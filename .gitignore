@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Kotlin
+*.kt.swp
+*.class
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+logs/
+*.log
+patches/*.json
+!patches/default.json
+
+# Native libraries
+*.so
+*.dylib
+*.dll
