@@ -1,13 +1,14 @@
 package llm.slop.spirals
 
+import llm.slop.spirals.rendering.FBO
+import llm.slop.spirals.rendering.Geometry
+import llm.slop.spirals.rendering.Shader
+import llm.slop.spirals.rendering.GLDebug
+import llm.slop.spirals.ui.UIManager
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL33.*
-import imgui.ImGui
-import imgui.flag.ImGuiConfigFlags
-import imgui.gl3.ImGuiImplGl3
-import imgui.glfw.ImGuiImplGlfw
 
 private val logger = KotlinLogging.logger {}
 
@@ -39,18 +40,32 @@ fun main() {
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
 
-    // Initialize ImGui
-    ImGui.createContext()
-    val io = ImGui.getIO()
-    io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard)
-    io.iniFilename = null // Disable imgui.ini
-
-    val imguiGlfw = ImGuiImplGlfw()
-    val imguiGl3 = ImGuiImplGl3()
-    imguiGlfw.init(window, true)
-    imguiGl3.init("#version 330 core")
+    // Initialize UI Manager
+    val uiManager = UIManager(window)
 
     logger.info { "Initialization complete" }
+
+    // Initialize rendering components
+    logger.info { "Creating FBO..." }
+    val testFBO = FBO(1920, 1080)
+    GLDebug.checkErrors("FBO creation")
+
+    logger.info { "Loading shaders..." }
+    val blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
+    GLDebug.checkErrors("Blit shader creation")
+
+    val testShader = Shader.fromResources("shaders/blit.vert", "shaders/test_gradient.frag")
+    GLDebug.checkErrors("Test shader creation")
+
+    logger.info { "Rendering components initialized" }
+
+    // Set up GL state for 2D rendering
+    glDisable(GL_DEPTH_TEST)
+    glDisable(GL_CULL_FACE)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+    logger.info { "GL state configured" }
 
     // Main loop
     var frameCount = 0
@@ -68,99 +83,63 @@ fun main() {
             lastTime = currentTime
         }
 
-        // Start ImGui frame
-        imguiGlfw.newFrame()
-        ImGui.newFrame()
+        // === RENDERING PHASE ===
 
-        // Render UI
-        renderUI()
+        // Get framebuffer size
+        val w = IntArray(1)
+        val h = IntArray(1)
+        glfwGetFramebufferSize(window, w, h)
 
-        // Render OpenGL background
-        glClearColor(0.1f, 0.1f, 0.12f, 1.0f)
+        // TODO: Handle FBO resizing if w[0]/h[0] differs from testFBO dimensions
+
+        // 1. Render content to FBO
+        testFBO.bind()
+        glClearColor(0f, 0f, 0f, 1f)
         glClear(GL_COLOR_BUFFER_BIT)
 
-        // TODO: Render mandalas here
+        testShader.bind()
+        testShader.setUniform("uTime", glfwGetTime().toFloat())
+        Geometry.drawFullscreenQuad()
+        testShader.unbind()
+        testFBO.unbind()
 
-        // Render ImGui
-        ImGui.render()
-        imguiGl3.renderDrawData(ImGui.getDrawData())
+        // 2. Blit FBO to screen
+        glViewport(0, 0, w[0], h[0])
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        blitShader.bind()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, testFBO.texture)
+        blitShader.setUniform("uTexture", 0)
+        Geometry.drawFullscreenQuad()
+        blitShader.unbind()
+        glBindVertexArray(0) // Ensure VAO is unbound for ImGui
+
+        // Check for errors (only first 3 frames to avoid spam)
+        if (frameCount < 3) {
+            GLDebug.checkErrors("FBO Render and Blit")
+        }
+
+        // === UI PHASE ===
+        uiManager.render(testFBO)
 
         glfwSwapBuffers(window)
     }
 
     // Cleanup
     logger.info { "Shutting down..." }
-    imguiGl3.dispose()
-    imguiGlfw.dispose()
-    ImGui.destroyContext()
+
+    // Dispose rendering resources
+    testShader.dispose()
+    blitShader.dispose()
+    testFBO.dispose()
+    Geometry.dispose()
+
+    // Dispose UI
+    uiManager.dispose()
+
+    // Dispose window
     glfwDestroyWindow(window)
     glfwTerminate()
-}
-
-fun renderUI() {
-    // Main menu bar
-    if (ImGui.beginMainMenuBar()) {
-        if (ImGui.beginMenu("File")) {
-            if (ImGui.menuItem("New Patch")) {
-                logger.info { "New patch" }
-            }
-            if (ImGui.menuItem("Open Patch...")) {
-                logger.info { "Open patch" }
-            }
-            if (ImGui.menuItem("Save Patch")) {
-                logger.info { "Save patch" }
-            }
-            ImGui.separator()
-            if (ImGui.menuItem("Exit")) {
-                logger.info { "Exit requested" }
-            }
-            ImGui.endMenu()
-        }
-        if (ImGui.beginMenu("View")) {
-            if (ImGui.menuItem("CV Sources")) {
-                logger.info { "Toggle CV sources" }
-            }
-            if (ImGui.menuItem("Parameter Grid")) {
-                logger.info { "Toggle parameter grid" }
-            }
-            ImGui.endMenu()
-        }
-        if (ImGui.beginMenu("Audio")) {
-            if (ImGui.menuItem("Settings...")) {
-                logger.info { "Audio settings" }
-            }
-            ImGui.endMenu()
-        }
-        if (ImGui.beginMenu("Help")) {
-            if (ImGui.menuItem("About")) {
-                logger.info { "About" }
-            }
-            ImGui.endMenu()
-        }
-        ImGui.endMainMenuBar()
-    }
-
-    // Demo window for testing
-    ImGui.showDemoWindow()
-
-    // Main UI window
-    ImGui.begin("Spirals Control")
-    ImGui.text("Welcome to Spirals Desktop!")
-    ImGui.separator()
-
-    if (ImGui.collapsingHeader("Status")) {
-        ImGui.text("OpenGL: ${glGetString(GL_VERSION)}")
-        ImGui.text("Renderer: ${glGetString(GL_RENDERER)}")
-        ImGui.text("FPS: %.1f".format(ImGui.getIO().framerate))
-    }
-
-    if (ImGui.collapsingHeader("Mixer")) {
-        ImGui.text("Deck A / Deck B")
-        val crossfade = floatArrayOf(0.5f)
-        if (ImGui.sliderFloat("Crossfade", crossfade, 0f, 1f)) {
-            logger.debug { "Crossfade: ${crossfade[0]}" }
-        }
-    }
-
-    ImGui.end()
 }
