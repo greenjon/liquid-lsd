@@ -158,7 +158,7 @@ fun main() {
         }
 
         // === UI PHASE ===
-        uiManager.render(mixer)
+        uiManager.render(mixer, w[0].toFloat(), h[0].toFloat())
 
         glfwSwapBuffers(window)
     }

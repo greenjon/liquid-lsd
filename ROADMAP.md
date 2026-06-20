@@ -99,21 +99,34 @@ Phase 4: UI & Interactivity
 Goal: Develop the grid-based patcher UI and integrate MIDI input.
 
 4.1. Hierarchical Parameter System
+Status: COMPLETE
 
-ParameterGroup.kt: Tree-like structure for organizing Parameters (e.g., Mixer → Deck A → Arms → L1).
-Implement parameter pathing (Mixer/DeckA/Arms/L1).
-Milestone: Parameters are organized hierarchically, ready for display.
+PatchGridState.kt: Manages selection state and group collapse state.
+Parameter paths implemented as strings (e.g. "Deck A/Geometry/L1").
+Milestone: Parameters are organized hierarchically in collapsible tree groups.
+
 4.2. CV Grid Patcher UI
+Status: COMPLETE
 
-UIController.kt: Manages main ImGui layout, including the parameter grid.
-CVGrid.kt: Renders the grid: Parameter rows, CV source columns.
-CVGrid.kt: Renders modulation circles at intersections (colored arc based on CV value).
-Milestone: Interactive grid displayed, showing parameters and CV sources.
-4.3. Modulation Editor (Side Panel)
+PatchGridPanel.kt: Renders the full grid — parameter rows grouped under Mixer/Deck A/Deck B
+with Geometry, Color, and Feedback sub-groups; CV source columns (AMP, BASS, MID, HIGH,
+FLUX, ONSET, ACCENT, BEAT, LFO, RAND). Groups are collapsible.
+Active cells show a faint circle + animated dot tracking live CV value
+(6 o'clock = 0/1, noon = 0.5). Bypassed cells shown in grey.
+Milestone: Interactive grid displayed, all parameters and CV sources visible.
 
-ModulationEditor.kt: UI for editing a specific CvModulator (gain, offset, curve, blend mode).
-UIController.kt: Opens ModulationEditor as a side panel when a modulation circle is clicked.
-Milestone: Can click a circle, open editor, adjust modulation parameters.
+4.3. Modulation Editor (Cell Config Panel)
+Status: COMPLETE
+
+CellConfigPanel.kt: Opens when a grid cell is clicked. Shows the (parameter → CV) pair,
+BYPASS/ACTIVE toggle, DELETE button, Operator (ADD/MUL), Weight slider, and
+CV-specific controls ported from Android ModulatorRow:
+  - BEAT: waveform, subdivision, phase offset, slope/duty
+  - LFO: waveform, speed range, period, phase offset, slope
+  - RAND (S&H): subdivision, phase offset, glide
+  - Audio CVs (amp/bass/etc.): weight and operator only
+Live value bar shown at bottom of panel.
+Milestone: Can click a cell, configure modulation, see live value feedback.
 4.4. MIDI Input
 
 MIDIManager.kt: Wrapper for javax.sound.midi, detects MIDI devices.
