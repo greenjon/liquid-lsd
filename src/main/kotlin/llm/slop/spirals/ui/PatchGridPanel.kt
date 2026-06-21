@@ -36,9 +36,13 @@ object PatchGridPanel {
     private const val CELL = 35f
     private const val CELL_PAD = 5f
 
+    private var gridStartX = 0f
+
     fun draw(mixer: Mixer, state: PatchGridState) {
         val avail = ImGui.getContentRegionAvailX()
-        val labelColW = (avail - CV_COLUMNS.size * (CELL + CELL_PAD)).coerceAtLeast(120f)
+        gridStartX = ImGui.getCursorScreenPosX()
+        val extraColsW = 2 * (CELL + CELL_PAD)
+        val labelColW = (avail - CV_COLUMNS.size * (CELL + CELL_PAD) - extraColsW).coerceAtLeast(120f)
 
         drawColumnHeaders(labelColW, state, mixer)
         ImGui.separator()
@@ -67,6 +71,10 @@ object PatchGridPanel {
                 val h = ImGui.calcTextSize(label).y
                 if (h > maxH) maxH = h
             }
+            val hFinal = ImGui.calcTextSize("F\nI\nN\nA\nL").y
+            val hBase = ImGui.calcTextSize("B\nA\nS\nE").y
+            if (hFinal > maxH) maxH = hFinal
+            if (hBase > maxH) maxH = hBase
         }
         
         // Reserve vertical space for headers
@@ -78,10 +86,11 @@ object PatchGridPanel {
         if (ImGui.button("🎲 Randomize All", labelColW - CELL_PAD, 24f)) {
             mixer.deckA.randomizeModulators()
             mixer.deckB.randomizeModulators()
-            listOf(mixer.crossfade, mixer.masterAlpha, mixer.mode).forEach { param ->
+            listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
                 val randomized = param.modulators.map { it.randomizeActiveValues() }
                 param.modulators.clear()
                 param.modulators.addAll(randomized)
+                param.randomizeBaseValue()
             }
             // Refresh selection
             val cell = state.selectedCell
@@ -91,28 +100,43 @@ object PatchGridPanel {
             }
         }
         
+        val lineCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.5f)
+
+        // Draw FINAL header
+        val finalColX = startX + labelColW
+        dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
+        var twFinal = 0f
+        val labelFinal = "F\nI\nN\nA\nL"
+        UITheme.withFont(UITheme.FontLevel.CAPTION) { twFinal = ImGui.calcTextSize(labelFinal).x }
+        var offsetX = ((CELL - twFinal) * 0.5f).coerceAtLeast(0f)
+        ImGui.setCursorScreenPos(finalColX + offsetX, startY)
+        UITheme.caption(labelFinal)
+
+        // Draw BASE header
+        val baseColX = startX + labelColW + (CELL + CELL_PAD)
+        dl.addLine(baseColX - CELL_PAD * 0.5f, startY, baseColX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
+        var twBase = 0f
+        val labelBase = "B\nA\nS\nE"
+        UITheme.withFont(UITheme.FontLevel.CAPTION) { twBase = ImGui.calcTextSize(labelBase).x }
+        offsetX = ((CELL - twBase) * 0.5f).coerceAtLeast(0f)
+        ImGui.setCursorScreenPos(baseColX + offsetX, startY)
+        UITheme.caption(labelBase)
+
         // Draw each column header vertically
         for ((idx, label) in CV_LABELS_VERTICAL.withIndex()) {
-            val colX = startX + labelColW + idx * (CELL + CELL_PAD)
-            
-            // Draw column separator line (except for the very first column edge if not desired, 
-            // but we can draw them for all to match the user's request for lines separating columns)
-            val lineCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.5f)
+            val colX = startX + labelColW + 2 * (CELL + CELL_PAD) + idx * (CELL + CELL_PAD)
             dl.addLine(colX - CELL_PAD * 0.5f, startY, colX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
             
             var tw = 0f
             UITheme.withFont(UITheme.FontLevel.CAPTION) { tw = ImGui.calcTextSize(label).x }
-            
-            val offsetX = ((CELL - tw) * 0.5f).coerceAtLeast(0f)
-            
-            ImGui.setCursorScreenPos(colX + offsetX, startY)
+            val offX = ((CELL - tw) * 0.5f).coerceAtLeast(0f)
+            ImGui.setCursorScreenPos(colX + offX, startY)
             UITheme.caption(label)
         }
         
         // Draw final separator line on the right edge
-        val finalColX = startX + labelColW + CV_LABELS_VERTICAL.size * (CELL + CELL_PAD)
-        val lineCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.5f)
-        dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
+        val rightColX = startX + labelColW + (CV_LABELS_VERTICAL.size + 2) * (CELL + CELL_PAD)
+        dl.addLine(rightColX - CELL_PAD * 0.5f, startY, rightColX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
         
         // Restore cursor to where the dummy left off
         ImGui.setCursorScreenPos(startX, afterHeadersY)
@@ -189,12 +213,98 @@ object PatchGridPanel {
         ImGui.pushID(paramKey)
 
         // Row label
+        val rowX = ImGui.getCursorPosX()
         val rowY = ImGui.getCursorPosY()
+        val rowScreenY = ImGui.getCursorScreenPosY()
+        
         ImGui.setCursorPosY(rowY + (CELL - ImGui.getTextLineHeight()) * 0.5f)
         UITheme.body(label)
         ImGui.setCursorPosY(rowY)
 
-        // CV cells
+        val dl = ImGui.getWindowDrawList()
+        val r = CELL * 0.5f
+
+        // 1. FINAL Cell
+        val finalX = gridStartX + labelColW
+        val finalY = rowScreenY
+        val isFinalSelected = state.selectedCell?.paramKey == paramKey && state.selectedCell?.cvSourceId == "final"
+        
+        ImGui.setCursorScreenPos(finalX, finalY)
+        ImGui.invisibleButton("##final_cell", CELL, CELL)
+        if (ImGui.isItemClicked()) {
+            state.select(PatchCellId(paramKey, "final"), param)
+        }
+        
+        val finalBgCol = when {
+            isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
+            else            -> ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 1f)
+        }
+        dl.addRectFilled(finalX, finalY, finalX + CELL, finalY + CELL, finalBgCol, 3f)
+        
+        val finalBorderCol = when {
+            isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
+            else            -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
+        }
+        
+        // Draw a circle with a pointer representing the live modulated final value
+        val circleR = r - 5f
+        val circleCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 1.0f, 0.25f)
+        dl.addCircle(finalX + r, finalY + r, circleR, circleCol, 32, 1.5f)
+
+        val liveVal = param.value
+        val angle = (3.0 * PI / 2.0) - liveVal * 2.0 * PI
+        val dotX = (finalX + r) + circleR * cos(angle).toFloat()
+        val dotY = (finalY + r) + circleR * sin(angle).toFloat()
+        val dotCol = ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)
+        dl.addCircleFilled(dotX, dotY, 3f, dotCol)
+        dl.addRect(finalX, finalY, finalX + CELL, finalY + CELL, finalBorderCol, 3f)
+
+        // 2. BASE Cell
+        val baseX = gridStartX + labelColW + CELL + CELL_PAD
+        val baseY = rowScreenY
+        val isBaseSelected = state.selectedCell?.paramKey == paramKey && state.selectedCell?.cvSourceId == "base"
+        
+        ImGui.setCursorScreenPos(baseX, baseY)
+        ImGui.invisibleButton("##base_cell", CELL, CELL)
+        if (ImGui.isItemClicked()) {
+            state.select(PatchCellId(paramKey, "base"), param)
+        }
+        
+        val baseBgCol = when {
+            isBaseSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
+            else           -> ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 1f)
+        }
+        dl.addRectFilled(baseX, baseY, baseX + CELL, baseY + CELL, baseBgCol, 3f)
+        
+        val baseBorderCol = when {
+            isBaseSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
+            else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
+        }
+        
+        // Draw circle with a pointer representing the static baseValue
+        val cx = baseX + r
+        val cy = baseY + r
+        val baseCircleR = r - 5f
+        val baseCircleCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.4f)
+        dl.addCircle(cx, cy, baseCircleR, baseCircleCol, 32, 1.5f)
+
+        // Draw base range vertical bar inside the circle if baseMin != baseMax
+        val baseMinY = param.baseMin * (CELL - 6f)
+        val baseMaxY = param.baseMax * (CELL - 6f)
+        if (param.baseMin != param.baseMax) {
+            val rangeCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 0.4f) // transparent gold
+            dl.addLine(cx, baseY + CELL - 3f - baseMaxY, cx, baseY + CELL - 3f - baseMinY, rangeCol, 3f)
+        }
+
+        // Draw pointer dot for static baseValue
+        val angleVal = (3.0 * PI / 2.0) - param.baseValue * 2.0 * PI
+        val baseDotX = cx + baseCircleR * cos(angleVal).toFloat()
+        val baseDotY = cy + baseCircleR * sin(angleVal).toFloat()
+        val baseDotCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f) // solid gold
+        dl.addCircleFilled(baseDotX, baseDotY, 3f, baseDotCol)
+        dl.addRect(baseX, baseY, baseX + CELL, baseY + CELL, baseBorderCol, 3f)
+
+        // 3. CV cells
         for ((colIdx, cvId) in CV_COLUMNS.withIndex()) {
             val cellId = PatchCellId(paramKey, cvId)
             val isSelected = state.selectedCell == cellId
@@ -202,18 +312,10 @@ object PatchGridPanel {
             val hasModulator = modulator != null && !modulator.bypassed
             val isBypassed = modulator != null && modulator.bypassed
 
-            ImGui.sameLine(labelColW + colIdx * (CELL + CELL_PAD), 0f)
-            ImGui.setCursorPosY(rowY)
+            val x = gridStartX + labelColW + 2 * (CELL + CELL_PAD) + colIdx * (CELL + CELL_PAD)
+            val y = rowScreenY
 
-            // Draw custom cell button via DrawList
-            val dl = ImGui.getWindowDrawList()
-            val x = ImGui.getCursorScreenPosX()
-            val y = ImGui.getCursorScreenPosY()
-            val r = CELL * 0.5f
-            val cx = x + r
-            val cy = y + r
-
-            // Invisible button to capture clicks
+            ImGui.setCursorScreenPos(x, y)
             ImGui.invisibleButton("##cell_$cvId", CELL, CELL)
             if (ImGui.isItemClicked()) {
                 state.select(cellId, param)
@@ -235,6 +337,8 @@ object PatchGridPanel {
 
             // If a modulator is active, draw the indicator circle + moving dot
             if (hasModulator || isBypassed) {
+                val cx = x + r
+                val cy = y + r
                 val circleR = r - 5f
                 val circleCol = if (isBypassed)
                     ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.4f)
@@ -243,13 +347,8 @@ object PatchGridPanel {
                 dl.addCircle(cx, cy, circleR, circleCol, 32, 1.5f)
 
                 if (!isBypassed) {
-                    // Moving dot: 6 o'clock = 0.0 and 1.0, noon = 0.5
-                    // Map value: 0.0 -> bottom (PI/2*3 = 270°), 0.5 -> top (PI/2 = 90°... wait, noon=top=0.5)
-                    // 6 o'clock in standard angles = 90° below = 270deg = 3*PI/2
-                    val liveVal = param.value
-                    // Map 0..1 -> angle: 6 o'clock (3PI/2) going counterclockwise to noon (PI/2)
-                    // At val=0: angle = 3PI/2 (bottom). At val=0.5: angle = PI/2 (top)... going counterclockwise
-                    // Full circle: val goes 0->1 counterclockwise: angle = 3PI/2 - val*2*PI
+                    val liveVal = modulator!!.evaluateValue()
+                    // Full circle: val goes 0..1 counterclockwise: angle = 3PI/2 - val*2*PI
                     val angle = (3.0 * PI / 2.0) - liveVal * 2.0 * PI
                     val dotX = cx + circleR * cos(angle).toFloat()
                     val dotY = cy + circleR * sin(angle).toFloat()
@@ -260,7 +359,7 @@ object PatchGridPanel {
         }
 
         ImGui.popID()
-        ImGui.spacing()
+        ImGui.setCursorPos(rowX, rowY + CELL)
     }
 }
 
@@ -280,5 +379,6 @@ fun Deck.randomizeModulators() {
         val randomized = param.modulators.map { it.randomizeActiveValues() }
         param.modulators.clear()
         param.modulators.addAll(randomized)
+        param.randomizeBaseValue()
     }
 }

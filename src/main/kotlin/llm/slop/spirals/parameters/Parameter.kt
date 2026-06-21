@@ -133,19 +133,34 @@ class ModulatableParameter(
     val modulators = CopyOnWriteArrayList<CvModulator>()
     val history = CvHistoryBuffer(historySize)
 
+    var baseMin: Float = baseValue
+    var baseMax: Float = baseValue
+
     var value: Float = baseValue
         private set
+
+    /**
+     * Randomizes the static baseValue within the [baseMin, baseMax] range.
+     */
+    fun randomizeBaseValue(random: kotlin.random.Random = kotlin.random.Random.Default) {
+        baseValue = if (baseMin == baseMax) baseMin else random.nextFloat() * (baseMax - baseMin) + baseMin
+    }
 
     /**
      * Calculates the final value by combining the base value with all active modulators.
      * Called once per frame prior to rendering.
      */
     fun evaluate(): Float {
+        val activeMods = modulators.filter { !it.bypassed }
+        if (activeMods.isEmpty()) {
+            value = baseValue.coerceIn(0f, 1f)
+            history.add(value)
+            return value
+        }
+
         var result = baseValue
 
-        for (mod in modulators) {
-            if (mod.bypassed) continue
-
+        for (mod in activeMods) {
             val finalCv = mod.evaluateValue()
             val modAmount = finalCv * mod.weight
 
@@ -166,6 +181,8 @@ class ModulatableParameter(
      */
     fun set(newValue: Float) {
         baseValue = newValue
+        baseMin = newValue
+        baseMax = newValue
     }
 }
 

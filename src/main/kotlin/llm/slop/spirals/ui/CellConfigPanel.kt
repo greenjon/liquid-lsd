@@ -50,6 +50,76 @@ object CellConfigPanel {
         val isSnh = cvId == "sampleAndHold"
         val hasAdvanced = isBeat || isLfo || isSnh
 
+        if (cvId == "base") {
+            UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey)
+            ImGui.sameLine()
+            UITheme.caption("  <--  BASE RANGE")
+            ImGui.separator()
+            ImGui.spacing()
+
+            drawCustomRangeSlider(
+                label = "Base Range",
+                currentMin = param.baseMin,
+                currentMax = param.baseMax,
+                minLimit = 0f,
+                maxLimit = 1f,
+                formatValue = { "%.3f".format(it) },
+                onRangeChanged = { nextMin, nextMax ->
+                    param.baseMin = nextMin
+                    param.baseMax = nextMax
+                    if (nextMin == nextMax) {
+                        param.baseValue = nextMin
+                    } else {
+                        param.baseValue = param.baseValue.coerceIn(nextMin, nextMax)
+                    }
+                }
+            )
+
+            ImGui.spacing()
+            if (ImGui.button("🎲 Randomize Base Value", ImGui.getContentRegionAvailX(), 30f)) {
+                param.randomizeBaseValue()
+            }
+
+            ImGui.spacing()
+            UITheme.caption("Static Base Value: %.3f".format(param.baseValue))
+            val barW = ImGui.getContentRegionAvailX()
+            val dl = ImGui.getWindowDrawList()
+            val cx = ImGui.getCursorScreenPosX()
+            val cy = ImGui.getCursorScreenPosY()
+            dl.addRectFilled(cx, cy, cx + barW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            dl.addRectFilled(cx, cy, cx + barW * param.baseValue, cy + 10f,
+                ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f))
+            ImGui.dummy(barW, 10f)
+            return
+        }
+
+        if (cvId == "final") {
+            UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey)
+            ImGui.sameLine()
+            UITheme.caption("  <--  FINAL VALUE")
+            ImGui.separator()
+            ImGui.spacing()
+
+            // Oscilloscope showing final value history
+            drawFinalOscilloscope(param.history)
+
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            val liveVal = param.value
+            UITheme.caption("Live Value: %.3f".format(liveVal))
+            val barW = ImGui.getContentRegionAvailX()
+            val dl = ImGui.getWindowDrawList()
+            val cx = ImGui.getCursorScreenPosX()
+            val cy = ImGui.getCursorScreenPosY()
+            dl.addRectFilled(cx, cy, cx + barW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            dl.addRectFilled(cx, cy, cx + barW * liveVal.coerceIn(0f, 1f), cy + 10f,
+                ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 1.0f, 1f))
+            ImGui.dummy(barW, 10f)
+            return
+        }
+
         UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey)
         ImGui.sameLine()
         UITheme.caption("  <--  $cvId")
@@ -299,6 +369,66 @@ object CellConfigPanel {
         dl.addRectFilled(cx, cy, cx + barW * liveVal.coerceIn(0f, 1f), cy + 10f,
             ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 1.0f, 1f))
         ImGui.dummy(barW, 10f)
+    }
+
+    private fun drawFinalOscilloscope(history: CvHistoryBuffer) {
+        val historySize = history.size
+        val w = ImGui.getContentRegionAvailX()
+        val h = 80f
+        
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        ImGui.dummy(w, h)
+        
+        val dl = ImGui.getWindowDrawList()
+        val bgCol = ImGui.colorConvertFloat4ToU32(0.04f, 0.04f, 0.04f, 1.0f)
+        dl.addRectFilled(startX, startY, startX + w, startY + h, bgCol, 4f)
+        
+        val centerY = startY + h / 2f
+        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 0.8f)
+        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 0.5f)
+        
+        dl.addLine(startX, centerY, startX + w, centerY, gridColCenter, 1.5f)
+        dl.addLine(startX, startY + 5f, startX + w, startY + 5f, gridColFaint, 1f)
+        dl.addLine(startX, startY + h - 5f, startX + w, startY + h - 5f, gridColFaint, 1f)
+        
+        val numDivisions = 4
+        for (i in 1 until numDivisions) {
+            val gridX = startX + (w * i / numDivisions)
+            dl.addLine(gridX, startY, gridX, startY + h, gridColFaint, 1f)
+        }
+        
+        val stepX = w / (historySize - 1)
+        val usableHeight = h - 10f
+        val lineCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 0.9f, 1.0f)
+        
+        for (i in 0 until historySize - 1) {
+            val val1 = history.getAt(i)
+            val val2 = history.getAt(i + 1)
+            
+            val x1 = startX + i * stepX
+            val y1 = (startY + h - 5f) - val1 * usableHeight
+            val x2 = startX + (i + 1) * stepX
+            val y2 = (startY + h - 5f) - val2 * usableHeight
+            
+            dl.addLine(x1, y1, x2, y2, lineCol, 2.0f)
+        }
+        
+        val borderCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1.0f)
+        dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
+        
+        ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "1.0")
+        ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "0.5")
+        ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "0.0")
+        
+        val textWidth = ImGui.calcTextSize("Final Parameter Value").x
+        ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "Final Parameter Value")
+        
+        ImGui.setCursorScreenPos(startX, startY + h)
     }
 
     private fun replaceModulator(state: PatchGridState, param: llm.slop.spirals.parameters.ModulatableParameter, newMod: CvModulator) {
