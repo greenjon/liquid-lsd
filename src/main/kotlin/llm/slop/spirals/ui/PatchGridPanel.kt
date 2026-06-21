@@ -28,6 +28,10 @@ object PatchGridPanel {
         "BEAT", "LFO", "RAND"
     )
 
+    // Vertical version of labels for space-saving column headers
+    private val CV_LABELS_VERTICAL = CV_LABELS.map { it.toList().joinToString("\n") }
+
+
     // Size of each cell square (px)
     private const val CELL = 35f
     private const val CELL_PAD = 5f
@@ -52,16 +56,48 @@ object PatchGridPanel {
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private fun drawColumnHeaders(labelColW: Float) {
-        ImGui.dummy(labelColW, 1f)
-        for (label in CV_LABELS) {
-            ImGui.sameLine(0f, CELL_PAD)
-            val tw = UITheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.calcTextSize(label).x }
-            val offset = ((CELL - tw) * 0.5f).coerceAtLeast(0f)
-            ImGui.setCursorPosX(ImGui.getCursorPosX() + offset)
-            UITheme.caption(label)
-            // Manually advance for uniform cell width (ImGui.sameLine handles spacing)
-            if (label != CV_LABELS.last()) ImGui.sameLine(0f, CELL - tw - offset + CELL_PAD)
+        val dl = ImGui.getWindowDrawList()
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        
+        // Calculate the maximum height needed for the vertical labels
+        var maxH = 0f
+        UITheme.withFont(UITheme.FontLevel.CAPTION) {
+            for (label in CV_LABELS_VERTICAL) {
+                val h = ImGui.calcTextSize(label).y
+                if (h > maxH) maxH = h
+            }
         }
+        
+        // Reserve vertical space for headers
+        ImGui.dummy(10f, maxH + 5f)
+        val afterHeadersY = ImGui.getCursorScreenPosY()
+        
+        // Draw each column header vertically
+        for ((idx, label) in CV_LABELS_VERTICAL.withIndex()) {
+            val colX = startX + labelColW + idx * (CELL + CELL_PAD)
+            
+            // Draw column separator line (except for the very first column edge if not desired, 
+            // but we can draw them for all to match the user's request for lines separating columns)
+            val lineCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.5f)
+            dl.addLine(colX - CELL_PAD * 0.5f, startY, colX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
+            
+            var tw = 0f
+            UITheme.withFont(UITheme.FontLevel.CAPTION) { tw = ImGui.calcTextSize(label).x }
+            
+            val offsetX = ((CELL - tw) * 0.5f).coerceAtLeast(0f)
+            
+            ImGui.setCursorScreenPos(colX + offsetX, startY)
+            UITheme.caption(label)
+        }
+        
+        // Draw final separator line on the right edge
+        val finalColX = startX + labelColW + CV_LABELS_VERTICAL.size * (CELL + CELL_PAD)
+        val lineCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.5f)
+        dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, startY + maxH + 5f, lineCol, 1f)
+        
+        // Restore cursor to where the dummy left off
+        ImGui.setCursorScreenPos(startX, afterHeadersY)
     }
 
     private inline fun drawGroup(label: String, state: PatchGridState, block: () -> Unit) {
