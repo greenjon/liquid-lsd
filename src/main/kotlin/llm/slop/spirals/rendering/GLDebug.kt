@@ -29,4 +29,16 @@ object GLDebug {
             logger.debug { "✓ No GL errors in: $context" }
         }
     }
+
+    /**
+     * Setup GL debug message callback if supported by context
+     */
+    fun setupDebugCallback() {
+        try {
+            org.lwjgl.opengl.GLUtil.setupDebugMessageCallback()
+            logger.info { "OpenGL Debug Message Callback enabled successfully" }
+        } catch (e: Exception) {
+            logger.warn { "Failed to enable OpenGL Debug Message Callback: ${e.message}" }
+        }
+    }
 }

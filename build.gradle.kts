@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.0.21"
     kotlin("plugin.serialization") version "2.0.21"
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "llm.slop"
@@ -65,6 +66,11 @@ kotlin {
 }
 
 tasks.withType<JavaExec> {
-    // Enable assertions
-    jvmArgs("-ea")
+    jvmArgs(
+        "-ea",
+        "-XX:+UseZGC",
+        "-XX:MaxGCPauseMillis=2",
+        "-Xms512m",
+        "-Xmx2g"
+    )
 }

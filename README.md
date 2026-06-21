@@ -27,9 +27,30 @@ Open source audio-reactive visual performance software for VJs.
 ./gradlew run
 ```
 
+## Packaging (Fat JAR)
+
+To package the application and all its native library dependencies into a single distribution executable:
+
+```bash
+./gradlew shadowJar
+```
+The output will be generated under `build/libs/spirals-desktop-1.0-SNAPSHOT-all.jar`.
+
+## Real-Time Performance & JVM Tuning
+
+For low-latency performance without audio glitches (xruns):
+- The application uses **ZGC** (`-XX:+UseZGC`) and target pause times of 2ms (`-XX:MaxGCPauseMillis=2`) to keep Garbage Collection stutters minimal.
+- An OpenGL debug callback is registered via `GLDebug.setupDebugCallback()` in development, logging driver warnings/errors automatically.
+
+## Audio Connection & Debugging (Linux)
+
+You can manage the JACK audio connections using command line tools:
+- `jack_lsp` - Lists active JACK audio/MIDI ports.
+- `jack_connect <source> <destination>` - Establishes a patch connection.
+- `pw-link` - Connection utility for PipeWire-JACK environments.
+
 ## License
 MIT
-```
 
 ---
 

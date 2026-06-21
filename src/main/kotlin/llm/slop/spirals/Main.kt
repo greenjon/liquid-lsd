@@ -33,6 +33,7 @@ fun main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE)
 
     // Create window
     val window = glfwCreateWindow(1920, 1080, "Spirals Desktop - VJ Software", 0, 0)
@@ -43,6 +44,7 @@ fun main() {
 
     // Initialize OpenGL
     GL.createCapabilities()
+    GLDebug.setupDebugCallback()
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
