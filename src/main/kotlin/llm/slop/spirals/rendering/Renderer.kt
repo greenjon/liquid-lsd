@@ -85,7 +85,7 @@ class Renderer {
         // Calculate and set global transformation uniforms
         val scale = (p["Scale"]?.value ?: 0.125f) * mandala.globalScale.value * 8.0f
         val rotation = (p["Rotation"]?.value ?: 0f) * 2.0f * Math.PI.toFloat()
-        val thickness = p["Thickness"]?.value ?: 0.1f
+        val thickness = (p["Thickness"]?.value ?: 0.5f) * 0.035f
         val aspect = targetFBO.width.toFloat() / targetFBO.height.toFloat()
 
         mandalaShader.setUniform("uGlobalScale", scale)

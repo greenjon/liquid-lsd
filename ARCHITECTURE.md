@@ -60,7 +60,7 @@ src/main/kotlin/llm/slop/spirals/
 │   ├── VisualSource.kt         — Interface (Mandala, future: video/3D)
 │   └── FBO.kt                  — OpenGL framebuffer wrapper
 ├── ui/
-│   ├── UIManager.kt            — Layout: PatchGrid (L 2/3) | CellConfig+Mixer (R 1/3)
+│   ├── UIManager.kt            — Layout: PatchGrid (L 40%) | CellConfig (M 30%) | Mixer (R 30%)
 │   ├── PatchGridPanel.kt       — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with lazy real-time oscilloscope
 │   └── PatchGridState.kt       — Selection state (cell, param, modulator)
@@ -99,13 +99,12 @@ value = result.coerceIn(0f, 1f)
 ## UI Layout
 
 ```
-┌─────────────────────────┬────────────────┐
-│                         │  Cell Config   │
-│      Patch Grid         │  (top 40%)     │
-│       (2/3 width)       ├────────────────┤
-│                         │ Mixer/Monitor  │
-│                         │  (bottom 60%)  │
-└─────────────────────────┴────────────────┘
+┌──────────────────┬────────────────┬────────────────┐
+│                  │                │                │
+│  Patch Grid      │  Cell Config   │ Mixer/Monitor  │
+│  (40% width)     │  (30% width)   │  (30% width)   │
+│                  │                │                │
+└──────────────────┴────────────────┴────────────────┘
 ```
 
 Patch Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same]  

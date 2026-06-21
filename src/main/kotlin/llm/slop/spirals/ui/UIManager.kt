@@ -142,8 +142,8 @@ class UIManager(private val windowHandle: Long) {
                          ImGuiWindowFlags.NoMove or
                          ImGuiWindowFlags.NoCollapse
 
-        // Left: Patch Grid (2/3 width, full content height)
-        val leftW = displayWidth * (2f / 3f)
+        // Left: Patch Grid (40% width, full content height)
+        val leftW = displayWidth * 0.4f
         ImGui.setNextWindowPos(0f, menuBarH)
         ImGui.setNextWindowSize(leftW, contentH)
         if (ImGui.begin("Patch Grid", noDecorate)) {
@@ -151,21 +151,19 @@ class UIManager(private val windowHandle: Long) {
         }
         ImGui.end()
 
-        val rightW = displayWidth - leftW
-        val rightTopH = contentH * 0.4f     // Cell Config
-        val rightBotH = contentH - rightTopH // Mixer / Monitor
-
-        // Right Top: Cell Config
+        // Middle: Cell Config (30% width, full content height)
+        val middleW = displayWidth * 0.3f
         ImGui.setNextWindowPos(leftW, menuBarH)
-        ImGui.setNextWindowSize(rightW, rightTopH)
+        ImGui.setNextWindowSize(middleW, contentH)
         if (ImGui.begin("Cell Config", noDecorate)) {
             CellConfigPanel.draw(patchState)
         }
         ImGui.end()
 
-        // Right Bottom: Mixer / Monitor
-        ImGui.setNextWindowPos(leftW, menuBarH + rightTopH)
-        ImGui.setNextWindowSize(rightW, rightBotH)
+        // Right: Mixer / Monitor (30% width, full content height)
+        val rightW = displayWidth - leftW - middleW
+        ImGui.setNextWindowPos(leftW + middleW, menuBarH)
+        ImGui.setNextWindowSize(rightW, contentH)
         if (ImGui.begin("Mixer / Monitor", noDecorate)) {
             drawMixerMonitor(mixer)
         }

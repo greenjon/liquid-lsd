@@ -66,7 +66,7 @@ class Mandala(
         "L4" to ModulatableParameter(0.1f),
         "Scale" to ModulatableParameter(0.125f),
         "Rotation" to ModulatableParameter(0.0f),
-        "Thickness" to ModulatableParameter(0.1f),
+        "Thickness" to ModulatableParameter(0.5f),
         "Hue Offset" to ModulatableParameter(0.0f),
         "Hue Sweep" to ModulatableParameter(1.0f / 9.0f),
         "Depth" to ModulatableParameter(0.35f)
