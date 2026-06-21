@@ -205,22 +205,24 @@ class UIManager(private val windowHandle: Long) {
         ImGui.columns(1)
         ImGui.spacing()
 
-        // Crossfader
-        drawFlatSlider("Crossfader", mixer.crossfade, 0f, 1f, 100f) {
+        // Crossfader (mapped display value from -1.0 to 1.0)
+        drawFlatSlider("Crossfader", mixer.crossfade, 0f, 1f, 100f, -1f, 1f) {
             "A <-- %.2f --> B".format(it)
         }
 
         // Blend mode inline combo
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
+        val startLocalX = ImGui.getCursorPosX()
+        val startLocalY = ImGui.getCursorPosY()
         val textH = ImGui.getTextLineHeight()
         val comboH = 26f
         val rowH = maxOf(textH, comboH)
 
-        ImGui.setCursorScreenPos(startX, startY + (rowH - textH) * 0.5f)
+        ImGui.setCursorPosX(startLocalX)
+        ImGui.setCursorPosY(startLocalY + (rowH - textH) * 0.5f)
         UITheme.body("Blend Mode")
 
-        ImGui.setCursorScreenPos(startX + 100f, startY + (rowH - comboH) * 0.5f)
+        ImGui.setCursorPosX(startLocalX + 100f)
+        ImGui.setCursorPosY(startLocalY + (rowH - comboH) * 0.5f)
         ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 5f)
         val modes = arrayOf("ADD", "SCREEN", "MULT", "MAX", "XFADE")
         val modeIdx = ImInt(mixer.mode.baseValue.toInt())
@@ -229,10 +231,11 @@ class UIManager(private val windowHandle: Long) {
         }
         ImGui.popItemWidth()
 
-        ImGui.setCursorScreenPos(startX, startY + rowH + 6f)
+        ImGui.setCursorPosX(startLocalX)
+        ImGui.setCursorPosY(startLocalY + rowH + 6f)
 
-        // Master Alpha
-        drawFlatSlider("Master Alpha", mixer.masterAlpha, 0f, 1f, 100f)
+        // Alpha (renamed from "Master Alpha")
+        drawFlatSlider("Alpha", mixer.masterAlpha, 0f, 1f, 100f)
         ImGui.spacing()
 
         ImGui.columns(2, "deckCtrls", true)
@@ -256,23 +259,26 @@ class UIManager(private val windowHandle: Long) {
             }.coerceAtLeast(0)
             val combo = ImInt(idx)
 
-            val startX = ImGui.getCursorScreenPosX()
-            val startY = ImGui.getCursorScreenPosY()
+            val startLocalX = ImGui.getCursorPosX()
+            val startLocalY = ImGui.getCursorPosY()
             val textH = ImGui.getTextLineHeight()
             val comboH = 26f
             val rowH = maxOf(textH, comboH)
 
-            ImGui.setCursorScreenPos(startX, startY + (rowH - textH) * 0.5f)
+            ImGui.setCursorPosX(startLocalX)
+            ImGui.setCursorPosY(startLocalY + (rowH - textH) * 0.5f)
             UITheme.body("Recipe")
 
-            ImGui.setCursorScreenPos(startX + 80f, startY + (rowH - comboH) * 0.5f)
+            ImGui.setCursorPosX(startLocalX + 80f)
+            ImGui.setCursorPosY(startLocalY + (rowH - comboH) * 0.5f)
             ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 5f)
             if (ImGui.combo("##recipe", combo, recipeNames)) {
                 mandala.recipe = recipes[combo.get()]
             }
             ImGui.popItemWidth()
 
-            ImGui.setCursorScreenPos(startX, startY + rowH + 6f)
+            ImGui.setCursorPosX(startLocalX)
+            ImGui.setCursorPosY(startLocalY + rowH + 6f)
         }
 
         fun slider(lbl: String, param: ModulatableParameter,
@@ -307,71 +313,97 @@ class UIManager(private val windowHandle: Long) {
         min: Float,
         max: Float,
         labelW: Float = 100f,
+        displayMin: Float = min,
+        displayMax: Float = max,
         formatValue: (Float) -> String = { "%.3f".format(it) }
     ) {
         ImGui.pushID(label)
-        
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
-        
+
+        val startLocalX = ImGui.getCursorPosX()
+        val startLocalY = ImGui.getCursorPosY()
+        val startScreenX = ImGui.getCursorScreenPosX()
+        val startScreenY = ImGui.getCursorScreenPosY()
+
         val barH = 14f
         val textH = ImGui.getTextLineHeight()
         val rowH = maxOf(barH, textH)
-        
+
         // Draw label (centered vertically in rowH)
-        ImGui.setCursorScreenPos(startX, startY + (rowH - textH) * 0.5f)
+        ImGui.setCursorPosY(startLocalY + (rowH - textH) * 0.5f)
         UITheme.body(label)
-        
+
         // Calculate bar position and width
-        val barStartX = startX + labelW
-        val barScreenY = startY + (rowH - barH) * 0.5f
-        
+        val barLocalStartX = startLocalX + labelW
+        val barScreenX = startScreenX + labelW
+        val barScreenY = startScreenY + (rowH - barH) * 0.5f
+
         // Draw interactive invisible button
-        ImGui.setCursorScreenPos(barStartX, barScreenY)
+        ImGui.setCursorPosX(barLocalStartX)
+        ImGui.setCursorPosY(startLocalY + (rowH - barH) * 0.5f)
         val barW = ImGui.getContentRegionAvailX() - 5f
         ImGui.invisibleButton("##slider", barW, barH)
-        
+
         // Process mouse dragging
         val mousePressed = ImGui.isItemActive() || (ImGui.isItemHovered() && ImGui.isMouseDown(0))
         val valueRange = max - min
+        val displayRange = displayMax - displayMin
+
         if (mousePressed) {
             val io = ImGui.getIO()
-            val pct = ((io.mousePos.x - barStartX) / barW).coerceIn(0f, 1f)
-            val nextVal = min + pct * valueRange
-            param.set(nextVal)
+            val pct = ((io.mousePos.x - barScreenX) / barW).coerceIn(0f, 1f)
+            val nextDisplayVal = displayMin + pct * displayRange
+            val nextInternalVal = min + if (displayRange > 0f) ((nextDisplayVal - displayMin) / displayRange) * valueRange else 0f
+            param.set(nextInternalVal)
         }
-        
+
         // Draw the flat bar visual using DrawList
         val dl = ImGui.getWindowDrawList()
         dl.addRectFilled(
-            barStartX, barScreenY,
-            barStartX + barW, barScreenY + barH,
+            barScreenX, barScreenY,
+            barScreenX + barW, barScreenY + barH,
             ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f),
             3f
         )
-        
-        val fillPct = ((param.baseValue - min) / valueRange).coerceIn(0f, 1f)
-        if (fillPct > 0f) {
+
+        val currentDisplayVal = displayMin + if (valueRange > 0f) ((param.baseValue - min) / valueRange) * displayRange else 0f
+        val fillCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
+
+        if (displayMin < 0f && displayMax > 0f) {
+            val pctCenter = (0f - displayMin) / displayRange
+            val pctVal = (currentDisplayVal - displayMin) / displayRange
+            val centerX = barScreenX + barW * pctCenter
+            val valX = barScreenX + barW * pctVal
+
             dl.addRectFilled(
-                barStartX, barScreenY,
-                barStartX + barW * fillPct, barScreenY + barH,
-                ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), // gold/amber
+                minOf(centerX, valX), barScreenY,
+                maxOf(centerX, valX), barScreenY + barH,
+                fillCol,
                 3f
             )
+        } else {
+            val fillPct = if (valueRange > 0f) ((param.baseValue - min) / valueRange).coerceIn(0f, 1f) else 0f
+            if (fillPct > 0f) {
+                dl.addRectFilled(
+                    barScreenX, barScreenY,
+                    barScreenX + barW * fillPct, barScreenY + barH,
+                    fillCol,
+                    3f
+                )
+            }
         }
-        
+
         // Value text overlay
-        val valStr = formatValue(param.baseValue)
+        val valStr = formatValue(currentDisplayVal)
         val textW = ImGui.calcTextSize(valStr).x
         val valTextH = ImGui.calcTextSize(valStr).y
-        val valTextX = barStartX + barW - textW - 5f
-        val valTextY = barScreenY + (barH - valTextH) * 0.5f
-        
-        ImGui.setCursorScreenPos(valTextX, valTextY)
+
+        ImGui.setCursorPosX(barLocalStartX + barW - textW - 5f)
+        ImGui.setCursorPosY(startLocalY + (rowH - valTextH) * 0.5f)
         UITheme.captionColored(0.9f, 0.9f, 0.9f, 0.8f, valStr)
-        
+
         // Set cursor position to the next line
-        ImGui.setCursorScreenPos(startX, startY + rowH + 6f)
+        ImGui.setCursorPosX(startLocalX)
+        ImGui.setCursorPosY(startLocalY + rowH + 6f)
         ImGui.popID()
     }
 
