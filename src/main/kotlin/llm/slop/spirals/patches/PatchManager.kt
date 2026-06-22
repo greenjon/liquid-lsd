@@ -22,6 +22,18 @@ object PatchManager {
     val deckAPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
     val deckBPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
 
+    var activePresetA: String? = null
+    var activePresetB: String? = null
+    var cachedDtoA: DeckPatchDto? = null
+    var cachedDtoB: DeckPatchDto? = null
+
+    fun isDeckDirty(deck: Deck, isDeckA: Boolean): Boolean {
+        val cached = if (isDeckA) cachedDtoA else cachedDtoB
+        if (cached == null) return false
+        val current = deck.toDto(cached.name)
+        return current != cached
+    }
+
     fun loadGlobalPatchAsync(file: File) {
         CompletableFuture.runAsync {
             try {
@@ -104,6 +116,8 @@ object PatchManager {
         while (deckADto != null) {
             try {
                 mixer.deckA.applyDto(deckADto)
+                activePresetA = deckADto.name
+                cachedDtoA = deckADto
                 logger.info { "Successfully applied Deck A preset: ${deckADto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck A preset" }
@@ -116,6 +130,8 @@ object PatchManager {
         while (deckBDto != null) {
             try {
                 mixer.deckB.applyDto(deckBDto)
+                activePresetB = deckBDto.name
+                cachedDtoB = deckBDto
                 logger.info { "Successfully applied Deck B preset: ${deckBDto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck B preset" }

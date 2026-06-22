@@ -46,6 +46,7 @@ class UIManager(private val windowHandle: Long) {
     private val deckASaveName = ImString(32)
     private val deckBSaveName = ImString(32)
     private var currentGlobalPatchFile: File? = null
+    private var currentMixer: Mixer? = null
 
     private val recipes = listOf(
         MandalaRatio("Recipe A", 26, 23, 14, 14),
@@ -89,6 +90,7 @@ class UIManager(private val windowHandle: Long) {
     }
 
     fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
+        currentMixer = mixer
         // ── Between-frame work (atlas is unlocked here) ───────────────────────
         pendingFontSize?.let { newSize ->
             pendingFontSize = null
@@ -185,13 +187,25 @@ class UIManager(private val windowHandle: Long) {
         }
     }
 
-    private fun getAvailableDeckPresets(): Array<String> {
+    private fun getAvailableDeckPresets(isDeckA: Boolean): Array<String> {
         val dir = File("presets/decks")
         if (!dir.exists()) dir.mkdirs()
         val files = dir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray()
         val list = mutableListOf<String>()
         list.add("None")
-        list.addAll(files.map { it.nameWithoutExtension })
+
+        val activePreset = if (isDeckA) llm.slop.spirals.patches.PatchManager.activePresetA else llm.slop.spirals.patches.PatchManager.activePresetB
+        val deck = if (isDeckA) currentMixer?.deckA else currentMixer?.deckB
+        val isDirty = if (deck != null) llm.slop.spirals.patches.PatchManager.isDeckDirty(deck, isDeckA) else false
+
+        val presetNames = files.map { it.nameWithoutExtension }
+        for (pName in presetNames) {
+            if (pName == activePreset && isDirty) {
+                list.add("$pName *")
+            } else {
+                list.add(pName)
+            }
+        }
         return list.toTypedArray()
     }
 
@@ -203,8 +217,16 @@ class UIManager(private val windowHandle: Long) {
         }
     }
 
-    private fun saveDeckPreset(name: String, deck: Deck) {
+    private fun saveDeckPreset(name: String, deck: Deck, isDeckA: Boolean) {
         if (name.isBlank()) return
+        val dto = deck.toDto(name)
+        if (isDeckA) {
+            llm.slop.spirals.patches.PatchManager.activePresetA = name
+            llm.slop.spirals.patches.PatchManager.cachedDtoA = dto
+        } else {
+            llm.slop.spirals.patches.PatchManager.activePresetB = name
+            llm.slop.spirals.patches.PatchManager.cachedDtoB = dto
+        }
         val file = File("presets/decks/$name.json")
         llm.slop.spirals.patches.PatchManager.saveDeckPresetAsync(file, deck, name)
     }
@@ -214,15 +236,31 @@ class UIManager(private val windowHandle: Long) {
         UITheme.h3(label)
         ImGui.sameLine(80f)
 
-        val presets = getAvailableDeckPresets()
+        val presets = getAvailableDeckPresets(isDeckA)
+        val activePreset = if (isDeckA) llm.slop.spirals.patches.PatchManager.activePresetA else llm.slop.spirals.patches.PatchManager.activePresetB
+        val isDirty = llm.slop.spirals.patches.PatchManager.isDeckDirty(deck, isDeckA)
+
+        val targetName = if (isDirty && activePreset != null) "$activePreset *" else activePreset
+        val idx = presets.indexOfFirst { it == targetName }.coerceAtLeast(0)
+
         val selectedIndex = if (isDeckA) deckAPresetIndex else deckBPresetIndex
-        if (selectedIndex.get() >= presets.size) {
-            selectedIndex.set(0)
-        }
+        selectedIndex.set(idx)
 
         ImGui.pushItemWidth(120f)
         if (ImGui.combo("##preset_$label", selectedIndex, presets)) {
-            loadDeckPreset(presets[selectedIndex.get()], deck, isDeckA)
+            val chosen = presets[selectedIndex.get()]
+            val cleanName = chosen.removeSuffix(" *")
+            if (cleanName == "None") {
+                if (isDeckA) {
+                    llm.slop.spirals.patches.PatchManager.activePresetA = null
+                    llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                } else {
+                    llm.slop.spirals.patches.PatchManager.activePresetB = null
+                    llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                }
+            } else {
+                loadDeckPreset(cleanName, deck, isDeckA)
+            }
         }
         ImGui.popItemWidth()
 
@@ -232,12 +270,32 @@ class UIManager(private val windowHandle: Long) {
         }
 
         if (ImGui.beginPopup("save_deck_preset_popup_$label")) {
+            val activeName = if (isDeckA) llm.slop.spirals.patches.PatchManager.activePresetA else llm.slop.spirals.patches.PatchManager.activePresetB
+            val isDeckDirty = llm.slop.spirals.patches.PatchManager.isDeckDirty(deck, isDeckA)
+
+            if (activeName != null) {
+                if (isDeckDirty) {
+                    if (ImGui.button("Overwrite '$activeName'", ImGui.getContentRegionAvailX(), 25f)) {
+                        saveDeckPreset(activeName, deck, isDeckA)
+                        ImGui.closeCurrentPopup()
+                    }
+                    ImGui.separator()
+                } else {
+                    ImGui.textDisabled("Preset is up to date")
+                    ImGui.separator()
+                }
+            }
+
+            ImGui.text("Save As New:")
             val nameInput = if (isDeckA) deckASaveName else deckBSaveName
-            ImGui.inputText("Name", nameInput)
+            ImGui.inputText("##nameInput_$label", nameInput)
             ImGui.sameLine()
-            if (ImGui.button("Save")) {
-                saveDeckPreset(nameInput.get(), deck)
-                ImGui.closeCurrentPopup()
+            if (ImGui.button("Save##asNew_$label")) {
+                val newName = nameInput.get().trim()
+                if (newName.isNotEmpty()) {
+                    saveDeckPreset(newName, deck, isDeckA)
+                    ImGui.closeCurrentPopup()
+                }
             }
             ImGui.endPopup()
         }
