@@ -144,9 +144,10 @@ Integrate into File menu in Main.kt.
 Milestone: Can save/load entire visual configurations.
 5.2. Randomization (Optional but High Value)
 
-RandomSetGenerator.kt: (Port logic from Android) Generate new mandala/set parameters based on constraints.
-Integrate into Deck.kt or a "Generate" button in the UI.
-Milestone: Can generate new mandala variations with a single click.
+- RandomSetGenerator.kt: (Port logic from Android) Generate new mandala/set parameters based on constraints.
+- Integrate into Deck.kt or a "Generate" button in the UI.
+- **Completed**: Added parameter-level randomization toggles (non-destructive) and individual reload triggers (`↻`) for CV modulators and parameter Base values, including single-handle static sliders.
+- Milestone: Can generate new mandala variations with a single click and granularly lock/reload parameters.
 5.3. Performance & Debugging
 
 OpenGL profiling (e.g., glGetDebugMessageLog).
