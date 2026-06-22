@@ -22,6 +22,10 @@ class ModulatableParameter(
     var baseMin: Float = baseValue
     var baseMax: Float = baseValue
 
+    var mappedMidiId: String? = null
+    var midiMapMin: Float = 0f
+    var midiMapMax: Float = 1f
+
     var value: Float = baseValue
         private set
 
@@ -30,6 +34,9 @@ class ModulatableParameter(
         baseMin = defaultValue
         baseMax = defaultValue
         randomizeBase = false
+        mappedMidiId = null
+        midiMapMin = 0f
+        midiMapMax = 1f
         modulators.clear()
     }
 
@@ -46,6 +53,11 @@ class ModulatableParameter(
      * Called once per frame prior to rendering.
      */
     fun evaluate(): Float {
+        mappedMidiId?.let { id ->
+            val midiVal = llm.slop.spirals.cv.CVRegistry.get(id)
+            baseValue = midiMapMin + midiVal * (midiMapMax - midiMapMin)
+        }
+
         val activeMods = modulators.filter { !it.bypassed }
         if (activeMods.isEmpty()) {
             value = baseValue.coerceIn(minClamp, maxClamp)
@@ -62,6 +74,7 @@ class ModulatableParameter(
             result = when (mod.operator) {
                 ModulationOperator.ADD -> result + modAmount
                 ModulationOperator.MUL -> result * (1.0f + modAmount)
+                ModulationOperator.SCALE -> result * (1.0f - mod.weight + modAmount)
             }
         }
 

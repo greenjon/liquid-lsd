@@ -37,7 +37,10 @@ data class ParameterDto(
     val baseMin: Float,
     val baseMax: Float,
     val randomizeBase: Boolean,
-    val modulators: List<ModulatorDto>
+    val modulators: List<ModulatorDto>,
+    val mappedMidiId: String? = null,
+    val midiMapMin: Float = 0f,
+    val midiMapMax: Float = 1f
 )
 
 @Serializable
@@ -126,7 +129,10 @@ fun ModulatableParameter.toDto(): ParameterDto = ParameterDto(
     baseMin = baseMin,
     baseMax = baseMax,
     randomizeBase = randomizeBase,
-    modulators = modulators.map { it.toDto() }
+    modulators = modulators.map { it.toDto() },
+    mappedMidiId = mappedMidiId,
+    midiMapMin = midiMapMin,
+    midiMapMax = midiMapMax
 )
 
 fun ModulatableParameter.applyDto(dto: ParameterDto) {
@@ -134,6 +140,9 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
     this.baseMin = dto.baseMin
     this.baseMax = dto.baseMax
     this.randomizeBase = dto.randomizeBase
+    this.mappedMidiId = dto.mappedMidiId
+    this.midiMapMin = dto.midiMapMin
+    this.midiMapMax = dto.midiMapMax
     
     // Safety check for CopyOnWriteArrayList: clear and addAll
     this.modulators.clear()

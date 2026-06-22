@@ -10,6 +10,11 @@ import llm.slop.spirals.parameters.ModulatableParameter
  */
 data class PatchCellId(val paramKey: String, val cvSourceId: String)
 
+sealed class MidiLearnTarget {
+    data class GridCell(val cellId: PatchCellId, val param: ModulatableParameter) : MidiLearnTarget()
+    data class BaseValueSlider(val label: String, val param: ModulatableParameter, val min: Float, val max: Float) : MidiLearnTarget()
+}
+
 /**
  * Holds transient UI state for the Patch Grid and Cell Config panel.
  */
@@ -20,6 +25,9 @@ class PatchGridState {
     /** The parameter object that backs the selected cell. */
     var selectedParam: ModulatableParameter? = null
 
+    /** MIDI Learn mode toggle and active learn target */
+    var isMidiLearnMode: Boolean = false
+    var midiLearnTarget: MidiLearnTarget? = null
 
     /** Tracks which tree node groups are open (keyed by label). Default open. */
     val groupOpen = mutableMapOf<String, Boolean>().withDefault { true }

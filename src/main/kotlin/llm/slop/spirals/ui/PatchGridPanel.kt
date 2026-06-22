@@ -238,6 +238,15 @@ object PatchGridPanel {
             if (ImGui.menuItem("Reset Parameter to Default")) {
                 param.reset()
             }
+            if (ImGui.menuItem("Clear all CVs")) {
+                param.modulators.clear()
+            }
+            val hasMidiMap = param.mappedMidiId != null
+            if (ImGui.menuItem("Clear MIDI mapping", null, false, hasMidiMap)) {
+                param.mappedMidiId = null
+                param.midiMapMin = 0f
+                param.midiMapMax = 1f
+            }
             ImGui.endPopup()
         }
         ImGui.setCursorPosY(rowY)
@@ -329,17 +338,27 @@ object PatchGridPanel {
         for ((colIdx, cvId) in CV_COLUMNS.withIndex()) {
             val cellId = PatchCellId(paramKey, cvId)
             val isSelected = state.selectedCell == cellId
-            val activeMods = param.modulators.filter { it.sourceId == cvId }
+            val activeMods = param.modulators.filter {
+                it.sourceId == cvId || (it.sourceId.startsWith("midi_cc_") && it.sourceId.endsWith("_$cvId"))
+            }
             val hasModulator = activeMods.any { !it.bypassed }
             val isBypassed = activeMods.isNotEmpty() && activeMods.all { it.bypassed }
 
             val x = gridStartX + labelColW + 2 * (CELL + CELL_PAD) + colIdx * (CELL + CELL_PAD)
             val y = rowScreenY
 
+            val isTarget = state.midiLearnTarget?.let {
+                it is MidiLearnTarget.GridCell && it.cellId == cellId
+            } ?: false
+
             ImGui.setCursorScreenPos(x, y)
             ImGui.invisibleButton("##cell_$cvId", CELL, CELL)
             if (ImGui.isItemClicked()) {
-                state.select(cellId, param)
+                if (state.isMidiLearnMode) {
+                    state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
+                } else {
+                    state.select(cellId, param)
+                }
             }
             if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {
                 if (ImGui.menuItem("Copy Cell Modulators")) {
@@ -355,7 +374,9 @@ object PatchGridPanel {
                     }
                     if (ImGui.menuItem(if (isBypassed) "Enable Modulator(s)" else "Bypass Modulator(s)")) {
                         val updated = param.modulators.map {
-                            if (it.sourceId == cvId) it.copy(bypassed = !it.bypassed) else it
+                            if (it.sourceId == cvId || (it.sourceId.startsWith("midi_cc_") && it.sourceId.endsWith("_$cvId"))) {
+                                it.copy(bypassed = !it.bypassed)
+                            } else it
                         }
                         param.modulators.clear()
                         param.modulators.addAll(updated)
@@ -366,12 +387,14 @@ object PatchGridPanel {
 
             // Cell background
             val bgCol = when {
+                isTarget      -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f) // listening target
                 isSelected    -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
                 hasModulator  -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
                 else          -> ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 1f)
             }
             dl.addRectFilled(x, y, x + CELL, y + CELL, bgCol, 3f)
             val borderCol = when {
+                isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f) // bright cyan
                 isSelected   -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
                 hasModulator -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
                 else         -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)

@@ -25,7 +25,7 @@ object CellConfigPanel {
     )
     private val waveformLabels = arrayOf("Sine", "Triangle", "Square")
     private val speedLabels = arrayOf("Slow", "Medium", "Fast")
-    private val operatorLabels = arrayOf("ADD", "MUL")
+    private val operatorLabels = arrayOf("ADD", "MUL", "SCALE")
 
     private var activeHistory: CvHistoryBuffer? = null
     private var activeCellId: PatchCellId? = null
@@ -47,9 +47,15 @@ object CellConfigPanel {
 
         val cvId = cell.cvSourceId
         val paramKey = cell.paramKey
-        val isBeat = cvId == "beatPhase"
-        val isLfo = cvId == "lfo"
-        val isSnh = cvId == "sampleAndHold"
+        
+        val activeMods = param.modulators.filter {
+            it.sourceId == cvId || (it.sourceId.startsWith("midi_cc_") && it.sourceId.endsWith("_$cvId"))
+        }
+        val isMidiMod = activeMods.any { it.sourceId.startsWith("midi_cc_") }
+
+        val isBeat = cvId == "beatPhase" && !isMidiMod
+        val isLfo = cvId == "lfo" && !isMidiMod
+        val isSnh = cvId == "sampleAndHold" && !isMidiMod
         val hasAdvanced = isBeat || isLfo || isSnh
 
         if (cvId == "base") {
@@ -156,11 +162,21 @@ object CellConfigPanel {
 
         UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey)
         ImGui.sameLine()
-        UITheme.caption("  <--  $cvId")
+        if (isMidiMod) {
+            val firstMidiMod = activeMods.firstOrNull { it.sourceId.startsWith("midi_cc_") }
+            val midiId = firstMidiMod?.sourceId ?: ""
+            val parts = midiId.substring("midi_cc_".length).split('_')
+            val label = if (parts.size >= 2) {
+                val ch = parts[0].toIntOrNull() ?: 0
+                val cc = parts[1].toIntOrNull() ?: 0
+                if (ch == 0) "MIDI CC $cc" else "MIDI Ch ${ch + 1} CC $cc"
+            } else "MIDI"
+            UITheme.caption("  <--  $cvId ($label)")
+        } else {
+            UITheme.caption("  <--  $cvId")
+        }
         ImGui.separator()
         ImGui.spacing()
-
-        val activeMods = param.modulators.filter { it.sourceId == cvId }
 
         if (activeMods.isEmpty()) {
             activeHistory = null
@@ -228,12 +244,20 @@ object CellConfigPanel {
 
             ImGui.spacing()
 
-            // ── Operator (ADD / MUL) ─────────────────────────────────
+            // ── Operator (ADD / MUL / SCALE) ──────────────────────────
         UITheme.body("Operator")
-        val opIdx = ImInt(if (existing.operator == ModulationOperator.ADD) 0 else 1)
+        val opIdx = ImInt(when (existing.operator) {
+            ModulationOperator.ADD -> 0
+            ModulationOperator.MUL -> 1
+            ModulationOperator.SCALE -> 2
+        })
         ImGui.pushItemWidth(150f)
         if (ImGui.combo("##op", opIdx, operatorLabels)) {
-            val newOp = if (opIdx.get() == 0) ModulationOperator.ADD else ModulationOperator.MUL
+            val newOp = when (opIdx.get()) {
+                0 -> ModulationOperator.ADD
+                1 -> ModulationOperator.MUL
+                else -> ModulationOperator.SCALE
+            }
             replaceModulator(state, param, existing.copy(operator = newOp))
         }
         ImGui.popItemWidth()

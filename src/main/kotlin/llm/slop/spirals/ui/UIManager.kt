@@ -17,6 +17,7 @@ import imgui.glfw.ImGuiImplGlfw
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.models.toDto
 import llm.slop.spirals.models.applyDto
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -25,6 +26,9 @@ class UIManager(private val windowHandle: Long) {
     private val logger = KotlinLogging.logger {}
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
+
+    // Tracks received MIDI CC events to process on the render thread
+    private val pendingMidiEvents = ConcurrentLinkedQueue<Pair<Int, Int>>()
 
     // Tracks the base size we last passed to scaleAllSizes so we can compute
     // the correct delta ratio on subsequent changes.
@@ -86,11 +90,55 @@ class UIManager(private val windowHandle: Long) {
 
         imguiGlfw.init(windowHandle, true)
         imguiGl3.init("#version 150")
+        
+        llm.slop.spirals.midi.MidiEngine.onMidiCcReceived = { channel, cc ->
+            pendingMidiEvents.offer(channel to cc)
+        }
+
         logger.info { "UIManager initialized" }
     }
 
     fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
+
+        // Poll received MIDI events from our callback-driven queue
+        while (true) {
+            val event = pendingMidiEvents.poll() ?: break
+            val (channel, cc) = event
+            val target = patchState.midiLearnTarget
+            if (target != null) {
+                val midiId = "midi_cc_${channel}_${cc}"
+                when (target) {
+                    is MidiLearnTarget.BaseValueSlider -> {
+                        target.param.mappedMidiId = midiId
+                        target.param.midiMapMin = target.min
+                        target.param.midiMapMax = target.max
+                    }
+                    is MidiLearnTarget.GridCell -> {
+                        // Clear existing modulators for this column/cell
+                        val cvId = target.cellId.cvSourceId
+                        val existingMods = target.param.modulators.filter {
+                            it.sourceId == cvId || (it.sourceId.startsWith("midi_cc_") && it.sourceId.endsWith("_$cvId"))
+                        }
+                        target.param.modulators.removeAll(existingMods)
+
+                        // Create new MIDI modulator linked to this column
+                        val exists = target.param.modulators.any { it.sourceId == "${midiId}_$cvId" }
+                        if (!exists) {
+                            target.param.modulators.add(
+                                llm.slop.spirals.parameters.CvModulator(
+                                    sourceId = "${midiId}_$cvId",
+                                    weight = 1.0f,
+                                    operator = llm.slop.spirals.parameters.ModulationOperator.ADD
+                                )
+                            )
+                        }
+                    }
+                }
+                patchState.midiLearnTarget = null
+            }
+        }
+
         // ── Between-frame work (atlas is unlocked here) ───────────────────────
         pendingFontSize?.let { newSize ->
             pendingFontSize = null
@@ -178,6 +226,22 @@ class UIManager(private val windowHandle: Long) {
                 if (ImGui.menuItem("Exit")) { logger.info { "Exit clicked" } }
                 ImGui.endMenu()
             }
+
+            // MIDI Map toggle button
+            val isMidiLearn = patchState.isMidiLearnMode
+            if (isMidiLearn) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
+            }
+            if (ImGui.menuItem("MIDI Map", "", isMidiLearn)) {
+                patchState.isMidiLearnMode = !isMidiLearn
+                if (!patchState.isMidiLearnMode) {
+                    patchState.midiLearnTarget = null
+                }
+            }
+            if (isMidiLearn) {
+                ImGui.popStyleColor()
+            }
+
             // Use menuItem (not beginMenu) so there's no dropdown — clicking
             // sets a flag that triggers openPopup after endMainMenuBar.
             if (ImGui.menuItem("Settings")) {
@@ -492,18 +556,31 @@ class UIManager(private val windowHandle: Long) {
 
         ImGui.invisibleButton("##slider", barW, barH)
 
-        // Process mouse dragging
-        val mousePressed = ImGui.isItemActive() || (ImGui.isItemHovered() && ImGui.isMouseDown(0))
+        val isTarget = patchState.midiLearnTarget?.let {
+            it is MidiLearnTarget.BaseValueSlider && it.param === param
+        } ?: false
+
+        if (patchState.isMidiLearnMode) {
+            if (ImGui.isItemClicked(0)) {
+                patchState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(label, param, min, max)
+            }
+        } else {
+            // Process mouse dragging
+            val mousePressed = ImGui.isItemActive() || (ImGui.isItemHovered() && ImGui.isMouseDown(0))
+            val valueRange = max - min
+            val displayRange = displayMax - displayMin
+
+            if (mousePressed) {
+                val io = ImGui.getIO()
+                val pct = ((io.mousePos.x - barStartX) / barW).coerceIn(0f, 1f)
+                val nextDisplayVal = displayMin + pct * displayRange
+                val nextInternalVal = min + if (displayRange > 0f) ((nextDisplayVal - displayMin) / displayRange) * valueRange else 0f
+                param.set(nextInternalVal)
+            }
+        }
+
         val valueRange = max - min
         val displayRange = displayMax - displayMin
-
-        if (mousePressed) {
-            val io = ImGui.getIO()
-            val pct = ((io.mousePos.x - barStartX) / barW).coerceIn(0f, 1f)
-            val nextDisplayVal = displayMin + pct * displayRange
-            val nextInternalVal = min + if (displayRange > 0f) ((nextDisplayVal - displayMin) / displayRange) * valueRange else 0f
-            param.set(nextInternalVal)
-        }
 
         // Draw the flat bar visual using DrawList
         val dl = ImGui.getWindowDrawList()
@@ -541,8 +618,34 @@ class UIManager(private val windowHandle: Long) {
             }
         }
 
+        // Draw highlight if it's the active learn target
+        if (isTarget) {
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1.0f) // bright cyan
+            dl.addRect(
+                barStartX - 2f, barScreenY - 2f,
+                barStartX + barW + 2f, barScreenY + barH + 2f,
+                borderCol,
+                4f,
+                15,
+                2.0f
+            )
+        }
+
+        // MIDI mapped indicator
+        val midiIndicator = param.mappedMidiId?.let { id ->
+            if (id.startsWith("midi_cc_")) {
+                val parts = id.substring("midi_cc_".length).split('_')
+                if (parts.size >= 2) {
+                    val ch = parts[0].toIntOrNull() ?: 0
+                    val cc = parts[1].toIntOrNull() ?: 0
+                    if (ch == 0) "[CC $cc]" else "[Ch ${ch + 1} CC $cc]"
+                } else null
+            } else null
+        }
+
         // Value text overlay
-        val valStr = formatValue(currentDisplayVal)
+        val baseValStr = formatValue(currentDisplayVal)
+        val valStr = if (midiIndicator != null) "$midiIndicator $baseValStr" else baseValStr
         val textW = ImGui.calcTextSize(valStr).x
         val valTextH = ImGui.calcTextSize(valStr).y
         val valTextX = barStartX + barW - textW - 5f

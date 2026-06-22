@@ -83,6 +83,14 @@ object CVRegistry {
      * Retrieves the current value of the specified CV signal.
      */
     fun get(id: String): Float {
+        if (id.startsWith("midi_cc_")) {
+            val parts = id.substring("midi_cc_".length).split('_')
+            if (parts.size >= 2) {
+                val channel = parts[0].toIntOrNull() ?: 0
+                val cc = parts[1].toIntOrNull() ?: 0
+                return llm.slop.spirals.midi.MidiEngine.getCcValue(channel, cc)
+            }
+        }
         return sources[id]?.value ?: 0f
     }
 

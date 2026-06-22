@@ -176,6 +176,7 @@ fun main() {
     // Cleanup
     logger.info { "Shutting down..." }
     audioEngine.stop()
+    llm.slop.spirals.midi.MidiEngine.close()
 
     // Dispose rendering resources
     renderer.dispose()

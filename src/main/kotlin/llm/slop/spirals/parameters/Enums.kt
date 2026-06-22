@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class ModulationOperator {
-    ADD, MUL
+    ADD, MUL, SCALE
 }
 
 @Serializable

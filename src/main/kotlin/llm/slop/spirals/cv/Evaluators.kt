@@ -61,14 +61,20 @@ fun getCombinedModulatorValue(mods: List<CvModulator>): Float {
     var first = true
     for (mod in mods) {
         if (mod.bypassed) continue
-        val cv = evaluateModulator(mod) * mod.weight
+        val cv = evaluateModulator(mod)
+        val modAmount = cv * mod.weight
         if (first) {
-            result = cv
+            result = when (mod.operator) {
+                llm.slop.spirals.parameters.ModulationOperator.ADD -> modAmount
+                llm.slop.spirals.parameters.ModulationOperator.MUL -> modAmount
+                llm.slop.spirals.parameters.ModulationOperator.SCALE -> 1.0f - mod.weight + modAmount
+            }
             first = false
         } else {
             result = when (mod.operator) {
-                llm.slop.spirals.parameters.ModulationOperator.ADD -> result + cv
-                llm.slop.spirals.parameters.ModulationOperator.MUL -> result * (1.0f + cv)
+                llm.slop.spirals.parameters.ModulationOperator.ADD -> result + modAmount
+                llm.slop.spirals.parameters.ModulationOperator.MUL -> result * (1.0f + modAmount)
+                llm.slop.spirals.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.weight + modAmount)
             }
         }
     }
