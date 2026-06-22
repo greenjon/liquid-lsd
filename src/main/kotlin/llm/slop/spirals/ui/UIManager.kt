@@ -15,6 +15,8 @@ import org.lwjgl.opengl.GL33.*
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import llm.slop.spirals.parameters.ModulatableParameter
+import llm.slop.spirals.models.toDto
+import llm.slop.spirals.models.applyDto
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -298,17 +300,38 @@ class UIManager(private val windowHandle: Long) {
         ImGui.setCursorPosY(nextY)
         ImGui.spacing()
 
-        val subW = (availW - 8f) * 0.5f
+        val btnW = 40f
+        val subW = (availW - btnW - 8f) * 0.5f
         val subH = subW * (9f / 16f)
 
-        ImGui.columns(2, "subMonitors", false)
-        ImGui.setColumnWidth(0, availW * 0.5f)
+        ImGui.columns(3, "subMonitors", false)
+        ImGui.setColumnWidth(0, (availW - btnW) * 0.5f)
+        ImGui.setColumnWidth(1, btnW)
+        ImGui.setColumnWidth(2, (availW - btnW) * 0.5f)
+
+        // Column 0: Deck A Header + Preview
         drawDeckHeader("Deck A", mixer.deckA, true)
         ImGui.image(mixer.deckA.getCurrentHistoryFBO().texture, subW, subH, 0f, 1f, 1f, 0f)
         ImGui.nextColumn()
+
+        // Column 1: Copy Buttons (above the previews, centered horizontally)
+        ImGui.setCursorPosY(ImGui.getCursorPosY() + 5f)
+        if (ImGui.button("◀##copyToA", btnW - 4f, 25f)) {
+            val dto = mixer.deckB.toDto("Deck B")
+            mixer.deckA.applyDto(dto)
+        }
+        ImGui.spacing()
+        if (ImGui.button("▶##copyToB", btnW - 4f, 25f)) {
+            val dto = mixer.deckA.toDto("Deck A")
+            mixer.deckB.applyDto(dto)
+        }
+        ImGui.nextColumn()
+
+        // Column 2: Deck B Header + Preview
         drawDeckHeader("Deck B", mixer.deckB, false)
         ImGui.image(mixer.deckB.getCurrentHistoryFBO().texture, subW, subH, 0f, 1f, 1f, 0f)
         ImGui.nextColumn()
+
         ImGui.columns(1)
         ImGui.spacing()
 

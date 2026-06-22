@@ -3,6 +3,7 @@ package llm.slop.spirals.ui
 import imgui.ImDrawList
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
+import imgui.flag.ImGuiKey
 import llm.slop.spirals.cv.CVRegistry
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.rendering.Deck
@@ -47,6 +48,8 @@ object PatchGridPanel {
         gridStartX = ImGui.getCursorScreenPosX()
         val extraColsW = 2 * (CELL + CELL_PAD)
         val labelColW = (avail - CV_COLUMNS.size * (CELL + CELL_PAD) - extraColsW).coerceAtLeast(120f)
+
+        handleKeyboardShortcuts(state, mixer)
 
         drawColumnHeaders(labelColW, state, mixer)
         ImGui.separator()
@@ -400,6 +403,33 @@ object PatchGridPanel {
 
         ImGui.popID()
         ImGui.setCursorPos(rowX, rowY + CELL)
+    }
+
+    private fun handleKeyboardShortcuts(state: PatchGridState, mixer: Mixer) {
+        val io = ImGui.getIO()
+        val ctrl = io.keyCtrl
+        if (ctrl) {
+            val cKey = ImGui.getKeyIndex(ImGuiKey.C)
+            val vKey = ImGui.getKeyIndex(ImGuiKey.V)
+
+            if (ImGui.isKeyPressed(cKey)) {
+                val cell = state.selectedCell
+                val param = state.selectedParam
+                if (cell != null && param != null && cell.cvSourceId != "base" && cell.cvSourceId != "final") {
+                    val activeMods = param.modulators.filter { it.sourceId == cell.cvSourceId }
+                    ClipboardManager.cellClipboard = CellClipboardData(cell.paramKey, cell.cvSourceId, activeMods.map { it.toDto() })
+                }
+            }
+            if (ImGui.isKeyPressed(vKey)) {
+                val cell = state.selectedCell
+                val param = state.selectedParam
+                if (cell != null && param != null && cell.cvSourceId != "base" && cell.cvSourceId != "final") {
+                    ClipboardManager.cellClipboard?.let { clip ->
+                        ClipboardManager.applyCellClipboard(param, cell.cvSourceId, clip)
+                    }
+                }
+            }
+        }
     }
 }
 
