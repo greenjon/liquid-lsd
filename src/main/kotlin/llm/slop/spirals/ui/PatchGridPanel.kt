@@ -90,7 +90,7 @@ object PatchGridPanel {
 
         // Draw Randomize All button in the top-left empty space of the column headers
         ImGui.setCursorScreenPos(startX, startY + (maxH + 5f - 24f) * 0.5f)
-        if (ImGui.button("🎲 Randomize All", labelColW - CELL_PAD, 24f)) {
+        if (ImGui.button("Randomize All", labelColW - CELL_PAD, 24f)) {
             mixer.deckA.randomizeModulators()
             mixer.deckB.randomizeModulators()
             listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->

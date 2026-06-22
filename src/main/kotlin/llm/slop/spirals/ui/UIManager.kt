@@ -227,7 +227,7 @@ class UIManager(private val windowHandle: Long) {
         ImGui.popItemWidth()
 
         ImGui.sameLine()
-        if (ImGui.button("💾##save_$label")) {
+        if (ImGui.button("Save##save_$label")) {
             ImGui.openPopup("save_deck_preset_popup_$label")
         }
 
@@ -316,12 +316,12 @@ class UIManager(private val windowHandle: Long) {
 
         // Column 1: Copy Buttons (above the previews, centered horizontally)
         ImGui.setCursorPosY(ImGui.getCursorPosY() + 5f)
-        if (ImGui.button("◀##copyToA", btnW - 4f, 25f)) {
+        if (ImGui.button("<##copyToA", btnW - 4f, 25f)) {
             val dto = mixer.deckB.toDto("Deck B")
             mixer.deckA.applyDto(dto)
         }
         ImGui.spacing()
-        if (ImGui.button("▶##copyToB", btnW - 4f, 25f)) {
+        if (ImGui.button(">##copyToB", btnW - 4f, 25f)) {
             val dto = mixer.deckA.toDto("Deck A")
             mixer.deckB.applyDto(dto)
         }
@@ -405,7 +405,7 @@ class UIManager(private val windowHandle: Long) {
         slider("FB Blur",   deck.fbBlur,    0f, 0.2f)
 
         ImGui.spacing()
-        if (ImGui.button("🎲 Randomize Modulators", ImGui.getContentRegionAvailX(), 30f)) {
+        if (ImGui.button("Randomize Modulators", ImGui.getContentRegionAvailX(), 30f)) {
             deck.randomizeModulators()
         }
 
