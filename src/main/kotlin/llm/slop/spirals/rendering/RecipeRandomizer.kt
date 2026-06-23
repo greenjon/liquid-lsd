@@ -20,7 +20,15 @@ object RecipeRandomizer {
 
         // 2. Auto hue sweep
         if (rset.autoHueSweep) {
-            mandala.parameters["Hue Sweep"]?.let { it.baseValue = mandala.recipe.petals / 9.0f; it.modulators.clear() }
+            val options = mandala.getSymmetricHueCycles(mandala.recipe.petals)
+            val randomIdx = random.nextInt(options.size)
+            val valForIdx = if (options.size > 1) randomIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
+            mandala.parameters["Hue Sweep"]?.let {
+                it.baseValue = valForIdx
+                it.baseMin = valForIdx
+                it.baseMax = valForIdx
+                it.modulators.clear()
+            }
         }
 
         // 3. Arm lengths

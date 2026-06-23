@@ -56,8 +56,17 @@ typealias MandalaRatio = Mandala4Arm
  * Implements VisualSource for desktop rendering.
  */
 class Mandala(
-    var recipe: MandalaRatio
+    recipe: MandalaRatio
 ) : VisualSource {
+
+    var recipe: MandalaRatio = recipe
+        set(value) {
+            val oldPetals = field.petals
+            field = value
+            if (oldPetals != value.petals) {
+                updateDefaultHueSweep()
+            }
+        }
 
     override val parameters = linkedMapOf(
         "L1" to ModulatableParameter(0.4f),
@@ -68,9 +77,38 @@ class Mandala(
         "Rotation" to ModulatableParameter(0.0f),
         "Thickness" to ModulatableParameter(0.5f),
         "Hue Offset" to ModulatableParameter(0.0f),
-        "Hue Sweep" to ModulatableParameter(1.0f / 9.0f),
+        "Hue Sweep" to ModulatableParameter(0.0f),
         "Depth" to ModulatableParameter(0.35f)
     )
+
+    init {
+        updateDefaultHueSweep()
+    }
+
+    private fun updateDefaultHueSweep() {
+        val options = getSymmetricHueCycles(recipe.petals)
+        val defaultIndex = options.indexOf(recipe.petals).coerceAtLeast(0)
+        val defaultVal = if (options.size > 1) defaultIndex.toFloat() / (options.size - 1).toFloat() else 0.0f
+        parameters["Hue Sweep"]?.let {
+            it.baseValue = defaultVal
+            it.baseMin = defaultVal
+            it.baseMax = defaultVal
+        }
+    }
+
+    fun getSymmetricHueCycles(petals: Int): List<Int> {
+        val p = petals.coerceAtLeast(1)
+        val options = mutableSetOf<Int>()
+        for (i in 1..p) {
+            if (p % i == 0) {
+                options.add(i)
+            }
+        }
+        for (i in 1..4) {
+            options.add(p * i)
+        }
+        return options.sorted()
+    }
 
     override val globalAlpha = ModulatableParameter(1.0f)
     override val globalScale = ModulatableParameter(1.0f)

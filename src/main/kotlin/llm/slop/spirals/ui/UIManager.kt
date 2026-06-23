@@ -387,7 +387,7 @@ class UIManager(private val windowHandle: Long) {
         ImGui.setNextWindowPos(leftW, menuBarH)
         ImGui.setNextWindowSize(middleW, contentH)
         if (ImGui.begin("Cell Config", noDecorate)) {
-            CellConfigPanel.draw(patchState)
+            CellConfigPanel.draw(patchState, mixer)
         }
         ImGui.end()
 

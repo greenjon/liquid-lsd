@@ -10,6 +10,9 @@ import llm.slop.spirals.parameters.CvModulator
 import llm.slop.spirals.parameters.LfoSpeedMode
 import llm.slop.spirals.parameters.ModulationOperator
 import llm.slop.spirals.parameters.Waveform
+import llm.slop.spirals.rendering.Mixer
+import llm.slop.spirals.rendering.Mandala
+import kotlin.math.roundToInt
 
 /**
  * Draws the Cell Config panel contents.
@@ -34,7 +37,7 @@ object CellConfigPanel {
     private var activeSliderLabel: String? = null
     private var clickMouseX = 0f
 
-    fun draw(state: PatchGridState) {
+    fun draw(state: PatchGridState, mixer: Mixer) {
         val cell = state.selectedCell
         val param = state.selectedParam
 
@@ -47,7 +50,14 @@ object CellConfigPanel {
 
         val cvId = cell.cvSourceId
         val paramKey = cell.paramKey
-        
+
+        val deck = when {
+            paramKey.startsWith("Deck A/") -> mixer.deckA
+            paramKey.startsWith("Deck B/") -> mixer.deckB
+            else -> null
+        }
+        val mandala = deck?.source as? Mandala
+
         val activeMods = param.modulators.filter {
             it.sourceId == cvId || (it.sourceId.startsWith("midi_cc_") && it.sourceId.endsWith("_$cvId"))
         }
@@ -65,48 +75,128 @@ object CellConfigPanel {
             ImGui.separator()
             ImGui.spacing()
 
-            drawCustomRangeSlider(
-                label = "Base Range",
-                currentValue = param.baseValue,
-                currentMin = param.baseMin,
-                currentMax = param.baseMax,
-                minLimit = 0f,
-                maxLimit = 1f,
-                isRandomizable = param.randomizeBase,
-                showControls = true,
-                formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = param.baseMin
-                        val rMax = param.baseMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((param.baseValue - 0.1f).coerceAtLeast(0f), (param.baseValue + 0.1f).coerceAtMost(1f))
+            val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
+
+            if (isHueSweep && mandala != null) {
+                val petals = mandala.recipe.petals
+                val options = mandala.getSymmetricHueCycles(petals)
+                val currentVal = param.baseValue
+                val currentIndex = if (options.size > 1) {
+                    (currentVal * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1)
+                } else {
+                    0
+                }
+
+                UITheme.caption("Symmetric Cycles (Symmetry-preserving factor/multiple of $petals petals):")
+
+                val labels = options.map { "$it cycles" }.toTypedArray()
+                val selectedOpt = ImInt(currentIndex)
+                ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
+                if (ImGui.combo("##hue_symmetry_combo", selectedOpt, labels)) {
+                    val nextIdx = selectedOpt.get()
+                    val newVal = if (options.size > 1) nextIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
+                    param.set(newVal)
+                }
+                ImGui.popItemWidth()
+
+                ImGui.spacing()
+                UITheme.caption("Choose the number of color repetitions along the curve.")
+                UITheme.caption("Because it is a factor or multiple of $petals, symmetry is preserved!")
+
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+
+                drawCustomRangeSlider(
+                    idPrefix = "hue_sweep_base",
+                    label = "Symmetry Random Range",
+                    currentValue = param.baseValue,
+                    currentMin = param.baseMin,
+                    currentMax = param.baseMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = param.randomizeBase,
+                    showControls = false,
+                    formatValue = {
+                        val idx = if (options.size > 1) (it * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+                        "${options[idx]} cycles"
+                    },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = param.baseMin
+                            val rMax = param.baseMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((param.baseValue - 0.1f).coerceAtLeast(0f), (param.baseValue + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            param.randomizeBase = true
+                            param.baseMin = nextMin
+                            param.baseMax = nextMax
                         } else {
-                            Pair(rMin, rMax)
+                            param.randomizeBase = false
+                            param.baseMin = param.baseValue
+                            param.baseMax = param.baseValue
                         }
-                        param.randomizeBase = true
+                    },
+                    onRandomizeNow = {
+                        param.randomizeBaseValue()
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
                         param.baseMin = nextMin
                         param.baseMax = nextMax
-                    } else {
-                        param.randomizeBase = false
-                        param.baseMin = param.baseValue
-                        param.baseMax = param.baseValue
+                        param.baseValue = param.baseValue.coerceIn(nextMin, nextMax)
+                    },
+                    onValueChanged = { newVal ->
+                        param.baseValue = newVal
+                        param.baseMin = newVal
+                        param.baseMax = newVal
                     }
-                },
-                onRandomizeNow = {
-                    param.randomizeBaseValue()
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    param.baseMin = nextMin
-                    param.baseMax = nextMax
-                    param.baseValue = param.baseValue.coerceIn(nextMin, nextMax)
-                },
-                onValueChanged = { newVal ->
-                    param.baseValue = newVal
-                    param.baseMin = newVal
-                    param.baseMax = newVal
-                }
-            )
+                )
+            } else {
+                drawCustomRangeSlider(
+                    label = "Base Range",
+                    currentValue = param.baseValue,
+                    currentMin = param.baseMin,
+                    currentMax = param.baseMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = param.randomizeBase,
+                    showControls = true,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = param.baseMin
+                            val rMax = param.baseMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((param.baseValue - 0.1f).coerceAtLeast(0f), (param.baseValue + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            param.randomizeBase = true
+                            param.baseMin = nextMin
+                            param.baseMax = nextMax
+                        } else {
+                            param.randomizeBase = false
+                            param.baseMin = param.baseValue
+                            param.baseMax = param.baseValue
+                        }
+                    },
+                    onRandomizeNow = {
+                        param.randomizeBaseValue()
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        param.baseMin = nextMin
+                        param.baseMax = nextMax
+                        param.baseValue = param.baseValue.coerceIn(nextMin, nextMax)
+                    },
+                    onValueChanged = { newVal ->
+                        param.baseValue = newVal
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+                )
+            }
 
             ImGui.spacing()
             val randomizeBaseActive = param.randomizeBase
@@ -121,7 +211,14 @@ object CellConfigPanel {
             }
 
             ImGui.spacing()
-            UITheme.caption("Static Base Value: %.3f".format(param.baseValue))
+            if (isHueSweep && mandala != null) {
+                val petals = mandala.recipe.petals
+                val options = mandala.getSymmetricHueCycles(petals)
+                val idx = if (options.size > 1) (param.baseValue * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+                UITheme.caption("Static Base Value: ${options[idx]} cycles")
+            } else {
+                UITheme.caption("Static Base Value: %.3f".format(param.baseValue))
+            }
             val barW = ImGui.getContentRegionAvailX()
             val dl = ImGui.getWindowDrawList()
             val cx = ImGui.getCursorScreenPosX()

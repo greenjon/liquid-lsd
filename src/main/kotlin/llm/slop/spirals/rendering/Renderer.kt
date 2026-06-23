@@ -3,6 +3,7 @@ package llm.slop.spirals.rendering
 import org.lwjgl.opengl.GL33.*
 import org.lwjgl.system.MemoryUtil
 import java.nio.FloatBuffer
+import kotlin.math.roundToInt
 
 /**
  * Main OpenGL renderer class.
@@ -95,7 +96,15 @@ class Renderer {
 
         // Set color-related uniforms
         val hueOffset = p["Hue Offset"]?.value ?: 0f
-        val hueSweep = ((p["Hue Sweep"]?.value ?: (1.0f / 9.0f)) * 9.0f).toInt().toFloat()
+        val petals = mandala.recipe.petals
+        val options = mandala.getSymmetricHueCycles(petals)
+        val rawSweep = p["Hue Sweep"]?.value ?: 0f
+        val index = if (options.size > 1) {
+            (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1)
+        } else {
+            0
+        }
+        val hueSweep = options[index].toFloat()
         val depth = p["Depth"]?.value ?: 0.35f
 
         mandalaShader.setUniform("uHueOffset", hueOffset)
