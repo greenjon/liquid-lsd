@@ -12,6 +12,7 @@ import llm.slop.spirals.parameters.ModulationOperator
 import llm.slop.spirals.parameters.Waveform
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.rendering.Mandala
+import llm.slop.spirals.rendering.MandalaLibrary
 import kotlin.math.roundToInt
 
 /**
@@ -154,22 +155,43 @@ object CellConfigPanel {
                     }
                 )
             } else {
+                val isLobes = paramKey.endsWith("/Geometry/Lobes")
+                val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
+
                 drawCustomRangeSlider(
                     label = "Base Range",
                     currentValue = param.baseValue,
                     currentMin = param.baseMin,
                     currentMax = param.baseMax,
-                    minLimit = 0f,
-                    maxLimit = 1f,
+                    minLimit = param.minClamp,
+                    maxLimit = param.maxClamp,
                     isRandomizable = param.randomizeBase,
                     showControls = true,
-                    formatValue = { "%.3f".format(it) },
+                    formatValue = {
+                        when {
+                            isLobes -> "${it.roundToInt()} lobes"
+                            isRecipeSelect -> {
+                                if (mandala != null) {
+                                    val currentLobe = mandala.parameters["Lobes"]?.value?.roundToInt() ?: mandala.recipe.petals
+                                    val closestLobe = MandalaLibrary.uniquePetals.minByOrNull { kotlin.math.abs(it - currentLobe) } ?: 3
+                                    val filtered = MandalaLibrary.recipesByPetals[closestLobe] ?: emptyList()
+                                    if (filtered.isNotEmpty()) {
+                                        val idx = (it * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
+                                        "[${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
+                                    } else "No recipes"
+                                } else "%.3f".format(it)
+                            }
+                            else -> "%.3f".format(it)
+                        }
+                    },
                     onRandomizableChanged = { checked ->
                         if (checked) {
                             val rMin = param.baseMin
                             val rMax = param.baseMax
+                            val rangeSpan = param.maxClamp - param.minClamp
+                            val offset = rangeSpan * 0.1f
                             val (nextMin, nextMax) = if (rMin == rMax) {
-                                Pair((param.baseValue - 0.1f).coerceAtLeast(0f), (param.baseValue + 0.1f).coerceAtMost(1f))
+                                Pair((param.baseValue - offset).coerceAtLeast(param.minClamp), (param.baseValue + offset).coerceAtMost(param.maxClamp))
                             } else {
                                 Pair(rMin, rMax)
                             }

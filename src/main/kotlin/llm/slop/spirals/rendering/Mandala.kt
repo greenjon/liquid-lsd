@@ -3,6 +3,7 @@ package llm.slop.spirals.rendering
 import llm.slop.spirals.parameters.ModulatableParameter
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * Data class representing the frequency ratios (recipe) for a 4-arm mandala.
@@ -78,10 +79,16 @@ class Mandala(
         "Thickness" to ModulatableParameter(0.5f),
         "Hue Offset" to ModulatableParameter(0.0f),
         "Hue Sweep" to ModulatableParameter(0.0f),
-        "Depth" to ModulatableParameter(0.35f)
+        "Depth" to ModulatableParameter(0.35f),
+        "Lobes" to ModulatableParameter(recipe.petals.toFloat(), minClamp = 3.0f, maxClamp = 26.0f),
+        "Recipe Select" to ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
     )
 
     init {
+        val initialList = MandalaLibrary.recipesByPetals[recipe.petals] ?: emptyList()
+        val initialIdx = initialList.indexOfFirst { it.a == recipe.a && it.b == recipe.b && it.c == recipe.c && it.d == recipe.d }.coerceAtLeast(0)
+        val initialPct = if (initialList.size > 1) initialIdx.toFloat() / (initialList.size - 1).toFloat() else 0.0f
+        parameters["Recipe Select"]?.set(initialPct)
         updateDefaultHueSweep()
     }
 
@@ -121,6 +128,21 @@ class Mandala(
     override fun update() {
         super.update()
 
+        // 1. Resolve closest valid lobes
+        val targetLobes = parameters["Lobes"]?.value?.roundToInt() ?: 3
+        val activeLobes = getClosestLobeCount(targetLobes)
+
+        // 2. Resolve recipe selection
+        val recipes = MandalaLibrary.recipesByPetals[activeLobes] ?: emptyList()
+        if (recipes.isNotEmpty()) {
+            val selectVal = parameters["Recipe Select"]?.value ?: 0.0f
+            val recipeIndex = (selectVal * (recipes.size - 1)).roundToInt().coerceIn(0, recipes.size - 1)
+            val targetRecipe = recipes[recipeIndex]
+            if (targetRecipe != recipe) {
+                recipe = targetRecipe
+            }
+        }
+
         // Calculate max possible reach of the arms to normalize distance in the shader
         val l1 = abs(parameters["L1"]?.value ?: 0f)
         val l2 = abs(parameters["L2"]?.value ?: 0f)
@@ -129,6 +151,12 @@ class Mandala(
 
         maxR = max(0.001f, l1 + l2 + l3 + l4)
         minR = 0f // Stable base for depth/brightness effect
+    }
+
+    private fun getClosestLobeCount(target: Int): Int {
+        val keys = MandalaLibrary.uniquePetals
+        if (keys.isEmpty()) return 3
+        return keys.minByOrNull { abs(it - target) } ?: 3
     }
 
     companion object {

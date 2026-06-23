@@ -16,7 +16,14 @@ object RecipeRandomizer {
 
     fun apply(rset: RandomSet, mandala: Mandala, random: kotlin.random.Random = kotlin.random.Random.Default) {
         // 1. Select a recipe
-        mandala.recipe = selectRecipe(rset, random)
+        val selected = selectRecipe(rset, random)
+        mandala.recipe = selected
+        
+        mandala.parameters["Lobes"]?.set(selected.petals.toFloat())
+        val list = MandalaLibrary.recipesByPetals[selected.petals] ?: emptyList()
+        val idx = list.indexOfFirst { it.a == selected.a && it.b == selected.b && it.c == selected.c && it.d == selected.d }.coerceAtLeast(0)
+        val pct = if (list.size > 1) idx.toFloat() / (list.size - 1).toFloat() else 0.0f
+        mandala.parameters["Recipe Select"]?.set(pct)
 
         // 2. Auto hue sweep
         if (rset.autoHueSweep) {

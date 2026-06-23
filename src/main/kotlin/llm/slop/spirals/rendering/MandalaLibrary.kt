@@ -301,4 +301,7 @@ object MandalaLibrary {
         MandalaRatio("17118896320133666996", 52, 2, 2, -23, 25, 3.0f, 2, 3, true, 4, 3.0f, 350.0f),
         MandalaRatio("5918343481301128875", 53, 1, 1, -25, 26, 3.0f, 2, 3, true, 4, 3.0f, 378.56f),
     )
+
+    val recipesByPetals: Map<Int, List<MandalaRatio>> = MandalaRatios.groupBy { it.petals }
+    val uniquePetals: List<Int> = recipesByPetals.keys.sorted()
 }

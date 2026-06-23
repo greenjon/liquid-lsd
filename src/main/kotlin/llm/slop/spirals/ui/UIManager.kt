@@ -8,8 +8,10 @@ import imgui.type.ImString
 import java.io.File
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mandala
+import llm.slop.spirals.rendering.MandalaLibrary
 import llm.slop.spirals.rendering.MandalaRatio
 import llm.slop.spirals.rendering.Mixer
+import kotlin.math.roundToInt
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL33.*
 import imgui.gl3.ImGuiImplGl3
@@ -52,18 +54,6 @@ class UIManager(private val windowHandle: Long) {
     private var currentGlobalPatchFile: File? = null
     private var currentMixer: Mixer? = null
 
-    private val recipes = listOf(
-        MandalaRatio("Recipe A", 26, 23, 14, 14),
-        MandalaRatio("Recipe B", 32, 23, 11, 11),
-        MandalaRatio("Recipe C", 28, 19, 16, 16),
-        MandalaRatio("Recipe D", 31, 19, 19, 10),
-        MandalaRatio("Recipe E", 35, 20, 11, 11),
-        MandalaRatio("Recipe F", 38, 23, 14, 5)
-    )
-    private val recipeNames = arrayOf(
-        "Recipe A (26,23,14,14)", "Recipe B (32,23,11,11)", "Recipe C (28,19,16,16)",
-        "Recipe D (31,19,19,10)", "Recipe E (35,20,11,11)", "Recipe F (38,23,14,5)"
-    )
 
     init {
         logger.info { "Initializing ImGui..." }
@@ -495,20 +485,49 @@ class UIManager(private val windowHandle: Long) {
     private fun drawDeckControls(label: String, deck: Deck) {
         ImGui.pushID(label)
 
-        // Recipe inline combo
+        // Recipe inline combo (Lobes and Recipe selection)
         val mandala = deck.source as? Mandala
         if (mandala != null) {
-            val idx = recipes.indexOfFirst {
-                it.a == mandala.recipe.a && it.b == mandala.recipe.b &&
-                it.c == mandala.recipe.c && it.d == mandala.recipe.d
-            }.coerceAtLeast(0)
-            val combo = ImInt(idx)
+            val currentLobe = mandala.parameters["Lobes"]?.baseValue?.roundToInt() ?: mandala.recipe.petals
+            val closestLobe = MandalaLibrary.uniquePetals.minByOrNull { kotlin.math.abs(it - currentLobe) } ?: 3
+            
+            val lobeIdx = MandalaLibrary.uniquePetals.indexOf(closestLobe).coerceAtLeast(0)
+            val lobeCombo = ImInt(lobeIdx)
+            
+            val lobeLabels = MandalaLibrary.uniquePetals.map { lobes ->
+                val count = MandalaLibrary.recipesByPetals[lobes]?.size ?: 0
+                "$lobes lobes ($count)"
+            }.toTypedArray()
+
+            UITheme.body("Lobes")
+            ImGui.sameLine(80f)
+            ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 5f)
+            if (ImGui.combo("##lobes", lobeCombo, lobeLabels)) {
+                val nextLobe = MandalaLibrary.uniquePetals[lobeCombo.get()]
+                mandala.parameters["Lobes"]?.set(nextLobe.toFloat())
+                // Reset recipe selection to first recipe when changing lobe count manually
+                mandala.parameters["Recipe Select"]?.set(0.0f)
+            }
+            ImGui.popItemWidth()
+
+            // Recipe selection dropdown
+            val filtered = MandalaLibrary.recipesByPetals[closestLobe] ?: emptyList()
+            val currentSelect = mandala.parameters["Recipe Select"]?.baseValue ?: 0.0f
+            val recipeIdx = (currentSelect * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
+            val recipeCombo = ImInt(recipeIdx)
+
+            val recipeNames = filtered.map { "[${it.a}, ${it.b}, ${it.c}, ${it.d}]" }.toTypedArray()
 
             UITheme.body("Recipe")
             ImGui.sameLine(80f)
             ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 5f)
-            if (ImGui.combo("##recipe", combo, recipeNames)) {
-                mandala.recipe = recipes[combo.get()]
+            if (ImGui.combo("##recipe", recipeCombo, recipeNames)) {
+                val nextSelect = if (filtered.size > 1) {
+                    recipeCombo.get().toFloat() / (filtered.size - 1).toFloat()
+                } else {
+                    0.0f
+                }
+                mandala.parameters["Recipe Select"]?.set(nextSelect)
             }
             ImGui.popItemWidth()
         }

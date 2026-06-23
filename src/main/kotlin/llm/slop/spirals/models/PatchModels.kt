@@ -197,6 +197,17 @@ fun Deck.applyDto(dto: DeckPatchDto) {
     for ((key, paramDto) in dto.parameters) {
         mandala.parameters[key]?.applyDto(paramDto)
     }
+
+    // Legacy patch fallback: sync parameter values to recipe if they weren't in the saved patch
+    if (!dto.parameters.containsKey("Lobes")) {
+        mandala.parameters["Lobes"]?.set(recipe.petals.toFloat())
+    }
+    if (!dto.parameters.containsKey("Recipe Select")) {
+        val list = MandalaLibrary.recipesByPetals[recipe.petals] ?: emptyList()
+        val idx = list.indexOfFirst { it.a == recipe.a && it.b == recipe.b && it.c == recipe.c && it.d == recipe.d }.coerceAtLeast(0)
+        val pct = if (list.size > 1) idx.toFloat() / (list.size - 1).toFloat() else 0.0f
+        mandala.parameters["Recipe Select"]?.set(pct)
+    }
     
     // Apply feedback parameters
     dto.feedbackParameters["fbDecay"]?.let { fbDecay.applyDto(it) }
