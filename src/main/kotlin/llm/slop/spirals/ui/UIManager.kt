@@ -180,9 +180,11 @@ class UIManager(private val windowHandle: Long) {
         drawLayout(mixer, displayWidth, displayHeight)
 
         // Settings modal — drawn outside any docked window so it floats freely.
-        SettingsPanel.draw(UITheme.baseSize, displayWidth, displayHeight) { newSize ->
+        SettingsPanel.draw(UITheme.baseSize, displayWidth, displayHeight, { newSize ->
             applyFontSize(newSize)
-        }
+        }, {
+            patchState.applyAutocollapseSetting()
+        })
 
         ImGui.render()
         imguiGl3.renderDrawData(ImGui.getDrawData())

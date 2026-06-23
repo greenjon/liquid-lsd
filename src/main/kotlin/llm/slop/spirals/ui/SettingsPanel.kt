@@ -25,7 +25,8 @@ object SettingsPanel {
     fun open() = ImGui.openPopup(POPUP_ID)
 
     fun draw(currentSize: Float, displayW: Float, displayH: Float,
-             onSizeChanged: (Float) -> Unit) {
+             onSizeChanged: (Float) -> Unit,
+             onAutocollapseChanged: () -> Unit) {
 
         // Centre the modal on the screen every time it appears.
         ImGui.setNextWindowPos(
@@ -163,6 +164,7 @@ object SettingsPanel {
             if (nextVal != UITheme.autocollapseEnabled) {
                 UITheme.autocollapseEnabled = nextVal
                 UITheme.saveSettings()
+                onAutocollapseChanged()
             }
         }
         ImGui.spacing()

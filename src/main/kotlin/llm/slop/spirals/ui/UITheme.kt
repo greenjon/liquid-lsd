@@ -47,7 +47,7 @@ object UITheme {
     var backgroundVideoEnabled: Boolean = false
 
     /** True if grid sections and subgroups should autocollapse when another is opened. */
-    var autocollapseEnabled: Boolean = false
+    var autocollapseEnabled: Boolean = true
 
     init {
         loadSettings()

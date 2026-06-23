@@ -30,10 +30,47 @@ class PatchGridState {
     var midiLearnTarget: MidiLearnTarget? = null
 
     /** Tracks which tree node groups are open (keyed by label). Default open. */
-    val groupOpen = mutableMapOf<String, Boolean>().withDefault { true }
+    val groupOpen = mutableMapOf<String, Boolean>().withDefault { !UITheme.autocollapseEnabled }
 
     /** Tracks which tree node groups need to be programmatically collapsed. */
     val groupNeedsCollapse = mutableMapOf<String, Boolean>().withDefault { false }
+
+    /** Tracks which tree node groups need to be programmatically expanded. */
+    val groupNeedsExpand = mutableMapOf<String, Boolean>().withDefault { false }
+
+    init {
+        applyAutocollapseSetting()
+    }
+
+    fun applyAutocollapseSetting() {
+        val openState = !UITheme.autocollapseEnabled
+        val groups = listOf("Mixer", "Deck A", "Deck B")
+        val subgroups = listOf("Geometry", "Color", "Background", "Feedback")
+
+        for (g in groups) {
+            groupOpen[g] = openState
+            if (openState) {
+                groupNeedsExpand[g] = true
+                groupNeedsCollapse[g] = false
+            } else {
+                groupNeedsCollapse[g] = true
+                groupNeedsExpand[g] = false
+            }
+        }
+        for (deck in listOf("Deck A", "Deck B")) {
+            for (sub in subgroups) {
+                val key = "$deck/$sub"
+                groupOpen[key] = openState
+                if (openState) {
+                    groupNeedsExpand[key] = true
+                    groupNeedsCollapse[key] = false
+                } else {
+                    groupNeedsCollapse[key] = true
+                    groupNeedsExpand[key] = false
+                }
+            }
+        }
+    }
 
     fun select(cellId: PatchCellId, param: ModulatableParameter) {
         selectedCell = cellId

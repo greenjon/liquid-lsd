@@ -176,6 +176,11 @@ object PatchGridPanel {
             ImGui.setNextItemOpen(false)
             state.groupNeedsCollapse[label] = false
         }
+        val needsExpand = state.groupNeedsExpand.getValue(label)
+        if (needsExpand) {
+            ImGui.setNextItemOpen(true)
+            state.groupNeedsExpand[label] = false
+        }
 
         if (ImGui.treeNodeEx(label, if (open) flags else ImGuiTreeNodeFlags.None)) {
             val wasClosed = !open
@@ -209,6 +214,11 @@ object PatchGridPanel {
         if (needsCollapse) {
             ImGui.setNextItemOpen(false)
             state.groupNeedsCollapse[key] = false
+        }
+        val needsExpand = state.groupNeedsExpand.getValue(key)
+        if (needsExpand) {
+            ImGui.setNextItemOpen(true)
+            state.groupNeedsExpand[key] = false
         }
 
         if (ImGui.treeNodeEx(label, if (open) flags else ImGuiTreeNodeFlags.None)) {
