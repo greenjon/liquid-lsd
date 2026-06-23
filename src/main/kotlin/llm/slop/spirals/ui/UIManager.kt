@@ -467,15 +467,21 @@ class UIManager(private val windowHandle: Long) {
         ImGui.spacing()
 
         ImGui.columns(2, "deckCtrls", true)
+        
+        ImGui.beginChild("DeckA_Child", 0f, 0f, false)
         UITheme.h3("Deck A")
         ImGui.separator()
         drawDeckControls("Deck A", mixer.deckA)
+        ImGui.endChild()
         ImGui.nextColumn()
         
+        ImGui.beginChild("DeckB_Child", 0f, 0f, false)
         UITheme.h3("Deck B")
         ImGui.separator()
         drawDeckControls("Deck B", mixer.deckB)
+        ImGui.endChild()
         ImGui.nextColumn()
+        
         ImGui.columns(1)
     }
 
