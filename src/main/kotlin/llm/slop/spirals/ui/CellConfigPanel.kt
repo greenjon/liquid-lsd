@@ -321,30 +321,23 @@ object CellConfigPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        if (activeMods.isEmpty()) {
+        val isVirtual = activeMods.isEmpty()
+        if (isVirtual && cvId == "midi") {
             activeHistory = null
             activeCellId = null
-            if (cvId == "midi") {
-                UITheme.caption("No MIDI mapping on this parameter.")
-                ImGui.spacing()
-                UITheme.caption("To map a controller:")
-                UITheme.caption("1. Enable [MIDI Map] in the main menu bar.")
-                UITheme.caption("2. Click this cell (which will highlight in cyan).")
-                UITheme.caption("3. Turn a knob or move a fader on your MIDI controller.")
-            } else {
-                // Empty cell: offer to create
-                UITheme.caption("No patch at this intersection.")
-                ImGui.spacing()
-                if (ImGui.button("+ Add Patch", ImGui.getContentRegionAvailX(), 35f)) {
-                    if (cvId in listOf("beatPhase", "lfo", "sampleAndHold")) {
-                        param.modulators.add(CvModulator(sourceId = cvId))
-                        param.modulators.add(CvModulator(sourceId = cvId, bypassed = true))
-                    } else {
-                        param.modulators.add(CvModulator(sourceId = cvId))
-                    }
-                }
-            }
+            UITheme.caption("No MIDI mapping on this parameter.")
+            ImGui.spacing()
+            UITheme.caption("To map a controller:")
+            UITheme.caption("1. Enable [MIDI Map] in the main menu bar.")
+            UITheme.caption("2. Click this cell (which will highlight in cyan).")
+            UITheme.caption("3. Turn a knob or move a fader on your MIDI controller.")
             return
+        }
+
+        val modsToDraw = if (isVirtual) {
+            listOf(CvModulator(sourceId = cvId, bypassed = true))
+        } else {
+            activeMods
         }
 
         // Initialize or update oscilloscope history
@@ -356,6 +349,9 @@ object CellConfigPanel {
         activeHistory?.add(combinedVal)
 
         // ── Delete ALL ───────────────────────────────────────────
+        if (isVirtual) {
+            ImGui.beginDisabled()
+        }
         ImGui.pushStyleColor(0, 0.8f, 0.2f, 0.2f, 1f)
         if (ImGui.button("Delete Patch", ImGui.getContentRegionAvailX(), 30f)) {
             val toRemove = activeMods.toList()
@@ -366,6 +362,9 @@ object CellConfigPanel {
             return
         }
         ImGui.popStyleColor()
+        if (isVirtual) {
+            ImGui.endDisabled()
+        }
 
         ImGui.spacing()
         ImGui.separator()
@@ -379,7 +378,7 @@ object CellConfigPanel {
         ImGui.spacing()
 
         // ── Modulators ───────────────────────────────────────────
-        for ((idx, existing) in activeMods.withIndex()) {
+        for ((idx, existing) in modsToDraw.withIndex()) {
             ImGui.pushID(existing.id)
             if (activeMods.size > 1) {
                 UITheme.h3("Modulator ${idx + 1}")
@@ -853,8 +852,23 @@ object CellConfigPanel {
     }
 
     private fun replaceModulator(state: PatchGridState, param: llm.slop.spirals.parameters.ModulatableParameter, newMod: CvModulator) {
-        val idx = param.modulators.indexOfFirst { it.id == newMod.id }
-        if (idx >= 0) param.modulators[idx] = newMod
+        var idx = param.modulators.indexOfFirst { it.id == newMod.id }
+        if (idx < 0) {
+            idx = param.modulators.indexOfFirst { it.sourceId == newMod.sourceId && !newMod.sourceId.startsWith("midi_cc_") }
+        }
+
+        // Auto-activate: if weight is adjusted to a non-zero value, activate/unbypass the modulator
+        val finalizedMod = if (newMod.bypassed && newMod.weight != 0.0f) {
+            newMod.copy(bypassed = false)
+        } else {
+            newMod
+        }
+
+        if (idx >= 0) {
+            param.modulators[idx] = finalizedMod
+        } else {
+            param.modulators.add(finalizedMod)
+        }
     }
 
     private fun drawOscilloscope() {
