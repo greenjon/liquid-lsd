@@ -25,7 +25,7 @@ object PatchGridPanel {
 
     private fun getCvColumns(): List<String> {
         return if (UITheme.audioEngineEnabled) {
-            listOf("amp", "bass", "mid", "high", "bassFlux", "onset", "accent", "beatPhase", "lfo", "sampleAndHold")
+            listOf("lfo", "sampleAndHold", "amp", "bass", "mid", "high", "bassFlux", "onset", "accent", "beatPhase")
         } else {
             listOf("lfo", "sampleAndHold")
         }
@@ -33,7 +33,7 @@ object PatchGridPanel {
 
     private fun getCvLabels(): List<String> {
         return if (UITheme.audioEngineEnabled) {
-            listOf("AMP", "BASS", "MID", "HIGH", "FLUX", "ONSET", "ACCENT", "BEAT", "LFO", "RAND")
+            listOf("LFO", "RAND", "AMP", "BASS", "MID", "HIGH", "FLUX", "ONSET", "ACCENT", "BEAT")
         } else {
             listOf("LFO", "RAND")
         }
