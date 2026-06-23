@@ -32,6 +32,9 @@ class PatchGridState {
     /** Tracks which tree node groups are open (keyed by label). Default open. */
     val groupOpen = mutableMapOf<String, Boolean>().withDefault { true }
 
+    /** Tracks which tree node groups need to be programmatically collapsed. */
+    val groupNeedsCollapse = mutableMapOf<String, Boolean>().withDefault { false }
+
     fun select(cellId: PatchCellId, param: ModulatableParameter) {
         selectedCell = cellId
         selectedParam = param

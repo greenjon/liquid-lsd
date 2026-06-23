@@ -150,6 +150,29 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
+        // ─────────────────────────────────────────────────────────────────────
+        // Interface Settings
+        // ─────────────────────────────────────────────────────────────────────
+        UITheme.h2("Interface")
+        ImGui.separator()
+        ImGui.spacing()
+
+        val autocollapseEnabled = ImBoolean(UITheme.autocollapseEnabled)
+        if (ImGui.checkbox("Autocollapse Grid Sections", autocollapseEnabled)) {
+            val nextVal = autocollapseEnabled.get()
+            if (nextVal != UITheme.autocollapseEnabled) {
+                UITheme.autocollapseEnabled = nextVal
+                UITheme.saveSettings()
+            }
+        }
+        ImGui.spacing()
+        UITheme.caption("When enabled, opening a grid section or subgroup will")
+        UITheme.caption("automatically collapse other sections at that same level.")
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
         // Centred Close button
         val closeW = 110f
         ImGui.setCursorPosX((MODAL_W - 32f - closeW) * 0.5f + ImGui.getWindowContentRegionMinX())

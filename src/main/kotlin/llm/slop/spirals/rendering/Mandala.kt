@@ -126,7 +126,6 @@ class Mandala(
     }
 
     override val globalAlpha = ModulatableParameter(1.0f)
-    override val globalScale = ModulatableParameter(1.0f)
 
     var minR: Float = 0f
         private set

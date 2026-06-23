@@ -66,6 +66,7 @@ object PatchGridPanel {
         drawGroup("Mixer", state) {
             drawParamRow("crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer)
             drawParamRow("master α",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer)
+            drawParamRow("bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer)
         }
 
         drawDeckGroup("Deck A", mixer.deckA, state, labelColW, mixer)
@@ -169,7 +170,18 @@ object PatchGridPanel {
     private inline fun drawGroup(label: String, state: PatchGridState, block: () -> Unit) {
         val open = state.groupOpen.getValue(label)
         val flags = ImGuiTreeNodeFlags.DefaultOpen or ImGuiTreeNodeFlags.SpanFullWidth
+
+        val needsCollapse = state.groupNeedsCollapse.getValue(label)
+        if (needsCollapse) {
+            ImGui.setNextItemOpen(false)
+            state.groupNeedsCollapse[label] = false
+        }
+
         if (ImGui.treeNodeEx(label, if (open) flags else ImGuiTreeNodeFlags.None)) {
+            val wasClosed = !open
+            if (wasClosed && UITheme.autocollapseEnabled) {
+                collapseSiblingGroups(label, state)
+            }
             state.groupOpen[label] = true
             block()
             ImGui.treePop()
@@ -178,10 +190,32 @@ object PatchGridPanel {
         }
     }
 
-    private inline fun drawSubGroup(label: String, state: PatchGridState, block: () -> Unit) {
-        val key = "sub_$label"
+    private fun collapseSiblingGroups(activeLabel: String, state: PatchGridState) {
+        val groups = listOf("Mixer", "Deck A", "Deck B")
+        for (g in groups) {
+            if (g != activeLabel) {
+                state.groupOpen[g] = false
+                state.groupNeedsCollapse[g] = true
+            }
+        }
+    }
+
+    private inline fun drawSubGroup(parentLabel: String, label: String, state: PatchGridState, block: () -> Unit) {
+        val key = "$parentLabel/$label"
+        val open = state.groupOpen.getValue(key)
         val flags = ImGuiTreeNodeFlags.DefaultOpen or ImGuiTreeNodeFlags.SpanFullWidth
-        if (ImGui.treeNodeEx(label, flags)) {
+
+        val needsCollapse = state.groupNeedsCollapse.getValue(key)
+        if (needsCollapse) {
+            ImGui.setNextItemOpen(false)
+            state.groupNeedsCollapse[key] = false
+        }
+
+        if (ImGui.treeNodeEx(label, if (open) flags else ImGuiTreeNodeFlags.None)) {
+            val wasClosed = !open
+            if (wasClosed && UITheme.autocollapseEnabled) {
+                collapseSiblingSubgroups(parentLabel, key, state)
+            }
             state.groupOpen[key] = true
             block()
             ImGui.treePop()
@@ -190,12 +224,23 @@ object PatchGridPanel {
         }
     }
 
+    private fun collapseSiblingSubgroups(parentLabel: String, activeKey: String, state: PatchGridState) {
+        val subgroups = listOf("Geometry", "Color", "Background", "Feedback")
+        for (sub in subgroups) {
+            val k = "$parentLabel/$sub"
+            if (k != activeKey) {
+                state.groupOpen[k] = false
+                state.groupNeedsCollapse[k] = true
+            }
+        }
+    }
+
     private fun drawDeckGroup(deckLabel: String, deck: Deck, state: PatchGridState, labelColW: Float, mixer: Mixer) {
         drawGroup(deckLabel, state) {
             val mandala = deck.source as? Mandala
 
             if (mandala != null) {
-                drawSubGroup("Geometry", state) {
+                drawSubGroup(deckLabel, "Geometry", state) {
                     drawParamRow("Lobe Count", "$deckLabel/Geometry/Lobes",    mandala.parameters["Lobes"]!!,         state, labelColW, mixer)
                     drawParamRow("Recipe ID",  "$deckLabel/Geometry/Recipe",   mandala.parameters["Recipe Select"]!!,  state, labelColW, mixer)
                     drawParamRow("L1",       "$deckLabel/Geometry/L1",       mandala.parameters["L1"]!!,       state, labelColW, mixer)
@@ -205,13 +250,14 @@ object PatchGridPanel {
                     drawParamRow("Scale",    "$deckLabel/Geometry/Scale",    mandala.parameters["Scale"]!!,    state, labelColW, mixer)
                     drawParamRow("Rotation", "$deckLabel/Geometry/Rotation", mandala.parameters["Rotation"]!!, state, labelColW, mixer)
                 }
-                drawSubGroup("Color", state) {
+                drawSubGroup(deckLabel, "Color", state) {
                     drawParamRow("Thickness",  "$deckLabel/Color/Thickness",  mandala.parameters["Thickness"]!!,  state, labelColW, mixer)
                     drawParamRow("Hue Offset", "$deckLabel/Color/HueOffset",  mandala.parameters["Hue Offset"]!!, state, labelColW, mixer)
                     drawParamRow("Hue Sweep",  "$deckLabel/Color/HueSweep",   mandala.parameters["Hue Sweep"]!!,  state, labelColW, mixer)
                     drawParamRow("Depth",      "$deckLabel/Color/Depth",      mandala.parameters["Depth"]!!,      state, labelColW, mixer)
+                    drawParamRow("Gain",       "$deckLabel/Color/Gain",       mandala.globalAlpha,                 state, labelColW, mixer)
                 }
-                drawSubGroup("Background", state) {
+                drawSubGroup(deckLabel, "Background", state) {
                     drawParamRow("Bg Style",    "$deckLabel/Background/Style",    mandala.parameters["Bg Style"]!!,    state, labelColW, mixer)
                     drawParamRow("Bg Feedback", "$deckLabel/Background/Feedback", mandala.parameters["Bg Feedback"]!!, state, labelColW, mixer)
                     drawParamRow("Bg Hue",      "$deckLabel/Background/Hue",      mandala.parameters["Bg Hue"]!!,      state, labelColW, mixer)
@@ -221,17 +267,17 @@ object PatchGridPanel {
                     drawParamRow("Bg Speed",    "$deckLabel/Background/Speed",    mandala.parameters["Bg Speed"]!!,    state, labelColW, mixer)
                     drawParamRow("Bg Zoom",     "$deckLabel/Background/Zoom",     mandala.parameters["Bg Zoom"]!!,     state, labelColW, mixer)
                 }
-                drawParamRow("Gain",  "$deckLabel/Gain",  mandala.globalAlpha, state, labelColW, mixer)
-                drawParamRow("Scale", "$deckLabel/GScale", mandala.globalScale, state, labelColW, mixer)
             }
 
-            drawSubGroup("Feedback", state) {
+            drawSubGroup(deckLabel, "Feedback", state) {
                 drawParamRow("Feedback",    "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer)
                 drawParamRow("FB Gain",     "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer)
                 drawParamRow("FB Zoom",     "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer)
                 drawParamRow("FB Rotate",   "$deckLabel/FB/Rotate",   deck.fbRotate,   state, labelColW, mixer)
                 drawParamRow("FB Hue Shift","$deckLabel/FB/HueShift", deck.fbHueShift, state, labelColW, mixer)
                 drawParamRow("FB Blur",     "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer)
+                drawParamRow("FB Chroma",   "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer)
+                drawParamRow("FB Mode",     "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer)
             }
         }
     }
@@ -572,13 +618,14 @@ fun Deck.randomizeModulators() {
     val allParams = mutableListOf<llm.slop.spirals.parameters.ModulatableParameter>()
     allParams.addAll(this.source.parameters.values)
     allParams.add(this.source.globalAlpha)
-    allParams.add(this.source.globalScale)
     allParams.add(this.fbDecay)
     allParams.add(this.fbGain)
     allParams.add(this.fbZoom)
     allParams.add(this.fbRotate)
     allParams.add(this.fbHueShift)
     allParams.add(this.fbBlur)
+    allParams.add(this.fbChroma)
+    allParams.add(this.fbMode)
 
     for (param in allParams) {
         val randomized = param.modulators.map { it.randomizeActiveValues() }

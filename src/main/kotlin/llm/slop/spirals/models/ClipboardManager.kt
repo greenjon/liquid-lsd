@@ -53,6 +53,7 @@ object ClipboardManager {
                     when (parts[1]) {
                         "crossfade" -> mixer.crossfade
                         "masterAlpha" -> mixer.masterAlpha
+                        "bloom" -> mixer.bloom
                         else -> null
                     }
                 } else null
@@ -65,10 +66,11 @@ object ClipboardManager {
                             if (parts.size > 2) deck.source.parameters[parts[2]] else null
                         }
                         "Color" -> {
-                            if (parts.size > 2) deck.source.parameters[parts[2]] else null
+                            if (parts.size > 2) {
+                                if (parts[2] == "Gain") deck.source.globalAlpha
+                                else deck.source.parameters[parts[2]]
+                            } else null
                         }
-                        "Gain" -> deck.source.globalAlpha
-                        "GScale" -> deck.source.globalScale
                         "FB" -> {
                             if (parts.size > 2) {
                                 when (parts[2]) {
@@ -78,6 +80,8 @@ object ClipboardManager {
                                     "Rotate" -> deck.fbRotate
                                     "HueShift" -> deck.fbHueShift
                                     "Blur" -> deck.fbBlur
+                                    "Chroma" -> deck.fbChroma
+                                    "Mode" -> deck.fbMode
                                     else -> null
                                 }
                             } else null

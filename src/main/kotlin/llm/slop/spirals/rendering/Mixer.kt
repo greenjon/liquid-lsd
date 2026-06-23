@@ -19,6 +19,7 @@ class Mixer(
     val crossfade = ModulatableParameter(0.0f) // 0.0 = Deck A, 1.0 = Deck B
     val mode = ModulatableParameter(4.0f) // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
     val masterAlpha = ModulatableParameter(1.0f) // Master output gain
+    val bloom = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
 
     /**
      * Evaluates mixer parameters.
@@ -27,6 +28,7 @@ class Mixer(
         crossfade.evaluate()
         mode.evaluate()
         masterAlpha.evaluate()
+        bloom.evaluate()
     }
 
     /**

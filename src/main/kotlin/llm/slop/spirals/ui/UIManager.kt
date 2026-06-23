@@ -491,6 +491,7 @@ class UIManager(private val windowHandle: Long) {
 
         // Alpha (renamed from "Master Alpha")
         drawFlatSlider("Alpha", mixer.masterAlpha, 0f, 1f, 100f)
+        drawFlatSlider("Bloom", mixer.bloom, 0f, 1f, 100f)
         ImGui.spacing()
 
         ImGui.columns(2, "deckCtrls", true)
@@ -574,6 +575,8 @@ class UIManager(private val windowHandle: Long) {
         slider("FB Rotate", deck.fbRotate, -0.1f, 0.1f)
         slider("FB Hue",    deck.fbHueShift,-0.1f, 0.1f)
         slider("FB Blur",   deck.fbBlur,    0f, 0.2f)
+        slider("FB Chroma", deck.fbChroma,  0f, 1f)
+        slider("FB Mode",   deck.fbMode,    0f, 1f)
 
         if (mandala != null) {
             ImGui.spacing()

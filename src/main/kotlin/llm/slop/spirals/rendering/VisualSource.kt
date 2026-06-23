@@ -16,7 +16,6 @@ interface VisualSource {
      * Top-level parameters for mixing and composition.
      */
     val globalAlpha: ModulatableParameter
-    val globalScale: ModulatableParameter
 
     /**
      * Trigger evaluation of all parameters.
@@ -25,6 +24,5 @@ interface VisualSource {
     fun update() {
         parameters.values.forEach { it.evaluate() }
         globalAlpha.evaluate()
-        globalScale.evaluate()
     }
 }

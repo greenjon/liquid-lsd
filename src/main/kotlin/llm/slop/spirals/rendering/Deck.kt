@@ -28,6 +28,8 @@ class Deck(
     val fbRotate = ModulatableParameter(0.0f, minClamp = -3.14f, maxClamp = 3.14f) // in radians
     val fbHueShift = ModulatableParameter(0.0f, minClamp = -1f, maxClamp = 1f) // range 0..1
     val fbBlur = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f) // range 0..1
+    val fbChroma = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+    val fbMode = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f) // 0 = Max, 1 = Difference
 
     init {
         // Clear all FBOs at startup to prevent reading uninitialized GPU memory

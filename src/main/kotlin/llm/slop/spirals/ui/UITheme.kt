@@ -46,6 +46,9 @@ object UITheme {
     /** True if the background video should be rendered and UI panels are semi-transparent. */
     var backgroundVideoEnabled: Boolean = false
 
+    /** True if grid sections and subgroups should autocollapse when another is opened. */
+    var autocollapseEnabled: Boolean = false
+
     init {
         loadSettings()
     }
@@ -70,8 +73,13 @@ object UITheme {
                     backgroundVideoEnabled = savedBgVideo
                     logger.info { "Loaded backgroundVideoEnabled from settings file: $backgroundVideoEnabled" }
                 }
+                val savedAutocollapse = props.getProperty("autocollapseEnabled")?.toBooleanStrictOrNull()
+                if (savedAutocollapse != null) {
+                    autocollapseEnabled = savedAutocollapse
+                    logger.info { "Loaded autocollapseEnabled from settings file: $autocollapseEnabled" }
+                }
             } else {
-                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled" }
+                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, autocollapseEnabled: $autocollapseEnabled" }
             }
         } catch (e: Exception) {
             logger.warn(e) { "Failed to load settings, using defaults" }
@@ -84,8 +92,9 @@ object UITheme {
             props.setProperty("baseSize", baseSize.toString())
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
+            props.setProperty("autocollapseEnabled", autocollapseEnabled.toString())
             settingsFile.outputStream().use { props.store(it, "Spirals Settings") }
-            logger.info { "Saved baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled to settings file" }
+            logger.info { "Saved baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, autocollapseEnabled: $autocollapseEnabled to settings file" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save settings" }
         }

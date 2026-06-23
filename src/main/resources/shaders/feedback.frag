@@ -11,6 +11,8 @@ uniform float uZoom;
 uniform float uRotate;
 uniform float uHueShift;
 uniform float uBlur;
+uniform float uChroma;
+uniform float uFeedbackMode;
 
 // RGB to HSV helper
 vec3 rgb2hsv(vec3 c) {
@@ -30,6 +32,21 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+// Helper to sample history with optional box blur
+vec4 sampleHistory(vec2 uv) {
+    if (uBlur > 0.0) {
+        float offset = uBlur * 0.005;
+        vec4 color = texture(uTextureHistory, uv);
+        color += texture(uTextureHistory, uv + vec2(offset, 0.0));
+        color += texture(uTextureHistory, uv + vec2(-offset, 0.0));
+        color += texture(uTextureHistory, uv + vec2(0.0, offset));
+        color += texture(uTextureHistory, uv + vec2(0.0, -offset));
+        return color / 5.0;
+    } else {
+        return texture(uTextureHistory, uv);
+    }
+}
+
 void main() {
     vec4 liveColor = texture(uTextureLive, vTexCoord);
 
@@ -46,20 +63,21 @@ void main() {
         uv.x * cosRot - uv.y * sinRot,
         uv.x * sinRot + uv.y * cosRot
     );
-    vec2 historyUV = uv + vec2(0.5);
 
-    // Sample historical buffer with optional 5-tap box blur
-    vec4 historyColor = vec4(0.0);
-    if (uBlur > 0.0) {
-        float offset = uBlur * 0.005;
-        historyColor += texture(uTextureHistory, historyUV);
-        historyColor += texture(uTextureHistory, historyUV + vec2(offset, 0.0));
-        historyColor += texture(uTextureHistory, historyUV + vec2(-offset, 0.0));
-        historyColor += texture(uTextureHistory, historyUV + vec2(0.0, offset));
-        historyColor += texture(uTextureHistory, historyUV + vec2(0.0, -offset));
-        historyColor /= 5.0;
+    // Sample historical buffer with optional Chromatic Aberration split
+    vec4 historyColor;
+    if (uChroma > 0.0) {
+        vec2 uvR = uv * (1.0 - uChroma * 0.05) + vec2(0.5);
+        vec2 uvG = uv + vec2(0.5);
+        vec2 uvB = uv * (1.0 + uChroma * 0.05) + vec2(0.5);
+        
+        float r = sampleHistory(uvR).r;
+        float g = sampleHistory(uvG).g;
+        float b = sampleHistory(uvB).b;
+        float a = sampleHistory(uvG).a;
+        historyColor = vec4(r, g, b, a);
     } else {
-        historyColor = texture(uTextureHistory, historyUV);
+        historyColor = sampleHistory(uv + vec2(0.5));
     }
 
     // Apply decay and gain (scale RGB and alpha proportionally)
@@ -73,7 +91,12 @@ void main() {
         historyColor.rgb = hsv2rgb(hsv);
     }
 
-    // Blend live frame with history using standard maximum blend
-    vec4 blended = max(liveColor, historyColor);
+    // Blend live frame with history using standard maximum or difference blend
+    vec4 blended;
+    if (uFeedbackMode >= 0.5) {
+        blended = vec4(abs(liveColor.rgb - historyColor.rgb), max(liveColor.a, historyColor.a));
+    } else {
+        blended = max(liveColor, historyColor);
+    }
     fragColor = blended;
 }

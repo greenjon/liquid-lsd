@@ -52,7 +52,7 @@ data class DeckPatchDto(
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val globalAlpha: ParameterDto,
-    val globalScale: ParameterDto
+    val globalScale: ParameterDto? = null
 )
 
 @Serializable
@@ -71,7 +71,8 @@ data class GlobalPatchDto(
     val masterAlpha: ParameterDto,
     val blendMode: Float,
     val deckA: DeckPatchDto,
-    val deckB: DeckPatchDto
+    val deckB: DeckPatchDto,
+    val bloom: ParameterDto? = null
 )
 
 // --- Extension Converters ---
@@ -163,7 +164,9 @@ fun Deck.toDto(name: String): DeckPatchDto {
         "fbZoom" to fbZoom.toDto(),
         "fbRotate" to fbRotate.toDto(),
         "fbHueShift" to fbHueShift.toDto(),
-        "fbBlur" to fbBlur.toDto()
+        "fbBlur" to fbBlur.toDto(),
+        "fbChroma" to fbChroma.toDto(),
+        "fbMode" to fbMode.toDto()
     )
     
     return DeckPatchDto(
@@ -173,7 +176,7 @@ fun Deck.toDto(name: String): DeckPatchDto {
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
-        globalScale = source.globalScale.toDto()
+        globalScale = ParameterDto(1.0f, 0.0f, 1.0f, false, emptyList())
     )
 }
 
@@ -216,10 +219,11 @@ fun Deck.applyDto(dto: DeckPatchDto) {
     dto.feedbackParameters["fbRotate"]?.let { fbRotate.applyDto(it) }
     dto.feedbackParameters["fbHueShift"]?.let { fbHueShift.applyDto(it) }
     dto.feedbackParameters["fbBlur"]?.let { fbBlur.applyDto(it) }
+    dto.feedbackParameters["fbChroma"]?.let { fbChroma.applyDto(it) }
+    dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
     
     // Apply global parameters
     source.globalAlpha.applyDto(dto.globalAlpha)
-    source.globalScale.applyDto(dto.globalScale)
 }
 
 fun Mixer.toDto(name: String): GlobalPatchDto = GlobalPatchDto(
@@ -228,7 +232,8 @@ fun Mixer.toDto(name: String): GlobalPatchDto = GlobalPatchDto(
     masterAlpha = masterAlpha.toDto(),
     blendMode = mode.baseValue,
     deckA = deckA.toDto("Deck A"),
-    deckB = deckB.toDto("Deck B")
+    deckB = deckB.toDto("Deck B"),
+    bloom = bloom.toDto()
 )
 
 fun Mixer.applyDto(dto: GlobalPatchDto) {
@@ -237,4 +242,5 @@ fun Mixer.applyDto(dto: GlobalPatchDto) {
     mode.set(dto.blendMode)
     deckA.applyDto(dto.deckA)
     deckB.applyDto(dto.deckB)
+    dto.bloom?.let { bloom.applyDto(it) }
 }
