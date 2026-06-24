@@ -25,8 +25,8 @@ fun evaluateModulator(modulator: CvModulator): Float {
 
             val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode()
 
-            val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat()
-            val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat()
+            val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
+            val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
 
             val glideAmount = if (positivePhase < modulator.slope) {
                 (positivePhase / modulator.slope).toFloat().coerceIn(0f, 1f)
@@ -62,19 +62,19 @@ fun getCombinedModulatorValue(mods: List<CvModulator>): Float {
     for (mod in mods) {
         if (mod.bypassed) continue
         val cv = evaluateModulator(mod)
-        val modAmount = cv * mod.weight
+        val modAmount = cv * mod.amplitude + mod.dcOffset
         if (first) {
             result = when (mod.operator) {
                 llm.slop.spirals.parameters.ModulationOperator.ADD -> modAmount
                 llm.slop.spirals.parameters.ModulationOperator.MUL -> modAmount
-                llm.slop.spirals.parameters.ModulationOperator.SCALE -> 1.0f - mod.weight + modAmount
+                llm.slop.spirals.parameters.ModulationOperator.SCALE -> 1.0f - mod.amplitude + modAmount
             }
             first = false
         } else {
             result = when (mod.operator) {
                 llm.slop.spirals.parameters.ModulationOperator.ADD -> result + modAmount
                 llm.slop.spirals.parameters.ModulationOperator.MUL -> result * (1.0f + modAmount)
-                llm.slop.spirals.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.weight + modAmount)
+                llm.slop.spirals.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.amplitude + modAmount)
             }
         }
     }

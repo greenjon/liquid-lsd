@@ -117,17 +117,24 @@ object ClipboardManager {
         val newBaseMin = scaleVal(data.parameter.baseMin)
         val newBaseMax = scaleVal(data.parameter.baseMax)
         
-        val weightScale = if (srcRange != 0f) destRange / srcRange else 1f
+        val ampScale = if (srcRange != 0f) destRange / srcRange else 1f
         
         val mappedMods = data.parameter.modulators.map { modDto ->
-            val weightVal = if (modDto.operator == "ADD") modDto.weight * weightScale else modDto.weight
-            val weightMinVal = if (modDto.operator == "ADD") modDto.weightMin * weightScale else modDto.weightMin
-            val weightMaxVal = if (modDto.operator == "ADD") modDto.weightMax * weightScale else modDto.weightMax
+            val amplitudeVal = if (modDto.operator == "ADD") modDto.amplitude * ampScale else modDto.amplitude
+            val amplitudeMinVal = if (modDto.operator == "ADD") modDto.amplitudeMin * ampScale else modDto.amplitudeMin
+            val amplitudeMaxVal = if (modDto.operator == "ADD") modDto.amplitudeMax * ampScale else modDto.amplitudeMax
             
+            val dcOffsetVal = if (modDto.operator == "ADD") modDto.dcOffset * ampScale else modDto.dcOffset
+            val dcOffsetMinVal = if (modDto.operator == "ADD") modDto.dcOffsetMin * ampScale else modDto.dcOffsetMin
+            val dcOffsetMaxVal = if (modDto.operator == "ADD") modDto.dcOffsetMax * ampScale else modDto.dcOffsetMax
+
             modDto.copy(
-                weight = weightVal.coerceIn(-1f, 1f),
-                weightMin = weightMinVal.coerceIn(-1f, 1f),
-                weightMax = weightMaxVal.coerceIn(-1f, 1f)
+                amplitude = amplitudeVal.coerceIn(0f, 1f),
+                amplitudeMin = amplitudeMinVal.coerceIn(0f, 1f),
+                amplitudeMax = amplitudeMaxVal.coerceIn(0f, 1f),
+                dcOffset = dcOffsetVal.coerceIn(-1f, 1f),
+                dcOffsetMin = dcOffsetMinVal.coerceIn(-1f, 1f),
+                dcOffsetMax = dcOffsetMaxVal.coerceIn(-1f, 1f)
             ).toDomain()
         }
         

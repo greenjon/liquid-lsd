@@ -159,7 +159,7 @@ class UIManager(private val windowHandle: Long) {
                             target.param.modulators.add(
                                 llm.slop.spirals.parameters.CvModulator(
                                     sourceId = midiId,
-                                    weight = 1.0f,
+                                    amplitude = 1.0f,
                                     operator = llm.slop.spirals.parameters.ModulationOperator.ADD
                                 )
                             )

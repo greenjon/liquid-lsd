@@ -15,6 +15,6 @@ class LFO(
 
     override fun update(totalBeats: Double, elapsedSeconds: Double) {
         val angle = elapsedSeconds * 2.0 * Math.PI * frequencyHz
-        _value = (sin(angle).toFloat() * 0.5f) + 0.5f
+        _value = sin(angle).toFloat()
     }
 }

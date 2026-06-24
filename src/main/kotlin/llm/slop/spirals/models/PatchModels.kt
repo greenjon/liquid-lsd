@@ -1,6 +1,7 @@
 package llm.slop.spirals.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 import llm.slop.spirals.parameters.*
 import llm.slop.spirals.rendering.*
 
@@ -8,7 +9,7 @@ import llm.slop.spirals.rendering.*
 data class ModulatorDto(
     val sourceId: String,
     val operator: String, // "ADD" or "MUL"
-    val weight: Float,
+    @SerialName("weight") val amplitude: Float,
     val bypassed: Boolean = false,
     val waveform: String = "SINE",
     val subdivision: Float = 1.0f,
@@ -17,18 +18,24 @@ data class ModulatorDto(
     val lfoSpeedMode: String = "FAST",
     
     // Randomization bounds
-    val weightMin: Float,
-    val weightMax: Float,
+    @SerialName("weightMin") val amplitudeMin: Float,
+    @SerialName("weightMax") val amplitudeMax: Float,
     val subdivisionMin: Float,
     val subdivisionMax: Float,
     val phaseOffsetMin: Float,
     val phaseOffsetMax: Float,
     val slopeMin: Float,
     val slopeMax: Float,
-    val randomizeWeight: Boolean = false,
+    @SerialName("randomizeWeight") val randomizeAmplitude: Boolean = false,
     val randomizeSubdivision: Boolean = false,
     val randomizePhaseOffset: Boolean = false,
-    val randomizeSlope: Boolean = false
+    val randomizeSlope: Boolean = false,
+
+    // DC Offset fields
+    val dcOffset: Float = 0.0f,
+    val dcOffsetMin: Float = 0.0f,
+    val dcOffsetMax: Float = 0.0f,
+    val randomizeDcOffset: Boolean = false
 )
 
 @Serializable
@@ -80,49 +87,57 @@ data class GlobalPatchDto(
 fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     sourceId = sourceId,
     operator = operator.name,
-    weight = weight,
+    amplitude = amplitude,
     bypassed = bypassed,
     waveform = waveform.name,
     subdivision = subdivision,
     phaseOffset = phaseOffset,
     slope = slope,
     lfoSpeedMode = lfoSpeedMode.name,
-    weightMin = weightMin,
-    weightMax = weightMax,
+    amplitudeMin = amplitudeMin,
+    amplitudeMax = amplitudeMax,
     subdivisionMin = subdivisionMin,
     subdivisionMax = subdivisionMax,
     phaseOffsetMin = phaseOffsetMin,
     phaseOffsetMax = phaseOffsetMax,
     slopeMin = slopeMin,
     slopeMax = slopeMax,
-    randomizeWeight = randomizeWeight,
+    randomizeAmplitude = randomizeAmplitude,
     randomizeSubdivision = randomizeSubdivision,
     randomizePhaseOffset = randomizePhaseOffset,
-    randomizeSlope = randomizeSlope
+    randomizeSlope = randomizeSlope,
+    dcOffset = dcOffset,
+    dcOffsetMin = dcOffsetMin,
+    dcOffsetMax = dcOffsetMax,
+    randomizeDcOffset = randomizeDcOffset
 )
 
 fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     sourceId = sourceId,
     operator = ModulationOperator.valueOf(operator),
-    weight = weight,
+    amplitude = amplitude,
     bypassed = bypassed,
     waveform = Waveform.valueOf(waveform),
     subdivision = subdivision,
     phaseOffset = phaseOffset,
     slope = slope,
     lfoSpeedMode = LfoSpeedMode.valueOf(lfoSpeedMode),
-    weightMin = weightMin,
-    weightMax = weightMax,
+    amplitudeMin = amplitudeMin,
+    amplitudeMax = amplitudeMax,
     subdivisionMin = subdivisionMin,
     subdivisionMax = subdivisionMax,
     phaseOffsetMin = phaseOffsetMin,
     phaseOffsetMax = phaseOffsetMax,
     slopeMin = slopeMin,
     slopeMax = slopeMax,
-    randomizeWeight = randomizeWeight,
+    randomizeAmplitude = randomizeAmplitude,
     randomizeSubdivision = randomizeSubdivision,
     randomizePhaseOffset = randomizePhaseOffset,
-    randomizeSlope = randomizeSlope
+    randomizeSlope = randomizeSlope,
+    dcOffset = dcOffset,
+    dcOffsetMin = dcOffsetMin,
+    dcOffsetMax = dcOffsetMax,
+    randomizeDcOffset = randomizeDcOffset
 )
 
 fun ModulatableParameter.toDto(): ParameterDto = ParameterDto(

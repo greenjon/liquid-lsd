@@ -459,55 +459,109 @@ object CellConfigPanel {
         ImGui.popItemWidth()
         ImGui.spacing()
 
-        // ── Weight ───────────────────────────────────────────────
+        // ── Amplitude ─────────────────────────────────────────────
         drawCustomRangeSlider(
             idPrefix = existing.id,
-            label = "Weight",
-            currentValue = existing.weight,
-            currentMin = existing.weightMin,
-            currentMax = existing.weightMax,
-            minLimit = -1f,
+            label = "Amplitude",
+            currentValue = existing.amplitude,
+            currentMin = existing.amplitudeMin,
+            currentMax = existing.amplitudeMax,
+            minLimit = 0f,
             maxLimit = 1f,
-            isRandomizable = existing.randomizeWeight,
+            isRandomizable = existing.randomizeAmplitude,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {
-                    val rMin = existing.weightMin
-                    val rMax = existing.weightMax
+                    val rMin = existing.amplitudeMin
+                    val rMax = existing.amplitudeMax
                     val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.weight - 0.1f).coerceAtLeast(-1f), (existing.weight + 0.1f).coerceAtMost(1f))
+                        Pair((existing.amplitude - 0.1f).coerceAtLeast(0f), (existing.amplitude + 0.1f).coerceAtMost(1f))
                     } else {
                         Pair(rMin, rMax)
                     }
                     replaceModulator(state, param, existing.copy(
-                        randomizeWeight = true,
-                        weightMin = nextMin,
-                        weightMax = nextMax
+                        randomizeAmplitude = true,
+                        amplitudeMin = nextMin,
+                        amplitudeMax = nextMax
                     ))
                 } else {
                     replaceModulator(state, param, existing.copy(
-                        randomizeWeight = false,
-                        weightMin = existing.weight,
-                        weightMax = existing.weight
+                        randomizeAmplitude = false,
+                        amplitudeMin = existing.amplitude,
+                        amplitudeMax = existing.amplitude
                     ))
                 }
             },
             onRandomizeNow = {
-                replaceModulator(state, param, existing.randomizeWeight())
+                replaceModulator(state, param, existing.randomizeAmplitude())
             },
             onRangeChanged = { nextMin, nextMax ->
-                val nextActive = existing.weight.coerceIn(nextMin, nextMax)
+                val nextActive = existing.amplitude.coerceIn(nextMin, nextMax)
                 replaceModulator(state, param, existing.copy(
-                    weightMin = nextMin,
-                    weightMax = nextMax,
-                    weight = nextActive
+                    amplitudeMin = nextMin,
+                    amplitudeMax = nextMax,
+                    amplitude = nextActive
                 ))
             },
             onValueChanged = { newVal ->
                 replaceModulator(state, param, existing.copy(
-                    weight = newVal,
-                    weightMin = newVal,
-                    weightMax = newVal
+                    amplitude = newVal,
+                    amplitudeMin = newVal,
+                    amplitudeMax = newVal
+                ))
+            }
+        )
+        ImGui.spacing()
+
+        // ── DC Offset ─────────────────────────────────────────────
+        drawCustomRangeSlider(
+            idPrefix = existing.id,
+            label = "DC Offset",
+            currentValue = existing.dcOffset,
+            currentMin = existing.dcOffsetMin,
+            currentMax = existing.dcOffsetMax,
+            minLimit = -1f,
+            maxLimit = 1f,
+            isRandomizable = existing.randomizeDcOffset,
+            formatValue = { "%.3f".format(it) },
+            onRandomizableChanged = { checked ->
+                if (checked) {
+                    val rMin = existing.dcOffsetMin
+                    val rMax = existing.dcOffsetMax
+                    val (nextMin, nextMax) = if (rMin == rMax) {
+                        Pair((existing.dcOffset - 0.1f).coerceAtLeast(-1f), (existing.dcOffset + 0.1f).coerceAtMost(1f))
+                    } else {
+                        Pair(rMin, rMax)
+                    }
+                    replaceModulator(state, param, existing.copy(
+                        randomizeDcOffset = true,
+                        dcOffsetMin = nextMin,
+                        dcOffsetMax = nextMax
+                    ))
+                } else {
+                    replaceModulator(state, param, existing.copy(
+                        randomizeDcOffset = false,
+                        dcOffsetMin = existing.dcOffset,
+                        dcOffsetMax = existing.dcOffset
+                    ))
+                }
+            },
+            onRandomizeNow = {
+                replaceModulator(state, param, existing.randomizeDcOffset())
+            },
+            onRangeChanged = { nextMin, nextMax ->
+                val nextActive = existing.dcOffset.coerceIn(nextMin, nextMax)
+                replaceModulator(state, param, existing.copy(
+                    dcOffsetMin = nextMin,
+                    dcOffsetMax = nextMax,
+                    dcOffset = nextActive
+                ))
+            },
+            onValueChanged = { newVal ->
+                replaceModulator(state, param, existing.copy(
+                    dcOffset = newVal,
+                    dcOffsetMin = newVal,
+                    dcOffsetMax = newVal
                 ))
             }
         )
@@ -893,8 +947,8 @@ object CellConfigPanel {
         val existing = if (idx >= 0) param.modulators[idx] else virtualModulators.firstOrNull { it.id == newMod.id }
         val wasBypassed = existing?.bypassed ?: false
 
-        // Auto-activate: if weight is adjusted to a non-zero value, activate/unbypass the modulator
-        val finalizedMod = if (wasBypassed && newMod.bypassed && newMod.weight != 0.0f) {
+        // Auto-activate: if amplitude is adjusted to a non-zero value, activate/unbypass the modulator
+        val finalizedMod = if (wasBypassed && newMod.bypassed && newMod.amplitude != 0.0f) {
             newMod.copy(bypassed = false)
         } else {
             newMod

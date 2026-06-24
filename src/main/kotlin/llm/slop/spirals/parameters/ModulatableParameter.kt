@@ -69,12 +69,12 @@ class ModulatableParameter(
 
         for (mod in activeMods) {
             val finalCv = evaluateModulator(mod)
-            val modAmount = finalCv * mod.weight
+            val modAmount = finalCv * mod.amplitude + mod.dcOffset
 
             result = when (mod.operator) {
                 ModulationOperator.ADD -> result + modAmount
                 ModulationOperator.MUL -> result * (1.0f + modAmount)
-                ModulationOperator.SCALE -> result * (1.0f - mod.weight + modAmount)
+                ModulationOperator.SCALE -> result * (1.0f - mod.amplitude + modAmount)
             }
         }
 

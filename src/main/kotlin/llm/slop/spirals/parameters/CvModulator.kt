@@ -7,7 +7,7 @@ import java.util.UUID
 data class CvModulator(
     val sourceId: String,
     val operator: ModulationOperator = ModulationOperator.ADD,
-    val weight: Float = 0.0f,
+    val amplitude: Float = 0.0f,
     val bypassed: Boolean = false,
     // Beat synchronization/shape settings
     val waveform: Waveform = Waveform.SINE,
@@ -18,8 +18,8 @@ data class CvModulator(
     val lfoSpeedMode: LfoSpeedMode = LfoSpeedMode.FAST,
 
     // Range fields
-    val weightMin: Float = weight,
-    val weightMax: Float = weight,
+    val amplitudeMin: Float = amplitude,
+    val amplitudeMax: Float = amplitude,
     val subdivisionMin: Float = subdivision,
     val subdivisionMax: Float = subdivision,
     val phaseOffsetMin: Float = phaseOffset,
@@ -27,17 +27,27 @@ data class CvModulator(
     val slopeMin: Float = slope,
     val slopeMax: Float = slope,
 
-    val randomizeWeight: Boolean = false,
+    val randomizeAmplitude: Boolean = false,
     val randomizeSubdivision: Boolean = false,
     val randomizePhaseOffset: Boolean = false,
     val randomizeSlope: Boolean = false,
 
+    // DC Offset fields
+    val dcOffset: Float = 0.0f,
+    val dcOffsetMin: Float = dcOffset,
+    val dcOffsetMax: Float = dcOffset,
+    val randomizeDcOffset: Boolean = false,
+
     val id: String = UUID.randomUUID().toString()
 ) {
     fun randomizeActiveValues(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
-        val newWeight = if (randomizeWeight) {
-            if (weightMin == weightMax) weightMin else random.nextFloat() * (weightMax - weightMin) + weightMin
-        } else weight
+        val newAmplitude = if (randomizeAmplitude) {
+            if (amplitudeMin == amplitudeMax) amplitudeMin else random.nextFloat() * (amplitudeMax - amplitudeMin) + amplitudeMin
+        } else amplitude
+
+        val newDcOffset = if (randomizeDcOffset) {
+            if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
+        } else dcOffset
 
         val newPhase = if (randomizePhaseOffset) {
             if (phaseOffsetMin == phaseOffsetMax) phaseOffsetMin else random.nextFloat() * (phaseOffsetMax - phaseOffsetMin) + phaseOffsetMin
@@ -63,17 +73,24 @@ data class CvModulator(
         } else subdivision
 
         return this.copy(
-            weight = newWeight,
+            amplitude = newAmplitude,
+            dcOffset = newDcOffset,
             subdivision = newSubdiv,
             phaseOffset = newPhase,
             slope = newSlope
         )
     }
 
-    fun randomizeWeight(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
-        if (!randomizeWeight) return this
-        val newWeight = if (weightMin == weightMax) weightMin else random.nextFloat() * (weightMax - weightMin) + weightMin
-        return this.copy(weight = newWeight)
+    fun randomizeAmplitude(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeAmplitude) return this
+        val newAmplitude = if (amplitudeMin == amplitudeMax) amplitudeMin else random.nextFloat() * (amplitudeMax - amplitudeMin) + amplitudeMin
+        return this.copy(amplitude = newAmplitude)
+    }
+
+    fun randomizeDcOffset(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeDcOffset) return this
+        val newDcOffset = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
+        return this.copy(dcOffset = newDcOffset)
     }
 
     fun randomizeSubdivision(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
