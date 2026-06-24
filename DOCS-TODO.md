@@ -19,8 +19,8 @@ Use this checklist to draft the documentation pages in phases. The skeleton file
   - [ ] Document the Mandala Synthesis engine: what lobes, color cycles, and feedback settings do.
   - [ ] Document the Dual-Deck Mixer: how Deck A and B blend together, crossfading, and blend modes.
 - [ ] **user_guide/modulation.md**
-  - [ ] Explain how CV sources work (both audio amplitude extraction and generated clocks/LFOs/random step).
-  - [ ] Walk through mapping modulators: weights, operators (ADD, MUL, SCALE), and bypassed states.
+  - [ ] Explain how CV sources work (both audio amplitude extraction and generated clocks/LFOs/random step, noting that waveforms are 0-centered).
+  - [ ] Walk through mapping modulators: amplitude (0-1), DC Offset (-1 to 1), operators (ADD, MUL, SCALE), and bypassed states.
   - [ ] Describe how to read the cell oscilloscopes and check signals in the Sound Analysis Panel.
 - [ ] **user_guide/midi_presets.md**
   - [ ] Describe how presets/patches are saved to JSON.
