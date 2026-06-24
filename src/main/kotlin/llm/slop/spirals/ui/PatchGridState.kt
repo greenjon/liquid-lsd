@@ -48,20 +48,32 @@ class PatchGridState {
         val subgroups = listOf("Geometry", "Color", "Background", "Feedback")
 
         for (g in groups) {
-            groupOpen[g] = openState
-            if (openState) {
-                groupNeedsExpand[g] = true
-                groupNeedsCollapse[g] = false
-            } else {
-                groupNeedsCollapse[g] = true
-                groupNeedsExpand[g] = false
+            groupOpen[g] = true // top level groups are always open
+            groupNeedsExpand[g] = true
+            groupNeedsCollapse[g] = false
+        }
+
+        var foundOpenSubgroupLabel: String? = null
+        if (!openState) {
+            for (deck in listOf("Deck A", "Deck B")) {
+                for (sub in subgroups) {
+                    val key = "$deck/$sub"
+                    if (groupOpen.getValue(key)) {
+                        foundOpenSubgroupLabel = sub
+                        break
+                    }
+                }
+                if (foundOpenSubgroupLabel != null) break
             }
         }
+
         for (deck in listOf("Deck A", "Deck B")) {
             for (sub in subgroups) {
                 val key = "$deck/$sub"
-                groupOpen[key] = openState
-                if (openState) {
+                val shouldOpen = if (openState) true else (sub == foundOpenSubgroupLabel)
+
+                groupOpen[key] = shouldOpen
+                if (shouldOpen) {
                     groupNeedsExpand[key] = true
                     groupNeedsCollapse[key] = false
                 } else {

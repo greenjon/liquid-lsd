@@ -183,25 +183,11 @@ object PatchGridPanel {
         }
 
         if (ImGui.treeNodeEx(label, if (open) flags else ImGuiTreeNodeFlags.None)) {
-            val wasClosed = !open
-            if (wasClosed && UITheme.autocollapseEnabled) {
-                collapseSiblingGroups(label, state)
-            }
             state.groupOpen[label] = true
             block()
             ImGui.treePop()
         } else {
             state.groupOpen[label] = false
-        }
-    }
-
-    private fun collapseSiblingGroups(activeLabel: String, state: PatchGridState) {
-        val groups = listOf("Mixer", "Deck A", "Deck B")
-        for (g in groups) {
-            if (g != activeLabel) {
-                state.groupOpen[g] = false
-                state.groupNeedsCollapse[g] = true
-            }
         }
     }
 
@@ -224,24 +210,44 @@ object PatchGridPanel {
         if (ImGui.treeNodeEx(label, if (open) flags else ImGuiTreeNodeFlags.None)) {
             val wasClosed = !open
             if (wasClosed && UITheme.autocollapseEnabled) {
-                collapseSiblingSubgroups(parentLabel, key, state)
+                syncAndCollapseSubgroups(label, state)
             }
             state.groupOpen[key] = true
             block()
             ImGui.treePop()
         } else {
+            val wasOpen = open
+            if (wasOpen && UITheme.autocollapseEnabled) {
+                syncCloseSubgroup(label, state)
+            }
             state.groupOpen[key] = false
         }
     }
 
-    private fun collapseSiblingSubgroups(parentLabel: String, activeKey: String, state: PatchGridState) {
+    private fun syncAndCollapseSubgroups(activeSubgroupLabel: String, state: PatchGridState) {
+        val decks = listOf("Deck A", "Deck B")
         val subgroups = listOf("Geometry", "Color", "Background", "Feedback")
-        for (sub in subgroups) {
-            val k = "$parentLabel/$sub"
-            if (k != activeKey) {
-                state.groupOpen[k] = false
-                state.groupNeedsCollapse[k] = true
+
+        for (deck in decks) {
+            for (sub in subgroups) {
+                val k = "$deck/$sub"
+                if (sub == activeSubgroupLabel) {
+                    state.groupOpen[k] = true
+                    state.groupNeedsExpand[k] = true
+                } else {
+                    state.groupOpen[k] = false
+                    state.groupNeedsCollapse[k] = true
+                }
             }
+        }
+    }
+
+    private fun syncCloseSubgroup(activeSubgroupLabel: String, state: PatchGridState) {
+        val decks = listOf("Deck A", "Deck B")
+        for (deck in decks) {
+            val k = "$deck/$activeSubgroupLabel"
+            state.groupOpen[k] = false
+            state.groupNeedsCollapse[k] = true
         }
     }
 
