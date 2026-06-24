@@ -1,6 +1,7 @@
 package llm.slop.spirals.audio
 
 import llm.slop.spirals.cv.CVRegistry
+import llm.slop.spirals.cv.CvHistoryBuffer
 import java.nio.FloatBuffer
 import kotlin.math.max
 
@@ -19,6 +20,9 @@ object AudioEngine {
     
     private val extractor = AmplitudeExtractor()
 
+    // Pre-allocated buffer for oscilloscope rendering of raw input samples
+    val rawHistory = CvHistoryBuffer(1024)
+
     // Temporary processing buffers to avoid allocation on the audio thread
     private var lowBuffer = FloatArray(1024)
     private var midBuffer = FloatArray(1024)
@@ -27,7 +31,10 @@ object AudioEngine {
     // Beat/BPM flywheel state
     private var lastCallbackTime = System.nanoTime()
     private var totalBeats = 0.0
-    private var estimatedBpm = 120f
+    @Volatile private var estimatedBpm = 120f
+
+    fun getEstimatedBpm(): Float = estimatedBpm
+    fun isActive(): Boolean = jackClient != null
 
     // BPM Sync/Transient detection state
     private var lastBeatTime = System.nanoTime()
@@ -77,10 +84,11 @@ object AudioEngine {
             highBuffer = FloatArray(nframes)
         }
 
-        // 3. Process samples through the filter banks
+        // 3. Process samples through the filter banks and update raw history
         val startPos = buffer.position()
         for (i in 0 until nframes) {
             val sample = buffer.get(startPos + i)
+            rawHistory.add(sample)
             lowBuffer[i] = lowPass.process(sample)
             midBuffer[i] = midPass.process(sample)
             highBuffer[i] = highPass.process(sample)

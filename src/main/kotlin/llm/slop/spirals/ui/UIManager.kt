@@ -44,6 +44,7 @@ class UIManager(private val windowHandle: Long) {
     // Set to true for one frame when the Settings menu item is clicked; consumed
     // immediately after endMainMenuBar so openPopup runs at root ID-stack level.
     private var pendingOpenSettings = false
+    private var pendingOpenAudioEngineMonitor = false
 
     private var lastBgVideoEnabled: Boolean? = null
 
@@ -177,6 +178,10 @@ class UIManager(private val windowHandle: Long) {
             SettingsPanel.open()
             pendingOpenSettings = false
         }
+        if (pendingOpenAudioEngineMonitor) {
+            AudioEnginePanel.open()
+            pendingOpenAudioEngineMonitor = false
+        }
         drawLayout(mixer, displayWidth, displayHeight)
 
         // Settings modal — drawn outside any docked window so it floats freely.
@@ -185,6 +190,9 @@ class UIManager(private val windowHandle: Long) {
         }, {
             patchState.applyAutocollapseSetting()
         })
+
+        // Audio Engine Monitor modal — drawn outside any docked window so it floats freely.
+        AudioEnginePanel.draw(displayWidth, displayHeight)
 
         ImGui.render()
         imguiGl3.renderDrawData(ImGui.getDrawData())
@@ -264,6 +272,17 @@ class UIManager(private val windowHandle: Long) {
             // sets a flag that triggers openPopup after endMainMenuBar.
             if (ImGui.menuItem("Settings")) {
                 pendingOpenSettings = true
+            }
+
+            if (ImGui.menuItem("Audio Engine")) {
+                pendingOpenAudioEngineMonitor = true
+            }
+
+            if (ImGui.beginMenu("Help")) {
+                if (ImGui.menuItem("Documentation")) {
+                    DocManager.openDocumentation()
+                }
+                ImGui.endMenu()
             }
             ImGui.endMainMenuBar()
         }

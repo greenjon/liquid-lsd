@@ -1,13 +1,36 @@
 # Spirals Desktop - TODO
 
-- [x] **BASE Parameter Column:**
-  - Add a column to the left of the CV labeled `BASE` in the Patch Matrix.
-  - In the cell config window (when clicking a parameter's BASE cell or perhaps in the config window), have a dual-headed slider that allows setting min/max values.
-  - This will be the base value range that all the CVs are modulating (or in the case of no CVs, it will also be the final value of the parameter). *Wait, how does a dual-headed slider for BASE work? It sets min/max values, but how is it evaluated? If there are no CVs, it is the final value. If there are CVs, does the base value modulate between min/max? Or is it a range for the base value itself? Let's check how parameter handles base value.*
-- [x] **FINAL Parameter Column:**
-  - Add a column to the left of `BASE` called `FINAL`.
-  - It shows/represents the final value of `Base` and all the CVs that actually gets used by the app.
-- [x] **UI Compactness:**
-  - Continue working on the UI for compactness.
-- [x] **3 Panel Layout:**
-  - Try a 3 panel layout with the mixer on the right and cell config in the middle.
+## Upcoming Tasks
+
+- [ ] **Sound Analysis Panel:**
+  - Build a panel for analysing sound.
+  - Show the raw audio data.
+  - Show oscpes for all of the audio CV.
+  - Calculate and display BPM.
+  - Remove Bass Flux from the audio monitor.
+  - Center the raw audio in the audio monitor.
+  - Add a beat phase o-scope to the audio monitor.
+  - Allow the audio monitor window to grow up to 90% of the vertical space.
+  - Stabilize the Beat phase.
+- [ ] **Thoroughly Test Audio Engine:**
+  - Implement comprehensive testing for the audio engine components.
+- [ ] **Thoroughly Test MIDI:**
+  - Implement comprehensive testing for MIDI input and routing.
+- [ ] **Build Documentation:**
+  - Write and organize MkDocs documentation.
+  - Use Gemini 3.5 Flash (Medium) for boilerplate and structure.
+  - Use Gemini 3.1 Pro (High) for the complicated, deep technical sections.
+- [ ] **Base Column Copy/Paste:**
+  - Make copy/paste work in the Base parameter column.
+- [ ] **Consider edge cases for storing MIDI data in patches:**
+  - What can go wrong? Because, it will.
+- [ ] **Deck and Parameter Grid Improvements:**
+  - Make all the deck controls read-only (to avoid confusion).
+  - Add deck buttons to quickly disable/enable effects.
+  - Add deck buttons to quickly mute/solo decks.
+  - Fix intermittent bug with bypassing effects.
+  - Enable grid cell traversal with arrow keys.
+  - Enable using the DELETE key to remove the patch from the cell.
+  - Add CTRL-Z to undo a paste or delete action.
+  - Make LFO times more intuitive.
+

@@ -74,3 +74,33 @@ tasks.withType<JavaExec> {
         "-Xmx2g"
     )
 }
+
+val generateDocs = tasks.register("generateDocs") {
+    group = "documentation"
+    description = "Generates HTML documentation using mkdocs if available."
+    inputs.files(fileTree("docs"), "mkdocs.yml")
+    outputs.dir("src/main/resources/docs")
+
+    doLast {
+        val hasMkdocs = try {
+            val pb = ProcessBuilder("mkdocs", "--version")
+            val proc = pb.start()
+            proc.waitFor() == 0
+        } catch (e: java.io.IOException) {
+            false
+        }
+
+        if (hasMkdocs) {
+            project.exec {
+                commandLine("mkdocs", "build", "-d", "${project.projectDir}/src/main/resources/docs")
+            }
+        } else {
+            println("WARNING: 'mkdocs' executable not found. Skipping documentation generation, will use existing resource files if present.")
+        }
+    }
+}
+
+tasks.processResources {
+    dependsOn(generateDocs)
+}
+
