@@ -438,16 +438,38 @@ object CellConfigPanel {
             }
             ImGui.popStyleColor()
 
+            ImGui.sameLine(0f, 10f)
+            if (ImGui.button("Randomize", 125f, 30f)) {
+                val randomized = existing.randomizeActiveValues()
+                replaceModulator(state, param, randomized)
+            }
+
             ImGui.spacing()
 
-            // ── Operator (ADD / MUL / SCALE) ──────────────────────────
+        // ── Waveform and Operator ──────────────────────────
+        val showWaveform = hasAdvanced && !isSnh
+        if (showWaveform) {
+            ImGui.beginGroup()
+            UITheme.body("Waveform")
+            val wfIdx = ImInt(existing.waveform.ordinal)
+            ImGui.pushItemWidth(120f)
+            if (ImGui.combo("##waveform", wfIdx, waveformLabels)) {
+                replaceModulator(state, param, existing.copy(waveform = Waveform.entries[wfIdx.get()]))
+            }
+            ImGui.popItemWidth()
+            ImGui.endGroup()
+            
+            ImGui.sameLine(0f, 20f)
+        }
+
+        ImGui.beginGroup()
         UITheme.body("Operator")
         val opIdx = ImInt(when (existing.operator) {
             ModulationOperator.ADD -> 0
             ModulationOperator.MUL -> 1
             ModulationOperator.SCALE -> 2
         })
-        ImGui.pushItemWidth(150f)
+        ImGui.pushItemWidth(120f)
         if (ImGui.combo("##op", opIdx, operatorLabels)) {
             val newOp = when (opIdx.get()) {
                 0 -> ModulationOperator.ADD
@@ -457,6 +479,7 @@ object CellConfigPanel {
             replaceModulator(state, param, existing.copy(operator = newOp))
         }
         ImGui.popItemWidth()
+        ImGui.endGroup()
         ImGui.spacing()
 
         // ── Amplitude ─────────────────────────────────────────────
@@ -568,12 +591,6 @@ object CellConfigPanel {
         ImGui.spacing()
 
         if (!hasAdvanced) {
-            // ── Test Randomize Button ────────────────────────────────
-            ImGui.spacing()
-            if (ImGui.button("Randomize", ImGui.getContentRegionAvailX(), 30f)) {
-                val randomized = existing.randomizeActiveValues()
-                replaceModulator(state, param, randomized)
-            }
             ImGui.popID()
             if (idx < modsToDraw.size - 1) {
                 ImGui.spacing()
@@ -583,17 +600,7 @@ object CellConfigPanel {
             continue
         }
 
-        // ── Waveform (Beat / LFO only) ───────────────────────────
-        if (!isSnh) {
-            UITheme.body("Waveform")
-            val wfIdx = ImInt(existing.waveform.ordinal)
-            ImGui.pushItemWidth(150f)
-            if (ImGui.combo("##waveform", wfIdx, waveformLabels)) {
-                replaceModulator(state, param, existing.copy(waveform = Waveform.entries[wfIdx.get()]))
-            }
-            ImGui.popItemWidth()
-            ImGui.spacing()
-        }
+
 
         // ── Subdivision (Beat / S&H) ─────────────────────────────
         if (isBeat || isSnh) {
@@ -857,13 +864,6 @@ object CellConfigPanel {
                 }
             )
             ImGui.spacing()
-        }
-
-        // ── Test Randomize Button ────────────────────────────────
-        ImGui.spacing()
-        if (ImGui.button("Randomize", ImGui.getContentRegionAvailX(), 30f)) {
-            val randomized = existing.randomizeActiveValues()
-            replaceModulator(state, param, randomized)
         }
 
             ImGui.popID()
