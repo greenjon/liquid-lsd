@@ -312,9 +312,11 @@ object PatchGridPanel {
         
         ImGui.setCursorPosY(rowY + (CELL - ImGui.getTextLineHeight()) * 0.5f)
         val cursorStartX = ImGui.getCursorPosX()
+        val indent = ImGui.getCursorScreenPosX() - gridStartX
+        val labelBtnW = labelColW - indent - CELL_PAD
         UITheme.body(label)
         ImGui.sameLine(cursorStartX)
-        ImGui.invisibleButton("row_label_btn_$paramKey", labelColW - CELL_PAD, CELL)
+        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL)
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
             if (ImGui.menuItem("Copy Row Modulations")) {
                 ClipboardManager.rowClipboard = RowClipboardData(paramKey, param.toDto())
@@ -371,7 +373,7 @@ object PatchGridPanel {
         dl.addCircle(finalX + r, finalY + r, circleR, circleCol, 32, 1.5f)
 
         val liveVal = param.value
-        val angle = (3.0 * PI / 2.0) - liveVal * 2.0 * PI
+        val angle = (PI / 2.0) + liveVal * 2.0 * PI
         val dotX = (finalX + r) + circleR * cos(angle).toFloat()
         val dotY = (finalY + r) + circleR * sin(angle).toFloat()
         val dotCol = ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)
@@ -416,7 +418,7 @@ object PatchGridPanel {
         }
 
         // Draw pointer dot for static baseValue
-        val angleVal = (3.0 * PI / 2.0) - param.baseValue * 2.0 * PI
+        val angleVal = (PI / 2.0) + param.baseValue * 2.0 * PI
         val baseDotX = cx + baseCircleR * cos(angleVal).toFloat()
         val baseDotY = cy + baseCircleR * sin(angleVal).toFloat()
         val baseDotCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f) // solid gold
@@ -493,7 +495,7 @@ object PatchGridPanel {
 
             if (!isMidiBypassed) {
                 val liveVal = llm.slop.spirals.cv.getCombinedModulatorValue(midiMods).coerceIn(-1f, 1f)
-                val angle = (3.0 * PI / 2.0) - liveVal * 2.0 * PI
+                val angle = (PI / 2.0) + liveVal * 2.0 * PI
                 val dotX = cx + circleR * cos(angle).toFloat()
                 val dotY = cy + circleR * sin(angle).toFloat()
                 val dotCol = ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)
@@ -582,8 +584,8 @@ object PatchGridPanel {
 
                 if (!isBypassed) {
                     val liveVal = llm.slop.spirals.cv.getCombinedModulatorValue(activeMods).coerceIn(-1f, 1f)
-                    // Full circle: val goes 0..1 counterclockwise: angle = 3PI/2 - val*2*PI
-                    val angle = (3.0 * PI / 2.0) - liveVal * 2.0 * PI
+                    // Full circle: val goes 0..1 clockwise: angle = PI/2 + val*2*PI
+                    val angle = (PI / 2.0) + liveVal * 2.0 * PI
                     val dotX = cx + circleR * cos(angle).toFloat()
                     val dotY = cy + circleR * sin(angle).toFloat()
                     val dotCol = ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)

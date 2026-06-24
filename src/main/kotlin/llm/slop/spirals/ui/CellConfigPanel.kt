@@ -298,8 +298,47 @@ object CellConfigPanel {
             ImGui.separator()
             ImGui.spacing()
 
+            // Live value text readout
+            val isBgStyle = paramKey.endsWith("/Background/Style")
+            val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
+            val isLobes = paramKey.endsWith("/Geometry/Lobes")
+            val liveVal = param.value
+            val liveLabel = when {
+                isHueSweep && mandala != null -> {
+                    val petals = mandala.recipe.petals
+                    val options = mandala.getSymmetricHueCycles(petals)
+                    val idx = if (options.size > 1) (liveVal * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+                    "${options[idx]} cycles"
+                }
+                isBgStyle -> {
+                    when (liveVal.roundToInt()) {
+                        0 -> "Off"
+                        1 -> "Solid Color"
+                        2 -> "Plasma"
+                        else -> "Off"
+                    }
+                }
+                isLobes -> "${liveVal.roundToInt()} lobes"
+                else -> "%.3f".format(liveVal)
+            }
+            UITheme.h3("Live Modulated Value: $liveLabel")
+            ImGui.spacing()
+
             // Oscilloscope showing final value history
-            drawFinalOscilloscope(param.history)
+            drawFinalOscilloscope(param.history, param.minClamp, param.maxClamp)
+
+            // Cyan progress bar under the oscilloscope showing the value in the clamp range
+            ImGui.spacing()
+            val range = param.maxClamp - param.minClamp
+            val pct = if (range == 0f) 0.5f else ((param.value - param.minClamp) / range).coerceIn(0f, 1f)
+            val barW = ImGui.getContentRegionAvailX()
+            val dl = ImGui.getWindowDrawList()
+            val cx = ImGui.getCursorScreenPosX()
+            val cy = ImGui.getCursorScreenPosY()
+            dl.addRectFilled(cx, cy, cx + barW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            dl.addRectFilled(cx, cy, cx + barW * pct, cy + 10f,
+                ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 1.0f, 1f))
+            ImGui.dummy(barW, 10f)
 
             return
         }
@@ -783,7 +822,7 @@ object CellConfigPanel {
 
     }
 
-    private fun drawFinalOscilloscope(history: CvHistoryBuffer) {
+    private fun drawFinalOscilloscope(history: CvHistoryBuffer, minVal: Float, maxVal: Float) {
         val historySize = history.size
         val w = ImGui.getContentRegionAvailX()
         val h = 80f
@@ -814,9 +853,15 @@ object CellConfigPanel {
         val usableHeight = h - 10f
         val lineCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 0.9f, 1.0f)
         
+        val range = maxVal - minVal
+        val divisor = if (range == 0f) 1f else range
+        
         for (i in 0 until historySize - 1) {
-            val val1 = history.getAt(i)
-            val val2 = history.getAt(i + 1)
+            val raw1 = history.getAt(i)
+            val raw2 = history.getAt(i + 1)
+            
+            val val1 = if (range == 0f) 0.5f else ((raw1 - minVal) / divisor).coerceIn(0f, 1f)
+            val val2 = if (range == 0f) 0.5f else ((raw2 - minVal) / divisor).coerceIn(0f, 1f)
             
             val x1 = startX + i * stepX
             val y1 = (startY + h - 5f) - val1 * usableHeight
@@ -830,11 +875,11 @@ object CellConfigPanel {
         dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
         
         ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "1.0")
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(maxVal))
         ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "0.5")
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal + range * 0.5f))
         ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "0.0")
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal))
         
         val textWidth = ImGui.calcTextSize("Final Parameter Value").x
         ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
