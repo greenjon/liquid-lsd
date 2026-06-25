@@ -646,6 +646,10 @@ object CellConfigPanel {
         ImGui.spacing()
 
         if (!hasAdvanced) {
+            ImGui.unindent(10f)
+            if (bypassed) {
+                ImGui.popStyleVar()
+            }
             ImGui.popID()
             if (idx < modsToDraw.size - 1) {
                 ImGui.spacing()

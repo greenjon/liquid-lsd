@@ -88,6 +88,15 @@ class UIManager(private val windowHandle: Long) {
     private var pendingProjectAction = PendingProjectAction.NONE
     private var pendingOpenConfirmPopup = false
 
+    private enum class PendingDeckAction {
+        NONE, NEW, LOAD_FILE, LOAD_PRESET
+    }
+    
+    private var pendingDeckActionA = PendingDeckAction.NONE
+    private var pendingDeckActionB = PendingDeckAction.NONE
+    private var pendingDeckTargetPresetA: String? = null
+    private var pendingDeckTargetPresetB: String? = null
+
 
     init {
         logger.info { "Initializing ImGui..." }
@@ -212,6 +221,7 @@ class UIManager(private val windowHandle: Long) {
             AudioEnginePanel.draw(displayWidth, displayHeight)
 
             drawConfirmPopup(mixer, displayWidth, displayHeight)
+            drawDeckConfirmPopups(mixer.deckA, mixer.deckB)
         }
 
         ImGui.render()
@@ -318,6 +328,132 @@ class UIManager(private val windowHandle: Long) {
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
+        }
+    }
+
+    private fun drawDeckConfirmPopups(deckA: Deck, deckB: Deck) {
+        // Deck A Confirmation
+        if (pendingDeckActionA != PendingDeckAction.NONE) {
+            ImGui.openPopup("Save Changes Deck A?##confirm")
+        }
+        if (ImGui.beginPopupModal("Save Changes Deck A?##confirm", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("You have unsaved changes in Deck A. Save before proceeding?")
+            ImGui.spacing()
+            if (ImGui.button("Save", 80f, 0f)) {
+                val activeName = llm.slop.spirals.patches.PatchManager.activePresetA
+                if (activeName != null) {
+                    saveDeckPreset(activeName, deckA, true)
+                } else {
+                    // Fallback to saving as a generic name if it was "None"
+                    saveDeckPreset("Untitled_A", deckA, true)
+                }
+                executePendingDeckAction(deckA, true)
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Discard", 80f, 0f)) {
+                executePendingDeckAction(deckA, true)
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 80f, 0f)) {
+                pendingDeckActionA = PendingDeckAction.NONE
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+
+        // Deck B Confirmation
+        if (pendingDeckActionB != PendingDeckAction.NONE) {
+            ImGui.openPopup("Save Changes Deck B?##confirm")
+        }
+        
+        if (ImGui.beginPopupModal("Save Changes Deck B?##confirm", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("You have unsaved changes in Deck B. Save before proceeding?")
+            ImGui.spacing()
+            if (ImGui.button("Save", 80f, 0f)) {
+                val activeName = llm.slop.spirals.patches.PatchManager.activePresetB
+                if (activeName != null) {
+                    saveDeckPreset(activeName, deckB, false)
+                } else {
+                    saveDeckPreset("Untitled_B", deckB, false)
+                }
+                executePendingDeckAction(deckB, false)
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Discard", 80f, 0f)) {
+                executePendingDeckAction(deckB, false)
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 80f, 0f)) {
+                pendingDeckActionB = PendingDeckAction.NONE
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
+    private fun executePendingDeckAction(deck: Deck, isDeckA: Boolean) {
+        val action = if (isDeckA) pendingDeckActionA else pendingDeckActionB
+        val targetPreset = if (isDeckA) pendingDeckTargetPresetA else pendingDeckTargetPresetB
+
+        when (action) {
+            PendingDeckAction.NEW -> {
+                deck.reset()
+                if (isDeckA) {
+                    llm.slop.spirals.patches.PatchManager.activePresetA = null
+                    llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                } else {
+                    llm.slop.spirals.patches.PatchManager.activePresetB = null
+                    llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                }
+            }
+            PendingDeckAction.LOAD_FILE -> {
+                performLoadDeckPreset(isDeckA)
+            }
+            PendingDeckAction.LOAD_PRESET -> {
+                if (targetPreset != null) {
+                    if (targetPreset == "None") {
+                        if (isDeckA) {
+                            llm.slop.spirals.patches.PatchManager.activePresetA = null
+                            llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                        } else {
+                            llm.slop.spirals.patches.PatchManager.activePresetB = null
+                            llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                        }
+                    } else {
+                        loadDeckPreset(targetPreset, deck, isDeckA)
+                    }
+                }
+            }
+            PendingDeckAction.NONE -> {}
+        }
+
+        if (isDeckA) {
+            pendingDeckActionA = PendingDeckAction.NONE
+            pendingDeckTargetPresetA = null
+        } else {
+            pendingDeckActionB = PendingDeckAction.NONE
+            pendingDeckTargetPresetB = null
+        }
+    }
+
+    private fun performLoadDeckPreset(isDeckA: Boolean) {
+        val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Load Deck Preset", java.awt.FileDialog.LOAD)
+        dialog.file = "*.json"
+        dialog.isVisible = true
+        if (dialog.directory != null && dialog.file != null) {
+            val sourceFile = java.io.File(dialog.directory, dialog.file)
+            val presetsDir = java.io.File("presets/decks")
+            if (!presetsDir.exists()) presetsDir.mkdirs()
+            
+            val targetFile = java.io.File(presetsDir, sourceFile.name)
+            if (sourceFile.absolutePath != targetFile.absolutePath) {
+                sourceFile.copyTo(targetFile, overwrite = true)
+            }
+            llm.slop.spirals.patches.PatchManager.loadDeckPresetAsync(targetFile, isDeckA)
         }
     }
 
@@ -686,45 +822,91 @@ class UIManager(private val windowHandle: Long) {
         if (ImGui.combo("##preset", selectedIndex, presets)) {
             val chosen = presets[selectedIndex.get()]
             val cleanName = chosen.removeSuffix(" *")
-            if (cleanName == "None") {
+            
+            if (isDirty) {
                 if (isDeckA) {
-                    llm.slop.spirals.patches.PatchManager.activePresetA = null
-                    llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                    pendingDeckActionA = PendingDeckAction.LOAD_PRESET
+                    pendingDeckTargetPresetA = cleanName
                 } else {
-                    llm.slop.spirals.patches.PatchManager.activePresetB = null
-                    llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                    pendingDeckActionB = PendingDeckAction.LOAD_PRESET
+                    pendingDeckTargetPresetB = cleanName
                 }
             } else {
-                loadDeckPreset(cleanName, deck, isDeckA)
+                if (cleanName == "None") {
+                    if (isDeckA) {
+                        llm.slop.spirals.patches.PatchManager.activePresetA = null
+                        llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                    } else {
+                        llm.slop.spirals.patches.PatchManager.activePresetB = null
+                        llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                    }
+                } else {
+                    loadDeckPreset(cleanName, deck, isDeckA)
+                }
             }
         }
         ImGui.popItemWidth()
 
+        var openSaveAs = false
+        var openDeleteConfirm = false
+        
         ImGui.sameLine()
-        if (ImGui.button("Save", saveBtnW, 0f)) {
-            ImGui.openPopup("save_deck_preset_popup")
+        if (ImGui.button("Menu", saveBtnW, 0f)) {
+            ImGui.openPopup("deck_preset_menu_$label")
         }
 
-        if (ImGui.beginPopup("save_deck_preset_popup")) {
-            val activeName = if (isDeckA) llm.slop.spirals.patches.PatchManager.activePresetA else llm.slop.spirals.patches.PatchManager.activePresetB
-            val isDeckDirty = llm.slop.spirals.patches.PatchManager.isDeckDirty(deck, isDeckA)
-
-            if (activeName != null) {
-                if (isDeckDirty) {
-                    if (ImGui.button("Overwrite '$activeName'", ImGui.getContentRegionAvailX(), 25f)) {
-                        saveDeckPreset(activeName, deck, isDeckA)
-                        ImGui.closeCurrentPopup()
-                    }
-                    ImGui.separator()
+        if (ImGui.beginPopup("deck_preset_menu_$label")) {
+            if (ImGui.menuItem("New (Reset Deck)")) {
+                if (isDirty) {
+                    if (isDeckA) pendingDeckActionA = PendingDeckAction.NEW
+                    else pendingDeckActionB = PendingDeckAction.NEW
                 } else {
-                    ImGui.textDisabled("Preset is up to date")
-                    ImGui.separator()
+                    deck.reset()
+                    if (isDeckA) {
+                        llm.slop.spirals.patches.PatchManager.activePresetA = null
+                        llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                    } else {
+                        llm.slop.spirals.patches.PatchManager.activePresetB = null
+                        llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                    }
                 }
             }
+            if (ImGui.menuItem("Load File...")) {
+                if (isDirty) {
+                    if (isDeckA) pendingDeckActionA = PendingDeckAction.LOAD_FILE
+                    else pendingDeckActionB = PendingDeckAction.LOAD_FILE
+                } else {
+                    performLoadDeckPreset(isDeckA)
+                }
+            }
+            
+            ImGui.separator()
+            
+            if (ImGui.menuItem("Save")) {
+                if (activePreset != null) saveDeckPreset(activePreset, deck, isDeckA)
+                else openSaveAs = true
+            }
+            if (ImGui.menuItem("Save As...")) {
+                openSaveAs = true
+            }
+            
+            // Delete option - only show if there is an active loaded preset
+            if (activePreset != null && activePreset != "None") {
+                ImGui.separator()
+                if (ImGui.menuItem("Delete '$activePreset'")) {
+                    openDeleteConfirm = true
+                }
+            }
+            ImGui.endPopup()
+        }
 
+        if (openSaveAs) ImGui.openPopup("save_as_deck_preset_popup_$label")
+        if (openDeleteConfirm) ImGui.openPopup("delete_deck_preset_popup_$label")
+
+        if (ImGui.beginPopup("save_as_deck_preset_popup_$label")) {
             ImGui.text("Save As New:")
             val nameInput = if (isDeckA) deckASaveName else deckBSaveName
-            ImGui.inputText("##nameInput", nameInput)
+            ImGui.inputText("##nameInput_$label", nameInput)
             ImGui.sameLine()
             if (ImGui.button("Save##asNew")) {
                 val newName = nameInput.get().trim()
@@ -732,6 +914,31 @@ class UIManager(private val windowHandle: Long) {
                     saveDeckPreset(newName, deck, isDeckA)
                     ImGui.closeCurrentPopup()
                 }
+            }
+            ImGui.endPopup()
+        }
+
+        // Delete confirmation popup
+        if (ImGui.beginPopupModal("delete_deck_preset_popup_$label", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("Are you sure you want to permanently delete '$activePreset'?")
+            ImGui.spacing()
+            if (ImGui.button("Delete", 80f, 0f)) {
+                val file = java.io.File("presets/decks/$activePreset.json")
+                if (file.exists()) file.delete()
+                
+                // Clear active preset state
+                if (isDeckA) {
+                    llm.slop.spirals.patches.PatchManager.activePresetA = null
+                    llm.slop.spirals.patches.PatchManager.cachedDtoA = null
+                } else {
+                    llm.slop.spirals.patches.PatchManager.activePresetB = null
+                    llm.slop.spirals.patches.PatchManager.cachedDtoB = null
+                }
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 80f, 0f)) {
+                ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
         }

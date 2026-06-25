@@ -39,6 +39,22 @@ class Deck(
     }
 
     /**
+     * Resets all parameters to their defaults.
+     */
+    fun reset() {
+        source.parameters.values.forEach { it.reset() }
+        source.globalAlpha.reset()
+        fbDecay.reset()
+        fbGain.reset()
+        fbZoom.reset()
+        fbRotate.reset()
+        fbHueShift.reset()
+        fbBlur.reset()
+        fbChroma.reset()
+        fbMode.reset()
+    }
+
+    /**
      * Retrieves the current history FBO (from the last frame).
      */
     fun getCurrentHistoryFBO(): FBO = if (fbIndex == 0) fb1 else fb2

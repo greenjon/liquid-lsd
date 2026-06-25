@@ -36,7 +36,77 @@ data class ModulatorDto(
     val dcOffsetMin: Float = 0.0f,
     val dcOffsetMax: Float = 0.0f,
     val randomizeDcOffset: Boolean = false
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ModulatorDto) return false
+        
+        if (sourceId != other.sourceId) return false
+        if (operator != other.operator) return false
+        if (bypassed != other.bypassed) return false
+        if (waveform != other.waveform) return false
+        if (lfoSpeedMode != other.lfoSpeedMode) return false
+        
+        if (amplitudeMin != other.amplitudeMin) return false
+        if (amplitudeMax != other.amplitudeMax) return false
+        if (subdivisionMin != other.subdivisionMin) return false
+        if (subdivisionMax != other.subdivisionMax) return false
+        if (phaseOffsetMin != other.phaseOffsetMin) return false
+        if (phaseOffsetMax != other.phaseOffsetMax) return false
+        if (slopeMin != other.slopeMin) return false
+        if (slopeMax != other.slopeMax) return false
+        if (dcOffsetMin != other.dcOffsetMin) return false
+        if (dcOffsetMax != other.dcOffsetMax) return false
+        
+        if (randomizeAmplitude != other.randomizeAmplitude) return false
+        if (randomizeSubdivision != other.randomizeSubdivision) return false
+        if (randomizePhaseOffset != other.randomizePhaseOffset) return false
+        if (randomizeSlope != other.randomizeSlope) return false
+        if (randomizeDcOffset != other.randomizeDcOffset) return false
+        
+        // Exclude instantaneous values from equality check if they are subject to randomization
+        if (!randomizeAmplitude && amplitude != other.amplitude) return false
+        if (!randomizeSubdivision && subdivision != other.subdivision) return false
+        if (!randomizePhaseOffset && phaseOffset != other.phaseOffset) return false
+        if (!randomizeSlope && slope != other.slope) return false
+        if (!randomizeDcOffset && dcOffset != other.dcOffset) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = sourceId.hashCode()
+        result = 31 * result + operator.hashCode()
+        result = 31 * result + bypassed.hashCode()
+        result = 31 * result + waveform.hashCode()
+        result = 31 * result + lfoSpeedMode.hashCode()
+        
+        result = 31 * result + amplitudeMin.hashCode()
+        result = 31 * result + amplitudeMax.hashCode()
+        result = 31 * result + subdivisionMin.hashCode()
+        result = 31 * result + subdivisionMax.hashCode()
+        result = 31 * result + phaseOffsetMin.hashCode()
+        result = 31 * result + phaseOffsetMax.hashCode()
+        result = 31 * result + slopeMin.hashCode()
+        result = 31 * result + slopeMax.hashCode()
+        result = 31 * result + dcOffsetMin.hashCode()
+        result = 31 * result + dcOffsetMax.hashCode()
+
+        result = 31 * result + randomizeAmplitude.hashCode()
+        result = 31 * result + randomizeSubdivision.hashCode()
+        result = 31 * result + randomizePhaseOffset.hashCode()
+        result = 31 * result + randomizeSlope.hashCode()
+        result = 31 * result + randomizeDcOffset.hashCode()
+
+        if (!randomizeAmplitude) result = 31 * result + amplitude.hashCode()
+        if (!randomizeSubdivision) result = 31 * result + subdivision.hashCode()
+        if (!randomizePhaseOffset) result = 31 * result + phaseOffset.hashCode()
+        if (!randomizeSlope) result = 31 * result + slope.hashCode()
+        if (!randomizeDcOffset) result = 31 * result + dcOffset.hashCode()
+        
+        return result
+    }
+}
 
 @Serializable
 data class ParameterDto(
@@ -48,7 +118,39 @@ data class ParameterDto(
     val mappedMidiId: String? = null,
     val midiMapMin: Float = 0f,
     val midiMapMax: Float = 1f
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ParameterDto) return false
+
+        if (baseMin != other.baseMin) return false
+        if (baseMax != other.baseMax) return false
+        if (randomizeBase != other.randomizeBase) return false
+        if (mappedMidiId != other.mappedMidiId) return false
+        if (midiMapMin != other.midiMapMin) return false
+        if (midiMapMax != other.midiMapMax) return false
+        if (modulators != other.modulators) return false
+
+        // Exclude instantaneous baseValue from equality check if it is subject to randomization
+        if (!randomizeBase && baseValue != other.baseValue) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = baseMin.hashCode()
+        result = 31 * result + baseMax.hashCode()
+        result = 31 * result + randomizeBase.hashCode()
+        result = 31 * result + (mappedMidiId?.hashCode() ?: 0)
+        result = 31 * result + midiMapMin.hashCode()
+        result = 31 * result + midiMapMax.hashCode()
+        result = 31 * result + modulators.hashCode()
+
+        if (!randomizeBase) result = 31 * result + baseValue.hashCode()
+
+        return result
+    }
+}
 
 @Serializable
 data class DeckPatchDto(
