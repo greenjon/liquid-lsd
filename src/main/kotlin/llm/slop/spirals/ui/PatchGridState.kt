@@ -12,7 +12,7 @@ data class PatchCellId(val paramKey: String, val cvSourceId: String)
 
 sealed class MidiLearnTarget {
     data class GridCell(val cellId: PatchCellId, val param: ModulatableParameter) : MidiLearnTarget()
-    data class BaseValueSlider(val label: String, val param: ModulatableParameter, val min: Float, val max: Float) : MidiLearnTarget()
+    data class BaseValueSlider(val paramKey: String, val label: String, val param: ModulatableParameter, val min: Float, val max: Float) : MidiLearnTarget()
 }
 
 /**

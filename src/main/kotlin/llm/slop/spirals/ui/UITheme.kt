@@ -54,9 +54,11 @@ object UITheme {
     /** True if the main window should hide all UI overlay panels to show full video mix. */
     var cleanModeEnabled: Boolean = false
 
+    enum class SetlistKeyTrigger { NONE, ARROWS, PAGE_UP_DOWN, SPACE_BACKSPACE }
+
     var setlistTransitionBehavior: SetlistTransitionBehavior = SetlistTransitionBehavior.PROMPT
-    var setlistNextMidiCc: Int = -1
-    var setlistPrevMidiCc: Int = -1
+    var activeMidiProfile: String = "default"
+    var setlistKeyTrigger: SetlistKeyTrigger = SetlistKeyTrigger.NONE
 
     init {
         loadSettings()
@@ -92,13 +94,13 @@ object UITheme {
                     setlistTransitionBehavior = try { SetlistTransitionBehavior.valueOf(savedTransition) } catch (e: Exception) { SetlistTransitionBehavior.PROMPT }
                     logger.info { "Loaded setlistTransitionBehavior from settings file: $setlistTransitionBehavior" }
                 }
-                val savedNextMidi = props.getProperty("setlistNextMidiCc")?.toIntOrNull()
-                if (savedNextMidi != null) {
-                    setlistNextMidiCc = savedNextMidi
+                val savedProfile = props.getProperty("activeMidiProfile")
+                if (savedProfile != null) {
+                    activeMidiProfile = savedProfile
                 }
-                val savedPrevMidi = props.getProperty("setlistPrevMidiCc")?.toIntOrNull()
-                if (savedPrevMidi != null) {
-                    setlistPrevMidiCc = savedPrevMidi
+                val savedKeyTrigger = props.getProperty("setlistKeyTrigger")
+                if (savedKeyTrigger != null) {
+                    setlistKeyTrigger = try { SetlistKeyTrigger.valueOf(savedKeyTrigger) } catch (e: Exception) { SetlistKeyTrigger.NONE }
                 }
             } else {
                 logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, autocollapseEnabled: $autocollapseEnabled" }
@@ -116,8 +118,8 @@ object UITheme {
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
             props.setProperty("autocollapseEnabled", autocollapseEnabled.toString())
             props.setProperty("setlistTransitionBehavior", setlistTransitionBehavior.name)
-            props.setProperty("setlistNextMidiCc", setlistNextMidiCc.toString())
-            props.setProperty("setlistPrevMidiCc", setlistPrevMidiCc.toString())
+            props.setProperty("activeMidiProfile", activeMidiProfile)
+            props.setProperty("setlistKeyTrigger", setlistKeyTrigger.name)
             settingsFile.outputStream().use { props.store(it, "Spirals Settings") }
             logger.info { "Saved settings to file" }
         } catch (e: Exception) {

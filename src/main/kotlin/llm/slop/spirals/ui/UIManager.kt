@@ -165,9 +165,8 @@ class UIManager(private val windowHandle: Long) {
                 val midiId = "midi_cc_${channel}_${cc}"
                 when (target) {
                     is MidiLearnTarget.BaseValueSlider -> {
-                        target.param.mappedMidiId = midiId
-                        target.param.midiMapMin = target.min
-                        target.param.midiMapMax = target.max
+                        llm.slop.spirals.midi.MidiMappingManager.addMapping(target.paramKey, cc, channel, target.min, target.max)
+                        llm.slop.spirals.midi.MidiMappingManager.saveActiveProfile()
                     }
                     is MidiLearnTarget.GridCell -> {
                         // Clear existing MIDI modulators for this parameter
@@ -191,7 +190,9 @@ class UIManager(private val windowHandle: Long) {
                 }
                 patchState.midiLearnTarget = null
             } else {
-                if (UITheme.setlistNextMidiCc != -1 && cc == UITheme.setlistNextMidiCc) {
+                val nextCc = llm.slop.spirals.midi.MidiMappingManager.getCcForSpecial("Global/setlistNext")
+                val nextCh = llm.slop.spirals.midi.MidiMappingManager.getChannelForSpecial("Global/setlistNext")
+                if (nextCc != -1 && cc == nextCc && channel == nextCh) {
                     val valNow = llm.slop.spirals.midi.MidiEngine.getCcValue(channel, cc)
                     val isHigh = valNow > 0.5f
                     if (isHigh && !lastNextMidiCcHigh) {
@@ -199,7 +200,9 @@ class UIManager(private val windowHandle: Long) {
                     }
                     lastNextMidiCcHigh = isHigh
                 }
-                if (UITheme.setlistPrevMidiCc != -1 && cc == UITheme.setlistPrevMidiCc) {
+                val prevCc = llm.slop.spirals.midi.MidiMappingManager.getCcForSpecial("Global/setlistPrev")
+                val prevCh = llm.slop.spirals.midi.MidiMappingManager.getChannelForSpecial("Global/setlistPrev")
+                if (prevCc != -1 && cc == prevCc && channel == prevCh) {
                     val valNow = llm.slop.spirals.midi.MidiEngine.getCcValue(channel, cc)
                     val isHigh = valNow > 0.5f
                     if (isHigh && !lastPrevMidiCcHigh) {
@@ -211,7 +214,25 @@ class UIManager(private val windowHandle: Long) {
         }
 
         val cvDelta = mixer.pollSetlistAdvance()
-        val totalDelta = midiCcDelta + cvDelta
+        var keyDelta = 0
+        if (!ImGui.getIO().wantCaptureKeyboard) {
+            when (UITheme.setlistKeyTrigger) {
+                UITheme.SetlistKeyTrigger.ARROWS -> {
+                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.LeftArrow))) keyDelta -= 1
+                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.RightArrow))) keyDelta += 1
+                }
+                UITheme.SetlistKeyTrigger.PAGE_UP_DOWN -> {
+                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.PageUp))) keyDelta -= 1
+                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.PageDown))) keyDelta += 1
+                }
+                UITheme.SetlistKeyTrigger.SPACE_BACKSPACE -> {
+                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Backspace))) keyDelta -= 1
+                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Space))) keyDelta += 1
+                }
+                else -> {}
+            }
+        }
+        val totalDelta = midiCcDelta + cvDelta + keyDelta
         if (totalDelta != 0) {
             advanceSetlist(totalDelta)
         }
@@ -813,17 +834,17 @@ class UIManager(private val windowHandle: Long) {
         ImGui.beginChild("MasterControls", availW, 100f, true)
         
         // Crossfader (mapped display value from -1.0 to 1.0)
-        drawFlatSlider("Crossfader", mixer.crossfade, 0f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)) {
+        drawFlatSlider("Mixer/crossfade", "Crossfader", mixer.crossfade, 0f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)) {
             "A <-- %.2f --> B".format(it)
         }
 
         ImGui.columns(2, "masterMixerCols", false)
         
         // Alpha (renamed from "Master Alpha")
-        drawFlatSlider("Alpha", mixer.masterAlpha, 0f, 1f, 50f, 0f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f))
+        drawFlatSlider("Mixer/masterAlpha", "Alpha", mixer.masterAlpha, 0f, 1f, 50f, 0f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f))
         ImGui.nextColumn()
         
-        drawFlatSlider("Bloom", mixer.bloom, 0f, 1f, 50f, 0f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f))
+        drawFlatSlider("Mixer/bloom", "Bloom", mixer.bloom, 0f, 1f, 50f, 0f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f))
         ImGui.nextColumn()
         
         ImGui.columns(1)
@@ -833,6 +854,15 @@ class UIManager(private val windowHandle: Long) {
         val modeIdx = mixer.mode.value.toInt().coerceIn(0, 4)
         ImGui.spacing()
         UITheme.captionColored(0.4f, 1.0f, 0.8f, 1.0f, "Blend Mode: ${modes[modeIdx]}")
+
+        ImGui.sameLine(ImGui.getWindowContentRegionMaxX() - 170f)
+        if (ImGui.button("< Prev", 80f, 0f)) {
+            advanceSetlist(-1)
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Next >", 80f, 0f)) {
+            advanceSetlist(1)
+        }
         
         ImGui.endChild()
         ImGui.popStyleColor()
@@ -1111,6 +1141,7 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun drawFlatSlider(
+        paramKey: String,
         label: String,
         param: ModulatableParameter,
         min: Float,
@@ -1136,12 +1167,12 @@ class UIManager(private val windowHandle: Long) {
         ImGui.invisibleButton("##slider", barW, barH)
 
         val isTarget = patchState.midiLearnTarget?.let {
-            it is MidiLearnTarget.BaseValueSlider && it.param === param
+            it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
         } ?: false
 
         if (patchState.isMidiLearnMode) {
             if (ImGui.isItemClicked(0)) {
-                patchState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(label, param, min, max)
+                patchState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, label, param, min, max)
             }
         }
 
@@ -1157,56 +1188,46 @@ class UIManager(private val windowHandle: Long) {
             3f
         )
 
-        val currentDisplayVal = displayMin + if (valueRange > 0f) ((param.value - min) / valueRange) * displayRange else 0f
-        val fillCol = themeColor
-
-        if (displayMin < 0f && displayMax > 0f) {
-            val pctCenter = (0f - displayMin) / displayRange
-            val pctVal = (currentDisplayVal - displayMin) / displayRange
-            val centerX = barStartX + barW * pctCenter
-            val valX = barStartX + barW * pctVal
-
-            dl.addRectFilled(
-                minOf(centerX, valX), barScreenY,
-                maxOf(centerX, valX), barScreenY + barH,
-                fillCol,
-                3f
+        // Draw learning highlight if active
+        if (isTarget) {
+            dl.addRect(
+                barStartX - 1f, barScreenY - 1f,
+                barStartX + barW + 1f, barScreenY + barH + 1f,
+                ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f),
+                3f,
+                0,
+                1.5f
             )
-        } else {
-            val fillPct = if (valueRange > 0f) ((param.value - min) / valueRange).coerceIn(0f, 1f) else 0f
-            if (fillPct > 0f) {
-                dl.addRectFilled(
-                    barStartX, barScreenY,
-                    barStartX + barW * fillPct, barScreenY + barH,
-                    fillCol,
-                    3f
-                )
-            }
+        } else if (patchState.isMidiLearnMode) {
+            // Subtle dotted or low alpha border to show map-ability
+            dl.addRect(
+                barStartX, barScreenY,
+                barStartX + barW, barScreenY + barH,
+                ImGui.colorConvertFloat4ToU32(0.8f, 0.5f, 0f, 0.4f),
+                3f,
+                0,
+                1f
+            )
         }
 
-        // Draw highlight if it's the active learn target
-        if (isTarget) {
-            val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1.0f) // bright cyan
-            dl.addRect(
-                barStartX - 2f, barScreenY - 2f,
-                barStartX + barW + 2f, barScreenY + barH + 2f,
-                borderCol,
-                4f,
-                15,
-                2.0f
+        // Fill mapping slider value
+        val currentDisplayVal = displayMin + if (valueRange > 0f) ((param.baseValue - min) / valueRange) * displayRange else 0f
+        val pct = if (valueRange > 0f) ((param.baseValue - min) / valueRange).coerceIn(0f, 1f) else 0f
+        val fillWidth = barW * pct
+
+        if (fillWidth > 0f) {
+            dl.addRectFilled(
+                barStartX, barScreenY,
+                barStartX + fillWidth, barScreenY + barH,
+                themeColor,
+                3f
             )
         }
 
         // MIDI mapped indicator
-        val midiIndicator = param.mappedMidiId?.let { id ->
-            if (id.startsWith("midi_cc_")) {
-                val parts = id.substring("midi_cc_".length).split('_')
-                if (parts.size >= 2) {
-                    val ch = parts[0].toIntOrNull() ?: 0
-                    val cc = parts[1].toIntOrNull() ?: 0
-                    if (ch == 0) "[CC $cc]" else "[Ch ${ch + 1} CC $cc]"
-                } else null
-            } else null
+        val mapping = llm.slop.spirals.midi.MidiMappingManager.getMappingForParameter(paramKey)
+        val midiIndicator = mapping?.let { m ->
+            if (m.channel == 0) "[CC ${m.cc}]" else "[Ch ${m.channel + 1} CC ${m.cc}]"
         }
 
         // Value text overlay

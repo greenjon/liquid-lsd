@@ -466,11 +466,10 @@ object PatchGridPanel {
             if (ImGui.menuItem("Clear all CVs")) {
                 param.modulators.clear()
             }
-            val hasMidiMap = param.mappedMidiId != null
+            val hasMidiMap = llm.slop.spirals.midi.MidiMappingManager.hasMapping(paramKey)
             if (ImGui.menuItem("Clear MIDI mapping", null, false, hasMidiMap)) {
-                param.mappedMidiId = null
-                param.midiMapMin = 0f
-                param.midiMapMax = 1f
+                llm.slop.spirals.midi.MidiMappingManager.removeMapping(paramKey)
+                llm.slop.spirals.midi.MidiMappingManager.saveActiveProfile()
             }
             ImGui.endPopup()
         }

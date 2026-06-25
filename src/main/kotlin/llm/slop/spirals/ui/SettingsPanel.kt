@@ -191,23 +191,47 @@ object SettingsPanel {
         }
         ImGui.spacing()
 
-        val nextCc = imgui.type.ImInt(UITheme.setlistNextMidiCc)
-        if (ImGui.inputInt("Next CC", nextCc)) {
-            val newVal = nextCc.get().coerceIn(-1, 127)
-            if (newVal != UITheme.setlistNextMidiCc) {
-                UITheme.setlistNextMidiCc = newVal
-                UITheme.saveSettings()
-            }
+        val triggers = UITheme.SetlistKeyTrigger.values()
+        val triggerNames = triggers.map { it.name }.toTypedArray()
+        val currentTriggerIdx = imgui.type.ImInt(UITheme.setlistKeyTrigger.ordinal)
+        if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
+            UITheme.setlistKeyTrigger = triggers[currentTriggerIdx.get()]
+            UITheme.saveSettings()
         }
         ImGui.spacing()
 
-        val prevCc = imgui.type.ImInt(UITheme.setlistPrevMidiCc)
+        val midiDir = java.io.File("presets/midi")
+        val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
+            .map { it.nameWithoutExtension }
+            .toMutableList()
+        if (profileFiles.isEmpty()) profileFiles.add("default")
+        if (!profileFiles.contains(UITheme.activeMidiProfile)) {
+            profileFiles.add(UITheme.activeMidiProfile)
+        }
+
+        val currentProfileIdx = imgui.type.ImInt(profileFiles.indexOf(UITheme.activeMidiProfile).coerceAtLeast(0))
+        val profileNamesArray = profileFiles.toTypedArray()
+        if (ImGui.combo("MIDI Profile", currentProfileIdx, profileNamesArray)) {
+            val nextProfile = profileNamesArray[currentProfileIdx.get()]
+            llm.slop.spirals.midi.MidiMappingManager.loadProfile(nextProfile)
+            UITheme.activeMidiProfile = nextProfile
+            UITheme.saveSettings()
+        }
+        ImGui.spacing()
+
+        val nextCc = imgui.type.ImInt(llm.slop.spirals.midi.MidiMappingManager.getCcForSpecial("Global/setlistNext"))
+        if (ImGui.inputInt("Next CC", nextCc)) {
+            val newVal = nextCc.get().coerceIn(-1, 127)
+            llm.slop.spirals.midi.MidiMappingManager.addMapping("Global/setlistNext", newVal)
+            llm.slop.spirals.midi.MidiMappingManager.saveActiveProfile()
+        }
+        ImGui.spacing()
+
+        val prevCc = imgui.type.ImInt(llm.slop.spirals.midi.MidiMappingManager.getCcForSpecial("Global/setlistPrev"))
         if (ImGui.inputInt("Prev CC", prevCc)) {
             val newVal = prevCc.get().coerceIn(-1, 127)
-            if (newVal != UITheme.setlistPrevMidiCc) {
-                UITheme.setlistPrevMidiCc = newVal
-                UITheme.saveSettings()
-            }
+            llm.slop.spirals.midi.MidiMappingManager.addMapping("Global/setlistPrev", newVal)
+            llm.slop.spirals.midi.MidiMappingManager.saveActiveProfile()
         }
         ImGui.spacing()
         UITheme.caption("Set to -1 to disable MIDI CC triggers.")

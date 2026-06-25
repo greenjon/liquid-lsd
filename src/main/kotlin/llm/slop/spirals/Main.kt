@@ -27,6 +27,10 @@ fun main() {
     // Ensure preset directories exist
     java.io.File("presets/decks").mkdirs()
     java.io.File("presets/global").mkdirs()
+    java.io.File("presets/midi").mkdirs()
+
+    // Load active MIDI mapping profile
+    llm.slop.spirals.midi.MidiMappingManager.loadProfile(UITheme.activeMidiProfile)
 
     // Initialize GLFW
     if (!glfwInit()) {
@@ -185,6 +189,9 @@ fun main() {
         val w = IntArray(1)
         val h = IntArray(1)
         glfwGetFramebufferSize(window, w, h)
+
+        // 0. Update MIDI mappings
+        llm.slop.spirals.midi.MidiMappingManager.update(mixer)
 
         // 1. Update and Render Deck A (renders source + applies feedback loop)
         deckA.update()
