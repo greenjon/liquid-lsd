@@ -8,13 +8,35 @@ object ClipboardManager {
     var cellClipboard: CellClipboardData? = null
     var rowClipboard: RowClipboardData? = null
 
-    private val GENERATORS = listOf("beatPhase", "lfo", "sampleAndHold")
+    private val GENERATORS = listOf("beatPhase", "lfo", "sampleAndHold", "gen1", "gen2")
 
     fun mapModulatorToDestination(dto: ModulatorDto, destCvId: String): ModulatorDto {
+        val mappedSourceId = when (destCvId) {
+            "audio" -> {
+                when (dto.sourceId) {
+                    "audio_amp", "audio_bass", "audio_mid", "audio_high" -> dto.sourceId
+                    "amp" -> "audio_amp"
+                    "bass" -> "audio_bass"
+                    "mid" -> "audio_mid"
+                    "high" -> "audio_high"
+                    else -> "audio_amp"
+                }
+            }
+            "trigger" -> {
+                when (dto.sourceId) {
+                    "trigger_onset", "trigger_accent" -> dto.sourceId
+                    "onset" -> "trigger_onset"
+                    "accent" -> "trigger_accent"
+                    else -> "trigger_onset"
+                }
+            }
+            else -> destCvId
+        }
+
         val isSourceGenerator = dto.sourceId in GENERATORS
         val isDestGenerator = destCvId in GENERATORS
         
-        var mapped = dto.copy(sourceId = destCvId)
+        var mapped = dto.copy(sourceId = mappedSourceId)
         
         if (!isSourceGenerator && isDestGenerator) {
             // Generate default speed/waveform properties
@@ -40,7 +62,13 @@ object ClipboardManager {
         val mappedMods = data.modulators.map { mapModulatorToDestination(it, destCvId) }
         
         // Remove existing modulators for this CV ID and append the new ones
-        param.modulators.removeIf { it.sourceId == destCvId }
+        if (destCvId == "audio") {
+            param.modulators.removeIf { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+        } else if (destCvId == "trigger") {
+            param.modulators.removeIf { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+        } else {
+            param.modulators.removeIf { it.sourceId == destCvId }
+        }
         param.modulators.addAll(mappedMods.map { it.toDomain() })
     }
 

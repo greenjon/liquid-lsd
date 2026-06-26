@@ -2,6 +2,7 @@ package llm.slop.spirals.parameters
 
 import llm.slop.spirals.cv.CvHistoryBuffer
 import llm.slop.spirals.cv.evaluateModulator
+import llm.slop.spirals.cv.CVRegistry
 import java.util.concurrent.CopyOnWriteArrayList
 
 enum class MeterType {
@@ -64,7 +65,9 @@ class ModulatableParameter(
      * Called once per frame prior to rendering.
      */
     fun evaluate(): Float {
-        val activeMods = modulators.filter { !it.bypassed }
+        val activeMods = modulators.filter { 
+            !it.bypassed && (CVRegistry.exists(it.sourceId) || it.sourceId.startsWith("midi_cc_"))
+        }
         if (activeMods.isEmpty()) {
             value = baseValue.coerceIn(minClamp, maxClamp)
             history.add(value)

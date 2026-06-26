@@ -12,5 +12,6 @@ fun calculateWaveform(waveform: Waveform, phase: Double, slope: Float): Float {
             raw * 2.0f - 1.0f
         }
         Waveform.SQUARE -> if (phase < slope) 1.0f else -1.0f
+        Waveform.RANDOM -> 0f
     }
 }

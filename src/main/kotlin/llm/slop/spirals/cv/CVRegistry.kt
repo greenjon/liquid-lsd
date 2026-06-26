@@ -32,6 +32,25 @@ object CVRegistry {
         register(BeatSine())
         register(LFO())
         register(SampleAndHold())
+
+        // Register new unified modulators
+        register(GenCVSource("gen1"))
+        register(GenCVSource("gen2"))
+
+        register(MutableCVSource("audio_amp"))
+        register(MutableCVSource("audio_bass"))
+        register(MutableCVSource("audio_mid"))
+        register(MutableCVSource("audio_high"))
+
+        register(MutableCVSource("trigger_onset"))
+        register(MutableCVSource("trigger_accent"))
+    }
+
+    /**
+     * Checks if a CV source ID is registered.
+     */
+    fun exists(id: String): Boolean {
+        return sources.containsKey(id)
     }
 
     /**
@@ -76,6 +95,14 @@ object CVRegistry {
         val src = sources[id]
         if (src is MutableCVSource) {
             src.value = value
+        }
+        when (id) {
+            "amp" -> updatePushedValue("audio_amp", value)
+            "bass" -> updatePushedValue("audio_bass", value)
+            "mid" -> updatePushedValue("audio_mid", value)
+            "high" -> updatePushedValue("audio_high", value)
+            "onset" -> updatePushedValue("trigger_onset", value)
+            "accent" -> updatePushedValue("trigger_accent", value)
         }
     }
 

@@ -25,17 +25,17 @@ object PatchGridPanel {
 
     private fun getCvColumns(): List<String> {
         return if (UITheme.audioEngineEnabled) {
-            listOf("lfo", "sampleAndHold", "beatPhase", "amp", "bass", "mid", "high", "onset", "accent")
+            listOf("gen1", "gen2", "lfo", "sampleAndHold", "beatPhase", "audio", "amp", "bass", "mid", "high", "trigger", "onset", "accent")
         } else {
-            listOf("lfo", "sampleAndHold")
+            listOf("gen1", "gen2", "lfo", "sampleAndHold")
         }
     }
 
     private fun getCvLabels(): List<String> {
         return if (UITheme.audioEngineEnabled) {
-            listOf("LFO", "RAND", "BEAT", "AMP", "BASS", "MID", "HIGH", "ONSET", "ACCENT")
+            listOf("GEN 1", "GEN 2", "LFO", "RAND", "BEAT", "AUDIO", "AMP", "BASS", "MID", "HIGH", "TRIGGER", "ONSET", "ACCENT")
         } else {
-            listOf("LFO", "RAND")
+            listOf("GEN 1", "GEN 2", "LFO", "RAND")
         }
     }
 
@@ -50,15 +50,19 @@ object PatchGridPanel {
             "final"          -> 0 * (CELL + CELL_PAD)
             "base"           -> 1 * (CELL + CELL_PAD) + GROUP_GAP
             "midi"           -> 2 * (CELL + CELL_PAD) + 2 * GROUP_GAP
-            "lfo"            -> 3 * (CELL + CELL_PAD) + 2 * GROUP_GAP
-            "sampleAndHold"  -> 4 * (CELL + CELL_PAD) + 2 * GROUP_GAP
-            "beatPhase"      -> 5 * (CELL + CELL_PAD) + 2 * GROUP_GAP
-            "amp"            -> 6 * (CELL + CELL_PAD) + 3 * GROUP_GAP
-            "bass"           -> 7 * (CELL + CELL_PAD) + 3 * GROUP_GAP
-            "mid"            -> 8 * (CELL + CELL_PAD) + 3 * GROUP_GAP
-            "high"           -> 9 * (CELL + CELL_PAD) + 3 * GROUP_GAP
-            "onset"          -> 10 * (CELL + CELL_PAD) + 4 * GROUP_GAP
-            "accent"         -> 11 * (CELL + CELL_PAD) + 4 * GROUP_GAP
+            "gen1"           -> 3 * (CELL + CELL_PAD) + 2 * GROUP_GAP
+            "gen2"           -> 4 * (CELL + CELL_PAD) + 2 * GROUP_GAP
+            "lfo"            -> 5 * (CELL + CELL_PAD) + 2 * GROUP_GAP
+            "sampleAndHold"  -> 6 * (CELL + CELL_PAD) + 2 * GROUP_GAP
+            "beatPhase"      -> 7 * (CELL + CELL_PAD) + 2 * GROUP_GAP
+            "audio"          -> 8 * (CELL + CELL_PAD) + 3 * GROUP_GAP
+            "amp"            -> 9 * (CELL + CELL_PAD) + 3 * GROUP_GAP
+            "bass"           -> 10 * (CELL + CELL_PAD) + 3 * GROUP_GAP
+            "mid"            -> 11 * (CELL + CELL_PAD) + 3 * GROUP_GAP
+            "high"           -> 12 * (CELL + CELL_PAD) + 3 * GROUP_GAP
+            "trigger"        -> 13 * (CELL + CELL_PAD) + 4 * GROUP_GAP
+            "onset"          -> 14 * (CELL + CELL_PAD) + 4 * GROUP_GAP
+            "accent"         -> 15 * (CELL + CELL_PAD) + 4 * GROUP_GAP
             else             -> 0f
         }
     }
@@ -70,15 +74,19 @@ object PatchGridPanel {
             "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
             "midi"           -> ImGui.colorConvertFloat4ToU32(0.3f, 1.0f, 0.4f, alpha)
             // Synthetic / Generators
+            "gen1"           -> ImGui.colorConvertFloat4ToU32(0.1f, 0.7f, 0.9f, alpha)
+            "gen2"           -> ImGui.colorConvertFloat4ToU32(0.1f, 0.8f, 0.7f, alpha)
             "lfo"            -> ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, alpha)
             "sampleAndHold"  -> ImGui.colorConvertFloat4ToU32(0.7f, 0.4f, 1.0f, alpha)
             "beatPhase"      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 1.0f, alpha)
             // Amplitude / Spectral
+            "audio"          -> ImGui.colorConvertFloat4ToU32(0.4f, 0.9f, 0.1f, alpha)
             "amp"            -> ImGui.colorConvertFloat4ToU32(0.7f, 0.9f, 0.1f, alpha)
             "bass"           -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.2f, alpha)
             "mid"            -> ImGui.colorConvertFloat4ToU32(0.9f, 0.5f, 0.1f, alpha)
             "high"           -> ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.2f, alpha)
-            // Transients
+            // Transients / Triggers
+            "trigger"        -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.7f, alpha)
             "onset"          -> ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, alpha)
             "accent"         -> ImGui.colorConvertFloat4ToU32(0.9f, 0.1f, 0.9f, alpha)
             else             -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, alpha)
@@ -637,8 +645,12 @@ object PatchGridPanel {
         for (cvId in cvCols) {
             val cellId = PatchCellId(paramKey, cvId)
             val isSelected = state.selectedCell == cellId
-            val activeMods = param.modulators.filter {
-                it.sourceId == cvId
+            val activeMods = if (cvId == "audio") {
+                param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+            } else if (cvId == "trigger") {
+                param.modulators.filter { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+            } else {
+                param.modulators.filter { it.sourceId == cvId }
             }
             val hasModulator = activeMods.any { !it.bypassed }
             val isBypassed = activeMods.isNotEmpty() && activeMods.all { it.bypassed }
@@ -675,10 +687,10 @@ object PatchGridPanel {
                         param.modulators.removeAll(activeMods)
                     }
                     if (ImGui.menuItem(if (isBypassed) "Enable Modulator(s)" else "Bypass Modulator(s)")) {
-                        val updated = param.modulators.map {
-                            if (it.sourceId == cvId) {
-                                it.copy(bypassed = !it.bypassed)
-                            } else it
+                        val updated = param.modulators.map { mod ->
+                            if (activeMods.any { it.id == mod.id }) {
+                                mod.copy(bypassed = !mod.bypassed)
+                            } else mod
                         }
                         param.modulators.clear()
                         param.modulators.addAll(updated)
@@ -886,7 +898,13 @@ object PatchGridPanel {
                 val cell = state.selectedCell
                 val param = state.selectedParam
                 if (cell != null && param != null && cell.cvSourceId != "base" && cell.cvSourceId != "final") {
-                    val activeMods = param.modulators.filter { it.sourceId == cell.cvSourceId }
+                    val activeMods = if (cell.cvSourceId == "audio") {
+                        param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+                    } else if (cell.cvSourceId == "trigger") {
+                        param.modulators.filter { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+                    } else {
+                        param.modulators.filter { it.sourceId == cell.cvSourceId }
+                    }
                     ClipboardManager.cellClipboard = CellClipboardData(cell.paramKey, cell.cvSourceId, activeMods.map { it.toDto() })
                 }
             }

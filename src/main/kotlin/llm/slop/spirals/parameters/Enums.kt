@@ -9,10 +9,16 @@ enum class ModulationOperator {
 
 @Serializable
 enum class Waveform {
-    SINE, TRIANGLE, SQUARE
+    SINE, TRIANGLE, SQUARE, RANDOM
 }
 
 @Serializable
 enum class LfoSpeedMode {
     SLOW, MEDIUM, FAST
 }
+
+@Serializable
+enum class GenUnit {
+    TIME, BEAT
+}
+

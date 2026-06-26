@@ -10,6 +10,7 @@ import llm.slop.spirals.parameters.CvModulator
 import llm.slop.spirals.parameters.LfoSpeedMode
 import llm.slop.spirals.parameters.ModulationOperator
 import llm.slop.spirals.parameters.Waveform
+import llm.slop.spirals.parameters.GenUnit
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.rendering.Mandala
 import llm.slop.spirals.rendering.MandalaLibrary
@@ -48,15 +49,19 @@ object CellConfigPanel {
             "final"          -> ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, alpha)
             "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
             "midi"           -> ImGui.colorConvertFloat4ToU32(0.3f, 1.0f, 0.4f, alpha)
+            "gen1"           -> ImGui.colorConvertFloat4ToU32(0.1f, 0.7f, 0.9f, alpha)
+            "gen2"           -> ImGui.colorConvertFloat4ToU32(0.1f, 0.8f, 0.7f, alpha)
             "lfo"            -> ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, alpha)
             "sampleAndHold"  -> ImGui.colorConvertFloat4ToU32(0.7f, 0.4f, 1.0f, alpha)
             "beatPhase"      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 1.0f, alpha)
-            "amp"            -> ImGui.colorConvertFloat4ToU32(0.7f, 0.9f, 0.1f, alpha)
-            "bass"           -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.2f, alpha)
-            "mid"            -> ImGui.colorConvertFloat4ToU32(0.9f, 0.5f, 0.1f, alpha)
-            "high"           -> ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.2f, alpha)
-            "onset"          -> ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, alpha)
-            "accent"         -> ImGui.colorConvertFloat4ToU32(0.9f, 0.1f, 0.9f, alpha)
+            "audio"          -> ImGui.colorConvertFloat4ToU32(0.4f, 0.9f, 0.1f, alpha)
+            "amp", "audio_amp" -> ImGui.colorConvertFloat4ToU32(0.7f, 0.9f, 0.1f, alpha)
+            "bass", "audio_bass" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.2f, alpha)
+            "mid", "audio_mid" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.5f, 0.1f, alpha)
+            "high", "audio_high" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.2f, alpha)
+            "trigger"        -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.7f, alpha)
+            "onset", "trigger_onset" -> ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, alpha)
+            "accent", "trigger_accent" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.1f, 0.9f, alpha)
             else             -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, alpha)
         }
     }
@@ -66,22 +71,42 @@ object CellConfigPanel {
             "final"          -> floatArrayOf(0.4f, 1.0f, 0.8f)
             "base"           -> floatArrayOf(0.8f, 0.6f, 0.2f)
             "midi"           -> floatArrayOf(0.3f, 1.0f, 0.4f)
+            "gen1"           -> floatArrayOf(0.1f, 0.7f, 0.9f)
+            "gen2"           -> floatArrayOf(0.1f, 0.8f, 0.7f)
             "lfo"            -> floatArrayOf(0.2f, 0.8f, 1.0f)
             "sampleAndHold"  -> floatArrayOf(0.7f, 0.4f, 1.0f)
             "beatPhase"      -> floatArrayOf(0.4f, 0.4f, 1.0f)
-            "amp"            -> floatArrayOf(0.7f, 0.9f, 0.1f)
-            "bass"           -> floatArrayOf(0.9f, 0.2f, 0.2f)
-            "mid"            -> floatArrayOf(0.9f, 0.5f, 0.1f)
-            "high"           -> floatArrayOf(0.9f, 0.9f, 0.2f)
-            "onset"          -> floatArrayOf(1.0f, 0.3f, 0.6f)
-            "accent"         -> floatArrayOf(0.9f, 0.1f, 0.9f)
+            "audio"          -> floatArrayOf(0.4f, 0.9f, 0.1f)
+            "amp", "audio_amp" -> floatArrayOf(0.7f, 0.9f, 0.1f)
+            "bass", "audio_bass" -> floatArrayOf(0.9f, 0.2f, 0.2f)
+            "mid", "audio_mid" -> floatArrayOf(0.9f, 0.5f, 0.1f)
+            "high", "audio_high" -> floatArrayOf(0.9f, 0.9f, 0.2f)
+            "trigger"        -> floatArrayOf(0.9f, 0.2f, 0.7f)
+            "onset", "trigger_onset" -> floatArrayOf(1.0f, 0.3f, 0.6f)
+            "accent", "trigger_accent" -> floatArrayOf(0.9f, 0.1f, 0.9f)
             else             -> floatArrayOf(0.5f, 0.5f, 0.5f)
         }
     }
 
     private fun initializeVirtualModulators(cvId: String, activeMods: List<CvModulator>, hasAdvanced: Boolean) {
         virtualModulators.clear()
-        if (hasAdvanced) {
+        if (cvId == "audio") {
+            val bands = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
+            for (band in bands) {
+                val exists = activeMods.any { it.sourceId == band }
+                if (!exists) {
+                    virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
+                }
+            }
+        } else if (cvId == "trigger") {
+            val bands = listOf("trigger_onset", "trigger_accent")
+            for (band in bands) {
+                val exists = activeMods.any { it.sourceId == band }
+                if (!exists) {
+                    virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
+                }
+            }
+        } else if (hasAdvanced) {
             val activeCount = activeMods.size
             if (activeCount == 0) {
                 virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
@@ -122,6 +147,10 @@ object CellConfigPanel {
 
         val activeMods = if (cvId == "midi") {
             param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+        } else if (cvId == "audio") {
+            param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+        } else if (cvId == "trigger") {
+            param.modulators.filter { it.sourceId in setOf("trigger_onset", "trigger_accent") }
         } else {
             param.modulators.filter { it.sourceId == cvId }
         }
@@ -130,7 +159,10 @@ object CellConfigPanel {
         val isBeat = cvId == "beatPhase"
         val isLfo = cvId == "lfo"
         val isSnh = cvId == "sampleAndHold"
-        val hasAdvanced = isBeat || isLfo || isSnh
+        val isGen = cvId == "gen1" || cvId == "gen2"
+        val isAudio = cvId == "audio"
+        val isTrigger = cvId == "trigger"
+        val hasAdvanced = isBeat || isLfo || isSnh || isGen
 
         if (cvId == "base") {
             UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey)
@@ -400,7 +432,23 @@ object CellConfigPanel {
             }
             UITheme.captionColored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, "  <--  $cvId ($label)")
         } else {
-            UITheme.captionColored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, "  <--  $cvId")
+            val label = when (cvId) {
+                "gen1" -> "Generator 1"
+                "gen2" -> "Generator 2"
+                "lfo" -> "LFO Modulator"
+                "sampleAndHold" -> "Sample & Hold Modulator"
+                "beatPhase" -> "Beat Phase Modulator"
+                "audio" -> "Audio Envelope / Spectral Bands"
+                "amp" -> "Amplitude Envelope"
+                "bass" -> "Bass Envelope"
+                "mid" -> "Mid Envelope"
+                "high" -> "High Envelope"
+                "trigger" -> "Trigger Triggers"
+                "onset" -> "Transient Onset"
+                "accent" -> "Transient Accent"
+                else -> cvId
+            }
+            UITheme.captionColored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, "  <--  $cvId ($label)")
         }
         ImGui.separator()
         ImGui.spacing()
@@ -465,6 +513,8 @@ object CellConfigPanel {
             ImGui.pushID(existing.id)
             
             val bypassed = existing.bypassed
+            val currentThemeColor = getThemeColor(existing.sourceId)
+            val currentThemeRGB = getThemeColorRGB(existing.sourceId)
             
             // Draw background panel for modulator
             val panelStartX = ImGui.getCursorScreenPosX()
@@ -475,7 +525,19 @@ object CellConfigPanel {
                 ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
             }
             
-            if (modsToDraw.size > 1) {
+            val bandLabel = when (existing.sourceId) {
+                "audio_amp" -> "Envelope / Amp"
+                "audio_bass" -> "Low / Bass"
+                "audio_mid" -> "Mid"
+                "audio_high" -> "High"
+                "trigger_onset" -> "Onset / Transient"
+                "trigger_accent" -> "Accent / Peak"
+                else -> null
+            }
+            if (bandLabel != null) {
+                UITheme.h3(bandLabel)
+                ImGui.spacing()
+            } else if (modsToDraw.size > 1) {
                 val typeLabel = if (hasAdvanced) "Oscillator" else "Modulator"
                 UITheme.h3("$typeLabel ${idx + 1}")
                 ImGui.spacing()
@@ -485,7 +547,7 @@ object CellConfigPanel {
 
             val bypassLabel = if (bypassed) "BYPASSED" else "ACTIVE"
             if (bypassed) ImGui.pushStyleColor(0, 0.5f, 0.5f, 0.5f, 1f)
-            else ImGui.pushStyleColor(0, themeRGB[0], themeRGB[1], themeRGB[2], 0.8f) // use theme color for active button
+            else ImGui.pushStyleColor(0, currentThemeRGB[0], currentThemeRGB[1], currentThemeRGB[2], 0.8f) // use theme color for active button
             if (ImGui.button(bypassLabel, 125f, 30f)) {
                 replaceModulator(state, param, existing.copy(bypassed = !bypassed))
             }
@@ -499,18 +561,38 @@ object CellConfigPanel {
 
             ImGui.spacing()
 
-        // ── Waveform and Operator ──────────────────────────
-        val showWaveform = hasAdvanced && !isSnh
+        // ── Waveform, Unit and Operator ──────────────────────────
+        val showWaveform = hasAdvanced && (!isSnh || isGen)
         if (showWaveform) {
             ImGui.beginGroup()
             UITheme.body("Waveform")
+            
+            val currentLabels = if (isGen) {
+                arrayOf("Sine", "Triangle", "Square", "Random")
+            } else {
+                waveformLabels
+            }
             val wfIdx = ImInt(existing.waveform.ordinal)
             ImGui.pushItemWidth(125f)
-            if (ImGui.combo("##waveform", wfIdx, waveformLabels)) {
+            if (ImGui.combo("##waveform", wfIdx, currentLabels)) {
                 replaceModulator(state, param, existing.copy(waveform = Waveform.entries[wfIdx.get()]))
             }
             ImGui.popItemWidth()
             ImGui.endGroup()
+            
+            if (isGen) {
+                ImGui.sameLine(0f, 10f)
+                ImGui.beginGroup()
+                UITheme.body("Unit")
+                val unitIdx = ImInt(existing.genUnit.ordinal)
+                val unitLabels = arrayOf("Time", "Beat")
+                ImGui.pushItemWidth(125f)
+                if (ImGui.combo("##unit", unitIdx, unitLabels)) {
+                    replaceModulator(state, param, existing.copy(genUnit = GenUnit.entries[unitIdx.get()]))
+                }
+                ImGui.popItemWidth()
+                ImGui.endGroup()
+            }
             
             ImGui.sameLine(0f, 10f)
         }
@@ -539,7 +621,7 @@ object CellConfigPanel {
         drawCustomRangeSlider(
             idPrefix = existing.id,
             label = "Amplitude",
-            themeColor = themeColor,
+            themeColor = currentThemeColor,
             currentValue = existing.amplitude,
             currentMin = existing.amplitudeMin,
             currentMax = existing.amplitudeMax,
@@ -594,7 +676,7 @@ object CellConfigPanel {
         drawCustomRangeSlider(
             idPrefix = existing.id,
             label = "DC Offset",
-            themeColor = themeColor,
+            themeColor = currentThemeColor,
             currentValue = existing.dcOffset,
             currentMin = existing.dcOffsetMin,
             currentMax = existing.dcOffsetMax,
@@ -662,7 +744,7 @@ object CellConfigPanel {
 
 
         // ── Subdivision (Beat / S&H) ─────────────────────────────
-        if (isBeat || isSnh) {
+        if (isBeat || isSnh || (isGen && existing.genUnit == GenUnit.BEAT)) {
             val currentMinIdx = subdivisionOptions.indexOfFirst { it == existing.subdivisionMin }.coerceAtLeast(0)
             val currentMaxIdx = subdivisionOptions.indexOfFirst { it == existing.subdivisionMax }.coerceAtLeast(0)
             val currentActiveIdx = subdivisionOptions.indexOfFirst { it == existing.subdivision }.coerceAtLeast(0)
@@ -670,7 +752,7 @@ object CellConfigPanel {
             drawCustomRangeSlider(
             idPrefix = existing.id,
                 label = "Beat Division",
-                themeColor = themeColor,
+                themeColor = currentThemeColor,
                 currentValue = currentActiveIdx.toFloat(),
                 currentMin = currentMinIdx.toFloat(),
                 currentMax = currentMaxIdx.toFloat(),
@@ -729,7 +811,7 @@ object CellConfigPanel {
         }
 
         // ── LFO Period / Speed ───────────────────────────────────
-        if (isLfo) {
+        if (isLfo || (isGen && existing.genUnit == GenUnit.TIME)) {
             UITheme.body("Speed Range")
             val speedIdx = ImInt(existing.lfoSpeedMode.ordinal)
             ImGui.pushItemWidth(125f)
@@ -757,7 +839,7 @@ object CellConfigPanel {
             drawCustomRangeSlider(
             idPrefix = existing.id,
                 label = "LFO Period",
-                themeColor = themeColor,
+                themeColor = currentThemeColor,
                 currentValue = existing.subdivision,
                 currentMin = existing.subdivisionMin,
                 currentMax = existing.subdivisionMax,
@@ -813,7 +895,7 @@ object CellConfigPanel {
         drawCustomRangeSlider(
             idPrefix = existing.id,
             label = "Phase Offset",
-            themeColor = themeColor,
+            themeColor = currentThemeColor,
             currentValue = existing.phaseOffset,
             currentMin = existing.phaseOffsetMin,
             currentMax = existing.phaseOffsetMax,
@@ -864,20 +946,21 @@ object CellConfigPanel {
         )
         ImGui.spacing()
 
-        // ── Slope / Duty (Triangle, Square, S&H) ────────────────
+        // ── Slope / Duty (Triangle, Square, S&H / Random) ────────────────
         val needsSlope = isSnh ||
                 existing.waveform == Waveform.TRIANGLE ||
-                existing.waveform == Waveform.SQUARE
+                existing.waveform == Waveform.SQUARE ||
+                existing.waveform == Waveform.RANDOM
         if (needsSlope) {
             val slopeLabel = when {
-                isSnh -> "Glide"
+                isSnh || existing.waveform == Waveform.RANDOM -> "Glide"
                 existing.waveform == Waveform.TRIANGLE -> "Slope"
                 else -> "Duty Cycle"
             }
             drawCustomRangeSlider(
             idPrefix = existing.id,
                 label = slopeLabel,
-                themeColor = themeColor,
+                themeColor = currentThemeColor,
                 currentValue = existing.slope,
                 currentMin = existing.slopeMin,
                 currentMax = existing.slopeMax,
@@ -939,7 +1022,7 @@ object CellConfigPanel {
             
             // Draw margin line for active modulators
             if (!bypassed) {
-                dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, themeColor, 4f)
+                dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, currentThemeColor, 4f)
             }
 
             ImGui.popID()

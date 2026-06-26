@@ -16,6 +16,7 @@ data class CvModulator(
     val slope: Float = 0.5f,
     // LFO speed bounds setting
     val lfoSpeedMode: LfoSpeedMode = LfoSpeedMode.FAST,
+    val genUnit: GenUnit = GenUnit.TIME,
 
     // Range fields
     val amplitudeMin: Float = amplitude,
@@ -40,6 +41,11 @@ data class CvModulator(
 
     val id: String = UUID.randomUUID().toString()
 ) {
+    private fun isDiscreteSubdivision(): Boolean {
+        return sourceId == "beatPhase" || sourceId == "sampleAndHold" || 
+               ((sourceId == "gen1" || sourceId == "gen2") && genUnit == GenUnit.BEAT)
+    }
+
     fun randomizeActiveValues(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
         val newAmplitude = if (randomizeAmplitude) {
             if (amplitudeMin == amplitudeMax) amplitudeMin else random.nextFloat() * (amplitudeMax - amplitudeMin) + amplitudeMin
@@ -61,7 +67,7 @@ data class CvModulator(
             if (subdivisionMin == subdivisionMax) {
                 subdivisionMin
             } else {
-                if (sourceId == "beatPhase" || sourceId == "sampleAndHold") {
+                if (isDiscreteSubdivision()) {
                     val options = floatArrayOf(0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f)
                     val valid = options.filter { it in subdivisionMin..subdivisionMax }
                     if (valid.isNotEmpty()) valid.random(random) else subdivisionMin
@@ -98,7 +104,7 @@ data class CvModulator(
         val newSubdiv = if (subdivisionMin == subdivisionMax) {
             subdivisionMin
         } else {
-            if (sourceId == "beatPhase" || sourceId == "sampleAndHold") {
+            if (isDiscreteSubdivision()) {
                 val options = floatArrayOf(0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f)
                 val valid = options.filter { it in subdivisionMin..subdivisionMax }
                 if (valid.isNotEmpty()) valid.random(random) else subdivisionMin
