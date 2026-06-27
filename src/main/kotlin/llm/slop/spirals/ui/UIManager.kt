@@ -101,6 +101,7 @@ class UIManager(private val windowHandle: Long) {
     private var pendingProjectAction = PendingProjectAction.NONE
     private var pendingOpenConfirmPopup = false
     private var pendingOpenExitPopup = false
+    private var pendingOpenMidiWarningPopup = false
 
     private enum class PendingDeckAction {
         NONE, NEW, LOAD_FILE, LOAD_PRESET
@@ -271,6 +272,10 @@ class UIManager(private val windowHandle: Long) {
                 ImGui.openPopup("Exit Spirals?##confirm")
                 pendingOpenExitPopup = false
             }
+            if (pendingOpenMidiWarningPopup) {
+                ImGui.openPopup("No MIDI Devices Connected##midi_warning")
+                pendingOpenMidiWarningPopup = false
+            }
             // Phase 3b — open setlist panel
             if (pendingOpenSetlist) {
                 SetlistPanel.open()
@@ -291,6 +296,7 @@ class UIManager(private val windowHandle: Long) {
             drawConfirmPopup(mixer, displayWidth, displayHeight)
             drawExitPopup(mixer, displayWidth, displayHeight)
             drawDeckConfirmPopups(mixer.deckA, mixer.deckB)
+            drawMidiWarningPopup(displayWidth, displayHeight)
 
             // Phase 1 — Global project file browser modal
             drawGlobalFileBrowser(mixer)
@@ -614,6 +620,37 @@ class UIManager(private val windowHandle: Long) {
         }
     }
 
+    private fun drawMidiWarningPopup(displayW: Float, displayH: Float) {
+        ImGui.setNextWindowPos(
+            displayW * 0.5f, displayH * 0.5f,
+            imgui.flag.ImGuiCond.Appearing, 0.5f, 0.5f
+        )
+        
+        val flags = imgui.flag.ImGuiWindowFlags.AlwaysAutoResize or
+                    imgui.flag.ImGuiWindowFlags.NoMove            or
+                    imgui.flag.ImGuiWindowFlags.NoCollapse
+
+        if (ImGui.beginPopupModal("No MIDI Devices Connected##midi_warning", flags)) {
+            ImGui.textWrapped("There are currently no MIDI input devices detected by the system.")
+            ImGui.spacing()
+            ImGui.textWrapped("You can still map parameters by clicking them, but you will need")
+            ImGui.textWrapped("to plug in a MIDI hardware controller to send actual control values.")
+            ImGui.spacing()
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
+            ImGui.textWrapped("A background watchdog is active. Plugging in a MIDI controller")
+            ImGui.textWrapped("will automatically activate it within a few seconds.")
+            ImGui.popStyleColor()
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+            
+            if (ImGui.button("OK", ImGui.getContentRegionAvailX(), 0f)) {
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
     private fun drawDeckConfirmPopups(deckA: Deck, deckB: Deck) {
         // Deck A Confirmation
         if (pendingDeckActionA != PendingDeckAction.NONE) {
@@ -783,6 +820,10 @@ class UIManager(private val windowHandle: Long) {
                 patchState.isMidiLearnMode = !isMidiLearn
                 if (!patchState.isMidiLearnMode) {
                     patchState.midiLearnTarget = null
+                } else {
+                    if (llm.slop.spirals.midi.MidiEngine.getActiveDeviceCount() == 0) {
+                        pendingOpenMidiWarningPopup = true
+                    }
                 }
             }
             if (isMidiLearn) {
@@ -795,8 +836,16 @@ class UIManager(private val windowHandle: Long) {
                 pendingOpenSettings = true
             }
 
-            if (ImGui.menuItem("Audio Engine")) {
+            val isAudioActive = llm.slop.spirals.audio.AudioEngine.isActive()
+            if (!isAudioActive && UITheme.audioEngineEnabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange warning
+            }
+            val audioEngineLabel = if (!isAudioActive && UITheme.audioEngineEnabled) "Audio Engine ⚠" else "Audio Engine"
+            if (ImGui.menuItem(audioEngineLabel)) {
                 pendingOpenAudioEngineMonitor = true
+            }
+            if (!isAudioActive && UITheme.audioEngineEnabled) {
+                ImGui.popStyleColor()
             }
 
             // Phase 3b — Setlist quick-load panel

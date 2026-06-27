@@ -18,6 +18,9 @@ class JackClient(
     private var client: org.jaudiolibs.jnajack.JackClient? = null
     private var inputPort: JackPort? = null
 
+    val isConnected: Boolean
+        get() = client != null
+
     /**
      * Initializes and activates the JACK client.
      */

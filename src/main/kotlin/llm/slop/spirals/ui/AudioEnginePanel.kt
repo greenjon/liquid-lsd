@@ -88,7 +88,26 @@ object AudioEnginePanel {
             ImGui.popStyleColor()
             UITheme.caption("You can enable JACK in Settings or run a JACK/PipeWire backend.")
             ImGui.spacing()
+            if (ImGui.button("Retry JACK Connection", ImGui.getContentRegionAvailX(), 0f)) {
+                Thread {
+                    AudioEngine.tryReconnect()
+                }.start()
+            }
+            ImGui.spacing()
         }
+
+        // MIDI status
+        val midiCount = llm.slop.spirals.midi.MidiEngine.getActiveDeviceCount()
+        if (midiCount == 0) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
+            ImGui.textWrapped("Warning: No MIDI devices detected. Connect a controller to map controls.")
+            ImGui.popStyleColor()
+        } else {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.2f, 0.9f, 0.4f, 1.0f)
+            ImGui.textWrapped("MIDI Status: $midiCount active MIDI input device(s) connected.")
+            ImGui.popStyleColor()
+        }
+        ImGui.spacing()
 
         // ─────────────────────────────────────────────────────────────────────
         // Scrollable Oscilloscopes Area

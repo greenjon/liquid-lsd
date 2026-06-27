@@ -120,6 +120,9 @@ fun main() {
         AudioEngine.start()
     }
 
+    // Start background watchdogs for MIDI and JACK
+    llm.slop.spirals.audio.MidiJackWatchdog.start()
+
     var secondaryWindow = 0L
 
     // Auto-detect and open secondary window on startup if external monitor is found
@@ -269,6 +272,7 @@ fun main() {
 
     // Cleanup
     logger.info { "Shutting down..." }
+    llm.slop.spirals.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.spirals.midi.MidiEngine.close()
 

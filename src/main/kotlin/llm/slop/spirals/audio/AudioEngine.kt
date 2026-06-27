@@ -4,12 +4,14 @@ import llm.slop.spirals.cv.CVRegistry
 import llm.slop.spirals.cv.CvHistoryBuffer
 import java.nio.FloatBuffer
 import kotlin.math.max
+import mu.KotlinLogging
 
 /**
  * Orchestrates the audio capture client and runs the real-time DSP analysis pipeline.
  * Separates audio into bands, detects transients/onsets, estimates BPM, and updates CVRegistry.
  */
 object AudioEngine {
+    private val logger = KotlinLogging.logger {}
     private var jackClient: JackClient? = null
     
     // DSP filters
@@ -34,7 +36,7 @@ object AudioEngine {
     @Volatile private var estimatedBpm = 120f
 
     fun getEstimatedBpm(): Float = estimatedBpm
-    fun isActive(): Boolean = jackClient != null
+    fun isActive(): Boolean = jackClient?.isConnected == true
 
     // BPM Sync/Transient detection state
     private var lastBeatTime = System.nanoTime()
@@ -58,6 +60,18 @@ object AudioEngine {
             processAudio(buffer, nframes, sampleRate)
         }
         jackClient?.start()
+    }
+
+    /**
+     * Attempts to reconnect to JACK if not currently active.
+     * Safe to call from a background thread.
+     */
+    fun tryReconnect() {
+        if (isActive()) return
+        
+        logger.info { "Watchdog attempting JACK reconnection..." }
+        stop()
+        start()
     }
 
     /**
