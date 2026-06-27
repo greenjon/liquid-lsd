@@ -15,11 +15,17 @@ class Deck(
     // FBO for rendering the clean visual source output
     val cleanFBO = FBO(width, height)
 
-
     // Ping-pong feedback FBOs
     val fb1 = FBO(width, height)
     val fb2 = FBO(width, height)
     private var fbIndex = 0
+
+    // Source selection parameter
+    val sourceSelect = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+
+    // Keep instances of both visual sources
+    val mandala: Mandala = if (source is Mandala) source as Mandala else Mandala(MandalaLibrary.MandalaRatios.first())
+    val mandelbulb: Mandelbulb = if (source is Mandelbulb) source as Mandelbulb else Mandelbulb()
 
     // Feedback parameters with custom clamp ranges
     val fbDecay = ModulatableParameter(0.73f, minClamp = 0f, maxClamp = 1f)
@@ -36,14 +42,20 @@ class Deck(
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
+        
+        // Ensure starting source matches the initialized source
+        source = if (sourceSelect.value >= 0.5f) mandelbulb else mandala
     }
 
     /**
      * Resets all parameters to their defaults.
      */
     fun reset() {
-        source.parameters.values.forEach { it.reset() }
-        source.globalAlpha.reset()
+        sourceSelect.reset()
+        mandala.parameters.values.forEach { it.reset() }
+        mandala.globalAlpha.reset()
+        mandelbulb.parameters.values.forEach { it.reset() }
+        mandelbulb.globalAlpha.reset()
         fbDecay.reset()
         fbGain.reset()
         fbZoom.reset()
@@ -52,6 +64,7 @@ class Deck(
         fbBlur.reset()
         fbChroma.reset()
         fbMode.reset()
+        source = if (sourceSelect.value >= 0.5f) mandelbulb else mandala
     }
 
     /**
@@ -88,6 +101,8 @@ class Deck(
      * Updates the underlying visual source and evaluates feedback parameters.
      */
     fun update() {
+        sourceSelect.evaluate()
+        source = if (sourceSelect.value >= 0.5f) mandelbulb else mandala
         source.update()
         fbDecay.evaluate()
         fbGain.evaluate()
@@ -95,6 +110,8 @@ class Deck(
         fbRotate.evaluate()
         fbHueShift.evaluate()
         fbBlur.evaluate()
+        fbChroma.evaluate()
+        fbMode.evaluate()
     }
 
     /**

@@ -9,6 +9,7 @@ import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.parameters.CvModulator
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mandala
+import llm.slop.spirals.rendering.Mandelbulb
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.models.ClipboardManager
 import llm.slop.spirals.models.CellClipboardData
@@ -380,6 +381,7 @@ object PatchGridPanel {
     private fun drawDeckGroup(deckLabel: String, deck: Deck, state: PatchGridState, labelColW: Float, mixer: Mixer) {
         drawGroup(deckLabel, state, true) {
             val mandala = deck.source as? Mandala
+            val mandelbulb = deck.source as? Mandelbulb
 
             if (mandala != null) {
                 drawSubGroup(deckLabel, "Geometry", state) {
@@ -424,7 +426,22 @@ object PatchGridPanel {
                 }
             }
 
+            if (mandelbulb != null) {
+                drawSubGroup(deckLabel, "Mandelbulb", state) {
+                    drawParamRow("Power",       "$deckLabel/Mandelbulb/Power",       mandelbulb.parameters["Power"]!!,       state, labelColW, mixer)
+                    drawParamRow("Iterations",  "$deckLabel/Mandelbulb/Iterations",  mandelbulb.parameters["Iterations"]!!,  state, labelColW, mixer)
+                    drawParamRow("Glow",        "$deckLabel/Mandelbulb/Glow",        mandelbulb.parameters["Glow"]!!,        state, labelColW, mixer)
+                    drawParamRow("Zoom",        "$deckLabel/Mandelbulb/Zoom",        mandelbulb.parameters["Zoom"]!!,        state, labelColW, mixer)
+                    drawParamRow("Color Shift", "$deckLabel/Mandelbulb/ColorShift",  mandelbulb.parameters["Color Shift"]!!, state, labelColW, mixer)
+                    drawParamRow("Bailout",     "$deckLabel/Mandelbulb/Bailout",     mandelbulb.parameters["Bailout"]!!,     state, labelColW, mixer)
+                    drawParamRow("Yaw",         "$deckLabel/Mandelbulb/Yaw",         mandelbulb.parameters["Yaw"]!!,         state, labelColW, mixer)
+                    drawParamRow("Pitch",       "$deckLabel/Mandelbulb/Pitch",       mandelbulb.parameters["Pitch"]!!,       state, labelColW, mixer)
+                    drawParamRow("Gain",        "$deckLabel/Mandelbulb/Gain",        mandelbulb.globalAlpha,                 state, labelColW, mixer)
+                }
+            }
+
             drawSubGroup(deckLabel, "Feedback", state) {
+                drawParamRow("Source",      "$deckLabel/FB/Source",   deck.sourceSelect,state, labelColW, mixer)
                 drawParamRow("Feedback",    "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer)
                 drawParamRow("FB Gain",     "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer)
                 drawParamRow("FB Zoom",     "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer)
@@ -899,6 +916,8 @@ object PatchGridPanel {
         for (deckLabel in listOf("Deck A", "Deck B")) {
             val deck = if (deckLabel == "Deck A") mixer.deckA else mixer.deckB
             val mandala = deck.source as? Mandala
+            val mandelbulb = deck.source as? Mandelbulb
+            
             if (mandala != null) {
                 // Geometry
                 list.add("$deckLabel/Geometry/Lobes" to mandala.parameters["Lobes"]!!)
@@ -927,8 +946,21 @@ object PatchGridPanel {
                 list.add("$deckLabel/Background/Speed" to mandala.parameters["Bg Speed"]!!)
                 list.add("$deckLabel/Background/Zoom" to mandala.parameters["Bg Zoom"]!!)
             }
+
+            if (mandelbulb != null) {
+                list.add("$deckLabel/Mandelbulb/Power" to mandelbulb.parameters["Power"]!!)
+                list.add("$deckLabel/Mandelbulb/Iterations" to mandelbulb.parameters["Iterations"]!!)
+                list.add("$deckLabel/Mandelbulb/Glow" to mandelbulb.parameters["Glow"]!!)
+                list.add("$deckLabel/Mandelbulb/Zoom" to mandelbulb.parameters["Zoom"]!!)
+                list.add("$deckLabel/Mandelbulb/ColorShift" to mandelbulb.parameters["Color Shift"]!!)
+                list.add("$deckLabel/Mandelbulb/Bailout" to mandelbulb.parameters["Bailout"]!!)
+                list.add("$deckLabel/Mandelbulb/Yaw" to mandelbulb.parameters["Yaw"]!!)
+                list.add("$deckLabel/Mandelbulb/Pitch" to mandelbulb.parameters["Pitch"]!!)
+                list.add("$deckLabel/Mandelbulb/Gain" to mandelbulb.globalAlpha)
+            }
             
             // Feedback
+            list.add("$deckLabel/FB/Source" to deck.sourceSelect)
             list.add("$deckLabel/FB/Decay" to deck.fbDecay)
             list.add("$deckLabel/FB/Gain" to deck.fbGain)
             list.add("$deckLabel/FB/Zoom" to deck.fbZoom)
@@ -1090,6 +1122,7 @@ fun Deck.randomizeModulators() {
     val allParams = mutableListOf<llm.slop.spirals.parameters.ModulatableParameter>()
     allParams.addAll(this.source.parameters.values)
     allParams.add(this.source.globalAlpha)
+    allParams.add(this.sourceSelect)
     allParams.add(this.fbDecay)
     allParams.add(this.fbGain)
     allParams.add(this.fbZoom)

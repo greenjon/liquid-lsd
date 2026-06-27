@@ -11,6 +11,7 @@ import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mandala
 import llm.slop.spirals.rendering.MandalaLibrary
 import llm.slop.spirals.rendering.MandalaRatio
+import llm.slop.spirals.rendering.Mandelbulb
 import llm.slop.spirals.rendering.Mixer
 import kotlin.math.roundToInt
 import mu.KotlinLogging
@@ -1273,6 +1274,14 @@ class UIManager(private val windowHandle: Long) {
             
             UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Background:")
             UITheme.body("  Style: ${bgStyleLabels[bgStyleIdx]}")
+        }
+        val mandelbulb = deck.source as? Mandelbulb
+        if (mandelbulb != null) {
+            val powerVal = mandelbulb.parameters["Power"]?.value ?: 8f
+            val iterVal = mandelbulb.parameters["Iterations"]?.value ?: 6f
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Fractal:")
+            UITheme.body("  Power: %.2f".format(powerVal))
+            UITheme.body("  Iterations: %.0f".format(iterVal))
         }
         ImGui.unindent(8f)
 

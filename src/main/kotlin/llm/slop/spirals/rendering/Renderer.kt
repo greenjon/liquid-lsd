@@ -16,6 +16,7 @@ class Renderer {
     private val mixerShader: Shader
     private val backgroundShader: Shader
     private val blitShader: Shader
+    private val mandelbulbShader: Shader
 
     private var mandalaVAO: Int = 0
     private var mandalaVBO: Int = 0
@@ -28,6 +29,7 @@ class Renderer {
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         backgroundShader = Shader.fromResources("shaders/blit.vert", "shaders/background.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
+        mandelbulbShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/mandelbulb.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
         val expansionBuffer = Mandala.expansionBuffer
@@ -59,8 +61,11 @@ class Renderer {
     fun render(source: VisualSource, targetFBO: FBO) {
         if (source is Mandala) {
             renderMandala(source, targetFBO)
+        } else if (source is Mandelbulb) {
+            renderMandelbulb(source, targetFBO)
         }
     }
+
 
     private fun renderBackground(mandala: Mandala, alpha: Float) {
         backgroundShader.bind()
@@ -170,6 +175,36 @@ class Renderer {
         mandalaShader.unbind()
         targetFBO.unbind()
     }
+
+    private fun renderMandelbulb(mandelbulb: Mandelbulb, targetFBO: FBO) {
+        targetFBO.bind()
+
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        mandelbulbShader.bind()
+
+        val p = mandelbulb.parameters
+        mandelbulbShader.setUniform("uPower", p["Power"]?.value ?: 8.0f)
+        mandelbulbShader.setUniform("uIterations", p["Iterations"]?.value ?: 6.0f)
+        mandelbulbShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
+        mandelbulbShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
+        mandelbulbShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
+        mandelbulbShader.setUniform("uBailout", p["Bailout"]?.value ?: 2.0f)
+        mandelbulbShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
+        mandelbulbShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
+        mandelbulbShader.setUniform("uAlpha", mandelbulb.globalAlpha.value)
+        mandelbulbShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+
+        Geometry.drawFullscreenQuad()
+
+        mandelbulbShader.unbind()
+        targetFBO.unbind()
+    }
+
 
     /**
      * Renders a Deck's visual source and updates its ping-pong feedback loop.
@@ -307,6 +342,7 @@ class Renderer {
             mixerShader.dispose()
             backgroundShader.dispose()
             blitShader.dispose()
+            mandelbulbShader.dispose()
             isDisposed = true
         }
     }

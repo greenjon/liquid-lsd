@@ -158,8 +158,8 @@ data class DeckPatchDto(
     val version: Int = 1,
     val name: String,
     val tags: List<String> = emptyList(), // Phase 2 — tag list; defaults to empty for backward compat
-    val visualSourceType: String, // e.g., "Mandala"
-    val recipe: MandalaRecipeDto, // For restoring recipe structure
+    val visualSourceType: String, // e.g., "Mandala" or "Mandelbulb"
+    val recipe: MandalaRecipeDto? = null, // For restoring recipe structure (Mandala-only)
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val globalAlpha: ParameterDto,
@@ -276,12 +276,13 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
 fun MandalaRatio.toDto(): MandalaRecipeDto = MandalaRecipeDto(a, b, c, d)
 
 fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
-    val mandala = source as Mandala
-    val recipeDto = mandala.recipe.toDto()
+    val sourceName = if (source is Mandelbulb) "Mandelbulb" else "Mandala"
+    val recipeDto = if (source is Mandala) (source as Mandala).recipe.toDto() else null
     
-    val paramsMap = mandala.parameters.mapValues { it.value.toDto() }
+    val paramsMap = source.parameters.mapValues { it.value.toDto() }
     
     val feedbackParamsMap = mapOf(
+        "sourceSelect" to sourceSelect.toDto(),
         "fbDecay" to fbDecay.toDto(),
         "fbGain" to fbGain.toDto(),
         "fbZoom" to fbZoom.toDto(),
@@ -295,7 +296,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
     return DeckPatchDto(
         name = name,
         tags = tags,
-        visualSourceType = "Mandala",
+        visualSourceType = sourceName,
         recipe = recipeDto,
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
@@ -305,35 +306,47 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
 }
 
 fun Deck.applyDto(dto: DeckPatchDto) {
-    val mandala = source as Mandala
+    dto.feedbackParameters["sourceSelect"]?.let { sourceSelect.applyDto(it) }
     
-    // Recreate or lookup recipe
-    val recipe = MandalaLibrary.MandalaRatios.firstOrNull {
-        it.a == dto.recipe.a && it.b == dto.recipe.b &&
-        it.c == dto.recipe.c && it.d == dto.recipe.d
-    } ?: MandalaRatio(
-        id = "custom_${dto.recipe.a}_${dto.recipe.b}_${dto.recipe.c}_${dto.recipe.d}",
-        a = dto.recipe.a,
-        b = dto.recipe.b,
-        c = dto.recipe.c,
-        d = dto.recipe.d
-    )
-    mandala.recipe = recipe
+    // Select the active source dynamically based on sourceSelect parameter
+    source = if (sourceSelect.value >= 0.5f) mandelbulb else mandala
     
-    // Apply visual source parameters
-    for ((key, paramDto) in dto.parameters) {
-        mandala.parameters[key]?.applyDto(paramDto)
-    }
+    if (source is Mandala) {
+        val mandalaObj = source as Mandala
+        val recipeDto = dto.recipe ?: MandalaRecipeDto(3, 3, 3, 3)
+        // Recreate or lookup recipe
+        val recipe = MandalaLibrary.MandalaRatios.firstOrNull {
+            it.a == recipeDto.a && it.b == recipeDto.b &&
+            it.c == recipeDto.c && it.d == recipeDto.d
+        } ?: MandalaRatio(
+            id = "custom_${recipeDto.a}_${recipeDto.b}_${recipeDto.c}_${recipeDto.d}",
+            a = recipeDto.a,
+            b = recipeDto.b,
+            c = recipeDto.c,
+            d = recipeDto.d
+        )
+        mandalaObj.recipe = recipe
+        
+        // Apply visual source parameters
+        for ((key, paramDto) in dto.parameters) {
+            mandalaObj.parameters[key]?.applyDto(paramDto)
+        }
 
-    // Legacy patch fallback: sync parameter values to recipe if they weren't in the saved patch
-    if (!dto.parameters.containsKey("Lobes")) {
-        mandala.parameters["Lobes"]?.set(recipe.petals.toFloat())
-    }
-    if (!dto.parameters.containsKey("Recipe Select")) {
-        val list = MandalaLibrary.recipesByPetals[recipe.petals] ?: emptyList()
-        val idx = list.indexOfFirst { it.a == recipe.a && it.b == recipe.b && it.c == recipe.c && it.d == recipe.d }.coerceAtLeast(0)
-        val pct = if (list.size > 1) idx.toFloat() / (list.size - 1).toFloat() else 0.0f
-        mandala.parameters["Recipe Select"]?.set(pct)
+        // Legacy patch fallback: sync parameter values to recipe if they weren't in the saved patch
+        if (!dto.parameters.containsKey("Lobes")) {
+            mandalaObj.parameters["Lobes"]?.set(recipe.petals.toFloat())
+        }
+        if (!dto.parameters.containsKey("Recipe Select")) {
+            val list = MandalaLibrary.recipesByPetals[recipe.petals] ?: emptyList()
+            val idx = list.indexOfFirst { it.a == recipe.a && it.b == recipe.b && it.c == recipe.c && it.d == recipe.d }.coerceAtLeast(0)
+            val pct = if (list.size > 1) idx.toFloat() / (list.size - 1).toFloat() else 0.0f
+            mandalaObj.parameters["Recipe Select"]?.set(pct)
+        }
+    } else if (source is Mandelbulb) {
+        val mandelbulbObj = source as Mandelbulb
+        for ((key, paramDto) in dto.parameters) {
+            mandelbulbObj.parameters[key]?.applyDto(paramDto)
+        }
     }
     
     // Apply feedback parameters
