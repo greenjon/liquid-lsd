@@ -82,7 +82,7 @@ object Geometry {
      */
     fun drawFullscreenQuad() {
         val vao = getFullscreenQuad()
-        logger.debug { "Drawing fullscreen quad with VAO: $vao" }
+        logger.trace { "Drawing fullscreen quad with VAO: $vao" }
         glBindVertexArray(vao)
         glDrawArrays(GL_TRIANGLES, 0, 6)
         glBindVertexArray(0)

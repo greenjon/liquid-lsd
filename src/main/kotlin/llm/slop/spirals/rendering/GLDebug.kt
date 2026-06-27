@@ -26,7 +26,7 @@ object GLDebug {
             error = glGetError()
         }
         if (!hasError && context.isNotEmpty()) {
-            logger.debug { "✓ No GL errors in: $context" }
+            logger.trace { "✓ No GL errors in: $context" }
         }
     }
 
