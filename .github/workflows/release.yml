@@ -35,6 +35,12 @@ jobs:
       - name: Build and Package ZIPs
         run: ./gradlew packageZips
 
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-distributions
+          path: build/distributions/*.zip
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
