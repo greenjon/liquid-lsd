@@ -859,6 +859,19 @@ class UIManager(private val windowHandle: Long) {
                 }
                 ImGui.endMenu()
             }
+
+            val tooltipsEnabled = UITheme.tooltipsEnabled
+            if (tooltipsEnabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
+            } else {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
+            }
+            if (ImGui.menuItem("Tooltips", "", tooltipsEnabled)) {
+                UITheme.tooltipsEnabled = !tooltipsEnabled
+                UITheme.saveSettings()
+            }
+            ImGui.popStyleColor()
+
             ImGui.endMainMenuBar()
         }
     }

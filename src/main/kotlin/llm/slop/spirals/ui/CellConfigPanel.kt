@@ -1256,6 +1256,15 @@ object CellConfigPanel {
                 onChanged(parsed.coerceIn(minLimit, maxLimit))
             }
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            val fieldType = when {
+                key.endsWith("_min") -> "Minimum modulation boundary. Type to set directly."
+                key.endsWith("_max") -> "Maximum modulation boundary. Type to set directly."
+                key.endsWith("_value") -> "Base value. Type to set directly."
+                else -> "Type a precise numeric value."
+            }
+            ImGui.setTooltip(fieldType)
+        }
         textWidgetActive[key] = ImGui.isItemActive()
         ImGui.popItemWidth()
     }
@@ -1406,6 +1415,9 @@ object CellConfigPanel {
             if (ImGui.checkbox("##check_$label", checked)) {
                 onRandomizableChanged(checked.get())
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Enable parameter modulation limits and randomization")
+            }
             
             // 2. Randomize Button
             val randBtnX = startX + labelColW - buttonSize
@@ -1417,7 +1429,7 @@ object CellConfigPanel {
                 onRandomizeNow()
             }
             val hovered = ImGui.isItemHovered()
-            if (hovered) {
+            if (hovered && UITheme.tooltipsEnabled) {
                 ImGui.setTooltip("Randomize $label now")
             }
             if (!isRandomizable) {
@@ -1637,6 +1649,43 @@ object CellConfigPanel {
             dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
         }
         
+        // Hover-zone tooltips for custom range slider track/handles
+        if (UITheme.tooltipsEnabled) {
+            val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
+            val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
+            if (inTrackY && inTrackX) {
+                if (isRandomizable) {
+                    val minPct = toPct(currentMin)
+                    val maxPct = toPct(currentMax)
+                    val minHandleX = lineStartX + minPct * lineWidth
+                    val maxHandleX = lineStartX + maxPct * lineWidth
+                    val curPct = toPct(currentValue)
+                    val curX = lineStartX + curPct * lineWidth
+
+                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                    val distToCur = kotlin.math.abs(mouseX - curX)
+
+                    when {
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${formatValue(currentMin)}")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${formatValue(currentMax)}")
+                        distToCur < 6f -> ImGui.setTooltip("Current modulated value for $label: ${formatValue(currentValue)}")
+                        else -> ImGui.setTooltip("Drag handles to set modulation bounds for $label")
+                    }
+                } else {
+                    val valPct = toPct(currentValue)
+                    val valHandleX = lineStartX + valPct * lineWidth
+                    val distToVal = kotlin.math.abs(mouseX - valHandleX)
+
+                    if (distToVal < 8f) {
+                        ImGui.setTooltip("Base value for $label: ${formatValue(currentValue)}")
+                    } else {
+                        ImGui.setTooltip("Drag to adjust base value for $label")
+                    }
+                }
+            }
+        }
+
         ImGui.popID()
         ImGui.setCursorScreenPos(rowStartX, startY + h)
     }
@@ -1763,6 +1812,9 @@ object CellConfigPanel {
             if (ImGui.checkbox("##check_$label", checked)) {
                 onRandomizableChanged(checked.get())
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Enable parameter modulation limits and randomization")
+            }
 
             // 2. Randomize Button
             val randBtnX = startX + labelColW - buttonSize
@@ -1772,7 +1824,7 @@ object CellConfigPanel {
                 onRandomizeNow()
             }
             val hovered = ImGui.isItemHovered()
-            if (hovered) ImGui.setTooltip("Randomize $label now")
+            if (hovered && UITheme.tooltipsEnabled) ImGui.setTooltip("Randomize $label now")
             if (!isRandomizable) ImGui.endDisabled()
 
             // Circle-arrow icon
@@ -1818,6 +1870,9 @@ object CellConfigPanel {
             if (ImGui.combo("##bd_min_$label", minIdx, subdivisionLabels)) {
                 onRangeChanged(minIdx.get().toFloat(), currentMax)
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Minimum modulation speed subdivision dropdown")
+            }
             ImGui.popItemWidth()
 
             // Max combo
@@ -1827,6 +1882,9 @@ object CellConfigPanel {
             if (ImGui.combo("##bd_max_$label", maxIdx, subdivisionLabels)) {
                 onRangeChanged(currentMin, maxIdx.get().toFloat())
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Maximum modulation speed subdivision dropdown")
+            }
             ImGui.popItemWidth()
         } else {
             val valIdx = ImInt(currentValue.toInt().coerceIn(0, subdivisionLabels.size - 1))
@@ -1834,6 +1892,9 @@ object CellConfigPanel {
             ImGui.pushItemWidth(comboWidth)
             if (ImGui.combo("##bd_val_$label", valIdx, subdivisionLabels)) {
                 onValueChanged(valIdx.get().toFloat())
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Base speed subdivision dropdown")
             }
             ImGui.popItemWidth()
         }
@@ -1949,6 +2010,43 @@ object CellConfigPanel {
             val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
             dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
             dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+        }
+
+        // Hover-zone tooltips for beat division slider track/handles
+        if (UITheme.tooltipsEnabled) {
+            val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
+            val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
+            if (inTrackY && inTrackX) {
+                if (isRandomizable) {
+                    val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
+                    val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
+                    val minHandleX = lineStartX + minPct * lineWidth
+                    val maxHandleX = lineStartX + maxPct * lineWidth
+                    val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+                    val curX = lineStartX + curPct * lineWidth
+
+                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                    val distToCur = kotlin.math.abs(mouseX - curX)
+
+                    when {
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}")
+                        distToCur < 6f -> ImGui.setTooltip("Current modulated speed for $label: ${formatValue(currentValue)}")
+                        else -> ImGui.setTooltip("Drag handles to set modulation bounds for $label")
+                    }
+                } else {
+                    val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+                    val valHandleX = lineStartX + valPct * lineWidth
+                    val distToVal = kotlin.math.abs(mouseX - valHandleX)
+
+                    if (distToVal < 8f) {
+                        ImGui.setTooltip("Base speed for $label: ${formatValue(currentValue)}")
+                    } else {
+                        ImGui.setTooltip("Drag to adjust base speed for $label")
+                    }
+                }
+            }
         }
 
         ImGui.popID()

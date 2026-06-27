@@ -59,6 +59,7 @@ object UITheme {
     var setlistTransitionBehavior: SetlistTransitionBehavior = SetlistTransitionBehavior.PROMPT
     var activeMidiProfile: String = "default"
     var setlistKeyTrigger: SetlistKeyTrigger = SetlistKeyTrigger.NONE
+    var tooltipsEnabled: Boolean = true
 
     init {
         loadSettings()
@@ -89,6 +90,11 @@ object UITheme {
                     autocollapseEnabled = savedAutocollapse
                     logger.info { "Loaded autocollapseEnabled from settings file: $autocollapseEnabled" }
                 }
+                val savedTooltips = props.getProperty("tooltipsEnabled")?.toBooleanStrictOrNull()
+                if (savedTooltips != null) {
+                    tooltipsEnabled = savedTooltips
+                    logger.info { "Loaded tooltipsEnabled from settings file: $tooltipsEnabled" }
+                }
                 val savedTransition = props.getProperty("setlistTransitionBehavior")
                 if (savedTransition != null) {
                     setlistTransitionBehavior = try { SetlistTransitionBehavior.valueOf(savedTransition) } catch (e: Exception) { SetlistTransitionBehavior.PROMPT }
@@ -103,7 +109,7 @@ object UITheme {
                     setlistKeyTrigger = try { SetlistKeyTrigger.valueOf(savedKeyTrigger) } catch (e: Exception) { SetlistKeyTrigger.NONE }
                 }
             } else {
-                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, autocollapseEnabled: $autocollapseEnabled" }
+                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, autocollapseEnabled: $autocollapseEnabled, tooltipsEnabled: $tooltipsEnabled" }
             }
         } catch (e: Exception) {
             logger.warn(e) { "Failed to load settings, using defaults" }
@@ -117,6 +123,7 @@ object UITheme {
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
             props.setProperty("autocollapseEnabled", autocollapseEnabled.toString())
+            props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
             props.setProperty("setlistTransitionBehavior", setlistTransitionBehavior.name)
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("setlistKeyTrigger", setlistKeyTrigger.name)
