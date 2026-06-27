@@ -17,6 +17,8 @@ class Renderer {
     private val backgroundShader: Shader
     private val blitShader: Shader
     private val mandelbulbShader: Shader
+    private val kifsShader: Shader
+    private val gyroidShader: Shader
 
     private var mandalaVAO: Int = 0
     private var mandalaVBO: Int = 0
@@ -30,6 +32,8 @@ class Renderer {
         backgroundShader = Shader.fromResources("shaders/blit.vert", "shaders/background.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
         mandelbulbShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/mandelbulb.frag")
+        kifsShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/kifs.frag")
+        gyroidShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/gyroid.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
         val expansionBuffer = Mandala.expansionBuffer
@@ -63,7 +67,79 @@ class Renderer {
             renderMandala(source, targetFBO)
         } else if (source is Mandelbulb) {
             renderMandelbulb(source, targetFBO)
+        } else if (source is Kifs) {
+            renderKifs(source, targetFBO)
+        } else if (source is Gyroid) {
+            renderGyroid(source, targetFBO)
         }
+    }
+
+    private fun renderKifs(kifs: Kifs, targetFBO: FBO) {
+        targetFBO.bind()
+
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        kifsShader.bind()
+
+        val p = kifs.parameters
+        kifsShader.setUniform("uIterations", p["Iterations"]?.value ?: 5.0f)
+        kifsShader.setUniform("uScale", p["Scale"]?.value ?: 2.0f)
+        kifsShader.setUniform("uFoldX", p["Fold X"]?.value ?: 0.5f)
+        kifsShader.setUniform("uFoldY", p["Fold Y"]?.value ?: 0.5f)
+        kifsShader.setUniform("uFoldZ", p["Fold Z"]?.value ?: 0.5f)
+        kifsShader.setUniform("uFoldAngleX", p["Fold Angle X"]?.value ?: 0.0f)
+        kifsShader.setUniform("uFoldAngleY", p["Fold Angle Y"]?.value ?: 0.0f)
+        kifsShader.setUniform("uFoldAngleZ", p["Fold Angle Z"]?.value ?: 0.0f)
+        kifsShader.setUniform("uShapeMorph", p["Shape Morph"]?.value ?: 0.0f)
+        kifsShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
+        kifsShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
+        kifsShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
+        kifsShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
+        kifsShader.setUniform("uAlpha", kifs.globalAlpha.value)
+        kifsShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        kifsShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
+
+        Geometry.drawFullscreenQuad()
+
+        kifsShader.unbind()
+        targetFBO.unbind()
+    }
+
+    private fun renderGyroid(gyroid: Gyroid, targetFBO: FBO) {
+        targetFBO.bind()
+
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        gyroidShader.bind()
+
+        val p = gyroid.parameters
+        gyroidShader.setUniform("uScaleX", p["Scale X"]?.value ?: 3.0f)
+        gyroidShader.setUniform("uScaleY", p["Scale Y"]?.value ?: 3.0f)
+        gyroidShader.setUniform("uScaleZ", p["Scale Z"]?.value ?: 3.0f)
+        gyroidShader.setUniform("uThickness", p["Thickness"]?.value ?: 0.0f)
+        gyroidShader.setUniform("uWallWidth", p["Wall Width"]?.value ?: 0.1f)
+        gyroidShader.setUniform("uSpeed", p["Speed"]?.value ?: 1.0f)
+        gyroidShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
+        gyroidShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
+        gyroidShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
+        gyroidShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
+        gyroidShader.setUniform("uAlpha", gyroid.globalAlpha.value)
+        gyroidShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        gyroidShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
+        gyroidShader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+
+        Geometry.drawFullscreenQuad()
+
+        gyroidShader.unbind()
+        targetFBO.unbind()
     }
 
 
@@ -343,6 +419,8 @@ class Renderer {
             backgroundShader.dispose()
             blitShader.dispose()
             mandelbulbShader.dispose()
+            kifsShader.dispose()
+            gyroidShader.dispose()
             isDisposed = true
         }
     }

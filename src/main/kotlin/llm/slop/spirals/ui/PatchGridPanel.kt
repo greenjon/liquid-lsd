@@ -10,6 +10,8 @@ import llm.slop.spirals.parameters.CvModulator
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mandala
 import llm.slop.spirals.rendering.Mandelbulb
+import llm.slop.spirals.rendering.Kifs
+import llm.slop.spirals.rendering.Gyroid
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.models.ClipboardManager
 import llm.slop.spirals.models.CellClipboardData
@@ -353,7 +355,7 @@ object PatchGridPanel {
 
     private fun syncAndCollapseSubgroups(activeSubgroupLabel: String, state: PatchGridState) {
         val decks = listOf("Deck A", "Deck B")
-        val subgroups = listOf("Geometry", "3D Geometry", "Color", "Background", "Feedback")
+        val subgroups = listOf("Geometry", "3D Geometry", "Color", "Background", "Feedback", "KIFS", "Gyroid")
 
         for (deck in decks) {
             for (sub in subgroups) {
@@ -382,6 +384,8 @@ object PatchGridPanel {
         drawGroup(deckLabel, state, true) {
             val mandala = deck.source as? Mandala
             val mandelbulb = deck.source as? Mandelbulb
+            val kifs = deck.source as? Kifs
+            val gyroid = deck.source as? Gyroid
 
             if (mandala != null) {
                 drawSubGroup(deckLabel, "Geometry", state) {
@@ -437,6 +441,43 @@ object PatchGridPanel {
                     drawParamRow("Yaw",         "$deckLabel/Mandelbulb/Yaw",         mandelbulb.parameters["Yaw"]!!,         state, labelColW, mixer)
                     drawParamRow("Pitch",       "$deckLabel/Mandelbulb/Pitch",       mandelbulb.parameters["Pitch"]!!,       state, labelColW, mixer)
                     drawParamRow("Gain",        "$deckLabel/Mandelbulb/Gain",        mandelbulb.globalAlpha,                 state, labelColW, mixer)
+                }
+            }
+
+            if (kifs != null) {
+                drawSubGroup(deckLabel, "KIFS", state) {
+                    drawParamRow("Iterations",  "$deckLabel/Kifs/Iterations",  kifs.parameters["Iterations"]!!,  state, labelColW, mixer)
+                    drawParamRow("Scale",       "$deckLabel/Kifs/Scale",       kifs.parameters["Scale"]!!,       state, labelColW, mixer)
+                    drawParamRow("Fold X",      "$deckLabel/Kifs/FoldX",      kifs.parameters["Fold X"]!!,      state, labelColW, mixer)
+                    drawParamRow("Fold Y",      "$deckLabel/Kifs/FoldY",      kifs.parameters["Fold Y"]!!,      state, labelColW, mixer)
+                    drawParamRow("Fold Z",      "$deckLabel/Kifs/FoldZ",      kifs.parameters["Fold Z"]!!,      state, labelColW, mixer)
+                    drawParamRow("Fold Angle X","$deckLabel/Kifs/FoldAngleX", kifs.parameters["Fold Angle X"]!!, state, labelColW, mixer)
+                    drawParamRow("Fold Angle Y","$deckLabel/Kifs/FoldAngleY", kifs.parameters["Fold Angle Y"]!!, state, labelColW, mixer)
+                    drawParamRow("Fold Angle Z","$deckLabel/Kifs/FoldAngleZ", kifs.parameters["Fold Angle Z"]!!, state, labelColW, mixer)
+                    drawParamRow("Shape Morph", "$deckLabel/Kifs/ShapeMorph",  kifs.parameters["Shape Morph"]!!,  state, labelColW, mixer)
+                    drawParamRow("Zoom",        "$deckLabel/Kifs/Zoom",        kifs.parameters["Zoom"]!!,        state, labelColW, mixer)
+                    drawParamRow("Color Shift", "$deckLabel/Kifs/ColorShift",  kifs.parameters["Color Shift"]!!,  state, labelColW, mixer)
+                    drawParamRow("Yaw",         "$deckLabel/Kifs/Yaw",         kifs.parameters["Yaw"]!!,         state, labelColW, mixer)
+                    drawParamRow("Pitch",       "$deckLabel/Kifs/Pitch",       kifs.parameters["Pitch"]!!,       state, labelColW, mixer)
+                    drawParamRow("Glow",        "$deckLabel/Kifs/Glow",        kifs.parameters["Glow"]!!,        state, labelColW, mixer)
+                    drawParamRow("Gain",        "$deckLabel/Kifs/Gain",        kifs.globalAlpha,                 state, labelColW, mixer)
+                }
+            }
+
+            if (gyroid != null) {
+                drawSubGroup(deckLabel, "Gyroid", state) {
+                    drawParamRow("Scale X",     "$deckLabel/Gyroid/ScaleX",     gyroid.parameters["Scale X"]!!,     state, labelColW, mixer)
+                    drawParamRow("Scale Y",     "$deckLabel/Gyroid/ScaleY",     gyroid.parameters["Scale Y"]!!,     state, labelColW, mixer)
+                    drawParamRow("Scale Z",     "$deckLabel/Gyroid/ScaleZ",     gyroid.parameters["Scale Z"]!!,     state, labelColW, mixer)
+                    drawParamRow("Thickness",   "$deckLabel/Gyroid/Thickness",   gyroid.parameters["Thickness"]!!,   state, labelColW, mixer)
+                    drawParamRow("Wall Width",  "$deckLabel/Gyroid/WallWidth",  gyroid.parameters["Wall Width"]!!,  state, labelColW, mixer)
+                    drawParamRow("Speed",       "$deckLabel/Gyroid/Speed",      gyroid.parameters["Speed"]!!,       state, labelColW, mixer)
+                    drawParamRow("Zoom",        "$deckLabel/Gyroid/Zoom",        gyroid.parameters["Zoom"]!!,        state, labelColW, mixer)
+                    drawParamRow("Color Shift", "$deckLabel/Gyroid/ColorShift",  gyroid.parameters["Color Shift"]!!,  state, labelColW, mixer)
+                    drawParamRow("Yaw",         "$deckLabel/Gyroid/Yaw",         gyroid.parameters["Yaw"]!!,         state, labelColW, mixer)
+                    drawParamRow("Pitch",       "$deckLabel/Gyroid/Pitch",       gyroid.parameters["Pitch"]!!,       state, labelColW, mixer)
+                    drawParamRow("Glow",        "$deckLabel/Gyroid/Glow",        gyroid.parameters["Glow"]!!,        state, labelColW, mixer)
+                    drawParamRow("Gain",        "$deckLabel/Gyroid/Gain",        gyroid.globalAlpha,                 state, labelColW, mixer)
                 }
             }
 
@@ -957,6 +998,41 @@ object PatchGridPanel {
                 list.add("$deckLabel/Mandelbulb/Yaw" to mandelbulb.parameters["Yaw"]!!)
                 list.add("$deckLabel/Mandelbulb/Pitch" to mandelbulb.parameters["Pitch"]!!)
                 list.add("$deckLabel/Mandelbulb/Gain" to mandelbulb.globalAlpha)
+            }
+
+            val kifs = deck.source as? Kifs
+            if (kifs != null) {
+                list.add("$deckLabel/Kifs/Iterations" to kifs.parameters["Iterations"]!!)
+                list.add("$deckLabel/Kifs/Scale" to kifs.parameters["Scale"]!!)
+                list.add("$deckLabel/Kifs/FoldX" to kifs.parameters["Fold X"]!!)
+                list.add("$deckLabel/Kifs/FoldY" to kifs.parameters["Fold Y"]!!)
+                list.add("$deckLabel/Kifs/FoldZ" to kifs.parameters["Fold Z"]!!)
+                list.add("$deckLabel/Kifs/FoldAngleX" to kifs.parameters["Fold Angle X"]!!)
+                list.add("$deckLabel/Kifs/FoldAngleY" to kifs.parameters["Fold Angle Y"]!!)
+                list.add("$deckLabel/Kifs/FoldAngleZ" to kifs.parameters["Fold Angle Z"]!!)
+                list.add("$deckLabel/Kifs/ShapeMorph" to kifs.parameters["Shape Morph"]!!)
+                list.add("$deckLabel/Kifs/Zoom" to kifs.parameters["Zoom"]!!)
+                list.add("$deckLabel/Kifs/ColorShift" to kifs.parameters["Color Shift"]!!)
+                list.add("$deckLabel/Kifs/Yaw" to kifs.parameters["Yaw"]!!)
+                list.add("$deckLabel/Kifs/Pitch" to kifs.parameters["Pitch"]!!)
+                list.add("$deckLabel/Kifs/Glow" to kifs.parameters["Glow"]!!)
+                list.add("$deckLabel/Kifs/Gain" to kifs.globalAlpha)
+            }
+
+            val gyroid = deck.source as? Gyroid
+            if (gyroid != null) {
+                list.add("$deckLabel/Gyroid/ScaleX" to gyroid.parameters["Scale X"]!!)
+                list.add("$deckLabel/Gyroid/ScaleY" to gyroid.parameters["Scale Y"]!!)
+                list.add("$deckLabel/Gyroid/ScaleZ" to gyroid.parameters["Scale Z"]!!)
+                list.add("$deckLabel/Gyroid/Thickness" to gyroid.parameters["Thickness"]!!)
+                list.add("$deckLabel/Gyroid/WallWidth" to gyroid.parameters["Wall Width"]!!)
+                list.add("$deckLabel/Gyroid/Speed" to gyroid.parameters["Speed"]!!)
+                list.add("$deckLabel/Gyroid/Zoom" to gyroid.parameters["Zoom"]!!)
+                list.add("$deckLabel/Gyroid/ColorShift" to gyroid.parameters["Color Shift"]!!)
+                list.add("$deckLabel/Gyroid/Yaw" to gyroid.parameters["Yaw"]!!)
+                list.add("$deckLabel/Gyroid/Pitch" to gyroid.parameters["Pitch"]!!)
+                list.add("$deckLabel/Gyroid/Glow" to gyroid.parameters["Glow"]!!)
+                list.add("$deckLabel/Gyroid/Gain" to gyroid.globalAlpha)
             }
             
             // Feedback

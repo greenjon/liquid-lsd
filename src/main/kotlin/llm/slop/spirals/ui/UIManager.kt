@@ -12,6 +12,8 @@ import llm.slop.spirals.rendering.Mandala
 import llm.slop.spirals.rendering.MandalaLibrary
 import llm.slop.spirals.rendering.MandalaRatio
 import llm.slop.spirals.rendering.Mandelbulb
+import llm.slop.spirals.rendering.Kifs
+import llm.slop.spirals.rendering.Gyroid
 import llm.slop.spirals.rendering.Mixer
 import kotlin.math.roundToInt
 import mu.KotlinLogging
@@ -1282,6 +1284,22 @@ class UIManager(private val windowHandle: Long) {
             UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Fractal:")
             UITheme.body("  Power: %.2f".format(powerVal))
             UITheme.body("  Iterations: %.0f".format(iterVal))
+        }
+        val kifs = deck.source as? Kifs
+        if (kifs != null) {
+            val scaleVal = kifs.parameters["Scale"]?.value ?: 2f
+            val iterVal = kifs.parameters["Iterations"]?.value ?: 5f
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "KIFS:")
+            UITheme.body("  Scale: %.2f".format(scaleVal))
+            UITheme.body("  Iterations: %.0f".format(iterVal))
+        }
+        val gyroid = deck.source as? Gyroid
+        if (gyroid != null) {
+            val thickVal = gyroid.parameters["Thickness"]?.value ?: 0f
+            val wallVal = gyroid.parameters["Wall Width"]?.value ?: 0.1f
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Gyroid:")
+            UITheme.body("  Thickness: %.2f".format(thickVal))
+            UITheme.body("  Wall Width: %.2f".format(wallVal))
         }
         ImGui.unindent(8f)
 

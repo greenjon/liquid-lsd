@@ -276,7 +276,12 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
 fun MandalaRatio.toDto(): MandalaRecipeDto = MandalaRecipeDto(a, b, c, d)
 
 fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
-    val sourceName = if (source is Mandelbulb) "Mandelbulb" else "Mandala"
+    val sourceName = when (source) {
+        is Mandelbulb -> "Mandelbulb"
+        is Kifs -> "Kifs"
+        is Gyroid -> "Gyroid"
+        else -> "Mandala"
+    }
     val recipeDto = if (source is Mandala) (source as Mandala).recipe.toDto() else null
     
     val paramsMap = source.parameters.mapValues { it.value.toDto() }
@@ -309,7 +314,12 @@ fun Deck.applyDto(dto: DeckPatchDto) {
     dto.feedbackParameters["sourceSelect"]?.let { sourceSelect.applyDto(it) }
     
     // Select the active source dynamically based on sourceSelect parameter
-    source = if (sourceSelect.value >= 0.5f) mandelbulb else mandala
+    source = when {
+        sourceSelect.value < 0.25f -> mandala
+        sourceSelect.value < 0.50f -> mandelbulb
+        sourceSelect.value < 0.75f -> kifs
+        else -> gyroid
+    }
     
     if (source is Mandala) {
         val mandalaObj = source as Mandala
@@ -346,6 +356,16 @@ fun Deck.applyDto(dto: DeckPatchDto) {
         val mandelbulbObj = source as Mandelbulb
         for ((key, paramDto) in dto.parameters) {
             mandelbulbObj.parameters[key]?.applyDto(paramDto)
+        }
+    } else if (source is Kifs) {
+        val kifsObj = source as Kifs
+        for ((key, paramDto) in dto.parameters) {
+            kifsObj.parameters[key]?.applyDto(paramDto)
+        }
+    } else if (source is Gyroid) {
+        val gyroidObj = source as Gyroid
+        for ((key, paramDto) in dto.parameters) {
+            gyroidObj.parameters[key]?.applyDto(paramDto)
         }
     }
     
