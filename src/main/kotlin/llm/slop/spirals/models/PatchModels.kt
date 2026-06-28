@@ -276,15 +276,7 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
 fun MandalaRatio.toDto(): MandalaRecipeDto = MandalaRecipeDto(a, b, c, d)
 
 fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
-    val sourceName = when (source) {
-        is Mandelbulb -> "Mandelbulb"
-        is Kifs -> "Kifs"
-        is Gyroid -> "Gyroid"
-        is Chladni -> "Chladni"
-        is Mandelbox -> "Mandelbox"
-        is PseudoKleinian -> "PseudoKleinian"
-        else -> "Mandala"
-    }
+    val sourceName = if (source is llm.slop.spirals.rendering.DynamicVisualSource) (source as llm.slop.spirals.rendering.DynamicVisualSource).id else "Mandala"
     val recipeDto = if (source is Mandala) (source as Mandala).recipe.toDto() else null
     
     val paramsMap = source.parameters.mapValues { it.value.toDto() }
@@ -317,15 +309,9 @@ fun Deck.applyDto(dto: DeckPatchDto) {
     dto.feedbackParameters["sourceSelect"]?.let { sourceSelect.applyDto(it) }
     
     // Select the active source dynamically based on sourceSelect parameter
-    source = when {
-        sourceSelect.value < 0.1428f -> mandala
-        sourceSelect.value < 0.2857f -> mandelbulb
-        sourceSelect.value < 0.4285f -> kifs
-        sourceSelect.value < 0.5714f -> gyroid
-        sourceSelect.value < 0.7142f -> chladni
-        sourceSelect.value < 0.8571f -> mandelbox
-        else -> pseudoKleinian
-    }
+    val size = availableSources.size
+    val index = if (size > 0) (sourceSelect.value * size).toInt().coerceIn(0, size - 1) else 0
+    source = if (size > 0) availableSources[index] else availableSources[0]
     
     if (source is Mandala) {
         val mandalaObj = source as Mandala
@@ -358,35 +344,10 @@ fun Deck.applyDto(dto: DeckPatchDto) {
             val pct = if (list.size > 1) idx.toFloat() / (list.size - 1).toFloat() else 0.0f
             mandalaObj.parameters["Recipe Select"]?.set(pct)
         }
-    } else if (source is Mandelbulb) {
-        val mandelbulbObj = source as Mandelbulb
+    } else if (source is llm.slop.spirals.rendering.DynamicVisualSource) {
+        val dynObj = source as llm.slop.spirals.rendering.DynamicVisualSource
         for ((key, paramDto) in dto.parameters) {
-            mandelbulbObj.parameters[key]?.applyDto(paramDto)
-        }
-    } else if (source is Kifs) {
-        val kifsObj = source as Kifs
-        for ((key, paramDto) in dto.parameters) {
-            kifsObj.parameters[key]?.applyDto(paramDto)
-        }
-    } else if (source is Gyroid) {
-        val gyroidObj = source as Gyroid
-        for ((key, paramDto) in dto.parameters) {
-            gyroidObj.parameters[key]?.applyDto(paramDto)
-        }
-    } else if (source is Chladni) {
-        val chladniObj = source as Chladni
-        for ((key, paramDto) in dto.parameters) {
-            chladniObj.parameters[key]?.applyDto(paramDto)
-        }
-    } else if (source is Mandelbox) {
-        val mandelboxObj = source as Mandelbox
-        for ((key, paramDto) in dto.parameters) {
-            mandelboxObj.parameters[key]?.applyDto(paramDto)
-        }
-    } else if (source is PseudoKleinian) {
-        val pkObj = source as PseudoKleinian
-        for ((key, paramDto) in dto.parameters) {
-            pkObj.parameters[key]?.applyDto(paramDto)
+            dynObj.parameters[key]?.applyDto(paramDto)
         }
     }
     

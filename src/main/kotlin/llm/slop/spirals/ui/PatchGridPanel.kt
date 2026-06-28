@@ -8,14 +8,9 @@ import llm.slop.spirals.cv.CVRegistry
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.parameters.CvModulator
 import llm.slop.spirals.rendering.Deck
+import llm.slop.spirals.rendering.DynamicVisualSource
 import llm.slop.spirals.rendering.Mandala
-import llm.slop.spirals.rendering.Mandelbulb
-import llm.slop.spirals.rendering.Kifs
-import llm.slop.spirals.rendering.Gyroid
-import llm.slop.spirals.rendering.Chladni
-import llm.slop.spirals.rendering.Mandelbox
 import llm.slop.spirals.rendering.Mixer
-import llm.slop.spirals.rendering.PseudoKleinian
 import llm.slop.spirals.models.ClipboardManager
 import llm.slop.spirals.models.CellClipboardData
 import llm.slop.spirals.models.RowClipboardData
@@ -390,12 +385,12 @@ object PatchGridPanel {
     private fun drawDeckGroup(deckLabel: String, deck: Deck, state: PatchGridState, labelColW: Float, mixer: Mixer) {
         drawGroup(deckLabel, state, true) {
             val mandala = deck.source as? Mandala
-            val mandelbulb = deck.source as? Mandelbulb
-            val kifs = deck.source as? Kifs
-            val gyroid = deck.source as? Gyroid
-            val chladni = deck.source as? Chladni
-            val mandelbox = deck.source as? Mandelbox
-            val pseudoKleinian = deck.source as? PseudoKleinian
+            
+            
+            
+            
+            
+            
 
             if (mandala != null) {
                 drawSubGroup(deckLabel, "Geometry", state) {
@@ -452,109 +447,13 @@ object PatchGridPanel {
                 }
             }
 
-            if (mandelbulb != null) {
-                drawSubGroup(deckLabel, "Mandelbulb", state) {
-                    drawParamRow("Power",       "$deckLabel/Mandelbulb/Power",       mandelbulb.parameters["Power"]!!,       state, labelColW, mixer)
-                    drawParamRow("Iterations",  "$deckLabel/Mandelbulb/Iterations",  mandelbulb.parameters["Iterations"]!!,  state, labelColW, mixer)
-                    drawParamRow("Glow",        "$deckLabel/Mandelbulb/Glow",        mandelbulb.parameters["Glow"]!!,        state, labelColW, mixer)
-                    drawParamRow("Zoom",        "$deckLabel/Mandelbulb/Zoom",        mandelbulb.parameters["Zoom"]!!,        state, labelColW, mixer)
-                    drawParamRow("Color Shift", "$deckLabel/Mandelbulb/ColorShift",  mandelbulb.parameters["Color Shift"]!!, state, labelColW, mixer)
-                    drawParamRow("Bailout",     "$deckLabel/Mandelbulb/Bailout",     mandelbulb.parameters["Bailout"]!!,     state, labelColW, mixer)
-                    drawParamRow("Yaw",         "$deckLabel/Mandelbulb/Yaw",         mandelbulb.parameters["Yaw"]!!,         state, labelColW, mixer)
-                    drawParamRow("Pitch",       "$deckLabel/Mandelbulb/Pitch",       mandelbulb.parameters["Pitch"]!!,       state, labelColW, mixer)
-                    drawParamRow("Gain",        "$deckLabel/Mandelbulb/Gain",        mandelbulb.globalAlpha,                 state, labelColW, mixer)
-                }
-            }
-
-            if (kifs != null) {
-                drawSubGroup(deckLabel, "KIFS", state) {
-                    drawParamRow("Iterations",  "$deckLabel/Kifs/Iterations",  kifs.parameters["Iterations"]!!,  state, labelColW, mixer)
-                    drawParamRow("Scale",       "$deckLabel/Kifs/Scale",       kifs.parameters["Scale"]!!,       state, labelColW, mixer)
-                    drawParamRow("Fold X",      "$deckLabel/Kifs/FoldX",      kifs.parameters["Fold X"]!!,      state, labelColW, mixer)
-                    drawParamRow("Fold Y",      "$deckLabel/Kifs/FoldY",      kifs.parameters["Fold Y"]!!,      state, labelColW, mixer)
-                    drawParamRow("Fold Z",      "$deckLabel/Kifs/FoldZ",      kifs.parameters["Fold Z"]!!,      state, labelColW, mixer)
-                    drawParamRow("Fold Angle X","$deckLabel/Kifs/FoldAngleX", kifs.parameters["Fold Angle X"]!!, state, labelColW, mixer)
-                    drawParamRow("Fold Angle Y","$deckLabel/Kifs/FoldAngleY", kifs.parameters["Fold Angle Y"]!!, state, labelColW, mixer)
-                    drawParamRow("Fold Angle Z","$deckLabel/Kifs/FoldAngleZ", kifs.parameters["Fold Angle Z"]!!, state, labelColW, mixer)
-                    drawParamRow("Shape Morph", "$deckLabel/Kifs/ShapeMorph",  kifs.parameters["Shape Morph"]!!,  state, labelColW, mixer)
-                    drawParamRow("Zoom",        "$deckLabel/Kifs/Zoom",        kifs.parameters["Zoom"]!!,        state, labelColW, mixer)
-                    drawParamRow("Color Shift", "$deckLabel/Kifs/ColorShift",  kifs.parameters["Color Shift"]!!,  state, labelColW, mixer)
-                    drawParamRow("Yaw",         "$deckLabel/Kifs/Yaw",         kifs.parameters["Yaw"]!!,         state, labelColW, mixer)
-                    drawParamRow("Pitch",       "$deckLabel/Kifs/Pitch",       kifs.parameters["Pitch"]!!,       state, labelColW, mixer)
-                    drawParamRow("Glow",        "$deckLabel/Kifs/Glow",        kifs.parameters["Glow"]!!,        state, labelColW, mixer)
-                    drawParamRow("Gain",        "$deckLabel/Kifs/Gain",        kifs.globalAlpha,                 state, labelColW, mixer)
-                }
-            }
-
-            if (gyroid != null) {
-                drawSubGroup(deckLabel, "Gyroid", state) {
-                    drawParamRow("Scale X",     "$deckLabel/Gyroid/ScaleX",     gyroid.parameters["Scale X"]!!,     state, labelColW, mixer)
-                    drawParamRow("Scale Y",     "$deckLabel/Gyroid/ScaleY",     gyroid.parameters["Scale Y"]!!,     state, labelColW, mixer)
-                    drawParamRow("Scale Z",     "$deckLabel/Gyroid/ScaleZ",     gyroid.parameters["Scale Z"]!!,     state, labelColW, mixer)
-                    drawParamRow("Thickness",   "$deckLabel/Gyroid/Thickness",   gyroid.parameters["Thickness"]!!,   state, labelColW, mixer)
-                    drawParamRow("Wall Width",  "$deckLabel/Gyroid/WallWidth",  gyroid.parameters["Wall Width"]!!,  state, labelColW, mixer)
-                    drawParamRow("Speed",       "$deckLabel/Gyroid/Speed",      gyroid.parameters["Speed"]!!,       state, labelColW, mixer)
-                    drawParamRow("Zoom",        "$deckLabel/Gyroid/Zoom",        gyroid.parameters["Zoom"]!!,        state, labelColW, mixer)
-                    drawParamRow("Color Shift", "$deckLabel/Gyroid/ColorShift",  gyroid.parameters["Color Shift"]!!,  state, labelColW, mixer)
-                    drawParamRow("Yaw",         "$deckLabel/Gyroid/Yaw",         gyroid.parameters["Yaw"]!!,         state, labelColW, mixer)
-                    drawParamRow("Pitch",       "$deckLabel/Gyroid/Pitch",       gyroid.parameters["Pitch"]!!,       state, labelColW, mixer)
-                    drawParamRow("Glow",        "$deckLabel/Gyroid/Glow",        gyroid.parameters["Glow"]!!,        state, labelColW, mixer)
-                    drawParamRow("Gain",        "$deckLabel/Gyroid/Gain",        gyroid.globalAlpha,                 state, labelColW, mixer)
-                }
-            }
-
-            if (chladni != null) {
-                drawSubGroup(deckLabel, "Chladni", state) {
-                    drawParamRow("Mode (2D/3D)", "$deckLabel/Chladni/Mode",      chladni.parameters["Mode"]!!,        state, labelColW, mixer)
-                    drawParamRow("Frequency N",  "$deckLabel/Chladni/FreqN",     chladni.parameters["Frequency N"]!!, state, labelColW, mixer)
-                    drawParamRow("Frequency M",  "$deckLabel/Chladni/FreqM",     chladni.parameters["Frequency M"]!!, state, labelColW, mixer)
-                    drawParamRow("Frequency L",  "$deckLabel/Chladni/FreqL",     chladni.parameters["Frequency L"]!!, state, labelColW, mixer)
-                    drawParamRow("Thickness",    "$deckLabel/Chladni/Thickness", chladni.parameters["Thickness"]!!,   state, labelColW, mixer)
-                    drawParamRow("Wall Width",   "$deckLabel/Chladni/WallWidth", chladni.parameters["Wall Width"]!!,  state, labelColW, mixer)
-                    drawParamRow("Scale",        "$deckLabel/Chladni/Scale",     chladni.parameters["Scale"]!!,       state, labelColW, mixer)
-                    drawParamRow("Speed",        "$deckLabel/Chladni/Speed",     chladni.parameters["Speed"]!!,       state, labelColW, mixer)
-                    drawParamRow("Zoom",         "$deckLabel/Chladni/Zoom",      chladni.parameters["Zoom"]!!,        state, labelColW, mixer)
-                    drawParamRow("Color Shift",  "$deckLabel/Chladni/ColorShift",chladni.parameters["Color Shift"]!!, state, labelColW, mixer)
-                    drawParamRow("Yaw",          "$deckLabel/Chladni/Yaw",       chladni.parameters["Yaw"]!!,         state, labelColW, mixer)
-                    drawParamRow("Pitch",        "$deckLabel/Chladni/Pitch",     chladni.parameters["Pitch"]!!,       state, labelColW, mixer)
-                    drawParamRow("Glow",         "$deckLabel/Chladni/Glow",      chladni.parameters["Glow"]!!,        state, labelColW, mixer)
-                    drawParamRow("Gain",         "$deckLabel/Chladni/Gain",      chladni.globalAlpha,                 state, labelColW, mixer)
-                }
-            }
-
-            if (mandelbox != null) {
-                drawSubGroup(deckLabel, "Mandelbox", state) {
-                    drawParamRow("Scale",        "$deckLabel/Mandelbox/Scale",       mandelbox.parameters["Scale"]!!,        state, labelColW, mixer)
-                    drawParamRow("Min Radius",   "$deckLabel/Mandelbox/MinRadius",   mandelbox.parameters["Min Radius"]!!,   state, labelColW, mixer)
-                    drawParamRow("Fixed Radius", "$deckLabel/Mandelbox/FixedRadius", mandelbox.parameters["Fixed Radius"]!!, state, labelColW, mixer)
-                    drawParamRow("Iterations",   "$deckLabel/Mandelbox/Iterations",  mandelbox.parameters["Iterations"]!!,   state, labelColW, mixer)
-                    drawParamRow("Fold Limit",   "$deckLabel/Mandelbox/FoldLimit",   mandelbox.parameters["Fold Limit"]!!,   state, labelColW, mixer)
-                    drawParamRow("Zoom",         "$deckLabel/Mandelbox/Zoom",        mandelbox.parameters["Zoom"]!!,         state, labelColW, mixer)
-                    drawParamRow("Color Shift",  "$deckLabel/Mandelbox/ColorShift",  mandelbox.parameters["Color Shift"]!!,  state, labelColW, mixer)
-                    drawParamRow("Yaw",          "$deckLabel/Mandelbox/Yaw",         mandelbox.parameters["Yaw"]!!,          state, labelColW, mixer)
-                    drawParamRow("Pitch",        "$deckLabel/Mandelbox/Pitch",       mandelbox.parameters["Pitch"]!!,        state, labelColW, mixer)
-                    drawParamRow("Glow",         "$deckLabel/Mandelbox/Glow",        mandelbox.parameters["Glow"]!!,         state, labelColW, mixer)
-                    drawParamRow("Gain",         "$deckLabel/Mandelbox/Gain",        mandelbox.globalAlpha,                  state, labelColW, mixer)
-                }
-            }
-
-            if (pseudoKleinian != null) {
-                drawSubGroup(deckLabel, "Pseudo-Kleinian", state) {
-                    drawParamRow("Scale",       "$deckLabel/PseudoKleinian/Scale",       pseudoKleinian.parameters["Scale"]!!,       state, labelColW, mixer)
-                    drawParamRow("Radius",      "$deckLabel/PseudoKleinian/Radius",      pseudoKleinian.parameters["Radius"]!!,      state, labelColW, mixer)
-                    drawParamRow("CX",          "$deckLabel/PseudoKleinian/CX",          pseudoKleinian.parameters["CX"]!!,          state, labelColW, mixer)
-                    drawParamRow("CY",          "$deckLabel/PseudoKleinian/CY",          pseudoKleinian.parameters["CY"]!!,          state, labelColW, mixer)
-                    drawParamRow("CZ",          "$deckLabel/PseudoKleinian/CZ",          pseudoKleinian.parameters["CZ"]!!,          state, labelColW, mixer)
-                    drawParamRow("Rot X",       "$deckLabel/PseudoKleinian/RotX",        pseudoKleinian.parameters["Rot X"]!!,       state, labelColW, mixer)
-                    drawParamRow("Rot Y",       "$deckLabel/PseudoKleinian/RotY",        pseudoKleinian.parameters["Rot Y"]!!,       state, labelColW, mixer)
-                    drawParamRow("Rot Z",       "$deckLabel/PseudoKleinian/RotZ",        pseudoKleinian.parameters["Rot Z"]!!,       state, labelColW, mixer)
-                    drawParamRow("Iterations",  "$deckLabel/PseudoKleinian/Iterations",  pseudoKleinian.parameters["Iterations"]!!,  state, labelColW, mixer)
-                    drawParamRow("Zoom",        "$deckLabel/PseudoKleinian/Zoom",        pseudoKleinian.parameters["Zoom"]!!,        state, labelColW, mixer)
-                    drawParamRow("Color Shift", "$deckLabel/PseudoKleinian/ColorShift",  pseudoKleinian.parameters["Color Shift"]!!, state, labelColW, mixer)
-                    drawParamRow("Yaw",         "$deckLabel/PseudoKleinian/Yaw",         pseudoKleinian.parameters["Yaw"]!!,         state, labelColW, mixer)
-                    drawParamRow("Pitch",       "$deckLabel/PseudoKleinian/Pitch",       pseudoKleinian.parameters["Pitch"]!!,       state, labelColW, mixer)
-                    drawParamRow("Glow",        "$deckLabel/PseudoKleinian/Glow",        pseudoKleinian.parameters["Glow"]!!,        state, labelColW, mixer)
-                    drawParamRow("Gain",        "$deckLabel/PseudoKleinian/Gain",        pseudoKleinian.globalAlpha,                 state, labelColW, mixer)
+            val activeSource = deck.source
+            if (activeSource is DynamicVisualSource) {
+                drawSubGroup(deckLabel, activeSource.displayName, state) {
+                    activeSource.parameters.forEach { (name, param) ->
+                        drawParamRow(name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer)
+                    }
+                    drawParamRow("Gain", "$deckLabel/${activeSource.displayName}/Gain", activeSource.globalAlpha, state, labelColW, mixer)
                 }
             }
 
@@ -1034,7 +933,7 @@ object PatchGridPanel {
         for (deckLabel in listOf("Deck A", "Deck B")) {
             val deck = if (deckLabel == "Deck A") mixer.deckA else mixer.deckB
             val mandala = deck.source as? Mandala
-            val mandelbulb = deck.source as? Mandelbulb
+            
             
             if (mandala != null) {
                 // Geometry
@@ -1065,84 +964,12 @@ object PatchGridPanel {
                 list.add("$deckLabel/Background/Zoom" to mandala.parameters["Bg Zoom"]!!)
             }
 
-            if (mandelbulb != null) {
-                list.add("$deckLabel/Mandelbulb/Power" to mandelbulb.parameters["Power"]!!)
-                list.add("$deckLabel/Mandelbulb/Iterations" to mandelbulb.parameters["Iterations"]!!)
-                list.add("$deckLabel/Mandelbulb/Glow" to mandelbulb.parameters["Glow"]!!)
-                list.add("$deckLabel/Mandelbulb/Zoom" to mandelbulb.parameters["Zoom"]!!)
-                list.add("$deckLabel/Mandelbulb/ColorShift" to mandelbulb.parameters["Color Shift"]!!)
-                list.add("$deckLabel/Mandelbulb/Bailout" to mandelbulb.parameters["Bailout"]!!)
-                list.add("$deckLabel/Mandelbulb/Yaw" to mandelbulb.parameters["Yaw"]!!)
-                list.add("$deckLabel/Mandelbulb/Pitch" to mandelbulb.parameters["Pitch"]!!)
-                list.add("$deckLabel/Mandelbulb/Gain" to mandelbulb.globalAlpha)
-            }
-
-            val kifs = deck.source as? Kifs
-            if (kifs != null) {
-                list.add("$deckLabel/Kifs/Iterations" to kifs.parameters["Iterations"]!!)
-                list.add("$deckLabel/Kifs/Scale" to kifs.parameters["Scale"]!!)
-                list.add("$deckLabel/Kifs/FoldX" to kifs.parameters["Fold X"]!!)
-                list.add("$deckLabel/Kifs/FoldY" to kifs.parameters["Fold Y"]!!)
-                list.add("$deckLabel/Kifs/FoldZ" to kifs.parameters["Fold Z"]!!)
-                list.add("$deckLabel/Kifs/FoldAngleX" to kifs.parameters["Fold Angle X"]!!)
-                list.add("$deckLabel/Kifs/FoldAngleY" to kifs.parameters["Fold Angle Y"]!!)
-                list.add("$deckLabel/Kifs/FoldAngleZ" to kifs.parameters["Fold Angle Z"]!!)
-                list.add("$deckLabel/Kifs/ShapeMorph" to kifs.parameters["Shape Morph"]!!)
-                list.add("$deckLabel/Kifs/Zoom" to kifs.parameters["Zoom"]!!)
-                list.add("$deckLabel/Kifs/ColorShift" to kifs.parameters["Color Shift"]!!)
-                list.add("$deckLabel/Kifs/Yaw" to kifs.parameters["Yaw"]!!)
-                list.add("$deckLabel/Kifs/Pitch" to kifs.parameters["Pitch"]!!)
-                list.add("$deckLabel/Kifs/Glow" to kifs.parameters["Glow"]!!)
-                list.add("$deckLabel/Kifs/Gain" to kifs.globalAlpha)
-            }
-
-            val gyroid = deck.source as? Gyroid
-            if (gyroid != null) {
-                list.add("$deckLabel/Gyroid/ScaleX" to gyroid.parameters["Scale X"]!!)
-                list.add("$deckLabel/Gyroid/ScaleY" to gyroid.parameters["Scale Y"]!!)
-                list.add("$deckLabel/Gyroid/ScaleZ" to gyroid.parameters["Scale Z"]!!)
-                list.add("$deckLabel/Gyroid/Thickness" to gyroid.parameters["Thickness"]!!)
-                list.add("$deckLabel/Gyroid/WallWidth" to gyroid.parameters["Wall Width"]!!)
-                list.add("$deckLabel/Gyroid/Speed" to gyroid.parameters["Speed"]!!)
-                list.add("$deckLabel/Gyroid/Zoom" to gyroid.parameters["Zoom"]!!)
-                list.add("$deckLabel/Gyroid/ColorShift" to gyroid.parameters["Color Shift"]!!)
-                list.add("$deckLabel/Gyroid/Yaw" to gyroid.parameters["Yaw"]!!)
-                list.add("$deckLabel/Gyroid/Pitch" to gyroid.parameters["Pitch"]!!)
-                list.add("$deckLabel/Gyroid/Glow" to gyroid.parameters["Glow"]!!)
-                list.add("$deckLabel/Gyroid/Gain" to gyroid.globalAlpha)
-            }
-
-            val chladni = deck.source as? Chladni
-            if (chladni != null) {
-                list.add("$deckLabel/Chladni/Mode" to chladni.parameters["Mode"]!!)
-                list.add("$deckLabel/Chladni/FreqN" to chladni.parameters["Frequency N"]!!)
-                list.add("$deckLabel/Chladni/FreqM" to chladni.parameters["Frequency M"]!!)
-                list.add("$deckLabel/Chladni/FreqL" to chladni.parameters["Frequency L"]!!)
-                list.add("$deckLabel/Chladni/Thickness" to chladni.parameters["Thickness"]!!)
-                list.add("$deckLabel/Chladni/WallWidth" to chladni.parameters["Wall Width"]!!)
-                list.add("$deckLabel/Chladni/Scale" to chladni.parameters["Scale"]!!)
-                list.add("$deckLabel/Chladni/Speed" to chladni.parameters["Speed"]!!)
-                list.add("$deckLabel/Chladni/Zoom" to chladni.parameters["Zoom"]!!)
-                list.add("$deckLabel/Chladni/ColorShift" to chladni.parameters["Color Shift"]!!)
-                list.add("$deckLabel/Chladni/Yaw" to chladni.parameters["Yaw"]!!)
-                list.add("$deckLabel/Chladni/Pitch" to chladni.parameters["Pitch"]!!)
-                list.add("$deckLabel/Chladni/Glow" to chladni.parameters["Glow"]!!)
-                list.add("$deckLabel/Chladni/Gain" to chladni.globalAlpha)
-            }
-
-            val mandelbox = deck.source as? Mandelbox
-            if (mandelbox != null) {
-                list.add("$deckLabel/Mandelbox/Scale" to mandelbox.parameters["Scale"]!!)
-                list.add("$deckLabel/Mandelbox/MinRadius" to mandelbox.parameters["Min Radius"]!!)
-                list.add("$deckLabel/Mandelbox/FixedRadius" to mandelbox.parameters["Fixed Radius"]!!)
-                list.add("$deckLabel/Mandelbox/Iterations" to mandelbox.parameters["Iterations"]!!)
-                list.add("$deckLabel/Mandelbox/FoldLimit" to mandelbox.parameters["Fold Limit"]!!)
-                list.add("$deckLabel/Mandelbox/Zoom" to mandelbox.parameters["Zoom"]!!)
-                list.add("$deckLabel/Mandelbox/ColorShift" to mandelbox.parameters["Color Shift"]!!)
-                list.add("$deckLabel/Mandelbox/Yaw" to mandelbox.parameters["Yaw"]!!)
-                list.add("$deckLabel/Mandelbox/Pitch" to mandelbox.parameters["Pitch"]!!)
-                list.add("$deckLabel/Mandelbox/Glow" to mandelbox.parameters["Glow"]!!)
-                list.add("$deckLabel/Mandelbox/Gain" to mandelbox.globalAlpha)
+            val activeSource = deck.source
+            if (activeSource is DynamicVisualSource) {
+                activeSource.parameters.forEach { (name, param) ->
+                    list.add("$deckLabel/${activeSource.displayName}/$name" to param)
+                }
+                list.add("$deckLabel/${activeSource.displayName}/Gain" to activeSource.globalAlpha)
             }
             
             // Feedback

@@ -24,13 +24,7 @@ class Deck(
     val sourceSelect = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
 
     // Keep instances of all visual sources
-    val mandala: Mandala = if (source is Mandala) source as Mandala else Mandala(MandalaLibrary.MandalaRatios.first())
-    val mandelbulb: Mandelbulb = if (source is Mandelbulb) source as Mandelbulb else Mandelbulb()
-    val kifs: Kifs = if (source is Kifs) source as Kifs else Kifs()
-    val gyroid: Gyroid = if (source is Gyroid) source as Gyroid else Gyroid()
-    val chladni: Chladni = if (source is Chladni) source as Chladni else Chladni()
-    val mandelbox: Mandelbox = if (source is Mandelbox) source as Mandelbox else Mandelbox()
-    val pseudoKleinian: PseudoKleinian = if (source is PseudoKleinian) source as PseudoKleinian else PseudoKleinian()
+    val availableSources = mutableListOf<VisualSource>()
 
     // Feedback parameters with custom clamp ranges
     val fbDecay = ModulatableParameter(0.73f, minClamp = 0f, maxClamp = 1f)
@@ -48,37 +42,28 @@ class Deck(
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         
-        // Ensure starting source matches the initialized source
-        source = when {
-            sourceSelect.value < 0.1428f -> mandala
-            sourceSelect.value < 0.2857f -> mandelbulb
-            sourceSelect.value < 0.4285f -> kifs
-            sourceSelect.value < 0.5714f -> gyroid
-            sourceSelect.value < 0.7142f -> chladni
-            sourceSelect.value < 0.8571f -> mandelbox
-            else -> pseudoKleinian
-        }
+        availableSources.add(Mandala(MandalaLibrary.MandalaRatios.first()))
+        availableSources.addAll(VisualSourceRegistry.availableSources)
+        
+        updateSourceSelection()
     }
 
     /**
      * Resets all parameters to their defaults.
      */
+    private fun updateSourceSelection() {
+        val size = availableSources.size
+        if (size == 0) return
+        val index = (sourceSelect.value * size).toInt().coerceIn(0, size - 1)
+        source = availableSources[index]
+    }
+
     fun reset() {
         sourceSelect.reset()
-        mandala.parameters.values.forEach { it.reset() }
-        mandala.globalAlpha.reset()
-        mandelbulb.parameters.values.forEach { it.reset() }
-        mandelbulb.globalAlpha.reset()
-        kifs.parameters.values.forEach { it.reset() }
-        kifs.globalAlpha.reset()
-        gyroid.parameters.values.forEach { it.reset() }
-        gyroid.globalAlpha.reset()
-        chladni.parameters.values.forEach { it.reset() }
-        chladni.globalAlpha.reset()
-        mandelbox.parameters.values.forEach { it.reset() }
-        mandelbox.globalAlpha.reset()
-        pseudoKleinian.parameters.values.forEach { it.reset() }
-        pseudoKleinian.globalAlpha.reset()
+        availableSources.forEach { src ->
+            src.parameters.values.forEach { it.reset() }
+            src.globalAlpha.reset()
+        }
         fbDecay.reset()
         fbGain.reset()
         fbZoom.reset()
@@ -87,15 +72,7 @@ class Deck(
         fbBlur.reset()
         fbChroma.reset()
         fbMode.reset()
-        source = when {
-            sourceSelect.value < 0.1428f -> mandala
-            sourceSelect.value < 0.2857f -> mandelbulb
-            sourceSelect.value < 0.4285f -> kifs
-            sourceSelect.value < 0.5714f -> gyroid
-            sourceSelect.value < 0.7142f -> chladni
-            sourceSelect.value < 0.8571f -> mandelbox
-            else -> pseudoKleinian
-        }
+        updateSourceSelection()
     }
 
     /**
@@ -133,15 +110,7 @@ class Deck(
      */
     fun update() {
         sourceSelect.evaluate()
-        source = when {
-            sourceSelect.value < 0.1428f -> mandala
-            sourceSelect.value < 0.2857f -> mandelbulb
-            sourceSelect.value < 0.4285f -> kifs
-            sourceSelect.value < 0.5714f -> gyroid
-            sourceSelect.value < 0.7142f -> chladni
-            sourceSelect.value < 0.8571f -> mandelbox
-            else -> pseudoKleinian
-        }
+        updateSourceSelection()
         source.update()
         fbDecay.evaluate()
         fbGain.evaluate()

@@ -29,6 +29,9 @@ fun main() {
     java.io.File("presets/global").mkdirs()
     java.io.File("presets/midi").mkdirs()
 
+    // Load dynamic visual sources
+    llm.slop.spirals.rendering.VisualSourceRegistry.loadAll()
+
     // Load active MIDI mapping profile
     llm.slop.spirals.midi.MidiMappingManager.loadProfile(UITheme.activeMidiProfile)
 

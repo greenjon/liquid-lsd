@@ -16,12 +16,6 @@ class Renderer {
     private val mixerShader: Shader
     private val backgroundShader: Shader
     private val blitShader: Shader
-    private val mandelbulbShader: Shader
-    private val kifsShader: Shader
-    private val gyroidShader: Shader
-    private val chladniShader: Shader
-    private val mandelboxShader: Shader
-    private val pseudoKleinianShader: Shader
 
     private var mandalaVAO: Int = 0
     private var mandalaVBO: Int = 0
@@ -34,12 +28,6 @@ class Renderer {
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         backgroundShader = Shader.fromResources("shaders/blit.vert", "shaders/background.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
-        mandelbulbShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/mandelbulb.frag")
-        kifsShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/kifs.frag")
-        gyroidShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/gyroid.frag")
-        chladniShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/chladni.frag")
-        mandelboxShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/mandelbox.frag")
-        pseudoKleinianShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/pseudo_kleinian.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
         val expansionBuffer = Mandala.expansionBuffer
@@ -68,189 +56,35 @@ class Renderer {
     fun render(source: VisualSource, targetFBO: FBO) {
         if (source is Mandala) {
             renderMandala(source, targetFBO)
-        } else if (source is Mandelbulb) {
-            renderMandelbulb(source, targetFBO)
-        } else if (source is Kifs) {
-            renderKifs(source, targetFBO)
-        } else if (source is Gyroid) {
-            renderGyroid(source, targetFBO)
-        } else if (source is Chladni) {
-            renderChladni(source, targetFBO)
-        } else if (source is Mandelbox) {
-            renderMandelbox(source, targetFBO)
-        } else if (source is PseudoKleinian) {
-            renderPseudoKleinian(source, targetFBO)
+        } else if (source is DynamicVisualSource) {
+            targetFBO.bind()
+            org.lwjgl.opengl.GL33.glClearColor(0f, 0f, 0f, 0f)
+            org.lwjgl.opengl.GL33.glClear(org.lwjgl.opengl.GL33.GL_COLOR_BUFFER_BIT)
+            org.lwjgl.opengl.GL33.glEnable(org.lwjgl.opengl.GL33.GL_BLEND)
+            org.lwjgl.opengl.GL33.glBlendFunc(org.lwjgl.opengl.GL33.GL_SRC_ALPHA, org.lwjgl.opengl.GL33.GL_ONE_MINUS_SRC_ALPHA)
+
+            source.shader.bind()
+
+            source.parameters.forEach { (name, param) ->
+                val uniformName = "u" + name.replace(" ", "")
+                source.shader.setUniform(uniformName, param.value)
+            }
+
+            source.shader.setUniform("uAlpha", source.globalAlpha.value)
+            source.shader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+            source.shader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+
+            Geometry.drawFullscreenQuad()
+
+            source.shader.unbind()
+            targetFBO.unbind()
         }
     }
 
-    private fun renderMandelbox(mandelbox: Mandelbox, targetFBO: FBO) {
-        targetFBO.bind()
 
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
 
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        mandelboxShader.bind()
 
-        val p = mandelbox.parameters
-        mandelboxShader.setUniform("uScale", p["Scale"]?.value ?: 2.0f)
-        mandelboxShader.setUniform("uMinRadius", p["Min Radius"]?.value ?: 0.5f)
-        mandelboxShader.setUniform("uFixedRadius", p["Fixed Radius"]?.value ?: 1.0f)
-        mandelboxShader.setUniform("uIterations", p["Iterations"]?.value ?: 8.0f)
-        mandelboxShader.setUniform("uFoldLimit", p["Fold Limit"]?.value ?: 1.0f)
-        mandelboxShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
-        mandelboxShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
-        mandelboxShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
-        mandelboxShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
-        mandelboxShader.setUniform("uAlpha", mandelbox.globalAlpha.value)
-        mandelboxShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        mandelboxShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
-
-        Geometry.drawFullscreenQuad()
-
-        mandelboxShader.unbind()
-        targetFBO.unbind()
-    }
-
-    private fun renderPseudoKleinian(pseudoKleinian: PseudoKleinian, targetFBO: FBO) {
-        targetFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        pseudoKleinianShader.bind()
-
-        val p = pseudoKleinian.parameters
-        pseudoKleinianShader.setUniform("uScale", p["Scale"]?.value ?: 1.5f)
-        pseudoKleinianShader.setUniform("uRadius", p["Radius"]?.value ?: 1.0f)
-        pseudoKleinianShader.setUniform("uCX", p["CX"]?.value ?: 1.0f)
-        pseudoKleinianShader.setUniform("uCY", p["CY"]?.value ?: 1.0f)
-        pseudoKleinianShader.setUniform("uCZ", p["CZ"]?.value ?: 1.0f)
-        pseudoKleinianShader.setUniform("uRotX", p["Rot X"]?.value ?: 0.0f)
-        pseudoKleinianShader.setUniform("uRotY", p["Rot Y"]?.value ?: 0.0f)
-        pseudoKleinianShader.setUniform("uRotZ", p["Rot Z"]?.value ?: 0.0f)
-        pseudoKleinianShader.setUniform("uIterations", p["Iterations"]?.value ?: 8.0f)
-        pseudoKleinianShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
-        pseudoKleinianShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
-        pseudoKleinianShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
-        pseudoKleinianShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
-        pseudoKleinianShader.setUniform("uAlpha", pseudoKleinian.globalAlpha.value)
-        pseudoKleinianShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        pseudoKleinianShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
-
-        Geometry.drawFullscreenQuad()
-
-        pseudoKleinianShader.unbind()
-        targetFBO.unbind()
-    }
-
-    private fun renderChladni(chladni: Chladni, targetFBO: FBO) {
-        targetFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        chladniShader.bind()
-
-        val p = chladni.parameters
-        chladniShader.setUniform("uMode", p["Mode"]?.value ?: 0.0f)
-        chladniShader.setUniform("uFrequencyN", p["Frequency N"]?.value ?: 3.0f)
-        chladniShader.setUniform("uFrequencyM", p["Frequency M"]?.value ?: 5.0f)
-        chladniShader.setUniform("uFrequencyL", p["Frequency L"]?.value ?: 2.0f)
-        chladniShader.setUniform("uThickness", p["Thickness"]?.value ?: 0.0f)
-        chladniShader.setUniform("uWallWidth", p["Wall Width"]?.value ?: 0.1f)
-        chladniShader.setUniform("uScale", p["Scale"]?.value ?: 3.0f)
-        chladniShader.setUniform("uSpeed", p["Speed"]?.value ?: 1.0f)
-        chladniShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
-        chladniShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
-        chladniShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
-        chladniShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
-        chladniShader.setUniform("uAlpha", chladni.globalAlpha.value)
-        chladniShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        chladniShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
-        chladniShader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
-
-        Geometry.drawFullscreenQuad()
-
-        chladniShader.unbind()
-        targetFBO.unbind()
-    }
-
-    private fun renderKifs(kifs: Kifs, targetFBO: FBO) {
-        targetFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        kifsShader.bind()
-
-        val p = kifs.parameters
-        kifsShader.setUniform("uIterations", p["Iterations"]?.value ?: 5.0f)
-        kifsShader.setUniform("uScale", p["Scale"]?.value ?: 2.0f)
-        kifsShader.setUniform("uFoldX", p["Fold X"]?.value ?: 0.5f)
-        kifsShader.setUniform("uFoldY", p["Fold Y"]?.value ?: 0.5f)
-        kifsShader.setUniform("uFoldZ", p["Fold Z"]?.value ?: 0.5f)
-        kifsShader.setUniform("uFoldAngleX", p["Fold Angle X"]?.value ?: 0.0f)
-        kifsShader.setUniform("uFoldAngleY", p["Fold Angle Y"]?.value ?: 0.0f)
-        kifsShader.setUniform("uFoldAngleZ", p["Fold Angle Z"]?.value ?: 0.0f)
-        kifsShader.setUniform("uShapeMorph", p["Shape Morph"]?.value ?: 0.0f)
-        kifsShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
-        kifsShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
-        kifsShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
-        kifsShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
-        kifsShader.setUniform("uAlpha", kifs.globalAlpha.value)
-        kifsShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        kifsShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
-
-        Geometry.drawFullscreenQuad()
-
-        kifsShader.unbind()
-        targetFBO.unbind()
-    }
-
-    private fun renderGyroid(gyroid: Gyroid, targetFBO: FBO) {
-        targetFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        gyroidShader.bind()
-
-        val p = gyroid.parameters
-        gyroidShader.setUniform("uScaleX", p["Scale X"]?.value ?: 3.0f)
-        gyroidShader.setUniform("uScaleY", p["Scale Y"]?.value ?: 3.0f)
-        gyroidShader.setUniform("uScaleZ", p["Scale Z"]?.value ?: 3.0f)
-        gyroidShader.setUniform("uThickness", p["Thickness"]?.value ?: 0.0f)
-        gyroidShader.setUniform("uWallWidth", p["Wall Width"]?.value ?: 0.1f)
-        gyroidShader.setUniform("uSpeed", p["Speed"]?.value ?: 1.0f)
-        gyroidShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
-        gyroidShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
-        gyroidShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
-        gyroidShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
-        gyroidShader.setUniform("uAlpha", gyroid.globalAlpha.value)
-        gyroidShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        gyroidShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
-        gyroidShader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
-
-        Geometry.drawFullscreenQuad()
-
-        gyroidShader.unbind()
-        targetFBO.unbind()
-    }
 
 
     private fun renderBackground(mandala: Mandala, alpha: Float) {
@@ -378,34 +212,6 @@ class Renderer {
         targetFBO.unbind()
     }
 
-    private fun renderMandelbulb(mandelbulb: Mandelbulb, targetFBO: FBO) {
-        targetFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        mandelbulbShader.bind()
-
-        val p = mandelbulb.parameters
-        mandelbulbShader.setUniform("uPower", p["Power"]?.value ?: 8.0f)
-        mandelbulbShader.setUniform("uIterations", p["Iterations"]?.value ?: 6.0f)
-        mandelbulbShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
-        mandelbulbShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
-        mandelbulbShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
-        mandelbulbShader.setUniform("uBailout", p["Bailout"]?.value ?: 2.0f)
-        mandelbulbShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
-        mandelbulbShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
-        mandelbulbShader.setUniform("uAlpha", mandelbulb.globalAlpha.value)
-        mandelbulbShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-
-        Geometry.drawFullscreenQuad()
-
-        mandelbulbShader.unbind()
-        targetFBO.unbind()
-    }
 
 
     /**
@@ -544,12 +350,6 @@ class Renderer {
             mixerShader.dispose()
             backgroundShader.dispose()
             blitShader.dispose()
-            mandelbulbShader.dispose()
-            kifsShader.dispose()
-            gyroidShader.dispose()
-            chladniShader.dispose()
-            mandelboxShader.dispose()
-            pseudoKleinianShader.dispose()
             isDisposed = true
         }
     }
