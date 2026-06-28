@@ -14,11 +14,12 @@ The core generative visual source in Spirals is the **Mandala**. It uses mathema
 - The mandala's colors dynamically cycle through color space based on parametric rates.
 - Color cycles can be modulated by external audio CVs to change palette characteristics on musical accents.
 
-### 3D Harmonograph Option
-- **3D Z-Axis**: Extrudes the 2D mandala into 3D using a two-component damped sine equation:
-  $$Z(t) = A_5 \sin(f_5 t + p_5) e^{-d_5 t} + A_6 \sin(f_6 t + p_6) e^{-d_6 t}$$
-  providing a physical harmonograph decay and complex spatial geometry.
-- **3D Controls**: Allows setting parameters for Z amplitudes (`Z Amp 1`, `Z Amp 2`), frequencies (`Z Freq 1`, `Z Freq 2`), damping (`Z Damp 1`, `Z Damp 2`), and phase offsets (`Z Phase 1`, `Z Phase 2`).
+### 3D Symmetrical Projections
+- **3D Modes**: Extrudes the 2D mandala into 3D space using one of three symmetrical methods (or disables it in 2D mode):
+  1. **Spherical Mapping**: Normalizes the 2D curve and projects it onto the surface of a 3D sphere using longitude ($\phi$) and latitude ($\theta$) angles. This creates intricate closed cages.
+  2. **Polyhedral Reflections**: Replicates the spherical-mapped 3D curve across polyhedral reflection groups (Cubic/Octahedral with 8 instances, or Tetrahedral with 4 instances) to produce highly symmetric crystal lattices.
+  3. **Coordinate Permutation**: Duplicates and renders the 2D loop onto the three primary coordinate planes simultaneously (XY, YZ, ZX planes) to create a mechanical, gyroscopic structure.
+- **3D Controls**: Exposes parameters like `Sphere Wrap X/Y` (controlling longitude/latitude wrapping range), `Mirror Group` (Cubic vs. Tetrahedral mirroring), and `Permute XY/YZ/ZX` (individual plane scales).
 - **Yaw, Pitch & Roll**: Supports 3D rotation of the mandala in space. Like all parameters, these can be modulated by CV sources (e.g. Bass CV modulating Yaw/Pitch).
 - **Perspective Projection**: Slide between a flat Orthographic view (`3D Persp` = 0) and an immersive, deep Perspective view (`3D Persp` = 1).
 

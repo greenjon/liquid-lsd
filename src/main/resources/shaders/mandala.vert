@@ -10,15 +10,15 @@ uniform float uB;
 uniform float uC;
 uniform float uD;
 
-// Z-axis harmonograph uniforms
-uniform float uZAmp1;
-uniform float uZAmp2;
-uniform float uZFreq1;
-uniform float uZFreq2;
-uniform float uZDamp1;
-uniform float uZDamp2;
-uniform float uZPhase1;
-uniform float uZPhase2;
+// 3D mode & projection uniforms
+uniform float u3DMode;
+uniform float uSphereWrapX;
+uniform float uSphereWrapY;
+uniform float uMirrorGroup;
+uniform float uPermuteXY;
+uniform float uPermuteYZ;
+uniform float uPermuteZX;
+uniform float uMaxR;
 
 // 3D rotations & perspective
 uniform float uYaw;
@@ -47,11 +47,7 @@ void main() {
     float y = uL1 * sin(t * uA) + uL2 * sin(t * uB) + uL3 * sin(t * uC) + uL4 * sin(t * uD);
     vCurvePos = vec2(x, y); // Pass unscaled 2D local position to fragment shader for depth sweep
 
-    // 2. Calculate Z-axis value using the 2-component damped sine equation
-    float z = uZAmp1 * sin(t * uZFreq1 + uZPhase1 * 2.0 * PI) * exp(-uZDamp1 * t)
-            + uZAmp2 * sin(t * uZFreq2 + uZPhase2 * 2.0 * PI) * exp(-uZDamp2 * t);
-
-    // 3. Calculate derivative (tangent in XY plane) to find the 2D normal vector
+    // 2. Calculate derivative (tangent in XY plane) to find the 2D normal vector
     float dx = -uA * uL1 * sin(t * uA) - uB * uL2 * sin(t * uB) - uC * uL3 * sin(t * uC) - uD * uL4 * sin(t * uD);
     float dy =  uA * uL1 * cos(t * uA) + uB * uL2 * cos(t * uB) + uC * uL3 * cos(t * uC) + uD * uL4 * cos(t * uD);
     vec2 tangent = vec2(dx, dy);
@@ -63,12 +59,67 @@ void main() {
         normal = vec2(0.0);
     }
 
-    // Offset position along local normal to construct ribbon geometry
-    vec3 pos = vec3(
+    // Offset position along local normal to construct ribbon geometry in 2D
+    vec2 localP = vec2(
         x + normal.x * (side * uThickness * 0.5),
-        y + normal.y * (side * uThickness * 0.5),
-        z
+        y + normal.y * (side * uThickness * 0.5)
     );
+
+    // 3. Compute 3D position based on active mode
+    vec3 pos;
+    if (u3DMode < 0.5) {
+        // Mode 0: 2D
+        pos = vec3(localP, 0.0);
+    } else if (u3DMode < 1.5) {
+        // Mode 1: Spherical Mapping
+        vec2 pNorm = localP / max(0.001, uMaxR);
+        float theta = (pNorm.y + 1.0) * 0.5 * PI * uSphereWrapY;
+        float phi = pNorm.x * PI * uSphereWrapX;
+        pos = vec3(
+            sin(theta) * cos(phi),
+            sin(theta) * sin(phi),
+            cos(theta)
+        ) * uMaxR;
+    } else if (u3DMode < 2.5) {
+        // Mode 2: Polyhedral Reflections (Cubic / Tetrahedral)
+        vec2 pNorm = localP / max(0.001, uMaxR);
+        float theta = (pNorm.y + 1.0) * 0.5 * PI * uSphereWrapY;
+        float phi = pNorm.x * PI * uSphereWrapX;
+        vec3 base3D = vec3(
+            sin(theta) * cos(phi),
+            sin(theta) * sin(phi),
+            cos(theta)
+        ) * uMaxR;
+
+        float sx = 1.0;
+        float sy = 1.0;
+        float sz = 1.0;
+        if (uMirrorGroup < 0.5) {
+            // Cubic mirror: 8 instances (gl_InstanceID: 0..7)
+            sx = ((gl_InstanceID & 1) != 0) ? -1.0 : 1.0;
+            sy = ((gl_InstanceID & 2) != 0) ? -1.0 : 1.0;
+            sz = ((gl_InstanceID & 4) != 0) ? -1.0 : 1.0;
+        } else {
+            // Tetrahedral: 4 instances (gl_InstanceID: 0..3)
+            if (gl_InstanceID == 1) {
+                sx = -1.0; sy = -1.0; sz = 1.0;
+            } else if (gl_InstanceID == 2) {
+                sx = 1.0; sy = -1.0; sz = -1.0;
+            } else if (gl_InstanceID == 3) {
+                sx = -1.0; sy = 1.0; sz = -1.0;
+            }
+        }
+        pos = base3D * vec3(sx, sy, sz);
+    } else {
+        // Mode 3: Coordinate Permutation (3 instances)
+        if (gl_InstanceID == 0) {
+            pos = vec3(localP.x, localP.y, 0.0) * uPermuteXY;
+        } else if (gl_InstanceID == 1) {
+            pos = vec3(0.0, localP.x, localP.y) * uPermuteYZ;
+        } else {
+            pos = vec3(localP.y, 0.0, localP.x) * uPermuteZX;
+        }
+    }
 
     // 4. Apply Roll (rotate around local Z-axis by uGlobalRotation)
     float cosRoll = cos(uGlobalRotation);

@@ -21,6 +21,7 @@ import llm.slop.spirals.models.toDto
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.roundToInt
 
 /**
  * Draws the Patch Grid panel. Rows = grouped ModulatableParameters.
@@ -401,17 +402,29 @@ object PatchGridPanel {
                     drawParamRow("Rotation", "$deckLabel/Geometry/Rotation", mandala.parameters["Rotation"]!!, state, labelColW, mixer)
                 }
                 drawSubGroup(deckLabel, "3D Geometry", state) {
-                    drawParamRow("Z Amp 1",   "$deckLabel/3D/ZAmp1",   mandala.parameters["Z Amp 1"]!!,   state, labelColW, mixer)
-                    drawParamRow("Z Amp 2",   "$deckLabel/3D/ZAmp2",   mandala.parameters["Z Amp 2"]!!,   state, labelColW, mixer)
-                    drawParamRow("Z Freq 1",  "$deckLabel/3D/ZFreq1",  mandala.parameters["Z Freq 1"]!!,  state, labelColW, mixer)
-                    drawParamRow("Z Freq 2",  "$deckLabel/3D/ZFreq2",  mandala.parameters["Z Freq 2"]!!,  state, labelColW, mixer)
-                    drawParamRow("Z Damp 1",  "$deckLabel/3D/ZDamp1",  mandala.parameters["Z Damp 1"]!!,  state, labelColW, mixer)
-                    drawParamRow("Z Damp 2",  "$deckLabel/3D/ZDamp2",  mandala.parameters["Z Damp 2"]!!,  state, labelColW, mixer)
-                    drawParamRow("Z Phase 1", "$deckLabel/3D/ZPhase1", mandala.parameters["Z Phase 1"]!!, state, labelColW, mixer)
-                    drawParamRow("Z Phase 2", "$deckLabel/3D/ZPhase2", mandala.parameters["Z Phase 2"]!!, state, labelColW, mixer)
-                    drawParamRow("3D Yaw",    "$deckLabel/3D/Yaw",     mandala.parameters["3D Yaw"]!!,    state, labelColW, mixer)
-                    drawParamRow("3D Pitch",  "$deckLabel/3D/Pitch",   mandala.parameters["3D Pitch"]!!,  state, labelColW, mixer)
-                    drawParamRow("3D Persp",  "$deckLabel/3D/Persp",   mandala.parameters["3D Persp"]!!,  state, labelColW, mixer)
+                    val modeVal = mandala.parameters["3D Mode"]?.value ?: 0f
+                    val mode = modeVal.roundToInt().coerceIn(0, 3)
+
+                    drawParamRow("3D Mode", "$deckLabel/3D/Mode", mandala.parameters["3D Mode"]!!, state, labelColW, mixer)
+
+                    if (mode == 1) {
+                        drawParamRow("Sphere Wrap X", "$deckLabel/3D/SphereWrapX", mandala.parameters["Sphere Wrap X"]!!, state, labelColW, mixer)
+                        drawParamRow("Sphere Wrap Y", "$deckLabel/3D/SphereWrapY", mandala.parameters["Sphere Wrap Y"]!!, state, labelColW, mixer)
+                    } else if (mode == 2) {
+                        drawParamRow("Mirror Group",  "$deckLabel/3D/MirrorGroup", mandala.parameters["Mirror Group"]!!,  state, labelColW, mixer)
+                        drawParamRow("Sphere Wrap X", "$deckLabel/3D/SphereWrapX", mandala.parameters["Sphere Wrap X"]!!, state, labelColW, mixer)
+                        drawParamRow("Sphere Wrap Y", "$deckLabel/3D/SphereWrapY", mandala.parameters["Sphere Wrap Y"]!!, state, labelColW, mixer)
+                    } else if (mode == 3) {
+                        drawParamRow("Permute XY",    "$deckLabel/3D/PermuteXY",   mandala.parameters["Permute XY"]!!,    state, labelColW, mixer)
+                        drawParamRow("Permute YZ",    "$deckLabel/3D/PermuteYZ",   mandala.parameters["Permute YZ"]!!,    state, labelColW, mixer)
+                        drawParamRow("Permute ZX",    "$deckLabel/3D/PermuteZX",   mandala.parameters["Permute ZX"]!!,    state, labelColW, mixer)
+                    }
+
+                    if (mode > 0) {
+                        drawParamRow("3D Yaw",   "$deckLabel/3D/Yaw",   mandala.parameters["3D Yaw"]!!,   state, labelColW, mixer)
+                        drawParamRow("3D Pitch", "$deckLabel/3D/Pitch", mandala.parameters["3D Pitch"]!!, state, labelColW, mixer)
+                        drawParamRow("3D Persp", "$deckLabel/3D/Persp", mandala.parameters["3D Persp"]!!, state, labelColW, mixer)
+                    }
                 }
                 drawSubGroup(deckLabel, "Color", state) {
                     drawParamRow("Thickness",  "$deckLabel/Color/Thickness",  mandala.parameters["Thickness"]!!,  state, labelColW, mixer)

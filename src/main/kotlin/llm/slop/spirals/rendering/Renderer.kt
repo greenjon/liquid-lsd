@@ -234,15 +234,16 @@ class Renderer {
         mandalaShader.setUniform("uC", mandala.recipe.c.toFloat())
         mandalaShader.setUniform("uD", mandala.recipe.d.toFloat())
 
-        // Set Z-axis harmonograph parameters
-        mandalaShader.setUniform("uZAmp1", p["Z Amp 1"]?.value ?: 0f)
-        mandalaShader.setUniform("uZAmp2", p["Z Amp 2"]?.value ?: 0f)
-        mandalaShader.setUniform("uZFreq1", p["Z Freq 1"]?.value ?: 2f)
-        mandalaShader.setUniform("uZFreq2", p["Z Freq 2"]?.value ?: 3f)
-        mandalaShader.setUniform("uZDamp1", p["Z Damp 1"]?.value ?: 0f)
-        mandalaShader.setUniform("uZDamp2", p["Z Damp 2"]?.value ?: 0f)
-        mandalaShader.setUniform("uZPhase1", p["Z Phase 1"]?.value ?: 0f)
-        mandalaShader.setUniform("uZPhase2", p["Z Phase 2"]?.value ?: 0f)
+        // Set 3D Mode & Symmetrical Projection parameters
+        val modeVal = p["3D Mode"]?.value ?: 0f
+        val mode = modeVal.roundToInt().coerceIn(0, 3)
+        mandalaShader.setUniform("u3DMode", mode.toFloat())
+        mandalaShader.setUniform("uSphereWrapX", p["Sphere Wrap X"]?.value ?: 1f)
+        mandalaShader.setUniform("uSphereWrapY", p["Sphere Wrap Y"]?.value ?: 1f)
+        mandalaShader.setUniform("uMirrorGroup", p["Mirror Group"]?.value ?: 0f)
+        mandalaShader.setUniform("uPermuteXY", p["Permute XY"]?.value ?: 1f)
+        mandalaShader.setUniform("uPermuteYZ", p["Permute YZ"]?.value ?: 1f)
+        mandalaShader.setUniform("uPermuteZX", p["Permute ZX"]?.value ?: 1f)
 
         // Set 3D rotations & perspective projection
         mandalaShader.setUniform("uYaw", p["3D Yaw"]?.value ?: 0f)
@@ -281,7 +282,22 @@ class Renderer {
 
         // Render the mandala ribbon
         glBindVertexArray(mandalaVAO)
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2)
+        val numInstances = when (mode) {
+            0 -> 1 // 2D
+            1 -> 1 // Spherical
+            2 -> {
+                // Polyhedral/Mirror
+                val mirrorGroup = (p["Mirror Group"]?.value ?: 0f).roundToInt().coerceIn(0, 1)
+                if (mirrorGroup == 0) 8 else 4 // 8 for Cubic, 4 for Tetrahedral
+            }
+            3 -> 3 // Coordinate Permutation
+            else -> 1
+        }
+        if (numInstances > 1) {
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2, numInstances)
+        } else {
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2)
+        }
 
         glBindVertexArray(0)
         mandalaShader.unbind()
