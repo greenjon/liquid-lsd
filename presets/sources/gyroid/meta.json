@@ -1,0 +1,90 @@
+{
+  "id": "gyroid",
+  "name": "Gyroid",
+  "parameters": [
+    {
+      "name": "Scale X",
+      "default": 3.0,
+      "min": 0.1,
+      "max": 20.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Scale Y",
+      "default": 3.0,
+      "min": 0.1,
+      "max": 20.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Scale Z",
+      "default": 3.0,
+      "min": 0.1,
+      "max": 20.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Thickness",
+      "default": 0.0,
+      "min": -1.5,
+      "max": 1.5,
+      "type": "BIPOLAR"
+    },
+    {
+      "name": "Wall Width",
+      "default": 0.1,
+      "min": 0.01,
+      "max": 0.5,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Speed",
+      "default": 1.0,
+      "min": 0.0,
+      "max": 5.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Color Shift",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Yaw",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Pitch",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Roll",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Glow",
+      "default": 0.5,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "id": "pseudo_kleinian",
+  "name": "Pseudo-Kleinian",
+  "parameters": [
+    {
+      "name": "Scale",
+      "default": 1.5,
+      "min": 0.5,
+      "max": 3.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Radius",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 1.2,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "CX",
+      "default": 0.5,
+      "min": -3.0,
+      "max": 3.0,
+      "type": "BIPOLAR"
+    },
+    {
+      "name": "CY",
+      "default": 0.5,
+      "min": -3.0,
+      "max": 3.0,
+      "type": "BIPOLAR"
+    },
+    {
+      "name": "CZ",
+      "default": 0.5,
+      "min": -3.0,
+      "max": 3.0,
+      "type": "BIPOLAR"
+    },
+    {
+      "name": "Rot X",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rot Y",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rot Z",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Iterations",
+      "default": 8.0,
+      "min": 1.0,
+      "max": 15.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Color Shift",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Yaw",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Pitch",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Roll",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Glow",
+      "default": 0.5,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR"
+    }
+  ]
+}

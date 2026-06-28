@@ -1,0 +1,69 @@
+{
+  "id": "mandelbulb",
+  "name": "Mandelbulb",
+  "parameters": [
+    {
+      "name": "Power",
+      "default": 8.0,
+      "min": 1.0,
+      "max": 20.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Iterations",
+      "default": 6.0,
+      "min": 1.0,
+      "max": 15.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Glow",
+      "default": 0.5,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Color Shift",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Bailout",
+      "default": 2.0,
+      "min": 1.0,
+      "max": 5.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Yaw",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Pitch",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Roll",
+      "default": 0.0,
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS"
+    }
+  ]
+}
