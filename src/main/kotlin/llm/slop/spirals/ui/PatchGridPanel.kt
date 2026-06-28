@@ -13,6 +13,7 @@ import llm.slop.spirals.rendering.Mandelbulb
 import llm.slop.spirals.rendering.Kifs
 import llm.slop.spirals.rendering.Gyroid
 import llm.slop.spirals.rendering.Chladni
+import llm.slop.spirals.rendering.Mandelbox
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.models.ClipboardManager
 import llm.slop.spirals.models.CellClipboardData
@@ -357,7 +358,7 @@ object PatchGridPanel {
 
     private fun syncAndCollapseSubgroups(activeSubgroupLabel: String, state: PatchGridState) {
         val decks = listOf("Deck A", "Deck B")
-        val subgroups = listOf("Geometry", "3D Geometry", "Color", "Background", "Feedback", "KIFS", "Gyroid", "Chladni")
+        val subgroups = listOf("Geometry", "3D Geometry", "Color", "Background", "Feedback", "KIFS", "Gyroid", "Chladni", "Mandelbox")
 
         for (deck in decks) {
             for (sub in subgroups) {
@@ -389,6 +390,7 @@ object PatchGridPanel {
             val kifs = deck.source as? Kifs
             val gyroid = deck.source as? Gyroid
             val chladni = deck.source as? Chladni
+            val mandelbox = deck.source as? Mandelbox
 
             if (mandala != null) {
                 drawSubGroup(deckLabel, "Geometry", state) {
@@ -512,6 +514,22 @@ object PatchGridPanel {
                     drawParamRow("Pitch",        "$deckLabel/Chladni/Pitch",     chladni.parameters["Pitch"]!!,       state, labelColW, mixer)
                     drawParamRow("Glow",         "$deckLabel/Chladni/Glow",      chladni.parameters["Glow"]!!,        state, labelColW, mixer)
                     drawParamRow("Gain",         "$deckLabel/Chladni/Gain",      chladni.globalAlpha,                 state, labelColW, mixer)
+                }
+            }
+
+            if (mandelbox != null) {
+                drawSubGroup(deckLabel, "Mandelbox", state) {
+                    drawParamRow("Scale",        "$deckLabel/Mandelbox/Scale",       mandelbox.parameters["Scale"]!!,        state, labelColW, mixer)
+                    drawParamRow("Min Radius",   "$deckLabel/Mandelbox/MinRadius",   mandelbox.parameters["Min Radius"]!!,   state, labelColW, mixer)
+                    drawParamRow("Fixed Radius", "$deckLabel/Mandelbox/FixedRadius", mandelbox.parameters["Fixed Radius"]!!, state, labelColW, mixer)
+                    drawParamRow("Iterations",   "$deckLabel/Mandelbox/Iterations",  mandelbox.parameters["Iterations"]!!,   state, labelColW, mixer)
+                    drawParamRow("Fold Limit",   "$deckLabel/Mandelbox/FoldLimit",   mandelbox.parameters["Fold Limit"]!!,   state, labelColW, mixer)
+                    drawParamRow("Zoom",         "$deckLabel/Mandelbox/Zoom",        mandelbox.parameters["Zoom"]!!,         state, labelColW, mixer)
+                    drawParamRow("Color Shift",  "$deckLabel/Mandelbox/ColorShift",  mandelbox.parameters["Color Shift"]!!,  state, labelColW, mixer)
+                    drawParamRow("Yaw",          "$deckLabel/Mandelbox/Yaw",         mandelbox.parameters["Yaw"]!!,          state, labelColW, mixer)
+                    drawParamRow("Pitch",        "$deckLabel/Mandelbox/Pitch",       mandelbox.parameters["Pitch"]!!,        state, labelColW, mixer)
+                    drawParamRow("Glow",         "$deckLabel/Mandelbox/Glow",        mandelbox.parameters["Glow"]!!,         state, labelColW, mixer)
+                    drawParamRow("Gain",         "$deckLabel/Mandelbox/Gain",        mandelbox.globalAlpha,                  state, labelColW, mixer)
                 }
             }
 
@@ -1085,6 +1103,21 @@ object PatchGridPanel {
                 list.add("$deckLabel/Chladni/Pitch" to chladni.parameters["Pitch"]!!)
                 list.add("$deckLabel/Chladni/Glow" to chladni.parameters["Glow"]!!)
                 list.add("$deckLabel/Chladni/Gain" to chladni.globalAlpha)
+            }
+
+            val mandelbox = deck.source as? Mandelbox
+            if (mandelbox != null) {
+                list.add("$deckLabel/Mandelbox/Scale" to mandelbox.parameters["Scale"]!!)
+                list.add("$deckLabel/Mandelbox/MinRadius" to mandelbox.parameters["Min Radius"]!!)
+                list.add("$deckLabel/Mandelbox/FixedRadius" to mandelbox.parameters["Fixed Radius"]!!)
+                list.add("$deckLabel/Mandelbox/Iterations" to mandelbox.parameters["Iterations"]!!)
+                list.add("$deckLabel/Mandelbox/FoldLimit" to mandelbox.parameters["Fold Limit"]!!)
+                list.add("$deckLabel/Mandelbox/Zoom" to mandelbox.parameters["Zoom"]!!)
+                list.add("$deckLabel/Mandelbox/ColorShift" to mandelbox.parameters["Color Shift"]!!)
+                list.add("$deckLabel/Mandelbox/Yaw" to mandelbox.parameters["Yaw"]!!)
+                list.add("$deckLabel/Mandelbox/Pitch" to mandelbox.parameters["Pitch"]!!)
+                list.add("$deckLabel/Mandelbox/Glow" to mandelbox.parameters["Glow"]!!)
+                list.add("$deckLabel/Mandelbox/Gain" to mandelbox.globalAlpha)
             }
             
             // Feedback

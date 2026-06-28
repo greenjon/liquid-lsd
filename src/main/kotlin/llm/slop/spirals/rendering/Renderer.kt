@@ -20,6 +20,7 @@ class Renderer {
     private val kifsShader: Shader
     private val gyroidShader: Shader
     private val chladniShader: Shader
+    private val mandelboxShader: Shader
 
     private var mandalaVAO: Int = 0
     private var mandalaVBO: Int = 0
@@ -36,6 +37,7 @@ class Renderer {
         kifsShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/kifs.frag")
         gyroidShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/gyroid.frag")
         chladniShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/chladni.frag")
+        mandelboxShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/mandelbox.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
         val expansionBuffer = Mandala.expansionBuffer
@@ -72,7 +74,40 @@ class Renderer {
             renderGyroid(source, targetFBO)
         } else if (source is Chladni) {
             renderChladni(source, targetFBO)
+        } else if (source is Mandelbox) {
+            renderMandelbox(source, targetFBO)
         }
+    }
+
+    private fun renderMandelbox(mandelbox: Mandelbox, targetFBO: FBO) {
+        targetFBO.bind()
+
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        mandelboxShader.bind()
+
+        val p = mandelbox.parameters
+        mandelboxShader.setUniform("uScale", p["Scale"]?.value ?: 2.0f)
+        mandelboxShader.setUniform("uMinRadius", p["Min Radius"]?.value ?: 0.5f)
+        mandelboxShader.setUniform("uFixedRadius", p["Fixed Radius"]?.value ?: 1.0f)
+        mandelboxShader.setUniform("uIterations", p["Iterations"]?.value ?: 8.0f)
+        mandelboxShader.setUniform("uFoldLimit", p["Fold Limit"]?.value ?: 1.0f)
+        mandelboxShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
+        mandelboxShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
+        mandelboxShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
+        mandelboxShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
+        mandelboxShader.setUniform("uAlpha", mandelbox.globalAlpha.value)
+        mandelboxShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        mandelboxShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
+
+        Geometry.drawFullscreenQuad()
+
+        mandelboxShader.unbind()
+        targetFBO.unbind()
     }
 
     private fun renderChladni(chladni: Chladni, targetFBO: FBO) {
@@ -474,6 +509,7 @@ class Renderer {
             kifsShader.dispose()
             gyroidShader.dispose()
             chladniShader.dispose()
+            mandelboxShader.dispose()
             isDisposed = true
         }
     }

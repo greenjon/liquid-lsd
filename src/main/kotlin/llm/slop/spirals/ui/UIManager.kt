@@ -15,6 +15,7 @@ import llm.slop.spirals.rendering.Mandelbulb
 import llm.slop.spirals.rendering.Kifs
 import llm.slop.spirals.rendering.Gyroid
 import llm.slop.spirals.rendering.Chladni
+import llm.slop.spirals.rendering.Mandelbox
 import llm.slop.spirals.rendering.Mixer
 import kotlin.math.roundToInt
 import mu.KotlinLogging
@@ -1311,6 +1312,14 @@ class UIManager(private val windowHandle: Long) {
             UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Chladni:")
             UITheme.body("  Mode: $modeLabel")
             UITheme.body("  Freq (N, M): %.1f, %.1f".format(freqN, freqM))
+        }
+        val mandelbox = deck.source as? Mandelbox
+        if (mandelbox != null) {
+            val scaleVal = mandelbox.parameters["Scale"]?.value ?: 2f
+            val iterVal = mandelbox.parameters["Iterations"]?.value ?: 8f
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Mandelbox:")
+            UITheme.body("  Scale: %.2f".format(scaleVal))
+            UITheme.body("  Iterations: %.0f".format(iterVal))
         }
         ImGui.unindent(8f)
 
