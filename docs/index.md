@@ -14,6 +14,7 @@ Detailed walkthroughs of the visual synth engine, CV routing matrix, and MIDI/Pr
 - **[Core Concepts](user_guide/concepts.md)**: Mandalas, decks, and mixing.
 - **[CV Modulation](user_guide/modulation.md)**: Modulation routing, operators, and generators (LFOs, Clocks, Random).
 - **[Presets & MIDI Mapping](user_guide/midi_presets.md)**: Preset saving/loading, clipboard, and MIDI Learn.
+- **[Custom Visuals](user_guide/custom_visuals.md)**: Add or create your own custom shaders and dynamic visuals.
 
 ### [Developer Reference](developer/architecture.md)
 Under-the-hood details of the application architecture, DSP engine, and rendering pipelines.
