@@ -12,6 +12,7 @@ import llm.slop.spirals.rendering.Mandala
 import llm.slop.spirals.rendering.Mandelbulb
 import llm.slop.spirals.rendering.Kifs
 import llm.slop.spirals.rendering.Gyroid
+import llm.slop.spirals.rendering.Chladni
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.models.ClipboardManager
 import llm.slop.spirals.models.CellClipboardData
@@ -355,7 +356,7 @@ object PatchGridPanel {
 
     private fun syncAndCollapseSubgroups(activeSubgroupLabel: String, state: PatchGridState) {
         val decks = listOf("Deck A", "Deck B")
-        val subgroups = listOf("Geometry", "3D Geometry", "Color", "Background", "Feedback", "KIFS", "Gyroid")
+        val subgroups = listOf("Geometry", "3D Geometry", "Color", "Background", "Feedback", "KIFS", "Gyroid", "Chladni")
 
         for (deck in decks) {
             for (sub in subgroups) {
@@ -386,6 +387,7 @@ object PatchGridPanel {
             val mandelbulb = deck.source as? Mandelbulb
             val kifs = deck.source as? Kifs
             val gyroid = deck.source as? Gyroid
+            val chladni = deck.source as? Chladni
 
             if (mandala != null) {
                 drawSubGroup(deckLabel, "Geometry", state) {
@@ -478,6 +480,25 @@ object PatchGridPanel {
                     drawParamRow("Pitch",       "$deckLabel/Gyroid/Pitch",       gyroid.parameters["Pitch"]!!,       state, labelColW, mixer)
                     drawParamRow("Glow",        "$deckLabel/Gyroid/Glow",        gyroid.parameters["Glow"]!!,        state, labelColW, mixer)
                     drawParamRow("Gain",        "$deckLabel/Gyroid/Gain",        gyroid.globalAlpha,                 state, labelColW, mixer)
+                }
+            }
+
+            if (chladni != null) {
+                drawSubGroup(deckLabel, "Chladni", state) {
+                    drawParamRow("Mode (2D/3D)", "$deckLabel/Chladni/Mode",      chladni.parameters["Mode"]!!,        state, labelColW, mixer)
+                    drawParamRow("Frequency N",  "$deckLabel/Chladni/FreqN",     chladni.parameters["Frequency N"]!!, state, labelColW, mixer)
+                    drawParamRow("Frequency M",  "$deckLabel/Chladni/FreqM",     chladni.parameters["Frequency M"]!!, state, labelColW, mixer)
+                    drawParamRow("Frequency L",  "$deckLabel/Chladni/FreqL",     chladni.parameters["Frequency L"]!!, state, labelColW, mixer)
+                    drawParamRow("Thickness",    "$deckLabel/Chladni/Thickness", chladni.parameters["Thickness"]!!,   state, labelColW, mixer)
+                    drawParamRow("Wall Width",   "$deckLabel/Chladni/WallWidth", chladni.parameters["Wall Width"]!!,  state, labelColW, mixer)
+                    drawParamRow("Scale",        "$deckLabel/Chladni/Scale",     chladni.parameters["Scale"]!!,       state, labelColW, mixer)
+                    drawParamRow("Speed",        "$deckLabel/Chladni/Speed",     chladni.parameters["Speed"]!!,       state, labelColW, mixer)
+                    drawParamRow("Zoom",         "$deckLabel/Chladni/Zoom",      chladni.parameters["Zoom"]!!,        state, labelColW, mixer)
+                    drawParamRow("Color Shift",  "$deckLabel/Chladni/ColorShift",chladni.parameters["Color Shift"]!!, state, labelColW, mixer)
+                    drawParamRow("Yaw",          "$deckLabel/Chladni/Yaw",       chladni.parameters["Yaw"]!!,         state, labelColW, mixer)
+                    drawParamRow("Pitch",        "$deckLabel/Chladni/Pitch",     chladni.parameters["Pitch"]!!,       state, labelColW, mixer)
+                    drawParamRow("Glow",         "$deckLabel/Chladni/Glow",      chladni.parameters["Glow"]!!,        state, labelColW, mixer)
+                    drawParamRow("Gain",         "$deckLabel/Chladni/Gain",      chladni.globalAlpha,                 state, labelColW, mixer)
                 }
             }
 
@@ -1033,6 +1054,24 @@ object PatchGridPanel {
                 list.add("$deckLabel/Gyroid/Pitch" to gyroid.parameters["Pitch"]!!)
                 list.add("$deckLabel/Gyroid/Glow" to gyroid.parameters["Glow"]!!)
                 list.add("$deckLabel/Gyroid/Gain" to gyroid.globalAlpha)
+            }
+
+            val chladni = deck.source as? Chladni
+            if (chladni != null) {
+                list.add("$deckLabel/Chladni/Mode" to chladni.parameters["Mode"]!!)
+                list.add("$deckLabel/Chladni/FreqN" to chladni.parameters["Frequency N"]!!)
+                list.add("$deckLabel/Chladni/FreqM" to chladni.parameters["Frequency M"]!!)
+                list.add("$deckLabel/Chladni/FreqL" to chladni.parameters["Frequency L"]!!)
+                list.add("$deckLabel/Chladni/Thickness" to chladni.parameters["Thickness"]!!)
+                list.add("$deckLabel/Chladni/WallWidth" to chladni.parameters["Wall Width"]!!)
+                list.add("$deckLabel/Chladni/Scale" to chladni.parameters["Scale"]!!)
+                list.add("$deckLabel/Chladni/Speed" to chladni.parameters["Speed"]!!)
+                list.add("$deckLabel/Chladni/Zoom" to chladni.parameters["Zoom"]!!)
+                list.add("$deckLabel/Chladni/ColorShift" to chladni.parameters["Color Shift"]!!)
+                list.add("$deckLabel/Chladni/Yaw" to chladni.parameters["Yaw"]!!)
+                list.add("$deckLabel/Chladni/Pitch" to chladni.parameters["Pitch"]!!)
+                list.add("$deckLabel/Chladni/Glow" to chladni.parameters["Glow"]!!)
+                list.add("$deckLabel/Chladni/Gain" to chladni.globalAlpha)
             }
             
             // Feedback

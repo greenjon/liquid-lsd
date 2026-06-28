@@ -280,6 +280,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
         is Mandelbulb -> "Mandelbulb"
         is Kifs -> "Kifs"
         is Gyroid -> "Gyroid"
+        is Chladni -> "Chladni"
         else -> "Mandala"
     }
     val recipeDto = if (source is Mandala) (source as Mandala).recipe.toDto() else null
@@ -315,10 +316,11 @@ fun Deck.applyDto(dto: DeckPatchDto) {
     
     // Select the active source dynamically based on sourceSelect parameter
     source = when {
-        sourceSelect.value < 0.25f -> mandala
-        sourceSelect.value < 0.50f -> mandelbulb
-        sourceSelect.value < 0.75f -> kifs
-        else -> gyroid
+        sourceSelect.value < 0.20f -> mandala
+        sourceSelect.value < 0.40f -> mandelbulb
+        sourceSelect.value < 0.60f -> kifs
+        sourceSelect.value < 0.80f -> gyroid
+        else -> chladni
     }
     
     if (source is Mandala) {
@@ -366,6 +368,11 @@ fun Deck.applyDto(dto: DeckPatchDto) {
         val gyroidObj = source as Gyroid
         for ((key, paramDto) in dto.parameters) {
             gyroidObj.parameters[key]?.applyDto(paramDto)
+        }
+    } else if (source is Chladni) {
+        val chladniObj = source as Chladni
+        for ((key, paramDto) in dto.parameters) {
+            chladniObj.parameters[key]?.applyDto(paramDto)
         }
     }
     

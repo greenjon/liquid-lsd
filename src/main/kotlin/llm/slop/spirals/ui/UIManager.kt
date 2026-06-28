@@ -14,6 +14,7 @@ import llm.slop.spirals.rendering.MandalaRatio
 import llm.slop.spirals.rendering.Mandelbulb
 import llm.slop.spirals.rendering.Kifs
 import llm.slop.spirals.rendering.Gyroid
+import llm.slop.spirals.rendering.Chladni
 import llm.slop.spirals.rendering.Mixer
 import kotlin.math.roundToInt
 import mu.KotlinLogging
@@ -1300,6 +1301,16 @@ class UIManager(private val windowHandle: Long) {
             UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Gyroid:")
             UITheme.body("  Thickness: %.2f".format(thickVal))
             UITheme.body("  Wall Width: %.2f".format(wallVal))
+        }
+        val chladni = deck.source as? Chladni
+        if (chladni != null) {
+            val modeVal = chladni.parameters["Mode"]?.value ?: 0f
+            val modeLabel = if (modeVal < 0.5f) "2D Plate" else "3D Volume"
+            val freqN = chladni.parameters["Frequency N"]?.value ?: 3f
+            val freqM = chladni.parameters["Frequency M"]?.value ?: 5f
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 1.0f, "Chladni:")
+            UITheme.body("  Mode: $modeLabel")
+            UITheme.body("  Freq (N, M): %.1f, %.1f".format(freqN, freqM))
         }
         ImGui.unindent(8f)
 

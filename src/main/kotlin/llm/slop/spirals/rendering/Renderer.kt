@@ -19,6 +19,7 @@ class Renderer {
     private val mandelbulbShader: Shader
     private val kifsShader: Shader
     private val gyroidShader: Shader
+    private val chladniShader: Shader
 
     private var mandalaVAO: Int = 0
     private var mandalaVBO: Int = 0
@@ -34,6 +35,7 @@ class Renderer {
         mandelbulbShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/mandelbulb.frag")
         kifsShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/kifs.frag")
         gyroidShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/gyroid.frag")
+        chladniShader = Shader.fromResources("shaders/mandelbulb.vert", "shaders/chladni.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
         val expansionBuffer = Mandala.expansionBuffer
@@ -59,9 +61,6 @@ class Renderer {
         }
     }
 
-    /**
-     * Renders a general VisualSource to the specified FBO.
-     */
     fun render(source: VisualSource, targetFBO: FBO) {
         if (source is Mandala) {
             renderMandala(source, targetFBO)
@@ -71,7 +70,44 @@ class Renderer {
             renderKifs(source, targetFBO)
         } else if (source is Gyroid) {
             renderGyroid(source, targetFBO)
+        } else if (source is Chladni) {
+            renderChladni(source, targetFBO)
         }
+    }
+
+    private fun renderChladni(chladni: Chladni, targetFBO: FBO) {
+        targetFBO.bind()
+
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        chladniShader.bind()
+
+        val p = chladni.parameters
+        chladniShader.setUniform("uMode", p["Mode"]?.value ?: 0.0f)
+        chladniShader.setUniform("uFrequencyN", p["Frequency N"]?.value ?: 3.0f)
+        chladniShader.setUniform("uFrequencyM", p["Frequency M"]?.value ?: 5.0f)
+        chladniShader.setUniform("uFrequencyL", p["Frequency L"]?.value ?: 2.0f)
+        chladniShader.setUniform("uThickness", p["Thickness"]?.value ?: 0.0f)
+        chladniShader.setUniform("uWallWidth", p["Wall Width"]?.value ?: 0.1f)
+        chladniShader.setUniform("uScale", p["Scale"]?.value ?: 3.0f)
+        chladniShader.setUniform("uSpeed", p["Speed"]?.value ?: 1.0f)
+        chladniShader.setUniform("uZoom", p["Zoom"]?.value ?: 1.0f)
+        chladniShader.setUniform("uColorShift", p["Color Shift"]?.value ?: 0.0f)
+        chladniShader.setUniform("uYaw", p["Yaw"]?.value ?: 0.0f)
+        chladniShader.setUniform("uPitch", p["Pitch"]?.value ?: 0.0f)
+        chladniShader.setUniform("uAlpha", chladni.globalAlpha.value)
+        chladniShader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        chladniShader.setUniform("uGlow", p["Glow"]?.value ?: 0.5f)
+        chladniShader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+
+        Geometry.drawFullscreenQuad()
+
+        chladniShader.unbind()
+        targetFBO.unbind()
     }
 
     private fun renderKifs(kifs: Kifs, targetFBO: FBO) {
@@ -421,6 +457,7 @@ class Renderer {
             mandelbulbShader.dispose()
             kifsShader.dispose()
             gyroidShader.dispose()
+            chladniShader.dispose()
             isDisposed = true
         }
     }

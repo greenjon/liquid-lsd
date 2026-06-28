@@ -28,6 +28,7 @@ class Deck(
     val mandelbulb: Mandelbulb = if (source is Mandelbulb) source as Mandelbulb else Mandelbulb()
     val kifs: Kifs = if (source is Kifs) source as Kifs else Kifs()
     val gyroid: Gyroid = if (source is Gyroid) source as Gyroid else Gyroid()
+    val chladni: Chladni = if (source is Chladni) source as Chladni else Chladni()
 
     // Feedback parameters with custom clamp ranges
     val fbDecay = ModulatableParameter(0.73f, minClamp = 0f, maxClamp = 1f)
@@ -47,10 +48,11 @@ class Deck(
         
         // Ensure starting source matches the initialized source
         source = when {
-            sourceSelect.value < 0.25f -> mandala
-            sourceSelect.value < 0.50f -> mandelbulb
-            sourceSelect.value < 0.75f -> kifs
-            else -> gyroid
+            sourceSelect.value < 0.20f -> mandala
+            sourceSelect.value < 0.40f -> mandelbulb
+            sourceSelect.value < 0.60f -> kifs
+            sourceSelect.value < 0.80f -> gyroid
+            else -> chladni
         }
     }
 
@@ -67,6 +69,8 @@ class Deck(
         kifs.globalAlpha.reset()
         gyroid.parameters.values.forEach { it.reset() }
         gyroid.globalAlpha.reset()
+        chladni.parameters.values.forEach { it.reset() }
+        chladni.globalAlpha.reset()
         fbDecay.reset()
         fbGain.reset()
         fbZoom.reset()
@@ -76,10 +80,11 @@ class Deck(
         fbChroma.reset()
         fbMode.reset()
         source = when {
-            sourceSelect.value < 0.25f -> mandala
-            sourceSelect.value < 0.50f -> mandelbulb
-            sourceSelect.value < 0.75f -> kifs
-            else -> gyroid
+            sourceSelect.value < 0.20f -> mandala
+            sourceSelect.value < 0.40f -> mandelbulb
+            sourceSelect.value < 0.60f -> kifs
+            sourceSelect.value < 0.80f -> gyroid
+            else -> chladni
         }
     }
 
@@ -119,10 +124,11 @@ class Deck(
     fun update() {
         sourceSelect.evaluate()
         source = when {
-            sourceSelect.value < 0.25f -> mandala
-            sourceSelect.value < 0.50f -> mandelbulb
-            sourceSelect.value < 0.75f -> kifs
-            else -> gyroid
+            sourceSelect.value < 0.20f -> mandala
+            sourceSelect.value < 0.40f -> mandelbulb
+            sourceSelect.value < 0.60f -> kifs
+            sourceSelect.value < 0.80f -> gyroid
+            else -> chladni
         }
         source.update()
         fbDecay.evaluate()
