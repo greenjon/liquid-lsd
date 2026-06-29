@@ -562,7 +562,8 @@ object CellConfigPanel {
             ImGui.sameLine(0f, 10f)
             val btnX1 = ImGui.getCursorScreenPosX()
             val btnY1 = ImGui.getCursorScreenPosY()
-            if (ImGui.button("##rand_bar_$idx", 50f, 30f)) {
+            val btnHeight = ImGui.getFrameHeight()
+            if (ImGui.button("##rand_bar_$idx", 50f, btnHeight)) {
                 val randomized = existing.randomizeActiveValues()
                 replaceModulator(state, param, randomized)
             }
@@ -570,31 +571,32 @@ object CellConfigPanel {
                 ImGui.setTooltip("Randomize modulator values")
             }
             
-            // Draw pair of dice inside the randomize button
+            // Draw pair of dice inside the randomize button (30% larger)
             val diceColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
             val dotColor = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1f)
             // Die 1
-            val d1X = btnX1 + 10f
-            val d1Y = btnY1 + 8f
-            val dieW = 13f
+            val dieW = 17f
+            val d1X = btnX1 + 6f
+            val d1Y = btnY1 + (btnHeight - dieW) / 2f
             dl.addRectFilled(d1X, d1Y, d1X + dieW, d1Y + dieW, diceColor, 2f)
             dl.addRect(d1X, d1Y, d1X + dieW, d1Y + dieW, dotColor, 2f, 0, 1f)
             // Face 3 dots
-            dl.addCircleFilled(d1X + 3f, d1Y + 3f, 1f, dotColor)
-            dl.addCircleFilled(d1X + 6.5f, d1Y + 6.5f, 1f, dotColor)
-            dl.addCircleFilled(d1X + 10f, d1Y + 10f, 1f, dotColor)
+            val dotRadius = 1.3f
+            dl.addCircleFilled(d1X + 4f, d1Y + 4f, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 8.5f, d1Y + 8.5f, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 13f, d1Y + 13f, dotRadius, dotColor)
 
             // Die 2
-            val d2X = btnX1 + 27f
-            val d2Y = btnY1 + 10f
+            val d2X = btnX1 + 26f
+            val d2Y = btnY1 + (btnHeight - dieW) / 2f + 2f
             dl.addRectFilled(d2X, d2Y, d2X + dieW, d2Y + dieW, diceColor, 2f)
             dl.addRect(d2X, d2Y, d2X + dieW, d2Y + dieW, dotColor, 2f, 0, 1f)
             // Face 5 dots
-            dl.addCircleFilled(d2X + 3f, d2Y + 3f, 1f, dotColor)
-            dl.addCircleFilled(d2X + 10f, d2Y + 3f, 1f, dotColor)
-            dl.addCircleFilled(d2X + 6.5f, d2Y + 6.5f, 1f, dotColor)
-            dl.addCircleFilled(d2X + 3f, d2Y + 10f, 1f, dotColor)
-            dl.addCircleFilled(d2X + 10f, d2Y + 10f, 1f, dotColor)
+            dl.addCircleFilled(d2X + 4f, d2Y + 4f, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 13f, d2Y + 4f, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 8.5f, d2Y + 8.5f, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 4f, d2Y + 13f, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 13f, d2Y + 13f, dotRadius, dotColor)
 
             // 2. Active/Bypass button (universal on/off power icon)
             ImGui.sameLine(0f, 10f)
@@ -610,7 +612,7 @@ object CellConfigPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
             
-            if (ImGui.button("##bypass_bar_$idx", 50f, 30f)) {
+            if (ImGui.button("##bypass_bar_$idx", 50f, btnHeight)) {
                 replaceModulator(state, param, existing.copy(bypassed = !bypassed))
             }
             if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
@@ -618,12 +620,12 @@ object CellConfigPanel {
             }
             ImGui.popStyleColor(3)
             
-            // Draw universal on/off (power icon) on the button
+            // Draw universal on/off (power icon 30% larger) on the button
             val pColor = ImGui.colorConvertFloat4ToU32(1f, 1.0f, 1.0f, 1f)
             val pCenterX = btnX2 + 25f
-            val pCenterY = btnY2 + 15f
-            val pRadius = 7f
-            val pThickness = 2f
+            val pCenterY = btnY2 + btnHeight / 2f
+            val pRadius = 9f
+            val pThickness = 2.5f
             
             dl.addCircle(pCenterX, pCenterY, pRadius, pColor, 16, pThickness)
             dl.addLine(pCenterX, pCenterY - pRadius * 1.3f, pCenterX, pCenterY + pRadius * 0.2f, pColor, pThickness)
@@ -640,7 +642,7 @@ object CellConfigPanel {
                 
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
-                if (ImGui.button("##reset_bar_$idx", resetWidth, 30f)) {
+                if (ImGui.button("##reset_bar_$idx", resetWidth, btnHeight)) {
                     val toRemove = activeMods.toList()
                     for (mod in toRemove) {
                         param.modulators.remove(mod)
@@ -664,23 +666,23 @@ object CellConfigPanel {
                     ImGui.endDisabled()
                 }
                 
-                // Draw trash can on reset button
+                // Draw trash can on reset button (30% larger)
                 val tcColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
                 val tcX = btnX3 + 25f
-                val tcY = btnY3 + 15f
+                val tcY = btnY3 + btnHeight / 2f
                 // Bucket
-                dl.addLine(tcX - 5f, tcY - 3f, tcX - 4f, tcY + 7f, tcColor, 1.5f)
-                dl.addLine(tcX + 5f, tcY - 3f, tcX + 4f, tcY + 7f, tcColor, 1.5f)
-                dl.addLine(tcX - 4f, tcY + 7f, tcX + 4f, tcY + 7f, tcColor, 1.5f)
+                dl.addLine(tcX - 6.5f, tcY - 4f, tcX - 5f, tcY + 9f, tcColor, 1.8f)
+                dl.addLine(tcX + 6.5f, tcY - 4f, tcX + 5f, tcY + 9f, tcColor, 1.8f)
+                dl.addLine(tcX - 5f, tcY + 9f, tcX + 5f, tcY + 9f, tcColor, 1.8f)
                 // Lid
-                dl.addLine(tcX - 7f, tcY - 3f, tcX + 7f, tcY - 3f, tcColor, 1.5f)
+                dl.addLine(tcX - 9f, tcY - 4f, tcX + 9f, tcY - 4f, tcColor, 1.8f)
                 // Handle
-                dl.addLine(tcX - 2f, tcY - 3f, tcX - 2f, tcY - 5f, tcColor, 1.5f)
-                dl.addLine(tcX - 2f, tcY - 5f, tcX + 2f, tcY - 5f, tcColor, 1.5f)
-                dl.addLine(tcX + 2f, tcY - 5f, tcX + 2f, tcY - 3f, tcColor, 1.5f)
+                dl.addLine(tcX - 3f, tcY - 4f, tcX - 3f, tcY - 7f, tcColor, 1.8f)
+                dl.addLine(tcX - 3f, tcY - 7f, tcX + 3f, tcY - 7f, tcColor, 1.8f)
+                dl.addLine(tcX + 3f, tcY - 7f, tcX + 3f, tcY - 4f, tcColor, 1.8f)
                 // Vertical lines inside (ribs)
-                dl.addLine(tcX - 2f, tcY - 1f, tcX - 1.5f, tcY + 5f, tcColor, 1f)
-                dl.addLine(tcX + 2f, tcY - 1f, tcX + 1.5f, tcY + 5f, tcColor, 1f)
+                dl.addLine(tcX - 2.5f, tcY - 1f, tcX - 2f, tcY + 7f, tcColor, 1.2f)
+                dl.addLine(tcX + 2.5f, tcY - 1f, tcX + 2f, tcY + 7f, tcColor, 1.2f)
             }
 
             ImGui.spacing()
