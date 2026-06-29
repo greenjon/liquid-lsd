@@ -494,27 +494,6 @@ object CellConfigPanel {
         val combinedVal = llm.slop.spirals.cv.getCombinedEffectiveValue(activeMods, isBipolar)
         activeHistory?.add(combinedVal)
 
-        // ── Delete ALL ───────────────────────────────────────────
-        if (isVirtual) {
-            ImGui.beginDisabled()
-        }
-        ImGui.pushStyleColor(0, 0.8f, 0.2f, 0.2f, 1f)
-        if (ImGui.button("Delete Patch", ImGui.getContentRegionAvailX(), 30f)) {
-            val toRemove = activeMods.toList()
-            for (mod in toRemove) {
-                param.modulators.remove(mod)
-            }
-            ImGui.popStyleColor()
-            return
-        }
-        ImGui.popStyleColor()
-        if (isVirtual) {
-            ImGui.endDisabled()
-        }
-
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
 
         // ── Unified Oscilloscope ─────────────────────────────────
         drawOscilloscope(param, themeColor)
@@ -560,18 +539,71 @@ object CellConfigPanel {
 
             ImGui.indent(10f) // Indent controls slightly
 
+            // Operator Box
+            val opIdx = ImInt(when (existing.operator) {
+                ModulationOperator.ADD -> 0
+                ModulationOperator.MUL -> 1
+                ModulationOperator.SCALE -> 2
+            })
+            if (bypassed) ImGui.popStyleVar()
+            ImGui.pushItemWidth(100f)
+            if (ImGui.combo("##op", opIdx, operatorLabels)) {
+                val newOp = when (opIdx.get()) {
+                    0 -> ModulationOperator.ADD
+                    1 -> ModulationOperator.MUL
+                    else -> ModulationOperator.SCALE
+                }
+                replaceModulator(state, param, existing.copy(operator = newOp))
+            }
+            ImGui.popItemWidth()
+            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+
+            // Randomize to the right
+            // Randomize to the right
+            ImGui.sameLine(0f, 10f)
+            if (ImGui.button("Randomize", 120f, 30f)) {
+                val randomized = existing.randomizeActiveValues()
+                replaceModulator(state, param, randomized)
+            }
+
+            // Active/Bypass to the right
+            ImGui.sameLine(0f, 10f)
             val bypassLabel = if (bypassed) "BYPASSED" else "ACTIVE"
             if (bypassed) ImGui.pushStyleColor(0, 0.5f, 0.5f, 0.5f, 1f)
             else ImGui.pushStyleColor(0, currentThemeRGB[0], currentThemeRGB[1], currentThemeRGB[2], 0.8f) // use theme color for active button
-            if (ImGui.button(bypassLabel, 125f, 30f)) {
+            if (ImGui.button(bypassLabel, 120f, 30f)) {
                 replaceModulator(state, param, existing.copy(bypassed = !bypassed))
             }
             ImGui.popStyleColor()
 
-            ImGui.sameLine(0f, 10f)
-            if (ImGui.button("Randomize", 125f, 30f)) {
-                val randomized = existing.randomizeActiveValues()
-                replaceModulator(state, param, randomized)
+            // Reset aligned to the right (only for the first modulator)
+            if (idx == 0) {
+                val resetWidth = 80f
+                ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)
+                if (isVirtual) {
+                    ImGui.beginDisabled()
+                }
+                ImGui.pushStyleColor(0, 0.8f, 0.2f, 0.2f, 1f)
+                if (ImGui.button("Reset", resetWidth, 30f)) {
+                    val toRemove = activeMods.toList()
+                    for (mod in toRemove) {
+                        param.modulators.remove(mod)
+                    }
+                    ImGui.popStyleColor()
+                    if (isVirtual) {
+                        ImGui.endDisabled()
+                    }
+                    ImGui.unindent(10f)
+                    if (bypassed) {
+                        ImGui.popStyleVar()
+                    }
+                    ImGui.popID()
+                    return
+                }
+                ImGui.popStyleColor()
+                if (isVirtual) {
+                    ImGui.endDisabled()
+                }
             }
 
             ImGui.spacing()
@@ -588,11 +620,13 @@ object CellConfigPanel {
                 waveformLabels
             }
             val wfIdx = ImInt(existing.waveform.ordinal)
+            if (bypassed) ImGui.popStyleVar()
             ImGui.pushItemWidth(125f)
             if (ImGui.combo("##waveform", wfIdx, currentLabels)) {
                 replaceModulator(state, param, existing.copy(waveform = Waveform.entries[wfIdx.get()]))
             }
             ImGui.popItemWidth()
+            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
             ImGui.endGroup()
             
             if (isGen) {
@@ -601,35 +635,20 @@ object CellConfigPanel {
                 UITheme.body("LFO 1 Unit")
                 val unitIdx = ImInt(existing.genUnit.ordinal)
                 val unitLabels = arrayOf("Time", "Beat")
+                if (bypassed) ImGui.popStyleVar()
                 ImGui.pushItemWidth(125f)
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {
                     replaceModulator(state, param, existing.copy(genUnit = GenUnit.entries[unitIdx.get()]))
                 }
                 ImGui.popItemWidth()
+                if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
                 ImGui.endGroup()
             }
             
             ImGui.sameLine(0f, 10f)
         }
 
-        ImGui.beginGroup()
-        UITheme.body("Operator")
-        val opIdx = ImInt(when (existing.operator) {
-            ModulationOperator.ADD -> 0
-            ModulationOperator.MUL -> 1
-            ModulationOperator.SCALE -> 2
-        })
-        ImGui.pushItemWidth(125f)
-        if (ImGui.combo("##op", opIdx, operatorLabels)) {
-            val newOp = when (opIdx.get()) {
-                0 -> ModulationOperator.ADD
-                1 -> ModulationOperator.MUL
-                else -> ModulationOperator.SCALE
-            }
-            replaceModulator(state, param, existing.copy(operator = newOp))
-        }
-        ImGui.popItemWidth()
-        ImGui.endGroup()
+        // Operator was moved to top row
         ImGui.spacing()
 
         // ── Amplitude ─────────────────────────────────────────────
@@ -1020,12 +1039,14 @@ object CellConfigPanel {
             val currentMode = existing.generatorModMode
             val modeLabels = arrayOf("None", "AM (Amplitude)", "PM (Phase)", "ADD (Additive)")
             val modeIdx = ImInt(currentMode.ordinal)
+            if (bypassed) ImGui.popStyleVar()
             ImGui.pushItemWidth(200f)
             if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
                 val nextMode = llm.slop.spirals.parameters.GeneratorModMode.entries[modeIdx.get()]
                 replaceModulator(state, param, existing.copy(generatorModMode = nextMode))
             }
             ImGui.popItemWidth()
+            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
 
             if (currentMode != llm.slop.spirals.parameters.GeneratorModMode.NONE) {
                 ImGui.spacing()
@@ -1092,11 +1113,13 @@ object CellConfigPanel {
                 UITheme.body("LFO 2")
                 val modWfLabels = arrayOf("Sine", "Triangle", "Square", "Random")
                 val modWfIdx = ImInt(existing.modWaveform.ordinal)
+                if (bypassed) ImGui.popStyleVar()
                 ImGui.pushItemWidth(125f)
                 if (ImGui.combo("##mod_waveform", modWfIdx, modWfLabels)) {
                     replaceModulator(state, param, existing.copy(modWaveform = Waveform.entries[modWfIdx.get()]))
                 }
                 ImGui.popItemWidth()
+                if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
                 ImGui.endGroup()
 
                 ImGui.sameLine(0f, 10f)
@@ -1105,11 +1128,13 @@ object CellConfigPanel {
                 UITheme.body("LFO 2 Unit")
                 val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
                 val modUnitLabels = arrayOf("Time", "Beat")
+                if (bypassed) ImGui.popStyleVar()
                 ImGui.pushItemWidth(125f)
                 if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {
                     replaceModulator(state, param, existing.copy(modGenUnit = GenUnit.entries[modUnitIdx.get()]))
                 }
                 ImGui.popItemWidth()
+                if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
                 ImGui.endGroup()
 
                 ImGui.spacing()

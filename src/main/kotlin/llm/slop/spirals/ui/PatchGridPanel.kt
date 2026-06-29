@@ -110,6 +110,8 @@ object PatchGridPanel {
 
         if (ImGui.beginChild("##patch_grid_scroll", 0f, 0f, false)) {
             drawGroup("Mixer", state, true) {
+                drawParamRow("Deck A Source", "Deck A/FB/Source",   mixer.deckA.sourceSelect,state, labelColW, mixer)
+                drawParamRow("Deck B Source", "Deck B/FB/Source",   mixer.deckB.sourceSelect,state, labelColW, mixer)
                 drawParamRow("crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer)
                 drawParamRow("master α",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer)
                 drawParamRow("bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer)
@@ -449,7 +451,7 @@ object PatchGridPanel {
 
             val activeSource = deck.source
             if (activeSource is DynamicVisualSource) {
-                val transformNames = setOf("Zoom", "Rotate X", "Rotate Y", "Rotate Z", "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z", "Scale", "Scale X", "Scale Y", "Scale Z")
+                val transformNames = setOf("Zoom", "Rotate X", "Rotate Y", "Rotate Z", "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z")
                 
                 // Partition parameters into transform vs others
                 val transformParams = mutableListOf<Map.Entry<String, ModulatableParameter>>()
@@ -480,7 +482,6 @@ object PatchGridPanel {
             }
 
             drawSubGroup(deckLabel, "Feedback", state) {
-                drawParamRow("Source",      "$deckLabel/FB/Source",   deck.sourceSelect,state, labelColW, mixer)
                 drawParamRow("Feedback",    "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer)
                 drawParamRow("FB Gain",     "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer)
                 drawParamRow("FB Zoom",     "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer)
@@ -939,6 +940,8 @@ object PatchGridPanel {
         val list = mutableListOf<Pair<String, ModulatableParameter>>()
         
         // Mixer
+        list.add("Deck A/FB/Source" to mixer.deckA.sourceSelect)
+        list.add("Deck B/FB/Source" to mixer.deckB.sourceSelect)
         list.add("Mixer/crossfade" to mixer.crossfade)
         list.add("Mixer/masterAlpha" to mixer.masterAlpha)
         list.add("Mixer/bloom" to mixer.bloom)
@@ -989,7 +992,6 @@ object PatchGridPanel {
             }
             
             // Feedback
-            list.add("$deckLabel/FB/Source" to deck.sourceSelect)
             list.add("$deckLabel/FB/Decay" to deck.fbDecay)
             list.add("$deckLabel/FB/Gain" to deck.fbGain)
             list.add("$deckLabel/FB/Zoom" to deck.fbZoom)

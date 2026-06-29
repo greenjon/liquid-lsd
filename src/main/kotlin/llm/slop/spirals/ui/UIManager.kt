@@ -64,7 +64,7 @@ class UIManager(private val windowHandle: Long) {
             style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 0.75f)
             style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 0.75f)
             style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 0.75f)
-            style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 0.75f)
+            style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
         } else {
             // Completely opaque colors
             style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 1.00f)

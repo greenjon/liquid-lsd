@@ -164,6 +164,7 @@ object MidiMappingManager {
         }
         if (subPath.startsWith("FB/")) {
             return when (subPath.removePrefix("FB/")) {
+                "Source" -> deck.sourceSelect
                 "Decay" -> deck.fbDecay
                 "Gain" -> deck.fbGain
                 "Zoom" -> deck.fbZoom
