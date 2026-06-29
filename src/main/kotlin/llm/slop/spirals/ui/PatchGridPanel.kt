@@ -1092,6 +1092,7 @@ object PatchGridPanel {
                 }
             }
 
+            /*
             // Cell traversal arrow keys
             val cell = state.selectedCell
             if (cell != null) {
@@ -1143,6 +1144,7 @@ object PatchGridPanel {
                     }
                 }
             }
+            */
         }
     }
 }

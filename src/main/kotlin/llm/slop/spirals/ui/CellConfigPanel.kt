@@ -1614,18 +1614,55 @@ object CellConfigPanel {
         }
         ImGui.setCursorScreenPos(posX, posY)
         ImGui.pushItemWidth(width)
-        if (ImGui.inputText("##input_$key", buffer)) {
+
+        // Native callback to handle arrow keys
+        val flags = imgui.flag.ImGuiInputTextFlags.CallbackHistory
+        val callback = object : imgui.callback.ImGuiInputTextCallback() {
+            override fun accept(data: imgui.ImGuiInputTextCallbackData) {
+                val upPressed = data.eventKey == imgui.flag.ImGuiKey.UpArrow
+                val downPressed = data.eventKey == imgui.flag.ImGuiKey.DownArrow
+                if (upPressed || downPressed) {
+                    val io = ImGui.getIO()
+                    val shift = io.keyShift
+                    val ctrl = io.keyCtrl
+                    val delta = if (ctrl && shift) {
+                        0.1f
+                    } else if (shift) {
+                        0.01f
+                    } else {
+                        0.001f
+                    }
+                    val dir = if (upPressed) 1f else -1f
+                    val nextValue = currentValue + (dir * delta)
+                    val clampedValue = nextValue.coerceIn(minLimit, maxLimit)
+                    
+                    val formatted = formatValue(clampedValue)
+                    data.deleteChars(0, data.buf.length)
+                    data.insertChars(0, formatted)
+                    data.cursorPos = formatted.length
+                    data.selectionStart = formatted.length
+                    data.selectionEnd = formatted.length
+                    data.setBufDirty(true)
+
+                    onChanged(clampedValue)
+                }
+            }
+        }
+
+        val inputChanged = ImGui.inputText("##input_$key", buffer, flags, callback)
+        if (inputChanged) {
             val parsed = parseValue(buffer.get())
             if (parsed != null) {
-                onChanged(parsed.coerceIn(minLimit, maxLimit))
+                val clamped = parsed.coerceIn(minLimit, maxLimit)
+                onChanged(clamped)
             }
         }
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             val fieldType = when {
-                key.endsWith("_min") -> "Minimum modulation boundary. Type to set directly."
-                key.endsWith("_max") -> "Maximum modulation boundary. Type to set directly."
-                key.endsWith("_value") -> "Base value. Type to set directly."
-                else -> "Type a precise numeric value."
+                key.endsWith("_min") -> "Minimum modulation boundary. Type to set directly. Up/Down to adjust."
+                key.endsWith("_max") -> "Maximum modulation boundary. Type to set directly. Up/Down to adjust."
+                key.endsWith("_value") -> "Base value. Type to set directly. Up/Down to adjust."
+                else -> "Type a precise numeric value. Up/Down to adjust."
             }
             ImGui.setTooltip(fieldType)
         }
