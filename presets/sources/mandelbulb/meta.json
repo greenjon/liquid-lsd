@@ -7,21 +7,27 @@
       "default": 8.0,
       "min": 1.0,
       "max": 20.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 4.0,
+      "defaultMax": 12.0
     },
     {
       "name": "Iterations",
       "default": 6.0,
       "min": 1.0,
       "max": 15.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 4.0,
+      "defaultMax": 8.0
     },
     {
       "name": "Glow",
       "default": 0.5,
       "min": 0.0,
       "max": 1.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 0.2,
+      "defaultMax": 0.7
     },
     {
       "name": "Zoom",
@@ -35,14 +41,18 @@
       "default": 0.0,
       "min": 0.0,
       "max": 1.0,
-      "type": "ENDLESS"
+      "type": "ENDLESS",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
     },
     {
       "name": "Bailout",
       "default": 2.0,
       "min": 1.0,
       "max": 5.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 1.5,
+      "defaultMax": 3.5
     },
     {
       "name": "Rotate Y",
