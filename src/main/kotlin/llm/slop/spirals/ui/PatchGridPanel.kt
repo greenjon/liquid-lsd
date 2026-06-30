@@ -137,6 +137,7 @@ object PatchGridPanel {
         val dl = ImGui.getWindowDrawList()
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
+        val mousePos = ImGui.getIO().mousePos
         
         // Calculate the maximum height needed for the vertical labels
         var maxH = 0f
@@ -182,6 +183,12 @@ object PatchGridPanel {
         // Draw FINAL header
         val finalColX = startX + labelColW + getColumnOffset("final")
         dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
+        
+        val isFinalHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
+        if (isFinalHovered) {
+            dl.addRectFilled(finalColX, startY, finalColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+        }
+        
         var twFinal = 0f
         val labelFinal = "F\nI\nN\nA\nL"
         UITheme.withFont(UITheme.FontLevel.CAPTION) { twFinal = ImGui.calcTextSize(labelFinal).x }
@@ -194,6 +201,12 @@ object PatchGridPanel {
         // Draw MIDI header
         val midiColX = startX + labelColW + getColumnOffset("midi")
         dl.addLine(midiColX - CELL_PAD * 0.5f, startY, midiColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
+        
+        val isMidiHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
+        if (isMidiHovered) {
+            dl.addRectFilled(midiColX, startY, midiColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+        }
+        
         var twMidi = 0f
         val labelMidi = "M\nI\nD\nI"
         UITheme.withFont(UITheme.FontLevel.CAPTION) { twMidi = ImGui.calcTextSize(labelMidi).x }
@@ -209,6 +222,11 @@ object PatchGridPanel {
             val cvId = cvCols[idx]
             val colX = startX + labelColW + getColumnOffset(cvId)
             dl.addLine(colX - CELL_PAD * 0.5f, startY, colX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
+            
+            val isCvHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
+            if (isCvHovered) {
+                dl.addRectFilled(colX, startY, colX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+            }
             
             var tw = 0f
             UITheme.withFont(UITheme.FontLevel.CAPTION) { tw = ImGui.calcTextSize(label).x }
