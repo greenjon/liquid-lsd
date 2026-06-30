@@ -555,6 +555,14 @@ object PatchGridPanel {
         ImGui.sameLine(cursorStartX)
         ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL)
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
+            if (ImGui.menuItem("Randomize row")) {
+                pushUndoState(state, mixer)
+                val randomized = param.modulators.map { it.randomizeActiveValues() }
+                param.modulators.clear()
+                param.modulators.addAll(randomized)
+                param.randomizeBaseValue()
+            }
+            ImGui.separator()
             if (ImGui.menuItem("Copy Row Modulations")) {
                 ClipboardManager.rowClipboard = RowClipboardData(paramKey, param.toDto())
             }
