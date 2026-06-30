@@ -35,63 +35,81 @@
       "default": 0.0,
       "min": -3.14159,
       "max": 3.14159,
-      "type": "ENDLESS"
+      "type": "ENDLESS",
+      "defaultMin": -3.14159,
+      "defaultMax": 3.14159
     },
     {
       "name": "Rotate YW",
       "default": 0.0,
       "min": -3.14159,
       "max": 3.14159,
-      "type": "ENDLESS"
+      "type": "ENDLESS",
+      "defaultMin": -3.14159,
+      "defaultMax": 3.14159
     },
     {
       "name": "Rotate ZW",
       "default": 0.0,
       "min": -3.14159,
       "max": 3.14159,
-      "type": "ENDLESS"
+      "type": "ENDLESS",
+      "defaultMin": -3.14159,
+      "defaultMax": 3.14159
     },
     {
       "name": "Mesh Density Theta",
       "default": 24.0,
       "min": 4.0,
       "max": 128.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 8.0,
+      "defaultMax": 48.0
     },
     {
       "name": "Mesh Density Phi",
       "default": 24.0,
       "min": 4.0,
       "max": 128.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 8.0,
+      "defaultMax": 48.0
     },
     {
       "name": "Thickness",
       "default": 0.02,
       "min": 0.001,
       "max": 0.1,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 0.005,
+      "defaultMax": 0.05
     },
     {
       "name": "Wireframe Mode",
       "default": 1.0,
       "min": 0.0,
       "max": 1.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
     },
     {
       "name": "Color Shift",
       "default": 0.0,
       "min": 0.0,
       "max": 1.0,
-      "type": "ENDLESS"
+      "type": "ENDLESS",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
     },
     {
       "name": "Glow",
       "default": 0.3,
       "min": 0.0,
       "max": 1.0,
-      "type": "MONOPOLAR"
+      "type": "MONOPOLAR",
+      "defaultMin": 0.1,
+      "defaultMax": 0.6
     }
   ]
 }
