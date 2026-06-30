@@ -136,15 +136,38 @@ class Renderer {
         mandalaShader.setUniform("uL3", p["L3"]?.value ?: 0f)
         mandalaShader.setUniform("uL4", p["L4"]?.value ?: 0f)
 
-        // Set arm frequency parameters (a to d)
-        mandalaShader.setUniform("uA", mandala.recipe.a.toFloat())
-        mandalaShader.setUniform("uB", mandala.recipe.b.toFloat())
-        mandalaShader.setUniform("uC", mandala.recipe.c.toFloat())
-        mandalaShader.setUniform("uD", mandala.recipe.d.toFloat())
+        // Set arm frequency parameters (a to d) with modulation and optional quantization
+        val freqOffset = p["Freq Offset"]?.value ?: 0f
+        val hLock = p["Harmonic Lock"]?.value ?: 1f
+        val maxBound = 12f
+
+        var aVal = mandala.recipe.a.toFloat()
+        var bVal = mandala.recipe.b.toFloat()
+        var cVal = mandala.recipe.c.toFloat()
+        var dVal = mandala.recipe.d.toFloat()
+
+        if (freqOffset > 0.0f) {
+            aVal += freqOffset * maxBound
+            bVal += freqOffset * maxBound * 1.5f
+            cVal += freqOffset * maxBound * 2.0f
+            dVal += freqOffset * maxBound * 2.5f
+        }
+
+        if (hLock > 0.5f) {
+            aVal = kotlin.math.floor(aVal)
+            bVal = kotlin.math.floor(bVal)
+            cVal = kotlin.math.floor(cVal)
+            dVal = kotlin.math.floor(dVal)
+        }
+
+        mandalaShader.setUniform("uA", aVal)
+        mandalaShader.setUniform("uB", bVal)
+        mandalaShader.setUniform("uC", cVal)
+        mandalaShader.setUniform("uD", dVal)
 
         // Set 3D Mode & Symmetrical Projection parameters
         val modeVal = p["3D Mode"]?.value ?: 0f
-        val mode = modeVal.roundToInt().coerceIn(0, 3)
+        val mode = modeVal.roundToInt().coerceIn(0, 4)
         mandalaShader.setUniform("u3DMode", mode.toFloat())
         mandalaShader.setUniform("uSphereWrapX", p["Sphere Wrap X"]?.value ?: 1f)
         mandalaShader.setUniform("uSphereWrapY", p["Sphere Wrap Y"]?.value ?: 1f)
@@ -195,10 +218,19 @@ class Renderer {
             1 -> 1 // Spherical
             2 -> {
                 // Polyhedral/Mirror
-                val mirrorGroup = (p["Mirror Group"]?.value ?: 0f).roundToInt().coerceIn(0, 1)
-                if (mirrorGroup == 0) 8 else 4 // 8 for Cubic, 4 for Tetrahedral
+                val mirrorGroup = (p["Mirror Group"]?.value ?: 0f).roundToInt().coerceIn(0, 2)
+                if (mirrorGroup < 2) 8 else 4 // 8 for Cubic (0 or 1), 4 for Tetrahedral (2)
             }
             3 -> 3 // Coordinate Permutation
+            4 -> {
+                val mirrorGroup = (p["Mirror Group"]?.value ?: 0f).roundToInt().coerceIn(0, 2)
+                when (mirrorGroup) {
+                    0 -> 1 // No mirror
+                    1 -> 8 // Cubic mirror
+                    2 -> 4 // Tetrahedral mirror
+                    else -> 1
+                }
+            }
             else -> 1
         }
         if (numInstances > 1) {

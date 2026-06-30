@@ -399,7 +399,7 @@ object PatchGridPanel {
                     drawParamRow("Rotate Z", "$deckLabel/View/RotateZ",   mandala.parameters["Rotate Z"]!!,   state, labelColW, mixer)
                     
                     val modeVal = mandala.parameters["3D Mode"]?.value ?: 0f
-                    val mode = modeVal.roundToInt().coerceIn(0, 3)
+                    val mode = modeVal.roundToInt().coerceIn(0, 4)
                     if (mode > 0) {
                         drawParamRow("Rotate X", "$deckLabel/View/RotateX", mandala.parameters["Rotate X"]!!, state, labelColW, mixer)
                         drawParamRow("Rotate Y", "$deckLabel/View/RotateY", mandala.parameters["Rotate Y"]!!, state, labelColW, mixer)
@@ -413,9 +413,11 @@ object PatchGridPanel {
                     drawParamRow("L2",       "$deckLabel/Geometry/L2",       mandala.parameters["L2"]!!,       state, labelColW, mixer)
                     drawParamRow("L3",       "$deckLabel/Geometry/L3",       mandala.parameters["L3"]!!,       state, labelColW, mixer)
                     drawParamRow("L4",       "$deckLabel/Geometry/L4",       mandala.parameters["L4"]!!,       state, labelColW, mixer)
+                    drawParamRow("Freq Offset", "$deckLabel/Geometry/FreqOffset", mandala.parameters["Freq Offset"]!!, state, labelColW, mixer)
+                    drawParamRow("Harmonic Lock", "$deckLabel/Geometry/HarmonicLock", mandala.parameters["Harmonic Lock"]!!, state, labelColW, mixer)
 
                     val modeVal = mandala.parameters["3D Mode"]?.value ?: 0f
-                    val mode = modeVal.roundToInt().coerceIn(0, 3)
+                    val mode = modeVal.roundToInt().coerceIn(0, 4)
                     drawParamRow("3D Mode", "$deckLabel/Geometry/3DMode", mandala.parameters["3D Mode"]!!, state, labelColW, mixer)
 
                     if (mode == 1) {
@@ -429,6 +431,8 @@ object PatchGridPanel {
                         drawParamRow("Permute XY",    "$deckLabel/Geometry/PermuteXY",   mandala.parameters["Permute XY"]!!,    state, labelColW, mixer)
                         drawParamRow("Permute YZ",    "$deckLabel/Geometry/PermuteYZ",   mandala.parameters["Permute YZ"]!!,    state, labelColW, mixer)
                         drawParamRow("Permute ZX",    "$deckLabel/Geometry/PermuteZX",   mandala.parameters["Permute ZX"]!!,    state, labelColW, mixer)
+                    } else if (mode == 4) {
+                        drawParamRow("Mirror Group",  "$deckLabel/Geometry/MirrorGroup", mandala.parameters["Mirror Group"]!!,  state, labelColW, mixer)
                     }
                 }
                 drawSubGroup(deckLabel, "Color", state) {
@@ -963,6 +967,8 @@ object PatchGridPanel {
                 list.add("$deckLabel/Geometry/L2" to mandala.parameters["L2"]!!)
                 list.add("$deckLabel/Geometry/L3" to mandala.parameters["L3"]!!)
                 list.add("$deckLabel/Geometry/L4" to mandala.parameters["L4"]!!)
+                list.add("$deckLabel/Geometry/FreqOffset" to mandala.parameters["Freq Offset"]!!)
+                list.add("$deckLabel/Geometry/HarmonicLock" to mandala.parameters["Harmonic Lock"]!!)
                 list.add("$deckLabel/Geometry/3DMode" to mandala.parameters["3D Mode"]!!)
                 list.add("$deckLabel/Geometry/SphereWrapX" to mandala.parameters["Sphere Wrap X"]!!)
                 list.add("$deckLabel/Geometry/SphereWrapY" to mandala.parameters["Sphere Wrap Y"]!!)

@@ -90,16 +90,18 @@ class Mandala(
         "Bg Sweep" to ModulatableParameter(0.2f, minClamp = 0.0f, maxClamp = 1.0f, meterType = llm.slop.spirals.parameters.MeterType.ENDLESS),
         "Bg Speed" to ModulatableParameter(0.2f, minClamp = 0.0f, maxClamp = 1.0f),
         "Bg Zoom" to ModulatableParameter(1.0f, minClamp = 0.1f, maxClamp = 10.0f),
-        "3D Mode" to ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 3.0f),
+        "3D Mode" to ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 4.0f),
         "Sphere Wrap X" to ModulatableParameter(1.0f, minClamp = 0.1f, maxClamp = 4.0f),
         "Sphere Wrap Y" to ModulatableParameter(1.0f, minClamp = 0.1f, maxClamp = 4.0f),
-        "Mirror Group" to ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f),
+        "Mirror Group" to ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 2.0f),
         "Permute XY" to ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f),
         "Permute YZ" to ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f),
         "Permute ZX" to ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f),
         "Rotate Y" to ModulatableParameter(0.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = llm.slop.spirals.parameters.MeterType.ENDLESS),
         "Rotate X" to ModulatableParameter(0.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = llm.slop.spirals.parameters.MeterType.ENDLESS),
-        "3D Persp" to ModulatableParameter(0.5f, minClamp = 0.0f, maxClamp = 1.0f)
+        "3D Persp" to ModulatableParameter(0.5f, minClamp = 0.0f, maxClamp = 1.0f),
+        "Harmonic Lock" to ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f),
+        "Freq Offset" to ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
     )
 
     init {
