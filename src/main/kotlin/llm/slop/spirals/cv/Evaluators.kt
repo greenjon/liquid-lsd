@@ -25,7 +25,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
             val currentCycle = kotlin.math.floor(cyclePosition).toInt()
             val previousCycle = currentCycle - 1
 
-            val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode()
+            val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.id.hashCode()
 
             val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
             val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
@@ -58,7 +58,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
                         val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                         val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                         val previousCycle = currentCycle - 1
-                        val seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999
+                        val seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                         val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                         val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                         val glideAmount = if (positivePhase < modulator.modSlope) {
@@ -79,7 +79,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
                         val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                         val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                         val previousCycle = currentCycle - 1
-                        val seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999
+                        val seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                         val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                         val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                         val glideAmount = if (positivePhase < modulator.modSlope) {
@@ -108,7 +108,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
                     val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                     val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                     val previousCycle = currentCycle - 1
-                    val seed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode()
+                    val seed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                     val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                     val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                     val glideAmount = if (positivePhase < modulator.slope) {
@@ -129,7 +129,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
                     val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                     val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                     val previousCycle = currentCycle - 1
-                    val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode()
+                    val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                     val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                     val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                     val glideAmount = if (positivePhase < modulator.slope) {

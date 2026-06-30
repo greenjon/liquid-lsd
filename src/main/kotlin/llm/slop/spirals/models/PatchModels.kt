@@ -36,7 +36,8 @@ data class ModulatorDto(
     val dcOffset: Float = 0.0f,
     val dcOffsetMin: Float = 0.0f,
     val dcOffsetMax: Float = 0.0f,
-    val randomizeDcOffset: Boolean = false
+    val randomizeDcOffset: Boolean = false,
+    val id: String? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -216,7 +217,8 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     dcOffset = dcOffset,
     dcOffsetMin = dcOffsetMin,
     dcOffsetMax = dcOffsetMax,
-    randomizeDcOffset = randomizeDcOffset
+    randomizeDcOffset = randomizeDcOffset,
+    id = id
 )
 
 fun ModulatorDto.toDomain(): CvModulator = CvModulator(
@@ -245,7 +247,8 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     dcOffset = dcOffset,
     dcOffsetMin = dcOffsetMin,
     dcOffsetMax = dcOffsetMax,
-    randomizeDcOffset = randomizeDcOffset
+    randomizeDcOffset = randomizeDcOffset,
+    id = id ?: java.util.UUID.randomUUID().toString()
 )
 
 fun ModulatableParameter.toDto(): ParameterDto = ParameterDto(

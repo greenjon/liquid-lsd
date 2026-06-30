@@ -128,7 +128,7 @@ class ModulatableParameter(
         )
         copy.baseMin = this.baseMin
         copy.baseMax = this.baseMax
-        copy.modulators.addAll(this.modulators)
+        copy.modulators.addAll(this.modulators.map { it.copy(id = java.util.UUID.randomUUID().toString()) })
         @Suppress("DEPRECATION")
         copy.mappedMidiId = this.mappedMidiId
         @Suppress("DEPRECATION")
