@@ -107,13 +107,11 @@ object PatchGridPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        if (ImGui.beginChild("##patch_grid_scroll", 0f, 0f, false)) {
-            drawTopTabs(state)
-            ImGui.spacing()
-            drawSubTabs(state, mixer)
-            ImGui.spacing()
-            ImGui.spacing()
+        drawSubTabs(state, mixer)
+        ImGui.spacing()
+        ImGui.spacing()
 
+        if (ImGui.beginChild("##patch_grid_scroll", 0f, 0f, false)) {
             if (state.activeTopTab == "Mixer") {
                 drawSubGroupContent("Mixer", "Mixer", state) {
                     drawParamRow("Deck A Source", "Deck A/FB/Source",   mixer.deckA.sourceSelect,state, labelColW, mixer)
@@ -154,12 +152,14 @@ object PatchGridPanel {
             if (hMidi > maxH) maxH = hMidi
         }
         
+        val headerH = (maxH + 5f).coerceAtLeast(54f)
+        
         // Reserve vertical space for headers
-        ImGui.dummy(10f, maxH + 5f)
+        ImGui.dummy(10f, headerH)
         val afterHeadersY = ImGui.getCursorScreenPosY()
 
         // Draw Randomize All button in the top-left empty space of the column headers
-        ImGui.setCursorScreenPos(startX, startY + (maxH + 5f - 24f) * 0.5f)
+        ImGui.setCursorScreenPos(startX, startY)
         if (ImGui.button("Randomize All", labelColW - CELL_PAD, 24f)) {
             pushUndoState(state, mixer)
             mixer.deckA.randomizeModulators()
@@ -170,9 +170,11 @@ object PatchGridPanel {
                 param.modulators.addAll(randomized)
                 param.randomizeBaseValue()
             }
-            // Refresh selection
-
         }
+        
+        // Draw Top Tab Row at the bottom-left of the header area (just above the separator)
+        ImGui.setCursorScreenPos(startX, startY + headerH - 24f)
+        drawTopTabs(state)
         
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
         val bottomY = startY + ImGui.getWindowHeight() // align to parent window height
