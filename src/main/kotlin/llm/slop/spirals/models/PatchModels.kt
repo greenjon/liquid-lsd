@@ -274,6 +274,7 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
     // Safety check for CopyOnWriteArrayList: clear and addAll
     this.modulators.clear()
     this.modulators.addAll(dto.modulators.map { it.toDomain() })
+    this.value = dto.baseValue
 }
 
 fun MandalaRatio.toDto(): MandalaRecipeDto = MandalaRecipeDto(a, b, c, d)

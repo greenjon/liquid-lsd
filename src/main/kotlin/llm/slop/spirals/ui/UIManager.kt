@@ -380,6 +380,7 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun loadGlobalPatchWithDialog() {
+        pendingProjectAction = PendingProjectAction.LOAD
         // Phase 1: open the ImGui file browser instead of java.awt.FileDialog
         val lastDir = currentGlobalPatchFile?.parentFile
             ?: File("presets/global").canonicalFile
@@ -479,10 +480,20 @@ class UIManager(private val windowHandle: Long) {
             val name = file.nameWithoutExtension
             when (pendingProjectAction) {
                 PendingProjectAction.LOAD -> {
-                    lastLoadDir = file.parentFile?.canonicalFile ?: lastLoadDir
-                    currentGlobalPatchFile = file
-                    llm.slop.spirals.patches.PatchManager.loadGlobalPatchAsync(file)
-                    pendingProjectAction = PendingProjectAction.NONE
+                    if (fileBrowser.mode == ImGuiFileBrowser.Mode.SAVE) {
+                        // User named a file to save the current changes first.
+                        // Save the project to the file, then open the LOAD dialog.
+                        llm.slop.spirals.patches.PatchManager.saveGlobalPatchAsync(file, mixer, name)
+                        currentGlobalPatchFile = file
+                        // Now trigger the LOAD dialog
+                        loadGlobalPatchWithDialog()
+                    } else {
+                        // User chose a file to load
+                        lastLoadDir = file.parentFile?.canonicalFile ?: lastLoadDir
+                        currentGlobalPatchFile = file
+                        llm.slop.spirals.patches.PatchManager.loadGlobalPatchAsync(file)
+                        pendingProjectAction = PendingProjectAction.NONE
+                    }
                 }
                 PendingProjectAction.NEW -> {
                     // Save-then-new: save first, then reset

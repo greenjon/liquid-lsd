@@ -36,7 +36,7 @@ class ModulatableParameter(
     var midiMapMax: Float = 1f
 
     var value: Float = baseValue
-        private set
+        internal set
 
     fun reset() {
         baseValue = defaultValue

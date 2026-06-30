@@ -37,7 +37,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
 
     // ── State ─────────────────────────────────────────────────────────────────
 
-    private var mode: Mode = Mode.LOAD
+    internal var mode: Mode = Mode.LOAD
     private var currentDir: File = File("presets/global").canonicalFile
     private var selectedFile: File? = null
     private val filenameInput = ImString(128)
