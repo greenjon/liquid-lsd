@@ -1,0 +1,97 @@
+{
+  "id": "clifford_torus",
+  "name": "Clifford Torus 4D",
+  "parameters": [
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Rotate X",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate Y",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate Z",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate XW",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate YW",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate ZW",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Mesh Density Theta",
+      "default": 24.0,
+      "min": 4.0,
+      "max": 128.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Mesh Density Phi",
+      "default": 24.0,
+      "min": 4.0,
+      "max": 128.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Thickness",
+      "default": 0.02,
+      "min": 0.001,
+      "max": 0.1,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Wireframe Mode",
+      "default": 1.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Color Shift",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Glow",
+      "default": 0.3,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR"
+    }
+  ]
+}
