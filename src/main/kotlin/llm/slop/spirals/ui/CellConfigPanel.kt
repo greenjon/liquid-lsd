@@ -1884,7 +1884,7 @@ object CellConfigPanel {
         val spacing = ImGui.getStyle().itemSpacing.x
         val combinedWidth = buttonSize
         
-        val labelColW = 125f
+        val labelColW = 175f
         val textBoxesStartX = startX + labelColW + 20f
         
         val boxWidth = 115f
@@ -1921,9 +1921,6 @@ object CellConfigPanel {
         }
 
         // ─── ROW 1: Labels ───
-        ImGui.setCursorScreenPos(startX, startY + 2f)
-        UITheme.body(label)
-        
         if (isRandomizable) {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
             UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
@@ -1950,6 +1947,12 @@ object CellConfigPanel {
         
         // ─── ROW 2: Widgets ───
         val row2Y = startY + 18f
+        
+        // Render name of variable beside the die, to its left, sharing vertical center
+        val textHeight = UITheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+        val textY = row2Y + (buttonSize - textHeight) / 2f
+        ImGui.setCursorScreenPos(startX, textY)
+        UITheme.body(label)
         
         if (showControls) {
             val randBtnX = startX + labelColW - buttonSize
@@ -2304,7 +2307,7 @@ object CellConfigPanel {
         val spacing = ImGui.getStyle().itemSpacing.x
         val combinedWidth = buttonSize
 
-        val labelColW = 125f
+        val labelColW = 175f
         val textBoxesStartX = startX + labelColW + 20f
 
         // Combo dropdowns are slightly wider than plain text boxes so they can display labels
@@ -2320,9 +2323,6 @@ object CellConfigPanel {
         val rangeSpan = maxLimit - minLimit
 
         // ─── ROW 1: Labels ───
-        ImGui.setCursorScreenPos(startX, startY + 2f)
-        UITheme.body(label)
-
         if (isRandomizable) {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
             UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
@@ -2348,6 +2348,12 @@ object CellConfigPanel {
 
         // ─── ROW 2: Widgets ───
         val row2Y = startY + 18f
+
+        // Render name of variable beside the die, to its left, sharing vertical center
+        val textHeight = UITheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+        val textY = row2Y + (buttonSize - textHeight) / 2f
+        ImGui.setCursorScreenPos(startX, textY)
+        UITheme.body(label)
 
         if (showControls) {
             val randBtnX = startX + labelColW - buttonSize
