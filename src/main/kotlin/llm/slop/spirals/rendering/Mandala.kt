@@ -178,6 +178,34 @@ class Mandala(
         return keys.minByOrNull { abs(it - target) } ?: 3
     }
 
+    override fun clone(): Mandala {
+        val copy = Mandala(this.recipe)
+        this.parameters.forEach { (name, param) ->
+            val copyParam = copy.parameters[name]
+            if (copyParam != null) {
+                copyParam.set(param.baseValue)
+                copyParam.randomizeBase = param.randomizeBase
+                copyParam.baseMin = param.baseMin
+                copyParam.baseMax = param.baseMax
+                copyParam.modulators.clear()
+                copyParam.modulators.addAll(param.modulators)
+                @Suppress("DEPRECATION")
+                copyParam.mappedMidiId = param.mappedMidiId
+                @Suppress("DEPRECATION")
+                copyParam.midiMapMin = param.midiMapMin
+                @Suppress("DEPRECATION")
+                copyParam.midiMapMax = param.midiMapMax
+            }
+        }
+        copy.globalAlpha.set(this.globalAlpha.baseValue)
+        copy.globalAlpha.randomizeBase = this.globalAlpha.randomizeBase
+        copy.globalAlpha.baseMin = this.globalAlpha.baseMin
+        copy.globalAlpha.baseMax = this.globalAlpha.baseMax
+        copy.globalAlpha.modulators.clear()
+        copy.globalAlpha.modulators.addAll(this.globalAlpha.modulators)
+        return copy
+    }
+
     companion object {
         const val POINTS = 2048
 

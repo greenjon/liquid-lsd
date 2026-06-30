@@ -42,8 +42,8 @@ class Deck(
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         
-        availableSources.add(Mandala(MandalaLibrary.MandalaRatios.first()))
-        availableSources.addAll(VisualSourceRegistry.availableSources)
+        availableSources.add(source.clone())
+        availableSources.addAll(VisualSourceRegistry.availableSources.map { it.clone() })
         
         updateSourceSelection()
     }

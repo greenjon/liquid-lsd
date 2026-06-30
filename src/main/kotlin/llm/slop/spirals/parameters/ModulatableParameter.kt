@@ -113,4 +113,28 @@ class ModulatableParameter(
         baseMin = newValue
         baseMax = newValue
     }
+
+    /**
+     * Creates a deep clone of this parameter.
+     */
+    fun clone(): ModulatableParameter {
+        val copy = ModulatableParameter(
+            baseValue = this.baseValue,
+            historySize = this.historySize,
+            minClamp = this.minClamp,
+            maxClamp = this.maxClamp,
+            randomizeBase = this.randomizeBase,
+            meterType = this.meterType
+        )
+        copy.baseMin = this.baseMin
+        copy.baseMax = this.baseMax
+        copy.modulators.addAll(this.modulators)
+        @Suppress("DEPRECATION")
+        copy.mappedMidiId = this.mappedMidiId
+        @Suppress("DEPRECATION")
+        copy.midiMapMin = this.midiMapMin
+        @Suppress("DEPRECATION")
+        copy.midiMapMax = this.midiMapMax
+        return copy
+    }
 }

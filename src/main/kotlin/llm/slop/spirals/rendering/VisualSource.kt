@@ -25,4 +25,9 @@ interface VisualSource {
         parameters.values.forEach { it.evaluate() }
         globalAlpha.evaluate()
     }
+
+    /**
+     * Creates an independent copy of this visual source.
+     */
+    fun clone(): VisualSource
 }
