@@ -3,6 +3,7 @@ package llm.slop.spirals.cv
 import llm.slop.spirals.parameters.CvModulator
 import llm.slop.spirals.parameters.LfoSpeedMode
 import llm.slop.spirals.parameters.calculateWaveform
+import llm.slop.spirals.parameters.calculateAdvancedLFO
 import llm.slop.spirals.parameters.GenUnit
 import llm.slop.spirals.parameters.Waveform
 
@@ -12,7 +13,37 @@ fun evaluateModulator(modulator: CvModulator): Float {
             val beats = CVRegistry.getSynchronizedTotalBeats()
             val localPhase = ((beats / modulator.subdivision) + modulator.phaseOffset) % 1.0
             val positivePhase = if (localPhase < 0.0) localPhase + 1.0 else localPhase
-            calculateWaveform(modulator.waveform, positivePhase, modulator.slope)
+            if (modulator.waveform == Waveform.RANDOM) {
+                val cyclePosition = (beats / modulator.subdivision.toDouble().coerceAtLeast(0.01)) + modulator.phaseOffset
+                val currentCycle = kotlin.math.floor(cyclePosition).toInt()
+                val previousCycle = currentCycle - 1
+                val seed = modulator.subdivision.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.id.hashCode()
+                val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
+                val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
+                val safeHold = modulator.hold.coerceIn(0.0f, 0.99f)
+                val slideDuration = 1.0f - safeHold
+                val tSlide = if (positivePhase < slideDuration) {
+                    (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
+                } else {
+                    1.0f
+                }
+                val k = 1.5f + (15.0f - 1.5f) * modulator.morph
+                val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+                val heldTri = tSlide * 2.0f - 1.0f
+                val result = if (heldTri >= 0f) {
+                    val u = 1.0f - heldTri
+                    val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                    1.0f - (smoothedU / maxVal)
+                } else {
+                    val u = 1.0f + heldTri
+                    val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                    -1.0f + (smoothedU / maxVal)
+                }
+                val t = (result + 1.0f) / 2.0f
+                previousValue + (currentValue - previousValue) * t
+            } else {
+                calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
+            }
         }
         "sampleAndHold" -> {
             val beats = CVRegistry.getSynchronizedTotalBeats()
@@ -30,13 +61,29 @@ fun evaluateModulator(modulator: CvModulator): Float {
             val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
             val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
 
-            val glideAmount = if (positivePhase < modulator.slope) {
-                (positivePhase / modulator.slope).toFloat().coerceIn(0f, 1f)
+            val safeHold = modulator.hold.coerceIn(0.0f, 0.99f)
+            val slideDuration = 1.0f - safeHold
+            val tSlide = if (positivePhase < slideDuration) {
+                (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
             } else {
                 1.0f
             }
 
-            previousValue + (currentValue - previousValue) * glideAmount
+            val k = 1.5f + (15.0f - 1.5f) * modulator.morph
+            val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+            val heldTri = tSlide * 2.0f - 1.0f
+            val result = if (heldTri >= 0f) {
+                val u = 1.0f - heldTri
+                val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                1.0f - (smoothedU / maxVal)
+            } else {
+                val u = 1.0f + heldTri
+                val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                -1.0f + (smoothedU / maxVal)
+            }
+            val t = (result + 1.0f) / 2.0f
+
+            previousValue + (currentValue - previousValue) * t
         }
         "lfo" -> {
             val seconds = CVRegistry.getElapsedRealtimeSec()
@@ -44,7 +91,37 @@ fun evaluateModulator(modulator: CvModulator): Float {
 
             val localPhase = ((seconds / period) + modulator.phaseOffset) % 1.0
             val positivePhase = if (localPhase < 0.0) localPhase + 1.0 else localPhase
-            calculateWaveform(modulator.waveform, positivePhase, modulator.slope)
+            if (modulator.waveform == Waveform.RANDOM) {
+                val cyclePosition = (seconds / period) + modulator.phaseOffset
+                val currentCycle = kotlin.math.floor(cyclePosition).toInt()
+                val previousCycle = currentCycle - 1
+                val seed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.id.hashCode()
+                val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
+                val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
+                val safeHold = modulator.hold.coerceIn(0.0f, 0.99f)
+                val slideDuration = 1.0f - safeHold
+                val tSlide = if (positivePhase < slideDuration) {
+                    (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
+                } else {
+                    1.0f
+                }
+                val k = 1.5f + (15.0f - 1.5f) * modulator.morph
+                val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+                val heldTri = tSlide * 2.0f - 1.0f
+                val result = if (heldTri >= 0f) {
+                    val u = 1.0f - heldTri
+                    val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                    1.0f - (smoothedU / maxVal)
+                } else {
+                    val u = 1.0f + heldTri
+                    val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                    -1.0f + (smoothedU / maxVal)
+                }
+                val t = (result + 1.0f) / 2.0f
+                previousValue + (currentValue - previousValue) * t
+            } else {
+                calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
+            }
         }
         "gen1", "gen2" -> {
             // 1. Evaluate internal modulator LFO (LFO 2) if active
@@ -53,43 +130,75 @@ fun evaluateModulator(modulator: CvModulator): Float {
                     val seconds = CVRegistry.getElapsedRealtimeSec()
                     val period = modulator.modSubdivision.toDouble().coerceAtLeast(0.001)
                     val cyclePosition = (seconds / period) + modulator.modPhaseOffset
+                    val phase = cyclePosition % 1.0
+                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                     if (modulator.modWaveform == Waveform.RANDOM) {
-                        val phase = cyclePosition % 1.0
-                        val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                         val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                         val previousCycle = currentCycle - 1
                         val seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                         val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                         val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
-                        val glideAmount = if (positivePhase < modulator.modSlope) {
-                            (positivePhase / modulator.modSlope).toFloat().coerceIn(0f, 1f)
-                        } else 1.0f
-                        previousValue + (currentValue - previousValue) * glideAmount
+                        
+                        val safeHold = modulator.modHold.coerceIn(0.0f, 0.99f)
+                        val slideDuration = 1.0f - safeHold
+                        val tSlide = if (positivePhase < slideDuration) {
+                            (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
+                        } else {
+                            1.0f
+                        }
+                        val k = 1.5f + (15.0f - 1.5f) * modulator.modMorph
+                        val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+                        val heldTri = tSlide * 2.0f - 1.0f
+                        val result = if (heldTri >= 0f) {
+                            val u = 1.0f - heldTri
+                            val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                            1.0f - (smoothedU / maxVal)
+                        } else {
+                            val u = 1.0f + heldTri
+                            val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                            -1.0f + (smoothedU / maxVal)
+                        }
+                        val t = (result + 1.0f) / 2.0f
+                        previousValue + (currentValue - previousValue) * t
                     } else {
-                        val phase = cyclePosition % 1.0
-                        val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                        calculateWaveform(modulator.modWaveform, positivePhase, modulator.modSlope)
+                        calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope)
                     }
                 } else {
                     val beats = CVRegistry.getSynchronizedTotalBeats()
                     val subdivisionD = modulator.modSubdivision.toDouble().coerceAtLeast(0.01)
                     val cyclePosition = (beats / subdivisionD) + modulator.modPhaseOffset
+                    val phase = cyclePosition % 1.0
+                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                     if (modulator.modWaveform == Waveform.RANDOM) {
-                        val phase = cyclePosition % 1.0
-                        val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                         val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                         val previousCycle = currentCycle - 1
                         val seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                         val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                         val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
-                        val glideAmount = if (positivePhase < modulator.modSlope) {
-                            (positivePhase / modulator.modSlope).toFloat().coerceIn(0f, 1f)
-                        } else 1.0f
-                        previousValue + (currentValue - previousValue) * glideAmount
+                        
+                        val safeHold = modulator.modHold.coerceIn(0.0f, 0.99f)
+                        val slideDuration = 1.0f - safeHold
+                        val tSlide = if (positivePhase < slideDuration) {
+                            (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
+                        } else {
+                            1.0f
+                        }
+                        val k = 1.5f + (15.0f - 1.5f) * modulator.modMorph
+                        val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+                        val heldTri = tSlide * 2.0f - 1.0f
+                        val result = if (heldTri >= 0f) {
+                            val u = 1.0f - heldTri
+                            val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                            1.0f - (smoothedU / maxVal)
+                        } else {
+                            val u = 1.0f + heldTri
+                            val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                            -1.0f + (smoothedU / maxVal)
+                        }
+                        val t = (result + 1.0f) / 2.0f
+                        previousValue + (currentValue - previousValue) * t
                     } else {
-                        val phase = cyclePosition % 1.0
-                        val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                        calculateWaveform(modulator.modWaveform, positivePhase, modulator.modSlope)
+                        calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope)
                     }
                 }
             } else 0f
@@ -103,43 +212,75 @@ fun evaluateModulator(modulator: CvModulator): Float {
                 val seconds = CVRegistry.getElapsedRealtimeSec()
                 val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
                 val cyclePosition = (seconds / period) + modulator.phaseOffset + pmShift
+                val phase = cyclePosition % 1.0
+                val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                 if (modulator.waveform == Waveform.RANDOM) {
-                    val phase = cyclePosition % 1.0
-                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                     val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                     val previousCycle = currentCycle - 1
                     val seed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                     val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                     val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
-                    val glideAmount = if (positivePhase < modulator.slope) {
-                        (positivePhase / modulator.slope).toFloat().coerceIn(0f, 1f)
-                    } else 1.0f
-                    previousValue + (currentValue - previousValue) * glideAmount
+                    
+                    val safeHold = modulator.hold.coerceIn(0.0f, 0.99f)
+                    val slideDuration = 1.0f - safeHold
+                    val tSlide = if (positivePhase < slideDuration) {
+                        (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
+                    } else {
+                        1.0f
+                    }
+                    val k = 1.5f + (15.0f - 1.5f) * modulator.morph
+                    val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+                    val heldTri = tSlide * 2.0f - 1.0f
+                    val result = if (heldTri >= 0f) {
+                        val u = 1.0f - heldTri
+                        val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                        1.0f - (smoothedU / maxVal)
+                    } else {
+                        val u = 1.0f + heldTri
+                        val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                        -1.0f + (smoothedU / maxVal)
+                    }
+                    val t = (result + 1.0f) / 2.0f
+                    previousValue + (currentValue - previousValue) * t
                 } else {
-                    val phase = cyclePosition % 1.0
-                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                    calculateWaveform(modulator.waveform, positivePhase, modulator.slope)
+                    calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
                 }
             } else {
                 val beats = CVRegistry.getSynchronizedTotalBeats()
                 val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
                 val cyclePosition = (beats / subdivisionD) + modulator.phaseOffset + pmShift
+                val phase = cyclePosition % 1.0
+                val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                 if (modulator.waveform == Waveform.RANDOM) {
-                    val phase = cyclePosition % 1.0
-                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
                     val currentCycle = kotlin.math.floor(cyclePosition).toInt()
                     val previousCycle = currentCycle - 1
                     val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                     val currentValue = kotlin.random.Random((currentCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
                     val previousValue = kotlin.random.Random((previousCycle + seed).toLong()).nextFloat() * 2.0f - 1.0f
-                    val glideAmount = if (positivePhase < modulator.slope) {
-                        (positivePhase / modulator.slope).toFloat().coerceIn(0f, 1f)
-                    } else 1.0f
-                    previousValue + (currentValue - previousValue) * glideAmount
+                    
+                    val safeHold = modulator.hold.coerceIn(0.0f, 0.99f)
+                    val slideDuration = 1.0f - safeHold
+                    val tSlide = if (positivePhase < slideDuration) {
+                        (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
+                    } else {
+                        1.0f
+                    }
+                    val k = 1.5f + (15.0f - 1.5f) * modulator.morph
+                    val maxVal = kotlin.math.log(kotlin.math.cosh(k.toDouble()), Math.E).toFloat() / k
+                    val heldTri = tSlide * 2.0f - 1.0f
+                    val result = if (heldTri >= 0f) {
+                        val u = 1.0f - heldTri
+                        val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                        1.0f - (smoothedU / maxVal)
+                    } else {
+                        val u = 1.0f + heldTri
+                        val smoothedU = kotlin.math.log(kotlin.math.cosh((k * u).toDouble()), Math.E).toFloat() / k
+                        -1.0f + (smoothedU / maxVal)
+                    }
+                    val t = (result + 1.0f) / 2.0f
+                    previousValue + (currentValue - previousValue) * t
                 } else {
-                    val phase = cyclePosition % 1.0
-                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                    calculateWaveform(modulator.waveform, positivePhase, modulator.slope)
+                    calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
                 }
             }
 

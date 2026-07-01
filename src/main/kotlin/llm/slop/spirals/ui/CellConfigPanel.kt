@@ -679,46 +679,117 @@ object CellConfigPanel {
 
             ImGui.spacing()
 
-        // ── Waveform, Unit and Operator ──────────────────────────
+        // ── Waveform Shape and Timing controls ───────────────────
         val showWaveform = hasAdvanced && (!isSnh || isGen)
         if (showWaveform) {
             val startX = ImGui.getCursorPosX()
 
-            // Labels Row
-            UITheme.body(if (isGen) "LFO 1" else "Waveform")
-            if (isGen) {
-                ImGui.sameLine()
-                ImGui.setCursorPosX(startX + 135f)
-                UITheme.body("LFO 1 Unit")
+            // 1. Shape Preset buttons
+            UITheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
+            ImGui.sameLine(0f, 10f)
+
+            val btnW = 80f
+            val btnH = ImGui.getFrameHeight()
+
+            // Sine Button
+            val isSine = existing.waveform == Waveform.SINE && existing.morph == 0.0f && existing.hold == 0.0f
+            if (isSine) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Sine##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.SINE,
+                    morph = 0.0f,
+                    hold = 0.0f
+                ))
+            }
+            if (isSine) ImGui.popStyleColor()
+
+            // Triangle Button
+            ImGui.sameLine(0f, 4f)
+            val isTri = existing.waveform == Waveform.TRIANGLE && existing.morph == 1.0f && existing.hold == 0.0f
+            if (isTri) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Triangle##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.TRIANGLE,
+                    morph = 1.0f,
+                    hold = 0.0f
+                ))
+            }
+            if (isTri) ImGui.popStyleColor()
+
+            // Square Button
+            ImGui.sameLine(0f, 4f)
+            val isSquare = existing.waveform == Waveform.SQUARE && existing.morph == 1.0f && existing.hold == 0.5f
+            if (isSquare) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Square##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.SQUARE,
+                    morph = 1.0f,
+                    hold = 0.5f
+                ))
+            }
+            if (isSquare) ImGui.popStyleColor()
+
+            // Random Button
+            ImGui.sameLine(0f, 4f)
+            val isRandom = existing.waveform == Waveform.RANDOM
+            if (isRandom) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Random##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.RANDOM
+                ))
+            }
+            if (isRandom) ImGui.popStyleColor()
+
+            // 2. Slew Preset buttons (only if not Random)
+            if (existing.waveform != Waveform.RANDOM) {
+                ImGui.sameLine(0f, 20f)
+                UITheme.body("Asymmetry:")
+                ImGui.sameLine(0f, 10f)
+
+                // Left Button
+                val isLeft = existing.slope <= 0.01f
+                if (isLeft) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Left##lfo1", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(slope = 0.001f))
+                }
+                if (isLeft) ImGui.popStyleColor()
+
+                // Center Button
+                ImGui.sameLine(0f, 4f)
+                val isCenter = existing.slope >= 0.49f && existing.slope <= 0.51f
+                if (isCenter) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Center##lfo1", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(slope = 0.5f))
+                }
+                if (isCenter) ImGui.popStyleColor()
+
+                // Right Button
+                ImGui.sameLine(0f, 4f)
+                val isRight = existing.slope >= 0.99f
+                if (isRight) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Right##lfo1", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(slope = 0.999f))
+                }
+                if (isRight) ImGui.popStyleColor()
             }
 
-            // Dropdowns Row
-            val currentLabels = if (isGen) {
-                arrayOf("Sine", "Triangle", "Square", "Random")
-            } else {
-                waveformLabels
-            }
-            val wfIdx = ImInt(existing.waveform.ordinal)
-            if (bypassed) ImGui.popStyleVar()
-            ImGui.pushItemWidth(125f)
-            if (ImGui.combo("##waveform", wfIdx, currentLabels)) {
-                replaceModulator(state, param, existing.copy(waveform = Waveform.entries[wfIdx.get()]))
-            }
-            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
-            
+            ImGui.spacing()
+
+            // ── Unit Selection Dropdown (Time/Beat) if applicable ──
             if (isGen) {
-                ImGui.sameLine()
-                ImGui.setCursorPosX(startX + 135f)
+                UITheme.body("LFO 1 Unit:")
+                ImGui.sameLine(0f, 10f)
                 val unitIdx = ImInt(existing.genUnit.ordinal)
                 val unitLabels = arrayOf("Time", "Beat")
                 if (bypassed) ImGui.popStyleVar()
+                ImGui.pushItemWidth(125f)
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {
                     replaceModulator(state, param, existing.copy(genUnit = GenUnit.entries[unitIdx.get()]))
                 }
+                ImGui.popItemWidth()
                 if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+                ImGui.spacing()
             }
-            ImGui.popItemWidth()
-            ImGui.spacing()
         }
 
         // Operator was moved to top row
@@ -1048,72 +1119,179 @@ object CellConfigPanel {
         )
         ImGui.spacing()
 
-        // ── Slope / Duty (Triangle, Square, S&H / Random) ────────────────
-        val needsSlope = isSnh ||
-                existing.waveform == Waveform.TRIANGLE ||
-                existing.waveform == Waveform.SQUARE ||
-                existing.waveform == Waveform.RANDOM
-        if (needsSlope) {
-            val slopeLabel = when {
-                isSnh || existing.waveform == Waveform.RANDOM -> "Glide"
-                existing.waveform == Waveform.TRIANGLE -> "Slope"
-                else -> "Duty Cycle"
-            }
+        if (hasAdvanced) {
+            // ── Morph Slider ──
             drawCustomRangeSlider(
-            idPrefix = existing.id,
-                label = slopeLabel,
+                idPrefix = existing.id + "_morph",
+                label = if (isGen) "LFO 1 Morph" else "Morph",
                 themeColor = currentThemeColor,
-                currentValue = existing.slope,
-                currentMin = existing.slopeMin,
-                currentMax = existing.slopeMax,
+                currentValue = existing.morph,
+                currentMin = existing.morphMin,
+                currentMax = existing.morphMax,
                 minLimit = 0f,
                 maxLimit = 1f,
-                isRandomizable = existing.randomizeSlope,
+                isRandomizable = existing.randomizeMorph,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
-                        val rMin = existing.slopeMin
-                        val rMax = existing.slopeMax
+                        val rMin = existing.morphMin
+                        val rMax = existing.morphMax
                         val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.slope - 0.1f).coerceAtLeast(0f), (existing.slope + 0.1f).coerceAtMost(1f))
+                            Pair((existing.morph - 0.1f).coerceAtLeast(0f), (existing.morph + 0.1f).coerceAtMost(1f))
                         } else {
                             Pair(rMin, rMax)
                         }
                         replaceModulator(state, param, existing.copy(
-                            randomizeSlope = true,
-                            slopeMin = nextMin,
-                            slopeMax = nextMax
+                            randomizeMorph = true,
+                            morphMin = nextMin,
+                            morphMax = nextMax
                         ))
                     } else {
                         replaceModulator(state, param, existing.copy(
-                            randomizeSlope = false,
-                            slopeMin = existing.slope,
-                            slopeMax = existing.slope
+                            randomizeMorph = false,
+                            morphMin = existing.morph,
+                            morphMax = existing.morph
                         ))
                     }
                 },
                 onRandomizeNow = {
-                    replaceModulator(state, param, existing.randomizeSlope())
+                    replaceModulator(state, param, existing.randomizeMorph())
                 },
                 onRangeChanged = { nextMin, nextMax ->
                     val safeMin = minOf(nextMin, nextMax)
                     val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.slope.coerceIn(safeMin, safeMax)
+                    val nextActive = existing.morph.coerceIn(safeMin, safeMax)
                     replaceModulator(state, param, existing.copy(
-                        slopeMin = safeMin,
-                        slopeMax = safeMax,
-                        slope = nextActive
+                        morphMin = safeMin,
+                        morphMax = safeMax,
+                        morph = nextActive
                     ))
                 },
                 onValueChanged = { newVal ->
                     replaceModulator(state, param, existing.copy(
-                        slope = newVal,
-                        slopeMin = newVal,
-                        slopeMax = newVal
+                        morph = newVal,
+                        morphMin = newVal,
+                        morphMax = newVal
                     ))
                 }
             )
             ImGui.spacing()
+
+            // ── Hold Slider ──
+            drawCustomRangeSlider(
+                idPrefix = existing.id + "_hold",
+                label = if (isGen) "LFO 1 Hold" else "Hold",
+                themeColor = currentThemeColor,
+                currentValue = existing.hold,
+                currentMin = existing.holdMin,
+                currentMax = existing.holdMax,
+                minLimit = 0f,
+                maxLimit = 0.99f,
+                isRandomizable = existing.randomizeHold,
+                formatValue = { "%.3f".format(it) },
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.holdMin
+                        val rMax = existing.holdMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.99f))
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        replaceModulator(state, param, existing.copy(
+                            randomizeHold = true,
+                            holdMin = nextMin,
+                            holdMax = nextMax
+                        ))
+                    } else {
+                        replaceModulator(state, param, existing.copy(
+                            randomizeHold = false,
+                            holdMin = existing.hold,
+                            holdMax = existing.hold
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    replaceModulator(state, param, existing.randomizeHold())
+                },
+                onRangeChanged = { nextMin, nextMax ->
+                    val safeMin = minOf(nextMin, nextMax)
+                    val safeMax = maxOf(nextMin, nextMax)
+                    val nextActive = existing.hold.coerceIn(safeMin, safeMax)
+                    replaceModulator(state, param, existing.copy(
+                        holdMin = safeMin,
+                        holdMax = safeMax,
+                        hold = nextActive
+                    ))
+                },
+                onValueChanged = { newVal ->
+                    replaceModulator(state, param, existing.copy(
+                        hold = newVal,
+                        holdMin = newVal,
+                        holdMax = newVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+
+            // ── Slew / Slope Slider (only if not Random) ──
+            if (existing.waveform != Waveform.RANDOM) {
+                drawCustomRangeSlider(
+                    idPrefix = existing.id,
+                    label = if (isGen) "LFO 1 Slew" else "Slew",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.slope,
+                    currentMin = existing.slopeMin,
+                    currentMax = existing.slopeMax,
+                    minLimit = 0.001f,
+                    maxLimit = 0.999f,
+                    isRandomizable = existing.randomizeSlope,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.slopeMin
+                            val rMax = existing.slopeMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.slope - 0.1f).coerceAtLeast(0.001f), (existing.slope + 0.1f).coerceAtMost(0.999f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeSlope = true,
+                                slopeMin = nextMin,
+                                slopeMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeSlope = false,
+                                slopeMin = existing.slope,
+                                slopeMax = existing.slope
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeSlope())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.slope.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            slopeMin = safeMin,
+                            slopeMax = safeMax,
+                            slope = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            slope = newVal,
+                            slopeMin = newVal,
+                            slopeMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+            }
         }
 
         if (isGen) {
@@ -1167,6 +1345,8 @@ object CellConfigPanel {
                     .randomizeModSubdivision()
                     .randomizeModPhaseOffset()
                     .randomizeModSlope()
+                    .randomizeModMorph()
+                    .randomizeModHold()
                 replaceModulator(state, param, randomized)
             }
             if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
@@ -1212,44 +1392,104 @@ object CellConfigPanel {
             val startX = ImGui.getCursorPosX()
             val lfo2Disabled = (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE)
 
-            // Labels Row
-            if (lfo2Disabled) {
-                ImGui.beginDisabled()
-            }
-            UITheme.body("LFO 2")
-            
-            ImGui.sameLine()
-            ImGui.setCursorPosX(startX + 135f)
-            UITheme.body("LFO 2 Unit")
-            
-            if (lfo2Disabled) {
-                ImGui.endDisabled()
-            }
-
-            ImGui.sameLine()
-            ImGui.setCursorPosX(startX + 270f)
-            UITheme.body("Modulation Mode")
-
-            // Dropdowns Row
             if (lfo2Disabled) {
                 ImGui.beginDisabled()
             }
 
-            // LFO 2 Waveform
-            val modWfLabels = arrayOf("Sine", "Triangle", "Square", "Random")
-            val modWfIdx = ImInt(existing.modWaveform.ordinal)
-            if (bypassed) ImGui.popStyleVar()
-            ImGui.pushItemWidth(125f)
-            if (ImGui.combo("##mod_waveform", modWfIdx, modWfLabels)) {
-                replaceModulator(state, param, existing.copy(modWaveform = Waveform.entries[modWfIdx.get()]))
+            val btnW = 80f
+            val btnH = ImGui.getFrameHeight()
+
+            // 1. LFO 2 Shape Preset buttons
+            UITheme.body("LFO 2 Shape:")
+            ImGui.sameLine(0f, 10f)
+
+            // Sine Button
+            val isModSine = existing.modWaveform == Waveform.SINE && existing.modMorph == 0.0f && existing.modHold == 0.0f
+            if (isModSine) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Sine##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.SINE,
+                    modMorph = 0.0f,
+                    modHold = 0.0f
+                ))
             }
-            ImGui.popItemWidth()
-            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+            if (isModSine) ImGui.popStyleColor()
+            
+            // Triangle Button
+            ImGui.sameLine(0f, 4f)
+            val isModTri = existing.modWaveform == Waveform.TRIANGLE && existing.modMorph == 1.0f && existing.modHold == 0.0f
+            if (isModTri) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Triangle##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.TRIANGLE,
+                    modMorph = 1.0f,
+                    modHold = 0.0f
+                ))
+            }
+            if (isModTri) ImGui.popStyleColor()
 
-            ImGui.sameLine()
-            ImGui.setCursorPosX(startX + 135f)
+            // Square Button
+            ImGui.sameLine(0f, 4f)
+            val isModSquare = existing.modWaveform == Waveform.SQUARE && existing.modMorph == 1.0f && existing.modHold == 0.5f
+            if (isModSquare) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Square##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.SQUARE,
+                    modMorph = 1.0f,
+                    modHold = 0.5f
+                ))
+            }
+            if (isModSquare) ImGui.popStyleColor()
 
-            // LFO 2 Unit
+            // Random Button
+            ImGui.sameLine(0f, 4f)
+            val isModRandom = existing.modWaveform == Waveform.RANDOM
+            if (isModRandom) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Random##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.RANDOM
+                ))
+            }
+            if (isModRandom) ImGui.popStyleColor()
+
+            // 2. LFO 2 Slew Preset buttons (only if not Random)
+            if (existing.modWaveform != Waveform.RANDOM) {
+                ImGui.sameLine(0f, 20f)
+                UITheme.body("Asymmetry:")
+                ImGui.sameLine(0f, 10f)
+
+                // Left Button
+                val isModLeft = existing.modSlope <= 0.01f
+                if (isModLeft) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Left##lfo2", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(modSlope = 0.001f))
+                }
+                if (isModLeft) ImGui.popStyleColor()
+
+                // Center Button
+                ImGui.sameLine(0f, 4f)
+                val isModCenter = existing.modSlope >= 0.49f && existing.modSlope <= 0.51f
+                if (isModCenter) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Center##lfo2", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(modSlope = 0.5f))
+                }
+                if (isModCenter) ImGui.popStyleColor()
+
+                // Right Button
+                ImGui.sameLine(0f, 4f)
+                val isModRight = existing.modSlope >= 0.99f
+                if (isModRight) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Right##lfo2", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(modSlope = 0.999f))
+                }
+                if (isModRight) ImGui.popStyleColor()
+            }
+
+            ImGui.spacing()
+
+            // 3. Dropdowns Row for Unit and Mode
+            UITheme.body("LFO 2 Unit:")
+            ImGui.sameLine(0f, 10f)
             val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
             val modUnitLabels = arrayOf("Time", "Beat")
             if (bypassed) ImGui.popStyleVar()
@@ -1264,10 +1504,10 @@ object CellConfigPanel {
                 ImGui.endDisabled()
             }
 
-            ImGui.sameLine()
-            ImGui.setCursorPosX(startX + 270f)
+            ImGui.sameLine(0f, 20f)
+            UITheme.body("Modulation Mode:")
+            ImGui.sameLine(0f, 10f)
 
-            // Modulation Mode
             if (bypassed) ImGui.popStyleVar()
             ImGui.pushItemWidth(200f)
             if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
@@ -1527,25 +1767,131 @@ object CellConfigPanel {
                 )
                 ImGui.spacing()
 
-                // LFO 2 Slope
-                val modNeedsSlope = existing.modWaveform == Waveform.TRIANGLE ||
-                        existing.modWaveform == Waveform.SQUARE ||
-                        existing.modWaveform == Waveform.RANDOM
-                if (modNeedsSlope) {
-                    val modSlopeLabel = when (existing.modWaveform) {
-                        Waveform.RANDOM -> "LFO 2 Glide"
-                        Waveform.TRIANGLE -> "LFO 2 Slope"
-                        else -> "LFO 2 Duty Cycle"
+                // LFO 2 Morph
+                drawCustomRangeSlider(
+                    idPrefix = existing.id + "_mod_morph",
+                    label = "LFO 2 Morph",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.modMorph,
+                    currentMin = existing.modMorphMin,
+                    currentMax = existing.modMorphMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = existing.randomizeModMorph,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.modMorphMin
+                            val rMax = existing.modMorphMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.modMorph - 0.1f).coerceAtLeast(0f), (existing.modMorph + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModMorph = true,
+                                modMorphMin = nextMin,
+                                modMorphMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModMorph = false,
+                                modMorphMin = existing.modMorph,
+                                modMorphMax = existing.modMorph
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeModMorph())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.modMorph.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            modMorphMin = safeMin,
+                            modMorphMax = safeMax,
+                            modMorph = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            modMorph = newVal,
+                            modMorphMin = newVal,
+                            modMorphMax = newVal
+                        ))
                     }
+                )
+                ImGui.spacing()
+
+                // LFO 2 Hold
+                drawCustomRangeSlider(
+                    idPrefix = existing.id + "_mod_hold",
+                    label = "LFO 2 Hold",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.modHold,
+                    currentMin = existing.modHoldMin,
+                    currentMax = existing.modHoldMax,
+                    minLimit = 0f,
+                    maxLimit = 0.99f,
+                    isRandomizable = existing.randomizeModHold,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.modHoldMin
+                            val rMax = existing.modHoldMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.modHold - 0.1f).coerceAtLeast(0f), (existing.modHold + 0.1f).coerceAtMost(0.99f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModHold = true,
+                                modHoldMin = nextMin,
+                                modHoldMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModHold = false,
+                                modHoldMin = existing.modHold,
+                                modHoldMax = existing.modHold
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeModHold())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.modHold.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            modHoldMin = safeMin,
+                            modHoldMax = safeMax,
+                            modHold = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            modHold = newVal,
+                            modHoldMin = newVal,
+                            modHoldMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+
+                // LFO 2 Slew (mod slope, if not random)
+                if (existing.modWaveform != Waveform.RANDOM) {
                     drawCustomRangeSlider(
                         idPrefix = existing.id + "_mod_slope",
-                        label = modSlopeLabel,
+                        label = "LFO 2 Slew",
                         themeColor = currentThemeColor,
                         currentValue = existing.modSlope,
                         currentMin = existing.modSlopeMin,
                         currentMax = existing.modSlopeMax,
-                        minLimit = 0f,
-                        maxLimit = 1f,
+                        minLimit = 0.001f,
+                        maxLimit = 0.999f,
                         isRandomizable = existing.randomizeModSlope,
                         formatValue = { "%.3f".format(it) },
                         onRandomizableChanged = { checked ->
@@ -1553,7 +1899,7 @@ object CellConfigPanel {
                                 val rMin = existing.modSlopeMin
                                 val rMax = existing.modSlopeMax
                                 val (nextMin, nextMax) = if (rMin == rMax) {
-                                    Pair((existing.modSlope - 0.1f).coerceAtLeast(0f), (existing.modSlope + 0.1f).coerceAtMost(1f))
+                                    Pair((existing.modSlope - 0.1f).coerceAtLeast(0.001f), (existing.modSlope + 0.1f).coerceAtMost(0.999f))
                                 } else {
                                     Pair(rMin, rMax)
                                 }

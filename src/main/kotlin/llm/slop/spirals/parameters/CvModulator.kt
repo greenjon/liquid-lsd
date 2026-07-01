@@ -33,6 +33,17 @@ data class CvModulator(
     val randomizePhaseOffset: Boolean = false,
     val randomizeSlope: Boolean = false,
 
+    // Advanced LFO fields
+    val morph: Float = 0.0f,
+    val morphMin: Float = morph,
+    val morphMax: Float = morph,
+    val randomizeMorph: Boolean = false,
+
+    val hold: Float = 0.0f,
+    val holdMin: Float = hold,
+    val holdMax: Float = hold,
+    val randomizeHold: Boolean = false,
+
     // DC Offset fields
     val dcOffset: Float = 0.0f,
     val dcOffsetMin: Float = dcOffset,
@@ -58,6 +69,17 @@ data class CvModulator(
     val randomizeModSubdivision: Boolean = false,
     val randomizeModPhaseOffset: Boolean = false,
     val randomizeModSlope: Boolean = false,
+
+    // Modulator LFO (LFO 2) Advanced fields
+    val modMorph: Float = 0.0f,
+    val modMorphMin: Float = modMorph,
+    val modMorphMax: Float = modMorph,
+    val randomizeModMorph: Boolean = false,
+
+    val modHold: Float = 0.0f,
+    val modHoldMin: Float = modHold,
+    val modHoldMax: Float = modHold,
+    val randomizeModHold: Boolean = false,
 
     val generatorModDepthMin: Float = generatorModDepth,
     val generatorModDepthMax: Float = generatorModDepth,
@@ -87,6 +109,14 @@ data class CvModulator(
             if (slopeMin == slopeMax) slopeMin else random.nextFloat() * (slopeMax - slopeMin) + slopeMin
         } else slope
 
+        val newMorph = if (randomizeMorph) {
+            if (morphMin == morphMax) morphMin else random.nextFloat() * (morphMax - morphMin) + morphMin
+        } else morph
+
+        val newHold = if (randomizeHold) {
+            if (holdMin == holdMax) holdMin else random.nextFloat() * (holdMax - holdMin) + holdMin
+        } else hold
+
         val newSubdiv = if (randomizeSubdivision) {
             if (subdivisionMin == subdivisionMax) {
                 subdivisionMin
@@ -109,6 +139,14 @@ data class CvModulator(
         val newModSlope = if (randomizeModSlope) {
             if (modSlopeMin == modSlopeMax) modSlopeMin else random.nextFloat() * (modSlopeMax - modSlopeMin) + modSlopeMin
         } else modSlope
+
+        val newModMorph = if (randomizeModMorph) {
+            if (modMorphMin == modMorphMax) modMorphMin else random.nextFloat() * (modMorphMax - modMorphMin) + modMorphMin
+        } else modMorph
+
+        val newModHold = if (randomizeModHold) {
+            if (modHoldMin == modHoldMax) modHoldMin else random.nextFloat() * (modHoldMax - modHoldMin) + modHoldMin
+        } else modHold
 
         val newModSubdiv = if (randomizeModSubdivision) {
             if (modSubdivisionMin == modSubdivisionMax) {
@@ -134,8 +172,12 @@ data class CvModulator(
             subdivision = newSubdiv,
             phaseOffset = newPhase,
             slope = newSlope,
+            morph = newMorph,
+            hold = newHold,
             modPhaseOffset = newModPhase,
             modSlope = newModSlope,
+            modMorph = newModMorph,
+            modHold = newModHold,
             modSubdivision = newModSubdiv,
             generatorModDepth = newModDepth
         )
@@ -181,6 +223,18 @@ data class CvModulator(
         return this.copy(slope = newSlope)
     }
 
+    fun randomizeMorph(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeMorph) return this
+        val newMorph = if (morphMin == morphMax) morphMin else random.nextFloat() * (morphMax - morphMin) + morphMin
+        return this.copy(morph = newMorph)
+    }
+
+    fun randomizeHold(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeHold) return this
+        val newHold = if (holdMin == holdMax) holdMin else random.nextFloat() * (holdMax - holdMin) + holdMin
+        return this.copy(hold = newHold)
+    }
+
     fun randomizeModSubdivision(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
         if (!randomizeModSubdivision) return this
         val newSubdiv = if (modSubdivisionMin == modSubdivisionMax) {
@@ -207,6 +261,18 @@ data class CvModulator(
         if (!randomizeModSlope) return this
         val newSlope = if (modSlopeMin == modSlopeMax) modSlopeMin else random.nextFloat() * (modSlopeMax - modSlopeMin) + modSlopeMin
         return this.copy(modSlope = newSlope)
+    }
+
+    fun randomizeModMorph(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeModMorph) return this
+        val newMorph = if (modMorphMin == modMorphMax) modMorphMin else random.nextFloat() * (modMorphMax - modMorphMin) + modMorphMin
+        return this.copy(modMorph = newMorph)
+    }
+
+    fun randomizeModHold(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeModHold) return this
+        val newHold = if (modHoldMin == modHoldMax) modHoldMin else random.nextFloat() * (modHoldMax - modHoldMin) + modHoldMin
+        return this.copy(modHold = newHold)
     }
 
     fun randomizeGeneratorModDepth(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
