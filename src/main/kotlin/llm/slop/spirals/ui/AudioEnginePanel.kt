@@ -23,6 +23,18 @@ object AudioEnginePanel {
     private val rawSamples = FloatArray(1024)
     private val cvSamples = FloatArray(200)
 
+    private val manualBpmArr = FloatArray(1)
+    private val gainArr = FloatArray(1)
+    private val sysVolArr = FloatArray(1)
+    
+    // Beat Detection UI arrays
+    private val floorArr = IntArray(1)
+    private val ceilArr = IntArray(1)
+    private val resArr = FloatArray(1)
+    private val winLenArr = FloatArray(1)
+    private val pllArr = FloatArray(1)
+    private val isLocked = imgui.type.ImBoolean()
+
     fun open() = ImGui.openPopup(POPUP_ID)
 
     fun draw(displayWidth: Float, displayHeight: Float) {
@@ -134,11 +146,109 @@ object AudioEnginePanel {
             UITheme.body("Manual BPM:")
             ImGui.sameLine()
             ImGui.setNextItemWidth(180f)
-            val manualBpmArr = floatArrayOf(AudioEngine.manualBpm)
+            manualBpmArr[0] = AudioEngine.manualBpm
             if (ImGui.sliderFloat("##manual_bpm", manualBpmArr, 40f, 200f, "%.1f")) {
                 AudioEngine.manualBpm = manualBpmArr[0]
                 AudioEngine.setBpmDirectly(manualBpmArr[0])
                 UITheme.saveSettings()
+            }
+
+            ImGui.spacing()
+            
+            // ── New Beat Detection UI ──
+            UITheme.h3("Auto Beat Detection")
+            ImGui.spacing()
+            
+            val settings = AudioEngine.beatDetector.settings
+            
+            if (ImGui.beginCombo("Mode", settings.mode.name)) {
+                llm.slop.spirals.audio.BeatDetectionMode.values().forEach { mode ->
+                    val isSelected = settings.mode == mode
+                    if (ImGui.selectable(mode.name, isSelected)) {
+                        settings.mode = mode
+                    }
+                    if (isSelected) ImGui.setItemDefaultFocus()
+                }
+                ImGui.endCombo()
+            }
+            
+            if (ImGui.beginCombo("Target", settings.target.name)) {
+                llm.slop.spirals.audio.AudioTarget.values().forEach { target ->
+                    val isSelected = settings.target == target
+                    if (ImGui.selectable(target.name, isSelected)) {
+                        settings.target = target
+                    }
+                    if (isSelected) ImGui.setItemDefaultFocus()
+                }
+                ImGui.endCombo()
+            }
+
+            ImGui.spacing()
+            
+            // Window Size Combo
+            val windowSizes = intArrayOf(1024, 2048, 4096, 8192)
+            if (ImGui.beginCombo("Window Size", settings.windowSize.toString())) {
+                windowSizes.forEach { ws ->
+                    val isSelected = settings.windowSize == ws
+                    if (ImGui.selectable(ws.toString(), isSelected)) {
+                        settings.windowSize = ws
+                    }
+                    if (isSelected) ImGui.setItemDefaultFocus()
+                }
+                ImGui.endCombo()
+            }
+
+            // Hop Size Combo
+            val hopSizes = intArrayOf(128, 256, 512, 1024)
+            if (ImGui.beginCombo("Hop Size", settings.hopSize.toString())) {
+                hopSizes.forEach { hs ->
+                    val isSelected = settings.hopSize == hs
+                    if (ImGui.selectable(hs.toString(), isSelected)) {
+                        settings.hopSize = hs
+                    }
+                    if (isSelected) ImGui.setItemDefaultFocus()
+                }
+                ImGui.endCombo()
+            }
+
+            floorArr[0] = settings.bpmSearchFloor
+            if (ImGui.sliderInt("BPM Floor", floorArr, 40, 120)) { 
+                settings.bpmSearchFloor = floorArr[0]
+            }
+            
+            ceilArr[0] = settings.bpmSearchCeiling
+            if (ImGui.sliderInt("BPM Ceiling", ceilArr, 120, 240)) { 
+                settings.bpmSearchCeiling = ceilArr[0]
+            }
+            
+            resArr[0] = settings.bpmGridResolution
+            if (ImGui.sliderFloat("BPM Resolution", resArr, 0.1f, 2.0f, "%.1f")) { 
+                settings.bpmGridResolution = resArr[0]
+            }
+            
+            winLenArr[0] = settings.analysisWindowLength
+            if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) { 
+                settings.analysisWindowLength = winLenArr[0]
+            }
+            
+            pllArr[0] = settings.pllAdaptationRate
+            if (ImGui.sliderFloat("PLL Adaptation", pllArr, 0.01f, 1.0f, "%.2f")) { 
+                settings.pllAdaptationRate = pllArr[0]
+            }
+            
+            ImGui.spacing()
+            UITheme.body("Presets:")
+            ImGui.sameLine()
+            if (ImGui.button("High Accuracy")) AudioEngine.beatDetector.applyPreset(llm.slop.spirals.audio.BeatDetectionSettings.highAccuracy())
+            ImGui.sameLine()
+            if (ImGui.button("Balanced")) AudioEngine.beatDetector.applyPreset(llm.slop.spirals.audio.BeatDetectionSettings.balanced())
+            ImGui.sameLine()
+            if (ImGui.button("Eco")) AudioEngine.beatDetector.applyPreset(llm.slop.spirals.audio.BeatDetectionSettings.eco())
+            
+            ImGui.spacing()
+            isLocked.set(AudioEngine.isBpmLocked)
+            if (ImGui.checkbox("Lock to Manual BPM", isLocked)) {
+                AudioEngine.isBpmLocked = isLocked.get()
             }
 
             ImGui.spacing()
@@ -148,7 +258,7 @@ object AudioEnginePanel {
             // 1. Raw Audio Oscilloscope
             UITheme.h3("Raw Audio Input")
 
-            val gainArr = floatArrayOf(AudioEngine.inputGain)
+            gainArr[0] = AudioEngine.inputGain
             ImGui.alignTextToFramePadding()
             UITheme.body("Input Level Gain:")
             ImGui.sameLine()
@@ -167,7 +277,7 @@ object AudioEnginePanel {
             // System input volume slider
             if (SystemAudioVolume.isSupported) {
                 SystemAudioVolume.queryAsync()
-                val sysVolArr = floatArrayOf(SystemAudioVolume.systemInputVolume)
+                sysVolArr[0] = SystemAudioVolume.systemInputVolume
                 ImGui.alignTextToFramePadding()
                 UITheme.body("System Input Volume:")
                 ImGui.sameLine()

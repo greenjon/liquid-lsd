@@ -9,6 +9,187 @@ import mu.KotlinLogging
 
 enum class SignalState { SILENT, ACTIVE }
 
+enum class BeatDetectionMode { STFT_COMB, AUTOCORRELATION, PLL }
+enum class AudioTarget { UNFILTERED, LOW, MID, HIGH }
+
+data class BeatDetectionSettings(
+    var mode: BeatDetectionMode = BeatDetectionMode.AUTOCORRELATION,
+    var target: AudioTarget = AudioTarget.LOW,
+    var windowSize: Int = 2048,
+    var hopSize: Int = 512,
+    var bpmSearchFloor: Int = 40,
+    var bpmSearchCeiling: Int = 140,
+    var bpmGridResolution: Float = 1.0f,
+    var analysisWindowLength: Float = 3.0f,
+    var pllAdaptationRate: Float = 0.1f
+) {
+    companion object {
+        fun highAccuracy() = BeatDetectionSettings(
+            mode = BeatDetectionMode.STFT_COMB,
+            target = AudioTarget.UNFILTERED,
+            windowSize = 4096,
+            hopSize = 256,
+            bpmSearchFloor = 40,
+            bpmSearchCeiling = 240,
+            bpmGridResolution = 0.1f,
+            analysisWindowLength = 5.0f,
+            pllAdaptationRate = 0.1f
+        )
+        fun balanced() = BeatDetectionSettings(
+            mode = BeatDetectionMode.AUTOCORRELATION,
+            target = AudioTarget.LOW,
+            windowSize = 2048,
+            hopSize = 512,
+            bpmSearchFloor = 40,
+            bpmSearchCeiling = 240,
+            bpmGridResolution = 1.0f,
+            analysisWindowLength = 3.0f,
+            pllAdaptationRate = 0.1f
+        )
+        fun eco() = BeatDetectionSettings(
+            mode = BeatDetectionMode.PLL,
+            target = AudioTarget.LOW,
+            windowSize = 1024,
+            hopSize = 512,
+            bpmSearchFloor = 40,
+            bpmSearchCeiling = 240,
+            bpmGridResolution = 2.0f,
+            analysisWindowLength = 1.5f,
+            pllAdaptationRate = 0.1f
+        )
+    }
+}
+
+class BeatDetector {
+    var settings = BeatDetectionSettings.balanced()
+    
+    // Pre-allocated circular buffer to store envelopes without allocating memory in real-time thread.
+    // 8192 blocks of history is enough for ~8s of audio at normal JACK buffer sizes.
+    private val maxEnvelopeBlocks = 8192
+    private val historyBuffer = FloatArray(maxEnvelopeBlocks)
+    private var historyIndex = 0
+    private var historyCount = 0
+    
+    // PLL State
+    private var pllPhase = 0.0f
+    private var pllPeriod = 0.0f 
+    private var currentBpm = 120.0f
+    
+    fun applyPreset(preset: BeatDetectionSettings) {
+        this.settings = preset.copy()
+    }
+    
+    fun processBlock(
+        unfilteredAmp: Float,
+        lowAmp: Float,
+        midAmp: Float,
+        highAmp: Float,
+        sampleRate: Float,
+        nframes: Int
+    ): Float {
+        // High-performance section: No allocations, no blocking calls!
+        val targetAmp = when (settings.target) {
+            AudioTarget.UNFILTERED -> unfilteredAmp
+            AudioTarget.LOW -> lowAmp
+            AudioTarget.MID -> midAmp
+            AudioTarget.HIGH -> highAmp
+        }
+        
+        // Push current target block amplitude into history
+        historyBuffer[historyIndex] = targetAmp
+        historyIndex = (historyIndex + 1) % maxEnvelopeBlocks
+        if (historyCount < maxEnvelopeBlocks) {
+            historyCount++
+        }
+        
+        val fps = sampleRate / nframes.coerceAtLeast(1)
+        val floorBpm = settings.bpmSearchFloor.toFloat()
+        val ceilBpm = settings.bpmSearchCeiling.toFloat()
+        
+        when (settings.mode) {
+            BeatDetectionMode.STFT_COMB -> {
+                // Comb Filter Bank logic on envelope onset
+                var bestBpm = currentBpm
+                var maxEnergy = 0.0f
+                var bpm = floorBpm
+                
+                while (bpm <= ceilBpm) {
+                    val delayInBlocks = ((60.0f / bpm) * fps).toInt().coerceAtLeast(1)
+                    var energy = 0.0f
+                    val numPeriods = 4
+                    
+                    for (i in 0 until numPeriods) {
+                        val idx = (historyIndex - 1 - i * delayInBlocks + maxEnvelopeBlocks * 10) % maxEnvelopeBlocks
+                        energy += historyBuffer[idx]
+                    }
+                    
+                    if (energy > maxEnergy) {
+                        maxEnergy = energy
+                        bestBpm = bpm
+                    }
+                    bpm += settings.bpmGridResolution
+                }
+                
+                currentBpm = currentBpm * 0.9f + bestBpm * 0.1f
+            }
+            BeatDetectionMode.AUTOCORRELATION -> {
+                var maxAc = 0.0f
+                var bestDelay = 0
+                
+                val maxDelayBlocks = ((60.0f / floorBpm) * fps).toInt().coerceAtMost(maxEnvelopeBlocks / 2)
+                val minDelayBlocks = ((60.0f / ceilBpm) * fps).toInt().coerceAtLeast(1)
+                
+                for (delay in minDelayBlocks..maxDelayBlocks) {
+                    var ac = 0.0f
+                    val N = (settings.analysisWindowLength * fps).toInt().coerceAtMost(maxEnvelopeBlocks - delay)
+                    
+                    for (i in 0 until N) {
+                        val idx1 = (historyIndex - 1 - i + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
+                        val idx2 = (historyIndex - 1 - i - delay + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
+                        ac += historyBuffer[idx1] * historyBuffer[idx2]
+                    }
+                    
+                    if (ac > maxAc) {
+                        maxAc = ac
+                        bestDelay = delay
+                    }
+                }
+                
+                if (bestDelay > 0) {
+                    val bestBpm = 60.0f / (bestDelay / fps)
+                    currentBpm = currentBpm * 0.95f + bestBpm * 0.05f
+                }
+            }
+            BeatDetectionMode.PLL -> {
+                val expectedPeriod = fps * (60.0f / currentBpm)
+                if (pllPeriod == 0.0f) pllPeriod = expectedPeriod
+                
+                pllPhase += 1.0f
+                if (pllPhase >= pllPeriod) {
+                    pllPhase -= pllPeriod
+                }
+                
+                val prevTarget = historyBuffer[(historyIndex - 2 + maxEnvelopeBlocks) % maxEnvelopeBlocks]
+                if (targetAmp > prevTarget && targetAmp > 0.05f) { 
+                    var error = pllPhase / pllPeriod
+                    if (error > 0.5f) error -= 1.0f
+                    
+                    pllPhase -= error * pllPeriod * settings.pllAdaptationRate
+                    pllPeriod -= error * pllPeriod * (settings.pllAdaptationRate * 0.1f)
+                    
+                    val minPeriod = fps * (60.0f / ceilBpm)
+                    val maxPeriod = fps * (60.0f / floorBpm)
+                    pllPeriod = pllPeriod.coerceIn(minPeriod, maxPeriod)
+                }
+                
+                currentBpm = 60.0f / (pllPeriod / fps)
+            }
+        }
+        
+        return currentBpm.coerceIn(floorBpm, ceilBpm)
+    }
+}
+
 data class DetectionConfig(
     val silenceThresholdDb: Float = -40f,
     val silenceTimeoutMs: Long = 500_000_000L // 500ms in nanos
@@ -32,6 +213,7 @@ object AudioEngine {
     private val highPass = BiquadFilter(BiquadFilter.Type.HIGHPASS, lastSampleRate, 5000f)
 
     private val extractor = AmplitudeExtractor()
+    val beatDetector = BeatDetector()
 
     // Pre-allocated buffer for oscilloscope rendering of raw input samples
     val rawHistory = CvHistoryBuffer(1024)
@@ -146,6 +328,8 @@ object AudioEngine {
         val mid  = extractor.calculateRms(midBuffer,  nframes)
         val high = extractor.calculateRms(highBuffer, nframes)
 
+        val autoBpm = beatDetector.processBlock(amp, bass, mid, high, sampleRate, nframes)
+
         // 5. Onset-strength function: half-wave rectified multi-band spectral flux
         //    Weights favour bass/kick (×2) over mid (×0.8) and high (×0.3)
         val bassFlux = max(0f, bass - prevBass)
@@ -189,8 +373,8 @@ object AudioEngine {
             totalBeats += deltaTimeSec * (estimatedBpm / 60.0)
         }
 
-        // 8. Manual BPM lock override (always active as real-time estimation is removed)
-        estimatedBpm = manualBpm
+        // 8. Manual BPM lock override
+        estimatedBpm = if (isBpmLocked) manualBpm else autoBpm
 
         // 9. Publish to CV Registry
         CVRegistry.updateBeatAnchor(totalBeats, estimatedBpm, currentTime)
