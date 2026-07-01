@@ -11,6 +11,7 @@ import mu.KotlinLogging
  */
 object MidiJackWatchdog {
     private val logger = KotlinLogging.logger {}
+    @Volatile
     private var running = false
     private var thread: Thread? = null
 
@@ -20,6 +21,7 @@ object MidiJackWatchdog {
     @Volatile
     var isJackReconnectActive = true
 
+    @Synchronized
     fun start() {
         if (running) return
         running = true
@@ -52,6 +54,7 @@ object MidiJackWatchdog {
         }
     }
 
+    @Synchronized
     fun stop() {
         running = false
         thread?.interrupt()

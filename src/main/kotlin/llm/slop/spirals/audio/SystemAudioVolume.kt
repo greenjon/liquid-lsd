@@ -2,6 +2,7 @@ package llm.slop.spirals.audio
 
 import mu.KotlinLogging
 import java.util.Locale
+import java.util.concurrent.Executors
 
 /**
  * Helper to query and set the system input level (default audio source) via native utilities.
@@ -14,6 +15,10 @@ object SystemAudioVolume {
     private val os: OS
 
     private enum class OS { LINUX, MAC, WINDOWS, UNKNOWN }
+
+    private val volumeExecutor = Executors.newSingleThreadExecutor { r ->
+        Thread(r, "SystemAudioVolume-Worker").apply { isDaemon = true }
+    }
 
     init {
         val osName = System.getProperty("os.name").lowercase(Locale.ENGLISH)
@@ -41,7 +46,7 @@ object SystemAudioVolume {
     fun updateSystemVolume(volume: Float) {
         if (!isSupported) return
         systemInputVolume = volume.coerceIn(0f, 1f)
-        Thread {
+        volumeExecutor.execute {
             try {
                 val pb = when (os) {
                     OS.LINUX -> ProcessBuilder("wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", "%.2f".format(volume))
@@ -49,14 +54,14 @@ object SystemAudioVolume {
                         val pct = (volume * 100).toInt()
                         ProcessBuilder("osascript", "-e", "set volume input volume $pct")
                     }
-                    else -> return@Thread
+                    else -> return@execute
                 }
                 val process = pb.start()
                 process.waitFor()
             } catch (e: Exception) {
                 logger.error(e) { "Failed to set system volume" }
             }
-        }.start()
+        }
     }
 
     fun queryAsync() {
@@ -64,12 +69,12 @@ object SystemAudioVolume {
         val now = System.currentTimeMillis()
         if (now - lastQueryTime < queryIntervalMs || isQuerying) return
         isQuerying = true
-        Thread {
+        volumeExecutor.execute {
             try {
                 val pb = when (os) {
                     OS.LINUX -> ProcessBuilder("wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@")
                     OS.MAC -> ProcessBuilder("osascript", "-e", "input volume of (get volume settings)")
-                    else -> return@Thread
+                    else -> return@execute
                 }
                 val process = pb.start()
                 val output = process.inputStream.bufferedReader().readText().trim()
@@ -100,6 +105,6 @@ object SystemAudioVolume {
                 lastQueryTime = System.currentTimeMillis()
                 isQuerying = false
             }
-        }.start()
+        }
     }
 }

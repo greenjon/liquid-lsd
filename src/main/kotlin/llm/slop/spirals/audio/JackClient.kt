@@ -3,6 +3,10 @@ package llm.slop.spirals.audio
 import org.jaudiolibs.jnajack.*
 import java.nio.FloatBuffer
 import java.util.EnumSet
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -15,8 +19,36 @@ class JackClient(
     val clientName: String = "spirals-desktop",
     val onProcess: (FloatBuffer, Int, Float) -> Unit // (buffer, nframes, sampleRate)
 ) {
+    @Volatile
     private var client: org.jaudiolibs.jnajack.JackClient? = null
+    @Volatile
     private var inputPort: JackPort? = null
+
+    private val callbackErrorCount = AtomicInteger(0)
+    private val lastCallbackError = AtomicReference<Throwable?>(null)
+    private val errorLoggerExecutor = Executors.newSingleThreadScheduledExecutor { r ->
+        Thread(r, "JackClient-ErrorLogger").apply { isDaemon = true }
+    }
+    private var lastLoggedErrorCount = 0
+
+    init {
+        errorLoggerExecutor.scheduleWithFixedDelay({
+            try {
+                val count = callbackErrorCount.get()
+                if (count > lastLoggedErrorCount) {
+                    val error = lastCallbackError.getAndSet(null)
+                    if (error != null) {
+                        logger.error(error) { "Error in JACK process callback (Total occurrences: $count)" }
+                    } else {
+                        logger.error { "Error in JACK process callback occurred. Total occurrences: $count" }
+                    }
+                    lastLoggedErrorCount = count
+                }
+            } catch (e: Exception) {
+                // Ignore background logging exception
+            }
+        }, 1, 1, TimeUnit.SECONDS)
+    }
 
     val isConnected: Boolean
         get() = client != null
@@ -53,8 +85,9 @@ class JackClient(
                     if (buffer != null) {
                         onProcess(buffer, nframes, sampleRate)
                     }
-                } catch (e: Exception) {
-                    logger.error(e) { "Error in JACK process callback" }
+                } catch (e: Throwable) {
+                    lastCallbackError.set(e)
+                    callbackErrorCount.incrementAndGet()
                 }
                 true
             }
@@ -101,6 +134,11 @@ class JackClient(
      * Stops the JACK client session.
      */
     fun stop() {
+        try {
+            errorLoggerExecutor.shutdown()
+        } catch (e: Exception) {
+            // Ignore
+        }
         try {
             logger.info { "Stopping JACK client..." }
             client?.deactivate()

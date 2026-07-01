@@ -61,7 +61,9 @@ data class BeatDetectionSettings(
 }
 
 class BeatDetector {
+    @Volatile
     var settings = BeatDetectionSettings.balanced()
+        private set
     
     // Pre-allocated circular buffer to store envelopes without allocating memory in real-time thread.
     // 8192 blocks of history is enough for ~8s of audio at normal JACK buffer sizes.
@@ -73,7 +75,17 @@ class BeatDetector {
     // PLL State
     private var pllPhase = 0.0f
     private var pllPeriod = 0.0f 
+    @Volatile
     private var currentBpm = 120.0f
+
+    private var blocksSinceLastAnalysis = 0
+    @Volatile
+    private var isCalculating = false
+    private val bgHistoryBuffer = FloatArray(maxEnvelopeBlocks)
+    private val analysisExecutor = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+        Thread(r, "BeatDetector-Analysis").apply { isDaemon = true }
+    }
+    private val analysisTask = AnalysisTask()
     
     fun applyPreset(preset: BeatDetectionSettings) {
         this.settings = preset.copy()
@@ -105,88 +117,118 @@ class BeatDetector {
         val fps = sampleRate / nframes.coerceAtLeast(1)
         val floorBpm = settings.bpmSearchFloor.toFloat()
         val ceilBpm = settings.bpmSearchCeiling.toFloat()
+        val mode = settings.mode
         
-        when (settings.mode) {
-            BeatDetectionMode.STFT_COMB -> {
-                // Comb Filter Bank logic on envelope onset
-                var bestBpm = currentBpm
-                var maxEnergy = 0.0f
-                var bpm = floorBpm
-                
-                while (bpm <= ceilBpm) {
-                    val delayInBlocks = ((60.0f / bpm) * fps).toInt().coerceAtLeast(1)
-                    var energy = 0.0f
-                    val numPeriods = 4
-                    
-                    for (i in 0 until numPeriods) {
-                        val idx = (historyIndex - 1 - i * delayInBlocks + maxEnvelopeBlocks * 10) % maxEnvelopeBlocks
-                        energy += historyBuffer[idx]
-                    }
-                    
-                    if (energy > maxEnergy) {
-                        maxEnergy = energy
-                        bestBpm = bpm
-                    }
-                    bpm += settings.bpmGridResolution
-                }
-                
-                currentBpm = currentBpm * 0.9f + bestBpm * 0.1f
+        if (mode == BeatDetectionMode.PLL) {
+            val expectedPeriod = fps * (60.0f / currentBpm)
+            if (pllPeriod == 0.0f) pllPeriod = expectedPeriod
+            
+            pllPhase += 1.0f
+            if (pllPhase >= pllPeriod) {
+                pllPhase -= pllPeriod
             }
-            BeatDetectionMode.AUTOCORRELATION -> {
-                var maxAc = 0.0f
-                var bestDelay = 0
+            
+            val prevTarget = historyBuffer[(historyIndex - 2 + maxEnvelopeBlocks) % maxEnvelopeBlocks]
+            if (targetAmp > prevTarget && targetAmp > 0.05f) { 
+                var error = pllPhase / pllPeriod
+                if (error > 0.5f) error -= 1.0f
                 
-                val maxDelayBlocks = ((60.0f / floorBpm) * fps).toInt().coerceAtMost(maxEnvelopeBlocks / 2)
-                val minDelayBlocks = ((60.0f / ceilBpm) * fps).toInt().coerceAtLeast(1)
+                pllPhase -= error * pllPeriod * settings.pllAdaptationRate
+                pllPeriod -= error * pllPeriod * (settings.pllAdaptationRate * 0.1f)
                 
-                for (delay in minDelayBlocks..maxDelayBlocks) {
-                    var ac = 0.0f
-                    val N = (settings.analysisWindowLength * fps).toInt().coerceAtMost(maxEnvelopeBlocks - delay)
-                    
-                    for (i in 0 until N) {
-                        val idx1 = (historyIndex - 1 - i + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
-                        val idx2 = (historyIndex - 1 - i - delay + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
-                        ac += historyBuffer[idx1] * historyBuffer[idx2]
-                    }
-                    
-                    if (ac > maxAc) {
-                        maxAc = ac
-                        bestDelay = delay
-                    }
-                }
-                
-                if (bestDelay > 0) {
-                    val bestBpm = 60.0f / (bestDelay / fps)
-                    currentBpm = currentBpm * 0.95f + bestBpm * 0.05f
-                }
+                val minPeriod = fps * (60.0f / ceilBpm)
+                val maxPeriod = fps * (60.0f / floorBpm)
+                pllPeriod = pllPeriod.coerceIn(minPeriod, maxPeriod)
             }
-            BeatDetectionMode.PLL -> {
-                val expectedPeriod = fps * (60.0f / currentBpm)
-                if (pllPeriod == 0.0f) pllPeriod = expectedPeriod
-                
-                pllPhase += 1.0f
-                if (pllPhase >= pllPeriod) {
-                    pllPhase -= pllPeriod
-                }
-                
-                val prevTarget = historyBuffer[(historyIndex - 2 + maxEnvelopeBlocks) % maxEnvelopeBlocks]
-                if (targetAmp > prevTarget && targetAmp > 0.05f) { 
-                    var error = pllPhase / pllPeriod
-                    if (error > 0.5f) error -= 1.0f
-                    
-                    pllPhase -= error * pllPeriod * settings.pllAdaptationRate
-                    pllPeriod -= error * pllPeriod * (settings.pllAdaptationRate * 0.1f)
-                    
-                    val minPeriod = fps * (60.0f / ceilBpm)
-                    val maxPeriod = fps * (60.0f / floorBpm)
-                    pllPeriod = pllPeriod.coerceIn(minPeriod, maxPeriod)
-                }
-                
-                currentBpm = 60.0f / (pllPeriod / fps)
+            
+            currentBpm = 60.0f / (pllPeriod / fps)
+        } else {
+            blocksSinceLastAnalysis++
+            if (blocksSinceLastAnalysis >= 16 && !isCalculating) {
+                blocksSinceLastAnalysis = 0
+                isCalculating = true
+                System.arraycopy(historyBuffer, 0, bgHistoryBuffer, 0, maxEnvelopeBlocks)
+                analysisTask.fps = fps
+                analysisTask.bgHistoryIndex = historyIndex
+                analysisTask.bgHistoryCount = historyCount
+                analysisExecutor.execute(analysisTask)
             }
         }
         
         return currentBpm.coerceIn(floorBpm, ceilBpm)
+    }
+
+    private inner class AnalysisTask : Runnable {
+        @Volatile var fps: Float = 0f
+        @Volatile var bgHistoryIndex: Int = 0
+        @Volatile var bgHistoryCount: Int = 0
+
+        override fun run() {
+            try {
+                val localSettings = settings
+                val mode = localSettings.mode
+                val floorBpm = localSettings.bpmSearchFloor.toFloat()
+                val ceilBpm = localSettings.bpmSearchCeiling.toFloat()
+                val res = localSettings.bpmGridResolution
+                val winLen = localSettings.analysisWindowLength
+
+                var bestBpm = currentBpm
+                if (mode == BeatDetectionMode.STFT_COMB) {
+                    // Comb Filter Bank logic on envelope onset
+                    var maxEnergy = 0.0f
+                    var bpm = floorBpm
+                    
+                    while (bpm <= ceilBpm) {
+                        val delayInBlocks = ((60.0f / bpm) * fps).toInt().coerceAtLeast(1)
+                        var energy = 0.0f
+                        val numPeriods = 4
+                        
+                        for (i in 0 until numPeriods) {
+                            val idx = (bgHistoryIndex - 1 - i * delayInBlocks + maxEnvelopeBlocks * 10) % maxEnvelopeBlocks
+                            energy += bgHistoryBuffer[idx]
+                        }
+                        
+                        if (energy > maxEnergy) {
+                            maxEnergy = energy
+                            bestBpm = bpm
+                        }
+                        bpm += res
+                    }
+                    currentBpm = currentBpm * 0.9f + bestBpm * 0.1f
+                } else if (mode == BeatDetectionMode.AUTOCORRELATION) {
+                    var maxAc = 0.0f
+                    var bestDelay = 0
+                    
+                    val maxDelayBlocks = ((60.0f / floorBpm) * fps).toInt().coerceAtMost(maxEnvelopeBlocks / 2)
+                    val minDelayBlocks = ((60.0f / ceilBpm) * fps).toInt().coerceAtLeast(1)
+                    
+                    for (delay in minDelayBlocks..maxDelayBlocks) {
+                        var ac = 0.0f
+                        val N = (winLen * fps).toInt().coerceAtMost(maxEnvelopeBlocks - delay)
+                        
+                        for (i in 0 until N) {
+                            val idx1 = (bgHistoryIndex - 1 - i + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
+                            val idx2 = (bgHistoryIndex - 1 - i - delay + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
+                            ac += bgHistoryBuffer[idx1] * bgHistoryBuffer[idx2]
+                        }
+                        
+                        if (ac > maxAc) {
+                            maxAc = ac
+                            bestDelay = delay
+                        }
+                    }
+                    
+                    if (bestDelay > 0) {
+                        val calcBpm = 60.0f / (bestDelay / fps)
+                        currentBpm = currentBpm * 0.95f + calcBpm * 0.05f
+                    }
+                }
+            } catch (e: Exception) {
+                // ignore
+            } finally {
+                isCalculating = false
+            }
+        }
     }
 }
 
@@ -219,9 +261,9 @@ object AudioEngine {
     val rawHistory = CvHistoryBuffer(1024)
 
     // Temporary processing buffers — resized only on JACK buffer-size change (rare)
-    private var lowBuffer  = FloatArray(1024)
-    private var midBuffer  = FloatArray(1024)
-    private var highBuffer = FloatArray(1024)
+    private var lowBuffer  = FloatArray(8192)
+    private var midBuffer  = FloatArray(8192)
+    private var highBuffer = FloatArray(8192)
 
     // ── Flywheel state ──────────────────────────────────────────────────────
     private var totalSamplesProcessed = 0L
