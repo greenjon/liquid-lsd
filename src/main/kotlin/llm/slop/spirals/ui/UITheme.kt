@@ -97,21 +97,7 @@ object UITheme {
                     logger.info { "Loaded audioManualBpm from settings: $savedManualBpm" }
                 }
 
-                val savedPhaseSyncEnabled = props.getProperty("audioPhaseSyncEnabled")?.toBooleanStrictOrNull()
-                if (savedPhaseSyncEnabled != null) {
-                    AudioEngine.isPhaseSyncEnabled = savedPhaseSyncEnabled
-                    logger.info { "Loaded audioPhaseSyncEnabled from settings: $savedPhaseSyncEnabled" }
-                }
-                val savedPhaseSyncStrength = props.getProperty("audioPhaseSyncStrength")?.toFloatOrNull()
-                if (savedPhaseSyncStrength != null) {
-                    AudioEngine.phaseSyncStrength = savedPhaseSyncStrength
-                    logger.info { "Loaded audioPhaseSyncStrength from settings: $savedPhaseSyncStrength" }
-                }
-                val savedAcfHistorySize = props.getProperty("audioAcfHistorySize")?.toIntOrNull()
-                if (savedAcfHistorySize != null && (savedAcfHistorySize == 128 || savedAcfHistorySize == 256)) {
-                    AudioEngine.acfHistorySize = savedAcfHistorySize
-                    logger.info { "Loaded audioAcfHistorySize from settings: $savedAcfHistorySize" }
-                }
+
                 val savedBgVideo = props.getProperty("backgroundVideoEnabled")?.toBooleanStrictOrNull()
                 if (savedBgVideo != null) {
                     backgroundVideoEnabled = savedBgVideo
@@ -157,9 +143,7 @@ object UITheme {
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
 
-            props.setProperty("audioPhaseSyncEnabled", AudioEngine.isPhaseSyncEnabled.toString())
-            props.setProperty("audioPhaseSyncStrength", AudioEngine.phaseSyncStrength.toString())
-            props.setProperty("audioAcfHistorySize", AudioEngine.acfHistorySize.toString())
+
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
             props.setProperty("autocollapseEnabled", autocollapseEnabled.toString())
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())

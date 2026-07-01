@@ -87,16 +87,14 @@ object AudioEnginePanel {
 
         ImGui.spacing()
 
-        // Display tracking state and confidence
+        // Display tracking state
         val state = AudioEngine.currentState
-        val confidence = AudioEngine.confidenceScore
         ImGui.alignTextToFramePadding()
         UITheme.body("Sync State: ")
         ImGui.sameLine()
         when (state) {
             SignalState.SILENT -> UITheme.bodyColored(0.5f, 0.5f, 0.5f, 1.0f, "SILENT")
-            SignalState.SEARCHING -> UITheme.bodyColored(1.0f, 0.6f, 0.0f, 1.0f, "SEARCHING (Conf: %.0f%%)".format(confidence * 100f))
-            SignalState.LOCKED -> UITheme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "LOCKED (Conf: %.0f%%)".format(confidence * 100f))
+            SignalState.ACTIVE -> UITheme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "ACTIVE")
         }
 
         ImGui.spacing()
@@ -129,58 +127,19 @@ object AudioEnginePanel {
         }
         ImGui.spacing()
 
-        // Beat Sync & Stability Settings
-        UITheme.h3("Beat Sync & Stability Settings")
+        // Beat Sync Settings
+        UITheme.h3("Beat Sync Settings")
 
-            val lockedBpm = imgui.type.ImBoolean(AudioEngine.isBpmLocked)
-            if (ImGui.checkbox("Lock BPM", lockedBpm)) {
-                AudioEngine.isBpmLocked = lockedBpm.get()
-                if (AudioEngine.isBpmLocked) {
-                    AudioEngine.setBpmDirectly(AudioEngine.manualBpm)
-                }
-                UITheme.saveSettings()
-            }
+            ImGui.alignTextToFramePadding()
+            UITheme.body("Manual BPM:")
             ImGui.sameLine()
             ImGui.setNextItemWidth(180f)
             val manualBpmArr = floatArrayOf(AudioEngine.manualBpm)
-            if (ImGui.sliderFloat("Manual BPM", manualBpmArr, 40f, 200f, "%.1f")) {
+            if (ImGui.sliderFloat("##manual_bpm", manualBpmArr, 40f, 200f, "%.1f")) {
                 AudioEngine.manualBpm = manualBpmArr[0]
-                if (AudioEngine.isBpmLocked) {
-                    AudioEngine.setBpmDirectly(manualBpmArr[0])
-                }
+                AudioEngine.setBpmDirectly(manualBpmArr[0])
                 UITheme.saveSettings()
             }
-
-            // ACF history window size toggle: 128 = ~3s lock, 256 = ~6s lock
-            val isWide = AudioEngine.acfHistorySize == 256
-            UITheme.body("ACF Window:")
-            ImGui.sameLine()
-            if (ImGui.radioButton("128 (~3s)", !isWide)) {
-                AudioEngine.acfHistorySize = 128
-                UITheme.saveSettings()
-            }
-            ImGui.sameLine()
-            if (ImGui.radioButton("256 (~6s)", isWide)) {
-                AudioEngine.acfHistorySize = 256
-                UITheme.saveSettings()
-            }
-            ImGui.sameLine()
-            UITheme.caption("Larger = more accurate, slower to lock")
-
-            val syncEnabled = imgui.type.ImBoolean(AudioEngine.isPhaseSyncEnabled)
-            if (ImGui.checkbox("Phase Sync", syncEnabled)) {
-                AudioEngine.isPhaseSyncEnabled = syncEnabled.get()
-                UITheme.saveSettings()
-            }
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(180f)
-            val syncStrengthArr = floatArrayOf(AudioEngine.phaseSyncStrength)
-            if (ImGui.sliderFloat("Sync Strength", syncStrengthArr, 0.0f, 1.0f, "%.2f")) {
-                AudioEngine.phaseSyncStrength = syncStrengthArr[0]
-                UITheme.saveSettings()
-            }
-            ImGui.sameLine()
-            UITheme.caption("Lower = softer phase alignment")
 
             ImGui.spacing()
             ImGui.separator()
