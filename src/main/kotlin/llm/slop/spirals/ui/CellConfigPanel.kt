@@ -557,11 +557,16 @@ object CellConfigPanel {
             val btnX1 = ImGui.getCursorScreenPosX()
             val btnY1 = ImGui.getCursorScreenPosY()
             if (ImGui.button("##rand_bar_$idx", btnWidth, btnHeight)) {
-                val randomized = existing.randomizeActiveValues()
+                val randomized = existing
+                    .randomizeAmplitude()
+                    .randomizeDcOffset()
+                    .randomizeSubdivision()
+                    .randomizePhaseOffset()
+                    .randomizeSlope()
                 replaceModulator(state, param, randomized)
             }
             if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize modulator values")
+                ImGui.setTooltip("Randomize primary LFO / modulator values")
             }
             
             // Draw pair of dice inside the randomize button (scaled and enlarged 15% more)
@@ -1117,8 +1122,92 @@ object CellConfigPanel {
             ImGui.spacing()
 
             val currentMode = existing.generatorModMode
-            val modeLabels = arrayOf("None", "AM (Amplitude)", "PM (Phase)", "ADD (Additive)")
-            val modeIdx = ImInt(currentMode.ordinal)
+            val modeLabels = arrayOf("AM (Amplitude)", "PM (Phase)", "ADD (Additive)")
+            val modeIdx = ImInt(if (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
+
+            val lfo2Bypassed = (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE)
+            val btnX2 = ImGui.getCursorScreenPosX()
+            val btnY2 = ImGui.getCursorScreenPosY()
+            
+            // Push styled button colors: Green for active, Red for bypassed
+            val btnColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
+            val btnHoverColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
+            val btnActiveColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
+            
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
+            
+            if (ImGui.button("##bypass_lfo2_$idx", btnWidth, btnHeight)) {
+                val nextMode = if (lfo2Bypassed) llm.slop.spirals.parameters.GeneratorModMode.AM else llm.slop.spirals.parameters.GeneratorModMode.NONE
+                replaceModulator(state, param, existing.copy(generatorModMode = nextMode))
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
+            }
+            ImGui.popStyleColor(3)
+            
+            // Draw power icon
+            val pColor = ImGui.colorConvertFloat4ToU32(1f, 1.0f, 1.0f, 1f)
+            val pCenterX = btnX2 + btnWidth / 2f
+            val pCenterY = btnY2 + btnHeight / 2f
+            val pRadius = 11f * scale
+            val pThickness = 3f * scale
+            
+            dl.addCircle(pCenterX, pCenterY, pRadius, pColor, 16, pThickness)
+            dl.addLine(pCenterX, pCenterY - pRadius * 1.3f, pCenterX, pCenterY + pRadius * 0.2f, pColor, pThickness)
+
+            // 2. Dice button for LFO 2
+            ImGui.sameLine(0f, 10f)
+            val btnX1 = ImGui.getCursorScreenPosX()
+            val btnY1 = ImGui.getCursorScreenPosY()
+            if (ImGui.button("##rand_lfo2_$idx", btnWidth, btnHeight)) {
+                val randomized = existing
+                    .randomizeGeneratorModDepth()
+                    .randomizeModSubdivision()
+                    .randomizeModPhaseOffset()
+                    .randomizeModSlope()
+                replaceModulator(state, param, randomized)
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize LFO 2 values")
+            }
+            
+            // Draw pair of dice inside the LFO 2 randomize button
+            val diceColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
+            val dotColor = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1f)
+            // Die 1
+            val dieW = 23f * scale
+            val d1X = btnX1 + 5f * scale
+            val d1Y = btnY1 + (btnHeight - dieW) / 2f
+            dl.addRectFilled(d1X, d1Y, d1X + dieW, d1Y + dieW, diceColor, 2f * scale)
+            dl.addRect(d1X, d1Y, d1X + dieW, d1Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
+            // Face 3 dots
+            val dotRadius = 1.7f * scale
+            dl.addCircleFilled(d1X + 5f * scale, d1Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 11.5f * scale, d1Y + 11.5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 18f * scale, d1Y + 18f * scale, dotRadius, dotColor)
+
+            // Die 2
+            val d2X = btnX1 + 24f * scale
+            val d2Y = btnY1 + (btnHeight - dieW) / 2f + 2f * scale
+            dl.addRectFilled(d2X, d2Y, d2X + dieW, d2Y + dieW, diceColor, 2f * scale)
+            dl.addRect(d2X, d2Y, d2X + dieW, d2Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
+            // Face 5 dots
+            dl.addCircleFilled(d2X + 5f * scale, d2Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 18f * scale, d2Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 11.5f * scale, d2Y + 11.5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 5f * scale, d2Y + 18f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 18f * scale, d2Y + 18f * scale, dotRadius, dotColor)
+
+            // Title text for LFO 2
+            ImGui.sameLine(0f, 225f)
+            val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
+            ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
+            val lfo2Title = if (isLfo) "LFO 2" else "Oscillator 2"
+            UITheme.h2(lfo2Title)
+            
+            ImGui.spacing()
 
             val startX = ImGui.getCursorPosX()
             val lfo2Disabled = (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE)
@@ -1182,7 +1271,7 @@ object CellConfigPanel {
             if (bypassed) ImGui.popStyleVar()
             ImGui.pushItemWidth(200f)
             if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
-                val nextMode = llm.slop.spirals.parameters.GeneratorModMode.entries[modeIdx.get()]
+                val nextMode = llm.slop.spirals.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
                 replaceModulator(state, param, existing.copy(generatorModMode = nextMode))
             }
             ImGui.popItemWidth()
