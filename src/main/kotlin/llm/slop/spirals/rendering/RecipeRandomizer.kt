@@ -100,7 +100,7 @@ object RecipeRandomizer {
     }
 
     private fun applyRotation(c: RotationConstraints?, mandala: Mandala, random: kotlin.random.Random) {
-        val param = mandala.parameters["Rotation"] ?: return
+        val param = mandala.parameters["Rotate Z"] ?: return
         param.baseValue = 0f; param.modulators.clear()
         c ?: return
 
@@ -124,7 +124,7 @@ object RecipeRandomizer {
         val finalSlope = if (sourceId == "sampleAndHold")
             random.nextFloat() * (c.randomGlideMax - c.randomGlideMin) + c.randomGlideMin else slope
 
-        param.modulators.add(CvModulator("beatPhase", ModulationOperator.ADD, 1.0f, false,
+        param.modulators.add(CvModulator(sourceId, ModulationOperator.ADD, 1.0f, false,
             Waveform.TRIANGLE, subdivision, random.nextFloat(), finalSlope))
     }
 

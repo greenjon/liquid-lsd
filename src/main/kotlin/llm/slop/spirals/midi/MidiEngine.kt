@@ -3,16 +3,19 @@ package llm.slop.spirals.midi
 import javax.sound.midi.*
 import mu.KotlinLogging
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicIntegerArray
 
 object MidiEngine {
     private val logger = KotlinLogging.logger {}
 
-    // 128 CCs across 16 channels (0.0f - 1.0f)
-    private val ccValues = FloatArray(16 * 128)
+    // 128 CCs across 16 channels stored as float bit-patterns in an AtomicIntegerArray.
+    // Using atomic storage prevents data races between the MIDI receiver thread (writer)
+    // and the render thread (reader) without requiring any locking.
+    private val ccValues = AtomicIntegerArray(16 * 128)
 
-    // Callback hook for MIDI Learn Mode
-    @Volatile
-    var onMidiCcReceived: ((channel: Int, cc: Int) -> Unit)? = null
+    // Callback hook for MIDI Learn Mode — REMOVED.
+    // All MIDI events (including learn events) are routed through the thread-safe
+    // receivedCcEvents queue below and processed on the render thread by UIManager.
 
     // Thread-safe queue to pass MIDI events to the main render thread
     val receivedCcEvents = ConcurrentLinkedQueue<Pair<Int, Int>>()
@@ -106,7 +109,7 @@ object MidiEngine {
 
     fun getCcValue(channel: Int, cc: Int): Float {
         val idx = (channel.coerceIn(0, 15) * 128) + cc.coerceIn(0, 127)
-        return ccValues[idx]
+        return Float.fromBits(ccValues.get(idx))
     }
 
     fun close() {
@@ -135,15 +138,16 @@ object MidiEngine {
                     val normalizedValue = value.toFloat() / 127.0f
 
                     val idx = (channel * 128) + cc
-                    if (idx in ccValues.indices) {
-                        ccValues[idx] = normalizedValue
+                    if (idx in 0 until ccValues.length()) {
+                        ccValues.set(idx, normalizedValue.toBits())
                     }
 
                     // Queue event for main thread polling
                     receivedCcEvents.offer(channel to cc)
 
-                    // Trigger callback for MIDI Learn Mode
-                    onMidiCcReceived?.invoke(channel, cc)
+                    // MIDI Learn routing: the render thread drains receivedCcEvents
+                    // each frame (in UIManager.render) and handles all state mutations
+                    // there. No direct callback into render-thread state from here.
                 }
             }
         }

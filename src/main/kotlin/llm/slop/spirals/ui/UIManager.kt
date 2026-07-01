@@ -25,7 +25,6 @@ import imgui.glfw.ImGuiImplGlfw
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.models.toDto
 import llm.slop.spirals.models.applyDto
-import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -35,8 +34,6 @@ class UIManager(private val windowHandle: Long) {
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
 
-    // Tracks received MIDI CC events to process on the render thread
-    private val pendingMidiEvents = ConcurrentLinkedQueue<Pair<Int, Int>>()
 
     // Clean default style to reset size attributes before scaling
     private lateinit var defaultStyle: imgui.ImGuiStyle
@@ -142,10 +139,8 @@ class UIManager(private val windowHandle: Long) {
 
         imguiGlfw.init(windowHandle, true)
         imguiGl3.init("#version 150")
-        
-        llm.slop.spirals.midi.MidiEngine.onMidiCcReceived = { channel, cc ->
-            pendingMidiEvents.offer(channel to cc)
-        }
+        // MIDI learn events arrive via MidiEngine.receivedCcEvents (a ConcurrentLinkedQueue)
+        // and are processed each frame at the top of render(). No direct callback hook needed.
 
         logger.info { "UIManager initialized" }
     }
@@ -162,10 +157,12 @@ class UIManager(private val windowHandle: Long) {
             lastWindowTitle = title
         }
 
-        // Poll received MIDI events from our callback-driven queue
+        // Drain all MIDI events queued by the MIDI receiver thread.
+        // MidiEngine.receivedCcEvents is the canonical thread-safe delivery queue;
+        // we process all state mutations here on the render thread.
         var midiCcDelta = 0
         while (true) {
-            val event = pendingMidiEvents.poll() ?: break
+            val event = llm.slop.spirals.midi.MidiEngine.receivedCcEvents.poll() ?: break
             val (channel, cc) = event
             val target = patchState.midiLearnTarget
             if (target != null) {

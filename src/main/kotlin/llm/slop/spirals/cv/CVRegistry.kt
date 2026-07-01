@@ -1,6 +1,7 @@
 package llm.slop.spirals.cv
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Central registry for all Control Voltage (CV) signals.
@@ -9,10 +10,16 @@ import java.util.concurrent.ConcurrentHashMap
 object CVRegistry {
     private val startTimeNs = System.nanoTime()
 
-    // High-precision beat clock sync state (updated from AudioEngine)
-    @Volatile private var anchorBeats = 0.0
-    @Volatile private var anchorBpm = 120f
-    @Volatile private var anchorTimeNs = System.nanoTime()
+    /**
+     * Immutable snapshot of the beat synchronisation anchor.
+     * Written atomically from the audio thread via [updateBeatAnchor];
+     * read atomically from the render thread via [getSynchronizedTotalBeats].
+     * Using a single AtomicReference<BeatAnchor> instead of three separate
+     * @Volatile fields prevents the render thread from observing a torn triplet
+     * where, e.g., anchorBeats has been updated but anchorTimeNs has not.
+     */
+    private data class BeatAnchor(val beats: Double, val bpm: Float, val timeNs: Long)
+    private val beatAnchor = AtomicReference(BeatAnchor(0.0, 120f, System.nanoTime()))
 
     private val sources = ConcurrentHashMap<String, CVSource>()
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
@@ -63,22 +70,24 @@ object CVRegistry {
 
     /**
      * Updates the beat synchronization anchor. Called from the audio thread.
+     * The three values are published as a single atomic reference swap so the
+     * render thread never observes a partially-updated state.
      */
     fun updateBeatAnchor(beats: Double, bpm: Float, timeNs: Long) {
-        anchorBeats = beats
-        anchorBpm = bpm
-        anchorTimeNs = timeNs
+        beatAnchor.set(BeatAnchor(beats, bpm, timeNs))
         updatePushedValue("bpm", bpm)
     }
 
     /**
      * Calculates the current synchronized total beats with sub-frame interpolation.
+     * Reads a single consistent [BeatAnchor] snapshot; safe to call from any thread.
      */
     fun getSynchronizedTotalBeats(): Double {
+        val anchor = beatAnchor.get()
         val now = System.nanoTime()
-        val elapsedSec = (now - anchorTimeNs) / 1_000_000_000.0
-        val beatDelta = elapsedSec * (anchorBpm / 60.0)
-        return anchorBeats + beatDelta
+        val elapsedSec = (now - anchor.timeNs) / 1_000_000_000.0
+        val beatDelta = elapsedSec * (anchor.bpm / 60.0)
+        return anchor.beats + beatDelta
     }
 
     /**
@@ -97,11 +106,11 @@ object CVRegistry {
             src.value = value
         }
         when (id) {
-            "amp" -> updatePushedValue("audio_amp", value)
-            "bass" -> updatePushedValue("audio_bass", value)
-            "mid" -> updatePushedValue("audio_mid", value)
-            "high" -> updatePushedValue("audio_high", value)
-            "onset" -> updatePushedValue("trigger_onset", value)
+            "amp"    -> updatePushedValue("audio_amp",      value)
+            "bass"   -> updatePushedValue("audio_bass",     value)
+            "mid"    -> updatePushedValue("audio_mid",      value)
+            "high"   -> updatePushedValue("audio_high",     value)
+            "onset"  -> updatePushedValue("trigger_onset",  value)
             "accent" -> updatePushedValue("trigger_accent", value)
         }
     }

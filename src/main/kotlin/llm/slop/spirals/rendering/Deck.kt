@@ -131,7 +131,9 @@ class Deck(
         cleanFBO.dispose()
         fb1.dispose()
         fb2.dispose()
-        source.dispose()
+        // Note: `source` is always one of the entries in `availableSources`, so the
+        // forEach below already disposes it. Do NOT call source.dispose() here — that
+        // would double-free the active source's GPU objects.
         availableSources.forEach { it.dispose() }
     }
 }
