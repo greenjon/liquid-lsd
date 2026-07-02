@@ -1,6 +1,7 @@
 package llm.slop.spirals.midi
 
 import llm.slop.spirals.parameters.ModulatableParameter
+import llm.slop.spirals.parameters.ParameterResolver
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mandala
@@ -100,82 +101,11 @@ object MidiMappingManager {
     fun update(mixer: Mixer) {
         for ((path, mapping) in activeProfile.mappings) {
             if (path.startsWith("Global/")) continue // special trigger mappings
-            val param = findParameterByPath(mixer, path) ?: continue
+            val param = ParameterResolver.findParameterByPath(mixer, path) ?: continue
             val rawMidi = MidiEngine.getCcValue(mapping.channel, mapping.cc)
             val scaled = mapping.minVal + rawMidi * (mapping.maxVal - mapping.minVal)
             param.baseValue = scaled
         }
     }
 
-    fun findParameterByPath(mixer: Mixer, path: String): ModulatableParameter? {
-        if (path.startsWith("Mixer/")) {
-            return when (path.removePrefix("Mixer/")) {
-                "crossfade" -> mixer.crossfade
-                "masterAlpha" -> mixer.masterAlpha
-                "bloom" -> mixer.bloom
-                "setlistPrev" -> mixer.setlistPrev
-                "setlistNext" -> mixer.setlistNext
-                else -> null
-            }
-        }
-        if (path.startsWith("Deck A/")) {
-            return findDeckParameter(mixer.deckA, path.removePrefix("Deck A/"))
-        }
-        if (path.startsWith("Deck B/")) {
-            return findDeckParameter(mixer.deckB, path.removePrefix("Deck B/"))
-        }
-        return null
-    }
-
-    private fun findDeckParameter(deck: Deck, subPath: String): ModulatableParameter? {
-        if (subPath.startsWith("Geometry/")) {
-            val paramName = when (val name = subPath.removePrefix("Geometry/")) {
-                "Lobes" -> "Lobes"
-                "Recipe" -> "Recipe Select"
-                else -> name
-            }
-            val mandala = deck.source as? Mandala ?: return null
-            return mandala.parameters[paramName]
-        }
-        if (subPath.startsWith("Color/")) {
-            val paramName = when (val name = subPath.removePrefix("Color/")) {
-                "HueOffset" -> "Hue Offset"
-                "HueSweep" -> "Hue Sweep"
-                "Gain" -> return deck.source.globalAlpha
-                else -> name
-            }
-            val mandala = deck.source as? Mandala ?: return null
-            return mandala.parameters[paramName]
-        }
-        if (subPath.startsWith("Background/")) {
-            val paramName = when (val name = subPath.removePrefix("Background/")) {
-                "Style" -> "Bg Style"
-                "Feedback" -> "Bg Feedback"
-                "Hue" -> "Bg Hue"
-                "Sat" -> "Bg Sat"
-                "Val" -> "Bg Val"
-                "Sweep" -> "Bg Sweep"
-                "Speed" -> "Bg Speed"
-                "Zoom" -> "Bg Zoom"
-                else -> name
-            }
-            val mandala = deck.source as? Mandala ?: return null
-            return mandala.parameters[paramName]
-        }
-        if (subPath.startsWith("FB/")) {
-            return when (subPath.removePrefix("FB/")) {
-                "Source" -> deck.sourceSelect
-                "Decay" -> deck.fbDecay
-                "Gain" -> deck.fbGain
-                "Zoom" -> deck.fbZoom
-                "Rotate" -> deck.fbRotate
-                "HueShift" -> deck.fbHueShift
-                "Blur" -> deck.fbBlur
-                "Chroma" -> deck.fbChroma
-                "Mode" -> deck.fbMode
-                else -> null
-            }
-        }
-        return null
-    }
 }
