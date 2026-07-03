@@ -127,7 +127,8 @@ class UIManager(private val windowHandle: Long) {
         onTriggerExitFlow = { triggerExitFlow() },
         onOpenSettings = { pendingOpenSettings = true },
         onOpenAudioEngineMonitor = { pendingOpenAudioEngineMonitor = true },
-        onOpenPlaylistEditor = { pendingOpenPlaylistEditor = true }
+        onOpenPlaylistEditor = { pendingOpenPlaylistEditor = true },
+        onToggleAssetManagement = { showAssetManagementMode = !showAssetManagementMode }
     )
 
     // Phase 2 — Deck preset browsers (replaces flat ImGui.combo)
@@ -143,6 +144,9 @@ class UIManager(private val windowHandle: Long) {
     private var currentMixer: Mixer? = null
 
     private var lastWindowTitle: String? = null
+    
+    // Asset management mode toggle
+    private var showAssetManagementMode = false
 
 
     init {
@@ -289,6 +293,11 @@ class UIManager(private val windowHandle: Long) {
         val cvDelta = mixer.pollSetlistAdvance()
         var keyDelta = 0
         if (!ImGui.getIO().wantCaptureKeyboard) {
+            // Toggle asset management mode with F3 (GLFW key code 292)
+            if (ImGui.isKeyPressed(292)) {
+                showAssetManagementMode = !showAssetManagementMode
+            }
+            
             when (UITheme.setlistKeyTrigger) {
                 UITheme.SetlistKeyTrigger.ARROWS -> {
                     if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.LeftArrow))) keyDelta -= 1
@@ -499,6 +508,15 @@ class UIManager(private val windowHandle: Long) {
                          ImGuiWindowFlags.NoMove or
                          ImGuiWindowFlags.NoCollapse
 
+        // Check if we're in asset management mode (toggled via menu or keyboard shortcut)
+        if (showAssetManagementMode) {
+            drawAssetManagementLayout(displayWidth, displayHeight, menuBarH, contentH, noDecorate)
+        } else {
+            drawDefaultLayout(mixer, displayWidth, displayHeight, menuBarH, contentH, noDecorate)
+        }
+    }
+
+    private fun drawDefaultLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
         // Left: Patch Grid (30% width, full content height)
         val leftW = displayWidth * 0.3f
         ImGui.setNextWindowPos(0f, menuBarH)
@@ -524,6 +542,36 @@ class UIManager(private val windowHandle: Long) {
         val noTitleDecorate = noDecorate or imgui.flag.ImGuiWindowFlags.NoTitleBar
         if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {
             drawMixerMonitor(mixer)
+        }
+        ImGui.end()
+    }
+
+    private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
+        // Left: Asset Browser (35% width)
+        val leftW = displayWidth * 0.35f
+        ImGui.setNextWindowPos(0f, menuBarH)
+        ImGui.setNextWindowSize(leftW, contentH)
+        if (ImGui.begin("Asset Browser", noDecorate)) {
+            AssetBrowserPanel.draw(leftW, contentH)
+        }
+        ImGui.end()
+
+        // Middle: Playlist Editor (35% width)
+        val middleW = displayWidth * 0.35f
+        ImGui.setNextWindowPos(leftW, menuBarH)
+        ImGui.setNextWindowSize(middleW, contentH)
+        if (ImGui.begin("Playlist Editor", noDecorate)) {
+            PlaylistEditorPanel.draw(middleW, contentH)
+        }
+        ImGui.end()
+
+        // Right: Mixer / Monitor (30% width)
+        val rightW = displayWidth - leftW - middleW
+        ImGui.setNextWindowPos(leftW + middleW, menuBarH)
+        ImGui.setNextWindowSize(rightW, contentH)
+        val noTitleDecorate = noDecorate or imgui.flag.ImGuiWindowFlags.NoTitleBar
+        if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {
+            drawMixerMonitor(currentMixer!!)
         }
         ImGui.end()
     }
