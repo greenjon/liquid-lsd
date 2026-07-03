@@ -540,17 +540,48 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
-        // Left + Center merged: Unified Media Library (70% width)
         val libraryW = displayWidth * 0.70f
-        ImGui.setNextWindowPos(0f, menuBarH)
-        ImGui.setNextWindowSize(libraryW, contentH)
-        if (ImGui.begin("Asset Browser", noDecorate)) {
-            AssetBrowserPanel.draw(libraryW, contentH, currentMixer!!)
+        val rightW = displayWidth - libraryW
+
+        if (UITheme.assetManagerHalfHeight) {
+            val halfH = contentH * 0.5f
+
+            // Top Left: Patch Grid (30% width)
+            val leftW = displayWidth * 0.3f
+            ImGui.setNextWindowPos(0f, menuBarH)
+            ImGui.setNextWindowSize(leftW, halfH)
+            if (ImGui.begin("Patch Grid", noDecorate)) {
+                PatchGridPanel.draw(currentMixer!!, patchState)
+            }
+            ImGui.end()
+
+            // Top Middle: Cell Config (40% width)
+            val middleW = libraryW - leftW
+            ImGui.setNextWindowPos(leftW, menuBarH)
+            ImGui.setNextWindowSize(middleW, halfH)
+            if (ImGui.begin("Cell Config", noDecorate)) {
+                CellConfigPanel.draw(patchState, currentMixer!!)
+            }
+            ImGui.end()
+
+            // Bottom: Asset Browser
+            ImGui.setNextWindowPos(0f, menuBarH + halfH)
+            ImGui.setNextWindowSize(libraryW, contentH - halfH)
+            if (ImGui.begin("Asset Browser", noDecorate)) {
+                AssetBrowserPanel.draw(libraryW, contentH - halfH, currentMixer!!)
+            }
+            ImGui.end()
+        } else {
+            // Full height Unified Media Library (70% width)
+            ImGui.setNextWindowPos(0f, menuBarH)
+            ImGui.setNextWindowSize(libraryW, contentH)
+            if (ImGui.begin("Asset Browser", noDecorate)) {
+                AssetBrowserPanel.draw(libraryW, contentH, currentMixer!!)
+            }
+            ImGui.end()
         }
-        ImGui.end()
 
         // Right: Mixer / Monitor (30% width)
-        val rightW = displayWidth - libraryW
         ImGui.setNextWindowPos(libraryW, menuBarH)
         ImGui.setNextWindowSize(rightW, contentH)
         val noTitleDecorate = noDecorate or imgui.flag.ImGuiWindowFlags.NoTitleBar

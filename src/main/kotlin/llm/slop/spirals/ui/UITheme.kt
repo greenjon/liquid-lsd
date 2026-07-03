@@ -61,6 +61,7 @@ object UITheme {
     var activeMidiProfile: String = "default"
     var setlistKeyTrigger: SetlistKeyTrigger = SetlistKeyTrigger.NONE
     var tooltipsEnabled: Boolean = true
+    var assetManagerHalfHeight: Boolean = false
 
     init {
         loadSettings()
@@ -113,6 +114,11 @@ object UITheme {
                     tooltipsEnabled = savedTooltips
                     logger.info { "Loaded tooltipsEnabled from settings file: $tooltipsEnabled" }
                 }
+                val savedHalfHeight = props.getProperty("assetManagerHalfHeight")?.toBooleanStrictOrNull()
+                if (savedHalfHeight != null) {
+                    assetManagerHalfHeight = savedHalfHeight
+                    logger.info { "Loaded assetManagerHalfHeight from settings file: $assetManagerHalfHeight" }
+                }
                 val savedTransition = props.getProperty("setlistTransitionBehavior")
                 if (savedTransition != null) {
                     setlistTransitionBehavior = try { SetlistTransitionBehavior.valueOf(savedTransition) } catch (e: Exception) { SetlistTransitionBehavior.PROMPT }
@@ -147,6 +153,7 @@ object UITheme {
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
             props.setProperty("autocollapseEnabled", autocollapseEnabled.toString())
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
+            props.setProperty("assetManagerHalfHeight", assetManagerHalfHeight.toString())
             props.setProperty("setlistTransitionBehavior", setlistTransitionBehavior.name)
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("setlistKeyTrigger", setlistKeyTrigger.name)

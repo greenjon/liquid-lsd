@@ -74,6 +74,11 @@ object AssetBrowserPanel {
             showSidebar = !showSidebar
         }
         ImGui.sameLine()
+        if (ImGui.smallButton(if (UITheme.assetManagerHalfHeight) "↕ Full" else "↕ Half")) {
+            UITheme.assetManagerHalfHeight = !UITheme.assetManagerHalfHeight
+            UITheme.saveSettings()
+        }
+        ImGui.sameLine()
         val viewLabel = when (val view = currentView) {
             is LibraryView.Queue -> "Queue"
             is LibraryView.PlaylistsRoot -> "Playlists"
