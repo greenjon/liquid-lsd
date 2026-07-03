@@ -71,14 +71,10 @@ object PlaylistManager {
             }
             
             val content = file.readText()
-            val patches = if (file.extension == "lsdset" || content.trim().startsWith("{")) {
-                parseLsdsetPlaylist(content).toMutableList()
-            } else {
-                content.lines()
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() && !it.startsWith("#") }
-                    .toMutableList()
-            }
+            val patches = content.lines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") }
+                .toMutableList()
             
             val playlist = Playlist(
                 name = file.nameWithoutExtension,
@@ -94,17 +90,6 @@ object PlaylistManager {
             Result.failure(e)
         }
     }
-
-    private fun parseLsdsetPlaylist(content: String): List<String> {
-        return try {
-            val itemsMatch = "\"items\"\\s*:\\s*\\[(.*?)]".toRegex(RegexOption.DOT_MATCHES_ALL).find(content)
-            itemsMatch?.groupValues?.get(1)?.split(",")?.map { 
-                it.trim().removeSurrounding("\"") 
-            }?.filter { it.isNotBlank() } ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
     
     /**
      * Saves a playlist to disk.
@@ -112,29 +97,12 @@ object PlaylistManager {
     fun savePlaylist(playlist: Playlist): Result<Unit> {
         return try {
             val file = File(playlist.filePath)
-            val extension = file.extension.ifBlank { "playlist" }
-            
-            val content = if (extension == "lsdset") {
-                // Save in legacy JSON format
-                buildString {
-                    appendLine("{")
-                    appendLine("    \"name\": \"${playlist.name}\",")
-                    appendLine("    \"items\": [")
-                    playlist.patches.forEachIndexed { index, patch ->
-                        val comma = if (index < playlist.patches.size - 1) "," else ""
-                        appendLine("        \"$patch\"$comma")
-                    }
-                    appendLine("    ]")
-                    appendLine("}")
-                }
-            } else {
-                buildString {
-                    appendLine("# Spirals Playlist: ${playlist.name}")
-                    appendLine("# Generated: ${LocalDateTime.now()}")
-                    appendLine()
-                    playlist.patches.forEach { patch ->
-                        appendLine(patch)
-                    }
+            val content = buildString {
+                appendLine("# Spirals Playlist: ${playlist.name}")
+                appendLine("# Generated: ${LocalDateTime.now()}")
+                appendLine()
+                playlist.patches.forEach { patch ->
+                    appendLine(patch)
                 }
             }
             
@@ -158,7 +126,7 @@ object PlaylistManager {
                 return Result.failure(IllegalArgumentException("Invalid directory"))
             }
             
-            val file = File(directory, "$name.playlist")
+            val file = File(directory, "$name.lsdset")
             if (file.exists()) {
                 return Result.failure(IllegalArgumentException("Playlist already exists"))
             }

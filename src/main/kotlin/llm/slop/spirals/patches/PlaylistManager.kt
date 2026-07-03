@@ -23,16 +23,28 @@ object PlaylistManager {
     fun loadPlaylist(file: File) {
         try {
             val content = file.readText()
-            val dto = json.decodeFromString<PlaylistDto>(content)
+            val lines = content.lines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") }
+            
             activePlaylist.clear()
-            dto.items.forEach { itemName ->
-                var deckFile = File("presets/decks/$itemName")
+            lines.forEach { itemName ->
+                var deckFile = File(itemName)
                 if (!deckFile.exists()) {
-                    // Try with extensions
-                    val possible = listOf(itemName, "$itemName.lsd", "$itemName.json")
+                    deckFile = File("presets/decks/$itemName")
+                }
+                if (!deckFile.exists()) {
+                    deckFile = File("presets/patches/$itemName")
+                }
+                if (!deckFile.exists()) {
+                    val possible = listOf(
+                        itemName, "$itemName.lsd", "$itemName.json",
+                        "presets/decks/$itemName.lsd", "presets/decks/$itemName.json",
+                        "presets/patches/$itemName.lsd", "presets/patches/$itemName.json"
+                    )
                     var found = false
                     for (p in possible) {
-                        val f = File("presets/decks/$p")
+                        val f = File(p)
                         if (f.exists()) {
                             activePlaylist.add(f)
                             found = true
@@ -54,9 +66,12 @@ object PlaylistManager {
 
     fun savePlaylist(file: File) {
         try {
-            val items = activePlaylist.map { it.name }
-            val dto = PlaylistDto(name = file.nameWithoutExtension, items = items)
-            val content = json.encodeToString(dto)
+            val content = buildString {
+                appendLine("# Spirals Playlist: ${file.nameWithoutExtension}")
+                activePlaylist.forEach { patch ->
+                    appendLine(patch.name)
+                }
+            }
             file.parentFile?.mkdirs()
             file.writeText(content)
             currentPlaylistFile = file

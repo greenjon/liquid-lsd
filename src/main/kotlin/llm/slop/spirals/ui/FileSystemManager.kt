@@ -43,7 +43,7 @@ object FileSystemManager {
                         isValid = validatePatchFile(file)
                     ))
                 }
-                ext == "playlist" || ext == "lsdset" -> {
+                ext == "lsdset" -> {
                     val validation = validatePlaylistFile(file)
                     items.add(AssetItem(
                         path = file.absolutePath,
@@ -77,11 +77,7 @@ object FileSystemManager {
         
         try {
             val content = file.readText()
-            val patches = if (file.extension == "lsdset" || content.trim().startsWith("{")) {
-                parseLsdsetPlaylist(content)
-            } else {
-                parsePlaylistContent(content)
-            }
+            val patches = parsePlaylistContent(content)
             
             val missingPatches = patches.filter { path ->
                 val f = File(path)

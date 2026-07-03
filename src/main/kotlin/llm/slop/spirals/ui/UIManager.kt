@@ -221,7 +221,6 @@ class UIManager(private val windowHandle: Long) {
     private val mixerMonitorPanel = MixerMonitorPanel(
         patchState = patchState,
         advanceSetlist = { delta -> projectManager.advanceSetlist(delta) },
-        drawDeckPresetDropdown = { label, deck, isDeckA, width -> deckControlPanel.drawDeckPresetDropdown(label, deck, isDeckA, width) },
         drawDeckControls = { label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(label, deck, width, height, isDeckA) }
     )
 
@@ -547,27 +546,18 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
-        // Left: Asset Browser (35% width)
-        val leftW = displayWidth * 0.35f
+        // Left + Center merged: Unified Media Library (70% width)
+        val libraryW = displayWidth * 0.70f
         ImGui.setNextWindowPos(0f, menuBarH)
-        ImGui.setNextWindowSize(leftW, contentH)
+        ImGui.setNextWindowSize(libraryW, contentH)
         if (ImGui.begin("Asset Browser", noDecorate)) {
-            AssetBrowserPanel.draw(leftW, contentH)
-        }
-        ImGui.end()
-
-        // Middle: Playlist Editor (35% width)
-        val middleW = displayWidth * 0.35f
-        ImGui.setNextWindowPos(leftW, menuBarH)
-        ImGui.setNextWindowSize(middleW, contentH)
-        if (ImGui.begin("Playlist Editor", noDecorate)) {
-            PlaylistEditorPanel.draw(middleW, contentH)
+            AssetBrowserPanel.draw(libraryW, contentH, currentMixer!!)
         }
         ImGui.end()
 
         // Right: Mixer / Monitor (30% width)
-        val rightW = displayWidth - leftW - middleW
-        ImGui.setNextWindowPos(leftW + middleW, menuBarH)
+        val rightW = displayWidth - libraryW
+        ImGui.setNextWindowPos(libraryW, menuBarH)
         ImGui.setNextWindowSize(rightW, contentH)
         val noTitleDecorate = noDecorate or imgui.flag.ImGuiWindowFlags.NoTitleBar
         if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {

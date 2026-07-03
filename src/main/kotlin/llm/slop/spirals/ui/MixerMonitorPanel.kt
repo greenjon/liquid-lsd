@@ -12,7 +12,6 @@ import llm.slop.spirals.models.applyDto
 class MixerMonitorPanel(
     private val patchState: PatchGridState,
     private val advanceSetlist: (Int) -> Unit,
-    private val drawDeckPresetDropdown: (String, Deck, Boolean, Float) -> Unit,
     private val drawDeckControls: (String, Deck, Float, Float, Boolean) -> Unit
 ) {
 
@@ -131,11 +130,20 @@ class MixerMonitorPanel(
         
         // 4. Presets Row
         val presetY = centerY + headerRowH
-        ImGui.setCursorScreenPos(startX, presetY)
-        drawDeckPresetDropdown("Deck A", mixer.deckA, true, halfW)
         
-        ImGui.setCursorScreenPos(deckBStartX, presetY)
-        drawDeckPresetDropdown("Deck B", mixer.deckB, false, halfW)
+        val activePresetA = llm.slop.spirals.patches.PatchManager.activePresetA ?: "None"
+        val isDirtyA = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckA, true)
+        val displayNameA = if (isDirtyA) "$activePresetA *" else activePresetA
+        
+        ImGui.setCursorScreenPos(startX, presetY + 3f)
+        UITheme.body("Preset: $displayNameA")
+        
+        val activePresetB = llm.slop.spirals.patches.PatchManager.activePresetB ?: "None"
+        val isDirtyB = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckB, false)
+        val displayNameB = if (isDirtyB) "$activePresetB *" else activePresetB
+        
+        ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
+        UITheme.body("Preset: $displayNameB")
         
         ImGui.spacing()
         
