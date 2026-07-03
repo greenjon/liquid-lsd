@@ -13,8 +13,7 @@ class MenuBar(
     private val patchState: PatchGridState,
     private val onTriggerExitFlow: () -> Unit,
     private val onOpenSettings: () -> Unit,
-    private val onOpenAudioEngineMonitor: () -> Unit,
-    private val onToggleAssetManagement: () -> Unit
+    private val onOpenAudioEngineMonitor: () -> Unit
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -84,11 +83,6 @@ class MenuBar(
             }
             if (!isAudioActive && UITheme.audioEngineEnabled) {
                 ImGui.popStyleColor()
-            }
-
-
-            if (ImGui.menuItem("Asset Manager (F3)")) {
-                onToggleAssetManagement()
             }
 
             if (ImGui.beginMenu("Help")) {
