@@ -25,15 +25,6 @@ class MixerMonitorPanel(
 
         ImGui.image(mixer.masterFBO.texture, availW, masterH, 0f, 1f, 1f, 0f)
 
-        // Draw overlay text on top of the master output image
-        val dl = ImGui.getWindowDrawList()
-        val overlayStr = "Master Output"
-        val overlayH = ImGui.calcTextSize(overlayStr).y + 10f
-        dl.addRectFilled(imgScreenX, imgScreenY, imgScreenX + availW, imgScreenY + overlayH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 0.6f))
-        
-        ImGui.setCursorScreenPos(imgScreenX + 10f, imgScreenY + 5f)
-        UITheme.captionColored(0.4f, 1.0f, 0.8f, 1.0f, overlayStr) // Mint green text
-
         // Restore Y cursor position
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY + masterH)
         ImGui.spacing()
@@ -46,7 +37,7 @@ class MixerMonitorPanel(
         
         // Crossfader (mapped display value from -1.0 to 1.0)
         drawFlatSlider("Mixer/crossfade", "Crossfader", mixer.crossfade, 0f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)) {
-            "A <-- %.2f --> B".format(it)
+            ""
         }
         if (ImGui.isItemActive()) {
             mixer.isAutoFading = false
@@ -171,9 +162,10 @@ class MixerMonitorPanel(
 
     private fun drawUtilityGrid(mixer: Mixer, width: Float, height: Float) {
         ImGui.beginChild("UtilityGrid", width, height, false)
-        UITheme.captionColored(0.4f, 1.0f, 0.8f, 1.0f, "DECK UTILITIES")
+        ImGui.dummy(0f, ImGui.getTextLineHeightWithSpacing())
         ImGui.spacing()
 
+        val startY = ImGui.getCursorPosY()
         val cellW = (width - 10f) / 3f
         val cellH = (height - 30f) / 3f
 
@@ -187,6 +179,7 @@ class MixerMonitorPanel(
         }
 
         ImGui.sameLine(cellW + 5f)
+        ImGui.setCursorPosY(startY)
         
         // Column 2 & 3: Action Buttons
         ImGui.beginGroup()
@@ -210,6 +203,8 @@ class MixerMonitorPanel(
         ImGui.endGroup()
 
         ImGui.sameLine(cellW * 2f + 10f)
+        ImGui.setCursorPosY(startY)
+
         ImGui.beginGroup()
         when (utilityMode) {
             0 -> { // Move
