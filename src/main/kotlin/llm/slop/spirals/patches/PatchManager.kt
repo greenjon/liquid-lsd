@@ -53,11 +53,76 @@ object PatchManager {
         cachedGlobalDto = defaultDto
     }
 
-    fun isDeckDirty(deck: Deck, isDeckA: Boolean): Boolean {
-        val cached = if (isDeckA) cachedDtoA else cachedDtoB
+    fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean {
+        val cached = when {
+            deck === mixer.deckA -> cachedDtoA
+            deck === mixer.deckB -> cachedDtoB
+            deck === mixer.deckC -> cachedDtoC
+            else -> null
+        }
         if (cached == null) return false
         val current = deck.toDto(cached.name)
         return current != cached
+    }
+
+    fun copyDeck(mixer: Mixer, from: Deck, to: Deck) {
+        val fromDto = when {
+            from === mixer.deckA -> cachedDtoA?.let { from.toDto(it.name) } ?: from.toDto("Deck A")
+            from === mixer.deckB -> cachedDtoB?.let { from.toDto(it.name) } ?: from.toDto("Deck B")
+            from === mixer.deckC -> cachedDtoC?.let { from.toDto(it.name) } ?: from.toDto("Deck C")
+            else -> return
+        }
+        
+        to.applyDto(fromDto)
+        
+        when {
+            to === mixer.deckA -> { cachedDtoA = fromDto; activePresetA = fromDto.name }
+            to === mixer.deckB -> { cachedDtoB = fromDto; activePresetB = fromDto.name }
+            to === mixer.deckC -> { cachedDtoC = fromDto; activePresetC = fromDto.name }
+        }
+    }
+
+    fun moveDeck(mixer: Mixer, from: Deck, to: Deck) {
+        copyDeck(mixer, from, to)
+        from.reset()
+        when {
+            from === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
+            from === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
+            from === mixer.deckC -> { cachedDtoC = null; activePresetC = null }
+        }
+    }
+
+    fun swapDecks(mixer: Mixer, deck1: Deck, deck2: Deck) {
+        val dto1 = when {
+            deck1 === mixer.deckA -> cachedDtoA?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck A")
+            deck1 === mixer.deckB -> cachedDtoB?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck B")
+            deck1 === mixer.deckC -> cachedDtoC?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck C")
+            else -> return
+        }
+        val dto2 = when {
+            deck2 === mixer.deckA -> cachedDtoA?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck A")
+            deck2 === mixer.deckB -> cachedDtoB?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck B")
+            deck2 === mixer.deckC -> cachedDtoC?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck C")
+            else -> return
+        }
+
+        deck1.applyDto(dto2)
+        deck2.applyDto(dto1)
+
+        // Update caches
+        val oldDto1 = dto1
+        val oldDto2 = dto2
+
+        when {
+            deck1 === mixer.deckA -> { cachedDtoA = oldDto2; activePresetA = oldDto2.name }
+            deck1 === mixer.deckB -> { cachedDtoB = oldDto2; activePresetB = oldDto2.name }
+            deck1 === mixer.deckC -> { cachedDtoC = oldDto2; activePresetC = oldDto2.name }
+        }
+        when {
+            deck2 === mixer.deckA -> { cachedDtoA = oldDto1; activePresetA = oldDto1.name }
+            deck2 === mixer.deckB -> { cachedDtoB = oldDto1; activePresetB = oldDto1.name }
+            deck2 === mixer.deckC -> { cachedDtoC = oldDto1; activePresetC = oldDto1.name }
+        }
     }
 
     fun loadGlobalPatchAsync(file: File) {

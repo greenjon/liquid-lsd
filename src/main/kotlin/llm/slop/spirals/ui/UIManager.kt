@@ -17,6 +17,7 @@ import llm.slop.spirals.rendering.MandalaRatio
 
 
 import llm.slop.spirals.rendering.Mixer
+import llm.slop.spirals.patches.PatchManager
 import kotlin.math.roundToInt
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL33.*
@@ -214,7 +215,7 @@ class UIManager(private val windowHandle: Long) {
     private val mixerMonitorPanel = MixerMonitorPanel(
         patchState = patchState,
         advanceSetlist = { delta -> projectManager.advanceSetlist(delta) },
-        drawDeckControls = { label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(label, deck, width, height, isDeckA) }
+        drawDeckControls = { mixer, label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(mixer, label, deck, width, height, isDeckA) }
     )
 
     fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
@@ -363,8 +364,8 @@ class UIManager(private val windowHandle: Long) {
             projectManager.drawGlobalFileBrowser(mixer)
 
             deckABrowser.draw(
-                activePresetName = llm.slop.spirals.patches.PatchManager.activePresetA,
-                isDirty          = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckA, true),
+                activePresetName = PatchManager.activePresetA,
+                isDirty          = PatchManager.isDeckDirty(mixer.deckA, mixer),
                 onSelect         = { name ->
                     if (name == null) {
                         llm.slop.spirals.patches.PatchManager.activePresetA = null
@@ -376,8 +377,8 @@ class UIManager(private val windowHandle: Long) {
                 onSaveAs = { name, tags -> saveDeckPreset(name, mixer.deckA, true, tags) }
             )
             deckBBrowser.draw(
-                activePresetName = llm.slop.spirals.patches.PatchManager.activePresetB,
-                isDirty          = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckB, false),
+                activePresetName = PatchManager.activePresetB,
+                isDirty          = PatchManager.isDeckDirty(mixer.deckB, mixer),
                 onSelect         = { name ->
                     if (name == null) {
                         llm.slop.spirals.patches.PatchManager.activePresetB = null

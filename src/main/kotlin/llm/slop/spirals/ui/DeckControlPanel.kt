@@ -5,6 +5,8 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.spirals.rendering.Deck
+import llm.slop.spirals.rendering.Mixer
+import llm.slop.spirals.patches.PatchManager
 import llm.slop.spirals.rendering.Mandala
 import llm.slop.spirals.rendering.DynamicVisualSource
 import java.io.File
@@ -18,13 +20,13 @@ class DeckControlPanel(
     private val onSaveDeck: (String, Deck, Boolean) -> Unit,
     private val onDeleteDeck: (Boolean) -> Unit
 ) {
-    fun drawDeckPresetDropdown(label: String, deck: Deck, isDeckA: Boolean, fixedWidth: Float) {
+    fun drawDeckPresetDropdown(mixer: Mixer, label: String, deck: Deck, isDeckA: Boolean, fixedWidth: Float) {
         ImGui.beginGroup()
         ImGui.pushID("presetRow_$label")
 
-        val activePreset = if (isDeckA) llm.slop.spirals.patches.PatchManager.activePresetA
-                           else        llm.slop.spirals.patches.PatchManager.activePresetB
-        val isDirty = llm.slop.spirals.patches.PatchManager.isDeckDirty(deck, isDeckA)
+        val activePreset = if (isDeckA) PatchManager.activePresetA
+                           else        PatchManager.activePresetB
+        val isDirty = PatchManager.isDeckDirty(deck, mixer)
 
         val displayName = when {
             activePreset == null -> "None"
@@ -101,7 +103,7 @@ class DeckControlPanel(
         ImGui.endGroup()
     }
 
-    fun drawDeckControls(label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean) {
+    fun drawDeckControls(mixer: Mixer, label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean) {
         ImGui.pushID(label)
 
         val themeCol = if (isDeckA) {

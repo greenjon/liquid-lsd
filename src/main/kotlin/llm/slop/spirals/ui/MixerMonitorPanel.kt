@@ -7,12 +7,14 @@ import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.models.toDto
 import llm.slop.spirals.models.applyDto
+import llm.slop.spirals.patches.PatchManager
 
 class MixerMonitorPanel(
     private val patchState: PatchGridState,
     private val advanceSetlist: (Int) -> Unit,
-    private val drawDeckControls: (String, Deck, Float, Float, Boolean) -> Unit
+    private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit
 ) {
+    private var utilityMode = 1 // 0=Move, 1=Copy, 2=Swap
 
     fun draw(mixer: Mixer) {
         val availW = ImGui.getContentRegionAvailX()
@@ -82,20 +84,6 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX + (halfW - twA) * 0.5f, centerY)
         UITheme.h2("Deck A")
         
-        // 2. Centered Copy Buttons (drawn exactly in the middle of availW)
-        val centerOfPanel = startX + availW * 0.5f
-        ImGui.setCursorScreenPos(centerOfPanel - btnW - 5f, centerY + 2f)
-        if (ImGui.button("<##copyToA", btnW, 25f)) {
-            val dto = mixer.deckB.toDto("Deck B")
-            mixer.deckA.applyDto(dto)
-        }
-        
-        ImGui.setCursorScreenPos(centerOfPanel + 5f, centerY + 2f)
-        if (ImGui.button(">##copyToB", btnW, 25f)) {
-            val dto = mixer.deckA.toDto("Deck A")
-            mixer.deckB.applyDto(dto)
-        }
-        
         // 3. Deck B Header
         val deckBStartX = startX + halfW + padding
         ImGui.setCursorScreenPos(deckBStartX + (halfW - twB) * 0.5f, centerY)
@@ -104,15 +92,15 @@ class MixerMonitorPanel(
         // 4. Presets Row
         val presetY = centerY + headerRowH
         
-        val activePresetA = llm.slop.spirals.patches.PatchManager.activePresetA ?: "None"
-        val isDirtyA = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckA, true)
+        val activePresetA = PatchManager.activePresetA ?: "None"
+        val isDirtyA = PatchManager.isDeckDirty(mixer.deckA, mixer)
         val displayNameA = if (isDirtyA) "$activePresetA *" else activePresetA
         
         ImGui.setCursorScreenPos(startX, presetY + 3f)
         UITheme.body("Preset: $displayNameA")
         
-        val activePresetB = llm.slop.spirals.patches.PatchManager.activePresetB ?: "None"
-        val isDirtyB = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckB, false)
+        val activePresetB = PatchManager.activePresetB ?: "None"
+        val isDirtyB = PatchManager.isDeckDirty(mixer.deckB, mixer)
         val displayNameB = if (isDirtyB) "$activePresetB *" else activePresetB
         
         ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
@@ -126,10 +114,10 @@ class MixerMonitorPanel(
         val childY = ImGui.getCursorScreenPosY()
         
         ImGui.setCursorScreenPos(startX, childY)
-        drawDeckControls("Deck A", mixer.deckA, halfW, subH, true)
+        drawDeckControls(mixer, "Deck A", mixer.deckA, halfW, subH, true)
         
         ImGui.setCursorScreenPos(deckBStartX, childY)
-        drawDeckControls("Deck B", mixer.deckB, halfW, subH, false)
+        drawDeckControls(mixer, "Deck B", mixer.deckB, halfW, subH, false)
         
         val endY = ImGui.getCursorScreenPosY()
         ImGui.setCursorScreenPos(startX, endY)
@@ -151,30 +139,22 @@ class MixerMonitorPanel(
         ImGui.spacing()
         
         // Row 1: Monitor Label and Toggle
+        val row1Y = ImGui.getCursorScreenPosY()
+        ImGui.setCursorScreenPos(startX, row1Y)
         UITheme.body(previewLabel)
-        ImGui.sameLine(halfW - 60f)
+        ImGui.sameLine(halfW - 80f)
         if (ImGui.checkbox("Preview Mode", UITheme.previewModeEnabled)) {
             UITheme.previewModeEnabled = !UITheme.previewModeEnabled
             UITheme.saveSettings()
         }
 
-        // Row 2: Preset Info and Copy Buttons
-        val activePresetC = llm.slop.spirals.patches.PatchManager.activePresetC ?: "None"
-        val isDirtyC = llm.slop.spirals.patches.PatchManager.isDeckDirty(mixer.deckC, false)
+        // Row 2: Preset Info
+        val activePresetC = PatchManager.activePresetC ?: "None"
+        val isDirtyC = PatchManager.isDeckDirty(mixer.deckC, mixer)
         val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
+        ImGui.setCursorScreenPos(startX, row1Y + ImGui.getFrameHeightWithSpacing())
         UITheme.body("Preset: $displayNameC")
         
-        ImGui.sameLine(halfW + 10f)
-        if (ImGui.button("Copy to A##copyCToA", 70f, 22f)) {
-            val dto = mixer.deckC.toDto("Deck C")
-            mixer.deckA.applyDto(dto)
-        }
-        ImGui.sameLine(halfW + 85f)
-        if (ImGui.button("Copy to B##copyCToB", 70f, 22f)) {
-            val dto = mixer.deckC.toDto("Deck C")
-            mixer.deckB.applyDto(dto)
-        }
-
         val imgX = ImGui.getCursorScreenPosX()
         val imgY = ImGui.getCursorScreenPosY()
         
@@ -183,6 +163,72 @@ class MixerMonitorPanel(
         val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
         val dlPreview = ImGui.getWindowDrawList()
         dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + halfW + 1f, imgY + subH + 1f, deckCColor, 0f, 0, 2f)
+
+        // --- Utility Grid (to the right of Deck C) ---
+        ImGui.setCursorScreenPos(deckBStartX, row1Y)
+        drawUtilityGrid(mixer, halfW, subH + ImGui.getFrameHeightWithSpacing() * 2f)
+    }
+
+    private fun drawUtilityGrid(mixer: Mixer, width: Float, height: Float) {
+        ImGui.beginChild("UtilityGrid", width, height, false)
+        UITheme.captionColored(0.4f, 1.0f, 0.8f, 1.0f, "DECK UTILITIES")
+        ImGui.spacing()
+
+        val cellW = (width - 10f) / 3f
+        val cellH = (height - 30f) / 3f
+
+        // Column 1: Labels/Selectables
+        val labels = listOf("Move", "Copy", "Swap")
+        for (i in 0..2) {
+            if (ImGui.selectable(labels[i], utilityMode == i, 0, cellW, cellH * 0.8f)) {
+                utilityMode = i
+            }
+            if (i < 2) ImGui.spacing()
+        }
+
+        ImGui.sameLine(cellW + 5f)
+        
+        // Column 2 & 3: Action Buttons
+        ImGui.beginGroup()
+        when (utilityMode) {
+            0 -> { // Move
+                if (ImGui.button("A > B", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckA, mixer.deckB)
+                if (ImGui.button("B > A", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckB, mixer.deckA)
+                if (ImGui.button("C > A", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckC, mixer.deckA)
+            }
+            1 -> { // Copy
+                if (ImGui.button("A > B", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckA, mixer.deckB)
+                if (ImGui.button("B > A", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckB, mixer.deckA)
+                if (ImGui.button("C > A", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckC, mixer.deckA)
+            }
+            2 -> { // Swap
+                if (ImGui.button("A + B", cellW, cellH)) PatchManager.swapDecks(mixer, mixer.deckA, mixer.deckB)
+                if (ImGui.button("B + C", cellW, cellH)) PatchManager.swapDecks(mixer, mixer.deckB, mixer.deckC)
+                if (ImGui.button("C + A", cellW, cellH)) PatchManager.swapDecks(mixer, mixer.deckC, mixer.deckA)
+            }
+        }
+        ImGui.endGroup()
+
+        ImGui.sameLine(cellW * 2f + 10f)
+        ImGui.beginGroup()
+        when (utilityMode) {
+            0 -> { // Move
+                if (ImGui.button("A > C", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckA, mixer.deckC)
+                if (ImGui.button("B > C", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckB, mixer.deckC)
+                if (ImGui.button("C > B", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckC, mixer.deckB)
+            }
+            1 -> { // Copy
+                if (ImGui.button("A > C", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckA, mixer.deckC)
+                if (ImGui.button("B > C", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckB, mixer.deckC)
+                if (ImGui.button("C > B", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckC, mixer.deckB)
+            }
+            2 -> { // Swap (Only 3 combinations for 3 decks, so last column is empty or spacers)
+                // Already covered all pairs in column 2
+            }
+        }
+        ImGui.endGroup()
+
+        ImGui.endChild()
     }
 
     fun drawFlatSlider(

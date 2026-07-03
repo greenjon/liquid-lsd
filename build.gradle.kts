@@ -56,6 +56,10 @@ dependencies {
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.4.14")
+
+    // Testing
+    testImplementation(kotlin("test"))
+    testImplementation("io.mockk:mockk:1.13.8")
 }
 
 application {
