@@ -177,14 +177,14 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
         // ".." entry to go up
         val parent = currentDir.parentFile
         if (parent != null) {
-            if (ImGui.selectable("[..]", false)) {
+            if (ImGui.selectable("${Icons.CHEVRON_UP}  ..", false)) {
                 navigateTo(parent)
             }
         }
 
         for (entry in listing) {
             val isDir = entry.isDirectory
-            val label = if (isDir) "[${entry.name}]" else entry.name
+            val label = if (isDir) "${Icons.FOLDER}  ${entry.name}" else "${Icons.FILE}  ${entry.name}"
             val isSelected = selectedFile == entry
 
             if (ImGui.selectable(label, isSelected)) {

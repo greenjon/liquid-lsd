@@ -493,36 +493,6 @@ object PatchGridRenderer {
 
     fun drawDiceButton(id: String, x: Float, y: Float, scale: Float, btnWidth: Float, btnHeight: Float): Boolean {
         ImGui.setCursorScreenPos(x, y)
-        val clicked = ImGui.button("##$id", btnWidth, btnHeight)
-        
-        val dl = ImGui.getWindowDrawList()
-        val diceColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
-        val dotColor = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1f)
-        
-        // Die 1
-        val dieW = 23f * scale
-        val d1X = x + 5f * scale
-        val d1Y = y + (btnHeight - dieW) / 2f
-        dl.addRectFilled(d1X, d1Y, d1X + dieW, d1Y + dieW, diceColor, 2f * scale)
-        dl.addRect(d1X, d1Y, d1X + dieW, d1Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
-        // Face 3 dots
-        val dotRadius = 1.7f * scale
-        dl.addCircleFilled(d1X + 5f * scale, d1Y + 5f * scale, dotRadius, dotColor)
-        dl.addCircleFilled(d1X + 11.5f * scale, d1Y + 11.5f * scale, dotRadius, dotColor)
-        dl.addCircleFilled(d1X + 18f * scale, d1Y + 18f * scale, dotRadius, dotColor)
-
-        // Die 2
-        val d2X = x + 24f * scale
-        val d2Y = y + (btnHeight - dieW) / 2f + 2f * scale
-        dl.addRectFilled(d2X, d2Y, d2X + dieW, d2Y + dieW, diceColor, 2f * scale)
-        dl.addRect(d2X, d2Y, d2X + dieW, d2Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
-        // Face 5 dots
-        dl.addCircleFilled(d2X + 5f * scale, d2Y + 5f * scale, dotRadius, dotColor)
-        dl.addCircleFilled(d2X + 18f * scale, d2Y + 5f * scale, dotRadius, dotColor)
-        dl.addCircleFilled(d2X + 11.5f * scale, d2Y + 11.5f * scale, dotRadius, dotColor)
-        dl.addCircleFilled(d2X + 5f * scale, d2Y + 18f * scale, dotRadius, dotColor)
-        dl.addCircleFilled(d2X + 18f * scale, d2Y + 18f * scale, dotRadius, dotColor)
-        
-        return clicked
+        return ImGui.button("${Icons.DICES}##$id", btnWidth, btnHeight)
     }
 }

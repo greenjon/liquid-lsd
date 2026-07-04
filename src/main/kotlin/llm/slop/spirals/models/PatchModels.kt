@@ -304,6 +304,7 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     id = id ?: java.util.UUID.randomUUID().toString()
 )
 
+@Suppress("DEPRECATION")
 fun ModulatableParameter.toDto(): ParameterDto = ParameterDto(
     baseValue = baseValue,
     baseMin = baseMin,
@@ -315,6 +316,7 @@ fun ModulatableParameter.toDto(): ParameterDto = ParameterDto(
     midiMapMax = midiMapMax
 )
 
+@Suppress("DEPRECATION")
 fun ModulatableParameter.applyDto(dto: ParameterDto) {
     this.baseValue = dto.baseValue
     this.baseMin = dto.baseMin

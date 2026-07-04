@@ -198,6 +198,14 @@ object UITheme {
     private lateinit var fontCaption: ImFont
     private lateinit var fontCode:    ImFont
 
+    // Keep raw bytes of loaded fonts and range alive to prevent GC/JNI unpinning issues
+    private var regularBytes: ByteArray? = null
+    private var mediumBytes: ByteArray? = null
+    private var boldBytes: ByteArray? = null
+    private var codeBytes: ByteArray? = null
+    private var lucideBytes: ByteArray? = null
+    private var iconRange: ShortArray? = null
+
     /** True once [loadFonts] has completed successfully. */
     var isLoaded: Boolean = false
         private set
@@ -208,6 +216,7 @@ object UITheme {
     private const val INTER_MEDIUM  = "/fonts/Inter-Medium.ttf"
     private const val INTER_BOLD    = "/fonts/Inter-Bold.ttf"
     private const val JETBRAINS     = "/fonts/JetBrainsMono-Regular.ttf"
+    private const val LUCIDE         = "/fonts/lucide.ttf"
 
     // -- Initialisation --------------------------------------------------------
 
@@ -236,18 +245,42 @@ object UITheme {
             setFontDataOwnedByAtlas(owned)
         }
 
-        val regularBytes = loadBytes(INTER_REGULAR)
-        val mediumBytes  = loadBytes(INTER_MEDIUM)
-        val boldBytes    = loadBytes(INTER_BOLD)
-        val codeBytes    = loadBytes(JETBRAINS)
+        regularBytes = loadBytes(INTER_REGULAR)
+        mediumBytes  = loadBytes(INTER_MEDIUM)
+        boldBytes    = loadBytes(INTER_BOLD)
+        codeBytes    = loadBytes(JETBRAINS)
+        lucideBytes  = loadBytes(LUCIDE)
+
+        logger.info { "Font bytes loaded: Inter=${regularBytes!!.size}, Lucide=${lucideBytes!!.size}" }
+
+        // Range for standard Lucide (E000 - F8FF range)
+        // Range format is [start, end, 0]
+        iconRange = shortArrayOf(0xe000.toShort(), 0xf8ff.toShort(), 0)
+
+        fun addWithIcons(bytes: ByteArray, size: Float, config: ImFontConfig): ImFont {
+            val f = atlas.addFontFromMemoryTTF(bytes, size, config)
+            if (f.ptr == 0L) logger.error { "Failed to load main font at size $size" }
+
+            val iconCfg = ImFontConfig().apply {
+                setFontDataOwnedByAtlas(false)
+                setMergeMode(true)
+                setPixelSnapH(true)
+            }
+            
+            val iconFont = atlas.addFontFromMemoryTTF(lucideBytes!!, size, iconCfg, iconRange!!)
+            if (iconFont.ptr == 0L) logger.error { "Failed to merge Lucide icons at size $size" }
+            
+            iconCfg.destroy()
+            return f
+        }
 
         // Load each level; bodies/captions use Regular, headers use Bold/Medium.
-        fontBody    = atlas.addFontFromMemoryTTF(regularBytes, baseSize * multBody,    cfg())
-        fontCaption = atlas.addFontFromMemoryTTF(regularBytes, baseSize * multCaption, cfg())
-        fontH3      = atlas.addFontFromMemoryTTF(mediumBytes,  baseSize * multH3,      cfg())
-        fontH2      = atlas.addFontFromMemoryTTF(boldBytes,    baseSize * multH2,      cfg())
-        fontH1      = atlas.addFontFromMemoryTTF(boldBytes,    baseSize * multH1,      cfg())
-        fontCode    = atlas.addFontFromMemoryTTF(codeBytes,    baseSize * multCode,    cfg())
+        fontBody    = addWithIcons(regularBytes!!, baseSize * multBody,    cfg())
+        fontCaption = addWithIcons(regularBytes!!, baseSize * multCaption, cfg())
+        fontH3      = addWithIcons(mediumBytes!!,  baseSize * multH3,      cfg())
+        fontH2      = addWithIcons(boldBytes!!,    baseSize * multH2,      cfg())
+        fontH1      = addWithIcons(boldBytes!!,    baseSize * multH1,      cfg())
+        fontCode    = addWithIcons(codeBytes!!,    baseSize * multCode,    cfg())
 
         isLoaded = true
         logger.info {

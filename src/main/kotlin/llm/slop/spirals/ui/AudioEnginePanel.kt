@@ -54,7 +54,7 @@ object AudioEnginePanel {
         // ---------------------------------------------------------------------
         // Header: Title & Info
         // ---------------------------------------------------------------------
-        UITheme.h2("Audio Engine Monitor")
+        UITheme.h2("${Icons.ACTIVITY} Audio Engine Monitor")
         ImGui.separator()
         ImGui.spacing()
 
@@ -140,7 +140,7 @@ object AudioEnginePanel {
         ImGui.spacing()
 
         // Beat Sync Settings
-        UITheme.h3("Beat Sync Settings")
+        UITheme.h3("${Icons.SETTINGS} Beat Sync Settings")
 
             ImGui.alignTextToFramePadding()
             UITheme.body("Manual BPM:")
@@ -156,7 +156,7 @@ object AudioEnginePanel {
             ImGui.spacing()
             
             // -- New Beat Detection UI --
-            UITheme.h3("Auto Beat Detection")
+            UITheme.h3("${Icons.ZAP} Auto Beat Detection")
             ImGui.spacing()
             
             val settings = AudioEngine.beatDetector.settings

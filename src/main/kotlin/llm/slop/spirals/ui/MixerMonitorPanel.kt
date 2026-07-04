@@ -14,7 +14,7 @@ class MixerMonitorPanel(
     private val advanceSetlist: (Int) -> Unit,
     private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit,
     private val onUtilityAction: (Int, Deck, Deck) -> Unit, // (mode: 0=Move, 1=Copy, 2=Swap, from, to)
-    private val onSaveDeck: (Deck, Boolean) -> Unit
+    private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit
 ) {
     private var utilityMode = 1 // 0=Move, 1=Copy, 2=Swap
 
@@ -92,8 +92,17 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, presetY + 3f)
         UITheme.body("Preset: $displayNameA")
         ImGui.sameLine()
-        if (ImGui.smallButton("Save##A")) {
-            onSaveDeck(mixer.deckA, true)
+        if (ImGui.smallButton("[v]##SaveA")) {
+            ImGui.openPopup("save_menu_A")
+        }
+        if (ImGui.beginPopup("save_menu_A")) {
+            if (ImGui.menuItem("Save")) {
+                onSaveDeck(mixer.deckA, true, false)
+            }
+            if (ImGui.menuItem("Save As...")) {
+                onSaveDeck(mixer.deckA, true, true)
+            }
+            ImGui.endPopup()
         }
         
         val activePresetB = PatchManager.activePresetB ?: "None"
@@ -103,8 +112,17 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
         UITheme.body("Preset: $displayNameB")
         ImGui.sameLine()
-        if (ImGui.smallButton("Save##B")) {
-            onSaveDeck(mixer.deckB, false)
+        if (ImGui.smallButton("[v]##SaveB")) {
+            ImGui.openPopup("save_menu_B")
+        }
+        if (ImGui.beginPopup("save_menu_B")) {
+            if (ImGui.menuItem("Save")) {
+                onSaveDeck(mixer.deckB, false, false)
+            }
+            if (ImGui.menuItem("Save As...")) {
+                onSaveDeck(mixer.deckB, false, true)
+            }
+            ImGui.endPopup()
         }
         
         ImGui.spacing()
@@ -154,8 +172,17 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, row1Y + ImGui.getTextLineHeightWithSpacing())
         UITheme.body("Preset: $displayNameC")
         ImGui.sameLine()
-        if (ImGui.smallButton("Save##C")) {
-            onSaveDeck(mixer.deckC, false) // Note: boolean isDeckA is overloaded for Deck C in some contexts, but here it's just a save trigger
+        if (ImGui.smallButton("[v]##SaveC")) {
+            ImGui.openPopup("save_menu_C")
+        }
+        if (ImGui.beginPopup("save_menu_C")) {
+            if (ImGui.menuItem("Save")) {
+                onSaveDeck(mixer.deckC, false, false) // Note: boolean isDeckA is overloaded for Deck C in some contexts, but here it's just a save trigger
+            }
+            if (ImGui.menuItem("Save As...")) {
+                onSaveDeck(mixer.deckC, false, true)
+            }
+            ImGui.endPopup()
         }
         
         val imgX = ImGui.getCursorScreenPosX()

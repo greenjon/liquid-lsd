@@ -40,6 +40,18 @@ object SettingsPanel {
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
 
+        // --- Font Debugger Block ---
+        UITheme.h3("Font Icon Debugger (E100-E17F)")
+        for (i in 0xE100..0xE17F) {
+            val hex = Integer.toHexString(i).uppercase()
+            ImGui.text("$hex: ${i.toChar()}")
+            if ((i - 0xE100 + 1) % 8 != 0) ImGui.sameLine(0f, 15f)
+        }
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+        // ---------------------------
+
         // -- Width anchor -- ensures the modal is never narrower than MODAL_W --
         ImGui.dummy(MODAL_W - 32f, 1f)   // 32 = 2 x default window padding
 

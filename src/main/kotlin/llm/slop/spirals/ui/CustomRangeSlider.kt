@@ -246,9 +246,17 @@ object CustomRangeSlider {
         if (showControls) {
             val randBtnX = startX + labelColW - buttonSize
             ImGui.setCursorScreenPos(randBtnX, row2Y)
-            if (ImGui.button("##rand_$label", buttonSize, buttonSize)) {
+            
+            if (!isRandomizable) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
+            }
+            if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
                 onRandomizableChanged(!isRandomizable)
             }
+            if (!isRandomizable) {
+                ImGui.popStyleColor()
+            }
+            
             if (ImGui.isItemClicked(1)) { // Right click
                 if (!isRandomizable) {
                     onRandomizableChanged(true)
@@ -259,51 +267,6 @@ object CustomRangeSlider {
             if (hovered && UITheme.tooltipsEnabled) {
                 ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
             }
-            
-            // Single die icon (white with black spots, scaled and enlarged 15% more)
-            val centerX = randBtnX + buttonSize / 2f
-            val centerYBtn = row2Y + buttonSize / 2f
-            
-            val diceBgColor = if (!isRandomizable) {
-                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.3f)
-            } else if (ImGui.isItemActive()) {
-                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
-            } else if (hovered) {
-                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
-            } else {
-                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.9f)
-            }
-
-            val diceOutlineColor = if (!isRandomizable) {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 0.3f)
-            } else {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 1.0f)
-            }
-
-            val spotColor = if (!isRandomizable) {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 0.3f)
-            } else {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 1.0f)
-            }
-
-            val dieSize = buttonSize * 0.7f
-            val halfSize = dieSize / 2f
-            val x0 = centerX - halfSize
-            val y0 = centerYBtn - halfSize
-            val x1 = centerX + halfSize
-            val y1 = centerYBtn + halfSize
-            
-            dl.addRectFilled(x0, y0, x1, y1, diceBgColor, 2f)
-            dl.addRect(x0, y0, x1, y1, diceOutlineColor, 2f, 0, 1.5f)
-            
-            // Draw a single die face 5 (scaled and enlarged 15% more)
-            val dotRadius = buttonSize * 0.06f
-            val offset = halfSize * 0.6f
-            dl.addCircleFilled(centerX, centerYBtn, dotRadius, spotColor)
-            dl.addCircleFilled(centerX - offset, centerYBtn - offset, dotRadius, spotColor)
-            dl.addCircleFilled(centerX + offset, centerYBtn - offset, dotRadius, spotColor)
-            dl.addCircleFilled(centerX - offset, centerYBtn + offset, dotRadius, spotColor)
-            dl.addCircleFilled(centerX + offset, centerYBtn + offset, dotRadius, spotColor)
         }
         
         // 3. Text inputs

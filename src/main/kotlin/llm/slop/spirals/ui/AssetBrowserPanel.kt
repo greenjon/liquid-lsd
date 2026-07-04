@@ -2,6 +2,7 @@ package llm.slop.spirals.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImString
 import llm.slop.spirals.patches.PlayQueueManager
@@ -67,31 +68,52 @@ object AssetBrowserPanel {
         val sidebarWidth = if (showSidebar) width * 0.25f else 0f
         val mainWidth = width - sidebarWidth
 
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6f)
         if (ImGui.beginMenuBar()) {
-            if (ImGui.smallButton(if (showSidebar) "<" else ">")) {
+            val toggleIcon = if (showSidebar) Icons.MINUS else Icons.PANEL_LEFT_OPEN
+
+            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
+
+            if (ImGui.button("$toggleIcon##toggle_sidebar")) {
                 showSidebar = !showSidebar
             }
-            ImGui.sameLine()
+            ImGui.popStyleColor(4)
+
             UITheme.AssetBrowserMode.entries.forEach { mode ->
                 val active = UITheme.assetBrowserMode == mode
-                if (active) ImGui.pushStyleColor(ImGuiCol.Button, 0.35f, 0.35f, 0.35f, 1f)
-                if (ImGui.smallButton(mode.name.lowercase().replaceFirstChar { it.uppercase() })) {
+                val icon = when (mode) {
+                    UITheme.AssetBrowserMode.FULL -> Icons.LAYOUT_FULL
+                    UITheme.AssetBrowserMode.HALF -> Icons.LAYOUT_HALF
+                    UITheme.AssetBrowserMode.HIDE -> Icons.LAYOUT_HIDE
+                }
+
+                ImGui.sameLine(0f, 6f)
+
+                // Transparent button background style
+                ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
+
+                // Text color: bright white for active, dimmed for inactive
+                if (active) {
+                    ImGui.pushStyleColor(ImGuiCol.Text, 1f, 1f, 1f, 1.0f)
+                } else {
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
+                }
+
+                if (ImGui.button("$icon##mode_${mode.name}")) {
                     UITheme.assetBrowserMode = mode
                     UITheme.saveSettings()
                 }
-                if (active) ImGui.popStyleColor()
-                ImGui.sameLine()
+                ImGui.popStyleColor(4)
             }
 
-            val viewLabel = when (val view = currentView) {
-                is LibraryView.Queue -> "Queue"
-                is LibraryView.PlaylistsRoot -> "Playlists"
-                is LibraryView.SpecificPlaylist -> "Playlist: ${view.playlistFile.nameWithoutExtension}"
-                is LibraryView.Patches -> "Patches: ${view.currentDir.name}"
-            }
-            ImGui.textDisabled("($viewLabel)")
             ImGui.endMenuBar()
         }
+        ImGui.popStyleVar()
 
         if (UITheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) return
 

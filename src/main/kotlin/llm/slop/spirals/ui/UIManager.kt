@@ -242,14 +242,14 @@ class UIManager(private val windowHandle: Long) {
                 }
             }
         },
-        onSaveDeck = { deck, isDeckA ->
+        onSaveDeck = { deck, isDeckA, isSaveAs ->
             val activeName = when {
                 deck === currentMixer?.deckA -> PatchManager.activePresetA
                 deck === currentMixer?.deckB -> PatchManager.activePresetB
                 deck === currentMixer?.deckC -> PatchManager.activePresetC
                 else -> null
             }
-            if (activeName != null) {
+            if (activeName != null && !isSaveAs) {
                 saveDeckPreset(activeName, deck, isDeckA)
             } else {
                 if (deck === currentMixer?.deckA) deckABrowser.open()
@@ -570,7 +570,7 @@ class UIManager(private val windowHandle: Long) {
         val assetBrowserH = when (UITheme.assetBrowserMode) {
             UITheme.AssetBrowserMode.FULL -> contentH
             UITheme.AssetBrowserMode.HALF -> contentH * 0.5f
-            UITheme.AssetBrowserMode.HIDE -> 32f
+            UITheme.AssetBrowserMode.HIDE -> 38f
         }
 
         if (UITheme.assetBrowserMode != UITheme.AssetBrowserMode.FULL) {
