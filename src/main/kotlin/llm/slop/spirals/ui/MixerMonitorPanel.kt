@@ -149,6 +149,17 @@ class MixerMonitorPanel(
         
         ImGui.image(mixer.deckC.getOutputTexture(), halfW, subH, 0f, 1f, 1f, 0f)
 
+        if (ImGui.beginDragDropTarget()) {
+            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+            if (payload != null) {
+                val file = java.io.File(payload)
+                if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
+                    PatchManager.loadDeckPresetAsync(file, isDeckA = false, isDeckC = true)
+                }
+            }
+            ImGui.endDragDropTarget()
+        }
+
         val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
         val dlPreview = ImGui.getWindowDrawList()
         dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + halfW + 1f, imgY + subH + 1f, deckCColor, 0f, 0, 2f)
@@ -163,65 +174,61 @@ class MixerMonitorPanel(
         ImGui.dummy(0f, ImGui.getTextLineHeightWithSpacing())
         ImGui.spacing()
 
-        val startY = ImGui.getCursorPosY()
         val cellW = (width - 10f) / 3f
-        val cellH = ((height - 30f) / 3f) * 0.75f
+        val btnW = (width - 5f) / 2f
+        val cellH = ((height - 35f) / 4f) * 0.75f
 
-        // Column 1: Labels/Selectables
+        // Row 1: Mode Selectors (Tabs)
         val labels = listOf("Move", "Copy", "Swap")
         val style = ImGui.getStyle()
         val oldAlignX = style.getSelectableTextAlignX()
         val oldAlignY = style.getSelectableTextAlignY()
-        style.setSelectableTextAlign(oldAlignX, 0.5f)
+        style.setSelectableTextAlign(0.5f, 0.5f)
 
         for (i in 0..2) {
             if (ImGui.selectable(labels[i], utilityMode == i, 0, cellW, cellH)) {
                 utilityMode = i
             }
+            if (i < 2) ImGui.sameLine(0f, 5f)
         }
         style.setSelectableTextAlign(oldAlignX, oldAlignY)
-
-        ImGui.sameLine(cellW + 5f)
-        ImGui.setCursorPosY(startY)
         
-        // Column 2 & 3: Action Buttons
+        ImGui.spacing()
+        
+        // Rows 2-4: Action Buttons
         ImGui.beginGroup()
         when (utilityMode) {
             0 -> { // Move
-                if (ImGui.button("A > B", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckA, mixer.deckB)
-                if (ImGui.button("B > A", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckB, mixer.deckA)
-                if (ImGui.button("C > A", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckC, mixer.deckA)
+                if (ImGui.button("A > B", btnW, cellH)) PatchManager.moveDeck(mixer, mixer.deckA, mixer.deckB)
+                if (ImGui.button("B > A", btnW, cellH)) PatchManager.moveDeck(mixer, mixer.deckB, mixer.deckA)
+                if (ImGui.button("C > A", btnW, cellH)) PatchManager.moveDeck(mixer, mixer.deckC, mixer.deckA)
             }
             1 -> { // Copy
-                if (ImGui.button("A > B", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckA, mixer.deckB)
-                if (ImGui.button("B > A", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckB, mixer.deckA)
-                if (ImGui.button("C > A", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckC, mixer.deckA)
+                if (ImGui.button("A > B", btnW, cellH)) PatchManager.copyDeck(mixer, mixer.deckA, mixer.deckB)
+                if (ImGui.button("B > A", btnW, cellH)) PatchManager.copyDeck(mixer, mixer.deckB, mixer.deckA)
+                if (ImGui.button("C > A", btnW, cellH)) PatchManager.copyDeck(mixer, mixer.deckC, mixer.deckA)
             }
             2 -> { // Swap
-                if (ImGui.button("A + B", cellW, cellH)) PatchManager.swapDecks(mixer, mixer.deckA, mixer.deckB)
-                if (ImGui.button("B + C", cellW, cellH)) PatchManager.swapDecks(mixer, mixer.deckB, mixer.deckC)
-                if (ImGui.button("C + A", cellW, cellH)) PatchManager.swapDecks(mixer, mixer.deckC, mixer.deckA)
+                if (ImGui.button("A + B", btnW, cellH)) PatchManager.swapDecks(mixer, mixer.deckA, mixer.deckB)
+                if (ImGui.button("B + C", btnW, cellH)) PatchManager.swapDecks(mixer, mixer.deckB, mixer.deckC)
+                if (ImGui.button("C + A", btnW, cellH)) PatchManager.swapDecks(mixer, mixer.deckC, mixer.deckA)
             }
         }
         ImGui.endGroup()
 
-        ImGui.sameLine(cellW * 2f + 10f)
-        ImGui.setCursorPosY(startY)
+        ImGui.sameLine(0f, 5f)
 
         ImGui.beginGroup()
         when (utilityMode) {
             0 -> { // Move
-                if (ImGui.button("A > C", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckA, mixer.deckC)
-                if (ImGui.button("B > C", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckB, mixer.deckC)
-                if (ImGui.button("C > B", cellW, cellH)) PatchManager.moveDeck(mixer, mixer.deckC, mixer.deckB)
+                if (ImGui.button("A > C", btnW, cellH)) PatchManager.moveDeck(mixer, mixer.deckA, mixer.deckC)
+                if (ImGui.button("B > C", btnW, cellH)) PatchManager.moveDeck(mixer, mixer.deckB, mixer.deckC)
+                if (ImGui.button("C > B", btnW, cellH)) PatchManager.moveDeck(mixer, mixer.deckC, mixer.deckB)
             }
             1 -> { // Copy
-                if (ImGui.button("A > C", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckA, mixer.deckC)
-                if (ImGui.button("B > C", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckB, mixer.deckC)
-                if (ImGui.button("C > B", cellW, cellH)) PatchManager.copyDeck(mixer, mixer.deckC, mixer.deckB)
-            }
-            2 -> { // Swap (Only 3 combinations for 3 decks, so last column is empty or spacers)
-                // Already covered all pairs in column 2
+                if (ImGui.button("A > C", btnW, cellH)) PatchManager.copyDeck(mixer, mixer.deckA, mixer.deckC)
+                if (ImGui.button("B > C", btnW, cellH)) PatchManager.copyDeck(mixer, mixer.deckB, mixer.deckC)
+                if (ImGui.button("C > B", btnW, cellH)) PatchManager.copyDeck(mixer, mixer.deckC, mixer.deckB)
             }
         }
         ImGui.endGroup()

@@ -138,6 +138,17 @@ class DeckControlPanel(
         
         ImGui.image(deck.getOutputTexture(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
         
+        if (ImGui.beginDragDropTarget()) {
+            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+            if (payload != null) {
+                val file = File(payload)
+                if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
+                    PatchManager.loadDeckPresetAsync(file, isDeckA)
+                }
+            }
+            ImGui.endDragDropTarget()
+        }
+        
         val dl = ImGui.getWindowDrawList()
         // Draw border perfectly wrapped around the image
         dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
