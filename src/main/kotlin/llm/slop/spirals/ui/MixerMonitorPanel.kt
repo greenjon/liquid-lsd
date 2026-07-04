@@ -114,8 +114,7 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, endY)
 
         // --- Deck C / Preview Monitor (Aligned to Lower Left) ---
-        val previewMode = UITheme.previewModeEnabled
-        val previewLabel = if (previewMode) "PREVIEW MONITOR" else "DECK C MONITOR"
+        val previewLabel = "DECK C / PREVIEW"
         
         // Push Deck C monitor to the bottom of the panel
         val contentHeightRemaining = ImGui.getContentRegionAvailY()
@@ -129,21 +128,20 @@ class MixerMonitorPanel(
         ImGui.separator()
         ImGui.spacing()
         
-        // Row 1: Monitor Label and Toggle
+        // Row 1: Monitor Label
         val row1Y = ImGui.getCursorScreenPosY()
-        ImGui.setCursorScreenPos(startX, row1Y)
-        UITheme.body(previewLabel)
-        ImGui.sameLine(halfW - 80f)
-        if (ImGui.checkbox("Preview Mode", UITheme.previewModeEnabled)) {
-            UITheme.previewModeEnabled = !UITheme.previewModeEnabled
-            UITheme.saveSettings()
+        var twC = 0f
+        UITheme.withFont(UITheme.FontLevel.H2) {
+            twC = ImGui.calcTextSize(previewLabel).x
         }
+        ImGui.setCursorScreenPos(startX + (halfW - twC) * 0.5f, row1Y)
+        UITheme.h2(previewLabel)
 
         // Row 2: Preset Info
         val activePresetC = PatchManager.activePresetC ?: "None"
         val isDirtyC = PatchManager.isDeckDirty(mixer.deckC, mixer)
         val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
-        ImGui.setCursorScreenPos(startX, row1Y + ImGui.getFrameHeightWithSpacing())
+        ImGui.setCursorScreenPos(startX, row1Y + ImGui.getTextLineHeightWithSpacing())
         UITheme.body("Preset: $displayNameC")
         
         val imgX = ImGui.getCursorScreenPosX()

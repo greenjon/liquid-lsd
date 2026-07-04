@@ -65,9 +65,6 @@ object UITheme {
     enum class AssetBrowserMode { FULL, HALF, HIDE }
     var assetBrowserMode: AssetBrowserMode = AssetBrowserMode.HALF
 
-    /** True if Deck C monitor shows active preview, False if it just monitors Deck C workspace. */
-    var previewModeEnabled: Boolean = true
-
     init {
         loadSettings()
     }
@@ -130,10 +127,6 @@ object UITheme {
                         logger.info { "Migrated assetManagerHalfHeight to assetBrowserMode: $assetBrowserMode" }
                     }
                 }
-                val savedPreviewMode = props.getProperty("previewModeEnabled")?.toBooleanStrictOrNull()
-                if (savedPreviewMode != null) {
-                    previewModeEnabled = savedPreviewMode
-                }
                 val savedTransition = props.getProperty("setlistTransitionBehavior")
                 if (savedTransition != null) {
                     setlistTransitionBehavior = try { SetlistTransitionBehavior.valueOf(savedTransition) } catch (e: Exception) { SetlistTransitionBehavior.PROMPT }
@@ -169,7 +162,6 @@ object UITheme {
             props.setProperty("autocollapseEnabled", autocollapseEnabled.toString())
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
             props.setProperty("assetBrowserMode", assetBrowserMode.name)
-            props.setProperty("previewModeEnabled", previewModeEnabled.toString())
             props.setProperty("setlistTransitionBehavior", setlistTransitionBehavior.name)
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("setlistKeyTrigger", setlistKeyTrigger.name)
