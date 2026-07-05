@@ -80,6 +80,9 @@ object AssetBrowserPanel {
             if (ImGui.button("$toggleIcon##toggle_sidebar")) {
                 showSidebar = !showSidebar
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Show/hide the library folders and playlists sidebar.")
+            }
             ImGui.popStyleColor(4)
 
             UITheme.AssetBrowserMode.entries.forEach { mode ->
@@ -107,6 +110,14 @@ object AssetBrowserPanel {
                 if (ImGui.button("$icon##mode_${mode.name}")) {
                     UITheme.assetBrowserMode = mode
                     UITheme.saveSettings()
+                }
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    val modeDesc = when (mode) {
+                        UITheme.AssetBrowserMode.FULL -> "Switch asset browser height to Full size."
+                        UITheme.AssetBrowserMode.HALF -> "Switch asset browser height to Half size."
+                        UITheme.AssetBrowserMode.HIDE -> "Hide the asset browser."
+                    }
+                    ImGui.setTooltip(modeDesc)
                 }
                 ImGui.popStyleColor(4)
             }
@@ -181,7 +192,7 @@ object AssetBrowserPanel {
                 val itemFlags = ImGuiTreeNodeFlags.Leaf or ImGuiTreeNodeFlags.SpanAvailWidth or
                     (if (isPlaylistSelected) ImGuiTreeNodeFlags.Selected else 0)
                 
-                val itemOpened = ImGui.treeNodeEx("[L] ${asset.displayName}##sidebar_${asset.path}", itemFlags)
+                val itemOpened = ImGui.treeNodeEx("${asset.displayName}##sidebar_${asset.path}", itemFlags)
                 if (ImGui.isItemClicked() && !ImGui.isItemToggledOpen()) {
                     currentView = LibraryView.SpecificPlaylist(File(asset.path))
                 }
@@ -269,13 +280,62 @@ object AssetBrowserPanel {
         if (ImGui.checkbox("AUTO-VJ", PlayQueueManager.isAutoVJEnabled)) {
             PlayQueueManager.isAutoVJEnabled = !PlayQueueManager.isAutoVJEnabled
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue patches at set intervals.")
+        }
+        
+        ImGui.sameLine()
+        val repeatActive = PlayQueueManager.isRepeatEnabled
+        if (repeatActive) {
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+        }
+        if (ImGui.button("${Icons.REPEAT}##repeatQueue")) {
+            PlayQueueManager.isRepeatEnabled = !PlayQueueManager.isRepeatEnabled
+        }
+        if (repeatActive) {
+            ImGui.popStyleColor(4)
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
+        }
+
+        ImGui.sameLine()
+        val shuffleActive = PlayQueueManager.isShuffleEnabled
+        if (shuffleActive) {
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+        }
+        if (ImGui.button("${Icons.SHUFFLE}##shuffleQueue")) {
+            PlayQueueManager.isShuffleEnabled = !PlayQueueManager.isShuffleEnabled
+            if (PlayQueueManager.isShuffleEnabled) {
+                PlayQueueManager.initializeShuffle()
+            }
+        }
+        if (shuffleActive) {
+            ImGui.popStyleColor(4)
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Shuffle Queue: play patches in a random order.")
+        }
+
         ImGui.sameLine()
         if (ImGui.button("Clear")) {
             PlayQueueManager.clearQueue()
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Empty the play queue.")
+        }
         ImGui.sameLine()
         if (ImGui.button("Export")) {
             ImGui.openPopup("ExportQueuePopup")
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Save current queue sequence as a new playlist.")
         }
         drawExportQueuePopup()
         
@@ -289,7 +349,7 @@ object AssetBrowserPanel {
         
         PlayQueueManager.queue.forEachIndexed { index, file ->
             val isActive = index == PlayQueueManager.activeIndex
-            val label = "${index + 1}. [P] ${file.nameWithoutExtension}${if (isActive) " ->" else ""}"
+            val label = "${index + 1}. ${file.nameWithoutExtension}${if (isActive) " ->" else ""}"
             
             if (isActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
@@ -465,7 +525,7 @@ object AssetBrowserPanel {
             val resolvedFile = PlaylistManager.resolvePatch(patchPath)
             val exists = resolvedFile.exists()
             val displayName = resolvedFile.nameWithoutExtension.ifBlank { patchPath }
-            val label = "${index + 1}. ${if (exists) "[P]" else "[!]" } $displayName${if (!exists) " (missing)" else ""}"
+            val label = "${index + 1}. ${if (exists) "" else "[!] "}$displayName${if (!exists) " (missing)" else ""}"
             
             if (!exists) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1f, 0.3f, 0.3f, 1f)
@@ -586,8 +646,14 @@ object AssetBrowserPanel {
         if (ImGui.button("Refresh Folder")) {
             refreshAssets()
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Re-scan active directory for newly added patch or playlist files.")
+        }
         ImGui.sameLine()
         ImGui.inputText("Filter", searchBuffer)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Type to filter patches by filename.")
+        }
         
         ImGui.separator()
         ImGui.spacing()
@@ -621,6 +687,9 @@ object AssetBrowserPanel {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, true, mixer)
                 }
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Load patch to Deck A.")
+            }
             ImGui.popStyleColor(5)
 
             ImGui.sameLine()
@@ -640,6 +709,9 @@ object AssetBrowserPanel {
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Load patch to Deck B.")
             }
             ImGui.popStyleColor(5)
 
@@ -661,13 +733,16 @@ object AssetBrowserPanel {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Preview patch on Deck C (Preview/C).")
+            }
             ImGui.popStyleColor(5)
 
             ImGui.popStyleVar(2)
 
             ImGui.sameLine()
 
-            val label = "[P] ${asset.displayName}"
+            val label = asset.displayName
             val isSelected = selectedAsset == asset
             
             if (ImGui.selectable(label, isSelected)) {

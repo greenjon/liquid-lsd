@@ -85,7 +85,7 @@ object Lfo2Section {
             ImGui.beginDisabled()
         }
 
-        val btnW = 80f
+        val btnW = 35f
         val btnH = ImGui.getFrameHeight()
 
         // 1. LFO 2 Shape Preset buttons
@@ -94,52 +94,56 @@ object Lfo2Section {
 
         // Sine Button
         val isModSine = existing.modWaveform == Waveform.SINE && existing.modMorph == 0.0f && existing.modHold == 0.0f
-        if (isModSine) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-        if (ImGui.button("Sine##lfo2", btnW, btnH)) {
+        if (CustomIconButton.drawWaveformButton("lfo2_sine_$idx", WaveShape.SINE, isModSine, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
                 modWaveform = Waveform.SINE,
                 modMorph = 0.0f,
                 modHold = 0.0f
             ))
         }
-        if (isModSine) ImGui.popStyleColor()
-        
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Load standard smooth Sine wave for LFO 2.")
+        }
+
         // Triangle Button
         ImGui.sameLine(0f, 4f)
         val isModTri = existing.modWaveform == Waveform.TRIANGLE && existing.modMorph == 1.0f && existing.modHold == 0.0f
-        if (isModTri) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-        if (ImGui.button("Triangle##lfo2", btnW, btnH)) {
+        if (CustomIconButton.drawWaveformButton("lfo2_tri_$idx", WaveShape.TRIANGLE, isModTri, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
                 modWaveform = Waveform.TRIANGLE,
                 modMorph = 1.0f,
                 modHold = 0.0f
             ))
         }
-        if (isModTri) ImGui.popStyleColor()
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Load linear Triangle wave for LFO 2.")
+        }
 
         // Square Button
         ImGui.sameLine(0f, 4f)
         val isModSquare = existing.modWaveform == Waveform.SQUARE && existing.modMorph == 1.0f && existing.modHold == 0.5f
-        if (isModSquare) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-        if (ImGui.button("Square##lfo2", btnW, btnH)) {
+        if (CustomIconButton.drawWaveformButton("lfo2_square_$idx", WaveShape.SQUARE, isModSquare, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
                 modWaveform = Waveform.SQUARE,
                 modMorph = 1.0f,
                 modHold = 0.5f
             ))
         }
-        if (isModSquare) ImGui.popStyleColor()
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Load binary Square wave for LFO 2.")
+        }
 
         // Random Button
         ImGui.sameLine(0f, 4f)
         val isModRandom = existing.modWaveform == Waveform.RANDOM
-        if (isModRandom) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-        if (ImGui.button("Random##lfo2", btnW, btnH)) {
+        if (CustomIconButton.drawWaveformButton("lfo2_random_$idx", WaveShape.RANDOM, isModRandom, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
                 modWaveform = Waveform.RANDOM
             ))
         }
-        if (isModRandom) ImGui.popStyleColor()
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Load step or smooth Random noise for LFO 2.")
+        }
 
         // 2. LFO 2 Slew Preset buttons (only if not Random)
         if (existing.modWaveform != Waveform.RANDOM) {
@@ -149,29 +153,32 @@ object Lfo2Section {
 
             // Left Button
             val isModLeft = existing.modSlope <= 0.01f
-            if (isModLeft) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Left##lfo2", 60f, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", WaveShape.RAMP_DOWN, isModLeft, themeColor, 35f, btnH)) {
                 onReplace(existing.copy(modSlope = 0.001f))
             }
-            if (isModLeft) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Set LFO 2 asymmetry fully Left.")
+            }
 
             // Center Button
             ImGui.sameLine(0f, 4f)
             val isModCenter = existing.modSlope >= 0.49f && existing.modSlope <= 0.51f
-            if (isModCenter) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Center##lfo2", 60f, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", WaveShape.TRIANGLE, isModCenter, themeColor, 35f, btnH)) {
                 onReplace(existing.copy(modSlope = 0.5f))
             }
-            if (isModCenter) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Set LFO 2 asymmetry to Center.")
+            }
 
             // Right Button
             ImGui.sameLine(0f, 4f)
             val isModRight = existing.modSlope >= 0.99f
-            if (isModRight) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Right##lfo2", 60f, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", WaveShape.RAMP_UP, isModRight, themeColor, 35f, btnH)) {
                 onReplace(existing.copy(modSlope = 0.999f))
             }
-            if (isModRight) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Set LFO 2 asymmetry fully Right.")
+            }
         }
 
         ImGui.spacing()
@@ -185,6 +192,9 @@ object Lfo2Section {
         ImGui.pushItemWidth(125f)
         if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {
             onReplace(existing.copy(modGenUnit = GenUnit.entries[modUnitIdx.get()]))
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Select frequency unit for LFO 2:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.")
         }
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
@@ -202,6 +212,9 @@ object Lfo2Section {
         if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
             val nextMode = llm.slop.spirals.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
             onReplace(existing.copy(generatorModMode = nextMode))
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Amplitude.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
         }
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)

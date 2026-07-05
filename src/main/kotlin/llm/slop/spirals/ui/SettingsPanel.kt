@@ -40,17 +40,6 @@ object SettingsPanel {
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
 
-        // --- Font Debugger Block ---
-        UITheme.h3("Font Icon Debugger (E100-E17F)")
-        for (i in 0xE100..0xE17F) {
-            val hex = Integer.toHexString(i).uppercase()
-            ImGui.text("$hex: ${i.toChar()}")
-            if ((i - 0xE100 + 1) % 8 != 0) ImGui.sameLine(0f, 15f)
-        }
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-        // ---------------------------
 
         // -- Width anchor -- ensures the modal is never narrower than MODAL_W --
         ImGui.dummy(MODAL_W - 32f, 1f)   // 32 = 2 x default window padding
@@ -94,6 +83,9 @@ object SettingsPanel {
             if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
             if (ImGui.button("  -  ##dec") && canDecrease)
                 onSizeChanged(currentSize - STEP)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Decrease global interface and font size.")
+            }
             if (!canDecrease) ImGui.popStyleVar()
 
             ImGui.sameLine()
@@ -106,6 +98,9 @@ object SettingsPanel {
             if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
             if (ImGui.button("  +  ##inc") && canIncrease)
                 onSizeChanged(currentSize + STEP)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Increase global interface and font size.")
+            }
             if (!canIncrease) ImGui.popStyleVar()
 
             ImGui.endTable()
@@ -132,6 +127,9 @@ object SettingsPanel {
                 }
             }
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Toggle the JACK audio backend. When disabled, audio-derived modulation columns are hidden.")
+        }
         ImGui.spacing()
         UITheme.caption("Disabling the audio engine stops JACK audio processing")
         UITheme.caption("and limits patch grid columns to LFO, RAND, and MIDI.")
@@ -154,6 +152,9 @@ object SettingsPanel {
                 UITheme.backgroundVideoEnabled = nextVal
                 UITheme.saveSettings()
             }
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Render master output video in the background with semi-transparent panels.")
         }
         ImGui.spacing()
         UITheme.caption("When enabled, the final output video renders behind the UI,")
@@ -179,6 +180,9 @@ object SettingsPanel {
                 onAutocollapseChanged()
             }
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Automatically collapse other parameter subgroups when expanding a section.")
+        }
         ImGui.spacing()
         UITheme.caption("When enabled, opening a grid section or subgroup will")
         UITheme.caption("automatically collapse other sections at that same level.")
@@ -200,6 +204,9 @@ object SettingsPanel {
         if (ImGui.combo("Startup Behavior", currentStartupIdx, startupOptions)) {
             UITheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
             UITheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Restore Previous Session: Reload decks and play queue on launch.\nStart Empty: Clean slate.")
         }
         ImGui.spacing()
         UITheme.caption("Choose whether to load the previous session (active deck contents and play queue)")
@@ -223,6 +230,9 @@ object SettingsPanel {
             UITheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
             UITheme.saveSettings()
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Configure how Auto-VJ acts if a deck has unsaved manual changes.")
+        }
         ImGui.spacing()
 
         val triggers = UITheme.QueueKeyTrigger.values()
@@ -231,6 +241,9 @@ object SettingsPanel {
         if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
             UITheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
             UITheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Set keyboard key sequence used to manually trigger queue advancement.")
         }
         ImGui.spacing()
 
@@ -251,6 +264,9 @@ object SettingsPanel {
             UITheme.activeMidiProfile = nextProfile
             UITheme.saveSettings()
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Select active MIDI controller CC assignment profile.")
+        }
         ImGui.spacing()
 
         val nextCc = imgui.type.ImInt(llm.slop.spirals.midi.MidiMappingManager.getCcForSpecial("Global/queueNext"))
@@ -259,6 +275,9 @@ object SettingsPanel {
             llm.slop.spirals.midi.MidiMappingManager.addMapping("Global/queueNext", newVal)
             llm.slop.spirals.midi.MidiMappingManager.saveActiveProfile()
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("MIDI CC number to advance the play queue. Set to -1 to disable.")
+        }
         ImGui.spacing()
 
         val prevCc = imgui.type.ImInt(llm.slop.spirals.midi.MidiMappingManager.getCcForSpecial("Global/queuePrev"))
@@ -266,6 +285,9 @@ object SettingsPanel {
             val newVal = prevCc.get().coerceIn(-1, 127)
             llm.slop.spirals.midi.MidiMappingManager.addMapping("Global/queuePrev", newVal)
             llm.slop.spirals.midi.MidiMappingManager.saveActiveProfile()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("MIDI CC number to trigger previous queue item. Set to -1 to disable.")
         }
         ImGui.spacing()
         UITheme.caption("Set to -1 to disable MIDI CC triggers.")

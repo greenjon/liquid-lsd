@@ -1,0 +1,3048 @@
+package llm.slop.spirals.ui
+
+import imgui.ImGui
+import imgui.flag.ImGuiColorEditFlags
+import imgui.type.ImBoolean
+import imgui.type.ImInt
+import llm.slop.spirals.cv.CVRegistry
+import llm.slop.spirals.cv.CvHistoryBuffer
+import llm.slop.spirals.cv.evaluateModulator
+import llm.slop.spirals.parameters.CvModulator
+import llm.slop.spirals.parameters.LfoSpeedMode
+import llm.slop.spirals.parameters.ModulationOperator
+import llm.slop.spirals.parameters.Waveform
+import llm.slop.spirals.parameters.GenUnit
+import llm.slop.spirals.rendering.Mixer
+import llm.slop.spirals.rendering.Mandala
+import llm.slop.spirals.rendering.MandalaLibrary
+import llm.slop.spirals.utils.TimeUtils
+import kotlin.math.roundToInt
+
+/**
+ * Draws the Cell Config panel contents.
+ * Call this inside an ImGui.begin("Cell Config") / ImGui.end() block.
+ */
+object CellConfigPanel {
+
+    private val subdivisionOptions = floatArrayOf(
+        0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f
+    )
+    private val subdivisionLabels = arrayOf(
+        "1/8", "1/4", "1/2", "1", "2", "4", "8", "16", "32", "64", "128", "256"
+    )
+    private val waveformLabels = arrayOf("Sine", "Triangle", "Square")
+    private val speedLabels = arrayOf("Slow", "Medium", "Fast")
+    private val operatorLabels = arrayOf("ADD", "MUL", "SCALE")
+
+    private var activeHistory: CvHistoryBuffer? = null
+    private val modulatorHistories = mutableMapOf<String, CvHistoryBuffer>()
+    private var activeCellId: PatchCellId? = null
+    private val virtualModulators = mutableListOf<CvModulator>()
+    private var lastActiveIds: Set<String> = emptySet()
+    private var draggingMin = false
+    private var draggingMax = false
+    private var activeSliderLabel: String? = null
+    private var clickMouseX = 0f
+
+    private val textBuffers = mutableMapOf<String, imgui.type.ImString>()
+    private val textWidgetActive = mutableMapOf<String, Boolean>()
+
+    private fun getThemeColor(cvId: String, alpha: Float = 1f): Int {
+        return when (cvId) {
+            "final"          -> ImGui.colorConvertFloat4ToU32(0.0f, 1.0f, 0.7f, alpha)
+            "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
+            "midi"           -> ImGui.colorConvertFloat4ToU32(0.7f, 0.3f, 1.0f, alpha)
+            "gen1"           -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 1.0f, alpha)
+            "gen2"           -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 0.7f, alpha)
+            "lfo"            -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 1.0f, alpha)
+            "sampleAndHold"  -> ImGui.colorConvertFloat4ToU32(0.7f, 0.4f, 1.0f, alpha)
+            "beatPhase"      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 1.0f, alpha)
+            "audio"          -> ImGui.colorConvertFloat4ToU32(0.3f, 0.9f, 0.0f, alpha)
+            "amp", "audio_amp" -> ImGui.colorConvertFloat4ToU32(0.3f, 0.9f, 0.0f, alpha)
+            "bass", "audio_bass" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.2f, alpha)
+            "mid", "audio_mid" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.5f, 0.1f, alpha)
+            "high", "audio_high" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.2f, alpha)
+            "trigger"        -> ImGui.colorConvertFloat4ToU32(1.0f, 0.0f, 0.5f, alpha)
+            "onset", "trigger_onset" -> ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, alpha)
+            "accent", "trigger_accent" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.1f, 0.9f, alpha)
+            else             -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, alpha)
+        }
+    }
+
+    private fun getThemeColorRGB(cvId: String): FloatArray {
+        return when (cvId) {
+            "final"          -> floatArrayOf(0.0f, 1.0f, 0.7f)
+            "base"           -> floatArrayOf(0.8f, 0.6f, 0.2f)
+            "midi"           -> floatArrayOf(0.7f, 0.3f, 1.0f)
+            "gen1"           -> floatArrayOf(0.0f, 0.7f, 1.0f)
+            "gen2"           -> floatArrayOf(0.0f, 0.8f, 0.7f)
+            "lfo"            -> floatArrayOf(0.0f, 0.7f, 1.0f)
+            "sampleAndHold"  -> floatArrayOf(0.7f, 0.4f, 1.0f)
+            "beatPhase"      -> floatArrayOf(0.4f, 0.4f, 1.0f)
+            "audio"          -> floatArrayOf(0.3f, 0.9f, 0.0f)
+            "amp", "audio_amp" -> floatArrayOf(0.3f, 0.9f, 0.0f)
+            "bass", "audio_bass" -> floatArrayOf(0.9f, 0.2f, 0.2f)
+            "mid", "audio_mid" -> floatArrayOf(0.9f, 0.5f, 0.1f)
+            "high", "audio_high" -> floatArrayOf(0.9f, 0.9f, 0.2f)
+            "trigger"        -> floatArrayOf(1.0f, 0.0f, 0.5f)
+            "onset", "trigger_onset" -> floatArrayOf(1.0f, 0.3f, 0.6f)
+            "accent", "trigger_accent" -> floatArrayOf(0.9f, 0.1f, 0.9f)
+            else             -> floatArrayOf(0.5f, 0.5f, 0.5f)
+        }
+    }
+
+    private fun initializeVirtualModulators(cvId: String, activeMods: List<CvModulator>, hasAdvanced: Boolean) {
+        virtualModulators.clear()
+        if (cvId == "audio") {
+            val bands = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
+            for (band in bands) {
+                val exists = activeMods.any { it.sourceId == band }
+                if (!exists) {
+                    virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
+                }
+            }
+        } else if (cvId == "trigger") {
+            val bands = listOf("trigger_onset", "trigger_accent")
+            for (band in bands) {
+                val exists = activeMods.any { it.sourceId == band }
+                if (!exists) {
+                    virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
+                }
+            }
+        } else if (hasAdvanced) {
+            val activeCount = activeMods.size
+            if (activeCount == 0) {
+                virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
+                // virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
+            } else if (activeCount == 1) {
+                // virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
+            }
+        } else {
+            if (activeMods.isEmpty()) {
+                virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
+            }
+        }
+    }
+
+    fun draw(state: PatchGridState, mixer: Mixer) {
+        val cell = state.selectedCell
+        val param = state.selectedParam
+
+        if (cell == null || param == null) {
+            activeHistory = null
+            activeCellId = null
+            UITheme.caption("Click a cell in the Patch Grid to configure it.")
+            return
+        }
+
+        val cvId = cell.cvSourceId
+        val paramKey = cell.paramKey
+
+        val themeRGB = getThemeColorRGB(cvId)
+        val themeColor = getThemeColor(cvId)
+
+        val deck = when {
+            paramKey.startsWith("Deck A/") -> mixer.deckA
+            paramKey.startsWith("Deck B/") -> mixer.deckB
+            else -> null
+        }
+        val mandala = deck?.source as? Mandala
+
+        val activeMods = if (cvId == "midi") {
+            param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+        } else if (cvId == "audio") {
+            param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+        } else if (cvId == "trigger") {
+            param.modulators.filter { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+        } else {
+            param.modulators.filter { it.sourceId == cvId }
+        }
+        val isMidiMod = cvId == "midi"
+
+        val isBeat = cvId == "beatPhase"
+        val isLfo = cvId == "lfo"
+        val isSnh = cvId == "sampleAndHold"
+        val isGen = cvId == "gen1" || cvId == "gen2"
+        val isAudio = cvId == "audio"
+        val isTrigger = cvId == "trigger"
+        val hasAdvanced = isBeat || isLfo || isSnh || isGen
+
+        if (cvId == "final") {
+            UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey.replace("/", " | "))
+            ImGui.separator()
+            ImGui.spacing()
+
+            // Live value text readout
+            val isBgStyle = paramKey.endsWith("/Background/Style")
+            val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
+            val isLobes = paramKey.endsWith("/Geometry/Lobes")
+            val liveVal = param.value
+            val liveLabel = when {
+                isHueSweep && mandala != null -> {
+                    val petals = mandala.recipe.petals
+                    val options = mandala.getSymmetricHueCycles(petals)
+                    val idx = if (options.size > 1) (liveVal * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+                    "${options[idx]} cycles"
+                }
+                isBgStyle -> {
+                    when (liveVal.roundToInt()) {
+                        0 -> "Off"
+                        1 -> "Solid Color"
+                        2 -> "Plasma"
+                        else -> "Off"
+                    }
+                }
+                isLobes -> "${liveVal.roundToInt()} lobes"
+                else -> "%.3f".format(liveVal)
+            }
+            UITheme.h3("Live Modulated Value: $liveLabel")
+            ImGui.spacing()
+
+            // Update active modulators history
+            val activeMods = param.modulators.filter { 
+                !it.bypassed && (CVRegistry.exists(it.sourceId) || it.sourceId.startsWith("midi_cc_"))
+            }
+            val activeIds = activeMods.map { it.id }.toSet()
+            modulatorHistories.keys.retainAll(activeIds)
+
+            for (mod in activeMods) {
+                val hist = modulatorHistories.getOrPut(mod.id) { CvHistoryBuffer(200) }
+                val cvVal = evaluateModulator(mod)
+                val isBipolar = param.minClamp < 0f
+                val rawModAmount = if (isBipolar) {
+                    cvVal * mod.amplitude + mod.dcOffset
+                } else {
+                    ((cvVal + 1f) / 2f) * mod.amplitude + mod.dcOffset
+                }
+                val scalar = if (mod.operator == ModulationOperator.ADD) {
+                    if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
+                } else 1.0f
+                val modAmount = rawModAmount * scalar
+                val modulatorVal = when (mod.operator) {
+                    ModulationOperator.ADD -> param.baseValue + modAmount
+                    ModulationOperator.MUL -> param.baseValue * (1.0f + modAmount)
+                    ModulationOperator.SCALE -> param.baseValue * (1.0f - mod.amplitude + modAmount)
+                }.coerceIn(param.minClamp, param.maxClamp)
+                hist.add(modulatorVal)
+            }
+
+            // Oscilloscope showing final value history plus modulator histories
+            drawFinalOscilloscope(param.history, param.minClamp, param.maxClamp, themeColor, activeMods, modulatorHistories)
+
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            // --- INITIAL VALUE CONTROLS ---
+            UITheme.h3("Initial Value Configuration")
+            ImGui.spacing()
+
+            if (isHueSweep && mandala != null) {
+                val petals = mandala.recipe.petals
+                val options = mandala.getSymmetricHueCycles(petals)
+                val currentVal = param.baseValue
+                val currentIndex = if (options.size > 1) {
+                    (currentVal * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1)
+                } else {
+                    0
+                }
+
+                UITheme.caption("Symmetric Cycles (Symmetry-preserving factor/multiple of $petals petals):")
+
+                val labels = options.map { "$it cycles" }.toTypedArray()
+                val selectedOpt = ImInt(currentIndex)
+                ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
+                if (ImGui.combo("##hue_symmetry_combo", selectedOpt, labels)) {
+                    val nextIdx = selectedOpt.get()
+                    val newVal = if (options.size > 1) nextIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
+                    param.set(newVal)
+                }
+                ImGui.popItemWidth()
+
+                ImGui.spacing()
+                UITheme.caption("Choose the number of color repetitions along the curve.")
+                UITheme.caption("Because it is a factor or multiple of $petals, symmetry is preserved!")
+
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+
+                drawCustomRangeSlider(
+                    idPrefix = "hue_sweep_base",
+                    label = "Symmetry Random Range",
+                    currentValue = param.baseValue,
+                    currentMin = param.baseMin,
+                    currentMax = param.baseMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = param.randomizeBase,
+                    showControls = false,
+                    formatValue = {
+                        val idx = if (options.size > 1) (it * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+                        "${options[idx]} cycles"
+                    },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = param.baseMin
+                            val rMax = param.baseMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((param.baseValue - 0.1f).coerceAtLeast(0f), (param.baseValue + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            param.randomizeBase = true
+                            param.baseMin = nextMin
+                            param.baseMax = nextMax
+                        } else {
+                            param.randomizeBase = false
+                            param.baseMin = param.baseValue
+                            param.baseMax = param.baseValue
+                        }
+                    },
+                    onRandomizeNow = {
+                        param.randomizeBaseValue()
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        param.baseMin = safeMin
+                        param.baseMax = safeMax
+                        param.baseValue = param.baseValue.coerceIn(safeMin, safeMax)
+                    },
+                    onValueChanged = { newVal ->
+                        param.baseValue = newVal
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+                )
+            } else {
+                val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
+
+                drawCustomRangeSlider(
+                    label = "Initial Range",
+                    currentValue = param.baseValue,
+                    currentMin = param.baseMin,
+                    currentMax = param.baseMax,
+                    minLimit = param.minClamp,
+                    maxLimit = param.maxClamp,
+                    isRandomizable = param.randomizeBase,
+                    showControls = true,
+                    formatValue = {
+                        when {
+                            isBgStyle -> {
+                                when (it.roundToInt()) {
+                                    0 -> "Off"
+                                    1 -> "Solid Color"
+                                    2 -> "Plasma"
+                                    else -> "Off"
+                                }
+                            }
+                            isLobes -> "${it.roundToInt()} lobes"
+                            isRecipeSelect -> {
+                                if (mandala != null) {
+                                    val currentLobe = mandala.parameters["Lobes"]?.value?.roundToInt() ?: mandala.recipe.petals
+                                    val closestLobe = MandalaLibrary.uniquePetals.minByOrNull { kotlin.math.abs(it - currentLobe) } ?: 3
+                                    val filtered = MandalaLibrary.recipesByPetals[closestLobe] ?: emptyList()
+                                    if (filtered.isNotEmpty()) {
+                                        val idx = (it * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
+                                        "[${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
+                                    } else "No recipes"
+                                } else "%.3f".format(it)
+                            }
+                            else -> "%.3f".format(it)
+                        }
+                    },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = param.baseMin
+                            val rMax = param.baseMax
+                            val rangeSpan = param.maxClamp - param.minClamp
+                            val offset = rangeSpan * 0.1f
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((param.baseValue - offset).coerceAtLeast(param.minClamp), (param.baseValue + offset).coerceAtMost(param.maxClamp))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            param.randomizeBase = true
+                            param.baseMin = nextMin
+                            param.baseMax = nextMax
+                        } else {
+                            param.randomizeBase = false
+                            param.baseMin = param.baseValue
+                            param.baseMax = param.baseValue
+                        }
+                    },
+                    onRandomizeNow = {
+                        param.randomizeBaseValue()
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        param.baseMin = safeMin
+                        param.baseMax = safeMax
+                        param.baseValue = param.baseValue.coerceIn(safeMin, safeMax)
+                    },
+                    onValueChanged = { newVal ->
+                        param.baseValue = newVal
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+                )
+            }
+
+            ImGui.spacing()
+            val randomizeBaseActive = param.randomizeBase
+            if (!randomizeBaseActive) {
+                ImGui.beginDisabled()
+            }
+            if (ImGui.button("🎲 Randomize Initial Value", ImGui.getContentRegionAvailX(), 30f)) {
+                param.randomizeBaseValue()
+            }
+            if (!randomizeBaseActive) {
+                ImGui.endDisabled()
+            }
+
+            ImGui.spacing()
+            if (isHueSweep && mandala != null) {
+                val petals = mandala.recipe.petals
+                val options = mandala.getSymmetricHueCycles(petals)
+                val idx = if (options.size > 1) (param.baseValue * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+                UITheme.caption("Static Initial Value: ${options[idx]} cycles")
+            } else if (isBgStyle) {
+                val label = when (param.baseValue.roundToInt()) {
+                    0 -> "Off"
+                    1 -> "Solid Color"
+                    2 -> "Plasma"
+                    else -> "Off"
+                }
+                UITheme.caption("Static Initial Value: $label")
+            } else {
+                UITheme.caption("Static Initial Value: %.3f".format(param.baseValue))
+            }
+            val baseBarW = ImGui.getContentRegionAvailX()
+            val baseDl = ImGui.getWindowDrawList()
+            val cx = ImGui.getCursorScreenPosX()
+            val cy = ImGui.getCursorScreenPosY()
+            baseDl.addRectFilled(cx, cy, cx + baseBarW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            baseDl.addRectFilled(cx, cy, cx + baseBarW * param.baseValue, cy + 10f, getThemeColor("base"))
+            ImGui.dummy(baseBarW, 10f)
+
+            return
+        }
+
+        UITheme.h2Colored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, paramKey.replace("/", " | "))
+        ImGui.separator()
+        ImGui.spacing()
+
+        val isVirtual = activeMods.isEmpty()
+        if (isVirtual && cvId == "midi") {
+            activeHistory = null
+            activeCellId = null
+            UITheme.caption("No MIDI mapping on this parameter.")
+            ImGui.spacing()
+            UITheme.caption("To map a controller:")
+            UITheme.caption("1. Enable [MIDI Map] in the main menu bar.")
+            UITheme.caption("2. Click this cell (which will highlight in cyan).")
+            UITheme.caption("3. Turn a knob or move a fader on your MIDI controller.")
+            return
+        }
+
+        // Initialize or update oscilloscope history and virtual modulators
+        val currentActiveIds = activeMods.map { it.id }.toSet()
+        if (activeCellId != cell || activeHistory == null || currentActiveIds != lastActiveIds) {
+            activeHistory = CvHistoryBuffer(200)
+            activeCellId = cell
+            lastActiveIds = currentActiveIds
+            initializeVirtualModulators(cvId, activeMods, hasAdvanced)
+        }
+
+        var modsToDraw = activeMods + virtualModulators.filter { vm -> activeMods.none { am -> am.id == vm.id } }
+        if (cvId == "audio") {
+            val order = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
+            modsToDraw = modsToDraw.sortedBy { order.indexOf(it.sourceId) }
+        } else if (cvId == "trigger") {
+            val order = listOf("trigger_onset", "trigger_accent")
+            modsToDraw = modsToDraw.sortedBy { order.indexOf(it.sourceId) }
+        }
+        val isBipolar = param.minClamp < 0f
+        // Use the same formula as the engine so the O-scope displays what the parameter actually receives.
+        val combinedVal = llm.slop.spirals.cv.getCombinedEffectiveValue(activeMods, isBipolar)
+        activeHistory?.add(combinedVal)
+
+
+        // ── Unified Oscilloscope ─────────────────────────────────
+        drawOscilloscope(param, themeColor)
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // ── Modulators ───────────────────────────────────────────
+        for ((idx, existing) in modsToDraw.withIndex()) {
+            ImGui.pushID(existing.id)
+            
+            val bypassed = existing.bypassed
+            val currentThemeColor = getThemeColor(existing.sourceId)
+            val currentThemeRGB = getThemeColorRGB(existing.sourceId)
+            
+            // Draw background panel for modulator
+            val panelStartX = ImGui.getCursorScreenPosX()
+            val panelStartY = ImGui.getCursorScreenPosY()
+            val dl = ImGui.getWindowDrawList()
+            
+            if (bypassed) {
+                ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+            }
+            
+            val bandLabel = when (existing.sourceId) {
+                "audio_amp" -> "Amplitude"
+                "audio_bass" -> "Low"
+                "audio_mid" -> "Mid"
+                "audio_high" -> "High"
+                "trigger_onset" -> "Onset / Transient"
+                "trigger_accent" -> "Accent / Peak"
+                else -> null
+            }
+            val titleText = bandLabel ?: if (modsToDraw.size > 1) {
+                val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else "Modulator"
+                "$typeLabel ${idx + 1}"
+            } else {
+                val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else "Modulator"
+                typeLabel
+            }
+
+            ImGui.indent(10f) // Indent controls slightly
+
+            val btnHeight = ImGui.getFrameHeight()
+            val scale = btnHeight / 30f
+            val btnWidth = 50f * scale
+
+            if (bypassed) {
+                ImGui.popStyleVar() // Draw header controls at full opacity
+            }
+
+            // 1. Power icon (Active/Bypass button)
+            val btnX2 = ImGui.getCursorScreenPosX()
+            val btnY2 = ImGui.getCursorScreenPosY()
+            
+            // Push styled button colors: Green for active, Red for bypassed
+            val btnColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
+            val btnHoverColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
+            val btnActiveColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
+            
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
+            
+            if (ImGui.button("##bypass_bar_$idx", btnWidth, btnHeight)) {
+                replaceModulator(state, param, existing.copy(bypassed = !bypassed))
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip(if (bypassed) "Enable modulator (Active)" else "Bypass modulator")
+            }
+            ImGui.popStyleColor(3)
+            
+            // Draw universal on/off (power icon scaled/enlarged) on the button
+            val pColor = ImGui.colorConvertFloat4ToU32(1f, 1.0f, 1.0f, 1f)
+            val pCenterX = btnX2 + btnWidth / 2f
+            val pCenterY = btnY2 + btnHeight / 2f
+            val pRadius = 11f * scale
+            val pThickness = 3f * scale
+            
+            dl.addCircle(pCenterX, pCenterY, pRadius, pColor, 16, pThickness)
+            dl.addLine(pCenterX, pCenterY - pRadius * 1.3f, pCenterX, pCenterY + pRadius * 0.2f, pColor, pThickness)
+
+            // 2. Dice icon (Randomize button)
+            ImGui.sameLine(0f, 10f)
+            val btnX1 = ImGui.getCursorScreenPosX()
+            val btnY1 = ImGui.getCursorScreenPosY()
+            if (ImGui.button("##rand_bar_$idx", btnWidth, btnHeight)) {
+                val randomized = existing
+                    .randomizeAmplitude()
+                    .randomizeDcOffset()
+                    .randomizeSubdivision()
+                    .randomizePhaseOffset()
+                    .randomizeSlope()
+                replaceModulator(state, param, randomized)
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize primary LFO / modulator values")
+            }
+            
+            // Draw pair of dice inside the randomize button (scaled and enlarged 15% more)
+            val diceColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
+            val dotColor = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1f)
+            // Die 1
+            val dieW = 23f * scale
+            val d1X = btnX1 + 5f * scale
+            val d1Y = btnY1 + (btnHeight - dieW) / 2f
+            dl.addRectFilled(d1X, d1Y, d1X + dieW, d1Y + dieW, diceColor, 2f * scale)
+            dl.addRect(d1X, d1Y, d1X + dieW, d1Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
+            // Face 3 dots
+            val dotRadius = 1.7f * scale
+            dl.addCircleFilled(d1X + 5f * scale, d1Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 11.5f * scale, d1Y + 11.5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 18f * scale, d1Y + 18f * scale, dotRadius, dotColor)
+
+            // Die 2
+            val d2X = btnX1 + 24f * scale
+            val d2Y = btnY1 + (btnHeight - dieW) / 2f + 2f * scale
+            dl.addRectFilled(d2X, d2Y, d2X + dieW, d2Y + dieW, diceColor, 2f * scale)
+            dl.addRect(d2X, d2Y, d2X + dieW, d2Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
+            // Face 5 dots
+            dl.addCircleFilled(d2X + 5f * scale, d2Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 18f * scale, d2Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 11.5f * scale, d2Y + 11.5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 5f * scale, d2Y + 18f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 18f * scale, d2Y + 18f * scale, dotRadius, dotColor)
+
+            // 3. Operator dropdown (ADD/MUL/SCALE combo box)
+            ImGui.sameLine(0f, 10f)
+            val opIdx = ImInt(when (existing.operator) {
+                ModulationOperator.ADD -> 0
+                ModulationOperator.MUL -> 1
+                ModulationOperator.SCALE -> 2
+            })
+            ImGui.pushItemWidth(100f)
+            if (ImGui.combo("##op", opIdx, operatorLabels)) {
+                val newOp = when (opIdx.get()) {
+                    0 -> ModulationOperator.ADD
+                    1 -> ModulationOperator.MUL
+                    else -> ModulationOperator.SCALE
+                }
+                replaceModulator(state, param, existing.copy(operator = newOp))
+            }
+            ImGui.popItemWidth()
+
+            // 4. Title Text (vertically centered in the row, left-aligned)
+            ImGui.sameLine(0f, 115f)
+            val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
+            ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
+            UITheme.h2(titleText)
+
+            // 5. Reset button (trash can icon)
+            if (idx == 0) {
+                val resetWidth = 50f * scale
+                ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)
+                if (isVirtual) {
+                    ImGui.beginDisabled()
+                }
+                val btnX3 = ImGui.getCursorScreenPosX()
+                val btnY3 = ImGui.getCursorScreenPosY()
+                
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
+                if (ImGui.button("##reset_bar_$idx", resetWidth, btnHeight)) {
+                    val toRemove = activeMods.toList()
+                    for (mod in toRemove) {
+                        param.modulators.remove(mod)
+                    }
+                    ImGui.popStyleColor(2)
+                    if (isVirtual) {
+                        ImGui.endDisabled()
+                    }
+                    ImGui.unindent(10f)
+                    // If bypassed, style var was popped, so no need to pop it again
+                    ImGui.popID()
+                    return
+                }
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Clear/reset modulators")
+                }
+                ImGui.popStyleColor(2)
+                if (isVirtual) {
+                    ImGui.endDisabled()
+                }
+                
+                // Draw trash can on reset button (scaled/enlarged)
+                val tcColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
+                val tcX = btnX3 + resetWidth / 2f
+                val tcY = btnY3 + btnHeight / 2f
+                // Bucket
+                dl.addLine(tcX - 8f * scale, tcY - 5f * scale, tcX - 6f * scale, tcY + 11f * scale, tcColor, 2.2f * scale)
+                dl.addLine(tcX + 8f * scale, tcY - 5f * scale, tcX + 6f * scale, tcY + 11f * scale, tcColor, 2.2f * scale)
+                dl.addLine(tcX - 6f * scale, tcY + 11f * scale, tcX + 6f * scale, tcY + 11f * scale, tcColor, 2.2f * scale)
+                // Lid
+                dl.addLine(tcX - 11f * scale, tcY - 5f * scale, tcX + 11f * scale, tcY - 5f * scale, tcColor, 2.2f * scale)
+                // Handle
+                dl.addLine(tcX - 4f * scale, tcY - 5f * scale, tcX - 4f * scale, tcY - 9f * scale, tcColor, 2.2f * scale)
+                dl.addLine(tcX - 4f * scale, tcY - 9f * scale, tcX + 4f * scale, tcY - 9f * scale, tcColor, 2.2f * scale)
+                dl.addLine(tcX + 4f * scale, tcY - 9f * scale, tcX + 4f * scale, tcY - 5f * scale, tcColor, 2.2f * scale)
+                // Vertical lines inside (ribs)
+                dl.addLine(tcX - 3f * scale, tcY - 1f * scale, tcX - 2.5f * scale, tcY + 8f * scale, tcColor, 1.5f * scale)
+                dl.addLine(tcX + 3f * scale, tcY - 1f * scale, tcX + 2.5f * scale, tcY + 8f * scale, tcColor, 1.5f * scale)
+            }
+
+            if (bypassed) {
+                ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f) // Re-push style var for sub-controls
+            }
+
+            ImGui.spacing()
+
+        // ── Waveform Shape and Timing controls ───────────────────
+        val showWaveform = hasAdvanced && (!isSnh || isGen)
+        if (showWaveform) {
+            val startX = ImGui.getCursorPosX()
+
+            // 1. Shape Preset buttons
+            UITheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
+            ImGui.sameLine(0f, 10f)
+
+            val btnW = 80f
+            val btnH = ImGui.getFrameHeight()
+
+            // Sine Button
+            val isSine = existing.waveform == Waveform.SINE && existing.morph == 0.0f && existing.hold == 0.0f
+            if (isSine) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Sine##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.SINE,
+                    morph = 0.0f,
+                    hold = 0.0f
+                ))
+            }
+            if (isSine) ImGui.popStyleColor()
+
+            // Triangle Button
+            ImGui.sameLine(0f, 4f)
+            val isTri = existing.waveform == Waveform.TRIANGLE && existing.morph == 1.0f && existing.hold == 0.0f
+            if (isTri) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Triangle##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.TRIANGLE,
+                    morph = 1.0f,
+                    hold = 0.0f
+                ))
+            }
+            if (isTri) ImGui.popStyleColor()
+
+            // Square Button
+            ImGui.sameLine(0f, 4f)
+            val isSquare = existing.waveform == Waveform.SQUARE && existing.morph == 1.0f && existing.hold == 0.5f
+            if (isSquare) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Square##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.SQUARE,
+                    morph = 1.0f,
+                    hold = 0.5f
+                ))
+            }
+            if (isSquare) ImGui.popStyleColor()
+
+            // Random Button
+            ImGui.sameLine(0f, 4f)
+            val isRandom = existing.waveform == Waveform.RANDOM
+            if (isRandom) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Random##lfo1", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    waveform = Waveform.RANDOM
+                ))
+            }
+            if (isRandom) ImGui.popStyleColor()
+
+            // 2. Slew Preset buttons (only if not Random)
+            if (existing.waveform != Waveform.RANDOM) {
+                ImGui.sameLine(0f, 20f)
+                UITheme.body("Asymmetry:")
+                ImGui.sameLine(0f, 10f)
+
+                // Left Button
+                val isLeft = existing.slope <= 0.01f
+                if (isLeft) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Left##lfo1", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(slope = 0.001f))
+                }
+                if (isLeft) ImGui.popStyleColor()
+
+                // Center Button
+                ImGui.sameLine(0f, 4f)
+                val isCenter = existing.slope >= 0.49f && existing.slope <= 0.51f
+                if (isCenter) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Center##lfo1", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(slope = 0.5f))
+                }
+                if (isCenter) ImGui.popStyleColor()
+
+                // Right Button
+                ImGui.sameLine(0f, 4f)
+                val isRight = existing.slope >= 0.99f
+                if (isRight) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Right##lfo1", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(slope = 0.999f))
+                }
+                if (isRight) ImGui.popStyleColor()
+            }
+
+            ImGui.spacing()
+
+            // ── Unit Selection Dropdown (Time/Beat) if applicable ──
+            if (isGen) {
+                UITheme.body("LFO 1 Unit:")
+                ImGui.sameLine(0f, 10f)
+                val unitIdx = ImInt(existing.genUnit.ordinal)
+                val unitLabels = arrayOf("Time", "Beat")
+                if (bypassed) ImGui.popStyleVar()
+                ImGui.pushItemWidth(125f)
+                if (ImGui.combo("##unit", unitIdx, unitLabels)) {
+                    replaceModulator(state, param, existing.copy(genUnit = GenUnit.entries[unitIdx.get()]))
+                }
+                ImGui.popItemWidth()
+                if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+                ImGui.spacing()
+            }
+        }
+
+        // Operator was moved to top row
+        ImGui.spacing()
+
+        // ── DC Offset ─────────────────────────────────────────────
+        drawCustomRangeSlider(
+            idPrefix = existing.id,
+            label = "DC Offset",
+            themeColor = currentThemeColor,
+            currentValue = existing.dcOffset,
+            currentMin = existing.dcOffsetMin,
+            currentMax = existing.dcOffsetMax,
+            minLimit = -1f,
+            maxLimit = 1f,
+            isRandomizable = existing.randomizeDcOffset,
+            formatValue = { "%.3f".format(it) },
+            onRandomizableChanged = { checked ->
+                if (checked) {
+                    val rMin = existing.dcOffsetMin
+                    val rMax = existing.dcOffsetMax
+                    val (nextMin, nextMax) = if (rMin == rMax) {
+                        Pair((existing.dcOffset - 0.1f).coerceAtLeast(-1f), (existing.dcOffset + 0.1f).coerceAtMost(1f))
+                    } else {
+                        Pair(rMin, rMax)
+                    }
+                    replaceModulator(state, param, existing.copy(
+                        randomizeDcOffset = true,
+                        dcOffsetMin = nextMin,
+                        dcOffsetMax = nextMax
+                    ))
+                } else {
+                    replaceModulator(state, param, existing.copy(
+                        randomizeDcOffset = false,
+                        dcOffsetMin = existing.dcOffset,
+                        dcOffsetMax = existing.dcOffset
+                    ))
+                }
+            },
+            onRandomizeNow = {
+                replaceModulator(state, param, existing.randomizeDcOffset())
+            },
+            onRangeChanged = { nextMin, nextMax ->
+                val safeMin = minOf(nextMin, nextMax)
+                val safeMax = maxOf(nextMin, nextMax)
+                val nextActive = existing.dcOffset.coerceIn(safeMin, safeMax)
+                replaceModulator(state, param, existing.copy(
+                    dcOffsetMin = safeMin,
+                    dcOffsetMax = safeMax,
+                    dcOffset = nextActive
+                ))
+            },
+            onValueChanged = { newVal ->
+                replaceModulator(state, param, existing.copy(
+                    dcOffset = newVal,
+                    dcOffsetMin = newVal,
+                    dcOffsetMax = newVal
+                ))
+            }
+        )
+        ImGui.spacing()
+
+        // ── Amplitude ─────────────────────────────────────────────
+        drawCustomRangeSlider(
+            idPrefix = existing.id,
+            label = "Amplitude",
+            themeColor = currentThemeColor,
+            currentValue = existing.amplitude,
+            currentMin = existing.amplitudeMin,
+            currentMax = existing.amplitudeMax,
+            minLimit = 0f,
+            maxLimit = 1f,
+            isRandomizable = existing.randomizeAmplitude,
+            formatValue = { "%.3f".format(it) },
+            onRandomizableChanged = { checked ->
+                if (checked) {
+                    val rMin = existing.amplitudeMin
+                    val rMax = existing.amplitudeMax
+                    val (nextMin, nextMax) = if (rMin == rMax) {
+                        Pair((existing.amplitude - 0.1f).coerceAtLeast(0f), (existing.amplitude + 0.1f).coerceAtMost(1f))
+                    } else {
+                        Pair(rMin, rMax)
+                    }
+                    replaceModulator(state, param, existing.copy(
+                        randomizeAmplitude = true,
+                        amplitudeMin = nextMin,
+                        amplitudeMax = nextMax
+                    ))
+                } else {
+                    replaceModulator(state, param, existing.copy(
+                        randomizeAmplitude = false,
+                        amplitudeMin = existing.amplitude,
+                        amplitudeMax = existing.amplitude
+                    ))
+                }
+            },
+            onRandomizeNow = {
+                replaceModulator(state, param, existing.randomizeAmplitude())
+            },
+            onRangeChanged = { nextMin, nextMax ->
+                val safeMin = minOf(nextMin, nextMax)
+                val safeMax = maxOf(nextMin, nextMax)
+                val nextActive = existing.amplitude.coerceIn(safeMin, safeMax)
+                replaceModulator(state, param, existing.copy(
+                    amplitudeMin = safeMin,
+                    amplitudeMax = safeMax,
+                    amplitude = nextActive
+                ))
+            },
+            onValueChanged = { newVal ->
+                replaceModulator(state, param, existing.copy(
+                    amplitude = newVal,
+                    amplitudeMin = newVal,
+                    amplitudeMax = newVal
+                ))
+            }
+        )
+        ImGui.spacing()
+
+        if (!hasAdvanced) {
+            ImGui.unindent(10f)
+            if (bypassed) {
+                ImGui.popStyleVar()
+            }
+            ImGui.popID()
+            if (idx < modsToDraw.size - 1) {
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+            }
+            continue
+        }
+
+
+
+        // ── Subdivision (Beat / S&H) ─────────────────────────────
+        if (isBeat || isSnh || (isGen && existing.genUnit == GenUnit.BEAT)) {
+            val currentMinIdx = subdivisionOptions.indexOfFirst { it == existing.subdivisionMin }.coerceAtLeast(0)
+            val currentMaxIdx = subdivisionOptions.indexOfFirst { it == existing.subdivisionMax }.coerceAtLeast(0)
+            val currentActiveIdx = subdivisionOptions.indexOfFirst { it == existing.subdivision }.coerceAtLeast(0)
+            
+            drawBeatDivisionSlider(
+                idPrefix = existing.id,
+                label = if (isGen) "LFO 1 Beat Div" else "Beat Div",
+                themeColor = currentThemeColor,
+                currentValue = currentActiveIdx.toFloat(),
+                currentMin = currentMinIdx.toFloat(),
+                currentMax = currentMaxIdx.toFloat(),
+                minLimit = 0f,
+                maxLimit = (subdivisionOptions.size - 1).toFloat(),
+                isRandomizable = existing.randomizeSubdivision,
+                formatValue = { idx -> subdivisionLabels[idx.toInt().coerceIn(0, subdivisionOptions.size - 1)] },
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.subdivisionMin
+                        val rMax = existing.subdivisionMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            val idx = subdivisionOptions.indexOfFirst { it == rMin }.coerceIn(0, subdivisionOptions.size - 1)
+                            val minIdx = (idx - 1).coerceAtLeast(0)
+                            val maxIdx = (idx + 1).coerceAtMost(subdivisionOptions.size - 1)
+                            Pair(subdivisionOptions[minIdx], subdivisionOptions[maxIdx])
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        replaceModulator(state, param, existing.copy(
+                            randomizeSubdivision = true,
+                            subdivisionMin = nextMin,
+                            subdivisionMax = nextMax
+                        ))
+                    } else {
+                        replaceModulator(state, param, existing.copy(
+                            randomizeSubdivision = false,
+                            subdivisionMin = existing.subdivision,
+                            subdivisionMax = existing.subdivision
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    replaceModulator(state, param, existing.randomizeSubdivision())
+                },
+                onRangeChanged = { nextMinIdx, nextMaxIdx ->
+                    val rawMinVal = subdivisionOptions[nextMinIdx.toInt().coerceIn(0, subdivisionOptions.size - 1)]
+                    val rawMaxVal = subdivisionOptions[nextMaxIdx.toInt().coerceIn(0, subdivisionOptions.size - 1)]
+                    val nextMinVal = minOf(rawMinVal, rawMaxVal)
+                    val nextMaxVal = maxOf(rawMinVal, rawMaxVal)
+                    val nextActive = existing.subdivision.coerceIn(nextMinVal, nextMaxVal)
+                    replaceModulator(state, param, existing.copy(
+                        subdivisionMin = nextMinVal,
+                        subdivisionMax = nextMaxVal,
+                        subdivision = nextActive
+                    ))
+                },
+                onValueChanged = { newValIdx ->
+                    val newVal = subdivisionOptions[newValIdx.toInt().coerceIn(0, subdivisionOptions.size - 1)]
+                    replaceModulator(state, param, existing.copy(
+                        subdivision = newVal,
+                        subdivisionMin = newVal,
+                        subdivisionMax = newVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+        }
+
+        // ── LFO Period / Speed ───────────────────────────────────
+        if (isLfo || (isGen && existing.genUnit == GenUnit.TIME)) {
+            val formatFunc: (Float) -> String = { v -> TimeUtils.formatPeriod(v) }
+            val parseFunc: (String) -> Float? = { s -> TimeUtils.parsePeriod(s) }
+
+            drawCustomRangeSlider(
+                idPrefix = existing.id,
+                label = if (isGen) "LFO 1 Period" else "LFO Period",
+                themeColor = currentThemeColor,
+                currentValue = existing.subdivision,
+                currentMin = existing.subdivisionMin,
+                currentMax = existing.subdivisionMax,
+                minLimit = 0.01f,
+                maxLimit = 86400f,
+                isRandomizable = existing.randomizeSubdivision,
+                formatValue = formatFunc,
+                isLogarithmic = true,
+                parseValue = parseFunc,
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.subdivisionMin
+                        val rMax = existing.subdivisionMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            Pair((existing.subdivision * 0.5f).coerceIn(0.01f, 86400f), (existing.subdivision * 2f).coerceIn(0.01f, 86400f))
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        replaceModulator(state, param, existing.copy(
+                            randomizeSubdivision = true,
+                            subdivisionMin = nextMin,
+                            subdivisionMax = nextMax
+                        ))
+                    } else {
+                        replaceModulator(state, param, existing.copy(
+                            randomizeSubdivision = false,
+                            subdivisionMin = existing.subdivision,
+                            subdivisionMax = existing.subdivision
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    replaceModulator(state, param, existing.randomizeSubdivision())
+                },
+                onRangeChanged = { nextMin, nextMax ->
+                    val roundedMin = if (nextMin >= 3600f) nextMin.toInt().toFloat() else nextMin
+                    val roundedMax = if (nextMax >= 3600f) nextMax.toInt().toFloat() else nextMax
+                    val safeMin = minOf(roundedMin, roundedMax)
+                    val safeMax = maxOf(roundedMin, roundedMax)
+                    val nextActive = existing.subdivision.coerceIn(safeMin, safeMax)
+                    val roundedActive = if (nextActive >= 3600f) nextActive.toInt().toFloat() else nextActive
+                    replaceModulator(state, param, existing.copy(
+                        subdivisionMin = safeMin,
+                        subdivisionMax = safeMax,
+                        subdivision = roundedActive
+                    ))
+                },
+                onValueChanged = { newVal ->
+                    val roundedVal = if (newVal >= 3600f) newVal.toInt().toFloat() else newVal
+                    replaceModulator(state, param, existing.copy(
+                        subdivision = roundedVal,
+                        subdivisionMin = roundedVal,
+                        subdivisionMax = roundedVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+        }
+
+        // ── Phase Offset ─────────────────────────────────────────
+        drawCustomRangeSlider(
+            idPrefix = existing.id,
+            label = if (isGen) "LFO 1 Phase" else "Phase Offset",
+            themeColor = currentThemeColor,
+            currentValue = existing.phaseOffset,
+            currentMin = existing.phaseOffsetMin,
+            currentMax = existing.phaseOffsetMax,
+            minLimit = 0f,
+            maxLimit = 1f,
+            isRandomizable = existing.randomizePhaseOffset,
+            formatValue = { "%.3f".format(it) },
+            onRandomizableChanged = { checked ->
+                if (checked) {
+                    val rMin = existing.phaseOffsetMin
+                    val rMax = existing.phaseOffsetMax
+                    val (nextMin, nextMax) = if (rMin == rMax) {
+                        Pair((existing.phaseOffset - 0.1f).coerceAtLeast(0f), (existing.phaseOffset + 0.1f).coerceAtMost(1f))
+                    } else {
+                        Pair(rMin, rMax)
+                    }
+                    replaceModulator(state, param, existing.copy(
+                        randomizePhaseOffset = true,
+                        phaseOffsetMin = nextMin,
+                        phaseOffsetMax = nextMax
+                    ))
+                } else {
+                    replaceModulator(state, param, existing.copy(
+                        randomizePhaseOffset = false,
+                        phaseOffsetMin = existing.phaseOffset,
+                        phaseOffsetMax = existing.phaseOffset
+                    ))
+                }
+            },
+            onRandomizeNow = {
+                replaceModulator(state, param, existing.randomizePhaseOffset())
+            },
+            onRangeChanged = { nextMin, nextMax ->
+                val safeMin = minOf(nextMin, nextMax)
+                val safeMax = maxOf(nextMin, nextMax)
+                val nextActive = existing.phaseOffset.coerceIn(safeMin, safeMax)
+                replaceModulator(state, param, existing.copy(
+                    phaseOffsetMin = safeMin,
+                    phaseOffsetMax = safeMax,
+                    phaseOffset = nextActive
+                ))
+            },
+            onValueChanged = { newVal ->
+                replaceModulator(state, param, existing.copy(
+                    phaseOffset = newVal,
+                    phaseOffsetMin = newVal,
+                    phaseOffsetMax = newVal
+                ))
+            }
+        )
+        ImGui.spacing()
+
+        if (hasAdvanced) {
+            // ── Morph Slider ──
+            drawCustomRangeSlider(
+                idPrefix = existing.id + "_morph",
+                label = if (isGen) "LFO 1 Morph" else "Morph",
+                themeColor = currentThemeColor,
+                currentValue = existing.morph,
+                currentMin = existing.morphMin,
+                currentMax = existing.morphMax,
+                minLimit = 0f,
+                maxLimit = 1f,
+                isRandomizable = existing.randomizeMorph,
+                formatValue = { "%.3f".format(it) },
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.morphMin
+                        val rMax = existing.morphMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            Pair((existing.morph - 0.1f).coerceAtLeast(0f), (existing.morph + 0.1f).coerceAtMost(1f))
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        replaceModulator(state, param, existing.copy(
+                            randomizeMorph = true,
+                            morphMin = nextMin,
+                            morphMax = nextMax
+                        ))
+                    } else {
+                        replaceModulator(state, param, existing.copy(
+                            randomizeMorph = false,
+                            morphMin = existing.morph,
+                            morphMax = existing.morph
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    replaceModulator(state, param, existing.randomizeMorph())
+                },
+                onRangeChanged = { nextMin, nextMax ->
+                    val safeMin = minOf(nextMin, nextMax)
+                    val safeMax = maxOf(nextMin, nextMax)
+                    val nextActive = existing.morph.coerceIn(safeMin, safeMax)
+                    replaceModulator(state, param, existing.copy(
+                        morphMin = safeMin,
+                        morphMax = safeMax,
+                        morph = nextActive
+                    ))
+                },
+                onValueChanged = { newVal ->
+                    replaceModulator(state, param, existing.copy(
+                        morph = newVal,
+                        morphMin = newVal,
+                        morphMax = newVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+
+            // ── Hold Slider ──
+            drawCustomRangeSlider(
+                idPrefix = existing.id + "_hold",
+                label = if (isGen) "LFO 1 Hold" else "Hold",
+                themeColor = currentThemeColor,
+                currentValue = existing.hold,
+                currentMin = existing.holdMin,
+                currentMax = existing.holdMax,
+                minLimit = 0f,
+                maxLimit = 0.99f,
+                isRandomizable = existing.randomizeHold,
+                formatValue = { "%.3f".format(it) },
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.holdMin
+                        val rMax = existing.holdMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.99f))
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        replaceModulator(state, param, existing.copy(
+                            randomizeHold = true,
+                            holdMin = nextMin,
+                            holdMax = nextMax
+                        ))
+                    } else {
+                        replaceModulator(state, param, existing.copy(
+                            randomizeHold = false,
+                            holdMin = existing.hold,
+                            holdMax = existing.hold
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    replaceModulator(state, param, existing.randomizeHold())
+                },
+                onRangeChanged = { nextMin, nextMax ->
+                    val safeMin = minOf(nextMin, nextMax)
+                    val safeMax = maxOf(nextMin, nextMax)
+                    val nextActive = existing.hold.coerceIn(safeMin, safeMax)
+                    replaceModulator(state, param, existing.copy(
+                        holdMin = safeMin,
+                        holdMax = safeMax,
+                        hold = nextActive
+                    ))
+                },
+                onValueChanged = { newVal ->
+                    replaceModulator(state, param, existing.copy(
+                        hold = newVal,
+                        holdMin = newVal,
+                        holdMax = newVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+
+            // ── Slew / Slope Slider (only if not Random) ──
+            if (existing.waveform != Waveform.RANDOM) {
+                drawCustomRangeSlider(
+                    idPrefix = existing.id,
+                    label = if (isGen) "LFO 1 Slew" else "Slew",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.slope,
+                    currentMin = existing.slopeMin,
+                    currentMax = existing.slopeMax,
+                    minLimit = 0.001f,
+                    maxLimit = 0.999f,
+                    isRandomizable = existing.randomizeSlope,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.slopeMin
+                            val rMax = existing.slopeMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.slope - 0.1f).coerceAtLeast(0.001f), (existing.slope + 0.1f).coerceAtMost(0.999f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeSlope = true,
+                                slopeMin = nextMin,
+                                slopeMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeSlope = false,
+                                slopeMin = existing.slope,
+                                slopeMax = existing.slope
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeSlope())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.slope.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            slopeMin = safeMin,
+                            slopeMax = safeMax,
+                            slope = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            slope = newVal,
+                            slopeMin = newVal,
+                            slopeMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+            }
+        }
+
+        if (isGen) {
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            val currentMode = existing.generatorModMode
+            val modeLabels = arrayOf("AM (Amplitude)", "PM (Phase)", "ADD (Additive)")
+            val modeIdx = ImInt(if (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
+
+            val lfo2Bypassed = (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE)
+            val btnX2 = ImGui.getCursorScreenPosX()
+            val btnY2 = ImGui.getCursorScreenPosY()
+            
+            // Push styled button colors: Green for active, Red for bypassed
+            val btnColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
+            val btnHoverColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
+            val btnActiveColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
+            
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
+            
+            if (ImGui.button("##bypass_lfo2_$idx", btnWidth, btnHeight)) {
+                val nextMode = if (lfo2Bypassed) llm.slop.spirals.parameters.GeneratorModMode.AM else llm.slop.spirals.parameters.GeneratorModMode.NONE
+                replaceModulator(state, param, existing.copy(generatorModMode = nextMode))
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
+            }
+            ImGui.popStyleColor(3)
+            
+            // Draw power icon
+            val pColor = ImGui.colorConvertFloat4ToU32(1f, 1.0f, 1.0f, 1f)
+            val pCenterX = btnX2 + btnWidth / 2f
+            val pCenterY = btnY2 + btnHeight / 2f
+            val pRadius = 11f * scale
+            val pThickness = 3f * scale
+            
+            dl.addCircle(pCenterX, pCenterY, pRadius, pColor, 16, pThickness)
+            dl.addLine(pCenterX, pCenterY - pRadius * 1.3f, pCenterX, pCenterY + pRadius * 0.2f, pColor, pThickness)
+
+            // 2. Dice button for LFO 2
+            ImGui.sameLine(0f, 10f)
+            val btnX1 = ImGui.getCursorScreenPosX()
+            val btnY1 = ImGui.getCursorScreenPosY()
+            if (ImGui.button("##rand_lfo2_$idx", btnWidth, btnHeight)) {
+                val randomized = existing
+                    .randomizeGeneratorModDepth()
+                    .randomizeModSubdivision()
+                    .randomizeModPhaseOffset()
+                    .randomizeModSlope()
+                    .randomizeModMorph()
+                    .randomizeModHold()
+                replaceModulator(state, param, randomized)
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize LFO 2 values")
+            }
+            
+            // Draw pair of dice inside the LFO 2 randomize button
+            val diceColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 1f)
+            val dotColor = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1f)
+            // Die 1
+            val dieW = 23f * scale
+            val d1X = btnX1 + 5f * scale
+            val d1Y = btnY1 + (btnHeight - dieW) / 2f
+            dl.addRectFilled(d1X, d1Y, d1X + dieW, d1Y + dieW, diceColor, 2f * scale)
+            dl.addRect(d1X, d1Y, d1X + dieW, d1Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
+            // Face 3 dots
+            val dotRadius = 1.7f * scale
+            dl.addCircleFilled(d1X + 5f * scale, d1Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 11.5f * scale, d1Y + 11.5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d1X + 18f * scale, d1Y + 18f * scale, dotRadius, dotColor)
+
+            // Die 2
+            val d2X = btnX1 + 24f * scale
+            val d2Y = btnY1 + (btnHeight - dieW) / 2f + 2f * scale
+            dl.addRectFilled(d2X, d2Y, d2X + dieW, d2Y + dieW, diceColor, 2f * scale)
+            dl.addRect(d2X, d2Y, d2X + dieW, d2Y + dieW, dotColor, 2f * scale, 0, 1.2f * scale)
+            // Face 5 dots
+            dl.addCircleFilled(d2X + 5f * scale, d2Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 18f * scale, d2Y + 5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 11.5f * scale, d2Y + 11.5f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 5f * scale, d2Y + 18f * scale, dotRadius, dotColor)
+            dl.addCircleFilled(d2X + 18f * scale, d2Y + 18f * scale, dotRadius, dotColor)
+
+            // Title text for LFO 2
+            ImGui.sameLine(0f, 225f)
+            val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
+            ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
+            val lfo2Title = if (isLfo) "LFO 2" else "Oscillator 2"
+            UITheme.h2(lfo2Title)
+            
+            ImGui.spacing()
+
+            val startX = ImGui.getCursorPosX()
+            val lfo2Disabled = (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE)
+
+            if (lfo2Disabled) {
+                ImGui.beginDisabled()
+            }
+
+            val btnW = 80f
+            val btnH = ImGui.getFrameHeight()
+
+            // 1. LFO 2 Shape Preset buttons
+            UITheme.body("LFO 2 Shape:")
+            ImGui.sameLine(0f, 10f)
+
+            // Sine Button
+            val isModSine = existing.modWaveform == Waveform.SINE && existing.modMorph == 0.0f && existing.modHold == 0.0f
+            if (isModSine) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Sine##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.SINE,
+                    modMorph = 0.0f,
+                    modHold = 0.0f
+                ))
+            }
+            if (isModSine) ImGui.popStyleColor()
+            
+            // Triangle Button
+            ImGui.sameLine(0f, 4f)
+            val isModTri = existing.modWaveform == Waveform.TRIANGLE && existing.modMorph == 1.0f && existing.modHold == 0.0f
+            if (isModTri) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Triangle##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.TRIANGLE,
+                    modMorph = 1.0f,
+                    modHold = 0.0f
+                ))
+            }
+            if (isModTri) ImGui.popStyleColor()
+
+            // Square Button
+            ImGui.sameLine(0f, 4f)
+            val isModSquare = existing.modWaveform == Waveform.SQUARE && existing.modMorph == 1.0f && existing.modHold == 0.5f
+            if (isModSquare) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Square##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.SQUARE,
+                    modMorph = 1.0f,
+                    modHold = 0.5f
+                ))
+            }
+            if (isModSquare) ImGui.popStyleColor()
+
+            // Random Button
+            ImGui.sameLine(0f, 4f)
+            val isModRandom = existing.modWaveform == Waveform.RANDOM
+            if (isModRandom) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+            if (ImGui.button("Random##lfo2", btnW, btnH)) {
+                replaceModulator(state, param, existing.copy(
+                    modWaveform = Waveform.RANDOM
+                ))
+            }
+            if (isModRandom) ImGui.popStyleColor()
+
+            // 2. LFO 2 Slew Preset buttons (only if not Random)
+            if (existing.modWaveform != Waveform.RANDOM) {
+                ImGui.sameLine(0f, 20f)
+                UITheme.body("Asymmetry:")
+                ImGui.sameLine(0f, 10f)
+
+                // Left Button
+                val isModLeft = existing.modSlope <= 0.01f
+                if (isModLeft) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Left##lfo2", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(modSlope = 0.001f))
+                }
+                if (isModLeft) ImGui.popStyleColor()
+
+                // Center Button
+                ImGui.sameLine(0f, 4f)
+                val isModCenter = existing.modSlope >= 0.49f && existing.modSlope <= 0.51f
+                if (isModCenter) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Center##lfo2", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(modSlope = 0.5f))
+                }
+                if (isModCenter) ImGui.popStyleColor()
+
+                // Right Button
+                ImGui.sameLine(0f, 4f)
+                val isModRight = existing.modSlope >= 0.99f
+                if (isModRight) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, currentThemeColor)
+                if (ImGui.button("Right##lfo2", 60f, btnH)) {
+                    replaceModulator(state, param, existing.copy(modSlope = 0.999f))
+                }
+                if (isModRight) ImGui.popStyleColor()
+            }
+
+            ImGui.spacing()
+
+            // 3. Dropdowns Row for Unit and Mode
+            UITheme.body("LFO 2 Unit:")
+            ImGui.sameLine(0f, 10f)
+            val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
+            val modUnitLabels = arrayOf("Time", "Beat")
+            if (bypassed) ImGui.popStyleVar()
+            ImGui.pushItemWidth(125f)
+            if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {
+                replaceModulator(state, param, existing.copy(modGenUnit = GenUnit.entries[modUnitIdx.get()]))
+            }
+            ImGui.popItemWidth()
+            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+
+            if (lfo2Disabled) {
+                ImGui.endDisabled()
+            }
+
+            ImGui.sameLine(0f, 20f)
+            UITheme.body("Modulation Mode:")
+            ImGui.sameLine(0f, 10f)
+
+            if (bypassed) ImGui.popStyleVar()
+            ImGui.pushItemWidth(200f)
+            if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
+                val nextMode = llm.slop.spirals.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
+                replaceModulator(state, param, existing.copy(generatorModMode = nextMode))
+            }
+            ImGui.popItemWidth()
+            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+
+            ImGui.spacing()
+
+            if (currentMode != llm.slop.spirals.parameters.GeneratorModMode.NONE) {
+                ImGui.spacing()
+
+                // Modulation Depth range slider
+                drawCustomRangeSlider(
+                    idPrefix = existing.id + "_mod_depth",
+                    label = "Mod Depth",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.generatorModDepth,
+                    currentMin = existing.generatorModDepthMin,
+                    currentMax = existing.generatorModDepthMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = existing.randomizeGeneratorModDepth,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.generatorModDepthMin
+                            val rMax = existing.generatorModDepthMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.generatorModDepth - 0.1f).coerceAtLeast(0f), (existing.generatorModDepth + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeGeneratorModDepth = true,
+                                generatorModDepthMin = nextMin,
+                                generatorModDepthMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeGeneratorModDepth = false,
+                                generatorModDepthMin = existing.generatorModDepth,
+                                generatorModDepthMax = existing.generatorModDepth
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeGeneratorModDepth())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.generatorModDepth.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            generatorModDepthMin = safeMin,
+                            generatorModDepthMax = safeMax,
+                            generatorModDepth = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            generatorModDepth = newVal,
+                            generatorModDepthMin = newVal,
+                            generatorModDepthMax = newVal
+                        ))
+                    }
+                )
+
+                ImGui.spacing()
+
+                // LFO 2 Speed (Subdivision or Period)
+                if (existing.modGenUnit == GenUnit.BEAT) {
+                    val currentMinIdx = subdivisionOptions.indexOfFirst { it == existing.modSubdivisionMin }.coerceAtLeast(0)
+                    val currentMaxIdx = subdivisionOptions.indexOfFirst { it == existing.modSubdivisionMax }.coerceAtLeast(0)
+                    val currentActiveIdx = subdivisionOptions.indexOfFirst { it == existing.modSubdivision }.coerceAtLeast(0)
+
+                    drawBeatDivisionSlider(
+                        idPrefix = existing.id + "_mod",
+                        label = "LFO 2 Beat Div",
+                        themeColor = currentThemeColor,
+                        currentValue = currentActiveIdx.toFloat(),
+                        currentMin = currentMinIdx.toFloat(),
+                        currentMax = currentMaxIdx.toFloat(),
+                        minLimit = 0f,
+                        maxLimit = (subdivisionOptions.size - 1).toFloat(),
+                        isRandomizable = existing.randomizeModSubdivision,
+                        formatValue = { idx -> subdivisionLabels[idx.toInt().coerceIn(0, subdivisionOptions.size - 1)] },
+                        onRandomizableChanged = { checked ->
+                            if (checked) {
+                                val rMin = existing.modSubdivisionMin
+                                val rMax = existing.modSubdivisionMax
+                                val (nextMin, nextMax) = if (rMin == rMax) {
+                                    val idx = subdivisionOptions.indexOfFirst { it == rMin }.coerceIn(0, subdivisionOptions.size - 1)
+                                    val minIdx = (idx - 1).coerceAtLeast(0)
+                                    val maxIdx = (idx + 1).coerceAtMost(subdivisionOptions.size - 1)
+                                    Pair(subdivisionOptions[minIdx], subdivisionOptions[maxIdx])
+                                } else {
+                                    Pair(rMin, rMax)
+                                }
+                                replaceModulator(state, param, existing.copy(
+                                    randomizeModSubdivision = true,
+                                    modSubdivisionMin = nextMin,
+                                    modSubdivisionMax = nextMax
+                                ))
+                            } else {
+                                replaceModulator(state, param, existing.copy(
+                                    randomizeModSubdivision = false,
+                                    modSubdivisionMin = existing.modSubdivision,
+                                    modSubdivisionMax = existing.modSubdivision
+                                ))
+                            }
+                        },
+                        onRandomizeNow = {
+                            replaceModulator(state, param, existing.randomizeModSubdivision())
+                        },
+                        onRangeChanged = { nextMinIdx, nextMaxIdx ->
+                            val rawMinVal = subdivisionOptions[nextMinIdx.toInt().coerceIn(0, subdivisionOptions.size - 1)]
+                            val rawMaxVal = subdivisionOptions[nextMaxIdx.toInt().coerceIn(0, subdivisionOptions.size - 1)]
+                            val nextMinVal = minOf(rawMinVal, rawMaxVal)
+                            val nextMaxVal = maxOf(rawMinVal, rawMaxVal)
+                            val nextActive = existing.modSubdivision.coerceIn(nextMinVal, nextMaxVal)
+                            replaceModulator(state, param, existing.copy(
+                                modSubdivisionMin = nextMinVal,
+                                modSubdivisionMax = nextMaxVal,
+                                modSubdivision = nextActive
+                            ))
+                        },
+                        onValueChanged = { newValIdx ->
+                            val newVal = subdivisionOptions[newValIdx.toInt().coerceIn(0, subdivisionOptions.size - 1)]
+                            replaceModulator(state, param, existing.copy(
+                                modSubdivision = newVal,
+                                modSubdivisionMin = newVal,
+                                modSubdivisionMax = newVal
+                            ))
+                        }
+                    )
+                    ImGui.spacing()
+                } else {
+                    val formatFunc: (Float) -> String = { v -> TimeUtils.formatPeriod(v) }
+                    val parseFunc: (String) -> Float? = { s -> TimeUtils.parsePeriod(s) }
+
+                    drawCustomRangeSlider(
+                        idPrefix = existing.id + "_mod",
+                        label = "LFO 2 Period",
+                        themeColor = currentThemeColor,
+                        currentValue = existing.modSubdivision,
+                        currentMin = existing.modSubdivisionMin,
+                        currentMax = existing.modSubdivisionMax,
+                        minLimit = 0.01f,
+                        maxLimit = 86400f,
+                        isRandomizable = existing.randomizeModSubdivision,
+                        formatValue = formatFunc,
+                        isLogarithmic = true,
+                        parseValue = parseFunc,
+                        onRandomizableChanged = { checked ->
+                            if (checked) {
+                                val rMin = existing.modSubdivisionMin
+                                val rMax = existing.modSubdivisionMax
+                                val (nextMin, nextMax) = if (rMin == rMax) {
+                                    Pair((existing.modSubdivision * 0.5f).coerceIn(0.01f, 86400f), (existing.modSubdivision * 2f).coerceIn(0.01f, 86400f))
+                                } else {
+                                    Pair(rMin, rMax)
+                                }
+                                replaceModulator(state, param, existing.copy(
+                                    randomizeModSubdivision = true,
+                                    modSubdivisionMin = nextMin,
+                                    modSubdivisionMax = nextMax
+                                ))
+                            } else {
+                                replaceModulator(state, param, existing.copy(
+                                    randomizeModSubdivision = false,
+                                    modSubdivisionMin = existing.modSubdivision,
+                                    modSubdivisionMax = existing.modSubdivision
+                                ))
+                            }
+                        },
+                        onRandomizeNow = {
+                            replaceModulator(state, param, existing.randomizeModSubdivision())
+                        },
+                        onRangeChanged = { nextMin, nextMax ->
+                            val safeMin = minOf(nextMin, nextMax)
+                            val safeMax = maxOf(nextMin, nextMax)
+                            val nextActive = existing.modSubdivision.coerceIn(safeMin, safeMax)
+                            replaceModulator(state, param, existing.copy(
+                                modSubdivisionMin = safeMin,
+                                modSubdivisionMax = safeMax,
+                                modSubdivision = nextActive
+                            ))
+                        },
+                        onValueChanged = { newVal ->
+                            replaceModulator(state, param, existing.copy(
+                                modSubdivision = newVal,
+                                modSubdivisionMin = newVal,
+                                modSubdivisionMax = newVal
+                            ))
+                        }
+                    )
+                    ImGui.spacing()
+                }
+
+                // LFO 2 Phase Offset
+                drawCustomRangeSlider(
+                    idPrefix = existing.id + "_mod_phase",
+                    label = "LFO 2 Phase",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.modPhaseOffset,
+                    currentMin = existing.modPhaseOffsetMin,
+                    currentMax = existing.modPhaseOffsetMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = existing.randomizeModPhaseOffset,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.modPhaseOffsetMin
+                            val rMax = existing.modPhaseOffsetMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.modPhaseOffset - 0.1f).coerceAtLeast(0f), (existing.modPhaseOffset + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModPhaseOffset = true,
+                                modPhaseOffsetMin = nextMin,
+                                modPhaseOffsetMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModPhaseOffset = false,
+                                modPhaseOffsetMin = existing.modPhaseOffset,
+                                modPhaseOffsetMax = existing.modPhaseOffset
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeModPhaseOffset())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.modPhaseOffset.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            modPhaseOffsetMin = safeMin,
+                            modPhaseOffsetMax = safeMax,
+                            modPhaseOffset = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            modPhaseOffset = newVal,
+                            modPhaseOffsetMin = newVal,
+                            modPhaseOffsetMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+
+                // LFO 2 Morph
+                drawCustomRangeSlider(
+                    idPrefix = existing.id + "_mod_morph",
+                    label = "LFO 2 Morph",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.modMorph,
+                    currentMin = existing.modMorphMin,
+                    currentMax = existing.modMorphMax,
+                    minLimit = 0f,
+                    maxLimit = 1f,
+                    isRandomizable = existing.randomizeModMorph,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.modMorphMin
+                            val rMax = existing.modMorphMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.modMorph - 0.1f).coerceAtLeast(0f), (existing.modMorph + 0.1f).coerceAtMost(1f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModMorph = true,
+                                modMorphMin = nextMin,
+                                modMorphMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModMorph = false,
+                                modMorphMin = existing.modMorph,
+                                modMorphMax = existing.modMorph
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeModMorph())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.modMorph.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            modMorphMin = safeMin,
+                            modMorphMax = safeMax,
+                            modMorph = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            modMorph = newVal,
+                            modMorphMin = newVal,
+                            modMorphMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+
+                // LFO 2 Hold
+                drawCustomRangeSlider(
+                    idPrefix = existing.id + "_mod_hold",
+                    label = "LFO 2 Hold",
+                    themeColor = currentThemeColor,
+                    currentValue = existing.modHold,
+                    currentMin = existing.modHoldMin,
+                    currentMax = existing.modHoldMax,
+                    minLimit = 0f,
+                    maxLimit = 0.99f,
+                    isRandomizable = existing.randomizeModHold,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.modHoldMin
+                            val rMax = existing.modHoldMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.modHold - 0.1f).coerceAtLeast(0f), (existing.modHold + 0.1f).coerceAtMost(0.99f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModHold = true,
+                                modHoldMin = nextMin,
+                                modHoldMax = nextMax
+                            ))
+                        } else {
+                            replaceModulator(state, param, existing.copy(
+                                randomizeModHold = false,
+                                modHoldMin = existing.modHold,
+                                modHoldMax = existing.modHold
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        replaceModulator(state, param, existing.randomizeModHold())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.modHold.coerceIn(safeMin, safeMax)
+                        replaceModulator(state, param, existing.copy(
+                            modHoldMin = safeMin,
+                            modHoldMax = safeMax,
+                            modHold = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        replaceModulator(state, param, existing.copy(
+                            modHold = newVal,
+                            modHoldMin = newVal,
+                            modHoldMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+
+                // LFO 2 Slew (mod slope, if not random)
+                if (existing.modWaveform != Waveform.RANDOM) {
+                    drawCustomRangeSlider(
+                        idPrefix = existing.id + "_mod_slope",
+                        label = "LFO 2 Slew",
+                        themeColor = currentThemeColor,
+                        currentValue = existing.modSlope,
+                        currentMin = existing.modSlopeMin,
+                        currentMax = existing.modSlopeMax,
+                        minLimit = 0.001f,
+                        maxLimit = 0.999f,
+                        isRandomizable = existing.randomizeModSlope,
+                        formatValue = { "%.3f".format(it) },
+                        onRandomizableChanged = { checked ->
+                            if (checked) {
+                                val rMin = existing.modSlopeMin
+                                val rMax = existing.modSlopeMax
+                                val (nextMin, nextMax) = if (rMin == rMax) {
+                                    Pair((existing.modSlope - 0.1f).coerceAtLeast(0.001f), (existing.modSlope + 0.1f).coerceAtMost(0.999f))
+                                } else {
+                                    Pair(rMin, rMax)
+                                }
+                                replaceModulator(state, param, existing.copy(
+                                    randomizeModSlope = true,
+                                    modSlopeMin = nextMin,
+                                    modSlopeMax = nextMax
+                                ))
+                            } else {
+                                replaceModulator(state, param, existing.copy(
+                                    randomizeModSlope = false,
+                                    modSlopeMin = existing.modSlope,
+                                    modSlopeMax = existing.modSlope
+                                ))
+                            }
+                        },
+                        onRandomizeNow = {
+                            replaceModulator(state, param, existing.randomizeModSlope())
+                        },
+                        onRangeChanged = { nextMin, nextMax ->
+                            val safeMin = minOf(nextMin, nextMax)
+                            val safeMax = maxOf(nextMin, nextMax)
+                            val nextActive = existing.modSlope.coerceIn(safeMin, safeMax)
+                            replaceModulator(state, param, existing.copy(
+                                modSlopeMin = safeMin,
+                                modSlopeMax = safeMax,
+                                modSlope = nextActive
+                            ))
+                        },
+                        onValueChanged = { newVal ->
+                            replaceModulator(state, param, existing.copy(
+                                modSlope = newVal,
+                                modSlopeMin = newVal,
+                                modSlopeMax = newVal
+                            ))
+                        }
+                    )
+                    ImGui.spacing()
+                }
+            }
+        }
+
+        ImGui.unindent(10f) // Unindent at the end of block
+            
+            if (bypassed) {
+                ImGui.popStyleVar()
+            }
+            
+            val panelEndY = ImGui.getCursorScreenPosY()
+            
+            // Draw margin line for active modulators
+            if (!bypassed) {
+                dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, currentThemeColor, 4f)
+            }
+
+            ImGui.popID()
+            if (idx < modsToDraw.size - 1) {
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+            }
+        }
+
+    }
+
+    private fun drawFinalOscilloscope(
+        history: CvHistoryBuffer,
+        minVal: Float,
+        maxVal: Float,
+        themeColor: Int,
+        modulators: List<CvModulator>,
+        modulatorHistories: Map<String, CvHistoryBuffer>
+    ) {
+        val historySize = history.size
+        val w = ImGui.getContentRegionAvailX()
+        val h = 80f
+        
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        ImGui.dummy(w, h)
+        
+        val dl = ImGui.getWindowDrawList()
+        val bgCol = ImGui.colorConvertFloat4ToU32(0.04f, 0.04f, 0.04f, 1.0f)
+        dl.addRectFilled(startX, startY, startX + w, startY + h, bgCol, 4f)
+        
+        val centerY = startY + h / 2f
+        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 0.8f)
+        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 0.5f)
+        
+        dl.addLine(startX, centerY, startX + w, centerY, gridColCenter, 1.5f)
+        dl.addLine(startX, startY + 5f, startX + w, startY + 5f, gridColFaint, 1f)
+        dl.addLine(startX, startY + h - 5f, startX + w, startY + h - 5f, gridColFaint, 1f)
+        
+        val numDivisions = 4
+        for (i in 1 until numDivisions) {
+            val gridX = startX + (w * i / numDivisions)
+            dl.addLine(gridX, startY, gridX, startY + h, gridColFaint, 1f)
+        }
+        
+        val stepX = w / (historySize - 1)
+        val usableHeight = h - 10f
+        
+        val range = maxVal - minVal
+        val divisor = if (range == 0f) 1f else range
+        
+        // 1. Draw each active modulator's history line
+        for (mod in modulators) {
+            val hist = modulatorHistories[mod.id] ?: continue
+            val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
+            val modColor = getThemeColor(colorId, 0.6f) // Thinner and transparent background line
+            
+            for (i in 0 until historySize - 1) {
+                val raw1 = hist.getAt(i)
+                val raw2 = hist.getAt(i + 1)
+                
+                val val1 = if (range == 0f) 0.5f else ((raw1 - minVal) / divisor).coerceIn(0f, 1f)
+                val val2 = if (range == 0f) 0.5f else ((raw2 - minVal) / divisor).coerceIn(0f, 1f)
+                
+                val x1 = startX + i * stepX
+                val y1 = (startY + h - 5f) - val1 * usableHeight
+                val x2 = startX + (i + 1) * stepX
+                val y2 = (startY + h - 5f) - val2 * usableHeight
+                
+                dl.addLine(x1, y1, x2, y2, modColor, 1.25f)
+            }
+        }
+        
+        // 2. Draw final modulated line on top
+        val lineCol = themeColor
+        for (i in 0 until historySize - 1) {
+            val raw1 = history.getAt(i)
+            val raw2 = history.getAt(i + 1)
+            
+            val val1 = if (range == 0f) 0.5f else ((raw1 - minVal) / divisor).coerceIn(0f, 1f)
+            val val2 = if (range == 0f) 0.5f else ((raw2 - minVal) / divisor).coerceIn(0f, 1f)
+            
+            val x1 = startX + i * stepX
+            val y1 = (startY + h - 5f) - val1 * usableHeight
+            val x2 = startX + (i + 1) * stepX
+            val y2 = (startY + h - 5f) - val2 * usableHeight
+            
+            dl.addLine(x1, y1, x2, y2, lineCol, 2.25f)
+        }
+        
+        val borderCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1.0f)
+        dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
+        
+        ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(maxVal))
+        ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal + range * 0.5f))
+        ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal))
+        
+        val textWidth = ImGui.calcTextSize("Final Parameter Value").x
+        ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "Final Parameter Value")
+        
+        ImGui.setCursorScreenPos(startX, startY + h)
+    }
+
+    private fun replaceModulator(state: PatchGridState, param: llm.slop.spirals.parameters.ModulatableParameter, newMod: CvModulator) {
+        val idx = param.modulators.indexOfFirst { it.id == newMod.id }
+        val existing = if (idx >= 0) param.modulators[idx] else virtualModulators.firstOrNull { it.id == newMod.id }
+        val wasBypassed = existing?.bypassed ?: false
+
+        // Auto-activate: if amplitude is adjusted to a non-zero value, activate/unbypass the modulator
+        val finalizedMod = if (wasBypassed && newMod.bypassed && newMod.amplitude != 0.0f) {
+            newMod.copy(bypassed = false)
+        } else {
+            newMod
+        }
+
+        if (idx >= 0) {
+            param.modulators[idx] = finalizedMod
+        } else {
+            param.modulators.add(finalizedMod)
+        }
+    }
+
+    private fun drawOscilloscope(param: llm.slop.spirals.parameters.ModulatableParameter, themeColor: Int) {
+        val history = activeHistory ?: return
+        val historySize = history.size
+        val w = ImGui.getContentRegionAvailX()
+        val h = 80f // Height of the oscilloscope box
+        
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        
+        // Reserve space
+        ImGui.dummy(w, h)
+        
+        val dl = ImGui.getWindowDrawList()
+        
+        // 1. Background
+        val bgCol = ImGui.colorConvertFloat4ToU32(0.04f, 0.04f, 0.04f, 1.0f)
+        dl.addRectFilled(startX, startY, startX + w, startY + h, bgCol, 4f)
+        
+        val isBipolar = param.minClamp < 0f
+
+        // 2. Grid lines
+        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 0.8f)
+        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 0.5f)
+
+        if (isBipolar) {
+            // Bipolar: center line represents zero
+            val centerY = startY + h / 2f
+            dl.addLine(startX, centerY, startX + w, centerY, gridColCenter, 1.5f)
+        } else {
+            // Monopolar: bottom line is the zero baseline
+            dl.addLine(startX, startY + h - 5f, startX + w, startY + h - 5f, gridColCenter, 1.5f)
+        }
+        dl.addLine(startX, startY + 5f, startX + w, startY + 5f, gridColFaint, 1f)
+        if (isBipolar) {
+            dl.addLine(startX, startY + h - 5f, startX + w, startY + h - 5f, gridColFaint, 1f)
+        }
+
+        // Vertical lines
+        val numDivisions = 4
+        for (i in 1 until numDivisions) {
+            val gridX = startX + (w * i / numDivisions)
+            dl.addLine(gridX, startY, gridX, startY + h, gridColFaint, 1f)
+        }
+
+        // 3. Draw lines of history
+        val stepX = w / (historySize - 1)
+        val usableHeight = h - 10f
+
+        val lineCol = themeColor
+
+        for (i in 0 until historySize - 1) {
+            // Bipolar history is stored as [-1,1] raw CV → normalize to [0,1].
+            // Monopolar history is already stored as effective [0,1] value → use directly.
+            val raw1 = history.getAt(i)
+            val raw2 = history.getAt(i + 1)
+            val norm1 = if (isBipolar) (raw1 + 1f) / 2f else raw1.coerceIn(0f, 1f)
+            val norm2 = if (isBipolar) (raw2 + 1f) / 2f else raw2.coerceIn(0f, 1f)
+
+            val x1 = startX + i * stepX
+            val y1 = (startY + h - 5f) - norm1 * usableHeight
+            val x2 = startX + (i + 1) * stepX
+            val y2 = (startY + h - 5f) - norm2 * usableHeight
+
+            dl.addLine(x1, y1, x2, y2, lineCol, 2.0f)
+        }
+        
+        // 4. Border
+        val borderCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1.0f)
+        dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
+        
+        // 5. Y-Axis label markings (showing scaled bounds instead of hardcoded -1..1)
+        val maxLabel = "%.2f".format(param.maxClamp)
+        val midLabel = "%.2f".format(param.minClamp + (param.maxClamp - param.minClamp) / 2f)
+        val minLabel = "%.2f".format(param.minClamp)
+        
+        ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, maxLabel)
+
+        if (isBipolar) {
+            val centerY = startY + h / 2f
+            ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
+            UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, midLabel)
+        }
+
+        ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
+        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, minLabel)
+
+        // Restore cursor position for downstream ImGui rendering
+        ImGui.setCursorScreenPos(startX, startY + h)
+    }
+
+    private fun drawTextInput(
+        key: String,
+        currentValue: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        posX: Float,
+        posY: Float,
+        width: Float,
+        onChanged: (Float) -> Unit,
+        formatValue: (Float) -> String = { "%.3f".format(it) },
+        parseValue: (String) -> Float? = { it.toFloatOrNull() }
+    ) {
+        val buffer = textBuffers.getOrPut(key) { imgui.type.ImString(formatValue(currentValue), 32) }
+        val active = textWidgetActive.getOrDefault(key, false)
+        if (!active) {
+            buffer.set(formatValue(currentValue))
+        }
+        ImGui.setCursorScreenPos(posX, posY)
+        ImGui.pushItemWidth(width)
+
+        // Native callback to handle arrow keys
+        val flags = imgui.flag.ImGuiInputTextFlags.CallbackHistory
+        val callback = object : imgui.callback.ImGuiInputTextCallback() {
+            override fun accept(data: imgui.ImGuiInputTextCallbackData) {
+                val upPressed = data.eventKey == imgui.flag.ImGuiKey.UpArrow
+                val downPressed = data.eventKey == imgui.flag.ImGuiKey.DownArrow
+                if (upPressed || downPressed) {
+                    val io = ImGui.getIO()
+                    val shift = io.keyShift
+                    val ctrl = io.keyCtrl
+                    val delta = if (ctrl && shift) {
+                        0.1f
+                    } else if (shift) {
+                        0.01f
+                    } else {
+                        0.001f
+                    }
+                    val dir = if (upPressed) 1f else -1f
+                    val nextValue = currentValue + (dir * delta)
+                    val clampedValue = nextValue.coerceIn(minLimit, maxLimit)
+                    
+                    val formatted = formatValue(clampedValue)
+                    data.deleteChars(0, data.buf.length)
+                    data.insertChars(0, formatted)
+                    data.cursorPos = formatted.length
+                    data.selectionStart = formatted.length
+                    data.selectionEnd = formatted.length
+                    data.setBufDirty(true)
+
+                    onChanged(clampedValue)
+                }
+            }
+        }
+
+        val inputChanged = ImGui.inputText("##input_$key", buffer, flags, callback)
+        if (inputChanged) {
+            val parsed = parseValue(buffer.get())
+            if (parsed != null) {
+                val clamped = parsed.coerceIn(minLimit, maxLimit)
+                onChanged(clamped)
+            }
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            val fieldType = when {
+                key.endsWith("_min") -> "Minimum modulation boundary. Type to set directly. Up/Down to adjust."
+                key.endsWith("_max") -> "Maximum modulation boundary. Type to set directly. Up/Down to adjust."
+                key.endsWith("_value") -> "Base value. Type to set directly. Up/Down to adjust."
+                else -> "Type a precise numeric value. Up/Down to adjust."
+            }
+            ImGui.setTooltip(fieldType)
+        }
+        textWidgetActive[key] = ImGui.isItemActive()
+        ImGui.popItemWidth()
+    }
+
+    private fun drawCustomRangeSlider(
+        label: String,
+        currentMin: Float,
+        currentMax: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        formatValue: (Float) -> String,
+        onRangeChanged: (Float, Float) -> Unit,
+        idPrefix: String = "",
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
+        isLogarithmic: Boolean = false,
+        parseValue: (String) -> Float? = { it.toFloatOrNull() }
+    ) {
+        drawCustomRangeSlider(
+            label = label,
+            currentValue = currentMin,
+            currentMin = currentMin,
+            currentMax = currentMax,
+            minLimit = minLimit,
+            maxLimit = maxLimit,
+            isRandomizable = true,
+            showControls = false,
+            formatValue = formatValue,
+            onRangeChanged = onRangeChanged,
+            idPrefix = idPrefix,
+            themeColor = themeColor,
+            isLogarithmic = isLogarithmic,
+            parseValue = parseValue
+        )
+    }
+
+    private fun drawCustomRangeSlider(
+        label: String,
+        currentValue: Float,
+        currentMin: Float,
+        currentMax: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        isRandomizable: Boolean,
+        showControls: Boolean = true,
+        formatValue: (Float) -> String,
+        onRandomizableChanged: (Boolean) -> Unit = {},
+        onRandomizeNow: () -> Unit = {},
+        onRangeChanged: (Float, Float) -> Unit = { _, _ -> },
+        onValueChanged: (Float) -> Unit = {},
+        idPrefix: String = "",
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
+        isLogarithmic: Boolean = false,
+        parseValue: (String) -> Float? = { it.toFloatOrNull() }
+    ) {
+        val rowStartX = ImGui.getCursorScreenPosX()
+        val rowStartY = ImGui.getCursorScreenPosY()
+
+        ImGui.pushID(label)
+
+        val w = ImGui.getContentRegionAvailX()
+        val h = 44f
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        
+        // Reserve space
+        ImGui.dummy(w, h)
+        
+        val dl = ImGui.getWindowDrawList()
+        val io = ImGui.getIO()
+        val mouseX = io.mousePos.x
+        val mouseY = io.mousePos.y
+        
+        val buttonSize = ImGui.getFrameHeight()
+        val spacing = ImGui.getStyle().itemSpacing.x
+        val combinedWidth = buttonSize
+        
+        val labelColW = 175f
+        val textBoxesStartX = startX + labelColW + 20f
+        
+        val boxWidth = 115f
+        val boxSpacing = 8f
+        
+        val sliderStartX = textBoxesStartX + (if (isRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
+        val lineStartX = sliderStartX
+        val lineEndX = startX + w - 10f
+        val lineWidth = lineEndX - lineStartX
+        val centerY = startY + 28f
+        
+        val rangeSpan = maxLimit - minLimit
+
+        val toPct: (Float) -> Float = { v ->
+            if (isLogarithmic) {
+                val logMin = java.lang.Math.log10(minLimit.toDouble())
+                val logMax = java.lang.Math.log10(maxLimit.toDouble())
+                val logVal = java.lang.Math.log10(v.toDouble().coerceAtLeast(minLimit.toDouble()))
+                ((logVal - logMin) / (logMax - logMin)).toFloat().coerceIn(0f, 1f)
+            } else {
+                if (rangeSpan > 0f) (v - minLimit) / rangeSpan else 0f
+            }
+        }
+
+        val toVal: (Float) -> Float = { p ->
+            if (isLogarithmic) {
+                val logMin = java.lang.Math.log10(minLimit.toDouble())
+                val logMax = java.lang.Math.log10(maxLimit.toDouble())
+                val logVal = logMin + p.toDouble() * (logMax - logMin)
+                java.lang.Math.pow(10.0, logVal).toFloat().coerceIn(minLimit, maxLimit)
+            } else {
+                minLimit + p * rangeSpan
+            }
+        }
+
+        // ─── ROW 1: Labels ───
+        if (isRandomizable) {
+            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
+            
+            ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, startY + 2f)
+            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
+            
+            // Add "Current" label with [value] centered above the dynamic dot on Row 1
+            val curPct = toPct(currentValue)
+            val curX = lineStartX + curPct * lineWidth
+            val formattedVal = formatValue(currentValue)
+            val labelText = "Current: $formattedVal"
+            val currentTextWidth = ImGui.calcTextSize(labelText).x
+            val minAllowedX = lineStartX
+            val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
+            val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
+            
+            ImGui.setCursorScreenPos(textX, startY + 2f)
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
+        } else {
+            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
+        }
+        
+        // ─── ROW 2: Widgets ───
+        val row2Y = startY + 18f
+        
+        // Render name of variable beside the die, to its left, sharing vertical center
+        val textHeight = UITheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+        val textY = row2Y + (buttonSize - textHeight) / 2f
+        ImGui.setCursorScreenPos(startX, textY)
+        UITheme.body(label)
+        
+        if (showControls) {
+            val randBtnX = startX + labelColW - buttonSize
+            ImGui.setCursorScreenPos(randBtnX, row2Y)
+            if (ImGui.button("##rand_$label", buttonSize, buttonSize)) {
+                onRandomizableChanged(!isRandomizable)
+            }
+            if (ImGui.isItemClicked(1)) { // Right click
+                if (!isRandomizable) {
+                    onRandomizableChanged(true)
+                }
+                onRandomizeNow()
+            }
+            val hovered = ImGui.isItemHovered()
+            if (hovered && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
+            }
+            
+            // Single die icon (white with black spots, scaled and enlarged 15% more)
+            val centerX = randBtnX + buttonSize / 2f
+            val centerYBtn = row2Y + buttonSize / 2f
+            
+            val diceBgColor = if (!isRandomizable) {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.3f)
+            } else if (ImGui.isItemActive()) {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
+            } else if (hovered) {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.9f)
+            }
+
+            val diceOutlineColor = if (!isRandomizable) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 0.3f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 1.0f)
+            }
+
+            val spotColor = if (!isRandomizable) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 0.3f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 1.0f)
+            }
+
+            val dieSize = buttonSize * 0.7f
+            val halfSize = dieSize / 2f
+            val x0 = centerX - halfSize
+            val y0 = centerYBtn - halfSize
+            val x1 = centerX + halfSize
+            val y1 = centerYBtn + halfSize
+            
+            dl.addRectFilled(x0, y0, x1, y1, diceBgColor, 2f)
+            dl.addRect(x0, y0, x1, y1, diceOutlineColor, 2f, 0, 1.5f)
+            
+            // Draw a single die face 5 (scaled and enlarged 15% more)
+            val dotRadius = buttonSize * 0.06f
+            val offset = halfSize * 0.6f
+            dl.addCircleFilled(centerX, centerYBtn, dotRadius, spotColor)
+            dl.addCircleFilled(centerX - offset, centerYBtn - offset, dotRadius, spotColor)
+            dl.addCircleFilled(centerX + offset, centerYBtn - offset, dotRadius, spotColor)
+            dl.addCircleFilled(centerX - offset, centerYBtn + offset, dotRadius, spotColor)
+            dl.addCircleFilled(centerX + offset, centerYBtn + offset, dotRadius, spotColor)
+        }
+        
+        // 3. Text inputs
+        if (isRandomizable) {
+            drawTextInput(
+                key = "${idPrefix}_${label}_min",
+                currentValue = currentMin,
+                minLimit = minLimit,
+                maxLimit = maxLimit,
+                posX = textBoxesStartX,
+                posY = row2Y,
+                width = boxWidth,
+                onChanged = { nextMin ->
+                    onRangeChanged(nextMin, maxOf(nextMin, currentMax))
+                },
+                formatValue = formatValue,
+                parseValue = parseValue
+            )
+            drawTextInput(
+                key = "${idPrefix}_${label}_max",
+                currentValue = currentMax,
+                minLimit = minLimit,
+                maxLimit = maxLimit,
+                posX = textBoxesStartX + boxWidth + boxSpacing,
+                posY = row2Y,
+                width = boxWidth,
+                onChanged = { nextMax ->
+                    onRangeChanged(minOf(nextMax, currentMin), nextMax)
+                },
+                formatValue = formatValue,
+                parseValue = parseValue
+            )
+        } else {
+            drawTextInput(
+                key = "${idPrefix}_${label}_value",
+                currentValue = currentValue,
+                minLimit = minLimit,
+                maxLimit = maxLimit,
+                posX = textBoxesStartX,
+                posY = row2Y,
+                width = boxWidth,
+                onChanged = { newVal ->
+                    onValueChanged(newVal)
+                },
+                formatValue = formatValue,
+                parseValue = parseValue
+            )
+        }
+        
+        // ─── Dragging & Slider Render ───
+        val mousePressed = ImGui.isMouseClicked(0)
+        val mouseDown = ImGui.isMouseDown(0)
+        
+        if (isRandomizable) {
+            val minPct = toPct(currentMin)
+            val maxPct = toPct(currentMax)
+            val minHandleX = lineStartX + minPct * lineWidth
+            val maxHandleX = lineStartX + maxPct * lineWidth
+            
+            if (mousePressed) {
+                val inRowY = mouseY >= row2Y && mouseY <= row2Y + buttonSize
+                val inRowX = mouseX >= lineStartX - 10f && mouseX <= lineEndX + 10f
+                if (inRowY && inRowX) {
+                    activeSliderLabel = idPrefix + label
+                    val isOverlapping = kotlin.math.abs(minHandleX - maxHandleX) < 4f
+                    if (isOverlapping) {
+                        if (mouseX < minHandleX - 5f) {
+                            draggingMin = true
+                            draggingMax = false
+                        } else if (mouseX > maxHandleX + 5f) {
+                            draggingMax = true
+                            draggingMin = false
+                        } else {
+                            draggingMin = false
+                            draggingMax = false
+                            clickMouseX = mouseX
+                        }
+                    } else {
+                        val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                        val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                        if (distToMin < distToMax) {
+                            draggingMin = true
+                            draggingMax = false
+                        } else {
+                            draggingMax = true
+                            draggingMin = false
+                        }
+                    }
+                }
+            }
+            
+            if (mouseDown && activeSliderLabel == (idPrefix + label)) {
+                val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
+                val rawVal = toVal(pct)
+                if (!draggingMin && !draggingMax) {
+                    val dragThreshold = 2f
+                    if (mouseX > clickMouseX + dragThreshold) {
+                        draggingMax = true
+                        val nextMax = rawVal.coerceIn(currentMin, maxLimit)
+                        onRangeChanged(currentMin, nextMax)
+                    } else if (mouseX < clickMouseX - dragThreshold) {
+                        draggingMin = true
+                        val nextMin = rawVal.coerceIn(minLimit, currentMax)
+                        onRangeChanged(nextMin, currentMax)
+                    }
+                } else if (draggingMin) {
+                    val nextMin = rawVal.coerceIn(minLimit, currentMax)
+                    onRangeChanged(nextMin, currentMax)
+                } else if (draggingMax) {
+                    val nextMax = rawVal.coerceIn(currentMin, maxLimit)
+                    onRangeChanged(currentMin, nextMax)
+                }
+            } else if (!mouseDown && activeSliderLabel == (idPrefix + label)) {
+                draggingMin = false
+                draggingMax = false
+                activeSliderLabel = null
+            }
+            
+            // Draw tracks
+            val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f) // Darker inactive track
+            dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
+            dl.addLine(minHandleX, centerY, maxHandleX, centerY, themeColor, 3f) // Active track is theme color
+            
+            // Draw handles
+            val handleW = 6f
+            val handleH = 16f
+            val handleBgCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f)
+            val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+            
+            dl.addRectFilled(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+            dl.addRect(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+            dl.addRectFilled(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+            dl.addRect(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+
+            // Draw dynamic current value indicator (Amber Gold dot)
+            val curPct = toPct(currentValue)
+            val curX = lineStartX + curPct * lineWidth
+            val dotY = centerY
+            val dotR = 4f
+            val curDotCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f) // Bright Amber Gold
+            dl.addCircleFilled(curX, dotY, dotR, curDotCol)
+            dl.addCircle(curX, dotY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f) // Dark border
+        } else {
+            val valPct = toPct(currentValue)
+            val valHandleX = lineStartX + valPct * lineWidth
+            
+            if (mousePressed) {
+                val inRowY = mouseY >= row2Y && mouseY <= row2Y + buttonSize
+                val inRowX = mouseX >= lineStartX - 10f && mouseX <= lineEndX + 10f
+                if (inRowY && inRowX) {
+                    activeSliderLabel = idPrefix + label
+                    draggingMin = true
+                    draggingMax = false
+                }
+            }
+            
+            if (mouseDown && activeSliderLabel == (idPrefix + label)) {
+                val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
+                val rawVal = toVal(pct)
+                onValueChanged(rawVal)
+            } else if (!mouseDown && activeSliderLabel == (idPrefix + label)) {
+                draggingMin = false
+                draggingMax = false
+                activeSliderLabel = null
+            }
+            
+            // Draw tracks
+            val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f) // Darker inactive track
+            dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
+            dl.addLine(lineStartX, centerY, valHandleX, centerY, themeColor, 3f) // Active track is theme color
+            
+            // Draw single handle
+            val handleW = 6f
+            val handleH = 16f
+            val handleBgCol = ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
+            val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+            
+            dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+            dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+        }
+        
+        // Hover-zone tooltips for custom range slider track/handles
+        if (UITheme.tooltipsEnabled) {
+            val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
+            val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
+            if (inTrackY && inTrackX) {
+                if (isRandomizable) {
+                    val minPct = toPct(currentMin)
+                    val maxPct = toPct(currentMax)
+                    val minHandleX = lineStartX + minPct * lineWidth
+                    val maxHandleX = lineStartX + maxPct * lineWidth
+                    val curPct = toPct(currentValue)
+                    val curX = lineStartX + curPct * lineWidth
+
+                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                    val distToCur = kotlin.math.abs(mouseX - curX)
+
+                    when {
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${formatValue(currentMin)}")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${formatValue(currentMax)}")
+                        distToCur < 6f -> ImGui.setTooltip("Current modulated value for $label: ${formatValue(currentValue)}")
+                        else -> ImGui.setTooltip("Drag handles to set modulation bounds for $label")
+                    }
+                } else {
+                    val valPct = toPct(currentValue)
+                    val valHandleX = lineStartX + valPct * lineWidth
+                    val distToVal = kotlin.math.abs(mouseX - valHandleX)
+
+                    if (distToVal < 8f) {
+                        ImGui.setTooltip("Base value for $label: ${formatValue(currentValue)}")
+                    } else {
+                        ImGui.setTooltip("Drag to adjust base value for $label")
+                    }
+                }
+            }
+        }
+
+        ImGui.popID()
+        ImGui.setCursorScreenPos(rowStartX, startY + h)
+    }
+
+    /**
+     * Like [drawCustomRangeSlider] but the Min/Max/Current widgets are combo dropdowns
+     * that display [subdivisionLabels] entries instead of numeric text boxes.
+     * All values are *indices* into [subdivisionOptions]/[subdivisionLabels].
+     */
+    private fun drawBeatDivisionSlider(
+        label: String,
+        currentMin: Float,
+        currentMax: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        formatValue: (Float) -> String,
+        onRangeChanged: (Float, Float) -> Unit,
+        idPrefix: String = "",
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
+    ) {
+        drawBeatDivisionSlider(
+            label = label,
+            currentValue = currentMin,
+            currentMin = currentMin,
+            currentMax = currentMax,
+            minLimit = minLimit,
+            maxLimit = maxLimit,
+            isRandomizable = true,
+            showControls = false,
+            formatValue = formatValue,
+            onRangeChanged = onRangeChanged,
+            idPrefix = idPrefix,
+            themeColor = themeColor
+        )
+    }
+
+    private fun drawBeatDivisionSlider(
+        label: String,
+        currentValue: Float,
+        currentMin: Float,
+        currentMax: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        isRandomizable: Boolean,
+        showControls: Boolean = true,
+        formatValue: (Float) -> String,
+        onRandomizableChanged: (Boolean) -> Unit = {},
+        onRandomizeNow: () -> Unit = {},
+        onRangeChanged: (Float, Float) -> Unit = { _, _ -> },
+        onValueChanged: (Float) -> Unit = {},
+        idPrefix: String = "",
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
+    ) {
+        val rowStartX = ImGui.getCursorScreenPosX()
+        val rowStartY = ImGui.getCursorScreenPosY()
+
+        ImGui.pushID(label)
+
+        val w = ImGui.getContentRegionAvailX()
+        val h = 44f
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+
+        ImGui.dummy(w, h)
+
+        val dl = ImGui.getWindowDrawList()
+        val io = ImGui.getIO()
+        val mouseX = io.mousePos.x
+        val mouseY = io.mousePos.y
+
+        val buttonSize = ImGui.getFrameHeight()
+        val spacing = ImGui.getStyle().itemSpacing.x
+        val combinedWidth = buttonSize
+
+        val labelColW = 175f
+        val textBoxesStartX = startX + labelColW + 20f
+
+        // Combo dropdowns are slightly wider than plain text boxes so they can display labels
+        val comboWidth = 125f
+        val comboSpacing = 8f
+
+        val sliderStartX = textBoxesStartX + (if (isRandomizable) (comboWidth * 2f + comboSpacing) else comboWidth) + 15f
+        val lineStartX = sliderStartX
+        val lineEndX = startX + w - 10f
+        val lineWidth = lineEndX - lineStartX
+        val centerY = startY + 28f
+
+        val rangeSpan = maxLimit - minLimit
+
+        // ─── ROW 1: Labels ───
+        if (isRandomizable) {
+            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
+
+            ImGui.setCursorScreenPos(textBoxesStartX + comboWidth + comboSpacing, startY + 2f)
+            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
+
+            val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+            val curX = lineStartX + curPct * lineWidth
+            val formattedVal = formatValue(currentValue)
+            val labelText = "Current: $formattedVal"
+            val currentTextWidth = ImGui.calcTextSize(labelText).x
+            val minAllowedX = lineStartX
+            val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
+            val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
+
+            ImGui.setCursorScreenPos(textX, startY + 2f)
+            UITheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
+        } else {
+            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
+        }
+
+        // ─── ROW 2: Widgets ───
+        val row2Y = startY + 18f
+
+        // Render name of variable beside the die, to its left, sharing vertical center
+        val textHeight = UITheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+        val textY = row2Y + (buttonSize - textHeight) / 2f
+        ImGui.setCursorScreenPos(startX, textY)
+        UITheme.body(label)
+
+        if (showControls) {
+            val randBtnX = startX + labelColW - buttonSize
+            ImGui.setCursorScreenPos(randBtnX, row2Y)
+            if (ImGui.button("##rand_$label", buttonSize, buttonSize)) {
+                onRandomizableChanged(!isRandomizable)
+            }
+            if (ImGui.isItemClicked(1)) { // Right click
+                if (!isRandomizable) {
+                    onRandomizableChanged(true)
+                }
+                onRandomizeNow()
+            }
+            val hovered = ImGui.isItemHovered()
+            if (hovered && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
+            }
+
+            // Single die icon (white with black spots, scaled and enlarged 15% more)
+            val centerX = randBtnX + buttonSize / 2f
+            val centerYBtn = row2Y + buttonSize / 2f
+            
+            val diceBgColor = if (!isRandomizable) {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.3f)
+            } else if (ImGui.isItemActive()) {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
+            } else if (hovered) {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.9f)
+            }
+
+            val diceOutlineColor = if (!isRandomizable) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 0.3f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 1.0f)
+            }
+
+            val spotColor = if (!isRandomizable) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 0.3f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.0f, 0.0f, 1.0f)
+            }
+
+            val dieSize = buttonSize * 0.7f
+            val halfSize = dieSize / 2f
+            val x0 = centerX - halfSize
+            val y0 = centerYBtn - halfSize
+            val x1 = centerX + halfSize
+            val y1 = centerYBtn + halfSize
+            
+            dl.addRectFilled(x0, y0, x1, y1, diceBgColor, 2f)
+            dl.addRect(x0, y0, x1, y1, diceOutlineColor, 2f, 0, 1.5f)
+            
+            // Draw a single die face 5 (scaled and enlarged 15% more)
+            val dotRadius = buttonSize * 0.06f
+            val offset = halfSize * 0.6f
+            dl.addCircleFilled(centerX, centerYBtn, dotRadius, spotColor)
+            dl.addCircleFilled(centerX - offset, centerYBtn - offset, dotRadius, spotColor)
+            dl.addCircleFilled(centerX + offset, centerYBtn - offset, dotRadius, spotColor)
+            dl.addCircleFilled(centerX - offset, centerYBtn + offset, dotRadius, spotColor)
+            dl.addCircleFilled(centerX + offset, centerYBtn + offset, dotRadius, spotColor)
+        }
+
+        // ─── Combo dropdowns instead of text inputs ───
+        if (isRandomizable) {
+            // Min combo
+            val minIdx = ImInt(currentMin.toInt().coerceIn(0, subdivisionLabels.size - 1))
+            ImGui.setCursorScreenPos(textBoxesStartX, row2Y)
+            ImGui.pushItemWidth(comboWidth)
+            if (ImGui.combo("##bd_min_$label", minIdx, subdivisionLabels)) {
+                val nextMin = minIdx.get().toFloat()
+                onRangeChanged(nextMin, maxOf(nextMin, currentMax))
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Minimum modulation speed subdivision dropdown")
+            }
+            ImGui.popItemWidth()
+
+            // Max combo
+            val maxIdx = ImInt(currentMax.toInt().coerceIn(0, subdivisionLabels.size - 1))
+            ImGui.setCursorScreenPos(textBoxesStartX + comboWidth + comboSpacing, row2Y)
+            ImGui.pushItemWidth(comboWidth)
+            if (ImGui.combo("##bd_max_$label", maxIdx, subdivisionLabels)) {
+                val nextMax = maxIdx.get().toFloat()
+                onRangeChanged(minOf(nextMax, currentMin), nextMax)
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Maximum modulation speed subdivision dropdown")
+            }
+            ImGui.popItemWidth()
+        } else {
+            val valIdx = ImInt(currentValue.toInt().coerceIn(0, subdivisionLabels.size - 1))
+            ImGui.setCursorScreenPos(textBoxesStartX, row2Y)
+            ImGui.pushItemWidth(comboWidth)
+            if (ImGui.combo("##bd_val_$label", valIdx, subdivisionLabels)) {
+                onValueChanged(valIdx.get().toFloat())
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Base speed subdivision dropdown")
+            }
+            ImGui.popItemWidth()
+        }
+
+        // ─── Dragging & Slider Render ───
+        val mousePressed = ImGui.isMouseClicked(0)
+        val mouseDown = ImGui.isMouseDown(0)
+
+        if (isRandomizable) {
+            val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
+            val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
+            val minHandleX = lineStartX + minPct * lineWidth
+            val maxHandleX = lineStartX + maxPct * lineWidth
+
+            if (mousePressed) {
+                val inRowY = mouseY >= row2Y && mouseY <= row2Y + buttonSize
+                val inRowX = mouseX >= lineStartX - 10f && mouseX <= lineEndX + 10f
+                if (inRowY && inRowX) {
+                    activeSliderLabel = idPrefix + label
+                    val isOverlapping = kotlin.math.abs(minHandleX - maxHandleX) < 4f
+                    if (isOverlapping) {
+                        if (mouseX < minHandleX - 5f) {
+                            draggingMin = true; draggingMax = false
+                        } else if (mouseX > maxHandleX + 5f) {
+                            draggingMax = true; draggingMin = false
+                        } else {
+                            draggingMin = false; draggingMax = false
+                            clickMouseX = mouseX
+                        }
+                    } else {
+                        val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                        val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                        if (distToMin < distToMax) {
+                            draggingMin = true; draggingMax = false
+                        } else {
+                            draggingMax = true; draggingMin = false
+                        }
+                    }
+                }
+            }
+
+            if (mouseDown && activeSliderLabel == (idPrefix + label)) {
+                val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
+                val rawVal = (minLimit + pct * rangeSpan).let { v ->
+                    // Snap to nearest integer index
+                    v.roundToInt().coerceIn(minLimit.toInt(), maxLimit.toInt()).toFloat()
+                }
+                if (!draggingMin && !draggingMax) {
+                    val dragThreshold = 2f
+                    if (mouseX > clickMouseX + dragThreshold) {
+                        draggingMax = true
+                        onRangeChanged(currentMin, rawVal.coerceIn(currentMin, maxLimit))
+                    } else if (mouseX < clickMouseX - dragThreshold) {
+                        draggingMin = true
+                        onRangeChanged(rawVal.coerceIn(minLimit, currentMax), currentMax)
+                    }
+                } else if (draggingMin) {
+                    onRangeChanged(rawVal.coerceIn(minLimit, currentMax), currentMax)
+                } else if (draggingMax) {
+                    onRangeChanged(currentMin, rawVal.coerceIn(currentMin, maxLimit))
+                }
+            } else if (!mouseDown && activeSliderLabel == (idPrefix + label)) {
+                draggingMin = false; draggingMax = false; activeSliderLabel = null
+            }
+
+            // Track
+            val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+            dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
+            dl.addLine(minHandleX, centerY, maxHandleX, centerY, themeColor, 3f)
+
+            val handleW = 6f; val handleH = 16f
+            val handleBgCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f)
+            val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+            dl.addRectFilled(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+            dl.addRect(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+            dl.addRectFilled(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+            dl.addRect(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+
+            // Current value dot
+            val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+            val curX = lineStartX + curPct * lineWidth
+            val curDotCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f)
+            dl.addCircleFilled(curX, centerY, 4f, curDotCol)
+            dl.addCircle(curX, centerY, 4.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
+        } else {
+            val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+            val valHandleX = lineStartX + valPct * lineWidth
+
+            if (mousePressed) {
+                val inRowY = mouseY >= row2Y && mouseY <= row2Y + buttonSize
+                val inRowX = mouseX >= lineStartX - 10f && mouseX <= lineEndX + 10f
+                if (inRowY && inRowX) {
+                    activeSliderLabel = idPrefix + label
+                    draggingMin = true; draggingMax = false
+                }
+            }
+
+            if (mouseDown && activeSliderLabel == (idPrefix + label)) {
+                val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
+                val rawVal = (minLimit + pct * rangeSpan).roundToInt()
+                    .coerceIn(minLimit.toInt(), maxLimit.toInt()).toFloat()
+                onValueChanged(rawVal)
+            } else if (!mouseDown && activeSliderLabel == (idPrefix + label)) {
+                draggingMin = false; draggingMax = false; activeSliderLabel = null
+            }
+
+            val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+            dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
+            dl.addLine(lineStartX, centerY, valHandleX, centerY, themeColor, 3f)
+
+            val handleW = 6f; val handleH = 16f
+            val handleBgCol = ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
+            val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+            dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+            dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+        }
+
+        // Hover-zone tooltips for beat division slider track/handles
+        if (UITheme.tooltipsEnabled) {
+            val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
+            val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
+            if (inTrackY && inTrackX) {
+                if (isRandomizable) {
+                    val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
+                    val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
+                    val minHandleX = lineStartX + minPct * lineWidth
+                    val maxHandleX = lineStartX + maxPct * lineWidth
+                    val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+                    val curX = lineStartX + curPct * lineWidth
+
+                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                    val distToCur = kotlin.math.abs(mouseX - curX)
+
+                    when {
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}")
+                        distToCur < 6f -> ImGui.setTooltip("Current modulated speed for $label: ${formatValue(currentValue)}")
+                        else -> ImGui.setTooltip("Drag handles to set modulation bounds for $label")
+                    }
+                } else {
+                    val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+                    val valHandleX = lineStartX + valPct * lineWidth
+                    val distToVal = kotlin.math.abs(mouseX - valHandleX)
+
+                    if (distToVal < 8f) {
+                        ImGui.setTooltip("Base speed for $label: ${formatValue(currentValue)}")
+                    } else {
+                        ImGui.setTooltip("Drag to adjust base speed for $label")
+                    }
+                }
+            }
+        }
+
+        ImGui.popID()
+        ImGui.setCursorScreenPos(rowStartX, startY + h)
+    }
+}

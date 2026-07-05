@@ -120,8 +120,9 @@ object PatchGridPanel {
                     PatchGridRenderer.drawParamRow("crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer, gridStartX, 2, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
                     PatchGridRenderer.drawParamRow("master Alpha",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, 3, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
                     PatchGridRenderer.drawParamRow("bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer, gridStartX, 4, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                    PatchGridRenderer.drawParamRow("queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, 5, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                    PatchGridRenderer.drawParamRow("queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, 6, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                    PatchGridRenderer.drawParamRow("fade speed",  "Mixer/xfadeSpeed",  mixer.xfadeSpeed,  state, labelColW, mixer, gridStartX, 5, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                    PatchGridRenderer.drawParamRow("queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, 6, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                    PatchGridRenderer.drawParamRow("queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, 7, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
                 }
             } else if (state.activeTopTab == "Deck A") {
                 PatchGridTabs.drawDeckGroupContent("Deck A", mixer.deckA, state, labelColW, mixer, gridStartX, ::getCvColumns, ::getColumnOffset, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
@@ -221,6 +222,10 @@ object PatchGridPanel {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("final"))
         UITheme.caption(labelFinal)
         ImGui.popStyleColor()
+        val isFinalHeaderHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        if (isFinalHeaderHovered && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("FINAL: Base parameter value and modulation bounds/limits.")
+        }
 
         // Draw MIDI header
         val midiColX = startX + labelColW + getColumnOffset("midi")
@@ -239,6 +244,10 @@ object PatchGridPanel {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("midi"))
         UITheme.caption(labelMidi)
         ImGui.popStyleColor()
+        val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        if (isMidiHeaderHovered && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("MIDI: Map MIDI CC/Notes from controllers to modulate this parameter.")
+        }
 
         // Draw each column header vertically
         val cvCols = getCvColumns()
@@ -259,6 +268,16 @@ object PatchGridPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor(cvId))
             UITheme.caption(label)
             ImGui.popStyleColor()
+            val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+            if (isCvHeaderHovered && UITheme.tooltipsEnabled) {
+                val cvDesc = when (cvId) {
+                    "gen1" -> "LFO: Synthetic low-frequency oscillator waveforms (Sine, Triangle, Square, Random)."
+                    "audio" -> "AUDIO: Modulator envelopes tracked from input audio frequency bands (Bass, Mid, High, Amplitude)."
+                    "trigger" -> "TRIGGER: Modulator envelopes tracked from transient onsets or peak accents."
+                    else -> "CV Modulator source."
+                }
+                ImGui.setTooltip(cvDesc)
+            }
         }
         
         // Draw final separator line on the right edge
@@ -284,6 +303,16 @@ object PatchGridPanel {
     ) {
         if (PatchGridRenderer.drawDiceButton(id, startX, startY, scale, btnWidth, btnHeight)) {
             onClick()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            val scopeDesc = when(id) {
+                "rand_all" -> "Randomize modulator depths and values for all decks (A, B, C)."
+                "rand_deck_a" -> "Randomize modulator depths and values for Deck A."
+                "rand_deck_b" -> "Randomize modulator depths and values for Deck B."
+                "rand_deck_c" -> "Randomize modulator depths and values for Deck C."
+                else -> "Randomize values."
+            }
+            ImGui.setTooltip(scopeDesc)
         }
         ImGui.sameLine(0f, 6f)
         val textY = startY + (btnHeight - ImGui.getTextLineHeight()) * 0.5f

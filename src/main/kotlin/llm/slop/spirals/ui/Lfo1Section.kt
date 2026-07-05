@@ -32,57 +32,61 @@ object Lfo1Section {
             UITheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
             ImGui.sameLine(0f, 10f)
 
-            val btnW = 80f
+            val btnW = 35f
             val btnH = ImGui.getFrameHeight()
 
             // Sine Button
             val isSine = existing.waveform == Waveform.SINE && existing.morph == 0.0f && existing.hold == 0.0f
-            if (isSine) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Sine##lfo1", btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo1_sine", WaveShape.SINE, isSine, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
                     waveform = Waveform.SINE,
                     morph = 0.0f,
                     hold = 0.0f
                 ))
             }
-            if (isSine) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Load standard smooth Sine wave LFO.")
+            }
 
             // Triangle Button
             ImGui.sameLine(0f, 4f)
             val isTri = existing.waveform == Waveform.TRIANGLE && existing.morph == 1.0f && existing.hold == 0.0f
-            if (isTri) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Triangle##lfo1", btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo1_tri", WaveShape.TRIANGLE, isTri, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
                     waveform = Waveform.TRIANGLE,
                     morph = 1.0f,
                     hold = 0.0f
                 ))
             }
-            if (isTri) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Load linear Triangle wave LFO.")
+            }
 
             // Square Button
             ImGui.sameLine(0f, 4f)
             val isSquare = existing.waveform == Waveform.SQUARE && existing.morph == 1.0f && existing.hold == 0.5f
-            if (isSquare) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Square##lfo1", btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo1_square", WaveShape.SQUARE, isSquare, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
                     waveform = Waveform.SQUARE,
                     morph = 1.0f,
                     hold = 0.5f
                 ))
             }
-            if (isSquare) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Load binary Square wave LFO.")
+            }
 
             // Random Button
             ImGui.sameLine(0f, 4f)
             val isRandom = existing.waveform == Waveform.RANDOM
-            if (isRandom) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            if (ImGui.button("Random##lfo1", btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo1_random", WaveShape.RANDOM, isRandom, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
                     waveform = Waveform.RANDOM
                 ))
             }
-            if (isRandom) ImGui.popStyleColor()
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Load step or smooth Random noise LFO.")
+            }
 
             // 2. Slew Preset buttons (only if not Random)
             if (existing.waveform != Waveform.RANDOM) {
@@ -92,29 +96,32 @@ object Lfo1Section {
 
                 // Left Button
                 val isLeft = existing.slope <= 0.01f
-                if (isLeft) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-                if (ImGui.button("Left##lfo1", 60f, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_left", WaveShape.RAMP_DOWN, isLeft, themeColor, 35f, btnH)) {
                     onReplace(existing.copy(slope = 0.001f))
                 }
-                if (isLeft) ImGui.popStyleColor()
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Set LFO asymmetry fully Left (sawtooth falling / ramp down).")
+                }
 
                 // Center Button
                 ImGui.sameLine(0f, 4f)
                 val isCenter = existing.slope >= 0.49f && existing.slope <= 0.51f
-                if (isCenter) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-                if (ImGui.button("Center##lfo1", 60f, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_center", WaveShape.TRIANGLE, isCenter, themeColor, 35f, btnH)) {
                     onReplace(existing.copy(slope = 0.5f))
                 }
-                if (isCenter) ImGui.popStyleColor()
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Set LFO asymmetry to Center (perfectly symmetrical).")
+                }
 
                 // Right Button
                 ImGui.sameLine(0f, 4f)
                 val isRight = existing.slope >= 0.99f
-                if (isRight) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-                if (ImGui.button("Right##lfo1", 60f, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_right", WaveShape.RAMP_UP, isRight, themeColor, 35f, btnH)) {
                     onReplace(existing.copy(slope = 0.999f))
                 }
-                if (isRight) ImGui.popStyleColor()
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Set LFO asymmetry fully Right (sawtooth rising / ramp up).")
+                }
             }
 
             ImGui.spacing()
@@ -129,6 +136,9 @@ object Lfo1Section {
                 ImGui.pushItemWidth(125f)
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {
                     onReplace(existing.copy(genUnit = GenUnit.entries[unitIdx.get()]))
+                }
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Select frequency unit:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.")
                 }
                 ImGui.popItemWidth()
                 if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)

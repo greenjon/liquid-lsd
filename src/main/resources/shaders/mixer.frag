@@ -12,11 +12,13 @@ uniform float uBloom; // 0.0 = no bloom, 1.0 = full bloom
 vec4 sampleBlended(vec2 uv) {
     vec4 color1 = texture(uTex1, uv);
     vec4 color2 = texture(uTex2, uv);
-    float t = uBalance;
+    float t = clamp(uBalance, 0.0, 1.0);
     vec4 blended = vec4(0.0);
 
     if (uMode == 0) { // ADD
-        blended = color1 * (1.0 - t) + color2 * t;
+        float w1 = clamp((1.0 - t) * 2.0, 0.0, 1.0);
+        float w2 = clamp(t * 2.0, 0.0, 1.0);
+        blended = color1 * w1 + color2 * w2;
     } else if (uMode == 1) { // SCREEN
         vec4 c1 = color1 * (1.0 - t);
         vec4 c2 = color2 * t;
@@ -31,7 +33,9 @@ vec4 sampleBlended(vec2 uv) {
     } else if (uMode == 3) { // MAX
         blended = max(color1 * (1.0 - t), color2 * t);
     } else { // XFADE (mode 4)
-        blended = mix(color1, color2, t);
+        float w1 = clamp(1.0 - pow(t, 4.0), 0.0, 1.0);
+        float w2 = clamp(1.0 - pow(1.0 - t, 4.0), 0.0, 1.0);
+        blended = color1 * w1 + color2 * w2;
     }
     return blended;
 }

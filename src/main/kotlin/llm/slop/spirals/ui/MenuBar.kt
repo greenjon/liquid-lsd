@@ -60,12 +60,18 @@ class MenuBar(
                     }
                 }
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
+            }
             if (isMidiLearn) {
                 ImGui.popStyleColor()
             }
 
             if (ImGui.menuItem("Settings")) {
                 onOpenSettings()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
             }
 
             val isAudioActive = llm.slop.spirals.audio.AudioEngine.isActive()
@@ -75,6 +81,9 @@ class MenuBar(
             val audioEngineLabel = if (!isAudioActive && UITheme.audioEngineEnabled) "Audio Engine [!]" else "Audio Engine"
             if (ImGui.menuItem(audioEngineLabel)) {
                 onOpenAudioEngineMonitor()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("View real-time input waveforms, estimated BPM, and sound-derived modulation signals.")
             }
             if (!isAudioActive && UITheme.audioEngineEnabled) {
                 ImGui.popStyleColor()
@@ -96,6 +105,9 @@ class MenuBar(
             if (ImGui.menuItem("Tooltips", "", tooltipsEnabled)) {
                 UITheme.tooltipsEnabled = !tooltipsEnabled
                 UITheme.saveSettings()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
             }
             ImGui.popStyleColor()
 

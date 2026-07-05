@@ -111,6 +111,9 @@ object FinalParamSection {
                 val newVal = if (options.size > 1) nextIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
                 param.set(newVal)
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Select symmetry-preserving cycle count. Keeps color distributions aligned with geometry lobes.")
+            }
             ImGui.popItemWidth()
 
             ImGui.spacing()

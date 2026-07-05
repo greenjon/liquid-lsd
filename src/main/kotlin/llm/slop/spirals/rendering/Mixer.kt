@@ -22,13 +22,21 @@ class Mixer(
     val mode = ModulatableParameter(4.0f) // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
     val masterAlpha = ModulatableParameter(1.0f) // Master output gain
     val bloom = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val xfadeSpeed = ModulatableParameter(0.1f, minClamp = 0.001f, maxClamp = 1.0f)
+    val xfadeSpeed = ModulatableParameter(5.0f, minClamp = 0.1f, maxClamp = 30.0f)
 
     @Volatile var targetCrossfade = -1.0f
     var isAutoFading = false
 
-    val queuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val queueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+    val queuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod ->
+            llm.slop.spirals.patches.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")
+        }
+    }
+    val queueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod ->
+            llm.slop.spirals.patches.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")
+        }
+    }
 
     private var prevQueuePrevVal = 0.0f
     private var prevQueueNextVal = 0.0f
@@ -43,7 +51,8 @@ class Mixer(
                 crossfade.baseValue = targetCrossfade
                 isAutoFading = false
             } else {
-                val step = xfadeSpeed.value * 0.05f // scale speed to a reasonable per-frame delta
+                val durationSec = xfadeSpeed.value.coerceAtLeast(0.1f)
+                val step = 2.0f / (durationSec * 60.0f)
                 if (current < targetCrossfade) {
                     crossfade.baseValue = (current + step).coerceAtMost(targetCrossfade)
                 } else {

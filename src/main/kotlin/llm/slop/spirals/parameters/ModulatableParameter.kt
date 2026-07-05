@@ -28,6 +28,9 @@ class ModulatableParameter(
     var baseMin: Float = baseValue
     var baseMax: Float = baseValue
 
+    @Volatile
+    var modulatorFilter: ((CvModulator) -> Boolean)? = null
+
     @Deprecated("Use global MIDI mapping profiles instead")
     var mappedMidiId: String? = null
     @Deprecated("Use global MIDI mapping profiles instead")
@@ -69,7 +72,8 @@ class ModulatableParameter(
         val size = modulators.size
         for (i in 0 until size) {
             val mod = modulators[i]
-            if (!mod.bypassed && (CVRegistry.exists(mod.sourceId) || mod.sourceId.startsWith("midi_cc_"))) {
+            val isAllowed = modulatorFilter?.invoke(mod) ?: true
+            if (isAllowed && !mod.bypassed && (CVRegistry.exists(mod.sourceId) || mod.sourceId.startsWith("midi_cc_"))) {
                 hasActive = true
                 break
             }
@@ -85,7 +89,8 @@ class ModulatableParameter(
 
         for (i in 0 until size) {
             val mod = modulators[i]
-            if (mod.bypassed || !(CVRegistry.exists(mod.sourceId) || mod.sourceId.startsWith("midi_cc_"))) {
+            val isAllowed = modulatorFilter?.invoke(mod) ?: true
+            if (!isAllowed || mod.bypassed || !(CVRegistry.exists(mod.sourceId) || mod.sourceId.startsWith("midi_cc_"))) {
                 continue
             }
             val finalCv = evaluateModulator(mod)
@@ -139,6 +144,7 @@ class ModulatableParameter(
         )
         copy.baseMin = this.baseMin
         copy.baseMax = this.baseMax
+        copy.modulatorFilter = this.modulatorFilter
         copy.modulators.addAll(this.modulators.map { it.copy(id = java.util.UUID.randomUUID().toString()) })
         @Suppress("DEPRECATION")
         copy.mappedMidiId = this.mappedMidiId

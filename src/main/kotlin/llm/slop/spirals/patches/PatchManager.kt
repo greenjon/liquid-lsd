@@ -292,7 +292,13 @@ object PatchManager {
                 blendMode = mixer.mode.baseValue,
                 queue = PlayQueueManager.queue.map { it.absolutePath },
                 activeIndex = PlayQueueManager.activeIndex,
-                isAutoVJEnabled = PlayQueueManager.isAutoVJEnabled
+                isAutoVJEnabled = PlayQueueManager.isAutoVJEnabled,
+                bloom = mixer.bloom.toDto(),
+                xfadeSpeed = mixer.xfadeSpeed.toDto(),
+                queueNext = mixer.queueNext.toDto(),
+                queuePrev = mixer.queuePrev.toDto(),
+                isRepeatEnabled = PlayQueueManager.isRepeatEnabled,
+                isShuffleEnabled = PlayQueueManager.isShuffleEnabled
             )
             
             val content = json.encodeToString(session)
@@ -322,6 +328,19 @@ object PatchManager {
             mixer.deckB.applyDto(session.deckB)
             mixer.deckC.applyDto(session.deckC)
             
+            session.bloom?.let { mixer.bloom.applyDto(it) }
+            session.xfadeSpeed?.let { 
+                if (session.version <= 3) {
+                    val oldVal = it.baseValue
+                    val convertedVal = (2.0f / (3.0f * oldVal)).coerceIn(0.1f, 30.0f)
+                    mixer.xfadeSpeed.applyDto(it.copy(baseValue = convertedVal))
+                } else {
+                    mixer.xfadeSpeed.applyDto(it)
+                }
+            }
+            session.queueNext?.let { mixer.queueNext.applyDto(it) }
+            session.queuePrev?.let { mixer.queuePrev.applyDto(it) }
+            
             activePresetA = if (session.deckA.isEmpty) null else session.deckA.name
             cachedDtoA = if (session.deckA.isEmpty) null else session.deckA
             
@@ -332,7 +351,13 @@ object PatchManager {
             cachedDtoC = if (session.deckC.isEmpty) null else session.deckC
             
             val files = session.queue.map { File(it) }.filter { it.exists() }
-            PlayQueueManager.restoreSessionQueue(files, session.activeIndex, session.isAutoVJEnabled)
+            PlayQueueManager.restoreSessionQueue(
+                files,
+                session.activeIndex,
+                session.isAutoVJEnabled,
+                session.isRepeatEnabled,
+                session.isShuffleEnabled
+            )
             logger.info { "Successfully loaded session state from ${sessionFile.name}" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load session state" }

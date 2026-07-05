@@ -34,15 +34,22 @@ class MixerMonitorPanel(
 
         // --- Master Mixer Controls ---
         ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.05f, 0.1f, 0.08f, 0.4f)) // Faint mint background
-        ImGui.beginChild("MasterControls", availW, 55f, true)
+        ImGui.beginChild("MasterControls", availW, 85f, true)
         
         // Crossfader (mapped display value from -1.0 to 1.0)
-        drawFlatSlider("Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f)) {
+        drawFlatSlider("Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck C runs in parallel as a preview.") {
             ""
         }
         if (ImGui.isItemActive()) {
             mixer.isAutoFading = false
             mixer.targetCrossfade = mixer.crossfade.baseValue
+        }
+        
+        ImGui.spacing()
+        
+        // Fade Speed (Mixer/xfadeSpeed)
+        drawFlatSlider("Mixer/xfadeSpeed", "Fade Speed", mixer.xfadeSpeed, 0.1f, 30.0f, 80f, 0.1f, 30.0f, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), "Adjust transition duration for automatic crossfading and Auto-VJ transitions.") {
+            "%.1fs".format(it)
         }
         
         ImGui.endChild()
@@ -91,8 +98,11 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, presetY + 3f)
         UITheme.body("Preset: $displayNameA")
         ImGui.sameLine()
-        if (ImGui.smallButton("[v]##SaveA")) {
+        if (ImGui.smallButton("${Icons.SAVE}##SaveA")) {
             ImGui.openPopup("save_menu_A")
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Save or save as a new preset for Deck A.")
         }
         if (ImGui.beginPopup("save_menu_A")) {
             if (ImGui.menuItem("Save")) {
@@ -111,8 +121,11 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
         UITheme.body("Preset: $displayNameB")
         ImGui.sameLine()
-        if (ImGui.smallButton("[v]##SaveB")) {
+        if (ImGui.smallButton("${Icons.SAVE}##SaveB")) {
             ImGui.openPopup("save_menu_B")
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Save or save as a new preset for Deck B.")
         }
         if (ImGui.beginPopup("save_menu_B")) {
             if (ImGui.menuItem("Save")) {
@@ -171,8 +184,11 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, row1Y + ImGui.getTextLineHeightWithSpacing())
         UITheme.body("Preset: $displayNameC")
         ImGui.sameLine()
-        if (ImGui.smallButton("[v]##SaveC")) {
+        if (ImGui.smallButton("${Icons.SAVE}##SaveC")) {
             ImGui.openPopup("save_menu_C")
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Save or save as a new preset for Deck C.")
         }
         if (ImGui.beginPopup("save_menu_C")) {
             if (ImGui.menuItem("Save")) {
@@ -191,6 +207,9 @@ class MixerMonitorPanel(
 
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_C", halfW, subH)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop patch files to load.")
+        }
 
         if (ImGui.beginDragDropSource()) {
             ImGui.setDragDropPayload("MONITOR_DRAG", "C")
@@ -249,6 +268,14 @@ class MixerMonitorPanel(
             if (ImGui.selectable(labels[i], utilityMode == i, 0, cellW, cellH)) {
                 utilityMode = i
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                val operationDesc = when(i) {
+                    0 -> "Move: Move preset and configurations from source deck to target deck, clearing source."
+                    1 -> "Copy: Duplicate preset and configurations from source deck to target deck."
+                    else -> "Swap: Swap preset and configurations between two decks."
+                }
+                ImGui.setTooltip(operationDesc)
+            }
             if (i < 2) ImGui.sameLine(0f, 5f)
         }
         style.setSelectableTextAlign(oldAlignX, oldAlignY)
@@ -259,21 +286,31 @@ class MixerMonitorPanel(
         if (utilityMode == 2) {
             val fullW = width - 5f
             if (ImGui.button("A + B", fullW, cellH)) onUtilityAction(utilityMode, mixer.deckA, mixer.deckB)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Swap configurations of Deck A and Deck B.")
             if (ImGui.button("B+C", fullW, cellH)) onUtilityAction(utilityMode, mixer.deckB, mixer.deckC)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Swap configurations of Deck B and Deck C.")
             if (ImGui.button("C + A", fullW, cellH)) onUtilityAction(utilityMode, mixer.deckC, mixer.deckA)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Swap configurations of Deck C and Deck A.")
         } else {
+            val opName = if (utilityMode == 0) "Move" else "Copy"
             ImGui.beginGroup()
             if (ImGui.button("A > B", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckA, mixer.deckB)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck A to Deck B.")
             if (ImGui.button("B > A", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckB, mixer.deckA)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck B to Deck A.")
             if (ImGui.button("C > A", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckC, mixer.deckA)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck C to Deck A.")
             ImGui.endGroup()
 
             ImGui.sameLine(0f, 5f)
 
             ImGui.beginGroup()
             if (ImGui.button("A > C", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckA, mixer.deckC)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck A to Deck C.")
             if (ImGui.button("B > C", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckB, mixer.deckC)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck B to Deck C.")
             if (ImGui.button("C > B", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckC, mixer.deckB)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck C to Deck B.")
             ImGui.endGroup()
         }
 
@@ -290,6 +327,7 @@ class MixerMonitorPanel(
         displayMin: Float = min,
         displayMax: Float = max,
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f),
+        tooltip: String? = null,
         formatValue: (Float) -> String = { "%.3f".format(it) }
     ) {
         ImGui.pushID(label)
@@ -305,6 +343,10 @@ class MixerMonitorPanel(
         val barH = 14f
 
         ImGui.invisibleButton("##slider", barW, barH)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            val baseTip = tooltip ?: "Click and drag to adjust $label."
+            ImGui.setTooltip(baseTip)
+        }
 
         val isTarget = patchState.midiLearnTarget?.let {
             it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey

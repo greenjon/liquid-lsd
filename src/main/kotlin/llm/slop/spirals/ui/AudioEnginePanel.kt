@@ -91,6 +91,9 @@ object AudioEnginePanel {
         val curX = ImGui.getCursorScreenPosX()
         val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
         ImGui.dummy(indicatorSize, indicatorSize)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Real-time tempo estimate. Flashes on the detected beat phase.")
+        }
         val dl = ImGui.getWindowDrawList()
         val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
         val borderCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.5f)
@@ -108,6 +111,9 @@ object AudioEnginePanel {
             SignalState.SILENT -> UITheme.bodyColored(0.5f, 0.5f, 0.5f, 1.0f, "SILENT")
             SignalState.ACTIVE -> UITheme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "ACTIVE")
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Active: Signal detected and tracking tempo. Silent: No input audio or level too low.")
+        }
 
         ImGui.spacing()
 
@@ -123,6 +129,9 @@ object AudioEnginePanel {
                     AudioEngine.tryReconnect()
                 }.start()
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
+            }
             ImGui.spacing()
         }
 
@@ -136,6 +145,9 @@ object AudioEnginePanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.2f, 0.9f, 0.4f, 1.0f)
             ImGui.textWrapped("MIDI Status: $midiCount active MIDI input device(s) connected.")
             ImGui.popStyleColor()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Displays the count of connected MIDI input controllers.")
         }
         ImGui.spacing()
 
@@ -151,6 +163,9 @@ object AudioEnginePanel {
                 AudioEngine.manualBpm = manualBpmArr[0]
                 AudioEngine.setBpmDirectly(manualBpmArr[0])
                 UITheme.saveSettings()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Set fallback tempo. Used when 'Lock to Manual BPM' is active or input signal is silent.")
             }
 
             ImGui.spacing()
@@ -171,6 +186,9 @@ object AudioEnginePanel {
                 }
                 ImGui.endCombo()
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Select algorithm used for beat tracking (e.g., spectral energy flux).")
+            }
             
             if (ImGui.beginCombo("Target", settings.target.name)) {
                 llm.slop.spirals.audio.AudioTarget.values().forEach { target ->
@@ -181,6 +199,9 @@ object AudioEnginePanel {
                     if (isSelected) ImGui.setItemDefaultFocus()
                 }
                 ImGui.endCombo()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Choose which audio input channel to analyze (Left, Right, or Mixed Mono).")
             }
 
             ImGui.spacing()
@@ -197,6 +218,9 @@ object AudioEnginePanel {
                 }
                 ImGui.endCombo()
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("FFT window size. Larger is more frequency-accurate; smaller is more time-accurate.")
+            }
 
             // Hop Size Combo
             val hopSizes = intArrayOf(128, 256, 512, 1024)
@@ -210,45 +234,75 @@ object AudioEnginePanel {
                 }
                 ImGui.endCombo()
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Step size between analysis frames. Lower values increase temporal resolution.")
+            }
 
             floorArr[0] = settings.bpmSearchFloor
             if (ImGui.sliderInt("BPM Floor", floorArr, 40, 120)) { 
                 settings.bpmSearchFloor = floorArr[0]
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Minimum limit for tempo estimation to prevent half-tempo octave tracking errors.")
             }
             
             ceilArr[0] = settings.bpmSearchCeiling
             if (ImGui.sliderInt("BPM Ceiling", ceilArr, 120, 240)) { 
                 settings.bpmSearchCeiling = ceilArr[0]
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Maximum limit for tempo estimation to prevent double-tempo octave tracking errors.")
+            }
             
             resArr[0] = settings.bpmGridResolution
             if (ImGui.sliderFloat("BPM Resolution", resArr, 0.1f, 2.0f, "%.1f")) { 
                 settings.bpmGridResolution = resArr[0]
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("The granularity of the tempo search grid (in BPM steps).")
             }
             
             winLenArr[0] = settings.analysisWindowLength
             if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) { 
                 settings.analysisWindowLength = winLenArr[0]
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Duration of history buffer analyzed for autocorrelation and beat estimation.")
+            }
             
             pllArr[0] = settings.pllAdaptationRate
             if (ImGui.sliderFloat("PLL Adaptation", pllArr, 0.01f, 1.0f, "%.2f")) { 
                 settings.pllAdaptationRate = pllArr[0]
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Controls how quickly the Phase-Locked Loop (PLL) tracks sudden tempo changes.")
             }
             
             ImGui.spacing()
             UITheme.body("Presets:")
             ImGui.sameLine()
             if (ImGui.button("High Accuracy")) AudioEngine.beatDetector.applyPreset(llm.slop.spirals.audio.BeatDetectionSettings.highAccuracy())
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Apply configuration tuned for precise tempo detection (larger FFT window).")
+            }
             ImGui.sameLine()
             if (ImGui.button("Balanced")) AudioEngine.beatDetector.applyPreset(llm.slop.spirals.audio.BeatDetectionSettings.balanced())
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Apply configuration balanced between latency and precision.")
+            }
             ImGui.sameLine()
             if (ImGui.button("Eco")) AudioEngine.beatDetector.applyPreset(llm.slop.spirals.audio.BeatDetectionSettings.eco())
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Apply configuration with low CPU usage (smaller FFT window).")
+            }
             
             ImGui.spacing()
             isLocked.set(AudioEngine.isBpmLocked)
             if (ImGui.checkbox("Lock to Manual BPM", isLocked)) {
                 AudioEngine.isBpmLocked = isLocked.get()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
             }
 
             ImGui.spacing()
@@ -267,10 +321,16 @@ object AudioEnginePanel {
                 AudioEngine.inputGain = gainArr[0]
                 UITheme.saveSettings()
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Pre-amplify the incoming audio signal before analysis and oscilloscope display.")
+            }
             ImGui.sameLine()
             if (ImGui.button("Reset##gain")) {
                 AudioEngine.inputGain = 1.0f
                 UITheme.saveSettings()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Reset input gain to 1.0x.")
             }
             ImGui.spacing()
 
@@ -284,6 +344,9 @@ object AudioEnginePanel {
                 ImGui.setNextItemWidth(180f)
                 if (ImGui.sliderFloat("##system_gain", sysVolArr, 0.0f, 1.0f, "%.2f")) {
                     SystemAudioVolume.updateSystemVolume(sysVolArr[0])
+                }
+                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                    ImGui.setTooltip("System-level recording input volume (operating system volume control).")
                 }
                 if (SystemAudioVolume.isMuted) {
                     ImGui.sameLine()

@@ -222,7 +222,7 @@ data class GlobalPatchDto(
 
 @Serializable
 data class SessionStateDto(
-    val version: Int = 2,
+    val version: Int = 4,
     val deckA: DeckPatchDto,
     val deckB: DeckPatchDto,
     val deckC: DeckPatchDto,
@@ -231,7 +231,13 @@ data class SessionStateDto(
     val blendMode: Float,
     val queue: List<String>,
     val activeIndex: Int,
-    val isAutoVJEnabled: Boolean
+    val isAutoVJEnabled: Boolean,
+    val bloom: ParameterDto? = null,
+    val xfadeSpeed: ParameterDto? = null,
+    val queueNext: ParameterDto? = null,
+    val queuePrev: ParameterDto? = null,
+    val isRepeatEnabled: Boolean = false,
+    val isShuffleEnabled: Boolean = false
 )
 
 @Serializable

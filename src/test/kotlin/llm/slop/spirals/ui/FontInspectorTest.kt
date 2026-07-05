@@ -50,7 +50,13 @@ class FontInspectorTest {
             "RECTANGLE_VERTICAL" to 0xe377,
             "ROWS_2" to 0xe439,
             "PANEL_BOTTOM" to 0xe42c,
-            "PANEL_LEFT_OPEN" to 0xe21d
+            "PANEL_LEFT_OPEN" to 0xe21d,
+            "WAVE_SINE" to 0xe38b,
+            "WAVE_TRI" to 0xe192,
+            "WAVE_SQUARE" to 0xe167,
+            "ALIGN_LEFT_LINE" to 0xe457,
+            "ALIGN_CENTER_LINE" to 0xe5cf,
+            "ALIGN_RIGHT_LINE" to 0xe459
         )
 
         for ((name, codepoint) in codepointsToCheck) {

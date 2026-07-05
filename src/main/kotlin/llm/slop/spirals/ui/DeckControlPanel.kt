@@ -43,6 +43,9 @@ class DeckControlPanel(
         if (ImGui.button("$displayName##presetBtn_$label", browserBtnW, 0f)) {
             browser.open()
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Click to open the Tag Preset Browser for Deck $label.")
+        }
 
         // -- Menu button -------------------------------------------------------
         var openDeleteConfirm = false
@@ -50,6 +53,9 @@ class DeckControlPanel(
         ImGui.sameLine()
         if (ImGui.button("Menu##menu_$label", menuBtnW, 0f)) {
             ImGui.openPopup("deck_preset_menu_$label")
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Deck operations menu (Reset, Load, Save, Save As, Delete).")
         }
 
         if (ImGui.beginPopup("deck_preset_menu_$label")) {
@@ -140,6 +146,9 @@ class DeckControlPanel(
         
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_$label", imgAvailW, imgAvailH)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Interactive monitor for Deck $label. Drag to route to another deck or drop presets to load.")
+        }
         
         if (ImGui.beginDragDropSource()) {
             val deckName = if (isDeckA) "A" else "B"

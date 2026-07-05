@@ -108,6 +108,9 @@ object ModulatorHeaderRow {
             }
             onReplace(existing.copy(operator = newOp))
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Modulation Operator:\nADD: Modulator value is added to parameter's base.\nMUL: Modulator multiplies the base value.\nSCALE: Modulator scales the remaining range.")
+        }
         ImGui.popItemWidth()
 
         // 4. Title Text (vertically centered in the row, left-aligned)

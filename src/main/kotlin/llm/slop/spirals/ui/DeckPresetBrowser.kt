@@ -118,10 +118,16 @@ class DeckPresetBrowser(
         ImGui.sameLine()
         ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 70f)
         ImGui.inputText("##search$deckLabel", searchInput)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Type to search presets by name.")
+        }
         ImGui.popItemWidth()
         ImGui.sameLine()
         if (ImGui.button("Refresh")) {
             scanPresets()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Re-scan presets directory.")
         }
     }
 
@@ -143,6 +149,9 @@ class DeckPresetBrowser(
             if (ImGui.button("[$tag]##tag_${deckLabel}_$tag")) {
                 if (active) activeTags.remove(tag) else activeTags.add(tag)
             }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Toggle tag '$tag' filter. Active tags filter listed presets.")
+            }
             if (active) ImGui.popStyleColor(3)
             ImGui.sameLine()
         }
@@ -150,6 +159,9 @@ class DeckPresetBrowser(
         if (activeTags.isNotEmpty()) {
             if (ImGui.button("X Clear##clearTags$deckLabel")) {
                 activeTags.clear()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Clear all active tag filters.")
             }
         }
     }

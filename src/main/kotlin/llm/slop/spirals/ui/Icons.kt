@@ -29,5 +29,17 @@ object Icons {
     const val LAYOUT_HALF = "\ue439" // rows-2
     const val LAYOUT_HIDE = "\ue42c" // panel-bottom
     const val PANEL_LEFT_OPEN = "\ue21d" // panel-left-open
+    const val REPEAT      = "\ue146" // repeat
+    const val SHUFFLE     = "\ue15e" // shuffle
+
+    // Wave Shapes
+    const val WAVE_SINE   = "\ue38b" // spline
+    const val WAVE_TRI    = "\ue192" // triangle
+    const val WAVE_SQUARE = "\ue167" // square
+
+    // Asymmetry alignments
+    const val ALIGN_LEFT_LINE   = "\ue457" // arrow-left-to-line
+    const val ALIGN_CENTER_LINE = "\ue5cf" // fold-horizontal
+    const val ALIGN_RIGHT_LINE  = "\ue459" // arrow-right-to-line
 }
 

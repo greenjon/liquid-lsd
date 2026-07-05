@@ -15,6 +15,7 @@ object ParameterResolver {
         list.add("Mixer/crossfade" to mixer.crossfade)
         list.add("Mixer/masterAlpha" to mixer.masterAlpha)
         list.add("Mixer/bloom" to mixer.bloom)
+        list.add("Mixer/xfadeSpeed" to mixer.xfadeSpeed)
         list.add("Mixer/queuePrev" to mixer.queuePrev)
         list.add("Mixer/queueNext" to mixer.queueNext)
         

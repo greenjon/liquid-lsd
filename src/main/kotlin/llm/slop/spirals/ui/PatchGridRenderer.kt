@@ -61,6 +61,9 @@ object PatchGridRenderer {
         UITheme.body(label)
         ImGui.sameLine(cursorStartX)
         ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Click to open context menu: Randomize, Copy/Paste, or Reset parameter $label.")
+        }
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
             if (ImGui.menuItem("Randomize row")) {
                 onPushUndo()
@@ -110,6 +113,15 @@ object PatchGridRenderer {
         if (ImGui.isItemClicked()) {
             state.select(PatchCellId(paramKey, "final"), param)
         }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (param.modulatorFilter != null) {
+                ImGui.beginTooltip()
+                ImGui.text("Parameter value: ${"%.3f".format(param.value)} (Base: ${"%.3f".format(param.baseValue)})\nClick to configure bounds, random ranges, and default values.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
+                ImGui.endTooltip()
+            } else {
+                ImGui.setTooltip("Parameter value: ${"%.3f".format(param.value)} (Base: ${"%.3f".format(param.baseValue)})\nClick to configure bounds, random ranges, and default values.")
+            }
+        }
         
         val finalBgCol = when {
             isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
@@ -140,8 +152,14 @@ object PatchGridRenderer {
         
         // Find any MIDI modulator for this parameter
         val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
-        val hasMidiMod = midiMods.any { !it.bypassed }
-        val isMidiBypassed = midiMods.isNotEmpty() && midiMods.all { it.bypassed }
+        val hasMidiMod = midiMods.any { mod ->
+            val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+            isAllowed && !mod.bypassed
+        }
+        val isMidiBypassed = midiMods.isNotEmpty() && midiMods.all { mod ->
+            val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+            !isAllowed || mod.bypassed
+        }
         
         val isMidiTarget = state.midiLearnTarget?.let {
             it is MidiLearnTarget.GridCell && it.cellId == midiCellId
@@ -149,6 +167,17 @@ object PatchGridRenderer {
 
         ImGui.setCursorScreenPos(midiX, midiY)
         ImGui.invisibleButton("##midi_cell", CELL, CELL)
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            val details = if (hasMidiMod) {
+                val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
+                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings."
+            } else if (state.isMidiLearnMode) {
+                "MIDI Learn active. Click this cell, then move/turn a control on your controller to bind it."
+            } else {
+                "No MIDI mapping. Click to view CC mapping options (MIDI Map mode)."
+            }
+            ImGui.setTooltip(details)
+        }
         if (ImGui.isItemClicked()) {
             if (state.isMidiLearnMode) {
                 state.midiLearnTarget = MidiLearnTarget.GridCell(midiCellId, param)
@@ -228,8 +257,14 @@ object PatchGridRenderer {
             } else {
                 param.modulators.filter { it.sourceId == cvId }
             }
-            val hasModulator = activeMods.any { !it.bypassed }
-            val isBypassed = activeMods.isNotEmpty() && activeMods.all { it.bypassed }
+            val hasModulator = activeMods.any { mod ->
+                val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+                isAllowed && !mod.bypassed
+            }
+            val isBypassed = activeMods.isNotEmpty() && activeMods.all { mod ->
+                val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+                !isAllowed || mod.bypassed
+            }
 
             val x = gridStartX + labelColW + getColumnOffset(cvId)
             val y = rowScreenY
@@ -243,6 +278,23 @@ object PatchGridRenderer {
 
             ImGui.setCursorScreenPos(x, y)
             ImGui.invisibleButton("##cell_$cvId", CELL, CELL)
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                val isFiltered = param.modulatorFilter != null && activeMods.any { mod -> param.modulatorFilter?.invoke(mod) == false }
+                val statusText = when {
+                    isFiltered -> "Bypassed: Bypassed because AUTO-VJ is OFF."
+                    hasModulator -> "Active: Modulation routed to parameter."
+                    isBypassed -> "Bypassed: Bypassed by user toggle."
+                    else -> "Unmapped: Click to route this modulation source."
+                }
+                val modSource = when (cvId) {
+                    "gen1" -> "LFO / Oscillator"
+                    "audio" -> "Audio Envelope Follower"
+                    "trigger" -> "Transient Trigger"
+                    else -> cvId
+                }
+                val tipText = "Source: $modSource\nStatus: $statusText\nClick to configure modulation settings. Right-click to copy/paste."
+                ImGui.setTooltip(tipText)
+            }
             if (ImGui.isItemClicked()) {
                 if (state.isMidiLearnMode) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
