@@ -13,6 +13,7 @@ class Deck(
     val height: Int = 1080
 ) {
     var isEmpty: Boolean = false
+    var lastSourceSelectBase: Float = 0.0f
 
     // FBO for rendering the clean visual source output
     val cleanFBO = FBO(width, height)
@@ -53,6 +54,7 @@ class Deck(
         availableSources.addAll(registrySources)
         
         updateSourceSelection()
+        lastSourceSelectBase = sourceSelect.baseValue
     }
 
     /**
@@ -68,6 +70,7 @@ class Deck(
     fun reset() {
         isEmpty = true
         sourceSelect.reset()
+        lastSourceSelectBase = sourceSelect.baseValue
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -124,8 +127,15 @@ class Deck(
      * Updates the underlying visual source and evaluates feedback parameters.
      */
     fun update() {
+        val oldSelectValue = sourceSelect.value
         sourceSelect.evaluate()
         updateSourceSelection()
+        val newSelectValue = sourceSelect.value
+
+        if (isEmpty && (sourceSelect.baseValue != lastSourceSelectBase || sourceSelect.modulators.isNotEmpty() || newSelectValue != oldSelectValue)) {
+            isEmpty = false
+        }
+
         source.update()
         fbDecay.evaluate()
         fbGain.evaluate()

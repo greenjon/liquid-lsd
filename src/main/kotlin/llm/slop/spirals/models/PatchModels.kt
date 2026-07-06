@@ -390,6 +390,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
 fun Deck.applyDto(dto: DeckPatchDto) {
     this.isEmpty = dto.isEmpty
     dto.feedbackParameters["sourceSelect"]?.let { sourceSelect.applyDto(it) }
+    this.lastSourceSelectBase = sourceSelect.baseValue
     
     // Select the active source dynamically based on sourceSelect parameter
     val size = availableSources.size
