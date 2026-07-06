@@ -15,7 +15,7 @@ class MixerMonitorPanel(
     private val onUtilityAction: (Int, Deck, Deck) -> Unit, // (mode: 0=Move, 1=Copy, 2=Swap, from, to)
     private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit
 ) {
-    private var utilityMode = 1 // 0=Move, 1=Copy, 2=Swap
+    private var pendingRightDragFrom: String? = null
 
     fun draw(mixer: Mixer) {
         val availW = ImGui.getContentRegionAvailX()
@@ -153,12 +153,12 @@ class MixerMonitorPanel(
         val endY = ImGui.getCursorScreenPosY()
         ImGui.setCursorScreenPos(startX, endY)
 
-        // --- Deck C / Preview Monitor (Aligned to Lower Left) ---
+        // --- Deck C / Preview Monitor (Aligned to Center / Full Width) ---
         val previewLabel = "DECK C / PREVIEW"
         
         // Push Deck C monitor to the bottom of the panel
         val contentHeightRemaining = ImGui.getContentRegionAvailY()
-        val deckCHeightNeeded = subH + ImGui.getFrameHeightWithSpacing() * 2f + 20f
+        val deckCHeightNeeded = masterH + ImGui.getFrameHeightWithSpacing() * 2f + 20f
         
         if (contentHeightRemaining > deckCHeightNeeded) {
             ImGui.setCursorPosY(ImGui.getCursorPosY() + (contentHeightRemaining - deckCHeightNeeded))
@@ -174,7 +174,7 @@ class MixerMonitorPanel(
         UITheme.withFont(UITheme.FontLevel.H2) {
             twC = ImGui.calcTextSize(previewLabel).x
         }
-        ImGui.setCursorScreenPos(startX + (halfW - twC) * 0.5f, row1Y)
+        ImGui.setCursorScreenPos(startX + (availW - twC) * 0.5f, row1Y)
         UITheme.h2(previewLabel)
 
         // Row 2: Preset Info
@@ -203,10 +203,10 @@ class MixerMonitorPanel(
         val imgX = ImGui.getCursorScreenPosX()
         val imgY = ImGui.getCursorScreenPosY()
         
-        ImGui.image(mixer.deckC.getOutputTexture(), halfW, subH, 0f, 1f, 1f, 0f)
+        ImGui.image(mixer.deckC.getOutputTexture(), availW, masterH, 0f, 1f, 1f, 0f)
 
         ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.invisibleButton("##drag_source_C", halfW, subH)
+        ImGui.invisibleButton("##drag_source_C", availW, masterH)
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop patch files to load.")
         }
@@ -214,6 +214,12 @@ class MixerMonitorPanel(
         if (ImGui.beginDragDropSource()) {
             ImGui.setDragDropPayload("MONITOR_DRAG", "C")
             ImGui.text("Move Deck C")
+            ImGui.endDragDropSource()
+        }
+
+        if (ImGui.beginDragDropSource(128)) { // 128 = ImGuiDragDropFlags.SourceButtonMouseButtonRight
+            ImGui.setDragDropPayload("MONITOR_DRAG_RIGHT", "C")
+            ImGui.text("Copy/Move/Swap Deck C")
             ImGui.endDragDropSource()
         }
 
@@ -236,85 +242,37 @@ class MixerMonitorPanel(
                     PatchManager.moveDeck(mixer, fromDeck, toDeck)
                 }
             }
+            val payloadMonitorRight = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG_RIGHT")
+            if (payloadMonitorRight != null) {
+                pendingRightDragFrom = payloadMonitorRight
+                ImGui.openPopup("monitor_drag_menu_C")
+            }
             ImGui.endDragDropTarget()
+        }
+
+        if (ImGui.beginPopup("monitor_drag_menu_C")) {
+            val fromName = pendingRightDragFrom
+            if (fromName != null) {
+                val fromDeck = if (fromName == "A") mixer.deckA
+                               else if (fromName == "B") mixer.deckB
+                               else mixer.deckC
+                val toDeck = mixer.deckC
+                if (ImGui.menuItem("Move")) {
+                    onUtilityAction(0, fromDeck, toDeck)
+                }
+                if (ImGui.menuItem("Copy")) {
+                    onUtilityAction(1, fromDeck, toDeck)
+                }
+                if (ImGui.menuItem("Swap")) {
+                    onUtilityAction(2, fromDeck, toDeck)
+                }
+            }
+            ImGui.endPopup()
         }
 
         val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
         val dlPreview = ImGui.getWindowDrawList()
-        dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + halfW + 1f, imgY + subH + 1f, deckCColor, 0f, 0, 2f)
-
-        // --- Utility Grid (to the right of Deck C) ---
-        ImGui.setCursorScreenPos(deckBStartX, row1Y)
-        drawUtilityGrid(mixer, halfW, subH + ImGui.getFrameHeightWithSpacing() * 2f)
-    }
-
-    private fun drawUtilityGrid(mixer: Mixer, width: Float, height: Float) {
-        ImGui.beginChild("UtilityGrid", width, height, false)
-        ImGui.dummy(0f, ImGui.getTextLineHeightWithSpacing())
-        ImGui.spacing()
-
-        val cellW = (width - 10f) / 3f
-        val btnW = (width - 5f) / 2f
-        val cellH = ((height - 35f) / 4f) * 0.75f
-
-        // Row 1: Mode Selectors (Tabs)
-        val labels = listOf("Move", "Copy", "Swap")
-        val style = ImGui.getStyle()
-        val oldAlignX = style.getSelectableTextAlignX()
-        val oldAlignY = style.getSelectableTextAlignY()
-        style.setSelectableTextAlign(0.5f, 0.5f)
-
-        for (i in 0..2) {
-            if (ImGui.selectable(labels[i], utilityMode == i, 0, cellW, cellH)) {
-                utilityMode = i
-            }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-                val operationDesc = when(i) {
-                    0 -> "Move: Move preset and configurations from source deck to target deck, clearing source."
-                    1 -> "Copy: Duplicate preset and configurations from source deck to target deck."
-                    else -> "Swap: Swap preset and configurations between two decks."
-                }
-                ImGui.setTooltip(operationDesc)
-            }
-            if (i < 2) ImGui.sameLine(0f, 5f)
-        }
-        style.setSelectableTextAlign(oldAlignX, oldAlignY)
-        
-        ImGui.spacing()
-        
-        // Rows 2-4: Action Buttons
-        if (utilityMode == 2) {
-            val fullW = width - 5f
-            if (ImGui.button("A + B", fullW, cellH)) onUtilityAction(utilityMode, mixer.deckA, mixer.deckB)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Swap configurations of Deck A and Deck B.")
-            if (ImGui.button("B+C", fullW, cellH)) onUtilityAction(utilityMode, mixer.deckB, mixer.deckC)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Swap configurations of Deck B and Deck C.")
-            if (ImGui.button("C + A", fullW, cellH)) onUtilityAction(utilityMode, mixer.deckC, mixer.deckA)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Swap configurations of Deck C and Deck A.")
-        } else {
-            val opName = if (utilityMode == 0) "Move" else "Copy"
-            ImGui.beginGroup()
-            if (ImGui.button("A > B", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckA, mixer.deckB)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck A to Deck B.")
-            if (ImGui.button("B > A", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckB, mixer.deckA)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck B to Deck A.")
-            if (ImGui.button("C > A", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckC, mixer.deckA)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck C to Deck A.")
-            ImGui.endGroup()
-
-            ImGui.sameLine(0f, 5f)
-
-            ImGui.beginGroup()
-            if (ImGui.button("A > C", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckA, mixer.deckC)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck A to Deck C.")
-            if (ImGui.button("B > C", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckB, mixer.deckC)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck B to Deck C.")
-            if (ImGui.button("C > B", btnW, cellH)) onUtilityAction(utilityMode, mixer.deckC, mixer.deckB)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("$opName Deck C to Deck B.")
-            ImGui.endGroup()
-        }
-
-        ImGui.endChild()
+        dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + availW + 1f, imgY + masterH + 1f, deckCColor, 0f, 0, 2f)
     }
 
     fun drawFlatSlider(

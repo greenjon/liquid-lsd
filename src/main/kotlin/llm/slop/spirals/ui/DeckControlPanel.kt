@@ -20,6 +20,8 @@ class DeckControlPanel(
     private val onSaveDeck: (String, Deck, Boolean) -> Unit,
     private val onDeleteDeck: (Boolean) -> Unit
 ) {
+    private var pendingRightDragFrom: String? = null
+
     fun drawDeckPresetDropdown(mixer: Mixer, label: String, deck: Deck, isDeckA: Boolean, fixedWidth: Float) {
         ImGui.beginGroup()
         ImGui.pushID("presetRow_$label")
@@ -109,7 +111,7 @@ class DeckControlPanel(
         ImGui.endGroup()
     }
 
-    fun drawDeckControls(mixer: Mixer, label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean) {
+    fun drawDeckControls(mixer: Mixer, label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean, onUtilityAction: (Int, Deck, Deck) -> Unit) {
         ImGui.pushID(label)
 
         val themeCol = if (isDeckA) {
@@ -156,6 +158,13 @@ class DeckControlPanel(
             ImGui.text("Move Deck $deckName")
             ImGui.endDragDropSource()
         }
+
+        if (ImGui.beginDragDropSource(128)) { // 128 = ImGuiDragDropFlags.SourceButtonMouseButtonRight
+            val deckName = if (isDeckA) "A" else "B"
+            ImGui.setDragDropPayload("MONITOR_DRAG_RIGHT", deckName)
+            ImGui.text("Copy/Move/Swap Deck $deckName")
+            ImGui.endDragDropSource()
+        }
         
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -183,7 +192,31 @@ class DeckControlPanel(
                     PatchManager.moveDeck(mixer, fromDeck, toDeck)
                 }
             }
+            val payloadMonitorRight = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG_RIGHT")
+            if (payloadMonitorRight != null) {
+                pendingRightDragFrom = payloadMonitorRight
+                ImGui.openPopup("monitor_drag_menu_$label")
+            }
             ImGui.endDragDropTarget()
+        }
+
+        if (ImGui.beginPopup("monitor_drag_menu_$label")) {
+            val fromName = pendingRightDragFrom
+            if (fromName != null) {
+                val fromDeck = if (fromName == "A") mixer.deckA
+                               else if (fromName == "B") mixer.deckB
+                               else mixer.deckC
+                if (ImGui.menuItem("Move")) {
+                    onUtilityAction(0, fromDeck, deck)
+                }
+                if (ImGui.menuItem("Copy")) {
+                    onUtilityAction(1, fromDeck, deck)
+                }
+                if (ImGui.menuItem("Swap")) {
+                    onUtilityAction(2, fromDeck, deck)
+                }
+            }
+            ImGui.endPopup()
         }
         
         val dl = ImGui.getWindowDrawList()

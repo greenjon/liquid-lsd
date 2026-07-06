@@ -157,47 +157,11 @@ object PatchGridPanel {
             if (hFinal > maxH) maxH = hFinal
             if (hMidi > maxH) maxH = hMidi
         }
-        
-        val btnHeight = ImGui.getFrameHeight()
-        val spacing = 4f
-        val buttonsH = 4 * (btnHeight + spacing)
-        val headerH = (maxH + 5f).coerceAtLeast(buttonsH + 28f)
+        val headerH = (maxH + 5f).coerceAtLeast(40f)
         
         // Reserve vertical space for headers
         ImGui.dummy(10f, headerH)
         val afterHeadersY = ImGui.getCursorScreenPosY()
-
-        val scale = btnHeight / 30f
-        val btnWidth = 50f * scale
-
-        // Draw the 3 randomize rows vertically
-        drawRandomizeRow("rand_all", "Randomize all", startX, startY, btnWidth, btnHeight, scale) {
-            PatchGridUndo.pushUndoState(state, mixer)
-            mixer.deckA.randomizeModulators()
-            mixer.deckB.randomizeModulators()
-            mixer.deckC.randomizeModulators()
-            listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
-                val randomized = param.modulators.map { it.randomizeActiveValues() }
-                param.modulators.clear()
-                param.modulators.addAll(randomized)
-                param.randomizeBaseValue()
-            }
-        }
-
-        drawRandomizeRow("rand_deck_a", "Randomize Deck A", startX, startY + btnHeight + spacing, btnWidth, btnHeight, scale) {
-            PatchGridUndo.pushUndoState(state, mixer)
-            mixer.deckA.randomizeModulators()
-        }
-
-        drawRandomizeRow("rand_deck_b", "Randomize Deck B", startX, startY + (btnHeight + spacing) * 2f, btnWidth, btnHeight, scale) {
-            PatchGridUndo.pushUndoState(state, mixer)
-            mixer.deckB.randomizeModulators()
-        }
-
-        drawRandomizeRow("rand_deck_c", "Randomize Deck C", startX, startY + (btnHeight + spacing) * 3f, btnWidth, btnHeight, scale) {
-            PatchGridUndo.pushUndoState(state, mixer)
-            mixer.deckC.randomizeModulators()
-        }
         
         // Draw Top Tab Row at the bottom-left of the header area (just above the separator)
         ImGui.setCursorScreenPos(startX, startY + headerH - 24f)
@@ -288,37 +252,6 @@ object PatchGridPanel {
         
         // Restore cursor to where the dummy left off
         ImGui.setCursorScreenPos(startX, afterHeadersY)
-    }
-
-
-
-    private fun drawRandomizeRow(
-        id: String,
-        label: String,
-        startX: Float,
-        startY: Float,
-        btnWidth: Float,
-        btnHeight: Float,
-        scale: Float,
-        onClick: () -> Unit
-    ) {
-        if (PatchGridRenderer.drawDiceButton(id, startX, startY, scale, btnWidth, btnHeight)) {
-            onClick()
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            val scopeDesc = when(id) {
-                "rand_all" -> "Randomize modulator depths and values for all decks (A, B, C)."
-                "rand_deck_a" -> "Randomize modulator depths and values for Deck A."
-                "rand_deck_b" -> "Randomize modulator depths and values for Deck B."
-                "rand_deck_c" -> "Randomize modulator depths and values for Deck C."
-                else -> "Randomize values."
-            }
-            ImGui.setTooltip(scopeDesc)
-        }
-        ImGui.sameLine(0f, 6f)
-        val textY = startY + (btnHeight - ImGui.getTextLineHeight()) * 0.5f
-        ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), textY)
-        UITheme.body(label)
     }
 }
 

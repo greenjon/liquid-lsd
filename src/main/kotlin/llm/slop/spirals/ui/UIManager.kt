@@ -207,34 +207,39 @@ class UIManager(private val windowHandle: Long) {
         }
     )
 
-    private val mixerMonitorPanel = MixerMonitorPanel(
-        patchState = patchState,
-        drawDeckControls = { mixer, label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(mixer, label, deck, width, height, isDeckA) },
-        onUtilityAction = { mode, from, to ->
-            val isDirty = PatchManager.isDeckDirty(to, currentMixer!!)
+    private val deckUtilityAction = { mode: Int, from: Deck, to: Deck ->
+        val mixer = currentMixer
+        if (mixer != null) {
+            val isDirty = PatchManager.isDeckDirty(to, mixer)
             if (!isDirty) {
                 when (mode) {
-                    0 -> PatchManager.moveDeck(currentMixer!!, from, to)
-                    1 -> PatchManager.copyDeck(currentMixer!!, from, to)
-                    2 -> PatchManager.swapDecks(currentMixer!!, from, to)
+                    0 -> PatchManager.moveDeck(mixer, from, to)
+                    1 -> PatchManager.copyDeck(mixer, from, to)
+                    2 -> PatchManager.swapDecks(mixer, from, to)
                 }
             } else {
                 when (to) {
-                    currentMixer?.deckA -> {
+                    mixer.deckA -> {
                         popupManager.pendingDeckActionA = when(mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
                         popupManager.pendingDeckUtilitySourceA = from
                     }
-                    currentMixer?.deckB -> {
+                    mixer.deckB -> {
                         popupManager.pendingDeckActionB = when(mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
                         popupManager.pendingDeckUtilitySourceB = from
                     }
-                    currentMixer?.deckC -> {
+                    mixer.deckC -> {
                         popupManager.pendingDeckActionC = when(mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
                         popupManager.pendingDeckUtilitySourceC = from
                     }
                 }
             }
-        },
+        }
+    }
+
+    private val mixerMonitorPanel = MixerMonitorPanel(
+        patchState = patchState,
+        drawDeckControls = { mixer, label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(mixer, label, deck, width, height, isDeckA, deckUtilityAction) },
+        onUtilityAction = deckUtilityAction,
         onSaveDeck = { deck, isDeckA, isSaveAs ->
             val activeName = when {
                 deck === currentMixer?.deckA -> PatchManager.activePresetA
