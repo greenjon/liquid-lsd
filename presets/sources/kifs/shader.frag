@@ -73,6 +73,36 @@ float sdSphere(vec3 p, float s) {
     return length(p) - s;
 }
 
+float sdTetrahedron(vec3 p, float r) {
+    vec3 q = abs(p);
+    float d = max(q.x + q.y, max(q.y + q.z, q.z + q.x));
+    return (d - r) / sqrt(3.0);
+}
+
+float sdDodecahedron(vec3 p, float r) {
+    float phi = 1.6180339887;
+    vec3 n = normalize(vec3(phi, 1.0, 0.0));
+    p = abs(p);
+    float d = dot(p, n) - r;
+    d = max(d, dot(p.yxz, n) - r);
+    d = max(d, dot(p.zyx, n) - r);
+    d = max(d, max(p.x, max(p.y, p.z)) * (1.0 / sqrt(3.0)) - r);
+    return d;
+}
+
+float sdTruncatedIcosahedron(vec3 p, float r) {
+    float phi = 1.6180339887;
+    vec3 n1 = normalize(vec3(0.0, 1.0, phi));
+    vec3 n2 = normalize(vec3(1.0, phi, 0.0));
+    vec3 n3 = normalize(vec3(phi, 0.0, 1.0));
+    p = abs(p);
+    float d = dot(p, n1);
+    d = max(d, dot(p, n2));
+    d = max(d, dot(p, n3));
+    d = max(d, dot(p, vec3(1.0/sqrt(3.0))) - r * 1.1547);
+    return d - r;
+}
+
 float map(vec3 p, out float trap) {
     vec3 z = p;
     
@@ -134,10 +164,26 @@ float map(vec3 p, out float trap) {
     }
     
     // Evaluate base primitive and divide by accumulated scale
-    float dBox = sdBox(z, vec3(1.0)) / dr;
-    float dSphere = sdSphere(z, 1.0) / dr;
+    float dCube   = sdBox(z, vec3(1.0));
+    float dSphere = sdSphere(z, 1.0);
+    float dTetra  = sdTetrahedron(z, 1.0);
+    float dDodeca = sdDodecahedron(z, 1.0);
+    float dSoccer = sdTruncatedIcosahedron(z, 1.0);
+
+    float finalShape = 0.0;
+    float m = clamp(uShapeMorph, 0.0, 1.0) * 4.0;
+
+    if (m < 1.0) {
+        finalShape = mix(dCube, dSphere, m);
+    } else if (m < 2.0) {
+        finalShape = mix(dSphere, dTetra, m - 1.0);
+    } else if (m < 3.0) {
+        finalShape = mix(dTetra, dDodeca, m - 2.0);
+    } else {
+        finalShape = mix(dDodeca, dSoccer, clamp(m - 3.0, 0.0, 1.0));
+    }
     
-    return mix(dBox, dSphere, uShapeMorph);
+    return finalShape / dr;
 }
 
 // Calculate normal using central differences

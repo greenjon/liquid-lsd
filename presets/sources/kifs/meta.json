@@ -194,6 +194,13 @@
       "type": "MONOPOLAR",
       "defaultMin": 1.0,
       "defaultMax": 5.0
+    },
+    {
+      "name": "Rot Mode",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR"
     }
   ]
 }
