@@ -1,5 +1,6 @@
 package llm.slop.spirals.ui
 
+import llm.slop.spirals.patches.PlaylistParser
 import mu.KotlinLogging
 import java.io.File
 import java.nio.file.Files
@@ -76,15 +77,10 @@ object FileSystemManager {
         }
         
         try {
-            val content = file.readText()
-            val patches = parsePlaylistContent(content)
+            val patches = PlaylistParser.parseFile(file)
             
             val missingPatches = patches.filter { path ->
-                val f = File(path)
-                if (f.exists()) return@filter false
-                
-                // Try relative to patches root
-                !File(getPatchesRoot(), path).exists()
+                PlaylistParser.resolveItem(path, listOf(getPatchesRoot())) == null
             }
             
             if (missingPatches.isNotEmpty()) {
@@ -96,32 +92,6 @@ object FileSystemManager {
             logger.error(e) { "Failed to validate playlist: ${file.name}" }
             return false to "Parse error"
         }
-    }
-
-    /**
-     * Parses legacy JSON .lsdset content.
-     */
-    private fun parseLsdsetPlaylist(content: String): List<String> {
-        return try {
-            // Very simple JSON extraction for items array if we don't want to depend on a full parser here
-            // or we can use the existing DTO if available.
-            // For now, let's assume standard format and try to find strings between quotes in the items array.
-            val itemsMatch = "\"items\"\\s*:\\s*\\[(.*?)\\]".toRegex(RegexOption.DOT_MATCHES_ALL).find(content)
-            itemsMatch?.groupValues?.get(1)?.split(",")?.map { 
-                it.trim().removeSurrounding("\"") 
-            }?.filter { it.isNotBlank() } ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-    
-    /**
-     * Parses playlist content and returns list of patch paths.
-     */
-    private fun parsePlaylistContent(content: String): List<String> {
-        return content.lines()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && !it.startsWith("#") }
     }
     
     /**

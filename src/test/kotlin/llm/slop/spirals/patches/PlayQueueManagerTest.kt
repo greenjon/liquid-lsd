@@ -12,6 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import java.io.File
+import kotlin.io.path.createTempDirectory
 
 class PlayQueueManagerTest {
 
@@ -221,5 +222,23 @@ class PlayQueueManagerTest {
         // should adjust activeIndex and shift playedIndices
         // activeIndex becomes -1, index 0 is removed, but others shift down by 1.
         assertFalse(0 in PlayQueueManager.playedIndices)
+    }
+
+    @Test
+    fun testSharedPlaylistParserResolvesJsonItemsWithPatchExtensions() {
+        val tempDir = createTempDirectory().toFile()
+        val patchFile = File(tempDir, "testPatch.lsd").apply { writeText("{}") }
+        val playlistContent = """
+            {
+              "version": 1,
+              "name": "Test",
+              "items": ["testPatch"]
+            }
+        """.trimIndent()
+
+        val items = PlaylistParser.parseItems(playlistContent)
+        val resolved = PlaylistParser.resolveItems(items, listOf(tempDir))
+
+        assertEquals(listOf(patchFile.absoluteFile), resolved.map { it.absoluteFile })
     }
 }

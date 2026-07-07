@@ -3,8 +3,6 @@ package llm.slop.spirals.patches
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.ui.UITheme
-import llm.slop.spirals.models.PlaylistDto
-import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
@@ -15,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object PlayQueueManager {
     private val logger = KotlinLogging.logger {}
-    private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
     val queue = CopyOnWriteArrayList<File>()
     
@@ -111,18 +108,10 @@ object PlayQueueManager {
 
     fun parsePlaylist(playlistFile: File): List<File> {
         return try {
-            val content = playlistFile.readText()
-            val items = if (content.trim().startsWith("{")) {
-                val dto = json.decodeFromString<PlaylistDto>(content)
-                dto.items
-            } else {
-                content.lines()
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() && !it.startsWith("#") }
-            }
+            val items = PlaylistParser.parseFile(playlistFile)
             
             items.mapNotNull { itemName ->
-                val resolved = resolveQueueItem(itemName)
+                val resolved = PlaylistParser.resolveItem(itemName)
                 if (resolved == null) {
                     logger.warn { "Queue playlist item not found: $itemName" }
                 }
@@ -180,31 +169,6 @@ object PlayQueueManager {
                 logger.info { "Appended playlist to queue: ${playlistFile.name} (${files.size} items)" }
             }
         }
-    }
-
-    private fun resolveQueueItem(name: String): File? {
-        val f = File(name)
-        if (f.exists() && f.isFile) return f
-
-        val roots = listOf("presets/patches")
-        for (root in roots) {
-            val rf = File(root, name)
-            if (rf.exists() && rf.isFile) return rf
-        }
-
-        // Try extensions
-        val extensions = listOf(".lsd", ".json", ".patch")
-        for (ext in extensions) {
-            val nameWithExt = if (name.endsWith(ext, ignoreCase = true)) name else "$name$ext"
-            val fExt = File(nameWithExt)
-            if (fExt.exists() && fExt.isFile) return fExt
-
-            for (root in roots) {
-                val rfExt = File(root, nameWithExt)
-                if (rfExt.exists() && rfExt.isFile) return rfExt
-            }
-        }
-        return null
     }
 
     fun appendToQueue(file: File) {
@@ -400,4 +364,3 @@ object PlayQueueManager {
         }
     }
 }
-
