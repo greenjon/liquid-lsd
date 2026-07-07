@@ -67,7 +67,6 @@ class BeatDetector {
     
     private class AnalysisSnapshot {
         var fps: Float = 0f
-        var bgHistoryIndex: Int = 0
         var bgHistoryCount: Int = 0
     }
 
@@ -158,11 +157,19 @@ class BeatDetector {
             if (blocksSinceLastAnalysis >= 16 && !isCalculating) {
                 blocksSinceLastAnalysis = 0
                 isCalculating = true
-                System.arraycopy(historyBuffer, 0, bgHistoryBuffer, 0, maxEnvelopeBlocks)
+                val maxDelayBlocks = ((60.0f / floorBpm) * fps)
+                    .toInt()
+                    .coerceAtMost(maxEnvelopeBlocks / 2)
+                    .coerceAtLeast(1)
+                val analysisBlocks = (settings.analysisWindowLength * fps).toInt().coerceAtLeast(1)
+                val copyLength = maxOf(analysisBlocks + maxDelayBlocks, maxDelayBlocks * 4 + 1)
+                    .coerceAtMost(historyCount)
+                    .coerceAtMost(maxEnvelopeBlocks)
+
+                copyLatestHistoryForAnalysis(copyLength)
                 val nextSnapshot = if (pendingSnapshot === snapshot1) snapshot2 else snapshot1
                 nextSnapshot.fps = fps
-                nextSnapshot.bgHistoryIndex = historyIndex
-                nextSnapshot.bgHistoryCount = historyCount
+                nextSnapshot.bgHistoryCount = copyLength
                 pendingSnapshot = nextSnapshot
                 analysisExecutor.execute(analysisTask)
             }
@@ -171,12 +178,24 @@ class BeatDetector {
         return currentBpm.coerceIn(floorBpm, ceilBpm)
     }
 
+    private fun copyLatestHistoryForAnalysis(copyLength: Int) {
+        if (copyLength <= 0) return
+
+        val start = (historyIndex - copyLength + maxEnvelopeBlocks) % maxEnvelopeBlocks
+        val firstCopyLength = minOf(copyLength, maxEnvelopeBlocks - start)
+        System.arraycopy(historyBuffer, start, bgHistoryBuffer, 0, firstCopyLength)
+
+        val remaining = copyLength - firstCopyLength
+        if (remaining > 0) {
+            System.arraycopy(historyBuffer, 0, bgHistoryBuffer, firstCopyLength, remaining)
+        }
+    }
+
     private inner class AnalysisTask : Runnable {
         override fun run() {
             try {
                 val snap = pendingSnapshot
                 val fps = snap.fps
-                val bgHistoryIndex = snap.bgHistoryIndex
                 val bgHistoryCount = snap.bgHistoryCount
 
                 val localSettings = settings
@@ -198,8 +217,10 @@ class BeatDetector {
                         val numPeriods = 4
                         
                         for (i in 0 until numPeriods) {
-                            val idx = (bgHistoryIndex - 1 - i * delayInBlocks + maxEnvelopeBlocks * 10) % maxEnvelopeBlocks
-                            energy += bgHistoryBuffer[idx]
+                            val idx = bgHistoryCount - 1 - i * delayInBlocks
+                            if (idx >= 0) {
+                                energy += bgHistoryBuffer[idx]
+                            }
                         }
                         
                         if (energy > maxEnergy) {
@@ -213,16 +234,16 @@ class BeatDetector {
                     var maxAc = 0.0f
                     var bestDelay = 0
                     
-                    val maxDelayBlocks = ((60.0f / floorBpm) * fps).toInt().coerceAtMost(maxEnvelopeBlocks / 2)
+                    val maxDelayBlocks = ((60.0f / floorBpm) * fps).toInt().coerceAtMost(bgHistoryCount / 2)
                     val minDelayBlocks = ((60.0f / ceilBpm) * fps).toInt().coerceAtLeast(1)
                     
                     for (delay in minDelayBlocks..maxDelayBlocks) {
                         var ac = 0.0f
-                        val N = (winLen * fps).toInt().coerceAtMost(maxEnvelopeBlocks - delay)
+                        val N = (winLen * fps).toInt().coerceAtMost(bgHistoryCount - delay)
                         
                         for (i in 0 until N) {
-                            val idx1 = (bgHistoryIndex - 1 - i + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
-                            val idx2 = (bgHistoryIndex - 1 - i - delay + maxEnvelopeBlocks * 2) % maxEnvelopeBlocks
+                            val idx1 = bgHistoryCount - 1 - i
+                            val idx2 = idx1 - delay
                             ac += bgHistoryBuffer[idx1] * bgHistoryBuffer[idx2]
                         }
                         
