@@ -345,6 +345,7 @@ fun main() {
     uiManager.dispose()
 
     // Dispose window
+    GLDebug.disposeDebugCallback()
     glfwDestroyWindow(window)
     glfwTerminate()
 }

@@ -261,6 +261,14 @@ data class DetectionConfig(
 object AudioEngine {
     private val logger = KotlinLogging.logger {}
     private var jackClient: JackClient? = null
+    @Volatile
+    private var automaticReconnectEnabled = true
+    @Volatile
+    var lastJackFailure: JackStartFailure? = null
+        private set
+    @Volatile
+    var lastJackFailureMessage: String? = null
+        private set
 
     // DSP filters
     private var lastSampleRate = 44100f
@@ -316,6 +324,11 @@ object AudioEngine {
      * Starts the Audio Engine and JACK client connection.
      */
     fun start() {
+        automaticReconnectEnabled = true
+        startClient()
+    }
+
+    private fun startClient() {
         // Reset flywheel
         totalSamplesProcessed = 0L
         totalBeats = 0.0
@@ -333,18 +346,28 @@ object AudioEngine {
         jackClient = JackClient("spirals-desktop") { buffer, nframes, sampleRate ->
             processAudio(buffer, nframes, sampleRate)
         }
-        jackClient?.start()
+        val started = jackClient?.start() == true
+        lastJackFailure = jackClient?.lastStartFailure
+        lastJackFailureMessage = jackClient?.lastStartFailureMessage
+        if (!started && lastJackFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) {
+            automaticReconnectEnabled = false
+            logger.warn { "Automatic JACK reconnect disabled until manual retry; native library is missing." }
+        }
     }
 
     /**
      * Attempts to reconnect to JACK if not currently active.
      * Safe to call from a background thread.
      */
-    fun tryReconnect() {
+    fun tryReconnect(force: Boolean = false) {
         if (isActive()) return
+        if (!force && !automaticReconnectEnabled) return
+        if (force) {
+            automaticReconnectEnabled = true
+        }
         logger.info { "Watchdog attempting JACK reconnection..." }
         stop()
-        start()
+        startClient()
     }
 
     /**

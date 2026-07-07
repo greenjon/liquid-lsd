@@ -132,7 +132,7 @@ object AudioEnginePanel {
             ImGui.spacing()
             if (ImGui.button("Retry JACK Connection", ImGui.getContentRegionAvailX(), 0f)) {
                 Thread {
-                    AudioEngine.tryReconnect()
+                    AudioEngine.tryReconnect(force = true)
                 }.start()
             }
             if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
