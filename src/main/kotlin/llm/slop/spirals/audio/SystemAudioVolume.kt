@@ -3,6 +3,7 @@ package llm.slop.spirals.audio
 import mu.KotlinLogging
 import java.util.Locale
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Helper to query and set the system input level (default audio source) via native utilities.
@@ -10,6 +11,7 @@ import java.util.concurrent.Executors
  */
 object SystemAudioVolume {
     private val logger = KotlinLogging.logger {}
+    private const val PROCESS_TIMEOUT_SECONDS = 2L
     
     val isSupported: Boolean
     private val os: OS
@@ -43,6 +45,18 @@ object SystemAudioVolume {
     private val queryIntervalMs = 2000L
     private var isQuerying = false
 
+    private fun waitForProcess(process: Process): Boolean {
+        if (process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            return true
+        }
+
+        process.destroy()
+        if (!process.waitFor(250, TimeUnit.MILLISECONDS)) {
+            process.destroyForcibly()
+        }
+        return false
+    }
+
     fun updateSystemVolume(volume: Float) {
         if (!isSupported) return
         systemInputVolume = volume.coerceIn(0f, 1f)
@@ -57,7 +71,9 @@ object SystemAudioVolume {
                     else -> return@execute
                 }
                 val process = pb.start()
-                process.waitFor()
+                if (!waitForProcess(process)) {
+                    logger.warn { "Timed out setting system volume" }
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to set system volume" }
             }
@@ -77,8 +93,11 @@ object SystemAudioVolume {
                     else -> return@execute
                 }
                 val process = pb.start()
+                if (!waitForProcess(process)) {
+                    logger.warn { "Timed out querying system volume" }
+                    return@execute
+                }
                 val output = process.inputStream.bufferedReader().readText().trim()
-                process.waitFor()
                 when (os) {
                     OS.LINUX -> {
                         if (output.startsWith("Volume:")) {
