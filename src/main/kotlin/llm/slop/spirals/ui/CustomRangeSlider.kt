@@ -247,14 +247,8 @@ object CustomRangeSlider {
             val randBtnX = startX + labelColW - buttonSize
             ImGui.setCursorScreenPos(randBtnX, row2Y)
             
-            if (!isRandomizable) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
-            }
-            if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
+            if (UITheme.iconButton("##rand_$label", Icons.DICES, "Left-click to toggle random range.\nRight-click to randomize now.", active = isRandomizable, size = buttonSize)) {
                 onRandomizableChanged(!isRandomizable)
-            }
-            if (!isRandomizable) {
-                ImGui.popStyleColor()
             }
             
             if (ImGui.isItemClicked(1)) { // Right click
@@ -262,10 +256,6 @@ object CustomRangeSlider {
                     onRandomizableChanged(true)
                 }
                 onRandomizeNow()
-            }
-            val hovered = ImGui.isItemHovered()
-            if (hovered && UITheme.tooltipsEnabled) {
-                ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
             }
         }
         

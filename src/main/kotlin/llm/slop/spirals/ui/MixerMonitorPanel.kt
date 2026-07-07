@@ -107,12 +107,9 @@ class MixerMonitorPanel(
         
         ImGui.setCursorScreenPos(startX, presetY + 3f)
         UITheme.body("Preset: $displayNameA")
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.SAVE}##SaveA")) {
+        ImGui.sameLine(0f, 6f)
+        if (UITheme.iconButton("##SaveA", Icons.SAVE, "Save or save as a new preset for Deck A.", size = ImGui.getFrameHeight())) {
             ImGui.openPopup("save_menu_A")
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save or save as a new preset for Deck A.")
         }
         if (ImGui.beginPopup("save_menu_A")) {
             if (ImGui.menuItem("Save")) {
@@ -130,12 +127,9 @@ class MixerMonitorPanel(
         
         ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
         UITheme.body("Preset: $displayNameB")
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.SAVE}##SaveB")) {
+        ImGui.sameLine(0f, 6f)
+        if (UITheme.iconButton("##SaveB", Icons.SAVE, "Save or save as a new preset for Deck B.", size = ImGui.getFrameHeight())) {
             ImGui.openPopup("save_menu_B")
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save or save as a new preset for Deck B.")
         }
         if (ImGui.beginPopup("save_menu_B")) {
             if (ImGui.menuItem("Save")) {
@@ -193,12 +187,9 @@ class MixerMonitorPanel(
         val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
         ImGui.setCursorScreenPos(startX, row1Y + ImGui.getTextLineHeightWithSpacing())
         UITheme.body("Preset: $displayNameC")
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.SAVE}##SaveC")) {
+        ImGui.sameLine(0f, 6f)
+        if (UITheme.iconButton("##SaveC", Icons.SAVE, "Save or save as a new preset for Deck C.", size = ImGui.getFrameHeight())) {
             ImGui.openPopup("save_menu_C")
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save or save as a new preset for Deck C.")
         }
         if (ImGui.beginPopup("save_menu_C")) {
             if (ImGui.menuItem("Save")) {

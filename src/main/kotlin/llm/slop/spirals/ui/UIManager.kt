@@ -60,23 +60,7 @@ class UIManager(
         val enabled = UITheme.backgroundVideoEnabled
         if (enabled == lastBgVideoEnabled) return
         lastBgVideoEnabled = enabled
-
-        val style = ImGui.getStyle()
-        if (enabled) {
-            // Semi-transparent style for a cool VJ look
-            style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 0.75f)
-            style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 0.75f)
-            style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 0.75f)
-            style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 0.75f)
-            style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-        } else {
-            // Completely opaque colors
-            style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 1.00f)
-            style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 1.00f)
-            style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 1.00f)
-            style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 1.00f)
-            style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-        }
+        UITheme.applyStyleColors(enabled)
     }
 
     private val patchState = PatchGridState()
@@ -156,12 +140,7 @@ class UIManager(
 
         // Scale style sizes proportionally to the loaded baseSize relative to the baseline of 15f
         scaleStyleFromDefault(UITheme.baseSize)
-
-        // Darken the modal backdrop for a more dramatic VJ-app feel.
-        ImGui.getStyle().setColor(
-            imgui.flag.ImGuiCol.ModalWindowDimBg,
-            0f, 0f, 0f, 0.72f
-        )
+        UITheme.applyStyleColors(UITheme.backgroundVideoEnabled)
 
         imguiGlfw.init(windowHandle, true)
         imguiGl3.init("#version 150")
@@ -674,6 +653,22 @@ class UIManager(
         if (style.grabMinSize <= 0.0f) {
             style.grabMinSize = 1.0f
         }
+        style.setWindowPadding(10f * scale, 8f * scale)
+        style.setFramePadding(7f * scale, 4f * scale)
+        style.setCellPadding(8f * scale, 5f * scale)
+        style.setItemSpacing(8f * scale, 5f * scale)
+        style.setItemInnerSpacing(6f * scale, 4f * scale)
+        style.setWindowRounding(0f)
+        style.setChildRounding(2f * scale)
+        style.setPopupRounding(2f * scale)
+        style.setFrameRounding(2f * scale)
+        style.setGrabRounding(2f * scale)
+        style.setScrollbarRounding(2f * scale)
+        style.setWindowBorderSize(1f)
+        style.setChildBorderSize(1f)
+        style.setFrameBorderSize(0f)
+        style.setScrollbarSize(12f * scale)
+        UITheme.applyStyleColors(UITheme.backgroundVideoEnabled)
     }
 
     fun dispose() {

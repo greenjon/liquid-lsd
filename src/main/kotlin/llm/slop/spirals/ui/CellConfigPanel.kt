@@ -23,6 +23,35 @@ object CellConfigPanel {
     private val virtualModulators = mutableListOf<CvModulator>()
     private var lastActiveIds: Set<String> = emptySet()
 
+    private fun drawEmptyState() {
+        val availW = ImGui.getContentRegionAvailX()
+        val availH = ImGui.getContentRegionAvailY().coerceAtLeast(120f)
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        val centerY = startY + availH * 0.42f
+        val drawList = ImGui.getWindowDrawList()
+
+        val title = "No cell selected"
+        val subtitle = "Patch Grid"
+        var titleW = 0f
+        var titleH = 0f
+        UITheme.withFont(UITheme.FontLevel.H2) {
+            val size = ImGui.calcTextSize(title)
+            titleW = size.x
+            titleH = size.y
+        }
+        val subtitleSize = ImGui.calcTextSize(subtitle)
+        val accent = UITheme.colorU32(UITheme.Colors.ACCENT_R, UITheme.Colors.ACCENT_G, UITheme.Colors.ACCENT_B, 0.42f)
+        val muted = UITheme.colorU32(UITheme.Colors.MUTED_R, UITheme.Colors.MUTED_G, UITheme.Colors.MUTED_B, 0.72f)
+
+        drawList.addLine(startX + availW * 0.5f - 28f, centerY - 16f, startX + availW * 0.5f + 28f, centerY - 16f, accent, 2f)
+        UITheme.withFont(UITheme.FontLevel.H2) {
+            drawList.addText(startX + (availW - titleW) * 0.5f, centerY, muted, title)
+        }
+        drawList.addText(startX + (availW - subtitleSize.x) * 0.5f, centerY + titleH + 8f, muted, subtitle)
+        ImGui.dummy(availW, availH)
+    }
+
     private fun initializeVirtualModulators(cvId: String, activeMods: List<CvModulator>, hasAdvanced: Boolean) {
         virtualModulators.clear()
         if (cvId == "audio") {
@@ -63,7 +92,7 @@ object CellConfigPanel {
         if (cell == null || param == null) {
             activeHistory = null
             activeCellId = null
-            UITheme.caption("Click a cell in the Patch Grid to configure it.")
+            drawEmptyState()
             return
         }
 

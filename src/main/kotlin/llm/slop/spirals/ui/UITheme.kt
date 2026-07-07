@@ -4,6 +4,7 @@ import imgui.ImFont
 import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.ImGuiIO
+import imgui.flag.ImGuiCol
 import llm.slop.spirals.audio.AudioEngine
 import mu.KotlinLogging
 import java.io.File
@@ -41,7 +42,61 @@ object UITheme {
     // -- Mutable sizing knobs (user-tweakable from Settings later) -------------
 
     /** Base pixel size at which BODY text is rendered. All others are derived. */
-    var baseSize: Float = 20f
+    var baseSize: Float = 18f
+
+    object Colors {
+        const val BACKGROUND_R = 0.035f
+        const val BACKGROUND_G = 0.043f
+        const val BACKGROUND_B = 0.055f
+
+        const val PANEL_R = 0.055f
+        const val PANEL_G = 0.070f
+        const val PANEL_B = 0.090f
+
+        const val PANEL_ALT_R = 0.075f
+        const val PANEL_ALT_G = 0.095f
+        const val PANEL_ALT_B = 0.125f
+
+        const val FRAME_R = 0.105f
+        const val FRAME_G = 0.135f
+        const val FRAME_B = 0.180f
+
+        const val FRAME_HOVER_R = 0.145f
+        const val FRAME_HOVER_G = 0.190f
+        const val FRAME_HOVER_B = 0.255f
+
+        const val ACCENT_R = 0.185f
+        const val ACCENT_G = 0.465f
+        const val ACCENT_B = 0.820f
+
+        const val ACCENT_HOVER_R = 0.255f
+        const val ACCENT_HOVER_G = 0.565f
+        const val ACCENT_HOVER_B = 0.950f
+
+        const val TEXT_R = 0.900f
+        const val TEXT_G = 0.930f
+        const val TEXT_B = 0.960f
+
+        const val MUTED_R = 0.560f
+        const val MUTED_G = 0.610f
+        const val MUTED_B = 0.680f
+
+        const val BORDER_R = 0.165f
+        const val BORDER_G = 0.205f
+        const val BORDER_B = 0.270f
+
+        const val DECK_A_R = 0.250f
+        const val DECK_A_G = 0.520f
+        const val DECK_A_B = 0.980f
+
+        const val DECK_B_R = 0.960f
+        const val DECK_B_G = 0.470f
+        const val DECK_B_B = 0.240f
+
+        const val DECK_C_R = 0.190f
+        const val DECK_C_G = 0.760f
+        const val DECK_C_B = 0.560f
+    }
 
     /** True if the JACK audio engine should process incoming audio and estimate tempo. */
     var audioEngineEnabled: Boolean = true
@@ -180,6 +235,62 @@ object UITheme {
         } catch (e: Exception) {
             logger.error(e) { "Failed to save settings" }
         }
+    }
+
+    fun colorU32(r: Float, g: Float, b: Float, a: Float = 1f): Int {
+        return ImGui.colorConvertFloat4ToU32(r, g, b, a)
+    }
+
+    fun deckAccentColor(label: String, alpha: Float = 1f): Int {
+        return when (label) {
+            "Deck A" -> colorU32(Colors.DECK_A_R, Colors.DECK_A_G, Colors.DECK_A_B, alpha)
+            "Deck B" -> colorU32(Colors.DECK_B_R, Colors.DECK_B_G, Colors.DECK_B_B, alpha)
+            "Deck C" -> colorU32(Colors.DECK_C_R, Colors.DECK_C_G, Colors.DECK_C_B, alpha)
+            else -> colorU32(Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, alpha)
+        }
+    }
+
+    fun applyStyleColors(backgroundVideo: Boolean) {
+        val alpha = if (backgroundVideo) 0.78f else 1.0f
+        val style = ImGui.getStyle()
+
+        style.setColor(ImGuiCol.Text, Colors.TEXT_R, Colors.TEXT_G, Colors.TEXT_B, 1f)
+        style.setColor(ImGuiCol.TextDisabled, Colors.MUTED_R, Colors.MUTED_G, Colors.MUTED_B, 1f)
+        style.setColor(ImGuiCol.WindowBg, Colors.BACKGROUND_R, Colors.BACKGROUND_G, Colors.BACKGROUND_B, alpha)
+        style.setColor(ImGuiCol.ChildBg, Colors.PANEL_R, Colors.PANEL_G, Colors.PANEL_B, alpha)
+        style.setColor(ImGuiCol.PopupBg, Colors.PANEL_ALT_R, Colors.PANEL_ALT_G, Colors.PANEL_ALT_B, 0.98f)
+        style.setColor(ImGuiCol.Border, Colors.BORDER_R, Colors.BORDER_G, Colors.BORDER_B, 0.95f)
+        style.setColor(ImGuiCol.BorderShadow, 0f, 0f, 0f, 0f)
+        style.setColor(ImGuiCol.FrameBg, Colors.FRAME_R, Colors.FRAME_G, Colors.FRAME_B, 1f)
+        style.setColor(ImGuiCol.FrameBgHovered, Colors.FRAME_HOVER_R, Colors.FRAME_HOVER_G, Colors.FRAME_HOVER_B, 1f)
+        style.setColor(ImGuiCol.FrameBgActive, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 0.70f)
+        style.setColor(ImGuiCol.TitleBg, Colors.PANEL_R, Colors.PANEL_G, Colors.PANEL_B, alpha)
+        style.setColor(ImGuiCol.TitleBgActive, Colors.PANEL_ALT_R, Colors.PANEL_ALT_G, Colors.PANEL_ALT_B, alpha)
+        style.setColor(ImGuiCol.MenuBarBg, Colors.PANEL_ALT_R, Colors.PANEL_ALT_G, Colors.PANEL_ALT_B, alpha)
+        style.setColor(ImGuiCol.ScrollbarBg, Colors.BACKGROUND_R, Colors.BACKGROUND_G, Colors.BACKGROUND_B, 0.8f)
+        style.setColor(ImGuiCol.ScrollbarGrab, 0.22f, 0.27f, 0.34f, 1f)
+        style.setColor(ImGuiCol.ScrollbarGrabHovered, 0.30f, 0.38f, 0.48f, 1f)
+        style.setColor(ImGuiCol.ScrollbarGrabActive, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 1f)
+        style.setColor(ImGuiCol.CheckMark, Colors.ACCENT_HOVER_R, Colors.ACCENT_HOVER_G, Colors.ACCENT_HOVER_B, 1f)
+        style.setColor(ImGuiCol.SliderGrab, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 1f)
+        style.setColor(ImGuiCol.SliderGrabActive, Colors.ACCENT_HOVER_R, Colors.ACCENT_HOVER_G, Colors.ACCENT_HOVER_B, 1f)
+        style.setColor(ImGuiCol.Button, 0.125f, 0.175f, 0.245f, 1f)
+        style.setColor(ImGuiCol.ButtonHovered, 0.175f, 0.255f, 0.360f, 1f)
+        style.setColor(ImGuiCol.ButtonActive, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 1f)
+        style.setColor(ImGuiCol.Header, 0.140f, 0.205f, 0.300f, 1f)
+        style.setColor(ImGuiCol.HeaderHovered, 0.180f, 0.275f, 0.405f, 1f)
+        style.setColor(ImGuiCol.HeaderActive, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 0.95f)
+        style.setColor(ImGuiCol.Separator, Colors.BORDER_R, Colors.BORDER_G, Colors.BORDER_B, 0.85f)
+        style.setColor(ImGuiCol.SeparatorHovered, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 0.8f)
+        style.setColor(ImGuiCol.SeparatorActive, Colors.ACCENT_HOVER_R, Colors.ACCENT_HOVER_G, Colors.ACCENT_HOVER_B, 1f)
+        style.setColor(ImGuiCol.ResizeGrip, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 0.25f)
+        style.setColor(ImGuiCol.ResizeGripHovered, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 0.55f)
+        style.setColor(ImGuiCol.ResizeGripActive, Colors.ACCENT_HOVER_R, Colors.ACCENT_HOVER_G, Colors.ACCENT_HOVER_B, 0.85f)
+        style.setColor(ImGuiCol.Tab, Colors.FRAME_R, Colors.FRAME_G, Colors.FRAME_B, 1f)
+        style.setColor(ImGuiCol.TabHovered, Colors.FRAME_HOVER_R, Colors.FRAME_HOVER_G, Colors.FRAME_HOVER_B, 1f)
+        style.setColor(ImGuiCol.TabActive, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 1f)
+        style.setColor(ImGuiCol.PlotHistogram, Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 1f)
+        style.setColor(ImGuiCol.ModalWindowDimBg, 0f, 0f, 0f, 0.72f)
     }
 
     /** Per-level multipliers. Changing these + calling rebuildFonts() is all
@@ -349,6 +460,95 @@ object UITheme {
     fun body(text: String)    = withFont(FontLevel.BODY)    { ImGui.text(text) }
     fun caption(text: String) = withFont(FontLevel.CAPTION) { ImGui.textDisabled(text) }
     fun code(text: String)    = withFont(FontLevel.CODE)    { ImGui.text(text) }
+
+    fun iconButton(id: String, icon: String, tooltip: String, active: Boolean = false, size: Float = ImGui.getFrameHeight()): Boolean {
+        return iconButton(id, icon, tooltip, active, size, size)
+    }
+
+    fun iconButton(id: String, icon: String, tooltip: String, active: Boolean = false, width: Float, height: Float): Boolean {
+        val posX = ImGui.getCursorScreenPosX()
+        val posY = ImGui.getCursorScreenPosY()
+        val clicked = ImGui.invisibleButton(id, width, height)
+        val hovered = ImGui.isItemHovered()
+        val held = ImGui.isItemActive()
+        val drawList = ImGui.getWindowDrawList()
+
+        val bg = when {
+            active -> colorU32(Colors.ACCENT_R, Colors.ACCENT_G, Colors.ACCENT_B, 0.90f)
+            held -> colorU32(Colors.FRAME_HOVER_R, Colors.FRAME_HOVER_G, Colors.FRAME_HOVER_B, 0.95f)
+            hovered -> colorU32(Colors.FRAME_HOVER_R, Colors.FRAME_HOVER_G, Colors.FRAME_HOVER_B, 0.72f)
+            else -> colorU32(Colors.FRAME_R, Colors.FRAME_G, Colors.FRAME_B, 0.54f)
+        }
+        val border = if (active || hovered) {
+            colorU32(Colors.ACCENT_HOVER_R, Colors.ACCENT_HOVER_G, Colors.ACCENT_HOVER_B, 0.82f)
+        } else {
+            colorU32(Colors.BORDER_R, Colors.BORDER_G, Colors.BORDER_B, 0.80f)
+        }
+        val text = if (active) {
+            colorU32(1f, 1f, 1f, 1f)
+        } else {
+            colorU32(Colors.TEXT_R, Colors.TEXT_G, Colors.TEXT_B, 0.88f)
+        }
+
+        val rounding = 2f * (baseSize / 15f)
+        drawList.addRectFilled(posX, posY, posX + width, posY + height, bg, rounding)
+        drawList.addRect(posX, posY, posX + width, posY + height, border, rounding)
+
+        val textSize = ImGui.calcTextSize(icon)
+        val opticalBaselineOffset = height * 0.12f
+        drawList.addText(
+            posX + (width - textSize.x) * 0.5f,
+            posY + (height - textSize.y) * 0.5f + opticalBaselineOffset,
+            text,
+            icon
+        )
+
+        if (hovered && tooltipsEnabled) {
+            ImGui.setTooltip(tooltip)
+        }
+        return clicked
+    }
+
+    fun tabButton(id: String, label: String, active: Boolean, activeColor: Int, width: Float, height: Float = ImGui.getFrameHeight()): Boolean {
+        val posX = ImGui.getCursorScreenPosX()
+        val posY = ImGui.getCursorScreenPosY()
+        val clicked = ImGui.invisibleButton(id, width, height)
+        val hovered = ImGui.isItemHovered()
+        val held = ImGui.isItemActive()
+        val drawList = ImGui.getWindowDrawList()
+
+        val bg = when {
+            active -> activeColor
+            held || hovered -> colorU32(Colors.FRAME_HOVER_R, Colors.FRAME_HOVER_G, Colors.FRAME_HOVER_B, 0.92f)
+            else -> colorU32(Colors.FRAME_R, Colors.FRAME_G, Colors.FRAME_B, 0.72f)
+        }
+        val border = if (active || hovered) {
+            activeColor
+        } else {
+            colorU32(Colors.BORDER_R, Colors.BORDER_G, Colors.BORDER_B, 0.78f)
+        }
+        val text = if (active) {
+            colorU32(1f, 1f, 1f, 0.96f)
+        } else {
+            colorU32(Colors.TEXT_R, Colors.TEXT_G, Colors.TEXT_B, 0.82f)
+        }
+
+        val rounding = 2f * (baseSize / 15f)
+        drawList.addRectFilled(posX, posY, posX + width, posY + height, bg, rounding)
+        drawList.addRect(posX, posY, posX + width, posY + height, border, rounding)
+        if (active) {
+            drawList.addRectFilled(posX, posY + height - 2f, posX + width, posY + height, colorU32(1f, 1f, 1f, 0.28f), rounding)
+        }
+
+        val textSize = ImGui.calcTextSize(label)
+        drawList.addText(
+            posX + (width - textSize.x) * 0.5f,
+            posY + (height - textSize.y) * 0.5f,
+            text,
+            label
+        )
+        return clicked
+    }
 
     // -- Coloured variants -----------------------------------------------------
 
