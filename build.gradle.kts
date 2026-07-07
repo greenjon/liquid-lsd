@@ -66,6 +66,107 @@ application {
     mainClass.set("llm.slop.spirals.MainKt")
 }
 
+tasks.register<JavaExec>("runUiLab") {
+    group = "application"
+    description = "Runs Spirals in deterministic UI lab mode for visual iteration."
+    dependsOn("classes")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.spirals.MainKt")
+    args("--ui-lab", "--no-audio", "--no-watchdog")
+}
+
+tasks.register<JavaExec>("captureUiLab") {
+    group = "verification"
+    description = "Captures a deterministic UI lab screenshot to build/ui-lab/ui-lab.png."
+    dependsOn("classes")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.spirals.MainKt")
+    args(
+        "--ui-lab",
+        "--window=1440x900",
+        "--screenshot-ui=build/ui-lab/ui-lab.png",
+        "--screenshot-after-frames=8",
+        "--no-audio",
+        "--no-watchdog"
+    )
+}
+
+data class ResponsiveCapturePreset(val name: String, val size: String)
+val responsiveCapturePresets = listOf(
+    ResponsiveCapturePreset("compact", "900x700"),
+    ResponsiveCapturePreset("laptop", "1280x720"),
+    ResponsiveCapturePreset("desktop", "1440x900"),
+    ResponsiveCapturePreset("wide", "1920x1080")
+)
+
+val responsiveUiLabTasks = responsiveCapturePresets.map { preset ->
+    tasks.register<JavaExec>("captureUiLab${preset.name.replaceFirstChar { it.uppercase() }}") {
+        group = "verification"
+        description = "Captures the UI lab at ${preset.size}."
+        dependsOn("classes")
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set("llm.slop.spirals.MainKt")
+        args(
+            "--ui-lab",
+            "--window=${preset.size}",
+            "--screenshot-ui=build/ui-lab/responsive/ui-lab-${preset.name}.png",
+            "--screenshot-after-frames=8",
+            "--no-audio",
+            "--no-watchdog"
+        )
+    }
+}
+
+val responsiveAppTasks = responsiveCapturePresets.map { preset ->
+    tasks.register<JavaExec>("captureApp${preset.name.replaceFirstChar { it.uppercase() }}") {
+        group = "verification"
+        description = "Captures the live app shell at ${preset.size}."
+        dependsOn("classes")
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set("llm.slop.spirals.MainKt")
+        args(
+            "--window=${preset.size}",
+            "--screenshot-ui=build/ui-lab/responsive/app-${preset.name}.png",
+            "--screenshot-after-frames=12",
+            "--no-audio",
+            "--no-watchdog"
+        )
+    }
+}
+
+val captureAppMaximized = tasks.register<JavaExec>("captureAppMaximized") {
+    group = "verification"
+    description = "Captures the live app shell in an OS-maximized window."
+    dependsOn("classes")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.spirals.MainKt")
+    args(
+        "--window=maximized",
+        "--screenshot-ui=build/ui-lab/responsive/app-maximized.png",
+        "--screenshot-after-frames=12",
+        "--no-audio",
+        "--no-watchdog"
+    )
+}
+
+tasks.register("captureResponsiveUiLab") {
+    group = "verification"
+    description = "Captures UI lab screenshots at compact, laptop, desktop, and wide sizes."
+    dependsOn(responsiveUiLabTasks)
+}
+
+tasks.register("captureResponsiveApp") {
+    group = "verification"
+    description = "Captures live app screenshots at compact, laptop, desktop, wide, and maximized sizes."
+    dependsOn(responsiveAppTasks + captureAppMaximized)
+}
+
+tasks.register("captureResponsiveUi") {
+    group = "verification"
+    description = "Captures both deterministic UI lab and live app responsive screenshot sets."
+    dependsOn("captureResponsiveUiLab", "captureResponsiveApp")
+}
+
 kotlin {
     jvmToolchain(17)
     sourceSets {
@@ -76,6 +177,9 @@ kotlin {
 }
 
 tasks.withType<JavaExec> {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    })
     jvmArgs(
         "-ea",
         "-XX:+UseZGC",
@@ -359,4 +463,3 @@ val packageZips = tasks.register("packageZips") {
     description = "Assembles all platform-specific distribution ZIP archives."
     dependsOn(zipWindows, zipLinux, zipLinuxArm, zipMacArm, zipMacIntel)
 }
-

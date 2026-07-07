@@ -64,6 +64,13 @@ On Windows:
 .\gradlew.bat run
 ```
 
+For UI design iteration without audio, MIDI, or session state:
+
+```powershell
+.\gradlew.bat runUiLab
+.\gradlew.bat captureUiLab
+```
+
 Useful JACK/PipeWire commands:
 
 ```bash

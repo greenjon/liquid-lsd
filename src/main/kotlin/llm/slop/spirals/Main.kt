@@ -14,6 +14,7 @@ import llm.slop.spirals.audio.AudioEngine
 import llm.slop.spirals.ui.UITheme
 import llm.slop.spirals.cv.CVRegistry
 import llm.slop.spirals.patches.PatchManager
+import llm.slop.spirals.utils.ScreenshotCapture
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL
@@ -21,8 +22,12 @@ import org.lwjgl.opengl.GL33.*
 
 private val logger = KotlinLogging.logger {}
 
-fun main() {
+fun main(args: Array<String>) {
+    val launchOptions = AppLaunchOptions.parse(args)
     logger.info { "Starting Spirals Desktop..." }
+    if (launchOptions.uiLab) {
+        logger.info { "Starting in UI lab mode" }
+    }
 
     // Ensure preset directories exist
     java.io.File("presets/patches").mkdirs()
@@ -48,8 +53,12 @@ fun main() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE)
 
     // Create window
-    val window = glfwCreateWindow(1920, 1080, "Spirals Desktop - VJ Software", 0, 0)
+    val windowTitle = if (launchOptions.uiLab) "Spirals Desktop - UI Lab" else "Spirals Desktop - VJ Software"
+    val window = glfwCreateWindow(launchOptions.windowWidth, launchOptions.windowHeight, windowTitle, 0, 0)
         ?: throw RuntimeException("Failed to create GLFW window")
+    if (launchOptions.startMaximized) {
+        glfwMaximizeWindow(window)
+    }
 
     glfwMakeContextCurrent(window)
     glfwSwapInterval(1) // Enable vsync
@@ -65,7 +74,10 @@ fun main() {
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
 
     // Initialize UI Manager
-    val uiManager = UIManager(window)
+    val uiManager = UIManager(
+        windowHandle = window,
+        uiMode = if (launchOptions.uiLab) UIManager.UiMode.LAB else UIManager.UiMode.APP
+    )
 
     glfwSetWindowCloseCallback(window) { win ->
         glfwSetWindowShouldClose(win, false)
@@ -121,7 +133,7 @@ fun main() {
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckC)
     PatchManager.initializeDefault(mixer)
-    if (UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
+    if (launchOptions.uiLab || UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
         PatchManager.startEmpty(mixer)
     } else {
         PatchManager.loadSession(mixer)
@@ -139,19 +151,24 @@ fun main() {
     logger.info { "GL state configured" }
 
     // Start Audio engine if enabled
-    if (UITheme.audioEngineEnabled) {
+    val shouldStartAudio = launchOptions.audioEnabled ?: (UITheme.audioEngineEnabled && !launchOptions.uiLab)
+    if (shouldStartAudio) {
         AudioEngine.start()
     }
 
     // Start background watchdogs for MIDI and JACK
-    llm.slop.spirals.audio.MidiJackWatchdog.start()
+    if (launchOptions.watchdogEnabled && !launchOptions.uiLab) {
+        llm.slop.spirals.audio.MidiJackWatchdog.start()
+    }
 
     var secondaryWindow = 0L
 
     // Auto-detect and open secondary window on startup if external monitor is found
-    val initialExternalMonitor = getExternalMonitor()
-    if (initialExternalMonitor != null) {
-        secondaryWindow = createSecondaryWindow(window)
+    if (!launchOptions.uiLab) {
+        val initialExternalMonitor = getExternalMonitor()
+        if (initialExternalMonitor != null) {
+            secondaryWindow = createSecondaryWindow(window)
+        }
     }
 
     // Setup key callback chaining to allow "f", "Spacebar", CTRL-, and CTRL= controls
@@ -188,6 +205,7 @@ fun main() {
 
     // Main loop
     var frameCount = 0
+    var totalFrameCount = 0
     var lastTime = glfwGetTime()
 
     val w = IntArray(1)
@@ -209,6 +227,7 @@ fun main() {
 
         // Calculate FPS
         frameCount++
+        totalFrameCount++
         val currentTime = glfwGetTime()
         if (currentTime - lastTime >= 1.0) {
             logger.debug { "FPS: $frameCount" }
@@ -274,6 +293,17 @@ fun main() {
         // === UI PHASE ===
         uiManager.render(mixer, windowW[0].toFloat(), windowH[0].toFloat())
 
+        val screenshotPath = launchOptions.screenshotPath
+        if (screenshotPath != null && totalFrameCount >= launchOptions.screenshotAfterFrames) {
+            val written = ScreenshotCapture.writeFramebufferPng(screenshotPath, w[0], h[0])
+            if (written) {
+                logger.info { "Wrote UI screenshot to ${screenshotPath.absolutePath}" }
+            } else {
+                logger.error { "Failed to write UI screenshot to ${screenshotPath.absolutePath}" }
+            }
+            glfwSetWindowShouldClose(window, true)
+        }
+
         glfwSwapBuffers(window)
 
         // === SECONDARY WINDOW RENDER PHASE ===
@@ -323,8 +353,12 @@ fun main() {
 
     // Cleanup
     logger.info { "Shutting down..." }
-    PatchManager.saveSession(mixer)
-    llm.slop.spirals.audio.MidiJackWatchdog.stop()
+    if (!launchOptions.uiLab) {
+        PatchManager.saveSession(mixer)
+    }
+    if (launchOptions.watchdogEnabled && !launchOptions.uiLab) {
+        llm.slop.spirals.audio.MidiJackWatchdog.stop()
+    }
     AudioEngine.stop()
     llm.slop.spirals.midi.MidiEngine.close()
 

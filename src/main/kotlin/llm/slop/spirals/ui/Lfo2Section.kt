@@ -35,27 +35,14 @@ object Lfo2Section {
         val lfo2Bypassed = (currentMode == llm.slop.spirals.parameters.GeneratorModMode.NONE)
         val btnY2 = ImGui.getCursorScreenPosY()
         
-        // Push styled button colors: Green for active, Red for bypassed
-        val btnColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
-        val btnHoverColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
-        val btnActiveColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
-        
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
-        
-        if (ImGui.button("${Icons.POWER}##bypass_lfo2_$idx", btnWidth, btnHeight)) {
+        if (UITheme.iconButton("##bypass_lfo2_$idx", Icons.POWER, if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2", active = !lfo2Bypassed, width = btnWidth, height = btnHeight)) {
             val nextMode = if (lfo2Bypassed) llm.slop.spirals.parameters.GeneratorModMode.AM else llm.slop.spirals.parameters.GeneratorModMode.NONE
             onReplace(existing.copy(generatorModMode = nextMode))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
-        }
-        ImGui.popStyleColor(3)
 
         // 2. Dice button for LFO 2
         ImGui.sameLine(0f, 10f)
-        if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
+        if (UITheme.iconButton("##rand_lfo2_$idx", Icons.DICES, "Randomize LFO 2 values", width = btnWidth, height = btnHeight)) {
             val randomized = existing
                 .randomizeGeneratorModDepth()
                 .randomizeModSubdivision()
@@ -64,9 +51,6 @@ object Lfo2Section {
                 .randomizeModMorph()
                 .randomizeModHold()
             onReplace(randomized)
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize LFO 2 values")
         }
 
         // Title text for LFO 2

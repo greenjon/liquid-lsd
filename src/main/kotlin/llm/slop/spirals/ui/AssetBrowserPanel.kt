@@ -65,28 +65,43 @@ object AssetBrowserPanel {
     init {
         refreshAssets()
     }
+
+    private data class AssetBrowserLayout(val sidebarWidth: Float, val centerWidth: Float, val queueWidth: Float)
+
+    private fun calculateLayout(width: Float, showSidebar: Boolean): AssetBrowserLayout {
+        if (!showSidebar) {
+            val queueWidth = (width * 0.42f).coerceIn(220f, 360f)
+            return AssetBrowserLayout(0f, width - queueWidth, queueWidth)
+        }
+
+        val sidebarWidth = when {
+            width < 700f -> 130f
+            width < 1000f -> (width * 0.24f).coerceIn(150f, 240f)
+            else -> (width * 0.26f).coerceAtMost(320f)
+        }
+        val queueWidth = when {
+            width < 700f -> 220f
+            width < 1000f -> (width * 0.28f).coerceIn(240f, 300f)
+            else -> (width * 0.30f).coerceIn(300f, 420f)
+        }.coerceAtMost(width - sidebarWidth - 220f)
+        val centerWidth = (width - sidebarWidth - queueWidth).coerceAtLeast(220f)
+        return AssetBrowserLayout(sidebarWidth, centerWidth, width - sidebarWidth - centerWidth)
+    }
     
     fun draw(width: Float, height: Float, mixer: Mixer) {
-        val sidebarWidth = if (showSidebar) width * 0.33f else 0f
-        val centerWidth = if (showSidebar) width * 0.33f else width * 0.5f
-        val queueWidth = width - sidebarWidth - centerWidth
+        val layout = calculateLayout(width, showSidebar)
+        val sidebarWidth = layout.sidebarWidth
+        val centerWidth = layout.centerWidth
+        val queueWidth = layout.queueWidth
 
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6f)
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 3f, 3f)
         if (ImGui.beginMenuBar()) {
             val toggleIcon = if (showSidebar) Icons.MINUS else Icons.PANEL_LEFT_OPEN
+            val iconSize = ImGui.getFrameHeight()
 
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
-
-            if (ImGui.button("$toggleIcon##toggle_sidebar")) {
+            if (UITheme.iconButton("##toggle_sidebar", toggleIcon, "Show/hide the library folders and playlists sidebar.", size = iconSize)) {
                 showSidebar = !showSidebar
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-                ImGui.setTooltip("Show/hide the library folders and playlists sidebar.")
-            }
-            ImGui.popStyleColor(4)
 
             UITheme.AssetBrowserMode.entries.forEach { mode ->
                 val active = UITheme.assetBrowserMode == mode
@@ -97,32 +112,15 @@ object AssetBrowserPanel {
                 }
 
                 ImGui.sameLine(0f, 6f)
-
-                // Transparent button background style
-                ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
-
-                // Text color: bright white for active, dimmed for inactive
-                if (active) {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 1f, 1f, 1f, 1.0f)
-                } else {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
+                val modeDesc = when (mode) {
+                    UITheme.AssetBrowserMode.FULL -> "Switch asset browser height to Full size."
+                    UITheme.AssetBrowserMode.HALF -> "Switch asset browser height to Half size."
+                    UITheme.AssetBrowserMode.HIDE -> "Hide the asset browser."
                 }
-
-                if (ImGui.button("$icon##mode_${mode.name}")) {
+                if (UITheme.iconButton("##mode_${mode.name}", icon, modeDesc, active = active, size = iconSize)) {
                     UITheme.assetBrowserMode = mode
                     UITheme.saveSettings()
                 }
-                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-                    val modeDesc = when (mode) {
-                        UITheme.AssetBrowserMode.FULL -> "Switch asset browser height to Full size."
-                        UITheme.AssetBrowserMode.HALF -> "Switch asset browser height to Half size."
-                        UITheme.AssetBrowserMode.HIDE -> "Hide the asset browser."
-                    }
-                    ImGui.setTooltip(modeDesc)
-                }
-                ImGui.popStyleColor(4)
             }
 
             ImGui.endMenuBar()
@@ -132,6 +130,7 @@ object AssetBrowserPanel {
         if (UITheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) return
 
         val contentH = ImGui.getContentRegionAvailY() - 5f
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 10f, 8f)
         if (showSidebar) {
             ImGui.beginChild("AssetSidebar", sidebarWidth - 6f, contentH, true)
             drawNavigationSidebar(mixer)
@@ -147,6 +146,7 @@ object AssetBrowserPanel {
         ImGui.beginChild("AssetQueue", queueWidth - 8f, contentH, true)
         drawQueueContent(mixer)
         ImGui.endChild()
+        ImGui.popStyleVar()
 
         // Deferred popup opens: ImGui does not allow openPopup() from inside a context menu popup.
         // Flags are set inside the context menu block, and the actual open happens here, outside all popups.
@@ -309,65 +309,36 @@ object AssetBrowserPanel {
 
     private fun drawQueueContent(mixer: Mixer) {
         // Header Row
-        if (ImGui.checkbox("AUTO-VJ", PlayQueueManager.isAutoVJEnabled)) {
+        val iconSize = ImGui.getFrameHeight()
+        if (UITheme.iconButton("##autoVjQueue", Icons.POWER, "Enable automatic transition queue. Will cycle through queue patches at set intervals.", active = PlayQueueManager.isAutoVJEnabled, size = iconSize)) {
             PlayQueueManager.isAutoVJEnabled = !PlayQueueManager.isAutoVJEnabled
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue patches at set intervals.")
-        }
+        ImGui.sameLine()
+        ImGui.alignTextToFramePadding()
+        UITheme.caption("AUTO-VJ")
         
         ImGui.sameLine()
         val repeatActive = PlayQueueManager.isRepeatEnabled
-        if (repeatActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        if (ImGui.button("${Icons.REPEAT}##repeatQueue")) {
+        if (UITheme.iconButton("##repeatQueue", Icons.REPEAT, "Repeat Queue: cycle back to start when the bottom is reached.", active = repeatActive, size = iconSize)) {
             PlayQueueManager.isRepeatEnabled = !PlayQueueManager.isRepeatEnabled
-        }
-        if (repeatActive) {
-            ImGui.popStyleColor(4)
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
         }
 
         ImGui.sameLine()
         val shuffleActive = PlayQueueManager.isShuffleEnabled
-        if (shuffleActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        if (ImGui.button("${Icons.SHUFFLE}##shuffleQueue")) {
+        if (UITheme.iconButton("##shuffleQueue", Icons.SHUFFLE, "Shuffle Queue: play patches in a random order.", active = shuffleActive, size = iconSize)) {
             PlayQueueManager.isShuffleEnabled = !PlayQueueManager.isShuffleEnabled
             if (PlayQueueManager.isShuffleEnabled) {
                 PlayQueueManager.initializeShuffle()
             }
         }
-        if (shuffleActive) {
-            ImGui.popStyleColor(4)
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Shuffle Queue: play patches in a random order.")
-        }
 
         ImGui.sameLine()
-        if (ImGui.button("Clear")) {
+        if (UITheme.iconButton("##clearQueue", Icons.TRASH, "Empty the play queue.", size = iconSize)) {
             PlayQueueManager.clearQueue()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Empty the play queue.")
-        }
         ImGui.sameLine()
-        if (ImGui.button("Export")) {
+        if (UITheme.iconButton("##exportQueue", Icons.SAVE, "Save current queue sequence as a new playlist.", size = iconSize)) {
             ImGui.openPopup("ExportQueuePopup")
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save current queue sequence as a new playlist.")
         }
         drawExportQueuePopup()
         
@@ -895,14 +866,15 @@ object AssetBrowserPanel {
 
     private fun drawPatchesView(currentDir: File, mixer: Mixer) {
         // Header Row
-        if (ImGui.button("Refresh Folder")) {
+        if (UITheme.iconButton("##refreshPatches", Icons.REFRESH, "Re-scan active directory for newly added patch or playlist files.")) {
             refreshAssets()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Re-scan active directory for newly added patch or playlist files.")
-        }
-        ImGui.sameLine()
-        ImGui.inputText("Filter", searchBuffer)
+        ImGui.sameLine(0f, 8f)
+        ImGui.alignTextToFramePadding()
+        UITheme.caption(Icons.SEARCH)
+        ImGui.sameLine(0f, 6f)
+        ImGui.setNextItemWidth(-1f)
+        ImGui.inputText("##patchFilter", searchBuffer)
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to filter patches by filename.")
         }
