@@ -339,6 +339,7 @@ class Renderer {
         feedbackShader.setUniform("uBlur", deck.fbBlur.value)
         feedbackShader.setUniform("uChroma", deck.fbChroma.value)
         feedbackShader.setUniform("uFeedbackMode", deck.fbMode.value)
+        feedbackShader.setUniform("uKaleido", deck.fbKaleido.value)
 
         // Composite feedback onto fullscreen quad
         Geometry.drawFullscreenQuad()

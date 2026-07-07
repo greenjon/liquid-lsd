@@ -38,6 +38,7 @@ class Deck(
     val fbBlur = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f) // range 0..1
     val fbChroma = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val fbMode = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f) // 0 = Max, 1 = Difference
+    val fbKaleido = ModulatableParameter(1.0f, minClamp = 1f, maxClamp = 12f)
 
     init {
         // Clear all FBOs at startup to prevent reading uninitialized GPU memory
@@ -84,6 +85,7 @@ class Deck(
         fbBlur.reset()
         fbChroma.reset()
         fbMode.reset()
+        fbKaleido.reset()
         source.clear()
         updateSourceSelection()
 
@@ -145,6 +147,7 @@ class Deck(
         fbBlur.evaluate()
         fbChroma.evaluate()
         fbMode.evaluate()
+        fbKaleido.evaluate()
     }
 
     /**

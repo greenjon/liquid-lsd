@@ -13,6 +13,7 @@ uniform float uHueShift;
 uniform float uBlur;
 uniform float uChroma;
 uniform float uFeedbackMode;
+uniform float uKaleido;
 
 // RGB to HSV helper
 vec3 rgb2hsv(vec3 c) {
@@ -52,6 +53,19 @@ void main() {
 
     // Apply coordinate transformations around center (0.5, 0.5) for zoom/rotate feedback
     vec2 uv = vTexCoord - vec2(0.5);
+
+    // Kaleidoscope / radial symmetry
+    float segments = floor(uKaleido + 0.5);
+    if (segments > 1.0) {
+        float angle = atan(uv.y, uv.x);
+        float radius = length(uv);
+        float segmentAngle = 6.28318530718 / segments;
+        
+        angle = mod(angle, segmentAngle);
+        angle = abs(angle - segmentAngle / 2.0);
+        
+        uv = vec2(radius * cos(angle), radius * sin(angle));
+    }
     
     // Zoom factor (positive zooms in)
     uv *= (1.0 - uZoom);

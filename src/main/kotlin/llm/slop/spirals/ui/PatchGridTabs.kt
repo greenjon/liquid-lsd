@@ -295,6 +295,7 @@ object PatchGridTabs {
             PatchGridRenderer.drawParamRow("FB Blur",      "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer, gridStartX, 5, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             PatchGridRenderer.drawParamRow("FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, 6, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             PatchGridRenderer.drawParamRow("FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, 7, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            PatchGridRenderer.drawParamRow("FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, 8, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
     }
 }
