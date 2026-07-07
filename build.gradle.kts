@@ -19,6 +19,37 @@ repositories {
 val lwjglVersion = "3.3.3"
 val imguiVersion = "1.86.11"
 
+object BuildProjectConfig {
+    const val PRODUCT_NAME = "Spirals"
+    const val PRODUCT_SLUG = "spirals"
+    const val APP_ARTIFACT_ID = "$PRODUCT_SLUG-desktop"
+    const val PACKAGE_SEGMENT = PRODUCT_SLUG
+    const val LAUNCHER_JAR_NAME = "$APP_ARTIFACT_ID-all.jar"
+    const val DISTRIBUTION_DIR_NAME = APP_ARTIFACT_ID
+
+    fun distributionName(platform: String) = "$DISTRIBUTION_DIR_NAME-$platform"
+    fun archiveName(platform: String) = "${distributionName(platform)}.zip"
+}
+
+object BuildTaskConfig {
+    const val APP_MAIN_CLASS = "llm.slop.${BuildProjectConfig.PACKAGE_SEGMENT}.MainKt"
+    const val UI_LAB_WINDOW = "1440x900"
+    const val UI_LAB_SCREENSHOT_FRAMES = 8
+    const val APP_SCREENSHOT_FRAMES = 12
+    const val UI_LAB_OUTPUT = "build/ui-lab/ui-lab.png"
+    const val RESPONSIVE_OUTPUT_DIR = "build/ui-lab/responsive"
+    val commonCaptureArgs = listOf("--no-audio", "--no-watchdog")
+}
+
+data class ResponsiveCapturePreset(val name: String, val size: String)
+
+val responsiveCapturePresets = listOf(
+    ResponsiveCapturePreset("compact", "900x700"),
+    ResponsiveCapturePreset("laptop", "1280x720"),
+    ResponsiveCapturePreset("desktop", "1440x900"),
+    ResponsiveCapturePreset("wide", "1920x1080")
+)
+
 dependencies {
     // Kotlin
     implementation(kotlin("stdlib"))
@@ -63,7 +94,96 @@ dependencies {
 }
 
 application {
-    mainClass.set("llm.slop.spirals.MainKt")
+    mainClass.set(BuildTaskConfig.APP_MAIN_CLASS)
+}
+
+tasks.register<JavaExec>("runUiLab") {
+    group = "application"
+    description = "Runs ${BuildProjectConfig.PRODUCT_NAME} in deterministic UI lab mode for visual iteration."
+    dependsOn("classes")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set(BuildTaskConfig.APP_MAIN_CLASS)
+    args(listOf("--ui-lab") + BuildTaskConfig.commonCaptureArgs)
+}
+
+tasks.register<JavaExec>("captureUiLab") {
+    group = "verification"
+    description = "Captures a deterministic UI lab screenshot to build/ui-lab/ui-lab.png."
+    dependsOn("classes")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set(BuildTaskConfig.APP_MAIN_CLASS)
+    args(
+        "--ui-lab",
+        "--window=${BuildTaskConfig.UI_LAB_WINDOW}",
+        "--screenshot-ui=${BuildTaskConfig.UI_LAB_OUTPUT}",
+        "--screenshot-after-frames=${BuildTaskConfig.UI_LAB_SCREENSHOT_FRAMES}"
+    )
+    args(BuildTaskConfig.commonCaptureArgs)
+}
+
+val responsiveUiLabTasks = responsiveCapturePresets.map { preset ->
+    tasks.register<JavaExec>("captureUiLab${preset.name.replaceFirstChar { it.uppercase() }}") {
+        group = "verification"
+        description = "Captures the UI lab at ${preset.size}."
+        dependsOn("classes")
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set(BuildTaskConfig.APP_MAIN_CLASS)
+        args(
+            "--ui-lab",
+            "--window=${preset.size}",
+            "--screenshot-ui=${BuildTaskConfig.RESPONSIVE_OUTPUT_DIR}/ui-lab-${preset.name}.png",
+            "--screenshot-after-frames=${BuildTaskConfig.UI_LAB_SCREENSHOT_FRAMES}"
+        )
+        args(BuildTaskConfig.commonCaptureArgs)
+    }
+}
+
+val responsiveAppTasks = responsiveCapturePresets.map { preset ->
+    tasks.register<JavaExec>("captureApp${preset.name.replaceFirstChar { it.uppercase() }}") {
+        group = "verification"
+        description = "Captures the live app shell at ${preset.size}."
+        dependsOn("classes")
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set(BuildTaskConfig.APP_MAIN_CLASS)
+        args(
+            "--window=${preset.size}",
+            "--screenshot-ui=${BuildTaskConfig.RESPONSIVE_OUTPUT_DIR}/app-${preset.name}.png",
+            "--screenshot-after-frames=${BuildTaskConfig.APP_SCREENSHOT_FRAMES}"
+        )
+        args(BuildTaskConfig.commonCaptureArgs)
+    }
+}
+
+val captureAppMaximized = tasks.register<JavaExec>("captureAppMaximized") {
+    group = "verification"
+    description = "Captures the live app shell in an OS-maximized window."
+    dependsOn("classes")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set(BuildTaskConfig.APP_MAIN_CLASS)
+    args(
+        "--window=maximized",
+        "--screenshot-ui=${BuildTaskConfig.RESPONSIVE_OUTPUT_DIR}/app-maximized.png",
+        "--screenshot-after-frames=${BuildTaskConfig.APP_SCREENSHOT_FRAMES}"
+    )
+    args(BuildTaskConfig.commonCaptureArgs)
+}
+
+tasks.register("captureResponsiveUiLab") {
+    group = "verification"
+    description = "Captures UI lab screenshots at compact, laptop, desktop, and wide sizes."
+    dependsOn(responsiveUiLabTasks)
+}
+
+tasks.register("captureResponsiveApp") {
+    group = "verification"
+    description = "Captures live app screenshots at compact, laptop, desktop, wide, and maximized sizes."
+    dependsOn(responsiveAppTasks + captureAppMaximized)
+}
+
+tasks.register("captureResponsiveUi") {
+    group = "verification"
+    description = "Captures both deterministic UI lab and live app responsive screenshot sets."
+    dependsOn("captureResponsiveUiLab", "captureResponsiveApp")
 }
 
 kotlin {
@@ -76,6 +196,9 @@ kotlin {
 }
 
 tasks.withType<JavaExec> {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    })
     jvmArgs(
         "-ea",
         "-XX:+UseZGC",
@@ -132,7 +255,7 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
 
         // 1. Copy shadowJar
         val jarFile = tasks.named("shadowJar").get().outputs.files.singleFile
-        val destJar = file("$distDir/spirals-desktop-all.jar")
+        val destJar = file("$distDir/${BuildProjectConfig.LAUNCHER_JAR_NAME}")
         jarFile.copyTo(destJar, overwrite = true)
         println("Copied shadowJar to ${destJar.absolutePath}")
 
@@ -206,10 +329,10 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
             setlocal
             cd /d "%~dp0"
             if exist "jre\windows-x64\bin\java.exe" (
-                "jre\windows-x64\bin\java.exe" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                "jre\windows-x64\bin\java.exe" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             ) else (
                 echo Bundled JRE not found. Trying system java...
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             )
             endlocal
         """.trimIndent().replace("\n", "\r\n")) // Windows CRLF
@@ -227,15 +350,15 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
                 JRE_DIR="jre/linux-aarch64"
             else
                 echo "Unsupported architecture: ${'$'}ARCH. Trying system java..."
-                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             fi
 
             if [ -f "${'$'}JRE_DIR/bin/java" ]; then
                 chmod +x "${'$'}JRE_DIR/bin/java"
-                exec "./${'$'}JRE_DIR/bin/java" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                exec "./${'$'}JRE_DIR/bin/java" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             else
                 echo "Bundled JRE not found. Trying system java..."
-                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             fi
         """.trimIndent())
         runLinux.setExecutable(true)
@@ -247,10 +370,10 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
             cd "${'$'}SCRIPT_DIR"
             if [ -f "jre/macos-aarch64/bin/java" ]; then
                 chmod +x jre/macos-aarch64/bin/java
-                ./jre/macos-aarch64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                ./jre/macos-aarch64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             else
                 echo "Bundled JRE not found. Trying system java..."
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             fi
         """.trimIndent())
         runMacArm.setExecutable(true)
@@ -262,10 +385,10 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
             cd "${'$'}SCRIPT_DIR"
             if [ -f "jre/macos-x64/bin/java" ]; then
                 chmod +x jre/macos-x64/bin/java
-                ./jre/macos-x64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                ./jre/macos-x64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             else
                 echo "Bundled JRE not found. Trying system java..."
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar ${BuildProjectConfig.LAUNCHER_JAR_NAME}
             fi
         """.trimIndent())
         runMacIntel.setExecutable(true)
@@ -276,24 +399,24 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
 
 val zipWindows = tasks.register<Zip>("zipWindows") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-windows-x64.zip")
+    archiveFileName.set(BuildProjectConfig.archiveName("windows-x64"))
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-windows-x64")
+    into(BuildProjectConfig.distributionName("windows-x64"))
     from("build/dist") {
         include("run-windows.bat")
-        include("spirals-desktop-all.jar")
+        include(BuildProjectConfig.LAUNCHER_JAR_NAME)
         include("jre/windows-x64/**")
     }
 }
 
 val zipLinux = tasks.register<Zip>("zipLinux") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-linux-x64.zip")
+    archiveFileName.set(BuildProjectConfig.archiveName("linux-x64"))
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-linux-x64")
+    into(BuildProjectConfig.distributionName("linux-x64"))
     from("build/dist") {
         include("run-linux.sh")
-        include("spirals-desktop-all.jar")
+        include(BuildProjectConfig.LAUNCHER_JAR_NAME)
         include("jre/linux-x64/**")
     }
     eachFile {
@@ -305,12 +428,12 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
 
 val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-linux-arm64.zip")
+    archiveFileName.set(BuildProjectConfig.archiveName("linux-arm64"))
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-linux-arm64")
+    into(BuildProjectConfig.distributionName("linux-arm64"))
     from("build/dist") {
         include("run-linux.sh")
-        include("spirals-desktop-all.jar")
+        include(BuildProjectConfig.LAUNCHER_JAR_NAME)
         include("jre/linux-aarch64/**")
     }
     eachFile {
@@ -322,12 +445,12 @@ val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
 
 val zipMacArm = tasks.register<Zip>("zipMacArm") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-macos-arm64.zip")
+    archiveFileName.set(BuildProjectConfig.archiveName("macos-arm64"))
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-macos-arm64")
+    into(BuildProjectConfig.distributionName("macos-arm64"))
     from("build/dist") {
         include("run-mac-arm.command")
-        include("spirals-desktop-all.jar")
+        include(BuildProjectConfig.LAUNCHER_JAR_NAME)
         include("jre/macos-aarch64/**")
     }
     eachFile {
@@ -339,12 +462,12 @@ val zipMacArm = tasks.register<Zip>("zipMacArm") {
 
 val zipMacIntel = tasks.register<Zip>("zipMacIntel") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-macos-x64.zip")
+    archiveFileName.set(BuildProjectConfig.archiveName("macos-x64"))
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-macos-x64")
+    into(BuildProjectConfig.distributionName("macos-x64"))
     from("build/dist") {
         include("run-mac-intel.command")
-        include("spirals-desktop-all.jar")
+        include(BuildProjectConfig.LAUNCHER_JAR_NAME)
         include("jre/macos-x64/**")
     }
     eachFile {
@@ -359,4 +482,3 @@ val packageZips = tasks.register("packageZips") {
     description = "Assembles all platform-specific distribution ZIP archives."
     dependsOn(zipWindows, zipLinux, zipLinuxArm, zipMacArm, zipMacIntel)
 }
-

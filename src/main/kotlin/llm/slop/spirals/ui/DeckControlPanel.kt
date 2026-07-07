@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
+import llm.slop.spirals.config.ProjectConfig
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.patches.PatchManager
@@ -94,8 +95,8 @@ class DeckControlPanel(
             ImGui.text("Permanently delete '$activePreset'?")
             ImGui.spacing()
             if (ImGui.button("Delete", 80f, 0f)) {
-                var file = File("presets/patches/$activePreset.lsd")
-                if (!file.exists()) file = File("presets/patches/$activePreset.json")
+                var file = File(ProjectConfig.Paths.PATCHES_DIR, "$activePreset.lsd")
+                if (!file.exists()) file = File(ProjectConfig.Paths.PATCHES_DIR, "$activePreset.json")
                 if (file.exists()) file.delete()
                 onDeleteDeck(isDeckA)
                 ImGui.closeCurrentPopup()

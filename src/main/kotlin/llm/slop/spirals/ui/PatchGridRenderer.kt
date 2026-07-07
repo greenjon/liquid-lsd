@@ -545,6 +545,6 @@ object PatchGridRenderer {
 
     fun drawDiceButton(id: String, x: Float, y: Float, scale: Float, btnWidth: Float, btnHeight: Float): Boolean {
         ImGui.setCursorScreenPos(x, y)
-        return ImGui.button("${Icons.DICES}##$id", btnWidth, btnHeight)
+        return UITheme.iconButton("##$id", Icons.DICES, "Randomize parameter.", width = btnWidth, height = btnHeight)
     }
 }

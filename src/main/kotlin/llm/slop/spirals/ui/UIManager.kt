@@ -6,6 +6,7 @@ import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImInt
 import imgui.type.ImString
+import llm.slop.spirals.config.ProjectConfig
 import java.io.File
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mandala
@@ -31,7 +32,12 @@ import llm.slop.spirals.patches.PlayQueueManager
 /**
  * Manages the ImGui overlay for desktop control.
  */
-class UIManager(private val windowHandle: Long) {
+class UIManager(
+    private val windowHandle: Long,
+    private val uiMode: UiMode = UiMode.APP
+) {
+    enum class UiMode { APP, LAB }
+
     private val logger = KotlinLogging.logger {}
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
@@ -55,23 +61,7 @@ class UIManager(private val windowHandle: Long) {
         val enabled = UITheme.backgroundVideoEnabled
         if (enabled == lastBgVideoEnabled) return
         lastBgVideoEnabled = enabled
-
-        val style = ImGui.getStyle()
-        if (enabled) {
-            // Semi-transparent style for a cool VJ look
-            style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 0.75f)
-            style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 0.75f)
-            style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 0.75f)
-            style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 0.75f)
-            style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-        } else {
-            // Completely opaque colors
-            style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 1.00f)
-            style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 1.00f)
-            style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 1.00f)
-            style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 1.00f)
-            style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-        }
+        UITheme.applyStyleColors(enabled)
     }
 
     private val patchState = PatchGridState()
@@ -151,12 +141,7 @@ class UIManager(private val windowHandle: Long) {
 
         // Scale style sizes proportionally to the loaded baseSize relative to the baseline of 15f
         scaleStyleFromDefault(UITheme.baseSize)
-
-        // Darken the modal backdrop for a more dramatic VJ-app feel.
-        ImGui.getStyle().setColor(
-            imgui.flag.ImGuiCol.ModalWindowDimBg,
-            0f, 0f, 0f, 0.72f
-        )
+        UITheme.applyStyleColors(UITheme.backgroundVideoEnabled)
 
         imguiGlfw.init(windowHandle, true)
         imguiGl3.init("#version 150")
@@ -261,10 +246,20 @@ class UIManager(private val windowHandle: Long) {
         currentMixer = mixer
 
         // Update window title dynamically with project name and dirty status
-        val title = "Spirals Desktop"
+        val title = if (uiMode == UiMode.LAB) ProjectConfig.App.UI_LAB_WINDOW_TITLE else ProjectConfig.App.NAME
         if (title != lastWindowTitle) {
             org.lwjgl.glfw.GLFW.glfwSetWindowTitle(windowHandle, title)
             lastWindowTitle = title
+        }
+
+        if (uiMode == UiMode.LAB) {
+            imguiGlfw.newFrame()
+            ImGui.newFrame()
+            updateUiTransparency()
+            UiLabPanel.draw(displayWidth, displayHeight)
+            ImGui.render()
+            imguiGl3.renderDrawData(ImGui.getDrawData())
+            return
         }
 
         // Drain all MIDI events queued by the MIDI receiver thread.
@@ -374,7 +369,7 @@ class UIManager(private val windowHandle: Long) {
             }
 
             if (popupManager.pendingOpenExitPopup) {
-                ImGui.openPopup("Exit Spirals?##confirm")
+                ImGui.openPopup("${ProjectConfig.App.EXIT_CONFIRM_TITLE}##confirm")
                 popupManager.pendingOpenExitPopup = false
             }
             if (popupManager.pendingOpenMidiWarningPopup) {
@@ -479,7 +474,7 @@ class UIManager(private val windowHandle: Long) {
 
     /**
      * Phase 2: deck preset "Load File..." now opens the ImGui file browser
-     * pointed at `presets/patches/` instead of `java.awt.FileDialog`.
+     * pointed at the configured patches directory instead of `java.awt.FileDialog`.
      *
      * The browser is shared with the global project browser but uses a
      * separate instance per deck so both decks can have independent state.
@@ -491,7 +486,7 @@ class UIManager(private val windowHandle: Long) {
         val browser = if (isDeckA) deckAFileBrowser else deckBFileBrowser
         browser.open(
             ImGuiFileBrowser.Mode.LOAD,
-            startDir = File("presets/patches").canonicalFile
+            startDir = File(ProjectConfig.Paths.PATCHES_DIR).canonicalFile
         )
     }
 
@@ -499,9 +494,9 @@ class UIManager(private val windowHandle: Long) {
 
     private fun loadDeckPreset(presetName: String, deck: Deck, isDeckA: Boolean) {
         if (presetName == "None") return
-        var file = File("presets/patches/$presetName.lsd")
+        var file = File(ProjectConfig.Paths.PATCHES_DIR, "$presetName.lsd")
         if (!file.exists()) {
-            file = File("presets/patches/$presetName.json")
+            file = File(ProjectConfig.Paths.PATCHES_DIR, "$presetName.json")
         }
         if (file.exists()) {
             llm.slop.spirals.patches.PatchManager.loadDeckPresetAsync(file, isDeckA)
@@ -542,7 +537,7 @@ class UIManager(private val windowHandle: Long) {
                 llm.slop.spirals.patches.PatchManager.cachedDtoC = dto
             }
         }
-        val file = File("presets/patches/$name.lsd")
+        val file = File(ProjectConfig.Paths.PATCHES_DIR, "$name.lsd")
         llm.slop.spirals.patches.PatchManager.saveDeckPresetAsync(file, deck, name, resolvedTags)
     }
 
@@ -557,18 +552,14 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
-        val libraryW = displayWidth * 0.70f
-        val rightW = displayWidth - libraryW
-
-        val assetBrowserH = when (UITheme.assetBrowserMode) {
-            UITheme.AssetBrowserMode.FULL -> contentH
-            UITheme.AssetBrowserMode.HALF -> contentH * 0.5f
-            UITheme.AssetBrowserMode.HIDE -> 38f
-        }
+        val layout = AppMainLayoutCalculator.calculate(displayWidth, contentH, UITheme.assetBrowserMode)
+        val libraryW = layout.libraryWidth
+        val rightW = layout.rightWidth
+        val assetBrowserH = layout.assetBrowserHeight
 
         if (UITheme.assetBrowserMode != UITheme.AssetBrowserMode.FULL) {
             val topH = contentH - assetBrowserH
-            val leftW = displayWidth * 0.3f
+            val leftW = layout.patchGridWidth
 
             ImGui.setNextWindowPos(0f, menuBarH)
             ImGui.setNextWindowSize(leftW, topH)
@@ -577,7 +568,7 @@ class UIManager(private val windowHandle: Long) {
             }
             ImGui.end()
 
-            val middleW = libraryW - leftW
+            val middleW = layout.cellConfigWidth
             ImGui.setNextWindowPos(leftW, menuBarH)
             ImGui.setNextWindowSize(middleW, topH)
             if (ImGui.begin("Cell Config", noDecorate)) {
@@ -663,6 +654,22 @@ class UIManager(private val windowHandle: Long) {
         if (style.grabMinSize <= 0.0f) {
             style.grabMinSize = 1.0f
         }
+        style.setWindowPadding(10f * scale, 8f * scale)
+        style.setFramePadding(7f * scale, 4f * scale)
+        style.setCellPadding(8f * scale, 5f * scale)
+        style.setItemSpacing(8f * scale, 5f * scale)
+        style.setItemInnerSpacing(6f * scale, 4f * scale)
+        style.setWindowRounding(0f)
+        style.setChildRounding(2f * scale)
+        style.setPopupRounding(2f * scale)
+        style.setFrameRounding(2f * scale)
+        style.setGrabRounding(2f * scale)
+        style.setScrollbarRounding(2f * scale)
+        style.setWindowBorderSize(1f)
+        style.setChildBorderSize(1f)
+        style.setFrameBorderSize(0f)
+        style.setScrollbarSize(12f * scale)
+        UITheme.applyStyleColors(UITheme.backgroundVideoEnabled)
     }
 
     fun dispose() {

@@ -2,6 +2,7 @@ package llm.slop.spirals.patches
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import llm.slop.spirals.config.ProjectConfig
 import llm.slop.spirals.models.*
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mixer
@@ -305,7 +306,7 @@ object PatchManager {
 
     fun saveSession(mixer: Mixer) {
         try {
-            val sessionFile = File("presets/last_session.json")
+            val sessionFile = File(ProjectConfig.Paths.LAST_SESSION_FILE)
             val parent = sessionFile.parentFile
             if (parent != null && !parent.exists()) {
                 parent.mkdirs()
@@ -343,7 +344,7 @@ object PatchManager {
 
     fun loadSession(mixer: Mixer) {
         try {
-            val sessionFile = File("presets/last_session.json")
+            val sessionFile = File(ProjectConfig.Paths.LAST_SESSION_FILE)
             if (!sessionFile.exists()) {
                 logger.info { "No previous session file found." }
                 return

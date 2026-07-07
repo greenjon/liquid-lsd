@@ -1,5 +1,6 @@
 package llm.slop.spirals.ui
 
+import llm.slop.spirals.config.ProjectConfig
 import mu.KotlinLogging
 import java.io.File
 import java.time.LocalDateTime
@@ -98,7 +99,7 @@ object PlaylistManager {
         return try {
             val file = File(playlist.filePath)
             val content = buildString {
-                appendLine("# Spirals Playlist: ${playlist.name}")
+                appendLine("# ${ProjectConfig.App.PLAYLIST_FILE_COMMENT_PREFIX}: ${playlist.name}")
                 appendLine("# Generated: ${LocalDateTime.now()}")
                 appendLine()
                 playlist.patches.forEach { patch ->

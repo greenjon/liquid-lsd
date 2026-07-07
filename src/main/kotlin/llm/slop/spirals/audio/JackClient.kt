@@ -1,5 +1,6 @@
 package llm.slop.spirals.audio
 
+import llm.slop.spirals.config.ProjectConfig
 import org.jaudiolibs.jnajack.*
 import java.nio.FloatBuffer
 import java.util.EnumSet
@@ -21,7 +22,7 @@ enum class JackStartFailure {
  * for the JACK Audio Connection Kit.
  */
 class JackClient(
-    val clientName: String = "spirals-desktop",
+    val clientName: String = ProjectConfig.App.JACK_CLIENT_NAME,
     val onProcess: (FloatBuffer, Int, Float) -> Unit // (buffer, nframes, sampleRate)
 ) {
     @Volatile

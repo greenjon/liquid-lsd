@@ -8,6 +8,7 @@ import llm.slop.spirals.rendering.Mandala
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
+import llm.slop.spirals.config.ProjectConfig
 import mu.KotlinLogging
 import java.io.File
 
@@ -33,7 +34,7 @@ internal fun midiProfileFile(midiDir: File, profileName: String): File {
     val filePath = file.canonicalFile.toPath()
 
     require(filePath.startsWith(rootPath)) {
-        "MIDI profile path escapes presets/midi: $profileName"
+        "MIDI profile path escapes ${ProjectConfig.Paths.MIDI_DIR}: $profileName"
     }
 
     return file
@@ -56,9 +57,9 @@ data class MidiMappingProfile(
 object MidiMappingManager {
     private val logger = KotlinLogging.logger {}
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    private val midiDir = File("presets/midi")
+    private val midiDir = File(ProjectConfig.Paths.MIDI_DIR)
 
-    var activeProfileName = "default"
+    var activeProfileName = ProjectConfig.Files.DEFAULT_MIDI_PROFILE
         private set
 
     private var activeProfile = MidiMappingProfile("Default Profile")

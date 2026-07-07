@@ -2,12 +2,13 @@ package llm.slop.spirals.patches
 
 import llm.slop.spirals.models.PlaylistDto
 import kotlinx.serialization.json.Json
+import llm.slop.spirals.config.ProjectConfig
 import java.io.File
 
 object PlaylistParser {
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    private val defaultPatchRoots = listOf(File("presets/patches"))
-    private val patchExtensions = listOf(".lsd", ".json", ".patch")
+    private val defaultPatchRoots = listOf(File(ProjectConfig.Paths.PATCHES_DIR))
+    private val patchExtensions = ProjectConfig.Files.patchFileSuffixes
 
     fun parseItems(content: String): List<String> {
         return if (content.trimStart().startsWith("{")) {

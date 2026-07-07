@@ -1,6 +1,7 @@
 package llm.slop.spirals.rendering
 
 import llm.slop.spirals.parameters.ModulatableParameter
+import llm.slop.spirals.config.RuntimeConfig
 
 /**
  * Represents a single visual rendering chain (Deck).
@@ -9,8 +10,8 @@ import llm.slop.spirals.parameters.ModulatableParameter
  */
 class Deck(
     var source: VisualSource,
-    val width: Int = 1920,
-    val height: Int = 1080
+    val width: Int = RuntimeConfig.Rendering.DEFAULT_WIDTH,
+    val height: Int = RuntimeConfig.Rendering.DEFAULT_HEIGHT
 ) {
     var isEmpty: Boolean = false
     var lastSourceSelectBase: Float = 0.0f

@@ -2,6 +2,7 @@ package llm.slop.spirals.rendering
 
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.parameters.MeterType
+import llm.slop.spirals.config.RuntimeConfig
 
 /**
  * Manages the blending of two Decks (Deck A and Deck B) into a master output FBO.
@@ -11,8 +12,8 @@ class Mixer(
     val deckA: Deck,
     val deckB: Deck,
     val deckC: Deck,
-    val width: Int = 1920,
-    val height: Int = 1080
+    val width: Int = RuntimeConfig.Rendering.DEFAULT_WIDTH,
+    val height: Int = RuntimeConfig.Rendering.DEFAULT_HEIGHT
 ) {
     // The master FBO where the blended result is rendered
     val masterFBO = FBO(width, height)

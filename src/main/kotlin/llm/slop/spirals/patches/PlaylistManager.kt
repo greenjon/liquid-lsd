@@ -2,6 +2,7 @@ package llm.slop.spirals.patches
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import llm.slop.spirals.config.ProjectConfig
 import llm.slop.spirals.models.PlaylistDto
 import mu.KotlinLogging
 import java.io.File
@@ -31,12 +32,13 @@ object PlaylistManager {
             lines.forEach { itemName ->
                 var deckFile = File(itemName)
                 if (!deckFile.exists()) {
-                    deckFile = File("presets/patches/$itemName")
+                    deckFile = File(ProjectConfig.Paths.PATCHES_DIR, itemName)
                 }
                 if (!deckFile.exists()) {
                     val possible = listOf(
                         itemName, "$itemName.lsd", "$itemName.json",
-                        "presets/patches/$itemName.lsd", "presets/patches/$itemName.json"
+                        "${ProjectConfig.Paths.PATCHES_DIR}/$itemName.lsd",
+                        "${ProjectConfig.Paths.PATCHES_DIR}/$itemName.json"
                     )
                     var found = false
                     for (p in possible) {
@@ -63,7 +65,7 @@ object PlaylistManager {
     fun savePlaylist(file: File) {
         try {
             val content = buildString {
-                appendLine("# Spirals Playlist: ${file.nameWithoutExtension}")
+                appendLine("# ${ProjectConfig.App.PLAYLIST_FILE_COMMENT_PREFIX}: ${file.nameWithoutExtension}")
                 activePlaylist.forEach { patch ->
                     appendLine(patch.name)
                 }

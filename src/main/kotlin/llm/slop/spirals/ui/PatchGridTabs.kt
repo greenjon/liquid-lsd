@@ -9,32 +9,42 @@ import llm.slop.spirals.parameters.ModulatableParameter
 import kotlin.math.roundToInt
 
 object PatchGridTabs {
+    private fun topTabDisplayLabel(tab: String, compact: Boolean): String {
+        if (!compact) return tab
+        return when (tab) {
+            "Deck A" -> "A"
+            "Deck B" -> "B"
+            "Deck C" -> "C"
+            else -> tab
+        }
+    }
+
+    private fun subTabDisplayLabel(tab: String, compact: Boolean): String {
+        if (!compact) return tab
+        return when (tab) {
+            "Geometry" -> "Geom"
+            "Background" -> "Back"
+            "Feedback" -> "Feed"
+            else -> tab
+        }
+    }
+
     fun drawTopTabs(state: PatchGridState) {
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 0f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 2f)
         val tabs = listOf("Mixer", "Deck A", "Deck B", "Deck C")
-        val buttonWidth = 80f
+        val compact = ImGui.getContentRegionAvailX() < 300f
+        val buttonWidth = if (compact) 58f else 80f
         tabs.forEachIndexed { i, tab ->
             if (i > 0) ImGui.sameLine()
             val isActive = state.activeTopTab == tab
-            if (isActive) {
-                val activeCol = when (tab) {
-                    "Deck A" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.8f, 1f)
-                    "Deck B" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, 1f)
-                    "Deck C" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f) // Emerald/Teal for Deck C
-                    else     -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 1f)
-                }
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
+            val activeCol = if (tab == "Mixer") {
+                UITheme.colorU32(UITheme.Colors.ACCENT_R, UITheme.Colors.ACCENT_G, UITheme.Colors.ACCENT_B, 1f)
             } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 1f))
+                UITheme.deckAccentColor(tab, 1f)
             }
-            if (ImGui.button(tab, buttonWidth, 24f)) {
+            if (UITheme.tabButton("##top_tab_$tab", topTabDisplayLabel(tab, compact), isActive, activeCol, buttonWidth, 28f)) {
                 state.activeTopTab = tab
             }
-            ImGui.popStyleColor(3)
         }
         ImGui.popStyleVar()
     }
@@ -93,37 +103,35 @@ object PatchGridTabs {
             else -> state.activeDeckASubTab
         }
 
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 0f)
+        val compactLabels = ImGui.getContentRegionAvailX() < 460f
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 2f)
         tabs.forEachIndexed { i, tab ->
-            if (i > 0) ImGui.sameLine()
+            val displayLabel = subTabDisplayLabel(tab, compactLabels)
             val isActive = currentSubTab == tab
-            if (isActive) {
-                val bgCol = getSubTabColor(tab, 1f)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
-            } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-            }
             var tw = 0f
-            UITheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(tab).x }
-            val btnW = (tw + 20f).coerceAtLeast(80f)
-            if (ImGui.button(tab, btnW, 24f)) {
+            UITheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
+            val btnW = (tw + 20f).coerceAtLeast(if (compactLabels) 56f else 64f)
+            if (i > 0) {
+                val spacing = ImGui.getStyle().itemSpacing.x
+                val nextRight = ImGui.getItemRectMaxX() + spacing + btnW
+                val contentRight = ImGui.getWindowPosX() + ImGui.getWindowContentRegionMaxX()
+                if (nextRight <= contentRight) {
+                    ImGui.sameLine(0f, spacing)
+                }
+            }
+            if (UITheme.tabButton("##sub_tab_${state.activeTopTab}_$tab", displayLabel, isActive, getSubTabColor(tab, 1f), btnW, 28f)) {
                 when (state.activeTopTab) {
                     "Deck A" -> state.activeDeckASubTab = tab
                     "Deck B" -> state.activeDeckBSubTab = tab
                     "Deck C" -> state.activeDeckCSubTab = tab
                 }
             }
-            ImGui.popStyleColor(3)
         }
         ImGui.popStyleVar()
     }
 
     private fun getSubTabColor(label: String, alpha: Float): Int {
-        return ImGui.colorConvertFloat4ToU32(0.25f, 0.55f, 0.85f, alpha)
+        return UITheme.colorU32(UITheme.Colors.ACCENT_R, UITheme.Colors.ACCENT_G, UITheme.Colors.ACCENT_B, alpha)
     }
 
     /**

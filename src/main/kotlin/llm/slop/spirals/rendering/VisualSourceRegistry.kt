@@ -2,6 +2,7 @@ package llm.slop.spirals.rendering
 
 import llm.slop.spirals.parameters.ModulatableParameter
 import llm.slop.spirals.parameters.MeterType
+import llm.slop.spirals.config.ProjectConfig
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import java.io.File
@@ -51,7 +52,7 @@ object VisualSourceRegistry {
     fun loadAll() {
         disposeAll()
         
-        val sourcesDir = File("presets/sources")
+        val sourcesDir = File(ProjectConfig.Paths.SOURCES_DIR)
         if (!sourcesDir.exists()) {
             sourcesDir.mkdirs()
         }

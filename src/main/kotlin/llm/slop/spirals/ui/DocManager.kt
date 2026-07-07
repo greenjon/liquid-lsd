@@ -1,5 +1,6 @@
 package llm.slop.spirals.ui
 
+import llm.slop.spirals.config.ProjectConfig
 import mu.KotlinLogging
 import java.io.File
 import java.io.FileOutputStream
@@ -17,7 +18,7 @@ object DocManager {
 
     private val appDataDir: File by lazy {
         val userHome = System.getProperty("user.home")
-        val dir = File(userHome, ".spirals-desktop")
+        val dir = File(userHome, ProjectConfig.Paths.LOCAL_APP_DATA_DIR)
         if (!dir.exists()) {
             dir.mkdirs()
         }
@@ -40,7 +41,7 @@ object DocManager {
             } else {
                 logger.error { "index.html not found in extracted docs directory at ${indexFile.absolutePath}" }
                 // Fallback online URL if offline fails
-                openInBrowser(URI("https://github.com/greenjon/spirals-desktop"))
+                openInBrowser(URI(ProjectConfig.App.GITHUB_REPOSITORY_URL))
             }
         } catch (e: Exception) {
             logger.error(e) { "Failed to extract and open documentation: ${e.message}" }

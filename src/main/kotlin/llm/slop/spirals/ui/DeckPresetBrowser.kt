@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImString
 import kotlinx.serialization.json.Json
+import llm.slop.spirals.config.ProjectConfig
 import llm.slop.spirals.models.DeckPatchDto
 import mu.KotlinLogging
 import java.io.File
@@ -210,7 +211,7 @@ class DeckPresetBrowser(
         if (filtered.isEmpty() && allPresets.isNotEmpty()) {
             ImGui.textDisabled("No presets match the current filter.")
         } else if (allPresets.isEmpty()) {
-            ImGui.textDisabled("No presets found in presets/patches/")
+            ImGui.textDisabled("No presets found in ${ProjectConfig.Paths.PATCHES_DIR}/")
         }
 
         ImGui.endChild()
@@ -304,7 +305,7 @@ class DeckPresetBrowser(
     // -- Preset scanning -------------------------------------------------------
 
     /**
-     * Reads all `.lsd` and `.json` files from `presets/patches/`, deserialises just enough
+     * Reads all `.lsd` and `.json` files from the configured patches directory, deserialises just enough
      * to extract the `tags` field, and rebuilds [allPresets] and [allTags].
      *
      * This runs on the render (main) thread -- file I/O is acceptable here
@@ -312,7 +313,7 @@ class DeckPresetBrowser(
      * every frame.
      */
     private fun scanPresets() {
-        val dir = File("presets/patches")
+        val dir = File(ProjectConfig.Paths.PATCHES_DIR)
         if (!dir.exists()) dir.mkdirs()
 
         val files = dir.listFiles { _, name -> name.endsWith(".lsd") || name.endsWith(".json") }

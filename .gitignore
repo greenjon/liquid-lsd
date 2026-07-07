@@ -1,6 +1,8 @@
 # Gradle
 .gradle/
+.kotlin/
 build/
+bin/
 !gradle-wrapper.jar
 
 # IntelliJ IDEA

@@ -1,5 +1,7 @@
 package llm.slop.spirals.ui
 
+import llm.slop.spirals.config.ProjectConfig
+import llm.slop.spirals.config.RuntimeConfig
 import llm.slop.spirals.patches.PlaylistParser
 import mu.KotlinLogging
 import java.io.File
@@ -15,10 +17,6 @@ import java.util.concurrent.ConcurrentHashMap
 object FileSystemManager {
     private val logger = KotlinLogging.logger {}
     
-    private const val PATCHES_ROOT = "presets/patches"
-    private const val PLAYLISTS_ROOT = "presets/playlists"
-    private const val SCAN_CACHE_TTL_MS = 1_000L
-
     private data class ScanCacheEntry(
         val signature: String,
         val cachedAtMs: Long,
@@ -70,7 +68,7 @@ object FileSystemManager {
         val signature = directorySignature(directory)
         val now = System.currentTimeMillis()
         scanCache[cacheKey]?.let { cached ->
-            if (cached.signature == signature && now - cached.cachedAtMs <= SCAN_CACHE_TTL_MS) {
+            if (cached.signature == signature && now - cached.cachedAtMs <= RuntimeConfig.AssetScan.CACHE_TTL_MS) {
                 return cached.items
             }
         }
@@ -306,7 +304,7 @@ object FileSystemManager {
      * Gets the root directory for patches.
      */
     fun getPatchesRoot(): File {
-        val root = File(PATCHES_ROOT)
+        val root = File(ProjectConfig.Paths.PATCHES_DIR)
         if (!root.exists()) {
             root.mkdirs()
         }
@@ -317,7 +315,7 @@ object FileSystemManager {
      * Gets the root directory for playlists.
      */
     fun getPlaylistsRoot(): File {
-        val root = File(PLAYLISTS_ROOT)
+        val root = File(ProjectConfig.Paths.PLAYLISTS_DIR)
         if (!root.exists()) {
             root.mkdirs()
         }

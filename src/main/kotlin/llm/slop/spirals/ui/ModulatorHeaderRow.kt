@@ -60,26 +60,13 @@ object ModulatorHeaderRow {
         // 1. Power icon (Active/Bypass button)
         val btnY2 = ImGui.getCursorScreenPosY()
         
-        // Push styled button colors: Green for active, Red for bypassed
-        val btnColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
-        val btnHoverColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
-        val btnActiveColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
-        
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
-        
-        if (ImGui.button("${Icons.POWER}##bypass_bar_$idx", btnWidth, btnHeight)) {
+        if (UITheme.iconButton("##bypass_bar_$idx", Icons.POWER, if (bypassed) "Enable modulator (Active)" else "Bypass modulator", active = !bypassed, width = btnWidth, height = btnHeight)) {
             onReplace(existing.copy(bypassed = !bypassed))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (bypassed) "Enable modulator (Active)" else "Bypass modulator")
-        }
-        ImGui.popStyleColor(3)
 
         // 2. Dice icon (Randomize button)
         ImGui.sameLine(0f, 10f)
-        if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
+        if (UITheme.iconButton("##rand_bar_$idx", Icons.DICES, "Randomize primary LFO / modulator values", width = btnWidth, height = btnHeight)) {
             val randomized = existing
                 .randomizeAmplitude()
                 .randomizeDcOffset()
@@ -87,9 +74,6 @@ object ModulatorHeaderRow {
                 .randomizePhaseOffset()
                 .randomizeSlope()
             onReplace(randomized)
-        }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize primary LFO / modulator values")
         }
         
         // 3. Operator dropdown (ADD/MUL/SCALE combo box)
@@ -127,21 +111,14 @@ object ModulatorHeaderRow {
                 ImGui.beginDisabled()
             }
             
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
-            if (ImGui.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
+            if (UITheme.iconButton("##reset_bar_$idx", Icons.TRASH, "Clear/reset modulators", width = resetWidth, height = btnHeight)) {
                 onReset()
-                ImGui.popStyleColor(2)
                 if (isVirtual) {
                     ImGui.endDisabled()
                 }
                 ImGui.unindent(10f)
                 return
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-                ImGui.setTooltip("Clear/reset modulators")
-            }
-            ImGui.popStyleColor(2)
             if (isVirtual) {
                 ImGui.endDisabled()
             }

@@ -2,6 +2,7 @@ package llm.slop.spirals.audio
 
 import llm.slop.spirals.cv.CVRegistry
 import llm.slop.spirals.cv.CvHistoryBuffer
+import llm.slop.spirals.config.ProjectConfig
 import java.nio.FloatBuffer
 import kotlin.math.max
 import kotlin.math.log10
@@ -364,15 +365,22 @@ object AudioEngine {
         accentLevel = 0f
         localOnsetMean = 0f
 
-        jackClient = JackClient("spirals-desktop") { buffer, nframes, sampleRate ->
+        jackClient = JackClient(ProjectConfig.App.JACK_CLIENT_NAME) { buffer, nframes, sampleRate ->
             processAudio(buffer, nframes, sampleRate)
         }
         val started = jackClient?.start() == true
         lastJackFailure = jackClient?.lastStartFailure
         lastJackFailureMessage = jackClient?.lastStartFailureMessage
-        if (!started && lastJackFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) {
+        if (!started) {
+            jackClient?.stop()
+            jackClient = null
             automaticReconnectEnabled = false
-            logger.warn { "Automatic JACK reconnect disabled until manual retry; native library is missing." }
+            val reason = when (lastJackFailure) {
+                JackStartFailure.NATIVE_LIBRARY_MISSING -> "native library is missing"
+                JackStartFailure.CONNECTION_FAILED -> "server connection failed"
+                null -> "startup failed"
+            }
+            logger.warn { "Automatic JACK reconnect disabled until manual retry; $reason." }
         }
     }
 

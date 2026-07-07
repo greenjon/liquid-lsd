@@ -6,6 +6,7 @@ import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiTableColumnFlags
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImBoolean
+import llm.slop.spirals.config.ProjectConfig
 
 /**
  * Modal settings overlay. Call [open] when the menu item is clicked.
@@ -239,7 +240,7 @@ object SettingsPanel {
         }
         ImGui.spacing()
 
-        val midiDir = java.io.File("presets/midi")
+        val midiDir = java.io.File(ProjectConfig.Paths.MIDI_DIR)
         val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
             .map { it.nameWithoutExtension }
             .toMutableList()

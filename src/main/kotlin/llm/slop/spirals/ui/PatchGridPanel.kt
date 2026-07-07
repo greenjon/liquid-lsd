@@ -147,93 +147,41 @@ object PatchGridPanel {
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
         val mousePos = ImGui.getIO().mousePos
-        
-        // Calculate the maximum height needed for the vertical labels
-        var maxH = 0f
-        val cvLabelsVertical = getCvLabels().map { it.toList().joinToString("\n") }
-        UITheme.withFont(UITheme.FontLevel.CAPTION) {
-            for (label in cvLabelsVertical) {
-                val h = ImGui.calcTextSize(label).y
-                if (h > maxH) maxH = h
-            }
-            val hFinal = ImGui.calcTextSize("F\nI\nN\nA\nL").y
-            val hMidi = ImGui.calcTextSize("M\nI\nD\nI").y
-            if (hFinal > maxH) maxH = hFinal
-            if (hMidi > maxH) maxH = hMidi
-        }
-        val headerH = (maxH + 5f).coerceAtLeast(40f)
+        val headerH = 28f
         
         // Reserve vertical space for headers
         ImGui.dummy(10f, headerH)
         val afterHeadersY = ImGui.getCursorScreenPosY()
         
-        val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
+        val lineCol = UITheme.colorU32(UITheme.Colors.BORDER_R, UITheme.Colors.BORDER_G, UITheme.Colors.BORDER_B, 0.55f)
         val bottomY = startY + ImGui.getWindowHeight() // align to parent window height
         
-        // Draw FINAL header
         val finalColX = startX + labelColW + getColumnOffset("final")
         dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
-        
-        val isFinalHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
-        if (isFinalHovered) {
-            dl.addRectFilled(finalColX, startY, finalColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
-        }
-        
-        var twFinal = 0f
-        val labelFinal = "F\nI\nN\nA\nL"
-        UITheme.withFont(UITheme.FontLevel.CAPTION) { twFinal = ImGui.calcTextSize(labelFinal).x }
-        var offsetX = ((CELL - twFinal) * 0.5f).coerceAtLeast(0f)
-        ImGui.setCursorScreenPos(finalColX + offsetX, startY)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("final"))
-        UITheme.caption(labelFinal)
-        ImGui.popStyleColor()
-        val isFinalHeaderHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        val isFinalHeaderHovered = drawHeaderBadge(dl, finalColX, startY, "VAL", getCvColor("final"), mousePos)
         if (isFinalHeaderHovered && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("FINAL: Base parameter value and modulation bounds/limits.")
         }
 
-        // Draw MIDI header
         val midiColX = startX + labelColW + getColumnOffset("midi")
         dl.addLine(midiColX - CELL_PAD * 0.5f, startY, midiColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
-        
-        val isMidiHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
-        if (isMidiHovered) {
-            dl.addRectFilled(midiColX, startY, midiColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
-        }
-        
-        var twMidi = 0f
-        val labelMidi = "M\nI\nD\nI"
-        UITheme.withFont(UITheme.FontLevel.CAPTION) { twMidi = ImGui.calcTextSize(labelMidi).x }
-        offsetX = ((CELL - twMidi) * 0.5f).coerceAtLeast(0f)
-        ImGui.setCursorScreenPos(midiColX + offsetX, startY)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("midi"))
-        UITheme.caption(labelMidi)
-        ImGui.popStyleColor()
-        val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        val isMidiHeaderHovered = drawHeaderBadge(dl, midiColX, startY, "MIDI", getCvColor("midi"), mousePos)
         if (isMidiHeaderHovered && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("MIDI: Map MIDI CC/Notes from controllers to modulate this parameter.")
         }
 
-        // Draw each column header vertically
         val cvCols = getCvColumns()
-        for ((idx, label) in cvLabelsVertical.withIndex()) {
+        val cvLabels = getCvLabels()
+        for ((idx, label) in cvLabels.withIndex()) {
             val cvId = cvCols[idx]
             val colX = startX + labelColW + getColumnOffset(cvId)
             dl.addLine(colX - CELL_PAD * 0.5f, startY, colX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
-            
-            val isCvHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
-            if (isCvHovered) {
-                dl.addRectFilled(colX, startY, colX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+            val compactLabel = when (label) {
+                "AUDIO" -> "AUD"
+                "TRIG" -> "TRG"
+                else -> label
             }
-            
-            var tw = 0f
-            UITheme.withFont(UITheme.FontLevel.CAPTION) { tw = ImGui.calcTextSize(label).x }
-            val offX = ((CELL - tw) * 0.5f).coerceAtLeast(0f)
-            ImGui.setCursorScreenPos(colX + offX, startY)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor(cvId))
-            UITheme.caption(label)
-            ImGui.popStyleColor()
-            val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+            val isCvHeaderHovered = drawHeaderBadge(dl, colX, startY, compactLabel, getCvColor(cvId), mousePos)
             if (isCvHeaderHovered && UITheme.tooltipsEnabled) {
                 val cvDesc = when (cvId) {
                     "gen1" -> "LFO: Synthetic low-frequency oscillator waveforms (Sine, Triangle, Square, Random)."
@@ -252,6 +200,30 @@ object PatchGridPanel {
         
         // Restore cursor to where the dummy left off
         ImGui.setCursorScreenPos(startX, afterHeadersY)
+    }
+
+    private fun drawHeaderBadge(dl: ImDrawList, x: Float, y: Float, label: String, color: Int, mousePos: imgui.ImVec2): Boolean {
+        val badgeY = y + 4f
+        val badgeH = 20f
+        val hovered = mousePos.x >= x && mousePos.x <= (x + CELL) && mousePos.y >= y && mousePos.y <= (y + 28f)
+        val bgAlpha = if (hovered) 0.26f else 0.16f
+        val bgCol = UITheme.colorU32(1f, 1f, 1f, bgAlpha)
+
+        dl.addRectFilled(x + 1f, badgeY, x + CELL - 1f, badgeY + badgeH, bgCol, 4f)
+
+        var textW = 0f
+        var textH = 0f
+        UITheme.withFont(UITheme.FontLevel.CAPTION) {
+            val size = ImGui.calcTextSize(label)
+            textW = size.x
+            textH = size.y
+        }
+
+        ImGui.setCursorScreenPos(x + ((CELL - textW) * 0.5f).coerceAtLeast(1f), badgeY + ((badgeH - textH) * 0.5f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, color)
+        UITheme.caption(label)
+        ImGui.popStyleColor()
+        return hovered
     }
 }
 

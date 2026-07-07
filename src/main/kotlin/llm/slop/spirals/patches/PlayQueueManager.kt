@@ -2,6 +2,7 @@ package llm.slop.spirals.patches
 
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.rendering.Deck
+import llm.slop.spirals.config.ProjectConfig
 import llm.slop.spirals.ui.UITheme
 import mu.KotlinLogging
 import java.io.File
@@ -354,7 +355,7 @@ object PlayQueueManager {
                 val activeName = if (targetIsA) PatchManager.activePresetA else PatchManager.activePresetB
                 val saveName = activeName ?: "AutoVJ_${if (targetIsA) "A" else "B"}_${System.currentTimeMillis()}"
                 logger.info { "AutoVJ: Autosaving dirty deck to $saveName" }
-                PatchManager.saveDeckPresetAsync(File("presets/patches/$saveName.lsd"), targetDeck, saveName)
+                PatchManager.saveDeckPresetAsync(File(ProjectConfig.Paths.PATCHES_DIR, "$saveName.lsd"), targetDeck, saveName)
                 true
             }
             UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {

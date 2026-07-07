@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
 import imgui.flag.ImGuiCol
+import llm.slop.spirals.config.ProjectConfig
 import llm.slop.spirals.rendering.Deck
 import llm.slop.spirals.rendering.Mixer
 import llm.slop.spirals.patches.PatchManager
@@ -46,7 +47,7 @@ class PopupManager(
                     ImGuiWindowFlags.NoMove            or
                     ImGuiWindowFlags.NoCollapse
 
-        if (ImGui.beginPopupModal("Exit Spirals?##confirm", flags)) {
+        if (ImGui.beginPopupModal("${ProjectConfig.App.EXIT_CONFIRM_TITLE}##confirm", flags)) {
             ImGui.text("Are you sure you want to exit?")
             ImGui.text("Accidentally exiting during a show would be bad!")
             ImGui.spacing()
