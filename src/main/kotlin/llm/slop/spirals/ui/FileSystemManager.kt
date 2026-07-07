@@ -3,6 +3,7 @@ package llm.slop.spirals.ui
 import mu.KotlinLogging
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 /**
@@ -14,6 +15,24 @@ object FileSystemManager {
     
     private const val PATCHES_ROOT = "presets/patches"
     private const val PLAYLISTS_ROOT = "presets/playlists"
+
+    private fun managedRootPaths(): List<Path> {
+        return listOf(getPatchesRoot(), getPlaylistsRoot())
+            .map { it.canonicalFile.toPath() }
+    }
+
+    internal fun isManagedAssetPath(file: File): Boolean {
+        val candidate = file.canonicalFile.toPath()
+        return managedRootPaths().any { root -> candidate == root || candidate.startsWith(root) }
+    }
+
+    private fun requireManagedAssetPath(file: File): Result<Unit>? {
+        return if (isManagedAssetPath(file)) {
+            null
+        } else {
+            Result.failure(IllegalArgumentException("Path is outside managed asset roots: ${file.path}"))
+        }
+    }
     
     /**
      * Scans a directory and returns all assets (patches, playlists, folders).
@@ -133,8 +152,10 @@ object FileSystemManager {
             if (!oldFile.exists()) {
                 return Result.failure(IllegalArgumentException("File does not exist: $oldPath"))
             }
+            requireManagedAssetPath(oldFile)?.let { return it.map { oldPath } }
             
             val newFile = File(oldFile.parent, "$newName.${oldFile.extension}")
+            requireManagedAssetPath(newFile)?.let { return it.map { newFile.absolutePath } }
             if (newFile.exists()) {
                 return Result.failure(IllegalArgumentException("File already exists: ${newFile.name}"))
             }
@@ -160,6 +181,7 @@ object FileSystemManager {
             if (!sourceFile.exists()) {
                 return Result.failure(IllegalArgumentException("Source file does not exist"))
             }
+            requireManagedAssetPath(sourceFile)?.let { return it.map { sourcePath } }
             
             val baseName = sourceFile.nameWithoutExtension
             val extension = sourceFile.extension
@@ -175,6 +197,7 @@ object FileSystemManager {
                 targetFile = File(sourceFile.parent, copyName)
                 copyIndex++
             } while (targetFile.exists())
+            requireManagedAssetPath(targetFile)?.let { return it.map { targetFile.absolutePath } }
             
             Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES)
             logger.info { "Cloned ${sourceFile.name} to ${targetFile.name}" }
@@ -196,12 +219,15 @@ object FileSystemManager {
             if (!sourceFile.exists()) {
                 return Result.failure(IllegalArgumentException("Source file does not exist"))
             }
+            requireManagedAssetPath(sourceFile)?.let { return it.map { sourcePath } }
             
             if (!targetDir.exists() || !targetDir.isDirectory) {
                 return Result.failure(IllegalArgumentException("Target directory does not exist"))
             }
+            requireManagedAssetPath(targetDir)?.let { return it.map { targetDirectory } }
             
             val targetFile = File(targetDir, sourceFile.name)
+            requireManagedAssetPath(targetFile)?.let { return it.map { targetFile.absolutePath } }
             if (targetFile.exists()) {
                 return Result.failure(IllegalArgumentException("File already exists in target directory"))
             }
@@ -224,6 +250,7 @@ object FileSystemManager {
             if (!file.exists()) {
                 return Result.failure(IllegalArgumentException("File does not exist"))
             }
+            requireManagedAssetPath(file)?.let { return it }
             
             if (file.delete()) {
                 logger.info { "Deleted ${file.name}" }
@@ -246,8 +273,10 @@ object FileSystemManager {
             if (!parentDir.exists() || !parentDir.isDirectory) {
                 return Result.failure(IllegalArgumentException("Parent directory does not exist"))
             }
+            requireManagedAssetPath(parentDir)?.let { return it.map { parentPath } }
             
             val newDir = File(parentDir, name)
+            requireManagedAssetPath(newDir)?.let { return it.map { newDir.absolutePath } }
             if (newDir.exists()) {
                 return Result.failure(IllegalArgumentException("Directory already exists"))
             }
