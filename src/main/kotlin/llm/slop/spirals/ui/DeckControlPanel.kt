@@ -132,8 +132,8 @@ class DeckControlPanel(
         
         val inset = 3f
         val imgAvailW = panelW - (inset * 2f)
-        val imgAvailH = imgAvailW * (9f / 16f)
-        val childH = imgAvailH + 10f
+        val childH = previewH.coerceAtLeast(20f)
+        val imgAvailH = (childH - 10f).coerceAtMost(imgAvailW * (9f / 16f)).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
         ImGui.beginChild("Child_$label", panelW, childH, false)
