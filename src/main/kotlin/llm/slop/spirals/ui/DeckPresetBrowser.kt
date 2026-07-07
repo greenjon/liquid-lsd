@@ -56,6 +56,13 @@ class DeckPresetBrowser(
     private val saveAsName = ImString(64)
     private val saveAsTags = ImString(128)   // comma-separated
 
+    private companion object {
+        private const val POPUP_W = 400f
+        private const val POPUP_H = 800f
+        private const val SAVE_AS_W = 360f
+        private const val POPUP_MARGIN = 48f
+    }
+
     // -- Public API ------------------------------------------------------------
 
     /** Schedule the browser to open on the next [draw] call. */
@@ -86,10 +93,15 @@ class DeckPresetBrowser(
             pendingOpen = false
         }
 
-        ImGui.setNextWindowSize(400f, 800f, imgui.flag.ImGuiCond.Always)
+        val displayW = ImGui.getIO().displaySizeX
+        val displayH = ImGui.getIO().displaySizeY
+        val popupW = POPUP_W.coerceAtMost((displayW - POPUP_MARGIN).coerceAtLeast(280f))
+        val popupH = POPUP_H.coerceAtMost((displayH - POPUP_MARGIN).coerceAtLeast(360f))
+
+        ImGui.setNextWindowSize(popupW, popupH, imgui.flag.ImGuiCond.Always)
         ImGui.setNextWindowPos(
-            ImGui.getIO().displaySizeX * 0.5f,
-            ImGui.getIO().displaySizeY * 0.5f,
+            displayW * 0.5f,
+            displayH * 0.5f,
             imgui.flag.ImGuiCond.Always,
             0.5f, 0.5f
         )
@@ -116,7 +128,7 @@ class DeckPresetBrowser(
     private fun drawSearchBar() {
         ImGui.text("Search:")
         ImGui.sameLine()
-        ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 70f)
+        ImGui.pushItemWidth((ImGui.getContentRegionAvailX() - 70f).coerceAtLeast(80f))
         ImGui.inputText("##search$deckLabel", searchInput)
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to search presets by name.")
@@ -172,7 +184,7 @@ class DeckPresetBrowser(
         onSelect: (String?) -> Unit
     ) {
         val footerHeight = ImGui.getFrameHeightWithSpacing() + 15f
-        val listH = ImGui.getContentRegionAvailY() - footerHeight
+        val listH = (ImGui.getContentRegionAvailY() - footerHeight).coerceAtLeast(ImGui.getFrameHeightWithSpacing() * 3f)
         ImGui.beginChild("##presetList$deckLabel", ImGui.getContentRegionAvailX(), listH, false)
 
         val filtered = filteredPresets()
@@ -236,7 +248,8 @@ class DeckPresetBrowser(
             showSaveAs = false
         }
 
-        ImGui.setNextWindowSize(360f, 0f, imgui.flag.ImGuiCond.Appearing)
+        val saveAsW = SAVE_AS_W.coerceAtMost((ImGui.getIO().displaySizeX - POPUP_MARGIN).coerceAtLeast(260f))
+        ImGui.setNextWindowSize(saveAsW, 0f, imgui.flag.ImGuiCond.Appearing)
         val flags = ImGuiWindowFlags.AlwaysAutoResize or ImGuiWindowFlags.NoMove
         if (!ImGui.beginPopupModal(saveAsId, flags)) return
 
