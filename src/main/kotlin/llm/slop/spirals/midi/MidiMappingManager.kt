@@ -11,6 +11,34 @@ import kotlinx.serialization.encodeToString
 import mu.KotlinLogging
 import java.io.File
 
+private val safeProfileCharacter = Regex("[^A-Za-z0-9._-]")
+private val repeatedUnderscores = Regex("_+")
+
+internal fun sanitizeMidiProfileName(profileName: String): String {
+    val sanitized = profileName.trim()
+        .replace('\\', '_')
+        .replace('/', '_')
+        .replace(safeProfileCharacter, "_")
+        .replace(repeatedUnderscores, "_")
+        .trim('.', '_', '-')
+        .take(80)
+
+    return sanitized.ifBlank { "default" }
+}
+
+internal fun midiProfileFile(midiDir: File, profileName: String): File {
+    val safeName = sanitizeMidiProfileName(profileName)
+    val file = File(midiDir, "$safeName.json")
+    val rootPath = midiDir.canonicalFile.toPath()
+    val filePath = file.canonicalFile.toPath()
+
+    require(filePath.startsWith(rootPath)) {
+        "MIDI profile path escapes presets/midi: $profileName"
+    }
+
+    return file
+}
+
 @Serializable
 data class MidiControlMapping(
     val cc: Int,
@@ -41,26 +69,27 @@ object MidiMappingManager {
     }
 
     fun loadProfile(profileName: String) {
-        val file = File(midiDir, "$profileName.json")
+        val safeProfileName = sanitizeMidiProfileName(profileName)
+        val file = midiProfileFile(midiDir, safeProfileName)
         if (file.exists()) {
             try {
                 val content = file.readText()
                 activeProfile = json.decodeFromString<MidiMappingProfile>(content)
-                activeProfileName = profileName
-                logger.info { "Loaded MIDI mapping profile: $profileName" }
+                activeProfileName = safeProfileName
+                logger.info { "Loaded MIDI mapping profile: $safeProfileName" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to load MIDI profile: $profileName" }
+                logger.error(e) { "Failed to load MIDI profile: $safeProfileName" }
             }
         } else {
             // Create default empty profile
-            activeProfile = MidiMappingProfile(profileName)
-            activeProfileName = profileName
+            activeProfile = MidiMappingProfile(safeProfileName)
+            activeProfileName = safeProfileName
             saveActiveProfile()
         }
     }
 
     fun saveActiveProfile() {
-        val file = File(midiDir, "$activeProfileName.json")
+        val file = midiProfileFile(midiDir, activeProfileName)
         try {
             val content = json.encodeToString(activeProfile)
             file.writeText(content)
