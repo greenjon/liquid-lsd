@@ -18,8 +18,18 @@ class MixerMonitorPanel(
     private var pendingRightDragFrom: String? = null
 
     fun draw(mixer: Mixer) {
-        val availW = ImGui.getContentRegionAvailX()
-        val masterH = availW * (9f / 16f)
+        val style = ImGui.getStyle()
+        val layout = MixerMonitorLayoutCalculator.calculate(
+            windowWidth = ImGui.getWindowWidth(),
+            availableHeight = ImGui.getContentRegionAvailY(),
+            windowPaddingX = style.getWindowPaddingX(),
+            scrollbarWidth = style.getScrollbarSize(),
+            textLineHeightWithSpacing = ImGui.getTextLineHeightWithSpacing(),
+            frameHeightWithSpacing = ImGui.getFrameHeightWithSpacing(),
+            itemSpacingY = style.getItemSpacingY()
+        )
+        val availW = layout.contentWidth
+        val masterH = layout.masterHeight
 
         val imgScreenX = ImGui.getCursorScreenPosX()
         val imgScreenY = ImGui.getCursorScreenPosY()
@@ -140,7 +150,7 @@ class MixerMonitorPanel(
         ImGui.spacing()
         
         // --- Render the exact exact child panels ---
-        val subH = halfW * (9f / 16f)
+        val subH = layout.deckChildHeight
         
         val childY = ImGui.getCursorScreenPosY()
         
@@ -158,7 +168,7 @@ class MixerMonitorPanel(
         
         // Push Deck C monitor to the bottom of the panel
         val contentHeightRemaining = ImGui.getContentRegionAvailY()
-        val deckCHeightNeeded = masterH + ImGui.getFrameHeightWithSpacing() * 2f + 20f
+        val deckCHeightNeeded = layout.deckCHeight + ImGui.getFrameHeightWithSpacing() * 2f + 20f
         
         if (contentHeightRemaining > deckCHeightNeeded) {
             ImGui.setCursorPosY(ImGui.getCursorPosY() + (contentHeightRemaining - deckCHeightNeeded))
@@ -203,10 +213,10 @@ class MixerMonitorPanel(
         val imgX = ImGui.getCursorScreenPosX()
         val imgY = ImGui.getCursorScreenPosY()
         
-        ImGui.image(mixer.deckC.getOutputTexture(), availW, masterH, 0f, 1f, 1f, 0f)
+        ImGui.image(mixer.deckC.getOutputTexture(), availW, layout.deckCHeight, 0f, 1f, 1f, 0f)
 
         ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.invisibleButton("##drag_source_C", availW, masterH)
+        ImGui.invisibleButton("##drag_source_C", availW, layout.deckCHeight)
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop patch files to load.")
         }
@@ -272,7 +282,7 @@ class MixerMonitorPanel(
 
         val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
         val dlPreview = ImGui.getWindowDrawList()
-        dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + availW + 1f, imgY + masterH + 1f, deckCColor, 0f, 0, 2f)
+        dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + availW + 1f, imgY + layout.deckCHeight + 1f, deckCColor, 0f, 0, 2f)
     }
 
     fun drawFlatSlider(

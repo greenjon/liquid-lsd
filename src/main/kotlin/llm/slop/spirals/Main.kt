@@ -192,6 +192,8 @@ fun main() {
 
     val w = IntArray(1)
     val h = IntArray(1)
+    val windowW = IntArray(1)
+    val windowH = IntArray(1)
     val sw = IntArray(1)
     val sh = IntArray(1)
 
@@ -222,8 +224,10 @@ fun main() {
         // Update all global CV signals
         CVRegistry.updateAll()
 
-        // Get framebuffer size
+        // Get framebuffer size for OpenGL and window size for ImGui layout.
+        // ImGui GLFW coordinates are logical window units, not framebuffer pixels.
         glfwGetFramebufferSize(window, w, h)
+        glfwGetWindowSize(window, windowW, windowH)
 
         // 0. Update MIDI mappings
         llm.slop.spirals.midi.MidiMappingManager.update(mixer)
@@ -268,7 +272,7 @@ fun main() {
         }
 
         // === UI PHASE ===
-        uiManager.render(mixer, w[0].toFloat(), h[0].toFloat())
+        uiManager.render(mixer, windowW[0].toFloat(), windowH[0].toFloat())
 
         glfwSwapBuffers(window)
 
