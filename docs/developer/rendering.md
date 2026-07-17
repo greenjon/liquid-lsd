@@ -54,3 +54,16 @@ dynamic visual sources loaded at runtime from `presets/sources/`.
   Clones assigned to Decks share the shader reference but do not dispose it.
 - **Error Fallback**: If a custom shader fails to compile, a red checkerboard fallback shader is used
   so the rest of the application keeps running.
+
+### KIFS Visual Source (`Kifs.kt`)
+
+The KIFS (Kaleidoscopic Iterated Function System) visual source is a specialized subclass of `DynamicVisualSource` that generates complex fractal geometry using CPU-side mathematical folding operations:
+
+- **Dynamic Fold Angles**: Instead of passing raw parameters directly to uniforms, `Kifs` intercept parameter binding inside `setupUniforms` to dynamically calculate combined 3D fold angles (`uFoldAngleX`, `uFoldAngleY`, `uFoldAngleZ`).
+- **Symmetry Interpolation**: It reads the `Shape Morph` parameter (clamped to `[0f, 1f]` and scaled to `[0f, 4f]`) to smoothly interpolate the base geometry between classic polyhedral symmetries:
+  - **Cube Symmetry** (morph < 1.0): Interpolates between Cube angles `(0, 0.7854, 0)` and Sphere transition angles `(0, 1.0082, 1.0472)`.
+  - **Tetrahedron Symmetry** (morph < 2.0): Interpolates between Sphere transition angles and Tetrahedron angles `(0, 1.231, 2.0944)`.
+  - **Dodecahedron Symmetry** (morph < 3.0): Interpolates between Tetrahedron angles and Dodecahedron (Icosahedral) angles `(2.0344, 0, 2.4119)`.
+  - **Soccer Ball Symmetry** (morph >= 3.0): Uses the exact same Icosahedral symmetry angles as the Dodecahedron.
+- **User Offset**: The user's manual settings for `Fold Angle X`, `Y`, and `Z` are added as offsets directly to the calculated base symmetry angles before binding.
+- **Cloning**: Implements a custom deep-copy `clone()` method for parameter maps while ensuring that the cloned source safely references the master compiled shader without taking ownership of it.

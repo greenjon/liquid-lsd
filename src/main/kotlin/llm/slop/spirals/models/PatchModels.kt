@@ -289,7 +289,8 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
 )
 
 fun ModulatorDto.toDomain(): CvModulator = CvModulator(
-    sourceId = sourceId,
+    // Migrate legacy source IDs from older patch versions
+    sourceId = when (sourceId) { "gen1", "gen2" -> "lfo"; else -> sourceId },
     operator = ModulationOperator.valueOf(operator),
     amplitude = amplitude,
     bypassed = bypassed,

@@ -8,7 +8,7 @@ object ClipboardManager {
     var cellClipboard: CellClipboardData? = null
     var rowClipboard: RowClipboardData? = null
 
-    private val GENERATORS = listOf("beatPhase", "lfo", "sampleAndHold", "gen1", "gen2")
+    private val GENERATORS = listOf("beatPhase", "lfo", "sampleAndHold")
 
     fun mapModulatorToDestination(dto: ModulatorDto, destCvId: String): ModulatorDto {
         val mappedSourceId = when (destCvId) {

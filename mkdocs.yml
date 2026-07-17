@@ -37,4 +37,5 @@ nav:
     - Real-Time Audio & DSP: developer/audio_dsp.md
     - Beat Sync & Stability: developer/beat_sync.md
     - OpenGL Rendering: developer/rendering.md
+    - Patch & Queue Management: developer/patch_management.md
   - Operations & Tuning: developer/ops_tuning.md

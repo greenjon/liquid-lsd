@@ -25,24 +25,11 @@ object CVRegistry {
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
 
     init {
-        // Register default audio-derived CV signals
-        // register(MutableCVSource("amp"))
-        // register(MutableCVSource("bass"))
-        // register(MutableCVSource("mid"))
-        // register(MutableCVSource("high"))
-        // register(MutableCVSource("onset"))
-        // register(MutableCVSource("accent"))
         register(MutableCVSource("bpm", 120f))
-
-        // Register default generator CV signals
-        // register(BeatClock())
         register(BeatSine())
-        // register(LFO())
-        // register(SampleAndHold())
 
-        // Register new unified modulators
-        register(GenCVSource("gen1"))
-        // register(GenCVSource("gen2"))
+        // LFO: unified generator — evaluates time-based or beat-based waveforms per CvModulator
+        register(GenCVSource("lfo"))
 
         register(MutableCVSource("audio_amp"))
         register(MutableCVSource("audio_bass"))

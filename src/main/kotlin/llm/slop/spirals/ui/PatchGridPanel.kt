@@ -29,17 +29,17 @@ object PatchGridPanel {
 
     private fun getCvColumns(): List<String> {
         return if (UITheme.audioEngineEnabled) {
-            listOf("gen1", /*"gen2",*/ "audio", "trigger")
+            listOf("lfo", "audio", "trigger")
         } else {
-            listOf("gen1" /*, "gen2"*/)
+            listOf("lfo")
         }
     }
 
     private fun getCvLabels(): List<String> {
         return if (UITheme.audioEngineEnabled) {
-            listOf("LFO", /*"GEN 2",*/ "AUDIO", "TRIG")
+            listOf("LFO", "AUDIO", "TRIG")
         } else {
-            listOf("LFO" /*, "GEN 2"*/)
+            listOf("LFO")
         }
     }
 
@@ -68,8 +68,6 @@ object PatchGridPanel {
             "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
             "midi"           -> ImGui.colorConvertFloat4ToU32(0.7f, 0.3f, 1.0f, alpha)
             // Synthetic / Generators
-            "gen1"           -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 1.0f, alpha)
-            "gen2"           -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 0.7f, alpha)
             "lfo"            -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 1.0f, alpha)
             "sampleAndHold"  -> ImGui.colorConvertFloat4ToU32(0.7f, 0.4f, 1.0f, alpha)
             "beatPhase"      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 1.0f, alpha)
@@ -236,7 +234,7 @@ object PatchGridPanel {
             val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
             if (isCvHeaderHovered && UITheme.tooltipsEnabled) {
                 val cvDesc = when (cvId) {
-                    "gen1" -> "LFO: Synthetic low-frequency oscillator waveforms (Sine, Triangle, Square, Random)."
+                    "lfo" -> "LFO: Synthetic low-frequency oscillator waveforms (Sine, Triangle, Square, Random)."
                     "audio" -> "AUDIO: Modulator envelopes tracked from input audio frequency bands (Bass, Mid, High, Amplitude)."
                     "trigger" -> "TRIGGER: Modulator envelopes tracked from transient onsets or peak accents."
                     else -> "CV Modulator source."

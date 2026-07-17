@@ -287,7 +287,7 @@ object PatchGridRenderer {
                     else -> "Unmapped: Click to route this modulation source."
                 }
                 val modSource = when (cvId) {
-                    "gen1" -> "LFO / Oscillator"
+                    "lfo" -> "LFO / Oscillator"
                     "audio" -> "Audio Envelope Follower"
                     "trigger" -> "Transient Trigger"
                     else -> cvId

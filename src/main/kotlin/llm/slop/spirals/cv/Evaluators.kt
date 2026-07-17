@@ -85,25 +85,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
             calculateRandomWaveform(positivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
         }
         "lfo" -> {
-            val seconds = CVRegistry.getElapsedRealtimeSec()
-            val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
-
-            val localPhase = ((seconds / period) + modulator.phaseOffset) % 1.0
-            val positivePhase = if (localPhase < 0.0) localPhase + 1.0 else localPhase
-            if (modulator.waveform == Waveform.RANDOM) {
-                val cyclePosition = (seconds / period) + modulator.phaseOffset
-                val currentCycle = kotlin.math.floor(cyclePosition).toInt()
-                val previousCycle = currentCycle - 1
-                val seed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.id.hashCode()
-                val currentValue = randomFloatFromSeed((currentCycle + seed).toLong())
-                val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
-                calculateRandomWaveform(positivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
-            } else {
-                calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
-            }
-        }
-        "gen1", "gen2" -> {
-            // 1. Evaluate internal modulator LFO (LFO 2) if active
+            // Full LFO / generator: time-based or beat-based clocking (GenUnit), with optional LFO2 modulation (AM/PM/ADD).
             val modVal = if (modulator.generatorModMode != llm.slop.spirals.parameters.GeneratorModMode.NONE) {
                 if (modulator.modGenUnit == GenUnit.TIME) {
                     val seconds = CVRegistry.getElapsedRealtimeSec()

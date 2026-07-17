@@ -94,7 +94,7 @@ object CellConfigPanel {
         val isBeat = cvId == "beatPhase"
         val isLfo = cvId == "lfo"
         val isSnh = cvId == "sampleAndHold"
-        val isGen = cvId == "gen1" || cvId == "gen2"
+        val isGen = cvId == "lfo"
         val isAudio = cvId == "audio"
         val isTrigger = cvId == "trigger"
         val hasAdvanced = isBeat || isLfo || isSnh || isGen

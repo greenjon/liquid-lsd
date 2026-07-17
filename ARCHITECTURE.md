@@ -1,7 +1,8 @@
 # Spirals Desktop — Architecture
 
-Linux desktop VJ software. Real-time audio-reactive parametric mandala visuals, dual-deck mixer,
-CV modulation matrix. Built with Kotlin/JVM, OpenGL 3.3, ImGui, and JACK audio.
+Cross-platform VJ software (Linux x64/ARM64, macOS x64/ARM64, Windows x64). Real-time
+audio-reactive parametric mandala visuals, three-deck mixer with preview deck, CV modulation
+matrix. Built with Kotlin/JVM, OpenGL 3.3, ImGui, and JACK audio (Linux only).
 
 ## Video Pipeline
 
@@ -10,20 +11,23 @@ JACK Audio ──► AudioEngine ──► CVRegistry
                                     │  (every frame: updateAll)
                          ┌──────────┴──────────┐
                       Deck A                Deck B
-                   (Mandala source)     (Mandala source)
+                   (live output)         (live output)
                          │                    │
-               ModulatableParams          ModulatableParams
-               evaluated via CV          evaluated via CV
+               ModulatableParams        ModulatableParams
+               evaluated via CV         evaluated via CV
                          │                    │
                     cleanFBO             cleanFBO
                          │                    │
-                   feedback.frag         feedback.frag
-                   (ping-pong FBOs)      (ping-pong FBOs)
+               feedback.frag           feedback.frag
+               (ping-pong FBOs)        (ping-pong FBOs)
                          └──────────┬──────────┘
                                 Mixer.kt
                               mixer.frag
                                   │
                              masterFBO ──► screen
+
+Deck C  (preview only — same pipeline as A/B, excluded from Mixer output)
+   └── used to build/audition patches while A and B are performing live
 ```
 
 ## File Map
@@ -32,7 +36,7 @@ JACK Audio ──► AudioEngine ──► CVRegistry
 src/main/kotlin/llm/slop/spirals/
 ├── Main.kt                     — GLFW window, render loop
 ├── audio/
-│   ├── AudioEngine.kt          — JACK lifecycle, pushes CV values
+│   ├── AudioEngine.kt          — JACK lifecycle, pushes CV values (Linux only)
 │   ├── JackClient.kt           — JNAJack callback wrapper
 │   ├── DSP.kt                  — Band-split FFT, RMS, onset detection
 │   ├── BiquadFilter.kt         — Zero-alloc biquad IIR filter
@@ -41,14 +45,14 @@ src/main/kotlin/llm/slop/spirals/
 │   ├── CVRegistry.kt           — Singleton: all CV sources, beat sync, histories
 │   ├── CVSource.kt             — Interface: id, value, update()
 │   ├── BeatClock.kt            — Beat phase 0..1, JACK-synced
-│   ├── Evaluators.kt           — Evaluators for CV, LFO, and S&H
-│   ├── GenCVSource.kt          — Writable CV for generators
+│   ├── Evaluators.kt           — Evaluators for lfo, beatPhase, sampleAndHold, audio
+│   ├── GenCVSource.kt          — Registry placeholder for the lfo generator
 │   └── CvHistoryBuffer.kt      — Ring buffer (200 samples)
 ├── midi/
 │   ├── MidiEngine.kt           — MIDI connection and event polling
 │   └── MidiMappingManager.kt   — Maps MIDI CC to UI/parameters
 ├── models/
-│   └── PatchModels.kt          — Data models for patch serialization
+│   └── PatchModels.kt          — Data models + DTOs for patch serialization
 ├── parameters/
 │   └── Parameter.kt            — ModulatableParameter, CvModulator,
 │                                  ModulationOperator, Waveform, LfoSpeedMode
@@ -62,18 +66,20 @@ src/main/kotlin/llm/slop/spirals/
 │   │                             Mandala (VisualSource with all params)
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params
-│   ├── Mixer.kt                — Blends Deck A+B → masterFBO
+│   │                             (Deck A & B → live output; Deck C → preview only)
+│   ├── Mixer.kt                — Blends Deck A+B → masterFBO (Deck C excluded)
 │   ├── Renderer.kt             — Per-frame: source → feedback → mix → blit
-│   ├── VisualSource.kt         — Interface (Mandala, future: video/3D)
+│   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
-│   ├── DynamicVisualSource.kt  — Wraps loaded shaders
+│   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders
+│   ├── Kifs.kt                 — Kaleidoscopic IFS visual source
 │   ├── Shader.kt               — GLSL shader compilation/management
 │   ├── Geometry.kt             — Vertex buffers, basic shapes
 │   └── FBO.kt                  — OpenGL framebuffer wrapper
-├── ui/
-│   ├── UIManager.kt            — Layout: PatchGrid (L 40%) | CellConfig (M 30%) | Mixer (R 30%)
+├── ui/                         — 34 files; see docs/developer/ui.md
+│   ├── UIManager.kt            — Top-level layout orchestrator
 │   ├── PatchGridPanel.kt       — Modulation matrix: param rows × CV columns
-│   ├── CellConfigPanel.kt      — Edits one CvModulator with lazy real-time oscilloscope
+│   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
 │   └── PatchGridState.kt       — Selection state (cell, param, modulator)
 └── utils/
     └── TimeUtils.kt            — Timing utilities
@@ -90,8 +96,8 @@ src/main/kotlin/llm/slop/spirals/
 | `audio_high` | Audio | High-frequency RMS |
 | `trigger_onset` | Audio | Transient/onset pulse |
 | `trigger_accent` | Audio | Strong beat accent |
-| `gen1` | Generator | Evaluated inline |
-| `BeatSine` | Generator | Evaluated inline |
+| `lfo` | Generator | Time-based or beat-based waveform; evaluated inline per `CvModulator` |
+| `BeatSine` | Generator | Sine wave locked to beat phase |
 
 ## Modulation Math
 
@@ -117,20 +123,22 @@ value = result.coerceIn(0f, 1f)
 └──────────────────┴────────────────┴────────────────┘
 ```
 
-Patch Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same]  
-Patch Grid columns: AMP BASS MID HIGH FLUX ONSET ACCENT BEAT LFO RAND
+Patch Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck C [same]  
+Patch Grid columns: LFO | AUDIO | TRIG
 
 ## Design Principles
-- **Zero-allocation audio thread** — pre-allocated buffers, no object creation in JACK callback
-- **VisualSource abstraction** — Deck is source-agnostic; video/3D sources slot in later
-- **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from presets/sources/)
-- **Thread safety** — `@Volatile` beat anchor, `CopyOnWriteArrayList` for modulators, `MidiEngine.receivedCcEvents` queue pattern
-- **Serializable patches** — `CvModulator` is `@Serializable`; save/load is Phase 5
+- **Zero-allocation audio thread** — pre-allocated buffers, no object creation in JACK callback (Linux only)
+- **Deck C preview** — third deck runs the full render pipeline but is excluded from `Mixer` output; used for patch authoring while A/B perform live
+- **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `Kifs` all satisfy the interface
+- **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `presets/sources/`)
+- **Thread safety** — `AtomicReference<BeatAnchor>` for beat clock, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
+- **Serializable patches** — `CvModulator` is `@Serializable`; load-time migration remaps legacy source IDs
 
 ## Build & Run
 ```bash
-./gradlew run          # development
-./gradlew compileKotlin  # check for errors only
+./gradlew run              # launch (JACK/PipeWire should be running for audio CVs on Linux)
+./gradlew compileKotlin    # type-check only, no run
+./gradlew packageThumbDrive  # bundle fat JAR + JREs for all 5 platforms
 ```
-**JACK or PipeWire must be running** before launch (visuals work without it; audio CVs stay at 0).
 Custom visual shaders are loaded from `presets/sources/`.
+For deeper notes see `docs/developer/` and `.agents/PROJECT.md`.

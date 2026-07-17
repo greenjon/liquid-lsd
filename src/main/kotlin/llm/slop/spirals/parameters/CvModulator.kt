@@ -89,7 +89,7 @@ data class CvModulator(
 ) {
     private fun isDiscreteSubdivision(): Boolean {
         return sourceId == "beatPhase" || sourceId == "sampleAndHold" || 
-               ((sourceId == "gen1" || sourceId == "gen2") && genUnit == GenUnit.BEAT)
+               (sourceId == "lfo" && genUnit == GenUnit.BEAT)
     }
 
     fun randomizeActiveValues(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
