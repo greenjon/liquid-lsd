@@ -40,7 +40,7 @@ object DocManager {
             } else {
                 logger.error { "index.html not found in extracted docs directory at ${indexFile.absolutePath}" }
                 // Fallback online URL if offline fails
-                openInBrowser(URI("https://github.com/greenjon/spirals-desktop"))
+                openInBrowser(URI("https://github.com/greenjon/liquid-lsd"))
             }
         } catch (e: Exception) {
             logger.error(e) { "Failed to extract and open documentation: ${e.message}" }
