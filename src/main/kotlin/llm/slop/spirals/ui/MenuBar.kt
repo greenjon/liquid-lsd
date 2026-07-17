@@ -46,33 +46,36 @@ class MenuBar(
                 ImGui.endMenu()
             }
 
-            if (ImGui.beginMenu("Randomize")) {
-                if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                    PatchGridUndo.pushUndoState(patchState, mixer)
-                    mixer.deckA.randomizeModulators()
-                    mixer.deckB.randomizeModulators()
-                    mixer.deckC.randomizeModulators()
-                    listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
-                        val randomized = param.modulators.map { it.randomizeActiveValues() }
-                        param.modulators.clear()
-                        param.modulators.addAll(randomized)
-                        param.randomizeBaseValue()
+            if (UITheme.randomizationEnabled) {
+                if (ImGui.beginMenu("Randomize")) {
+                    if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                        PatchGridUndo.pushUndoState(patchState, mixer)
+                        mixer.deckA.randomizeModulators()
+                        mixer.deckB.randomizeModulators()
+                        mixer.deckC.randomizeModulators()
+                        listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
+                            val randomized = param.modulators.map { it.randomizeActiveValues() }
+                            param.modulators.clear()
+                            param.modulators.addAll(randomized)
+                            param.randomizeBaseValue()
+                        }
                     }
+                    if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                        PatchGridUndo.pushUndoState(patchState, mixer)
+                        mixer.deckA.randomizeModulators()
+                    }
+                    if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                        PatchGridUndo.pushUndoState(patchState, mixer)
+                        mixer.deckB.randomizeModulators()
+                    }
+                    if (ImGui.selectable("Deck C", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                        PatchGridUndo.pushUndoState(patchState, mixer)
+                        mixer.deckC.randomizeModulators()
+                    }
+                    ImGui.endMenu()
                 }
-                if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                    PatchGridUndo.pushUndoState(patchState, mixer)
-                    mixer.deckA.randomizeModulators()
-                }
-                if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                    PatchGridUndo.pushUndoState(patchState, mixer)
-                    mixer.deckB.randomizeModulators()
-                }
-                if (ImGui.selectable("Deck C", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                    PatchGridUndo.pushUndoState(patchState, mixer)
-                    mixer.deckC.randomizeModulators()
-                }
-                ImGui.endMenu()
             }
+
 
             // MIDI Map toggle button
             val isMidiLearn = patchState.isMidiLearnMode

@@ -151,6 +151,9 @@ object CustomRangeSlider {
         isLogarithmic: Boolean = false,
         parseValue: (String) -> Float? = { it.toFloatOrNull() }
     ) {
+        val effectiveIsRandomizable = isRandomizable && UITheme.randomizationEnabled
+        val effectiveShowControls = showControls && UITheme.randomizationEnabled
+
         val rowStartX = ImGui.getCursorScreenPosX()
         val rowStartY = ImGui.getCursorScreenPosY()
 
@@ -179,7 +182,7 @@ object CustomRangeSlider {
         val boxWidth = 115f
         val boxSpacing = 8f
         
-        val sliderStartX = textBoxesStartX + (if (isRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
+        val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
         val lineStartX = sliderStartX
         val lineEndX = startX + w - 10f
         val lineWidth = lineEndX - lineStartX
@@ -210,7 +213,7 @@ object CustomRangeSlider {
         }
 
         // --- ROW 1: Labels ---
-        if (isRandomizable) {
+        if (effectiveIsRandomizable) {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
             UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
             
@@ -243,22 +246,22 @@ object CustomRangeSlider {
         ImGui.setCursorScreenPos(startX, textY)
         UITheme.body(label)
         
-        if (showControls) {
+        if (effectiveShowControls) {
             val randBtnX = startX + labelColW - buttonSize
             ImGui.setCursorScreenPos(randBtnX, row2Y)
             
-            if (!isRandomizable) {
+            if (!effectiveIsRandomizable) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
             }
             if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
-                onRandomizableChanged(!isRandomizable)
+                onRandomizableChanged(!effectiveIsRandomizable)
             }
-            if (!isRandomizable) {
+            if (!effectiveIsRandomizable) {
                 ImGui.popStyleColor()
             }
             
             if (ImGui.isItemClicked(1)) { // Right click
-                if (!isRandomizable) {
+                if (!effectiveIsRandomizable) {
                     onRandomizableChanged(true)
                 }
                 onRandomizeNow()
@@ -270,7 +273,7 @@ object CustomRangeSlider {
         }
         
         // 3. Text inputs
-        if (isRandomizable) {
+        if (effectiveIsRandomizable) {
             drawTextInput(
                 key = "${idPrefix}_${label}_min",
                 currentValue = currentMin,
@@ -320,7 +323,7 @@ object CustomRangeSlider {
         val mousePressed = ImGui.isMouseClicked(0)
         val mouseDown = ImGui.isMouseDown(0)
         
-        if (isRandomizable) {
+        if (effectiveIsRandomizable) {
             val minPct = toPct(currentMin)
             val maxPct = toPct(currentMax)
             val minHandleX = lineStartX + minPct * lineWidth
@@ -453,7 +456,7 @@ object CustomRangeSlider {
             val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
             val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
             if (inTrackY && inTrackX) {
-                if (isRandomizable) {
+                if (effectiveIsRandomizable) {
                     val minPct = toPct(currentMin)
                     val maxPct = toPct(currentMax)
                     val minHandleX = lineStartX + minPct * lineWidth

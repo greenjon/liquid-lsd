@@ -61,6 +61,9 @@ object BeatDivisionSlider {
         idPrefix: String = "",
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
     ) {
+        val effectiveIsRandomizable = isRandomizable && UITheme.randomizationEnabled
+        val effectiveShowControls = showControls && UITheme.randomizationEnabled
+
         val rowStartX = ImGui.getCursorScreenPosX()
         val rowStartY = ImGui.getCursorScreenPosY()
 
@@ -89,7 +92,7 @@ object BeatDivisionSlider {
         val comboWidth = 125f
         val comboSpacing = 8f
 
-        val sliderStartX = textBoxesStartX + (if (isRandomizable) (comboWidth * 2f + comboSpacing) else comboWidth) + 15f
+        val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (comboWidth * 2f + comboSpacing) else comboWidth) + 15f
         val lineStartX = sliderStartX
         val lineEndX = startX + w - 10f
         val lineWidth = lineEndX - lineStartX
@@ -98,7 +101,7 @@ object BeatDivisionSlider {
         val rangeSpan = maxLimit - minLimit
 
         // --- ROW 1: Labels ---
-        if (isRandomizable) {
+        if (effectiveIsRandomizable) {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
             UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
 
@@ -130,22 +133,22 @@ object BeatDivisionSlider {
         ImGui.setCursorScreenPos(startX, textY)
         UITheme.body(label)
 
-        if (showControls) {
+        if (effectiveShowControls) {
             val randBtnX = startX + labelColW - buttonSize
             ImGui.setCursorScreenPos(randBtnX, row2Y)
             
-            if (!isRandomizable) {
+            if (!effectiveIsRandomizable) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
             }
             if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
-                onRandomizableChanged(!isRandomizable)
+                onRandomizableChanged(!effectiveIsRandomizable)
             }
-            if (!isRandomizable) {
+            if (!effectiveIsRandomizable) {
                 ImGui.popStyleColor()
             }
             
             if (ImGui.isItemClicked(1)) { // Right click
-                if (!isRandomizable) {
+                if (!effectiveIsRandomizable) {
                     onRandomizableChanged(true)
                 }
                 onRandomizeNow()
@@ -157,7 +160,7 @@ object BeatDivisionSlider {
         }
 
         // --- Combo dropdowns instead of text inputs ---
-        if (isRandomizable) {
+        if (effectiveIsRandomizable) {
             // Min combo
             val minIdx = ImInt(currentMin.toInt().coerceIn(0, subdivisionLabels.size - 1))
             ImGui.setCursorScreenPos(textBoxesStartX, row2Y)
@@ -200,7 +203,7 @@ object BeatDivisionSlider {
         val mousePressed = ImGui.isMouseClicked(0)
         val mouseDown = ImGui.isMouseDown(0)
 
-        if (isRandomizable) {
+        if (effectiveIsRandomizable) {
             val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
             val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
             val minHandleX = lineStartX + minPct * lineWidth
@@ -314,7 +317,7 @@ object BeatDivisionSlider {
             val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
             val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
             if (inTrackY && inTrackX) {
-                if (isRandomizable) {
+                if (effectiveIsRandomizable) {
                     val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
                     val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
                     val minHandleX = lineStartX + minPct * lineWidth

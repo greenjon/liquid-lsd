@@ -54,6 +54,10 @@ object UITheme {
     /** True if the main window should hide all UI overlay panels to show full video mix. */
     var cleanModeEnabled: Boolean = false
 
+    /** True if parameter and modulator randomization is enabled. */
+    var randomizationEnabled: Boolean = true
+
+
     enum class QueueKeyTrigger { NONE, ARROWS, PAGE_UP_DOWN, SPACE_BACKSPACE }
 
     var autoVjDirtyBehavior: AutoVjDirtyBehavior = AutoVjDirtyBehavior.AUTO_DISCARD
@@ -109,6 +113,13 @@ object UITheme {
                     backgroundVideoEnabled = savedBgVideo
                     logger.info { "Loaded backgroundVideoEnabled from settings file: $backgroundVideoEnabled" }
                 }
+
+                val savedRandomization = props.getProperty("randomizationEnabled")?.toBooleanStrictOrNull()
+                if (savedRandomization != null) {
+                    randomizationEnabled = savedRandomization
+                    logger.info { "Loaded randomizationEnabled from settings file: $randomizationEnabled" }
+                }
+
 
                 val savedTooltips = props.getProperty("tooltipsEnabled")?.toBooleanStrictOrNull()
                 if (savedTooltips != null) {
@@ -168,6 +179,8 @@ object UITheme {
 
 
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
+            props.setProperty("randomizationEnabled", randomizationEnabled.toString())
+
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
             props.setProperty("maxFps", maxFps.toString())
             props.setProperty("assetBrowserMode", assetBrowserMode.name)

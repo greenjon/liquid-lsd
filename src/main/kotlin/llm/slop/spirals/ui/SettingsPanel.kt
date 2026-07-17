@@ -181,7 +181,31 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
+        // ---------------------------------------------------------------------
+        // Randomization Settings
+        // ---------------------------------------------------------------------
+        UITheme.h2("Randomization")
+        ImGui.separator()
+        ImGui.spacing()
 
+        val randEnabled = ImBoolean(UITheme.randomizationEnabled)
+        if (ImGui.checkbox("Enable Parameter Randomization", randEnabled)) {
+            val nextVal = randEnabled.get()
+            if (nextVal != UITheme.randomizationEnabled) {
+                UITheme.randomizationEnabled = nextVal
+                UITheme.saveSettings()
+            }
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Toggle parameter and modulator randomization features.")
+        }
+        ImGui.spacing()
+        UITheme.caption("When disabled, all sliders collapse to single static values")
+        UITheme.caption("and randomization controls/menus are hidden.")
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
 
         // ---------------------------------------------------------------------
         // Startup Settings

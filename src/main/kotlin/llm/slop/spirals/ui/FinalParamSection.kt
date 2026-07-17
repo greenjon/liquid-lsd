@@ -247,17 +247,20 @@ object FinalParamSection {
             )
         }
 
-        ImGui.spacing()
-        val randomizeBaseActive = param.randomizeBase
-        if (!randomizeBaseActive) {
-            ImGui.beginDisabled()
+        if (UITheme.randomizationEnabled) {
+            ImGui.spacing()
+            val randomizeBaseActive = param.randomizeBase
+            if (!randomizeBaseActive) {
+                ImGui.beginDisabled()
+            }
+            if (ImGui.button("Rand Randomize Initial Value", ImGui.getContentRegionAvailX(), 30f)) {
+                param.randomizeBaseValue()
+            }
+            if (!randomizeBaseActive) {
+                ImGui.endDisabled()
+            }
         }
-        if (ImGui.button("Rand Randomize Initial Value", ImGui.getContentRegionAvailX(), 30f)) {
-            param.randomizeBaseValue()
-        }
-        if (!randomizeBaseActive) {
-            ImGui.endDisabled()
-        }
+
 
         ImGui.spacing()
         if (isHueSweep && mandala != null) {

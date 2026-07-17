@@ -65,14 +65,16 @@ object PatchGridRenderer {
             ImGui.setTooltip("Click to open context menu: Randomize, Copy/Paste, or Reset parameter $label.")
         }
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
-            if (ImGui.menuItem("Randomize row")) {
-                onPushUndo()
-                val randomized = param.modulators.map { it.randomizeActiveValues() }
-                param.modulators.clear()
-                param.modulators.addAll(randomized)
-                param.randomizeBaseValue()
+            if (UITheme.randomizationEnabled) {
+                if (ImGui.menuItem("Randomize row")) {
+                    onPushUndo()
+                    val randomized = param.modulators.map { it.randomizeActiveValues() }
+                    param.modulators.clear()
+                    param.modulators.addAll(randomized)
+                    param.randomizeBaseValue()
+                }
+                ImGui.separator()
             }
-            ImGui.separator()
             if (ImGui.menuItem("Copy Row Modulations")) {
                 ClipboardManager.rowClipboard = RowClipboardData(paramKey, param.toDto())
             }
@@ -528,10 +530,12 @@ object PatchGridRenderer {
         val scale = 35f / 30f
         val btnWidth = 50f * scale
         val btnHeight = 35f
-        if (drawDiceButton("dice_$groupKey", gridStartX, y, scale, btnWidth, btnHeight)) {
-            onRandomize()
+        if (UITheme.randomizationEnabled) {
+            if (drawDiceButton("dice_$groupKey", gridStartX, y, scale, btnWidth, btnHeight)) {
+                onRandomize()
+            }
+            ImGui.sameLine(0f, 6f)
         }
-        ImGui.sameLine(0f, 6f)
         val textY = y + (btnHeight - ImGui.getTextLineHeight()) * 0.5f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), textY)
         UITheme.body(label)
@@ -544,6 +548,7 @@ object PatchGridRenderer {
     }
 
     fun drawDiceButton(id: String, x: Float, y: Float, scale: Float, btnWidth: Float, btnHeight: Float): Boolean {
+        if (!UITheme.randomizationEnabled) return false
         ImGui.setCursorScreenPos(x, y)
         return ImGui.button("${Icons.DICES}##$id", btnWidth, btnHeight)
     }

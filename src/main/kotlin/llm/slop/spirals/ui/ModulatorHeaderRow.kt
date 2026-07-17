@@ -78,19 +78,22 @@ object ModulatorHeaderRow {
         ImGui.popStyleColor(3)
 
         // 2. Dice icon (Randomize button)
-        ImGui.sameLine(0f, 10f)
-        if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
-            val randomized = existing
-                .randomizeAmplitude()
-                .randomizeDcOffset()
-                .randomizeSubdivision()
-                .randomizePhaseOffset()
-                .randomizeSlope()
-            onReplace(randomized)
+        if (UITheme.randomizationEnabled) {
+            ImGui.sameLine(0f, 10f)
+            if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
+                val randomized = existing
+                    .randomizeAmplitude()
+                    .randomizeDcOffset()
+                    .randomizeSubdivision()
+                    .randomizePhaseOffset()
+                    .randomizeSlope()
+                onReplace(randomized)
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize primary LFO / modulator values")
+            }
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize primary LFO / modulator values")
-        }
+
         
         // 3. Operator dropdown (ADD/MUL/SCALE combo box)
         ImGui.sameLine(0f, 10f)

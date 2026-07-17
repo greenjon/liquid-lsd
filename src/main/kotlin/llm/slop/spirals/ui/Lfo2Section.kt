@@ -54,20 +54,23 @@ object Lfo2Section {
         ImGui.popStyleColor(3)
 
         // 2. Dice button for LFO 2
-        ImGui.sameLine(0f, 10f)
-        if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
-            val randomized = existing
-                .randomizeGeneratorModDepth()
-                .randomizeModSubdivision()
-                .randomizeModPhaseOffset()
-                .randomizeModSlope()
-                .randomizeModMorph()
-                .randomizeModHold()
-            onReplace(randomized)
+        if (UITheme.randomizationEnabled) {
+            ImGui.sameLine(0f, 10f)
+            if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
+                val randomized = existing
+                    .randomizeGeneratorModDepth()
+                    .randomizeModSubdivision()
+                    .randomizeModPhaseOffset()
+                    .randomizeModSlope()
+                    .randomizeModMorph()
+                    .randomizeModHold()
+                onReplace(randomized)
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize LFO 2 values")
+            }
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize LFO 2 values")
-        }
+
 
         // Title text for LFO 2
         ImGui.sameLine(0f, 225f)
