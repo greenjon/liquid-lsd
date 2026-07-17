@@ -10,7 +10,7 @@ import java.io.File
 import java.util.Properties
 
 /**
- * Central typography / styling system for Spirals Desktop.
+ * Central typography / styling system for Liquid LSD.
  *
  * Six semantic text levels are defined, each backed by a separately loaded
  * ImFont at the correct pixel size. Call [loadFonts] once during ImGui
@@ -30,7 +30,8 @@ object UITheme {
 
     private val logger = KotlinLogging.logger {}
 
-    private val settingsFile = File("spirals-settings.properties")
+    private val settingsFile = File("lsd-settings.properties")
+    private val legacySettingsFile = File("spirals-settings.properties")
 
     // -- Semantic Levels -------------------------------------------------------
 
@@ -78,6 +79,11 @@ object UITheme {
 
     private fun loadSettings() {
         try {
+            // One-time migration: carry over settings from the old filename
+            if (!settingsFile.exists() && legacySettingsFile.exists()) {
+                legacySettingsFile.copyTo(settingsFile)
+                logger.info { "Migrated settings from ${legacySettingsFile.name} to ${settingsFile.name}" }
+            }
             if (settingsFile.exists()) {
                 val props = Properties()
                 settingsFile.inputStream().use { props.load(it) }
@@ -188,7 +194,7 @@ object UITheme {
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("queueKeyTrigger", queueKeyTrigger.name)
             props.setProperty("startupBehavior", startupBehavior.name)
-            settingsFile.outputStream().use { props.store(it, "Spirals Settings") }
+            settingsFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             logger.info { "Saved settings to file" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save settings" }

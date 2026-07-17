@@ -1,6 +1,6 @@
 # Presets & MIDI Mapping
 
-Spirals Desktop contains patch saving mechanisms and external MIDI controller integration.
+Liquid LSD contains patch saving mechanisms and external MIDI controller integration.
 
 ## Preset & Patch Management
 

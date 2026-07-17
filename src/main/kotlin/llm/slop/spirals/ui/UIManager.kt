@@ -261,7 +261,7 @@ class UIManager(private val windowHandle: Long) {
         currentMixer = mixer
 
         // Update window title dynamically with project name and dirty status
-        val title = "Spirals Desktop"
+        val title = "Liquid LSD"
         if (title != lastWindowTitle) {
             org.lwjgl.glfw.GLFW.glfwSetWindowTitle(windowHandle, title)
             lastWindowTitle = title

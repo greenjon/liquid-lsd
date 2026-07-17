@@ -1,6 +1,6 @@
-# Spirals Desktop
+# Liquid LSD
 
-Spirals Desktop is open-source VJ software for real-time, audio-reactive visual performance. It renders dual-deck parametric mandala and shader visuals, maps audio and generated CV sources into visual parameters, and exposes the performance surface through an ImGui desktop interface.
+Liquid LSD is open-source VJ software for real-time, audio-reactive visual performance. It renders dual-deck parametric mandala and shader visuals, maps audio and generated CV sources into visual parameters, and exposes the performance surface through an ImGui desktop interface.
 
 The project is in active beta: the core workflow is usable, the UI is close to its intended shape, and bug reports are welcome.
 

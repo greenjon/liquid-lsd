@@ -1,10 +1,10 @@
 # Architecture Overview
 
-This section covers the high-level system design, threading boundaries, and safety models of Spirals Desktop.
+This section covers the high-level system design, threading boundaries, and safety models of Liquid LSD.
 
 ## High-Level Video Pipeline
 
-Spirals processes real-time audio and generates framebuffers through sequential stages:
+Liquid LSD processes real-time audio and generates framebuffers through sequential stages:
 
 ```
 JACK / Java Sound ──► AudioEngine ──► CVRegistry
@@ -31,7 +31,7 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
 
 ## Threading Boundaries
 
-Spirals runs on two primary threads: the **OS Main Thread** and the **Audio Thread** (JACK callback thread or Java Sound capture thread). Maintaining strict separation between them is critical for real-time safety.
+Liquid LSD runs on two primary threads: the **OS Main Thread** and the **Audio Thread** (JACK callback thread or Java Sound capture thread). Maintaining strict separation between them is critical for real-time safety.
 
 ### Thread 0 (OS Main / Rendering Thread)
 - **Duties**: GLFW event polling, OpenGL context creation, OpenGL draw calls (rendering to Decks, Mixer, and Screen), ImGui interface drawing.

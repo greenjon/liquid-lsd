@@ -1,6 +1,6 @@
 # Audio Beat Synchronization & Stability
 
-This document describes the beat tracking and CV synchronization system in Spirals Desktop —
+This document describes the beat tracking and CV synchronization system in Liquid LSD —
 how BPM is detected or set manually, how the beat clock is ticked, and how visual generators
 stay phase-locked to the music across frames.
 

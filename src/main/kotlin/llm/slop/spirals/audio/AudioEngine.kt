@@ -371,7 +371,7 @@ object AudioEngine {
         accentLevel = 0f
         localOnsetMean = 0f
 
-        jackClient = JackClient("spirals-desktop") { buffer, nframes, sampleRate ->
+        jackClient = JackClient("lsd") { buffer, nframes, sampleRate ->
             processAudio(buffer, nframes, sampleRate)
         }
         val started = jackClient?.start() == true

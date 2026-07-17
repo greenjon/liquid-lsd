@@ -1,8 +1,8 @@
-# Spirals Desktop Documentation
+# Liquid LSD Documentation
 
-Welcome to the documentation for **Spirals Desktop**, a real-time graphics and audio workstation designed for VJs and live visual performances.
+Welcome to the documentation for **Liquid LSD**, a real-time graphics and audio workstation designed for VJs and live visual performances.
 
-Spirals combines real-time low-latency audio analysis, a CV modulation matrix, and high-performance generative visual rendering in a single desktop application.
+Liquid LSD combines real-time low-latency audio analysis, a CV modulation matrix, and high-performance generative visual rendering in a single desktop application.
 
 ## Documentation Map
 

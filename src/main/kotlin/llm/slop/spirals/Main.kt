@@ -22,7 +22,7 @@ import org.lwjgl.opengl.GL33.*
 private val logger = KotlinLogging.logger {}
 
 fun main() {
-    logger.info { "Starting Spirals Desktop..." }
+    logger.info { "Starting Liquid LSD..." }
 
     // Ensure preset directories exist
     java.io.File("presets/patches").mkdirs()
@@ -48,7 +48,7 @@ fun main() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE)
 
     // Create window
-    val window = glfwCreateWindow(1920, 1080, "Spirals Desktop - VJ Software", 0, 0)
+    val window = glfwCreateWindow(1920, 1080, "Liquid LSD — Libre Shader Decks", 0, 0)
         ?: throw RuntimeException("Failed to create GLFW window")
 
     glfwMakeContextCurrent(window)
@@ -157,8 +157,11 @@ fun main() {
     // Setup key callback chaining to allow "f", "Spacebar", CTRL-, and CTRL= controls
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
+        val io = imgui.ImGui.getIO()
         val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_EQUAL)
-        val isHotKey = (key == GLFW_KEY_F || key == GLFW_KEY_SPACE || isFontSizeHotKey)
+        val isShortcutAllowed = !io.wantCaptureKeyboard || UITheme.cleanModeEnabled
+        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_SPACE) && isShortcutAllowed) || isFontSizeHotKey
+
         if (action == GLFW_PRESS) {
             if (isFontSizeHotKey) {
                 if (key == GLFW_KEY_MINUS) {
@@ -166,18 +169,15 @@ fun main() {
                 } else if (key == GLFW_KEY_EQUAL) {
                     uiManager.adjustFontSize(1f)
                 }
-            } else if (key == GLFW_KEY_F) {
+            } else if (key == GLFW_KEY_F && isShortcutAllowed) {
                 UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled
                 logger.info { "Clean mode toggled: ${UITheme.cleanModeEnabled}" }
-            } else if (key == GLFW_KEY_SPACE) {
-                val io = imgui.ImGui.getIO()
-                if (!io.wantCaptureKeyboard || UITheme.cleanModeEnabled) {
-                    if (secondaryWindow == 0L) {
-                        secondaryWindow = createSecondaryWindow(window)
-                    } else {
-                        destroySecondaryWindow(secondaryWindow)
-                        secondaryWindow = 0L
-                    }
+            } else if (key == GLFW_KEY_SPACE && isShortcutAllowed) {
+                if (secondaryWindow == 0L) {
+                    secondaryWindow = createSecondaryWindow(window)
+                } else {
+                    destroySecondaryWindow(secondaryWindow)
+                    secondaryWindow = 0L
                 }
             }
         }
@@ -380,7 +380,7 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
         val mode = glfwGetVideoMode(externalMonitor) ?: return 0L
         glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE)
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE)
-        val win = glfwCreateWindow(mode.width(), mode.height(), "Spirals Output", externalMonitor, primaryWindow)
+        val win = glfwCreateWindow(mode.width(), mode.height(), "Liquid LSD Output", externalMonitor, primaryWindow)
         if (win != 0L) {
             logger.info { "Created secondary window fullscreen on external monitor (width: ${mode.width()}, height: ${mode.height()})" }
             return win
@@ -388,7 +388,7 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
     } else {
         glfwWindowHint(GLFW_DECORATED, GLFW_TRUE)
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
-        val win = glfwCreateWindow(1280, 720, "Spirals Output Preview", 0, primaryWindow)
+        val win = glfwCreateWindow(1280, 720, "Liquid LSD Output Preview", 0, primaryWindow)
         if (win != 0L) {
             logger.info { "Created secondary preview window (no external monitor found)" }
             return win

@@ -46,11 +46,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/distributions/spirals-desktop-windows-x64.zip
-            build/distributions/spirals-desktop-linux-x64.zip
-            build/distributions/spirals-desktop-linux-arm64.zip
-            build/distributions/spirals-desktop-macos-arm64.zip
-            build/distributions/spirals-desktop-macos-x64.zip
+            build/distributions/liquid-lsd-windows-x64.zip
+            build/distributions/liquid-lsd-linux-x64.zip
+            build/distributions/liquid-lsd-linux-arm64.zip
+            build/distributions/liquid-lsd-macos-arm64.zip
+            build/distributions/liquid-lsd-macos-x64.zip
           draft: false
           prerelease: false
           generate_release_notes: true

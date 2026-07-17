@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Asset Management System provides a unified interface for managing patches and playlists in Spirals Desktop. It features a three-panel layout optimized for VJ workflows.
+The Asset Management System provides a unified interface for managing patches and playlists in Liquid LSD. It features a three-panel layout optimized for VJ workflows.
 
 ## Accessing Asset Management Mode
 
@@ -154,7 +154,7 @@ Located in: `presets/playlists/`
 
 Example playlist file:
 ```
-# Spirals Playlist: Summer Vibes
+# Liquid LSD Playlist: Summer Vibes
 # Generated: 2024-01-15T20:30:00
 
 presets/patches/sunset_mandala.lsd

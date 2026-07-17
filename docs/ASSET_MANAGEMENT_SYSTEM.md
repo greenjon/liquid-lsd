@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Asset Management System provides a comprehensive interface for organizing, browsing, and managing patches and playlists in Spirals Desktop. It introduces a dual-mode UI that can be toggled between the standard performance view and an asset management view.
+The Asset Management System provides a comprehensive interface for organizing, browsing, and managing patches and playlists in Liquid LSD. It introduces a dual-mode UI that can be toggled between the standard performance view and an asset management view.
 
 ## Architecture
 
@@ -144,7 +144,7 @@ The asset management mode can be toggled via:
 ### Playlist Format (.playlist)
 
 ```
-# Spirals Playlist: My Setlist
+# Liquid LSD Playlist: My Setlist
 # Generated: 2024-01-15T10:30:00
 
 /absolute/path/to/patch1.patch
@@ -312,4 +312,4 @@ if (ImGui.beginDragDropTarget()) {
 
 ## Credits
 
-Implemented as part of the Spirals Desktop asset management overhaul.
+Implemented as part of the Liquid LSD asset management overhaul.

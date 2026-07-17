@@ -1,1 +1,1 @@
-rootProject.name = "spirals-desktop"
+rootProject.name = "lsd"

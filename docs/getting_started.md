@@ -1,10 +1,10 @@
 # Getting Started
 
-This guide walks you through the system prerequisites, compilation, packaging, and the initial launch steps for Spirals Desktop on various operating systems.
+This guide walks you through the system prerequisites, compilation, packaging, and the initial launch steps for Liquid LSD on various operating systems.
 
 ## Prerequisites
 
-To run Spirals Desktop, you will need a Java Development Kit (JDK) version 17 or higher, and a running audio connection server (JACK or PipeWire-JACK).
+To run Liquid LSD, you will need a Java Development Kit (JDK) version 17 or higher, and a running audio connection server (JACK or PipeWire-JACK).
 
 ### Linux (x86_64 & arm64)
 - **JDK**: Java 17+ (Ubuntu/Debian: `sudo apt install openjdk-17-jdk`, Fedora: `sudo dnf install java-17-openjdk-devel`).
@@ -23,7 +23,7 @@ To run Spirals Desktop, you will need a Java Development Kit (JDK) version 17 or
 
 ## Build & Run Instructions
 
-Spirals Desktop uses Gradle as its build system. The project directory includes a Gradle wrapper (`gradlew`).
+Liquid LSD uses Gradle as its build system. The project directory includes a Gradle wrapper (`gradlew`).
 
 ### Compiling the Code
 To check for syntax and compile the Kotlin source code without launching the window:
@@ -44,11 +44,11 @@ To package the application and all platform-specific native library dependencies
 ./gradlew shadowJar
 ```
 The output artifact will be generated at:
-`build/libs/spirals-desktop-1.0-SNAPSHOT-all.jar`
+`build/libs/lsd-all.jar`
 
 Run the packaged JAR with:
 ```bash
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/spirals-desktop-1.0-SNAPSHOT-all.jar
+java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/lsd-all.jar
 ```
 
 ---
@@ -56,8 +56,8 @@ java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/spirals-desktop-1.0-SNAP
 ## First Launch Walkthrough
 
 1. **Start the Audio Server**: Launch PipeWire/JACK (e.g., using `qjackctl` or starting the system audio service).
-2. **Launch Spirals**: Run `./gradlew run`.
-3. **Verify Window initialization**: A window with the title **Spirals Desktop - VJ Software** should open, showing a live generative mandala and a three-column ImGui setup:
+2. **Launch Liquid LSD**: Run `./gradlew run`.
+3. **Verify Window initialization**: A window with the title **Liquid LSD - VJ Software** should open, showing a live generative mandala and a three-column ImGui setup:
    - **Left Panel**: Patch Grid (modulation matrix).
    - **Middle Panel**: Cell Config (parameters editor & oscilloscope).
    - **Right Panel**: Mixer / Output Monitor.

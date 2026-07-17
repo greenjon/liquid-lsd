@@ -1,4 +1,4 @@
-# Spirals Desktop — Architecture
+# Liquid LSD — Architecture
 
 Cross-platform VJ software (Linux x64/ARM64, macOS x64/ARM64, Windows x64). Real-time
 audio-reactive parametric mandala visuals, three-deck mixer with preview deck, CV modulation

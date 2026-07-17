@@ -1,6 +1,6 @@
 # Modulation System
 
-Every visual parameter in Spirals is a `ModulatableParameter`. Each parameter holds a base value
+Every visual parameter in Liquid LSD is a `ModulatableParameter`. Each parameter holds a base value
 and a list of `CvModulator` instances. Once per frame `evaluate()` computes the final driven value
 by combining those modulators. This document explains the full pipeline.
 

@@ -120,7 +120,7 @@ attempt to free these JVM-owned arrays. Removing these fields = crash on next fo
 
 `withFont(level) { ... }` is an `inline` function — zero-allocation on the render path.
 
-Settings are read from / written to `spirals-settings.properties` on disk.
+Settings are read from / written to `lsd-settings.properties` on disk.
 Flags consumed across the UI: `audioEngineEnabled`, `backgroundVideoEnabled`, `cleanModeEnabled`,
 `assetBrowserMode`, `tooltipsEnabled`, `maxFps`, etc.
 

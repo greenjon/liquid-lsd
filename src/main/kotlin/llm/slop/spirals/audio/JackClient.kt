@@ -21,7 +21,7 @@ enum class JackStartFailure {
  * for the JACK Audio Connection Kit.
  */
 class JackClient(
-    val clientName: String = "spirals-desktop",
+    val clientName: String = "lsd",
     val onProcess: (FloatBuffer, Int, Float) -> Unit // (buffer, nframes, sampleRate)
 ) {
     @Volatile

@@ -17,7 +17,7 @@ object DocManager {
 
     private val appDataDir: File by lazy {
         val userHome = System.getProperty("user.home")
-        val dir = File(userHome, ".spirals-desktop")
+        val dir = File(userHome, ".liquid-lsd")
         if (!dir.exists()) {
             dir.mkdirs()
         }

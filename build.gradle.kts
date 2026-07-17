@@ -132,7 +132,7 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
 
         // 1. Copy shadowJar
         val jarFile = tasks.named("shadowJar").get().outputs.files.singleFile
-        val destJar = file("$distDir/spirals-desktop-all.jar")
+        val destJar = file("$distDir/lsd-all.jar")
         jarFile.copyTo(destJar, overwrite = true)
         println("Copied shadowJar to ${destJar.absolutePath}")
 
@@ -206,10 +206,10 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
             setlocal
             cd /d "%~dp0"
             if exist "jre\windows-x64\bin\java.exe" (
-                "jre\windows-x64\bin\java.exe" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                "jre\windows-x64\bin\java.exe" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             ) else (
                 echo Bundled JRE not found. Trying system java...
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             )
             endlocal
         """.trimIndent().replace("\n", "\r\n")) // Windows CRLF
@@ -227,15 +227,15 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
                 JRE_DIR="jre/linux-aarch64"
             else
                 echo "Unsupported architecture: ${'$'}ARCH. Trying system java..."
-                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
 
             if [ -f "${'$'}JRE_DIR/bin/java" ]; then
                 chmod +x "${'$'}JRE_DIR/bin/java"
-                exec "./${'$'}JRE_DIR/bin/java" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                exec "./${'$'}JRE_DIR/bin/java" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             else
                 echo "Bundled JRE not found. Trying system java..."
-                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
         """.trimIndent())
         runLinux.setExecutable(true)
@@ -247,10 +247,10 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
             cd "${'$'}SCRIPT_DIR"
             if [ -f "jre/macos-aarch64/bin/java" ]; then
                 chmod +x jre/macos-aarch64/bin/java
-                ./jre/macos-aarch64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                ./jre/macos-aarch64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             else
                 echo "Bundled JRE not found. Trying system java..."
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
         """.trimIndent())
         runMacArm.setExecutable(true)
@@ -262,10 +262,10 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
             cd "${'$'}SCRIPT_DIR"
             if [ -f "jre/macos-x64/bin/java" ]; then
                 chmod +x jre/macos-x64/bin/java
-                ./jre/macos-x64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                ./jre/macos-x64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             else
                 echo "Bundled JRE not found. Trying system java..."
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar spirals-desktop-all.jar
+                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
         """.trimIndent())
         runMacIntel.setExecutable(true)
@@ -276,24 +276,24 @@ val packageThumbDrive = tasks.register("packageThumbDrive") {
 
 val zipWindows = tasks.register<Zip>("zipWindows") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-windows-x64.zip")
+    archiveFileName.set("liquid-lsd-windows-x64.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-windows-x64")
+    into("liquid-lsd-windows-x64")
     from("build/dist") {
         include("run-windows.bat")
-        include("spirals-desktop-all.jar")
+        include("lsd-all.jar")
         include("jre/windows-x64/**")
     }
 }
 
 val zipLinux = tasks.register<Zip>("zipLinux") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-linux-x64.zip")
+    archiveFileName.set("liquid-lsd-linux-x64.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-linux-x64")
+    into("liquid-lsd-linux-x64")
     from("build/dist") {
         include("run-linux.sh")
-        include("spirals-desktop-all.jar")
+        include("lsd-all.jar")
         include("jre/linux-x64/**")
     }
     eachFile {
@@ -305,12 +305,12 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
 
 val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-linux-arm64.zip")
+    archiveFileName.set("liquid-lsd-linux-arm64.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-linux-arm64")
+    into("liquid-lsd-linux-arm64")
     from("build/dist") {
         include("run-linux.sh")
-        include("spirals-desktop-all.jar")
+        include("lsd-all.jar")
         include("jre/linux-aarch64/**")
     }
     eachFile {
@@ -322,12 +322,12 @@ val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
 
 val zipMacArm = tasks.register<Zip>("zipMacArm") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-macos-arm64.zip")
+    archiveFileName.set("liquid-lsd-macos-arm64.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-macos-arm64")
+    into("liquid-lsd-macos-arm64")
     from("build/dist") {
         include("run-mac-arm.command")
-        include("spirals-desktop-all.jar")
+        include("lsd-all.jar")
         include("jre/macos-aarch64/**")
     }
     eachFile {
@@ -339,12 +339,12 @@ val zipMacArm = tasks.register<Zip>("zipMacArm") {
 
 val zipMacIntel = tasks.register<Zip>("zipMacIntel") {
     dependsOn(packageThumbDrive)
-    archiveFileName.set("spirals-desktop-macos-x64.zip")
+    archiveFileName.set("liquid-lsd-macos-x64.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("spirals-desktop-macos-x64")
+    into("liquid-lsd-macos-x64")
     from("build/dist") {
         include("run-mac-intel.command")
-        include("spirals-desktop-all.jar")
+        include("lsd-all.jar")
         include("jre/macos-x64/**")
     }
     eachFile {

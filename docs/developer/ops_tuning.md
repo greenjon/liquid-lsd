@@ -26,7 +26,7 @@ If you are running with the active JACK audio engine, ensure your user has real-
 ```
 Run with memory locking to prevent JVM heap swapping:
 ```bash
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar spirals-desktop.jar
+java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar lsd-all.jar
 ```
 
 #### macOS (Intel & Apple Silicon)
@@ -54,15 +54,15 @@ Use `jack_lsp -c` to see active connection links between ports.
 ### `jack_connect`
 Manually wire ports together (e.g., routing system capture to spirals):
 ```bash
-jack_connect system:capture_1 spirals:input_1
-jack_connect system:capture_2 spirals:input_2
+jack_connect system:capture_1 lsd:input_1
+jack_connect system:capture_2 lsd:input_2
 ```
 
 ### `pw-link`
 Use `pw-link` in PipeWire environments to inspect and establish links:
 ```bash
 pw-link -l                       # List links
-pw-link system:capture_1 spirals:input_1   # Establish connection
+pw-link system:capture_1 lsd:input_1   # Establish connection
 ```
 
 ---

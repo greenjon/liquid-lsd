@@ -1,10 +1,10 @@
 # Core Concepts
 
-Spirals Desktop is structured around a few primary visual generation and mixing systems. Understanding these concepts will help you build complex, audio-reactive live performances.
+Liquid LSD is structured around a few primary visual generation and mixing systems. Understanding these concepts will help you build complex, audio-reactive live performances.
 
 ## Mandala Synthesis Engine
 
-The core generative visual source in Spirals is the **Mandala**. It uses mathematical formulas to draw complex, symmetrical geometric shapes.
+The core generative visual source in Liquid LSD is the **Mandala**. It uses mathematical formulas to draw complex, symmetrical geometric shapes.
 
 ### Lobes & Geometry
 - **Lobe Count (Petals)**: Dictates the rotational symmetry of the mandala (how many arms or repeating patterns are generated).
@@ -32,7 +32,7 @@ The core generative visual source in Spirals is the **Mandala**. It uses mathema
 
 ## Dual-Deck Mixer
 
-Spirals follows a traditional DJ/VJ layout, featuring two independent decks that feed into a central mixer.
+Liquid LSD follows a traditional DJ/VJ layout, featuring two independent decks that feed into a central mixer.
 
 ### Deck A & Deck B
 - Each deck acts as an independent generator running its own Visual Source (currently a Mandala).

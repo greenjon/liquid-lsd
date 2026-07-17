@@ -1,6 +1,6 @@
 # CV Modulation
 
-The heart of Spirals Desktop is its Control Voltage (CV) modulation matrix. This system allows you to route audio characteristics or generator signals to modulate any rendering parameter.
+The heart of Liquid LSD is its Control Voltage (CV) modulation matrix. This system allows you to route audio characteristics or generator signals to modulate any rendering parameter.
 
 ## The Patch Grid
 
