@@ -1,4 +1,4 @@
-# Liquid LSD
+# Liquid LSD - Libre Shader Decks
 
 Liquid LSD is open-source VJ software for real-time, audio-reactive visual performance. It renders dual-deck parametric mandala and shader visuals, maps audio and generated CV sources into visual parameters, and exposes the performance surface through an ImGui desktop interface.
 
