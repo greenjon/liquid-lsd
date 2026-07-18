@@ -392,10 +392,6 @@ class UIManager(private val windowHandle: Long) {
 
             AudioEnginePanel.draw(displayWidth, displayHeight)
 
-            if (UITheme.showPerformanceOverlay) {
-                PerformanceStats.renderOverlay()
-            }
-
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
             popupManager.drawDeckConfirmPopups(mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)

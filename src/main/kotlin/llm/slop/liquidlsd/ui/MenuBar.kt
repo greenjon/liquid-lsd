@@ -143,21 +143,6 @@ class MenuBar(
             }
             ImGui.popStyleColor()
 
-            val showPerf = UITheme.showPerformanceOverlay
-            if (showPerf) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
-            } else {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
-            }
-            if (ImGui.menuItem("Perf Overlay", "", showPerf)) {
-                UITheme.showPerformanceOverlay = !showPerf
-                UITheme.saveSettings()
-            }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
-                ImGui.setTooltip("Toggle the real-time frame timing and audio latency budget overlay window.")
-            }
-            ImGui.popStyleColor()
-
             // ── Right-aligned performance stats ──────────────────────────────────
             drawPerformanceStats()
 
@@ -176,12 +161,15 @@ class MenuBar(
         val cpuFrac    = PerformanceStats.processCpuFraction   // -1 if unavailable
         val bpm        = PerformanceStats.bpm
         val audioActive = AudioEngine.isActive()
+        val audioLatency = PerformanceStats.audioCallbackMs
+        val showAudio = audioActive && UITheme.audioEngineEnabled && audioLatency > 0.0f
 
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
         val bpmText = if (audioActive && UITheme.audioEngineEnabled) "BPM: %3.0f  ".format(bpm) else ""
+        val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else ""
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%.0f ms  ".format(ftMs)
-        val fullLabel = cpuText + bpmText + fpsText + ftText
+        val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
 
         UITheme.withFont(UITheme.FontLevel.CODE) {
             val barWidth  = ImGui.getContentRegionAvailX()
@@ -209,6 +197,18 @@ class MenuBar(
             if (audioActive && UITheme.audioEngineEnabled) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue
                 ImGui.text(bpmText)
+                ImGui.popStyleColor()
+                ImGui.sameLine(0f, 0f)
+            }
+
+            // ── DSP Latency ───────────────────────────────────────────────────────
+            if (showAudio) {
+                when {
+                    audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
+                    audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
+                    else                 -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
+                }
+                ImGui.text(dspText)
                 ImGui.popStyleColor()
                 ImGui.sameLine(0f, 0f)
             }
