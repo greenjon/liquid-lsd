@@ -13,7 +13,8 @@ class MixerMonitorPanel(
     private val patchState: PatchGridState,
     private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit,
     private val onUtilityAction: (Int, Deck, Deck) -> Unit, // (mode: 0=Move, 1=Copy, 2=Swap, from, to)
-    private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit
+    private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
+    private val onEjectDeck: (Deck, Boolean, Boolean) -> Unit
 ) {
     private var pendingRightDragFrom: String? = null
 
@@ -114,6 +115,13 @@ class MixerMonitorPanel(
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Save or save as a new preset for Deck A.")
         }
+        ImGui.sameLine()
+        if (ImGui.smallButton("${Icons.EJECT}##EjectA")) {
+            onEjectDeck(mixer.deckA, true, false)
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Eject this patch")
+        }
         if (ImGui.beginPopup("save_menu_A")) {
             if (ImGui.menuItem("Save")) {
                 onSaveDeck(mixer.deckA, true, false)
@@ -136,6 +144,13 @@ class MixerMonitorPanel(
         }
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Save or save as a new preset for Deck B.")
+        }
+        ImGui.sameLine()
+        if (ImGui.smallButton("${Icons.EJECT}##EjectB")) {
+            onEjectDeck(mixer.deckB, false, false)
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Eject this patch")
         }
         if (ImGui.beginPopup("save_menu_B")) {
             if (ImGui.menuItem("Save")) {
@@ -199,6 +214,13 @@ class MixerMonitorPanel(
         }
         if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Save or save as a new preset for Deck C.")
+        }
+        ImGui.sameLine()
+        if (ImGui.smallButton("${Icons.EJECT}##EjectC")) {
+            onEjectDeck(mixer.deckC, false, true)
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Eject this patch")
         }
         if (ImGui.beginPopup("save_menu_C")) {
             if (ImGui.menuItem("Save")) {

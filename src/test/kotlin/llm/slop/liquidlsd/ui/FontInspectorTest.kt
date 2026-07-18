@@ -47,6 +47,7 @@ class FontInspectorTest {
             "ALERT" to 0xe193,
             "INFO" to 0xe0f9,
             "SAVE" to 0xe14d,
+            "EJECT" to 0xe45d,
             "UPLOAD" to 0xe19e,
             "RECTANGLE_VERTICAL" to 0xe377,
             "ROWS_2" to 0xe439,

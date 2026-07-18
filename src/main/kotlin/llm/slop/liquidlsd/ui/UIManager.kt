@@ -83,12 +83,19 @@ class UIManager(private val windowHandle: Long) {
             when (action) {
                 PopupManager.PendingDeckAction.NEW -> {
                     deck.reset()
-                    if (isDeckA) {
-                        llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                        llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
-                    } else {
-                        llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                        llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                    when {
+                        deck === currentMixer?.deckA -> {
+                            llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
+                            llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                        }
+                        deck === currentMixer?.deckB -> {
+                            llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
+                            llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                        }
+                        deck === currentMixer?.deckC -> {
+                            llm.slop.liquidlsd.patches.PatchManager.activePresetC = null
+                            llm.slop.liquidlsd.patches.PatchManager.cachedDtoC = null
+                        }
                     }
                 }
                 PopupManager.PendingDeckAction.LOAD_FILE -> {
@@ -97,15 +104,22 @@ class UIManager(private val windowHandle: Long) {
                 PopupManager.PendingDeckAction.LOAD_PRESET -> {
                     if (targetPreset != null) {
                         if (targetPreset == "None") {
-                            if (isDeckA) {
-                                llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                                llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
-                            } else {
-                                llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                                llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                            when {
+                                deck === currentMixer?.deckA -> {
+                                    llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
+                                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                                }
+                                deck === currentMixer?.deckB -> {
+                                    llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
+                                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                                }
+                                deck === currentMixer?.deckC -> {
+                                    llm.slop.liquidlsd.patches.PatchManager.activePresetC = null
+                                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoC = null
+                                }
                             }
                         } else {
-                            loadDeckPreset(targetPreset, deck, isDeckA)
+                            loadDeckPreset(targetPreset, deck, deck === currentMixer?.deckA)
                         }
                     }
                 }
@@ -256,7 +270,8 @@ class UIManager(private val windowHandle: Long) {
                 else if (deck === currentMixer?.deckB) deckBBrowser.open()
                 // Deck C save-as could be added here if needed
             }
-        }
+        },
+        onEjectDeck = { deck, isDeckA, isDeckC -> ejectDeck(deck, isDeckA, isDeckC) }
     )
 
     fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
@@ -508,6 +523,62 @@ class UIManager(private val windowHandle: Long) {
         }
         if (file.exists()) {
             llm.slop.liquidlsd.patches.PatchManager.loadDeckPresetAsync(file, isDeckA)
+        }
+    }
+
+    private fun ejectDeck(deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
+        val mixer = currentMixer ?: return
+        val isDirty = PatchManager.isDeckDirty(deck, mixer)
+        if (!isDirty) {
+            performEjectDeck(deck)
+        } else {
+            when (UITheme.autoVjDirtyBehavior) {
+                UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
+                    val activeName = when {
+                        deck === mixer.deckC -> PatchManager.activePresetC
+                        deck === mixer.deckA -> PatchManager.activePresetA
+                        else -> PatchManager.activePresetB
+                    }
+                    val label = when {
+                        deck === mixer.deckC -> "C"
+                        deck === mixer.deckA -> "A"
+                        else -> "B"
+                    }
+                    val saveName = activeName ?: "AutoVJ_${label}_${System.currentTimeMillis()}"
+                    saveDeckPreset(saveName, deck, isDeckA || isDeckC)
+                    performEjectDeck(deck)
+                }
+                UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
+                    performEjectDeck(deck)
+                }
+                UITheme.AutoVjDirtyBehavior.SKIP -> {
+                    if (deck === mixer.deckC) {
+                        popupManager.pendingDeckActionC = PopupManager.PendingDeckAction.NEW
+                    } else if (deck === mixer.deckA) {
+                        popupManager.pendingDeckActionA = PopupManager.PendingDeckAction.NEW
+                    } else {
+                        popupManager.pendingDeckActionB = PopupManager.PendingDeckAction.NEW
+                    }
+                }
+            }
+        }
+    }
+
+    private fun performEjectDeck(deck: Deck) {
+        deck.reset()
+        when {
+            deck === currentMixer?.deckC -> {
+                PatchManager.activePresetC = null
+                PatchManager.cachedDtoC = null
+            }
+            deck === currentMixer?.deckA -> {
+                PatchManager.activePresetA = null
+                PatchManager.cachedDtoA = null
+            }
+            else -> {
+                PatchManager.activePresetB = null
+                PatchManager.cachedDtoB = null
+            }
         }
     }
 
