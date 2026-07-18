@@ -171,4 +171,58 @@ class SessionStateTest {
         assertEquals(listOf(previousFile.absoluteFile, nextFile.absoluteFile), restored.files.map { it.absoluteFile })
         assertEquals(1, restored.activeIndex)
     }
+
+    @Test
+    fun testSessionPathSerialization() {
+        val root = File("presets").absoluteFile
+        val presetFile = File(root, "patches/MyPatch.lsd")
+        
+        val serialized = PatchManager.serializeSessionPath(presetFile)
+        assertEquals("patches/MyPatch.lsd", serialized)
+        
+        val outsideFile = File("/tmp/some_other_place.lsd")
+        val serializedOutside = PatchManager.serializeSessionPath(outsideFile)
+        assertEquals(outsideFile.absolutePath, serializedOutside)
+    }
+
+    @Test
+    fun testSessionPathResolution() {
+        val root = File("presets").absoluteFile
+        val presetFile = File(root, "patches/MyPatch.lsd")
+        presetFile.parentFile.mkdirs()
+        presetFile.writeText("{}")
+        
+        val resolved = PatchManager.resolveSessionPath("patches/MyPatch.lsd")
+        assertEquals(presetFile.absoluteFile, resolved?.absoluteFile)
+        
+        val outsideFile = File.createTempFile("outside", ".lsd")
+        outsideFile.writeText("{}")
+        
+        val resolvedOutside = PatchManager.resolveSessionPath(outsideFile.absolutePath)
+        assertEquals(outsideFile.absoluteFile, resolvedOutside?.absoluteFile)
+        
+        val missing = PatchManager.resolveSessionPath("missing/Patch.lsd")
+        assertNull(missing)
+        
+        presetFile.delete()
+        outsideFile.delete()
+    }
+    
+    @Test
+    fun testRestoredQueueUnresolvedItems() {
+        val root = File("presets").absoluteFile
+        val presetFile = File(root, "patches/MyPatch.lsd")
+        presetFile.parentFile.mkdirs()
+        presetFile.writeText("{}")
+        
+        PatchManager.resolveRestoredQueue(
+            listOf("patches/MyPatch.lsd", "patches/MissingPatch.lsd"),
+            savedActiveIndex = 0
+        )
+        
+        val unresolved = PatchManager.sessionState.unresolvedItems
+        assertEquals(listOf("patches/MissingPatch.lsd"), unresolved)
+        
+        presetFile.delete()
+    }
 }

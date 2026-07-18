@@ -41,37 +41,62 @@ object UITheme {
 
     // -- Mutable sizing knobs (user-tweakable from Settings later) -------------
 
-    /** Base pixel size at which BODY text is rendered. All others are derived. */
-    var baseSize: Float = 20f
+    @Volatile
+    var settings = AppSettings()
 
-    /** True if the JACK audio engine should process incoming audio and estimate tempo. */
-    var audioEngineEnabled: Boolean = true
+    var baseSize: Float
+        get() = settings.baseSize
+        set(value) { settings = settings.copy(baseSize = value) }
 
-    /** True if the background video should be rendered and UI panels are semi-transparent. */
-    var backgroundVideoEnabled: Boolean = false
+    var audioEngineEnabled: Boolean
+        get() = settings.audioEngineEnabled
+        set(value) { settings = settings.copy(audioEngineEnabled = value) }
 
+    var backgroundVideoEnabled: Boolean
+        get() = settings.backgroundVideoEnabled
+        set(value) { settings = settings.copy(backgroundVideoEnabled = value) }
 
+    var cleanModeEnabled: Boolean
+        get() = settings.cleanModeEnabled
+        set(value) { settings = settings.copy(cleanModeEnabled = value) }
 
-    /** True if the main window should hide all UI overlay panels to show full video mix. */
-    var cleanModeEnabled: Boolean = false
-
-    /** True if parameter and modulator randomization is enabled. */
-    var randomizationEnabled: Boolean = true
-
+    var randomizationEnabled: Boolean
+        get() = settings.randomizationEnabled
+        set(value) { settings = settings.copy(randomizationEnabled = value) }
 
     enum class QueueKeyTrigger { NONE, ARROWS, PAGE_UP_DOWN, SPACE_BACKSPACE }
 
-    var autoVjDirtyBehavior: AutoVjDirtyBehavior = AutoVjDirtyBehavior.AUTO_DISCARD
-    var activeMidiProfile: String = "default"
-    var queueKeyTrigger: QueueKeyTrigger = QueueKeyTrigger.NONE
-    var tooltipsEnabled: Boolean = true
-    var maxFps: Int = 30
+    var autoVjDirtyBehavior: AutoVjDirtyBehavior
+        get() = settings.autoVjDirtyBehavior
+        set(value) { settings = settings.copy(autoVjDirtyBehavior = value) }
+        
+    var activeMidiProfile: String
+        get() = settings.activeMidiProfile
+        set(value) { settings = settings.copy(activeMidiProfile = value) }
+        
+    var queueKeyTrigger: QueueKeyTrigger
+        get() = settings.queueKeyTrigger
+        set(value) { settings = settings.copy(queueKeyTrigger = value) }
+        
+    var tooltipsEnabled: Boolean
+        get() = settings.tooltipsEnabled
+        set(value) { settings = settings.copy(tooltipsEnabled = value) }
+        
+    var maxFps: Int
+        get() = settings.maxFps
+        set(value) { settings = settings.copy(maxFps = value) }
 
     enum class StartupBehavior { PREVIOUS_SESSION, EMPTY }
-    var startupBehavior: StartupBehavior = StartupBehavior.PREVIOUS_SESSION
+    
+    var startupBehavior: StartupBehavior
+        get() = settings.startupBehavior
+        set(value) { settings = settings.copy(startupBehavior = value) }
 
     enum class AssetBrowserMode { FULL, HALF, HIDE }
-    var assetBrowserMode: AssetBrowserMode = AssetBrowserMode.HALF
+    
+    var assetBrowserMode: AssetBrowserMode
+        get() = settings.assetBrowserMode
+        set(value) { settings = settings.copy(assetBrowserMode = value) }
 
     init {
         loadSettings()

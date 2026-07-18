@@ -41,11 +41,28 @@ class DeckControlPanel(
         val menuBtnW = 50f
         val browserBtnW = (fixedWidth - menuBtnW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(50f)
 
+        val deckIndex = when {
+            isDeckA -> 0
+            deck === mixer.deckC -> 2
+            else -> 1
+        }
+        val status = PatchManager.deckStatus[deckIndex].get()
+
+        val statusText = when (status.state) {
+            llm.slop.liquidlsd.patches.PatchIOState.LOADING -> " [L...]"
+            llm.slop.liquidlsd.patches.PatchIOState.SAVING -> " [S...]"
+            llm.slop.liquidlsd.patches.PatchIOState.ERROR -> " [!]"
+            else -> ""
+        }
+        val btnText = "$displayName$statusText##presetBtn_$label"
+
         // -- Preset browser trigger button -------------------------------------
-        if (ImGui.button("$displayName##presetBtn_$label", browserBtnW, 0f)) {
+        if (ImGui.button(btnText, browserBtnW, 0f)) {
             browser.open()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (status.state == llm.slop.liquidlsd.patches.PatchIOState.ERROR && ImGui.isItemHovered()) {
+            ImGui.setTooltip("Error: ${status.errorMessage}")
+        } else if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
             ImGui.setTooltip("Click to open the Tag Preset Browser for Deck $label.")
         }
 

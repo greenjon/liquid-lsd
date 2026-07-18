@@ -1,0 +1,97 @@
+--- src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt
++++ src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt
+@@ -12,6 +12,7 @@
+ import java.util.concurrent.ConcurrentLinkedQueue
+ import java.util.concurrent.ExecutorService
+ import java.util.concurrent.Executors
++import java.util.concurrent.atomic.AtomicReference
+ 
+ object PatchManager {
+     private val logger = KotlinLogging.logger {}
+@@ -24,6 +25,9 @@
+         ignoreUnknownKeys = true
+     }
+ 
++    val deckStatus = Array(3) { AtomicReference(PatchIOStatus()) }
++    private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
++
+     val globalPatchQueue = ConcurrentLinkedQueue<GlobalPatchDto>()
+     val deckAPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
+     val deckBPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
+@@ -185,7 +189,13 @@
+     }
+ 
+     fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false) {
+-        CompletableFuture.runAsync({
++        val deckIndex = when {
++            isDeckC -> 2
++            isDeckA -> 0
++            else -> 1
++        }
++        deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.LOADING))
++        val future = CompletableFuture.runAsync({
+             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
+             try {
+                 logger.info { "Loading deck preset from ${file.absolutePath} in background..." }
+@@ -199,6 +209,7 @@
+                     else -> deckBPatchQueue.offer(dto)
+                 }
+                 logger.info { "Deck preset loaded and queued for main thread swap" }
++                deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
+             } catch (e: Exception) {
+                 // Extension fallback: if .lsd fails, try .json, and vice versa.
+                 val altFile = when {
+@@ -215,10 +226,16 @@
+                 }
+ 
+                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
++                deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.ERROR, e.message ?: "Unknown error"))
+             } finally {
+                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+             }
+         }, patchIoExecutor)
++        // We don't cancel loads, just track them? The prompt says "For save operations: if a save is already queued... cancel/skip"
+     }
+ 
+     fun saveGlobalPatchAsync(file: File, mixer: Mixer, name: String) {
+@@ -241,10 +258,16 @@
+         }, patchIoExecutor)
+     }
+ 
+-    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList()) {
++    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
+         // Capture deck state on the main thread (Phase 2c: include tags)
+         val dto = deck.toDto(name, tags)
+-        CompletableFuture.runAsync({
++        
++        if (deckIndex in 0..2) {
++            deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.SAVING))
++            pendingSaves[deckIndex].getAndSet(null)?.cancel(false)
++        }
++        
++        val future = CompletableFuture.runAsync({
+             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
+             try {
+                 logger.info { "Saving deck preset to ${file.absolutePath} in background..." }
+@@ -252,11 +275,21 @@
+                 file.parentFile?.mkdirs()
+                 file.writeText(content)
+                 logger.info { "Deck preset saved to file successfully" }
++                if (deckIndex in 0..2) {
++                    deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
++                }
+             } catch (e: Exception) {
+                 logger.error(e) { "Failed to save deck preset to ${file.absolutePath}" }
++                if (deckIndex in 0..2) {
++                    deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.ERROR, e.message ?: "Unknown error"))
++                }
+             } finally {
+                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+             }
+         }, patchIoExecutor)
++        
++        if (deckIndex in 0..2) {
++            pendingSaves[deckIndex].set(future)
++        }
+     }
+ 

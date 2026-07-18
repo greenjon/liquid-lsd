@@ -126,6 +126,8 @@ class UIManager(private val windowHandle: Long) {
     private val deckABrowser = DeckPresetBrowser("A")
     private val deckBBrowser = DeckPresetBrowser("B")
 
+    private val missingItemsPanel = MissingItemsPanel()
+
 
     private var lastNextMidiCcHigh = false
     private var lastPrevMidiCcHigh = false
@@ -395,6 +397,8 @@ class UIManager(private val windowHandle: Long) {
             popupManager.drawDeckConfirmPopups(mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
 
+            missingItemsPanel.draw()
+
 
 
             deckABrowser.draw(
@@ -543,7 +547,13 @@ class UIManager(private val windowHandle: Long) {
             }
         }
         val file = File("presets/patches/$name.lsd")
-        llm.slop.liquidlsd.patches.PatchManager.saveDeckPresetAsync(file, deck, name, resolvedTags)
+        val deckIndex = when {
+            deck === currentMixer?.deckA -> 0
+            deck === currentMixer?.deckB -> 1
+            deck === currentMixer?.deckC -> 2
+            else -> -1
+        }
+        llm.slop.liquidlsd.patches.PatchManager.saveDeckPresetAsync(file, deck, name, resolvedTags, deckIndex)
     }
 
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {

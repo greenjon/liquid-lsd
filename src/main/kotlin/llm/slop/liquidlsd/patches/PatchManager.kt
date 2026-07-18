@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import mu.KotlinLogging
 import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ExecutorService
@@ -22,6 +23,14 @@ object PatchManager {
         prettyPrint = true
         ignoreUnknownKeys = true
     }
+
+    private val PRESETS_ROOT = File("presets").absoluteFile
+
+    @Volatile
+    var sessionState = SessionState()
+
+    val deckStatus = Array(3) { AtomicReference(PatchIOStatus()) }
+    private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
 
     val globalPatchQueue = ConcurrentLinkedQueue<GlobalPatchDto>()
     val deckAPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
@@ -184,6 +193,12 @@ object PatchManager {
     }
 
     fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false) {
+        val deckIndex = when {
+            isDeckC -> 2
+            isDeckA -> 0
+            else -> 1
+        }
+        deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.LOADING))
         CompletableFuture.runAsync({
             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
@@ -198,6 +213,7 @@ object PatchManager {
                     else -> deckBPatchQueue.offer(dto)
                 }
                 logger.info { "Deck preset loaded and queued for main thread swap" }
+                deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
             } catch (e: Exception) {
                 // Extension fallback: if .lsd fails, try .json, and vice versa.
                 val altFile = when {
@@ -215,6 +231,7 @@ object PatchManager {
                 }
 
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
+                deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.ERROR, e.message ?: "Unknown error"))
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
@@ -241,10 +258,16 @@ object PatchManager {
         }, patchIoExecutor)
     }
 
-    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList()) {
+    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
         // Capture deck state on the main thread (Phase 2c: include tags)
         val dto = deck.toDto(name, tags)
-        CompletableFuture.runAsync({
+        
+        if (deckIndex in 0..2) {
+            deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.SAVING))
+            pendingSaves[deckIndex].getAndSet(null)?.cancel(false)
+        }
+
+        val future = CompletableFuture.runAsync({
             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Saving deck preset to ${file.absolutePath} in background..." }
@@ -252,12 +275,22 @@ object PatchManager {
                 file.parentFile?.mkdirs()
                 file.writeText(content)
                 logger.info { "Deck preset saved to file successfully" }
+                if (deckIndex in 0..2) {
+                    deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save deck preset to ${file.absolutePath}" }
+                if (deckIndex in 0..2) {
+                    deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.ERROR, e.message ?: "Unknown error"))
+                }
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
+
+        if (deckIndex in 0..2) {
+            pendingSaves[deckIndex].set(future)
+        }
     }
 
     fun applyPendingPatches(mixer: Mixer) {
@@ -336,7 +369,7 @@ object PatchManager {
                 crossfade = mixer.crossfade.toDto(),
                 masterAlpha = mixer.masterAlpha.toDto(),
                 blendMode = mixer.mode.baseValue,
-                queue = PlayQueueManager.queue.map { it.absolutePath },
+                queue = PlayQueueManager.queue.map { serializeSessionPath(it) },
                 activeIndex = PlayQueueManager.activeIndex,
                 isAutoVJEnabled = PlayQueueManager.isAutoVJEnabled,
                 bloom = mixer.bloom.toDto(),
@@ -410,11 +443,42 @@ object PatchManager {
         }
     }
 
-    internal fun resolveRestoredQueue(queuePaths: List<String>, savedActiveIndex: Int): RestoredQueueState {
-        val existingFiles = queuePaths.mapIndexedNotNull { originalIndex, path ->
-            val file = File(path)
-            if (file.exists()) originalIndex to file else null
+    internal fun serializeSessionPath(file: File): String {
+        val absFile = file.absoluteFile
+        val rootPath = PRESETS_ROOT.absolutePath + File.separator
+        val filePath = absFile.absolutePath
+        return if (filePath.startsWith(rootPath)) {
+            filePath.substring(rootPath.length)
+        } else {
+            filePath
         }
+    }
+
+    internal fun resolveSessionPath(path: String): File? {
+        // Try as relative to presets root first
+        val relativeToRoot = File(PRESETS_ROOT, path)
+        if (relativeToRoot.exists()) return relativeToRoot
+
+        // Try as absolute path (or relative to CWD)
+        val directFile = File(path)
+        if (directFile.exists()) return directFile
+
+        return null
+    }
+
+    internal fun resolveRestoredQueue(queuePaths: List<String>, savedActiveIndex: Int): RestoredQueueState {
+        val unresolved = mutableListOf<String>()
+        val existingFiles = queuePaths.mapIndexedNotNull { originalIndex, path ->
+            val file = resolveSessionPath(path)
+            if (file != null) {
+                originalIndex to file
+            } else {
+                unresolved.add(path)
+                null
+            }
+        }
+        
+        sessionState = sessionState.copy(unresolvedItems = unresolved)
 
         if (existingFiles.isEmpty() || savedActiveIndex < 0) {
             return RestoredQueueState(existingFiles.map { it.second }, -1)
