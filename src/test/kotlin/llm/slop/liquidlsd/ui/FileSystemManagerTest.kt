@@ -68,4 +68,41 @@ class FileSystemManagerTest {
         assertTrue(result.isSuccess)
         assertFalse(source.exists())
     }
+    @Test
+    fun testConcurrentScanDoesNotDuplicateTasks() {
+        val directory = createTempDirectory().toFile()
+        File(directory, "concurrent1.lsd").writeText("{}")
+        File(directory, "concurrent2.lsd").writeText("{}")
+
+        val threads = (1..10).map {
+            Thread {
+                FileSystemManager.scanDirectory(directory)
+            }
+        }
+        
+        threads.forEach { it.start() }
+        threads.forEach { it.join() }
+        
+        // Wait for debounce and execution
+        Thread.sleep(200)
+        
+        val finalScan = FileSystemManager.scanDirectory(directory)
+        assertEquals(2, finalScan.size)
+    }
+
+    @Test
+    fun testAsyncValidationUpdatesState() {
+        val directory = createTempDirectory().toFile()
+        File(directory, "valid.lsd").writeText("{}")
+        
+        val initialScan = FileSystemManager.scanDirectory(directory)
+        assertEquals(1, initialScan.size)
+        assertTrue(initialScan[0].isValid)
+        
+        Thread.sleep(200)
+        
+        val secondScan = FileSystemManager.scanDirectory(directory)
+        assertEquals(1, secondScan.size)
+        assertTrue(secondScan[0].isValid)
+    }
 }

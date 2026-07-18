@@ -7,6 +7,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 /**
  * Manages file system operations for patches and playlists.
@@ -26,6 +29,11 @@ object FileSystemManager {
     )
 
     private val scanCache = ConcurrentHashMap<String, ScanCacheEntry>()
+    
+    private val executor = Executors.newSingleThreadScheduledExecutor { r ->
+        Thread(r, "FileSystemScanner").apply { isDaemon = true }
+    }
+    private val pendingScanFutures = ConcurrentHashMap<String, ScheduledFuture<*>>()
 
     internal fun clearScanCache() {
         scanCache.clear()
@@ -58,9 +66,6 @@ object FileSystemManager {
         }
     }
     
-    /**
-     * Scans a directory and returns all assets (patches, playlists, folders).
-     */
     fun scanDirectory(directory: File): List<AssetItem> {
         if (!directory.exists() || !directory.isDirectory) {
             return emptyList()
@@ -69,48 +74,96 @@ object FileSystemManager {
         val cacheKey = directory.canonicalPath
         val signature = directorySignature(directory)
         val now = System.currentTimeMillis()
-        scanCache[cacheKey]?.let { cached ->
-            if (cached.signature == signature && now - cached.cachedAtMs <= SCAN_CACHE_TTL_MS) {
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            if (now - cached.cachedAtMs <= SCAN_CACHE_TTL_MS) {
                 return cached.items
             }
+            triggerAsyncScan(directory, cacheKey)
+            return cached.items
         }
         
+        // Fast path for initial load or when directory contents change
+        val fastItems = performFastScan(directory)
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, fastItems)
+        triggerAsyncScan(directory, cacheKey)
+        return fastItems
+    }
+    
+    private fun performFastScan(directory: File): List<AssetItem> {
         val items = mutableListOf<AssetItem>()
-        
         directory.listFiles()?.forEach { file ->
             val ext = file.extension.lowercase()
             when {
                 file.isDirectory -> {
-                    items.add(AssetItem(
-                        path = file.absolutePath,
-                        name = file.name,
-                        type = AssetType.FOLDER
-                    ))
+                    items.add(AssetItem(path = file.absolutePath, name = file.name, type = AssetType.FOLDER))
                 }
                 ext == "lsd" || ext == "patch" || ext == "json" -> {
                     items.add(AssetItem(
-                        path = file.absolutePath,
-                        name = file.nameWithoutExtension,
-                        type = AssetType.PATCH,
-                        isValid = validatePatchFile(file)
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PATCH,
+                        isValid = true // Assume valid for fast scan
                     ))
                 }
                 ext == "lsdset" -> {
-                    val validation = validatePlaylistFile(file)
                     items.add(AssetItem(
-                        path = file.absolutePath,
-                        name = file.nameWithoutExtension,
-                        type = AssetType.PLAYLIST,
-                        isValid = validation.first,
-                        errorMessage = validation.second
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PLAYLIST,
+                        isValid = true, // Assume valid for fast scan
+                        errorMessage = "Validating..."
                     ))
                 }
             }
         }
-        
-        val sortedItems = items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
-        scanCache[cacheKey] = ScanCacheEntry(signature, now, sortedItems)
-        return sortedItems
+        return items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
+    }
+
+    private fun triggerAsyncScan(directory: File, cacheKey: String) {
+        pendingScanFutures[cacheKey]?.cancel(false)
+        val future = executor.schedule({
+            try {
+                if (!directory.exists() || !directory.isDirectory) return@schedule
+                
+                val currentSignature = directorySignature(directory)
+                val items = mutableListOf<AssetItem>()
+                
+                directory.listFiles()?.forEach { file ->
+                    val ext = file.extension.lowercase()
+                    when {
+                        file.isDirectory -> {
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.name,
+                                type = AssetType.FOLDER
+                            ))
+                        }
+                        ext == "lsd" || ext == "patch" || ext == "json" -> {
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.nameWithoutExtension,
+                                type = AssetType.PATCH,
+                                isValid = validatePatchFile(file)
+                            ))
+                        }
+                        ext == "lsdset" -> {
+                            val validation = validatePlaylistFile(file)
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.nameWithoutExtension,
+                                type = AssetType.PLAYLIST,
+                                isValid = validation.first,
+                                errorMessage = validation.second
+                            ))
+                        }
+                    }
+                }
+                val sortedItems = items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
+                scanCache[cacheKey] = ScanCacheEntry(currentSignature, System.currentTimeMillis(), sortedItems)
+            } catch (e: Exception) {
+                logger.error(e) { "Error during async scan of $directory" }
+            } finally {
+                pendingScanFutures.remove(cacheKey)
+            }
+        }, 100, TimeUnit.MILLISECONDS)
+        pendingScanFutures[cacheKey] = future
     }
     
     /**
