@@ -53,4 +53,19 @@ class FileSystemManagerTest {
             source.delete()
         }
     }
+    @Test
+    fun testDeleteRejectsTargetOutsideManagedRoots() {
+        val result = FileSystemManager.deleteFile("../../etc/passwd")
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+    }
+
+    @Test
+    fun testDeleteAllowsTargetInsideManagedRoots() {
+        val patchDir = FileSystemManager.getPatchesRoot()
+        val source = File(patchDir, "delete-test.lsd").apply { writeText("{}") }
+        val result = FileSystemManager.deleteFile(source.absolutePath)
+        assertTrue(result.isSuccess)
+        assertFalse(source.exists())
+    }
 }

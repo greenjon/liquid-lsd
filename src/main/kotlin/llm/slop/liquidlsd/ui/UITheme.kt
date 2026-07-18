@@ -281,6 +281,7 @@ object UITheme {
         fun addWithIcons(bytes: ByteArray, size: Float, config: ImFontConfig): ImFont {
             val f = atlas.addFontFromMemoryTTF(bytes, size, config)
             if (f.ptr == 0L) logger.error { "Failed to load main font at size $size" }
+            config.destroy()
 
             val iconCfg = ImFontConfig().apply {
                 setFontDataOwnedByAtlas(false)

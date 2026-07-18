@@ -53,12 +53,14 @@ class FBO(val width: Int, val height: Int) {
         glBindTexture(GL_TEXTURE_2D, 0)
 
         logger.debug { "Created FBO ${framebufferId} (${width}x${height}), texture: $texture" }
+        GLResourceTracker.register(framebufferId, "FBO created at ${Thread.currentThread().stackTrace[2]}")
     }
 
     /**
      * Bind this FBO for rendering (subsequent draw calls will render to this FBO)
      */
     fun bind() {
+        check(!isDisposed) { "FBO is already disposed!" }
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId)
         glViewport(0, 0, width, height)
     }
@@ -88,13 +90,9 @@ class FBO(val width: Int, val height: Int) {
             glDeleteTextures(texture)
             glDeleteFramebuffers(framebufferId)
             isDisposed = true
+            GLResourceTracker.unregister(framebufferId)
             logger.debug { "Disposed FBO $framebufferId" }
         }
     }
 
-    protected fun finalize() {
-        if (!isDisposed) {
-            logger.warn { "FBO $framebufferId was not disposed properly!" }
-        }
-    }
 }

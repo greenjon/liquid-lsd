@@ -36,7 +36,11 @@ object MidiJackWatchdog {
 
                     // 2. Re-establish connection to JACK server
                     if (isJackReconnectActive && UITheme.audioEngineEnabled && !AudioEngine.isActive()) {
-                        AudioEngine.tryReconnect()
+                        if (AudioEngine.patchIOInFlight.get()) {
+                            logger.warn { "Watchdog skipping JACK reconnect because Patch I/O is in flight." }
+                        } else {
+                            AudioEngine.tryReconnect()
+                        }
                     }
 
                     Thread.sleep(4000)

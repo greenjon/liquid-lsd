@@ -10,16 +10,9 @@ import java.util.concurrent.atomic.AtomicReference
 object CVRegistry {
     private val startTimeNs = System.nanoTime()
 
-    /**
-     * Immutable snapshot of the beat synchronisation anchor.
-     * Written atomically from the audio thread via [updateBeatAnchor];
-     * read atomically from the render thread via [getSynchronizedTotalBeats].
-     * Using a single AtomicReference<BeatAnchor> instead of three separate
-     * @Volatile fields prevents the render thread from observing a torn triplet
-     * where, e.g., anchorBeats has been updated but anchorTimeNs has not.
-     */
-    private data class BeatAnchor(val beats: Double, val bpm: Float, val timeNs: Long)
-    private val beatAnchor = AtomicReference(BeatAnchor(0.0, 120f, System.nanoTime()))
+    @Volatile private var anchorBeats: Double = 0.0
+    @Volatile private var anchorBpm: Float = 120f
+    @Volatile private var anchorTimeNs: Long = System.nanoTime()
 
     private val sources = ConcurrentHashMap<String, CVSource>()
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
@@ -55,26 +48,21 @@ object CVRegistry {
         histories[source.id] = CvHistoryBuffer(200)
     }
 
-    /**
-     * Updates the beat synchronization anchor. Called from the audio thread.
-     * The three values are published as a single atomic reference swap so the
-     * render thread never observes a partially-updated state.
-     */
     fun updateBeatAnchor(beats: Double, bpm: Float, timeNs: Long) {
-        beatAnchor.set(BeatAnchor(beats, bpm, timeNs))
+        anchorBeats = beats
+        anchorBpm = bpm
+        anchorTimeNs = timeNs
         updatePushedValue("bpm", bpm)
     }
 
-    /**
-     * Calculates the current synchronized total beats with sub-frame interpolation.
-     * Reads a single consistent [BeatAnchor] snapshot; safe to call from any thread.
-     */
     fun getSynchronizedTotalBeats(): Double {
-        val anchor = beatAnchor.get()
+        val beats = anchorBeats
+        val bpm = anchorBpm
+        val timeNs = anchorTimeNs
         val now = System.nanoTime()
-        val elapsedSec = (now - anchor.timeNs) / 1_000_000_000.0
-        val beatDelta = elapsedSec * (anchor.bpm / 60.0)
-        return anchor.beats + beatDelta
+        val elapsedSec = (now - timeNs) / 1_000_000_000.0
+        val beatDelta = elapsedSec * (bpm / 60.0)
+        return beats + beatDelta
     }
 
     /**

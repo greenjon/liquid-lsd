@@ -168,6 +168,7 @@ object PatchManager {
 
     fun loadGlobalPatchAsync(file: File) {
         CompletableFuture.runAsync({
+            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Loading global patch from ${file.absolutePath} in background..." }
                 val content = file.readText()
@@ -176,12 +177,15 @@ object PatchManager {
                 logger.info { "Global patch loaded from file and queued for main thread apply" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load global patch from ${file.absolutePath}" }
+            } finally {
+                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
     }
 
     fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false) {
         CompletableFuture.runAsync({
+            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Loading deck preset from ${file.absolutePath} in background..." }
                 if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
@@ -204,11 +208,15 @@ object PatchManager {
                 
                 if (altFile != null && altFile.exists()) {
                     logger.info { "File not found or failed, trying alternative: ${altFile.name}" }
+                    // clear flag before recursive call
+                    llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
                     loadDeckPresetAsync(altFile, isDeckA, isDeckC)
                     return@runAsync
                 }
 
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
+            } finally {
+                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
     }
@@ -218,6 +226,7 @@ object PatchManager {
         val dto = mixer.toDto(name)
         cachedGlobalDto = dto
         CompletableFuture.runAsync({
+            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Saving global patch to ${file.absolutePath} in background..." }
                 val content = json.encodeToString(dto)
@@ -226,6 +235,8 @@ object PatchManager {
                 logger.info { "Global patch saved to file successfully" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save global patch to ${file.absolutePath}" }
+            } finally {
+                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
     }
@@ -234,6 +245,7 @@ object PatchManager {
         // Capture deck state on the main thread (Phase 2c: include tags)
         val dto = deck.toDto(name, tags)
         CompletableFuture.runAsync({
+            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Saving deck preset to ${file.absolutePath} in background..." }
                 val content = json.encodeToString(dto)
@@ -242,6 +254,8 @@ object PatchManager {
                 logger.info { "Deck preset saved to file successfully" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save deck preset to ${file.absolutePath}" }
+            } finally {
+                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
     }

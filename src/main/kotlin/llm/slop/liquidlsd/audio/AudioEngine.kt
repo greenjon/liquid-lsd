@@ -68,12 +68,15 @@ class BeatDetector {
     private class AnalysisSnapshot {
         var fps: Float = 0f
         var bgHistoryCount: Int = 0
+        var historyIndexSnapshot: Int = 0
     }
 
     private val snapshot1 = AnalysisSnapshot()
     private val snapshot2 = AnalysisSnapshot()
     @Volatile
     private var pendingSnapshot = snapshot1
+    
+    internal val writeGen = java.util.concurrent.atomic.AtomicInteger(0)
     
     // Pre-allocated circular buffer to store envelopes without allocating memory in real-time thread.
     // 8192 blocks of history is enough for ~8s of audio at normal JACK buffer sizes.
@@ -92,10 +95,27 @@ class BeatDetector {
     @Volatile
     private var isCalculating = false
     private val bgHistoryBuffer = FloatArray(maxEnvelopeBlocks)
-    private val analysisExecutor = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
-        Thread(r, "BeatDetector-Analysis").apply { isDaemon = true }
-    }
     private val analysisTask = AnalysisTask()
+    private val analysisThread = Thread {
+        var lastProcessedGen = -1
+        while (true) {
+            try {
+                val currentGen = writeGen.get()
+                if (currentGen != lastProcessedGen) {
+                    lastProcessedGen = currentGen
+                    analysisTask.run()
+                } else {
+                    Thread.sleep(2)
+                }
+            } catch (e: InterruptedException) {
+                break
+            }
+        }
+    }.apply {
+        isDaemon = true
+        name = "BeatDetector-Analysis"
+        start()
+    }
     
     fun applyPreset(preset: BeatDetectionSettings) {
         this.settings = preset.copy()
@@ -166,22 +186,23 @@ class BeatDetector {
                     .coerceAtMost(historyCount)
                     .coerceAtMost(maxEnvelopeBlocks)
 
-                copyLatestHistoryForAnalysis(copyLength)
                 val nextSnapshot = if (pendingSnapshot === snapshot1) snapshot2 else snapshot1
                 nextSnapshot.fps = fps
                 nextSnapshot.bgHistoryCount = copyLength
+                nextSnapshot.historyIndexSnapshot = historyIndex
                 pendingSnapshot = nextSnapshot
-                analysisExecutor.execute(analysisTask)
+                
+                writeGen.incrementAndGet()
             }
         }
         
         return currentBpm.coerceIn(floorBpm, ceilBpm)
     }
 
-    private fun copyLatestHistoryForAnalysis(copyLength: Int) {
+    private fun copyLatestHistoryForAnalysis(copyLength: Int, snapHistoryIndex: Int) {
         if (copyLength <= 0) return
 
-        val start = (historyIndex - copyLength + maxEnvelopeBlocks) % maxEnvelopeBlocks
+        val start = (snapHistoryIndex - copyLength + maxEnvelopeBlocks) % maxEnvelopeBlocks
         val firstCopyLength = minOf(copyLength, maxEnvelopeBlocks - start)
         System.arraycopy(historyBuffer, start, bgHistoryBuffer, 0, firstCopyLength)
 
@@ -197,6 +218,11 @@ class BeatDetector {
                 val snap = pendingSnapshot
                 val fps = snap.fps
                 val bgHistoryCount = snap.bgHistoryCount
+                val snapHistoryIndex = snap.historyIndexSnapshot
+
+                // INVARIANT: historyBuffer is only written by the callback, and read by this background thread
+                // during this copy. A slight data race is benign here and preferred over locking the callback thread.
+                copyLatestHistoryForAnalysis(bgHistoryCount, snapHistoryIndex)
 
                 val localSettings = settings
                 val mode = localSettings.mode
@@ -291,6 +317,8 @@ object AudioEngine {
     @Volatile
     var lastJackFailureMessage: String? = null
         private set
+
+    val patchIOInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
 
     // DSP filters
     private var lastSampleRate = 44100f
@@ -416,9 +444,24 @@ object AudioEngine {
 
     /**
      * Processes a new block of audio samples from JACK. Runs on the real-time audio thread.
-     * ZERO ALLOCATIONS — all buffers are pre-allocated in [start] or at object init.
+     * 
+     * JACK CALLBACK SAFETY RULES (Strictly Enforced):
+     * - ZERO heap allocations (no `new`, no boxing, no Kotlin lambdas that allocate, no standard iterators)
+     * - ZERO blocking calls (no locks, no `synchronized`, no I/O, no Thread.sleep)
+     * - ZERO logging (no `logger.info`, `println`, etc.)
+     * 
+     * SAFE TO CALL:
+     * - Pre-allocated buffer reads/writes (FloatArray, CvHistoryBuffer)
+     * - Math operations and primitive local variables
+     * - `CVRegistry.updateBeatAnchor` (uses primitive @Volatile fields)
+     * - `CVRegistry.updatePushedValue` (uses ConcurrentHashMap.get which is wait-free for reads)
+     * - `beatDetector.processBlock` (uses atomic generation counter handoff)
+     * 
+     * UNSAFE TO CALL:
+     * - `Executors.submit { ... }` (lambda allocation)
+     * - `String` manipulation or concatenation
      */
-    private fun processAudio(buffer: FloatBuffer, nframes: Int, sampleRate: Float) {
+    internal fun processAudio(buffer: FloatBuffer, nframes: Int, sampleRate: Float) {
         val currentTime = System.nanoTime()
 
         // Ensure nframes doesn't exceed our pre-allocated buffers

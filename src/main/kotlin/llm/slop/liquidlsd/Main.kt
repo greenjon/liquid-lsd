@@ -22,7 +22,7 @@ import org.lwjgl.opengl.GL33.*
 private val logger = KotlinLogging.logger {}
 
 fun main() {
-    _root_ide_package_.llm.slop.liquidlsd.logger.info { "Starting Liquid LSD..." }
+    logger.info { "Starting Liquid LSD..." }
 
     // Ensure preset directories exist
     java.io.File("presets/patches").mkdirs()
@@ -32,7 +32,7 @@ fun main() {
 
 
     // Load active MIDI mapping profile
-    _root_ide_package_.llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(_root_ide_package_.llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
+    llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
 
     // Initialize GLFW
     if (!glfwInit()) {
@@ -305,18 +305,34 @@ fun main() {
         // Cap frame rate to UITheme.maxFps
         val targetFrameTime = 1.0 / UITheme.maxFps
         val elapsed = glfwGetTime() - frameStartTime
-        val sleepTime = targetFrameTime - elapsed
-        if (sleepTime > 0) {
-            val sleepMs = (sleepTime * 1000).toLong()
-            if (sleepMs > 0) {
+        var remaining = targetFrameTime - elapsed
+        if (remaining > 0) {
+            // First sleep with a 1 ms (1,000,000 ns) safety margin to avoid oversleeping.
+            // A 1ms margin is safe for 30/60 FPS desktop apps, giving the OS scheduler 
+            // plenty of leeway without wasting CPU in a spin loop.
+            // TODO: Since glfwSwapInterval(1) is used, we might rely purely on vsync in the future
+            // and drop this manual frame pacing entirely.
+            val sleep1Ms = ((remaining * 1000.0) - 1.0).toLong()
+            if (sleep1Ms > 0) {
                 try {
-                    Thread.sleep(sleepMs)
+                    Thread.sleep(sleep1Ms)
                 } catch (e: InterruptedException) {
                     // Ignore
                 }
             }
-            while (glfwGetTime() - frameStartTime < targetFrameTime) {
-                Thread.yield()
+            
+            // Second sleep with a smaller 0.2 ms (200,000 ns) margin to get closer to the target.
+            // No spin loop is used (Thread.yield() removed) to conserve CPU.
+            remaining = targetFrameTime - (glfwGetTime() - frameStartTime)
+            if (remaining > 0.0002) {
+                val sleep2Ns = ((remaining - 0.0002) * 1_000_000_000.0).toLong()
+                val ms = sleep2Ns / 1_000_000L
+                val ns = (sleep2Ns % 1_000_000L).toInt()
+                try {
+                    Thread.sleep(ms, ns)
+                } catch (e: InterruptedException) {
+                    // Ignore
+                }
             }
         }
     }
@@ -347,6 +363,8 @@ fun main() {
 
     // Dispose UI
     uiManager.dispose()
+
+    llm.slop.liquidlsd.rendering.GLResourceTracker.assertNoLeaks()
 
     // Dispose window
     GLDebug.disposeDebugCallback()

@@ -53,6 +53,7 @@ class Shader(vertexSource: String, fragmentSource: String) {
             fragmentId = fId
             programId = pId
             logger.debug { "Created shader program $programId" }
+            GLResourceTracker.register(programId, "Shader created at ${Thread.currentThread().stackTrace[2]}")
         } catch (e: Exception) {
             // Clean up whatever was created to prevent OpenGL leaks on failure
             if (pId != 0) {
@@ -93,6 +94,7 @@ class Shader(vertexSource: String, fragmentSource: String) {
      * Bind this shader for use
      */
     fun bind() {
+        check(!isDisposed) { "Shader program is already disposed!" }
         glUseProgram(programId)
     }
 
@@ -151,15 +153,12 @@ class Shader(vertexSource: String, fragmentSource: String) {
             glDeleteShader(fragmentId)
             glDeleteProgram(programId)
             isDisposed = true
+            GLResourceTracker.unregister(programId)
             logger.debug { "Disposed shader program $programId" }
         }
     }
 
-    protected fun finalize() {
-        if (!isDisposed) {
-            logger.warn { "Shader program $programId was not disposed properly!" }
-        }
-    }
+
 
     companion object {
         /**

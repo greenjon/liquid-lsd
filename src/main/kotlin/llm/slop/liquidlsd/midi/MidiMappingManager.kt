@@ -14,20 +14,19 @@ import java.io.File
 private val safeProfileCharacter = Regex("[^A-Za-z0-9._-]")
 private val repeatedUnderscores = Regex("_+")
 
-internal fun sanitizeMidiProfileName(profileName: String): String {
-    val sanitized = profileName.trim()
-        .replace('\\', '_')
-        .replace('/', '_')
-        .replace(safeProfileCharacter, "_")
-        .replace(repeatedUnderscores, "_")
-        .trim('.', '_', '-')
-        .take(80)
-
-    return sanitized.ifBlank { "default" }
+internal fun sanitiseProfileName(name: String): String {
+    val trimmed = name.trim()
+    if (trimmed.contains("/") || trimmed.contains("\\") || trimmed.contains("..") || trimmed.contains("\u0000")) {
+        throw IllegalArgumentException("Invalid characters in MIDI profile name: $name")
+    }
+    if (!trimmed.matches(Regex("^[a-zA-Z0-9_\\-]+$"))) {
+        throw IllegalArgumentException("MIDI profile name must contain only alphanumeric characters, underscores, and hyphens: $name")
+    }
+    return trimmed
 }
 
 internal fun midiProfileFile(midiDir: File, profileName: String): File {
-    val safeName = sanitizeMidiProfileName(profileName)
+    val safeName = sanitiseProfileName(profileName)
     val file = File(midiDir, "$safeName.json")
     val rootPath = midiDir.canonicalFile.toPath()
     val filePath = file.canonicalFile.toPath()
@@ -69,7 +68,7 @@ object MidiMappingManager {
     }
 
     fun loadProfile(profileName: String) {
-        val safeProfileName = sanitizeMidiProfileName(profileName)
+        val safeProfileName = try { sanitiseProfileName(profileName) } catch (e: Exception) { "default" }
         val file = midiProfileFile(midiDir, safeProfileName)
         if (file.exists()) {
             try {

@@ -87,7 +87,7 @@ Some imgui-java objects wrap native heap allocations and are **not garbage colle
 | Object | Where created | Where destroyed |
 |--------|-------------|----------------|
 | `ImGuiStyle` | `UIManager` — `defaultStyle = ImGuiStyle()` | `UIManager.dispose()` → `defaultStyle.destroy()` |
-| `ImFontConfig` | `UITheme.loadFonts()` per font merge | Immediately after `addFontFromMemoryTTF(...)` call |
+| `ImFontConfig` | `UITheme.loadFonts()` per font merge | Immediately after `addFontFromMemoryTTF(...)` call (including inside helper methods like `addWithIcons`) |
 
 Always call `.destroy()` on these before dropping the reference. Every other imgui-java type
 (`ImString`, `ImBoolean`, `ImInt`) is a JVM object with no native backing and does not need
