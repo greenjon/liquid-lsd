@@ -178,6 +178,18 @@ object SettingsPanel {
         UITheme.caption("unchecked is 60 FPS.")
 
         ImGui.spacing()
+        val showPerfOverlay = ImBoolean(UITheme.showPerformanceOverlay)
+        if (ImGui.checkbox("Show Performance Overlay", showPerfOverlay)) {
+            UITheme.showPerformanceOverlay = showPerfOverlay.get()
+            UITheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            ImGui.setTooltip("Display real-time frame timing and audio callback latency overlay window.")
+        }
+        ImGui.spacing()
+        UITheme.caption("Renders a lightweight window showing frame and audio budgets.")
+
+        ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 

@@ -81,14 +81,13 @@ object PerformanceStats {
 
     fun renderOverlay() {
         val flags = imgui.flag.ImGuiWindowFlags.NoTitleBar or 
-                    imgui.flag.ImGuiWindowFlags.NoResize or
-                    imgui.flag.ImGuiWindowFlags.NoMove or
                     imgui.flag.ImGuiWindowFlags.NoScrollbar or
                     imgui.flag.ImGuiWindowFlags.AlwaysAutoResize or
                     imgui.flag.ImGuiWindowFlags.NoFocusOnAppearing or
                     imgui.flag.ImGuiWindowFlags.NoNav
 
-        ImGui.setNextWindowPos(10f, 40f, imgui.flag.ImGuiCond.FirstUseEver)
+        val displayWidth = ImGui.getIO().displaySizeX
+        ImGui.setNextWindowPos(displayWidth - 310f, 40f, imgui.flag.ImGuiCond.FirstUseEver)
         ImGui.setNextWindowBgAlpha(0.6f)
         if (ImGui.begin("Timing Budget", flags)) {
             val fMs = frameTimeMs

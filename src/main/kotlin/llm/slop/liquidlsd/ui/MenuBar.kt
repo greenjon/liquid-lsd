@@ -143,6 +143,21 @@ class MenuBar(
             }
             ImGui.popStyleColor()
 
+            val showPerf = UITheme.showPerformanceOverlay
+            if (showPerf) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
+            } else {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
+            }
+            if (ImGui.menuItem("Perf Overlay", "", showPerf)) {
+                UITheme.showPerformanceOverlay = !showPerf
+                UITheme.saveSettings()
+            }
+            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                ImGui.setTooltip("Toggle the real-time frame timing and audio latency budget overlay window.")
+            }
+            ImGui.popStyleColor()
+
             // ── Right-aligned performance stats ──────────────────────────────────
             drawPerformanceStats()
 

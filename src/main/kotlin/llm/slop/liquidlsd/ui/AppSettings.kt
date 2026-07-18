@@ -12,5 +12,6 @@ data class AppSettings(
     val tooltipsEnabled: Boolean = true,
     val maxFps: Int = 30,
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
-    val assetBrowserMode: UITheme.AssetBrowserMode = UITheme.AssetBrowserMode.HALF
+    val assetBrowserMode: UITheme.AssetBrowserMode = UITheme.AssetBrowserMode.HALF,
+    val showPerformanceOverlay: Boolean = false
 )

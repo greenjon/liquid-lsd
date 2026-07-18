@@ -98,6 +98,10 @@ object UITheme {
         get() = settings.assetBrowserMode
         set(value) { settings = settings.copy(assetBrowserMode = value) }
 
+    var showPerformanceOverlay: Boolean
+        get() = settings.showPerformanceOverlay
+        set(value) { settings = settings.copy(showPerformanceOverlay = value) }
+
     init {
         loadSettings()
     }
@@ -191,6 +195,11 @@ object UITheme {
                     startupBehavior = try { StartupBehavior.valueOf(savedStartup) } catch (e: Exception) { StartupBehavior.PREVIOUS_SESSION }
                     logger.info { "Loaded startupBehavior from settings file: $startupBehavior" }
                 }
+                val savedShowPerf = props.getProperty("showPerformanceOverlay")?.toBooleanStrictOrNull()
+                if (savedShowPerf != null) {
+                    showPerformanceOverlay = savedShowPerf
+                    logger.info { "Loaded showPerformanceOverlay from settings file: $showPerformanceOverlay" }
+                }
             } else {
                 logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps" }
             }
@@ -219,6 +228,7 @@ object UITheme {
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("queueKeyTrigger", queueKeyTrigger.name)
             props.setProperty("startupBehavior", startupBehavior.name)
+            props.setProperty("showPerformanceOverlay", showPerformanceOverlay.toString())
             settingsFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             logger.info { "Saved settings to file" }
         } catch (e: Exception) {
