@@ -52,6 +52,7 @@ object CustomRangeSlider {
     }
 
     private fun drawTextInput(
+        session: llm.slop.liquidlsd.SessionContext,
         key: String,
         currentValue: Float,
         minLimit: Float,
@@ -88,7 +89,7 @@ object CustomRangeSlider {
                 onChanged(clamped)
             }
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             val fieldType = when {
                 key.endsWith("_min") -> "Minimum modulation boundary. Type to set directly. Up/Down to adjust."
                 key.endsWith("_max") -> "Maximum modulation boundary. Type to set directly. Up/Down to adjust."
@@ -102,6 +103,7 @@ object CustomRangeSlider {
     }
 
     fun drawCustomRangeSlider(
+        session: llm.slop.liquidlsd.SessionContext,
         label: String,
         currentMin: Float,
         currentMax: Float,
@@ -115,6 +117,7 @@ object CustomRangeSlider {
         parseValue: (String) -> Float? = { it.toFloatOrNull() }
     ) {
         drawCustomRangeSlider(
+            session = session,
             label = label,
             currentValue = currentMin,
             currentMin = currentMin,
@@ -133,6 +136,7 @@ object CustomRangeSlider {
     }
 
     fun drawCustomRangeSlider(
+        session: llm.slop.liquidlsd.SessionContext,
         label: String,
         currentValue: Float,
         currentMin: Float,
@@ -151,8 +155,8 @@ object CustomRangeSlider {
         isLogarithmic: Boolean = false,
         parseValue: (String) -> Float? = { it.toFloatOrNull() }
     ) {
-        val effectiveIsRandomizable = isRandomizable && UITheme.randomizationEnabled
-        val effectiveShowControls = showControls && UITheme.randomizationEnabled
+        val effectiveIsRandomizable = isRandomizable && session.uiTheme.randomizationEnabled
+        val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
 
         val rowStartX = ImGui.getCursorScreenPosX()
         val rowStartY = ImGui.getCursorScreenPosY()
@@ -215,10 +219,10 @@ object CustomRangeSlider {
         // --- ROW 1: Labels ---
         if (effectiveIsRandomizable) {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
             
             ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, startY + 2f)
-            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
             
             // Add "Current" label with [value] centered above the dynamic dot on Row 1
             val curPct = toPct(currentValue)
@@ -231,20 +235,20 @@ object CustomRangeSlider {
             val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
             
             ImGui.setCursorScreenPos(textX, startY + 2f)
-            UITheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
+            session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
         } else {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
         }
         
         // --- ROW 2: Widgets ---
         val row2Y = startY + 18f
         
         // Render name of variable beside the die, to its left, sharing vertical center
-        val textHeight = UITheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+        val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
         val textY = row2Y + (buttonSize - textHeight) / 2f
         ImGui.setCursorScreenPos(startX, textY)
-        UITheme.body(label)
+        session.uiTheme.body(label)
         
         if (effectiveShowControls) {
             val randBtnX = startX + labelColW - buttonSize
@@ -267,7 +271,7 @@ object CustomRangeSlider {
                 onRandomizeNow()
             }
             val hovered = ImGui.isItemHovered()
-            if (hovered && UITheme.tooltipsEnabled) {
+            if (hovered && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
             }
         }
@@ -275,6 +279,7 @@ object CustomRangeSlider {
         // 3. Text inputs
         if (effectiveIsRandomizable) {
             drawTextInput(
+                            session = session,
                 key = "${idPrefix}_${label}_min",
                 currentValue = currentMin,
                 minLimit = minLimit,
@@ -289,6 +294,7 @@ object CustomRangeSlider {
                 parseValue = parseValue
             )
             drawTextInput(
+                            session = session,
                 key = "${idPrefix}_${label}_max",
                 currentValue = currentMax,
                 minLimit = minLimit,
@@ -304,6 +310,7 @@ object CustomRangeSlider {
             )
         } else {
             drawTextInput(
+                            session = session,
                 key = "${idPrefix}_${label}_value",
                 currentValue = currentValue,
                 minLimit = minLimit,
@@ -452,7 +459,7 @@ object CustomRangeSlider {
         }
         
         // Hover-zone tooltips for custom range slider track/handles
-        if (UITheme.tooltipsEnabled) {
+        if (session.uiTheme.tooltipsEnabled) {
             val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
             val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
             if (inTrackY && inTrackX) {

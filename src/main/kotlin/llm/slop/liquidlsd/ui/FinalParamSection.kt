@@ -14,15 +14,14 @@ import kotlin.math.roundToInt
 
 object FinalParamSection {
 
-    fun draw(
-        state: PatchGridState,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
         param: ModulatableParameter,
         paramKey: String,
         themeColor: Int,
         mandala: Mandala?,
         modulatorHistories: MutableMap<String, CvHistoryBuffer>
     ) {
-        UITheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey.replace("/", " | "))
+        session.uiTheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey.replace("/", " | "))
         ImGui.separator()
         ImGui.spacing()
 
@@ -49,12 +48,12 @@ object FinalParamSection {
             isLobes -> "${liveVal.roundToInt()} lobes"
             else -> "%.3f".format(liveVal)
         }
-        UITheme.h3("Live Modulated Value: $liveLabel")
+        session.uiTheme.h3("Live Modulated Value: $liveLabel")
         ImGui.spacing()
 
         // Update active modulators history
         val activeMods = param.modulators.filter { 
-            !it.bypassed && (CVRegistry.exists(it.sourceId) || it.sourceId.startsWith("midi_cc_"))
+            !it.bypassed && (session.cvRegistry.exists(it.sourceId) || it.sourceId.startsWith("midi_cc_"))
         }
         val activeIds = activeMods.map { it.id }.toSet()
         modulatorHistories.keys.retainAll(activeIds)
@@ -81,14 +80,14 @@ object FinalParamSection {
         }
 
         // Oscilloscope showing final value history plus modulator histories
-        OscilloscopeDrawer.drawFinalOscilloscope(param.history, param.minClamp, param.maxClamp, themeColor, activeMods, modulatorHistories)
+        OscilloscopeDrawer.drawFinalOscilloscope(session, param.history, param.minClamp, param.maxClamp, themeColor, activeMods, modulatorHistories)
 
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
         // --- INITIAL VALUE CONTROLS ---
-        UITheme.h3("Initial Value Configuration")
+        session.uiTheme.h3("Initial Value Configuration")
         ImGui.spacing()
 
         if (isHueSweep && mandala != null) {
@@ -101,7 +100,7 @@ object FinalParamSection {
                 0
             }
 
-            UITheme.caption("Symmetric Cycles (Symmetry-preserving factor/multiple of $petals petals):")
+            session.uiTheme.caption("Symmetric Cycles (Symmetry-preserving factor/multiple of $petals petals):")
 
             val labels = options.map { "$it cycles" }.toTypedArray()
             val selectedOpt = ImInt(currentIndex)
@@ -111,21 +110,20 @@ object FinalParamSection {
                 val newVal = if (options.size > 1) nextIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
                 param.set(newVal)
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Select symmetry-preserving cycle count. Keeps color distributions aligned with geometry lobes.")
             }
             ImGui.popItemWidth()
 
             ImGui.spacing()
-            UITheme.caption("Choose the number of color repetitions along the curve.")
-            UITheme.caption("Because it is a factor or multiple of $petals, symmetry is preserved!")
+            session.uiTheme.caption("Choose the number of color repetitions along the curve.")
+            session.uiTheme.caption("Because it is a factor or multiple of $petals, symmetry is preserved!")
 
             ImGui.spacing()
             ImGui.separator()
             ImGui.spacing()
 
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = "hue_sweep_base",
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = "hue_sweep_base",
                 label = "Symmetry Random Range",
                 currentValue = param.baseValue,
                 currentMin = param.baseMin,
@@ -175,8 +173,7 @@ object FinalParamSection {
         } else {
             val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
 
-            CustomRangeSlider.drawCustomRangeSlider(
-                label = "Initial Range",
+            CustomRangeSlider.drawCustomRangeSlider(session, label = "Initial Range",
                 currentValue = param.baseValue,
                 currentMin = param.baseMin,
                 currentMax = param.baseMax,
@@ -247,7 +244,7 @@ object FinalParamSection {
             )
         }
 
-        if (UITheme.randomizationEnabled) {
+        if (session.uiTheme.randomizationEnabled) {
             ImGui.spacing()
             val randomizeBaseActive = param.randomizeBase
             if (!randomizeBaseActive) {
@@ -267,7 +264,7 @@ object FinalParamSection {
             val petals = mandala.recipe.petals
             val options = mandala.getSymmetricHueCycles(petals)
             val idx = if (options.size > 1) (param.baseValue * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
-            UITheme.caption("Static Initial Value: ${options[idx]} cycles")
+            session.uiTheme.caption("Static Initial Value: ${options[idx]} cycles")
         } else if (isBgStyle) {
             val label = when (param.baseValue.roundToInt()) {
                 0 -> "Off"
@@ -275,9 +272,9 @@ object FinalParamSection {
                 2 -> "Plasma"
                 else -> "Off"
             }
-            UITheme.caption("Static Initial Value: $label")
+            session.uiTheme.caption("Static Initial Value: $label")
         } else {
-            UITheme.caption("Static Initial Value: %.3f".format(param.baseValue))
+            session.uiTheme.caption("Static Initial Value: %.3f".format(param.baseValue))
         }
         val baseBarW = ImGui.getContentRegionAvailX()
         val baseDl = ImGui.getWindowDrawList()

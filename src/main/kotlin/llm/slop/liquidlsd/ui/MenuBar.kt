@@ -17,24 +17,24 @@ class MenuBar(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    fun draw(mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         if (ImGui.beginMainMenuBar()) {
             if (ImGui.beginMenu("File")) {
                 if (ImGui.beginMenu("New Patch")) {
                     if (ImGui.menuItem("To Deck A")) {
                         mixer.deckA.reset()
-                        PatchManager.activePresetA = null
-                        PatchManager.cachedDtoA = null
+                        session.patchManager.activePresetA = null
+                        session.patchManager.cachedDtoA = null
                     }
                     if (ImGui.menuItem("To Deck B")) {
                         mixer.deckB.reset()
-                        PatchManager.activePresetB = null
-                        PatchManager.cachedDtoB = null
+                        session.patchManager.activePresetB = null
+                        session.patchManager.cachedDtoB = null
                     }
                     if (ImGui.menuItem("To Deck C")) {
                         mixer.deckC.reset()
-                        PatchManager.activePresetC = null
-                        PatchManager.cachedDtoC = null
+                        session.patchManager.activePresetC = null
+                        session.patchManager.cachedDtoC = null
                     }
                     ImGui.endMenu()
                 }
@@ -46,7 +46,7 @@ class MenuBar(
                 ImGui.endMenu()
             }
 
-            if (UITheme.randomizationEnabled) {
+            if (session.uiTheme.randomizationEnabled) {
                 if (ImGui.beginMenu("Randomize")) {
                     if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
                         PatchGridUndo.pushUndoState(patchState, mixer)
@@ -92,7 +92,7 @@ class MenuBar(
                     }
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
             }
             if (isMidiLearn) {
@@ -102,22 +102,22 @@ class MenuBar(
             if (ImGui.menuItem("Settings")) {
                 onOpenSettings()
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
             }
 
-            val isAudioActive = llm.slop.liquidlsd.audio.AudioEngine.isActive()
-            if (!isAudioActive && UITheme.audioEngineEnabled) {
+            val isAudioActive = session.audioEngine.isActive()
+            if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange warning
             }
-            val audioEngineLabel = if (!isAudioActive && UITheme.audioEngineEnabled) "Audio Engine [!]" else "Audio Engine"
+            val audioEngineLabel = if (!isAudioActive && session.uiTheme.audioEngineEnabled) "Audio Engine [!]" else "Audio Engine"
             if (ImGui.menuItem(audioEngineLabel)) {
                 onOpenAudioEngineMonitor()
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("View real-time input waveforms, estimated BPM, and sound-derived modulation signals.")
             }
-            if (!isAudioActive && UITheme.audioEngineEnabled) {
+            if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
                 ImGui.popStyleColor()
             }
 
@@ -128,23 +128,23 @@ class MenuBar(
                 ImGui.endMenu()
             }
 
-            val tooltipsEnabled = UITheme.tooltipsEnabled
+            val tooltipsEnabled = session.uiTheme.tooltipsEnabled
             if (tooltipsEnabled) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
             } else {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
             }
             if (ImGui.menuItem("Tooltips", "", tooltipsEnabled)) {
-                UITheme.tooltipsEnabled = !tooltipsEnabled
-                UITheme.saveSettings()
+                session.uiTheme.tooltipsEnabled = !tooltipsEnabled
+                session.uiTheme.saveSettings()
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
             }
             ImGui.popStyleColor()
 
             // ── Right-aligned performance stats ──────────────────────────────────
-            drawPerformanceStats()
+            drawPerformanceStats(session)
 
             ImGui.endMainMenuBar()
         }
@@ -155,23 +155,23 @@ class MenuBar(
      * Each metric is colourised: green = healthy, yellow = marginal, red = problematic.
      * Zero allocations per frame (all formatting is done with pre-allocated StringBuilder).
      */
-    private fun drawPerformanceStats() {
+    private fun drawPerformanceStats(session: llm.slop.liquidlsd.SessionContext) {
         val fps        = PerformanceStats.fps
         val ftMs       = PerformanceStats.frameTimeMs
         val cpuFrac    = PerformanceStats.processCpuFraction   // -1 if unavailable
         val bpm        = PerformanceStats.bpm
-        val audioActive = AudioEngine.isActive()
+        val audioActive = session.audioEngine.isActive()
         val audioLatency = PerformanceStats.audioCallbackMs
-        val showAudio = audioActive && UITheme.audioEngineEnabled && audioLatency > 0.0f
+        val showAudio = audioActive && session.uiTheme.audioEngineEnabled && audioLatency > 0.0f
 
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
-        val bpmText = if (audioActive && UITheme.audioEngineEnabled) "BPM: %3.0f  ".format(bpm) else ""
+        val bpmText = if (audioActive && session.uiTheme.audioEngineEnabled) "BPM: %3.0f  ".format(bpm) else ""
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else ""
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%.0f ms  ".format(ftMs)
         val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
 
-        UITheme.withFont(UITheme.FontLevel.CODE) {
+        session.uiTheme.withFont(UITheme.FontLevel.CODE) {
             val barWidth  = ImGui.getContentRegionAvailX()
             val textWidth = ImGui.calcTextSize(fullLabel).x
             val startX    = ImGui.getCursorPosX() + barWidth - textWidth
@@ -194,7 +194,7 @@ class MenuBar(
             }
 
             // ── BPM ───────────────────────────────────────────────────────────────
-            if (audioActive && UITheme.audioEngineEnabled) {
+            if (audioActive && session.uiTheme.audioEngineEnabled) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue
                 ImGui.text(bpmText)
                 ImGui.popStyleColor()
@@ -214,7 +214,7 @@ class MenuBar(
             }
 
             // ── FPS ───────────────────────────────────────────────────────────────
-            val maxFpsConfig = UITheme.maxFps
+            val maxFpsConfig = session.uiTheme.maxFps
             val (fpsRed, fpsYellow) = if (maxFpsConfig <= 30) {
                 20f to 27f
             } else {

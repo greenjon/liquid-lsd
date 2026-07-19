@@ -17,7 +17,7 @@ object SidebarPanel {
     
     var currentView: LibraryView = LibraryView.Patches(FileSystemManager.getPatchesRoot())
 
-    fun draw(mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         // Node 2: Playlists
         val isPlaylistsActive = currentView is LibraryView.PlaylistsRoot || currentView is LibraryView.SpecificPlaylist
         val playlistsFlags = ImGuiTreeNodeFlags.OpenOnArrow or ImGuiTreeNodeFlags.OpenOnDoubleClick or ImGuiTreeNodeFlags.SpanAvailWidth or
@@ -27,7 +27,7 @@ object SidebarPanel {
             currentView = LibraryView.PlaylistsRoot
         }
         if (playlistsOpened) {
-            drawPlaylistsSidebarTree(FileSystemManager.getPlaylistsRoot(), mixer)
+            drawPlaylistsSidebarTree(session, FileSystemManager.getPlaylistsRoot(), mixer)
             ImGui.treePop()
         }
         
@@ -48,14 +48,14 @@ object SidebarPanel {
         }
     }
 
-    private fun drawPlaylistsSidebarTree(root: File, mixer: Mixer) {
+    private fun drawPlaylistsSidebarTree(session: llm.slop.liquidlsd.SessionContext, root: File, mixer: Mixer) {
         val items = FileSystemManager.scanDirectory(root)
         items.forEach { asset ->
             if (asset.type == AssetType.FOLDER) {
                 val flags = ImGuiTreeNodeFlags.OpenOnArrow or ImGuiTreeNodeFlags.OpenOnDoubleClick or ImGuiTreeNodeFlags.SpanAvailWidth
                 val opened = ImGui.treeNodeEx("[D] ${asset.name}##sidebar_${asset.path}", flags)
                 if (opened) {
-                    drawPlaylistsSidebarTree(File(asset.path), mixer)
+                    drawPlaylistsSidebarTree(session, File(asset.path), mixer)
                     ImGui.treePop()
                 }
             } else if (asset.type == AssetType.PLAYLIST) {

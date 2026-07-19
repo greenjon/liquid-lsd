@@ -18,6 +18,7 @@ object BeatDivisionSlider {
     private var clickMouseX = 0f
 
     fun drawBeatDivisionSlider(
+        session: llm.slop.liquidlsd.SessionContext,
         label: String,
         currentMin: Float,
         currentMax: Float,
@@ -29,6 +30,7 @@ object BeatDivisionSlider {
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
     ) {
         drawBeatDivisionSlider(
+            session = session,
             label = label,
             currentValue = currentMin,
             currentMin = currentMin,
@@ -45,6 +47,7 @@ object BeatDivisionSlider {
     }
 
     fun drawBeatDivisionSlider(
+        session: llm.slop.liquidlsd.SessionContext,
         label: String,
         currentValue: Float,
         currentMin: Float,
@@ -61,8 +64,8 @@ object BeatDivisionSlider {
         idPrefix: String = "",
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
     ) {
-        val effectiveIsRandomizable = isRandomizable && UITheme.randomizationEnabled
-        val effectiveShowControls = showControls && UITheme.randomizationEnabled
+        val effectiveIsRandomizable = isRandomizable && session.uiTheme.randomizationEnabled
+        val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
 
         val rowStartX = ImGui.getCursorScreenPosX()
         val rowStartY = ImGui.getCursorScreenPosY()
@@ -103,10 +106,10 @@ object BeatDivisionSlider {
         // --- ROW 1: Labels ---
         if (effectiveIsRandomizable) {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
 
             ImGui.setCursorScreenPos(textBoxesStartX + comboWidth + comboSpacing, startY + 2f)
-            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
 
             val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
             val curX = lineStartX + curPct * lineWidth
@@ -118,20 +121,20 @@ object BeatDivisionSlider {
             val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
 
             ImGui.setCursorScreenPos(textX, startY + 2f)
-            UITheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
+            session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
         } else {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            UITheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
         }
 
         // --- ROW 2: Widgets ---
         val row2Y = startY + 18f
 
         // Render name of variable beside the die, to its left, sharing vertical center
-        val textHeight = UITheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+        val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
         val textY = row2Y + (buttonSize - textHeight) / 2f
         ImGui.setCursorScreenPos(startX, textY)
-        UITheme.body(label)
+        session.uiTheme.body(label)
 
         if (effectiveShowControls) {
             val randBtnX = startX + labelColW - buttonSize
@@ -154,7 +157,7 @@ object BeatDivisionSlider {
                 onRandomizeNow()
             }
             val hovered = ImGui.isItemHovered()
-            if (hovered && UITheme.tooltipsEnabled) {
+            if (hovered && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
             }
         }
@@ -169,7 +172,7 @@ object BeatDivisionSlider {
                 val nextMin = minIdx.get().toFloat()
                 onRangeChanged(nextMin, maxOf(nextMin, currentMax))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Minimum modulation speed subdivision dropdown")
             }
             ImGui.popItemWidth()
@@ -182,7 +185,7 @@ object BeatDivisionSlider {
                 val nextMax = maxIdx.get().toFloat()
                 onRangeChanged(minOf(nextMax, currentMin), nextMax)
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Maximum modulation speed subdivision dropdown")
             }
             ImGui.popItemWidth()
@@ -193,7 +196,7 @@ object BeatDivisionSlider {
             if (ImGui.combo("##bd_val_$label", valIdx, subdivisionLabels)) {
                 onValueChanged(valIdx.get().toFloat())
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Base speed subdivision dropdown")
             }
             ImGui.popItemWidth()
@@ -313,7 +316,7 @@ object BeatDivisionSlider {
         }
 
         // Hover-zone tooltips for beat division slider track/handles
-        if (UITheme.tooltipsEnabled) {
+        if (session.uiTheme.tooltipsEnabled) {
             val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
             val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
             if (inTrackY && inTrackX) {

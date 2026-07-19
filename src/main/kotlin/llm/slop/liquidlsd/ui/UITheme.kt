@@ -20,8 +20,8 @@ import java.util.Properties
  * frame automatically via imgui-java's GL3 renderer.
  *
  * Usage:
- *   UITheme.h1("Main Title")
- *   UITheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.text("small note") }
+ *   session.uiTheme.h1("Main Title")
+ *   session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.text("small note") }
  *
  * For coloured variants use withFont directly; the named helpers are just
  * convenience wrappers for the most common single-text-call pattern.
@@ -140,13 +140,10 @@ object UITheme {
                     AudioEngine.inputGain = savedGain
                     logger.info { "Loaded audioInputGain from settings file: $savedGain" }
                 }
-                val savedBpmLocked = props.getProperty("audioBpmLocked")?.toBooleanStrictOrNull()
-                if (savedBpmLocked != null) {
+                props.getProperty("audioBpmLocked")?.toBooleanStrictOrNull()?.let { savedBpmLocked ->
                     AudioEngine.isBpmLocked = savedBpmLocked
-                    logger.info { "Loaded audioBpmLocked from settings: $savedBpmLocked" }
                 }
-                val savedManualBpm = props.getProperty("audioManualBpm")?.toFloatOrNull()
-                if (savedManualBpm != null) {
+                props.getProperty("audioManualBpm")?.toFloatOrNull()?.let { savedManualBpm ->
                     AudioEngine.manualBpm = savedManualBpm
                     logger.info { "Loaded audioManualBpm from settings: $savedManualBpm" }
                 }

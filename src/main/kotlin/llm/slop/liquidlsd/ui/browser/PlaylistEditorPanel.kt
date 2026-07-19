@@ -14,7 +14,7 @@ import mu.KotlinLogging
 object PlaylistEditorPanel {
     private val logger = KotlinLogging.logger {}
 
-    fun draw(playlist: PlaylistManager.Playlist, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, playlist: PlaylistManager.Playlist, mixer: Mixer) {
         // List of patches in playlist
         var moveFrom = -1
         var moveTo = -1
@@ -44,14 +44,14 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
             if (ImGui.button("A##deck_a", 24f, 24f) && exists) {
                 val targetDeck = mixer.deckA
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    PatchManager.loadDeckPresetAsync(resolvedFile, isDeckA = true, isDeckC = false)
+                    session.patchManager.loadDeckPresetAsync(resolvedFile, isDeckA = true, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, true, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Load patch to Deck A.")
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load patch to Deck A.")
             ImGui.popStyleColor(5)
 
             ImGui.sameLine()
@@ -64,14 +64,14 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
             if (ImGui.button("B##deck_b", 24f, 24f) && exists) {
                 val targetDeck = mixer.deckB
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    PatchManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = false)
+                    session.patchManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Load patch to Deck B.")
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load patch to Deck B.")
             ImGui.popStyleColor(5)
 
             ImGui.sameLine()
@@ -84,14 +84,14 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
             if (ImGui.button("C##deck_c", 24f, 24f) && exists) {
                 val targetDeck = mixer.deckC
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    PatchManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = true)
+                    session.patchManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = true)
                 } else {
                     UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) ImGui.setTooltip("Preview patch on Deck C (Preview/C).")
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview patch on Deck C (Preview/C).")
             ImGui.popStyleColor(5)
 
             ImGui.popStyleVar(2)
@@ -142,13 +142,13 @@ object PlaylistEditorPanel {
             // Right-click menu
             if (ImGui.beginPopupContextItem("playlist_item_menu")) {
                 if (ImGui.menuItem("Play now (and replace queue)")) {
-                    PlayQueueManager.playNow(resolvedFile, mixer)
+                    session.playQueueManager.playNow(resolvedFile, mixer)
                 }
                 if (ImGui.menuItem("Insert into the queue after current")) {
-                    PlayQueueManager.insertAfterCurrent(resolvedFile)
+                    session.playQueueManager.insertAfterCurrent(resolvedFile)
                 }
                 if (ImGui.menuItem("Add to the bottom of the queue")) {
-                    PlayQueueManager.appendToQueue(resolvedFile)
+                    session.playQueueManager.appendToQueue(resolvedFile)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Remove")) {

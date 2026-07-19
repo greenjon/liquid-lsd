@@ -22,13 +22,13 @@ class DeckControlPanel(
 ) {
     private var pendingRightDragFrom: String? = null
 
-    fun drawDeckPresetDropdown(mixer: Mixer, label: String, deck: Deck, isDeckA: Boolean, fixedWidth: Float) {
+    fun drawDeckPresetDropdown(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, label: String, deck: Deck, isDeckA: Boolean, fixedWidth: Float) {
         ImGui.beginGroup()
         ImGui.pushID("presetRow_$label")
 
-        val activePreset = if (isDeckA) PatchManager.activePresetA
-                           else        PatchManager.activePresetB
-        val isDirty = PatchManager.isDeckDirty(deck, mixer)
+        val activePreset = if (isDeckA) session.patchManager.activePresetA
+                           else        session.patchManager.activePresetB
+        val isDirty = session.patchManager.isDeckDirty(deck, mixer)
 
         val displayName = when {
             activePreset == null -> "None"
@@ -46,7 +46,7 @@ class DeckControlPanel(
             deck === mixer.deckC -> 2
             else -> 1
         }
-        val status = PatchManager.deckStatus[deckIndex].get()
+        val status = session.patchManager.deckStatus[deckIndex].get()
 
         val statusText = when (status.state) {
             llm.slop.liquidlsd.patches.PatchIOState.LOADING -> " [L...]"
@@ -62,7 +62,7 @@ class DeckControlPanel(
         }
         if (status.state == llm.slop.liquidlsd.patches.PatchIOState.ERROR && ImGui.isItemHovered()) {
             ImGui.setTooltip("Error: ${status.errorMessage}")
-        } else if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        } else if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Click to open the Tag Preset Browser for Deck $label.")
         }
 
@@ -73,7 +73,7 @@ class DeckControlPanel(
         if (ImGui.button("Menu##menu_$label", menuBtnW, 0f)) {
             ImGui.openPopup("deck_preset_menu_$label")
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Deck operations menu (Reset, Load, Save, Save As, Delete).")
         }
 
@@ -128,7 +128,7 @@ class DeckControlPanel(
         ImGui.endGroup()
     }
 
-    fun drawDeckControls(mixer: Mixer, label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean, onUtilityAction: (Int, Deck, Deck) -> Unit) {
+    fun drawDeckControls(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean, onUtilityAction: (Int, Deck, Deck) -> Unit) {
         ImGui.pushID(label)
 
         val themeCol = if (isDeckA) {
@@ -165,7 +165,7 @@ class DeckControlPanel(
         
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_$label", imgAvailW, imgAvailH)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive monitor for Deck $label. Drag to route to another deck or drop presets to load.")
         }
         
@@ -188,9 +188,9 @@ class DeckControlPanel(
             if (payload != null) {
                 val file = File(payload)
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                    val isDirty = PatchManager.isDeckDirty(deck, mixer)
+                    val isDirty = session.patchManager.isDeckDirty(deck, mixer)
                     if (!isDirty) {
-                        PatchManager.loadDeckPresetAsync(file, isDeckA, deck === mixer.deckC)
+                        session.patchManager.loadDeckPresetAsync(file, isDeckA, deck === mixer.deckC)
                     } else {
                         // Pass this to UIManager via a new callback or use PopupManager directly if we can
                         // For now, let's assume we need to trigger the popup

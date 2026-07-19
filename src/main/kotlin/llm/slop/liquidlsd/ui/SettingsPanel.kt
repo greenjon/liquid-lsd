@@ -26,7 +26,7 @@ object SettingsPanel {
 
     fun open() = ImGui.openPopup(POPUP_ID)
 
-    fun draw(currentSize: Float, displayW: Float, displayH: Float,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, displayW: Float, displayH: Float,
              onSizeChanged: (Float) -> Unit) {
         val modalW = MODAL_W.coerceAtMost((displayW - MODAL_MARGIN).coerceAtLeast(240f))
         val contentAnchorW = (modalW - WINDOW_PADDING_W).coerceAtLeast(180f)
@@ -52,7 +52,7 @@ object SettingsPanel {
         // Appearance section
         // ---------------------------------------------------------------------
         ImGui.spacing()
-        UITheme.h2("Appearance")
+        session.uiTheme.h2("Appearance")
         ImGui.separator()
         ImGui.spacing()
 
@@ -63,13 +63,13 @@ object SettingsPanel {
                     word.lowercase().replaceFirstChar { it.uppercaseChar() }
                 }
         }.toTypedArray()
-        val currentThemeIdx = imgui.type.ImInt(UITheme.theme.ordinal)
+        val currentThemeIdx = imgui.type.ImInt(session.uiTheme.theme.ordinal)
         if (ImGui.combo("UI Theme", currentThemeIdx, themeNames)) {
             val nextTheme = themes[currentThemeIdx.get()]
-            UITheme.theme = nextTheme
-            UITheme.saveSettings()
+            session.uiTheme.theme = nextTheme
+            session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Select the user interface color palette theme.")
         }
         ImGui.spacing()
@@ -78,7 +78,7 @@ object SettingsPanel {
         // Fonts section
         // ---------------------------------------------------------------------
         ImGui.spacing()
-        UITheme.h2("Fonts")
+        session.uiTheme.h2("Fonts")
         ImGui.separator()
         ImGui.spacing()
 
@@ -91,10 +91,10 @@ object SettingsPanel {
 
             // Left: field label + preview
             ImGui.tableSetColumnIndex(0)
-            UITheme.body("Global Size")
+            session.uiTheme.body("Global Size")
             ImGui.spacing()
             val t = UITheme
-            UITheme.caption(
+            session.uiTheme.caption(
                 "Cap ${(currentSize * t.multCaption).toInt()}  " +
                 "Body ${(currentSize * t.multBody).toInt()}  " +
                 "H3 ${(currentSize * t.multH3).toInt()}  " +
@@ -113,13 +113,13 @@ object SettingsPanel {
             if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
             if (ImGui.button("  -  ##dec") && canDecrease)
                 onSizeChanged(currentSize - STEP)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Decrease global interface and font size.")
             }
             if (!canDecrease) ImGui.popStyleVar()
 
             ImGui.sameLine()
-            UITheme.withFont(UITheme.FontLevel.CODE) {
+            session.uiTheme.withFont(UITheme.FontLevel.CODE) {
                 ImGui.text("%2.0f px".format(currentSize))
             }
             ImGui.sameLine()
@@ -128,7 +128,7 @@ object SettingsPanel {
             if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
             if (ImGui.button("  +  ##inc") && canIncrease)
                 onSizeChanged(currentSize + STEP)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Increase global interface and font size.")
             }
             if (!canIncrease) ImGui.popStyleVar()
@@ -140,29 +140,29 @@ object SettingsPanel {
         // Audio Engine Settings
         // ---------------------------------------------------------------------
         ImGui.spacing()
-        UITheme.h2("Audio")
+        session.uiTheme.h2("Audio")
         ImGui.separator()
         ImGui.spacing()
 
-        val audioEnabled = ImBoolean(UITheme.audioEngineEnabled)
+        val audioEnabled = ImBoolean(session.uiTheme.audioEngineEnabled)
         if (ImGui.checkbox("Enable Audio Engine (JACK)", audioEnabled)) {
             val nextVal = audioEnabled.get()
-            if (nextVal != UITheme.audioEngineEnabled) {
-                UITheme.audioEngineEnabled = nextVal
-                UITheme.saveSettings()
+            if (nextVal != session.uiTheme.audioEngineEnabled) {
+                session.uiTheme.audioEngineEnabled = nextVal
+                session.uiTheme.saveSettings()
                 if (nextVal) {
-                    llm.slop.liquidlsd.audio.AudioEngine.start()
+                    session.audioEngine.start()
                 } else {
-                    llm.slop.liquidlsd.audio.AudioEngine.stop()
+                    session.audioEngine.stop()
                 }
             }
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Toggle the JACK audio backend. When disabled, audio-derived modulation columns are hidden.")
         }
         ImGui.spacing()
-        UITheme.caption("Disabling the audio engine stops JACK audio processing")
-        UITheme.caption("and limits patch grid columns to LFO, RAND, and MIDI.")
+        session.uiTheme.caption("Disabling the audio engine stops JACK audio processing")
+        session.uiTheme.caption("and limits patch grid columns to LFO, RAND, and MIDI.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -171,37 +171,37 @@ object SettingsPanel {
         // ---------------------------------------------------------------------
         // Video Settings
         // ---------------------------------------------------------------------
-        UITheme.h2("Video")
+        session.uiTheme.h2("Video")
         ImGui.separator()
         ImGui.spacing()
 
-        val bgVideoEnabled = ImBoolean(UITheme.backgroundVideoEnabled)
+        val bgVideoEnabled = ImBoolean(session.uiTheme.backgroundVideoEnabled)
         if (ImGui.checkbox("Background Video", bgVideoEnabled)) {
             val nextVal = bgVideoEnabled.get()
-            if (nextVal != UITheme.backgroundVideoEnabled) {
-                UITheme.backgroundVideoEnabled = nextVal
-                UITheme.saveSettings()
+            if (nextVal != session.uiTheme.backgroundVideoEnabled) {
+                session.uiTheme.backgroundVideoEnabled = nextVal
+                session.uiTheme.saveSettings()
             }
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Render master output video in the background with semi-transparent panels.")
         }
         ImGui.spacing()
-        UITheme.caption("When enabled, the final output video renders behind the UI,")
-        UITheme.caption("and the interface panels become semi-transparent.")
+        session.uiTheme.caption("When enabled, the final output video renders behind the UI,")
+        session.uiTheme.caption("and the interface panels become semi-transparent.")
 
         ImGui.spacing()
-        val limit30 = ImBoolean(UITheme.maxFps == 30)
+        val limit30 = ImBoolean(session.uiTheme.maxFps == 30)
         if (ImGui.checkbox("Limit FPS to 30", limit30)) {
-            UITheme.maxFps = if (limit30.get()) 30 else 60
-            UITheme.saveSettings()
+            session.uiTheme.maxFps = if (limit30.get()) 30 else 60
+            session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Limit the rendering frame rate to 30 FPS instead of 60 FPS.")
         }
         ImGui.spacing()
-        UITheme.caption("Limits the rendering frame rate of the main loop. Checked is 30 FPS,")
-        UITheme.caption("unchecked is 60 FPS.")
+        session.uiTheme.caption("Limits the rendering frame rate of the main loop. Checked is 30 FPS,")
+        session.uiTheme.caption("unchecked is 60 FPS.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -210,24 +210,24 @@ object SettingsPanel {
         // ---------------------------------------------------------------------
         // Randomization Settings
         // ---------------------------------------------------------------------
-        UITheme.h2("Randomization")
+        session.uiTheme.h2("Randomization")
         ImGui.separator()
         ImGui.spacing()
 
-        val randEnabled = ImBoolean(UITheme.randomizationEnabled)
+        val randEnabled = ImBoolean(session.uiTheme.randomizationEnabled)
         if (ImGui.checkbox("Enable Parameter Randomization", randEnabled)) {
             val nextVal = randEnabled.get()
-            if (nextVal != UITheme.randomizationEnabled) {
-                UITheme.randomizationEnabled = nextVal
-                UITheme.saveSettings()
+            if (nextVal != session.uiTheme.randomizationEnabled) {
+                session.uiTheme.randomizationEnabled = nextVal
+                session.uiTheme.saveSettings()
             }
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Toggle parameter and modulator randomization features.")
         }
         ImGui.spacing()
-        UITheme.caption("When disabled, all sliders collapse to single static values")
-        UITheme.caption("and randomization controls/menus are hidden.")
+        session.uiTheme.caption("When disabled, all sliders collapse to single static values")
+        session.uiTheme.caption("and randomization controls/menus are hidden.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -236,23 +236,23 @@ object SettingsPanel {
         // ---------------------------------------------------------------------
         // Startup Settings
         // ---------------------------------------------------------------------
-        UITheme.h2("Startup")
+        session.uiTheme.h2("Startup")
         ImGui.separator()
         ImGui.spacing()
 
         val startupBehaviors = UITheme.StartupBehavior.values()
         val startupOptions = arrayOf("Restore Previous Session", "Start Empty")
-        val currentStartupIdx = imgui.type.ImInt(UITheme.startupBehavior.ordinal)
+        val currentStartupIdx = imgui.type.ImInt(session.uiTheme.startupBehavior.ordinal)
         if (ImGui.combo("Startup Behavior", currentStartupIdx, startupOptions)) {
-            UITheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
-            UITheme.saveSettings()
+            session.uiTheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
+            session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Restore Previous Session: Reload decks and play queue on launch.\nStart Empty: Clean slate.")
         }
         ImGui.spacing()
-        UITheme.caption("Choose whether to load the previous session (active deck contents and play queue)")
-        UITheme.caption("or start with empty decks and queue.")
+        session.uiTheme.caption("Choose whether to load the previous session (active deck contents and play queue)")
+        session.uiTheme.caption("or start with empty decks and queue.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -261,30 +261,30 @@ object SettingsPanel {
         // ---------------------------------------------------------------------
         // Queue & Live Mode Settings
         // ---------------------------------------------------------------------
-        UITheme.h2("Queue & Live Mode")
+        session.uiTheme.h2("Queue & Live Mode")
         ImGui.separator()
         ImGui.spacing()
 
         val autoVjBehaviors = UITheme.AutoVjDirtyBehavior.values()
         val autoVjBehaviorNames = autoVjBehaviors.map { it.name }.toTypedArray()
-        val currentAutoVjIdx = imgui.type.ImInt(UITheme.autoVjDirtyBehavior.ordinal)
+        val currentAutoVjIdx = imgui.type.ImInt(session.uiTheme.autoVjDirtyBehavior.ordinal)
         if (ImGui.combo("AutoVJ Dirty Behavior", currentAutoVjIdx, autoVjBehaviorNames)) {
-            UITheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
-            UITheme.saveSettings()
+            session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
+            session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Configure how Auto-VJ acts if a deck has unsaved manual changes.")
         }
         ImGui.spacing()
 
         val triggers = UITheme.QueueKeyTrigger.values()
         val triggerNames = triggers.map { it.name }.toTypedArray()
-        val currentTriggerIdx = imgui.type.ImInt(UITheme.queueKeyTrigger.ordinal)
+        val currentTriggerIdx = imgui.type.ImInt(session.uiTheme.queueKeyTrigger.ordinal)
         if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
-            UITheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
-            UITheme.saveSettings()
+            session.uiTheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
+            session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Set keyboard key sequence used to manually trigger queue advancement.")
         }
         ImGui.spacing()
@@ -294,45 +294,45 @@ object SettingsPanel {
             .map { it.nameWithoutExtension }
             .toMutableList()
         if (profileFiles.isEmpty()) profileFiles.add("default")
-        if (!profileFiles.contains(UITheme.activeMidiProfile)) {
-            profileFiles.add(UITheme.activeMidiProfile)
+        if (!profileFiles.contains(session.uiTheme.activeMidiProfile)) {
+            profileFiles.add(session.uiTheme.activeMidiProfile)
         }
 
-        val currentProfileIdx = imgui.type.ImInt(profileFiles.indexOf(UITheme.activeMidiProfile).coerceAtLeast(0))
+        val currentProfileIdx = imgui.type.ImInt(profileFiles.indexOf(session.uiTheme.activeMidiProfile).coerceAtLeast(0))
         val profileNamesArray = profileFiles.toTypedArray()
         if (ImGui.combo("MIDI Profile", currentProfileIdx, profileNamesArray)) {
             val nextProfile = profileNamesArray[currentProfileIdx.get()]
-            llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(nextProfile)
-            UITheme.activeMidiProfile = nextProfile
-            UITheme.saveSettings()
+            session.midiMappingManager.loadProfile(nextProfile)
+            session.uiTheme.activeMidiProfile = nextProfile
+            session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Select active MIDI controller CC assignment profile.")
         }
         ImGui.spacing()
 
-        val nextCc = imgui.type.ImInt(llm.slop.liquidlsd.midi.MidiMappingManager.getCcForSpecial("Global/queueNext"))
+        val nextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queueNext"))
         if (ImGui.inputInt("Next CC", nextCc)) {
             val newVal = nextCc.get().coerceIn(-1, 127)
-            llm.slop.liquidlsd.midi.MidiMappingManager.addMapping("Global/queueNext", newVal)
-            llm.slop.liquidlsd.midi.MidiMappingManager.saveActiveProfile()
+            session.midiMappingManager.addMapping("Global/queueNext", newVal)
+            session.midiMappingManager.saveActiveProfile()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("MIDI CC number to advance the play queue. Set to -1 to disable.")
         }
         ImGui.spacing()
 
-        val prevCc = imgui.type.ImInt(llm.slop.liquidlsd.midi.MidiMappingManager.getCcForSpecial("Global/queuePrev"))
+        val prevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queuePrev"))
         if (ImGui.inputInt("Prev CC", prevCc)) {
             val newVal = prevCc.get().coerceIn(-1, 127)
-            llm.slop.liquidlsd.midi.MidiMappingManager.addMapping("Global/queuePrev", newVal)
-            llm.slop.liquidlsd.midi.MidiMappingManager.saveActiveProfile()
+            session.midiMappingManager.addMapping("Global/queuePrev", newVal)
+            session.midiMappingManager.saveActiveProfile()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("MIDI CC number to trigger previous queue item. Set to -1 to disable.")
         }
         ImGui.spacing()
-        UITheme.caption("Set to -1 to disable MIDI CC triggers.")
+        session.uiTheme.caption("Set to -1 to disable MIDI CC triggers.")
 
         ImGui.spacing()
         ImGui.separator()

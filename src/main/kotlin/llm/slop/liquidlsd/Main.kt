@@ -67,8 +67,11 @@ fun main() {
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
 
+    // Initialize Session Context
+    val session = llm.slop.liquidlsd.SessionContext()
+
     // Initialize UI Manager
-    val uiManager = UIManager(window)
+    val uiManager = UIManager(window, session)
 
     glfwSetWindowCloseCallback(window) { win ->
         glfwSetWindowShouldClose(win, false)

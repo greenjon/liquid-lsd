@@ -96,13 +96,13 @@ class PopupManager(
         }
     }
 
-    fun drawDeckConfirmPopups(mixer: Mixer) {
-        drawDeckPopup(mixer, mixer.deckA, true)
-        drawDeckPopup(mixer, mixer.deckB, false)
-        drawDeckPopup(mixer, mixer.deckC, false, isDeckC = true)
+    fun drawDeckConfirmPopups(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        drawDeckPopup(session, mixer, mixer.deckA, true)
+        drawDeckPopup(session, mixer, mixer.deckB, false)
+        drawDeckPopup(session, mixer, mixer.deckC, false, isDeckC = true)
     }
 
-    private fun drawDeckPopup(mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
+    private fun drawDeckPopup(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
         val action = when {
             isDeckC -> pendingDeckActionC
             isDeckA -> pendingDeckActionA
@@ -124,18 +124,18 @@ class PopupManager(
             
             if (ImGui.button("Save", 80f, 0f)) {
                 val activeName = when {
-                    isDeckC -> PatchManager.activePresetC
-                    isDeckA -> PatchManager.activePresetA
-                    else -> PatchManager.activePresetB
+                    isDeckC -> session.patchManager.activePresetC
+                    isDeckA -> session.patchManager.activePresetA
+                    else -> session.patchManager.activePresetB
                 }
                 onSaveDeck(activeName ?: "Untitled_${label.last()}", deck, isDeckA || isDeckC) // Note: UIManager handles Deck C mapping
-                executeAction(mixer, deck, isDeckA, isDeckC, action)
+                executeAction(session, mixer, deck, isDeckA, isDeckC, action)
                 clearAction(isDeckA, isDeckC)
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
             if (ImGui.button("Discard", 80f, 0f)) {
-                executeAction(mixer, deck, isDeckA, isDeckC, action)
+                executeAction(session, mixer, deck, isDeckA, isDeckC, action)
                 clearAction(isDeckA, isDeckC)
                 ImGui.closeCurrentPopup()
             }
@@ -148,7 +148,7 @@ class PopupManager(
         }
     }
 
-    private fun executeAction(mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean, action: PendingDeckAction) {
+    private fun executeAction(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean, action: PendingDeckAction) {
         val targetPreset = when {
             isDeckC -> pendingDeckTargetPresetC
             isDeckA -> pendingDeckTargetPresetA
@@ -167,16 +167,16 @@ class PopupManager(
 
         when (action) {
             PendingDeckAction.DRAG_DROP -> {
-                sourceFile?.let { PatchManager.loadDeckPresetAsync(it, isDeckA, isDeckC) }
+                sourceFile?.let { session.patchManager.loadDeckPresetAsync(it, isDeckA, isDeckC) }
             }
             PendingDeckAction.MOVE -> {
-                utilitySource?.let { PatchManager.moveDeck(mixer, it, deck) }
+                utilitySource?.let { session.patchManager.moveDeck(mixer, it, deck) }
             }
             PendingDeckAction.COPY -> {
-                utilitySource?.let { PatchManager.copyDeck(mixer, it, deck) }
+                utilitySource?.let { session.patchManager.copyDeck(mixer, it, deck) }
             }
             PendingDeckAction.SWAP -> {
-                utilitySource?.let { PatchManager.swapDecks(mixer, it, deck) }
+                utilitySource?.let { session.patchManager.swapDecks(mixer, it, deck) }
             }
             else -> onExecuteDeckAction(deck, isDeckA || isDeckC, action, targetPreset)
         }

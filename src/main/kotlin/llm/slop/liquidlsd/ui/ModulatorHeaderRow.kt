@@ -9,8 +9,7 @@ import llm.slop.liquidlsd.parameters.ModulationOperator
 object ModulatorHeaderRow {
     private val operatorLabels = arrayOf("ADD", "MUL", "SCALE")
 
-    fun draw(
-        state: PatchGridState,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
         param: ModulatableParameter,
         existing: CvModulator,
         idx: Int,
@@ -72,13 +71,13 @@ object ModulatorHeaderRow {
         if (ImGui.button("${Icons.POWER}##bypass_bar_$idx", btnWidth, btnHeight)) {
             onReplace(existing.copy(bypassed = !bypassed))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip(if (bypassed) "Enable modulator (Active)" else "Bypass modulator")
         }
         ImGui.popStyleColor(3)
 
         // 2. Dice icon (Randomize button)
-        if (UITheme.randomizationEnabled) {
+        if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, 10f)
             if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
                 val randomized = existing
@@ -89,7 +88,7 @@ object ModulatorHeaderRow {
                     .randomizeSlope()
                 onReplace(randomized)
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Randomize primary LFO / modulator values")
             }
         }
@@ -111,7 +110,7 @@ object ModulatorHeaderRow {
             }
             onReplace(existing.copy(operator = newOp))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Modulation Operator:\nADD: Modulator value is added to parameter's base.\nMUL: Modulator multiplies the base value.\nSCALE: Modulator scales the remaining range.")
         }
         ImGui.popItemWidth()
@@ -120,7 +119,7 @@ object ModulatorHeaderRow {
         ImGui.sameLine(0f, 115f)
         val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
-        UITheme.h2(titleText)
+        session.uiTheme.h2(titleText)
 
         // 5. Reset button (trash can icon)
         if (idx == 0) {
@@ -141,7 +140,7 @@ object ModulatorHeaderRow {
                 ImGui.unindent(10f)
                 return
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Clear/reset modulators")
             }
             ImGui.popStyleColor(2)

@@ -57,7 +57,7 @@ object AssetBrowserPanel {
         refreshAssets()
     }
     
-    fun draw(width: Float, height: Float, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, width: Float, height: Float, mixer: Mixer) {
         val sidebarWidth = if (showSidebar) width * 0.33f else 0f
         val centerWidth = if (showSidebar) width * 0.33f else width * 0.5f
         val queueWidth = width - sidebarWidth - centerWidth
@@ -74,13 +74,13 @@ object AssetBrowserPanel {
             if (ImGui.button("$toggleIcon##toggle_sidebar")) {
                 showSidebar = !showSidebar
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Show/hide the library folders and playlists sidebar.")
             }
             ImGui.popStyleColor(4)
 
             UITheme.AssetBrowserMode.entries.forEach { mode ->
-                val active = UITheme.assetBrowserMode == mode
+                val active = session.uiTheme.assetBrowserMode == mode
                 val icon = when (mode) {
                     UITheme.AssetBrowserMode.FULL -> Icons.LAYOUT_FULL
                     UITheme.AssetBrowserMode.HALF -> Icons.LAYOUT_HALF
@@ -102,10 +102,10 @@ object AssetBrowserPanel {
                 }
 
                 if (ImGui.button("$icon##mode_${mode.name}")) {
-                    UITheme.assetBrowserMode = mode
-                    UITheme.saveSettings()
+                    session.uiTheme.assetBrowserMode = mode
+                    session.uiTheme.saveSettings()
                 }
-                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     val modeDesc = when (mode) {
                         UITheme.AssetBrowserMode.FULL -> "Switch asset browser height to Full size."
                         UITheme.AssetBrowserMode.HALF -> "Switch asset browser height to Half size."
@@ -120,23 +120,23 @@ object AssetBrowserPanel {
         }
         ImGui.popStyleVar()
 
-        if (UITheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) return
+        if (session.uiTheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) return
 
         val contentH = ImGui.getContentRegionAvailY() - 5f
         if (showSidebar) {
             ImGui.beginChild("AssetSidebar", sidebarWidth - 6f, contentH, true)
-            SidebarPanel.draw(mixer)
+            SidebarPanel.draw(session, mixer)
             ImGui.endChild()
             ImGui.sameLine()
         }
 
         ImGui.beginChild("AssetCenter", centerWidth - 6f, contentH, true)
-        drawCenterContent(mixer)
+        drawCenterContent(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
         ImGui.beginChild("AssetQueue", queueWidth - 8f, contentH, true)
-        QueueActionsPanel.draw(mixer)
+        QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
         // Deferred popup opens: ImGui does not allow openPopup() from inside a context menu popup.
@@ -154,14 +154,14 @@ object AssetBrowserPanel {
     }
     
 
-    private fun drawCenterContent(mixer: Mixer) {
+    private fun drawCenterContent(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         when (val view = SidebarPanel.currentView) {
-            is LibraryView.PlaylistsRoot -> drawPlaylistsRootView()
-            is LibraryView.SpecificPlaylist -> drawSpecificPlaylistView(view.playlistFile, mixer)
-            is LibraryView.Patches -> drawPatchesView(view.currentDir, mixer)
+            is LibraryView.PlaylistsRoot -> drawPlaylistsRootView(session)
+            is LibraryView.SpecificPlaylist -> drawSpecificPlaylistView(session, view.playlistFile, mixer)
+            is LibraryView.Patches -> drawPatchesView(session, view.currentDir, mixer)
         }
     }
-    private fun drawPlaylistsRootView() {
+    private fun drawPlaylistsRootView(session: llm.slop.liquidlsd.SessionContext) {
         ImGui.textDisabled("Playlists Root Settings")
         ImGui.separator()
         ImGui.spacing()
@@ -184,7 +184,7 @@ object AssetBrowserPanel {
         BrowserPopupHandler.drawNewPlaylistPopup()
     }
 
-    private fun drawSpecificPlaylistView(playlistFile: File, mixer: Mixer) {
+    private fun drawSpecificPlaylistView(session: llm.slop.liquidlsd.SessionContext, playlistFile: File, mixer: Mixer) {
         val playlist = getOrLoadPlaylist(playlistFile)
         if (playlist == null) {
             ImGui.textColored(1f, 0.3f, 0.3f, 1f, "Error loading playlist: ${playlistFile.name}")
@@ -219,20 +219,20 @@ object AssetBrowserPanel {
         
         ImGui.sameLine()
         if (ImGui.button("Add to queue")) {
-            PlayQueueManager.appendPlaylistToQueue(playlistFile)
+            session.playQueueManager.appendPlaylistToQueue(playlistFile)
         }
         if (ImGui.isItemHovered()) {
             ImGui.setTooltip("Add to the bottom of the queue. Right click for more options.")
         }
         if (ImGui.beginPopupContextItem("playlist_header_add_to_queue_menu")) {
             if (ImGui.menuItem("Play now (and replace queue)")) {
-                PlayQueueManager.playPlaylistNow(playlistFile, mixer)
+                session.playQueueManager.playPlaylistNow(playlistFile, mixer)
             }
             if (ImGui.menuItem("Insert into the queue after current")) {
-                PlayQueueManager.insertPlaylistAfterCurrent(playlistFile)
+                session.playQueueManager.insertPlaylistAfterCurrent(playlistFile)
             }
             if (ImGui.menuItem("Add to the bottom of the queue")) {
-                PlayQueueManager.appendPlaylistToQueue(playlistFile)
+                session.playQueueManager.appendPlaylistToQueue(playlistFile)
             }
             ImGui.endPopup()
         }
@@ -250,7 +250,7 @@ object AssetBrowserPanel {
         ImGui.spacing()
         
         
-        PlaylistEditorPanel.draw(playlist, mixer)
+        PlaylistEditorPanel.draw(session, playlist, mixer)
         
         // Rename Playlist Popup
         BrowserPopupHandler.drawRenamePlaylistPopup(playlist)
@@ -261,17 +261,17 @@ object AssetBrowserPanel {
 
 
 
-    private fun drawPatchesView(currentDir: File, mixer: Mixer) {
+    private fun drawPatchesView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer) {
         // Header Row
         if (ImGui.button("Refresh Folder")) {
             refreshAssets()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Re-scan active directory for newly added patch or playlist files.")
         }
         ImGui.sameLine()
         ImGui.inputText("Filter", searchBuffer)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to filter patches by filename.")
         }
         
@@ -299,15 +299,15 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
             if (ImGui.button("A##preview_a_$index", 24f, 24f)) {
                 val targetDeck = mixer.deckA
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
                     logger.info { "Loading patch ${asset.name} to Deck A" }
-                    PatchManager.loadDeckPresetAsync(File(asset.path), isDeckA = true, isDeckC = false)
+                    session.patchManager.loadDeckPresetAsync(File(asset.path), isDeckA = true, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, true, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Load patch to Deck A.")
             }
             ImGui.popStyleColor(5)
@@ -322,15 +322,15 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
             if (ImGui.button("B##preview_b_$index", 24f, 24f)) {
                 val targetDeck = mixer.deckB
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
                     logger.info { "Loading patch ${asset.name} to Deck B" }
-                    PatchManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = false)
+                    session.patchManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Load patch to Deck B.")
             }
             ImGui.popStyleColor(5)
@@ -345,15 +345,15 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
             if (ImGui.button("C##preview_c_$index", 24f, 24f)) {
                 val targetDeck = mixer.deckC
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
                     logger.info { "Previewing patch ${asset.name} on Deck C" }
-                    PatchManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = true)
+                    session.patchManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = true)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Preview patch on Deck C (Preview/C).")
             }
             ImGui.popStyleColor(5)
@@ -373,11 +373,11 @@ object AssetBrowserPanel {
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                val isDirty = PatchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 
                 if (!isDirty) {
                     logger.info { "Loading patch ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
-                    PatchManager.loadDeckPresetAsync(File(asset.path), targetIsA)
+                    session.patchManager.loadDeckPresetAsync(File(asset.path), targetIsA)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, targetIsA, mixer)
                 }
@@ -393,13 +393,13 @@ object AssetBrowserPanel {
             // Right-click context menu
             if (ImGui.beginPopupContextItem("patch_context_menu_$index")) {
                 if (ImGui.menuItem("Play now (and replace queue)")) {
-                    PlayQueueManager.playNow(File(asset.path), mixer)
+                    session.playQueueManager.playNow(File(asset.path), mixer)
                 }
                 if (ImGui.menuItem("Insert into the queue after current")) {
-                    PlayQueueManager.insertAfterCurrent(File(asset.path))
+                    session.playQueueManager.insertAfterCurrent(File(asset.path))
                 }
                 if (ImGui.menuItem("Add to the bottom of the queue")) {
-                    PlayQueueManager.appendToQueue(File(asset.path))
+                    session.playQueueManager.appendToQueue(File(asset.path))
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Rename")) {

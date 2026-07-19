@@ -10,8 +10,7 @@ import llm.slop.liquidlsd.utils.TimeUtils
 
 object Lfo1Section {
 
-    fun draw(
-        state: PatchGridState,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
         param: ModulatableParameter,
         existing: CvModulator,
         isLfo: Boolean,
@@ -29,7 +28,7 @@ object Lfo1Section {
             val startX = ImGui.getCursorPosX()
 
             // 1. Shape Preset buttons
-            UITheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
+            session.uiTheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
             ImGui.sameLine(0f, 10f)
 
             val btnW = 35f
@@ -44,7 +43,7 @@ object Lfo1Section {
                     hold = 0.0f
                 ))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Load standard smooth Sine wave LFO.")
             }
 
@@ -58,7 +57,7 @@ object Lfo1Section {
                     hold = 0.0f
                 ))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Load linear Triangle wave LFO.")
             }
 
@@ -72,7 +71,7 @@ object Lfo1Section {
                     hold = 0.5f
                 ))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Load binary Square wave LFO.")
             }
 
@@ -84,14 +83,14 @@ object Lfo1Section {
                     waveform = Waveform.RANDOM
                 ))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Load step or smooth Random noise LFO.")
             }
 
             // 2. Slew Preset buttons (only if not Random)
             if (existing.waveform != Waveform.RANDOM) {
                 ImGui.sameLine(0f, 20f)
-                UITheme.body("Asymmetry:")
+                session.uiTheme.body("Asymmetry:")
                 ImGui.sameLine(0f, 10f)
 
                 // Left Button
@@ -99,7 +98,7 @@ object Lfo1Section {
                 if (CustomIconButton.drawWaveformButton("lfo1_left", WaveShape.RAMP_DOWN, isLeft, themeColor, 35f, btnH)) {
                     onReplace(existing.copy(slope = 0.001f))
                 }
-                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     ImGui.setTooltip("Set LFO asymmetry fully Left (sawtooth falling / ramp down).")
                 }
 
@@ -109,7 +108,7 @@ object Lfo1Section {
                 if (CustomIconButton.drawWaveformButton("lfo1_center", WaveShape.TRIANGLE, isCenter, themeColor, 35f, btnH)) {
                     onReplace(existing.copy(slope = 0.5f))
                 }
-                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     ImGui.setTooltip("Set LFO asymmetry to Center (perfectly symmetrical).")
                 }
 
@@ -119,7 +118,7 @@ object Lfo1Section {
                 if (CustomIconButton.drawWaveformButton("lfo1_right", WaveShape.RAMP_UP, isRight, themeColor, 35f, btnH)) {
                     onReplace(existing.copy(slope = 0.999f))
                 }
-                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     ImGui.setTooltip("Set LFO asymmetry fully Right (sawtooth rising / ramp up).")
                 }
             }
@@ -128,7 +127,7 @@ object Lfo1Section {
 
             // -- Unit Selection Dropdown (Time/Beat) if applicable --
             if (isGen) {
-                UITheme.body("LFO 1 Unit:")
+                session.uiTheme.body("LFO 1 Unit:")
                 ImGui.sameLine(0f, 10f)
                 val unitIdx = ImInt(existing.genUnit.ordinal)
                 val unitLabels = arrayOf("Time", "Beat")
@@ -137,7 +136,7 @@ object Lfo1Section {
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {
                     onReplace(existing.copy(genUnit = GenUnit.entries[unitIdx.get()]))
                 }
-                if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     ImGui.setTooltip("Select frequency unit:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.")
                 }
                 ImGui.popItemWidth()
@@ -149,8 +148,7 @@ object Lfo1Section {
         ImGui.spacing()
 
         // -- DC Offset ---------------------------------------------
-        CustomRangeSlider.drawCustomRangeSlider(
-            idPrefix = existing.id,
+        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
             label = "DC Offset",
             themeColor = themeColor,
             currentValue = existing.dcOffset,
@@ -206,8 +204,7 @@ object Lfo1Section {
         ImGui.spacing()
 
         // -- Amplitude ---------------------------------------------
-        CustomRangeSlider.drawCustomRangeSlider(
-            idPrefix = existing.id,
+        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
             label = "Amplitude",
             themeColor = themeColor,
             currentValue = existing.amplitude,
@@ -274,8 +271,7 @@ object Lfo1Section {
             val currentMaxIdx = subdivisionOptions.indexOfFirst { it == existing.subdivisionMax }.coerceAtLeast(0)
             val currentActiveIdx = subdivisionOptions.indexOfFirst { it == existing.subdivision }.coerceAtLeast(0)
             
-            BeatDivisionSlider.drawBeatDivisionSlider(
-                idPrefix = existing.id,
+            BeatDivisionSlider.drawBeatDivisionSlider(session, idPrefix = existing.id,
                 label = if (isGen) "LFO 1 Beat Div" else "Beat Div",
                 themeColor = themeColor,
                 currentValue = currentActiveIdx.toFloat(),
@@ -342,8 +338,7 @@ object Lfo1Section {
             val formatFunc: (Float) -> String = { v -> TimeUtils.formatPeriod(v) }
             val parseFunc: (String) -> Float? = { s -> TimeUtils.parsePeriod(s) }
 
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = existing.id,
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
                 label = if (isGen) "LFO 1 Period" else "LFO Period",
                 themeColor = themeColor,
                 currentValue = existing.subdivision,
@@ -406,8 +401,7 @@ object Lfo1Section {
         }
 
         // -- Phase Offset -----------------------------------------
-        CustomRangeSlider.drawCustomRangeSlider(
-            idPrefix = existing.id,
+        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
             label = if (isGen) "LFO 1 Phase" else "Phase Offset",
             themeColor = themeColor,
             currentValue = existing.phaseOffset,
@@ -463,8 +457,7 @@ object Lfo1Section {
         ImGui.spacing()
 
         // -- Morph Slider --
-        CustomRangeSlider.drawCustomRangeSlider(
-            idPrefix = existing.id + "_morph",
+        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_morph",
             label = if (isGen) "LFO 1 Morph" else "Morph",
             themeColor = themeColor,
             currentValue = existing.morph,
@@ -520,8 +513,7 @@ object Lfo1Section {
         ImGui.spacing()
 
         // -- Hold Slider --
-        CustomRangeSlider.drawCustomRangeSlider(
-            idPrefix = existing.id + "_hold",
+        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_hold",
             label = if (isGen) "LFO 1 Hold" else "Hold",
             themeColor = themeColor,
             currentValue = existing.hold,
@@ -578,8 +570,7 @@ object Lfo1Section {
 
         // -- Slew / Slope Slider (only if not Random) --
         if (existing.waveform != Waveform.RANDOM) {
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = existing.id,
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
                 label = if (isGen) "LFO 1 Slew" else "Slew",
                 themeColor = themeColor,
                 currentValue = existing.slope,

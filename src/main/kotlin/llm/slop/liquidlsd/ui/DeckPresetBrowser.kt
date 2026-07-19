@@ -80,8 +80,7 @@ class DeckPresetBrowser(
      *                          Pass `null` to clear the active preset ("None").
      * @param onSaveAs          Called with (name, tags) when the user confirms Save As.
      */
-    fun draw(
-        activePresetName: String?,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, activePresetName: String?,
         isDirty: Boolean,
         onSelect: (String?) -> Unit,
         onSaveAs: (name: String, tags: List<String>) -> Unit
@@ -109,9 +108,9 @@ class DeckPresetBrowser(
         val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
         if (!ImGui.beginPopupModal(popupId, flags)) return
 
-        drawSearchBar()
+        drawSearchBar(session)
         ImGui.spacing()
-        drawTagRow()
+        drawTagRow(session)
         ImGui.separator()
         drawPresetList(activePresetName, isDirty, onSelect)
         ImGui.separator()
@@ -125,12 +124,12 @@ class DeckPresetBrowser(
 
     // -- Private drawing helpers -----------------------------------------------
 
-    private fun drawSearchBar() {
+    private fun drawSearchBar(session: llm.slop.liquidlsd.SessionContext) {
         ImGui.text("Search:")
         ImGui.sameLine()
         ImGui.pushItemWidth((ImGui.getContentRegionAvailX() - 70f).coerceAtLeast(80f))
         ImGui.inputText("##search$deckLabel", searchInput)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to search presets by name.")
         }
         ImGui.popItemWidth()
@@ -138,12 +137,12 @@ class DeckPresetBrowser(
         if (ImGui.button("Refresh")) {
             scanPresets()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Re-scan presets directory.")
         }
     }
 
-    private fun drawTagRow() {
+    private fun drawTagRow(session: llm.slop.liquidlsd.SessionContext) {
         if (allTags.isEmpty()) {
             ImGui.textDisabled("(no tags)")
             return
@@ -161,7 +160,7 @@ class DeckPresetBrowser(
             if (ImGui.button("[$tag]##tag_${deckLabel}_$tag")) {
                 if (active) activeTags.remove(tag) else activeTags.add(tag)
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Toggle tag '$tag' filter. Active tags filter listed presets.")
             }
             if (active) ImGui.popStyleColor(3)
@@ -172,7 +171,7 @@ class DeckPresetBrowser(
             if (ImGui.button("X Clear##clearTags$deckLabel")) {
                 activeTags.clear()
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Clear all active tag filters.")
             }
         }

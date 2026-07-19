@@ -18,7 +18,7 @@ class MixerMonitorPanel(
 ) {
     private var pendingRightDragFrom: String? = null
 
-    fun draw(mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val style = ImGui.getStyle()
         val layout = MixerMonitorLayoutCalculator.calculate(
             windowWidth = ImGui.getWindowWidth(),
@@ -48,18 +48,13 @@ class MixerMonitorPanel(
         ImGui.beginChild("MasterControls", availW, 85f, true)
         
         // Crossfader (mapped display value from -1.0 to 1.0)
-        drawFlatSlider("Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck C runs in parallel as a preview.") {
-            ""
+        drawFlatSlider(session, "Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck C runs in parallel as a preview.") {
+            "%.2f".format(it)
         }
-        if (ImGui.isItemActive()) {
-            mixer.isAutoFading = false
-            mixer.targetCrossfade = mixer.crossfade.baseValue
-        }
-        
+
         ImGui.spacing()
-        
-        // Fade Speed (Mixer/xfadeSpeed)
-        drawFlatSlider("Mixer/xfadeSpeed", "Fade Speed", mixer.xfadeSpeed, 0.1f, 30.0f, 80f, 0.1f, 30.0f, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), "Adjust transition duration for automatic crossfading and Auto-VJ transitions.") {
+
+        drawFlatSlider(session, "Mixer/xfadeSpeed", "Fade Speed", mixer.xfadeSpeed, 0.1f, 30.0f, 80f, 0.1f, 30.0f, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), "Adjust transition duration for automatic crossfading and Auto-VJ transitions.") {
             "%.1fs".format(it)
         }
         
@@ -86,40 +81,40 @@ class MixerMonitorPanel(
         // 1. Deck A Header
         var twA = 0f
         var twB = 0f
-        UITheme.withFont(UITheme.FontLevel.H2) {
+        session.uiTheme.withFont(UITheme.FontLevel.H2) {
             twA = ImGui.calcTextSize("Deck A").x
             twB = ImGui.calcTextSize("Deck B").x
         }
         
         ImGui.setCursorScreenPos(startX + (halfW - twA) * 0.5f, centerY)
-        UITheme.h2("Deck A")
+        session.uiTheme.h2("Deck A")
         
         // 3. Deck B Header
         val deckBStartX = startX + halfW + padding
         ImGui.setCursorScreenPos(deckBStartX + (halfW - twB) * 0.5f, centerY)
-        UITheme.h2("Deck B")
+        session.uiTheme.h2("Deck B")
         
         // 4. Presets Row
         val presetY = centerY + headerRowH
         
-        val activePresetA = PatchManager.activePresetA ?: "None"
-        val isDirtyA = PatchManager.isDeckDirty(mixer.deckA, mixer)
+        val activePresetA = session.patchManager.activePresetA ?: "None"
+        val isDirtyA = session.patchManager.isDeckDirty(mixer.deckA, mixer)
         val displayNameA = if (isDirtyA) "$activePresetA *" else activePresetA
         
         ImGui.setCursorScreenPos(startX, presetY + 3f)
-        UITheme.body("Preset: $displayNameA")
+        session.uiTheme.body("Preset: $displayNameA")
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveA")) {
             ImGui.openPopup("save_menu_A")
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Save or save as a new preset for Deck A.")
         }
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.EJECT}##EjectA")) {
             onEjectDeck(mixer.deckA, true, false)
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Eject this patch")
         }
         if (ImGui.beginPopup("save_menu_A")) {
@@ -132,24 +127,24 @@ class MixerMonitorPanel(
             ImGui.endPopup()
         }
         
-        val activePresetB = PatchManager.activePresetB ?: "None"
-        val isDirtyB = PatchManager.isDeckDirty(mixer.deckB, mixer)
+        val activePresetB = session.patchManager.activePresetB ?: "None"
+        val isDirtyB = session.patchManager.isDeckDirty(mixer.deckB, mixer)
         val displayNameB = if (isDirtyB) "$activePresetB *" else activePresetB
         
         ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
-        UITheme.body("Preset: $displayNameB")
+        session.uiTheme.body("Preset: $displayNameB")
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveB")) {
             ImGui.openPopup("save_menu_B")
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Save or save as a new preset for Deck B.")
         }
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.EJECT}##EjectB")) {
             onEjectDeck(mixer.deckB, false, false)
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Eject this patch")
         }
         if (ImGui.beginPopup("save_menu_B")) {
@@ -196,30 +191,30 @@ class MixerMonitorPanel(
         // Row 1: Monitor Label
         val row1Y = ImGui.getCursorScreenPosY()
         var twC = 0f
-        UITheme.withFont(UITheme.FontLevel.H2) {
+        session.uiTheme.withFont(UITheme.FontLevel.H2) {
             twC = ImGui.calcTextSize(previewLabel).x
         }
         ImGui.setCursorScreenPos(startX + (availW - twC) * 0.5f, row1Y)
-        UITheme.h2(previewLabel)
+        session.uiTheme.h2(previewLabel)
 
         // Row 2: Preset Info
-        val activePresetC = PatchManager.activePresetC ?: "None"
-        val isDirtyC = PatchManager.isDeckDirty(mixer.deckC, mixer)
+        val activePresetC = session.patchManager.activePresetC ?: "None"
+        val isDirtyC = session.patchManager.isDeckDirty(mixer.deckC, mixer)
         val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
         ImGui.setCursorScreenPos(startX, row1Y + ImGui.getTextLineHeightWithSpacing())
-        UITheme.body("Preset: $displayNameC")
+        session.uiTheme.body("Preset: $displayNameC")
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveC")) {
             ImGui.openPopup("save_menu_C")
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Save or save as a new preset for Deck C.")
         }
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.EJECT}##EjectC")) {
             onEjectDeck(mixer.deckC, false, true)
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Eject this patch")
         }
         if (ImGui.beginPopup("save_menu_C")) {
@@ -239,7 +234,7 @@ class MixerMonitorPanel(
 
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_C", availW, layout.deckCHeight)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop patch files to load.")
         }
 
@@ -260,7 +255,7 @@ class MixerMonitorPanel(
             if (payload != null) {
                 val file = java.io.File(payload)
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                    PatchManager.loadDeckPresetAsync(file, isDeckA = false, isDeckC = true)
+                    session.patchManager.loadDeckPresetAsync(file, isDeckA = false, isDeckC = true)
                 }
             }
             val payloadMonitor = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG")
@@ -308,6 +303,7 @@ class MixerMonitorPanel(
     }
 
     fun drawFlatSlider(
+        session: llm.slop.liquidlsd.SessionContext,
         paramKey: String,
         label: String,
         param: ModulatableParameter,
@@ -323,8 +319,8 @@ class MixerMonitorPanel(
         ImGui.pushID(label)
 
         var textW = 0f
-        UITheme.withFont(UITheme.FontLevel.BODY) { textW = ImGui.calcTextSize(label).x }
-        UITheme.body(label)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) { textW = ImGui.calcTextSize(label).x }
+        session.uiTheme.body(label)
         ImGui.sameLine(textW + 15f)
 
         val barStartX = ImGui.getCursorScreenPosX()
@@ -333,7 +329,7 @@ class MixerMonitorPanel(
         val barH = 14f
 
         ImGui.invisibleButton("##slider", barW, barH)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             val baseTip = tooltip ?: "Click and drag to adjust $label."
             ImGui.setTooltip(baseTip)
         }
@@ -422,7 +418,7 @@ class MixerMonitorPanel(
         }
 
         // MIDI mapped indicator
-        val mapping = llm.slop.liquidlsd.midi.MidiMappingManager.getMappingForParameter(paramKey)
+        val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
         val midiIndicator = mapping?.let { m ->
             if (m.channel == 0) "[CC ${m.cc}]" else "[Ch ${m.channel + 1} CC ${m.cc}]"
         }
@@ -441,7 +437,7 @@ class MixerMonitorPanel(
             val valTextX = barStartX + barW - textWidth - 5f
             val valTextY = barScreenY + (barH - valTextH) * 0.5f
 
-            UITheme.withFont(UITheme.FontLevel.CAPTION) {
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 dl.addText(valTextX, valTextY, ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.8f), valStr)
             }
         }

@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 object OscilloscopeDrawer {
 
     fun drawFinalOscilloscope(
+        session: llm.slop.liquidlsd.SessionContext,
         history: CvHistoryBuffer,
         minVal: Float,
         maxVal: Float,
@@ -90,20 +91,22 @@ object OscilloscopeDrawer {
         dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
         
         ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(maxVal))
+        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(maxVal))
         ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal + range * 0.5f))
+        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal + range * 0.5f))
         ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal))
+        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.2f".format(minVal))
         
         val textWidth = ImGui.calcTextSize("Final Parameter Value").x
         ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "Final Parameter Value")
+        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "Final Parameter Value")
         
         ImGui.setCursorScreenPos(startX, startY + h)
     }
 
-    fun drawOscilloscope(param: ModulatableParameter, themeColor: Int, activeHistory: CvHistoryBuffer?) {
+    fun drawOscilloscope(
+        session: llm.slop.liquidlsd.SessionContext,
+        param: ModulatableParameter, themeColor: Int, activeHistory: CvHistoryBuffer?) {
         val history = activeHistory ?: return
         val historySize = history.size
         val w = ImGui.getContentRegionAvailX()
@@ -177,16 +180,16 @@ object OscilloscopeDrawer {
         val minLabel = "%.2f".format(param.minClamp)
         
         ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, maxLabel)
+        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, maxLabel)
 
         if (isBipolar) {
             val centerY = startY + h / 2f
             ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
-            UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, midLabel)
+            session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, midLabel)
         }
 
         ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
-        UITheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, minLabel)
+        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, minLabel)
 
         // Restore cursor position for downstream ImGui rendering
         ImGui.setCursorScreenPos(startX, startY + h)

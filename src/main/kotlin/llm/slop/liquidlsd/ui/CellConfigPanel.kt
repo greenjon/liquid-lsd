@@ -56,14 +56,14 @@ object CellConfigPanel {
         }
     }
 
-    fun draw(state: PatchGridState, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, mixer: Mixer) {
         val cell = state.selectedCell
         val param = state.selectedParam
 
         if (cell == null || param == null) {
             activeHistory = null
             activeCellId = null
-            UITheme.caption("Click a cell in the Patch Grid to configure it.")
+            session.uiTheme.caption("Click a cell in the Patch Grid to configure it.")
             return
         }
 
@@ -100,11 +100,11 @@ object CellConfigPanel {
         val hasAdvanced = isBeat || isLfo || isSnh || isGen
 
         if (cvId == "final") {
-            FinalParamSection.draw(state, param, paramKey, themeColor, mandala, modulatorHistories)
+            FinalParamSection.draw(session, state, param, paramKey, themeColor, mandala, modulatorHistories)
             return
         }
 
-        UITheme.h2Colored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, paramKey.replace("/", " | "))
+        session.uiTheme.h2Colored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, paramKey.replace("/", " | "))
         ImGui.separator()
         ImGui.spacing()
 
@@ -112,12 +112,12 @@ object CellConfigPanel {
         if (isVirtual && cvId == "midi") {
             activeHistory = null
             activeCellId = null
-            UITheme.caption("No MIDI mapping on this parameter.")
+            session.uiTheme.caption("No MIDI mapping on this parameter.")
             ImGui.spacing()
-            UITheme.caption("To map a controller:")
-            UITheme.caption("1. Enable [MIDI Map] in the main menu bar.")
-            UITheme.caption("2. Click this cell (which will highlight in cyan).")
-            UITheme.caption("3. Turn a knob or move a fader on your MIDI controller.")
+            session.uiTheme.caption("To map a controller:")
+            session.uiTheme.caption("1. Enable [MIDI Map] in the main menu bar.")
+            session.uiTheme.caption("2. Click this cell (which will highlight in cyan).")
+            session.uiTheme.caption("3. Turn a knob or move a fader on your MIDI controller.")
             return
         }
 
@@ -144,7 +144,7 @@ object CellConfigPanel {
         activeHistory?.add(combinedVal)
 
         // -- Unified Oscilloscope ---------------------------------
-        OscilloscopeDrawer.drawOscilloscope(param, themeColor, activeHistory)
+        OscilloscopeDrawer.drawOscilloscope(session, param, themeColor, activeHistory)
 
         ImGui.spacing()
         ImGui.separator()
@@ -162,6 +162,7 @@ object CellConfigPanel {
             val dl = ImGui.getWindowDrawList()
             
             ModulatorHeaderRow.draw(
+                session = session,
                 state = state,
                 param = param,
                 existing = existing,
@@ -188,6 +189,7 @@ object CellConfigPanel {
 
             // Draw LFO 1 / primary timing/wave controls
             Lfo1Section.draw(
+                session = session,
                 state = state,
                 param = param,
                 existing = existing,
@@ -203,6 +205,7 @@ object CellConfigPanel {
             // Draw LFO 2 / secondary generator modulator controls
             if (isGen) {
                 Lfo2Section.draw(
+                    session = session,
                     state = state,
                     param = param,
                     existing = existing,

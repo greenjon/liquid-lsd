@@ -11,8 +11,7 @@ import kotlin.math.roundToInt
 
 object Lfo2Section {
 
-    fun draw(
-        state: PatchGridState,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
         param: ModulatableParameter,
         existing: CvModulator,
         idx: Int,
@@ -48,13 +47,13 @@ object Lfo2Section {
             val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
             onReplace(existing.copy(generatorModMode = nextMode))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
         }
         ImGui.popStyleColor(3)
 
         // 2. Dice button for LFO 2
-        if (UITheme.randomizationEnabled) {
+        if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, 10f)
             if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
                 val randomized = existing
@@ -66,7 +65,7 @@ object Lfo2Section {
                     .randomizeModHold()
                 onReplace(randomized)
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Randomize LFO 2 values")
             }
         }
@@ -77,7 +76,7 @@ object Lfo2Section {
         val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
         val lfo2Title = if (existing.sourceId == "lfo") "LFO 2" else "Oscillator 2"
-        UITheme.h2(lfo2Title)
+        session.uiTheme.h2(lfo2Title)
         
         ImGui.spacing()
 
@@ -92,7 +91,7 @@ object Lfo2Section {
         val btnH = ImGui.getFrameHeight()
 
         // 1. LFO 2 Shape Preset buttons
-        UITheme.body("LFO 2 Shape:")
+        session.uiTheme.body("LFO 2 Shape:")
         ImGui.sameLine(0f, 10f)
 
         // Sine Button
@@ -104,7 +103,7 @@ object Lfo2Section {
                 modHold = 0.0f
             ))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Load standard smooth Sine wave for LFO 2.")
         }
 
@@ -118,7 +117,7 @@ object Lfo2Section {
                 modHold = 0.0f
             ))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Load linear Triangle wave for LFO 2.")
         }
 
@@ -132,7 +131,7 @@ object Lfo2Section {
                 modHold = 0.5f
             ))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Load binary Square wave for LFO 2.")
         }
 
@@ -144,14 +143,14 @@ object Lfo2Section {
                 modWaveform = Waveform.RANDOM
             ))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Load step or smooth Random noise for LFO 2.")
         }
 
         // 2. LFO 2 Slew Preset buttons (only if not Random)
         if (existing.modWaveform != Waveform.RANDOM) {
             ImGui.sameLine(0f, 20f)
-            UITheme.body("Asymmetry:")
+            session.uiTheme.body("Asymmetry:")
             ImGui.sameLine(0f, 10f)
 
             // Left Button
@@ -159,7 +158,7 @@ object Lfo2Section {
             if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", WaveShape.RAMP_DOWN, isModLeft, themeColor, 35f, btnH)) {
                 onReplace(existing.copy(modSlope = 0.001f))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Set LFO 2 asymmetry fully Left.")
             }
 
@@ -169,7 +168,7 @@ object Lfo2Section {
             if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", WaveShape.TRIANGLE, isModCenter, themeColor, 35f, btnH)) {
                 onReplace(existing.copy(modSlope = 0.5f))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Set LFO 2 asymmetry to Center.")
             }
 
@@ -179,7 +178,7 @@ object Lfo2Section {
             if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", WaveShape.RAMP_UP, isModRight, themeColor, 35f, btnH)) {
                 onReplace(existing.copy(modSlope = 0.999f))
             }
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Set LFO 2 asymmetry fully Right.")
             }
         }
@@ -187,7 +186,7 @@ object Lfo2Section {
         ImGui.spacing()
 
         // 3. Dropdowns Row for Unit and Mode
-        UITheme.body("LFO 2 Unit:")
+        session.uiTheme.body("LFO 2 Unit:")
         ImGui.sameLine(0f, 10f)
         val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
         val modUnitLabels = arrayOf("Time", "Beat")
@@ -196,7 +195,7 @@ object Lfo2Section {
         if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {
             onReplace(existing.copy(modGenUnit = GenUnit.entries[modUnitIdx.get()]))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Select frequency unit for LFO 2:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.")
         }
         ImGui.popItemWidth()
@@ -207,7 +206,7 @@ object Lfo2Section {
         }
 
         ImGui.sameLine(0f, 20f)
-        UITheme.body("Modulation Mode:")
+        session.uiTheme.body("Modulation Mode:")
         ImGui.sameLine(0f, 10f)
 
         if (bypassed) ImGui.popStyleVar()
@@ -216,7 +215,7 @@ object Lfo2Section {
             val nextMode = llm.slop.liquidlsd.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
             onReplace(existing.copy(generatorModMode = nextMode))
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Amplitude.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
         }
         ImGui.popItemWidth()
@@ -228,8 +227,7 @@ object Lfo2Section {
             ImGui.spacing()
 
             // Modulation Depth range slider
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = existing.id + "_mod_depth",
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_depth",
                 label = "Mod Depth",
                 themeColor = themeColor,
                 currentValue = existing.generatorModDepth,
@@ -293,8 +291,7 @@ object Lfo2Section {
                 val currentMaxIdx = subdivisionOptions.indexOfFirst { it == existing.modSubdivisionMax }.coerceAtLeast(0)
                 val currentActiveIdx = subdivisionOptions.indexOfFirst { it == existing.modSubdivision }.coerceAtLeast(0)
 
-                BeatDivisionSlider.drawBeatDivisionSlider(
-                    idPrefix = existing.id + "_mod",
+                BeatDivisionSlider.drawBeatDivisionSlider(session, idPrefix = existing.id + "_mod",
                     label = "LFO 2 Beat Div",
                     themeColor = themeColor,
                     currentValue = currentActiveIdx.toFloat(),
@@ -358,8 +355,7 @@ object Lfo2Section {
                 val formatFunc: (Float) -> String = { v -> TimeUtils.formatPeriod(v) }
                 val parseFunc: (String) -> Float? = { s -> TimeUtils.parsePeriod(s) }
 
-                CustomRangeSlider.drawCustomRangeSlider(
-                    idPrefix = existing.id + "_mod",
+                CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod",
                     label = "LFO 2 Period",
                     themeColor = themeColor,
                     currentValue = existing.modSubdivision,
@@ -418,8 +414,7 @@ object Lfo2Section {
             }
 
             // LFO 2 Phase Offset
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = existing.id + "_mod_phase",
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_phase",
                 label = "LFO 2 Phase",
                 themeColor = themeColor,
                 currentValue = existing.modPhaseOffset,
@@ -475,8 +470,7 @@ object Lfo2Section {
             ImGui.spacing()
 
             // LFO 2 Morph
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = existing.id + "_mod_morph",
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_morph",
                 label = "LFO 2 Morph",
                 themeColor = themeColor,
                 currentValue = existing.modMorph,
@@ -532,8 +526,7 @@ object Lfo2Section {
             ImGui.spacing()
 
             // LFO 2 Hold
-            CustomRangeSlider.drawCustomRangeSlider(
-                idPrefix = existing.id + "_mod_hold",
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_hold",
                 label = "LFO 2 Hold",
                 themeColor = themeColor,
                 currentValue = existing.modHold,
@@ -590,8 +583,7 @@ object Lfo2Section {
 
             // LFO 2 Slew (mod slope, if not random)
             if (existing.modWaveform != Waveform.RANDOM) {
-                CustomRangeSlider.drawCustomRangeSlider(
-                    idPrefix = existing.id + "_mod_slope",
+                CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_slope",
                     label = "LFO 2 Slew",
                     themeColor = themeColor,
                     currentValue = existing.modSlope,

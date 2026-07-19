@@ -9,8 +9,8 @@ import java.io.File
 class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBrowser("MissingItemsBrowser")) {
     private var browserOpenForItem: String? = null
 
-    fun draw() {
-        val unresolved = PatchManager.sessionState.unresolvedItems
+    fun draw(session: llm.slop.liquidlsd.SessionContext) {
+        val unresolved = session.patchManager.sessionState.unresolvedItems
         if (unresolved.isEmpty()) return
 
         // We want a modal overlay
@@ -31,7 +31,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
             ImGui.spacing()
             ImGui.separator()
             if (ImGui.button("Dismiss All", 120f, 0f)) {
-                PatchManager.sessionState = PatchManager.sessionState.copy(unresolvedItems = emptyList())
+                session.patchManager.sessionState = session.patchManager.sessionState.copy(unresolvedItems = emptyList())
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
@@ -41,11 +41,11 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
             val item = browserOpenForItem
             if (item != null) {
                 // Remove the resolved item from the unresolved list
-                val newUnresolved = PatchManager.sessionState.unresolvedItems.filter { it != item }
-                PatchManager.sessionState = PatchManager.sessionState.copy(unresolvedItems = newUnresolved)
+                val newUnresolved = session.patchManager.sessionState.unresolvedItems.filter { it != item }
+                session.patchManager.sessionState = session.patchManager.sessionState.copy(unresolvedItems = newUnresolved)
                 
                 // Add the newly found file to the PlayQueueManager
-                PlayQueueManager.appendToQueue(selectedFile)
+                session.playQueueManager.appendToQueue(selectedFile)
             }
             browserOpenForItem = null
         }

@@ -14,8 +14,7 @@ import kotlin.math.sin
 
 object PatchGridRenderer {
     
-    fun drawParamRow(
-        label: String, 
+    fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String, 
         paramKey: String, 
         param: ModulatableParameter, 
         state: PatchGridState, 
@@ -58,14 +57,14 @@ object PatchGridRenderer {
         val cursorStartX = ImGui.getCursorPosX()
         val indent = ImGui.getCursorScreenPosX() - gridStartX
         val labelBtnW = labelColW - indent - CELL_PAD
-        UITheme.body(label)
+        session.uiTheme.body(label)
         ImGui.sameLine(cursorStartX)
         ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Click to open context menu: Randomize, Copy/Paste, or Reset parameter $label.")
         }
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
-            if (UITheme.randomizationEnabled) {
+            if (session.uiTheme.randomizationEnabled) {
                 if (ImGui.menuItem("Randomize row")) {
                     onPushUndo()
                     val randomized = param.modulators.map { it.randomizeActiveValues() }
@@ -92,10 +91,10 @@ object PatchGridRenderer {
                 onPushUndo()
                 param.modulators.clear()
             }
-            val hasMidiMap = llm.slop.liquidlsd.midi.MidiMappingManager.hasMapping(paramKey)
+            val hasMidiMap = session.midiMappingManager.hasMapping(paramKey)
             if (ImGui.menuItem("Clear MIDI mapping", null, false, hasMidiMap)) {
-                llm.slop.liquidlsd.midi.MidiMappingManager.removeMapping(paramKey)
-                llm.slop.liquidlsd.midi.MidiMappingManager.saveActiveProfile()
+                session.midiMappingManager.removeMapping(paramKey)
+                session.midiMappingManager.saveActiveProfile()
             }
             ImGui.endPopup()
         }
@@ -115,7 +114,7 @@ object PatchGridRenderer {
         if (ImGui.isItemClicked()) {
             state.select(PatchCellId(paramKey, "final"), param)
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             if (param.modulatorFilter != null) {
                 ImGui.beginTooltip()
                 ImGui.text("Parameter value: ${"%.3f".format(param.value)} (Base: ${"%.3f".format(param.baseValue)})\nClick to configure bounds, random ranges, and default values.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
@@ -169,7 +168,7 @@ object PatchGridRenderer {
 
         ImGui.setCursorScreenPos(midiX, midiY)
         ImGui.invisibleButton("##midi_cell", CELL, CELL)
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             val details = if (hasMidiMod) {
                 val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
                 "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings."
@@ -280,7 +279,7 @@ object PatchGridRenderer {
 
             ImGui.setCursorScreenPos(x, y)
             ImGui.invisibleButton("##cell_$cvId", CELL, CELL)
-            if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 val isFiltered = param.modulatorFilter != null && activeMods.any { mod -> param.modulatorFilter?.invoke(mod) == false }
                 val statusText = when {
                     isFiltered -> "Bypassed: Bypassed because AUTO-VJ is OFF."
@@ -517,8 +516,7 @@ object PatchGridRenderer {
         }
     }
 
-    fun drawRandomizeRow(
-        label: String,
+    fun drawRandomizeRow(session: llm.slop.liquidlsd.SessionContext, label: String,
         groupKey: String,
         gridStartX: Float,
         labelColW: Float,
@@ -530,15 +528,15 @@ object PatchGridRenderer {
         val scale = 35f / 30f
         val btnWidth = 50f * scale
         val btnHeight = 35f
-        if (UITheme.randomizationEnabled) {
-            if (drawDiceButton("dice_$groupKey", gridStartX, y, scale, btnWidth, btnHeight)) {
+        if (session.uiTheme.randomizationEnabled) {
+            if (drawDiceButton(session, "dice_$groupKey", gridStartX, y, scale, btnWidth, btnHeight)) {
                 onRandomize()
             }
             ImGui.sameLine(0f, 6f)
         }
         val textY = y + (btnHeight - ImGui.getTextLineHeight()) * 0.5f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), textY)
-        UITheme.body(label)
+        session.uiTheme.body(label)
         // Advance the ImGui layout cursor past this row so the next drawParamRow
         // picks up the correct rowScreenY.  setCursorScreenPos alone does not
         // update the window-local cursor, so we convert to window-local coords.
@@ -547,8 +545,8 @@ object PatchGridRenderer {
         ImGui.setCursorPosY((y + btnHeight) - winY + scrollY)
     }
 
-    fun drawDiceButton(id: String, x: Float, y: Float, scale: Float, btnWidth: Float, btnHeight: Float): Boolean {
-        if (!UITheme.randomizationEnabled) return false
+    fun drawDiceButton(session: llm.slop.liquidlsd.SessionContext, id: String, x: Float, y: Float, scale: Float, btnWidth: Float, btnHeight: Float): Boolean {
+        if (!session.uiTheme.randomizationEnabled) return false
         ImGui.setCursorScreenPos(x, y)
         return ImGui.button("${Icons.DICES}##$id", btnWidth, btnHeight)
     }

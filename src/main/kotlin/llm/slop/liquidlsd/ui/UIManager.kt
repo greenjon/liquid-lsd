@@ -32,7 +32,7 @@ import llm.slop.liquidlsd.patches.PlayQueueManager
 /**
  * Manages the ImGui overlay for desktop control.
  */
-class UIManager(private val windowHandle: Long) {
+class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.SessionContext) {
     private val logger = KotlinLogging.logger {}
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
@@ -217,8 +217,8 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun updateUiTransparency() {
-        val enabled = UITheme.backgroundVideoEnabled
-        val theme = UITheme.settings.theme
+        val enabled = session.uiTheme.backgroundVideoEnabled
+        val theme = session.uiTheme.settings.theme
         if (enabled == lastBgVideoEnabled && theme == lastTheme) return
         lastBgVideoEnabled = enabled
         lastTheme = theme
@@ -227,7 +227,7 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun drawNeonBackgroundIfNeeded(posX: Float, posY: Float, panelW: Float, panelH: Float, displayWidth: Float) {
-        if (UITheme.settings.theme != UITheme.Theme.NEON) return
+        if (session.uiTheme.settings.theme != UITheme.Theme.NEON) return
         val dl = ImGui.getWindowDrawList()
         
         fun getNeonBgColor(t: Float): Int {
@@ -243,7 +243,7 @@ class UIManager(private val windowHandle: Long) {
                 r = 0.85f + (0.01f - 0.85f) * fraction
                 b = 0.42f + (0.14f - 0.42f) * fraction
             }
-            val alpha = if (UITheme.backgroundVideoEnabled) 0.65f else 0.90f
+            val alpha = if (session.uiTheme.backgroundVideoEnabled) 0.65f else 0.90f
             return ImColor.rgba(r, g, b, alpha)
         }
 
@@ -264,16 +264,16 @@ class UIManager(private val windowHandle: Long) {
                     deck.reset()
                     when {
                         deck === currentMixer?.deckA -> {
-                            llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                            llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                            session.patchManager.activePresetA = null
+                            session.patchManager.cachedDtoA = null
                         }
                         deck === currentMixer?.deckB -> {
-                            llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                            llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                            session.patchManager.activePresetB = null
+                            session.patchManager.cachedDtoB = null
                         }
                         deck === currentMixer?.deckC -> {
-                            llm.slop.liquidlsd.patches.PatchManager.activePresetC = null
-                            llm.slop.liquidlsd.patches.PatchManager.cachedDtoC = null
+                            session.patchManager.activePresetC = null
+                            session.patchManager.cachedDtoC = null
                         }
                     }
                 }
@@ -285,16 +285,16 @@ class UIManager(private val windowHandle: Long) {
                         if (targetPreset == "None") {
                             when {
                                 deck === currentMixer?.deckA -> {
-                                    llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                                    session.patchManager.activePresetA = null
+                                    session.patchManager.cachedDtoA = null
                                 }
                                 deck === currentMixer?.deckB -> {
-                                    llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                                    session.patchManager.activePresetB = null
+                                    session.patchManager.cachedDtoB = null
                                 }
                                 deck === currentMixer?.deckC -> {
-                                    llm.slop.liquidlsd.patches.PatchManager.activePresetC = null
-                                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoC = null
+                                    session.patchManager.activePresetC = null
+                                    session.patchManager.cachedDtoC = null
                                 }
                             }
                         } else {
@@ -339,13 +339,13 @@ class UIManager(private val windowHandle: Long) {
 
         // Load semantic fonts before the GL3 backend initialises so the atlas
         // is ready for the backend to upload on its first render call.
-        UITheme.loadFonts(io)
+        session.uiTheme.loadFonts(io)
 
         // Save the default style right after context initialization so we can revert sizes
         defaultStyle = imgui.ImGuiStyle()
 
         // Scale style sizes proportionally to the loaded baseSize relative to the baseline of 15f
-        scaleStyleFromDefault(UITheme.baseSize)
+        scaleStyleFromDefault(session.uiTheme.baseSize)
 
         // Darken the modal backdrop for a more dramatic VJ-app feel.
         ImGui.getStyle().setColor(
@@ -371,12 +371,12 @@ class UIManager(private val windowHandle: Long) {
             } else {
                 if (isDeckA) {
                     currentMixer?.deckA?.reset()
-                    llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                    session.patchManager.activePresetA = null
+                    session.patchManager.cachedDtoA = null
                 } else {
                     currentMixer?.deckB?.reset()
-                    llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                    llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                    session.patchManager.activePresetB = null
+                    session.patchManager.cachedDtoB = null
                 }
             }
         },
@@ -392,12 +392,12 @@ class UIManager(private val windowHandle: Long) {
         onDeleteDeck = { isDeckA ->
             if (isDeckA) {
                 currentMixer?.deckA?.reset()
-                llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                session.patchManager.activePresetA = null
+                session.patchManager.cachedDtoA = null
             } else {
                 currentMixer?.deckB?.reset()
-                llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                session.patchManager.activePresetB = null
+                session.patchManager.cachedDtoB = null
             }
         }
     )
@@ -405,12 +405,12 @@ class UIManager(private val windowHandle: Long) {
     private val deckUtilityAction = { mode: Int, from: Deck, to: Deck ->
         val mixer = currentMixer
         if (mixer != null) {
-            val isDirty = PatchManager.isDeckDirty(to, mixer)
+            val isDirty = session.patchManager.isDeckDirty(to, mixer)
             if (!isDirty) {
                 when (mode) {
-                    0 -> PatchManager.moveDeck(mixer, from, to)
-                    1 -> PatchManager.copyDeck(mixer, from, to)
-                    2 -> PatchManager.swapDecks(mixer, from, to)
+                    0 -> session.patchManager.moveDeck(mixer, from, to)
+                    1 -> session.patchManager.copyDeck(mixer, from, to)
+                    2 -> session.patchManager.swapDecks(mixer, from, to)
                 }
             } else {
                 when (to) {
@@ -433,13 +433,13 @@ class UIManager(private val windowHandle: Long) {
 
     private val mixerMonitorPanel = MixerMonitorPanel(
         patchState = patchState,
-        drawDeckControls = { mixer, label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(mixer, label, deck, width, height, isDeckA, deckUtilityAction) },
+        drawDeckControls = { mixer, label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(session, mixer, label, deck, width, height, isDeckA, deckUtilityAction) },
         onUtilityAction = deckUtilityAction,
         onSaveDeck = { deck, isDeckA, isSaveAs ->
             val activeName = when {
-                deck === currentMixer?.deckA -> PatchManager.activePresetA
-                deck === currentMixer?.deckB -> PatchManager.activePresetB
-                deck === currentMixer?.deckC -> PatchManager.activePresetC
+                deck === currentMixer?.deckA -> session.patchManager.activePresetA
+                deck === currentMixer?.deckB -> session.patchManager.activePresetB
+                deck === currentMixer?.deckC -> session.patchManager.activePresetC
                 else -> null
             }
             if (activeName != null && !isSaveAs) {
@@ -473,8 +473,8 @@ class UIManager(private val windowHandle: Long) {
                 val midiId = "midi_cc_${channel}_${cc}"
                 when (target) {
                     is MidiLearnTarget.BaseValueSlider -> {
-                        llm.slop.liquidlsd.midi.MidiMappingManager.addMapping(target.paramKey, cc, channel, target.min, target.max)
-                        llm.slop.liquidlsd.midi.MidiMappingManager.saveActiveProfile()
+                        session.midiMappingManager.addMapping(target.paramKey, cc, channel, target.min, target.max)
+                        session.midiMappingManager.saveActiveProfile()
                     }
                     is MidiLearnTarget.GridCell -> {
                         val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
@@ -493,8 +493,8 @@ class UIManager(private val windowHandle: Long) {
                 }
                 patchState.midiLearnTarget = null
             } else {
-                val nextCc = llm.slop.liquidlsd.midi.MidiMappingManager.getCcForSpecial("Global/queueNext")
-                val nextCh = llm.slop.liquidlsd.midi.MidiMappingManager.getChannelForSpecial("Global/queueNext")
+                val nextCc = session.midiMappingManager.getCcForSpecial("Global/queueNext")
+                val nextCh = session.midiMappingManager.getChannelForSpecial("Global/queueNext")
                 if (nextCc != -1 && cc == nextCc && channel == nextCh) {
                     val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
                     val isHigh = valNow > 0.5f
@@ -503,8 +503,8 @@ class UIManager(private val windowHandle: Long) {
                     }
                     lastNextMidiCcHigh = isHigh
                 }
-                val prevCc = llm.slop.liquidlsd.midi.MidiMappingManager.getCcForSpecial("Global/queuePrev")
-                val prevCh = llm.slop.liquidlsd.midi.MidiMappingManager.getChannelForSpecial("Global/queuePrev")
+                val prevCc = session.midiMappingManager.getCcForSpecial("Global/queuePrev")
+                val prevCh = session.midiMappingManager.getChannelForSpecial("Global/queuePrev")
                 if (prevCc != -1 && cc == prevCc && channel == prevCh) {
                     val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
                     val isHigh = valNow > 0.5f
@@ -519,7 +519,7 @@ class UIManager(private val windowHandle: Long) {
         val cvDelta = mixer.pollQueueAdvance()
         var keyDelta = 0
         if (!ImGui.getIO().wantCaptureKeyboard) {
-            when (UITheme.queueKeyTrigger) {
+            when (session.uiTheme.queueKeyTrigger) {
                 UITheme.QueueKeyTrigger.ARROWS -> {
                     if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.LeftArrow))) keyDelta -= 1
                     if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.RightArrow))) keyDelta += 1
@@ -538,19 +538,19 @@ class UIManager(private val windowHandle: Long) {
         val totalDelta = midiCcDelta + cvDelta + keyDelta
         if (totalDelta != 0) {
             if (totalDelta > 0) {
-                PlayQueueManager.triggerNext(mixer)
+                session.playQueueManager.triggerNext(mixer)
             } else {
-                PlayQueueManager.triggerPrevious(mixer)
+                session.playQueueManager.triggerPrevious(mixer)
             }
         }
 
         pendingFontSize?.let { newSize ->
             pendingFontSize = null
-            UITheme.baseSize = newSize
-            UITheme.rebuildFonts(ImGui.getIO())
+            session.uiTheme.baseSize = newSize
+            session.uiTheme.rebuildFonts(ImGui.getIO())
             imguiGl3.updateFontsTexture()
             scaleStyleFromDefault(newSize)
-            UITheme.saveSettings()
+            session.uiTheme.saveSettings()
             logger.info { "Font size applied: ${newSize}px" }
         }
 
@@ -558,8 +558,8 @@ class UIManager(private val windowHandle: Long) {
         ImGui.newFrame()
         updateUiTransparency()
 
-        if (!UITheme.cleanModeEnabled) {
-            menuBar.draw(mixer)
+        if (!session.uiTheme.cleanModeEnabled) {
+            menuBar.draw(session, mixer)
             if (pendingOpenSettings) {
                 SettingsPanel.open()
                 pendingOpenSettings = false
@@ -580,40 +580,40 @@ class UIManager(private val windowHandle: Long) {
 
             drawLayout(mixer, displayWidth, displayHeight)
 
-            SettingsPanel.draw(UITheme.baseSize, displayWidth, displayHeight) { newSize ->
+            SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight) { newSize ->
                 applyFontSize(newSize)
             }
 
-            AudioEnginePanel.draw(displayWidth, displayHeight)
+            AudioEnginePanel.draw(session, displayWidth, displayHeight)
 
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
-            popupManager.drawDeckConfirmPopups(mixer)
+            popupManager.drawDeckConfirmPopups(session, mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
 
-            missingItemsPanel.draw()
+            missingItemsPanel.draw(session)
 
 
 
-            deckABrowser.draw(
-                activePresetName = PatchManager.activePresetA,
-                isDirty          = PatchManager.isDeckDirty(mixer.deckA, mixer),
+            deckABrowser.draw(session,
+                activePresetName = session.patchManager.activePresetA,
+                isDirty          = session.patchManager.isDeckDirty(mixer.deckA, mixer),
                 onSelect         = { name ->
                     if (name == null) {
-                        llm.slop.liquidlsd.patches.PatchManager.activePresetA = null
-                        llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = null
+                        session.patchManager.activePresetA = null
+                        session.patchManager.cachedDtoA = null
                     } else {
                         loadDeckPreset(name, mixer.deckA, true)
                     }
                 },
                 onSaveAs = { name, tags -> saveDeckPreset(name, mixer.deckA, true, tags) }
             )
-            deckBBrowser.draw(
-                activePresetName = PatchManager.activePresetB,
-                isDirty          = PatchManager.isDeckDirty(mixer.deckB, mixer),
+            deckBBrowser.draw(session,
+                activePresetName = session.patchManager.activePresetB,
+                isDirty          = session.patchManager.isDeckDirty(mixer.deckB, mixer),
                 onSelect         = { name ->
                     if (name == null) {
-                        llm.slop.liquidlsd.patches.PatchManager.activePresetB = null
-                        llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = null
+                        session.patchManager.activePresetB = null
+                        session.patchManager.cachedDtoB = null
                     } else {
                         loadDeckPreset(name, mixer.deckB, false)
                     }
@@ -622,10 +622,10 @@ class UIManager(private val windowHandle: Long) {
             )
 
             deckAFileBrowser.draw { file ->
-                llm.slop.liquidlsd.patches.PatchManager.loadDeckPresetAsync(file, true)
+                session.patchManager.loadDeckPresetAsync(file, true)
             }
             deckBFileBrowser.draw { file ->
-                llm.slop.liquidlsd.patches.PatchManager.loadDeckPresetAsync(file, false)
+                session.patchManager.loadDeckPresetAsync(file, false)
             }
         }
 
@@ -638,18 +638,18 @@ class UIManager(private val windowHandle: Long) {
      * Scale is computed relative to the baseline of 15f from a clean default style.
      */
     private fun applyFontSize(newSize: Float) {
-        if (newSize != UITheme.baseSize) pendingFontSize = newSize
+        if (newSize != session.uiTheme.baseSize) pendingFontSize = newSize
     }
 
     fun adjustFontSize(delta: Float) {
-        val currentSize = UITheme.baseSize
+        val currentSize = session.uiTheme.baseSize
         val targetSize = currentSize + delta
         val constrainedSize = targetSize.coerceIn(10f, 28f)
         applyFontSize(constrainedSize)
     }
 
     fun triggerExitFlow() {
-        UITheme.cleanModeEnabled = false
+        session.uiTheme.cleanModeEnabled = false
         popupManager.pendingOpenExitPopup = true
     }
 
@@ -701,22 +701,22 @@ class UIManager(private val windowHandle: Long) {
             file = File("presets/patches/$presetName.json")
         }
         if (file.exists()) {
-            llm.slop.liquidlsd.patches.PatchManager.loadDeckPresetAsync(file, isDeckA)
+            session.patchManager.loadDeckPresetAsync(file, isDeckA)
         }
     }
 
     private fun ejectDeck(deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
         val mixer = currentMixer ?: return
-        val isDirty = PatchManager.isDeckDirty(deck, mixer)
+        val isDirty = session.patchManager.isDeckDirty(deck, mixer)
         if (!isDirty) {
             performEjectDeck(deck)
         } else {
-            when (UITheme.autoVjDirtyBehavior) {
+            when (session.uiTheme.autoVjDirtyBehavior) {
                 UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
                     val activeName = when {
-                        deck === mixer.deckC -> PatchManager.activePresetC
-                        deck === mixer.deckA -> PatchManager.activePresetA
-                        else -> PatchManager.activePresetB
+                        deck === mixer.deckC -> session.patchManager.activePresetC
+                        deck === mixer.deckA -> session.patchManager.activePresetA
+                        else -> session.patchManager.activePresetB
                     }
                     val label = when {
                         deck === mixer.deckC -> "C"
@@ -747,16 +747,16 @@ class UIManager(private val windowHandle: Long) {
         deck.reset()
         when {
             deck === currentMixer?.deckC -> {
-                PatchManager.activePresetC = null
-                PatchManager.cachedDtoC = null
+                session.patchManager.activePresetC = null
+                session.patchManager.cachedDtoC = null
             }
             deck === currentMixer?.deckA -> {
-                PatchManager.activePresetA = null
-                PatchManager.cachedDtoA = null
+                session.patchManager.activePresetA = null
+                session.patchManager.cachedDtoA = null
             }
             else -> {
-                PatchManager.activePresetB = null
-                PatchManager.cachedDtoB = null
+                session.patchManager.activePresetB = null
+                session.patchManager.cachedDtoB = null
             }
         }
     }
@@ -772,9 +772,9 @@ class UIManager(private val windowHandle: Long) {
         // Restore existing tags when overwriting unless the caller explicitly supplies new ones
         val resolvedTags = tags ?: run {
             val cached = when {
-                deck === currentMixer?.deckA -> llm.slop.liquidlsd.patches.PatchManager.cachedDtoA
-                deck === currentMixer?.deckB -> llm.slop.liquidlsd.patches.PatchManager.cachedDtoB
-                deck === currentMixer?.deckC -> llm.slop.liquidlsd.patches.PatchManager.cachedDtoC
+                deck === currentMixer?.deckA -> session.patchManager.cachedDtoA
+                deck === currentMixer?.deckB -> session.patchManager.cachedDtoB
+                deck === currentMixer?.deckC -> session.patchManager.cachedDtoC
                 else -> null
             }
             cached?.tags ?: emptyList()
@@ -783,16 +783,16 @@ class UIManager(private val windowHandle: Long) {
         val dto = deck.toDto(name, resolvedTags)
         when {
             deck === currentMixer?.deckA -> {
-                llm.slop.liquidlsd.patches.PatchManager.activePresetA = name
-                llm.slop.liquidlsd.patches.PatchManager.cachedDtoA = dto
+                session.patchManager.activePresetA = name
+                session.patchManager.cachedDtoA = dto
             }
             deck === currentMixer?.deckB -> {
-                llm.slop.liquidlsd.patches.PatchManager.activePresetB = name
-                llm.slop.liquidlsd.patches.PatchManager.cachedDtoB = dto
+                session.patchManager.activePresetB = name
+                session.patchManager.cachedDtoB = dto
             }
             deck === currentMixer?.deckC -> {
-                llm.slop.liquidlsd.patches.PatchManager.activePresetC = name
-                llm.slop.liquidlsd.patches.PatchManager.cachedDtoC = dto
+                session.patchManager.activePresetC = name
+                session.patchManager.cachedDtoC = dto
             }
         }
         val file = File("presets/patches/$name.lsd")
@@ -802,7 +802,7 @@ class UIManager(private val windowHandle: Long) {
             deck === currentMixer?.deckC -> 2
             else -> -1
         }
-        llm.slop.liquidlsd.patches.PatchManager.saveDeckPresetAsync(file, deck, name, resolvedTags, deckIndex)
+        session.patchManager.saveDeckPresetAsync(file, deck, name, resolvedTags, deckIndex)
     }
 
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
@@ -819,13 +819,13 @@ class UIManager(private val windowHandle: Long) {
         val libraryW = displayWidth * 0.70f
         val rightW = displayWidth - libraryW
 
-        val assetBrowserH = when (UITheme.assetBrowserMode) {
+        val assetBrowserH = when (session.uiTheme.assetBrowserMode) {
             UITheme.AssetBrowserMode.FULL -> contentH
             UITheme.AssetBrowserMode.HALF -> contentH * 0.5f
             UITheme.AssetBrowserMode.HIDE -> 38f
         }
 
-        if (UITheme.assetBrowserMode != UITheme.AssetBrowserMode.FULL) {
+        if (session.uiTheme.assetBrowserMode != UITheme.AssetBrowserMode.FULL) {
             val topH = contentH - assetBrowserH
             val leftW = displayWidth * 0.3f
 
@@ -833,7 +833,7 @@ class UIManager(private val windowHandle: Long) {
             ImGui.setNextWindowSize(leftW, topH)
             if (ImGui.begin("Patch Grid", noDecorate)) {
                 drawNeonBackgroundIfNeeded(ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                PatchGridPanel.draw(currentMixer!!, patchState)
+                PatchGridPanel.draw(session, currentMixer!!, patchState)
             }
             ImGui.end()
 
@@ -842,20 +842,20 @@ class UIManager(private val windowHandle: Long) {
             ImGui.setNextWindowSize(middleW, topH)
             if (ImGui.begin("Cell Config", noDecorate)) {
                 drawNeonBackgroundIfNeeded(ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                CellConfigPanel.draw(patchState, currentMixer!!)
+                CellConfigPanel.draw(session, patchState, currentMixer!!)
             }
             ImGui.end()
         }
 
         // Asset Browser
-        val assetBrowserPosH = if (UITheme.assetBrowserMode == UITheme.AssetBrowserMode.FULL) menuBarH else (menuBarH + contentH - assetBrowserH)
+        val assetBrowserPosH = if (session.uiTheme.assetBrowserMode == UITheme.AssetBrowserMode.FULL) menuBarH else (menuBarH + contentH - assetBrowserH)
         ImGui.setNextWindowPos(0f, assetBrowserPosH)
         ImGui.setNextWindowSize(libraryW, assetBrowserH)
-        val flags = (if (UITheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) noDecorate or ImGuiWindowFlags.NoScrollbar else noDecorate) or
+        val flags = (if (session.uiTheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) noDecorate or ImGuiWindowFlags.NoScrollbar else noDecorate) or
                 ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
         if (ImGui.begin("Asset Browser", flags)) {
             drawNeonBackgroundIfNeeded(ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            AssetBrowserPanel.draw(libraryW, assetBrowserH, currentMixer!!)
+            AssetBrowserPanel.draw(session, libraryW, assetBrowserH, currentMixer!!)
         }
         ImGui.end()
 
@@ -871,7 +871,7 @@ class UIManager(private val windowHandle: Long) {
     }
 
     private fun drawMixerMonitor(mixer: Mixer) {
-        mixerMonitorPanel.draw(mixer)
+        mixerMonitorPanel.draw(session, mixer)
     }
 
     private fun copyStyleSizes(from: imgui.ImGuiStyle, to: imgui.ImGuiStyle) {

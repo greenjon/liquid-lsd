@@ -183,7 +183,7 @@ object BrowserPopupHandler {
         }
     }
 
-    fun drawExportQueuePopup() {
+    fun drawExportQueuePopup(session: llm.slop.liquidlsd.SessionContext) {
         if (ImGui.beginPopupModal("ExportQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("Export Queue as Playlist")
             ImGui.separator()
@@ -192,7 +192,7 @@ object BrowserPopupHandler {
                 val name = exportQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
-                        PlayQueueManager.queue.forEach { queueFile ->
+                        session.playQueueManager.queue.forEach { queueFile ->
                             PlaylistManager.insertPatch(playlist, queueFile.absolutePath, playlist.patches.size)
                         }
                         PlaylistManager.savePlaylist(playlist)

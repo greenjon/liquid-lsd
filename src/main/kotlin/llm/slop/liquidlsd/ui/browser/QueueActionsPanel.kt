@@ -12,17 +12,17 @@ import java.io.File
 object QueueActionsPanel {
     private val logger = KotlinLogging.logger {}
 
-    fun draw(mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         // Header Row
-        if (ImGui.checkbox("AUTO-VJ", PlayQueueManager.isAutoVJEnabled)) {
-            PlayQueueManager.isAutoVJEnabled = !PlayQueueManager.isAutoVJEnabled
+        if (ImGui.checkbox("AUTO-VJ", session.playQueueManager.isAutoVJEnabled)) {
+            session.playQueueManager.isAutoVJEnabled = !session.playQueueManager.isAutoVJEnabled
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue patches at set intervals.")
         }
         
         ImGui.sameLine()
-        val repeatActive = PlayQueueManager.isRepeatEnabled
+        val repeatActive = session.playQueueManager.isRepeatEnabled
         if (repeatActive) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
             ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
@@ -30,17 +30,17 @@ object QueueActionsPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
         }
         if (ImGui.button("${Icons.REPEAT}##repeatQueue")) {
-            PlayQueueManager.isRepeatEnabled = !PlayQueueManager.isRepeatEnabled
+            session.playQueueManager.isRepeatEnabled = !session.playQueueManager.isRepeatEnabled
         }
         if (repeatActive) {
             ImGui.popStyleColor(4)
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
         }
 
         ImGui.sameLine()
-        val shuffleActive = PlayQueueManager.isShuffleEnabled
+        val shuffleActive = session.playQueueManager.isShuffleEnabled
         if (shuffleActive) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
             ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
@@ -48,33 +48,33 @@ object QueueActionsPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
         }
         if (ImGui.button("${Icons.SHUFFLE}##shuffleQueue")) {
-            PlayQueueManager.isShuffleEnabled = !PlayQueueManager.isShuffleEnabled
-            if (PlayQueueManager.isShuffleEnabled) {
-                PlayQueueManager.initializeShuffle()
+            session.playQueueManager.isShuffleEnabled = !session.playQueueManager.isShuffleEnabled
+            if (session.playQueueManager.isShuffleEnabled) {
+                session.playQueueManager.initializeShuffle()
             }
         }
         if (shuffleActive) {
             ImGui.popStyleColor(4)
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Shuffle Queue: play patches in a random order.")
         }
 
         ImGui.sameLine()
         if (ImGui.button("Clear")) {
-            PlayQueueManager.clearQueue()
+            session.playQueueManager.clearQueue()
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Empty the play queue.")
         }
         ImGui.sameLine()
         if (ImGui.button("Export")) {
             ImGui.openPopup("ExportQueuePopup")
         }
-        if (ImGui.isItemHovered() && UITheme.tooltipsEnabled) {
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Save current queue sequence as a new playlist.")
         }
-        BrowserPopupHandler.drawExportQueuePopup()
+        BrowserPopupHandler.drawExportQueuePopup(session)
         
         ImGui.separator()
         ImGui.spacing()
@@ -88,8 +88,8 @@ object QueueActionsPanel {
         var insertLineY = -1f
         val insertLineColor = (255 shl 24) or (204 shl 16) or (255 shl 8) or 102 // mint-green, ABGR
 
-        PlayQueueManager.queue.forEachIndexed { index, file ->
-            val isActive = index == PlayQueueManager.activeIndex
+        session.playQueueManager.queue.forEachIndexed { index, file ->
+            val isActive = index == session.playQueueManager.activeIndex
             val label = "${index + 1}. ${file.nameWithoutExtension}${if (isActive) " ->" else ""}"
 
             if (isActive) {
@@ -130,20 +130,20 @@ object QueueActionsPanel {
                     moveFrom = queuePayload
                     // moveQueueItem does removeAt(from) then add(to) on the shortened list
                     val rawTo = if (queuePayload < effectiveSlot) effectiveSlot - 1 else effectiveSlot
-                    moveTo = rawTo.coerceIn(0, PlayQueueManager.queue.size - 1)
+                    moveTo = rawTo.coerceIn(0, session.playQueueManager.queue.size - 1)
                 }
 
                 // 2. Insert asset from center panel
                 val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (assetPayload != null) {
                     val droppedFile = File(assetPayload)
-                    val insertAt = effectiveSlot.coerceIn(0, PlayQueueManager.queue.size)
+                    val insertAt = effectiveSlot.coerceIn(0, session.playQueueManager.queue.size)
                     if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                        PlayQueueManager.queue.add(insertAt, droppedFile)
+                        session.playQueueManager.queue.add(insertAt, droppedFile)
                         logger.info { "Inserted patch from drag-drop at slot $insertAt: ${droppedFile.name}" }
                     } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdset")) {
-                        val files = PlayQueueManager.parsePlaylist(droppedFile)
-                        PlayQueueManager.queue.addAll(insertAt, files)
+                        val files = session.playQueueManager.parsePlaylist(droppedFile)
+                        session.playQueueManager.queue.addAll(insertAt, files)
                         logger.info { "Inserted playlist from drag-drop at slot $insertAt: ${droppedFile.name} (${files.size} items)" }
                     }
                 }
@@ -170,10 +170,10 @@ object QueueActionsPanel {
         }
 
         if (moveFrom != -1 && moveTo != -1) {
-            PlayQueueManager.moveQueueItem(moveFrom, moveTo)
+            session.playQueueManager.moveQueueItem(moveFrom, moveTo)
         }
         if (removeFromQueueIndex != -1) {
-            PlayQueueManager.removeFromQueue(removeFromQueueIndex)
+            session.playQueueManager.removeFromQueue(removeFromQueueIndex)
         }
 
         // Drop target for the empty space below all queue items (append to end)
@@ -186,9 +186,9 @@ object QueueActionsPanel {
                 if (payload != null) {
                     val file = File(payload)
                     if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                        PlayQueueManager.appendToQueue(file)
+                        session.playQueueManager.appendToQueue(file)
                     } else if (file.extension.lowercase() in listOf("playlist", "lsdset")) {
-                        PlayQueueManager.appendPlaylistToQueue(file)
+                        session.playQueueManager.appendPlaylistToQueue(file)
                     }
                 }
                 ImGui.endDragDropTarget()
