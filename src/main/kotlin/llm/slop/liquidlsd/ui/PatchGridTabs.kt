@@ -230,12 +230,6 @@ object PatchGridTabs {
 
         val endY = ImGui.getCursorScreenPosY()
 
-        if (parentLabel != "Mixer") {
-            val lineX   = ImGui.getWindowPos().x + 4f
-            val lineCol = getSubTabColor(state, 0.6f)
-            dl.addLine(lineX, subStartY, lineX, endY - 2f, lineCol, 3f)
-        }
-
         state.subgroupHeight[key] = endY - startY
     }
 

@@ -168,7 +168,7 @@ class MenuBar(
         val bpmText = if (audioActive && session.uiTheme.audioEngineEnabled) "BPM: %3.0f  ".format(bpm) else ""
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else ""
         val fpsText = "%3.0f fps  ".format(fps)
-        val ftText  = "%.0f ms  ".format(ftMs)
+        val ftText  = "%3.0f ms  ".format(ftMs)
         val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
 
         session.uiTheme.withFont(UITheme.FontLevel.CODE) {

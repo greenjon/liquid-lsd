@@ -96,6 +96,7 @@ object PatchGridPanel {
 
     private var gridStartX = 0f
     private var rowIndex = 0
+    private var lastBoxBottomY = 0f
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PatchGridState) {
         rowIndex = 0
@@ -120,15 +121,19 @@ object PatchGridPanel {
             val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
             val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
             val labelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
+            val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
 
             val containerTopY = ImGui.getCursorScreenPosY() - 2f
 
             // Dynamic/Sub Tabs
             PatchGridTabs.drawSubTabs(session, state, mixer)
             ImGui.spacing()
-            ImGui.spacing()
 
-            ImGui.separator()
+            // Separator confined inside the box width
+            val sepY = ImGui.getCursorScreenPosY() + 2f
+            val sepCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.12f)
+            ImGui.getWindowDrawList().addLine(gridStartX - 4f, sepY, boxMaxX, sepY, sepCol, 1f)
+            ImGui.spacing()
             ImGui.spacing()
 
             // Column Headers
@@ -167,9 +172,9 @@ object PatchGridPanel {
             val btnColor    = PatchGridTabs.getDeckColor(state.activeTopTab, 1.0f)
 
             val boxMinX = gridStartX - 6f
-            val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
             val boxTopY = containerTopY
             val boxBottomY = childMaxY.coerceAtLeast(boxTopY + 100f)
+            lastBoxBottomY = boxBottomY
 
             // 1. Card background fill and rounded stroke outline
             dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 6f)
@@ -220,7 +225,7 @@ object PatchGridPanel {
         val afterHeadersY = ImGui.getCursorScreenPosY()
         
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
-        val bottomY = startY + ImGui.getWindowHeight() // align to parent window height
+        val bottomY = if (lastBoxBottomY > startY) lastBoxBottomY else (startY + 300f)
         
         // Draw FINAL header
         val finalColX = startX + labelColW + getColumnOffset(session, "final")
