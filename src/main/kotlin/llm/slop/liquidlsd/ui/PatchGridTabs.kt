@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
+import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.roundToInt
 
@@ -27,6 +28,18 @@ object PatchGridTabs {
         return getDeckColor(state.activeTopTab, alpha)
     }
 
+    fun calculateLeftTabsWidth(session: llm.slop.liquidlsd.SessionContext): Float {
+        val labels = listOf("MIX", "A", "B", "C")
+        var maxW = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            labels.forEach { label ->
+                val w = ImGui.calcTextSize(label).x
+                if (w > maxW) maxW = w
+            }
+        }
+        return (maxW + 16f).coerceAtLeast(38f)
+    }
+
     fun drawLeftTabs(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, mixer: Mixer? = null, topOffset: Float = 36f) {
         if (topOffset > 0f) {
             ImGui.dummy(0f, topOffset)
@@ -41,39 +54,76 @@ object PatchGridTabs {
             Triple("B",   "Deck B", if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B visual source, geometry, color, and feedback parameters."),
             Triple("C",   "Deck C", if (deckCEmpty) "Deck C [EMPTY] — Click to assign a source or preset." else "Deck C visual source, geometry, color, and feedback parameters.")
         )
-        val buttonWidth = 38f
+        val buttonWidth = calculateLeftTabsWidth(session)
         val buttonHeight = 28f
 
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
             val isActive = state.activeTopTab == fullTab
             val activeCol = getDeckColor(fullTab, 1f)
-            if (isActive) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
+            val bgCol = if (isActive) {
+                activeCol
             } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f))
+                ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
+            }
+            val hoverCol = if (isActive) {
+                activeCol
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
+            }
+            val activeClickCol = if (isActive) {
+                activeCol
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f)
             }
 
-            if (ImGui.button(shortLabel, buttonWidth, buttonHeight)) {
+            val pMinX = ImGui.getCursorScreenPosX()
+            val pMinY = ImGui.getCursorScreenPosY()
+            val pMaxX = pMinX + buttonWidth
+            val pMaxY = pMinY + buttonHeight
+
+            if (ImGui.invisibleButton("##left_tab_$shortLabel", buttonWidth, buttonHeight)) {
                 state.activeTopTab = fullTab
             }
+            val isHovered = ImGui.isItemHovered()
+            val isItemActive = ImGui.isItemActive()
+
             if (isActive) {
-                activeBtnMinX = ImGui.getItemRectMinX()
-                activeBtnMinY = ImGui.getItemRectMinY()
-                activeBtnMaxX = ImGui.getItemRectMaxX()
-                activeBtnMaxY = ImGui.getItemRectMaxY()
+                activeBtnMinX = pMinX
+                activeBtnMinY = pMinY
+                activeBtnMaxX = pMaxX
+                activeBtnMaxY = pMaxY
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+
+            val drawCol = when {
+                isItemActive -> activeClickCol
+                isHovered    -> hoverCol
+                else         -> bgCol
+            }
+
+            val dl = ImGui.getWindowDrawList()
+            // Draw button background with left corners rounded (4f) and right corners sharp (0f)
+            dl.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, drawCol, 4f)
+            dl.addRectFilled(pMaxX - 6f, pMinY, pMaxX, pMaxY, drawCol, 0f)
+
+            // Draw centered text label
+            var tw = 0f
+            var th = 0f
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                val sz = ImGui.calcTextSize(shortLabel)
+                tw = sz.x
+                th = sz.y
+            }
+            val textX = pMinX + (buttonWidth - tw) * 0.5f
+            val textY = pMinY + (buttonHeight - th) * 0.5f
+            val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (isActive) 1f else 0.8f)
+            dl.addText(textX, textY, textCol, shortLabel)
+
+            if (isHovered && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip(tooltipText)
             }
-            ImGui.popStyleColor(3)
         }
-        ImGui.popStyleVar(2)
+        ImGui.popStyleVar()
     }
 
     private fun getDeckSubTabs(deck: Deck): List<String> {
@@ -98,11 +148,27 @@ object PatchGridTabs {
         return tabs.distinct()
     }
 
-    fun drawSubTabs(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, mixer: Mixer) {
-        if (state.activeTopTab == "Mixer") {
-            ImGui.dummy(0f, 24f) // placeholder to prevent layout jumping
-            return
+    fun getSubTabDisplayLabel(tab: String, isFirst: Boolean): String {
+        return if (isFirst && tab != "Empty") "$tab  ${Icons.CHEVRON_DOWN}" else tab
+    }
+
+    fun calculateSubTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, deck: Deck): Float {
+        val tabs = getDeckSubTabs(deck)
+        if (tabs.isEmpty()) return 0f
+        var totalW = 0f
+        tabs.forEachIndexed { i, tab ->
+            val displayLabel = getSubTabDisplayLabel(tab, i == 0)
+            var tw = 0f
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
+            val btnW = (tw + 16f).coerceAtLeast(45f)
+            totalW += btnW
+            if (i > 0) totalW += 4f
         }
+        return totalW
+    }
+
+    fun drawSubTabs(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, mixer: Mixer) {
+        if (state.activeTopTab == "Mixer") return
 
         val deck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
@@ -110,8 +176,9 @@ object PatchGridTabs {
             "Deck C" -> mixer.deckC
             else -> mixer.deckA
         }
-        val tabs = getDeckSubTabs(deck)
+        if (deck.isEmpty) return
 
+        val tabs = getDeckSubTabs(deck)
         if (tabs.isEmpty()) return
 
         // Auto-correct stale subtab value (e.g. after deck source changes)
@@ -139,6 +206,8 @@ object PatchGridTabs {
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 0f)
         tabs.forEachIndexed { i, tab ->
             if (i > 0) ImGui.sameLine()
+            val isSourceTab = (i == 0)
+            val displayLabel = getSubTabDisplayLabel(tab, isSourceTab)
             val isActive = currentSubTab == tab
             if (isActive) {
                 val bgCol = getSubTabColor(state, 1f)
@@ -151,16 +220,56 @@ object PatchGridTabs {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
             }
             var tw = 0f
-            UITheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(tab).x }
-            val btnW = (tw + 20f).coerceAtLeast(80f)
-            if (ImGui.button(tab, btnW, 24f)) {
-                when (state.activeTopTab) {
-                    "Deck A" -> state.activeDeckASubTab = tab
-                    "Deck B" -> state.activeDeckBSubTab = tab
-                    "Deck C" -> state.activeDeckCSubTab = tab
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
+            val btnW = (tw + 16f).coerceAtLeast(45f)
+            if (ImGui.button(displayLabel, btnW, 24f)) {
+                if (isSourceTab) {
+                    if (!isActive) {
+                        when (state.activeTopTab) {
+                            "Deck A" -> state.activeDeckASubTab = tab
+                            "Deck B" -> state.activeDeckBSubTab = tab
+                            "Deck C" -> state.activeDeckCSubTab = tab
+                        }
+                    } else {
+                        ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
+                    }
+                } else {
+                    when (state.activeTopTab) {
+                        "Deck A" -> state.activeDeckASubTab = tab
+                        "Deck B" -> state.activeDeckBSubTab = tab
+                        "Deck C" -> state.activeDeckCSubTab = tab
+                    }
                 }
             }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled && isSourceTab) {
+                ImGui.setTooltip("Click to switch to $tab tab. Click again while active to change Visual Source.")
+            }
             ImGui.popStyleColor(3)
+
+            if (isSourceTab && ImGui.beginPopup("##header_source_popup_${state.activeTopTab}")) {
+                ImGui.textDisabled("Select Visual Source:")
+                ImGui.separator()
+
+                if (ImGui.menuItem("Mandala")) {
+                    val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
+                    if (masterMandala != null && deck.source != masterMandala) {
+                        deck.source = masterMandala.clone()
+                        deck.isEmpty = false
+                    }
+                }
+
+                for (source in VisualSourceRegistry.availableSources) {
+                    if (source.id == "mandala") continue
+                    val isSelected = (source.displayName == tab)
+                    if (ImGui.menuItem(source.displayName, null, isSelected)) {
+                        if (deck.source != source) {
+                            deck.source = source.clone()
+                            deck.isEmpty = false
+                        }
+                    }
+                }
+                ImGui.endPopup()
+            }
         }
         ImGui.popStyleVar(2)
     }

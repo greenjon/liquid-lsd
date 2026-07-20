@@ -107,8 +107,9 @@ object PatchGridPanel {
 
         PatchGridKeyboard.handleKeyboardShortcuts(state, mixer, { s, m -> PatchGridUndo.pushUndoState(s, m) }, { s, m -> PatchGridUndo.performUndo(s, m) })
 
+        val sideTabWidth = PatchGridTabs.calculateLeftTabsWidth(session)
         if (ImGui.beginTable("##patch_grid_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)) {
-            ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, 42f)
+            ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, sideTabWidth + 4f)
             ImGui.tableSetupColumn("##main_grid", imgui.flag.ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
 
@@ -122,35 +123,31 @@ object PatchGridPanel {
             val avail = ImGui.getContentRegionAvailX()
             gridStartX = ImGui.getCursorScreenPosX()
             
-            val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
-            val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
-            val labelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
-            val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
-
-            val containerTopY = ImGui.getCursorScreenPosY() - 2f
-
-            // Dynamic/Sub Tabs
-            PatchGridTabs.drawSubTabs(session, state, mixer)
-            ImGui.spacing()
-
-            // Separator confined inside the box width
-            val sepY = ImGui.getCursorScreenPosY() + 2f
-            val sepCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.12f)
-            ImGui.getWindowDrawList().addLine(gridStartX - 4f, sepY, boxMaxX, sepY, sepCol, 1f)
-            ImGui.spacing()
-            ImGui.spacing()
-
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
                 "Deck C" -> mixer.deckC
                 else -> null
             }
+            val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
+                PatchGridTabs.calculateSubTabsWidth(session, state, activeDeck)
+            } else 0f
+
+            val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
+            val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
+            val defaultLabelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
+            val labelColW = maxOf(defaultLabelColW, subTabsW + 12f)
+            val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
+
+            val containerTopY = ImGui.getCursorScreenPosY() - 2f
+
             val isDeckEmpty = activeDeck?.isEmpty == true
 
-            // Column Headers (only draw when not empty)
+            // Column Headers (draw column headers & inline subtabs)
             if (!isDeckEmpty) {
                 drawColumnHeaders(session, labelColW, state, mixer)
+            } else {
+                ImGui.spacing()
             }
 
             if (ImGui.beginChild("##patch_grid_scroll", 0f, 0f, false)) {
@@ -251,7 +248,7 @@ object PatchGridPanel {
         ImGui.dummy(10f, headerH)
         val afterHeadersY = ImGui.getCursorScreenPosY()
         
-        // Render Visual Source dropdown in empty space to left of column headers
+        // Render Subtabs inline in empty space to left of column headers
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
@@ -259,33 +256,8 @@ object PatchGridPanel {
             else -> null
         }
         if (activeDeck != null && !activeDeck.isEmpty) {
-            val comboW = (labelColW - 16f).coerceAtMost(220f).coerceAtLeast(100f)
-            val currentName = (activeDeck.source as? DynamicVisualSource)?.displayName ?: "Mandala"
-            
-            ImGui.setCursorScreenPos(startX, startY + (headerH - 24f) * 0.5f)
-            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
-            ImGui.setNextItemWidth(comboW)
-            if (ImGui.beginCombo("##source_select_${state.activeTopTab}", currentName)) {
-                for (src in activeDeck.availableSources) {
-                    val srcName = (src as? DynamicVisualSource)?.displayName ?: "Mandala"
-                    val isSelected = (src == activeDeck.source)
-                    if (ImGui.selectable(srcName, isSelected)) {
-                        if (activeDeck.source != src) {
-                            PatchGridUndo.pushUndoState(state, mixer)
-                            activeDeck.source = src
-                            activeDeck.isEmpty = false
-                        }
-                    }
-                    if (isSelected) {
-                        ImGui.setItemDefaultFocus()
-                    }
-                }
-                ImGui.endCombo()
-            }
-            ImGui.popStyleVar()
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Select visual generator source for ${state.activeTopTab}.")
-            }
+            ImGui.setCursorScreenPos(startX, startY + headerH - 24f - 2f)
+            PatchGridTabs.drawSubTabs(session, state, mixer)
         }
         
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line

@@ -14,7 +14,8 @@ object Icons {
     const val FILE        = "\ue0c0" // file
     const val ACTIVITY    = "\ue038" // activity
     const val ZAP         = "\ue1b4" // zap
-    const val CHEVRON_UP  = "\ue070" // chevron-up
+    const val CHEVRON_UP    = "\ue070" // chevron-up
+    const val CHEVRON_DOWN  = "\ue06c" // chevron-down
     const val SEARCH      = "\ue151" // search
     const val REFRESH     = "\ue145" // refresh-cw
     const val PLUS        = "\ue13d" // plus
