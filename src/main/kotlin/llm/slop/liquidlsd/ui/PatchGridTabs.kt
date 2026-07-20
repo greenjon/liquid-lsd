@@ -298,12 +298,12 @@ object PatchGridTabs {
             drawSubGroupContent(session, deckLabel, "View", state) {
                 PatchGridRenderer.drawParamRow(session, "Zoom",     "$deckLabel/View/Zoom",   mandala.parameters["Zoom"]!!,     state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PatchGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", mandala.parameters["Rotate Z"]!!, state, labelColW, mixer, gridStartX, 1, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PatchGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", mandala.parameters["Rotate X"]!!, state, labelColW, mixer, gridStartX, 2, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PatchGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", mandala.parameters["Rotate Y"]!!, state, labelColW, mixer, gridStartX, 3, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 val modeVal = mandala.parameters["3D Mode"]?.value ?: 0f
                 val mode    = modeVal.roundToInt().coerceIn(0, 4)
                 if (mode > 0) {
-                    PatchGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", mandala.parameters["Rotate X"]!!, state, labelColW, mixer, gridStartX, 2, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PatchGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", mandala.parameters["Rotate Y"]!!, state, labelColW, mixer, gridStartX, 3, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     PatchGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp",   mandala.parameters["3D Persp"]!!, state, labelColW, mixer, gridStartX, 4, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }

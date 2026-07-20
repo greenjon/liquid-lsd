@@ -52,27 +52,21 @@
       "default": 0.0,
       "min": -3.14,
       "max": 3.14,
-      "type": "ENDLESS",
-      "defaultMin": -3.14,
-      "defaultMax": 3.14
+      "type": "ENDLESS"
     },
     {
       "name": "Rotate Y",
       "default": 0.0,
       "min": -3.14,
       "max": 3.14,
-      "type": "ENDLESS",
-      "defaultMin": -3.14,
-      "defaultMax": 3.14
+      "type": "ENDLESS"
     },
     {
       "name": "Rotate Z",
       "default": 0.0,
       "min": -3.14,
       "max": 3.14,
-      "type": "ENDLESS",
-      "defaultMin": -3.14,
-      "defaultMax": 3.14
+      "type": "ENDLESS"
     },
     {
       "name": "Iterations",

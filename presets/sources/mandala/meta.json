@@ -51,9 +51,7 @@
       "min": -3.14,
       "max": 3.14,
       "type": "ENDLESS",
-      "isAngle": true,
-      "defaultMin": -3.14,
-      "defaultMax": 3.14
+      "isAngle": true
     },
     {
       "name": "Thickness",
@@ -230,9 +228,7 @@
       "min": -3.14,
       "max": 3.14,
       "type": "ENDLESS",
-      "isAngle": true,
-      "defaultMin": -3.14,
-      "defaultMax": 3.14
+      "isAngle": true
     },
     {
       "name": "Rotate X",
@@ -240,9 +236,7 @@
       "min": -3.14,
       "max": 3.14,
       "type": "ENDLESS",
-      "isAngle": true,
-      "defaultMin": -3.14,
-      "defaultMax": 3.14
+      "isAngle": true
     },
     {
       "name": "3D Persp",

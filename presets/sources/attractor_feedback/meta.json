@@ -42,8 +42,6 @@
       "default": 0.0,
       "min": -3.14,
       "max": 3.14,
-      "defaultMin": -3.14,
-      "defaultMax": 3.14,
       "type": "ENDLESS"
     },
     {
@@ -96,8 +94,6 @@
       "default": 0.0,
       "min": -3.14,
       "max": 3.14,
-      "defaultMin": -3.14,
-      "defaultMax": 3.14,
       "type": "ENDLESS"
     },
     {

@@ -35,27 +35,21 @@
       "default": 0.0,
       "min": -3.14159,
       "max": 3.14159,
-      "type": "ENDLESS",
-      "defaultMin": -3.14159,
-      "defaultMax": 3.14159
+      "type": "ENDLESS"
     },
     {
       "name": "Rotate YW",
       "default": 0.0,
       "min": -3.14159,
       "max": 3.14159,
-      "type": "ENDLESS",
-      "defaultMin": -3.14159,
-      "defaultMax": 3.14159
+      "type": "ENDLESS"
     },
     {
       "name": "Rotate ZW",
       "default": 0.0,
       "min": -3.14159,
       "max": 3.14159,
-      "type": "ENDLESS",
-      "defaultMin": -3.14159,
-      "defaultMax": 3.14159
+      "type": "ENDLESS"
     },
     {
       "name": "Mesh Density Theta",
