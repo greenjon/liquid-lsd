@@ -121,6 +121,8 @@ object PatchGridPanel {
             val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
             val labelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
 
+            val containerTopY = ImGui.getCursorScreenPosY() - 2f
+
             // Dynamic/Sub Tabs
             PatchGridTabs.drawSubTabs(session, state, mixer)
             ImGui.spacing()
@@ -153,9 +155,40 @@ object PatchGridPanel {
                     PatchGridTabs.drawDeckGroupContent(session, "Deck C", mixer.deckC, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
                 }
             }
+            val childMaxY = ImGui.getCursorScreenPosY()
             ImGui.endChild()
 
             ImGui.endTable()
+
+            // Draw Connected Folder Frame around subtabs & parameters
+            val dl = ImGui.getWindowDrawList()
+            val accentColor = PatchGridTabs.getDeckColor(state.activeTopTab, 0.7f)
+            val accentFill  = PatchGridTabs.getDeckColor(state.activeTopTab, 0.04f)
+            val btnColor    = PatchGridTabs.getDeckColor(state.activeTopTab, 1.0f)
+
+            val boxMinX = gridStartX - 6f
+            val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
+            val boxTopY = containerTopY
+            val boxBottomY = childMaxY.coerceAtLeast(boxTopY + 100f)
+
+            // 1. Card background fill and rounded stroke outline
+            dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 6f)
+            dl.addRect(boxMinX, boxTopY, boxMaxX, boxBottomY, accentColor, 6f, 0, 1.5f)
+
+            // 2. Seamless folder tab bridge connecting active side tab button to the container
+            if (PatchGridTabs.activeBtnMaxX > 0f) {
+                val btnTop = PatchGridTabs.activeBtnMinY
+                val btnBot = PatchGridTabs.activeBtnMaxY
+                val btnRight = PatchGridTabs.activeBtnMaxX
+
+                // Overwrite the left border segment alongside the button with button color to form seamless tab connection
+                dl.addLine(boxMinX, btnTop + 1f, boxMinX, btnBot - 1f, btnColor, 3.5f)
+
+                // Fill any micro gap between the button right edge and the container left edge
+                if (boxMinX > btnRight) {
+                    dl.addRectFilled(btnRight - 1f, btnTop, boxMinX + 1f, btnBot, btnColor, 0f)
+                }
+            }
         }
     }
 

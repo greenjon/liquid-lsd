@@ -9,6 +9,24 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.roundToInt
 
 object PatchGridTabs {
+    var activeBtnMinX: Float = 0f
+    var activeBtnMinY: Float = 0f
+    var activeBtnMaxX: Float = 0f
+    var activeBtnMaxY: Float = 0f
+
+    fun getDeckColor(tab: String, alpha: Float = 1f): Int {
+        return when (tab) {
+            "Deck A", "A" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.8f, alpha)
+            "Deck B", "B" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, alpha)
+            "Deck C", "C" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, alpha)
+            else         -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, alpha) // Mixer / MIX
+        }
+    }
+
+    fun getSubTabColor(state: PatchGridState, alpha: Float): Int {
+        return getDeckColor(state.activeTopTab, alpha)
+    }
+
     fun drawLeftTabs(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, topOffset: Float = 36f) {
         if (topOffset > 0f) {
             ImGui.dummy(0f, topOffset)
@@ -22,16 +40,12 @@ object PatchGridTabs {
         val buttonWidth = 38f
         val buttonHeight = 28f
 
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
             val isActive = state.activeTopTab == fullTab
+            val activeCol = getDeckColor(fullTab, 1f)
             if (isActive) {
-                val activeCol = when (fullTab) {
-                    "Deck A" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.8f, 1f)
-                    "Deck B" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, 1f)
-                    "Deck C" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
-                    else     -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 1f)
-                }
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
@@ -44,12 +58,18 @@ object PatchGridTabs {
             if (ImGui.button(shortLabel, buttonWidth, buttonHeight)) {
                 state.activeTopTab = fullTab
             }
+            if (isActive) {
+                activeBtnMinX = ImGui.getItemRectMinX()
+                activeBtnMinY = ImGui.getItemRectMinY()
+                activeBtnMaxX = ImGui.getItemRectMaxX()
+                activeBtnMaxY = ImGui.getItemRectMaxY()
+            }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip(tooltipText)
             }
             ImGui.popStyleColor(3)
         }
-        ImGui.popStyleVar()
+        ImGui.popStyleVar(2)
     }
 
     /* Commented out in favor of drawLeftTabs; uncomment to use horizontal top tabs instead:
@@ -139,12 +159,13 @@ object PatchGridTabs {
             else -> state.activeDeckASubTab
         }
 
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 0f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 0f)
         tabs.forEachIndexed { i, tab ->
             if (i > 0) ImGui.sameLine()
             val isActive = currentSubTab == tab
             if (isActive) {
-                val bgCol = getSubTabColor(tab, 1f)
+                val bgCol = getSubTabColor(state, 1f)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
@@ -165,7 +186,7 @@ object PatchGridTabs {
             }
             ImGui.popStyleColor(3)
         }
-        ImGui.popStyleVar()
+        ImGui.popStyleVar(2)
     }
 
     private fun getSubTabColor(label: String, alpha: Float): Int {
@@ -211,7 +232,7 @@ object PatchGridTabs {
 
         if (parentLabel != "Mixer") {
             val lineX   = ImGui.getWindowPos().x + 4f
-            val lineCol = getSubTabColor(label, 0.6f)
+            val lineCol = getSubTabColor(state, 0.6f)
             dl.addLine(lineX, subStartY, lineX, endY - 2f, lineCol, 3f)
         }
 
