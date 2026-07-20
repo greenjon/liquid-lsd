@@ -64,7 +64,7 @@ object PatchGridRenderer {
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Click for menu (Randomize, Copy/Paste). Middle-click to reset parameter $label.")
         }
-        if (isLabelHovered && ImGui.isMouseClicked(2)) {
+        if (isLabelHovered && ImGui.isMouseReleased(2)) {
             onPushUndo()
             param.reset()
         }
@@ -113,6 +113,7 @@ object PatchGridRenderer {
         val finalY = rowScreenY
         val isFinalSelected = state.selectedCell?.paramKey == paramKey && state.selectedCell?.cvSourceId == "final"
         val isFinalHoveredCol = mousePos.x >= finalX && mousePos.x <= (finalX + CELL)
+        val isFinalCrosshair = isHoveredRow && isFinalHoveredCol
         
         ImGui.setCursorScreenPos(finalX, finalY)
         ImGui.invisibleButton("##final_cell", CELL, CELL)
@@ -120,7 +121,8 @@ object PatchGridRenderer {
         if (ImGui.isItemClicked()) {
             state.select(PatchCellId(paramKey, "final"), param)
         }
-        if (isFinalHovered && ImGui.isMouseClicked(2)) {
+        if (isFinalHovered && ImGui.isMouseReleased(2)) {
+            state.select(PatchCellId(paramKey, "final"), param)
             onPushUndo()
             param.reset()
         }
@@ -199,11 +201,14 @@ object PatchGridRenderer {
                 state.select(midiCellId, param)
             }
         }
-        if (isMidiCellHovered && ImGui.isMouseClicked(2)) { // Middle click bypass toggle
+        if (isMidiCellHovered && ImGui.isMouseReleased(2)) { // Middle click bypass toggle
+            state.select(midiCellId, param)
             if (midiMods.isNotEmpty()) {
                 onPushUndo()
+                val allBypassed = midiMods.all { it.bypassed }
+                val targetBypassed = !allBypassed
                 val updated = param.modulators.map {
-                    if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = !it.bypassed) else it
+                    if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = targetBypassed) else it
                 }
                 param.modulators.clear()
                 param.modulators.addAll(updated)
@@ -309,7 +314,7 @@ object PatchGridRenderer {
                     isFiltered -> "Bypassed: Bypassed because AUTO-VJ is OFF."
                     hasModulator -> "Active: Modulation routed to parameter."
                     isBypassed -> "Bypassed: Bypassed by user toggle."
-                    else -> "Unmapped: Click to route this modulation source."
+                    else -> "Unmapped: Middle-click or click to add & configure modulation."
                 }
                 val modSource = when (cvId) {
                     "lfo" -> "LFO / Oscillator"
@@ -317,7 +322,7 @@ object PatchGridRenderer {
                     "trigger" -> "Transient Trigger"
                     else -> cvId
                 }
-                val tipText = "Source: $modSource\nStatus: $statusText\nClick to configure modulation settings. Middle-click to toggle bypass. Right-click for menu."
+                val tipText = "Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active to toggle bypass, inactive to populate cellconfig."
                 ImGui.setTooltip(tipText)
             }
             if (ImGui.isItemClicked()) {
@@ -327,18 +332,21 @@ object PatchGridRenderer {
                     state.select(cellId, param)
                 }
             }
-            if (isCellHovered && ImGui.isMouseClicked(2)) { // Middle click bypass toggle
+            if (isCrosshair && ImGui.isMouseClicked(2)) { // Middle click: bypass toggle if active, populate default cellconfig if inactive
+                state.select(cellId, param)
                 if (activeMods.isNotEmpty()) {
                     onPushUndo()
+                    val allBypassed = activeMods.all { it.bypassed }
+                    val targetBypassed = !allBypassed
                     val updated = param.modulators.map { mod ->
                         if (activeMods.any { it.id == mod.id }) {
-                            mod.copy(bypassed = !mod.bypassed)
+                            mod.copy(bypassed = targetBypassed)
                         } else mod
                     }
                     param.modulators.clear()
                     param.modulators.addAll(updated)
                 } else {
-                    // Middle-clicking an unmapped cell creates a modulator directly
+                    // Middle-clicking an unmapped cell populates it with a default modulator and selects it
                     onPushUndo()
                     val defaultSource = when (cvId) {
                         "audio" -> "audio_amp"

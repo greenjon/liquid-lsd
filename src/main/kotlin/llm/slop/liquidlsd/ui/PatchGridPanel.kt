@@ -201,28 +201,28 @@ object PatchGridPanel {
             val boxBottomY = childMaxY.coerceAtLeast(boxTopY + 100f)
             lastBoxBottomY = boxBottomY
 
-            // 1. Card background fill and stepped stroke outline
+            // 1. Card background fill and stepped stroke outline (top of subtabs on left, step up to top of column headers at Final)
             if (!isDeckEmpty) {
                 val finalColLeftX = gridStartX + labelColW + getColumnOffset(session, "final") - CELL_PAD * 0.5f
-                val subtabBottomY = containerTopY + headerH + 2f
+                val subtabTopY = containerTopY + headerH - 26f
                 val strokeW = 1.5f
 
-                // Fill header box (top right) and main parameter box (bottom)
-                dl.addRectFilled(finalColLeftX, boxTopY, boxMaxX, subtabBottomY, accentFill, 4f)
-                dl.addRectFilled(boxMinX, subtabBottomY, boxMaxX, boxBottomY, accentFill, 4f)
+                // Fill main body box (from subtabTopY down) and top-right column headers box
+                dl.addRectFilled(boxMinX, subtabTopY, boxMaxX, boxBottomY, accentFill, 4f)
+                dl.addRectFilled(finalColLeftX, boxTopY, boxMaxX, subtabTopY, accentFill, 4f)
 
-                // Line 1: Origin (beneath tab row at left edge) right to left edge of Final column
-                dl.addLine(boxMinX, subtabBottomY, finalColLeftX, subtabBottomY, accentColor, strokeW)
-                // Line 2: Upward to top-left corner of Final box
-                dl.addLine(finalColLeftX, subtabBottomY, finalColLeftX, boxTopY, accentColor, strokeW)
-                // Line 3: Top edge across column headers
+                // Line 1: Across top of subtab buttons from left edge to left edge of Final column
+                dl.addLine(boxMinX, subtabTopY, finalColLeftX, subtabTopY, accentColor, strokeW)
+                // Line 2: Upward at left edge of Final column to top of Final header box
+                dl.addLine(finalColLeftX, subtabTopY, finalColLeftX, boxTopY, accentColor, strokeW)
+                // Line 3: Across top of column headers to right edge
                 dl.addLine(finalColLeftX, boxTopY, boxMaxX, boxTopY, accentColor, strokeW)
                 // Line 4: Right edge down to bottom
                 dl.addLine(boxMaxX, boxTopY, boxMaxX, boxBottomY, accentColor, strokeW)
                 // Line 5: Bottom edge left to left edge
                 dl.addLine(boxMaxX, boxBottomY, boxMinX, boxBottomY, accentColor, strokeW)
-                // Line 6: Left edge up to origin (beneath tab row)
-                dl.addLine(boxMinX, boxBottomY, boxMinX, subtabBottomY, accentColor, strokeW)
+                // Line 6: Left edge up to top of subtab buttons (subtabTopY)
+                dl.addLine(boxMinX, boxBottomY, boxMinX, subtabTopY, accentColor, strokeW)
             } else {
                 dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 6f)
                 dl.addRect(boxMinX, boxTopY, boxMaxX, boxBottomY, accentColor, 6f, 0, 1.5f)
