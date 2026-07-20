@@ -69,4 +69,22 @@ When you select a grid cell, the **Cell Config Panel** (middle panel) opens. Her
 Monitoring real-time values is essential to dialing in responsive patches.
 
 - **Cell-Specific Oscilloscope**: Inside the Cell Config panel, a scrolling waveform display shows the history of the selected CV source and how it affects the parameter's evaluated output.
-- **Sound Analysis Panel**: (Plan under active development) A dedicated window displaying the raw audio waveform, frequency band splits, and calculated BPM estimate.
+- **Sound Analysis Panel**: A dedicated window displaying the raw audio waveform, frequency band splits, and calculated BPM estimate.
+
+---
+
+## Mouse Controls & Power Shortcuts
+
+Liquid LSD includes power-user mouse shortcuts for fast live tweaking and parameter editing:
+
+### Parameter Sliders & Numeric Inputs
+- **Hover Scroll-Wheel Scrubbing**: Hover over any parameter slider track or numeric input box and scroll the mouse wheel to adjust values dynamically without clicking.
+  - **Unmodified**: `±0.001` fine adjustment step.
+  - **`Shift` + Scroll**: `±0.01` medium step.
+  - **`Ctrl` + `Shift` + Scroll**: `±0.1` coarse step.
+- **Middle-Click Reset**: Middle-click any slider track, numeric input box, or parameter value field to instantly reset it to its default value.
+
+### Patch Grid Matrix Shortcuts
+- **Middle-Click Cell Bypass**: Middle-clicking any **CV** or **MIDI** cell in the Patch Grid toggles the `bypassed` state on that modulation route instantly.
+- **Middle-Click Parameter Reset**: Middle-clicking the **`FINAL`** knob cell or parameter row label resets the target parameter to default.
+

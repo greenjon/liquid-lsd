@@ -819,6 +819,9 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         val theme = session.uiTheme
         val minRatio = 0.15f
 
+        val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
+        CustomRangeSlider.isAnySliderHovered = false
+
         // Ensure ratios stay bounded and sum safely
         var col1R = theme.col1Ratio.coerceIn(minRatio, 0.70f)
         var col2R = theme.col2Ratio.coerceIn(minRatio, 0.70f)
@@ -843,7 +846,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             // Column 1: Patch Grid
             ImGui.setNextWindowPos(0f, menuBarH)
             ImGui.setNextWindowSize(col1W, topH)
-            if (ImGui.begin("Patch Grid", noDecorate)) {
+            if (ImGui.begin("Patch Grid", noDecorate or ImGuiWindowFlags.NoScrollbar)) {
                 drawNeonBackgroundIfNeeded(ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                 PatchGridPanel.draw(session, currentMixer!!, patchState)
             }
@@ -852,7 +855,12 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             // Column 2: Cell Config
             ImGui.setNextWindowPos(col1W, menuBarH)
             ImGui.setNextWindowSize(col2W, topH)
-            if (ImGui.begin("Cell Config", noDecorate)) {
+            val cellConfigFlags = if (sliderWasHovered) {
+                noDecorate or ImGuiWindowFlags.NoScrollWithMouse
+            } else {
+                noDecorate
+            }
+            if (ImGui.begin("Cell Config", cellConfigFlags)) {
                 drawNeonBackgroundIfNeeded(ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                 CellConfigPanel.draw(session, patchState, currentMixer!!)
             }

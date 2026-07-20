@@ -15,6 +15,7 @@
 - **Redesigned PatchGrid & Seamless Cards**: Connected active side tabs to the parameter card container with seamless outlines, inline sub-tabs, and reordered parameter groups (Visual Source before FX).
 - **Mandala Performance Surface**: Added quick lobe selection pills (2, 3, 4, 6, 8, 12) and a live recipe stepper in `FinalParamSection`.
 - **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) to trigger parameter randomization dynamically via audio envelopes, LFOs, or beat clocks.
+- **Middle-Click & Scroll-Wheel Controls**: Added middle-click instant parameter reset, hover scroll-wheel parameter scrubbing (with `Shift` / `Ctrl+Shift` modifiers), and middle-click cell bypass in the PatchGrid matrix.
 
 ---
 
@@ -60,6 +61,11 @@
 #### 4. Performance & Media Browser Hardening
 - Padded frame time values in `MenuBar` to 3 digits to eliminate layout jitter when frame times fluctuate.
 - Reordered media browser sidebar to place **Patches** before **Playlists**.
+
+#### 5. Power-User Mouse & Scroll Wheel Controls
+- **Middle-Click Reset**: Middle-clicking any parameter slider, text box, `FINAL` knob cell, or row label resets the parameter to default instantly.
+- **Hover Scroll Scrubbing**: Hovering over slider tracks or text input fields and turning the scroll wheel adjusts values dynamically (unmodified = `±0.001`, `Shift` = `±0.01`, `Ctrl+Shift` = `±0.1`).
+- **Middle-Click Cell Bypass**: Middle-clicking CV or MIDI cells in PatchGrid toggles modulator `bypassed` state.
 
 ---
 

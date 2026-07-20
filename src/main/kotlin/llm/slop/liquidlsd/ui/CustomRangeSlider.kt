@@ -9,6 +9,8 @@ object CustomRangeSlider {
     private var activeSliderLabel: String? = null
     private var clickMouseX = 0f
 
+    var isAnySliderHovered = false
+
     private val textBuffers = mutableMapOf<String, imgui.type.ImString>()
     private val textWidgetActive = mutableMapOf<String, Boolean>()
     private val textCallbacks = mutableMapOf<String, ReusableInputCallback>()
@@ -60,6 +62,7 @@ object CustomRangeSlider {
         posX: Float,
         posY: Float,
         width: Float,
+        defaultValue: Float? = null,
         onChanged: (Float) -> Unit,
         formatValue: (Float) -> String = { "%.3f".format(it) },
         parseValue: (String) -> Float? = { it.toFloatOrNull() }
@@ -89,16 +92,43 @@ object CustomRangeSlider {
                 onChanged(clamped)
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val fieldType = when {
-                key.endsWith("_min") -> "Minimum modulation boundary. Type to set directly. Up/Down to adjust."
-                key.endsWith("_max") -> "Maximum modulation boundary. Type to set directly. Up/Down to adjust."
-                key.endsWith("_value") -> "Base value. Type to set directly. Up/Down to adjust."
-                else -> "Type a precise numeric value. Up/Down to adjust."
+        val isItemFocused = ImGui.isItemActive()
+        val isHovered = ImGui.isItemHovered()
+        if (isItemFocused || isHovered) {
+            isAnySliderHovered = true
+            val dl = ImGui.getWindowDrawList()
+            val frameH = ImGui.getFrameHeight()
+            val borderCol = if (isItemFocused) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan for active focus/typing/arrows
+            } else {
+                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Bright Amber Gold for mouse hover target
             }
-            ImGui.setTooltip(fieldType)
+            dl.addRect(posX - 1.5f, posY - 1.5f, posX + width + 1.5f, posY + frameH + 1.5f, borderCol, 3f, 0, 2.0f)
+
+            val io = ImGui.getIO()
+            if (io.mouseWheel != 0f) {
+                val shift = io.keyShift
+                val ctrl = io.keyCtrl
+                val deltaStep = if (ctrl && shift) 0.1f else if (shift) 0.01f else 0.001f
+                val nextVal = (currentValue + io.mouseWheel * deltaStep).coerceIn(minLimit, maxLimit)
+                onChanged(nextVal)
+                io.mouseWheel = 0f
+            }
+            if (ImGui.isMouseClicked(2)) { // Middle click reset
+                val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
+                onChanged(resetTarget)
+            }
+            if (session.uiTheme.tooltipsEnabled) {
+                val fieldType = when {
+                    key.endsWith("_min") -> "Minimum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
+                    key.endsWith("_max") -> "Maximum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
+                    key.endsWith("_value") -> "Base value. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
+                    else -> "Type a precise numeric value. Up/Down or Scroll to adjust. Middle-click to reset."
+                }
+                ImGui.setTooltip(fieldType)
+            }
         }
-        textWidgetActive[key] = ImGui.isItemActive()
+        textWidgetActive[key] = isItemFocused
         ImGui.popItemWidth()
     }
 
@@ -145,6 +175,7 @@ object CustomRangeSlider {
         maxLimit: Float,
         isRandomizable: Boolean,
         showControls: Boolean = true,
+        defaultValue: Float? = null,
         formatValue: (Float) -> String,
         onRandomizableChanged: (Boolean) -> Unit = {},
         onRandomizeNow: () -> Unit = {},
@@ -279,7 +310,7 @@ object CustomRangeSlider {
         // 3. Text inputs
         if (effectiveIsRandomizable) {
             drawTextInput(
-                            session = session,
+                session = session,
                 key = "${idPrefix}_${label}_min",
                 currentValue = currentMin,
                 minLimit = minLimit,
@@ -287,6 +318,7 @@ object CustomRangeSlider {
                 posX = textBoxesStartX,
                 posY = row2Y,
                 width = boxWidth,
+                defaultValue = defaultValue,
                 onChanged = { nextMin ->
                     onRangeChanged(nextMin, maxOf(nextMin, currentMax))
                 },
@@ -294,7 +326,7 @@ object CustomRangeSlider {
                 parseValue = parseValue
             )
             drawTextInput(
-                            session = session,
+                session = session,
                 key = "${idPrefix}_${label}_max",
                 currentValue = currentMax,
                 minLimit = minLimit,
@@ -302,6 +334,7 @@ object CustomRangeSlider {
                 posX = textBoxesStartX + boxWidth + boxSpacing,
                 posY = row2Y,
                 width = boxWidth,
+                defaultValue = defaultValue,
                 onChanged = { nextMax ->
                     onRangeChanged(minOf(nextMax, currentMin), nextMax)
                 },
@@ -310,7 +343,7 @@ object CustomRangeSlider {
             )
         } else {
             drawTextInput(
-                            session = session,
+                session = session,
                 key = "${idPrefix}_${label}_value",
                 currentValue = currentValue,
                 minLimit = minLimit,
@@ -318,6 +351,7 @@ object CustomRangeSlider {
                 posX = textBoxesStartX,
                 posY = row2Y,
                 width = boxWidth,
+                defaultValue = defaultValue,
                 onChanged = { newVal ->
                     onValueChanged(newVal)
                 },
@@ -458,11 +492,54 @@ object CustomRangeSlider {
             dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
         }
         
-        // Hover-zone tooltips for custom range slider track/handles
-        if (session.uiTheme.tooltipsEnabled) {
-            val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
-            val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
-            if (inTrackY && inTrackX) {
+        // Hover-zone handling & tooltips for custom range slider track/handles
+        val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
+        val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
+        val isTrackActive = activeSliderLabel == (idPrefix + label)
+        if ((inTrackY && inTrackX) || isTrackActive) {
+            isAnySliderHovered = true
+            val borderCol = if (isTrackActive) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while active dragging
+            } else {
+                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Amber Gold on hover target
+            }
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
+            
+            val io = ImGui.getIO()
+            if (io.mouseWheel != 0f) {
+                val shift = io.keyShift
+                val ctrl = io.keyCtrl
+                val deltaStep = if (ctrl && shift) 0.1f else if (shift) 0.01f else 0.001f
+                val delta = io.mouseWheel * deltaStep
+                if (effectiveIsRandomizable) {
+                    val minPct = toPct(currentMin)
+                    val maxPct = toPct(currentMax)
+                    val minHandleX = lineStartX + minPct * lineWidth
+                    val maxHandleX = lineStartX + maxPct * lineWidth
+                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                    if (distToMin < distToMax) {
+                        val nextMin = (currentMin + delta).coerceIn(minLimit, currentMax)
+                        onRangeChanged(nextMin, currentMax)
+                    } else {
+                        val nextMax = (currentMax + delta).coerceIn(currentMin, maxLimit)
+                        onRangeChanged(currentMin, nextMax)
+                    }
+                } else {
+                    val nextVal = (currentValue + delta).coerceIn(minLimit, maxLimit)
+                    onValueChanged(nextVal)
+                }
+                io.mouseWheel = 0f // Consume mouse wheel event so parent panel does not scroll
+            }
+            if (ImGui.isMouseClicked(2)) { // Middle click reset
+                val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
+                if (effectiveIsRandomizable) {
+                    onRangeChanged(resetTarget, resetTarget)
+                } else {
+                    onValueChanged(resetTarget)
+                }
+            }
+            if (session.uiTheme.tooltipsEnabled) {
                 if (effectiveIsRandomizable) {
                     val minPct = toPct(currentMin)
                     val maxPct = toPct(currentMax)
@@ -476,10 +553,10 @@ object CustomRangeSlider {
                     val distToCur = kotlin.math.abs(mouseX - curX)
 
                     when {
-                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${formatValue(currentMin)}")
-                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${formatValue(currentMax)}")
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${formatValue(currentMin)}\nScroll to adjust. Middle-click track to reset.")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${formatValue(currentMax)}\nScroll to adjust. Middle-click track to reset.")
                         distToCur < 6f -> ImGui.setTooltip("Current modulated value for $label: ${formatValue(currentValue)}")
-                        else -> ImGui.setTooltip("Drag handles to set modulation bounds for $label")
+                        else -> ImGui.setTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
                     }
                 } else {
                     val valPct = toPct(currentValue)
@@ -487,9 +564,9 @@ object CustomRangeSlider {
                     val distToVal = kotlin.math.abs(mouseX - valHandleX)
 
                     if (distToVal < 8f) {
-                        ImGui.setTooltip("Base value for $label: ${formatValue(currentValue)}")
+                        ImGui.setTooltip("Base value for $label: ${formatValue(currentValue)}\nScroll to adjust. Middle-click to reset.")
                     } else {
-                        ImGui.setTooltip("Drag to adjust base value for $label")
+                        ImGui.setTooltip("Drag or Scroll to adjust base value for $label. Middle-click to reset.")
                     }
                 }
             }

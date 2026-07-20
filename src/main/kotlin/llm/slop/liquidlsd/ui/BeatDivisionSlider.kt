@@ -315,11 +315,42 @@ object BeatDivisionSlider {
             dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
         }
 
-        // Hover-zone tooltips for beat division slider track/handles
-        if (session.uiTheme.tooltipsEnabled) {
-            val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
-            val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
-            if (inTrackY && inTrackX) {
+        // Hover-zone handling & tooltips for beat division slider track/handles
+        val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
+        val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
+        val isTrackActive = activeSliderLabel == (idPrefix + label)
+        if ((inTrackY && inTrackX) || isTrackActive) {
+            CustomRangeSlider.isAnySliderHovered = true
+            val borderCol = if (isTrackActive) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while active dragging
+            } else {
+                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Amber Gold on hover target
+            }
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
+
+            val io = ImGui.getIO()
+            if (io.mouseWheel != 0f) {
+                val wheel = io.mouseWheel
+                val step = if (wheel > 0f) 1 else -1
+                val currentIndex = subdivisionOptions.indexOfFirst { kotlin.math.abs(it - currentValue) < 0.001f }.let { if (it < 0) 3 else it }
+                val nextIndex = (currentIndex + step).coerceIn(0, subdivisionOptions.lastIndex)
+                val nextVal = subdivisionOptions[nextIndex]
+                if (effectiveIsRandomizable) {
+                    onRangeChanged(nextVal, maxOf(nextVal, currentMax))
+                } else {
+                    onValueChanged(nextVal)
+                }
+                io.mouseWheel = 0f // Consume mouse wheel event so parent panel does not scroll
+            }
+            if (ImGui.isMouseClicked(2)) { // Middle click reset
+                val resetVal = 1f
+                if (effectiveIsRandomizable) {
+                    onRangeChanged(resetVal, resetVal)
+                } else {
+                    onValueChanged(resetVal)
+                }
+            }
+            if (session.uiTheme.tooltipsEnabled) {
                 if (effectiveIsRandomizable) {
                     val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
                     val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
@@ -333,10 +364,10 @@ object BeatDivisionSlider {
                     val distToCur = kotlin.math.abs(mouseX - curX)
 
                     when {
-                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}")
-                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}")
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}\nScroll to adjust. Middle-click to reset.")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}\nScroll to adjust. Middle-click to reset.")
                         distToCur < 6f -> ImGui.setTooltip("Current modulated speed for $label: ${formatValue(currentValue)}")
-                        else -> ImGui.setTooltip("Drag handles to set modulation bounds for $label")
+                        else -> ImGui.setTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
                     }
                 } else {
                     val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
@@ -344,9 +375,9 @@ object BeatDivisionSlider {
                     val distToVal = kotlin.math.abs(mouseX - valHandleX)
 
                     if (distToVal < 8f) {
-                        ImGui.setTooltip("Base speed for $label: ${formatValue(currentValue)}")
+                        ImGui.setTooltip("Base speed for $label: ${formatValue(currentValue)}\nScroll to adjust. Middle-click to reset.")
                     } else {
-                        ImGui.setTooltip("Drag to adjust base speed for $label")
+                        ImGui.setTooltip("Drag or Scroll to adjust base speed for $label. Middle-click to reset.")
                     }
                 }
             }

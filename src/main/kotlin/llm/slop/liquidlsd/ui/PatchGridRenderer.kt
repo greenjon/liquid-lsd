@@ -60,8 +60,13 @@ object PatchGridRenderer {
         session.uiTheme.body(label)
         ImGui.sameLine(cursorStartX)
         ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Click to open context menu: Randomize, Copy/Paste, or Reset parameter $label.")
+        val isLabelHovered = ImGui.isItemHovered()
+        if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Click for menu (Randomize, Copy/Paste). Middle-click to reset parameter $label.")
+        }
+        if (isLabelHovered && ImGui.isMouseClicked(2)) {
+            onPushUndo()
+            param.reset()
         }
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
             if (session.uiTheme.randomizationEnabled) {
@@ -111,18 +116,23 @@ object PatchGridRenderer {
         
         ImGui.setCursorScreenPos(finalX, finalY)
         ImGui.invisibleButton("##final_cell", CELL, CELL)
+        val isFinalHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked()) {
             state.select(PatchCellId(paramKey, "final"), param)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+        if (isFinalHovered && ImGui.isMouseClicked(2)) {
+            onPushUndo()
+            param.reset()
+        }
+        if (isFinalHovered && session.uiTheme.tooltipsEnabled) {
             val displayValue = if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
             val displayBase = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
             if (param.modulatorFilter != null) {
                 ImGui.beginTooltip()
-                ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds, random ranges, and default values.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
+                ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
                 ImGui.endTooltip()
             } else {
-                ImGui.setTooltip("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds, random ranges, and default values.")
+                ImGui.setTooltip("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds and default values. Middle-click to reset.")
             }
         }
         
@@ -170,10 +180,11 @@ object PatchGridRenderer {
 
         ImGui.setCursorScreenPos(midiX, midiY)
         ImGui.invisibleButton("##midi_cell", CELL, CELL)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val details = if (hasMidiMod) {
+        val isMidiCellHovered = ImGui.isItemHovered()
+        if (isMidiCellHovered && session.uiTheme.tooltipsEnabled) {
+            val details = if (hasMidiMod || isMidiBypassed) {
                 val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
-                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings."
+                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings. Middle-click to toggle bypass."
             } else if (state.isMidiLearnMode) {
                 "MIDI Learn active. Click this cell, then move/turn a control on your controller to bind it."
             } else {
@@ -186,6 +197,16 @@ object PatchGridRenderer {
                 state.midiLearnTarget = MidiLearnTarget.GridCell(midiCellId, param)
             } else {
                 state.select(midiCellId, param)
+            }
+        }
+        if (isMidiCellHovered && ImGui.isMouseClicked(2)) { // Middle click bypass toggle
+            if (midiMods.isNotEmpty()) {
+                onPushUndo()
+                val updated = param.modulators.map {
+                    if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = !it.bypassed) else it
+                }
+                param.modulators.clear()
+                param.modulators.addAll(updated)
             }
         }
         
@@ -281,7 +302,8 @@ object PatchGridRenderer {
 
             ImGui.setCursorScreenPos(x, y)
             ImGui.invisibleButton("##cell_$cvId", CELL, CELL)
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            val isCellHovered = ImGui.isItemHovered()
+            if (isCellHovered && session.uiTheme.tooltipsEnabled) {
                 val isFiltered = param.modulatorFilter != null && activeMods.any { mod -> param.modulatorFilter?.invoke(mod) == false }
                 val statusText = when {
                     isFiltered -> "Bypassed: Bypassed because AUTO-VJ is OFF."
@@ -295,7 +317,7 @@ object PatchGridRenderer {
                     "trigger" -> "Transient Trigger"
                     else -> cvId
                 }
-                val tipText = "Source: $modSource\nStatus: $statusText\nClick to configure modulation settings. Right-click to copy/paste."
+                val tipText = "Source: $modSource\nStatus: $statusText\nClick to configure modulation settings. Middle-click to toggle bypass. Right-click for menu."
                 ImGui.setTooltip(tipText)
             }
             if (ImGui.isItemClicked()) {
@@ -303,6 +325,27 @@ object PatchGridRenderer {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
                 } else {
                     state.select(cellId, param)
+                }
+            }
+            if (isCellHovered && ImGui.isMouseClicked(2)) { // Middle click bypass toggle
+                if (activeMods.isNotEmpty()) {
+                    onPushUndo()
+                    val updated = param.modulators.map { mod ->
+                        if (activeMods.any { it.id == mod.id }) {
+                            mod.copy(bypassed = !mod.bypassed)
+                        } else mod
+                    }
+                    param.modulators.clear()
+                    param.modulators.addAll(updated)
+                } else {
+                    // Middle-clicking an unmapped cell creates a modulator directly
+                    onPushUndo()
+                    val defaultSource = when (cvId) {
+                        "audio" -> "audio_amp"
+                        "trigger" -> "trigger_onset"
+                        else -> cvId
+                    }
+                    param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, amplitude = 0.5f, bypassed = false))
                 }
             }
             if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {
