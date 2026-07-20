@@ -201,9 +201,32 @@ object PatchGridPanel {
             val boxBottomY = childMaxY.coerceAtLeast(boxTopY + 100f)
             lastBoxBottomY = boxBottomY
 
-            // 1. Card background fill and rounded stroke outline
-            dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 6f)
-            dl.addRect(boxMinX, boxTopY, boxMaxX, boxBottomY, accentColor, 6f, 0, 1.5f)
+            // 1. Card background fill and stepped stroke outline
+            if (!isDeckEmpty) {
+                val finalColLeftX = gridStartX + labelColW + getColumnOffset(session, "final") - CELL_PAD * 0.5f
+                val subtabBottomY = containerTopY + headerH + 2f
+                val strokeW = 1.5f
+
+                // Fill header box (top right) and main parameter box (bottom)
+                dl.addRectFilled(finalColLeftX, boxTopY, boxMaxX, subtabBottomY, accentFill, 4f)
+                dl.addRectFilled(boxMinX, subtabBottomY, boxMaxX, boxBottomY, accentFill, 4f)
+
+                // Line 1: Origin (beneath tab row at left edge) right to left edge of Final column
+                dl.addLine(boxMinX, subtabBottomY, finalColLeftX, subtabBottomY, accentColor, strokeW)
+                // Line 2: Upward to top-left corner of Final box
+                dl.addLine(finalColLeftX, subtabBottomY, finalColLeftX, boxTopY, accentColor, strokeW)
+                // Line 3: Top edge across column headers
+                dl.addLine(finalColLeftX, boxTopY, boxMaxX, boxTopY, accentColor, strokeW)
+                // Line 4: Right edge down to bottom
+                dl.addLine(boxMaxX, boxTopY, boxMaxX, boxBottomY, accentColor, strokeW)
+                // Line 5: Bottom edge left to left edge
+                dl.addLine(boxMaxX, boxBottomY, boxMinX, boxBottomY, accentColor, strokeW)
+                // Line 6: Left edge up to origin (beneath tab row)
+                dl.addLine(boxMinX, boxBottomY, boxMinX, subtabBottomY, accentColor, strokeW)
+            } else {
+                dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 6f)
+                dl.addRect(boxMinX, boxTopY, boxMaxX, boxBottomY, accentColor, 6f, 0, 1.5f)
+            }
 
             // 2. Seamless folder tab bridge connecting active side tab button to the container
             if (PatchGridTabs.activeBtnMaxX > 0f) {
