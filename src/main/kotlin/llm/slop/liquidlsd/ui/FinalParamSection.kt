@@ -29,6 +29,7 @@ object FinalParamSection {
         val isBgStyle = paramKey.endsWith("/Background/Style")
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
         val isLobes = paramKey.endsWith("/Geometry/Lobes")
+        val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
         val liveVal = param.value
         val liveLabel = when {
             isHueSweep && mandala != null -> {
@@ -46,6 +47,15 @@ object FinalParamSection {
                 }
             }
             isLobes -> "${liveVal.roundToInt()} lobes"
+            isRecipeSelect && mandala != null -> {
+                val currentLobe = mandala.parameters["Lobes"]?.value?.roundToInt() ?: mandala.recipe.petals
+                val closestLobe = MandalaLibrary.uniquePetals.minByOrNull { kotlin.math.abs(it - currentLobe) } ?: 3
+                val filtered = MandalaLibrary.recipesByPetals[closestLobe] ?: emptyList()
+                if (filtered.isNotEmpty()) {
+                    val idx = (liveVal * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
+                    "Recipe ${idx + 1}/${filtered.size} [${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
+                } else "%.3f".format(liveVal)
+            }
             param.isAngle -> "${"%.1f".format(liveVal * 180f / kotlin.math.PI.toFloat())}°"
             else -> "%.3f".format(liveVal)
         }
@@ -172,7 +182,104 @@ object FinalParamSection {
                 }
             )
         } else {
-            val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
+            if (isLobes) {
+                session.uiTheme.caption("Lobe Count Quick Selection:")
+                val currentLobe = param.baseValue.roundToInt()
+                val availableLobes = MandalaLibrary.uniquePetals
+                val availW = ImGui.getContentRegionAvailX()
+                var startLine = true
+
+                for (petal in availableLobes) {
+                    val label = "$petal"
+                    val btnW = 30f
+
+                    if (!startLine) {
+                        val lastX = ImGui.getCursorPosX()
+                        if (lastX + btnW + 4f < availW) {
+                            ImGui.sameLine()
+                        } else {
+                            startLine = true
+                        }
+                    }
+
+                    val isActive = (currentLobe == petal)
+                    if (isActive) {
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
+                    }
+
+                    if (ImGui.button("$label##lobe_pill_$petal", btnW, 24f)) {
+                        val newVal = petal.toFloat()
+                        param.baseValue = newVal
+                        if (!param.randomizeBase) {
+                            param.baseMin = newVal
+                            param.baseMax = newVal
+                        }
+                    }
+
+                    if (isActive) {
+                        ImGui.popStyleColor(4)
+                    }
+
+                    startLine = false
+                }
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+            } else if (isRecipeSelect && mandala != null) {
+                val currentLobe = mandala.parameters["Lobes"]?.value?.roundToInt() ?: mandala.recipe.petals
+                val closestLobe = MandalaLibrary.uniquePetals.minByOrNull { kotlin.math.abs(it - currentLobe) } ?: 3
+                val filtered = MandalaLibrary.recipesByPetals[closestLobe] ?: emptyList()
+                val count = filtered.size
+                val currentIdx = if (count > 0) {
+                    (param.baseValue * (count - 1)).roundToInt().coerceIn(0, count - 1)
+                } else 0
+
+                session.uiTheme.caption("Recipe Selection Stepper ($closestLobe lobes):")
+                
+                val canPrev = count > 1 && currentIdx > 0
+                val canNext = count > 1 && currentIdx < count - 1
+
+                if (!canPrev) ImGui.beginDisabled()
+                if (ImGui.button("◀##recipe_prev", 36f, 26f)) {
+                    val prevIdx = (currentIdx - 1).coerceAtLeast(0)
+                    val newVal = if (count > 1) prevIdx.toFloat() / (count - 1).toFloat() else 0f
+                    param.baseValue = newVal
+                    if (!param.randomizeBase) {
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+                }
+                if (!canPrev) ImGui.endDisabled()
+
+                ImGui.sameLine()
+                ImGui.alignTextToFramePadding()
+                val recipeLabel = if (count > 0) "Recipe ${currentIdx + 1} of $count" else "No Recipes"
+                session.uiTheme.body(recipeLabel)
+
+                ImGui.sameLine()
+                if (!canNext) ImGui.beginDisabled()
+                if (ImGui.button("▶##recipe_next", 36f, 26f)) {
+                    val nextIdx = (currentIdx + 1).coerceAtMost(count - 1)
+                    val newVal = if (count > 1) nextIdx.toFloat() / (count - 1).toFloat() else 0f
+                    param.baseValue = newVal
+                    if (!param.randomizeBase) {
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+                }
+                if (!canNext) ImGui.endDisabled()
+
+                if (count > 0) {
+                    val r = filtered[currentIdx]
+                    session.uiTheme.caption("Coefficients: [${r.a}, ${r.b}, ${r.c}, ${r.d}]")
+                }
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+            }
 
             val scale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
             val invScale = if (param.isAngle) (kotlin.math.PI.toFloat() / 180f) else 1f
@@ -203,7 +310,7 @@ object FinalParamSection {
                                 val filtered = MandalaLibrary.recipesByPetals[closestLobe] ?: emptyList()
                                 if (filtered.isNotEmpty()) {
                                     val idx = (it * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
-                                    "[${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
+                                    "Recipe ${idx + 1}/${filtered.size} [${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
                                 } else "No recipes"
                             } else "%.3f".format(it)
                         }
