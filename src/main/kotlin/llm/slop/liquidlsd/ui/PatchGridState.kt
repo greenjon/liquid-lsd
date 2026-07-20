@@ -48,9 +48,9 @@ class PatchGridState {
     var midiLearnTarget: MidiLearnTarget? = null
 
     var activeTopTab: String = "Deck A"
-    var activeDeckASubTab: String = "View"
-    var activeDeckBSubTab: String = "View"
-    var activeDeckCSubTab: String = "View"
+    var activeDeckASubTab: String = "Mandala"
+    var activeDeckBSubTab: String = "Mandala"
+    var activeDeckCSubTab: String = "Mandala"
 
     fun select(cellId: PatchCellId, param: ModulatableParameter) {
         selectedCell = cellId
