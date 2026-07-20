@@ -113,22 +113,25 @@ object PatchGridPanel {
             ImGui.tableSetupColumn("##main_grid", imgui.flag.ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
 
-            // Left column: Side tabs (MIX, A, B, C)
-            ImGui.tableSetColumnIndex(0)
-            PatchGridTabs.drawLeftTabs(session, state, mixer)
-
-            // Right column: Main Patch Grid content
-            ImGui.tableSetColumnIndex(1)
-
-            val avail = ImGui.getContentRegionAvailX()
-            gridStartX = ImGui.getCursorScreenPosX()
-            
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
                 "Deck C" -> mixer.deckC
                 else -> null
             }
+            val isDeckEmpty = activeDeck?.isEmpty == true
+            val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
+
+            // Left column: Side tabs (MIX, A, B, C)
+            ImGui.tableSetColumnIndex(0)
+            PatchGridTabs.drawLeftTabs(session, state, mixer, topOffset = headerH)
+
+            // Right column: Main Patch Grid content
+            ImGui.tableSetColumnIndex(1)
+
+            val avail = ImGui.getContentRegionAvailX()
+            gridStartX = ImGui.getCursorScreenPosX()
+
             val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
                 PatchGridTabs.calculateSubTabsWidth(session, state, activeDeck)
             } else 0f
@@ -140,8 +143,6 @@ object PatchGridPanel {
             val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
 
             val containerTopY = ImGui.getCursorScreenPosY() - 2f
-
-            val isDeckEmpty = activeDeck?.isEmpty == true
 
             // Column Headers (draw column headers & inline subtabs)
             if (!isDeckEmpty) {
@@ -223,13 +224,7 @@ object PatchGridPanel {
 
     // -- Helpers --------------------------------------------------------------
 
-    private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PatchGridState, mixer: Mixer) {
-        val dl = ImGui.getWindowDrawList()
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
-        val mousePos = ImGui.getIO().mousePos
-        
-        // Calculate the maximum height needed for the vertical labels
+    fun calculateHeaderHeight(session: llm.slop.liquidlsd.SessionContext): Float {
         var maxH = 0f
         val cvLabelsVertical = getCvLabels(session).map { it.toList().joinToString("\n") }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -242,7 +237,18 @@ object PatchGridPanel {
             if (hFinal > maxH) maxH = hFinal
             if (hMidi > maxH) maxH = hMidi
         }
-        val headerH = (maxH + 5f).coerceAtLeast(40f)
+        return (maxH + 5f).coerceAtLeast(40f)
+    }
+
+    private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PatchGridState, mixer: Mixer) {
+        val dl = ImGui.getWindowDrawList()
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        val mousePos = ImGui.getIO().mousePos
+        
+        // Calculate the maximum height needed for the vertical labels
+        val headerH = calculateHeaderHeight(session)
+        val cvLabelsVertical = getCvLabels(session).map { it.toList().joinToString("\n") }
         
         // Reserve vertical space for headers
         ImGui.dummy(10f, headerH)
