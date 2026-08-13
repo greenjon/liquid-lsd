@@ -12,7 +12,7 @@ graph TD
         AudioIn[Audio Capture Buffer] --> Biquad[Biquad IIR Filter Bank]
         Biquad --> RMS[RMS & Onset Detection]
         RMS --> Flywheel[Beat Clock Flywheel]
-        Flywheel --> Anchor[AtomicReference<BeatAnchor>]
+        Flywheel --> Anchor["@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)"]
     end
 
     subgraph Thread_0 [Thread 0: OS Main / Render Loop]
@@ -60,7 +60,7 @@ Liquid LSD runs across two core thread contexts: **Thread 0 (OS Main / Render Th
 Because the audio processing loop runs at sub-millisecond hardware intervals (~50–200 Hz) while Thread 0 renders frames at screen refresh rates (60Hz–144Hz+), lock-free synchronization prevents audio dropouts (xruns) and frame stuttering.
 
 ### Concurrency Primitives
-- **`AtomicReference<BeatAnchor>`**: Lock-free swap mechanism passing `totalBeats`, estimated `bpm`, and `nanoTime` from the audio thread to `CVRegistry`. Thread 0 reads this reference without locks and interpolates sub-millisecond phase accuracy.
+- **`@Volatile` Beat Anchor Fields**: Lock-free update passing `anchorBeats`, `anchorBpm`, and `anchorTimeNs` directly from the audio thread to `CVRegistry.updateBeatAnchor()` using primitive `@Volatile` fields. Zero object allocations occur on the audio callback thread. Thread 0 reads these volatile variables without locks and interpolates sub-millisecond phase accuracy via `CVRegistry.getSynchronizedTotalBeats()`.
 - **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in `CellConfigPanel`.
 - **`@Volatile` Flags**: Thread-safe single-scalar flags (`isBpmLocked`, `manualBpm`, `inputGain`) accessed across threads without lock overhead.
 - **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending preset loading DTOs (`PresetManager`) and incoming MIDI CC events (`MidiEngine`).

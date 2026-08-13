@@ -47,7 +47,7 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 
 ## Pluggable Dynamic Visual Sources (`VisualSourceRegistry.kt`)
 
-Beyond hardcoded generators, the engine loads dynamic shaders from `presets/sources/`:
+Beyond hardcoded generators, the engine loads dynamic shaders from `library/sources/`:
 
 - **`VisualSourceRegistry`**: Scans subfolders on startup, parses `meta.json`, compiles `[name].frag` against standard vertex shaders, and builds `DynamicVisualSource` templates.
 - **Shader Ownership**: The master template in `VisualSourceRegistry` owns the OpenGL shader program (`ownsShader = true`). Deck clones share shader program handles safely (`ownsShader = false`) to eliminate duplicate compilation overhead.

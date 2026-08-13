@@ -170,7 +170,7 @@ Randomization ranges also exist for all mod-fields (`modSubdivisionMin/Max`, etc
 
 When `genUnit == BEAT` the subdivision randomizer draws from the discrete musical grid
 rather than a continuous uniform. Beat mode uses `getSynchronizedTotalBeats()` which is an
-interpolated estimate updated atomically from the JACK audio thread via `BeatAnchor`.
+interpolated estimate updated from the JACK audio thread via `@Volatile` fields in `CVRegistry`.
 
 ### GeneratorModMode (LFO 2 interaction)
 

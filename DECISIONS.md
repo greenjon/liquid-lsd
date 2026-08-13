@@ -38,7 +38,7 @@ This document outlines the key architectural decisions made in the development o
 ---
 
 ## 5. Lock-Free Audio-to-Render Data Passing
-- **Decision**: Avoid mutexes/locks for thread synchronization. Instead, pass data from the audio thread to the rendering thread using `@Volatile` fields, `AtomicReference<BeatAnchor>`, and the custom single-writer `CvHistoryBuffer` ring-buffer.
+- **Decision**: Avoid mutexes/locks for thread synchronization. Instead, pass data from the audio thread to the rendering thread using `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`), and the custom single-writer `CvHistoryBuffer` ring-buffer.
 - **Rationale**: 
   - Locking on the audio thread can cause **priority inversion**, where a lower-priority rendering thread holding the lock blocks the real-time audio thread.
   - Lock-free structures keep the threads decoupled; transient data races in visualization buffers (like the oscilloscope) are acceptable, as they cause at most a single-frame visual glitch rather than an application-wide crash or xrun.

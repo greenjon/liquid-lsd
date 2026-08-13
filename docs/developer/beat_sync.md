@@ -15,7 +15,7 @@ JACK / Java Sound Callback (Audio Engine Thread)
     ├─► Flywheel Accumulator: totalBeats += (bufferFrames / sampleRate) * (BPM / 60.0)
     │
     └─► CVRegistry.updateBeatAnchor(totalBeats, bpm, nanoTime)
-              │  (AtomicReference<BeatAnchor> lock-free swap)
+              │  (@Volatile primitive fields update: zero heap allocation)
               │
         Render Thread 0 (Every Frame @ 60Hz–144Hz+)
               │

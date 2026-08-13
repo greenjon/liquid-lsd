@@ -66,7 +66,7 @@ When `triggerNext()` is called:
 ### Dirty Deck Handling Behaviors (`UITheme.autoVjDirtyBehavior`)
 If the active deck contains unsaved manual changes:
 - **`SKIP`**: Aborts queue advancement to protect unsaved work.
-- **`AUTO_SAVE`**: Automatically saves modified state to `presets/patches/AutoVJ_<Deck>_<Timestamp>.lsd` before advancing.
+- **`AUTO_SAVE`**: Automatically saves modified state to `library/presets/AutoVJ_<Deck>_<Timestamp>.lsd` before advancing.
 - **`AUTO_DISCARD`**: Discards manual changes and forces queue advancement.
 
 ---
@@ -74,4 +74,4 @@ If the active deck contains unsaved manual changes:
 ## 4. PlaylistManager & PlaylistParser
 
 - **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.playlist` files), supports reordering presets, and provides `pushToPlayQueue()` to dump playlists directly into `PlayQueueManager`.
-- **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using fallback resolution in `presets/patches/` with auto-extension matching (`.lsd`, `.lsd`, `.json`, `.patch`).
+- **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).

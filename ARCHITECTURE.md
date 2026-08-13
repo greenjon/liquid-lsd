@@ -133,8 +133,8 @@ Preset Grid columns: LFO | AUDIO | TRIG
 - **Zero-allocation audio loops** — pre-allocated buffers, no object creation in JACK callback or Java Sound conversion loop
 - **Deck C preview** — third deck runs the full render pipeline but is excluded from `Mixer` output; used for preset authoring while A/B perform live
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `Kifs` all satisfy the interface
-- **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `presets/sources/`)
-- **Thread safety** — `AtomicReference<BeatAnchor>` for beat clock, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
+- **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `library/sources/`)
+- **Thread safety** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
 - **Serializable presets** — `CvModulator` is `@Serializable`; load-time migration remaps legacy source IDs
 
 ## Build & Run
@@ -143,5 +143,5 @@ Preset Grid columns: LFO | AUDIO | TRIG
 ./gradlew compileKotlin    # type-check only, no run
 ./gradlew packageThumbDrive  # bundle fat JAR + JREs for all 5 platforms
 ```
-Custom visual shaders are loaded from `presets/sources/`.
+Custom visual shaders are loaded from `library/sources/`.
 For deeper notes see `docs/developer/` and `.agents/PROJECT.md`.
