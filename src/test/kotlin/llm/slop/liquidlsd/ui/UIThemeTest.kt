@@ -58,14 +58,16 @@ class UIThemeTest {
             assertFalse(UITheme.tooltipsEnabled)
 
         } finally {
-            // Restore original settings file if backed up
+            // Restore original settings file if backed up, or delete test file
             if (hadBackup && backupFile.exists()) {
                 backupFile.copyTo(settingsFile, overwrite = true)
                 backupFile.delete()
-                val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-                loadMethod.isAccessible = true
-                loadMethod.invoke(UITheme)
+            } else {
+                settingsFile.delete()
             }
+            val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
+            loadMethod.isAccessible = true
+            loadMethod.invoke(UITheme)
         }
     }
 }

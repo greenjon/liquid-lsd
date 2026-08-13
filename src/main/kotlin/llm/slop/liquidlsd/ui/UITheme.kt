@@ -298,7 +298,14 @@ object UITheme {
             props.setProperty("assetBrowserRatio", assetBrowserRatio.toString())
             props.setProperty("lastCustomAssetBrowserRatio", lastCustomAssetBrowserRatio.toString())
             props.setProperty("gridCellRatio", gridCellRatio.toString())
-            settingsFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
+            val tmpFile = File("${settingsFile.absolutePath}.tmp")
+            tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
+            java.nio.file.Files.move(
+                tmpFile.toPath(),
+                settingsFile.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                java.nio.file.StandardCopyOption.ATOMIC_MOVE
+            )
             logger.info { "Saved settings to file" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save settings" }
