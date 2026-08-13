@@ -518,7 +518,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
         val cvDelta = mixer.pollQueueAdvance()
         var keyDelta = 0
-        if (!ImGui.getIO().wantCaptureKeyboard) {
+        if (!ImGui.getIO().wantTextInput) {
             when (session.uiTheme.queueKeyTrigger) {
                 UITheme.QueueKeyTrigger.ARROWS -> {
                     if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.LeftArrow))) keyDelta -= 1

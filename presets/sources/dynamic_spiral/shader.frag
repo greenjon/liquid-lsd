@@ -40,23 +40,30 @@ void main() {
     float time = uTime * uSpeed;
 
     // A(n) = n^1.5 / (n + D) is strictly increasing for all n,D > 0.
-    // Once A exceeds the visible view radius, every subsequent point is also
-    // off-screen. Compute a generous bound (aspect + glow margin) so we can
-    // break the loop early — this is the biggest performance lever.
+    // Solve for nMax such that A(nMax) == viewRadius so that uMaxPoints points
+    // are evenly distributed across the visible spiral on screen.
     float glowReach = uScale * 0.2;            // radius at which exp glow ≈ 0
     float viewRadius = aspect / uScale + glowReach;
 
+    float nMax = viewRadius * viewRadius + sqrt(viewRadius * uDamping * 2.0);
+    for (int k = 0; k < 4; k++) {
+        float f = (nMax * sqrt(nMax)) / (nMax + uDamping) - viewRadius;
+        float df = (sqrt(nMax) * (0.5 * nMax + 1.5 * uDamping)) / ((nMax + uDamping) * (nMax + uDamping));
+        nMax -= f / max(df, 0.001);
+    }
+    nMax = max(nMax, 1.0);
+
     int maxN = int(clamp(uMaxPoints, 1.0, 2000.0));
+    float dn = nMax / float(maxN);
 
     for (int i = 1; i <= maxN; i++) {
-        float n = float(i);
+        float n = float(i) * dn;
 
         // Radial amplitude: A(n) = n^1.5 / (n + damping).
         // Written as n*sqrt(n) to avoid the slow generic pow() path.
         float A = (n * sqrt(n)) / (n + uDamping);
 
-        // Early exit: A is monotonically increasing, so all remaining points
-        // are also outside the view — no need to continue.
+        // Early exit if numerical precision overshoots viewRadius
         if (A > viewRadius) break;
 
         // Angular velocity: omega(n) = amp*cos(freq*n) + shear*n

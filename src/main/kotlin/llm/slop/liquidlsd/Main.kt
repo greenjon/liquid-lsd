@@ -165,7 +165,7 @@ fun main() {
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
         val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_EQUAL)
-        val isShortcutAllowed = !io.wantCaptureKeyboard || UITheme.cleanModeEnabled
+        val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
         val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_SPACE) && isShortcutAllowed) || isFontSizeHotKey
 
         if (action == GLFW_PRESS) {
