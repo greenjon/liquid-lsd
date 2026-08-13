@@ -31,7 +31,7 @@ object MixerMonitorLayoutCalculator {
         val contentWidth = (windowWidth - (windowPaddingX * 2f) - reservedScrollbarWidth).coerceAtLeast(1f)
 
         val masterControlsH = (frameHeightWithSpacing * 2f + itemSpacingY + 8f).coerceAtLeast(60f)
-        val patchNameExtraHeight = textLineHeightWithSpacing + 14f
+        val patchNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
 
         val verticalChrome = estimateVerticalChrome(
             masterControlsH = masterControlsH,
@@ -73,9 +73,7 @@ object MixerMonitorLayoutCalculator {
         itemSpacingY: Float
     ): Float {
         val separatorBands = itemSpacingY * 9f
-        val deckHeaderRows = textLineHeightWithSpacing + frameHeightWithSpacing
-        val deckCHeaderRows = textLineHeightWithSpacing + frameHeightWithSpacing
         val safetyMargin = itemSpacingY * 4f
-        return masterControlsH + separatorBands + deckHeaderRows + deckCHeaderRows + safetyMargin
+        return masterControlsH + separatorBands + safetyMargin
     }
 }

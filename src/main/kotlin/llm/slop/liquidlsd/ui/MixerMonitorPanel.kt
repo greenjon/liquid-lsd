@@ -79,102 +79,12 @@ class MixerMonitorPanel(
         
         val startX = baseScreenX + offsetX
         val centerY = ImGui.getCursorScreenPosY()
-        
-        // Use an invisible full-width dummy to reserve vertical space for the preset row
-        val presetRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeightWithSpacing() + 4f }
-        ImGui.dummy(layout.contentWidth, presetRowH + 4f)
-        
         val deckBStartX = startX + halfW + padding
-        
-        // Helper to format/truncate preset label to fit column width before save/eject icons
-        fun truncatePresetLabel(label: String, maxW: Float): String {
-            val fullText = "Preset: $label"
-            var textW = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) { textW = ImGui.calcTextSize(fullText).x }
-            if (textW <= maxW) return fullText
-            var len = label.length
-            while (len > 2) {
-                val truncated = "Preset: " + label.take(len) + "..."
-                var w = 0f
-                session.uiTheme.withFont(UITheme.FontLevel.BODY) { w = ImGui.calcTextSize(truncated).x }
-                if (w <= maxW) return truncated
-                len--
-            }
-            return "Preset: ${label.take(2)}..."
-        }
 
-        val iconBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.calcTextSize("${Icons.SAVE}").x + 16f }
-        val maxPresetW = (halfW - iconBtnW * 2f - 12f).coerceAtLeast(40f)
-
-        // Presets Row
-        val presetY = centerY
-        
-        val activePresetA = session.patchManager.activePresetA ?: "None"
-        val isDirtyA = session.patchManager.isDeckDirty(mixer.deckA, mixer)
-        val displayNameA = if (isDirtyA) "$activePresetA *" else activePresetA
-        
-        ImGui.setCursorScreenPos(startX, presetY)
-        session.uiTheme.body(truncatePresetLabel(displayNameA, maxPresetW))
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.SAVE}##SaveA")) {
-            ImGui.openPopup("save_menu_A")
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save or save as a new preset for Deck A.")
-        }
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.EJECT}##EjectA")) {
-            onEjectDeck(mixer.deckA, true, false)
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Eject this patch")
-        }
-        if (ImGui.beginPopup("save_menu_A")) {
-            if (ImGui.menuItem("Save")) {
-                onSaveDeck(mixer.deckA, true, false)
-            }
-            if (ImGui.menuItem("Save As...")) {
-                onSaveDeck(mixer.deckA, true, true)
-            }
-            ImGui.endPopup()
-        }
-        
-        val activePresetB = session.patchManager.activePresetB ?: "None"
-        val isDirtyB = session.patchManager.isDeckDirty(mixer.deckB, mixer)
-        val displayNameB = if (isDirtyB) "$activePresetB *" else activePresetB
-        
-        ImGui.setCursorScreenPos(deckBStartX, presetY)
-        session.uiTheme.body(truncatePresetLabel(displayNameB, maxPresetW))
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.SAVE}##SaveB")) {
-            ImGui.openPopup("save_menu_B")
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save or save as a new preset for Deck B.")
-        }
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.EJECT}##EjectB")) {
-            onEjectDeck(mixer.deckB, false, false)
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Eject this patch")
-        }
-        if (ImGui.beginPopup("save_menu_B")) {
-            if (ImGui.menuItem("Save")) {
-                onSaveDeck(mixer.deckB, false, false)
-            }
-            if (ImGui.menuItem("Save As...")) {
-                onSaveDeck(mixer.deckB, false, true)
-            }
-            ImGui.endPopup()
-        }
-        
-        ImGui.spacing()
-        
         // --- Render child panels ---
         val subH = layout.deckChildHeight
         
-        val childY = ImGui.getCursorScreenPosY()
+        val childY = centerY
         
         ImGui.setCursorScreenPos(startX, childY)
         drawDeckControls(mixer, "Deck A", mixer.deckA, halfW, subH, true)
@@ -196,38 +106,6 @@ class MixerMonitorPanel(
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
-        
-        // Preset Info row for Deck C
-        val row1Y = ImGui.getCursorScreenPosY()
-        val maxPresetWC = (availW - iconBtnW * 2f - 12f).coerceAtLeast(40f)
-        val activePresetC = session.patchManager.activePresetC ?: "None"
-        val isDirtyC = session.patchManager.isDeckDirty(mixer.deckC, mixer)
-        val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
-        ImGui.setCursorScreenPos(startX, row1Y)
-        session.uiTheme.body(truncatePresetLabel(displayNameC, maxPresetWC))
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.SAVE}##SaveC")) {
-            ImGui.openPopup("save_menu_C")
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save or save as a new preset for Deck C.")
-        }
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.EJECT}##EjectC")) {
-            onEjectDeck(mixer.deckC, false, true)
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Eject this patch")
-        }
-        if (ImGui.beginPopup("save_menu_C")) {
-            if (ImGui.menuItem("Save")) {
-                onSaveDeck(mixer.deckC, false, false) // Note: boolean isDeckA is overloaded for Deck C in some contexts, but here it's just a save trigger
-            }
-            if (ImGui.menuItem("Save As...")) {
-                onSaveDeck(mixer.deckC, false, true)
-            }
-            ImGui.endPopup()
-        }
         
         val imgX = startX
         val imgY = ImGui.getCursorScreenPosY()
@@ -331,6 +209,11 @@ class MixerMonitorPanel(
         session.uiTheme.withFont(fontLevelC) {
             dlPreview.addText(textXC, textYC, deckCColor, letterC)
         }
+
+        // Interactive bottom bar for Deck C
+        ImGui.spacing()
+        ImGui.setCursorPosX(startX)
+        drawDeckBottomBar(session, "Deck C", mixer.deckC, isDeckA = false, isDeckC = true, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck)
     }
 
     fun drawFlatSlider(

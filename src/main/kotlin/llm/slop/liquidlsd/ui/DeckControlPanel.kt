@@ -164,7 +164,18 @@ class DeckControlPanel(
         ImGui.endGroup()
     }
 
-    fun drawDeckControls(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, label: String, deck: Deck, panelW: Float, previewH: Float, isDeckA: Boolean, onUtilityAction: (Int, Deck, Deck) -> Unit) {
+    fun drawDeckControls(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        label: String,
+        deck: Deck,
+        panelW: Float,
+        previewH: Float,
+        isDeckA: Boolean,
+        onUtilityAction: (Int, Deck, Deck) -> Unit,
+        onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
+        onEjectDeck: (Deck, Boolean, Boolean) -> Unit
+    ) {
         ImGui.pushID(label)
 
         val themeCol = if (isDeckA) {
@@ -185,9 +196,9 @@ class DeckControlPanel(
         
         val inset = 3f
         val imgAvailW = panelW - (inset * 2f)
-        val patchNameH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeightWithSpacing() + 6f }
-        val childH = maxOf(previewH, (imgAvailW * (9f / 16f)) + patchNameH + 10f)
-        val imgAvailH = (childH - patchNameH - 10f).coerceAtMost(imgAvailW * (9f / 16f)).coerceAtLeast(1f)
+        val bottomBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { maxOf(ImGui.getFrameHeight(), ImGui.getTextLineHeight() + 6f) } + 6f
+        val childH = maxOf(previewH, (imgAvailW * (9f / 16f)) + bottomBarH + 6f)
+        val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * (9f / 16f)).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
         ImGui.beginChild("Child_$label", panelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
@@ -306,107 +317,221 @@ class DeckControlPanel(
             dl.addText(textX, textY, themeCol, letter)
         }
 
-        // Patch name label with hover tooltip + right-click note editing (Idea A)
+        // Interactive bottom bar: Save button, Eject button, Preset bar
         ImGui.spacing()
         ImGui.setCursorPosX(inset)
-        val (activePreset, mtime, dtoVersion) = when {
-            isDeckA -> Triple(
-                session.patchManager.activePresetA,
-                session.patchManager.activePresetMtimeA,
-                session.patchManager.cachedDtoA?.version ?: 1
-            )
-            else -> Triple(
-                session.patchManager.activePresetB,
-                session.patchManager.activePresetMtimeB,
-                session.patchManager.cachedDtoB?.version ?: 1
-            )
-        }
-        val isDirtyLabel = session.patchManager.isDeckDirty(deck, mixer)
-        drawPatchNameLabel(session, label, activePreset, mtime, dtoVersion, isDirtyLabel)
-
+        val browser = if (isDeckA) deckABrowser else deckBBrowser
+        drawDeckBottomBar(session, label, deck, isDeckA = isDeckA, isDeckC = false, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, browser = browser)
 
         ImGui.endChild()
         ImGui.popStyleVar()
         ImGui.popStyleColor()
         ImGui.popID()
     }
-
-    /**
-     * Draws a read-only patch name label below the preset row for a deck.
-     *
-     * - When [activePreset] is null (unsaved/new deck): shows "Untitled" in dim text; no interaction.
-     * - When [activePreset] is set: hovering shows a tooltip with the patch note, last-saved date,
-     *   and DTO version; right-clicking opens the note editor.
-     *
-     * @param deckLabel "Deck A", "Deck B", or "Deck C"
-     * @param activePreset The currently loaded preset name, or null if unsaved.
-     * @param mtime File modification time in ms since epoch, or null if unknown.
-     * @param dtoVersion The [DeckPatchDto.version] of the loaded patch.
-     * @param isDirty Whether the deck has unsaved changes.
-     */
-    fun drawPatchNameLabel(
-        session: llm.slop.liquidlsd.SessionContext,
-        deckLabel: String,
-        activePreset: String?,
-        mtime: Long?,
-        dtoVersion: Int,
-        isDirty: Boolean,
-    ) {
-        ImGui.pushID("patch_name_label_$deckLabel")
-
-        if (activePreset == null) {
-            // Unsaved: dim "Untitled" text, no interaction
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.45f, 0.45f, 1.0f)
-            ImGui.text("  Untitled")
-            ImGui.popStyleColor()
-        } else {
-            val dirtyMarker = if (isDirty) " ●" else ""
-            val displayName = "  $activePreset$dirtyMarker"
-
-            // Invisible button over the text to capture hover/click
-            val btnW = ImGui.getContentRegionAvailX()
-            val btnH = ImGui.getTextLineHeightWithSpacing()
-            val textX = ImGui.getCursorScreenPosX()
-            val textY = ImGui.getCursorScreenPosY()
-
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.75f, 0.85f, 1.0f, 1.0f) // soft blue-white
-            ImGui.text(displayName)
-            ImGui.popStyleColor()
-
-            ImGui.setCursorScreenPos(textX, textY)
-            ImGui.invisibleButton("##patch_name_btn_$deckLabel", btnW.coerceAtLeast(10f), btnH.coerceAtLeast(10f))
-
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                val patchNote = NotesManager.getPatchNote(deckLabel)
-                val mtimeStr = mtime?.let {
-                    SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
-                } ?: "unknown"
-
-                ImGui.beginTooltip()
-                ImGui.text(activePreset)
-                ImGui.separator()
-                ImGui.textDisabled("Last saved: $mtimeStr   v$dtoVersion")
-                if (patchNote.isNotEmpty()) {
-                    ImGui.spacing()
-                    ImGui.textWrapped(patchNote)
-                } else {
-                    ImGui.spacing()
-                    ImGui.textDisabled("(no patch note — right-click to add one)")
-                }
-                ImGui.endTooltip()
-            }
-
-            // Right-click context menu
-            if (ImGui.beginPopupContextItem("patch_name_menu_$deckLabel")) {
-                val patchNote = NotesManager.getPatchNote(deckLabel)
-                val noteLabel = if (patchNote.isNotEmpty()) "\uD83D\uDCDD Edit Patch Note\u2026" else "\uD83D\uDCDD Add Patch Note\u2026"
-                if (ImGui.menuItem(noteLabel)) {
-                    NoteEditorModal.request(NoteContext.Patch(deckLabel, activePreset))
-                }
-                ImGui.endPopup()
-            }
-        }
-
-        ImGui.popID()
-    }
 }
+
+/**
+ * Draws the interactive bottom bar for a deck preview monitor.
+ *
+ * Order: [Save Button] [Eject Button] [Preset Bar]
+ * Buttons and Preset Bar stay aligned along their bottom baselines,
+ * and the bar height grows dynamically as text size/scale increases.
+ */
+fun drawDeckBottomBar(
+    session: llm.slop.liquidlsd.SessionContext,
+    deckLabel: String,
+    deck: Deck,
+    isDeckA: Boolean,
+    isDeckC: Boolean,
+    mixer: Mixer,
+    onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
+    onEjectDeck: (Deck, Boolean, Boolean) -> Unit,
+    browser: DeckPresetBrowser? = null
+) {
+    ImGui.pushID("bottom_bar_$deckLabel")
+
+    val (activePreset, mtime, dtoVersion) = when {
+        isDeckA -> Triple(
+            session.patchManager.activePresetA,
+            session.patchManager.activePresetMtimeA,
+            session.patchManager.cachedDtoA?.version ?: 1
+        )
+        isDeckC -> Triple(
+            session.patchManager.activePresetC,
+            session.patchManager.activePresetMtimeC,
+            session.patchManager.cachedDtoC?.version ?: 1
+        )
+        else -> Triple(
+            session.patchManager.activePresetB,
+            session.patchManager.activePresetMtimeB,
+            session.patchManager.cachedDtoB?.version ?: 1
+        )
+    }
+    val isDirty = session.patchManager.isDeckDirty(deck, mixer)
+
+    var textH = 0f
+    session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
+    val frameH = ImGui.getFrameHeight()
+    val rowH = maxOf(frameH, textH + 6f)
+
+    val startX = ImGui.getCursorScreenPosX()
+    val startY = ImGui.getCursorScreenPosY()
+    val bottomY = startY + rowH
+
+    val tag = deckLabel.replace(" ", "")
+
+    // 1. Save Button
+    ImGui.setCursorScreenPos(startX, startY)
+    if (drawIconButton(session, "##btn_Save_$tag", Icons.SAVE, rowH, "Save or save as a new preset for $deckLabel.")) {
+        ImGui.openPopup("save_menu_$tag")
+    }
+    if (ImGui.beginPopup("save_menu_$tag")) {
+        if (ImGui.menuItem("Save")) {
+            onSaveDeck(deck, isDeckA, false)
+        }
+        if (ImGui.menuItem("Save As...")) {
+            onSaveDeck(deck, isDeckA, true)
+        }
+        ImGui.endPopup()
+    }
+
+    // 2. Eject Button
+    ImGui.sameLine()
+    val ejectX = ImGui.getCursorScreenPosX()
+    ImGui.setCursorScreenPos(ejectX, startY)
+    if (drawIconButton(session, "##btn_Eject_$tag", Icons.EJECT, rowH, "Eject this patch")) {
+        onEjectDeck(deck, isDeckA, isDeckC)
+    }
+
+    // 3. Preset Bar
+    ImGui.sameLine()
+    val barX = ImGui.getCursorScreenPosX()
+    val barW = ImGui.getContentRegionAvailX().coerceAtLeast(10f)
+
+    val dl = ImGui.getWindowDrawList()
+    val bgCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 0.7f)
+    val borderCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.30f, 0.38f, 0.8f)
+    dl.addRectFilled(barX, startY, barX + barW, bottomY, bgCol, 3f)
+    dl.addRect(barX, startY, barX + barW, bottomY, borderCol, 3f)
+
+    val labelText = if (activePreset == null) {
+        "Preset: None"
+    } else {
+        val dirtyMarker = if (isDirty) " *" else ""
+        "Preset: $activePreset$dirtyMarker"
+    }
+
+    val textY = startY + (rowH - textH) * 0.5f
+    val textPaddingX = 8f
+    session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        val textCol = if (activePreset == null) {
+            ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1.0f)
+        } else {
+            ImGui.colorConvertFloat4ToU32(0.85f, 0.90f, 1.0f, 1.0f)
+        }
+        dl.addText(barX + textPaddingX, textY, textCol, labelText)
+    }
+
+    ImGui.setCursorScreenPos(barX, startY)
+    ImGui.invisibleButton("##preset_bar_btn_$tag", barW, rowH)
+
+    if (ImGui.isItemClicked(0) && browser != null) {
+        browser.open()
+    }
+
+    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+        val patchNote = NotesManager.getPatchNote(deckLabel)
+        val mtimeStr = mtime?.let {
+            SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
+        } ?: "unknown"
+
+        ImGui.beginTooltip()
+        ImGui.text(activePreset ?: "None")
+        ImGui.separator()
+        ImGui.textDisabled("Last saved: $mtimeStr   v$dtoVersion")
+        if (patchNote.isNotEmpty()) {
+            ImGui.spacing()
+            ImGui.textWrapped(patchNote)
+        } else {
+            ImGui.spacing()
+            ImGui.textDisabled("(no patch note — right-click to add one)")
+        }
+        ImGui.endTooltip()
+    }
+
+    if (ImGui.beginPopupContextItem("patch_name_menu_$tag")) {
+        val patchNote = NotesManager.getPatchNote(deckLabel)
+        val noteLabel = if (patchNote.isNotEmpty()) "Edit Patch Note..." else "Add Patch Note..."
+        if (ImGui.menuItem(noteLabel)) {
+            NoteEditorModal.request(NoteContext.Patch(deckLabel, activePreset ?: "Untitled"))
+        }
+        ImGui.endPopup()
+    }
+
+    ImGui.setCursorScreenPos(startX, bottomY + 2f)
+
+    ImGui.popID()
+}
+
+private fun drawIconButton(
+    session: llm.slop.liquidlsd.SessionContext,
+    id: String,
+    icon: String,
+    rowH: Float,
+    tooltip: String? = null
+): Boolean {
+    var iconW = 0f
+    var iconH = 0f
+    session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        val sz = ImGui.calcTextSize(icon)
+        iconW = sz.x
+        iconH = sz.y
+    }
+
+    val padX = 10f
+    val btnW = (iconW + padX * 2f).coerceAtLeast(24f)
+    val startX = ImGui.getCursorScreenPosX()
+    val startY = ImGui.getCursorScreenPosY()
+    val endX = startX + btnW
+    val endY = startY + rowH
+
+    ImGui.invisibleButton(id, btnW, rowH)
+    val isHovered = ImGui.isItemHovered()
+    val isActive = ImGui.isItemActive()
+    val isClicked = ImGui.isItemClicked(0)
+
+    val dl = ImGui.getWindowDrawList()
+
+    val bgCol = when {
+        isActive -> ImGui.colorConvertFloat4ToU32(0.28f, 0.35f, 0.45f, 0.9f)
+        isHovered -> ImGui.colorConvertFloat4ToU32(0.20f, 0.25f, 0.35f, 0.8f)
+        else -> ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 0.7f)
+    }
+    val borderCol = if (isHovered) {
+        ImGui.colorConvertFloat4ToU32(0.35f, 0.45f, 0.60f, 0.9f)
+    } else {
+        ImGui.colorConvertFloat4ToU32(0.25f, 0.30f, 0.38f, 0.8f)
+    }
+    val iconCol = if (isHovered) {
+        ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
+    } else {
+        ImGui.colorConvertFloat4ToU32(0.85f, 0.90f, 0.95f, 0.9f)
+    }
+
+    dl.addRectFilled(startX, startY, endX, endY, bgCol, 3f)
+    dl.addRect(startX, startY, endX, endY, borderCol, 3f)
+
+    val iconX = startX + (btnW - iconW) * 0.5f
+    val iconY = startY + (rowH - iconH) * 0.5f
+
+    session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        dl.addText(iconX, iconY, iconCol, icon)
+    }
+
+    if (isHovered && tooltip != null && session.uiTheme.tooltipsEnabled) {
+        ImGui.setTooltip(tooltip)
+    }
+
+    return isClicked
+}
+

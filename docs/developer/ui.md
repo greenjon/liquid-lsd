@@ -30,9 +30,12 @@ graph TD
     
     MixerMonitorPanel --> DeckControlPanel[DeckControlPanel.kt]
     DeckControlPanel --> DeckPresetBrowser[DeckPresetBrowser.kt]
+    DeckControlPanel --> drawDeckBottomBar[drawDeckBottomBar Helper]
 ```
 
 All panel `draw(...)` methods receive `session: SessionContext`, the current `Mixer` reference, and `patchState: PatchGridState` at frame render time. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PatchManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
+
+Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and `DeckControlPanel` use a unified interactive bottom bar (`drawDeckBottomBar`). The top preset header row above monitors is removed, allocating more vertical space to the visual render textures. Below each monitor, the bottom bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
 ---
 

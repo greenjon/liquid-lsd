@@ -431,26 +431,33 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         }
     }
 
+    private val monitorSaveDeck = { deck: Deck, isDeckA: Boolean, isSaveAs: Boolean ->
+        val activeName = when {
+            deck === currentMixer?.deckA -> session.patchManager.activePresetA
+            deck === currentMixer?.deckB -> session.patchManager.activePresetB
+            deck === currentMixer?.deckC -> session.patchManager.activePresetC
+            else -> null
+        }
+        if (activeName != null && !isSaveAs) {
+            saveDeckPreset(activeName, deck, isDeckA)
+        } else {
+            if (deck === currentMixer?.deckA) deckABrowser.open()
+            else if (deck === currentMixer?.deckB) deckBBrowser.open()
+        }
+    }
+
+    private val monitorEjectDeck = { deck: Deck, isDeckA: Boolean, isDeckC: Boolean ->
+        ejectDeck(deck, isDeckA, isDeckC)
+    }
+
     private val mixerMonitorPanel = MixerMonitorPanel(
         patchState = patchState,
-        drawDeckControls = { mixer, label, deck, width, height, isDeckA -> deckControlPanel.drawDeckControls(session, mixer, label, deck, width, height, isDeckA, deckUtilityAction) },
-        onUtilityAction = deckUtilityAction,
-        onSaveDeck = { deck, isDeckA, isSaveAs ->
-            val activeName = when {
-                deck === currentMixer?.deckA -> session.patchManager.activePresetA
-                deck === currentMixer?.deckB -> session.patchManager.activePresetB
-                deck === currentMixer?.deckC -> session.patchManager.activePresetC
-                else -> null
-            }
-            if (activeName != null && !isSaveAs) {
-                saveDeckPreset(activeName, deck, isDeckA)
-            } else {
-                if (deck === currentMixer?.deckA) deckABrowser.open()
-                else if (deck === currentMixer?.deckB) deckBBrowser.open()
-                // Deck C save-as could be added here if needed
-            }
+        drawDeckControls = { mixer, label, deck, width, height, isDeckA ->
+            deckControlPanel.drawDeckControls(session, mixer, label, deck, width, height, isDeckA, deckUtilityAction, monitorSaveDeck, monitorEjectDeck)
         },
-        onEjectDeck = { deck, isDeckA, isDeckC -> ejectDeck(deck, isDeckA, isDeckC) }
+        onUtilityAction = deckUtilityAction,
+        onSaveDeck = monitorSaveDeck,
+        onEjectDeck = monitorEjectDeck
     )
 
     fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
