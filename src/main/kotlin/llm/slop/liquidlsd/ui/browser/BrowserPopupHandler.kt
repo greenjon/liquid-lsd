@@ -19,7 +19,6 @@ object BrowserPopupHandler {
     
     val renameBuffer = ImString(256)
     val newPlaylistNameBuffer = ImString(256)
-    val renamePlaylistBuffer = ImString(256)
     val exportQueueNameBuffer = ImString(256)
 
     fun drawRenameAssetPopup() {
@@ -113,52 +112,7 @@ object BrowserPopupHandler {
         }
     }
 
-    fun drawRenamePlaylistPopup(playlist: PlaylistManager.Playlist) {
-        if (ImGui.beginPopupModal("RenamePlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Rename Playlist to:")
-            if (renamePlaylistBuffer.get().isBlank()) {
-                renamePlaylistBuffer.set(playlist.name)
-            }
-            ImGui.inputText("##renamePlaylistInput", renamePlaylistBuffer)
-            if (ImGui.button("Rename", 120f, 0f)) {
-                val newName = renamePlaylistBuffer.get().trim()
-                if (newName.isNotBlank()) {
-                    FileSystemManager.renameFile(playlist.filePath, newName).onSuccess { newPath ->
-                        SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPath))
-                        AssetBrowserPanel.activePlaylistData = null
-                    }
-                }
-                renamePlaylistBuffer.set("")
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Cancel", 120f, 0f)) {
-                renamePlaylistBuffer.set("")
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.endPopup()
-        }
-    }
 
-    fun drawDeletePlaylistConfirmationPopup(playlistFile: File) {
-        if (ImGui.beginPopupModal("ConfirmDeletePlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Delete Playlist ${playlistFile.nameWithoutExtension}?")
-            ImGui.text("This action cannot be undone.")
-            ImGui.separator()
-            if (ImGui.button("Delete", 120f, 0f)) {
-                FileSystemManager.deleteFile(playlistFile.absolutePath).onSuccess {
-                    SidebarPanel.currentView = LibraryView.PlaylistsRoot
-                    AssetBrowserPanel.activePlaylistData = null
-                }
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Cancel", 120f, 0f)) {
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.endPopup()
-        }
-    }
 
     fun drawNewPlaylistPopup() {
         if (ImGui.beginPopupModal("NewPlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {

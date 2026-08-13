@@ -210,34 +210,15 @@ object AssetBrowserPanel {
             ImGui.sameLine()
             ImGui.textColored(1f, 0.7f, 0.3f, 1f, "*")
         }
-        
-        ImGui.sameLine()
-        if (ImGui.button("Rename Playlist")) {
-            ImGui.openPopup("RenamePlaylistPopup")
-        }
-        ImGui.sameLine()
-        if (ImGui.button("Delete Playlist")) {
-            ImGui.openPopup("ConfirmDeletePlaylistPopup")
-        }
-        ImGui.sameLine()
-        if (ImGui.button("Clone Playlist")) {
-            if (playlist.isDirty) {
-                PlaylistManager.savePlaylist(playlist)
-            }
-            FileSystemManager.cloneFile(playlistFile.absolutePath).onSuccess { newPath ->
-                SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPath))
-                activePlaylistData = null // force reload
-            }
-        }
-        
-        ImGui.sameLine()
-        if (ImGui.button("Add to queue")) {
-            session.playQueueManager.appendPlaylistToQueue(playlistFile)
-        }
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Add to the bottom of the queue. Right click for more options.")
-        }
-        if (ImGui.beginPopupContextItem("playlist_header_add_to_queue_menu")) {
+
+        // Playlist Right-Click Context Menu
+        val playlistAsset = AssetItem(
+            path = playlistFile.absolutePath,
+            name = playlistFile.nameWithoutExtension,
+            type = AssetType.PLAYLIST
+        )
+
+        if (ImGui.beginPopupContextWindow("playlist_view_context_menu", imgui.flag.ImGuiPopupFlags.MouseButtonRight or imgui.flag.ImGuiPopupFlags.NoOpenOverExistingPopup)) {
             if (ImGui.menuItem("Play now (and replace queue)")) {
                 session.playQueueManager.playPlaylistNow(playlistFile, mixer)
             }
@@ -247,29 +228,39 @@ object AssetBrowserPanel {
             if (ImGui.menuItem("Add to the bottom of the queue")) {
                 session.playQueueManager.appendPlaylistToQueue(playlistFile)
             }
-            ImGui.endPopup()
-        }
-        
-        if (playlist.isDirty) {
-            ImGui.sameLine()
-            if (ImGui.button("Save")) {
-                PlaylistManager.savePlaylist(playlist).onSuccess {
-                    logger.info { "Saved playlist: ${playlist.name}" }
+            ImGui.separator()
+            if (playlist.isDirty) {
+                if (ImGui.menuItem("Save")) {
+                    PlaylistManager.savePlaylist(playlist).onSuccess {
+                        logger.info { "Saved playlist: ${playlist.name}" }
+                    }
                 }
             }
+            if (ImGui.menuItem("Rename")) {
+                BrowserPopupHandler.renameTarget = playlistAsset
+                BrowserPopupHandler.renameBuffer.set(playlistAsset.name)
+                BrowserPopupHandler.pendingOpenRenamePopup = true
+            }
+            if (ImGui.menuItem("Clone")) {
+                if (playlist.isDirty) {
+                    PlaylistManager.savePlaylist(playlist)
+                }
+                FileSystemManager.cloneFile(playlistFile.absolutePath).onSuccess { newPath ->
+                    SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPath))
+                    activePlaylistData = null
+                }
+            }
+            if (ImGui.menuItem("Delete")) {
+                BrowserPopupHandler.deleteTarget = playlistAsset
+                BrowserPopupHandler.pendingOpenDeletePopup = true
+            }
+            ImGui.endPopup()
         }
         
         ImGui.separator()
         ImGui.spacing()
         
-        
         PlaylistEditorPanel.draw(session, playlist, mixer)
-        
-        // Rename Playlist Popup
-        BrowserPopupHandler.drawRenamePlaylistPopup(playlist)
-        
-        // Delete Playlist Confirmation Popup
-        BrowserPopupHandler.drawDeletePlaylistConfirmationPopup(playlistFile)
     }
 
 

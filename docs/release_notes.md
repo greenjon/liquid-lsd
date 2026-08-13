@@ -1,21 +1,24 @@
 # Liquid LSD — Release Notes
 
-## Version 1.0.0-beta.20
+## Version 1.0.0-beta.22
 
 > [!NOTE]
-> **Release 1.0.0-beta.20** rolls up all major features, visual generator additions, UI redesigns, performance optimizations, patch save/load overhauls, and architectural improvements completed since **v1.0.0-beta.17**.
+> **Release 1.0.0-beta.22** rolls up all recent UI enhancements, media browser auto-refresh, Settings font scaling dynamic adjustments, monitor overlay badges, and playlist menu bar streamlining into right-click context menus.
 
 ---
 
 ### Key Highlights
 
-- **Complete Save/Load & Session Persistence Overhaul**: Resolved preset save failures, parameter slider dirty state detection flaws (`ParameterDto.equals`), disk filename vs DTO name alignment, Deck C preset routing, and false startup queue advance triggers when AutoVJ is disabled.
+- **Complete Save/Load & Session Persistence Overhaul**: Resolved preset save failures, parameter slider dirty state detection flaws (`ParameterDto.equals`), disk filename vs DTO name alignment, Deck C preset routing, false startup queue advance triggers when AutoVJ is disabled, and `lsd-settings.properties` persistence for font size, column visibility toggles, and clean mode.
 - **New `Dynamic Spiral` Visual Source**: Introduced a multi-point logarithmic spiral generator with integrated phase tracking for glitch-free speed/shear modulation and fragment shader radial culling for high-FPS rendering.
 - **`SessionContext` Dependency Injection Architecture**: Refactored UI panels and core managers to use `SessionContext` dependency injection for improved modularity, testability, and state isolation.
 - **PatchGrid Expressive Controls**: Added middle-click parameter reset to default, modulator bypass toggles, scroll-wheel hover guards, mandala lobe selection pills (`2`, `3`, `4`, `6`, `8`, `12`), and live recipe steppers.
 - **Dynamic UI Theming Engine**: Added customizable UI color themes, base font scaling hotkeys (`Ctrl-` / `Ctrl=`), clean mode (`F`), and persistent theme settings in `lsd-settings.properties`.
 - **Resizable 3-Column Layout & Seamless Cards**: Added resizable workspace column splits, toggleable Mixer Panel columns, and connected side tabs into parameter cards with inline sub-tabs.
 - **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) for real-time audio- or beat-driven parameter randomization.
+- **Typography Font Sizing & Layout Alignment Overhaul**: Increased global base font limit from 28px to 36px. Added automatic vertical resizing for the main Menu Bar, Master Controls (Crossfader/Fade Speed), and Deck A/B monitors with patch name labels. Resolved UI text clipping and vertical misalignment across large font sizes, including left/sub tab button heights, Cell Config "Current" slider readouts, Mixer Monitor preset Save & Eject icons, Deck A/B header vertical padding, and Playlist preview buttons A, B, C.
+- **Media Browser Live Auto-Refresh**: Added real-time filesystem change monitoring across `AssetBrowserPanel`, `DeckPresetBrowser`, and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
+- **Playlist Menu Bar Streamlining**: Removed action buttons ("Rename Playlist", "Delete Playlist", "Clone Playlist", "Add to queue", "Save") from the playlist editor menu bar in Media Browser and consolidated them into the right-click context menu.
 - **Toolchain Upgrade**: Upgraded build toolchain to Gradle **9.7.0**.
 
 ---

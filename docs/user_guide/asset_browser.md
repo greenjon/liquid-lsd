@@ -72,8 +72,8 @@ Displays all saved `.playlist` files in the current folder.
 
 ### 2. Editor State
 Shows the active patch order for a performance setlist:
-- **Header Status**: Displays `Editing: [Setlist Name]` with an unsaved changes indicator (`*`).
-- **Save / Close Buttons**: `💾 Save` (`Ctrl+S`) saves changes to disk; `✖ Close` returns to Browser state.
+- **Header Status**: Displays `Playlist: [Setlist Name]` with an unsaved changes indicator (`*`).
+- **Context Menu (Right-Click)**: All playlist options (Play now, Insert into queue, Add to queue, Save, Rename, Clone, Delete) are accessed by right-clicking in the Playlist Editor panel or header bar.
 
 ---
 

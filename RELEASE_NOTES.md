@@ -1,9 +1,9 @@
 # Liquid LSD — Release Notes
 
-## Version 1.0.0-beta.20
+## Version 1.0.0-beta.22
 
 > [!NOTE]
-> **Release 1.0.0-beta.20** rolls up all major features, visual generator additions, UI redesigns, performance optimizations, patch save/load overhauls, and architectural improvements completed since **v1.0.0-beta.17**.
+> **Release 1.0.0-beta.22** rolls up all recent UI enhancements, media browser auto-refresh, Settings font scaling dynamic adjustments, monitor overlay badges, and playlist menu bar streamlining into right-click context menus.
 
 ---
 
@@ -18,6 +18,7 @@
 - **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) for real-time audio- or beat-driven parameter randomization.
 - **Typography Font Sizing & Layout Alignment Overhaul**: Increased global base font limit from 28px to 36px. Added automatic vertical resizing for the main Menu Bar, Master Controls (Crossfader/Fade Speed), and Deck A/B monitors with patch name labels. Resolved UI text clipping and vertical misalignment across large font sizes, including left/sub tab button heights, Cell Config "Current" slider readouts, Mixer Monitor preset Save & Eject icons, Deck A/B header vertical padding, and Playlist preview buttons A, B, C.
 - **Media Browser Live Auto-Refresh**: Added real-time filesystem change monitoring across `AssetBrowserPanel`, `DeckPresetBrowser`, and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
+- **Playlist Menu Bar Streamlining**: Removed action buttons ("Rename Playlist", "Delete Playlist", "Clone Playlist", "Add to queue", "Save") from the playlist editor menu bar in Media Browser and consolidated them into the right-click context menu.
 - **Toolchain Upgrade**: Upgraded build toolchain to Gradle **9.7.0**.
 
 ---
