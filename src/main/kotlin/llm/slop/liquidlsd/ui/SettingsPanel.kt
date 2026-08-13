@@ -58,8 +58,8 @@ object SettingsPanel {
         }.coerceAtLeast(30f)
 
         val contentH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            (ImGui.getTextLineHeightWithSpacing() * 12f)
-        }.coerceIn(240f, displayH * 0.65f)
+            (ImGui.getTextLineHeightWithSpacing() * 15f)
+        }.coerceIn(300f, displayH * 0.78f)
 
         val availW = ImGui.getContentRegionAvailX()
         val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(100f)
