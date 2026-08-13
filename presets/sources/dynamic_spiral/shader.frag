@@ -34,7 +34,7 @@ void main() {
     vec2 uv = vTexCoord * 2.0 - 1.0;
     float aspect = uResolution.x / uResolution.y;
     uv.x *= aspect;
-    uv /= uScale;
+    uv /= max(uScale, 0.05);
 
     vec3 newLight = vec3(0.0);
     float time = uTime * uSpeed;
