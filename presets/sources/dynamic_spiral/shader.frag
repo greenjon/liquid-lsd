@@ -24,6 +24,10 @@ uniform float uHueOffset;
 uniform float uHueSweep;
 uniform float uTrailDecay;
 
+// Integrated phase uniforms for smooth Speed and Shear transitions
+uniform float uIntegratedTime;
+uniform float uIntegratedShear;
+
 // IQ cosine palette
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
     return a + b * cos(6.28318530 * (c * t + d));
@@ -49,7 +53,6 @@ void main() {
     uv /= max(uScale, 0.05);
 
     vec3 newLight = vec3(0.0);
-    float time = uTime * uSpeed;
 
     // A(n) = n^1.5 / (n + D) is strictly increasing for all n,D > 0.
     // Solve for nMax such that A(nMax) == viewRadius so that uMaxPoints points
@@ -85,11 +88,9 @@ void main() {
         // Early exit if numerical precision overshoots viewRadius
         if (A > viewRadius) break;
 
-        // Angular velocity: omega(n) = amp*cos(freq*n) + shear*n
-        float omega = uWaveAmp * cos(uWaveFreq * n) + uShear * n;
-
-        // Current angle
-        float theta = omega * time;
+        // Current angle using integrated time & integrated shear (eliminates phase jumps on parameter change)
+        float omegaWave = uWaveAmp * cos(uWaveFreq * n);
+        float theta = omegaWave * uIntegratedTime + n * uIntegratedShear;
 
         // Cartesian position
         vec2 pos = vec2(A * cos(theta), A * sin(theta));
@@ -111,7 +112,7 @@ void main() {
 
         // Color: IQ palette driven by index n.
         // uHueSweep controls cycles-per-point; uHueOffset rotates the whole palette.
-        float t = n * uHueSweep - time * 0.1;
+        float t = n * uHueSweep - uIntegratedTime * 0.1;
         vec3 col = palette(
             t,
             vec3(0.5, 0.5, 0.5),

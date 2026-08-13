@@ -23,15 +23,32 @@ class DynamicSpiral(
     ownsShader: Boolean = false
 ) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader) {
 
+    private var lastTimeNanos: Long = System.nanoTime()
+    private var integratedTime: Float = 0f
+    private var integratedShear: Float = 0f
+
     init {
         // Max Points is a quality/performance dial, not a CV target.
         // Silently ignore any modulators wired to it.
         parameters["Max Points"]?.modulatorFilter = { false }
     }
 
+    override fun update() {
+        super.update()
+        val now = System.nanoTime()
+        val dt = ((now - lastTimeNanos) / 1_000_000_000.0).toFloat().coerceIn(0.0f, 0.1f)
+        lastTimeNanos = now
+
+        val speed = parameters["Speed"]?.value ?: 0.5f
+        val shear = parameters["Shear"]?.value ?: 0.1f
+
+        integratedTime += dt * speed
+        integratedShear += dt * speed * shear
+    }
+
     /**
      * Passes all parameters to the shader, with Max Points snapped to the nearest integer
-     * so the GLSL `int(uMaxPoints)` cast is exact and there is no off-by-one drift.
+     * and integrated time/shear phases passed for seamless speed & shear transitions.
      */
     override fun setupUniforms(shader: Shader) {
         parameters.forEach { (name, param) ->
@@ -42,6 +59,15 @@ class DynamicSpiral(
                 shader.setUniform(uniformName, param.value)
             }
         }
+        shader.setUniform("uIntegratedTime", integratedTime)
+        shader.setUniform("uIntegratedShear", integratedShear)
+    }
+
+    override fun clear() {
+        super.clear()
+        integratedTime = 0f
+        integratedShear = 0f
+        lastTimeNanos = System.nanoTime()
     }
 
     override fun clone(): DynamicSpiral {
@@ -49,7 +75,7 @@ class DynamicSpiral(
         this.parameters.forEach { (name, param) ->
             clonedParams[name] = param.clone()
         }
-        return DynamicSpiral(
+        val copy = DynamicSpiral(
             id = this.id,
             displayName = this.displayName,
             shader = this.shader,
@@ -57,5 +83,9 @@ class DynamicSpiral(
             hasFeedback = this.hasFeedback,
             ownsShader = false // Cloned instances do not own the shared shader
         )
+        copy.integratedTime = this.integratedTime
+        copy.integratedShear = this.integratedShear
+        copy.lastTimeNanos = System.nanoTime()
+        return copy
     }
 }
