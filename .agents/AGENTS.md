@@ -16,3 +16,19 @@ real-time graphics and audio project.
   - `jack_lsp` to list available ports
   - `jack_connect` to wire audio ports together
   - `pw-link` to establish connections in PipeWire environments
+
+## 4. Continuous Documentation Maintenance ("Doc-as-you-Code")
+- **Atomic Doc Updates**: Whenever modifying or refactoring code, features, preset schemas, audio engines, UI controls, or build settings, you MUST update the corresponding documentation files in `docs/`, `README.md`, `ARCHITECTURE.md`, or `DECISIONS.md` within the same turn/commit.
+- **Documentation Mapping**:
+  - Audio engine (`src/.../audio/`) → `docs/developer/` and `ARCHITECTURE.md`
+  - Rendering / Shaders / UI (`src/.../render/`, `src/.../ui/`) → `docs/user_guide/` and `docs/developer/`
+  - Presets & Configs (`presets/`, parameters) → `docs/user_guide/`
+  - Architectural / System decisions → `DECISIONS.md` and `ARCHITECTURE.md`
+- **Release Notes & Logs**: Whenever completing feature additions or bug fixes, update `RELEASE_NOTES.md` or `docs/release_notes.md`.
+
+## 5. UI Typography & Character Set Rules
+- **Font Stack**: The UI uses **Inter** (regular/medium/bold) for text, **JetBrains Mono** for code, and **Lucide** (`Icons.kt`) for icons.
+- **Avoid Multi-Byte Emojis in ImGui Strings**: Do NOT insert raw multi-byte Emojis (e.g. 📁, 🎨, 📋, 📝, 💾, ⚠) into ImGui text strings or UI labels. They do not exist in standard TTF fonts or font atlas textures and will render as missing `?` glyphs.
+- **Use `Icons.*` Constants or Standard Symbols**: Always use `Icons.<SYMBOL>` (e.g., `Icons.FOLDER`, `Icons.FILE`, `Icons.SETTINGS`, `Icons.ALERT`) for UI icons, or standard ASCII and basic Unicode symbols (e.g., `±`, `→`, `—`, `•`) which are baked into the `UITheme` glyph atlas.
+
+

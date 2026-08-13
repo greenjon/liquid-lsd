@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.patches
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.*
+import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import mu.KotlinLogging
@@ -43,6 +44,11 @@ object PatchManager {
     var cachedDtoA: DeckPatchDto? = null
     var cachedDtoB: DeckPatchDto? = null
     var cachedDtoC: DeckPatchDto? = null
+
+    /** File modification time (ms since epoch) of the most recently loaded deck preset, for Idea E tooltip. */
+    var activePresetMtimeA: Long? = null
+    var activePresetMtimeB: Long? = null
+    var activePresetMtimeC: Long? = null
 
     internal data class RestoredQueueState(
         val files: List<File>,
@@ -196,6 +202,7 @@ object PatchManager {
             else -> 1
         }
         deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.LOADING))
+        val fileMtime = file.lastModified().takeIf { it > 0L }
         CompletableFuture.runAsync({
             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
@@ -209,6 +216,12 @@ object PatchManager {
                     isDeckC -> deckCPatchQueue.offer(dto)
                     isDeckA -> deckAPatchQueue.offer(dto)
                     else -> deckBPatchQueue.offer(dto)
+                }
+                // Mtime is captured before the background thread runs so it reflects the file on disk
+                when {
+                    isDeckC -> activePresetMtimeC = fileMtime
+                    isDeckA -> activePresetMtimeA = fileMtime
+                    else    -> activePresetMtimeB = fileMtime
                 }
                 logger.info { "Deck preset loaded and queued for main thread swap" }
                 deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
@@ -258,8 +271,9 @@ object PatchManager {
 
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
         // Capture deck state on the main thread (Phase 2c: include tags)
-        val dto = deck.toDto(name, tags)
-        
+        val deckLabel = when (deckIndex) { 0 -> "Deck A"; 2 -> "Deck C"; else -> "Deck B" }
+        val dto = NotesManager.syncToDto(deckLabel, deck.toDto(name, tags))
+
         if (deckIndex in 0..2) {
             deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.SAVING))
             pendingSaves[deckIndex].getAndSet(null)?.cancel(false)
@@ -272,6 +286,12 @@ object PatchManager {
                 val content = json.encodeToString(dto)
                 file.parentFile?.mkdirs()
                 file.writeText(content)
+                // Update mtime to reflect the newly written file
+                when (deckIndex) {
+                    0 -> activePresetMtimeA = file.lastModified().takeIf { it > 0L }
+                    1 -> activePresetMtimeB = file.lastModified().takeIf { it > 0L }
+                    2 -> activePresetMtimeC = file.lastModified().takeIf { it > 0L }
+                }
                 logger.info { "Deck preset saved to file successfully" }
                 if (deckIndex in 0..2) {
                     deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
@@ -312,6 +332,7 @@ object PatchManager {
                 mixer.deckA.applyDto(deckADto)
                 activePresetA = deckADto.name
                 cachedDtoA = deckADto
+                NotesManager.syncFromDto("Deck A", deckADto)
                 logger.info { "Successfully applied Deck A preset: ${deckADto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck A preset" }
@@ -326,6 +347,7 @@ object PatchManager {
                 mixer.deckB.applyDto(deckBDto)
                 activePresetB = deckBDto.name
                 cachedDtoB = deckBDto
+                NotesManager.syncFromDto("Deck B", deckBDto)
                 logger.info { "Successfully applied Deck B preset: ${deckBDto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck B preset" }
@@ -340,6 +362,7 @@ object PatchManager {
                 mixer.deckC.applyDto(deckCDto)
                 activePresetC = deckCDto.name
                 cachedDtoC = deckCDto
+                NotesManager.syncFromDto("Deck C", deckCDto)
                 logger.info { "Successfully applied Deck C preset: ${deckCDto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck C preset" }

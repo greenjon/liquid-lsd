@@ -4,12 +4,16 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
-import llm.slop.liquidlsd.rendering.Deck
-import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.patches.PatchManager
-import llm.slop.liquidlsd.rendering.Mandala
+import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
+import llm.slop.liquidlsd.rendering.Mandala
+import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.SourceDocRegistry
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import kotlin.math.roundToInt
 
 class DeckControlPanel(
@@ -66,7 +70,25 @@ class DeckControlPanel(
         if (status.state == llm.slop.liquidlsd.patches.PatchIOState.ERROR && ImGui.isItemHovered()) {
             ImGui.setTooltip("Error: ${status.errorMessage}")
         } else if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Click to open the Tag Preset Browser for Deck $label.")
+            // Show engine description + global source note
+            val sourceId = (deck.source as? DynamicVisualSource)?.id ?: "mandala"
+            val engineDesc = SourceDocRegistry.getSourceDescription(sourceId)
+            val sourceNote = NotesManager.getSourceNote(sourceId)
+            if (engineDesc.isNotEmpty() || sourceNote.isNotEmpty()) {
+                ImGui.beginTooltip()
+                if (engineDesc.isNotEmpty()) {
+                    ImGui.textWrapped(engineDesc)
+                }
+                if (sourceNote.isNotEmpty()) {
+                    if (engineDesc.isNotEmpty()) ImGui.spacing()
+                    ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.85f, 0.4f, 1.0f)
+                    ImGui.textWrapped("\uD83D\uDCDD $sourceNote")
+                    ImGui.popStyleColor()
+                }
+                ImGui.endTooltip()
+            } else {
+                ImGui.setTooltip("Click to open the Tag Preset Browser for Deck $label.")
+            }
         }
 
         // -- Menu button -------------------------------------------------------
@@ -104,6 +126,17 @@ class DeckControlPanel(
                     openDeleteConfirm = true
                 }
             }
+
+            ImGui.separator()
+            // Source note editing
+            val sourceId = (deck.source as? DynamicVisualSource)?.id ?: "mandala"
+            val sourceName = (deck.source as? DynamicVisualSource)?.displayName ?: "Mandala"
+            val sourceNote = NotesManager.getSourceNote(sourceId)
+            val sourceNoteLabel = if (sourceNote.isNotEmpty()) "\uD83D\uDCDD Edit Source Note\u2026" else "\uD83D\uDCDD Add Source Note\u2026"
+            if (ImGui.menuItem(sourceNoteLabel)) {
+                NoteEditorModal.request(NoteContext.Source(sourceId, sourceName))
+            }
+
             ImGui.endPopup()
         }
 
@@ -243,9 +276,107 @@ class DeckControlPanel(
         // Draw border perfectly wrapped around the image
         dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
 
+        // Patch name label with hover tooltip + right-click note editing (Idea A)
+        ImGui.spacing()
+        ImGui.setCursorPosX(inset)
+        val (activePreset, mtime, dtoVersion) = when {
+            isDeckA -> Triple(
+                session.patchManager.activePresetA,
+                session.patchManager.activePresetMtimeA,
+                session.patchManager.cachedDtoA?.version ?: 1
+            )
+            else -> Triple(
+                session.patchManager.activePresetB,
+                session.patchManager.activePresetMtimeB,
+                session.patchManager.cachedDtoB?.version ?: 1
+            )
+        }
+        val isDirtyLabel = session.patchManager.isDeckDirty(deck, mixer)
+        drawPatchNameLabel(session, label, activePreset, mtime, dtoVersion, isDirtyLabel)
+
+
         ImGui.endChild()
         ImGui.popStyleVar()
         ImGui.popStyleColor()
+        ImGui.popID()
+    }
+
+    /**
+     * Draws a read-only patch name label below the preset row for a deck.
+     *
+     * - When [activePreset] is null (unsaved/new deck): shows "Untitled" in dim text; no interaction.
+     * - When [activePreset] is set: hovering shows a tooltip with the patch note, last-saved date,
+     *   and DTO version; right-clicking opens the note editor.
+     *
+     * @param deckLabel "Deck A", "Deck B", or "Deck C"
+     * @param activePreset The currently loaded preset name, or null if unsaved.
+     * @param mtime File modification time in ms since epoch, or null if unknown.
+     * @param dtoVersion The [DeckPatchDto.version] of the loaded patch.
+     * @param isDirty Whether the deck has unsaved changes.
+     */
+    fun drawPatchNameLabel(
+        session: llm.slop.liquidlsd.SessionContext,
+        deckLabel: String,
+        activePreset: String?,
+        mtime: Long?,
+        dtoVersion: Int,
+        isDirty: Boolean,
+    ) {
+        ImGui.pushID("patch_name_label_$deckLabel")
+
+        if (activePreset == null) {
+            // Unsaved: dim "Untitled" text, no interaction
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.45f, 0.45f, 1.0f)
+            ImGui.text("  Untitled")
+            ImGui.popStyleColor()
+        } else {
+            val dirtyMarker = if (isDirty) " ●" else ""
+            val displayName = "  $activePreset$dirtyMarker"
+
+            // Invisible button over the text to capture hover/click
+            val btnW = ImGui.getContentRegionAvailX()
+            val btnH = ImGui.getTextLineHeightWithSpacing()
+            val textX = ImGui.getCursorScreenPosX()
+            val textY = ImGui.getCursorScreenPosY()
+
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.75f, 0.85f, 1.0f, 1.0f) // soft blue-white
+            ImGui.text(displayName)
+            ImGui.popStyleColor()
+
+            ImGui.setCursorScreenPos(textX, textY)
+            ImGui.invisibleButton("##patch_name_btn_$deckLabel", btnW.coerceAtLeast(10f), btnH.coerceAtLeast(10f))
+
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                val patchNote = NotesManager.getPatchNote(deckLabel)
+                val mtimeStr = mtime?.let {
+                    SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
+                } ?: "unknown"
+
+                ImGui.beginTooltip()
+                ImGui.text(activePreset)
+                ImGui.separator()
+                ImGui.textDisabled("Last saved: $mtimeStr   v$dtoVersion")
+                if (patchNote.isNotEmpty()) {
+                    ImGui.spacing()
+                    ImGui.textWrapped(patchNote)
+                } else {
+                    ImGui.spacing()
+                    ImGui.textDisabled("(no patch note — right-click to add one)")
+                }
+                ImGui.endTooltip()
+            }
+
+            // Right-click context menu
+            if (ImGui.beginPopupContextItem("patch_name_menu_$deckLabel")) {
+                val patchNote = NotesManager.getPatchNote(deckLabel)
+                val noteLabel = if (patchNote.isNotEmpty()) "\uD83D\uDCDD Edit Patch Note\u2026" else "\uD83D\uDCDD Add Patch Note\u2026"
+                if (ImGui.menuItem(noteLabel)) {
+                    NoteEditorModal.request(NoteContext.Patch(deckLabel, activePreset))
+                }
+                ImGui.endPopup()
+            }
+        }
+
         ImGui.popID()
     }
 }

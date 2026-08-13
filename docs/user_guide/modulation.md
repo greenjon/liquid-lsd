@@ -1,90 +1,87 @@
-# CV Modulation
+# CV Modulation & Patch Grid
 
-The heart of Liquid LSD is its Control Voltage (CV) modulation matrix. This system allows you to route audio characteristics or generator signals to modulate any rendering parameter.
-
-## The Patch Grid
-
-The Patch Grid is a visual modulation matrix displayed in the left panel of the application.
-
-- **Rows**: The parameters available for modulation (grouped hierarchically: Mixer, Deck A, Deck B, along with subcategories like Geometry, Color, Background, and Feedback).
-- **Columns**: The active modulation sources. The grid columns are:
-  - **FINAL**: A special display column to set parameter base values and monitor real-time outputs.
-  - **MIDI**: Allows learning and mapping external hardware MIDI controllers.
-  - **GEN 1 & GEN 2**: Configurable generators (e.g. LFO, clock phase, random).
-  - **AUDIO**: Audio frequency-band envelope analysis.
-  - **TRIGGER**: Real-time musical transient detection.
-- **Grid Cells**: The intersection points where you can create a modulator linking a source to a parameter.
-  - Active cells display a faint circle containing an animated dot indicating the current real-time value of the CV signal.
-  - Bypassed cells are rendered in muted grey.
+The Control Voltage (CV) modulation matrix is the nerve center of Liquid LSD. It allows real-time audio envelopes, transient triggers, beat clocks, LFOs, and external MIDI signals to modulate any visual parameter.
 
 ---
 
-## CV Sources
+## The Patch Grid Matrix
 
-CV sources generate values that modulate rendering parameters. When you select a cell, the **Cell Config Panel** lets you map specific internal signals:
+The Patch Grid is located in the left panel of Performance Mode.
 
-### Audio-Derived Sources (Extracted from JACK Input)
-Under the **AUDIO** column, you can select which band-split envelope to use:
-- **`audio_amp`**: Overall root-mean-square (RMS) amplitude of the incoming audio signal.
-- **`audio_bass`**: RMS amplitude in the low-frequency band.
-- **`audio_mid`**: RMS amplitude in the mid-frequency band.
-- **`audio_high`**: RMS amplitude in the high-frequency band.
+```
+┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│ Parameter       │ FINAL    │ MIDI     │ GEN 1    │ AUDIO    │ TRIGGER  │
+├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+│ Deck A / Lobes  │  ● 4.0   │  [--]    │  ( 🔘 )   │  ( 🔘 )   │  [  ]    │
+│ Deck A / Zoom   │  ● 1.0   │  [--]    │  [  ]    │  ( 🔘 )   │  ( 🔘 )   │
+└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+```
 
-Under the **TRIGGER** column, you can select transient triggers:
-- **`trigger_onset`**: A brief impulse trigger generated on detected audio transients.
-- **`trigger_accent`**: A transient trigger generated on strong musical accents.
-
-*(Note: The current estimated tempo is also available under the `bpm` source).*
-
-### Generator Sources (Calculated in Real-Time)
-Under **GEN 1** and **GEN 2**, you can configure unified generators:
-- **Waveforms**: Sine, Triangle, Square, or Random (Sample & Hold) waveforms.
-- **Timing modes**: Time-based (free-running LFO at Fast/Medium/Slow speeds) or Beat-synced (subdivisions like 1/8, 1/4, 1/2, 1, 2, 4, 8, etc.).
-- **Controls**: Phase Offset and Slope (glide/smoothing amount).
-
----
-
-## Modulators & Operator Math
-
-When you select a grid cell, the **Cell Config Panel** (middle panel) opens. Here, you can configure how the CV source affects the target parameter.
-
-### Modulator Attributes
-- **Bypass/Active Toggle**: Instantly enable or disable this specific modulation routing.
-- **Amplitude (Amplitude Slider)**: Controls the strength/depth of the modulation.
-- **DC Offset**: Shifts the center offset of the incoming CV value.
-- **Operator**: Defines how the modulation value is combined with the parameter's base value:
-  - **ADD**: The modulation value is added directly:
-    $$result = baseValue + (cv * amplitude + dcOffset)$$
-  - **MUL**: The parameter's base value is scaled:
-    $$result = baseValue * (1.0 + (cv * amplitude + dcOffset))$$
-  - **SCALE**: The parameter's base value is scaled relative to the amplitude:
-    $$result = baseValue * (1.0 - amplitude + (cv * amplitude + dcOffset))$$
-
-*The final evaluated parameter value is always clamped to its defined limits (usually `0.0` to `1.0`).*
+- **Top Navigation Tabs**: Switch view focus between **Deck A**, **Deck B**, and **Deck C**.
+- **Undo / Redo History**: Maintains a 30-level undo/redo stack (`Ctrl+Z` / `Ctrl+Y`) tracking all modulator edits, additions, and parameter changes.
+- **Rows**: Modulatable parameters grouped logically: Mixer, Deck Geometry, View, Color, Background, and Feedback.
+- **Columns**: Active modulation sources:
+  - **FINAL**: Base parameter controls, live evaluated output knobs, and parameter default resets.
+  - **MIDI**: Direct MIDI CC hardware assignments.
+  - **GEN 1 & GEN 2**: Configurable LFO & clock generators.
+  - **AUDIO**: Audio frequency-band envelope extractors (`AMP`, `BASS`, `MID`, `HIGH`).
+  - **TRIGGER**: Musical transient impulse detectors (`ONSET`, `ACCENT`).
+- **Grid Cells**: Intersection points linking a source to a parameter. Active cells display a animated colored dot indicating live CV signal output.
 
 ---
 
-## Oscilloscopes & Monitors
+## Generator Sources & LFO 2 Modulation
 
-Monitoring real-time values is essential to dialing in responsive patches.
+Selecting a **GEN 1** or **GEN 2** cell enables full dual-oscillator LFO shaping in the **Cell Config Panel**:
 
-- **Cell-Specific Oscilloscope**: Inside the Cell Config panel, a scrolling waveform display shows the history of the selected CV source and how it affects the parameter's evaluated output.
-- **Sound Analysis Panel**: A dedicated window displaying the raw audio waveform, frequency band splits, and calculated BPM estimate.
+### Primary Oscillator (LFO 1 / Carrier)
+- **Waveforms**: `SINE`, `TRIANGLE` (asymmetric ramp), `SQUARE` (pulse-width adjustable), and `RANDOM` (Sample & Hold).
+- **Clock Mode**:
+  - **`TIME`**: Measured in seconds (`Fast` / `Medium` / `Slow` sliders).
+  - **`BEAT`**: Synced to interpolated beat clock subdivisions (`1/8`, `1/4`, `1/2`, `1`, `2`, `4`, `8` beats).
+- **Waveshaping**:
+  - **Slope**: Adjusts asymmetry (`0.5` = symmetric triangle, `1.0` = slow rise/sharp drop).
+  - **Morph**: Log-cosh waveshaping (`0.0` = sharp triangle, `1.0` = smooth sine).
+  - **Hold**: Compresses transition region to create peak plateaus.
+
+### Secondary Modulator (LFO 2)
+LFO 2 is a second internal oscillator that modulates LFO 1:
+- **`AM`** (Amplitude Modulation): LFO 2 scales LFO 1's depth (`carrier * (1 + lfo2 * depth)`).
+- **`PM`** (Phase Modulation): LFO 2 dynamically shifts LFO 1's phase offset.
+- **`ADD`** (Additive): Combines LFO 2 directly with LFO 1.
 
 ---
 
-## Mouse Controls & Power Shortcuts
+## Modulator Attributes & Operator Math
 
-Liquid LSD includes power-user mouse shortcuts for fast live tweaking and parameter editing:
+Modulators dictate how CV signals modify parameter base values:
 
-### Parameter Sliders & Numeric Inputs
-- **Hover Scroll-Wheel Scrubbing**: Hover over any parameter slider track or numeric input box and scroll the mouse wheel to adjust values dynamically without clicking.
-  - **Unmodified**: `±0.001` fine adjustment step.
-  - **`Shift` + Scroll**: `±0.01` medium step.
-  - **`Ctrl` + `Shift` + Scroll**: `±0.1` coarse step.
-- **Middle-Click Reset**: Middle-click any slider track, numeric input box, or parameter value field to instantly reset it to its default value.
+$$\text{Evaluated Value} = \text{baseValue} + \text{Modulation Effect}$$
 
-### Patch Grid Matrix Shortcuts
-- **Middle-Click Cell Bypass**: Middle-clicking any **CV** or **MIDI** cell in the Patch Grid toggles the `bypassed` state on that modulation route instantly.
-- **Middle-Click Parameter Reset**: Middle-clicking the **`FINAL`** knob cell or parameter row label resets the target parameter to default.
+### Modulation Operators
+- **`ADD`**: CV signal is scaled to the parameter's range and added to `baseValue`.
+- **`MUL`**: Multiplicative ring-mod style ($result = baseValue \times (1.0 + \text{CV} \times \text{amplitude})$).
+- **`SCALE`**: Attenuates base value ($result = baseValue \times (1.0 - \text{amplitude} + \text{CV} \times \text{amplitude})$).
 
+All final evaluated values are automatically clamped to parameter hardware bounds (`minClamp` to `maxClamp`).
+
+---
+
+## Power-User Mouse & Keyboard Shortcuts
+
+Liquid LSD includes mouse and keyboard power shortcuts designed for live performance speed:
+
+### Parameter Slider Scrubbing
+- **Hover Scroll-Wheel**: Hover over any slider or numeric box and scroll mouse wheel to adjust values without clicking:
+  - *Unmodified*: `±0.001` fine step.
+  - *`Shift` + Scroll*: `±0.01` medium step.
+  - *`Ctrl` + `Shift` + Scroll*: `±0.1` coarse step.
+- **Middle-Click Reset**: Middle-click any slider track or `FINAL` knob cell to instantly reset parameter to factory default.
+
+### Patch Grid Shortcuts
+- **Middle-Click Cell Bypass**: Middle-click any grid cell to toggle its `bypassed` state on/off immediately.
+- **Right-Click Row Context Menu**:
+  - Copy / Paste parameter settings.
+  - Reset parameter to default.
+  - **📝 Add/Edit Parameter Note…**: Opens `NoteEditorModal` to attach a custom user note to this parameter.
+- **`Ctrl+Z` / `Ctrl+Y`**: Global Undo / Redo across all modulation edits (up to 30 steps).

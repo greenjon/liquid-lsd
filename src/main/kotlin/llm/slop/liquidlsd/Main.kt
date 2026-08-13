@@ -13,6 +13,7 @@ import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.cv.CVRegistry
+import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.patches.PatchManager
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW.*
@@ -132,6 +133,7 @@ fun main() {
     } else {
         PatchManager.loadSession(mixer)
     }
+    NotesManager.loadSourceNotes()
     GLDebug.checkErrors("Mixer and Decks initialization")
 
     logger.info { "Rendering components initialized" }

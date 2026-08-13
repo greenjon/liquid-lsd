@@ -1,59 +1,80 @@
 # Architecture Overview
 
-This section covers the high-level system design, threading boundaries, and safety models of Liquid LSD.
+This section covers high-level system design, threading boundaries, concurrency models, and notes persistence in **Liquid LSD**.
 
-## High-Level Video Pipeline
+---
 
-Liquid LSD processes real-time audio and generates framebuffers through sequential stages:
+## High-Level Video & Data Pipeline
 
-```
-JACK / Java Sound ──► AudioEngine ──► CVRegistry
-                                    │  (every frame: updateAll)
-                          ┌─────────┴──────────────┐
-                       Deck A                   Deck B
-                    (VisualSource)           (VisualSource)
-                          │                       │
-               ModulatableParams         ModulatableParams
-               evaluated via CV          evaluated via CV
-                          │                       │
-                     cleanFBO                cleanFBO
-                          │                       │
-                    feedback.frag           feedback.frag
-                    (ping-pong FBOs)        (ping-pong FBOs)
-                          └─────────┬──────────────┘
-                                Mixer.kt
-                              mixer.frag
-                                  │
-                             masterFBO ──► Deck C (compositing) ──► screen
+```mermaid
+graph TD
+    subgraph Audio_Thread [Audio Processing Thread: JACK / Java Sound]
+        AudioIn[Audio Capture Buffer] --> Biquad[Biquad IIR Filter Bank]
+        Biquad --> RMS[RMS & Onset Detection]
+        RMS --> Flywheel[Beat Clock Flywheel]
+        Flywheel --> Anchor[AtomicReference<BeatAnchor>]
+    end
+
+    subgraph Thread_0 [Thread 0: OS Main / Render Loop]
+        Anchor --> CVReg[CVRegistry.updateAll]
+        CVReg --> ModEval[ModulatableParameter Evaluation]
+        
+        subgraph Deck_Generators [Visual Source Generators & Ping-Pong FBOs]
+            DeckA[Deck A: VisualSource -> feedback.frag -> cleanFBO]
+            DeckB[Deck B: VisualSource -> feedback.frag -> cleanFBO]
+            DeckC[Deck C: Preview Deck - Audition Only]
+        end
+        
+        ModEval --> DeckA
+        ModEval --> DeckB
+        ModEval --> DeckC
+        
+        DeckA --> Mixer[Mixer.kt -> mixer.frag]
+        DeckB --> Mixer
+        Mixer --> Screen[Master Framebuffer -> GLFW Window Screen]
+    end
+    
+    style DeckC stroke:#f66,stroke-dasharray: 5 5
 ```
 
 ---
 
 ## Threading Boundaries
 
-Liquid LSD runs on two primary threads: the **OS Main Thread** and the **Audio Thread** (JACK callback thread or Java Sound capture thread). Maintaining strict separation between them is critical for real-time safety.
+Liquid LSD runs across two core thread contexts: **Thread 0 (OS Main / Render Thread)** and the **Audio Capture Thread**.
 
-### Thread 0 (OS Main / Rendering Thread)
-- **Duties**: GLFW event polling, OpenGL context creation, OpenGL draw calls (rendering to Decks, Mixer, and Screen), ImGui interface drawing.
-- **Rules**: All LWJGL 3 GLFW window and OpenGL context manipulations must run on Thread 0.
+### 1. Thread 0 (OS Main & Rendering Thread)
+- **Responsibilities**: GLFW event polling, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/C, Mixer), and ImGui UI rendering.
+- **Strict Constraint**: All LWJGL 3 GLFW window and OpenGL context manipulations must execute strictly on Thread 0.
 
-### Audio Thread (JACK Callback or Java Sound Loop)
-- **Duties**: Periodically receives raw audio buffer chunks (via JACK callback or Java Sound capture thread), runs bandpass filtering, FFT calculations, RMS amplitude extraction, and onset detection.
-- **Rules**: Must be *completely non-blocking* and *zero-allocation*.
+### 2. Audio Thread (JACK Callback / Java Sound Daemon Loop)
+- **Responsibilities**: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state.
+- **Strict Real-Time Constraints**:
+  - **Zero-Allocation Rule**: No heap allocations (`new`, capturing closures, collection instantiations) inside the audio callback loop.
+  - **Non-Blocking Rule**: No mutex locks, file I/O, database access, logging, or thread sleeping.
 
 ---
 
 ## Concurrency Safety & Lock-Free Data Passing
 
-Since the audio thread operates under strict real-time constraints and the rendering thread runs at screen refresh rates (60Hz+), lock-based synchronization between them could lead to audio glitches (xruns) or frame stuttering.
+Because the audio processing loop runs at sub-millisecond hardware intervals (~50–200 Hz) while Thread 0 renders frames at screen refresh rates (60Hz–144Hz+), lock-free synchronization prevents audio dropouts (xruns) and frame stuttering.
 
-### Lock-Free Buffers
-- **`AtomicReference<BeatAnchor>`**: The primary mechanism for passing beat clock state (beats, BPM,
-  timestamp) from the audio thread to the render thread. The audio thread/loop writes a new `BeatAnchor`
-  value object atomically; the render thread reads it without any lock.
-- **`CvHistoryBuffer`**: A pre-allocated ring buffer used to pass historical CV values from the audio
-  engine to the main thread for drawing oscilloscopes and UI monitoring.
-- **`@Volatile` scalars**: Used for simple single-value flags like `isBpmLocked`, `inputGain`, and
-  `currentState` where atomic read/write is sufficient.
-- **Concurrent Collections**: Thread-safe structures like `ConcurrentLinkedQueue` are used to queue
-  incoming MIDI CC events from device listeners before they are polled on the render loop.
+### Concurrency Primitives
+- **`AtomicReference<BeatAnchor>`**: Lock-free swap mechanism passing `totalBeats`, estimated `bpm`, and `nanoTime` from the audio thread to `CVRegistry`. Thread 0 reads this reference without locks and interpolates sub-millisecond phase accuracy.
+- **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in `CellConfigPanel`.
+- **`@Volatile` Flags**: Thread-safe single-scalar flags (`isBpmLocked`, `manualBpm`, `inputGain`) accessed across threads without lock overhead.
+- **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending patch loading DTOs (`PatchManager`) and incoming MIDI CC events (`MidiEngine`).
+
+---
+
+## Notes System Persistence Architecture
+
+Liquid LSD integrates a three-tier notes persistence model managed by `NotesManager.kt`:
+
+| Note Scope | Storage Target | Lifetime | API Method |
+|------------|----------------|----------|------------|
+| **Global Source Notes** | `~/.liquid-lsd/source-notes.json` | App-global; survives patch changes | `NotesManager.getSourceNote / setSourceNote` |
+| **Patch Notes** | `.lsdpatch` JSON (`patchNotes`) | Saved/loaded per patch file | `NotesManager.getPatchNote / setPatchNote` |
+| **Parameter Notes** | `.lsdpatch` JSON (`paramNotes`) | Saved/loaded per patch file | `NotesManager.getParamNote / setParamNote` |
+
+`PatchManager` automatically syncs in-memory notes with `.lsdpatch` DTOs during async load (`syncFromDto`) and save (`syncToDto`) operations.

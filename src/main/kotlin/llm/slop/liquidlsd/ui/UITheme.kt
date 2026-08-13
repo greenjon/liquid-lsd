@@ -147,6 +147,11 @@ object UITheme {
         loadSettings()
     }
 
+    private fun Properties.getBoolean(key: String): Boolean? {
+        val raw = getProperty(key)?.trim() ?: return null
+        return raw.toBooleanStrictOrNull() ?: raw.toBoolean()
+    }
+
     private fun loadSettings() {
         try {
             // One-time migration: carry over settings from the old filename
@@ -159,10 +164,10 @@ object UITheme {
                 settingsFile.inputStream().use { props.load(it) }
                 val savedSize = props.getProperty("baseSize")?.toFloatOrNull()
                 if (savedSize != null) {
-                    baseSize = savedSize
+                    baseSize = savedSize.coerceIn(10f, 28f)
                     logger.info { "Loaded baseSize from settings file: $baseSize" }
                 }
-                val savedAudio = props.getProperty("audioEngineEnabled")?.toBooleanStrictOrNull()
+                val savedAudio = props.getBoolean("audioEngineEnabled")
                 if (savedAudio != null) {
                     audioEngineEnabled = savedAudio
                     logger.info { "Loaded audioEngineEnabled from settings file: $audioEngineEnabled" }
@@ -172,7 +177,7 @@ object UITheme {
                     AudioEngine.inputGain = savedGain
                     logger.info { "Loaded audioInputGain from settings file: $savedGain" }
                 }
-                props.getProperty("audioBpmLocked")?.toBooleanStrictOrNull()?.let { savedBpmLocked ->
+                props.getBoolean("audioBpmLocked")?.let { savedBpmLocked ->
                     AudioEngine.isBpmLocked = savedBpmLocked
                 }
                 props.getProperty("audioManualBpm")?.toFloatOrNull()?.let { savedManualBpm ->
@@ -181,23 +186,29 @@ object UITheme {
                 }
 
 
-                val savedBgVideo = props.getProperty("backgroundVideoEnabled")?.toBooleanStrictOrNull()
+                val savedBgVideo = props.getBoolean("backgroundVideoEnabled")
                 if (savedBgVideo != null) {
                     backgroundVideoEnabled = savedBgVideo
                     logger.info { "Loaded backgroundVideoEnabled from settings file: $backgroundVideoEnabled" }
                 }
 
-                val savedRandomization = props.getProperty("randomizationEnabled")?.toBooleanStrictOrNull()
+                val savedCleanMode = props.getBoolean("cleanModeEnabled")
+                if (savedCleanMode != null) {
+                    cleanModeEnabled = savedCleanMode
+                    logger.info { "Loaded cleanModeEnabled from settings file: $cleanModeEnabled" }
+                }
+
+                val savedRandomization = props.getBoolean("randomizationEnabled")
                 if (savedRandomization != null) {
                     randomizationEnabled = savedRandomization
                     logger.info { "Loaded randomizationEnabled from settings file: $randomizationEnabled" }
                 }
 
 
-                val savedTooltips = props.getProperty("tooltipsEnabled")?.toBooleanStrictOrNull()
+                val savedTooltips = props.getBoolean("tooltipsEnabled")
                 if (savedTooltips != null) {
                     tooltipsEnabled = savedTooltips
-                    logger.info { "Loaded tooltipsEnabled from settings file: $tooltipsEnabled" }
+                    logger.info { "Loaded tooltipsEnabled from settings file: $savedTooltips" }
                 }
                 val savedMaxFps = props.getProperty("maxFps")?.toIntOrNull()
                 if (savedMaxFps != null) {
@@ -209,7 +220,7 @@ object UITheme {
                     assetBrowserMode = try { AssetBrowserMode.valueOf(savedMode) } catch (e: Exception) { AssetBrowserMode.HALF }
                     logger.info { "Loaded assetBrowserMode from settings file: $assetBrowserMode" }
                 } else {
-                    val savedHalfHeight = props.getProperty("assetManagerHalfHeight")?.toBooleanStrictOrNull()
+                    val savedHalfHeight = props.getBoolean("assetManagerHalfHeight")
                     if (savedHalfHeight != null) {
                         assetBrowserMode = if (savedHalfHeight) AssetBrowserMode.HALF else AssetBrowserMode.FULL
                         logger.info { "Migrated assetManagerHalfHeight to assetBrowserMode: $assetBrowserMode" }
@@ -238,10 +249,10 @@ object UITheme {
                     theme = try { Theme.valueOf(savedTheme) } catch (e: Exception) { Theme.BORING }
                     logger.info { "Loaded theme from settings file: $theme" }
                 }
-                props.getProperty("showMidiCol")?.toBooleanStrictOrNull()?.let { showMidiCol = it }
-                props.getProperty("showLfoCol")?.toBooleanStrictOrNull()?.let { showLfoCol = it }
-                props.getProperty("showAudioCol")?.toBooleanStrictOrNull()?.let { showAudioCol = it }
-                props.getProperty("showTriggerCol")?.toBooleanStrictOrNull()?.let { showTriggerCol = it }
+                props.getBoolean("showMidiCol")?.let { showMidiCol = it }
+                props.getBoolean("showLfoCol")?.let { showLfoCol = it }
+                props.getBoolean("showAudioCol")?.let { showAudioCol = it }
+                props.getBoolean("showTriggerCol")?.let { showTriggerCol = it }
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { col1Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { col2Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("assetBrowserRatio")?.toFloatOrNull()?.let { assetBrowserRatio = it.coerceIn(0.10f, 0.90f) }
@@ -262,11 +273,9 @@ object UITheme {
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
-
-
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
+            props.setProperty("cleanModeEnabled", cleanModeEnabled.toString())
             props.setProperty("randomizationEnabled", randomizationEnabled.toString())
-
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
             props.setProperty("maxFps", maxFps.toString())
             props.setProperty("assetBrowserMode", assetBrowserMode.name)
@@ -364,11 +373,19 @@ object UITheme {
         logger.info { "Font bytes loaded: Inter=${regularBytes!!.size}, Lucide=${lucideBytes!!.size}" }
 
         // Range for standard Lucide (E000 - F8FF range)
-        // Range format is [start, end, 0]
+        // Range format is [start, end, ..., 0]
         iconRange = shortArrayOf(0xe000.toShort(), 0xf8ff.toShort(), 0)
 
+        // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, Punctuation, Arrows, Math, Geometric Shapes
+        val mainRanges = shortArrayOf(
+            0x0020.toShort(), 0x00FF.toShort(), // Basic Latin + Latin-1 Supplement
+            0x0100.toShort(), 0x017F.toShort(), // Latin Extended-A
+            0x2000.toShort(), 0x2BFF.toShort(), // Punctuation, Arrows, Math Operators, Geometric Shapes
+            0
+        )
+
         fun addWithIcons(bytes: ByteArray, size: Float, config: ImFontConfig): ImFont {
-            val f = atlas.addFontFromMemoryTTF(bytes, size, config)
+            val f = atlas.addFontFromMemoryTTF(bytes, size, config, mainRanges)
             if (f.ptr == 0L) logger.error { "Failed to load main font at size $size" }
             config.destroy()
 

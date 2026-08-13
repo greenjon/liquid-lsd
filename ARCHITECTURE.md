@@ -53,35 +53,37 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MidiEngine.kt           — MIDI connection and event polling
 │   └── MidiMappingManager.kt   — Maps MIDI CC to UI/parameters
 ├── models/
-│   └── PatchModels.kt          — Data models + DTOs for patch serialization
+│   └── PatchModels.kt          — Data models + DTOs for patch serialization (includes patchNotes & paramNotes)
+├── notes/
+│   └── NotesManager.kt         — 3-tier notes persistence manager (global source notes, patch notes, param notes)
 ├── parameters/
-│   └── Parameter.kt            — ModulatableParameter, CvModulator,
-│                                  ModulationOperator, Waveform, LfoSpeedMode
+│   └── Parameter.kt            — ModulatableParameter, CvModulator, ModulationOperator, Waveform, LfoSpeedMode
 ├── patches/
-│   ├── PatchManager.kt         — Save/load patches, state management
-│   ├── PlayQueueManager.kt     — Manages deck playback queues
+│   ├── PatchManager.kt         — Save/load patches, state management, file modification timestamps (mtime)
+│   ├── PlayQueueManager.kt     — Manages deck playback queues & AutoVJ dirty deck behaviors
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   └── ClipboardManager.kt     — Copy/paste for patch elements
 ├── rendering/
-│   ├── Mandala.kt              — Mandala4Arm (recipe + full field docs),
-│   │                             Mandala (VisualSource with all params)
+│   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource)
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
-│   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params
-│   │                             (Deck A & B → live output; Deck C → preview only)
-│   ├── Mixer.kt                — Blends Deck A+B → masterFBO (Deck C excluded)
-│   ├── Renderer.kt             — Per-frame: source → feedback → mix → blit
-│   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
+│   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params (Deck A & B -> live; Deck C -> preview)
+│   ├── Mixer.kt                — Blends Deck A+B -> masterFBO (Deck C excluded)
+│   ├── Renderer.kt             — Per-frame: source -> feedback -> mix -> blit
+│   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, Kifs)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders
-│   ├── Kifs.kt                 — Kaleidoscopic IFS visual source
+│   ├── Kifs.kt                 — Polyhedral symmetry morphing fractal source
+│   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
 │   ├── Shader.kt               — GLSL shader compilation/management
 │   ├── Geometry.kt             — Vertex buffers, basic shapes
 │   └── FBO.kt                  — OpenGL framebuffer wrapper
-├── ui/                         — 34 files; see docs/developer/ui.md
-│   ├── UIManager.kt            — Top-level layout orchestrator
+├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
+│   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
 │   ├── PatchGridPanel.kt       — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
-│   └── PatchGridState.kt       — Selection state (cell, param, modulator)
+│   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
+│   ├── browser/                — Asset Browser, Playlist Editor, Queue Actions, Sidebar panels
+│   └── PatchGridState.kt       — Selection state & 30-level Undo Stack
 └── utils/
     └── TimeUtils.kt            — Timing utilities
 ```

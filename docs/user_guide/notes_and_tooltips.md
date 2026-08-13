@@ -1,0 +1,83 @@
+# Documentation & Note System
+
+Liquid LSD features an integrated engine documentation registry, multi-tier user note system, and rich interactive tooltips. Performers and sound designers can reference visual parameters in real time and attach custom notes to engines, patches, and individual modulation parameters.
+
+---
+
+## Engine Documentation & Rich Tooltips
+
+Every visual generator, feedback chain control, and mixer parameter in Liquid LSD includes built-in engine documentation supplied by `SourceDocRegistry`.
+
+### Interactive Parameter Tooltips
+Hovering over any parameter row in the Patch Grid or any slider control across the interface (when tooltips are enabled) displays a multi-section tooltip:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Lobes                                                       │
+│ Range: 1.0 to 16.0  (Default: 4.0)                          │
+│ Live: 8.3  (base 4.0  +4.3)                                 │
+├─────────────────────────────────────────────────────────────┤
+│ Dictates rotational symmetry and repeating petal count      │
+│ for the mandala geometry.                                   │
+├─────────────────────────────────────────────────────────────┤
+│ 📝 Great for high-energy drop transitions when mapped to Bass│
+└─────────────────────────────────────────────────────────────┘
+```
+
+1. **Parameter Title & Range**: Displays the human-readable name, valid numeric bounds, and factory default value.
+2. **Live Value Breakdown**: Shows the evaluated current value alongside a real-time breakdown of base value and net CV modulation delta (`Live: X (base Y + mod Z)`).
+3. **Engine Description**: Built-in description explaining what the parameter mathematically or visually controls.
+4. **User Parameter Note**: Displays your custom user note (in amber text) if a note has been attached to this parameter.
+
+---
+
+## The Three-Tier Note System
+
+Liquid LSD provides three distinct scopes for notes:
+
+| Note Tier | Scope | Storage Location | Lifetime |
+|-----------|-------|------------------|----------|
+| **Global Source Notes** | Visual Engine / Source (e.g. Mandala, KIFS) | `~/.liquid-lsd/source-notes.json` | App-global; persists across patch changes and app restarts |
+| **Patch Notes** | Loaded Visual Patch (.lsdpatch) | Inside `.lsdpatch` preset file (`patchNotes`) | Saved/loaded per patch file |
+| **Parameter Notes** | Specific parameter within a patch | Inside `.lsdpatch` preset file (`paramNotes`) | Saved/loaded per patch file |
+
+---
+
+## Creating & Editing Notes
+
+### 1. Parameter Notes
+- **How to edit**: Right-click any parameter row in the Patch Grid to open the row context menu, then select **📝 Add/Edit Parameter Note…**.
+- **Display**: Appears inside the hover tooltip for that parameter whenever the patch is loaded.
+- **Persistence**: Saved directly inside the `.lsdpatch` file.
+
+### 2. Global Source Notes
+- **How to edit**: In Deck Control, open the **Deck Menu** popup and select **📝 Add/Edit Source Note…**.
+- **Display**: Appears inside the hover tooltip when hovering over the source selection button in Deck Control.
+- **Persistence**: Stored globally in `~/.liquid-lsd/source-notes.json`. Perfect for keeping personal cheat-sheets or performance tips for specific shader engines (e.g. "KIFS folds best with low gain feedback").
+
+### 3. Patch Notes & Deck Monitor Labels
+Each active Deck Monitor panel (Deck A and Deck B) features a soft blue-white **Patch Name Label** below the preview screen:
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                    [ Video Preview ]                      │
+└───────────────────────────────────────────────────────────┘
+ 🎨 Sunset_Mandala.lsdpatch *
+```
+
+- **Hovering**: Displays a detailed tooltip containing:
+  - Full patch file path and name
+  - Last saved timestamp and patch DTO schema version (`Last saved: 2026-08-13 04:30  v1`)
+  - The patch note body (or a hint to right-click if empty)
+- **Editing**: Right-click the patch name label and select **📝 Add/Edit Patch Note…** to open the note modal.
+- **Untitled Patches**: If a deck has no saved patch loaded, the label displays `Untitled` in dim grey. Notes cannot be attached to unsaved untitled decks until saved to disk.
+
+---
+
+## Note Editor Modal
+
+Selecting any edit note command opens the `NoteEditorModal` dialog:
+
+- **Multi-line Editing**: Supports multi-line text input up to 2048 characters.
+- **Keyboard Shortcuts**: Press `Ctrl+Enter` to quickly save and close, or `Escape` to cancel without saving changes.
+- **Clean Memory**: Runs with a pre-allocated text buffer to ensure native JVM memory safety during live performance.

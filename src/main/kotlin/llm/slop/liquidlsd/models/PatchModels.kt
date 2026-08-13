@@ -194,7 +194,9 @@ data class DeckPatchDto(
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val globalAlpha: ParameterDto,
     val globalScale: ParameterDto? = null,
-    val isEmpty: Boolean = false
+    val isEmpty: Boolean = false,
+    val patchNotes: String = "",             // User notes for this patch
+    val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
 )
 
 @Serializable

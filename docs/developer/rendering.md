@@ -1,69 +1,67 @@
-# OpenGL Rendering Pipeline
+# OpenGL Rendering Pipeline & Visual Sources
 
-This section details the OpenGL graphics rendering pipeline, framebuffer architecture, shader systems, and mandala generation math.
-
-## Framebuffer Object (FBO) Ping-Pong Architecture
-
-To perform feedback effects (decay, zoom, rotation, blur), the system uses ping-pong framebuffers:
-
-- **FBO Class**: `FBO.kt` wraps OpenGL Framebuffer creation, texture attachments, and viewport setup.
-- **Ping-Pong Loop**:
-  1. Render the current visual source (the clean mandala geometry) to `cleanFBO`.
-  2. Bind the target `feedbackFBO`.
-  3. Draw a fullscreen quad rendering `feedback.frag`. Pass the previous frame's feedback texture, the `cleanFBO` texture, and modulation parameters (Zoom, Rotate, Decay) as uniforms.
-  4. Swap/ping-pong the read and write feedback textures.
-  5. The output is blended and composited in `Mixer.kt` via `mixer.frag` to `masterFBO`.
+This document details the OpenGL graphics rendering pipeline, Framebuffer Object (FBO) ping-pong architecture, shader management, `SourceDocRegistry`, and visual source math in Liquid LSD.
 
 ---
 
-## Shader compilation & uniform binding
+## Framebuffer Object (FBO) Ping-Pong Loop
 
-Shaders are compiled dynamically from files located in `src/main/resources/shaders/`.
+To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic aberration), each Deck maintains a dual FBO ping-pong loop:
 
-- **Shader Class**: `Shader.kt` compiles vertex and fragment GLSL shaders, links them into a program, and validates for linking errors.
-- **OpenGL Debug Context**: The development configuration maintains `GLFW_OPENGL_DEBUG_CONTEXT` active, printing warnings and errors via the `GLDebug` callback immediately.
-- **Uniform Mapping**: Uniforms (floats, vectors) are bound by locating uniform locations with `glGetUniformLocation` and uploading evaluated parameters once per frame.
+```
+[VisualSource (Mandala / GLSL Shader)]
+                 │
+                 ▼
+            [cleanFBO]  (Renders raw source geometry/pixels)
+                 │
+                 ▼
+        [feedback.frag] ◄── [Previous Frame Feedback Texture]
+                 │
+                 ▼
+       [Write feedbackFBO]  (Applies decay, zoom, rotate, blur, chroma)
+                 │
+                 ▼
+        (Swap Read/Write FBOs)
+                 │
+                 ▼
+    [Mixer.kt / mixer.frag] ──► [masterFBO] ──► Screen
+```
+
+### Execution Steps
+1. **Source Render**: The active `VisualSource` renders clean geometry or raymarched shader pixels to `cleanFBO`.
+2. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, `cleanFBO` texture, and evaluated feedback parameters (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
+3. **Buffer Swap**: Swaps the read and write feedback FBO references.
+4. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.
 
 ---
 
-## Mandala Geometry Math
+## Source Documentation Registry (`SourceDocRegistry.kt`)
 
-The mandala's vertex rendering uses polar equations mapped to Cartesian coordinates:
+[`SourceDocRegistry.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:
 
-- Polar equations define the radius $r(\theta)$ based on coefficients from the selected `MandalaRatio`:
-  $$r(\theta) = f(\theta, a, b, c, d)$$
-- Convert polar points to Cartesian coordinates for the shader pipeline:
-  $$x = r(\theta) \cos(\theta)$$
-  $$y = r(\theta) \sin(\theta)$$
-- These points form vertices of a **ribbon** — each vertex carries a `(phase, side)` attribute pair,
-  where `side` is `+1` or `-1`, expanding the curve into a band with finite width.
-  The ribbon is rendered as a `GL_TRIANGLE_STRIP`.
+- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers all 10 built-in engines (`mandala`, `kifs`, `dynamic_spiral`, `gyroid`, `mandelbulb`, `mandelbox`, `chladni`, `clifford_torus`, `pseudo_kleinian`, `attractor_feedback`).
+- **Parameter Descriptions**: `paramDescriptions: Map<String, String>` covering ~120 parameters, keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
+- **UI Lookup API**: Surfaced by `PatchGridRenderer` and `DeckControlPanel` to draw rich tooltips.
 
 ---
 
-## Dynamic Visual Sources
+## Pluggable Dynamic Visual Sources (`VisualSourceRegistry.kt`)
 
-In addition to the built-in `Mandala` source, the rendering engine supports fully pluggable
-dynamic visual sources loaded at runtime from `presets/sources/`.
+Beyond hardcoded generators, the engine loads dynamic shaders from `presets/sources/`:
 
-- **`VisualSourceRegistry`**: Scans `presets/sources/` on startup and compiles each subfolder's
-  `shader.frag` against the shared vertex shader.
-- **`DynamicVisualSource`**: Wraps a compiled `Shader` and a `LinkedHashMap` of `ModulatableParameter`
-  objects. Parameters are injected as `uniform float u<Name>` each frame.
-- **Shader Ownership**: Master instances in the registry own their `Shader` object (`ownsShader = true`).
-  Clones assigned to Decks share the shader reference but do not dispose it.
-- **Error Fallback**: If a custom shader fails to compile, a red checkerboard fallback shader is used
-  so the rest of the application keeps running.
+- **`VisualSourceRegistry`**: Scans subfolders on startup, parses `meta.json`, compiles `[name].frag` against standard vertex shaders, and builds `DynamicVisualSource` templates.
+- **Shader Ownership**: The master template in `VisualSourceRegistry` owns the OpenGL shader program (`ownsShader = true`). Deck clones share shader program handles safely (`ownsShader = false`) to eliminate duplicate compilation overhead.
+- **Error Fallbacks**: If custom GLSL fails compilation, a fallback checkerboard shader is bound so the application avoids crashing.
 
-### KIFS Visual Source (`Kifs.kt`)
+---
 
-The KIFS (Kaleidoscopic Iterated Function System) visual source is a specialized subclass of `DynamicVisualSource` that generates complex fractal geometry using CPU-side mathematical folding operations:
+## KIFS Fractal Folding Engine (`Kifs.kt`)
 
-- **Dynamic Fold Angles**: Instead of passing raw parameters directly to uniforms, `Kifs` intercept parameter binding inside `setupUniforms` to dynamically calculate combined 3D fold angles (`uFoldAngleX`, `uFoldAngleY`, `uFoldAngleZ`).
-- **Symmetry Interpolation**: It reads the `Shape Morph` parameter (clamped to `[0f, 1f]` and scaled to `[0f, 4f]`) to smoothly interpolate the base geometry between classic polyhedral symmetries:
-  - **Cube Symmetry** (morph < 1.0): Interpolates between Cube angles `(0, 0.7854, 0)` and Sphere transition angles `(0, 1.0082, 1.0472)`.
-  - **Tetrahedron Symmetry** (morph < 2.0): Interpolates between Sphere transition angles and Tetrahedron angles `(0, 1.231, 2.0944)`.
-  - **Dodecahedron Symmetry** (morph < 3.0): Interpolates between Tetrahedron angles and Dodecahedron (Icosahedral) angles `(2.0344, 0, 2.4119)`.
-  - **Soccer Ball Symmetry** (morph >= 3.0): Uses the exact same Icosahedral symmetry angles as the Dodecahedron.
-- **User Offset**: The user's manual settings for `Fold Angle X`, `Y`, and `Z` are added as offsets directly to the calculated base symmetry angles before binding.
-- **Cloning**: Implements a custom deep-copy `clone()` method for parameter maps while ensuring that the cloned source safely references the master compiled shader without taking ownership of it.
+[`Kifs.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/Kifs.kt) extends `DynamicVisualSource` to calculate 3D polyhedral fold angles on the CPU before uniform binding:
+
+- **Shape Morphing Interpolation**: The `Shape Morph` parameter (`0.0` to `4.0`) interpolates 3D fold angles across 4 polyhedral symmetry modes:
+  1. *Cube Symmetry* ($morph < 1.0$): Interpolates between Cube angles $(0, 0.7854, 0)$ and Sphere transition angles $(0, 1.0082, 1.0472)$.
+  2. *Tetrahedron Symmetry* ($morph < 2.0$): Interpolates between Sphere angles and Tetrahedron angles $(0, 1.231, 2.0944)$.
+  3. *Dodecahedron / Icosahedron Symmetry* ($morph < 3.0$): Interpolates between Tetrahedron angles and Icosahedron angles $(2.0344, 0, 2.4119)$.
+  4. *Soccer Ball Symmetry* ($morph \ge 3.0$): Uses Icosahedral symmetry angles with extended folding iterations.
+- **Uniform Binding**: Calculates `uFoldAngleX`, `uFoldAngleY`, `uFoldAngleZ` by adding manual user fold angle offsets to calculated polyhedral base angles.

@@ -1,95 +1,89 @@
-# Operations & Tuning
+# Operations & Performance Tuning
 
-This guide covers performance optimization, JVM tuning, diagnostic commands, and audio/graphics troubleshooting for different target operating systems.
+This guide covers JVM Garbage Collector tuning, real-time audio configuration across operating systems, CLI diagnostics, and troubleshooting procedures for Liquid LSD.
 
-## JVM Tuning for Low-Latency Performance
+---
 
-To ensure real-time rendering and low-latency audio processing without drops or frame stutters, the Java Virtual Machine must be tuned carefully.
+## Low-Latency JVM Tuning (ZGC)
 
-> [!NOTE]
-> **JACK-Only Caveat**: Low-latency JVM/GC tuning (ZGC) and real-time priorities are strictly critical on Linux when using the active JACK/PipeWire audio engine to prevent xruns (audio dropouts). On macOS and Windows, where the audio engine is disabled (dummy mode) and audio CVs stay at 0, these low-latency tuning flags are optional, though ZGC is still recommended to maintain smooth, stutter-free visual rendering.
+To maintain 60+ FPS visual rendering and sub-millisecond audio analysis without frame stuttering or audio dropouts (xruns), Liquid LSD should be launched with the Z Garbage Collector (ZGC):
 
-### Z Garbage Collector (ZGC)
-Use the Z Garbage Collector, which is designed for low-latency workloads with pause times under a millisecond.
-Enable it using the following JVM flags:
 ```bash
--XX:+UseZGC -XX:MaxGCPauseMillis=2
+java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 ```
 
-### Platform-Specific Optimization Flags
+### Key Flags Explained
+- `-XX:+UseZGC`: Enables the Z Garbage Collector, designed for concurrent execution with pause times typically below $1\text{ ms}$.
+- `-XX:MaxGCPauseMillis=2`: Advises the JVM GC scheduler to keep pause times under 2 milliseconds, well within 60 FPS frame boundaries ($16.6\text{ ms}$).
 
-#### Linux (x86_64 & arm64)
-If you are running with the active JACK audio engine, ensure your user has real-time priority access configured in `/etc/security/limits.d/audio.conf` to prevent thread preemption:
-```text
-@audio   -   rtprio   95
-@audio   -   memlock  unlimited
-```
-Run with memory locking to prevent JVM heap swapping:
-```bash
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar lsd-all.jar
-```
+---
 
-#### macOS (Intel & Apple Silicon)
-Ensure you use native libraries compiled for the specific architecture (e.g. native Apple Silicon libs vs. Intel x86_64 libs) to avoid Rosetta 2 translation overhead. ZGC can be used to ensure smooth UI/graphics rendering.
+## Operating System Setup & Audio Drivers
 
-#### Windows
-Ensure the GPU is set to "High Performance" mode in the Windows Graphics Settings for `java.exe` to ensure smooth visual rendering. (Note: Since real-time audio is disabled on Windows, Windows audio latency and driver mapping settings are not applicable.)
+### Linux (x86_64 & ARM64)
+- **Audio Engines**: Supports native PipeWire-JACK and JACK2 servers via `JackClient.kt`, or Java Sound system capture (`JavaSoundClient.kt`).
+- **Real-Time Permissions**: Configure `/etc/security/limits.d/audio.conf` to grant real-time priority:
+  ```text
+  @audio   -   rtprio   95
+  @audio   -   memlock  unlimited
+  ```
+
+### macOS (Intel & Apple Silicon)
+- **Audio Engine**: Runs out-of-the-box using `JavaSoundClient.kt` capturing from standard input devices (microphone, line-in, or virtual audio cables like BlackHole/Loopback). Also supports optional JACK2 for macOS.
+- **Apple Silicon Native**: Always run native ARM64 JVM builds (`zulu17-ca-jdk17.x`) to prevent Rosetta 2 translation overhead.
+
+### Windows (x64)
+- **Audio Engine**: Runs out-of-the-box via `JavaSoundClient.kt` system audio capture. Supports optional JACK2 for Windows with ASIO drivers.
+- **GPU Performance**: Ensure `java.exe` is assigned to "High Performance GPU" in Windows Graphics Settings.
 
 ---
 
 ## Audio Connectivity Diagnostics (Linux CLI)
 
-> [!WARNING]
-> **JACK-Only / Linux-Only**: These diagnostic commands and tools are only applicable to Linux environments running JACK or PipeWire. On other platforms, the audio engine is deactivated and runs in a dummy mode, so no audio ports are created.
-
-When debugging input ports and routing on Linux, use the following tools:
+When diagnosing input port connections under PipeWire/JACK on Linux:
 
 ### `jack_lsp`
-Lists all active JACK/PipeWire ports:
+Lists active JACK ports and connections:
 ```bash
 jack_lsp
+jack_lsp -c    # Display active link routing
 ```
-Use `jack_lsp -c` to see active connection links between ports.
 
 ### `jack_connect`
-Manually wire ports together (e.g., routing system capture to lsd):
+Manually routes audio from system capture to Liquid LSD:
 ```bash
 jack_connect system:capture_1 lsd:input_1
 jack_connect system:capture_2 lsd:input_2
 ```
 
-### `pw-link`
-Use `pw-link` in PipeWire environments to inspect and establish links:
+### `pw-link` (PipeWire Native)
 ```bash
-pw-link -l                       # List links
-pw-link system:capture_1 lsd:input_1   # Establish connection
+pw-link -l                          # List active PipeWire links
+pw-link system:capture_1 lsd:input_1 # Establish link
 ```
 
 ---
 
 ## Troubleshooting Guide
 
-### 1. JVM Crash on Startup (LWJGL/OpenGL)
-- **Symptoms**: The application crashes immediately upon start with a native log file (`hs_err_pid.log`).
+### 1. Startup Graphics Crash (LWJGL / OpenGL)
+- **Symptoms**: Immediate crash with `hs_err_pid.log`.
 - **Causes**:
-  - OpenGL 3.3 context could not be created (unsupported driver/integrated GPU).
-  - Calling OpenGL functions or polling GLFW windows off Thread 0 (violating LWJGL single-thread safety).
-- **Solutions**:
-  - Verify your graphics drivers are up to date.
-  - Review the OpenGL logs. In development, check the stdout for lines starting with `GLDebug`.
+  - System GPU does not support OpenGL 3.3+.
+  - GLFW/OpenGL calls executed off Thread 0.
+- **Resolution**:
+  - Update graphics card drivers.
+  - Launch with standard sandbox rules and inspect stdout for `GLDebug` driver error logs.
 
 ### 2. Audio Dropouts (xruns)
-> [!NOTE]
-> **JACK-Only / Linux-Only**: Audio dropouts/xruns troubleshooting only applies to Linux environments.
+- **Symptoms**: Audio stuttering or console logs displaying `xrun`.
+- **Resolution**:
+  - Increase JACK buffer size (from 128 to 256 or 512 frames).
+  - Verify ZGC is active (`-XX:+UseZGC -XX:MaxGCPauseMillis=2`).
 
-- **Symptoms**: Stuttering audio, click sounds, or error logs showing `xrun` in the terminal.
-- **Solutions**:
-  - Increase your JACK/PipeWire buffer size (e.g. from 128 to 256 or 512 frames) or lower the sample rate (from 96kHz to 48kHz).
-  - Ensure ZGC is active and check the GC logs to confirm pause times are not exceeding the audio buffer period.
-
-### 3. MIDI CC Input Not Registering
-- **Symptoms**: Rotating knobs does not trigger MIDI Learn or update CV values.
-- **Solutions**:
-  - Confirm the MIDI device is plugged in and recognized by the OS (`lsusb` or MIDI Control Panel).
-  - Make sure another app does not have exclusive lock access to the MIDI device.
-  - Check the startup logs to ensure `MidiEngine` output lists the connected device.
+### 3. MIDI Controller Input Not Detected
+- **Symptoms**: Moving knobs does not register in MIDI Learn mode.
+- **Resolution**:
+  - Confirm device USB connection using `lsusb` (Linux) or Device Manager (Windows).
+  - Verify another DAW application does not have exclusive lock access to the MIDI device.
+  - Review startup console logs for `MidiEngine` device initialization messages.

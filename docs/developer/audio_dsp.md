@@ -1,98 +1,91 @@
-# Real-Time Audio & DSP
+# Real-Time Audio & DSP Engine
 
-This section describes the real-time audio thread constraints, DSP band-splitting, and the onset
-detection engine that feeds the CV registry.
-
-## Zero-Allocation & Real-Time Callback Safety
-
-Depending on the active backend, the audio analysis loop runs inside either a JACK host callback or a standard JVM daemon thread (for the Java Sound fallback).
-
-* **JACK Thread (Linux)**: This real-time thread has strict OS constraints. Any allocation or blocking will cause immediate buffer underruns (xruns) or server disconnects.
-* **Java Sound Thread (macOS, Windows, JACK-less Linux)**: This daemon thread captures system input audio. While not bound by the real-time constraints of JACK, maintaining zero allocations inside this loop prevents Garbage Collection (GC) pauses from causing visual micro-stuttering.
-
-Rules enforced across both backends:
-- **The Allocation Rule**: No objects may be allocated inside the callback or processing loop. This means no `new`, no Kotlin lambdas that capture state, and no standard library collection instantiation.
-- **Blocking Operations**: File I/O, database access, network requests, print statements, and mutex locks are strictly forbidden in the processing loop.
-- **Pre-Allocation**: All arrays, filters, buffers, and objects used in the callback (including the byte-to-float conversion buffers in [JavaSoundClient](file:///home/gj/projects/liquid-lsd-desktop/src/main/kotlin/llm/slop/liquidlsd/audio/JavaSoundClient.kt)) are allocated during initialization.
-
-As of the current build, the three filter output buffers (`lowBuffer`, `midBuffer`, `highBuffer`) are pre-allocated as `FloatArray(16384)` — the maximum hardware buffer size — so the callback never needs to resize them.
+This document details the real-time audio capture backends, zero-allocation constraints, DSP band-splitting filters, amplitude extraction, and onset detection engine in Liquid LSD.
 
 ---
 
-## DSP Pipeline & Band Splitting
+## Dual Audio Client Architecture
 
-The incoming mono audio stream is processed sequentially each callback to extract CV parameters.
+Liquid LSD supports two complementary audio client implementations managed by [`AudioEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt):
 
-### Biquad IIR Filter Bank
+```
+                       ┌───────────────────────────────┐
+                       │        AudioEngine.kt         │
+                       └───────────────┬───────────────┘
+                                       │
+                ┌──────────────────────┴──────────────────────┐
+                ▼                                             ▼
+     Linux JACK / PipeWire                        Cross-Platform Fallback
+       (JackClient.kt)                             (JavaSoundClient.kt)
+  - JNAJack native bindings                  - TargetDataLine input capture
+  - Sub-millisecond callback                 - Pre-allocated byte->float buffer
+  - Inter-app audio port graph               - macOS, Windows, JACK-less Linux
+```
 
-- Class: [`BiquadFilter.kt`](file:///home/gj/projects/liquid-lsd-desktop/src/main/kotlin/llm/slop/liquidlsd/audio/BiquadFilter.kt)
-- Three biquad IIR filters run in parallel: a **low-pass** (≤150 Hz), **band-pass** (≈1000 Hz),
-  and **high-pass** (≥5000 Hz), splitting the stream into bass, mid, and high frequency bands.
-- IIR filters are inherently zero-allocation: state is held in a fixed set of float coefficients
-  updated only on sample rate change.
+### 1. `JackClient.kt` (Linux JACK / PipeWire-JACK)
+- Uses JNAJack native C bindings to interface directly with the JACK or PipeWire-JACK server.
+- Registers client input ports (`lsd:input_1`, `lsd:input_2`).
+- Operates inside an OS real-time thread callback (`process(client, nframes)`). Strict OS priority rules apply: any heap allocation or blocking call triggers immediate xruns (audio dropouts) or server disconnection.
 
-### Amplitude Extractor (RMS)
-
-- Class: [`AmplitudeExtractor.kt`](file:///home/gj/projects/liquid-lsd-desktop/src/main/kotlin/llm/slop/liquidlsd/audio/AmplitudeExtractor.kt)
-- Computes Root Mean Square amplitude over each callback block for each band:
-
-$$RMS = \sqrt{\frac{1}{N} \sum_{i=1}^N x_i^2}$$
-
-- The overall amplitude is computed directly from the input `FloatBuffer` before filtering.
-  The per-band RMS values are computed from the filter output arrays.
-
-### Published CV Values
-
-After each callback, these values are pushed to `CVRegistry`:
-
-| CV ID | Source |
-|-------|--------|
-| `audio_amp` | Full-band RMS × normalisation factor |
-| `audio_bass` | Low-pass RMS |
-| `audio_mid` | Band-pass RMS |
-| `audio_high` | High-pass RMS |
-| `trigger_onset` | Half-wave rectified multi-band spectral flux |
-| `trigger_accent` | Peak-hold + decay envelope of onset strength |
+### 2. `JavaSoundClient.kt` (macOS, Windows, Standalone Linux)
+- Uses Java Sound `TargetDataLine` to capture system input audio (PCM 16-bit signed, mono/stereo 44.1kHz/48kHz).
+- Runs inside a dedicated daemon thread loop.
+- **Zero-Allocation Conversion**: Conversion from raw PCM byte arrays to normalized `FloatBuffer` arrays uses pre-allocated byte buffers (`byteBuffer`, `floatBuffer`), preventing JVM Garbage Collection (GC) pauses from causing visual micro-stuttering.
 
 ---
 
-## Onset Detection
+## Zero-Allocation Rules Enforced in Processing Loops
 
-Transient signals are extracted to drive trigger CV values and beat detection.
+Across both `JackClient` and `JavaSoundClient`, the inner DSP processing loop strictly enforces zero heap allocations:
 
-### Spectral Flux (Onset Strength)
+1. **No Instantiations**: No `new`, no Kotlin lambdas that capture outer scope, no collection instantiations inside the audio callback path.
+2. **No Blocking System Calls**: File I/O, database queries, string formatting, `println`, and mutex locking are forbidden.
+3. **Pre-Allocated Buffer Pools**: Filter output arrays (`lowBuffer`, `midBuffer`, `highBuffer`) are pre-allocated as `FloatArray(16384)` during initialization to handle maximum buffer sizes without resizing.
 
-On each callback, the engine computes the positive frame-to-frame change in RMS energy for each
-band (half-wave rectified):
+---
 
-$$Flux_{band} = \max(0,\ RMS_{band}(t) - RMS_{band}(t-1))$$
+## DSP Pipeline & Frequency Band Splitting
 
-Bands are weighted and summed into a single onset strength signal:
+Every audio block processes the incoming mono signal sequentially:
 
-$$\text{onsetStrength} = Flux_{bass} \times 2.0 + Flux_{mid} \times 0.8 + Flux_{high} \times 0.3$$
+```
+Input Audio ──► Biquad Filter Bank ──► Amplitude Extractor ──► CVRegistry
+                 ├── Low-Pass  (<= 150 Hz)    -> audio_bass
+                 ├── Band-Pass (~ 1000 Hz)   -> audio_mid
+                 └── High-Pass (>= 5000 Hz)   -> audio_high
+```
 
-This weighting favours bass/kick transients, which are the most musically relevant for beat sync.
+### Biquad IIR Filter Bank (`BiquadFilter.kt`)
+Three parallel second-order IIR (Infinite Impulse Response) biquad filters process the audio stream:
+- **Low-pass**: Cutoff $\le 150\text{ Hz}$ (bass/kick band).
+- **Band-pass**: Center frequency $\approx 1000\text{ Hz}$ (vocal/snare band).
+- **High-pass**: Cutoff $\ge 5000\text{ Hz}$ (hi-hat/cymbal band).
+
+The filter difference equation evaluates without allocations:
+$$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$
+
+### Amplitude Extractor (`AmplitudeExtractor.kt`)
+Calculates Root Mean Square (RMS) energy over each block:
+
+$$\text{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^N x_i^2}$$
+
+RMS values are normalized and published to `CVRegistry`:
+- `audio_amp`: Full-band input RMS.
+- `audio_bass`, `audio_mid`, `audio_high`: Per-band filter RMS values.
+
+---
+
+## Transient & Onset Detection
+
+Musical transients drive `trigger_onset` and `trigger_accent` CV signals.
+
+### Spectral Flux Calculation
+Spectral flux measures positive frame-to-frame energy growth across frequency bands (half-wave rectified):
+
+$$\text{Flux}_{band} = \max(0,\ \text{RMS}_{band}(t) - \text{RMS}_{band}(t-1))$$
+
+Weighted band sum favors low-frequency kick transients:
+$$\text{OnsetStrength} = \text{Flux}_{bass} \times 2.0 + \text{Flux}_{mid} \times 0.8 + \text{Flux}_{high} \times 0.3$$
 
 ### Silence Gate
-
-A silence gate (`silenceThresholdDb`, default −40 dBFS) suppresses the beat flywheel during quiet
-periods. When the overall RMS stays below this threshold for more than 500 ms, `SignalState`
-switches to `SILENT` and the beat counter stops incrementing.
-
----
-
-## Beat Flywheel
-
-Between audio callbacks, the master beat counter `totalBeats` is incremented sample-accurately:
-
-$$\text{beatDelta} = \frac{N_{frames}}{f_s} \times \frac{BPM_{estimated}}{60.0}$$
-
-$$\text{totalBeats} \leftarrow \text{totalBeats} + \text{beatDelta}$$
-
-This ensures the beat clock keeps ticking at a steady rate even during quiet sections. The BPM
-source is either `manualBpm` (when `isBpmLocked = true`) or the auto-detected value from
-`BeatDetector`.
-
-Once per callback, the new `BeatAnchor(totalBeats, estimatedBpm, currentTimeNs)` is published to
-`CVRegistry` via a single `AtomicReference` swap, giving the render thread a consistent snapshot
-without any lock.
+When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500 ms, `SignalState` switches to `SILENT`, suppressing accidental trigger firing during quiet sections.

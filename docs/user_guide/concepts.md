@@ -1,46 +1,102 @@
-# Core Concepts
+# Core Concepts & Visual Architecture
 
-Liquid LSD is structured around a few primary visual generation and mixing systems. Understanding these concepts will help you build complex, audio-reactive live performances.
-
-## Mandala Synthesis Engine
-
-The core generative visual source in Liquid LSD is the **Mandala**. It uses mathematical formulas to draw complex, symmetrical geometric shapes.
-
-### Lobes & Geometry
-- **Lobe Count (Petals)**: Dictates the rotational symmetry of the mandala (how many arms or repeating patterns are generated).
-- **Ratios & Libraries**: The system includes a curated library of about 300 classic mandala ratio presets that determine how overlapping lines intersect and form intricate patterns.
-
-### Color Cycles & Palettes
-- The mandala's colors dynamically cycle through color space based on parametric rates.
-- Color cycles can be modulated by external audio CVs to change palette characteristics on musical accents.
-
-### 3D Symmetrical Projections
-- **3D Modes**: Extrudes the 2D mandala into 3D space using one of three symmetrical methods (or disables it in 2D mode):
-  1. **Spherical Mapping**: Normalizes the 2D curve and projects it onto the surface of a 3D sphere using longitude ($\phi$) and latitude ($\theta$) angles. This creates intricate closed cages.
-  2. **Polyhedral Reflections**: Replicates the spherical-mapped 3D curve across polyhedral reflection groups (Cubic/Octahedral with 8 instances, or Tetrahedral with 4 instances) to produce highly symmetric crystal lattices.
-  3. **Coordinate Permutation**: Duplicates and renders the 2D loop onto the three primary coordinate planes simultaneously (XY, YZ, ZX planes) to create a mechanical, gyroscopic structure.
-- **3D Controls**: Exposes parameters like `Sphere Wrap X/Y` (controlling longitude/latitude wrapping range), `Mirror Group` (Cubic vs. Tetrahedral mirroring), and `Permute XY/YZ/ZX` (individual plane scales).
-- **Yaw, Pitch & Roll**: Supports 3D rotation of the mandala in space. Like all parameters, these can be modulated by CV sources (e.g. Bass CV modulating Yaw/Pitch).
-- **Perspective Projection**: Slide between a flat Orthographic view (`3D Persp` = 0) and an immersive, deep Perspective view (`3D Persp` = 1).
-
-### Feedback Loop (Ping-Pong FBOs)
-- Each deck uses a dual Framebuffer Object (FBO) feedback loop.
-- The output of the current frame is slightly scaled, rotated, blurred, or shifted in hue, and then blended back into the background of the next frame.
-- This creates long-exposure trails, fluid organic movement, and standard video-feedback zoom effects.
+Liquid LSD is structured around modular visual sources, a multi-deck rendering engine, ping-pong feedback loops, and a central visual mixer.
 
 ---
 
-## Dual-Deck Mixer
+## High-Level Rendering Architecture
 
-Liquid LSD follows a traditional DJ/VJ layout, featuring two independent decks that feed into a central mixer.
+```mermaid
+graph TD
+    Audio[Audio Input: JACK / Java Sound] --> DSP[DSP Engine & Band Split]
+    DSP --> CV[CV Registry & Beat Clock]
+    
+    subgraph Decks [Visual Generators]
+        DeckA[Deck A: Live Source + Ping-Pong FBO]
+        DeckB[Deck B: Live Source + Ping-Pong FBO]
+        DeckC[Deck C: Audition / Preview Deck]
+    end
+    
+    CV --> DeckA
+    CV --> DeckB
+    CV --> DeckC
+    
+    DeckA --> Mixer[Central Mixer & Blend Modes]
+    DeckB --> Mixer
+    Mixer --> Master[Master Output FBO -> Screen]
+    
+    style DeckC stroke:#f66,stroke-dasharray: 5 5
+```
 
-### Deck A & Deck B
-- Each deck acts as an independent generator running its own Visual Source (currently a Mandala).
-- Decks possess individual settings for feedback parameters (Decay, Gain, Zoom, Rotate, Hue Shift, Blur, Chroma Offset, and Feedback Mode).
+---
 
-### Blending Modes
-- The central Mixer blends the outputs of Deck A and Deck B using select blending equations: Additive blend (`ADD`), Screen blend (`SCREEN`), Multiply blend (`MULT`), Maximum/Lighten (`MAX`), or standard crossfade (`XFADE`).
+## Visual Generators (Visual Sources)
 
-### Crossfader Controls
-- The crossfader (`crossfade`) slider controls the interpolation weight between Deck A and Deck B.
-- Like all parameters, the crossfader can be modulated by a CV source (for example, audio-derived `bass` or an `LFO`) to alternate decks automatically in sync with the beat.
+Every deck runs a pluggable **Visual Source** that generates procedural geometry or raymarched shaders. Liquid LSD includes 10 built-in engines along with support for dynamic GLSL shaders.
+
+### 1. Mandala Synthesis Engine (`Mandala.kt`)
+The core procedural geometry generator:
+- **Lobe Count (Petals)**: Controls rotational symmetry (how many repeating arms are generated).
+- **Mandala Ratios**: Accesses a curated library of ~300 ratio presets determining mathematical harmonic intersections.
+- **3D Projections**:
+  - *Spherical Mapping*: Extrudes 2D curves onto a 3D sphere via longitude/latitude angles.
+  - *Polyhedral Reflections*: Replicates curves across Cubic/Octahedral (8 instances) or Tetrahedral (4 instances) reflection groups.
+  - *Coordinate Permutation*: Projects curves onto XY, YZ, and ZX planes simultaneously.
+  - *Perspective View*: Seamlessly transition from orthographic (`3D Persp` = 0) to immersive perspective projection (`3D Persp` = 1).
+
+### 2. KIFS Fractal Engine (`Kifs.kt`)
+Kaleidoscopic Iterated Function System generating complex fractal geometry using CPU-side mathematical folding:
+- **Shape Morph**: Smoothly interpolates geometry across 4 polyhedral symmetry modes:
+  1. *Cube Symmetry* (0.0 – 1.0)
+  2. *Tetrahedron Symmetry* (1.0 – 2.0)
+  3. *Dodecahedron / Icosahedron Symmetry* (2.0 – 3.0)
+  4. *Soccer Ball Symmetry* (3.0 – 4.0)
+- **Fold Angle Offsets**: Real-time X/Y/Z fold angle offsets that can be driven by LFOs or audio CVs.
+
+### 3. Procedural Shader Sources
+Built-in raymarched and procedural shaders:
+- **Gyroid**: Dynamic 3D triply periodic minimal surface.
+- **Mandelbulb & Mandelbox**: 3D hyper-complex fractal raymarchers.
+- **Chladni**: Acoustic vibration pattern generator.
+- **Pseudo-Kleinian**: Kleinian group fractal limit sets.
+- **Dynamic Spiral**: Multi-point spiral curve generator.
+
+---
+
+## Framebuffer Feedback Loops (Ping-Pong FBOs)
+
+Each deck incorporates an independent dual Framebuffer Object (FBO) feedback loop:
+1. The raw visual source renders into `cleanFBO`.
+2. The previous frame's feedback texture is combined with `cleanFBO` inside `feedback.frag`.
+3. Feedback transformation uniforms (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**) shift and decay the image continuously.
+4. Read and write feedback buffers swap (ping-pong) each frame, creating fluid liquid trails, organic motion, and video-feedback zoom effects.
+
+---
+
+## Deck Architecture: Live Decks A/B vs. Preview Deck C
+
+Liquid LSD features a three-deck architecture tailored for live VJ performance:
+
+### Deck A & Deck B (Live Performance Decks)
+Decks A and B drive the live master output. They feed directly into the central Mixer.
+
+### Deck C (Preview / Audition Deck)
+Deck C runs the complete rendering pipeline (Visual Source + Ping-Pong Feedback), but is **strictly excluded from the Mixer master output**. 
+- **Auditioning Patches**: Performers can load, build, edit, and preview new patches on Deck C while Decks A and B continue delivering live visuals to the audience screen.
+- **Safe Preparation**: Test complex CV routings or shader parameters safely on Deck C before loading them onto live Decks A or B.
+
+---
+
+## Central Mixer & Blending Modes
+
+The central Mixer blends the outputs of Deck A and Deck B to form the master video signal.
+
+### Blending Equations
+- **`ADD`** (Additive): Sums RGB values; ideal for dark background contrast.
+- **`SCREEN`**: Lightens overlapping areas while preserving dark detail.
+- **`MULT`** (Multiply): Multiplies RGB values; creates subtractive stencil masks.
+- **`MAX`** (Lighten): Compares A and B per-pixel and selects the brightest color.
+- **`XFADE`** (Crossfade): Standard linear interpolation between Deck A and Deck B.
+
+### Crossfader Modulation
+The `crossfade` slider interpolates between Deck A (0.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.

@@ -13,7 +13,8 @@ data class ParamMeta(
     val type: String = "MONOPOLAR",
     val defaultMin: Float? = null,
     val defaultMax: Float? = null,
-    val isAngle: Boolean = false
+    val isAngle: Boolean = false,
+    val description: String = ""
 )
 
 @Serializable
@@ -21,7 +22,8 @@ data class SourceMeta(
     val id: String,
     val name: String,
     val parameters: List<ParamMeta>,
-    val feedback: Boolean = false
+    val feedback: Boolean = false,
+    val description: String = ""
 )
 
 /**
