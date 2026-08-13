@@ -59,7 +59,8 @@ object PatchGridRenderer {
         val labelBtnW = labelColW - indent - CELL_PAD
         session.uiTheme.body(label)
         ImGui.sameLine(cursorStartX)
-        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL)
+        val btnFlagsRow = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL, btnFlagsRow)
         val isLabelHovered = ImGui.isItemHovered()
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Click for menu (Randomize, Copy/Paste). Middle-click to reset parameter $label.")
@@ -116,7 +117,8 @@ object PatchGridRenderer {
         val isFinalCrosshair = isHoveredRow && isFinalHoveredCol
         
         ImGui.setCursorScreenPos(finalX, finalY)
-        ImGui.invisibleButton("##final_cell", CELL, CELL)
+        val btnFlagsFinal = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+        ImGui.invisibleButton("##final_cell", CELL, CELL, btnFlagsFinal)
         val isFinalHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked()) {
             state.select(PatchCellId(paramKey, "final"), param)
@@ -181,7 +183,8 @@ object PatchGridRenderer {
         } ?: false
 
         ImGui.setCursorScreenPos(midiX, midiY)
-        ImGui.invisibleButton("##midi_cell", CELL, CELL)
+        val btnFlagsMidi = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+        ImGui.invisibleButton("##midi_cell", CELL, CELL, btnFlagsMidi)
         val isMidiCellHovered = ImGui.isItemHovered()
         if (isMidiCellHovered && session.uiTheme.tooltipsEnabled) {
             val details = if (hasMidiMod || isMidiBypassed) {
@@ -306,7 +309,8 @@ object PatchGridRenderer {
             } ?: false
 
             ImGui.setCursorScreenPos(x, y)
-            ImGui.invisibleButton("##cell_$cvId", CELL, CELL)
+            val btnFlagsCv = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+            ImGui.invisibleButton("##cell_$cvId", CELL, CELL, btnFlagsCv)
             val isCellHovered = ImGui.isItemHovered()
             if (isCellHovered && session.uiTheme.tooltipsEnabled) {
                 val isFiltered = param.modulatorFilter != null && activeMods.any { mod -> param.modulatorFilter?.invoke(mod) == false }

@@ -1,15 +1,15 @@
-import java.net.URL
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 
 plugins {
-    // Kotlin: version 2.0.21 (latest 2.4.20-Beta1). Do not update automatically.
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.serialization") version "2.0.21"
+    // Kotlin: version 2.3.0 (supports JDK 25+). Do not update automatically.
+    kotlin("jvm") version "2.3.0"
+    kotlin("plugin.serialization") version "2.3.0"
     application
-    // Shadow plugin: version 8.1.1. Do not update automatically.
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    // Shadow plugin: version 9.0.0 (com.gradleup.shadow). Do not update automatically.
+    id("com.gradleup.shadow") version "9.0.0"
     id("com.github.ben-manes.versions") version "0.51.0"
 }
 
@@ -72,6 +72,8 @@ application {
 }
 
 kotlin {
+    // JDK 17 toolchain — Gradle auto-detects the provisioned JDK at ~/.gradle/jdks.
+    // Produces JDK 17-compatible bytecode for cross-platform distribution.
     jvmToolchain(17)
     sourceSets {
         main {
@@ -96,6 +98,7 @@ val generateDocs = tasks.register("generateDocs") {
     inputs.files(fileTree("docs"), "mkdocs.yml")
     outputs.dir("src/main/resources/docs")
 
+    // Gradle 9: exec is no longer available on Project; use providers.exec or ProcessBuilder directly.
     doLast {
         val hasMkdocs = try {
             val pb = ProcessBuilder("mkdocs", "--version")
@@ -106,9 +109,11 @@ val generateDocs = tasks.register("generateDocs") {
         }
 
         if (hasMkdocs) {
-            project.exec {
-                commandLine("mkdocs", "build", "-d", "${project.projectDir}/src/main/resources/docs")
-            }
+            val result = ProcessBuilder("mkdocs", "build", "-d", "${project.projectDir}/src/main/resources/docs")
+                .inheritIO()
+                .start()
+                .waitFor()
+            if (result != 0) throw GradleException("mkdocs build failed with exit code $result")
         } else {
             println("WARNING: 'mkdocs' executable not found. Skipping documentation generation, will use existing resource files if present.")
         }
@@ -179,7 +184,7 @@ tasks.processResources {
                 if (!cacheFile.exists()) {
                     println("Downloading JRE for $name...")
                     try {
-                        URL(url).openStream().use { input ->
+                        URI(url).toURL().openStream().use { input ->
                             Files.copy(input, cacheFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
                         }
                         println("Successfully downloaded JRE for $name.")
@@ -328,7 +333,7 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
     }
     eachFile {
         if (name == "run-linux.sh" || path.endsWith("/bin/java")) {
-            mode = 493 // 0755 in octal
+            filePermissions { unix("755") } // Gradle 9: mode replaced by filePermissions
         }
     }
 }
@@ -345,7 +350,7 @@ val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
     }
     eachFile {
         if (name == "run-linux.sh" || path.endsWith("/bin/java")) {
-            mode = 493 // 0755 in octal
+            filePermissions { unix("755") }
         }
     }
 }
@@ -362,7 +367,7 @@ val zipMacArm = tasks.register<Zip>("zipMacArm") {
     }
     eachFile {
         if (name == "run-mac-arm.command" || path.endsWith("/bin/java")) {
-            mode = 493 // 0755 in octal
+            filePermissions { unix("755") }
         }
     }
 }
@@ -379,7 +384,7 @@ val zipMacIntel = tasks.register<Zip>("zipMacIntel") {
     }
     eachFile {
         if (name == "run-mac-intel.command" || path.endsWith("/bin/java")) {
-            mode = 493 // 0755 in octal
+            filePermissions { unix("755") }
         }
     }
 }
