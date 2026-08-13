@@ -143,6 +143,10 @@ object UITheme {
         get() = settings.lastCustomAssetBrowserRatio
         set(value) { settings = settings.copy(lastCustomAssetBrowserRatio = value) }
 
+    var gridCellRatio: Float
+        get() = settings.gridCellRatio
+        set(value) { settings = settings.copy(gridCellRatio = value) }
+
     init {
         loadSettings()
     }
@@ -257,6 +261,7 @@ object UITheme {
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { col2Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("assetBrowserRatio")?.toFloatOrNull()?.let { assetBrowserRatio = it.coerceIn(0.10f, 0.90f) }
                 props.getProperty("lastCustomAssetBrowserRatio")?.toFloatOrNull()?.let { lastCustomAssetBrowserRatio = it.coerceIn(0.10f, 0.90f) }
+                props.getProperty("gridCellRatio")?.toFloatOrNull()?.let { gridCellRatio = it.coerceIn(0.70f, 2.00f) }
             } else {
                 logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps" }
             }
@@ -292,6 +297,7 @@ object UITheme {
             props.setProperty("col2Ratio", col2Ratio.toString())
             props.setProperty("assetBrowserRatio", assetBrowserRatio.toString())
             props.setProperty("lastCustomAssetBrowserRatio", lastCustomAssetBrowserRatio.toString())
+            props.setProperty("gridCellRatio", gridCellRatio.toString())
             settingsFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             logger.info { "Saved settings to file" }
         } catch (e: Exception) {

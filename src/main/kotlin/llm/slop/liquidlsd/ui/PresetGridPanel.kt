@@ -58,20 +58,14 @@ object PresetGridPanel {
         return visibleCols
     }
 
-    // Size of each cell square (px)
-    private const val CELL = 35f
-    private const val CELL_PAD = 5f
-
     private fun getColumnOffset(session: llm.slop.liquidlsd.SessionContext, colId: String): Float {
-        // Build the visible column list dynamically
+        val metrics = GridMetrics.compute(session)
         val visibleCols = getVisibleColumns(session)
         
-        // Find the index of this column in the visible list
         val index = visibleCols.indexOf(colId)
         if (index < 0) return 0f
         
-        // Calculate offset based on position in visible columns
-        return index * (CELL + CELL_PAD)
+        return index * (metrics.cell + metrics.cellPad)
     }
 
     private fun getCvColor(colId: String, alpha: Float = 1f): Int {
@@ -99,6 +93,7 @@ object PresetGridPanel {
     }
 
     fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState): Float {
+        val metrics = GridMetrics.compute(session)
         val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session) + 4f
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
@@ -115,7 +110,7 @@ object PresetGridPanel {
         val labelColW = maxOf(baseLabelW, subTabsW + 16f)
 
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
+        val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f
 
         return sideTabWidth + 12f + labelColW + maxGridW + 24f
     }
@@ -157,6 +152,10 @@ object PresetGridPanel {
             val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
                 PresetGridTabs.calculateSubTabsWidth(session, state, activeDeck)
             } else 0f
+
+            val metrics = GridMetrics.compute(session)
+            val CELL = metrics.cell
+            val CELL_PAD = metrics.cellPad
 
             val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
             val baseLabelW = 160f * fontScale
@@ -290,6 +289,10 @@ object PresetGridPanel {
     }
 
     private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PresetGridState, mixer: Mixer) {
+        val metrics = GridMetrics.compute(session)
+        val CELL = metrics.cell
+        val CELL_PAD = metrics.cellPad
+
         val dl = ImGui.getWindowDrawList()
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()

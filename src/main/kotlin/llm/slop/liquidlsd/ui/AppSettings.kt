@@ -21,5 +21,6 @@ data class AppSettings(
     val col1Ratio: Float = 0.30f,
     val col2Ratio: Float = 0.40f,
     val assetBrowserRatio: Float = 0.50f,
-    val lastCustomAssetBrowserRatio: Float = 0.50f
+    val lastCustomAssetBrowserRatio: Float = 0.50f,
+    val gridCellRatio: Float = 1.0f
 )

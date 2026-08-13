@@ -182,6 +182,19 @@ object SettingsPanel {
 
             ImGui.endTable()
         }
+
+        ImGui.spacing()
+        session.uiTheme.body("Grid Knob Cell Scale")
+        session.uiTheme.caption("Scale Preset Grid readouts relative to font size (0.70x – 2.00x):")
+        ImGui.spacing()
+        val ratioVal = imgui.type.ImFloat(session.uiTheme.gridCellRatio)
+        if (ImGui.sliderFloat("##GridKnobScale", ratioVal.getData(), 0.70f, 2.00f, "%.2fx")) {
+            session.uiTheme.gridCellRatio = ratioVal.get()
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Scale circular readout knobs and grid cells relative to global font size (0.70x – 2.00x).")
+        }
     }
 
     private fun drawPresetGridSettings(session: llm.slop.liquidlsd.SessionContext) {

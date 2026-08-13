@@ -28,6 +28,8 @@ The Preset Grid is located in the left panel of Performance Mode.
   - **TRIGGER**: Musical transient impulse detectors (`ONSET`, `ACCENT`).
 - **Grid Cells**: Intersection points linking a source to a parameter. Active cells display a animated colored dot indicating live CV signal output.
 
+- **Grid Knob Cell Scale & Resolution Scaling**: Grid cells and circular readout knobs automatically scale with global UI font size (`baseSize`). You can fine-tune relative knob dimensions (0.70x to 2.00x) under **Settings -> Preset Grid** via the **Grid Knob Cell Scale** slider.
+
 ---
 
 ## Generator Sources & LFO 2 Modulation

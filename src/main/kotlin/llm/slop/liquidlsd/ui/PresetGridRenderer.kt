@@ -30,9 +30,10 @@ object PresetGridRenderer {
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
+        val metrics = GridMetrics.compute(session)
+        val CELL = metrics.cell
+        val CELL_PAD = metrics.cellPad
         val isEven = (rowIndex % 2 == 0)
-        val CELL = 35f
-        val CELL_PAD = 5f
 
         val mousePos = ImGui.getIO().mousePos
         val rowScreenY = ImGui.getCursorScreenPosY()
@@ -532,7 +533,13 @@ object PresetGridRenderer {
         val border = if (isHoveredRow && isHoveredCol) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
         dl.addRect(x, y, x + r * 2f, y + r * 2f, border, 3f)
 
-        val trackRadius = r - 5f
+        val scaleFactor = r / 17.5f
+        val trackRadius = (r - 5f * scaleFactor).coerceAtLeast(3f)
+        val strokeWidth = (1.5f * scaleFactor).coerceIn(1.0f, 4.0f)
+        val fillStrokeWidth = (2.5f * scaleFactor).coerceIn(1.5f, 6.0f)
+        val dotRadius = (3.0f * scaleFactor).coerceIn(2.0f, 8.0f)
+        val baseDotRadius = (2.5f * scaleFactor).coerceIn(1.5f, 7.0f)
+
         val trackCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, if (isBypassed) 0.2f else 0.4f)
         val fillCol = if (isBypassed) ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 0.5f) else color
 
@@ -545,11 +552,11 @@ object PresetGridRenderer {
 
         when (meterType) {
             llm.slop.liquidlsd.parameters.MeterType.ENDLESS, llm.slop.liquidlsd.parameters.MeterType.DISCRETE -> {
-                dl.addCircle(cx, cy, trackRadius, trackCol, 32, 1.5f)
+                dl.addCircle(cx, cy, trackRadius, trackCol, 32, strokeWidth)
                 val angle = (PI / 2.0) + normalized * 2.0 * PI
                 val dotX = cx + trackRadius * cos(angle).toFloat()
                 val dotY = cy + trackRadius * sin(angle).toFloat()
-                dl.addCircleFilled(dotX, dotY, 3f, fillCol)
+                dl.addCircleFilled(dotX, dotY, dotRadius, fillCol)
 
                 if (baseValue != null) {
                     val bNorm = if (range == 0f) 0.5f else ((baseValue - min) / range).coerceIn(0f, 1f)
@@ -557,23 +564,23 @@ object PresetGridRenderer {
                     val bX = cx + trackRadius * cos(bAngle).toFloat()
                     val bY = cy + trackRadius * sin(bAngle).toFloat()
                     val bCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
-                    dl.addCircleFilled(bX, bY, 3f, bCol)
+                    dl.addCircleFilled(bX, bY, dotRadius, bCol)
                 }
             }
             llm.slop.liquidlsd.parameters.MeterType.MONOPOLAR -> {
                 dl.pathArcTo(cx, cy, trackRadius, aMin, aMax, 32)
-                dl.pathStroke(trackCol, 0, 1.5f)
+                dl.pathStroke(trackCol, 0, strokeWidth)
 
                 if (normalized > 0f) {
                     val fillAngle = aMin + normalized * (aMax - aMin)
                     dl.pathArcTo(cx, cy, trackRadius, aMin, fillAngle, 32)
-                    dl.pathStroke(fillCol, 0, 2.5f)
+                    dl.pathStroke(fillCol, 0, fillStrokeWidth)
                 }
 
                 val valAngle = aMin + normalized * (aMax - aMin)
                 val dotX = cx + trackRadius * cos(valAngle)
                 val dotY = cy + trackRadius * sin(valAngle)
-                dl.addCircleFilled(dotX, dotY, 3f, fillCol)
+                dl.addCircleFilled(dotX, dotY, dotRadius, fillCol)
 
                 if (baseValue != null) {
                     val bNorm = if (range == 0f) 0.5f else ((baseValue - min) / range).coerceIn(0f, 1f)
@@ -581,7 +588,7 @@ object PresetGridRenderer {
                     val bX = cx + trackRadius * cos(bAngle)
                     val bY = cy + trackRadius * sin(bAngle)
                     val bCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
-                    dl.addCircleFilled(bX, bY, 2.5f, bCol)
+                    dl.addCircleFilled(bX, bY, baseDotRadius, bCol)
 
                     if (baseMin != null && baseMax != null && baseMin != baseMax) {
                         val rMinNorm = if (range == 0f) 0.5f else ((baseMin - min) / range).coerceIn(0f, 1f)
@@ -589,20 +596,20 @@ object PresetGridRenderer {
                         val rMinA = aMin + rMinNorm * (aMax - aMin)
                         val rMaxA = aMin + rMaxNorm * (aMax - aMin)
                         val rangeCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 0.4f)
-                        dl.pathArcTo(cx, cy, trackRadius - 3f, rMinA, rMaxA, 16)
-                        dl.pathStroke(rangeCol, 0, 2f)
+                        dl.pathArcTo(cx, cy, (trackRadius - 3f * scaleFactor).coerceAtLeast(2f), rMinA, rMaxA, 16)
+                        dl.pathStroke(rangeCol, 0, (2f * scaleFactor).coerceIn(1f, 4f))
                     }
                 }
             }
             llm.slop.liquidlsd.parameters.MeterType.BIPOLAR -> {
                 dl.pathArcTo(cx, cy, trackRadius, aMin, aMax, 32)
-                dl.pathStroke(trackCol, 0, 1.5f)
+                dl.pathStroke(trackCol, 0, strokeWidth)
 
-                val cX = cx + (trackRadius - 2f) * cos(aCenter)
-                val cY = cy + (trackRadius - 2f) * sin(aCenter)
-                val cX2 = cx + (trackRadius + 2f) * cos(aCenter)
-                val cY2 = cy + (trackRadius + 2f) * sin(aCenter)
-                dl.addLine(cX, cY, cX2, cY2, trackCol, 1.5f)
+                val cX = cx + (trackRadius - 2f * scaleFactor) * cos(aCenter)
+                val cY = cy + (trackRadius - 2f * scaleFactor) * sin(aCenter)
+                val cX2 = cx + (trackRadius + 2f * scaleFactor) * cos(aCenter)
+                val cY2 = cy + (trackRadius + 2f * scaleFactor) * sin(aCenter)
+                dl.addLine(cX, cY, cX2, cY2, trackCol, strokeWidth)
 
                 if (normalized != 0.5f) {
                     val valAngle = aMin + normalized * (aMax - aMin)
@@ -611,13 +618,13 @@ object PresetGridRenderer {
                     } else {
                         dl.pathArcTo(cx, cy, trackRadius, valAngle, aCenter, 16)
                     }
-                    dl.pathStroke(fillCol, 0, 2.5f)
+                    dl.pathStroke(fillCol, 0, fillStrokeWidth)
                 }
 
                 val valAngle = aMin + normalized * (aMax - aMin)
                 val dotX = cx + trackRadius * cos(valAngle)
                 val dotY = cy + trackRadius * sin(valAngle)
-                dl.addCircleFilled(dotX, dotY, 3f, fillCol)
+                dl.addCircleFilled(dotX, dotY, dotRadius, fillCol)
 
                 if (baseValue != null) {
                     val bNorm = if (range == 0f) 0.5f else ((baseValue - min) / range).coerceIn(0f, 1f)
@@ -625,7 +632,7 @@ object PresetGridRenderer {
                     val bX = cx + trackRadius * cos(bAngle)
                     val bY = cy + trackRadius * sin(bAngle)
                     val bCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
-                    dl.addCircleFilled(bX, bY, 2.5f, bCol)
+                    dl.addCircleFilled(bX, bY, baseDotRadius, bCol)
 
                     if (baseMin != null && baseMax != null && baseMin != baseMax) {
                         val rMinNorm = if (range == 0f) 0.5f else ((baseMin - min) / range).coerceIn(0f, 1f)
@@ -633,8 +640,8 @@ object PresetGridRenderer {
                         val rMinA = aMin + rMinNorm * (aMax - aMin)
                         val rMaxA = aMin + rMaxNorm * (aMax - aMin)
                         val rangeCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 0.4f)
-                        dl.pathArcTo(cx, cy, trackRadius - 3f, rMinA, rMaxA, 16)
-                        dl.pathStroke(rangeCol, 0, 2f)
+                        dl.pathArcTo(cx, cy, (trackRadius - 3f * scaleFactor).coerceAtLeast(2f), rMinA, rMaxA, 16)
+                        dl.pathStroke(rangeCol, 0, (2f * scaleFactor).coerceIn(1f, 4f))
                     }
                 }
             }
@@ -650,11 +657,12 @@ object PresetGridRenderer {
         cellW: Float,
         onRandomize: () -> Unit
     ) {
-        val scale = 35f / 30f
-        val btnWidth = 50f * scale
-        val btnHeight = 35f
+        val metrics = GridMetrics.compute(session)
+        val btnWidth = metrics.diceW
+        val btnHeight = metrics.cell
+        val diceScale = metrics.cell / 30f
         if (session.uiTheme.randomizationEnabled) {
-            if (drawDiceButton(session, "dice_$groupKey", gridStartX, y, scale, btnWidth, btnHeight)) {
+            if (drawDiceButton(session, "dice_$groupKey", gridStartX, y, diceScale, btnWidth, btnHeight)) {
                 onRandomize()
             }
             ImGui.sameLine(0f, 6f)
