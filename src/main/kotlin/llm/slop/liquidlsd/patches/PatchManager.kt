@@ -136,10 +136,7 @@ object PatchManager {
             deck === mixer.deckC -> "Deck C"
             else -> "Deck"
         }
-        // Snapshot the deck as-is but override isEmpty; this preserves the correct
-        // visualSourceType so applyDto selects the same source at index 0 and does
-        // not accidentally try to load an unrecognised type.
-        return deck.toDto(label).copy(isEmpty = true)
+        return deck.toDto(label).copy(isEmpty = true, visualSourceType = "mandala")
     }
 
     fun swapDecks(mixer: Mixer, deck1: Deck, deck2: Deck) {
@@ -206,7 +203,8 @@ object PatchManager {
                 if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
                 
                 val content = file.readText()
-                val dto = json.decodeFromString<DeckPatchDto>(content)
+                val rawDto = json.decodeFromString<DeckPatchDto>(content)
+                val dto = rawDto.copy(name = file.nameWithoutExtension)
                 when {
                     isDeckC -> deckCPatchQueue.offer(dto)
                     isDeckA -> deckAPatchQueue.offer(dto)
@@ -358,9 +356,9 @@ object PatchManager {
                 parent.mkdirs()
             }
             
-            val deckADto = mixer.deckA.toDto(activePresetA ?: "Deck A")
-            val deckBDto = mixer.deckB.toDto(activePresetB ?: "Deck B")
-            val deckCDto = mixer.deckC.toDto(activePresetC ?: "Deck C")
+            val deckADto = if (mixer.deckA.isEmpty) emptyDeckDto(mixer.deckA, mixer) else mixer.deckA.toDto(activePresetA ?: "Deck A")
+            val deckBDto = if (mixer.deckB.isEmpty) emptyDeckDto(mixer.deckB, mixer) else mixer.deckB.toDto(activePresetB ?: "Deck B")
+            val deckCDto = if (mixer.deckC.isEmpty) emptyDeckDto(mixer.deckC, mixer) else mixer.deckC.toDto(activePresetC ?: "Deck C")
             
             val session = SessionStateDto(
                 deckA = deckADto,
@@ -419,6 +417,9 @@ object PatchManager {
             }
             session.queueNext?.let { mixer.queueNext.applyDto(it) }
             session.queuePrev?.let { mixer.queuePrev.applyDto(it) }
+            mixer.queueNext.baseValue = 0f
+            mixer.queuePrev.baseValue = 0f
+            mixer.syncQueueTriggerPrevValues()
             
             activePresetA = if (session.deckA.isEmpty) null else session.deckA.name
             cachedDtoA = if (session.deckA.isEmpty) null else session.deckA

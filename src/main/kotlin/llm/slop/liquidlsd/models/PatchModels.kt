@@ -76,20 +76,20 @@ data class ModulatorDto(
         if (randomizeSlope != other.randomizeSlope) return false
         if (randomizeDcOffset != other.randomizeDcOffset) return false
         
-        // Exclude instantaneous values from equality check if they are subject to randomization
-        val isAmpRandom = randomizeAmplitude || amplitudeMin != other.amplitudeMin || amplitudeMax != other.amplitudeMax || amplitudeMin != amplitudeMax
+        // Exclude instantaneous values from equality check if they are subject to active randomization
+        val isAmpRandom = (randomizeAmplitude && amplitudeMin != amplitudeMax) || amplitudeMin != other.amplitudeMin || amplitudeMax != other.amplitudeMax
         if (!isAmpRandom && amplitude != other.amplitude) return false
         
-        val isSubRandom = randomizeSubdivision || subdivisionMin != other.subdivisionMin || subdivisionMax != other.subdivisionMax || subdivisionMin != subdivisionMax
+        val isSubRandom = (randomizeSubdivision && subdivisionMin != subdivisionMax) || subdivisionMin != other.subdivisionMin || subdivisionMax != other.subdivisionMax
         if (!isSubRandom && subdivision != other.subdivision) return false
         
-        val isPhaseRandom = randomizePhaseOffset || phaseOffsetMin != other.phaseOffsetMin || phaseOffsetMax != other.phaseOffsetMax || phaseOffsetMin != phaseOffsetMax
+        val isPhaseRandom = (randomizePhaseOffset && phaseOffsetMin != phaseOffsetMax) || phaseOffsetMin != other.phaseOffsetMin || phaseOffsetMax != other.phaseOffsetMax
         if (!isPhaseRandom && phaseOffset != other.phaseOffset) return false
         
-        val isSlopeRandom = randomizeSlope || slopeMin != other.slopeMin || slopeMax != other.slopeMax || slopeMin != slopeMax
+        val isSlopeRandom = (randomizeSlope && slopeMin != slopeMax) || slopeMin != other.slopeMin || slopeMax != other.slopeMax
         if (!isSlopeRandom && slope != other.slope) return false
         
-        val isDcRandom = randomizeDcOffset || dcOffsetMin != other.dcOffsetMin || dcOffsetMax != other.dcOffsetMax || dcOffsetMin != dcOffsetMax
+        val isDcRandom = (randomizeDcOffset && dcOffsetMin != dcOffsetMax) || dcOffsetMin != other.dcOffsetMin || dcOffsetMax != other.dcOffsetMax
         if (!isDcRandom && dcOffset != other.dcOffset) return false
 
         return true
@@ -119,19 +119,19 @@ data class ModulatorDto(
         result = 31 * result + randomizeSlope.hashCode()
         result = 31 * result + randomizeDcOffset.hashCode()
 
-        val isAmpRandom = randomizeAmplitude || amplitudeMin != amplitudeMax
+        val isAmpRandom = randomizeAmplitude && amplitudeMin != amplitudeMax
         if (!isAmpRandom) result = 31 * result + amplitude.hashCode()
         
-        val isSubRandom = randomizeSubdivision || subdivisionMin != subdivisionMax
+        val isSubRandom = randomizeSubdivision && subdivisionMin != subdivisionMax
         if (!isSubRandom) result = 31 * result + subdivision.hashCode()
         
-        val isPhaseRandom = randomizePhaseOffset || phaseOffsetMin != phaseOffsetMax
+        val isPhaseRandom = randomizePhaseOffset && phaseOffsetMin != phaseOffsetMax
         if (!isPhaseRandom) result = 31 * result + phaseOffset.hashCode()
         
-        val isSlopeRandom = randomizeSlope || slopeMin != slopeMax
+        val isSlopeRandom = randomizeSlope && slopeMin != slopeMax
         if (!isSlopeRandom) result = 31 * result + slope.hashCode()
         
-        val isDcRandom = randomizeDcOffset || dcOffsetMin != dcOffsetMax
+        val isDcRandom = randomizeDcOffset && dcOffsetMin != dcOffsetMax
         if (!isDcRandom) result = 31 * result + dcOffset.hashCode()
         
         return result
@@ -161,8 +161,8 @@ data class ParameterDto(
         if (midiMapMax != other.midiMapMax) return false
         if (modulators != other.modulators) return false
 
-        // Exclude instantaneous baseValue from equality check if it is subject to randomization
-        val isRandomized = randomizeBase || baseMin != other.baseMin || baseMax != other.baseMax || baseMin != baseMax
+        // Exclude instantaneous baseValue from equality check only if it is subject to active randomization
+        val isRandomized = (randomizeBase && baseMin != baseMax) || baseMin != other.baseMin || baseMax != other.baseMax
         if (!isRandomized && baseValue != other.baseValue) return false
 
         return true
@@ -177,9 +177,8 @@ data class ParameterDto(
         result = 31 * result + midiMapMax.hashCode()
         result = 31 * result + modulators.hashCode()
 
-        val isRandomized = randomizeBase || baseMin != baseMax
+        val isRandomized = randomizeBase && baseMin != baseMax
         if (!isRandomized) result = 31 * result + baseValue.hashCode()
-
         return result
     }
 }
@@ -388,7 +387,13 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
 }
 
 fun Deck.applyDto(dto: DeckPatchDto) {
-    this.isEmpty = dto.isEmpty
+    if (dto.isEmpty) {
+        reset()
+        val defaultSource = availableSources.firstOrNull { (it as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id == "mandala" } ?: availableSources.first()
+        source = defaultSource
+        return
+    }
+    this.isEmpty = false
     
     // Select the active source by visualSourceType id
     val matchedSource = availableSources.firstOrNull { src ->

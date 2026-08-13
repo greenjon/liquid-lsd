@@ -153,7 +153,22 @@ class Mixer(
 
         prevQueueNextVal = nextVal
         prevQueuePrevVal = prevVal
+
+        if (queueNext.baseValue != 0f) queueNext.baseValue = 0f
+        if (queuePrev.baseValue != 0f) queuePrev.baseValue = 0f
+
         return delta
+    }
+
+    /**
+     * Synchronizes current queue trigger parameter values into edge-detection trackers.
+     * Prevents false 0->1 trigger edge detection on startup / session load.
+     */
+    fun syncQueueTriggerPrevValues() {
+        queueNext.evaluate()
+        queuePrev.evaluate()
+        prevQueueNextVal = queueNext.value
+        prevQueuePrevVal = queuePrev.value
     }
 
     /**

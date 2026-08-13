@@ -516,7 +516,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             }
         }
 
-        val cvDelta = mixer.pollQueueAdvance()
+        val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
         var keyDelta = 0
         if (!ImGui.getIO().wantTextInput) {
             when (session.uiTheme.queueKeyTrigger) {
@@ -694,14 +694,15 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
 
 
-    private fun loadDeckPreset(presetName: String, deck: Deck, isDeckA: Boolean) {
+    private fun loadDeckPreset(presetName: String, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = (deck === currentMixer?.deckC)) {
         if (presetName == "None") return
-        var file = File("presets/patches/$presetName.lsd")
+        val cleanName = presetName.removeSuffix(".lsd").removeSuffix(".json").trim()
+        var file = File("presets/patches/$cleanName.lsd")
         if (!file.exists()) {
-            file = File("presets/patches/$presetName.json")
+            file = File("presets/patches/$cleanName.json")
         }
         if (file.exists()) {
-            session.patchManager.loadDeckPresetAsync(file, isDeckA)
+            session.patchManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
         }
     }
 
@@ -762,12 +763,13 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
     }
 
     /**
-     * Save a deck preset.  [tags] are stored in `DeckPatchDto.tags` (Phase 2c).
+     * Save a deck preset. [tags] are stored in `DeckPatchDto.tags` (Phase 2c).
      * Existing callers that don't supply tags preserve the current tag list by
      * reading it from the cached DTO, so an overwrite never silently strips tags.
      */
     private fun saveDeckPreset(name: String, deck: Deck, isDeckA: Boolean, tags: List<String>? = null) {
-        if (name.isBlank()) return
+        val cleanName = name.removeSuffix(".lsd").removeSuffix(".json").trim()
+        if (cleanName.isBlank()) return
 
         // Restore existing tags when overwriting unless the caller explicitly supplies new ones
         val resolvedTags = tags ?: run {
@@ -780,29 +782,36 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             cached?.tags ?: emptyList()
         }
 
-        val dto = deck.toDto(name, resolvedTags)
+        val dto = deck.toDto(cleanName, resolvedTags)
         when {
             deck === currentMixer?.deckA -> {
-                session.patchManager.activePresetA = name
+                session.patchManager.activePresetA = cleanName
                 session.patchManager.cachedDtoA = dto
             }
             deck === currentMixer?.deckB -> {
-                session.patchManager.activePresetB = name
+                session.patchManager.activePresetB = cleanName
                 session.patchManager.cachedDtoB = dto
             }
             deck === currentMixer?.deckC -> {
-                session.patchManager.activePresetC = name
+                session.patchManager.activePresetC = cleanName
                 session.patchManager.cachedDtoC = dto
             }
         }
-        val file = File("presets/patches/$name.lsd")
+        val file = File("presets/patches/$cleanName.lsd")
+
+        // Remove obsolete legacy .json file if it exists so duplicate files aren't left on disk
+        val legacyJson = File("presets/patches/$cleanName.json")
+        if (legacyJson.exists()) {
+            legacyJson.delete()
+        }
+
         val deckIndex = when {
             deck === currentMixer?.deckA -> 0
             deck === currentMixer?.deckB -> 1
             deck === currentMixer?.deckC -> 2
             else -> -1
         }
-        session.patchManager.saveDeckPresetAsync(file, deck, name, resolvedTags, deckIndex)
+        session.patchManager.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
     }
 
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {

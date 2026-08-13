@@ -436,11 +436,29 @@ object PatchGridPanel {
                 ImGui.textDisabled("Select Visual Source:")
                 ImGui.separator()
 
+                val clearPresetState = {
+                    when {
+                        deck === mixer.deckA -> {
+                            session.patchManager.activePresetA = null
+                            session.patchManager.cachedDtoA = null
+                        }
+                        deck === mixer.deckB -> {
+                            session.patchManager.activePresetB = null
+                            session.patchManager.cachedDtoB = null
+                        }
+                        deck === mixer.deckC -> {
+                            session.patchManager.activePresetC = null
+                            session.patchManager.cachedDtoC = null
+                        }
+                    }
+                }
+
                 if (ImGui.menuItem("Mandala")) {
                     val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
                     if (masterMandala != null) {
                         deck.source = masterMandala.clone()
                         deck.isEmpty = false
+                        clearPresetState()
                         PatchGridUndo.pushUndoState(state, mixer)
                     }
                 }
@@ -450,6 +468,7 @@ object PatchGridPanel {
                     if (ImGui.menuItem(source.displayName)) {
                         deck.source = source.clone()
                         deck.isEmpty = false
+                        clearPresetState()
                         PatchGridUndo.pushUndoState(state, mixer)
                     }
                 }

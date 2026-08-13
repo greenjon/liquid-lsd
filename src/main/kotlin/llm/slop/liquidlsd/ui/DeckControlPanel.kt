@@ -26,8 +26,11 @@ class DeckControlPanel(
         ImGui.beginGroup()
         ImGui.pushID("presetRow_$label")
 
-        val activePreset = if (isDeckA) session.patchManager.activePresetA
-                           else        session.patchManager.activePresetB
+        val activePreset = when {
+            isDeckA -> session.patchManager.activePresetA
+            deck === mixer.deckC -> session.patchManager.activePresetC
+            else -> session.patchManager.activePresetB
+        }
         val isDirty = session.patchManager.isDeckDirty(deck, mixer)
 
         val displayName = when {

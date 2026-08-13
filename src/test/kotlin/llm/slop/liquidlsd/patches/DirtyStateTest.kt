@@ -85,12 +85,15 @@ class DirtyStateTest {
 
     @Test
     fun testRangeDirtyState() {
-        // Use real DTO objects to test the equals() method properly
-        val realInitial = llm.slop.liquidlsd.models.ParameterDto(0.5f, 0.1f, 0.9f, false, emptyList())
-        val realOther = llm.slop.liquidlsd.models.ParameterDto(0.7f, 0.1f, 0.9f, false, emptyList())
+        // Static parameter (randomizeBase = false): baseValue edits MUST trigger dirty state
+        val staticInitial = llm.slop.liquidlsd.models.ParameterDto(0.5f, 0.1f, 0.9f, false, emptyList())
+        val staticOther = llm.slop.liquidlsd.models.ParameterDto(0.7f, 0.1f, 0.9f, false, emptyList())
+        kotlin.test.assertNotEquals(staticInitial, staticOther)
 
-        // Verify equals logic directly: since min != max, baseValue 0.5 should equal 0.7
-        assertEquals(realInitial, realOther)
+        // Randomized parameter (randomizeBase = true): baseValue differences are ignored
+        val randomInitial = llm.slop.liquidlsd.models.ParameterDto(0.5f, 0.1f, 0.9f, true, emptyList())
+        val randomOther = llm.slop.liquidlsd.models.ParameterDto(0.7f, 0.1f, 0.9f, true, emptyList())
+        assertEquals(randomInitial, randomOther)
         
         val mixer = mockk<Mixer>()
         val deck = mockk<Deck>()
@@ -100,11 +103,11 @@ class DirtyStateTest {
 
         val globalAlpha = llm.slop.liquidlsd.models.ParameterDto(1f, 0f, 1f, false, emptyList())
 
-        // Use real DeckPatchDto objects
+        // Use real DeckPatchDto objects with static parameters
         val cachedDeckDto = DeckPatchDto(
             name = "Test",
             visualSourceType = "Mandala",
-            parameters = mapOf("Lobes" to realInitial),
+            parameters = mapOf("Lobes" to staticInitial),
             feedbackParameters = emptyMap(),
             globalAlpha = globalAlpha
         )
@@ -115,14 +118,14 @@ class DirtyStateTest {
         val currentDeckDto = DeckPatchDto(
             name = "Test",
             visualSourceType = "Mandala",
-            parameters = mapOf("Lobes" to realOther),
+            parameters = mapOf("Lobes" to staticOther),
             feedbackParameters = emptyMap(),
             globalAlpha = globalAlpha
         )
 
         every { deck.toDto(any(), any()) } returns currentDeckDto
 
-        // Should NOT be dirty because the difference in baseValue is ignored for ranges
-        assertFalse(PatchManager.isDeckDirty(deck, mixer))
+        // Should BE dirty because slider baseValue changed on a static parameter
+        assertTrue(PatchManager.isDeckDirty(deck, mixer))
     }
 }
