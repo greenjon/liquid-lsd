@@ -106,6 +106,11 @@ class MixerMonitorPanel(
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
+
+        // Interactive top preset bar for Deck C
+        ImGui.setCursorScreenPos(startX, ImGui.getCursorScreenPosY())
+        drawDeckBottomBar(session, "Deck C", mixer.deckC, isDeckA = false, isDeckC = true, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = availW)
+        ImGui.spacing()
         
         val imgX = startX
         val imgY = ImGui.getCursorScreenPosY()
@@ -209,11 +214,6 @@ class MixerMonitorPanel(
         session.uiTheme.withFont(fontLevelC) {
             dlPreview.addText(textXC, textYC, deckCColor, letterC)
         }
-
-        // Interactive bottom bar for Deck C
-        ImGui.spacing()
-        ImGui.setCursorPosX(startX)
-        drawDeckBottomBar(session, "Deck C", mixer.deckC, isDeckA = false, isDeckC = true, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck)
     }
 
     fun drawFlatSlider(

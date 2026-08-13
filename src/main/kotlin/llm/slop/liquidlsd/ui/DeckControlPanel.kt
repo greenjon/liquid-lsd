@@ -206,6 +206,12 @@ class DeckControlPanel(
 
         ImGui.spacing()
 
+        // Interactive top preset bar: Save button, Eject button, Preset bar
+        ImGui.setCursorPosX(inset)
+        val browser = if (isDeckA) deckABrowser else deckBBrowser
+        drawDeckBottomBar(session, label, deck, isDeckA = isDeckA, isDeckC = false, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, browser = browser, targetW = imgAvailW)
+        ImGui.spacing()
+
         ImGui.setCursorPosX(inset)
         val imgX = ImGui.getCursorScreenPosX()
         val imgY = ImGui.getCursorScreenPosY()
@@ -318,12 +324,6 @@ class DeckControlPanel(
             dl.addText(textX, textY, themeCol, letter)
         }
 
-        // Interactive bottom bar: Save button, Eject button, Preset bar
-        ImGui.spacing()
-        ImGui.setCursorPosX(inset)
-        val browser = if (isDeckA) deckABrowser else deckBBrowser
-        drawDeckBottomBar(session, label, deck, isDeckA = isDeckA, isDeckC = false, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, browser = browser)
-
         ImGui.endChild()
         ImGui.popStyleVar()
         ImGui.popStyleColor()
@@ -347,7 +347,8 @@ fun drawDeckBottomBar(
     mixer: Mixer,
     onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
     onEjectDeck: (Deck, Boolean, Boolean) -> Unit,
-    browser: DeckPresetBrowser? = null
+    browser: DeckPresetBrowser? = null,
+    targetW: Float = 0f
 ) {
     ImGui.pushID("bottom_bar_$deckLabel")
 
@@ -407,7 +408,8 @@ fun drawDeckBottomBar(
     // 3. Preset Bar
     ImGui.sameLine()
     val barX = ImGui.getCursorScreenPosX()
-    val barW = ImGui.getContentRegionAvailX().coerceAtLeast(10f)
+    val totalW = if (targetW > 0f) targetW else ImGui.getContentRegionAvailX()
+    val barW = (startX + totalW - barX).coerceAtLeast(10f)
 
     val dl = ImGui.getWindowDrawList()
     val bgCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 0.7f)
