@@ -1,0 +1,113 @@
+{
+  "id": "dynamic_spiral",
+  "name": "Dynamic Spiral",
+  "feedback": true,
+  "parameters": [
+    {
+      "name": "Max Points",
+      "default": 500.0,
+      "min": 100.0,
+      "max": 2000.0,
+      "type": "MONOPOLAR"
+    },
+    {
+      "name": "Scale",
+      "default": 2.0,
+      "min": 0.1,
+      "max": 10.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 1.0,
+      "defaultMax": 4.0
+    },
+    {
+      "name": "Damping",
+      "default": 100.0,
+      "min": 1.0,
+      "max": 500.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 30.0,
+      "defaultMax": 200.0
+    },
+    {
+      "name": "Wave Freq",
+      "default": 0.2,
+      "min": 0.01,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.05,
+      "defaultMax": 0.5
+    },
+    {
+      "name": "Wave Amp",
+      "default": 10.0,
+      "min": 0.0,
+      "max": 50.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 2.0,
+      "defaultMax": 20.0
+    },
+    {
+      "name": "Shear",
+      "default": 0.1,
+      "min": -0.5,
+      "max": 0.5,
+      "type": "BIPOLAR",
+      "defaultMin": -0.2,
+      "defaultMax": 0.2
+    },
+    {
+      "name": "Speed",
+      "default": 1.0,
+      "min": -5.0,
+      "max": 5.0,
+      "type": "BIPOLAR",
+      "defaultMin": -2.0,
+      "defaultMax": 2.0
+    },
+    {
+      "name": "Dot Size",
+      "default": 0.01,
+      "min": 0.001,
+      "max": 0.05,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.005,
+      "defaultMax": 0.02
+    },
+    {
+      "name": "Glow",
+      "default": 1.5,
+      "min": 0.0,
+      "max": 5.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 3.0
+    },
+    {
+      "name": "Hue Offset",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Hue Sweep",
+      "default": 0.01,
+      "min": 0.001,
+      "max": 0.1,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.005,
+      "defaultMax": 0.05
+    },
+    {
+      "name": "Trail Decay",
+      "default": 0.85,
+      "min": 0.0,
+      "max": 0.98,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.6,
+      "defaultMax": 0.95
+    }
+  ]
+}

@@ -12,6 +12,8 @@ import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.MandalaLibrary
 import kotlin.math.roundToInt
 
+private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
+
 object FinalParamSection {
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
@@ -30,8 +32,10 @@ object FinalParamSection {
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
         val isLobes = paramKey.endsWith("/Geometry/Lobes")
         val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
+        val isMaxPoints = paramKey.endsWith("/Max Points")
         val liveVal = param.value
         val liveLabel = when {
+            isMaxPoints -> "${liveVal.roundToInt()} points"
             isHueSweep && mandala != null -> {
                 val petals = mandala.recipe.petals
                 val options = mandala.getSymmetricHueCycles(petals)
@@ -182,7 +186,52 @@ object FinalParamSection {
                 }
             )
         } else {
-            if (isLobes) {
+            if (isMaxPoints) {
+                session.uiTheme.caption("Point Count (GPU Performance):")
+                val currentPts = param.baseValue.roundToInt()
+                val availW = ImGui.getContentRegionAvailX()
+                var startLine = true
+
+                for (preset in MAX_POINTS_PRESETS) {
+                    val label = "$preset"
+                    val btnW = 46f
+
+                    if (!startLine) {
+                        val lastX = ImGui.getCursorPosX()
+                        if (lastX + btnW + 4f < availW) {
+                            ImGui.sameLine()
+                        } else {
+                            startLine = true
+                        }
+                    }
+
+                    val isActive = (currentPts == preset)
+                    if (isActive) {
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
+                    }
+
+                    if (ImGui.button("$label##maxpts_pill_$preset", btnW, 24f)) {
+                        val newVal = preset.toFloat()
+                        param.baseValue = newVal
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+
+                    if (isActive) {
+                        ImGui.popStyleColor(4)
+                    }
+
+                    startLine = false
+                }
+                ImGui.spacing()
+                session.uiTheme.caption("⚠ Not CV-modulatable — higher counts may reduce frame rate.")
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+            } else if (isLobes) {
                 session.uiTheme.caption("Lobe Count Quick Selection:")
                 val currentLobe = param.baseValue.roundToInt()
                 val availableLobes = MandalaLibrary.uniquePetals
@@ -294,6 +343,7 @@ object FinalParamSection {
                 showControls = true,
                 formatValue = {
                     when {
+                        isMaxPoints -> "${it.roundToInt()} pts"
                         isBgStyle -> {
                             when (it.roundToInt()) {
                                 0 -> "Off"
@@ -373,7 +423,9 @@ object FinalParamSection {
 
 
         ImGui.spacing()
-        if (isHueSweep && mandala != null) {
+        if (isMaxPoints) {
+            session.uiTheme.caption("Static Initial Value: ${param.baseValue.roundToInt()} pts")
+        } else if (isHueSweep && mandala != null) {
             val petals = mandala.recipe.petals
             val options = mandala.getSymmetricHueCycles(petals)
             val idx = if (options.size > 1) (param.baseValue * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0

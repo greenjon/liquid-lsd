@@ -129,6 +129,15 @@ object VisualSourceRegistry {
                         hasFeedback = meta.feedback,
                         ownsShader = true
                     )
+                } else if (meta.id == "dynamic_spiral") {
+                    DynamicSpiral(
+                        id = meta.id,
+                        displayName = meta.name,
+                        shader = shader,
+                        parameters = parameters,
+                        hasFeedback = meta.feedback,
+                        ownsShader = true
+                    )
                 } else {
                     DynamicVisualSource(
                         id = meta.id,
