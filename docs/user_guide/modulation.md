@@ -1,12 +1,12 @@
-# CV Modulation & Patch Grid
+# CV Modulation & Preset Grid
 
 The Control Voltage (CV) modulation matrix is the nerve center of Liquid LSD. It allows real-time audio envelopes, transient triggers, beat clocks, LFOs, and external MIDI signals to modulate any visual parameter.
 
 ---
 
-## The Patch Grid Matrix
+## The Preset Grid Matrix
 
-The Patch Grid is located in the left panel of Performance Mode.
+The Preset Grid is located in the left panel of Performance Mode.
 
 ```
 ┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
@@ -78,7 +78,7 @@ Liquid LSD includes mouse and keyboard power shortcuts designed for live perform
   - *`Ctrl` + `Shift` + Scroll*: `±0.1` coarse step.
 - **Middle-Click Reset**: Middle-click any slider track or `FINAL` knob cell to instantly reset parameter to factory default.
 
-### Patch Grid Shortcuts
+### Preset Grid Shortcuts
 - **Middle-Click Cell Bypass**: Middle-click any grid cell to toggle its `bypassed` state on/off immediately.
 - **Right-Click Row Context Menu**:
   - Copy / Paste parameter settings.

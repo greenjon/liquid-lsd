@@ -12,7 +12,7 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 /**
- * Manages file system operations for patches and playlists.
+ * Manages file system operations for presets and playlists.
  * All operations are non-destructive by default and return success/failure status.
  */
 object FileSystemManager {
@@ -20,7 +20,6 @@ object FileSystemManager {
     
     private const val PRESETS_ROOT = "library/presets"
     private const val PLAYLISTS_ROOT = "library/playlists"
-    private const val PATCHES_ROOT = PRESETS_ROOT
     private const val SCAN_CACHE_TTL_MS = 1_000L
 
     private data class ScanCacheEntry(
@@ -53,7 +52,7 @@ object FileSystemManager {
     private fun directorySignature(directory: File): String = getDirectorySignature(directory)
 
     private fun managedRootPaths(): List<Path> {
-        return listOf(getPatchesRoot(), getPlaylistsRoot())
+        return listOf(getPresetsRoot(), getPlaylistsRoot())
             .map { it.canonicalFile.toPath() }
     }
 
@@ -104,7 +103,7 @@ object FileSystemManager {
                 }
                 ext == "lsd" || ext == "patch" || ext == "json" -> {
                     items.add(AssetItem(
-                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PATCH,
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PRESET,
                         isValid = true // Assume valid for fast scan
                     ))
                 }
@@ -143,8 +142,8 @@ object FileSystemManager {
                             items.add(AssetItem(
                                 path = file.absolutePath,
                                 name = file.nameWithoutExtension,
-                                type = AssetType.PATCH,
-                                isValid = validatePatchFile(file)
+                                type = AssetType.PRESET,
+                                isValid = validatePresetFile(file)
                             ))
                         }
                         ext == "lsdset" -> {
@@ -171,14 +170,14 @@ object FileSystemManager {
     }
     
     /**
-     * Validates that a patch file exists and is readable.
+     * Validates that a preset file exists and is readable.
      */
-    private fun validatePatchFile(file: File): Boolean {
+    private fun validatePresetFile(file: File): Boolean {
         return file.exists() && file.canRead() && file.length() > 0
     }
     
     /**
-     * Validates a playlist file and checks if all referenced patches exist.
+     * Validates a playlist file and checks if all referenced presets exist.
      * Returns (isValid, errorMessage).
      */
     private fun validatePlaylistFile(file: File): Pair<Boolean, String?> {
@@ -187,14 +186,14 @@ object FileSystemManager {
         }
         
         try {
-            val patches = PlaylistParser.parseFile(file)
+            val presets = PlaylistParser.parseFile(file)
             
-            val missingPatches = patches.filter { path ->
-                PlaylistParser.resolveItem(path, listOf(getPatchesRoot())) == null
+            val missingPresets = presets.filter { path ->
+                PlaylistParser.resolveItem(path, listOf(getPresetsRoot())) == null
             }
             
-            if (missingPatches.isNotEmpty()) {
-                return false to "Missing ${missingPatches.size} patch(es)"
+            if (missingPresets.isNotEmpty()) {
+                return false to "Missing ${missingPresets.size} preset(s)"
             }
             
             return true to null
@@ -370,11 +369,7 @@ object FileSystemManager {
         return root
     }
     
-    /**
-     * Gets the root directory for patches (legacy alias).
-     */
-    fun getPatchesRoot(): File = getPresetsRoot()
-    
+
     /**
      * Gets the root directory for playlists.
      */

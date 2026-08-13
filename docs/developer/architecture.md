@@ -63,7 +63,7 @@ Because the audio processing loop runs at sub-millisecond hardware intervals (~5
 - **`AtomicReference<BeatAnchor>`**: Lock-free swap mechanism passing `totalBeats`, estimated `bpm`, and `nanoTime` from the audio thread to `CVRegistry`. Thread 0 reads this reference without locks and interpolates sub-millisecond phase accuracy.
 - **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in `CellConfigPanel`.
 - **`@Volatile` Flags**: Thread-safe single-scalar flags (`isBpmLocked`, `manualBpm`, `inputGain`) accessed across threads without lock overhead.
-- **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending patch loading DTOs (`PatchManager`) and incoming MIDI CC events (`MidiEngine`).
+- **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending preset loading DTOs (`PresetManager`) and incoming MIDI CC events (`MidiEngine`).
 
 ---
 
@@ -73,8 +73,8 @@ Liquid LSD integrates a three-tier notes persistence model managed by `NotesMana
 
 | Note Scope | Storage Target | Lifetime | API Method |
 |------------|----------------|----------|------------|
-| **Global Source Notes** | `~/.liquid-lsd/source-notes.json` | App-global; survives patch changes | `NotesManager.getSourceNote / setSourceNote` |
-| **Patch Notes** | `.lsdpatch` JSON (`patchNotes`) | Saved/loaded per patch file | `NotesManager.getPatchNote / setPatchNote` |
-| **Parameter Notes** | `.lsdpatch` JSON (`paramNotes`) | Saved/loaded per patch file | `NotesManager.getParamNote / setParamNote` |
+| **Global Source Notes** | `~/.liquid-lsd/source-notes.json` | App-global; survives preset changes | `NotesManager.getSourceNote / setSourceNote` |
+| **Preset Notes** | `.lsd` JSON (`presetNotes`) | Saved/loaded per preset file | `NotesManager.getPresetNote / setPresetNote` |
+| **Parameter Notes** | `.lsd` JSON (`paramNotes`) | Saved/loaded per preset file | `NotesManager.getParamNote / setParamNote` |
 
-`PatchManager` automatically syncs in-memory notes with `.lsdpatch` DTOs during async load (`syncFromDto`) and save (`syncToDto`) operations.
+`PresetManager` automatically syncs in-memory notes with `.lsd` DTOs during async load (`syncFromDto`) and save (`syncToDto`) operations.

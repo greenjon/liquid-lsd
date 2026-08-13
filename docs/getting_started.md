@@ -58,13 +58,13 @@ java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-S
 
 1. **Launch Liquid LSD**: Run `./gradlew run`.
 2. **Verify Interface**: A window titled **Liquid LSD — Libre Shader Decks** will open showing real-time generative visuals and a three-column interface:
-   - **Left Panel**: Patch Grid (CV modulation matrix).
+   - **Left Panel**: Preset Grid (CV modulation matrix).
    - **Middle Panel**: Cell Config (parameter editor, LFO controls & oscilloscope).
    - **Right Panel**: Mixer / Master Output Monitor.
 3. **Check Audio Input**:
    - On **Linux with PipeWire/JACK**: Route audio from your media player or hardware input to `lsd:input_1` / `lsd:input_2` using Helvum, qjackctl, or `jack_connect`.
    - On **macOS / Windows / Standalone Linux**: Liquid LSD automatically captures from your system default audio input device using Java Sound.
-4. **Observe Modulation**: As audio plays, the `AUDIO` (`AMP`, `BASS`, `MID`, `HIGH`) and `TRIGGER` columns in the Patch Grid will animate dynamically.
+4. **Observe Modulation**: As audio plays, the `AUDIO` (`AMP`, `BASS`, `MID`, `HIGH`) and `TRIGGER` columns in the Preset Grid will animate dynamically.
 5. **Explore Documentation & Notes**:
    - Hover over parameter labels to view built-in engine descriptions and live value breakdowns.
    - Press **`F3`** to switch between Performance Mode and Asset Management Mode.

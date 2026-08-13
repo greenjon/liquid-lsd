@@ -23,7 +23,7 @@ object SettingsPanel {
 
     enum class Category(val label: String) {
         APPEARANCE("Appearance"),
-        PATCH_GRID("Patch Grid"),
+        PRESET_GRID("Preset Grid"),
         AUDIO_ENGINE("Audio Engine"),
         MIDI_CONTROL("MIDI & Controls"),
         GENERAL("General")
@@ -94,7 +94,7 @@ object SettingsPanel {
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
                 Category.APPEARANCE   -> drawAppearance(session, currentSize, onSizeChanged)
-                Category.PATCH_GRID   -> drawPatchGridSettings(session)
+                Category.PRESET_GRID  -> drawPresetGridSettings(session)
                 Category.AUDIO_ENGINE -> drawAudioEngineSettings(session)
                 Category.MIDI_CONTROL -> drawMidiControlSettings(session)
                 Category.GENERAL      -> drawGeneralSettings(session)
@@ -184,12 +184,12 @@ object SettingsPanel {
         }
     }
 
-    private fun drawPatchGridSettings(session: llm.slop.liquidlsd.SessionContext) {
-        session.uiTheme.h2("Patch Grid CV Columns")
+    private fun drawPresetGridSettings(session: llm.slop.liquidlsd.SessionContext) {
+        session.uiTheme.h2("Preset Grid CV Columns")
         ImGui.separator()
         ImGui.spacing()
 
-        session.uiTheme.caption("Toggle which CV source columns appear in the Patch Grid:")
+        session.uiTheme.caption("Toggle which CV source columns appear in the Preset Grid:")
         ImGui.spacing()
 
         val midiVal = ImBoolean(session.uiTheme.showMidiCol)
@@ -198,7 +198,7 @@ object SettingsPanel {
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display MIDI CC modulation column in Patch Grid")
+            ImGui.setTooltip("Display MIDI CC modulation column in Preset Grid")
         }
 
         val lfoVal = ImBoolean(session.uiTheme.showLfoCol)
@@ -207,7 +207,7 @@ object SettingsPanel {
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display LFO / Oscillator modulation column in Patch Grid")
+            ImGui.setTooltip("Display LFO / Oscillator modulation column in Preset Grid")
         }
 
         val audioVal = ImBoolean(session.uiTheme.showAudioCol)
@@ -216,7 +216,7 @@ object SettingsPanel {
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display Audio spectral analysis modulation column in Patch Grid")
+            ImGui.setTooltip("Display Audio spectral analysis modulation column in Preset Grid")
         }
 
         val trigVal = ImBoolean(session.uiTheme.showTriggerCol)
@@ -225,7 +225,7 @@ object SettingsPanel {
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display Audio transient / trigger modulation column in Patch Grid")
+            ImGui.setTooltip("Display Audio transient / trigger modulation column in Preset Grid")
         }
 
         ImGui.spacing()

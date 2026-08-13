@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.parameters.ModulationOperator
 object ModulatorHeaderRow {
     private val operatorLabels = arrayOf("ADD", "MUL", "SCALE")
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState,
         param: ModulatableParameter,
         existing: CvModulator,
         idx: Int,

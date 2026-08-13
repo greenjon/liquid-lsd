@@ -15,19 +15,19 @@ object PlaylistEditorPanel {
     private val logger = KotlinLogging.logger {}
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, playlist: PlaylistManager.Playlist, mixer: Mixer) {
-        // List of patches in playlist
+        // List of presets in playlist
         var moveFrom = -1
         var moveTo = -1
-        var removePatchIndex = -1
+        var removePresetIndex = -1
         // Insertion-line state
         var insertSlot = -1
         var insertLineY = -1f
         val insertLineColor = (255 shl 24) or (204 shl 16) or (255 shl 8) or 102 // mint-green, ABGR
 
-        playlist.patches.forEachIndexed { index, patchPath ->
-            val resolvedFile = PlaylistManager.resolvePatch(patchPath)
+        playlist.presets.forEachIndexed { index, presetPath ->
+            val resolvedFile = PlaylistManager.resolvePreset(presetPath)
             val exists = resolvedFile.exists()
-            val displayName = resolvedFile.nameWithoutExtension.ifBlank { patchPath }
+            val displayName = resolvedFile.nameWithoutExtension.ifBlank { presetPath }
             val label = "${index + 1}. ${if (exists) "" else "[!] "}$displayName${if (!exists) " (missing)" else ""}"
 
             ImGui.pushID(index)
@@ -45,14 +45,14 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
             if (ImGui.button("A##deck_a", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckA
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    session.patchManager.loadDeckPresetAsync(resolvedFile, isDeckA = true, isDeckC = false)
+                    session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = true, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, true, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load patch to Deck A.")
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck A.")
             ImGui.popStyleColor(5)
 
             ImGui.sameLine()
@@ -65,14 +65,14 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
             if (ImGui.button("B##deck_b", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckB
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    session.patchManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = false)
+                    session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load patch to Deck B.")
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck B.")
             ImGui.popStyleColor(5)
 
             ImGui.sameLine()
@@ -85,14 +85,14 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
             if (ImGui.button("C##deck_c", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckC
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    session.patchManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = true)
+                    session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = true)
                 } else {
                     UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview patch on Deck C (Preview/C).")
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
             ImGui.popStyleColor(5)
 
             ImGui.popStyleVar(2)
@@ -134,7 +134,7 @@ object PlaylistEditorPanel {
                 if (payload != null) {
                     moveFrom = payload
                     val rawTo = if (payload < effectiveSlot) effectiveSlot - 1 else effectiveSlot
-                    moveTo = rawTo.coerceIn(0, playlist.patches.size - 1)
+                    moveTo = rawTo.coerceIn(0, playlist.presets.size - 1)
                 }
                 ImGui.endDragDropTarget()
             }
@@ -153,7 +153,7 @@ object PlaylistEditorPanel {
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Remove")) {
-                    removePatchIndex = index
+                    removePresetIndex = index
                 }
                 ImGui.endPopup()
             }
@@ -171,14 +171,14 @@ object PlaylistEditorPanel {
         }
         
         if (moveFrom != -1 && moveTo != -1) {
-            PlaylistManager.movePatch(playlist, moveFrom, moveTo).onSuccess {
+            PlaylistManager.movePreset(playlist, moveFrom, moveTo).onSuccess {
                 // Auto-save playlist when reordering
                 PlaylistManager.savePlaylist(playlist)
             }
         }
         
-        if (removePatchIndex != -1) {
-            PlaylistManager.removePatch(playlist, removePatchIndex).onSuccess {
+        if (removePresetIndex != -1) {
+            PlaylistManager.removePreset(playlist, removePresetIndex).onSuccess {
                 // Auto-save playlist when removing
                 PlaylistManager.savePlaylist(playlist)
             }

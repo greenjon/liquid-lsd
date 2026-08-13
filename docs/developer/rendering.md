@@ -41,7 +41,7 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 
 - **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers all 10 built-in engines (`mandala`, `kifs`, `dynamic_spiral`, `gyroid`, `mandelbulb`, `mandelbox`, `chladni`, `clifford_torus`, `pseudo_kleinian`, `attractor_feedback`).
 - **Parameter Descriptions**: `paramDescriptions: Map<String, String>` covering ~120 parameters, keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
-- **UI Lookup API**: Surfaced by `PatchGridRenderer` and `DeckControlPanel` to draw rich tooltips.
+- **UI Lookup API**: Surfaced by `PresetGridRenderer` and `DeckControlPanel` to draw rich tooltips.
 
 ---
 

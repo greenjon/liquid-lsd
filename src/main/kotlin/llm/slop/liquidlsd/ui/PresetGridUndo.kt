@@ -28,5 +28,4 @@ object PresetGridUndo {
     }
 }
 
-typealias PatchGridUndo = PresetGridUndo
 

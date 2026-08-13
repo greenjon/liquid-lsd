@@ -12,18 +12,18 @@ graph TD
     
     SessionContext[SessionContext.kt - DI Container for Subsystems]
     UITheme[UITheme.kt - Fonts, Styling, Settings]
-    PatchGridState[PatchGridState.kt - Selection & 30-level Undo Stack]
+    PresetGridState[PresetGridState.kt - Selection & 30-level Undo Stack]
     PopupManager[PopupManager.kt - Modal Dialog Management]
     NoteEditorModal[NoteEditorModal.kt - Note Editor Modal]
     
     UIManager --> SessionContext
     UIManager --> UITheme
-    UIManager --> PatchGridState
+    UIManager --> PresetGridState
     UIManager --> PopupManager
     UIManager --> NoteEditorModal
     
     UIManager --> MenuBar[MenuBar.kt]
-    UIManager --> PatchGridPanel[PatchGridPanel.kt]
+    UIManager --> PresetGridPanel[PresetGridPanel.kt]
     UIManager --> CellConfigPanel[CellConfigPanel.kt]
     UIManager --> MixerMonitorPanel[MixerMonitorPanel.kt]
     UIManager --> AssetBrowserPanel[AssetBrowserPanel.kt & PlaylistEditorPanel.kt]
@@ -33,7 +33,7 @@ graph TD
     DeckControlPanel --> drawDeckBottomBar[drawDeckBottomBar Helper]
 ```
 
-All panel `draw(...)` methods receive `session: SessionContext`, the current `Mixer` reference, and `patchState: PatchGridState` at frame render time. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PatchManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
+All panel `draw(...)` methods receive `session: SessionContext`, the current `Mixer` reference, and `presetState: PresetGridState` at frame render time. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
 
 Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and `DeckControlPanel` use a unified interactive bottom bar (`drawDeckBottomBar`). The top preset header row above monitors is removed, allocating more vertical space to the visual render textures. Below each monitor, the bottom bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
@@ -43,7 +43,7 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and 
 
 ### 1. `UIManager.kt`
 - **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`.
-- **Workspace Layout & Auto-Sizing Splitters**: Orchestrates the three-column desktop workspace. Left Panel (`PatchGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`). Splitter 1 is a static visual divider that repositions automatically, while Splitter 2 is interactive to resize Middle (`CellConfigPanel`) vs Right (`MixerMonitorPanel`).
+- **Workspace Layout & Auto-Sizing Splitters**: Orchestrates the three-column desktop workspace. Left Panel (`PresetGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`). Splitter 1 is a static visual divider that repositions automatically, while Splitter 2 is interactive to resize Middle (`CellConfigPanel`) vs Right (`MixerMonitorPanel`).
 - **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
 - **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()` and `PopupManager.draw()` at root scope.
@@ -53,7 +53,7 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and 
 - **`NoteContext` Sealed Class**:
   - `Param(deckLabel, paramKey, displayLabel)`: Edits parameter-level notes.
   - `Source(sourceId, displayName)`: Edits global visual source notes.
-  - `Patch(deckLabel, patchName)`: Edits patch-level notes.
+  - `Preset(deckLabel, presetName)`: Edits preset-level notes.
 - **Zero-Allocation Buffer Safety**: Allocates a single `ImString(2048)` buffer at object instantiation (`textBuffer`). Calling `NoteEditorModal.request(context)` populates `textBuffer` with the current note text. Drawing `ImGui.inputTextMultiline` reuses this pre-allocated buffer every frame without heap allocation.
 
 ### 3. `UITheme.kt`
@@ -78,6 +78,6 @@ Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules 
 ## Pattern for Adding a New UI Panel
 
 1. **Pre-allocate String Buffers**: Define all `ImString` fields at the class/object level (e.g. `val searchBuffer = ImString(256)`).
-2. **Inject Context at Draw Time**: Accept `session: SessionContext`, `mixer: Mixer`, and `patchState: PatchGridState` in the `draw(...)` signature.
+2. **Inject Context at Draw Time**: Accept `session: SessionContext`, `mixer: Mixer`, and `presetState: PresetGridState` in the `draw(...)` signature.
 3. **Use Deferred Root Popups**: To open a popup, set a `pendingOpen` flag and call `ImGui.openPopup(id)` at the root ID level.
 4. **Register in `UIManager`**: Hook panel rendering into `UIManager.render()`.

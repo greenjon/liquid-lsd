@@ -27,7 +27,7 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                              masterFBO ──► screen
 
 Deck C  (preview only — same pipeline as A/B, excluded from Mixer output)
-   └── used to build/audition patches while A and B are performing live
+   └── used to build/audition presets while A and B are performing live
 ```
 
 ## File Map
@@ -53,16 +53,16 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MidiEngine.kt           — MIDI connection and event polling
 │   └── MidiMappingManager.kt   — Maps MIDI CC to UI/parameters
 ├── models/
-│   └── PatchModels.kt          — Data models + DTOs for patch serialization (includes patchNotes & paramNotes)
+│   └── PresetModels.kt          — Data models + DTOs for preset serialization (includes presetNotes & paramNotes))
 ├── notes/
-│   └── NotesManager.kt         — 3-tier notes persistence manager (global source notes, patch notes, param notes)
+│   └── NotesManager.kt         — 3-tier notes persistence manager (global source notes, preset notes, param notes)
 ├── parameters/
 │   └── Parameter.kt            — ModulatableParameter, CvModulator, ModulationOperator, Waveform, LfoSpeedMode
-├── patches/
-│   ├── PatchManager.kt         — Save/load patches, state management, file modification timestamps (mtime)
+├── presets/
+│   ├── PresetManager.kt         — Save/load presets, state management, file modification timestamps (mtime)
 │   ├── PlayQueueManager.kt     — Manages deck playback queues & AutoVJ dirty deck behaviors
 │   ├── PlaylistManager.kt      — Manages saved setlists
-│   └── ClipboardManager.kt     — Copy/paste for patch elements
+│   └── ClipboardManager.kt     — Copy/paste for preset elements
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource)
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
@@ -79,11 +79,11 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── FBO.kt                  — OpenGL framebuffer wrapper
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
-│   ├── PatchGridPanel.kt       — Modulation matrix: param rows × CV columns
+│   ├── PresetGridPanel.kt       — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
 │   ├── browser/                — Asset Browser, Playlist Editor, Queue Actions, Sidebar panels
-│   └── PatchGridState.kt       — Selection state & 30-level Undo Stack
+│   └── PresetGridState.kt       — Selection state & 30-level Undo Stack
 └── utils/
     └── TimeUtils.kt            — Timing utilities
 ```
@@ -120,22 +120,22 @@ value = result.coerceIn(0f, 1f)
 ```
 ┌──────────────────┬────────────────┬────────────────┐
 │                  │                │                │
-│  Patch Grid      │  Cell Config   │ Mixer/Monitor  │
+│  Preset Grid     │  Cell Config   │ Mixer/Monitor  │
 │  (40% width)     │  (30% width)   │  (30% width)   │
 │                  │                │                │
 └──────────────────┴────────────────┴────────────────┘
 ```
 
-Patch Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck C [same]  
-Patch Grid columns: LFO | AUDIO | TRIG
+Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck C [same]  
+Preset Grid columns: LFO | AUDIO | TRIG
 
 ## Design Principles
 - **Zero-allocation audio loops** — pre-allocated buffers, no object creation in JACK callback or Java Sound conversion loop
-- **Deck C preview** — third deck runs the full render pipeline but is excluded from `Mixer` output; used for patch authoring while A/B perform live
+- **Deck C preview** — third deck runs the full render pipeline but is excluded from `Mixer` output; used for preset authoring while A/B perform live
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `Kifs` all satisfy the interface
 - **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `presets/sources/`)
 - **Thread safety** — `AtomicReference<BeatAnchor>` for beat clock, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
-- **Serializable patches** — `CvModulator` is `@Serializable`; load-time migration remaps legacy source IDs
+- **Serializable presets** — `CvModulator` is `@Serializable`; load-time migration remaps legacy source IDs
 
 ## Build & Run
 ```bash

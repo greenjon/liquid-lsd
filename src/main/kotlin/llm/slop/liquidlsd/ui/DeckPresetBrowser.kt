@@ -4,7 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImString
 import kotlinx.serialization.json.Json
-import llm.slop.liquidlsd.models.DeckPatchDto
+import llm.slop.liquidlsd.models.DeckPresetDto
 import mu.KotlinLogging
 import java.io.File
 
@@ -15,7 +15,7 @@ import java.io.File
  * opened via [open] and drawn every frame via [draw].  When the user selects
  * a preset [onSelect] is called with the clean preset name (no dirty suffix).
  *
- * Tags are read from the `tags` field of each `DeckPatchDto` at scan time.
+ * Tags are read from the `tags` field of each `DeckPresetDto` at scan time.
  * The scan is triggered once on [open] and again whenever the user clicks
  * the Refresh button inside the popup.
  *
@@ -332,7 +332,7 @@ class DeckPresetBrowser(
         val entries = files.mapNotNull { file ->
             try {
                 val content = file.readText()
-                val dto = json.decodeFromString<DeckPatchDto>(content)
+                val dto = json.decodeFromString<DeckPresetDto>(content)
                 PresetEntry(
                     name = file.nameWithoutExtension,
                     tags = dto.tags,

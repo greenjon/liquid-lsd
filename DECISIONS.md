@@ -62,7 +62,7 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## 8. Decoupled Asynchronous Patch & Preset IO
+## 8. Decoupled Asynchronous Preset IO
 - **Decision**: Execute all preset saving/loading (`.lsd` JSON files) on a dedicated daemon background thread (`PresetManager-IO` executor) and pass the loaded DTOs to the main thread via thread-safe queues.
 - **Rationale**: 
   - File I/O is slow and blocking. Saving or loading a preset on the main rendering thread would cause noticeable frame drops during a live VJ performance.

@@ -9,7 +9,7 @@ Liquid LSD features an integrated engine documentation registry, multi-tier user
 Every visual generator, feedback chain control, and mixer parameter in Liquid LSD includes built-in engine documentation supplied by `SourceDocRegistry`.
 
 ### Interactive Parameter Tooltips
-Hovering over any parameter row in the Patch Grid or any slider control across the interface (when tooltips are enabled) displays a multi-section tooltip:
+Hovering over any parameter row in the Preset Grid or any slider control across the interface (when tooltips are enabled) displays a multi-section tooltip:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -46,7 +46,7 @@ Liquid LSD provides three distinct scopes for notes:
 ## Creating & Editing Notes
 
 ### 1. Parameter Notes
-- **How to edit**: Right-click any parameter row in the Patch Grid to open the row context menu, then select **📝 Add/Edit Parameter Note…**.
+- **How to edit**: Right-click any parameter row in the Preset Grid to open the row context menu, then select **📝 Add/Edit Parameter Note…**.
 - **Display**: Appears inside the hover tooltip for that parameter whenever the patch is loaded.
 - **Persistence**: Saved directly inside the `.lsdpatch` file.
 
@@ -55,8 +55,8 @@ Liquid LSD provides three distinct scopes for notes:
 - **Display**: Appears inside the hover tooltip when hovering over the source selection button in Deck Control.
 - **Persistence**: Stored globally in `~/.liquid-lsd/source-notes.json`. Perfect for keeping personal cheat-sheets or performance tips for specific shader engines (e.g. "KIFS folds best with low gain feedback").
 
-### 3. Patch Notes & Deck Monitor Labels
-Each active Deck Monitor panel (Deck A and Deck B) features a soft blue-white **Patch Name Label** below the preview screen:
+### 3. Preset Notes & Deck Monitor Labels
+Each active Deck Monitor panel (Deck A and Deck B) features a soft blue-white **Preset Name Label** below the preview screen:
 
 ```
 ┌───────────────────────────────────────────────────────────┐
@@ -69,8 +69,8 @@ Each active Deck Monitor panel (Deck A and Deck B) features a soft blue-white **
   - Full patch file path and name
   - Last saved timestamp and patch DTO schema version (`Last saved: 2026-08-13 04:30  v1`)
   - The patch note body (or a hint to right-click if empty)
-- **Editing**: Right-click the patch name label and select **📝 Add/Edit Patch Note…** to open the note modal.
-- **Untitled Patches**: If a deck has no saved patch loaded, the label displays `Untitled` in dim grey. Notes cannot be attached to unsaved untitled decks until saved to disk.
+- **Editing**: Right-click the preset name label and select **📝 Add/Edit Patch Note…** to open the note modal.
+- **Untitled Presets**: If a deck has no saved preset loaded, the label displays `Untitled` in dim grey. Notes cannot be attached to unsaved untitled decks until saved to disk.
 
 ---
 

@@ -1,19 +1,19 @@
 # Presets & MIDI Mapping
 
-Liquid LSD provides preset serialization, patch clipboard management, and external MIDI hardware integration.
+Liquid LSD provides preset serialization, preset clipboard management, and external MIDI hardware integration.
 
 ---
 
-## Presets & Patch Serialization
+## Presets & Serialization
 
-Patches store the complete state of a deck, including all visual parameters, feedback settings, active CV modulators, and user notes.
+Presets store the complete state of a deck, including all visual parameters, feedback settings, active CV modulators, and user notes.
 
-### File Format (`.lsdpatch` / `.lsd`)
-- Patches are serialized using `kotlinx.serialization` into human-readable JSON files (`.lsdpatch` or `.lsd`).
+### File Format (`.lsd`)
+- Presets are serialized using `kotlinx.serialization` into human-readable JSON files (.lsd).
 - Presets are stored in `presets/patches/` (and subfolders) and managed via the **Asset Browser** (`F3`).
-- **DTO Backward Compatibility**: `.lsdpatch` files include automatic schema migration. Opening older patches automatically populates default values for new fields (`patchNotes`, `paramNotes`, LFO 2 modulators).
+- **DTO Backward Compatibility**: `.lsd` files include automatic schema migration. Opening older presets automatically populates default values for new fields (`presetNotes, paramNotes, LFO 2 modulators).
 
-### Patch Clipboard (Copy & Paste)
+### Preset Clipboard (Copy & Paste)
 - **Deck Parameter Copying**: You can copy base parameter settings from one deck and paste them onto another deck using right-click context menus in the `FINAL` column or Deck Controls.
 - **Modulator Copying**: Copy individual `CvModulator` configurations or full cell setups between parameters.
 
@@ -21,7 +21,7 @@ Patches store the complete state of a deck, including all visual parameters, fee
 
 ## MIDI Controller Mapping Architecture
 
-Liquid LSD cleanly separates physical hardware controller maps from visual performance patches.
+Liquid LSD cleanly separates physical hardware controller maps from visual performance presets.
 
 ### Hardware MIDI Profiles vs. Per-Patch MIDI Modulators
 

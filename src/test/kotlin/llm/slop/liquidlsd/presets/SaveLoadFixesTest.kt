@@ -1,6 +1,6 @@
 package llm.slop.liquidlsd.presets
 
-import llm.slop.liquidlsd.models.DeckPatchDto
+import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.rendering.Deck
@@ -30,7 +30,7 @@ class SaveLoadFixesTest {
         every { deck.source = any() } answers { assignedSource = firstArg() }
         every { deck.source } answers { assignedSource ?: masterMandala }
 
-        val emptyDto = DeckPatchDto(
+        val emptyDto = DeckPresetDto(
             name = "Empty",
             visualSourceType = "kifs",
             parameters = emptyMap(),

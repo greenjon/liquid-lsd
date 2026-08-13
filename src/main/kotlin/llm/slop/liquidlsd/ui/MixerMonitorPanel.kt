@@ -10,7 +10,7 @@ import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.presets.PresetManager
 
 class MixerMonitorPanel(
-    private val patchState: PatchGridState,
+    private val presetState: PresetGridState,
     private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit,
     private val onUtilityAction: (Int, Deck, Deck) -> Unit, // (mode: 0=Move, 1=Copy, 2=Swap, from, to)
     private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
@@ -115,7 +115,7 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_C", availW, layout.deckCHeight)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop patch files to load.")
+            ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop preset files to load.")
         }
 
         if (ImGui.beginDragDropSource()) {
@@ -135,7 +135,7 @@ class MixerMonitorPanel(
             if (payload != null) {
                 val file = java.io.File(payload)
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                    session.patchManager.loadDeckPresetAsync(file, isDeckA = false, isDeckC = true)
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckC = true)
                 }
             }
             val payloadMonitor = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG")
@@ -248,13 +248,13 @@ class MixerMonitorPanel(
             ImGui.setTooltip(baseTip)
         }
 
-        val isTarget = patchState.midiLearnTarget?.let {
+        val isTarget = presetState.midiLearnTarget?.let {
             it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
         } ?: false
 
-        if (patchState.isMidiLearnMode) {
+        if (presetState.isMidiLearnMode) {
             if (ImGui.isItemClicked(0)) {
-                patchState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, label, param, min, max)
+                presetState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, label, param, min, max)
             }
         } else if (ImGui.isItemActive()) {
             val mouseX = ImGui.getIO().mousePos.x
@@ -285,7 +285,7 @@ class MixerMonitorPanel(
                 0,
                 1.5f
             )
-        } else if (patchState.isMidiLearnMode) {
+        } else if (presetState.isMidiLearnMode) {
             // Subtle dotted or low alpha border to show map-ability
             dl.addRect(
                 barStartX, barScreenY,

@@ -16,7 +16,7 @@ import java.util.concurrent.Executors
 
 object PresetManager {
     private val logger = KotlinLogging.logger {}
-    private val patchIoExecutor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
+    private val presetIoExecutor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "PresetManager-IO").apply { isDaemon = true }
     }
 
@@ -49,7 +49,7 @@ object PresetManager {
     @Volatile
     var sessionState = SessionState()
 
-    val deckStatus = Array(3) { AtomicReference(PatchIOStatus()) }
+    val deckStatus = Array(3) { AtomicReference(PresetIOStatus()) }
     private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
 
     val globalPresetQueue = ConcurrentLinkedQueue<GlobalPresetDto>()
@@ -57,10 +57,6 @@ object PresetManager {
     val deckBPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
     val deckCPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
 
-    val globalPatchQueue get() = globalPresetQueue
-    val deckAPatchQueue get() = deckAPresetQueue
-    val deckBPatchQueue get() = deckBPresetQueue
-    val deckCPatchQueue get() = deckCPresetQueue
 
     var activePresetA: String? = null
     var activePresetB: String? = null
@@ -96,7 +92,6 @@ object PresetManager {
         return current != cached
     }
 
-    fun isGlobalPatchDirty(mixer: Mixer): Boolean = isGlobalPresetDirty(mixer)
 
     fun resetToDefault(mixer: Mixer) {
         val defaultDto = defaultGlobalPresetDto ?: return
@@ -204,9 +199,9 @@ object PresetManager {
         }
     }
 
-    fun loadGlobalPatchAsync(file: File) {
+    fun loadGlobalPresetAsync(file: File) {
         CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
+            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Loading global preset from ${file.absolutePath} in background..." }
                 val content = file.readText()
@@ -216,9 +211,9 @@ object PresetManager {
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load global preset from ${file.absolutePath}" }
             } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
             }
-        }, patchIoExecutor)
+        }, presetIoExecutor)
     }
 
     fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false) {
@@ -230,7 +225,7 @@ object PresetManager {
         deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.LOADING))
         val fileMtime = file.lastModified().takeIf { it > 0L }
         CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
+            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Loading deck preset from ${file.absolutePath} in background..." }
                 if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
@@ -262,7 +257,7 @@ object PresetManager {
                 if (altFile != null && altFile.exists()) {
                     logger.info { "File not found or failed, trying alternative: ${altFile.name}" }
                     // clear flag before recursive call
-                    llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+                    llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
                     loadDeckPresetAsync(altFile, isDeckA, isDeckC)
                     return@runAsync
                 }
@@ -270,9 +265,9 @@ object PresetManager {
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
                 deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
             } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
             }
-        }, patchIoExecutor)
+        }, presetIoExecutor)
     }
 
     fun saveGlobalPresetAsync(file: File, mixer: Mixer, name: String) {
@@ -280,7 +275,7 @@ object PresetManager {
         val dto = mixer.toDto(name)
         cachedGlobalDto = dto
         CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
+            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Saving global preset to ${file.absolutePath} in background..." }
                 val content = json.encodeToString(dto)
@@ -290,12 +285,11 @@ object PresetManager {
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save global preset to ${file.absolutePath}" }
             } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
             }
-        }, patchIoExecutor)
+        }, presetIoExecutor)
     }
 
-    fun saveGlobalPatchAsync(file: File, mixer: Mixer, name: String) = saveGlobalPresetAsync(file, mixer, name)
 
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
         // Capture deck state on the main thread (Phase 2c: include tags)
@@ -308,7 +302,7 @@ object PresetManager {
         }
 
         val future = CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
+            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
             try {
                 logger.info { "Saving deck preset to ${file.absolutePath} in background..." }
                 val content = json.encodeToString(dto)
@@ -330,17 +324,15 @@ object PresetManager {
                     deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
                 }
             } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
+                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
             }
-        }, patchIoExecutor)
+        }, presetIoExecutor)
 
         if (deckIndex in 0..2) {
             pendingSaves[deckIndex].set(future)
         }
     }
 
-    fun saveDeckPatchAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) =
-        saveDeckPresetAsync(file, deck, name, tags, deckIndex)
 
     fun applyPendingPresets(mixer: Mixer) {
         // Poll global preset queue
@@ -402,7 +394,6 @@ object PresetManager {
         }
     }
 
-    fun applyPendingPatches(mixer: Mixer) = applyPendingPresets(mixer)
 
     fun saveSession(mixer: Mixer) {
         try {
@@ -571,5 +562,5 @@ object PresetManager {
     }
 }
 
-typealias PatchManager = PresetManager
+
 

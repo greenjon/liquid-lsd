@@ -16,8 +16,8 @@ sealed class NoteContext {
     data class Param(val deckLabel: String, val paramKey: String, val displayLabel: String) : NoteContext()
     /** A global source note, stored by sourceId. */
     data class Source(val sourceId: String, val displayName: String) : NoteContext()
-    /** A patch-level note stored within the .lsdpatch file. */
-    data class Patch(val deckLabel: String, val patchName: String) : NoteContext()
+    /** A preset-level note stored within the preset file. */
+    data class Preset(val deckLabel: String, val presetName: String) : NoteContext()
 }
 
 /**
@@ -44,7 +44,7 @@ object NoteEditorModal {
         val existing = when (context) {
             is NoteContext.Param  -> NotesManager.getParamNote(context.deckLabel, context.paramKey)
             is NoteContext.Source -> NotesManager.getSourceNote(context.sourceId)
-            is NoteContext.Patch  -> NotesManager.getPatchNote(context.deckLabel)
+            is NoteContext.Preset -> NotesManager.getPresetNote(context.deckLabel)
         }
         textBuffer.set(existing)
         pendingOpen = true
@@ -71,7 +71,7 @@ object NoteEditorModal {
             val title = when (ctx) {
                 is NoteContext.Param  -> "Parameter note: ${ctx.displayLabel}"
                 is NoteContext.Source -> "Source note: ${ctx.displayName}"
-                is NoteContext.Patch  -> "Patch note: ${ctx.patchName}"
+                is NoteContext.Preset -> "Preset note: ${ctx.presetName}"
             }
             ImGui.text(title)
             ImGui.separator()
@@ -90,9 +90,9 @@ object NoteEditorModal {
             // Footer hint
             when (ctx) {
                 is NoteContext.Source ->
-                    ImGui.textDisabled("Saved globally — persists across all patches and app restarts.")
-                is NoteContext.Param, is NoteContext.Patch ->
-                    ImGui.textDisabled("Saved with this patch — included next time you save.")
+                    ImGui.textDisabled("Saved globally — persists across all presets and app restarts.")
+                is NoteContext.Param, is NoteContext.Preset ->
+                    ImGui.textDisabled("Saved with this preset — included next time you save.")
             }
 
             ImGui.spacing()
@@ -104,7 +104,7 @@ object NoteEditorModal {
                 when (ctx) {
                     is NoteContext.Param  -> NotesManager.setParamNote(ctx.deckLabel, ctx.paramKey, text)
                     is NoteContext.Source -> NotesManager.setSourceNote(ctx.sourceId, text)
-                    is NoteContext.Patch  -> NotesManager.setPatchNote(ctx.deckLabel, text)
+                    is NoteContext.Preset -> NotesManager.setPresetNote(ctx.deckLabel, text)
                 }
                 pendingContext = null
                 ImGui.closeCurrentPopup()

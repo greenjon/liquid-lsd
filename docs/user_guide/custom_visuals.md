@@ -56,7 +56,7 @@ The manifest file defines the shader metadata, UI parameters, and optional docum
 - **`parameters`**: Array of modulatable parameter descriptors:
   - `name`: Parameter title.
   - `default`, `min`, `max`: Parameter range bounds.
-  - `description` *(Optional)*: Parameter documentation string displayed in the Patch Grid hover tooltip.
+  - `description` *(Optional)*: Parameter documentation string displayed in the Preset Grid hover tooltip.
 
 > [!TIP]
 > **Automatic View Subgrouping**  

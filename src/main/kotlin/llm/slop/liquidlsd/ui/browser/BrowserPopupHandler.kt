@@ -31,7 +31,7 @@ object BrowserPopupHandler {
             }
             
             val typeStr = when (target.type) {
-                AssetType.PRESET, AssetType.PATCH -> "Preset"
+                AssetType.PRESET -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
             }
@@ -43,8 +43,8 @@ object BrowserPopupHandler {
                 val newName = renameBuffer.get().trim()
                 if (newName.isNotBlank()) {
                     FileSystemManager.renameFile(target.path, newName).onSuccess { newPath ->
-                        if (target.type == AssetType.PRESET || target.type == AssetType.PATCH) {
-                            PlaylistManager.updatePatchPathInAllPlaylists(target.path, newPath)
+                        if (target.type == AssetType.PRESET) {
+                            PlaylistManager.updatePresetPathInAllPlaylists(target.path, newPath)
                             AssetBrowserPanel.activePlaylistData = null
                             AssetBrowserPanel.refreshAssets()
                         } else if (target.type == AssetType.PLAYLIST) {
@@ -80,7 +80,7 @@ object BrowserPopupHandler {
             }
             
             val typeStr = when (target.type) {
-                AssetType.PRESET, AssetType.PATCH -> "Preset"
+                AssetType.PRESET -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
             }
@@ -90,7 +90,7 @@ object BrowserPopupHandler {
             ImGui.separator()
             if (ImGui.button("Delete", 120f, 0f)) {
                 FileSystemManager.deleteFile(target.path).onSuccess {
-                    if (target.type == AssetType.PRESET || target.type == AssetType.PATCH) {
+                    if (target.type == AssetType.PRESET) {
                         AssetBrowserPanel.refreshAssets()
                     } else if (target.type == AssetType.PLAYLIST) {
                         val currentPlaylistPath = (SidebarPanel.currentView as? LibraryView.SpecificPlaylist)?.playlistFile?.absolutePath
@@ -147,7 +147,7 @@ object BrowserPopupHandler {
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
                         session.playQueueManager.queue.forEach { queueFile ->
-                            PlaylistManager.insertPatch(playlist, queueFile.absolutePath, playlist.patches.size)
+                            PlaylistManager.insertPreset(playlist, queueFile.absolutePath, playlist.presets.size)
                         }
                         PlaylistManager.savePlaylist(playlist)
                     }

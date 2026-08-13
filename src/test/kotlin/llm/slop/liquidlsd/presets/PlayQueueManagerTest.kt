@@ -20,15 +20,15 @@ class PlayQueueManagerTest {
 
     @BeforeTest
     fun setUp() {
-        mockkObject(PatchManager)
-        every { PatchManager.isDeckDirty(any(), any()) } returns false
-        every { PatchManager.loadDeckPresetAsync(any(), any()) } returns Unit
+        mockkObject(PresetManager)
+        every { PresetManager.isDeckDirty(any(), any()) } returns false
+        every { PresetManager.loadDeckPresetAsync(any(), any()) } returns Unit
         PlayQueueManager.clearQueue()
     }
 
     @AfterTest
     fun tearDown() {
-        unmockkObject(PatchManager)
+        unmockkObject(PresetManager)
     }
 
     @Test
@@ -225,7 +225,7 @@ class PlayQueueManagerTest {
     }
 
     @Test
-    fun testSharedPlaylistParserResolvesJsonItemsWithPatchExtensions() {
+    fun testSharedPlaylistParserResolvesJsonItemsWithPresetExtensions() {
         val tempDir = createTempDirectory().toFile()
         val patchFile = File(tempDir, "testPatch.lsd").apply { writeText("{}") }
         val playlistContent = """

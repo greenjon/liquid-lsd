@@ -20,7 +20,7 @@ object PresetGridRenderer {
     fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String, 
         paramKey: String, 
         param: ModulatableParameter, 
-        state: PatchGridState, 
+        state: PresetGridState, 
         labelColW: Float, 
         mixer: Mixer,
         gridStartX: Float,
@@ -187,10 +187,10 @@ object PresetGridRenderer {
         ImGui.invisibleButton("##final_cell", CELL, CELL, btnFlagsFinal)
         val isFinalHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked()) {
-            state.select(PatchCellId(paramKey, "final"), param)
+            state.select(PresetCellId(paramKey, "final"), param)
         }
         if (isFinalHovered && ImGui.isMouseReleased(2)) {
-            state.select(PatchCellId(paramKey, "final"), param)
+            state.select(PresetCellId(paramKey, "final"), param)
             onPushUndo()
             param.reset()
         }
@@ -229,7 +229,7 @@ object PresetGridRenderer {
         if (session.uiTheme.showMidiCol) {
             val midiX = gridStartX + labelColW + getColumnOffset("midi")
             val midiY = rowScreenY
-            val midiCellId = PatchCellId(paramKey, "midi")
+            val midiCellId = PresetCellId(paramKey, "midi")
             val isMidiSelected = state.selectedCell == midiCellId
             val isMidiHoveredCol = mousePos.x >= midiX && mousePos.x <= (midiX + CELL)
             val isMidiCrosshair = isHoveredRow && isMidiHoveredCol
@@ -348,7 +348,7 @@ object PresetGridRenderer {
         // 3. CV cells
         val cvCols = getCvColumns()
         for (cvId in cvCols) {
-            val cellId = PatchCellId(paramKey, cvId)
+            val cellId = PresetCellId(paramKey, cvId)
             val isSelected = state.selectedCell == cellId
             val activeMods = if (cvId == "audio") {
                 param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
@@ -677,5 +677,5 @@ object PresetGridRenderer {
     }
 }
 
-typealias PatchGridRenderer = PresetGridRenderer
+
 

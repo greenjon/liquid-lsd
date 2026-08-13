@@ -22,8 +22,8 @@ Key properties:
 | Property | Purpose |
 |----------|---------|
 | `baseValue` | Starting value before any modulation |
-| `baseMin / baseMax` | Randomization range for `baseValue` at patch-load time |
-| `randomizeBase` | If true, `baseValue` is re-rolled at patch-load from `[baseMin, baseMax]` |
+| `baseMin / baseMax` | Randomization range for `baseValue` at preset-load time |
+| `randomizeBase` | If true, `baseValue` is re-rolled at preset-load from `[baseMin, baseMax]` |
 | `minClamp / maxClamp` | Hard output clamp; also determines polarity (see below) |
 | `meterType` | `MONOPOLAR` (default), `BIPOLAR` (minClamp < 0), `ENDLESS`, `DISCRETE` |
 | `modulators` | `CopyOnWriteArrayList<CvModulator>` — safe for read-heavy concurrent access |
@@ -75,7 +75,7 @@ modulation effect.
 ## CvModulator — Full Field Reference
 
 **File**: `parameters/CvModulator.kt`  
-**Serializable** — all fields are stored in `.lsd` patch files.
+**Serializable** — all fields are stored in `.lsd` preset files.
 
 ### Identity
 
@@ -115,7 +115,7 @@ holdMin / holdMax / randomizeHold
 dcOffsetMin / dcOffsetMax / randomizeDcOffset
 ```
 
-When the patch randomize action fires, `randomizeActiveValues()` samples uniformly within each
+When the preset randomize action fires, `randomizeActiveValues()` samples uniformly within each
 `[min, max]` range. For beat-based subdivision the sample is drawn from a discrete set of musical
 values `{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}` instead of a continuous uniform.
 
@@ -242,7 +242,7 @@ evaluateModulator(mod) → Float   (range [-1, 1])
 ## Serialization
 
 `CvModulator` is `@Serializable` (kotlinx-serialization). The DTO conversion lives in
-`models/PatchModels.kt`:
+`models/PresetModels.kt`:
 
 - `ModulatorDto.toDomain()` — load path; includes a one-line migration:
   `"gen1" / "gen2"` → `"lfo"` to silently upgrade patches saved before the rename.

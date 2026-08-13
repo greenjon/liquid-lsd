@@ -26,7 +26,7 @@ import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import java.io.File
 
 /**
- * Draws the Patch Grid panel. Rows = grouped ModulatableParameters.
+ * Draws the Preset Grid panel. Rows = grouped ModulatableParameters.
  * Columns = CV sources. Each intersection is a clickable cell.
  */
 object PresetGridPanel {
@@ -98,8 +98,8 @@ object PresetGridPanel {
         }
     }
 
-    fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PatchGridState): Float {
-        val sideTabWidth = PatchGridTabs.calculateLeftTabsWidth(session) + 4f
+    fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState): Float {
+        val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session) + 4f
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
@@ -107,7 +107,7 @@ object PresetGridPanel {
             else -> null
         }
         val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
-            PatchGridTabs.calculateSubTabsWidth(session, state, activeDeck)
+            PresetGridTabs.calculateSubTabsWidth(session, state, activeDeck)
         } else 0f
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
@@ -124,13 +124,13 @@ object PresetGridPanel {
     private var rowIndex = 0
     private var lastBoxBottomY = 0f
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PatchGridState) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState) {
         rowIndex = 0
 
-        PatchGridKeyboard.handleKeyboardShortcuts(state, mixer, { s, m -> PatchGridUndo.pushUndoState(s, m) }, { s, m -> PatchGridUndo.performUndo(s, m) })
+        PresetGridKeyboard.handleKeyboardShortcuts(state, mixer, { s, m -> PresetGridUndo.pushUndoState(s, m) }, { s, m -> PresetGridUndo.performUndo(s, m) })
 
-        val sideTabWidth = PatchGridTabs.calculateLeftTabsWidth(session)
-        if (ImGui.beginTable("##patch_grid_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)) {
+        val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session)
+        if (ImGui.beginTable("##preset_grid_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)) {
             ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, sideTabWidth + 4f)
             ImGui.tableSetupColumn("##main_grid", imgui.flag.ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
@@ -146,16 +146,16 @@ object PresetGridPanel {
 
             // Left column: Side tabs (MIX, A, B, C)
             ImGui.tableSetColumnIndex(0)
-            PatchGridTabs.drawLeftTabs(session, state, mixer, topOffset = headerH)
+            PresetGridTabs.drawLeftTabs(session, state, mixer, topOffset = headerH)
 
-            // Right column: Main Patch Grid content
+            // Right column: Main Preset Grid content
             ImGui.tableSetColumnIndex(1)
 
             val avail = ImGui.getContentRegionAvailX()
             gridStartX = ImGui.getCursorScreenPosX()
 
             val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
-                PatchGridTabs.calculateSubTabsWidth(session, state, activeDeck)
+                PresetGridTabs.calculateSubTabsWidth(session, state, activeDeck)
             } else 0f
 
             val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
@@ -177,37 +177,37 @@ object PresetGridPanel {
                 ImGui.spacing()
             }
 
-            if (ImGui.beginChild("##patch_grid_scroll", 0f, 0f, false)) {
+            if (ImGui.beginChild("##preset_grid_scroll", 0f, 0f, false)) {
                 if (state.activeTopTab == "Mixer") {
-                    PatchGridTabs.drawSubGroupContent(session, "Mixer", "Mixer", state) {
-                        PatchGridRenderer.drawParamRow(session, "crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer, gridStartX, 0, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "master Alpha",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, 1, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer, gridStartX, 2, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "fade speed",  "Mixer/xfadeSpeed",  mixer.xfadeSpeed,  state, labelColW, mixer, gridStartX, 3, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, 4, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, 5, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, 6, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, 7, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "rand Deck C", "Mixer/randDeckC", mixer.randDeckC, state, labelColW, mixer, gridStartX, 8, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
-                        PatchGridRenderer.drawParamRow(session, "rand All", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, 9, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                    PresetGridTabs.drawSubGroupContent(session, "Mixer", "Mixer", state) {
+                        PresetGridRenderer.drawParamRow(session, "crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer, gridStartX, 0, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "master Alpha",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, 1, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer, gridStartX, 2, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "fade speed",  "Mixer/xfadeSpeed",  mixer.xfadeSpeed,  state, labelColW, mixer, gridStartX, 3, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, 4, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, 5, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, 6, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, 7, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "rand Deck C", "Mixer/randDeckC", mixer.randDeckC, state, labelColW, mixer, gridStartX, 8, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "rand All", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, 9, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 } else if (state.activeTopTab == "Deck A") {
                     if (mixer.deckA.isEmpty) {
                         drawLaunchpad(session, "Deck A", mixer.deckA, state, mixer)
                     } else {
-                        PatchGridTabs.drawDeckGroupContent(session, "Deck A", mixer.deckA, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                        PresetGridTabs.drawDeckGroupContent(session, "Deck A", mixer.deckA, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 } else if (state.activeTopTab == "Deck B") {
                     if (mixer.deckB.isEmpty) {
                         drawLaunchpad(session, "Deck B", mixer.deckB, state, mixer)
                     } else {
-                        PatchGridTabs.drawDeckGroupContent(session, "Deck B", mixer.deckB, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                        PresetGridTabs.drawDeckGroupContent(session, "Deck B", mixer.deckB, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 } else if (state.activeTopTab == "Deck C") {
                     if (mixer.deckC.isEmpty) {
                         drawLaunchpad(session, "Deck C", mixer.deckC, state, mixer)
                     } else {
-                        PatchGridTabs.drawDeckGroupContent(session, "Deck C", mixer.deckC, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PatchGridUndo.pushUndoState(state, mixer) }
+                        PresetGridTabs.drawDeckGroupContent(session, "Deck C", mixer.deckC, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 }
             }
@@ -218,9 +218,9 @@ object PresetGridPanel {
 
             // Draw Connected Folder Frame around subtabs & parameters
             val dl = ImGui.getWindowDrawList()
-            val accentColor = PatchGridTabs.getDeckColor(state.activeTopTab, 0.7f)
-            val accentFill  = PatchGridTabs.getDeckColor(state.activeTopTab, 0.04f)
-            val btnColor    = PatchGridTabs.getDeckColor(state.activeTopTab, 1.0f)
+            val accentColor = PresetGridTabs.getDeckColor(state.activeTopTab, 0.7f)
+            val accentFill  = PresetGridTabs.getDeckColor(state.activeTopTab, 0.04f)
+            val btnColor    = PresetGridTabs.getDeckColor(state.activeTopTab, 1.0f)
 
             val boxMinX = gridStartX - 6f
             val boxTopY = containerTopY
@@ -255,10 +255,10 @@ object PresetGridPanel {
             }
 
             // 2. Seamless folder tab bridge connecting active side tab button to the container
-            if (PatchGridTabs.activeBtnMaxX > 0f) {
-                val btnTop = PatchGridTabs.activeBtnMinY
-                val btnBot = PatchGridTabs.activeBtnMaxY
-                val btnRight = PatchGridTabs.activeBtnMaxX
+            if (PresetGridTabs.activeBtnMaxX > 0f) {
+                val btnTop = PresetGridTabs.activeBtnMinY
+                val btnBot = PresetGridTabs.activeBtnMaxY
+                val btnRight = PresetGridTabs.activeBtnMaxX
 
                 // Overwrite the left border segment alongside the button with button color to form seamless tab connection
                 dl.addLine(boxMinX, btnTop + 1f, boxMinX, btnBot - 1f, btnColor, 3.5f)
@@ -289,7 +289,7 @@ object PresetGridPanel {
         return (maxH + 5f).coerceAtLeast(40f)
     }
 
-    private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PatchGridState, mixer: Mixer) {
+    private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PresetGridState, mixer: Mixer) {
         val dl = ImGui.getWindowDrawList()
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
@@ -313,7 +313,7 @@ object PresetGridPanel {
         if (activeDeck != null && !activeDeck.isEmpty) {
             val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
             ImGui.setCursorScreenPos(startX, startY + headerH - subTabH - 2f)
-            PatchGridTabs.drawSubTabs(session, state, mixer)
+            PresetGridTabs.drawSubTabs(session, state, mixer)
         }
         
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
@@ -409,12 +409,12 @@ object PresetGridPanel {
         session: llm.slop.liquidlsd.SessionContext,
         deckLabel: String,
         deck: Deck,
-        state: PatchGridState,
+        state: PresetGridState,
         mixer: Mixer
     ) {
         val isDeckA = deckLabel == "Deck A"
         val isDeckC = deckLabel == "Deck C"
-        val deckColorU32 = PatchGridTabs.getDeckColor(deckLabel, 1f)
+        val deckColorU32 = PresetGridTabs.getDeckColor(deckLabel, 1f)
 
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(300f)
         val cardW = (availW * 0.92f).coerceAtMost(520f)
@@ -466,16 +466,16 @@ object PresetGridPanel {
                 val clearPresetState = {
                     when {
                         deck === mixer.deckA -> {
-                            session.patchManager.activePresetA = null
-                            session.patchManager.cachedDtoA = null
+                            session.presetManager.activePresetA = null
+                            session.presetManager.cachedDtoA = null
                         }
                         deck === mixer.deckB -> {
-                            session.patchManager.activePresetB = null
-                            session.patchManager.cachedDtoB = null
+                            session.presetManager.activePresetB = null
+                            session.presetManager.cachedDtoB = null
                         }
                         deck === mixer.deckC -> {
-                            session.patchManager.activePresetC = null
-                            session.patchManager.cachedDtoC = null
+                            session.presetManager.activePresetC = null
+                            session.presetManager.cachedDtoC = null
                         }
                     }
                 }
@@ -486,7 +486,7 @@ object PresetGridPanel {
                         deck.source = masterMandala.clone()
                         deck.isEmpty = false
                         clearPresetState()
-                        PatchGridUndo.pushUndoState(state, mixer)
+                        PresetGridUndo.pushUndoState(state, mixer)
                     }
                 }
 
@@ -496,7 +496,7 @@ object PresetGridPanel {
                         deck.source = source.clone()
                         deck.isEmpty = false
                         clearPresetState()
-                        PatchGridUndo.pushUndoState(state, mixer)
+                        PresetGridUndo.pushUndoState(state, mixer)
                     }
                 }
                 ImGui.endPopup()
@@ -512,7 +512,7 @@ object PresetGridPanel {
                 ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Choose a saved preset patch for $deckLabel")
+                ImGui.setTooltip("Choose a saved preset for $deckLabel")
             }
             ImGui.popStyleColor(3)
 
@@ -521,17 +521,17 @@ object PresetGridPanel {
                 ImGui.separator()
 
                 val presetDir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
-                val patchFiles = if (presetDir.exists()) {
+                val presetFiles = if (presetDir.exists()) {
                     presetDir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".lsd")) }?.toList() ?: emptyList()
                 } else emptyList()
 
-                if (patchFiles.isEmpty()) {
+                if (presetFiles.isEmpty()) {
                     ImGui.textDisabled("No presets found in library/presets/")
                 } else {
-                    for (file in patchFiles.sortedBy { it.nameWithoutExtension }) {
+                    for (file in presetFiles.sortedBy { it.nameWithoutExtension }) {
                         val displayName = file.nameWithoutExtension.replace('_', ' ')
                         if (ImGui.menuItem(displayName)) {
-                            session.patchManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
+                            session.presetManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
                         }
                     }
                 }
@@ -550,13 +550,13 @@ object PresetGridPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
             if (ImGui.button("🎲 Quick Random", buttonWidth, buttonHeight)) {
                 val presetDir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
-                val patchFiles = if (presetDir.exists()) {
+                val presetFiles = if (presetDir.exists()) {
                     presetDir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".lsd")) }?.toList() ?: emptyList()
                 } else emptyList()
 
-                if (patchFiles.isNotEmpty()) {
-                    val randomFile = patchFiles.random()
-                    session.patchManager.loadDeckPresetAsync(randomFile, isDeckA, isDeckC)
+                if (presetFiles.isNotEmpty()) {
+                    val randomFile = presetFiles.random()
+                    session.presetManager.loadDeckPresetAsync(randomFile, isDeckA, isDeckC)
                 } else {
                     val randomRatio = MandalaLibrary.MandalaRatios.random()
                     val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
@@ -565,12 +565,12 @@ object PresetGridPanel {
                         newMandala.recipe = randomRatio
                         deck.source = newMandala
                         deck.isEmpty = false
-                        PatchGridUndo.pushUndoState(state, mixer)
+                        PresetGridUndo.pushUndoState(state, mixer)
                     }
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Instantly load a random preset patch or Mandala recipe into $deckLabel")
+                ImGui.setTooltip("Instantly load a random preset or Mandala recipe into $deckLabel")
             }
             ImGui.popStyleColor(3)
 
@@ -602,5 +602,5 @@ fun Deck.randomizeModulators() {
     }
 }
 
-typealias PatchGridPanel = PresetGridPanel
+
 

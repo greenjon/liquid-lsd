@@ -19,7 +19,7 @@ object PresetGridKeyboard {
         
         if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Z), false)) {
             if (isShift) {
-                // Currently no redo queue is tracked by PatchGridUndo.kt but we swallow the key
+                // Currently no redo queue is tracked by PresetGridUndo.kt but we swallow the key
             } else {
                 onPerformUndo(state, mixer)
             }
@@ -98,5 +98,4 @@ object PresetGridKeyboard {
     }
 }
 
-typealias PatchGridKeyboard = PresetGridKeyboard
 

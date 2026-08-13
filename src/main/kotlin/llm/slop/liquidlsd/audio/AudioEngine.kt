@@ -319,7 +319,7 @@ object AudioEngine {
         private set
 
     val presetIOInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
-    val patchIOInFlight get() = presetIOInFlight
+
 
     private val callbackLatencyNanos = java.util.concurrent.atomic.AtomicLong(0L)
 

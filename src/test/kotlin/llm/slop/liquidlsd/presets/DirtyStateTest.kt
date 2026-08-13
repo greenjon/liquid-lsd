@@ -5,8 +5,8 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.models.DeckPatchDto
-import llm.slop.liquidlsd.models.GlobalPatchDto
+import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.GlobalPresetDto
 import llm.slop.liquidlsd.models.toDto
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -41,7 +41,7 @@ class DirtyStateTest {
         assertFalse(PresetManager.isDeckDirty(deck, mixer))
         
         // "Load" a preset by setting cachedDto
-        val initialDto = mockk<DeckPatchDto>()
+        val initialDto = mockk<DeckPresetDto>()
         every { initialDto.name } returns "TestPreset"
         PresetManager.cachedDtoA = initialDto
         PresetManager.activePresetA = "TestPreset"
@@ -53,7 +53,7 @@ class DirtyStateTest {
         assertFalse(PresetManager.isDeckDirty(deck, mixer))
         
         // Change a parameter (mock toDto to return something different)
-        val modifiedDto = mockk<DeckPatchDto>()
+        val modifiedDto = mockk<DeckPresetDto>()
         every { modifiedDto.name } returns "TestPreset"
         every { deck.toDto(any(), any()) } returns modifiedDto
         
@@ -65,22 +65,22 @@ class DirtyStateTest {
     fun testGlobalDirtyState() {
         val mixer = mockk<Mixer>()
         
-        val initialDto = mockk<GlobalPatchDto>()
+        val initialDto = mockk<GlobalPresetDto>()
         every { initialDto.name } returns "Untitled Project"
         
         every { mixer.toDto(any()) } returns initialDto
         PresetManager.initializeDefault(mixer)
         
         // Initial state should not be dirty
-        assertFalse(PresetManager.isGlobalPatchDirty(mixer))
+        assertFalse(PresetManager.isGlobalPresetDirty(mixer))
         
         // Change something
-        val modifiedDto = mockk<GlobalPatchDto>()
+        val modifiedDto = mockk<GlobalPresetDto>()
         every { modifiedDto.name } returns "Untitled Project"
         every { mixer.toDto(any()) } returns modifiedDto
         
         // Now it SHOULD be dirty
-        assertTrue(PresetManager.isGlobalPatchDirty(mixer))
+        assertTrue(PresetManager.isGlobalPresetDirty(mixer))
     }
 
     @Test
@@ -103,8 +103,8 @@ class DirtyStateTest {
 
         val globalAlpha = llm.slop.liquidlsd.models.ParameterDto(1f, 0f, 1f, false, emptyList())
 
-        // Use real DeckPatchDto objects with static parameters
-        val cachedDeckDto = DeckPatchDto(
+        // Use real DeckPresetDto objects with static parameters
+        val cachedDeckDto = DeckPresetDto(
             name = "Test",
             visualSourceType = "Mandala",
             parameters = mapOf("Lobes" to staticInitial),
@@ -115,7 +115,7 @@ class DirtyStateTest {
         PresetManager.cachedDtoA = cachedDeckDto
         PresetManager.activePresetA = "Test"
 
-        val currentDeckDto = DeckPatchDto(
+        val currentDeckDto = DeckPresetDto(
             name = "Test",
             visualSourceType = "Mandala",
             parameters = mapOf("Lobes" to staticOther),

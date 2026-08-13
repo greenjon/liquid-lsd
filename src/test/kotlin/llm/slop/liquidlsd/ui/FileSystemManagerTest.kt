@@ -31,7 +31,7 @@ class FileSystemManagerTest {
     }
 
     @Test
-    fun testManagedAssetPathAllowsPatchAndPlaylistRootsOnly() {
+    fun testManagedAssetPathAllowsPresetAndPlaylistRootsOnly() {
         assertTrue(FileSystemManager.isManagedAssetPath(File("library/presets/test.lsd")))
         assertTrue(FileSystemManager.isManagedAssetPath(File("library/playlists/test.lsdset")))
         assertFalse(FileSystemManager.isManagedAssetPath(File("library/midi/test.json")))
@@ -40,8 +40,8 @@ class FileSystemManagerTest {
 
     @Test
     fun testRenameRejectsTargetOutsideManagedRoots() {
-        val patchDir = FileSystemManager.getPatchesRoot()
-        val source = File(patchDir, "rename-escape-test.lsd").apply { writeText("{}") }
+        val presetDir = FileSystemManager.getPresetsRoot()
+        val source = File(presetDir, "rename-escape-test.lsd").apply { writeText("{}") }
 
         try {
             val result = FileSystemManager.renameFile(source.absolutePath, "../midi/escaped")
@@ -62,8 +62,8 @@ class FileSystemManagerTest {
 
     @Test
     fun testDeleteAllowsTargetInsideManagedRoots() {
-        val patchDir = FileSystemManager.getPatchesRoot()
-        val source = File(patchDir, "delete-test.lsd").apply { writeText("{}") }
+        val presetDir = FileSystemManager.getPresetsRoot()
+        val source = File(presetDir, "delete-test.lsd").apply { writeText("{}") }
         val result = FileSystemManager.deleteFile(source.absolutePath)
         assertTrue(result.isSuccess)
         assertFalse(source.exists())

@@ -30,7 +30,7 @@ object SidebarPanel {
             AssetBrowserPanel.refreshAssets()
         }
         if (presetsOpened) {
-            drawPatchesFolderTree(presetsRoot)
+            drawPresetsFolderTree(presetsRoot)
             ImGui.treePop()
         }
 
@@ -71,7 +71,7 @@ object SidebarPanel {
                 if (ImGui.beginDragDropTarget()) {
                     val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                     if (payload != null) {
-                        handlePatchDropOnPlaylist(payload, File(asset.path))
+                        handlePresetDropOnPlaylist(payload, File(asset.path))
                     }
                     ImGui.endDragDropTarget()
                 }
@@ -121,10 +121,10 @@ object SidebarPanel {
         }
     }
 
-    private fun drawPatchesFolderTree(root: File) {
+    private fun drawPresetsFolderTree(root: File) {
         val subdirs = root.listFiles()?.filter { it.isDirectory }?.sortedBy { it.name } ?: emptyList()
         subdirs.forEach { subDir ->
-            val isSelected = (currentView as? LibraryView.Patches)?.currentDir?.absolutePath == subDir.absolutePath
+            val isSelected = (currentView as? LibraryView.Presets)?.currentDir?.absolutePath == subDir.absolutePath
             val flags = ImGuiTreeNodeFlags.OpenOnArrow or ImGuiTreeNodeFlags.OpenOnDoubleClick or ImGuiTreeNodeFlags.SpanAvailWidth
             val hasChildren = subDir.listFiles()?.any { it.isDirectory } == true
             val nodeFlags = if (isSelected) flags or ImGuiTreeNodeFlags.Selected else flags
@@ -132,18 +132,18 @@ object SidebarPanel {
             
             val opened = ImGui.treeNodeEx("[D] ${subDir.name}##folder_${subDir.absolutePath}", finalFlags)
             if (ImGui.isItemClicked() && !ImGui.isItemToggledOpen()) {
-                currentView = LibraryView.Patches(subDir)
+                currentView = LibraryView.Presets(subDir)
                 AssetBrowserPanel.refreshAssets()
             }
             if (opened) {
-                drawPatchesFolderTree(subDir)
+                drawPresetsFolderTree(subDir)
                 ImGui.treePop()
             }
         }
     }
 
-    private fun handlePatchDropOnPlaylist(patchPath: String, playlistFile: File) {
-        val droppedFile = File(patchPath)
+    private fun handlePresetDropOnPlaylist(presetPath: String, playlistFile: File) {
+        val droppedFile = File(presetPath)
         if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
             val playlistToModify = if (AssetBrowserPanel.activePlaylistData?.filePath == playlistFile.absolutePath) {
                 AssetBrowserPanel.activePlaylistData
@@ -152,9 +152,9 @@ object SidebarPanel {
             }
             
             playlistToModify?.let { playlist ->
-                PlaylistManager.insertPatch(playlist, patchPath, playlist.patches.size).onSuccess {
+                PlaylistManager.insertPreset(playlist, presetPath, playlist.presets.size).onSuccess {
                     PlaylistManager.savePlaylist(playlist).onSuccess {
-                        logger.info { "Added patch ${droppedFile.name} to playlist ${playlist.name} via sidebar drag-drop" }
+                        logger.info { "Added preset ${droppedFile.name} to playlist ${playlist.name} via sidebar drag-drop" }
                     }
                 }
             }

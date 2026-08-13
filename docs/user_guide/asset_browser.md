@@ -8,7 +8,7 @@ Liquid LSD includes a dedicated **Asset Management System** for organizing visua
 
 Liquid LSD features two primary interface layouts:
 
-1. **Performance Mode** (Default): Patch Grid, Cell Config, and Mixer / Monitor panels.
+1. **Performance Mode (Default): Preset Grid, Cell Config, and Mixer / Monitor panels.
 2. **Asset Management Mode**: Asset Browser, Playlist Editor, and Mixer / Monitor panels.
 
 ### How to Toggle
@@ -83,10 +83,10 @@ Liquid LSD supports intuitive drag-and-drop workflows across panels:
 
 | Dragged Item (Asset Browser) | Target Destination (Playlist Editor) | Resulting Action |
 |------------------------------|--------------------------------------|------------------|
-| **Patch file** | Between patches in playlist | Inserts patch at target index |
-| **Patch file** | Empty playlist area | Appends patch to end of playlist |
+| **Preset file** | Between presets in playlist | Inserts preset at target index |
+| **Preset file** | Empty playlist area | Appends preset to end of playlist |
 | **Playlist file** | Inside active playlist editor | **Flat Unpacks** all patches from the source playlist into the active setlist |
-| **Patch within playlist** | Reorder within active playlist | Reorders patch sequence |
+| **Patch within playlist** | Reorder within active playlist | Reorders preset sequence |
 
 ---
 

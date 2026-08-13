@@ -16,7 +16,7 @@ private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
 
 object FinalParamSection {
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState,
         param: ModulatableParameter,
         paramKey: String,
         themeColor: Int,

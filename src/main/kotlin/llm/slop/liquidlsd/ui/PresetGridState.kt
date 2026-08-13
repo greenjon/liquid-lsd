@@ -9,7 +9,6 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
  * @param cvSourceId The CV source column, e.g. "beatPhase", "amp", "lfo"
  */
 data class PresetCellId(val paramKey: String, val cvSourceId: String)
-typealias PatchCellId = PresetCellId
 
 sealed class MidiLearnTarget {
     data class GridCell(val cellId: PresetCellId, val param: ModulatableParameter) : MidiLearnTarget()
@@ -64,12 +63,11 @@ class PresetGridState {
     }
 }
 
-typealias PatchGridState = PresetGridState
 
 data class PresetGridUndoSnapshot(
     val modulatorsByParamKey: Map<String, List<CvModulator>>
 )
 
-typealias PatchGridUndoSnapshot = PresetGridUndoSnapshot
+
 
 

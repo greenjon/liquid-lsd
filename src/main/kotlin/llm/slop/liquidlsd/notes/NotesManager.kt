@@ -12,15 +12,15 @@ private val logger = KotlinLogging.logger {}
  * Manages three tiers of user notes:
  *
  * 1. **Global source notes** — one note per visual source engine (e.g. "Mandala", "KIFS"),
- *    persisted to `~/.liquid-lsd/source-notes.json`. Survives patch loads and app restarts.
+ *    persisted to `~/.liquid-lsd/source-notes.json`. Survives preset loads and app restarts.
  *
- * 2. **Patch notes** — one free-form note per loaded patch, stored in `DeckPatchDto.patchNotes`.
- *    Synced from the DTO on patch load and back into the DTO on save.
+ * 2. **Preset notes** — one free-form note per loaded preset, stored in `DeckPresetDto.presetNotes`.
+ *    Synced from the DTO on preset load and back into the DTO on save.
  *
  * 3. **Parameter notes** — one note per (deckLabel, paramKey) pair, stored in
- *    `DeckPatchDto.paramNotes`. Same sync lifecycle as patch notes.
+ *    `DeckPresetDto.paramNotes`. Same sync lifecycle as preset notes.
  *
- * In-memory maps for patch/param notes are keyed by deckLabel ("Deck A", "Deck B", "Deck C").
+ * In-memory maps for preset/param notes are keyed by deckLabel ("Deck A", "Deck B", "Deck C").
  */
 object NotesManager {
 
@@ -75,7 +75,7 @@ object NotesManager {
         }
     }
 
-    // ── Per-deck patch and parameter notes (in-memory; synced to/from DTO) ────
+    // ── Per-deck preset and parameter notes (in-memory; synced to/from DTO) ────
 
     /** Preset note per deck label. */
     private val presetNotes: MutableMap<String, String> = mutableMapOf()
@@ -90,9 +90,6 @@ object NotesManager {
         else presetNotes[deckLabel] = text.trim()
     }
 
-    // Legacy aliases
-    fun getPatchNote(deckLabel: String): String = getPresetNote(deckLabel)
-    fun setPatchNote(deckLabel: String, text: String) = setPresetNote(deckLabel, text)
 
     fun getParamNote(deckLabel: String, paramKey: String): String =
         paramNotes[deckLabel]?.get(paramKey) ?: ""

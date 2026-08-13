@@ -29,7 +29,7 @@ nav:
   - Getting Started: getting_started.md
   - User Guide:
     - Core Concepts & Visual Sources: user_guide/concepts.md
-    - CV Modulation & Patch Grid: user_guide/modulation.md
+    - CV Modulation & Preset Grid: user_guide/modulation.md
     - Documentation & Notes: user_guide/notes_and_tooltips.md
     - Presets & MIDI Mapping: user_guide/midi_presets.md
     - Asset Browser & Playlists: user_guide/asset_browser.md
@@ -41,7 +41,7 @@ nav:
     - Modulation Engine: developer/modulation.md
     - OpenGL Rendering: developer/rendering.md
     - UI Architecture & ImGui: developer/ui.md
-    - Patch & Queue Management: developer/patch_management.md
+    - Preset & Queue Management: developer/preset_management.md
     - Mandala UX Roadmap: developer/mandala_future_roadmap.md
   - Operations & Tuning: developer/ops_tuning.md
   - Release Notes: release_notes.md

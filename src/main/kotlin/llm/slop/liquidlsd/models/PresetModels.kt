@@ -197,11 +197,8 @@ data class DeckPresetDto(
     val isEmpty: Boolean = false,
     @SerialName("patchNotes") val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
-) {
-    val patchNotes: String get() = presetNotes
-}
+)
 
-typealias DeckPatchDto = DeckPresetDto
 
 @Serializable
 data class MandalaRecipeDto(
@@ -226,7 +223,6 @@ data class GlobalPresetDto(
     val queuePrev: ParameterDto? = null
 )
 
-typealias GlobalPatchDto = GlobalPresetDto
 
 @Serializable
 data class SessionStateDto(
@@ -296,7 +292,7 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
 )
 
 fun ModulatorDto.toDomain(): CvModulator = CvModulator(
-    // Migrate legacy source IDs from older patch versions
+    // Migrate legacy source IDs from older preset versions
     sourceId = when (sourceId) { "gen1", "gen2" -> "lfo"; else -> sourceId },
     operator = ModulationOperator.valueOf(operator),
     amplitude = amplitude,
@@ -364,7 +360,7 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
 
 fun MandalaRatio.toDto(): MandalaRecipeDto = MandalaRecipeDto(a, b, c, d, id)
 
-fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
+fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
     val sourceName = if (source is llm.slop.liquidlsd.rendering.DynamicVisualSource) (source as llm.slop.liquidlsd.rendering.DynamicVisualSource).id else "mandala"
     val recipeDto = if (source is Mandala) (source as Mandala).recipe.toDto() else null
     
@@ -381,7 +377,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
         "fbMode" to fbMode.toDto()
     )
     
-    return DeckPatchDto(
+    return DeckPresetDto(
         name = name,
         tags = tags,
         visualSourceType = sourceName,
@@ -394,7 +390,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPatchDto {
     )
 }
 
-fun Deck.applyDto(dto: DeckPatchDto) {
+fun Deck.applyDto(dto: DeckPresetDto) {
     if (dto.isEmpty) {
         reset()
         val defaultSource = availableSources.firstOrNull { (it as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id == "mandala" } ?: availableSources.first()
@@ -438,7 +434,7 @@ fun Deck.applyDto(dto: DeckPatchDto) {
             mandalaObj.parameters[mappedKey]?.applyDto(paramDto)
         }
 
-        // Legacy patch fallback: sync parameter values to recipe if they weren't in the saved patch
+        // Legacy preset fallback: sync parameter values to recipe if they weren't in the saved preset
         if (!dto.parameters.containsKey("Lobes")) {
             mandalaObj.parameters["Lobes"]?.set(recipe.petals.toFloat())
         }

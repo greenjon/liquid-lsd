@@ -124,9 +124,9 @@ class PopupManager(
             
             if (ImGui.button("Save", 80f, 0f)) {
                 val activeName = when {
-                    isDeckC -> session.patchManager.activePresetC
-                    isDeckA -> session.patchManager.activePresetA
-                    else -> session.patchManager.activePresetB
+                    isDeckC -> session.presetManager.activePresetC
+                    isDeckA -> session.presetManager.activePresetA
+                    else -> session.presetManager.activePresetB
                 }
                 onSaveDeck(activeName ?: "Untitled_${label.last()}", deck, isDeckA || isDeckC) // Note: UIManager handles Deck C mapping
                 executeAction(session, mixer, deck, isDeckA, isDeckC, action)
@@ -167,16 +167,16 @@ class PopupManager(
 
         when (action) {
             PendingDeckAction.DRAG_DROP -> {
-                sourceFile?.let { session.patchManager.loadDeckPresetAsync(it, isDeckA, isDeckC) }
+                sourceFile?.let { session.presetManager.loadDeckPresetAsync(it, isDeckA, isDeckC) }
             }
             PendingDeckAction.MOVE -> {
-                utilitySource?.let { session.patchManager.moveDeck(mixer, it, deck) }
+                utilitySource?.let { session.presetManager.moveDeck(mixer, it, deck) }
             }
             PendingDeckAction.COPY -> {
-                utilitySource?.let { session.patchManager.copyDeck(mixer, it, deck) }
+                utilitySource?.let { session.presetManager.copyDeck(mixer, it, deck) }
             }
             PendingDeckAction.SWAP -> {
-                utilitySource?.let { session.patchManager.swapDecks(mixer, it, deck) }
+                utilitySource?.let { session.presetManager.swapDecks(mixer, it, deck) }
             }
             else -> onExecuteDeckAction(deck, isDeckA || isDeckC, action, targetPreset)
         }

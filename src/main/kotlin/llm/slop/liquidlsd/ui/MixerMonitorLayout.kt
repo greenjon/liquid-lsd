@@ -31,7 +31,7 @@ object MixerMonitorLayoutCalculator {
         val contentWidth = (windowWidth - (windowPaddingX * 2f) - reservedScrollbarWidth).coerceAtLeast(1f)
 
         val masterControlsH = (frameHeightWithSpacing * 2f + itemSpacingY + 8f).coerceAtLeast(60f)
-        val patchNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
+        val presetNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
 
         val verticalChrome = estimateVerticalChrome(
             masterControlsH = masterControlsH,
@@ -53,7 +53,7 @@ object MixerMonitorLayoutCalculator {
 
         val halfWidth = ((renderWidth - TWO_DECK_PADDING) * 0.5f).coerceAtLeast(1f)
         val desiredMasterHeight = renderWidth * ASPECT_16_9
-        val desiredDeckChildHeight = (halfWidth * ASPECT_16_9) + patchNameExtraHeight
+        val desiredDeckChildHeight = (halfWidth * ASPECT_16_9) + presetNameExtraHeight
         val desiredDeckCHeight = renderWidth * ASPECT_16_9
 
         return MixerMonitorLayout(

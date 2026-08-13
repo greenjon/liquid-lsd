@@ -2,7 +2,7 @@ package llm.slop.liquidlsd.presets
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import llm.slop.liquidlsd.models.DeckPatchDto
+import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.SessionStateDto
 import kotlin.test.Test
@@ -147,7 +147,7 @@ class SessionStateTest {
         val nextFile = File(tempDir, "next.lsd").apply { writeText("{}") }
         val missingFile = File(tempDir, "missing.lsd")
 
-        val restored = PatchManager.resolveRestoredQueue(
+        val restored = PresetManager.resolveRestoredQueue(
             listOf(missingFile.absolutePath, activeFile.absolutePath, nextFile.absolutePath),
             savedActiveIndex = 1
         )
@@ -163,7 +163,7 @@ class SessionStateTest {
         val nextFile = File(tempDir, "next.lsd").apply { writeText("{}") }
         val missingActiveFile = File(tempDir, "active.lsd")
 
-        val restored = PatchManager.resolveRestoredQueue(
+        val restored = PresetManager.resolveRestoredQueue(
             listOf(previousFile.absolutePath, missingActiveFile.absolutePath, nextFile.absolutePath),
             savedActiveIndex = 1
         )

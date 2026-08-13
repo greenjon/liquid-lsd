@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import llm.slop.liquidlsd.models.DeckPatchDto
+import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.presets.PresetManager
@@ -39,8 +39,8 @@ class DeckUtilityTest {
         every { deckA.isEmpty } returns false
         every { deckB.isEmpty } returns false
         
-        val dtoA = mockk<DeckPatchDto>()
-        every { dtoA.name } returns "Patch A"
+        val dtoA = mockk<DeckPresetDto>()
+        every { dtoA.name } returns "Preset A"
         every { deckA.toDto(any(), any()) } returns dtoA
         every { deckB.applyDto(any()) } returns Unit
 
@@ -48,7 +48,7 @@ class DeckUtilityTest {
 
         verify { deckA.toDto(any()) }
         verify { deckB.applyDto(dtoA) }
-        assertEquals("Patch A", PresetManager.activePresetB)
+        assertEquals("Preset A", PresetManager.activePresetB)
     }
 
     @Test
@@ -64,12 +64,12 @@ class DeckUtilityTest {
         every { deckA.isEmpty } returns false
         every { deckB.isEmpty } returns false
 
-        val dtoA = mockk<DeckPatchDto>()
-        every { dtoA.name } returns "Patch A"
+        val dtoA = mockk<DeckPresetDto>()
+        every { dtoA.name } returns "Preset A"
         every { deckA.toDto(any(), any()) } returns dtoA
 
         // emptyDeckDto calls dtoA.copy(isEmpty = true, visualSourceType = any()); return a distinct sentinel
-        val emptyDto = mockk<DeckPatchDto>()
+        val emptyDto = mockk<DeckPresetDto>()
         every { dtoA.copy(isEmpty = true, visualSourceType = any()) } returns emptyDto
 
         every { deckB.applyDto(any()) } returns Unit
@@ -81,7 +81,7 @@ class DeckUtilityTest {
         verify { deckA.toDto(any()) }
         verify { deckB.applyDto(dtoA) }
         verify { deckA.applyDto(emptyDto) }
-        assertEquals("Patch A", PresetManager.activePresetB)
+        assertEquals("Preset A", PresetManager.activePresetB)
         assertNull(PresetManager.activePresetA)
     }
 
@@ -95,10 +95,10 @@ class DeckUtilityTest {
         every { mixer.deckB } returns deckB
         every { mixer.deckC } returns mockk()
 
-        val dtoA = mockk<DeckPatchDto>()
-        every { dtoA.name } returns "Patch A"
-        val dtoB = mockk<DeckPatchDto>()
-        every { dtoB.name } returns "Patch B"
+        val dtoA = mockk<DeckPresetDto>()
+        every { dtoA.name } returns "Preset A"
+        val dtoB = mockk<DeckPresetDto>()
+        every { dtoB.name } returns "Preset B"
 
         every { deckA.toDto(any(), any()) } returns dtoA
         every { deckB.toDto(any(), any()) } returns dtoB
@@ -109,7 +109,7 @@ class DeckUtilityTest {
 
         verify { deckA.applyDto(dtoB) }
         verify { deckB.applyDto(dtoA) }
-        assertEquals("Patch B", PresetManager.activePresetA)
-        assertEquals("Patch A", PresetManager.activePresetB)
+        assertEquals("Preset B", PresetManager.activePresetA)
+        assertEquals("Preset A", PresetManager.activePresetB)
     }
 }

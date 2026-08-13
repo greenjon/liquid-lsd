@@ -24,14 +24,14 @@ class AudioEngineTest {
     }
 
     @Test
-    fun testWatchdogSkipsReconnectWhenPatchIOInFlight() {
-        AudioEngine.patchIOInFlight.set(true)
-        assertTrue(AudioEngine.patchIOInFlight.get())
+    fun testWatchdogSkipsReconnectWhenPresetIOInFlight() {
+        AudioEngine.presetIOInFlight.set(true)
+        assertTrue(AudioEngine.presetIOInFlight.get())
         
         // Verify AudioEngine is accessible and we can set the flag,
         // which the watchdog loop reads.
-        AudioEngine.patchIOInFlight.set(false)
-        assertFalse(AudioEngine.patchIOInFlight.get())
+        AudioEngine.presetIOInFlight.set(false)
+        assertFalse(AudioEngine.presetIOInFlight.get())
     }
 
     @Test

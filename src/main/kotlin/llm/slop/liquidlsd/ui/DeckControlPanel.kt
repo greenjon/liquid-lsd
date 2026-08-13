@@ -32,11 +32,11 @@ class DeckControlPanel(
         ImGui.pushID("presetRow_$label")
 
         val activePreset = when {
-            isDeckA -> session.patchManager.activePresetA
-            deck === mixer.deckC -> session.patchManager.activePresetC
-            else -> session.patchManager.activePresetB
+            isDeckA -> session.presetManager.activePresetA
+            deck === mixer.deckC -> session.presetManager.activePresetC
+            else -> session.presetManager.activePresetB
         }
-        val isDirty = session.patchManager.isDeckDirty(deck, mixer)
+        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
 
         val displayName = when {
             activePreset == null -> "None"
@@ -54,7 +54,7 @@ class DeckControlPanel(
             deck === mixer.deckC -> 2
             else -> 1
         }
-        val status = session.patchManager.deckStatus[deckIndex].get()
+        val status = session.presetManager.deckStatus[deckIndex].get()
 
         val statusText = when (status.state) {
             PresetIOState.LOADING -> " [L...]"
@@ -237,9 +237,9 @@ class DeckControlPanel(
             if (payload != null) {
                 val file = File(payload)
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                    val isDirty = session.patchManager.isDeckDirty(deck, mixer)
+                    val isDirty = session.presetManager.isDeckDirty(deck, mixer)
                     if (!isDirty) {
-                        session.patchManager.loadDeckPresetAsync(file, isDeckA, deck === mixer.deckC)
+                        session.presetManager.loadDeckPresetAsync(file, isDeckA, deck === mixer.deckC)
                     } else {
                         // Pass this to UIManager via a new callback or use PopupManager directly if we can
                         // For now, let's assume we need to trigger the popup
@@ -353,22 +353,22 @@ fun drawDeckBottomBar(
 
     val (activePreset, mtime, dtoVersion) = when {
         isDeckA -> Triple(
-            session.patchManager.activePresetA,
-            session.patchManager.activePresetMtimeA,
-            session.patchManager.cachedDtoA?.version ?: 1
+            session.presetManager.activePresetA,
+            session.presetManager.activePresetMtimeA,
+            session.presetManager.cachedDtoA?.version ?: 1
         )
         isDeckC -> Triple(
-            session.patchManager.activePresetC,
-            session.patchManager.activePresetMtimeC,
-            session.patchManager.cachedDtoC?.version ?: 1
+            session.presetManager.activePresetC,
+            session.presetManager.activePresetMtimeC,
+            session.presetManager.cachedDtoC?.version ?: 1
         )
         else -> Triple(
-            session.patchManager.activePresetB,
-            session.patchManager.activePresetMtimeB,
-            session.patchManager.cachedDtoB?.version ?: 1
+            session.presetManager.activePresetB,
+            session.presetManager.activePresetMtimeB,
+            session.presetManager.cachedDtoB?.version ?: 1
         )
     }
-    val isDirty = session.patchManager.isDeckDirty(deck, mixer)
+    val isDirty = session.presetManager.isDeckDirty(deck, mixer)
 
     var textH = 0f
     session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
@@ -400,7 +400,7 @@ fun drawDeckBottomBar(
     ImGui.sameLine()
     val ejectX = ImGui.getCursorScreenPosX()
     ImGui.setCursorScreenPos(ejectX, startY)
-    if (drawIconButton(session, "##btn_Eject_$tag", Icons.EJECT, rowH, "Eject this patch")) {
+    if (drawIconButton(session, "##btn_Eject_$tag", Icons.EJECT, rowH, "Eject this preset")) {
         onEjectDeck(deck, isDeckA, isDeckC)
     }
 
@@ -441,7 +441,7 @@ fun drawDeckBottomBar(
     }
 
     if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-        val patchNote = NotesManager.getPatchNote(deckLabel)
+        val presetNote = NotesManager.getPresetNote(deckLabel)
         val mtimeStr = mtime?.let {
             SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
         } ?: "unknown"
@@ -450,21 +450,21 @@ fun drawDeckBottomBar(
         ImGui.text(activePreset ?: "None")
         ImGui.separator()
         ImGui.textDisabled("Last saved: $mtimeStr   v$dtoVersion")
-        if (patchNote.isNotEmpty()) {
+        if (presetNote.isNotEmpty()) {
             ImGui.spacing()
-            ImGui.textWrapped(patchNote)
+            ImGui.textWrapped(presetNote)
         } else {
             ImGui.spacing()
-            ImGui.textDisabled("(no patch note — right-click to add one)")
+            ImGui.textDisabled("(no preset note — right-click to add one)")
         }
         ImGui.endTooltip()
     }
 
-    if (ImGui.beginPopupContextItem("patch_name_menu_$tag")) {
-        val patchNote = NotesManager.getPatchNote(deckLabel)
-        val noteLabel = if (patchNote.isNotEmpty()) "Edit Patch Note..." else "Add Patch Note..."
+    if (ImGui.beginPopupContextItem("preset_name_menu_$tag")) {
+        val presetNote = NotesManager.getPresetNote(deckLabel)
+        val noteLabel = if (presetNote.isNotEmpty()) "Edit Preset Note..." else "Add Preset Note..."
         if (ImGui.menuItem(noteLabel)) {
-            NoteEditorModal.request(NoteContext.Patch(deckLabel, activePreset ?: "Untitled"))
+            NoteEditorModal.request(NoteContext.Preset(deckLabel, activePreset ?: "Untitled"))
         }
         ImGui.endPopup()
     }

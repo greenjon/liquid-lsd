@@ -41,7 +41,7 @@ This document captures design ideas and proposed features for future iterations 
 - **Concept**: Performers often rely on 10–20 go-to Mandala recipes during live VJ sets.
 - **Quick-Slots**:
   - Add "Star" / Favorite bookmarking to save recipes into quick-recall slots (e.g. `[ Fav 1 ] [ Fav 2 ] [ Fav 3 ] [ Fav 4 ]`).
-  - Render quick-recall buttons on the Deck / PatchGrid UI for zero-latency switching during live performances.
+  - Render quick-recall buttons on the Deck / PresetGrid UI for zero-latency switching during live performances.
 
 ---
 *Created on 2026-07-20 to track future UI/UX enhancements for Mandala Visual Generator.*

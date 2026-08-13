@@ -18,7 +18,7 @@ object QueueActionsPanel {
             session.playQueueManager.isAutoVJEnabled = !session.playQueueManager.isAutoVJEnabled
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue patches at set intervals.")
+            ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue presets at set intervals.")
         }
         
         ImGui.sameLine()
@@ -57,7 +57,7 @@ object QueueActionsPanel {
             ImGui.popStyleColor(4)
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Shuffle Queue: play patches in a random order.")
+            ImGui.setTooltip("Shuffle Queue: play presets in a random order.")
         }
 
         ImGui.sameLine()
@@ -140,7 +140,7 @@ object QueueActionsPanel {
                     val insertAt = effectiveSlot.coerceIn(0, session.playQueueManager.queue.size)
                     if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
                         session.playQueueManager.queue.add(insertAt, droppedFile)
-                        logger.info { "Inserted patch from drag-drop at slot $insertAt: ${droppedFile.name}" }
+                        logger.info { "Inserted preset from drag-drop at slot $insertAt: ${droppedFile.name}" }
                     } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdset")) {
                         val files = session.playQueueManager.parsePlaylist(droppedFile)
                         session.playQueueManager.queue.addAll(insertAt, files)

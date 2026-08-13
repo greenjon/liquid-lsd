@@ -12,7 +12,6 @@ class SessionContext {
     val cvRegistry = CVRegistry
     val audioEngine = AudioEngine
     val presetManager = PresetManager
-    val patchManager = PresetManager
     val playQueueManager = PlayQueueManager
     val midiMappingManager = MidiMappingManager
     val visualSourceRegistry = VisualSourceRegistry

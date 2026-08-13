@@ -7,6 +7,5 @@ data class SessionState(
     val loadedPresets: Map<Int, File> = emptyMap(),
     val unresolvedItems: List<String> = emptyList()
 ) {
-    val loadedPatches: Map<Int, File> get() = loadedPresets
 }
 

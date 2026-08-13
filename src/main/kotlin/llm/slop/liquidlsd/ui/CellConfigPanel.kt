@@ -19,7 +19,7 @@ object CellConfigPanel {
 
     private var activeHistory: CvHistoryBuffer? = null
     private val modulatorHistories = mutableMapOf<String, CvHistoryBuffer>()
-    private var activeCellId: PatchCellId? = null
+    private var activeCellId: PresetCellId? = null
     private val virtualModulators = mutableListOf<CvModulator>()
     private var lastActiveIds: Set<String> = emptySet()
 
@@ -56,7 +56,7 @@ object CellConfigPanel {
         }
     }
 
-    private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, currentParamKey: String, currentCvId: String) {
+    private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, currentParamKey: String, currentCvId: String) {
         val availableTabs = mutableListOf<Pair<String, String>>()
         availableTabs.add("Final" to "final")
         if (session.uiTheme.showMidiCol) availableTabs.add("MIDI" to "midi")
@@ -89,7 +89,7 @@ object CellConfigPanel {
             }
             val btnW = 55f
             if (ImGui.button(label, btnW, 22f)) {
-                state.selectedCell = PatchCellId(currentParamKey, targetCvId)
+                state.selectedCell = PresetCellId(currentParamKey, targetCvId)
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("Switch CellConfig view to $label CV modulation for parameter")
@@ -102,14 +102,14 @@ object CellConfigPanel {
         ImGui.spacing()
     }
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PatchGridState, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer) {
         val cell = state.selectedCell
         val param = state.selectedParam
 
         if (cell == null || param == null) {
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("Click a cell in the Patch Grid to configure it.")
+            session.uiTheme.caption("Click a cell in the Preset Grid to configure it.")
             return
         }
 
@@ -293,7 +293,7 @@ object CellConfigPanel {
         }
     }
 
-    private fun replaceModulator(state: PatchGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator) {
+    private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator) {
         val idx = param.modulators.indexOfFirst { it.id == newMod.id }
         val existing = if (idx >= 0) param.modulators[idx] else virtualModulators.firstOrNull { it.id == newMod.id }
         val wasBypassed = existing?.bypassed ?: false

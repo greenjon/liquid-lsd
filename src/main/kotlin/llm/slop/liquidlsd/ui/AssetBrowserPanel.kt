@@ -19,9 +19,6 @@ sealed class LibraryView {
     object PlaylistsRoot : LibraryView()
     data class SpecificPlaylist(val playlistFile: File) : LibraryView()
     data class Presets(val currentDir: File) : LibraryView()
-    
-    // Legacy alias
-    typealias Patches = Presets
 }
 
 object AssetBrowserPanel {
@@ -174,7 +171,7 @@ object AssetBrowserPanel {
         when (val view = SidebarPanel.currentView) {
             is LibraryView.PlaylistsRoot -> drawPlaylistsRootView(session)
             is LibraryView.SpecificPlaylist -> drawSpecificPlaylistView(session, view.playlistFile, mixer)
-            is LibraryView.Patches -> drawPatchesView(session, view.currentDir, mixer)
+            is LibraryView.Presets -> drawPresetsView(session, view.currentDir, mixer)
         }
     }
     private fun drawPlaylistsRootView(session: llm.slop.liquidlsd.SessionContext) {
@@ -268,20 +265,20 @@ object AssetBrowserPanel {
 
 
 
-    private fun drawPatchesView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer) {
+    private fun drawPresetsView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer) {
         // Header Row
         ImGui.inputText("Filter", searchBuffer)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Type to filter patches by filename.")
+            ImGui.setTooltip("Type to filter presets by filename.")
         }
         
         ImGui.separator()
         ImGui.spacing()
         
-        // List of patches in currentDir
+        // List of presets in currentDir
         val filterText = searchBuffer.get().trim().lowercase()
         val filteredAssets = assets.filter { 
-            it.type == AssetType.PATCH && (filterText.isEmpty() || it.displayName.lowercase().contains(filterText)) 
+            it.type == AssetType.PRESET && (filterText.isEmpty() || it.displayName.lowercase().contains(filterText)) 
         }
         
         filteredAssets.forEachIndexed { index, asset ->
@@ -300,16 +297,16 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
             if (ImGui.button("A##preview_a_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckA
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    logger.info { "Loading patch ${asset.name} to Deck A" }
-                    session.patchManager.loadDeckPresetAsync(File(asset.path), isDeckA = true, isDeckC = false)
+                    logger.info { "Loading preset ${asset.name} to Deck A" }
+                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = true, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, true, mixer)
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load patch to Deck A.")
+                ImGui.setTooltip("Load preset to Deck A.")
             }
             ImGui.popStyleColor(5)
 
@@ -323,16 +320,16 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
             if (ImGui.button("B##preview_b_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckB
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    logger.info { "Loading patch ${asset.name} to Deck B" }
-                    session.patchManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = false)
+                    logger.info { "Loading preset ${asset.name} to Deck B" }
+                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = false)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load patch to Deck B.")
+                ImGui.setTooltip("Load preset to Deck B.")
             }
             ImGui.popStyleColor(5)
 
@@ -346,16 +343,16 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
             if (ImGui.button("C##preview_c_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckC
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
-                    logger.info { "Previewing patch ${asset.name} on Deck C" }
-                    session.patchManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = true)
+                    logger.info { "Previewing preset ${asset.name} on Deck C" }
+                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = true)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Preview patch on Deck C (Preview/C).")
+                ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
             }
             ImGui.popStyleColor(5)
 
@@ -370,21 +367,21 @@ object AssetBrowserPanel {
                 selectedAsset = asset
             }
             
-            // Double-click: Load the patch to the inactive deck (>0% crossfader).
+            // Double-click: Load the preset to the inactive deck (>0% crossfader).
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                 
                 if (!isDirty) {
-                    logger.info { "Loading patch ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
-                    session.patchManager.loadDeckPresetAsync(File(asset.path), targetIsA)
+                    logger.info { "Loading preset ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
+                    session.presetManager.loadDeckPresetAsync(File(asset.path), targetIsA)
                 } else {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, targetIsA, mixer)
                 }
             }
             
-            // Drag source: drag a patch
+            // Drag source: drag a preset
             if (ImGui.beginDragDropSource()) {
                 ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
                 ImGui.text(asset.name)
@@ -392,7 +389,7 @@ object AssetBrowserPanel {
             }
             
             // Right-click context menu
-            if (ImGui.beginPopupContextItem("patch_context_menu_$index")) {
+            if (ImGui.beginPopupContextItem("preset_context_menu_$index")) {
                 if (ImGui.menuItem("Play now (and replace queue)")) {
                     session.playQueueManager.playNow(File(asset.path), mixer)
                 }

@@ -10,7 +10,7 @@ import llm.slop.liquidlsd.audio.AudioEngine
 
 class MenuBar(
     private val popupManager: PopupManager,
-    private val patchState: PresetGridState,
+    private val presetState: PresetGridState,
     private val onTriggerExitFlow: () -> Unit,
     private val onOpenSettings: () -> Unit,
     private val onOpenAudioEngineMonitor: () -> Unit
@@ -24,18 +24,18 @@ class MenuBar(
                     if (ImGui.beginMenu("New Preset")) {
                         if (ImGui.menuItem("To Deck A")) {
                             mixer.deckA.reset()
-                            session.patchManager.activePresetA = null
-                            session.patchManager.cachedDtoA = null
+                            session.presetManager.activePresetA = null
+                            session.presetManager.cachedDtoA = null
                         }
                         if (ImGui.menuItem("To Deck B")) {
                             mixer.deckB.reset()
-                            session.patchManager.activePresetB = null
-                            session.patchManager.cachedDtoB = null
+                            session.presetManager.activePresetB = null
+                            session.presetManager.cachedDtoB = null
                         }
                         if (ImGui.menuItem("To Deck C")) {
                             mixer.deckC.reset()
-                            session.patchManager.activePresetC = null
-                            session.patchManager.cachedDtoC = null
+                            session.presetManager.activePresetC = null
+                            session.presetManager.cachedDtoC = null
                         }
                         ImGui.endMenu()
                     }
@@ -50,7 +50,7 @@ class MenuBar(
                 if (session.uiTheme.randomizationEnabled) {
                     if (ImGui.beginMenu("Randomize")) {
                         if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            PresetGridUndo.pushUndoState(presetState, mixer)
                             mixer.deckA.randomizeModulators()
                             mixer.deckB.randomizeModulators()
                             mixer.deckC.randomizeModulators()
@@ -62,15 +62,15 @@ class MenuBar(
                             }
                         }
                         if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            PresetGridUndo.pushUndoState(presetState, mixer)
                             mixer.deckA.randomizeModulators()
                         }
                         if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            PresetGridUndo.pushUndoState(presetState, mixer)
                             mixer.deckB.randomizeModulators()
                         }
                         if (ImGui.selectable("Deck C", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            PresetGridUndo.pushUndoState(presetState, mixer)
                             mixer.deckC.randomizeModulators()
                         }
                         ImGui.endMenu()
@@ -79,14 +79,14 @@ class MenuBar(
 
 
                 // MIDI Map toggle button
-                val isMidiLearn = patchState.isMidiLearnMode
+                val isMidiLearn = presetState.isMidiLearnMode
                 if (isMidiLearn) {
                     ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
                 }
                 if (ImGui.menuItem("MIDI Map", "", isMidiLearn)) {
-                    patchState.isMidiLearnMode = !isMidiLearn
-                    if (!patchState.isMidiLearnMode) {
-                        patchState.midiLearnTarget = null
+                    presetState.isMidiLearnMode = !isMidiLearn
+                    if (!presetState.isMidiLearnMode) {
+                        presetState.midiLearnTarget = null
                     } else {
                         if (MidiEngine.getActiveDeviceCount() == 0) {
                             popupManager.pendingOpenMidiWarningPopup = true
