@@ -36,8 +36,9 @@ object SettingsPanel {
     fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, displayW: Float, displayH: Float,
              onSizeChanged: (Float) -> Unit) {
 
-        val targetH = minOf(MODAL_H, displayH * 0.85f)
-        val targetW = minOf(MODAL_W, displayW * 0.85f)
+        val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
+        val targetW = (MODAL_W * fontScale).coerceIn(580f, displayW * 0.90f)
+        val targetH = (MODAL_H * fontScale).coerceIn(480f, displayH * 0.90f)
 
         ImGui.setNextWindowPos(
             displayW * 0.5f, displayH * 0.5f,
@@ -49,9 +50,19 @@ object SettingsPanel {
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
 
-        val sidebarW = 140f
+        val sidebarW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            Category.values().maxOf { ImGui.calcTextSize(it.label).x } + 36f
+        }.coerceAtLeast(140f)
 
-        if (ImGui.beginTable("##settings_table", 2, ImGuiTableColumnFlags.None, ImGui.getContentRegionAvailX(), ImGui.getContentRegionAvailY() - 36f)) {
+        val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.getFrameHeight() + 8f
+        }.coerceAtLeast(32f)
+
+        val bottomPadding = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.getFrameHeightWithSpacing() + 12f
+        }
+
+        if (ImGui.beginTable("##settings_table", 2, ImGuiTableColumnFlags.None, ImGui.getContentRegionAvailX(), ImGui.getContentRegionAvailY() - bottomPadding)) {
             ImGui.tableSetupColumn("##sidebar", ImGuiTableColumnFlags.WidthFixed, sidebarW)
             ImGui.tableSetupColumn("##content", ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
@@ -72,7 +83,7 @@ object SettingsPanel {
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f))
                     }
 
-                    if (ImGui.button(cat.label, sidebarW - 16f, 32f)) {
+                    if (ImGui.button(cat.label, sidebarW - 16f, btnH)) {
                         activeCategory = cat
                     }
                     ImGui.popStyleColor(3)
@@ -101,7 +112,9 @@ object SettingsPanel {
         ImGui.spacing()
 
         // Centred Close button
-        val closeW = 110f
+        val closeW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.calcTextSize("  Close  ").x + 40f
+        }.coerceAtLeast(110f)
         ImGui.setCursorPosX(ImGui.getWindowContentRegionMinX() + (ImGui.getContentRegionAvailX() - closeW) * 0.5f)
         if (ImGui.button("Close", closeW, 0f)) ImGui.closeCurrentPopup()
 
@@ -136,8 +149,11 @@ object SettingsPanel {
         ImGui.spacing()
 
         if (ImGui.beginTable("##fontSettings", 2)) {
+            val fontCtrlW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                ImGui.calcTextSize("  -  ").x + ImGui.calcTextSize(" 00 px ").x + ImGui.calcTextSize("  +  ").x + 40f
+            }.coerceAtLeast(140f)
             ImGui.tableSetupColumn("##lbl",  ImGuiTableColumnFlags.WidthStretch)
-            ImGui.tableSetupColumn("##ctrl", ImGuiTableColumnFlags.WidthFixed, 140f)
+            ImGui.tableSetupColumn("##ctrl", ImGuiTableColumnFlags.WidthFixed, fontCtrlW)
             ImGui.tableNextRow()
 
             ImGui.tableSetColumnIndex(0)
