@@ -18,13 +18,13 @@
 ┌─────────────────────────────────────────────────────────────┐
 │          Domain State, Modulation, and Persistence           │
 │ `src/main/.../parameters`, `src/main/.../cv`,                │
-│ `src/main/.../patches`, `src/main/.../models`                │
+│ `src/main/.../presets`, `src/main/.../models`                │
 └─────────────────────────────────────────────────────────────┘
          │                  ▲
          ▼                  │
 ┌─────────────────────────────────────────────────────────────┐
 │  Presets, Shaders, Audio/MIDI Devices, Generated Docs        │
-│  `presets/`, `src/main/resources/`, JACK, Java MIDI          │
+│  `library/`, `src/main/resources/`, JACK, Java MIDI          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,21 +33,21 @@
 | Component | Responsibility | File |
 |-----------|----------------|------|
 | Application entry point | Creates preset directories, initializes GLFW/OpenGL/ImGui, loads visual sources, constructs decks and mixer, runs the frame loop, and performs orderly shutdown. | `src/main/kotlin/llm/slop/liquidlsd/Main.kt` |
-| Main frame loop | Polls GLFW events, applies queued patches, updates CV and MIDI mappings, renders decks, composites the mixer, draws UI, swaps buffers, and services the secondary output window. | `src/main/kotlin/llm/slop/liquidlsd/Main.kt:198` |
-| UI manager | Owns ImGui context/backends, menu/popups, asset browser layout, patch grid, deck preset browser coordination, MIDI learn event draining, and font/style updates. | `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt` |
+| Main frame loop | Polls GLFW events, applies queued presets, updates CV and MIDI mappings, renders decks, composites the mixer, draws UI, swaps buffers, and services the secondary output window. | `src/main/kotlin/llm/slop/liquidlsd/Main.kt:198` |
+| UI manager | Owns ImGui context/backends, menu/popups, asset browser layout, preset grid, deck preset browser coordination, MIDI learn event draining, and font/style updates. | `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt` |
 | Renderer | Owns core shader programs, Mandala VAO/VBO, deck rendering, feedback passes, dynamic visual source rendering, and mixer compositing. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt` |
 | Deck | Represents one visual chain with source selection, source FBO, ping-pong feedback FBOs, and per-deck feedback parameters. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Deck.kt` |
 | Mixer | Holds Deck A, Deck B, Deck C, master FBO, crossfade/blend/master controls, queue trigger parameters, and auto-fade state. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Mixer.kt` |
-| Visual source registry | Loads dynamic shader sources from `presets/sources/*/meta.json` and `presets/sources/*/shader.frag`, compiles shaders, and creates master source instances. | `src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt` |
-| Patch manager | Serializes/deserializes deck/global/session DTOs, queues background loads for main-thread apply, saves presets/session files, and tracks dirty state caches. | `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt` |
-| Patch DTO converters | Defines persisted patch/session/playlist models and extension converters between DTOs and domain objects. | `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt` |
+| Visual source registry | Loads dynamic shader sources from `library/sources/*/meta.json` and `library/sources/*/shader.frag`, compiles shaders, and creates master source instances. | `src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt` |
+| Preset manager | Serializes/deserializes deck/global/session DTOs, queues background loads for main-thread apply, saves presets/session files, and tracks dirty state caches. | `src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt` |
+| Preset DTO converters | Defines persisted preset/session/playlist models and extension converters between DTOs and domain objects. | `src/main/kotlin/llm/slop/liquidlsd/models/PresetModels.kt` |
 | Modulation parameter | Evaluates base values plus CV/MIDI modulators and records parameter history for meters/oscilloscopes. | `src/main/kotlin/llm/slop/liquidlsd/parameters/ModulatableParameter.kt` |
 | CV registry | Stores CV sources and histories, publishes audio-derived values, synchronizes beat state between audio and render threads, and updates sources once per frame. | `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt` |
 | Audio engine | Runs JACK-backed audio capture, DSP filters, beat detection, and audio-to-CV publishing. | `src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt` |
 | JACK client | Opens JACK, registers the input port, installs the real-time process callback, and auto-connects physical input ports. | `src/main/kotlin/llm/slop/liquidlsd/audio/JackClient.kt` |
 | MIDI engine | Opens Java MIDI input devices, stores CC values in atomic arrays, and queues MIDI CC events for render-thread processing. | `src/main/kotlin/llm/slop/liquidlsd/midi/MidiEngine.kt` |
 | MIDI mapping manager | Loads/saves mapping profiles and applies CC values to mixer/deck parameters each frame. | `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt` |
-| Queue managers | Manage playlist files and the active play queue used by Auto VJ and queue-next/previous triggers. | `src/main/kotlin/llm/slop/liquidlsd/patches/PlaylistManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt` |
+| Queue managers | Manage playlist files and the active play queue used by Auto VJ and queue-next/previous triggers. | `src/main/kotlin/llm/slop/liquidlsd/ui/PlaylistManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PlayQueueManager.kt` |
 | Project-local architecture skills | Define native ImGui allocation, JACK callback, and LWJGL/OpenGL thread constraints that must be followed for new work. | `.agents/skills/imgui_memory_management/SKILL.md`, `.agents/skills/jack_callback_safety/SKILL.md`, `.agents/skills/lwjgl_thread_restriction/SKILL.md` |
 
 ## Pattern Overview

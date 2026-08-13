@@ -263,7 +263,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering next: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PatchManager.loadDeckPresetAsync(file, targetIsA)
+        PresetManager.loadDeckPresetAsync(file, targetIsA)
         
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
@@ -332,7 +332,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering previous: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PatchManager.loadDeckPresetAsync(file, targetIsA)
+        PresetManager.loadDeckPresetAsync(file, targetIsA)
         
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
@@ -344,14 +344,14 @@ object PlayQueueManager {
      * @return true if the queue advance should proceed, false if it should be skipped.
      */
     private fun handleDirtyDeck(targetIsA: Boolean, targetDeck: Deck, mixer: Mixer): Boolean {
-        if (!PatchManager.isDeckDirty(targetDeck, mixer)) return true
+        if (!PresetManager.isDeckDirty(targetDeck, mixer)) return true
         return when (UITheme.autoVjDirtyBehavior) {
             UITheme.AutoVjDirtyBehavior.SKIP -> {
                 logger.info { "AutoVJ: Skipping because target deck is dirty" }
                 false
             }
             UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
-                val activeName = if (targetIsA) PatchManager.activePresetA else PatchManager.activePresetB
+                val activeName = if (targetIsA) PresetManager.activePresetA else PresetManager.activePresetB
                 val saveName = activeName ?: "AutoVJ_${if (targetIsA) "A" else "B"}_${System.currentTimeMillis()}"
                 logger.info { "AutoVJ: Autosaving dirty deck to $saveName" }
                 PresetManager.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), targetDeck, saveName)

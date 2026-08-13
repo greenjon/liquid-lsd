@@ -318,7 +318,8 @@ object AudioEngine {
     var lastJackFailureMessage: String? = null
         private set
 
-    val patchIOInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
+    val presetIOInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
+    val patchIOInFlight get() = presetIOInFlight
 
     private val callbackLatencyNanos = java.util.concurrent.atomic.AtomicLong(0L)
 

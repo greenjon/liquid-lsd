@@ -77,18 +77,22 @@ object NotesManager {
 
     // ── Per-deck patch and parameter notes (in-memory; synced to/from DTO) ────
 
-    /** Patch note per deck label. */
-    private val patchNotes: MutableMap<String, String> = mutableMapOf()
+    /** Preset note per deck label. */
+    private val presetNotes: MutableMap<String, String> = mutableMapOf()
 
     /** Parameter notes per deck label, inner map keyed by paramKey. */
     private val paramNotes: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
 
-    fun getPatchNote(deckLabel: String): String = patchNotes[deckLabel] ?: ""
+    fun getPresetNote(deckLabel: String): String = presetNotes[deckLabel] ?: ""
 
-    fun setPatchNote(deckLabel: String, text: String) {
-        if (text.isBlank()) patchNotes.remove(deckLabel)
-        else patchNotes[deckLabel] = text.trim()
+    fun setPresetNote(deckLabel: String, text: String) {
+        if (text.isBlank()) presetNotes.remove(deckLabel)
+        else presetNotes[deckLabel] = text.trim()
     }
+
+    // Legacy aliases
+    fun getPatchNote(deckLabel: String): String = getPresetNote(deckLabel)
+    fun setPatchNote(deckLabel: String, text: String) = setPresetNote(deckLabel, text)
 
     fun getParamNote(deckLabel: String, paramKey: String): String =
         paramNotes[deckLabel]?.get(paramKey) ?: ""
@@ -106,8 +110,8 @@ object NotesManager {
      * Call this after loading a preset from disk.
      */
     fun syncFromDto(deckLabel: String, dto: DeckPresetDto) {
-        if (dto.presetNotes.isBlank()) patchNotes.remove(deckLabel)
-        else patchNotes[deckLabel] = dto.presetNotes
+        if (dto.presetNotes.isBlank()) presetNotes.remove(deckLabel)
+        else presetNotes[deckLabel] = dto.presetNotes
 
         if (dto.paramNotes.isEmpty()) {
             paramNotes.remove(deckLabel)
@@ -122,13 +126,13 @@ object NotesManager {
      */
     fun syncToDto(deckLabel: String, dto: DeckPresetDto): DeckPresetDto =
         dto.copy(
-            presetNotes = patchNotes[deckLabel] ?: "",
+            presetNotes = presetNotes[deckLabel] ?: "",
             paramNotes = paramNotes[deckLabel]?.toMap() ?: emptyMap()
         )
 
-    /** Clears in-memory notes for a deck (e.g. when the deck is reset / new patch). */
+    /** Clears in-memory notes for a deck (e.g. when the deck is reset / new preset). */
     fun clearDeckNotes(deckLabel: String) {
-        patchNotes.remove(deckLabel)
+        presetNotes.remove(deckLabel)
         paramNotes.remove(deckLabel)
     }
 }
