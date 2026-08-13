@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.models.applyDto
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
 
 class MixerMonitorPanel(
     private val patchState: PatchGridState,

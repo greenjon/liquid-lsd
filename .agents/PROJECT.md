@@ -11,7 +11,7 @@ Liquid LSD Desktop is a **Linux VJ (video jockey) application** written in **Kot
 It renders real-time audio-reactive visuals — primarily parametric mandala geometry and
 user-defined GLSL shaders — and exposes a live performance surface through an ImGui desktop UI.
 
-**The primary user is a live performer.** They load patches, map audio/CV signals to visual
+**The primary user is a live performer.** They load presets, map audio/CV signals to visual
 parameters, and mix between two decks in real time.
 
 ---
@@ -23,7 +23,7 @@ parameters, and mix between two decks in real time.
 | Window/GL | LWJGL 3 (GLFW + OpenGL 3.3) | Single primary thread only |
 | UI | imgui-java | Immediate-mode; native memory managed explicitly |
 | Audio | JNAJack (JACK/PipeWire) | **Linux only** — fallbacks for other platforms TBD |
-| Serialization | kotlinx.serialization | Patches, playlists, MIDI maps |
+| Serialization | kotlinx.serialization | Presets, playlists, MIDI maps |
 | Build | Gradle + Shadow | `./gradlew run` to launch |
 
 **Build targets:** Linux x64, Linux ARM64, macOS x64, macOS ARM64, Windows x64.
@@ -57,16 +57,16 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── audio/               — JACK client, DSP (FFT/RMS/onset), beat analysis
 ├── cv/                  — CV registry, beat clock, evaluators, history ring buffers
 ├── midi/                — MIDI input polling and CC→parameter mapping
-├── models/              — @Serializable DTOs (patch, playlist, MIDI map)
+├── models/              — @Serializable DTOs (preset, playlist, MIDI map)
 ├── parameters/          — ModulatableParameter, CvModulator, waveforms, operators
-├── patches/             — Save/load patches, play queue, playlists, clipboard
+├── presets/             — Save/load presets, play queue, playlists, clipboard
 ├── rendering/           — Decks, Mixer, Mandala, shaders, FBOs, VisualSource abstraction
-├── ui/                  — UIManager, PatchGridPanel, CellConfigPanel, PatchGridState
+├── ui/                  — UIManager, PresetGridPanel, CellConfigPanel, PresetGridState
 └── utils/               — TimeUtils
 ```
 
-User-loadable GLSL visual sources live in `presets/sources/` (not in `src/`).
-Built-in shaders, fonts, and bundled patches are in `src/main/resources/`.
+User-loadable GLSL visual sources live in `library/sources/` (not in `src/`).
+Built-in shaders, fonts, and bundled presets are in `src/main/resources/`.
 
 ---
 
@@ -97,8 +97,8 @@ MIDI CCs are polled each frame from a queue and applied to parameters or UI stat
 | `Deck` | One visual channel: holds a `VisualSource` + ping-pong FBOs + feedback params |
 | `Mixer` | Blends Deck A + Deck B → `masterFBO` → screen (Deck C is excluded from output) |
 | `Renderer` | Orchestrates per-frame: source→feedback→mix→blit |
-| `UIManager` | Top-level ImGui layout (PatchGrid 40% | CellConfig 30% | Mixer 30%) |
-| `PatchManager` | Save/load patches; owns current patch state |
+| `UIManager` | Top-level ImGui layout (PresetGrid 40% | CellConfig 30% | Mixer 30%) |
+| `PresetManager` | Save/load presets; owns current preset state |
 
 ---
 
@@ -126,7 +126,7 @@ Only read these if your task touches the area. Don't load all of them by default
 | CvModulator fields / LFO2 / evaluate() | `docs/developer/modulation.md` |
 | Full architecture diagram & CV source table | `ARCHITECTURE.md` |
 | Performance / GC tuning / xrun diagnosis | `docs/developer/ops_tuning.md` |
-| Patch serialization / save-load | `models/PatchModels.kt` · `patches/PatchManager.kt` |
+| Preset serialization / save-load | `models/PresetModels.kt` · `presets/PresetManager.kt` |
 | Dynamic GLSL visual sources | `rendering/VisualSourceRegistry.kt` · `rendering/DynamicVisualSource.kt` |
 | MIDI mapping | `midi/MidiEngine.kt` · `midi/MidiMappingManager.kt` |
 

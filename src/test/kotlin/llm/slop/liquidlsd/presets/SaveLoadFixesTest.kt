@@ -1,4 +1,4 @@
-package llm.slop.liquidlsd.patches
+package llm.slop.liquidlsd.presets
 
 import llm.slop.liquidlsd.models.DeckPatchDto
 import llm.slop.liquidlsd.models.ParameterDto

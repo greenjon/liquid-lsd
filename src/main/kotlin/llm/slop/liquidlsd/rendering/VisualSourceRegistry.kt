@@ -51,7 +51,7 @@ object VisualSourceRegistry {
     fun loadAll() {
         disposeAll()
         
-        val sourcesDir = File("presets/sources")
+        val sourcesDir = File("library/sources").let { if (!it.exists() && File("presets/sources").exists()) File("presets/sources") else it }
         if (!sourcesDir.exists()) {
             sourcesDir.mkdirs()
         }

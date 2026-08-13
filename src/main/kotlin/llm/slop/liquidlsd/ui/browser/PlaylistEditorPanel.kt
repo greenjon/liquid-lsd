@@ -3,8 +3,8 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
-import llm.slop.liquidlsd.patches.PatchManager
-import llm.slop.liquidlsd.patches.PlayQueueManager
+import llm.slop.liquidlsd.presets.PresetManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.UIManager

@@ -15,7 +15,7 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
-object PatchGridRenderer {
+object PresetGridRenderer {
     
     fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String, 
         paramKey: String, 
@@ -676,3 +676,6 @@ object PatchGridRenderer {
         return ImGui.button("${Icons.DICES}##$id", btnWidth, btnHeight)
     }
 }
+
+typealias PatchGridRenderer = PresetGridRenderer
+

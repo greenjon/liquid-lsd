@@ -2,7 +2,7 @@ package llm.slop.liquidlsd.notes
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import llm.slop.liquidlsd.models.DeckPatchDto
+import llm.slop.liquidlsd.models.DeckPresetDto
 import mu.KotlinLogging
 import java.io.File
 
@@ -102,12 +102,12 @@ object NotesManager {
     }
 
     /**
-     * Populates in-memory patch/param notes from a freshly loaded [DeckPatchDto].
-     * Call this after loading a patch from disk.
+     * Populates in-memory preset/param notes from a freshly loaded [DeckPresetDto].
+     * Call this after loading a preset from disk.
      */
-    fun syncFromDto(deckLabel: String, dto: DeckPatchDto) {
-        if (dto.patchNotes.isBlank()) patchNotes.remove(deckLabel)
-        else patchNotes[deckLabel] = dto.patchNotes
+    fun syncFromDto(deckLabel: String, dto: DeckPresetDto) {
+        if (dto.presetNotes.isBlank()) patchNotes.remove(deckLabel)
+        else patchNotes[deckLabel] = dto.presetNotes
 
         if (dto.paramNotes.isEmpty()) {
             paramNotes.remove(deckLabel)
@@ -117,12 +117,12 @@ object NotesManager {
     }
 
     /**
-     * Returns a copy of [dto] with the current in-memory patch/param notes applied.
-     * Call this before saving a patch to disk.
+     * Returns a copy of [dto] with the current in-memory preset/param notes applied.
+     * Call this before saving a preset to disk.
      */
-    fun syncToDto(deckLabel: String, dto: DeckPatchDto): DeckPatchDto =
+    fun syncToDto(deckLabel: String, dto: DeckPresetDto): DeckPresetDto =
         dto.copy(
-            patchNotes = patchNotes[deckLabel] ?: "",
+            presetNotes = patchNotes[deckLabel] ?: "",
             paramNotes = paramNotes[deckLabel]?.toMap() ?: emptyMap()
         )
 

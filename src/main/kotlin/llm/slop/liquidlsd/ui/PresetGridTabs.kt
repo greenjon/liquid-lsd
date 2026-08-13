@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.roundToInt
 
-object PatchGridTabs {
+object PresetGridTabs {
     var activeBtnMinX: Float = 0f
     var activeBtnMinY: Float = 0f
     var activeBtnMaxX: Float = 0f
@@ -472,3 +472,6 @@ object PatchGridTabs {
         }
     }
 }
+
+typealias PatchGridTabs = PresetGridTabs
+

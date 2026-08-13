@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.ui.AssetBrowserPanel
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.LibraryView
-import llm.slop.liquidlsd.patches.PlayQueueManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.ui.PlaylistManager
 import java.io.File
 import mu.KotlinLogging
@@ -15,22 +15,22 @@ import mu.KotlinLogging
 object SidebarPanel {
     private val logger = KotlinLogging.logger {}
     
-    var currentView: LibraryView = LibraryView.Patches(FileSystemManager.getPatchesRoot())
+    var currentView: LibraryView = LibraryView.Presets(FileSystemManager.getPresetsRoot())
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        // Node 1: Patches
-        val patchesRoot = FileSystemManager.getPatchesRoot()
-        val isPatchesActive = currentView is LibraryView.Patches
-        val patchesFlags = ImGuiTreeNodeFlags.OpenOnArrow or ImGuiTreeNodeFlags.OpenOnDoubleClick or ImGuiTreeNodeFlags.SpanAvailWidth or
-            (if (isPatchesActive) ImGuiTreeNodeFlags.Selected else 0)
+        // Node 1: Presets
+        val presetsRoot = FileSystemManager.getPresetsRoot()
+        val isPresetsActive = currentView is LibraryView.Presets
+        val presetsFlags = ImGuiTreeNodeFlags.OpenOnArrow or ImGuiTreeNodeFlags.OpenOnDoubleClick or ImGuiTreeNodeFlags.SpanAvailWidth or
+            (if (isPresetsActive) ImGuiTreeNodeFlags.Selected else 0)
         
-        val patchesOpened = ImGui.treeNodeEx("Patches", patchesFlags)
+        val presetsOpened = ImGui.treeNodeEx("Presets", presetsFlags)
         if (ImGui.isItemClicked() && !ImGui.isItemToggledOpen()) {
-            currentView = LibraryView.Patches(patchesRoot)
+            currentView = LibraryView.Presets(presetsRoot)
             AssetBrowserPanel.refreshAssets()
         }
-        if (patchesOpened) {
-            drawPatchesFolderTree(patchesRoot)
+        if (presetsOpened) {
+            drawPatchesFolderTree(presetsRoot)
             ImGui.treePop()
         }
 

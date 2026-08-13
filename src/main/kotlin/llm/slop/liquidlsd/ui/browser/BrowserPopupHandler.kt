@@ -8,7 +8,7 @@ import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.LibraryView
 import llm.slop.liquidlsd.ui.PlaylistManager
-import llm.slop.liquidlsd.patches.PlayQueueManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
 import java.io.File
 
 object BrowserPopupHandler {
@@ -31,7 +31,7 @@ object BrowserPopupHandler {
             }
             
             val typeStr = when (target.type) {
-                AssetType.PATCH -> "Patch"
+                AssetType.PRESET, AssetType.PATCH -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
             }
@@ -43,7 +43,7 @@ object BrowserPopupHandler {
                 val newName = renameBuffer.get().trim()
                 if (newName.isNotBlank()) {
                     FileSystemManager.renameFile(target.path, newName).onSuccess { newPath ->
-                        if (target.type == AssetType.PATCH) {
+                        if (target.type == AssetType.PRESET || target.type == AssetType.PATCH) {
                             PlaylistManager.updatePatchPathInAllPlaylists(target.path, newPath)
                             AssetBrowserPanel.activePlaylistData = null
                             AssetBrowserPanel.refreshAssets()
@@ -80,7 +80,7 @@ object BrowserPopupHandler {
             }
             
             val typeStr = when (target.type) {
-                AssetType.PATCH -> "Patch"
+                AssetType.PRESET, AssetType.PATCH -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
             }
@@ -90,7 +90,7 @@ object BrowserPopupHandler {
             ImGui.separator()
             if (ImGui.button("Delete", 120f, 0f)) {
                 FileSystemManager.deleteFile(target.path).onSuccess {
-                    if (target.type == AssetType.PATCH) {
+                    if (target.type == AssetType.PRESET || target.type == AssetType.PATCH) {
                         AssetBrowserPanel.refreshAssets()
                     } else if (target.type == AssetType.PLAYLIST) {
                         val currentPlaylistPath = (SidebarPanel.currentView as? LibraryView.SpecificPlaylist)?.playlistFile?.absolutePath

@@ -4,6 +4,7 @@ package llm.slop.liquidlsd.ui
  * Represents the type of asset in the unified browser.
  */
 enum class AssetType {
+    PRESET,
     PATCH,
     PLAYLIST,
     FOLDER

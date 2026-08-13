@@ -184,7 +184,7 @@ data class ParameterDto(
 }
 
 @Serializable
-data class DeckPatchDto(
+data class DeckPresetDto(
     val version: Int = 1,
     val name: String,
     val tags: List<String> = emptyList(), // Phase 2 — tag list; defaults to empty for backward compat
@@ -195,9 +195,13 @@ data class DeckPatchDto(
     val globalAlpha: ParameterDto,
     val globalScale: ParameterDto? = null,
     val isEmpty: Boolean = false,
-    val patchNotes: String = "",             // User notes for this patch
+    @SerialName("patchNotes") val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
-)
+) {
+    val patchNotes: String get() = presetNotes
+}
+
+typealias DeckPatchDto = DeckPresetDto
 
 @Serializable
 data class MandalaRecipeDto(
@@ -209,25 +213,27 @@ data class MandalaRecipeDto(
 )
 
 @Serializable
-data class GlobalPatchDto(
+data class GlobalPresetDto(
     val version: Int = 2,
     val name: String,
     val crossfade: ParameterDto,
     val masterAlpha: ParameterDto,
     val blendMode: Float,
-    val deckA: DeckPatchDto,
-    val deckB: DeckPatchDto,
+    val deckA: DeckPresetDto,
+    val deckB: DeckPresetDto,
     val bloom: ParameterDto? = null,
     val queueNext: ParameterDto? = null,
     val queuePrev: ParameterDto? = null
 )
 
+typealias GlobalPatchDto = GlobalPresetDto
+
 @Serializable
 data class SessionStateDto(
     val version: Int = 4,
-    val deckA: DeckPatchDto,
-    val deckB: DeckPatchDto,
-    val deckC: DeckPatchDto,
+    val deckA: DeckPresetDto,
+    val deckB: DeckPresetDto,
+    val deckC: DeckPresetDto,
     val crossfade: ParameterDto,
     val masterAlpha: ParameterDto,
     val blendMode: Float,
@@ -246,7 +252,7 @@ data class SessionStateDto(
 data class PlaylistDto(
     val version: Int = 1,
     val name: String,
-    val items: List<String> // List of .lsd file names (relative to presets/patches)
+    val items: List<String> // List of .lsd file names (relative to library/presets)
 )
 
 // --- Extension Converters ---
@@ -463,7 +469,7 @@ fun Deck.applyDto(dto: DeckPatchDto) {
     source.globalAlpha.applyDto(dto.globalAlpha)
 }
 
-fun Mixer.toDto(name: String): GlobalPatchDto = GlobalPatchDto(
+fun Mixer.toDto(name: String): GlobalPresetDto = GlobalPresetDto(
     name = name,
     crossfade = crossfade.toDto(),
     masterAlpha = masterAlpha.toDto(),
@@ -484,7 +490,7 @@ fun mapMonopolarToBipolar(dto: ParameterDto): ParameterDto {
     )
 }
 
-fun Mixer.applyDto(dto: GlobalPatchDto) {
+fun Mixer.applyDto(dto: GlobalPresetDto) {
     val crossfadeDto = if (dto.version <= 1) mapMonopolarToBipolar(dto.crossfade) else dto.crossfade
     crossfade.applyDto(crossfadeDto)
     masterAlpha.applyDto(dto.masterAlpha)

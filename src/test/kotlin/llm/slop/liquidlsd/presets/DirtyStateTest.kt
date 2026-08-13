@@ -1,4 +1,4 @@
-package llm.slop.liquidlsd.patches
+package llm.slop.liquidlsd.presets
 
 import io.mockk.every
 import io.mockk.mockk
@@ -18,14 +18,14 @@ class DirtyStateTest {
 
     @BeforeTest
     fun setup() {
-        mockkStatic("llm.slop.liquidlsd.models.PatchModelsKt")
-        PatchManager.activePresetA = null
-        PatchManager.activePresetB = null
-        PatchManager.activePresetC = null
-        PatchManager.cachedDtoA = null
-        PatchManager.cachedDtoB = null
-        PatchManager.cachedDtoC = null
-        PatchManager.cachedGlobalDto = null
+        mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
+        PresetManager.activePresetA = null
+        PresetManager.activePresetB = null
+        PresetManager.activePresetC = null
+        PresetManager.cachedDtoA = null
+        PresetManager.cachedDtoB = null
+        PresetManager.cachedDtoC = null
+        PresetManager.cachedGlobalDto = null
     }
 
     @Test
@@ -38,19 +38,19 @@ class DirtyStateTest {
         every { mixer.deckC } returns mockk()
 
         // Initial state should not be dirty because cachedDto is null
-        assertFalse(PatchManager.isDeckDirty(deck, mixer))
+        assertFalse(PresetManager.isDeckDirty(deck, mixer))
         
         // "Load" a preset by setting cachedDto
         val initialDto = mockk<DeckPatchDto>()
         every { initialDto.name } returns "TestPreset"
-        PatchManager.cachedDtoA = initialDto
-        PatchManager.activePresetA = "TestPreset"
+        PresetManager.cachedDtoA = initialDto
+        PresetManager.activePresetA = "TestPreset"
         
         // Mock toDto to return something EQUAL to initialDto
         every { deck.toDto(any(), any()) } returns initialDto
         
         // Now it should NOT be dirty
-        assertFalse(PatchManager.isDeckDirty(deck, mixer))
+        assertFalse(PresetManager.isDeckDirty(deck, mixer))
         
         // Change a parameter (mock toDto to return something different)
         val modifiedDto = mockk<DeckPatchDto>()
@@ -58,7 +58,7 @@ class DirtyStateTest {
         every { deck.toDto(any(), any()) } returns modifiedDto
         
         // Now it SHOULD be dirty
-        assertTrue(PatchManager.isDeckDirty(deck, mixer))
+        assertTrue(PresetManager.isDeckDirty(deck, mixer))
     }
 
     @Test
@@ -69,10 +69,10 @@ class DirtyStateTest {
         every { initialDto.name } returns "Untitled Project"
         
         every { mixer.toDto(any()) } returns initialDto
-        PatchManager.initializeDefault(mixer)
+        PresetManager.initializeDefault(mixer)
         
         // Initial state should not be dirty
-        assertFalse(PatchManager.isGlobalPatchDirty(mixer))
+        assertFalse(PresetManager.isGlobalPatchDirty(mixer))
         
         // Change something
         val modifiedDto = mockk<GlobalPatchDto>()
@@ -80,7 +80,7 @@ class DirtyStateTest {
         every { mixer.toDto(any()) } returns modifiedDto
         
         // Now it SHOULD be dirty
-        assertTrue(PatchManager.isGlobalPatchDirty(mixer))
+        assertTrue(PresetManager.isGlobalPatchDirty(mixer))
     }
 
     @Test
@@ -112,8 +112,8 @@ class DirtyStateTest {
             globalAlpha = globalAlpha
         )
         
-        PatchManager.cachedDtoA = cachedDeckDto
-        PatchManager.activePresetA = "Test"
+        PresetManager.cachedDtoA = cachedDeckDto
+        PresetManager.activePresetA = "Test"
 
         val currentDeckDto = DeckPatchDto(
             name = "Test",
@@ -126,6 +126,6 @@ class DirtyStateTest {
         every { deck.toDto(any(), any()) } returns currentDeckDto
 
         // Should BE dirty because slider baseValue changed on a static parameter
-        assertTrue(PatchManager.isDeckDirty(deck, mixer))
+        assertTrue(PresetManager.isDeckDirty(deck, mixer))
     }
 }

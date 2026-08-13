@@ -1,5 +1,20 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.23
+
+> [!NOTE]
+> **Release 1.0.0-beta.23** introduces industry-standard "Preset" terminology, unified `library/` folder storage structure, automatic legacy directory migration, and full backward compatibility.
+
+---
+
+### Key Highlights
+
+- **Industry Standard 'Preset' Terminology Refactor**: Refactored visual parameter snapshots across the codebase from 'Patch' to 'Preset' (`PresetManager`, `DeckPresetDto`, `GlobalPresetDto`, `PresetGridPanel`, `PresetGridState`, `PresetGridRenderer`).
+- **Unified `library/` User Storage Directory**: Renamed the top-level user data directory from `presets/` to `library/` (`library/presets/`, `library/midi/`, `library/playlists/`, `library/sources/`, `library/last_session.json`), establishing `library/` as the single root directory for all user content.
+- **Automatic Migration & Seamless Backward Compatibility**: Implemented automatic disk migration logic that moves any legacy `presets/` directory contents to `library/` on application startup, alongside typealiases (`PatchManager`, `PatchGridPanel`, `DeckPatchDto`, `GlobalPatchDto`) and fallback file resolution paths for legacy preset JSON files.
+
+---
+
 ## Version 1.0.0-beta.22
 
 > [!NOTE]

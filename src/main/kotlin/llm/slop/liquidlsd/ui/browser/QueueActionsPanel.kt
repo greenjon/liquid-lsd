@@ -2,7 +2,7 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
-import llm.slop.liquidlsd.patches.PlayQueueManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme

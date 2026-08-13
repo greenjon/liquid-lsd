@@ -9,8 +9,8 @@ The project is in active beta: the core workflow is usable, the UI is close to i
 - Dual-deck visual mixer with per-deck feedback, blend, and monitor controls.
 - Audio-reactive modulation from JACK/PipeWire-JACK (Linux) or cross-platform Java Sound fallback (macOS/Windows/Linux fallback).
 - CV modulation matrix for amplitude bands, onset/accent triggers, beat phase, LFOs, and random/sample-and-hold sources.
-- Patch, playlist, play queue, clipboard, and MIDI mapping support.
-- Dynamic GLSL visual sources loaded from `presets/sources/`.
+- Preset, playlist, play queue, clipboard, and MIDI mapping support.
+- Dynamic GLSL visual sources loaded from `library/sources/`.
 - Bundled shader and font resources under `src/main/resources/`.
 
 ## Requirements
@@ -27,7 +27,7 @@ The project is in active beta: the core workflow is usable, the UI is close to i
 - LWJGL 3 for GLFW, OpenGL, and native desktop integration.
 - imgui-java for the immediate-mode UI.
 - JNAJack (JACK) and Java Sound (fallback/cross-platform) for audio input.
-- kotlinx.serialization for patch/session data.
+- kotlinx.serialization for preset/session data.
 - Gradle Shadow for fat JAR packaging.
 
 ## Build
@@ -94,17 +94,17 @@ src/main/kotlin/llm/slop/liquidlsd/
   audio/                 JACK client, Java Sound fallback, DSP, beat/audio analysis
   cv/                    CV registry, beat clock, evaluators, history buffers
   midi/                  MIDI input, profiles, and mapping
-  models/                Serializable patch/session DTOs
+  models/                Serializable preset/session DTOs
   notes/                 NotesManager and 3-tier notes persistence
   parameters/            Modulatable parameters and CV operators
-  patches/               Patch, playlist, queue, and clipboard managers
+  presets/               Preset, playlist, queue, and clipboard managers
   rendering/             Decks, mixer, shaders, FBOs, VisualSources, SourceDocRegistry
   ui/                    ImGui panels, Asset Browser, NoteEditorModal, UI state
   utils/                 Timing utilities
 
 src/main/resources/
   shaders/               Built-in GLSL shaders
-  patches/               Default bundled patch data
+  presets/               Default bundled preset data
   fonts/                 Bundled UI/icon fonts
   logback.xml            Logging configuration
 

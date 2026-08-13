@@ -6,7 +6,7 @@ import imgui.flag.ImGuiWindowFlags
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
 
 class PopupManager(
     private val onTriggerExit: () -> Unit,

@@ -1,4 +1,4 @@
-package llm.slop.liquidlsd.patches
+package llm.slop.liquidlsd.presets
 
 import io.mockk.every
 import io.mockk.mockk

@@ -18,7 +18,7 @@ import llm.slop.liquidlsd.rendering.MandalaRatio
 
 
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
 import kotlin.math.roundToInt
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL33.*
@@ -27,7 +27,7 @@ import imgui.glfw.ImGuiImplGlfw
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.models.applyDto
-import llm.slop.liquidlsd.patches.PlayQueueManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -685,7 +685,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
     /**
      * Phase 2: deck preset "Load File..." now opens the ImGui file browser
-     * pointed at `presets/patches/` instead of `java.awt.FileDialog`.
+     * pointed at `library/presets/` instead of `java.awt.FileDialog`.
      *
      * The browser is shared with the global project browser but uses a
      * separate instance per deck so both decks can have independent state.
@@ -695,20 +695,19 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
     private fun performLoadDeckPreset(isDeckA: Boolean) {
         val browser = if (isDeckA) deckAFileBrowser else deckBFileBrowser
+        val dir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
         browser.open(
             ImGuiFileBrowser.Mode.LOAD,
-            startDir = File("presets/patches").canonicalFile
+            startDir = dir.canonicalFile
         )
     }
-
-
 
     private fun loadDeckPreset(presetName: String, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = (deck === currentMixer?.deckC)) {
         if (presetName == "None") return
         val cleanName = presetName.removeSuffix(".lsd").removeSuffix(".json").trim()
-        var file = File("presets/patches/$cleanName.lsd")
+        var file = File("library/presets/$cleanName.lsd").let { if (!it.exists() && File("presets/patches/$cleanName.lsd").exists()) File("presets/patches/$cleanName.lsd") else it }
         if (!file.exists()) {
-            file = File("presets/patches/$cleanName.json")
+            file = File("library/presets/$cleanName.json").let { if (!it.exists() && File("presets/patches/$cleanName.json").exists()) File("presets/patches/$cleanName.json") else it }
         }
         if (file.exists()) {
             session.patchManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
@@ -806,10 +805,10 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
                 session.patchManager.cachedDtoC = dto
             }
         }
-        val file = File("presets/patches/$cleanName.lsd")
+        val file = File("library/presets/$cleanName.lsd")
 
         // Remove obsolete legacy .json file if it exists so duplicate files aren't left on disk
-        val legacyJson = File("presets/patches/$cleanName.json")
+        val legacyJson = File("library/presets/$cleanName.json")
         if (legacyJson.exists()) {
             legacyJson.delete()
         }

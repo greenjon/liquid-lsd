@@ -7,7 +7,7 @@ import io.mockk.verify
 import llm.slop.liquidlsd.models.DeckPatchDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,13 +17,13 @@ class DeckUtilityTest {
 
     @BeforeTest
     fun setup() {
-        mockkStatic("llm.slop.liquidlsd.models.PatchModelsKt")
-        PatchManager.activePresetA = null
-        PatchManager.activePresetB = null
-        PatchManager.activePresetC = null
-        PatchManager.cachedDtoA = null
-        PatchManager.cachedDtoB = null
-        PatchManager.cachedDtoC = null
+        mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
+        PresetManager.activePresetA = null
+        PresetManager.activePresetB = null
+        PresetManager.activePresetC = null
+        PresetManager.cachedDtoA = null
+        PresetManager.cachedDtoB = null
+        PresetManager.cachedDtoC = null
     }
 
     @Test
@@ -44,11 +44,11 @@ class DeckUtilityTest {
         every { deckA.toDto(any(), any()) } returns dtoA
         every { deckB.applyDto(any()) } returns Unit
 
-        PatchManager.copyDeck(mixer, deckA, deckB)
+        PresetManager.copyDeck(mixer, deckA, deckB)
 
         verify { deckA.toDto(any()) }
         verify { deckB.applyDto(dtoA) }
-        assertEquals("Patch A", PatchManager.activePresetB)
+        assertEquals("Patch A", PresetManager.activePresetB)
     }
 
     @Test
@@ -76,13 +76,13 @@ class DeckUtilityTest {
         // deckA.applyDto is called once with the empty DTO to clear the source deck
         every { deckA.applyDto(any()) } returns Unit
 
-        PatchManager.moveDeck(mixer, deckA, deckB)
+        PresetManager.moveDeck(mixer, deckA, deckB)
 
         verify { deckA.toDto(any()) }
         verify { deckB.applyDto(dtoA) }
         verify { deckA.applyDto(emptyDto) }
-        assertEquals("Patch A", PatchManager.activePresetB)
-        assertNull(PatchManager.activePresetA)
+        assertEquals("Patch A", PresetManager.activePresetB)
+        assertNull(PresetManager.activePresetA)
     }
 
     @Test
@@ -105,11 +105,11 @@ class DeckUtilityTest {
         every { deckA.applyDto(any()) } returns Unit
         every { deckB.applyDto(any()) } returns Unit
 
-        PatchManager.swapDecks(mixer, deckA, deckB)
+        PresetManager.swapDecks(mixer, deckA, deckB)
 
         verify { deckA.applyDto(dtoB) }
         verify { deckB.applyDto(dtoA) }
-        assertEquals("Patch B", PatchManager.activePresetA)
-        assertEquals("Patch A", PatchManager.activePresetB)
+        assertEquals("Patch B", PresetManager.activePresetA)
+        assertEquals("Patch A", PresetManager.activePresetB)
     }
 }

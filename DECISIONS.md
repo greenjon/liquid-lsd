@@ -62,8 +62,16 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## 8. Decoupled Asynchronous Patch IO
-- **Decision**: Execute all patch and preset saving/loading (`.lsd` JSON files) on a dedicated daemon background thread (`PatchManager-IO` executor) and pass the loaded DTOs to the main thread via thread-safe queues.
+## 8. Decoupled Asynchronous Patch & Preset IO
+- **Decision**: Execute all preset saving/loading (`.lsd` JSON files) on a dedicated daemon background thread (`PresetManager-IO` executor) and pass the loaded DTOs to the main thread via thread-safe queues.
 - **Rationale**: 
-  - File I/O is slow and blocking. Saving or loading a patch on the main rendering thread would cause noticeable frame drops during a live VJ performance.
-  - Loading on a background thread keeps rendering smooth, and using thread-safe queues ensures that applying loaded patches happens atomically at the start of the next render frame, preventing OpenGL state corruption.
+  - File I/O is slow and blocking. Saving or loading a preset on the main rendering thread would cause noticeable frame drops during a live VJ performance.
+  - Loading on a background thread keeps rendering smooth, and using thread-safe queues ensures that applying loaded presets happens atomically at the start of the next render frame, preventing OpenGL state corruption.
+
+---
+
+## 9. Terminology Standardisation: Preset & Unified Library Folder
+- **Decision**: Refactor visual parameter snapshots from 'Patch' to 'Preset' (e.g., `PresetManager`, `DeckPresetDto`, `PresetGridPanel`), and rename the top-level user storage directory from `presets/` to `library/` (containing `library/presets/`, `library/midi/`, `library/playlists/`, `library/sources/`, `library/last_session.json`).
+- **Rationale**: 
+  - Aligns with VJ / audio industry standards (Resolume, Ableton, TouchDesigner) where 'patch' refers to modular node graphs, whereas saved parameter snapshots are called 'presets'.
+  - Eliminates path redundancy (e.g. `presets/patches` or `presets/presets`) by establishing `library/` as the single root folder for user assets. Full backward compatibility and automatic directory migration are provided for seamless upgrades.

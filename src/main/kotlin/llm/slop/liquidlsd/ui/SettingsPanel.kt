@@ -272,7 +272,7 @@ object SettingsPanel {
 
         ImGui.spacing()
         session.uiTheme.caption("Disabling the audio engine stops JACK audio processing")
-        session.uiTheme.caption("and limits patch grid columns to LFO, RAND, and MIDI.")
+        session.uiTheme.caption("and limits preset grid columns to LFO, RAND, and MIDI.")
     }
 
     private fun drawMidiControlSettings(session: llm.slop.liquidlsd.SessionContext) {
@@ -280,7 +280,7 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        val midiDir = java.io.File("presets/midi")
+        val midiDir = java.io.File("library/midi").let { if (!it.exists() && java.io.File("presets/midi").exists()) java.io.File("presets/midi") else it }
         val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
             .map { it.nameWithoutExtension }
             .toMutableList()

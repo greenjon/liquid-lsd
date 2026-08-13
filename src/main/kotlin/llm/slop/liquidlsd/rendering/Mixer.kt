@@ -29,12 +29,12 @@ class Mixer(
 
     val queuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
         modulatorFilter = { mod ->
-            llm.slop.liquidlsd.patches.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")
+            llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")
         }
     }
     val queueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
         modulatorFilter = { mod ->
-            llm.slop.liquidlsd.patches.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")
+            llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")
         }
     }
 

@@ -14,8 +14,9 @@ import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.notes.NotesManager
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
 import mu.KotlinLogging
+import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL33.*
@@ -25,10 +26,10 @@ private val logger = KotlinLogging.logger {}
 fun main() {
     logger.info { "Starting Liquid LSD..." }
 
-    // Ensure preset directories exist
-    java.io.File("presets/patches").mkdirs()
-    java.io.File("presets/playlists").mkdirs()
-    java.io.File("presets/midi").mkdirs()
+    // Ensure library directories exist
+    java.io.File("library/presets").mkdirs()
+    java.io.File("library/playlists").mkdirs()
+    java.io.File("library/midi").mkdirs()
 
 
 
@@ -127,11 +128,11 @@ fun main() {
 
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckC)
-    PatchManager.initializeDefault(mixer)
+    PresetManager.initializeDefault(mixer)
     if (UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
-        PatchManager.startEmpty(mixer)
+        PresetManager.startEmpty(mixer)
     } else {
-        PatchManager.loadSession(mixer)
+        PresetManager.loadSession(mixer)
     }
     NotesManager.loadSourceNotes()
     GLDebug.checkErrors("Mixer and Decks initialization")
@@ -229,8 +230,8 @@ fun main() {
 
         // === RENDERING PHASE ===
 
-        // Apply loaded patches from queues atomically on the main thread
-        PatchManager.applyPendingPatches(mixer)
+        // Apply loaded presets from queues atomically on the main thread
+        PresetManager.applyPendingPresets(mixer)
 
         // Update all global CV signals
         CVRegistry.updateAll()
@@ -357,7 +358,7 @@ fun main() {
 
     // Cleanup
     logger.info { "Shutting down..." }
-    PatchManager.saveSession(mixer)
+    PresetManager.saveSession(mixer)
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.liquidlsd.midi.MidiEngine.close()

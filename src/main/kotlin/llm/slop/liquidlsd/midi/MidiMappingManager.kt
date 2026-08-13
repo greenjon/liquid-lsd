@@ -32,7 +32,7 @@ internal fun midiProfileFile(midiDir: File, profileName: String): File {
     val filePath = file.canonicalFile.toPath()
 
     require(filePath.startsWith(rootPath)) {
-        "MIDI profile path escapes presets/midi: $profileName"
+        "MIDI profile path escapes library/midi: $profileName"
     }
 
     return file
@@ -55,7 +55,7 @@ data class MidiMappingProfile(
 object MidiMappingManager {
     private val logger = KotlinLogging.logger {}
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    private val midiDir = File("presets/midi")
+    private val midiDir = File("library/midi").let { if (!it.exists() && File("presets/midi").exists()) File("presets/midi") else it }
 
     var activeProfileName = "default"
         private set

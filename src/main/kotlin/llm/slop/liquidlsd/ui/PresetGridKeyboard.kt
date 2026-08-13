@@ -9,8 +9,8 @@ import llm.slop.liquidlsd.models.RowClipboardData
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.models.toDto
 
-object PatchGridKeyboard {
-    fun handleKeyboardShortcuts(state: PatchGridState, mixer: Mixer, onPushUndo: (PatchGridState, Mixer) -> Unit, onPerformUndo: (PatchGridState, Mixer) -> Unit) {
+object PresetGridKeyboard {
+    fun handleKeyboardShortcuts(state: PresetGridState, mixer: Mixer, onPushUndo: (PresetGridState, Mixer) -> Unit, onPerformUndo: (PresetGridState, Mixer) -> Unit) {
         val io = ImGui.getIO()
         val isCtrl = io.keyCtrl
         val isShift = io.keyShift
@@ -97,3 +97,6 @@ object PatchGridKeyboard {
         }
     }
 }
+
+typealias PatchGridKeyboard = PresetGridKeyboard
+

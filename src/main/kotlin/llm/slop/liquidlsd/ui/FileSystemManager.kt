@@ -1,6 +1,6 @@
 package llm.slop.liquidlsd.ui
 
-import llm.slop.liquidlsd.patches.PlaylistParser
+import llm.slop.liquidlsd.presets.PlaylistParser
 import mu.KotlinLogging
 import java.io.File
 import java.nio.file.Files
@@ -18,8 +18,9 @@ import java.util.concurrent.TimeUnit
 object FileSystemManager {
     private val logger = KotlinLogging.logger {}
     
-    private const val PATCHES_ROOT = "presets/patches"
-    private const val PLAYLISTS_ROOT = "presets/playlists"
+    private const val PRESETS_ROOT = "library/presets"
+    private const val PLAYLISTS_ROOT = "library/playlists"
+    private const val PATCHES_ROOT = PRESETS_ROOT
     private const val SCAN_CACHE_TTL_MS = 1_000L
 
     private data class ScanCacheEntry(
@@ -359,10 +360,10 @@ object FileSystemManager {
     }
     
     /**
-     * Gets the root directory for patches.
+     * Gets the root directory for presets.
      */
-    fun getPatchesRoot(): File {
-        val root = File(PATCHES_ROOT)
+    fun getPresetsRoot(): File {
+        val root = File(PRESETS_ROOT).let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
         if (!root.exists()) {
             root.mkdirs()
         }
@@ -370,13 +371,19 @@ object FileSystemManager {
     }
     
     /**
+     * Gets the root directory for patches (legacy alias).
+     */
+    fun getPatchesRoot(): File = getPresetsRoot()
+    
+    /**
      * Gets the root directory for playlists.
      */
     fun getPlaylistsRoot(): File {
-        val root = File(PLAYLISTS_ROOT)
+        val root = File(PLAYLISTS_ROOT).let { if (!it.exists() && File("presets/playlists").exists()) File("presets/playlists") else it }
         if (!root.exists()) {
             root.mkdirs()
         }
         return root
     }
 }
+

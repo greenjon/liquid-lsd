@@ -38,7 +38,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
     // -- State -----------------------------------------------------------------
 
     internal var mode: Mode = Mode.LOAD
-    private var currentDir: File = File("presets/global").canonicalFile
+    private var currentDir: File = File("library/global").let { if (!it.exists() && File("presets/global").exists()) File("presets/global") else it }.canonicalFile
     private var selectedFile: File? = null
     private val filenameInput = ImString(128)
     private var filterExts: List<String> = listOf(".json", ".lsd", ".lsdset")
@@ -57,12 +57,12 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
      * Schedule the browser to open on the next [draw] call.
      *
      * @param mode       LOAD or SAVE
-     * @param startDir   Directory to open initially (defaults to `presets/global`)
+     * @param startDir   Directory to open initially (defaults to `library/global`)
      * @param initialName Pre-populate the filename input (useful for Save As)
      */
     fun open(
         mode: Mode,
-        startDir: File = File("presets/global").canonicalFile,
+        startDir: File = File("library/global").let { if (!it.exists() && File("presets/global").exists()) File("presets/global") else it }.canonicalFile,
         initialName: String = "",
         extensions: List<String> = listOf(".json", ".lsd", ".lsdset")
     ) {

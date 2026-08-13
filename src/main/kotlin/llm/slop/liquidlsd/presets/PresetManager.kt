@@ -1,4 +1,4 @@
-package llm.slop.liquidlsd.patches
+package llm.slop.liquidlsd.presets
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -14,10 +14,10 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-object PatchManager {
+object PresetManager {
     private val logger = KotlinLogging.logger {}
     private val patchIoExecutor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "PatchManager-IO").apply { isDaemon = true }
+        Thread(runnable, "PresetManager-IO").apply { isDaemon = true }
     }
 
     private val json = Json {
@@ -25,7 +25,26 @@ object PatchManager {
         ignoreUnknownKeys = true
     }
 
-    private val PRESETS_ROOT = File("presets").absoluteFile
+    private val LIBRARY_ROOT = File("library").absoluteFile
+    private val PRESETS_ROOT = LIBRARY_ROOT
+
+    init {
+        val legacyRoot = File("presets").absoluteFile
+        val libraryRoot = LIBRARY_ROOT
+        if (legacyRoot.exists() && !libraryRoot.exists()) {
+            try {
+                legacyRoot.renameTo(libraryRoot)
+                val legacyPatches = File(libraryRoot, "patches")
+                val newPresets = File(libraryRoot, "presets")
+                if (legacyPatches.exists() && !newPresets.exists()) {
+                    legacyPatches.renameTo(newPresets)
+                }
+                logger.info { "Migrated legacy presets/ folder to library/" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to auto-migrate legacy presets/ directory to library/" }
+            }
+        }
+    }
 
     @Volatile
     var sessionState = SessionState()
@@ -33,17 +52,22 @@ object PatchManager {
     val deckStatus = Array(3) { AtomicReference(PatchIOStatus()) }
     private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
 
-    val globalPatchQueue = ConcurrentLinkedQueue<GlobalPatchDto>()
-    val deckAPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
-    val deckBPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
-    val deckCPatchQueue = ConcurrentLinkedQueue<DeckPatchDto>()
+    val globalPresetQueue = ConcurrentLinkedQueue<GlobalPresetDto>()
+    val deckAPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
+    val deckBPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
+    val deckCPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
+
+    val globalPatchQueue get() = globalPresetQueue
+    val deckAPatchQueue get() = deckAPresetQueue
+    val deckBPatchQueue get() = deckBPresetQueue
+    val deckCPatchQueue get() = deckCPresetQueue
 
     var activePresetA: String? = null
     var activePresetB: String? = null
     var activePresetC: String? = null
-    var cachedDtoA: DeckPatchDto? = null
-    var cachedDtoB: DeckPatchDto? = null
-    var cachedDtoC: DeckPatchDto? = null
+    var cachedDtoA: DeckPresetDto? = null
+    var cachedDtoB: DeckPresetDto? = null
+    var cachedDtoC: DeckPresetDto? = null
 
     /** File modification time (ms since epoch) of the most recently loaded deck preset, for Idea E tooltip. */
     var activePresetMtimeA: Long? = null
@@ -55,25 +79,27 @@ object PatchManager {
         val activeIndex: Int
     )
 
-    var cachedGlobalDto: GlobalPatchDto? = null
-    private var defaultGlobalPatchDto: GlobalPatchDto? = null
+    var cachedGlobalDto: GlobalPresetDto? = null
+    private var defaultGlobalPresetDto: GlobalPresetDto? = null
 
     fun initializeDefault(mixer: Mixer) {
         val dto = mixer.toDto("Untitled Project")
-        defaultGlobalPatchDto = dto
+        defaultGlobalPresetDto = dto
         if (cachedGlobalDto == null) {
             cachedGlobalDto = dto
         }
     }
 
-    fun isGlobalPatchDirty(mixer: Mixer): Boolean {
-        val cached = cachedGlobalDto ?: defaultGlobalPatchDto ?: return false
+    fun isGlobalPresetDirty(mixer: Mixer): Boolean {
+        val cached = cachedGlobalDto ?: defaultGlobalPresetDto ?: return false
         val current = mixer.toDto(cached.name)
         return current != cached
     }
 
+    fun isGlobalPatchDirty(mixer: Mixer): Boolean = isGlobalPresetDirty(mixer)
+
     fun resetToDefault(mixer: Mixer) {
-        val defaultDto = defaultGlobalPatchDto ?: return
+        val defaultDto = defaultGlobalPresetDto ?: return
         mixer.applyDto(defaultDto)
         cachedGlobalDto = defaultDto
     }
@@ -130,12 +156,12 @@ object PatchManager {
     }
 
     /**
-     * Builds a canonical "empty" [DeckPatchDto] for the given deck.
+     * Builds a canonical "empty" [DeckPresetDto] for the given deck.
      * The DTO uses the deck's current active source name and default parameter
      * values, with [isEmpty] = true and all modulators cleared, so that
      * [Deck.applyDto] leaves the deck in an inert state that the renderer will skip.
      */
-    private fun emptyDeckDto(deck: Deck, mixer: Mixer): DeckPatchDto {
+    private fun emptyDeckDto(deck: Deck, mixer: Mixer): DeckPresetDto {
         val label = when {
             deck === mixer.deckA -> "Deck A"
             deck === mixer.deckB -> "Deck B"
@@ -182,13 +208,13 @@ object PatchManager {
         CompletableFuture.runAsync({
             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
-                logger.info { "Loading global patch from ${file.absolutePath} in background..." }
+                logger.info { "Loading global preset from ${file.absolutePath} in background..." }
                 val content = file.readText()
-                val dto = json.decodeFromString<GlobalPatchDto>(content)
-                globalPatchQueue.offer(dto)
-                logger.info { "Global patch loaded from file and queued for main thread apply" }
+                val dto = json.decodeFromString<GlobalPresetDto>(content)
+                globalPresetQueue.offer(dto)
+                logger.info { "Global preset loaded from file and queued for main thread apply" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to load global patch from ${file.absolutePath}" }
+                logger.error(e) { "Failed to load global preset from ${file.absolutePath}" }
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
@@ -201,7 +227,7 @@ object PatchManager {
             isDeckA -> 0
             else -> 1
         }
-        deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.LOADING))
+        deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.LOADING))
         val fileMtime = file.lastModified().takeIf { it > 0L }
         CompletableFuture.runAsync({
             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
@@ -210,12 +236,12 @@ object PatchManager {
                 if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
                 
                 val content = file.readText()
-                val rawDto = json.decodeFromString<DeckPatchDto>(content)
+                val rawDto = json.decodeFromString<DeckPresetDto>(content)
                 val dto = rawDto.copy(name = file.nameWithoutExtension)
                 when {
-                    isDeckC -> deckCPatchQueue.offer(dto)
-                    isDeckA -> deckAPatchQueue.offer(dto)
-                    else -> deckBPatchQueue.offer(dto)
+                    isDeckC -> deckCPresetQueue.offer(dto)
+                    isDeckA -> deckAPresetQueue.offer(dto)
+                    else -> deckBPresetQueue.offer(dto)
                 }
                 // Mtime is captured before the background thread runs so it reflects the file on disk
                 when {
@@ -224,7 +250,7 @@ object PatchManager {
                     else    -> activePresetMtimeB = fileMtime
                 }
                 logger.info { "Deck preset loaded and queued for main thread swap" }
-                deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
+                deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.IDLE))
             } catch (e: Exception) {
                 // Extension fallback: if .lsd fails, try .json, and vice versa.
                 val altFile = when {
@@ -242,32 +268,34 @@ object PatchManager {
                 }
 
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
-                deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.ERROR, e.message ?: "Unknown error"))
+                deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
     }
 
-    fun saveGlobalPatchAsync(file: File, mixer: Mixer, name: String) {
+    fun saveGlobalPresetAsync(file: File, mixer: Mixer, name: String) {
         // Capture states on the main thread to ensure we don't read changing values from other threads
         val dto = mixer.toDto(name)
         cachedGlobalDto = dto
         CompletableFuture.runAsync({
             llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(false, true)
             try {
-                logger.info { "Saving global patch to ${file.absolutePath} in background..." }
+                logger.info { "Saving global preset to ${file.absolutePath} in background..." }
                 val content = json.encodeToString(dto)
                 file.parentFile?.mkdirs()
                 file.writeText(content)
-                logger.info { "Global patch saved to file successfully" }
+                logger.info { "Global preset saved to file successfully" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save global patch to ${file.absolutePath}" }
+                logger.error(e) { "Failed to save global preset to ${file.absolutePath}" }
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
             }
         }, patchIoExecutor)
     }
+
+    fun saveGlobalPatchAsync(file: File, mixer: Mixer, name: String) = saveGlobalPresetAsync(file, mixer, name)
 
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
         // Capture deck state on the main thread (Phase 2c: include tags)
@@ -275,7 +303,7 @@ object PatchManager {
         val dto = NotesManager.syncToDto(deckLabel, deck.toDto(name, tags))
 
         if (deckIndex in 0..2) {
-            deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.SAVING))
+            deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.SAVING))
             pendingSaves[deckIndex].getAndSet(null)?.cancel(false)
         }
 
@@ -294,12 +322,12 @@ object PatchManager {
                 }
                 logger.info { "Deck preset saved to file successfully" }
                 if (deckIndex in 0..2) {
-                    deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.IDLE))
+                    deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.IDLE))
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save deck preset to ${file.absolutePath}" }
                 if (deckIndex in 0..2) {
-                    deckStatus[deckIndex].set(PatchIOStatus(PatchIOState.ERROR, e.message ?: "Unknown error"))
+                    deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
                 }
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.patchIOInFlight.compareAndSet(true, false)
@@ -311,22 +339,25 @@ object PatchManager {
         }
     }
 
-    fun applyPendingPatches(mixer: Mixer) {
-        // Poll global patch queue
-        var globalDto = globalPatchQueue.poll()
+    fun saveDeckPatchAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) =
+        saveDeckPresetAsync(file, deck, name, tags, deckIndex)
+
+    fun applyPendingPresets(mixer: Mixer) {
+        // Poll global preset queue
+        var globalDto = globalPresetQueue.poll()
         while (globalDto != null) {
             try {
                 mixer.applyDto(globalDto)
                 cachedGlobalDto = globalDto
-                logger.info { "Successfully applied global patch: ${globalDto.name}" }
+                logger.info { "Successfully applied global preset: ${globalDto.name}" }
             } catch (e: Exception) {
-                logger.error(e) { "Error applying global patch" }
+                logger.error(e) { "Error applying global preset" }
             }
-            globalDto = globalPatchQueue.poll()
+            globalDto = globalPresetQueue.poll()
         }
 
-        // Poll deck A patch queue
-        var deckADto = deckAPatchQueue.poll()
+        // Poll deck A preset queue
+        var deckADto = deckAPresetQueue.poll()
         while (deckADto != null) {
             try {
                 mixer.deckA.applyDto(deckADto)
@@ -337,11 +368,11 @@ object PatchManager {
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck A preset" }
             }
-            deckADto = deckAPatchQueue.poll()
+            deckADto = deckAPresetQueue.poll()
         }
 
-        // Poll deck B patch queue
-        var deckBDto = deckBPatchQueue.poll()
+        // Poll deck B preset queue
+        var deckBDto = deckBPresetQueue.poll()
         while (deckBDto != null) {
             try {
                 mixer.deckB.applyDto(deckBDto)
@@ -352,11 +383,11 @@ object PatchManager {
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck B preset" }
             }
-            deckBDto = deckBPatchQueue.poll()
+            deckBDto = deckBPresetQueue.poll()
         }
 
-        // Poll deck C patch queue
-        var deckCDto = deckCPatchQueue.poll()
+        // Poll deck C preset queue
+        var deckCDto = deckCPresetQueue.poll()
         while (deckCDto != null) {
             try {
                 mixer.deckC.applyDto(deckCDto)
@@ -367,13 +398,15 @@ object PatchManager {
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck C preset" }
             }
-            deckCDto = deckCPatchQueue.poll()
+            deckCDto = deckCPresetQueue.poll()
         }
     }
 
+    fun applyPendingPatches(mixer: Mixer) = applyPendingPresets(mixer)
+
     fun saveSession(mixer: Mixer) {
         try {
-            val sessionFile = File("presets/last_session.json")
+            val sessionFile = File(LIBRARY_ROOT, "last_session.json")
             val parent = sessionFile.parentFile
             if (parent != null && !parent.exists()) {
                 parent.mkdirs()
@@ -411,7 +444,11 @@ object PatchManager {
 
     fun loadSession(mixer: Mixer) {
         try {
-            val sessionFile = File("presets/last_session.json")
+            var sessionFile = File(LIBRARY_ROOT, "last_session.json")
+            if (!sessionFile.exists()) {
+                val legacyFile = File("presets/last_session.json")
+                if (legacyFile.exists()) sessionFile = legacyFile
+            }
             if (!sessionFile.exists()) {
                 logger.info { "No previous session file found." }
                 return
@@ -469,7 +506,7 @@ object PatchManager {
 
     internal fun serializeSessionPath(file: File): String {
         val absFile = file.absoluteFile
-        val rootPath = PRESETS_ROOT.absolutePath + File.separator
+        val rootPath = LIBRARY_ROOT.absolutePath + File.separator
         val filePath = absFile.absolutePath
         return if (filePath.startsWith(rootPath)) {
             filePath.substring(rootPath.length)
@@ -479,9 +516,13 @@ object PatchManager {
     }
 
     internal fun resolveSessionPath(path: String): File? {
-        // Try as relative to presets root first
-        val relativeToRoot = File(PRESETS_ROOT, path)
+        // Try as relative to library root first
+        val relativeToRoot = File(LIBRARY_ROOT, path)
         if (relativeToRoot.exists()) return relativeToRoot
+
+        // Try as relative to legacy presets root
+        val relativeToLegacy = File("presets", path)
+        if (relativeToLegacy.exists()) return relativeToLegacy
 
         // Try as absolute path (or relative to CWD)
         val directFile = File(path)
@@ -529,3 +570,6 @@ object PatchManager {
         logger.info { "Started application empty" }
     }
 }
+
+typealias PatchManager = PresetManager
+

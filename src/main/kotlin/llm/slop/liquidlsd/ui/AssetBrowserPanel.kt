@@ -5,8 +5,8 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImString
-import llm.slop.liquidlsd.patches.PlayQueueManager
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
+import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.rendering.Mixer
 import mu.KotlinLogging
 import java.io.File
@@ -18,7 +18,10 @@ import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 sealed class LibraryView {
     object PlaylistsRoot : LibraryView()
     data class SpecificPlaylist(val playlistFile: File) : LibraryView()
-    data class Patches(val currentDir: File) : LibraryView()
+    data class Presets(val currentDir: File) : LibraryView()
+    
+    // Legacy alias
+    typealias Patches = Presets
 }
 
 object AssetBrowserPanel {
@@ -27,11 +30,11 @@ object AssetBrowserPanel {
     
     internal var currentDirectory: File
         get() = when (val view = SidebarPanel.currentView) {
-            is LibraryView.Patches -> view.currentDir
-            else -> FileSystemManager.getPatchesRoot()
+            is LibraryView.Presets -> view.currentDir
+            else -> FileSystemManager.getPresetsRoot()
         }
         set(value) {
-            SidebarPanel.currentView = LibraryView.Patches(value)
+            SidebarPanel.currentView = LibraryView.Presets(value)
         }
         
     private var assets: List<AssetItem> = emptyList()

@@ -5,7 +5,8 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.notes.NotesManager
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
+import llm.slop.liquidlsd.presets.PresetIOState
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mandala
@@ -56,9 +57,9 @@ class DeckControlPanel(
         val status = session.patchManager.deckStatus[deckIndex].get()
 
         val statusText = when (status.state) {
-            llm.slop.liquidlsd.patches.PatchIOState.LOADING -> " [L...]"
-            llm.slop.liquidlsd.patches.PatchIOState.SAVING -> " [S...]"
-            llm.slop.liquidlsd.patches.PatchIOState.ERROR -> " [!]"
+            PresetIOState.LOADING -> " [L...]"
+            PresetIOState.SAVING -> " [S...]"
+            PresetIOState.ERROR -> " [!]"
             else -> ""
         }
         val btnText = "$displayName$statusText##presetBtn_$label"
@@ -67,7 +68,7 @@ class DeckControlPanel(
         if (ImGui.button(btnText, browserBtnW, 0f)) {
             browser.open()
         }
-        if (status.state == llm.slop.liquidlsd.patches.PatchIOState.ERROR && ImGui.isItemHovered()) {
+        if (status.state == PresetIOState.ERROR && ImGui.isItemHovered()) {
             ImGui.setTooltip("Error: ${status.errorMessage}")
         } else if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             // Show engine description + global source note
@@ -147,8 +148,8 @@ class DeckControlPanel(
             ImGui.text("Permanently delete '$activePreset'?")
             ImGui.spacing()
             if (ImGui.button("Delete", 80f, 0f)) {
-                var file = File("presets/patches/$activePreset.lsd")
-                if (!file.exists()) file = File("presets/patches/$activePreset.json")
+                var file = File("library/presets/$activePreset.lsd").let { if (!it.exists() && File("presets/patches/$activePreset.lsd").exists()) File("presets/patches/$activePreset.lsd") else it }
+                if (!file.exists()) file = File("library/presets/$activePreset.json").let { if (!it.exists() && File("presets/patches/$activePreset.json").exists()) File("presets/patches/$activePreset.json") else it }
                 if (file.exists()) file.delete()
                 onDeleteDeck(isDeckA)
                 ImGui.closeCurrentPopup()

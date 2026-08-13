@@ -3,14 +3,14 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.patches.PatchManager
+import llm.slop.liquidlsd.presets.PresetManager
 import mu.KotlinLogging
 import llm.slop.liquidlsd.midi.MidiEngine
 import llm.slop.liquidlsd.audio.AudioEngine
 
 class MenuBar(
     private val popupManager: PopupManager,
-    private val patchState: PatchGridState,
+    private val patchState: PresetGridState,
     private val onTriggerExitFlow: () -> Unit,
     private val onOpenSettings: () -> Unit,
     private val onOpenAudioEngineMonitor: () -> Unit
@@ -21,7 +21,7 @@ class MenuBar(
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.beginMainMenuBar()) {
                 if (ImGui.beginMenu("File")) {
-                    if (ImGui.beginMenu("New Patch")) {
+                    if (ImGui.beginMenu("New Preset")) {
                         if (ImGui.menuItem("To Deck A")) {
                             mixer.deckA.reset()
                             session.patchManager.activePresetA = null

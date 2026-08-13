@@ -2,8 +2,8 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiWindowFlags
-import llm.slop.liquidlsd.patches.PatchManager
-import llm.slop.liquidlsd.patches.PlayQueueManager
+import llm.slop.liquidlsd.presets.PresetManager
+import llm.slop.liquidlsd.presets.PlayQueueManager
 import java.io.File
 
 class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBrowser("MissingItemsBrowser")) {

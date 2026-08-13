@@ -1,4 +1,4 @@
-package llm.slop.liquidlsd.patches
+package llm.slop.liquidlsd.presets
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -174,34 +174,34 @@ class SessionStateTest {
 
     @Test
     fun testSessionPathSerialization() {
-        val root = File("presets").absoluteFile
-        val presetFile = File(root, "patches/MyPatch.lsd")
+        val root = File("library").absoluteFile
+        val presetFile = File(root, "presets/MyPreset.lsd")
         
-        val serialized = PatchManager.serializeSessionPath(presetFile)
-        assertEquals("patches/MyPatch.lsd", serialized)
+        val serialized = PresetManager.serializeSessionPath(presetFile)
+        assertEquals("presets/MyPreset.lsd", serialized)
         
         val outsideFile = File("/tmp/some_other_place.lsd")
-        val serializedOutside = PatchManager.serializeSessionPath(outsideFile)
+        val serializedOutside = PresetManager.serializeSessionPath(outsideFile)
         assertEquals(outsideFile.absolutePath, serializedOutside)
     }
 
     @Test
     fun testSessionPathResolution() {
-        val root = File("presets").absoluteFile
-        val presetFile = File(root, "patches/MyPatch.lsd")
+        val root = File("library").absoluteFile
+        val presetFile = File(root, "presets/MyPreset.lsd")
         presetFile.parentFile.mkdirs()
         presetFile.writeText("{}")
         
-        val resolved = PatchManager.resolveSessionPath("patches/MyPatch.lsd")
+        val resolved = PresetManager.resolveSessionPath("presets/MyPreset.lsd")
         assertEquals(presetFile.absoluteFile, resolved?.absoluteFile)
         
         val outsideFile = File.createTempFile("outside", ".lsd")
         outsideFile.writeText("{}")
         
-        val resolvedOutside = PatchManager.resolveSessionPath(outsideFile.absolutePath)
+        val resolvedOutside = PresetManager.resolveSessionPath(outsideFile.absolutePath)
         assertEquals(outsideFile.absoluteFile, resolvedOutside?.absoluteFile)
         
-        val missing = PatchManager.resolveSessionPath("missing/Patch.lsd")
+        val missing = PresetManager.resolveSessionPath("missing/Preset.lsd")
         assertNull(missing)
         
         presetFile.delete()
@@ -210,18 +210,18 @@ class SessionStateTest {
     
     @Test
     fun testRestoredQueueUnresolvedItems() {
-        val root = File("presets").absoluteFile
-        val presetFile = File(root, "patches/MyPatch.lsd")
+        val root = File("library").absoluteFile
+        val presetFile = File(root, "presets/MyPreset.lsd")
         presetFile.parentFile.mkdirs()
         presetFile.writeText("{}")
         
-        PatchManager.resolveRestoredQueue(
-            listOf("patches/MyPatch.lsd", "patches/MissingPatch.lsd"),
+        PresetManager.resolveRestoredQueue(
+            listOf("presets/MyPreset.lsd", "presets/MissingPreset.lsd"),
             savedActiveIndex = 0
         )
         
-        val unresolved = PatchManager.sessionState.unresolvedItems
-        assertEquals(listOf("patches/MissingPatch.lsd"), unresolved)
+        val unresolved = PresetManager.sessionState.unresolvedItems
+        assertEquals(listOf("presets/MissingPreset.lsd"), unresolved)
         
         presetFile.delete()
     }

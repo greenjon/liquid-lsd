@@ -32,9 +32,9 @@ class FileSystemManagerTest {
 
     @Test
     fun testManagedAssetPathAllowsPatchAndPlaylistRootsOnly() {
-        assertTrue(FileSystemManager.isManagedAssetPath(File("presets/patches/test.lsd")))
-        assertTrue(FileSystemManager.isManagedAssetPath(File("presets/playlists/test.lsdset")))
-        assertFalse(FileSystemManager.isManagedAssetPath(File("presets/midi/test.json")))
+        assertTrue(FileSystemManager.isManagedAssetPath(File("library/presets/test.lsd")))
+        assertTrue(FileSystemManager.isManagedAssetPath(File("library/playlists/test.lsdset")))
+        assertFalse(FileSystemManager.isManagedAssetPath(File("library/midi/test.json")))
         assertFalse(FileSystemManager.isManagedAssetPath(File("build/outside.lsd")))
     }
 

@@ -29,7 +29,7 @@ import java.io.File
  * Draws the Patch Grid panel. Rows = grouped ModulatableParameters.
  * Columns = CV sources. Each intersection is a clickable cell.
  */
-object PatchGridPanel {
+object PresetGridPanel {
 
     private fun getCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val cols = mutableListOf<String>()
@@ -520,13 +520,13 @@ object PatchGridPanel {
                 ImGui.textDisabled("Quick Select Preset:")
                 ImGui.separator()
 
-                val presetDir = File("presets/patches")
+                val presetDir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
                 val patchFiles = if (presetDir.exists()) {
                     presetDir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".lsd")) }?.toList() ?: emptyList()
                 } else emptyList()
 
                 if (patchFiles.isEmpty()) {
-                    ImGui.textDisabled("No presets found in presets/patches/")
+                    ImGui.textDisabled("No presets found in library/presets/")
                 } else {
                     for (file in patchFiles.sortedBy { it.nameWithoutExtension }) {
                         val displayName = file.nameWithoutExtension.replace('_', ' ')
@@ -549,7 +549,7 @@ object PatchGridPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
             if (ImGui.button("🎲 Quick Random", buttonWidth, buttonHeight)) {
-                val presetDir = File("presets/patches")
+                val presetDir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
                 val patchFiles = if (presetDir.exists()) {
                     presetDir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".lsd")) }?.toList() ?: emptyList()
                 } else emptyList()
@@ -601,3 +601,6 @@ fun Deck.randomizeModulators() {
         param.randomizeBaseValue()
     }
 }
+
+typealias PatchGridPanel = PresetGridPanel
+

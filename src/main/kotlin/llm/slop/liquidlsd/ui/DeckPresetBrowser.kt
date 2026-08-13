@@ -206,7 +206,7 @@ class DeckPresetBrowser(
         if (filtered.isEmpty() && allPresets.isNotEmpty()) {
             ImGui.textDisabled("No presets match the current filter.")
         } else if (allPresets.isEmpty()) {
-            ImGui.textDisabled("No presets found in presets/patches/")
+            ImGui.textDisabled("No presets found in library/presets/")
         }
 
         ImGui.endChild()
@@ -310,7 +310,7 @@ class DeckPresetBrowser(
     private fun checkAutoRefresh() {
         val now = System.currentTimeMillis()
         if (now - lastAutoRefreshTimeMs > 250L) {
-            val dir = File("presets/patches")
+            val dir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
             val sig = FileSystemManager.getDirectorySignature(dir)
             if (sig != lastPresetDirSignature) {
                 scanPresets()
@@ -319,7 +319,7 @@ class DeckPresetBrowser(
     }
 
     private fun scanPresets() {
-        val dir = File("presets/patches")
+        val dir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
         if (!dir.exists()) dir.mkdirs()
 
         lastPresetDirSignature = FileSystemManager.getDirectorySignature(dir)

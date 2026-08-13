@@ -27,10 +27,12 @@ Thumbs.db
 # Application
 logs/
 *.log
-patches/*.json
-!patches/default.json
-presets/*
-!presets/sources/
+library/presets/*.json
+library/presets/*.lsd
+library/last_session.json
+!library/presets/default.json
+library/*
+!library/sources/
 spirals-settings.properties
 lsd-settings.properties
 imgui.ini
