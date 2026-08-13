@@ -29,6 +29,18 @@ vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
     return a + b * cos(6.28318530 * (c * t + d));
 }
 
+// Solves A(n) = n^1.5 / (n + damping) == targetR for n using Newton-Raphson
+float solveN(float targetR, float damping) {
+    if (targetR <= 0.0) return 0.0;
+    float n = targetR * targetR + sqrt(targetR * damping * 2.0);
+    for (int k = 0; k < 4; k++) {
+        float f = (n * sqrt(n)) / (n + damping) - targetR;
+        float df = (sqrt(n) * (0.5 * n + 1.5 * damping)) / ((n + damping) * (n + damping));
+        n -= f / max(df, 0.001);
+    }
+    return max(n, 0.0);
+}
+
 void main() {
     // Normalize to [-1, 1] with correct aspect ratio
     vec2 uv = vTexCoord * 2.0 - 1.0;
@@ -44,19 +56,26 @@ void main() {
     // are evenly distributed across the visible spiral on screen.
     float glowReach = uScale * 0.2;            // radius at which exp glow ≈ 0
     float viewRadius = aspect / uScale + glowReach;
-
-    float nMax = viewRadius * viewRadius + sqrt(viewRadius * uDamping * 2.0);
-    for (int k = 0; k < 4; k++) {
-        float f = (nMax * sqrt(nMax)) / (nMax + uDamping) - viewRadius;
-        float df = (sqrt(nMax) * (0.5 * nMax + 1.5 * uDamping)) / ((nMax + uDamping) * (nMax + uDamping));
-        nMax -= f / max(df, 0.001);
-    }
-    nMax = max(nMax, 1.0);
+    float nMax = solveN(viewRadius, uDamping);
 
     int maxN = int(clamp(uMaxPoints, 1.0, 2000.0));
     float dn = nMax / float(maxN);
 
-    for (int i = 1; i <= maxN; i++) {
+    // Per-fragment radial range culling:
+    // Only iterate over points whose radial distance A(n) is close enough
+    // to this fragment's distance r = length(uv) to contribute visible light.
+    float pixelRadius = length(uv);
+    float pointReach = uDotSize + glowReach;
+    float rMin = max(pixelRadius - pointReach, 0.0);
+    float rMax = pixelRadius + pointReach;
+
+    float nMin = solveN(rMin, uDamping);
+    float nMaxRange = solveN(rMax, uDamping);
+
+    int iStart = clamp(int(floor(nMin / dn)) - 1, 1, maxN);
+    int iEnd   = clamp(int(ceil(nMaxRange / dn)) + 1, 1, maxN);
+
+    for (int i = iStart; i <= iEnd; i++) {
         float n = float(i) * dn;
 
         // Radial amplitude: A(n) = n^1.5 / (n + damping).
