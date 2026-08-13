@@ -18,8 +18,8 @@ object SettingsPanel {
     private const val MIN_SIZE = 10f
     private const val MAX_SIZE = 36f
     private const val STEP     = 1f
-    private const val MODAL_W  = 600f
-    private const val MODAL_H  = 720f
+    private const val MODAL_W  = 580f
+    private const val MODAL_H  = 420f
 
     enum class Category(val label: String) {
         APPEARANCE("Appearance"),
@@ -37,8 +37,8 @@ object SettingsPanel {
              onSizeChanged: (Float) -> Unit) {
 
         val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
-        val targetW = (MODAL_W * fontScale).coerceIn(580f, displayW * 0.90f)
-        val targetH = (MODAL_H * fontScale).coerceIn(480f, displayH * 0.90f)
+        val targetW = (MODAL_W * fontScale).coerceIn(540f, displayW * 0.90f)
+        val targetH = (MODAL_H * fontScale).coerceIn(380f, displayH * 0.85f)
 
         ImGui.setNextWindowPos(
             displayW * 0.5f, displayH * 0.5f,
@@ -46,7 +46,7 @@ object SettingsPanel {
         )
         ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.Always)
 
-        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoResize
+        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoScrollbar
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
 
@@ -55,14 +55,16 @@ object SettingsPanel {
         }.coerceAtLeast(140f)
 
         val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.getFrameHeight() + 8f
-        }.coerceAtLeast(32f)
+            ImGui.getFrameHeight() + 6f
+        }.coerceAtLeast(30f)
 
-        val bottomPadding = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.getFrameHeightWithSpacing() + 12f
+        val closeRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.getFrameHeightWithSpacing() + 16f
         }
 
-        if (ImGui.beginTable("##settings_table", 2, ImGuiTableColumnFlags.None, ImGui.getContentRegionAvailX(), ImGui.getContentRegionAvailY() - bottomPadding)) {
+        val tableH = (ImGui.getContentRegionAvailY() - closeRowH).coerceAtLeast(100f)
+
+        if (ImGui.beginTable("##settings_table", 2, ImGuiTableColumnFlags.None, ImGui.getContentRegionAvailX(), tableH)) {
             ImGui.tableSetupColumn("##sidebar", ImGuiTableColumnFlags.WidthFixed, sidebarW)
             ImGui.tableSetupColumn("##content", ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
@@ -108,6 +110,7 @@ object SettingsPanel {
             ImGui.endTable()
         }
 
+        ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
