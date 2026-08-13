@@ -80,26 +80,11 @@ class MixerMonitorPanel(
         val startX = baseScreenX + offsetX
         val centerY = ImGui.getCursorScreenPosY()
         
-        // Use an invisible full-width dummy to reserve vertical space for the two rows
-        val headerRowH = session.uiTheme.withFont(UITheme.FontLevel.H2) { ImGui.getTextLineHeight() + 6f }
+        // Use an invisible full-width dummy to reserve vertical space for the preset row
         val presetRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeightWithSpacing() + 4f }
-        ImGui.dummy(layout.contentWidth, headerRowH + presetRowH + 8f)
+        ImGui.dummy(layout.contentWidth, presetRowH + 4f)
         
-        // 1. Deck A Header
-        var twA = 0f
-        var twB = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.H2) {
-            twA = ImGui.calcTextSize("Deck A").x
-            twB = ImGui.calcTextSize("Deck B").x
-        }
-        
-        ImGui.setCursorScreenPos(startX + (halfW - twA) * 0.5f, centerY)
-        session.uiTheme.h2("Deck A")
-        
-        // 3. Deck B Header
         val deckBStartX = startX + halfW + padding
-        ImGui.setCursorScreenPos(deckBStartX + (halfW - twB) * 0.5f, centerY)
-        session.uiTheme.h2("Deck B")
         
         // Helper to format/truncate preset label to fit column width before save/eject icons
         fun truncatePresetLabel(label: String, maxW: Float): String {
@@ -121,8 +106,8 @@ class MixerMonitorPanel(
         val iconBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.calcTextSize("${Icons.SAVE}").x + 16f }
         val maxPresetW = (halfW - iconBtnW * 2f - 12f).coerceAtLeast(40f)
 
-        // 4. Presets Row
-        val presetY = centerY + headerRowH + 6f
+        // Presets Row
+        val presetY = centerY
         
         val activePresetA = session.patchManager.activePresetA ?: "None"
         val isDirtyA = session.patchManager.isDeckDirty(mixer.deckA, mixer)
@@ -186,7 +171,7 @@ class MixerMonitorPanel(
         
         ImGui.spacing()
         
-        // --- Render the exact exact child panels ---
+        // --- Render child panels ---
         val subH = layout.deckChildHeight
         
         val childY = ImGui.getCursorScreenPosY()
@@ -200,12 +185,9 @@ class MixerMonitorPanel(
         val endY = ImGui.getCursorScreenPosY()
         ImGui.setCursorScreenPos(startX, endY)
 
-        // --- Deck C / Preview Monitor (Aligned to Center / Full Width) ---
-        val previewLabel = "DECK C / PREVIEW"
-        
-        // Push Deck C monitor to the bottom of the panel
+        // --- Deck C / Preview Monitor ---
         val contentHeightRemaining = ImGui.getContentRegionAvailY()
-        val deckCHeightNeeded = layout.deckCHeight + ImGui.getFrameHeightWithSpacing() * 2f + 20f
+        val deckCHeightNeeded = layout.deckCHeight + ImGui.getFrameHeightWithSpacing() + 15f
         
         if (contentHeightRemaining > deckCHeightNeeded) {
             ImGui.setCursorPosY(ImGui.getCursorPosY() + (contentHeightRemaining - deckCHeightNeeded))
@@ -215,22 +197,13 @@ class MixerMonitorPanel(
         ImGui.separator()
         ImGui.spacing()
         
-        // Row 1: Monitor Label
+        // Preset Info row for Deck C
         val row1Y = ImGui.getCursorScreenPosY()
-        var twC = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.H2) {
-            twC = ImGui.calcTextSize(previewLabel).x
-        }
-        ImGui.setCursorScreenPos(startX + (availW - twC) * 0.5f, row1Y)
-        session.uiTheme.h2(previewLabel)
-
-        // Row 2: Preset Info
         val maxPresetWC = (availW - iconBtnW * 2f - 12f).coerceAtLeast(40f)
         val activePresetC = session.patchManager.activePresetC ?: "None"
         val isDirtyC = session.patchManager.isDeckDirty(mixer.deckC, mixer)
         val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
-        val row2HeaderH = session.uiTheme.withFont(UITheme.FontLevel.H2) { ImGui.getTextLineHeight() + 4f }
-        ImGui.setCursorScreenPos(startX, row1Y + row2HeaderH)
+        ImGui.setCursorScreenPos(startX, row1Y)
         session.uiTheme.body(truncatePresetLabel(displayNameC, maxPresetWC))
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveC")) {
@@ -329,6 +302,35 @@ class MixerMonitorPanel(
         val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
         val dlPreview = ImGui.getWindowDrawList()
         dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + availW + 1f, imgY + layout.deckCHeight + 1f, deckCColor, 0f, 0, 2f)
+
+        // Draw lower-left letter badge overlay ("C") on Deck C monitor
+        val letterC = "C"
+        val badgePadXC = 8f
+        val badgePadYC = 3f
+        val fontLevelC = UITheme.FontLevel.H2
+        var textWC = 0f
+        var textHC = 0f
+        session.uiTheme.withFont(fontLevelC) {
+            val sz = ImGui.calcTextSize(letterC)
+            textWC = sz.x
+            textHC = sz.y
+        }
+        val badgeWC = (textWC + badgePadXC * 2f).coerceAtLeast(24f)
+        val badgeHC = (textHC + badgePadYC * 2f).coerceAtLeast(24f)
+        val badgeMarginC = 6f
+        val badgeMinXC = imgX + badgeMarginC
+        val badgeMaxYC = imgY + layout.deckCHeight - badgeMarginC
+        val badgeMinYC = badgeMaxYC - badgeHC
+        val badgeMaxXC = badgeMinXC + badgeWC
+
+        dlPreview.addRectFilled(badgeMinXC, badgeMinYC, badgeMaxXC, badgeMaxYC, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dlPreview.addRect(badgeMinXC, badgeMinYC, badgeMaxXC, badgeMaxYC, deckCColor, 4f, 0, 1.5f)
+
+        val textXC = badgeMinXC + (badgeWC - textWC) * 0.5f
+        val textYC = badgeMinYC + (badgeHC - textHC) * 0.5f
+        session.uiTheme.withFont(fontLevelC) {
+            dlPreview.addText(textXC, textYC, deckCColor, letterC)
+        }
     }
 
     fun drawFlatSlider(

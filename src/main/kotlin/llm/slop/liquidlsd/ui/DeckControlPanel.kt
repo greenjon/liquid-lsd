@@ -277,6 +277,35 @@ class DeckControlPanel(
         // Draw border perfectly wrapped around the image
         dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
 
+        // Draw lower-left letter badge overlay ("A" or "B") on monitor
+        val letter = if (isDeckA) "A" else "B"
+        val badgePadX = 8f
+        val badgePadY = 3f
+        val fontLevel = UITheme.FontLevel.H2
+        var textW = 0f
+        var textH = 0f
+        session.uiTheme.withFont(fontLevel) {
+            val sz = ImGui.calcTextSize(letter)
+            textW = sz.x
+            textH = sz.y
+        }
+        val badgeW = (textW + badgePadX * 2f).coerceAtLeast(24f)
+        val badgeH = (textH + badgePadY * 2f).coerceAtLeast(24f)
+        val badgeMargin = 6f
+        val badgeMinX = imgX + badgeMargin
+        val badgeMaxY = imgY + imgAvailH - badgeMargin
+        val badgeMinY = badgeMaxY - badgeH
+        val badgeMaxX = badgeMinX + badgeW
+
+        dl.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dl.addRect(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, themeCol, 4f, 0, 1.5f)
+
+        val textX = badgeMinX + (badgeW - textW) * 0.5f
+        val textY = badgeMinY + (badgeH - textH) * 0.5f
+        session.uiTheme.withFont(fontLevel) {
+            dl.addText(textX, textY, themeCol, letter)
+        }
+
         // Patch name label with hover tooltip + right-click note editing (Idea A)
         ImGui.spacing()
         ImGui.setCursorPosX(inset)
