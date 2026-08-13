@@ -46,9 +46,10 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
     /** Set to true for one frame to trigger `ImGui.openPopup`. */
     private var pendingOpen = false
 
-    /** Cached directory listing, refreshed whenever [currentDir] changes. */
+    /** Cached directory listing, refreshed whenever [currentDir] or on-disk contents change. */
     private var listing: List<File> = emptyList()
     private var listingDir: File? = null   // which dir the listing was built for
+    private var listingSignature: String = ""
 
     // -- Public API ------------------------------------------------------------
 
@@ -71,6 +72,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
         filenameInput.set(initialName)
         this.filterExts = extensions
         listingDir = null   // force refresh
+        listingSignature = ""
         pendingOpen = true
     }
 
@@ -118,8 +120,10 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
     private fun popupId() = if (mode == Mode.SAVE) "Save Project###$id" else "Load Project###$id"
 
     private fun refreshListingIfNeeded() {
-        if (listingDir == currentDir) return
+        val currentSig = FileSystemManager.getDirectorySignature(currentDir)
+        if (listingDir == currentDir && listingSignature == currentSig) return
         listingDir = currentDir
+        listingSignature = currentSig
         listing = buildListing(currentDir)
     }
 

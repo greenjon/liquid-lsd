@@ -30,7 +30,11 @@ object MixerMonitorLayoutCalculator {
         val reservedScrollbarWidth = scrollbarWidth.coerceAtLeast(0f)
         val contentWidth = (windowWidth - (windowPaddingX * 2f) - reservedScrollbarWidth).coerceAtLeast(1f)
 
+        val masterControlsH = (frameHeightWithSpacing * 2f + itemSpacingY + 8f).coerceAtLeast(60f)
+        val patchNameExtraHeight = textLineHeightWithSpacing + 14f
+
         val verticalChrome = estimateVerticalChrome(
+            masterControlsH = masterControlsH,
             textLineHeightWithSpacing = textLineHeightWithSpacing,
             frameHeightWithSpacing = frameHeightWithSpacing,
             itemSpacingY = itemSpacingY
@@ -38,8 +42,6 @@ object MixerMonitorLayoutCalculator {
         val availableForPreviews = (availableHeight - verticalChrome).coerceAtLeast(0f)
 
         // Calculate maximum allowed width to maintain exact 16:9 aspect ratios given available height.
-        // scalableHeight(W) = W * (9/16) + ( (W - 16)/2 * (9/16) + 10 ) + W * (9/16)
-        //                   = W * 1.40625f + 5.5f
         val maxAllowedWidth = if (availableForPreviews > 5.5f) {
             (availableForPreviews - 5.5f) / 1.40625f
         } else {
@@ -51,7 +53,7 @@ object MixerMonitorLayoutCalculator {
 
         val halfWidth = ((renderWidth - TWO_DECK_PADDING) * 0.5f).coerceAtLeast(1f)
         val desiredMasterHeight = renderWidth * ASPECT_16_9
-        val desiredDeckChildHeight = (halfWidth * ASPECT_16_9) + DECK_CHILD_EXTRA_HEIGHT
+        val desiredDeckChildHeight = (halfWidth * ASPECT_16_9) + patchNameExtraHeight
         val desiredDeckCHeight = renderWidth * ASPECT_16_9
 
         return MixerMonitorLayout(
@@ -65,6 +67,7 @@ object MixerMonitorLayoutCalculator {
     }
 
     private fun estimateVerticalChrome(
+        masterControlsH: Float,
         textLineHeightWithSpacing: Float,
         frameHeightWithSpacing: Float,
         itemSpacingY: Float
@@ -73,6 +76,6 @@ object MixerMonitorLayoutCalculator {
         val deckHeaderRows = textLineHeightWithSpacing + frameHeightWithSpacing
         val deckCHeaderRows = textLineHeightWithSpacing + frameHeightWithSpacing
         val safetyMargin = itemSpacingY * 4f
-        return MASTER_CONTROLS_HEIGHT + separatorBands + deckHeaderRows + deckCHeaderRows + safetyMargin
+        return masterControlsH + separatorBands + deckHeaderRows + deckCHeaderRows + safetyMargin
     }
 }

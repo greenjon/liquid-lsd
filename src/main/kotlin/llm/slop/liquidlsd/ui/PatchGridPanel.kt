@@ -311,7 +311,8 @@ object PatchGridPanel {
             else -> null
         }
         if (activeDeck != null && !activeDeck.isEmpty) {
-            ImGui.setCursorScreenPos(startX, startY + headerH - 24f - 2f)
+            val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+            ImGui.setCursorScreenPos(startX, startY + headerH - subTabH - 2f)
             PatchGridTabs.drawSubTabs(session, state, mixer)
         }
         

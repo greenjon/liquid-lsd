@@ -39,14 +39,17 @@ object FileSystemManager {
         scanCache.clear()
     }
 
-    private fun directorySignature(directory: File): String {
-        return directory.listFiles()
+    internal fun getDirectorySignature(directory: File): String {
+        if (!directory.exists() || !directory.isDirectory) return ""
+        val childrenSig = directory.listFiles()
             ?.sortedBy { it.name }
             ?.joinToString("|") { file ->
                 "${file.name}:${file.isDirectory}:${file.length()}:${file.lastModified()}"
-            }
-            ?: ""
+            } ?: ""
+        return "${directory.lastModified()}:$childrenSig"
     }
+
+    private fun directorySignature(directory: File): String = getDirectorySignature(directory)
 
     private fun managedRootPaths(): List<Path> {
         return listOf(getPatchesRoot(), getPlaylistsRoot())

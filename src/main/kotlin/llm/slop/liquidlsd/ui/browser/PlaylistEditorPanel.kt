@@ -33,6 +33,7 @@ object PlaylistEditorPanel {
             ImGui.pushID(index)
 
             // A / B / C deck buttons
+            val btnSize = ImGui.getFrameHeight()
             ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
             ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
 
@@ -42,7 +43,7 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
-            if (ImGui.button("A##deck_a", 24f, 24f) && exists) {
+            if (ImGui.button("A##deck_a", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckA
                 val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
@@ -62,7 +63,7 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
-            if (ImGui.button("B##deck_b", 24f, 24f) && exists) {
+            if (ImGui.button("B##deck_b", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckB
                 val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
@@ -82,7 +83,7 @@ object PlaylistEditorPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
-            if (ImGui.button("C##deck_c", 24f, 24f) && exists) {
+            if (ImGui.button("C##deck_c", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckC
                 val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {

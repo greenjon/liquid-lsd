@@ -105,4 +105,18 @@ class FileSystemManagerTest {
         assertEquals(1, secondScan.size)
         assertTrue(secondScan[0].isValid)
     }
+
+    @Test
+    fun testDirectorySignatureChangesWhenFileAddedOrRemoved() {
+        val directory = createTempDirectory().toFile()
+        val initialSig = FileSystemManager.getDirectorySignature(directory)
+
+        val file = File(directory, "new_preset.lsd").apply { writeText("{}") }
+        val addedSig = FileSystemManager.getDirectorySignature(directory)
+        assertTrue(initialSig != addedSig, "Directory signature should change when file is added")
+
+        file.delete()
+        val deletedSig = FileSystemManager.getDirectorySignature(directory)
+        assertTrue(addedSig != deletedSig, "Directory signature should change when file is deleted")
+    }
 }

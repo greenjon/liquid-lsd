@@ -185,11 +185,12 @@ class DeckControlPanel(
         
         val inset = 3f
         val imgAvailW = panelW - (inset * 2f)
-        val childH = previewH.coerceAtLeast(20f)
-        val imgAvailH = (childH - 10f).coerceAtMost(imgAvailW * (9f / 16f)).coerceAtLeast(1f)
+        val patchNameH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeightWithSpacing() + 6f }
+        val childH = maxOf(previewH, (imgAvailW * (9f / 16f)) + patchNameH + 10f)
+        val imgAvailH = (childH - patchNameH - 10f).coerceAtMost(imgAvailW * (9f / 16f)).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
-        ImGui.beginChild("Child_$label", panelW, childH, false)
+        ImGui.beginChild("Child_$label", panelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
 
         ImGui.spacing()
 

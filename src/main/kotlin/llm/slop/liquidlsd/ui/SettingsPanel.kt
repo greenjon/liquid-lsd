@@ -16,7 +16,7 @@ object SettingsPanel {
 
     private const val POPUP_ID = "Settings##modal"
     private const val MIN_SIZE = 10f
-    private const val MAX_SIZE = 28f
+    private const val MAX_SIZE = 36f
     private const val STEP     = 1f
     private const val MODAL_W  = 600f
     private const val MODAL_H  = 720f

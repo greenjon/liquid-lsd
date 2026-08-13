@@ -16,6 +16,8 @@
 - **Dynamic UI Theming Engine**: Added customizable UI color themes, base font scaling hotkeys (`Ctrl-` / `Ctrl=`), clean mode (`F`), and persistent theme settings in `lsd-settings.properties`.
 - **Resizable 3-Column Layout & Seamless Cards**: Added resizable workspace column splits, toggleable Mixer Panel columns, and connected side tabs into parameter cards with inline sub-tabs.
 - **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) for real-time audio- or beat-driven parameter randomization.
+- **Typography Font Sizing & Layout Alignment Overhaul**: Increased global base font limit from 28px to 36px. Added automatic vertical resizing for the main Menu Bar, Master Controls (Crossfader/Fade Speed), and Deck A/B monitors with patch name labels. Resolved UI text clipping and vertical misalignment across large font sizes, including left/sub tab button heights, Cell Config "Current" slider readouts, Mixer Monitor preset Save & Eject icons, Deck A/B header vertical padding, and Playlist preview buttons A, B, C.
+- **Media Browser Live Auto-Refresh**: Added real-time filesystem change monitoring across `AssetBrowserPanel`, `DeckPresetBrowser`, and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
 - **Toolchain Upgrade**: Upgraded build toolchain to Gradle **9.7.0**.
 
 ---

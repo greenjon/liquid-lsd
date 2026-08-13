@@ -211,10 +211,11 @@ object CustomRangeSlider {
         val spacing = ImGui.getStyle().itemSpacing.x
         val combinedWidth = buttonSize
         
-        val labelColW = 175f
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val labelColW = 175f * fontScale
         val textBoxesStartX = startX + labelColW + 20f
         
-        val boxWidth = 115f
+        val boxWidth = 115f * fontScale
         val boxSpacing = 8f
         
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
@@ -260,7 +261,7 @@ object CustomRangeSlider {
             val curX = lineStartX + curPct * lineWidth
             val formattedVal = formatValue(currentValue)
             val labelText = "Current: $formattedVal"
-            val currentTextWidth = ImGui.calcTextSize(labelText).x
+            val currentTextWidth = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.calcTextSize(labelText).x }
             val minAllowedX = lineStartX
             val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
             val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
@@ -269,7 +270,8 @@ object CustomRangeSlider {
             session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
         } else {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
+            val formattedVal = formatValue(currentValue)
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current: $formattedVal")
         }
         
         // --- ROW 2: Widgets ---

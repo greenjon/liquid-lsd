@@ -646,7 +646,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
     fun adjustFontSize(delta: Float) {
         val currentSize = session.uiTheme.baseSize
         val targetSize = currentSize + delta
-        val constrainedSize = targetSize.coerceIn(10f, 28f)
+        val constrainedSize = targetSize.coerceIn(10f, 36f)
         applyFontSize(constrainedSize)
     }
 
@@ -817,7 +817,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
     }
 
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
-        val menuBarH = 32f
+        val menuBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)
         val contentH = displayHeight - menuBarH
         val noDecorate = ImGuiWindowFlags.NoResize or
                          ImGuiWindowFlags.NoMove or

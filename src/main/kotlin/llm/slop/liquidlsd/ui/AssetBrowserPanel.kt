@@ -37,6 +37,8 @@ object AssetBrowserPanel {
     private var assets: List<AssetItem> = emptyList()
     private var selectedAsset: AssetItem? = null
     private var showSidebar = true
+    private var lastKnownSignature: String = ""
+    private var lastAutoRefreshTimeMs: Long = 0L
     
     private val searchBuffer = ImString(256)
     internal var activePlaylistData: PlaylistManager.Playlist? = null
@@ -52,12 +54,23 @@ object AssetBrowserPanel {
         }
         return null
     }
+
+    private fun checkAutoRefresh() {
+        val now = System.currentTimeMillis()
+        if (now - lastAutoRefreshTimeMs > 250L) {
+            val sig = FileSystemManager.getDirectorySignature(currentDirectory)
+            if (sig != lastKnownSignature) {
+                refreshAssets()
+            }
+        }
+    }
     
     init {
         refreshAssets()
     }
     
     fun draw(session: llm.slop.liquidlsd.SessionContext, width: Float, height: Float, mixer: Mixer) {
+        checkAutoRefresh()
         val sidebarWidth = if (showSidebar) width * 0.33f else 0f
         val centerWidth = if (showSidebar) width * 0.33f else width * 0.5f
         val queueWidth = width - sidebarWidth - centerWidth
@@ -263,13 +276,6 @@ object AssetBrowserPanel {
 
     private fun drawPatchesView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer) {
         // Header Row
-        if (ImGui.button("Refresh Folder")) {
-            refreshAssets()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Re-scan active directory for newly added patch or playlist files.")
-        }
-        ImGui.sameLine()
         ImGui.inputText("Filter", searchBuffer)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to filter patches by filename.")
@@ -288,6 +294,7 @@ object AssetBrowserPanel {
             ImGui.pushID(index)
             
             // Preview buttons: A, B, C
+            val btnSize = ImGui.getFrameHeight()
             ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
             ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
 
@@ -297,7 +304,7 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
-            if (ImGui.button("A##preview_a_$index", 24f, 24f)) {
+            if (ImGui.button("A##preview_a_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckA
                 val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
@@ -320,7 +327,7 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
-            if (ImGui.button("B##preview_b_$index", 24f, 24f)) {
+            if (ImGui.button("B##preview_b_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckB
                 val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
@@ -343,7 +350,7 @@ object AssetBrowserPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
-            if (ImGui.button("C##preview_c_$index", 24f, 24f)) {
+            if (ImGui.button("C##preview_c_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckC
                 val isDirty = session.patchManager.isDeckDirty(targetDeck, mixer)
                 if (!isDirty) {
@@ -426,6 +433,8 @@ object AssetBrowserPanel {
 
 
     internal fun refreshAssets() {
+        lastKnownSignature = FileSystemManager.getDirectorySignature(currentDirectory)
+        lastAutoRefreshTimeMs = System.currentTimeMillis()
         assets = FileSystemManager.scanDirectory(currentDirectory)
         logger.debug { "Refreshed assets: ${assets.size} items in ${currentDirectory.name}" }
     }

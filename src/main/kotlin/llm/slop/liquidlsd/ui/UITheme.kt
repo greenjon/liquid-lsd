@@ -164,7 +164,7 @@ object UITheme {
                 settingsFile.inputStream().use { props.load(it) }
                 val savedSize = props.getProperty("baseSize")?.toFloatOrNull()
                 if (savedSize != null) {
-                    baseSize = savedSize.coerceIn(10f, 28f)
+                    baseSize = savedSize.coerceIn(10f, 36f)
                     logger.info { "Loaded baseSize from settings file: $baseSize" }
                 }
                 val savedAudio = props.getBoolean("audioEngineEnabled")

@@ -55,7 +55,7 @@ object PatchGridTabs {
             Triple("C",   "Deck C", if (deckCEmpty) "Deck C [EMPTY] — Click to assign a source or preset." else "Deck C visual source, geometry, color, and feedback parameters.")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
-        val buttonHeight = 28f
+        val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 12f }.coerceAtLeast(28f)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
@@ -222,7 +222,8 @@ object PatchGridTabs {
             var tw = 0f
             session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
             val btnW = (tw + 16f).coerceAtLeast(45f)
-            if (ImGui.button(displayLabel, btnW, 24f)) {
+            val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+            if (ImGui.button(displayLabel, btnW, subTabH)) {
                 if (isSourceTab) {
                     if (!isActive) {
                         when (state.activeTopTab) {

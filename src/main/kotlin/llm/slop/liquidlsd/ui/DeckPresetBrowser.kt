@@ -55,6 +55,8 @@ class DeckPresetBrowser(
     private var showSaveAs = false
     private val saveAsName = ImString(64)
     private val saveAsTags = ImString(128)   // comma-separated
+    private var lastPresetDirSignature: String = ""
+    private var lastAutoRefreshTimeMs: Long = 0L
 
     private companion object {
         private const val POPUP_W = 400f
@@ -108,6 +110,8 @@ class DeckPresetBrowser(
         val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
         if (!ImGui.beginPopupModal(popupId, flags)) return
 
+        checkAutoRefresh()
+
         drawSearchBar(session)
         ImGui.spacing()
         drawTagRow(session)
@@ -127,19 +131,12 @@ class DeckPresetBrowser(
     private fun drawSearchBar(session: llm.slop.liquidlsd.SessionContext) {
         ImGui.text("Search:")
         ImGui.sameLine()
-        ImGui.pushItemWidth((ImGui.getContentRegionAvailX() - 70f).coerceAtLeast(80f))
+        ImGui.pushItemWidth(ImGui.getContentRegionAvailX())
         ImGui.inputText("##search$deckLabel", searchInput)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to search presets by name.")
         }
         ImGui.popItemWidth()
-        ImGui.sameLine()
-        if (ImGui.button("Refresh")) {
-            scanPresets()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Re-scan presets directory.")
-        }
     }
 
     private fun drawTagRow(session: llm.slop.liquidlsd.SessionContext) {
@@ -310,9 +307,23 @@ class DeckPresetBrowser(
      * because it only happens on explicit user action (open / refresh), not
      * every frame.
      */
+    private fun checkAutoRefresh() {
+        val now = System.currentTimeMillis()
+        if (now - lastAutoRefreshTimeMs > 250L) {
+            val dir = File("presets/patches")
+            val sig = FileSystemManager.getDirectorySignature(dir)
+            if (sig != lastPresetDirSignature) {
+                scanPresets()
+            }
+        }
+    }
+
     private fun scanPresets() {
         val dir = File("presets/patches")
         if (!dir.exists()) dir.mkdirs()
+
+        lastPresetDirSignature = FileSystemManager.getDirectorySignature(dir)
+        lastAutoRefreshTimeMs = System.currentTimeMillis()
 
         val files = dir.listFiles { _, name -> name.endsWith(".lsd") || name.endsWith(".json") }
             ?.sortedBy { it.nameWithoutExtension.lowercase() }

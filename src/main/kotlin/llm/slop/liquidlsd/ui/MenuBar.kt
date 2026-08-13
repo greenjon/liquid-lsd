@@ -18,135 +18,137 @@ class MenuBar(
     private val logger = KotlinLogging.logger {}
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        if (ImGui.beginMainMenuBar()) {
-            if (ImGui.beginMenu("File")) {
-                if (ImGui.beginMenu("New Patch")) {
-                    if (ImGui.menuItem("To Deck A")) {
-                        mixer.deckA.reset()
-                        session.patchManager.activePresetA = null
-                        session.patchManager.cachedDtoA = null
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.beginMainMenuBar()) {
+                if (ImGui.beginMenu("File")) {
+                    if (ImGui.beginMenu("New Patch")) {
+                        if (ImGui.menuItem("To Deck A")) {
+                            mixer.deckA.reset()
+                            session.patchManager.activePresetA = null
+                            session.patchManager.cachedDtoA = null
+                        }
+                        if (ImGui.menuItem("To Deck B")) {
+                            mixer.deckB.reset()
+                            session.patchManager.activePresetB = null
+                            session.patchManager.cachedDtoB = null
+                        }
+                        if (ImGui.menuItem("To Deck C")) {
+                            mixer.deckC.reset()
+                            session.patchManager.activePresetC = null
+                            session.patchManager.cachedDtoC = null
+                        }
+                        ImGui.endMenu()
                     }
-                    if (ImGui.menuItem("To Deck B")) {
-                        mixer.deckB.reset()
-                        session.patchManager.activePresetB = null
-                        session.patchManager.cachedDtoB = null
-                    }
-                    if (ImGui.menuItem("To Deck C")) {
-                        mixer.deckC.reset()
-                        session.patchManager.activePresetC = null
-                        session.patchManager.cachedDtoC = null
+                    ImGui.separator()
+                    if (ImGui.menuItem("Exit")) {
+                        logger.info { "Exit clicked" }
+                        onTriggerExitFlow()
                     }
                     ImGui.endMenu()
                 }
-                ImGui.separator()
-                if (ImGui.menuItem("Exit")) {
-                    logger.info { "Exit clicked" }
-                    onTriggerExitFlow()
-                }
-                ImGui.endMenu()
-            }
 
-            if (session.uiTheme.randomizationEnabled) {
-                if (ImGui.beginMenu("Randomize")) {
-                    if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                        PatchGridUndo.pushUndoState(patchState, mixer)
-                        mixer.deckA.randomizeModulators()
-                        mixer.deckB.randomizeModulators()
-                        mixer.deckC.randomizeModulators()
-                        listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
-                            val randomized = param.modulators.map { it.randomizeActiveValues() }
-                            param.modulators.clear()
-                            param.modulators.addAll(randomized)
-                            param.randomizeBaseValue()
+                if (session.uiTheme.randomizationEnabled) {
+                    if (ImGui.beginMenu("Randomize")) {
+                        if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            mixer.deckA.randomizeModulators()
+                            mixer.deckB.randomizeModulators()
+                            mixer.deckC.randomizeModulators()
+                            listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
+                                val randomized = param.modulators.map { it.randomizeActiveValues() }
+                                param.modulators.clear()
+                                param.modulators.addAll(randomized)
+                                param.randomizeBaseValue()
+                            }
+                        }
+                        if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            mixer.deckA.randomizeModulators()
+                        }
+                        if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            mixer.deckB.randomizeModulators()
+                        }
+                        if (ImGui.selectable("Deck C", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                            PatchGridUndo.pushUndoState(patchState, mixer)
+                            mixer.deckC.randomizeModulators()
+                        }
+                        ImGui.endMenu()
+                    }
+                }
+
+
+                // MIDI Map toggle button
+                val isMidiLearn = patchState.isMidiLearnMode
+                if (isMidiLearn) {
+                    ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
+                }
+                if (ImGui.menuItem("MIDI Map", "", isMidiLearn)) {
+                    patchState.isMidiLearnMode = !isMidiLearn
+                    if (!patchState.isMidiLearnMode) {
+                        patchState.midiLearnTarget = null
+                    } else {
+                        if (MidiEngine.getActiveDeviceCount() == 0) {
+                            popupManager.pendingOpenMidiWarningPopup = true
                         }
                     }
-                    if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                        PatchGridUndo.pushUndoState(patchState, mixer)
-                        mixer.deckA.randomizeModulators()
-                    }
-                    if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                        PatchGridUndo.pushUndoState(patchState, mixer)
-                        mixer.deckB.randomizeModulators()
-                    }
-                    if (ImGui.selectable("Deck C", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                        PatchGridUndo.pushUndoState(patchState, mixer)
-                        mixer.deckC.randomizeModulators()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
+                }
+                if (isMidiLearn) {
+                    ImGui.popStyleColor()
+                }
+
+                if (ImGui.menuItem("Settings")) {
+                    onOpenSettings()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
+                }
+
+                val isAudioActive = session.audioEngine.isActive()
+                if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
+                    ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange warning
+                }
+                val audioEngineLabel = if (!isAudioActive && session.uiTheme.audioEngineEnabled) "Audio Engine [!]" else "Audio Engine"
+                if (ImGui.menuItem(audioEngineLabel)) {
+                    onOpenAudioEngineMonitor()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("View real-time input waveforms, estimated BPM, and sound-derived modulation signals.")
+                }
+                if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
+                    ImGui.popStyleColor()
+                }
+
+                if (ImGui.beginMenu("Help")) {
+                    if (ImGui.menuItem("Documentation")) {
+                        DocManager.openDocumentation()
                     }
                     ImGui.endMenu()
                 }
-            }
 
-
-            // MIDI Map toggle button
-            val isMidiLearn = patchState.isMidiLearnMode
-            if (isMidiLearn) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
-            }
-            if (ImGui.menuItem("MIDI Map", "", isMidiLearn)) {
-                patchState.isMidiLearnMode = !isMidiLearn
-                if (!patchState.isMidiLearnMode) {
-                    patchState.midiLearnTarget = null
+                val tooltipsEnabled = session.uiTheme.tooltipsEnabled
+                if (tooltipsEnabled) {
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
                 } else {
-                    if (MidiEngine.getActiveDeviceCount() == 0) {
-                        popupManager.pendingOpenMidiWarningPopup = true
-                    }
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
                 }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
-            }
-            if (isMidiLearn) {
-                ImGui.popStyleColor()
-            }
-
-            if (ImGui.menuItem("Settings")) {
-                onOpenSettings()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
-            }
-
-            val isAudioActive = session.audioEngine.isActive()
-            if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange warning
-            }
-            val audioEngineLabel = if (!isAudioActive && session.uiTheme.audioEngineEnabled) "Audio Engine [!]" else "Audio Engine"
-            if (ImGui.menuItem(audioEngineLabel)) {
-                onOpenAudioEngineMonitor()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("View real-time input waveforms, estimated BPM, and sound-derived modulation signals.")
-            }
-            if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
-                ImGui.popStyleColor()
-            }
-
-            if (ImGui.beginMenu("Help")) {
-                if (ImGui.menuItem("Documentation")) {
-                    DocManager.openDocumentation()
+                if (ImGui.menuItem("Tooltips", "", tooltipsEnabled)) {
+                    session.uiTheme.tooltipsEnabled = !tooltipsEnabled
+                    session.uiTheme.saveSettings()
                 }
-                ImGui.endMenu()
-            }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
+                }
+                ImGui.popStyleColor()
 
-            val tooltipsEnabled = session.uiTheme.tooltipsEnabled
-            if (tooltipsEnabled) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
-            } else {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
-            }
-            if (ImGui.menuItem("Tooltips", "", tooltipsEnabled)) {
-                session.uiTheme.tooltipsEnabled = !tooltipsEnabled
-                session.uiTheme.saveSettings()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
-            }
-            ImGui.popStyleColor()
+                // ── Right-aligned performance stats ──────────────────────────────────
+                drawPerformanceStats(session)
 
-            // ── Right-aligned performance stats ──────────────────────────────────
-            drawPerformanceStats(session)
-
-            ImGui.endMainMenuBar()
+                ImGui.endMainMenuBar()
+            }
         }
     }
 

@@ -57,7 +57,7 @@ For Patches & Playlists:
 
 For Folders:
 - **New Folder…**: Creates a subfolder in the current directory.
-- **Refresh**: Reloads the directory contents.
+- **Auto-Refresh**: Automatically monitors and updates directory contents in real time when files are added, modified, or removed on disk.
 
 ---
 

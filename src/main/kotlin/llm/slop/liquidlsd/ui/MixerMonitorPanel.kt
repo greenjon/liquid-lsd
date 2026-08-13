@@ -47,9 +47,12 @@ class MixerMonitorPanel(
         ImGui.spacing()
 
         // --- Master Mixer Controls ---
+        val masterControlsH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            (ImGui.getFrameHeightWithSpacing() * 2f) + ImGui.getStyle().itemSpacing.y + 8f
+        }.coerceAtLeast(60f)
         ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.05f, 0.1f, 0.08f, 0.4f)) // Faint mint background
         ImGui.setCursorScreenPos(imgScreenX, ImGui.getCursorScreenPosY())
-        ImGui.beginChild("MasterControls", availW, 85f, true)
+        ImGui.beginChild("MasterControls", availW, masterControlsH, true, imgui.flag.ImGuiWindowFlags.NoScrollbar)
         
         // Crossfader (mapped display value from -1.0 to 1.0)
         drawFlatSlider(session, "Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck C runs in parallel as a preview.") {
@@ -78,9 +81,9 @@ class MixerMonitorPanel(
         val centerY = ImGui.getCursorScreenPosY()
         
         // Use an invisible full-width dummy to reserve vertical space for the two rows
-        val headerRowH = ImGui.getTextLineHeightWithSpacing()
-        val presetRowH = ImGui.getFrameHeightWithSpacing()
-        ImGui.dummy(layout.contentWidth, headerRowH + presetRowH)
+        val headerRowH = session.uiTheme.withFont(UITheme.FontLevel.H2) { ImGui.getTextLineHeight() + 6f }
+        val presetRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeightWithSpacing() + 4f }
+        ImGui.dummy(layout.contentWidth, headerRowH + presetRowH + 8f)
         
         // 1. Deck A Header
         var twA = 0f
@@ -98,15 +101,35 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(deckBStartX + (halfW - twB) * 0.5f, centerY)
         session.uiTheme.h2("Deck B")
         
+        // Helper to format/truncate preset label to fit column width before save/eject icons
+        fun truncatePresetLabel(label: String, maxW: Float): String {
+            val fullText = "Preset: $label"
+            var textW = 0f
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) { textW = ImGui.calcTextSize(fullText).x }
+            if (textW <= maxW) return fullText
+            var len = label.length
+            while (len > 2) {
+                val truncated = "Preset: " + label.take(len) + "..."
+                var w = 0f
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) { w = ImGui.calcTextSize(truncated).x }
+                if (w <= maxW) return truncated
+                len--
+            }
+            return "Preset: ${label.take(2)}..."
+        }
+
+        val iconBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.calcTextSize("${Icons.SAVE}").x + 16f }
+        val maxPresetW = (halfW - iconBtnW * 2f - 12f).coerceAtLeast(40f)
+
         // 4. Presets Row
-        val presetY = centerY + headerRowH
+        val presetY = centerY + headerRowH + 6f
         
         val activePresetA = session.patchManager.activePresetA ?: "None"
         val isDirtyA = session.patchManager.isDeckDirty(mixer.deckA, mixer)
         val displayNameA = if (isDirtyA) "$activePresetA *" else activePresetA
         
-        ImGui.setCursorScreenPos(startX, presetY + 3f)
-        session.uiTheme.body("Preset: $displayNameA")
+        ImGui.setCursorScreenPos(startX, presetY)
+        session.uiTheme.body(truncatePresetLabel(displayNameA, maxPresetW))
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveA")) {
             ImGui.openPopup("save_menu_A")
@@ -135,8 +158,8 @@ class MixerMonitorPanel(
         val isDirtyB = session.patchManager.isDeckDirty(mixer.deckB, mixer)
         val displayNameB = if (isDirtyB) "$activePresetB *" else activePresetB
         
-        ImGui.setCursorScreenPos(deckBStartX, presetY + 3f)
-        session.uiTheme.body("Preset: $displayNameB")
+        ImGui.setCursorScreenPos(deckBStartX, presetY)
+        session.uiTheme.body(truncatePresetLabel(displayNameB, maxPresetW))
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveB")) {
             ImGui.openPopup("save_menu_B")
@@ -202,11 +225,13 @@ class MixerMonitorPanel(
         session.uiTheme.h2(previewLabel)
 
         // Row 2: Preset Info
+        val maxPresetWC = (availW - iconBtnW * 2f - 12f).coerceAtLeast(40f)
         val activePresetC = session.patchManager.activePresetC ?: "None"
         val isDirtyC = session.patchManager.isDeckDirty(mixer.deckC, mixer)
         val displayNameC = if (isDirtyC) "$activePresetC *" else activePresetC
-        ImGui.setCursorScreenPos(startX, row1Y + ImGui.getTextLineHeightWithSpacing())
-        session.uiTheme.body("Preset: $displayNameC")
+        val row2HeaderH = session.uiTheme.withFont(UITheme.FontLevel.H2) { ImGui.getTextLineHeight() + 4f }
+        ImGui.setCursorScreenPos(startX, row1Y + row2HeaderH)
+        session.uiTheme.body(truncatePresetLabel(displayNameC, maxPresetWC))
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.SAVE}##SaveC")) {
             ImGui.openPopup("save_menu_C")

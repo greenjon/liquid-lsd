@@ -115,7 +115,7 @@ object BeatDivisionSlider {
             val curX = lineStartX + curPct * lineWidth
             val formattedVal = formatValue(currentValue)
             val labelText = "Current: $formattedVal"
-            val currentTextWidth = ImGui.calcTextSize(labelText).x
+            val currentTextWidth = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.calcTextSize(labelText).x }
             val minAllowedX = lineStartX
             val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
             val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
@@ -124,7 +124,8 @@ object BeatDivisionSlider {
             session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
         } else {
             ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current")
+            val formattedVal = formatValue(currentValue)
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current: $formattedVal")
         }
 
         // --- ROW 2: Widgets ---
