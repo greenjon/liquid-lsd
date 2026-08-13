@@ -98,6 +98,28 @@ object PatchGridPanel {
         }
     }
 
+    fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PatchGridState): Float {
+        val sideTabWidth = PatchGridTabs.calculateLeftTabsWidth(session) + 4f
+        val activeDeck = when (state.activeTopTab) {
+            "Deck A" -> mixer.deckA
+            "Deck B" -> mixer.deckB
+            "Deck C" -> mixer.deckC
+            else -> null
+        }
+        val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
+            PatchGridTabs.calculateSubTabsWidth(session, state, activeDeck)
+        } else 0f
+
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val baseLabelW = 160f * fontScale
+        val labelColW = maxOf(baseLabelW, subTabsW + 16f)
+
+        val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
+        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
+
+        return sideTabWidth + 12f + labelColW + maxGridW + 24f
+    }
+
     private var gridStartX = 0f
     private var rowIndex = 0
     private var lastBoxBottomY = 0f
@@ -136,10 +158,14 @@ object PatchGridPanel {
                 PatchGridTabs.calculateSubTabsWidth(session, state, activeDeck)
             } else 0f
 
+            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+            val baseLabelW = 160f * fontScale
+            val idealLabelColW = maxOf(baseLabelW, subTabsW + 16f)
+
             val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
             val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
-            val defaultLabelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
-            val labelColW = maxOf(defaultLabelColW, subTabsW + 12f)
+            val maxAllowedLabelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
+            val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
             val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(gridStartX + avail)
 
             val containerTopY = ImGui.getCursorScreenPosY() - 2f

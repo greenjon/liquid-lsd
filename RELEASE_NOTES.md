@@ -46,7 +46,8 @@
 #### 4. UI Architecture & Dynamic Theming
 - **`SessionContext` Refactor**: Replaced singleton access across 28+ UI panels with `SessionContext` dependency injection.
 - **UI Theme Engine**: Built `UITheme` theming subsystem for dynamic UI color themes, clean mode (`F`), font scaling, and persistent settings.
-- **Resizable Layout**: Added resizable three-column workspace layout with drag handles and toggleable Mixer Panel visibility.
+- **Auto-Resizing Workspace Layout**: Implemented auto-fitting Left Panel (Patch Grid) width based on active CV columns and font zoom (`CTRL-` / `CTRL=`). Rebalanced vertical splitters so Splitter 1 is a static auto-repositioning divider and Splitter 2 resizes Middle vs Right panels.
+- **MIDI Cell Tooltip Fix**: Resolved pre-existing tooltip overlay bug where hiding the MIDI column caused the `FINAL` cell tooltips to be covered by the hidden MIDI cell.
 - **Seamless Cards**: Connected active side tabs seamlessly into parameter cards with inline sub-tabs and logical category grouping (Visual Source before FX).
 - **Empty Deck Handling**: Added full support for inert empty deck states across `Deck`, `PatchGridPanel`, `PatchGridTabs`, and render loops.
 

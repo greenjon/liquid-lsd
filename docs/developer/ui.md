@@ -1,178 +1,80 @@
-# UI Layer
+# UI Architecture & ImGui Systems
 
-The `ui/` package contains 34 files. This document maps the panel hierarchy, ownership of state,
-key patterns, and what to read before touching any UI code.
-
----
-
-## Top-Level Layout
-
-```
-┌─ MenuBar (top bar, full width) ───────────────────────────────────┐
-
-┌─ PatchGrid (40%) ──┬─ CellConfig (30%) ──┬─ Mixer/Monitor (30%) ─┐
-│                    │                      │                        │
-│  Modulation matrix │  Selected cell       │  Master preview        │
-│  param rows ×      │  LFO config          │  Crossfader            │
-│  CV columns        │  Oscilloscope        │  Deck A/B/C monitors   │
-│                    │                      │  Deck controls         │
-└────────────────────┴──────────────────────┴────────────────────────┘
-
-┌─ AssetBrowserPanel (bottom, 70% width) ───────────────────────────┐
-│  Patch library / playlists / play queue browser                    │
-└────────────────────────────────────────────────────────────────────┘
-```
+The `ui/` package manages the immediate-mode desktop interface using ImGui (`imgui-java`), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the `NoteEditorModal` architecture.
 
 ---
 
 ## Component Dependency Graph
 
+```mermaid
+graph TD
+    UIManager[UIManager.kt - Top-level Orchestrator & GLFW/ImGui Loop]
+    
+    SessionContext[SessionContext.kt - DI Container for Subsystems]
+    UITheme[UITheme.kt - Fonts, Styling, Settings]
+    PatchGridState[PatchGridState.kt - Selection & 30-level Undo Stack]
+    PopupManager[PopupManager.kt - Modal Dialog Management]
+    NoteEditorModal[NoteEditorModal.kt - Note Editor Modal]
+    
+    UIManager --> SessionContext
+    UIManager --> UITheme
+    UIManager --> PatchGridState
+    UIManager --> PopupManager
+    UIManager --> NoteEditorModal
+    
+    UIManager --> MenuBar[MenuBar.kt]
+    UIManager --> PatchGridPanel[PatchGridPanel.kt]
+    UIManager --> CellConfigPanel[CellConfigPanel.kt]
+    UIManager --> MixerMonitorPanel[MixerMonitorPanel.kt]
+    UIManager --> AssetBrowserPanel[AssetBrowserPanel.kt & PlaylistEditorPanel.kt]
+    
+    MixerMonitorPanel --> DeckControlPanel[DeckControlPanel.kt]
+    DeckControlPanel --> DeckPresetBrowser[DeckPresetBrowser.kt]
 ```
-UIManager  (orchestrator — owns backends, runs per-frame render loop)
-├── SessionContext  (dependency injection container passed to panel draw methods)
-├── UITheme         fonts, settings, feature flags
-├── PopupManager    all modal dialogs (exit, MIDI warn, deck confirm)
-├── MenuBar         top menu bar; no state of its own
-├── PatchGridState  shared transient state token (passed by reference)
-├── PatchGridPanel  modulation matrix grid
-├── CellConfigPanel modulator editor + oscilloscope
-├── MixerMonitorPanel
-│   └── DeckControlPanel  (via injected lambda)
-│       └── DeckPresetBrowser A / B
-├── AssetBrowserPanel
-├── SettingsPanel
-├── AudioEnginePanel
-└── ImGuiFileBrowser deckA, deckB
-```
 
-All panels receive `session: SessionContext` and the live `Mixer` reference **at draw time** — they access `AudioEngine`, `CVRegistry`, `PatchManager`, `PlayQueueManager`, `MidiMappingManager`, `VisualSourceRegistry`, and `UITheme` via `session` rather than direct global singletons.
-`UIManager.currentMixer` is the frame-to-frame mixer reference.
+All panel `draw(...)` methods receive `session: SessionContext`, the current `Mixer` reference, and `patchState: PatchGridState` at frame render time. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PatchManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
 
 ---
 
-## UIManager
+## Key Core UI Orchestrators
 
-**File**: `UIManager.kt`  
-**Role**: Owns the ImGui/GLFW/GL3 backends. Calls `render(mixer, w, h)` once per frame.
+### 1. `UIManager.kt`
+- **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`.
+- **Workspace Layout & Auto-Sizing Splitters**: Orchestrates the three-column desktop workspace. Left Panel (`PatchGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`). Splitter 1 is a static visual divider that repositions automatically, while Splitter 2 is interactive to resize Middle (`CellConfigPanel`) vs Right (`MixerMonitorPanel`).
+- **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
+- **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
+- **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()` and `PopupManager.draw()` at root scope.
 
-Key responsibilities:
-- Initialises `ImGuiImplGlfw` + `ImGuiImplGl3` at startup, disposes at shutdown
-- Drains the MIDI CC event queue each frame; dispatches queue-advance signals (MIDI CC, keyboard, CV threshold)
-- Deferred font rebuild: sets `pendingFontSize` in one frame; rebuilds atlas + GL texture at the **top of the next frame** (after `newFrame()` but before `ImGui.newFrame()`) — mid-frame rebuilds corrupt the font atlas
-- Deferred popup open: sets `pendingOpenSettings` / `pendingOpenAudioEngineMonitor` flags; `ImGui.openPopup()` is called one frame later at root ID-stack level so it lands outside child windows
-- `companion object` exposes `triggerDeckDragDrop` as a static entry point callable safely from the rendering thread
+### 2. `NoteEditorModal.kt`
+- **Role**: Stateful singleton modal editor for the 3-tier Note System.
+- **`NoteContext` Sealed Class**:
+  - `Param(deckLabel, paramKey, displayLabel)`: Edits parameter-level notes.
+  - `Source(sourceId, displayName)`: Edits global visual source notes.
+  - `Patch(deckLabel, patchName)`: Edits patch-level notes.
+- **Zero-Allocation Buffer Safety**: Allocates a single `ImString(2048)` buffer at object instantiation (`textBuffer`). Calling `NoteEditorModal.request(context)` populates `textBuffer` with the current note text. Drawing `ImGui.inputTextMultiline` reuses this pre-allocated buffer every frame without heap allocation.
 
-Notable owned state:
-- `patchState: PatchGridState` — the shared selection/undo token
-- `popupManager: PopupManager`
-- `defaultStyle: ImGuiStyle` — clean style snapshot; **freed in `dispose()` via `.destroy()`** (native object)
-
----
-
-## PatchGridState
-
-**File**: `PatchGridState.kt`  
-**Role**: Plain data class (not a singleton) carrying all transient patch-grid state.  
-Passed by reference from `UIManager` into `MenuBar`, `PatchGridPanel`, `CellConfigPanel`,
-`MixerMonitorPanel`, and `DeckControlPanel`.
-
-Key fields:
-| Field | Purpose |
-|-------|---------|
-| `selectedCell: PatchCellId?` | Currently selected grid cell (paramKey + cvSourceId) |
-| `selectedParam: ModulatableParameter?` | Backing parameter for the selection |
-| `undoStack` | Max-30 snapshots of modulator state |
-| `isMidiLearnMode` | Whether MIDI learn is active |
-| `midiLearnTarget: MidiLearnTarget?` | Sealed class: `GridCell` or `BaseValueSlider` |
-| `activeTopTab` | "Deck A" / "Deck B" / "Deck C" |
-| `activeDeck*SubTab` | Per-deck sub-tab selection |
+### 3. `UITheme.kt`
+- Manages font rendering (Inter, JetBrains Mono, Lucide icons merged via `setMergeMode(true)`).
+- **Critical Font Array Ownership**: Font `ByteArray` fields (`regularBytes`, `boldBytes`) and `iconRange: ShortArray` are stored as class fields. Calling `setFontDataOwnedByAtlas(false)` prevents native ImGui from attempting to free JVM-managed byte arrays.
 
 ---
 
-## PopupManager
+## ImGui Native Memory & Allocation Rules
 
-**File**: `PopupManager.kt`  
-**Role**: Owns all modal popups — exit confirm, MIDI warning, per-deck unsaved-changes confirm.
+Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules must be followed across all `ui/` files to prevent JVM SegFaults and Garbage Collection pauses:
 
-Pattern: `UIManager` sets a `pendingOpen*` flag and immediately calls `ImGui.openPopup(id)` in
-the *same* frame at the root ID-stack level (outside child windows). `PopupManager.draw*()` then
-calls `ImGui.beginPopupModal(id)` to actually render it.
-
-`PendingDeckAction` enum has 8 states (NONE, NEW, LOAD_FILE, LOAD_PRESET, DRAG_DROP, MOVE, COPY,
-SWAP) — one set per deck (A, B, C). `clearAction()` resets all three after dismiss.
-
----
-
-## UITheme
-
-**File**: `UITheme.kt`  
-**Role**: Global singleton. Fonts, settings persistence, feature flags.
-
-Fonts are loaded from classpath resources (Inter + JetBrains Mono + Lucide icon font merged via
-`setMergeMode(true)`). Six semantic levels: H1–H3, BODY, CAPTION, CODE.
-
-**Critical**: Font `ByteArray` fields (`regularBytes`, `boldBytes`, etc.) and the `iconRange:
-ShortArray` are stored as class fields **intentionally** — to prevent GC collection while native
-ImGui holds a pointer into them. `setFontDataOwnedByAtlas(false)` tells native code not to
-attempt to free these JVM-owned arrays. Removing these fields = crash on next font rebuild.
-
-`ImFontConfig` objects are created per font merge and `.destroy()`'d immediately after
-`addFontFromMemoryTTF` — they are not reused.
-
-`withFont(level) { ... }` is an `inline` function — zero-allocation on the render path.
-
-Settings are read from / written to `lsd-settings.properties` on disk.
-Flags consumed across the UI: `audioEngineEnabled`, `backgroundVideoEnabled`, `cleanModeEnabled`,
-`assetBrowserMode`, `tooltipsEnabled`, `maxFps`, etc.
+| Wrapper Type | Instantiation Rule | Cleanup Rule |
+|--------------|-------------------|--------------|
+| **`ImString`** | Allocate as **class/field-level variable**. Never allocate locally inside `draw()`. | Reused frame-to-frame. |
+| **`ImBoolean` / `ImInt`** | Class field if state persists; local variables allowed only in rare modal popups. | Reused frame-to-frame. |
+| **`ImGuiStyle`** | Class/singleton instance. | Must call `.destroy()` in `dispose()`. |
+| **`ImFontConfig`** | Instantiated per font build. | Must call `.destroy()` immediately after loading. |
 
 ---
 
-## CvTheme
+## Pattern for Adding a New UI Panel
 
-**File**: `CvTheme.kt`  
-**Role**: Lookup-only singleton. Maps CV source ID strings to RGBA color values.  
-Used by `PatchGridPanel`, `PatchGridRenderer`, `CellConfigPanel`, and `OscilloscopeDrawer` to
-give each CV source a consistent color across all panel contexts.
-
-No state; no native allocations.
-
----
-
-## AssetBrowserPanel
-
-**File**: `AssetBrowserPanel.kt` (~1115 lines)  
-**Role**: File/playlist browser in the bottom section. Handles navigation, search, rename,
-delete, folder creation, drag-to-deck, playlist export.
-
-Owns six `ImString` fields (`renameBuffer`, `folderNameBuffer`, `searchBuffer`,
-`newPlaylistNameBuffer`, `renamePlaylistBuffer`, `exportQueueNameBuffer`) — all `ImString(256)`,
-allocated at object construction and reused every frame. This is the correct pattern.
-
-Navigation state is a `LibraryView` sealed class with three variants:
-`PlaylistsRoot`, `SpecificPlaylist(playlist)`, `Patches(dir)`.
-
----
-
-## Im-type Allocation Rules
-
-See the `imgui_memory_management` skill for full details. Short version:
-
-- **`ImString`** — always a **class/object-level field**, never a local. Widgets read back the
-  previous value through the same pointer; a new instance is always empty.
-- **`ImBoolean` / `ImInt`** — field if the value must persist between frames; local is acceptable
-  only in panels shown infrequently (e.g. `SettingsPanel`). Never use as a local in panels
-  rendered every frame.
-- **`MemoryStack`** — not used in `ui/` at all. It belongs in OpenGL/GLFW interop code only.
-- **`ImGuiStyle`** — native object; call `.destroy()` in `dispose()`.
-- **`ImFontConfig`** — native object; call `.destroy()` immediately after use.
-
----
-
-## Adding a New Panel
-
-1. Allocate any `ImString`/`ImBoolean` fields at object/class level — not inside the draw function.
-2. Accept `session: SessionContext` and `Mixer` as draw-time parameters — do not store them as fields or access global singletons directly.
-3. Accept `PatchGridState` by reference if you need selection/undo state.
-4. Register your draw call in `UIManager.render()`.
-5. If your panel opens a popup, follow the deferred-open pattern: set a `pendingOpen*` flag in one
-   frame; call `ImGui.openPopup(id)` at root level; call `beginPopupModal(id)` in your draw.
+1. **Pre-allocate String Buffers**: Define all `ImString` fields at the class/object level (e.g. `val searchBuffer = ImString(256)`).
+2. **Inject Context at Draw Time**: Accept `session: SessionContext`, `mixer: Mixer`, and `patchState: PatchGridState` in the `draw(...)` signature.
+3. **Use Deferred Root Popups**: To open a popup, set a `pendingOpen` flag and call `ImGui.openPopup(id)` at the root ID level.
+4. **Register in `UIManager`**: Hook panel rendering into `UIManager.render()`.

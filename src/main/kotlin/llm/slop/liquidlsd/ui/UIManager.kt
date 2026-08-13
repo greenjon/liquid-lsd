@@ -590,8 +590,10 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             popupManager.drawDeckConfirmPopups(session, mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
 
-            missingItemsPanel.draw(session)
+            // Note editor modal (opened by NoteEditorModal.request() from anywhere in the UI)
+            NoteEditorModal.draw()
 
+            missingItemsPanel.draw(session)
 
 
             deckABrowser.draw(session,
@@ -831,14 +833,14 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
         CustomRangeSlider.isAnySliderHovered = false
 
-        // Ensure ratios stay bounded and sum safely
-        var col1R = theme.col1Ratio.coerceIn(minRatio, 0.70f)
-        var col2R = theme.col2Ratio.coerceIn(minRatio, 0.70f)
-        if (col1R + col2R > 1.0f - minRatio) {
-            col2R = 1.0f - minRatio - col1R
-        }
+        // Auto-calculate Column 1 (Left Panel / Patch Grid) width based on active columns & font scale
+        val reqCol1W = currentMixer?.let { PatchGridPanel.calculateRequiredWidth(session, it, patchState) } ?: (displayWidth * 0.30f)
+        val maxCol1W = (displayWidth * 0.50f).coerceAtMost((displayWidth * (1.0f - minRatio)) - 250f)
+        val col1W = reqCol1W.coerceIn(displayWidth * minRatio, maxCol1W)
+        val col1R = col1W / displayWidth
 
-        val col1W = displayWidth * col1R
+        // Column 2 (Middle Panel / Cell Config) and Column 3 (Right Panel / Mixer Monitor)
+        var col2R = theme.col2Ratio.coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
         val col2W = displayWidth * col2R
         val libraryW = col1W + col2W
         val rightW = displayWidth - libraryW
@@ -875,27 +877,10 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             }
             ImGui.end()
 
-            // Vertical Splitter 1 (between Patch Grid & Cell Config)
-            drawVerticalSplitter(
-                id = "##vsplit1",
-                posX = col1W,
-                posY = menuBarH,
-                width = 8f,
-                height = topH,
-                displayWidth = displayWidth,
-                onDrag = { deltaX ->
-                    val deltaR = deltaX / displayWidth
-                    val maxC1 = 1.0f - minRatio - theme.col2Ratio
-                    val newC1 = (theme.col1Ratio + deltaR).coerceIn(minRatio, maxC1)
-                    theme.col1Ratio = newC1
-                    theme.saveSettings()
-                },
-                onDoubleClick = {
-                    theme.col1Ratio = 0.30f
-                    theme.col2Ratio = 0.40f
-                    theme.saveSettings()
-                }
-            )
+            // Vertical Splitter 1 (Static divider line between Patch Grid & Cell Config)
+            val drawList = ImGui.getForegroundDrawList()
+            val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+            drawList.addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
         }
 
         // Horizontal Splitter (above Asset Browser when not FULL)
@@ -970,13 +955,12 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             displayWidth = displayWidth,
             onDrag = { deltaX ->
                 val deltaR = deltaX / displayWidth
-                val maxC2 = 1.0f - minRatio - theme.col1Ratio
+                val maxC2 = (1.0f - minRatio - col1R).coerceAtLeast(minRatio)
                 val newC2 = (theme.col2Ratio + deltaR).coerceIn(minRatio, maxC2)
                 theme.col2Ratio = newC2
                 theme.saveSettings()
             },
             onDoubleClick = {
-                theme.col1Ratio = 0.30f
                 theme.col2Ratio = 0.40f
                 theme.saveSettings()
             }
