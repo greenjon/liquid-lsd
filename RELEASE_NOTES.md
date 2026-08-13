@@ -1,70 +1,73 @@
 # Liquid LSD — Release Notes
 
-## Version 1.0.0-beta.19
+## Version 1.0.0-beta.20
 
 > [!NOTE]
-> **Release 1.0.0-beta.19** rolls up all major features, UI redesigns, performance optimizations, and under-the-hood architectural improvements completed since **v1.0.0-beta.17** (combining all developments across beta 18 and beta 19 into this major release).
+> **Release 1.0.0-beta.20** rolls up all major features, visual generator additions, UI redesigns, performance optimizations, patch save/load overhauls, and architectural improvements completed since **v1.0.0-beta.17**.
 
 ---
 
 ### Key Highlights
 
-- **`SessionContext` Dependency Injection Architecture**: Replaced global singletons across 28+ UI panels and core managers with explicit context injection for improved state isolation, testability, and modularity.
-- **Dynamic UI Theming Engine**: Added support for customizable UI color themes and theme management in settings.
-- **Resizable 3-Column Layout & Toggleable Mixer**: Upgraded main window layout engine with resizable column splits and toggleable Mixer Panel columns.
-- **Redesigned PatchGrid & Seamless Cards**: Connected active side tabs to the parameter card container with seamless outlines, inline sub-tabs, and reordered parameter groups (Visual Source before FX).
-- **Mandala Performance Surface**: Added quick lobe selection pills (2, 3, 4, 6, 8, 12) and a live recipe stepper in `FinalParamSection`.
-- **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) to trigger parameter randomization dynamically via audio envelopes, LFOs, or beat clocks.
+- **Complete Save/Load & Session Persistence Overhaul**: Resolved preset save failures, parameter slider dirty state detection flaws (`ParameterDto.equals`), disk filename vs DTO name alignment, Deck C preset routing, and false startup queue advance triggers when AutoVJ is disabled.
+- **New `Dynamic Spiral` Visual Source**: Introduced a multi-point logarithmic spiral generator with integrated phase tracking for glitch-free speed/shear modulation and fragment shader radial culling for high-FPS rendering.
+- **`SessionContext` Dependency Injection Architecture**: Refactored UI panels and core managers to use `SessionContext` dependency injection for improved modularity, testability, and state isolation.
+- **PatchGrid Expressive Controls**: Added middle-click parameter reset to default, modulator bypass toggles, scroll-wheel hover guards, mandala lobe selection pills (`2`, `3`, `4`, `6`, `8`, `12`), and live recipe steppers.
+- **Dynamic UI Theming Engine**: Added customizable UI color themes, base font scaling hotkeys (`Ctrl-` / `Ctrl=`), clean mode (`F`), and persistent theme settings in `lsd-settings.properties`.
+- **Resizable 3-Column Layout & Seamless Cards**: Added resizable workspace column splits, toggleable Mixer Panel columns, and connected side tabs into parameter cards with inline sub-tabs.
+- **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) for real-time audio- or beat-driven parameter randomization.
+- **Toolchain Upgrade**: Upgraded build toolchain to Gradle **9.7.0**.
 
 ---
 
-### 🛠️ Under-the-Hood Architectural Changes
+### 🛠️ Detailed Update Summary (v1.0.0-beta.17 → v1.0.0-beta.20)
 
-#### 1. `SessionContext` Refactor
-- Replaced direct singleton access across UI components (`UIManager`, `PatchGridPanel`, `CellConfigPanel`, `MixerMonitorPanel`, `AssetBrowserPanel`, `AudioEnginePanel`, `SettingsPanel`, `PopupManager`, etc.) with `SessionContext` dependency injection.
-- Cleaned up coupling between the UI layer, parameter resolvers, and audio/CV registries.
-- Updated UI developer documentation ([`docs/developer/ui.md`](docs/developer/ui.md) and [`.agents/PROJECT.md`](.agents/PROJECT.md)) to mandate `SessionContext` patterns.
+#### 1. Save/Load & Session Persistence Overhaul
+- **Session State Fix**: Prevented empty decks from restoring stale sources (such as KIFS) on application restart. Empty decks now serialize and restore cleanly with default Mandala baseline.
+- **Dirty State Tracking**: Corrected `ParameterDto.equals()` and `ModulatorDto.equals()` so static parameter base value slider edits correctly mark the deck dirty (`isDeckDirty = true`) and display dirty indicators (`*`).
+- **Filename vs DTO Alignment**: Aligned loaded DTO names with disk filenames in `loadDeckPresetAsync()`, ensuring **Save** updates the exact file loaded rather than fallback DTO names.
+- **Deck C Routing**: Plumbed `isDeckC` routing through preset loading, active preset resolution, and save flows.
+- **Startup Queue Trigger Fix**: Prevented false queue advance triggers on startup when `queueNext` base values restore from `last_session.json`. Suppressed automated CV queue advance triggers when AutoVJ is disabled.
+- **Filename Sanitization**: Sanitized preset filenames (removing redundant `.lsd`/`.json` suffixes) and automatically cleaned up obsolete legacy `.json` files upon `.lsd` save.
 
-#### 2. Deck Model & Metadata Refactoring
-- Added full support for **Empty Deck States** across `Deck`, `PatchGridPanel`, `PatchGridTabs`, and rendering routines.
-- Removed deprecated `sourceSelect` modulatable parameters from `Deck`.
-- Cleaned up parameter range defaults (`defaultMin` and `defaultMax`) in visual source metadata definitions ([`presets/sources/kifs/meta.json`](presets/sources/kifs/meta.json) and [`presets/sources/mandala/meta.json`](presets/sources/mandala/meta.json)).
+#### 2. Dynamic Spiral Visual Source & Shader Optimizations
+- Added `DynamicSpiral` visual source with parameters for points, scale, damping, wave frequency/amplitude, shear, speed, dot size, glow, hue offset/sweep, and trail decay.
+- **Integrated Phase Tracking**: Added continuous phase integration across speed and shear changes to prevent visual popping or phase jump glitches during modulation.
+- **Shader Culling**: Implemented per-fragment radial range culling in `dynamic_spiral.frag` to bypass out-of-bounds fragment calculations.
+- **Tuned Ranges**: Optimized point cloud distribution and default parameter ranges for smooth rendering.
 
-#### 3. Real-Time CV Parameter Randomization
-- Added CV-triggerable randomization parameters:
-  - `Deck A Param Rand`
-  - `Deck B Param Rand`
-  - `Deck C Param Rand`
-  - `All Decks Param Rand`
-- Allows performers to route audio transients, LFO spikes, or beat clock events directly to parameter randomization.
+#### 3. PatchGrid Performance Controls
+- **Middle-Click Reset**: Middle-clicking any parameter control in the Patch Grid instantly resets its value to default.
+- **Modulator Bypass Toggle**: Added a bypass toggle for individual modulators in parameter cards without requiring modulator deletion.
+- **Scroll-Wheel Hover Guard**: Prevented parent panel scroll wheel conflicts when hovering over parameter sliders.
+- **Mandala Lobe Pills & Stepper**: Added quick lobe selection pills (`2`, `3`, `4`, `6`, `8`, `12`) and a recipe stepper in `FinalParamSection`.
+- **CV Parameter Randomization**: Added CV-triggerable parameters `Deck A Param Rand`, `Deck B Param Rand`, `Deck C Param Rand`, and `All Decks Param Rand`.
 
----
+#### 4. UI Architecture & Dynamic Theming
+- **`SessionContext` Refactor**: Replaced singleton access across 28+ UI panels with `SessionContext` dependency injection.
+- **UI Theme Engine**: Built `UITheme` theming subsystem for dynamic UI color themes, clean mode (`F`), font scaling, and persistent settings.
+- **Resizable Layout**: Added resizable three-column workspace layout with drag handles and toggleable Mixer Panel visibility.
+- **Seamless Cards**: Connected active side tabs seamlessly into parameter cards with inline sub-tabs and logical category grouping (Visual Source before FX).
+- **Empty Deck Handling**: Added full support for inert empty deck states across `Deck`, `PatchGridPanel`, `PatchGridTabs`, and render loops.
 
-### 🎨 UI & UX Redesign
-
-#### 1. Workspace Layout & Theming
-- Built `UITheme` theming subsystem allowing custom theme selection and dynamic color token overrides.
-- Implemented a resizable three-column UI layout with smooth drag handles and configurable panel column visibility.
-- Improved `SettingsPanel` popup sizing, dynamic centering, and positioning rules.
-
-#### 2. PatchGrid & Parameter Navigation Polish
-- **Seamless Outline**: Connected side tabs seamlessly into the PatchGrid parameter container with card outline styling.
-- **Inline Sub-Tabs & Alignment**: Relocated sub-tabs inline with column headers and aligned tab vertical offsets relative to column header heights.
-- **Logical Category Grouping**: Moved Visual Source parameters ahead of FX controls and renamed the parameter category header from `Feedback` to `FX`.
-- **Display Formatting**: Corrected `Rotate X` and `Rotate Y` parameter degree formatting in Mandala parameter tabs.
-
-#### 3. Mandala Quick Performance Controls
-- **Lobe Selection Pills**: Added quick-access pills (`2`, `3`, `4`, `6`, `8`, `12`) in `FinalParamSection` for instantly changing mandala lobe symmetry.
-- **Recipe Stepper**: Added stepper buttons to quickly iterate through preset geometric recipes live during a performance.
-
-#### 4. Performance & Media Browser Hardening
-- Padded frame time values in `MenuBar` to 3 digits to eliminate layout jitter when frame times fluctuate.
-- Reordered media browser sidebar to place **Patches** before **Playlists**.
+#### 5. Build & Toolchain
+- Upgraded Gradle wrapper to **Gradle 9.7.0**.
+- Added middle-click flags and input guards to `PatchGridRenderer`.
 
 ---
 
-### 📜 Commit History (v1.0.0-beta.17 → v1.0.0-beta.19)
+### 📜 Commit History (v1.0.0-beta.17 → v1.0.0-beta.20)
 
+- `bb03c2d` fix(patches): resolve save/load, preset name alignment, and startup queue advance bugs
+- `1b85a39` feat(spiral): implement integrated phase tracking for smooth speed and shear transitions
+- `ec093ff` perf(shader): implement per-fragment radial range culling in Dynamic Spiral
+- `114abfc` Optimize dynamic spiral point distribution, fix hotkey text input guard, adjust default fbDecay, and add patch tags scratchpad plan
+- `7973616` fix: tune Dynamic Spiral parameter ranges
+- `5b5b082` build & ui: upgrade Gradle wrapper to 9.7.0 and enable middle-click flags in PatchGridRenderer
+- `def9c6b` feat: add Dynamic Spiral visual source
+- `c12c23e` ui: refine PatchGrid stroke layout and middle-click/bypass behaviors
+- `08c4cb6` Implement middle-click parameter reset, modulator bypass toggle, and quick-creation in Patch Grid; prevent panel scroll-wheel conflict when hovering sliders; update docs and release notes
+- `c9c9af6` docs: add beta 19 release notes detailing changes since v1.0.0-beta.17
 - `700495c` Refine PatchGridPanel card background and outline border styling
 - `43157cc` ui: adjust left tabs vertical alignment relative to column header height
 - `0eb72b1` ui: relocate sub-tabs inline and refine patchgrid tab styling
