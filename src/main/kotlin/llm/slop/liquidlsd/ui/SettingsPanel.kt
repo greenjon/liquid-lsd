@@ -38,15 +38,14 @@ object SettingsPanel {
 
         val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
         val targetW = (MODAL_W * fontScale).coerceIn(540f, displayW * 0.90f)
-        val targetH = (MODAL_H * fontScale).coerceIn(380f, displayH * 0.85f)
 
         ImGui.setNextWindowPos(
             displayW * 0.5f, displayH * 0.5f,
             ImGuiCond.Always, 0.5f, 0.5f
         )
-        ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.Always)
+        ImGui.setNextWindowSize(targetW, 0f, ImGuiCond.Always)
 
-        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoScrollbar
+        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.AlwaysAutoResize or ImGuiWindowFlags.NoScrollbar
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
 
@@ -58,57 +57,50 @@ object SettingsPanel {
             ImGui.getFrameHeight() + 6f
         }.coerceAtLeast(30f)
 
-        val closeRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.getFrameHeightWithSpacing() + 16f
-        }
+        val contentH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            (ImGui.getTextLineHeightWithSpacing() * 12f)
+        }.coerceIn(240f, displayH * 0.65f)
 
-        val tableH = (ImGui.getContentRegionAvailY() - closeRowH).coerceAtLeast(100f)
+        val availW = ImGui.getContentRegionAvailX()
+        val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(100f)
 
-        if (ImGui.beginTable("##settings_table", 2, ImGuiTableColumnFlags.None, ImGui.getContentRegionAvailX(), tableH)) {
-            ImGui.tableSetupColumn("##sidebar", ImGuiTableColumnFlags.WidthFixed, sidebarW)
-            ImGui.tableSetupColumn("##content", ImGuiTableColumnFlags.WidthStretch)
-            ImGui.tableNextRow()
-
-            // Left Sidebar Column
-            ImGui.tableSetColumnIndex(0)
-            if (ImGui.beginChild("##settings_sidebar", 0f, 0f, true)) {
-                Category.values().forEach { cat ->
-                    val selected = activeCategory == cat
-                    if (selected) {
-                        val activeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 1f)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
-                    } else {
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f))
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f))
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f))
-                    }
-
-                    if (ImGui.button(cat.label, sidebarW - 16f, btnH)) {
-                        activeCategory = cat
-                    }
-                    ImGui.popStyleColor(3)
-                    ImGui.spacing()
+        // Left Sidebar Child
+        if (ImGui.beginChild("##settings_sidebar", sidebarW, contentH, true)) {
+            Category.values().forEach { cat ->
+                val selected = activeCategory == cat
+                if (selected) {
+                    val activeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 1f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
+                } else {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f))
                 }
-            }
-            ImGui.endChild()
 
-            // Right Content Column
-            ImGui.tableSetColumnIndex(1)
-            if (ImGui.beginChild("##settings_content", 0f, 0f, true)) {
-                when (activeCategory) {
-                    Category.APPEARANCE   -> drawAppearance(session, currentSize, onSizeChanged)
-                    Category.PATCH_GRID   -> drawPatchGridSettings(session)
-                    Category.AUDIO_ENGINE -> drawAudioEngineSettings(session)
-                    Category.MIDI_CONTROL -> drawMidiControlSettings(session)
-                    Category.GENERAL      -> drawGeneralSettings(session)
+                if (ImGui.button(cat.label, sidebarW - 16f, btnH)) {
+                    activeCategory = cat
                 }
+                ImGui.popStyleColor(3)
+                ImGui.spacing()
             }
-            ImGui.endChild()
-
-            ImGui.endTable()
         }
+        ImGui.endChild()
+
+        ImGui.sameLine()
+
+        // Right Content Child
+        if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
+            when (activeCategory) {
+                Category.APPEARANCE   -> drawAppearance(session, currentSize, onSizeChanged)
+                Category.PATCH_GRID   -> drawPatchGridSettings(session)
+                Category.AUDIO_ENGINE -> drawAudioEngineSettings(session)
+                Category.MIDI_CONTROL -> drawMidiControlSettings(session)
+                Category.GENERAL      -> drawGeneralSettings(session)
+            }
+        }
+        ImGui.endChild()
 
         ImGui.spacing()
         ImGui.separator()
@@ -118,7 +110,7 @@ object SettingsPanel {
         val closeW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             ImGui.calcTextSize("  Close  ").x + 40f
         }.coerceAtLeast(110f)
-        ImGui.setCursorPosX(ImGui.getWindowContentRegionMinX() + (ImGui.getContentRegionAvailX() - closeW) * 0.5f)
+        ImGui.setCursorPosX(ImGui.getWindowContentRegionMinX() + (availW - closeW) * 0.5f)
         if (ImGui.button("Close", closeW, 0f)) ImGui.closeCurrentPopup()
 
         ImGui.endPopup()
