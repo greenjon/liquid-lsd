@@ -364,7 +364,7 @@ object Lfo1Section {
         }
 
         // -- LFO Period / Speed -----------------------------------
-        if (isLfo || (isGen && existing.genUnit == GenUnit.TIME)) {
+        if (isGen && existing.genUnit == GenUnit.TIME) {
             val formatFunc: (Float) -> String = { v -> TimeUtils.formatPeriod(v) }
             val parseFunc: (String) -> Float? = { s -> TimeUtils.parsePeriod(s) }
 
@@ -434,9 +434,11 @@ object Lfo1Section {
         if (isGen && existing.genUnit == GenUnit.FRAME) {
             val formatFunc: (Float) -> String = { v ->
                 val frames = v.toInt().coerceIn(1, 10000)
-                val sec = frames / 60.0
-                if (frames == 1) "1 frame (%.3fs)".format(sec)
-                else "$frames frames (%.2fs)".format(sec)
+                val fps = session.uiTheme.maxFps.coerceAtLeast(1).toFloat()
+                val sec = frames / fps
+                val secFormatted = TimeUtils.formatPeriod(sec)
+                if (frames == 1) "1 frame ($secFormatted)"
+                else "$frames frames ($secFormatted)"
             }
             val parseFunc: (String) -> Float? = { s ->
                 s.replace(Regex("[^0-9.]"), "").toFloatOrNull()?.toInt()?.coerceIn(1, 10000)?.toFloat()

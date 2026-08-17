@@ -384,9 +384,11 @@ object Lfo2Section {
             } else if (existing.modGenUnit == GenUnit.FRAME) {
                 val formatFunc: (Float) -> String = { v ->
                     val frames = v.toInt().coerceIn(1, 10000)
-                    val sec = frames / 60.0
-                    if (frames == 1) "1 frame (%.3fs)".format(sec)
-                    else "$frames frames (%.2fs)".format(sec)
+                    val fps = session.uiTheme.maxFps.coerceAtLeast(1).toFloat()
+                    val sec = frames / fps
+                    val secFormatted = TimeUtils.formatPeriod(sec)
+                    if (frames == 1) "1 frame ($secFormatted)"
+                    else "$frames frames ($secFormatted)"
                 }
                 val parseFunc: (String) -> Float? = { s ->
                     s.replace(Regex("[^0-9.]"), "").toFloatOrNull()?.toInt()?.coerceIn(1, 10000)?.toFloat()
