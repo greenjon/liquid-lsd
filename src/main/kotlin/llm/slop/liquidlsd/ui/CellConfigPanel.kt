@@ -298,8 +298,8 @@ object CellConfigPanel {
         val existing = if (idx >= 0) param.modulators[idx] else virtualModulators.firstOrNull { it.id == newMod.id }
         val wasBypassed = existing?.bypassed ?: false
 
-        // Auto-activate: if amplitude is adjusted to a non-zero value, activate/unbypass the modulator
-        val finalizedMod = if (wasBypassed && newMod.bypassed && newMod.amplitude != 0.0f) {
+        // Auto-activate: if depth is adjusted to a non-zero value, activate/unbypass the modulator
+        val finalizedMod = if (wasBypassed && newMod.bypassed && newMod.depth != 0.0f) {
             newMod.copy(bypassed = false)
         } else {
             newMod

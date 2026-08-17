@@ -81,7 +81,7 @@ object ModulatorHeaderRow {
             ImGui.sameLine(0f, 10f)
             if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
                 val randomized = existing
-                    .randomizeAmplitude()
+                    .randomizeDepth()
                     .randomizeDcOffset()
                     .randomizeSubdivision()
                     .randomizePhaseOffset()

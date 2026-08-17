@@ -98,12 +98,12 @@ class ModulatableParameter(
             }
             val finalCv = evaluateModulator(mod)
             val isBipolar = minClamp < 0f
-            // Bipolar:    rawModAmount = (rawCV * amp) + dc      → symmetric around 0
-            // Monopolar:  rawModAmount = ((rawCV+1)/2 * amp) + dc → maps [−1,1] to [0,amp]+dc
+            // Bipolar:    rawModAmount = (rawCV * depth) + dc      → symmetric around 0
+            // Monopolar:  rawModAmount = ((rawCV+1)/2 * depth) + dc → maps [−1,1] to [0,depth]+dc
             val rawModAmount = if (isBipolar) {
-                finalCv * mod.amplitude + mod.dcOffset
+                finalCv * mod.depth + mod.dcOffset
             } else {
-                ((finalCv + 1f) / 2f) * mod.amplitude + mod.dcOffset
+                ((finalCv + 1f) / 2f) * mod.depth + mod.dcOffset
             }
             
             val scalar = if (mod.operator == ModulationOperator.ADD) {
@@ -114,7 +114,7 @@ class ModulatableParameter(
             result = when (mod.operator) {
                 ModulationOperator.ADD -> result + modAmount
                 ModulationOperator.MUL -> result * (1.0f + modAmount)
-                ModulationOperator.SCALE -> result * (1.0f - mod.amplitude + modAmount)
+                ModulationOperator.SCALE -> result * (1.0f - mod.depth + modAmount)
             }
         }
 

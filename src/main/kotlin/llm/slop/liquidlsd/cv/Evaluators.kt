@@ -192,19 +192,19 @@ fun getCombinedModulatorValue(mods: List<CvModulator>): Float {
     for (mod in mods) {
         if (mod.bypassed) continue
         val cv = evaluateModulator(mod)
-        val modAmount = cv * mod.amplitude + mod.dcOffset
+        val modAmount = cv * mod.depth + mod.dcOffset
         if (first) {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount
                 llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> modAmount
-                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> 1.0f - mod.amplitude + modAmount
+                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> 1.0f - mod.depth + modAmount
             }
             first = false
         } else {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> result + modAmount
                 llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> result * (1.0f + modAmount)
-                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.amplitude + modAmount)
+                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.depth + modAmount)
             }
         }
     }
@@ -213,8 +213,8 @@ fun getCombinedModulatorValue(mods: List<CvModulator>): Float {
 
 /**
  * Like getCombinedModulatorValue, but applies the correct formula per parameter polarity:
- *   Bipolar  (isBipolar=true):  modAmount = cv * amplitude + dc         → result in [-1, 1]
- *   Monopolar (isBipolar=false): modAmount = ((cv+1)/2) * amplitude + dc → result in [ 0, 1]
+ *   Bipolar  (isBipolar=true):  modAmount = cv * depth + dc         → result in [-1, 1]
+ *   Monopolar (isBipolar=false): modAmount = ((cv+1)/2) * depth + dc → result in [ 0, 1]
  *
  * Used by the O-scope in CellConfigPanel so its display matches the engine output.
  */
@@ -227,22 +227,22 @@ fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean): Floa
         if (mod.bypassed) continue
         val cv = evaluateModulator(mod)
         val modAmount = if (isBipolar) {
-            cv * mod.amplitude + mod.dcOffset
+            cv * mod.depth + mod.dcOffset
         } else {
-            ((cv + 1f) / 2f) * mod.amplitude + mod.dcOffset
+            ((cv + 1f) / 2f) * mod.depth + mod.dcOffset
         }
         if (first) {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount
                 llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> modAmount
-                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> 1.0f - mod.amplitude + modAmount
+                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> 1.0f - mod.depth + modAmount
             }
             first = false
         } else {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> result + modAmount
                 llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> result * (1.0f + modAmount)
-                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.amplitude + modAmount)
+                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.depth + modAmount)
             }
         }
     }

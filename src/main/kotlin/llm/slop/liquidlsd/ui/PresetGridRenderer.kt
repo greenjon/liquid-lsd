@@ -426,7 +426,7 @@ object PresetGridRenderer {
                         "trigger" -> "trigger_onset"
                         else -> cvId
                     }
-                    param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, amplitude = 0.5f, bypassed = false))
+                    param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = 0.5f, bypassed = false))
                 }
             }
             if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {

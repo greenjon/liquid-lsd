@@ -7,7 +7,7 @@ import java.util.UUID
 data class CvModulator(
     val sourceId: String,
     val operator: ModulationOperator = ModulationOperator.ADD,
-    val amplitude: Float = 0.0f,
+    val depth: Float = 0.0f,
     val bypassed: Boolean = false,
     // Beat synchronization/shape settings
     val waveform: Waveform = Waveform.SINE,
@@ -19,8 +19,8 @@ data class CvModulator(
     val genUnit: GenUnit = GenUnit.TIME,
 
     // Range fields
-    val amplitudeMin: Float = amplitude,
-    val amplitudeMax: Float = amplitude,
+    val depthMin: Float = depth,
+    val depthMax: Float = depth,
     val subdivisionMin: Float = subdivision,
     val subdivisionMax: Float = subdivision,
     val phaseOffsetMin: Float = phaseOffset,
@@ -28,7 +28,7 @@ data class CvModulator(
     val slopeMin: Float = slope,
     val slopeMax: Float = slope,
 
-    val randomizeAmplitude: Boolean = false,
+    val randomizeDepth: Boolean = false,
     val randomizeSubdivision: Boolean = false,
     val randomizePhaseOffset: Boolean = false,
     val randomizeSlope: Boolean = false,
@@ -93,9 +93,9 @@ data class CvModulator(
     }
 
     fun randomizeActiveValues(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
-        val newAmplitude = if (randomizeAmplitude) {
-            if (amplitudeMin == amplitudeMax) amplitudeMin else random.nextFloat() * (amplitudeMax - amplitudeMin) + amplitudeMin
-        } else amplitude
+        val newDepth = if (randomizeDepth) {
+            if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
+        } else depth
 
         val newDcOffset = if (randomizeDcOffset) {
             if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
@@ -167,7 +167,7 @@ data class CvModulator(
         } else generatorModDepth
 
         return this.copy(
-            amplitude = newAmplitude,
+            depth = newDepth,
             dcOffset = newDcOffset,
             subdivision = newSubdiv,
             phaseOffset = newPhase,
@@ -183,10 +183,10 @@ data class CvModulator(
         )
     }
 
-    fun randomizeAmplitude(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
-        if (!randomizeAmplitude) return this
-        val newAmplitude = if (amplitudeMin == amplitudeMax) amplitudeMin else random.nextFloat() * (amplitudeMax - amplitudeMin) + amplitudeMin
-        return this.copy(amplitude = newAmplitude)
+    fun randomizeDepth(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeDepth) return this
+        val newDepth = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
+        return this.copy(depth = newDepth)
     }
 
     fun randomizeDcOffset(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {

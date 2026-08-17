@@ -149,21 +149,21 @@ object ClipboardManager {
         val newBaseMin = scaleVal(data.parameter.baseMin)
         val newBaseMax = scaleVal(data.parameter.baseMax)
         
-        val ampScale = if (srcRange != 0f) destRange / srcRange else 1f
+        val depthScale = if (srcRange != 0f) destRange / srcRange else 1f
         
         val mappedMods = data.parameter.modulators.map { modDto ->
-            val amplitudeVal = if (modDto.operator == "ADD") modDto.amplitude * ampScale else modDto.amplitude
-            val amplitudeMinVal = if (modDto.operator == "ADD") modDto.amplitudeMin * ampScale else modDto.amplitudeMin
-            val amplitudeMaxVal = if (modDto.operator == "ADD") modDto.amplitudeMax * ampScale else modDto.amplitudeMax
+            val depthVal = if (modDto.operator == "ADD") modDto.depth * depthScale else modDto.depth
+            val depthMinVal = if (modDto.operator == "ADD") modDto.depthMin * depthScale else modDto.depthMin
+            val depthMaxVal = if (modDto.operator == "ADD") modDto.depthMax * depthScale else modDto.depthMax
             
-            val dcOffsetVal = if (modDto.operator == "ADD") modDto.dcOffset * ampScale else modDto.dcOffset
-            val dcOffsetMinVal = if (modDto.operator == "ADD") modDto.dcOffsetMin * ampScale else modDto.dcOffsetMin
-            val dcOffsetMaxVal = if (modDto.operator == "ADD") modDto.dcOffsetMax * ampScale else modDto.dcOffsetMax
+            val dcOffsetVal = if (modDto.operator == "ADD") modDto.dcOffset * depthScale else modDto.dcOffset
+            val dcOffsetMinVal = if (modDto.operator == "ADD") modDto.dcOffsetMin * depthScale else modDto.dcOffsetMin
+            val dcOffsetMaxVal = if (modDto.operator == "ADD") modDto.dcOffsetMax * depthScale else modDto.dcOffsetMax
 
             modDto.copy(
-                amplitude = amplitudeVal.coerceIn(0f, 1f),
-                amplitudeMin = amplitudeMinVal.coerceIn(0f, 1f),
-                amplitudeMax = amplitudeMaxVal.coerceIn(0f, 1f),
+                depth = depthVal.coerceIn(0f, 1f),
+                depthMin = depthMinVal.coerceIn(0f, 1f),
+                depthMax = depthMaxVal.coerceIn(0f, 1f),
                 dcOffset = dcOffsetVal.coerceIn(-1f, 1f),
                 dcOffsetMin = dcOffsetMinVal.coerceIn(-1f, 1f),
                 dcOffsetMax = dcOffsetMaxVal.coerceIn(-1f, 1f)

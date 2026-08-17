@@ -9,6 +9,7 @@
 
 ### Key Highlights
 
+- **CV Modulation "Depth" Terminology Standardization**: Standardized the term for the value assigned to a CV modulator from "amplitude" (and legacy JSON "weight") to **"Depth"** across domain models (`CvModulator.depth`, `depthMin`, `depthMax`, `randomizeDepth`), evaluation logic, UI controls (Cell Config Depth range slider, LFO 2 AM Depth mode/tooltips), and documentation, while maintaining full backward serialization compatibility with existing presets.
 - **Preset Grid Resolution Independence & User-Adjustable Knob Scale**: Replaced hardcoded cell pixel dimensions with a dynamic `GridMetrics` geometry token system that scales Preset Grid cells and circular readout knobs automatically with global UI font size (`baseSize`). Added a **"Grid Knob Cell Scale"** setting slider (0.70x to 2.00x) in **Settings -> Preset Grid** for resolution-independent visual customization across display setups (e.g. 1080p, 1280x800, 1440p, 4K).
 - **Industry Standard 'Preset' Terminology Refactor**: Refactored visual parameter snapshots across the codebase from 'Patch' to 'Preset' (`PresetManager`, `DeckPresetDto`, `GlobalPresetDto`, `PresetGridPanel`, `PresetGridState`, `PresetGridRenderer`).
 - **Unified `library/` User Storage Directory**: Renamed the top-level user data directory from `presets/` to `library/` (`library/presets/`, `library/midi/`, `library/playlists/`, `library/sources/`, `library/last_session.json`), establishing `library/` as the single root directory for all user content.

@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.rendering.*
 data class ModulatorDto(
     val sourceId: String,
     val operator: String, // "ADD" or "MUL"
-    @SerialName("weight") val amplitude: Float,
+    @SerialName("weight") val depth: Float,
     val bypassed: Boolean = false,
     val waveform: String = "SINE",
     val subdivision: Float = 1.0f,
@@ -19,15 +19,15 @@ data class ModulatorDto(
     val genUnit: String = "TIME",
     
     // Randomization bounds
-    @SerialName("weightMin") val amplitudeMin: Float,
-    @SerialName("weightMax") val amplitudeMax: Float,
+    @SerialName("weightMin") val depthMin: Float,
+    @SerialName("weightMax") val depthMax: Float,
     val subdivisionMin: Float,
     val subdivisionMax: Float,
     val phaseOffsetMin: Float,
     val phaseOffsetMax: Float,
     val slopeMin: Float,
     val slopeMax: Float,
-    @SerialName("randomizeWeight") val randomizeAmplitude: Boolean = false,
+    @SerialName("randomizeWeight") val randomizeDepth: Boolean = false,
     val randomizeSubdivision: Boolean = false,
     val randomizePhaseOffset: Boolean = false,
     val randomizeSlope: Boolean = false,
@@ -59,8 +59,8 @@ data class ModulatorDto(
         if (waveform != other.waveform) return false
         if (lfoSpeedMode != other.lfoSpeedMode) return false
         
-        if (amplitudeMin != other.amplitudeMin) return false
-        if (amplitudeMax != other.amplitudeMax) return false
+        if (depthMin != other.depthMin) return false
+        if (depthMax != other.depthMax) return false
         if (subdivisionMin != other.subdivisionMin) return false
         if (subdivisionMax != other.subdivisionMax) return false
         if (phaseOffsetMin != other.phaseOffsetMin) return false
@@ -70,15 +70,15 @@ data class ModulatorDto(
         if (dcOffsetMin != other.dcOffsetMin) return false
         if (dcOffsetMax != other.dcOffsetMax) return false
         
-        if (randomizeAmplitude != other.randomizeAmplitude) return false
+        if (randomizeDepth != other.randomizeDepth) return false
         if (randomizeSubdivision != other.randomizeSubdivision) return false
         if (randomizePhaseOffset != other.randomizePhaseOffset) return false
         if (randomizeSlope != other.randomizeSlope) return false
         if (randomizeDcOffset != other.randomizeDcOffset) return false
         
         // Exclude instantaneous values from equality check if they are subject to active randomization
-        val isAmpRandom = (randomizeAmplitude && amplitudeMin != amplitudeMax) || amplitudeMin != other.amplitudeMin || amplitudeMax != other.amplitudeMax
-        if (!isAmpRandom && amplitude != other.amplitude) return false
+        val isDepthRandom = (randomizeDepth && depthMin != depthMax) || depthMin != other.depthMin || depthMax != other.depthMax
+        if (!isDepthRandom && depth != other.depth) return false
         
         val isSubRandom = (randomizeSubdivision && subdivisionMin != subdivisionMax) || subdivisionMin != other.subdivisionMin || subdivisionMax != other.subdivisionMax
         if (!isSubRandom && subdivision != other.subdivision) return false
@@ -102,8 +102,8 @@ data class ModulatorDto(
         result = 31 * result + waveform.hashCode()
         result = 31 * result + lfoSpeedMode.hashCode()
         
-        result = 31 * result + amplitudeMin.hashCode()
-        result = 31 * result + amplitudeMax.hashCode()
+        result = 31 * result + depthMin.hashCode()
+        result = 31 * result + depthMax.hashCode()
         result = 31 * result + subdivisionMin.hashCode()
         result = 31 * result + subdivisionMax.hashCode()
         result = 31 * result + phaseOffsetMin.hashCode()
@@ -113,14 +113,14 @@ data class ModulatorDto(
         result = 31 * result + dcOffsetMin.hashCode()
         result = 31 * result + dcOffsetMax.hashCode()
 
-        result = 31 * result + randomizeAmplitude.hashCode()
+        result = 31 * result + randomizeDepth.hashCode()
         result = 31 * result + randomizeSubdivision.hashCode()
         result = 31 * result + randomizePhaseOffset.hashCode()
         result = 31 * result + randomizeSlope.hashCode()
         result = 31 * result + randomizeDcOffset.hashCode()
 
-        val isAmpRandom = randomizeAmplitude && amplitudeMin != amplitudeMax
-        if (!isAmpRandom) result = 31 * result + amplitude.hashCode()
+        val isDepthRandom = randomizeDepth && depthMin != depthMax
+        if (!isDepthRandom) result = 31 * result + depth.hashCode()
         
         val isSubRandom = randomizeSubdivision && subdivisionMin != subdivisionMax
         if (!isSubRandom) result = 31 * result + subdivision.hashCode()
@@ -256,7 +256,7 @@ data class PlaylistDto(
 fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     sourceId = sourceId,
     operator = operator.name,
-    amplitude = amplitude,
+    depth = depth,
     bypassed = bypassed,
     waveform = waveform.name,
     subdivision = subdivision,
@@ -264,15 +264,15 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     slope = slope,
     lfoSpeedMode = lfoSpeedMode.name,
     genUnit = genUnit.name,
-    amplitudeMin = amplitudeMin,
-    amplitudeMax = amplitudeMax,
+    depthMin = depthMin,
+    depthMax = depthMax,
     subdivisionMin = subdivisionMin,
     subdivisionMax = subdivisionMax,
     phaseOffsetMin = phaseOffsetMin,
     phaseOffsetMax = phaseOffsetMax,
     slopeMin = slopeMin,
     slopeMax = slopeMax,
-    randomizeAmplitude = randomizeAmplitude,
+    randomizeDepth = randomizeDepth,
     randomizeSubdivision = randomizeSubdivision,
     randomizePhaseOffset = randomizePhaseOffset,
     randomizeSlope = randomizeSlope,
@@ -295,7 +295,7 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     // Migrate legacy source IDs from older preset versions
     sourceId = when (sourceId) { "gen1", "gen2" -> "lfo"; else -> sourceId },
     operator = ModulationOperator.valueOf(operator),
-    amplitude = amplitude,
+    depth = depth,
     bypassed = bypassed,
     waveform = Waveform.valueOf(waveform),
     subdivision = subdivision,
@@ -303,15 +303,15 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     slope = slope,
     lfoSpeedMode = LfoSpeedMode.valueOf(lfoSpeedMode),
     genUnit = GenUnit.valueOf(genUnit),
-    amplitudeMin = amplitudeMin,
-    amplitudeMax = amplitudeMax,
+    depthMin = depthMin,
+    depthMax = depthMax,
     subdivisionMin = subdivisionMin,
     subdivisionMax = subdivisionMax,
     phaseOffsetMin = phaseOffsetMin,
     phaseOffsetMax = phaseOffsetMax,
     slopeMin = slopeMin,
     slopeMax = slopeMax,
-    randomizeAmplitude = randomizeAmplitude,
+    randomizeDepth = randomizeDepth,
     randomizeSubdivision = randomizeSubdivision,
     randomizePhaseOffset = randomizePhaseOffset,
     randomizeSlope = randomizeSlope,

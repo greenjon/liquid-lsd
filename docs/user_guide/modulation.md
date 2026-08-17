@@ -62,8 +62,8 @@ $$\text{Evaluated Value} = \text{baseValue} + \text{Modulation Effect}$$
 
 ### Modulation Operators
 - **`ADD`**: CV signal is scaled to the parameter's range and added to `baseValue`.
-- **`MUL`**: Multiplicative ring-mod style ($result = baseValue \times (1.0 + \text{CV} \times \text{amplitude})$).
-- **`SCALE`**: Attenuates base value ($result = baseValue \times (1.0 - \text{amplitude} + \text{CV} \times \text{amplitude})$).
+- **`MUL`**: Multiplicative ring-mod style ($result = baseValue \times (1.0 + \text{CV} \times \text{depth})$).
+- **`SCALE`**: Attenuates base value ($result = baseValue \times (1.0 - \text{depth} + \text{CV} \times \text{depth})$).
 
 All final evaluated values are automatically clamped to parameter hardware bounds (`minClamp` to `maxClamp`).
 

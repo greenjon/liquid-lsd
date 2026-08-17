@@ -109,7 +109,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 result = baseValue
 for each active CvModulator:
     cv = CvModulator.evaluateValue()  (runs beatPhase/lfo/snh calculation locally; audio from CVRegistry.get())
-    amount = cv * weight
+    amount = cv * depth
     result = result + amount          (ADD)
            | result * (1 + amount)    (MUL)
 value = result.coerceIn(0f, 1f)

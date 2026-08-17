@@ -93,7 +93,7 @@ MIDI CCs are polled each frame from a queue and applied to parameters or UI stat
 | `SessionContext` | Dependency injection container providing access to core registries and managers |
 | `CVRegistry` | All CV source values live here |
 | `ModulatableParameter` | A float param with up to N `CvModulator`s stacked on it |
-| `CvModulator` | One modulation slot: source id + weight + operator (ADD/MUL) + waveform |
+| `CvModulator` | One modulation slot: source id + depth + operator (ADD/MUL) + waveform |
 | `Deck` | One visual channel: holds a `VisualSource` + ping-pong FBOs + feedback params |
 | `Mixer` | Blends Deck A + Deck B → `masterFBO` → screen (Deck C is excluded from output) |
 | `Renderer` | Orchestrates per-frame: source→feedback→mix→blit |

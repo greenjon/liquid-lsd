@@ -48,9 +48,9 @@ for (mod in modulators) {
 
     // Polarity normalisation
     rawModAmount = if (isBipolar)
-        rawCV * amplitude + dcOffset        // bipolar: symmetric around 0
+        rawCV * depth + dcOffset        // bipolar: symmetric around 0
     else
-        ((rawCV + 1) / 2) * amplitude + dcOffset  // monopolar: maps [-1,1] → [0,amp]+dc
+        ((rawCV + 1) / 2) * depth + dcOffset  // monopolar: maps [-1,1] → [0,depth]+dc
 
     // Scale to parameter range
     scalar = if (ADD) then (range / 2) for bipolar, else range for monopolar; else 1.0
@@ -59,7 +59,7 @@ for (mod in modulators) {
     result = when (operator) {
         ADD   -> result + modAmount
         MUL   -> result * (1 + modAmount)
-        SCALE -> result * (1 - amplitude + modAmount)
+        SCALE -> result * (1 - depth + modAmount)
     }
 }
 
@@ -90,8 +90,8 @@ modulation effect.
 
 | Field | Type | Range | Purpose |
 |-------|------|-------|---------|
-| `amplitude` | `Float` | `[0, 1]` | Peak modulation depth |
-| `dcOffset` | `Float` | `[-1, 1]` | Constant offset added after amplitude scaling |
+| `depth` | `Float` | `[0, 1]` | Peak modulation depth |
+| `dcOffset` | `Float` | `[-1, 1]` | Constant offset added after depth scaling |
 | `waveform` | `Waveform` | — | Shape: `SINE`, `TRIANGLE`, `SQUARE`, `RANDOM` |
 | `subdivision` | `Float` | Seconds (TIME) or beats (BEAT) | One cycle duration |
 | `phaseOffset` | `Float` | `[0, 1]` | Phase shift within the cycle |
@@ -106,7 +106,7 @@ modulation effect.
 Every continuously-valued field has a `Min`/`Max` pair and a `randomize*` flag:
 
 ```
-amplitudeMin / amplitudeMax / randomizeAmplitude
+depthMin / depthMax / randomizeDepth
 subdivisionMin / subdivisionMax / randomizeSubdivision
 phaseOffsetMin / phaseOffsetMax / randomizePhaseOffset
 slopeMin / slopeMax / randomizeSlope
@@ -150,7 +150,7 @@ Randomization ranges also exist for all mod-fields (`modSubdivisionMin/Max`, etc
 |-------|---------|
 | `ADD` | `result + modAmount` — adds CV signal scaled to parameter range |
 | `MUL` | `result * (1 + modAmount)` — multiplicative ring-mod style |
-| `SCALE` | `result * (1 - amplitude + modAmount)` — attenuates the base value |
+| `SCALE` | `result * (1 - depth + modAmount)` — attenuates the base value |
 
 ### Waveform
 
@@ -247,7 +247,7 @@ evaluateModulator(mod) → Float   (range [-1, 1])
 - `ModulatorDto.toDomain()` — load path; includes a one-line migration:
   `"gen1" / "gen2"` → `"lfo"` to silently upgrade patches saved before the rename.
 - `CvModulator.toDto()` — save path; field names are stable (some use `@SerialName` aliases,
-  e.g. `weight` for `amplitude`).
+  e.g. `weight` for `depth`).
 
 Do not rename `CvModulator` fields without adding a corresponding `@SerialName` or migration in
 `toDomain()`.

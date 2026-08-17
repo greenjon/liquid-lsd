@@ -7,6 +7,7 @@
 
 ### Key Highlights
 
+- **CV Modulation "Depth" Terminology Standardization**: Standardized the term for the value assigned to a CV modulator from "amplitude" (and legacy JSON "weight") to **"Depth"** across domain models (`CvModulator.depth`, `depthMin`, `depthMax`, `randomizeDepth`), evaluation logic, UI controls (Cell Config Depth range slider, LFO 2 AM Depth mode/tooltips), and documentation, while maintaining full backward serialization compatibility with existing presets.
 - **Patch → Preset Global Rename**: All internal APIs (`PatchManager`, `DeckPatchDto`, `GlobalPatchDto`, `PatchGridState`, `PatchCellId`, `PatchIOStatus`, etc.) and their stale legacy typealiases have been removed and replaced with canonical `Preset*` equivalents. `SessionContext.patchManager` is now `presetManager`; `PresetManager.applyPendingPatches` is `applyPendingPresets`; `NoteContext.Patch` is `NoteContext.Preset`.
 - **Preset Grid (formerly Patch Grid)**: The CV modulation matrix panel, settings category, keyboard shortcuts doc, and all UI tooltips now consistently use "Preset Grid".
 - **`AssetType.PATCH` Removed**: The `AssetType` enum no longer contains a `PATCH` variant; files are classified under `AssetType.PRESET`.

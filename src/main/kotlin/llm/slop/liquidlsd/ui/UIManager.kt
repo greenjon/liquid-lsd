@@ -491,7 +491,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
                             target.param.modulators.add(
                                 llm.slop.liquidlsd.parameters.CvModulator(
                                     sourceId = midiId,
-                                    amplitude = 1.0f,
+                                    depth = 1.0f,
                                     operator = llm.slop.liquidlsd.parameters.ModulationOperator.ADD
                                 )
                             )

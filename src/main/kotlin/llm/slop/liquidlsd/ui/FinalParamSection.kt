@@ -78,9 +78,9 @@ object FinalParamSection {
             val cvVal = evaluateModulator(mod)
             val isBipolar = param.minClamp < 0f
             val rawModAmount = if (isBipolar) {
-                cvVal * mod.amplitude + mod.dcOffset
+                cvVal * mod.depth + mod.dcOffset
             } else {
-                ((cvVal + 1f) / 2f) * mod.amplitude + mod.dcOffset
+                ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
             }
             val scalar = if (mod.operator == ModulationOperator.ADD) {
                 if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
@@ -89,7 +89,7 @@ object FinalParamSection {
             val modulatorVal = when (mod.operator) {
                 ModulationOperator.ADD -> param.baseValue + modAmount
                 ModulationOperator.MUL -> param.baseValue * (1.0f + modAmount)
-                ModulationOperator.SCALE -> param.baseValue * (1.0f - mod.amplitude + modAmount)
+                ModulationOperator.SCALE -> param.baseValue * (1.0f - mod.depth + modAmount)
             }.coerceIn(param.minClamp, param.maxClamp)
             hist.add(modulatorVal)
         }

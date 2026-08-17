@@ -28,7 +28,7 @@ object Lfo2Section {
         ImGui.spacing()
 
         val currentMode = existing.generatorModMode
-        val modeLabels = arrayOf("AM (Amplitude)", "PM (Phase)", "ADD (Additive)")
+        val modeLabels = arrayOf("AM (Depth)", "PM (Phase)", "ADD (Additive)")
         val modeIdx = ImInt(if (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
 
         val lfo2Bypassed = (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
@@ -216,7 +216,7 @@ object Lfo2Section {
             onReplace(existing.copy(generatorModMode = nextMode))
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Amplitude.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
+            ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Depth.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
         }
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)

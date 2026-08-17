@@ -203,57 +203,57 @@ object Lfo1Section {
         )
         ImGui.spacing()
 
-        // -- Amplitude ---------------------------------------------
+        // -- Depth ---------------------------------------------
         CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
-            label = "Amplitude",
+            label = "Depth",
             themeColor = themeColor,
-            currentValue = existing.amplitude,
-            currentMin = existing.amplitudeMin,
-            currentMax = existing.amplitudeMax,
+            currentValue = existing.depth,
+            currentMin = existing.depthMin,
+            currentMax = existing.depthMax,
             minLimit = 0f,
             maxLimit = 1f,
-            isRandomizable = existing.randomizeAmplitude,
+            isRandomizable = existing.randomizeDepth,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {
-                    val rMin = existing.amplitudeMin
-                    val rMax = existing.amplitudeMax
+                    val rMin = existing.depthMin
+                    val rMax = existing.depthMax
                     val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.amplitude - 0.1f).coerceAtLeast(0f), (existing.amplitude + 0.1f).coerceAtMost(1f))
+                        Pair((existing.depth - 0.1f).coerceAtLeast(0f), (existing.depth + 0.1f).coerceAtMost(1f))
                     } else {
                         Pair(rMin, rMax)
                     }
                     onReplace(existing.copy(
-                        randomizeAmplitude = true,
-                        amplitudeMin = nextMin,
-                        amplitudeMax = nextMax
+                        randomizeDepth = true,
+                        depthMin = nextMin,
+                        depthMax = nextMax
                     ))
                 } else {
                     onReplace(existing.copy(
-                        randomizeAmplitude = false,
-                        amplitudeMin = existing.amplitude,
-                        amplitudeMax = existing.amplitude
+                        randomizeDepth = false,
+                        depthMin = existing.depth,
+                        depthMax = existing.depth
                     ))
                 }
             },
             onRandomizeNow = {
-                onReplace(existing.randomizeAmplitude())
+                onReplace(existing.randomizeDepth())
             },
             onRangeChanged = { nextMin, nextMax ->
                 val safeMin = minOf(nextMin, nextMax)
                 val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.amplitude.coerceIn(safeMin, safeMax)
+                val nextActive = existing.depth.coerceIn(safeMin, safeMax)
                 onReplace(existing.copy(
-                    amplitudeMin = safeMin,
-                    amplitudeMax = safeMax,
-                    amplitude = nextActive
+                    depthMin = safeMin,
+                    depthMax = safeMax,
+                    depth = nextActive
                 ))
             },
             onValueChanged = { newVal ->
                 onReplace(existing.copy(
-                    amplitude = newVal,
-                    amplitudeMin = newVal,
-                    amplitudeMax = newVal
+                    depth = newVal,
+                    depthMin = newVal,
+                    depthMax = newVal
                 ))
             }
         )
