@@ -1,5 +1,23 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.25
+
+> [!NOTE]
+> **Release 1.0.0-beta.25** overhauls the real-time beat detection engine, phase tracking flywheel, and beat sine generator to deliver stable, responsive, and phase-aligned beat synchronization.
+
+---
+
+### Key Highlights
+
+- **Spectral Flux Onset Beat Analysis**: Replaced raw RMS amplitude beat input with half-wave rectified multi-band spectral flux. Beat detection now operates on sharp transient impulses, preventing false triggers on sustained drones or synth bass notes.
+- **Sub-Block Parabolic Peak Interpolation**: Added parabolic peak interpolation to STFT Comb and Autocorrelation analysis tasks. Eliminates discrete block-quantization BPM jumps (e.g. 117.4 $\leftrightarrow$ 120.2) for smooth, floating-point tempo tracking.
+- **Background Phase Anchor Alignment**: Background analysis now computes cross-correlation beat phase alignment anchors, ensuring beat-synced oscillators (`beatSine`, beat LFOs) lock their peaks directly to audio transient hits.
+- **Dual-Time-Constant Peak-Triggered PLL**: Refined Phase-Locked Loop (`BeatDetectionMode.PLL`) to evaluate only on local onset peaks with fast phase correction ($\alpha$) and damped period inertia ($\beta$), eliminating tempo wobble on syncopated hits.
+- **Smooth Flywheel Phase Slewing**: Upgraded `AudioEngine` flywheel accumulation to apply second-order phase slewing, smoothly nudging beat phase over audio blocks without instantaneous phase jumps or visual pops.
+- **Beat Detection Confidence Metric**: Added a peak-to-average energy confidence metric $C \in [0, 1]$ to stabilize tempo during ambient breakdowns or silent sections.
+
+---
+
 ## Version 1.0.0-beta.24
 
 > [!NOTE]

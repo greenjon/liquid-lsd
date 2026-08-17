@@ -36,24 +36,33 @@ The default and recommended mode for live performances. `AudioEngine.manualBpm` 
 When unlocked, [`BeatDetector.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/cv/BeatClock.kt) evaluates audio envelopes using one of three selectable algorithms:
 
 #### A. Phase-Locked Loop (PLL) — `BeatDetectionMode.PLL`
-An internal oscillator nudges its period $T_{period}$ whenever a transient impulse occurs:
+An internal oscillator nudges its period $T_{period}$ whenever a transient onset peak occurs:
 $$\text{Error} = \frac{\phi_{current}}{T_{period}} - 0.5$$
 
-Period and phase adjust toward transient alignment:
+Period and phase adjust toward transient alignment using dual time constants ($\alpha = \text{pllAdaptationRate}$, $\beta = \alpha \times 0.01$):
 $$\phi \leftarrow \phi - \text{Error} \times T \times \alpha$$
-$$T \leftarrow T - \text{Error} \times T \times (\alpha \times 0.1)$$
+$$T \leftarrow T - \text{Error} \times T \times \beta$$
+
+Evaluated strictly on local onset peaks ($\text{flux}_t > \text{flux}_{t-1} \land \text{flux}_t > \text{flux}_{t+1}$) to prevent sample-block over-triggering.
 
 #### B. STFT Comb Filter Bank — `BeatDetectionMode.STFT_COMB`
-Runs on a background analysis thread every 16 blocks. Tests candidate BPM delays against past envelope history:
-$$\text{Energy}(BPM) = \sum_{k=0}^{3} \text{envelope}\left[\text{histIdx} - k \times \text{delay}_{BPM}\right]$$
+Runs on a background analysis thread every 16 blocks over onset spectral flux history:
+$$\text{Energy}(BPM) = \sum_{k=0}^{3} \text{flux}\left[\text{histIdx} - k \times \text{delay}_{BPM}\right]$$
+Includes sub-grid parabolic interpolation around the peak comb energy index for floating-point BPM accuracy, and a phase anchor cross-correlation pass to align beat phase.
 
 #### C. Autocorrelation — `BeatDetectionMode.AUTOCORRELATION`
-Runs on a background analysis thread. Evaluates envelope autocorrelation across candidate lags $\tau$:
-$$AC(\tau) = \sum_{i=0}^N \text{envelope}[i] \cdot \text{envelope}[i - \tau]$$
+Runs on a background analysis thread. Evaluates onset flux autocorrelation across candidate lags $\tau$:
+$$AC(\tau) = \sum_{i=0}^N \text{flux}[i] \cdot \text{flux}[i - \tau]$$
+Applies sub-block parabolic interpolation ($\tau_{\text{sub}} = k_{\text{best}} + \Delta k$) to eliminate integer block discretization steps, paired with phase anchor impulse tracking.
 
 ---
 
-## Double-Buffered Background Analysis Thread Safety
+## Flywheel Phase Slewing & Thread Safety
+
+Background beat detection results publish a target phase anchor ($\text{pendingPhaseNudge}$). Rather than stepping `totalBeats` instantaneously—which creates visual phase pops or clicks—`AudioEngine` applies second-order phase slewing:
+$$\Delta \phi = \text{phaseTarget} - (\text{totalBeats} \bmod 1.0)$$
+$$\text{totalBeats} \leftarrow \text{totalBeats} + \text{slewAmount}$$
+The discrepancy bleeds off smoothly over subsequent audio blocks, delivering continuous, glitch-free sine wave modulation.
 
 Heavy comb filter and autocorrelation analysis tasks execute on a background daemon thread (`BeatDetector-Analysis`) to protect the real-time audio callback.
 
