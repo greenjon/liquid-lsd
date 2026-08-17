@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap
 object CVRegistry {
     private val startTimeNs = System.nanoTime()
 
+    @Volatile private var currentFrameIndex: Long = 0L
+
     @Volatile private var anchorBeats: Double = 0.0
     @Volatile private var anchorBpm: Float = 120f
     @Volatile private var anchorTimeNs: Long = System.nanoTime()
@@ -115,10 +117,23 @@ object CVRegistry {
     fun getSourceIds(): List<String> = sources.keys().toList().sorted()
 
     /**
+     * Returns the total elapsed render frames since application launch.
+     */
+    fun getRenderFrameCount(): Long = currentFrameIndex
+
+    /**
+     * Sets or resets the render frame counter (primarily used for unit testing).
+     */
+    fun setRenderFrameCount(frames: Long) {
+        currentFrameIndex = frames
+    }
+
+    /**
      * Updates all active CV sources and writes their values to their histories.
      * Must be called once per render frame.
      */
     fun updateAll() {
+        currentFrameIndex++
         val totalBeats = getSynchronizedTotalBeats()
         val elapsedSeconds = getElapsedRealtimeSec()
 

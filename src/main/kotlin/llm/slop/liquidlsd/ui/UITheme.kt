@@ -31,7 +31,6 @@ object UITheme {
     private val logger = KotlinLogging.logger {}
 
     private val settingsFile = File("lsd-settings.properties")
-    private val legacySettingsFile = File("spirals-settings.properties")
 
     // -- Semantic Levels -------------------------------------------------------
 
@@ -158,11 +157,6 @@ object UITheme {
 
     private fun loadSettings() {
         try {
-            // One-time migration: carry over settings from the old filename
-            if (!settingsFile.exists() && legacySettingsFile.exists()) {
-                legacySettingsFile.copyTo(settingsFile)
-                logger.info { "Migrated settings from ${legacySettingsFile.name} to ${settingsFile.name}" }
-            }
             if (settingsFile.exists()) {
                 val props = Properties()
                 settingsFile.inputStream().use { props.load(it) }
@@ -475,10 +469,6 @@ object UITheme {
             if (pushed) ImGui.popFont()
         }
     }
-
-    // Convenience alias kept for callers that used the old withScale signature.
-    @Deprecated("Use withFont(FontLevel, block) instead", ReplaceWith("withFont(level, block)"))
-    inline fun <T> withScale(scaleMultiplier: Float, block: () -> T): T = block()
 
     // -- Semantic text helpers -------------------------------------------------
 

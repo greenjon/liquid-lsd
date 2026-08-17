@@ -148,8 +148,7 @@ class DeckControlPanel(
             ImGui.text("Permanently delete '$activePreset'?")
             ImGui.spacing()
             if (ImGui.button("Delete", 80f, 0f)) {
-                var file = File("library/presets/$activePreset.lsd").let { if (!it.exists() && File("presets/patches/$activePreset.lsd").exists()) File("presets/patches/$activePreset.lsd") else it }
-                if (!file.exists()) file = File("library/presets/$activePreset.json").let { if (!it.exists() && File("presets/patches/$activePreset.json").exists()) File("presets/patches/$activePreset.json") else it }
+                val file = File("library/presets/$activePreset.lsd")
                 if (file.exists()) file.delete()
                 onDeleteDeck(isDeckA)
                 ImGui.closeCurrentPopup()

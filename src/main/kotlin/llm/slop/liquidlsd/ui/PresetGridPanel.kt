@@ -523,9 +523,9 @@ object PresetGridPanel {
                 ImGui.textDisabled("Quick Select Preset:")
                 ImGui.separator()
 
-                val presetDir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
+                val presetDir = File("library/presets")
                 val presetFiles = if (presetDir.exists()) {
-                    presetDir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".lsd")) }?.toList() ?: emptyList()
+                    presetDir.listFiles { f -> f.isFile && f.name.endsWith(".lsd") }?.toList() ?: emptyList()
                 } else emptyList()
 
                 if (presetFiles.isEmpty()) {
@@ -552,9 +552,9 @@ object PresetGridPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
             if (ImGui.button("🎲 Quick Random", buttonWidth, buttonHeight)) {
-                val presetDir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
+                val presetDir = File("library/presets")
                 val presetFiles = if (presetDir.exists()) {
-                    presetDir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".lsd")) }?.toList() ?: emptyList()
+                    presetDir.listFiles { f -> f.isFile && f.name.endsWith(".lsd") }?.toList() ?: emptyList()
                 } else emptyList()
 
                 if (presetFiles.isNotEmpty()) {

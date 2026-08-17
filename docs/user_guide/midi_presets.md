@@ -9,9 +9,8 @@ Liquid LSD provides preset serialization, preset clipboard management, and exter
 Presets store the complete state of a deck, including all visual parameters, feedback settings, active CV modulators, and user notes.
 
 ### File Format (`.lsd`)
-- Presets are serialized using `kotlinx.serialization` into human-readable JSON files (.lsd).
-- Presets are stored in `presets/patches/` (and subfolders) and managed via the **Asset Browser** (`F3`).
-- **DTO Backward Compatibility**: `.lsd` files include automatic schema migration. Opening older presets automatically populates default values for new fields (`presetNotes, paramNotes, LFO 2 modulators).
+- Presets are serialized using `kotlinx.serialization` into human-readable JSON files (`.lsd`).
+- Presets are stored in `library/presets/` (and subfolders) and managed via the **Asset Browser** (`F3`).
 
 ### Preset Clipboard (Copy & Paste)
 - **Deck Parameter Copying**: You can copy base parameter settings from one deck and paste them onto another deck using right-click context menus in the `FINAL` column or Deck Controls.
@@ -23,12 +22,12 @@ Presets store the complete state of a deck, including all visual parameters, fee
 
 Liquid LSD cleanly separates physical hardware controller maps from visual performance presets.
 
-### Hardware MIDI Profiles vs. Per-Patch MIDI Modulators
+### Hardware MIDI Profiles vs. Per-Preset MIDI Modulators
 
 | Feature Scope | Storage Location | Purpose | Portability |
 |---------------|------------------|---------|-------------|
-| **Base Parameter Sliders** (e.g. Master Crossfader, Deck Gain) | Hardware Profile (`presets/midi/default.json`) | Maps physical knobs to global base parameter controls | Swap physical MIDI controllers without editing visual patches |
-| **Grid Cell Modulators** (MIDI Column in Patch Grid) | Visual Patch File (`.lsdpatch`) | Binds specific MIDI CC numbers as dynamic modulation sources (`midi_cc_<ch>_<cc>`) | Preserved inside patch files across performances |
+| **Base Parameter Sliders** (e.g. Master Crossfader, Deck Gain) | Hardware Profile (`library/midi/default.json`) | Maps physical knobs to global base parameter controls | Swap physical MIDI controllers without editing visual presets |
+| **Grid Cell Modulators** (MIDI Column in Preset Grid) | Visual Preset File (`.lsd`) | Binds specific MIDI CC numbers as dynamic modulation sources (`midi_cc_<ch>_<cc>`) | Preserved inside preset files across performances |
 
 ### MIDI Learn Mode
 1. **Activate MIDI Learn**: Click the **MIDI Learn** button in the Patch Grid header or next to a parameter slider.

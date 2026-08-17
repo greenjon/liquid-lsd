@@ -19,7 +19,7 @@ enum class LfoSpeedMode {
 
 @Serializable
 enum class GenUnit {
-    TIME, BEAT
+    TIME, BEAT, FRAME
 }
 
 @Serializable

@@ -697,7 +697,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
     private fun performLoadDeckPreset(isDeckA: Boolean) {
         val browser = if (isDeckA) deckAFileBrowser else deckBFileBrowser
-        val dir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
+        val dir = File("library/presets")
         browser.open(
             ImGuiFileBrowser.Mode.LOAD,
             startDir = dir.canonicalFile
@@ -706,11 +706,8 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
     private fun loadDeckPreset(presetName: String, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = (deck === currentMixer?.deckC)) {
         if (presetName == "None") return
-        val cleanName = presetName.removeSuffix(".lsd").removeSuffix(".json").trim()
-        var file = File("library/presets/$cleanName.lsd").let { if (!it.exists() && File("presets/patches/$cleanName.lsd").exists()) File("presets/patches/$cleanName.lsd") else it }
-        if (!file.exists()) {
-            file = File("library/presets/$cleanName.json").let { if (!it.exists() && File("presets/patches/$cleanName.json").exists()) File("presets/patches/$cleanName.json") else it }
-        }
+        val cleanName = presetName.removeSuffix(".lsd").trim()
+        val file = File("library/presets/$cleanName.lsd")
         if (file.exists()) {
             session.presetManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
         }
@@ -729,13 +726,9 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
                         deck === mixer.deckA -> session.presetManager.activePresetA
                         else -> session.presetManager.activePresetB
                     }
-                    val label = when {
-                        deck === mixer.deckC -> "C"
-                        deck === mixer.deckA -> "A"
-                        else -> "B"
+                    if (activeName != null && activeName != "None") {
+                        saveDeckPreset(activeName, deck, isDeckA)
                     }
-                    val saveName = activeName ?: "AutoVJ_${label}_${System.currentTimeMillis()}"
-                    saveDeckPreset(saveName, deck, isDeckA || isDeckC)
                     performEjectDeck(deck)
                 }
                 UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
@@ -755,19 +748,20 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
     }
 
     private fun performEjectDeck(deck: Deck) {
+        val mixer = currentMixer ?: return
         deck.reset()
         when {
-            deck === currentMixer?.deckC -> {
-                session.presetManager.activePresetC = null
-                session.presetManager.cachedDtoC = null
-            }
-            deck === currentMixer?.deckA -> {
+            deck === mixer.deckA -> {
                 session.presetManager.activePresetA = null
                 session.presetManager.cachedDtoA = null
             }
-            else -> {
+            deck === mixer.deckB -> {
                 session.presetManager.activePresetB = null
                 session.presetManager.cachedDtoB = null
+            }
+            deck === mixer.deckC -> {
+                session.presetManager.activePresetC = null
+                session.presetManager.cachedDtoC = null
             }
         }
     }
@@ -778,7 +772,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
      * reading it from the cached DTO, so an overwrite never silently strips tags.
      */
     private fun saveDeckPreset(name: String, deck: Deck, isDeckA: Boolean, tags: List<String>? = null) {
-        val cleanName = name.removeSuffix(".lsd").removeSuffix(".json").trim()
+        val cleanName = name.removeSuffix(".lsd").trim()
         if (cleanName.isBlank()) return
 
         // Restore existing tags when overwriting unless the caller explicitly supplies new ones
@@ -808,12 +802,6 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             }
         }
         val file = File("library/presets/$cleanName.lsd")
-
-        // Remove obsolete legacy .json file if it exists so duplicate files aren't left on disk
-        val legacyJson = File("library/presets/$cleanName.json")
-        if (legacyJson.exists()) {
-            legacyJson.delete()
-        }
 
         val deckIndex = when {
             deck === currentMixer?.deckA -> 0

@@ -36,9 +36,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isRepeatEnabled = false
         PlayQueueManager.isShuffleEnabled = false
 
-        PlayQueueManager.appendToQueue(File("presets/patches/patch1.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch2.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch3.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset3.lsd"))
 
         assertEquals(-1, PlayQueueManager.activeIndex)
 
@@ -64,9 +64,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isRepeatEnabled = true
         PlayQueueManager.isShuffleEnabled = false
 
-        PlayQueueManager.appendToQueue(File("presets/patches/patch1.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch2.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch3.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset3.lsd"))
 
         // Trigger 1 -> Index 0
         PlayQueueManager.triggerNext(mixer)
@@ -90,9 +90,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isRepeatEnabled = true
         PlayQueueManager.isShuffleEnabled = false
 
-        PlayQueueManager.appendToQueue(File("presets/patches/patch1.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch2.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch3.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset3.lsd"))
 
         // Set activeIndex to 0 initially
         PlayQueueManager.restoreSessionQueue(
@@ -119,9 +119,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isShuffleEnabled = true
         PlayQueueManager.initializeShuffle()
 
-        PlayQueueManager.appendToQueue(File("presets/patches/patch1.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch2.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch3.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset3.lsd"))
 
         val visited = mutableSetOf<Int>()
 
@@ -147,9 +147,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isShuffleEnabled = true
         PlayQueueManager.initializeShuffle()
 
-        PlayQueueManager.appendToQueue(File("presets/patches/patch1.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch2.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch3.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset3.lsd"))
 
         val visitedCycle1 = mutableSetOf<Int>()
         for (i in 0 until 3) {
@@ -170,9 +170,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isShuffleEnabled = true
         PlayQueueManager.initializeShuffle()
 
-        PlayQueueManager.appendToQueue(File("presets/patches/patch1.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch2.lsd"))
-        PlayQueueManager.appendToQueue(File("presets/patches/patch3.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/preset3.lsd"))
 
         // Walk forward 3 tracks
         val history = mutableListOf<Int>()
@@ -194,9 +194,9 @@ class PlayQueueManagerTest {
         PlayQueueManager.isRepeatEnabled = false
         PlayQueueManager.isShuffleEnabled = true
 
-        val f1 = File("presets/patches/patch1.lsd")
-        val f2 = File("presets/patches/patch2.lsd")
-        val f3 = File("presets/patches/patch3.lsd")
+        val f1 = File("library/presets/preset1.lsd")
+        val f2 = File("library/presets/preset2.lsd")
+        val f3 = File("library/presets/preset3.lsd")
 
         PlayQueueManager.appendToQueue(f1)
         PlayQueueManager.appendToQueue(f2)

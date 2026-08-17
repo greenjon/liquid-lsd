@@ -135,7 +135,7 @@ Preset Grid columns: LFO | AUDIO | TRIG
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `Kifs` all satisfy the interface
 - **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `library/sources/`)
 - **Thread safety** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
-- **Serializable presets** — `CvModulator` is `@Serializable`; load-time migration remaps legacy source IDs
+- **Serializable presets** — `CvModulator` is `@Serializable`; clean, direct serialization without legacy aliases
 
 ## Build & Run
 ```bash

@@ -362,7 +362,7 @@ object FileSystemManager {
      * Gets the root directory for presets.
      */
     fun getPresetsRoot(): File {
-        val root = File(PRESETS_ROOT).let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
+        val root = File(PRESETS_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }
@@ -374,7 +374,7 @@ object FileSystemManager {
      * Gets the root directory for playlists.
      */
     fun getPlaylistsRoot(): File {
-        val root = File(PLAYLISTS_ROOT).let { if (!it.exists() && File("presets/playlists").exists()) File("presets/playlists") else it }
+        val root = File(PLAYLISTS_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }

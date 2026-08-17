@@ -111,18 +111,17 @@ class CvModulatorTest {
     }
 
     @Test
-    fun testPresetJsonSerializationCompatibility() {
+    fun testPresetJsonSerialization() {
         val json = Json { ignoreUnknownKeys = true }
 
-        // Test deserializing legacy preset containing "weight", "weightMin", "weightMax", "randomizeWeight"
-        val legacyJson = """
+        val jsonStr = """
             {
                 "sourceId": "lfo",
                 "operator": "ADD",
-                "weight": 0.65,
-                "weightMin": 0.25,
-                "weightMax": 0.75,
-                "randomizeWeight": true,
+                "depth": 0.65,
+                "depthMin": 0.25,
+                "depthMax": 0.75,
+                "randomizeDepth": true,
                 "subdivisionMin": 1.0,
                 "subdivisionMax": 1.0,
                 "phaseOffsetMin": 0.0,
@@ -132,7 +131,7 @@ class CvModulatorTest {
             }
         """.trimIndent()
 
-        val dto = json.decodeFromString<ModulatorDto>(legacyJson)
+        val dto = json.decodeFromString<ModulatorDto>(jsonStr)
         assertEquals(0.65f, dto.depth, 0.0001f)
         assertEquals(0.25f, dto.depthMin, 0.0001f)
         assertEquals(0.75f, dto.depthMax, 0.0001f)
@@ -147,10 +146,10 @@ class CvModulatorTest {
         // Test round-trip back to DTO and verify serial names
         val backDto = domain.toDto()
         val encoded = json.encodeToString(ModulatorDto.serializer(), backDto)
-        assertTrue(encoded.contains("\"weight\":0.65"), "Encoded JSON should contain 'weight' key")
-        assertTrue(encoded.contains("\"weightMin\":0.25"), "Encoded JSON should contain 'weightMin' key")
-        assertTrue(encoded.contains("\"weightMax\":0.75"), "Encoded JSON should contain 'weightMax' key")
-        assertTrue(encoded.contains("\"randomizeWeight\":true"), "Encoded JSON should contain 'randomizeWeight' key")
+        assertTrue(encoded.contains("\"depth\":0.65"), "Encoded JSON should contain 'depth' key")
+        assertTrue(encoded.contains("\"depthMin\":0.25"), "Encoded JSON should contain 'depthMin' key")
+        assertTrue(encoded.contains("\"depthMax\":0.75"), "Encoded JSON should contain 'depthMax' key")
+        assertTrue(encoded.contains("\"randomizeDepth\":true"), "Encoded JSON should contain 'randomizeDepth' key")
     }
 
     @Test
@@ -184,5 +183,86 @@ class CvModulatorTest {
         assertEquals(0.8f, pastedMod.depth, 0.001f)
         assertEquals(0.4f, pastedMod.depthMin, 0.001f)
         assertEquals(1.0f, pastedMod.depthMax.coerceAtMost(1f), 0.001f)
+    }
+
+    @Test
+    fun testFrameSyncedLfoEvaluation() {
+        CVRegistry.setRenderFrameCount(0L)
+        val mod = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 60f, // 60-frame cycle
+            waveform = Waveform.TRIANGLE,
+            morph = 0f,
+            hold = 0f,
+            slope = 0.5f,
+            phaseOffset = 0f,
+            bypassed = false
+        )
+
+        // At frame 0: phase 0.0 -> bottom of triangle = -1.0
+        val v0 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(-1.0f, v0, 0.001f)
+
+        // At frame 15: phase 15/60 = 0.25 -> zero crossing = 0.0
+        CVRegistry.setRenderFrameCount(15L)
+        val v15 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(0.0f, v15, 0.001f)
+
+        // At frame 30: phase 30/60 = 0.5 -> peak of triangle = 1.0
+        CVRegistry.setRenderFrameCount(30L)
+        val v30 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(1.0f, v30, 0.001f)
+
+        // At frame 60: phase 60/60 = 1.0 (wrapped to 0.0) -> bottom of triangle = -1.0
+        CVRegistry.setRenderFrameCount(60L)
+        val v60 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(-1.0f, v60, 0.001f)
+    }
+
+    @Test
+    fun testFrameSyncedLfoRandomizationDiscreteIntegers() {
+        val mod = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 10f,
+            subdivisionMin = 4f,
+            subdivisionMax = 8f,
+            randomizeSubdivision = true
+        )
+        val rng = Random(1234)
+        for (i in 0..20) {
+            val randomized = mod.randomizeSubdivision(rng)
+            assertTrue(randomized.subdivision in 4f..8f, "Randomized frame subdivision must be in range [4, 8]")
+            assertEquals(randomized.subdivision.toInt().toFloat(), randomized.subdivision, "Frame subdivision must be an integer value")
+        }
+    }
+
+    @Test
+    fun testFrameSyncedLfoJsonSerialization() {
+        val json = Json { ignoreUnknownKeys = true }
+        val mod = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 120f,
+            subdivisionMin = 60f,
+            subdivisionMax = 240f,
+            randomizeSubdivision = true,
+            modGenUnit = GenUnit.FRAME,
+            modSubdivision = 30f
+        )
+        val dto = mod.toDto()
+        assertEquals("FRAME", dto.genUnit)
+        assertEquals(120f, dto.subdivision)
+
+        val encoded = json.encodeToString(CvModulator.serializer(), mod)
+        val decoded = json.decodeFromString<CvModulator>(encoded)
+
+        assertEquals(GenUnit.FRAME, decoded.genUnit)
+        assertEquals(GenUnit.FRAME, decoded.modGenUnit)
+        assertEquals(120f, decoded.subdivision)
+        assertEquals(60f, decoded.subdivisionMin)
+        assertEquals(240f, decoded.subdivisionMax)
+        assertTrue(decoded.randomizeSubdivision)
     }
 }

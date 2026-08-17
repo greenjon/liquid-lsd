@@ -49,7 +49,7 @@ object PlaylistManager {
         
         // Try with extension if missing
         if (f.extension.isEmpty()) {
-            val possible = listOf("$path.lsd", "$path.patch", "$path.json")
+            val possible = listOf("$path.lsd")
             for (p in possible) {
                 val pf = File(p)
                 if (pf.exists()) return pf

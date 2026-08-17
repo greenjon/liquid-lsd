@@ -17,7 +17,7 @@ import java.io.File
  *
  * ```kotlin
  * // Trigger (once, outside the popup):
- * fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("presets/global"))
+ * fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("library/global"))
  *
  * // Draw every frame (inside your render function):
  * fileBrowser.draw { file ->
@@ -38,7 +38,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
     // -- State -----------------------------------------------------------------
 
     internal var mode: Mode = Mode.LOAD
-    private var currentDir: File = File("library/global").let { if (!it.exists() && File("presets/global").exists()) File("presets/global") else it }.canonicalFile
+    private var currentDir: File = File("library/global").canonicalFile
     private var selectedFile: File? = null
     private val filenameInput = ImString(128)
     private var filterExts: List<String> = listOf(".json", ".lsd", ".lsdset")
@@ -62,7 +62,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
      */
     fun open(
         mode: Mode,
-        startDir: File = File("library/global").let { if (!it.exists() && File("presets/global").exists()) File("presets/global") else it }.canonicalFile,
+        startDir: File = File("library/global").canonicalFile,
         initialName: String = "",
         extensions: List<String> = listOf(".json", ".lsd", ".lsdset")
     ) {

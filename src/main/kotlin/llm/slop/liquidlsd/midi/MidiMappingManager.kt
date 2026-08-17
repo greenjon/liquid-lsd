@@ -55,7 +55,7 @@ data class MidiMappingProfile(
 object MidiMappingManager {
     private val logger = KotlinLogging.logger {}
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    private val midiDir = File("library/midi").let { if (!it.exists() && File("presets/midi").exists()) File("presets/midi") else it }
+    private val midiDir = File("library/midi")
 
     var activeProfileName = "default"
         private set

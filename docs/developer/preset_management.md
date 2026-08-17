@@ -43,8 +43,8 @@ var activePresetMtimeC: Long? = null
   - `syncFromDto(deckLabel, dto)`: Extracts `dto.presetNotes` and `dto.paramNotes` into deck memory maps on preset load.
   - `syncToDto(deckLabel, dto)`: Embeds current in-memory preset and parameter notes into `DeckPresetDto` prior to serialization.
 
-### DTO Schema Extensions (`PresetModels.kt`)
-[`DeckPresetDto`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/PresetModels.kt) includes backward-compatible optional fields:
+### DTO Schema Notes Fields (`PresetModels.kt`)
+[`DeckPresetDto`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/PresetModels.kt) includes:
 ```kotlin
 val presetNotes: String = "",
 val paramNotes: Map<String, String> = emptyMap()

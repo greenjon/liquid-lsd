@@ -1,7 +1,6 @@
 package llm.slop.liquidlsd.models
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerialName
 import llm.slop.liquidlsd.parameters.*
 import llm.slop.liquidlsd.rendering.*
 
@@ -9,7 +8,7 @@ import llm.slop.liquidlsd.rendering.*
 data class ModulatorDto(
     val sourceId: String,
     val operator: String, // "ADD" or "MUL"
-    @SerialName("weight") val depth: Float,
+    val depth: Float,
     val bypassed: Boolean = false,
     val waveform: String = "SINE",
     val subdivision: Float = 1.0f,
@@ -17,17 +16,18 @@ data class ModulatorDto(
     val slope: Float = 0.5f,
     val lfoSpeedMode: String = "FAST",
     val genUnit: String = "TIME",
+    val modGenUnit: String = "TIME",
     
     // Randomization bounds
-    @SerialName("weightMin") val depthMin: Float,
-    @SerialName("weightMax") val depthMax: Float,
+    val depthMin: Float,
+    val depthMax: Float,
     val subdivisionMin: Float,
     val subdivisionMax: Float,
     val phaseOffsetMin: Float,
     val phaseOffsetMax: Float,
     val slopeMin: Float,
     val slopeMax: Float,
-    @SerialName("randomizeWeight") val randomizeDepth: Boolean = false,
+    val randomizeDepth: Boolean = false,
     val randomizeSubdivision: Boolean = false,
     val randomizePhaseOffset: Boolean = false,
     val randomizeSlope: Boolean = false,
@@ -187,18 +187,16 @@ data class ParameterDto(
 data class DeckPresetDto(
     val version: Int = 1,
     val name: String,
-    val tags: List<String> = emptyList(), // Phase 2 — tag list; defaults to empty for backward compat
+    val tags: List<String> = emptyList(),
     val visualSourceType: String, // e.g., "Mandala" or "Mandelbulb"
     val recipe: MandalaRecipeDto? = null, // For restoring recipe structure (Mandala-only)
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val globalAlpha: ParameterDto,
-    val globalScale: ParameterDto? = null,
     val isEmpty: Boolean = false,
-    @SerialName("patchNotes") val presetNotes: String = "",             // User notes for this preset
+    val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
 )
-
 
 @Serializable
 data class MandalaRecipeDto(
@@ -222,7 +220,6 @@ data class GlobalPresetDto(
     val queueNext: ParameterDto? = null,
     val queuePrev: ParameterDto? = null
 )
-
 
 @Serializable
 data class SessionStateDto(
@@ -264,6 +261,7 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     slope = slope,
     lfoSpeedMode = lfoSpeedMode.name,
     genUnit = genUnit.name,
+    modGenUnit = modGenUnit.name,
     depthMin = depthMin,
     depthMax = depthMax,
     subdivisionMin = subdivisionMin,
@@ -292,8 +290,7 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
 )
 
 fun ModulatorDto.toDomain(): CvModulator = CvModulator(
-    // Migrate legacy source IDs from older preset versions
-    sourceId = when (sourceId) { "gen1", "gen2" -> "lfo"; else -> sourceId },
+    sourceId = sourceId,
     operator = ModulationOperator.valueOf(operator),
     depth = depth,
     bypassed = bypassed,
@@ -303,6 +300,7 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     slope = slope,
     lfoSpeedMode = LfoSpeedMode.valueOf(lfoSpeedMode),
     genUnit = GenUnit.valueOf(genUnit),
+    modGenUnit = GenUnit.valueOf(modGenUnit),
     depthMin = depthMin,
     depthMax = depthMax,
     subdivisionMin = subdivisionMin,
@@ -385,7 +383,6 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
-        globalScale = ParameterDto(1.0f, 0.0f, 1.0f, false, emptyList()),
         isEmpty = isEmpty
     )
 }
@@ -422,27 +419,9 @@ fun Deck.applyDto(dto: DeckPresetDto) {
         )
         mandalaObj.recipe = recipe
         
-        // Apply visual source parameters
+        // Apply visual source parameters directly
         for ((key, paramDto) in dto.parameters) {
-            val mappedKey = when (key) {
-                "Scale" -> "Zoom"
-                "Rotation" -> "Rotate Z"
-                "3D Yaw" -> "Rotate Y"
-                "3D Pitch" -> "Rotate X"
-                else -> key
-            }
-            mandalaObj.parameters[mappedKey]?.applyDto(paramDto)
-        }
-
-        // Legacy preset fallback: sync parameter values to recipe if they weren't in the saved preset
-        if (!dto.parameters.containsKey("Lobes")) {
-            mandalaObj.parameters["Lobes"]?.set(recipe.petals.toFloat())
-        }
-        if (!dto.parameters.containsKey("Recipe Select")) {
-            val list = MandalaLibrary.recipesByPetals[recipe.petals] ?: emptyList()
-            val idx = list.indexOfFirst { it.a == recipe.a && it.b == recipe.b && it.c == recipe.c && it.d == recipe.d }.coerceAtLeast(0)
-            val pct = if (list.size > 1) idx.toFloat() / (list.size - 1).toFloat() else 0.0f
-            mandalaObj.parameters["Recipe Select"]?.set(pct)
+            mandalaObj.parameters[key]?.applyDto(paramDto)
         }
     } else if (source is llm.slop.liquidlsd.rendering.DynamicVisualSource) {
         val dynObj = source as llm.slop.liquidlsd.rendering.DynamicVisualSource
@@ -477,18 +456,8 @@ fun Mixer.toDto(name: String): GlobalPresetDto = GlobalPresetDto(
     queuePrev = queuePrev.toDto()
 )
 
-fun mapMonopolarToBipolar(dto: ParameterDto): ParameterDto {
-    val mapVal: (Float) -> Float = { it * 2f - 1f }
-    return dto.copy(
-        baseValue = mapVal(dto.baseValue),
-        baseMin = mapVal(dto.baseMin),
-        baseMax = mapVal(dto.baseMax)
-    )
-}
-
 fun Mixer.applyDto(dto: GlobalPresetDto) {
-    val crossfadeDto = if (dto.version <= 1) mapMonopolarToBipolar(dto.crossfade) else dto.crossfade
-    crossfade.applyDto(crossfadeDto)
+    crossfade.applyDto(dto.crossfade)
     masterAlpha.applyDto(dto.masterAlpha)
     mode.set(dto.blendMode)
     deckA.applyDto(dto.deckA)
@@ -497,3 +466,4 @@ fun Mixer.applyDto(dto: GlobalPresetDto) {
     dto.queueNext?.let { queueNext.applyDto(it) }
     dto.queuePrev?.let { queuePrev.applyDto(it) }
 }
+

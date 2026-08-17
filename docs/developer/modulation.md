@@ -93,12 +93,12 @@ modulation effect.
 | `depth` | `Float` | `[0, 1]` | Peak modulation depth |
 | `dcOffset` | `Float` | `[-1, 1]` | Constant offset added after depth scaling |
 | `waveform` | `Waveform` | — | Shape: `SINE`, `TRIANGLE`, `SQUARE`, `RANDOM` |
-| `subdivision` | `Float` | Seconds (TIME) or beats (BEAT) | One cycle duration |
+| `subdivision` | `Float` | Seconds (`TIME`), beats (`BEAT`), or frames (`FRAME`) | One cycle duration |
 | `phaseOffset` | `Float` | `[0, 1]` | Phase shift within the cycle |
 | `slope` | `Float` | `[0, 1]` | Asymmetry: `0` = sharp fall/slow rise, `0.5` = symmetric, `1` = slow rise/sharp fall |
 | `morph` | `Float` | `[0, 1]` | Waveshaping softness (0 = linear triangle, 1 = near-sine via `cosh` approximation) |
 | `hold` | `Float` | `[0, 0.99]` | Plateau width at peak (compresses the transition region) |
-| `genUnit` | `GenUnit` | `TIME` or `BEAT` | Whether `subdivision` is measured in seconds or musical beats. Only meaningful for `lfo`. |
+| `genUnit` | `GenUnit` | `TIME`, `BEAT`, or `FRAME` | Whether `subdivision` is measured in seconds, musical beats, or render frames (1-10000). Only meaningful for `lfo`. |
 | `lfoSpeedMode` | `LfoSpeedMode` | `SLOW/MEDIUM/FAST` | UI-only speed range hint for the slider |
 
 ### Randomization Ranges
@@ -117,7 +117,7 @@ dcOffsetMin / dcOffsetMax / randomizeDcOffset
 
 When the preset randomize action fires, `randomizeActiveValues()` samples uniformly within each
 `[min, max]` range. For beat-based subdivision the sample is drawn from a discrete set of musical
-values `{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}` instead of a continuous uniform.
+values `{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}`. For frame-based subdivision, it samples discrete integers in `[min, max]`.
 
 ### LFO 2 (Modulator) — only evaluated when `sourceId == "lfo"`
 
@@ -132,7 +132,7 @@ speed, phase, slope, morph, and hold:
 | `modSlope` | LFO 2 asymmetry |
 | `modMorph` | LFO 2 waveshaping |
 | `modHold` | LFO 2 plateau |
-| `modGenUnit` | `TIME` or `BEAT` for LFO 2's clock |
+| `modGenUnit` | `TIME`, `BEAT`, or `FRAME` for LFO 2's clock |
 | `generatorModMode` | How LFO 2 acts on LFO 1: `NONE`, `AM`, `PM`, or `ADD` |
 | `generatorModDepth` | How much LFO 2 influences LFO 1 |
 
@@ -167,10 +167,11 @@ Randomization ranges also exist for all mod-fields (`modSubdivisionMin/Max`, etc
 |-------|---------|
 | `TIME` | `subdivision` is a period in **seconds** |
 | `BEAT` | `subdivision` is a number of **beats** (synced to `CVRegistry.getSynchronizedTotalBeats()`) |
+| `FRAME` | `subdivision` is a number of **render frames** (1 to 10,000 frames, synced to `CVRegistry.getRenderFrameCount()`) |
 
 When `genUnit == BEAT` the subdivision randomizer draws from the discrete musical grid
-rather than a continuous uniform. Beat mode uses `getSynchronizedTotalBeats()` which is an
-interpolated estimate updated from the JACK audio thread via `@Volatile` fields in `CVRegistry`.
+rather than a continuous uniform. When `genUnit == FRAME`, the randomizer and UI lock strictly to integer frame counts. Beat mode uses `getSynchronizedTotalBeats()` which is an
+interpolated estimate updated from the JACK audio thread via `@Volatile` fields in `CVRegistry`. Frame mode uses monotonic render frame ticks updated on each frame.
 
 ### GeneratorModMode (LFO 2 interaction)
 

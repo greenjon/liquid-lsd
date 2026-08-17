@@ -21,84 +21,7 @@ class SessionStateTest {
     }
 
     @Test
-    fun testSessionStateDtoSerializationAndBackwardCompatibility() {
-        // 1. Verify deserializing an older version (version 2) of SessionStateDto lacking the new optional fields
-        val oldJsonStr = """
-            {
-                "version": 2,
-                "deckA": {
-                    "name": "Deck A",
-                    "visualSourceType": "Mandala",
-                    "parameters": {},
-                    "feedbackParameters": {},
-                    "globalAlpha": {
-                        "baseValue": 1.0,
-                        "baseMin": 1.0,
-                        "baseMax": 1.0,
-                        "randomizeBase": false,
-                        "modulators": []
-                    },
-                    "isEmpty": false
-                },
-                "deckB": {
-                    "name": "Deck B",
-                    "visualSourceType": "Mandala",
-                    "parameters": {},
-                    "feedbackParameters": {},
-                    "globalAlpha": {
-                        "baseValue": 1.0,
-                        "baseMin": 1.0,
-                        "baseMax": 1.0,
-                        "randomizeBase": false,
-                        "modulators": []
-                    },
-                    "isEmpty": false
-                },
-                "deckC": {
-                    "name": "Deck C",
-                    "visualSourceType": "Mandala",
-                    "parameters": {},
-                    "feedbackParameters": {},
-                    "globalAlpha": {
-                        "baseValue": 1.0,
-                        "baseMin": 1.0,
-                        "baseMax": 1.0,
-                        "randomizeBase": false,
-                        "modulators": []
-                    },
-                    "isEmpty": true
-                },
-                "crossfade": {
-                    "baseValue": 0.0,
-                    "baseMin": 0.0,
-                    "baseMax": 0.0,
-                    "randomizeBase": false,
-                    "modulators": []
-                },
-                "masterAlpha": {
-                    "baseValue": 1.0,
-                    "baseMin": 1.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
-                    "modulators": []
-                },
-                "blendMode": 4.0,
-                "queue": [],
-                "activeIndex": -1,
-                "isAutoVJEnabled": false
-            }
-        """.trimIndent()
-
-        val decodedOld = json.decodeFromString<SessionStateDto>(oldJsonStr)
-        assertEquals(2, decodedOld.version)
-        assertNull(decodedOld.bloom)
-        assertNull(decodedOld.xfadeSpeed)
-        assertNull(decodedOld.queueNext)
-        assertNull(decodedOld.queuePrev)
-        assertFalse(decodedOld.isRepeatEnabled)
-        assertFalse(decodedOld.isShuffleEnabled)
-
-        // 2. Verify serializing and deserializing a new version (version 4) of SessionStateDto including the new fields
+    fun testSessionStateDtoSerialization() {
         val dummyParam = ParameterDto(
             baseValue = 0.5f,
             baseMin = 0.0f,
@@ -106,16 +29,24 @@ class SessionStateTest {
             randomizeBase = false,
             modulators = emptyList()
         )
-        val newSession = SessionStateDto(
+        val dummyDeck = DeckPresetDto(
+            name = "Deck A",
+            visualSourceType = "mandala",
+            parameters = emptyMap(),
+            feedbackParameters = emptyMap(),
+            globalAlpha = dummyParam,
+            isEmpty = false
+        )
+        val session = SessionStateDto(
             version = 4,
-            deckA = decodedOld.deckA,
-            deckB = decodedOld.deckB,
-            deckC = decodedOld.deckC,
-            crossfade = decodedOld.crossfade,
-            masterAlpha = decodedOld.masterAlpha,
-            blendMode = decodedOld.blendMode,
-            queue = emptyList(),
-            activeIndex = -1,
+            deckA = dummyDeck,
+            deckB = dummyDeck.copy(name = "Deck B"),
+            deckC = dummyDeck.copy(name = "Deck C", isEmpty = true),
+            crossfade = dummyParam,
+            masterAlpha = dummyParam,
+            blendMode = 4.0f,
+            queue = listOf("presets/test.lsd"),
+            activeIndex = 0,
             isAutoVJEnabled = true,
             bloom = dummyParam,
             xfadeSpeed = dummyParam,
@@ -125,19 +56,22 @@ class SessionStateTest {
             isShuffleEnabled = true
         )
 
-        val newJsonStr = json.encodeToString(newSession)
-        val decodedNew = json.decodeFromString<SessionStateDto>(newJsonStr)
-        assertEquals(4, decodedNew.version)
-        assertNotNull(decodedNew.bloom)
-        assertEquals(0.5f, decodedNew.bloom?.baseValue)
-        assertNotNull(decodedNew.xfadeSpeed)
-        assertEquals(0.5f, decodedNew.xfadeSpeed?.baseValue)
-        assertNotNull(decodedNew.queueNext)
-        assertEquals(0.5f, decodedNew.queueNext?.baseValue)
-        assertNotNull(decodedNew.queuePrev)
-        assertEquals(0.5f, decodedNew.queuePrev?.baseValue)
-        assertTrue(decodedNew.isRepeatEnabled)
-        assertTrue(decodedNew.isShuffleEnabled)
+        val jsonStr = json.encodeToString(session)
+        val decoded = json.decodeFromString<SessionStateDto>(jsonStr)
+        assertEquals(4, decoded.version)
+        assertEquals("Deck A", decoded.deckA.name)
+        assertEquals("Deck B", decoded.deckB.name)
+        assertTrue(decoded.deckC.isEmpty)
+        assertNotNull(decoded.bloom)
+        assertEquals(0.5f, decoded.bloom?.baseValue)
+        assertNotNull(decoded.xfadeSpeed)
+        assertEquals(0.5f, decoded.xfadeSpeed?.baseValue)
+        assertNotNull(decoded.queueNext)
+        assertEquals(0.5f, decoded.queueNext?.baseValue)
+        assertNotNull(decoded.queuePrev)
+        assertEquals(0.5f, decoded.queuePrev?.baseValue)
+        assertTrue(decoded.isRepeatEnabled)
+        assertTrue(decoded.isShuffleEnabled)
     }
 
     @Test

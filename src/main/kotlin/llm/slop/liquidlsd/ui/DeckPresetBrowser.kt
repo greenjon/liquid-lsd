@@ -310,7 +310,7 @@ class DeckPresetBrowser(
     private fun checkAutoRefresh() {
         val now = System.currentTimeMillis()
         if (now - lastAutoRefreshTimeMs > 250L) {
-            val dir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
+            val dir = File("library/presets")
             val sig = FileSystemManager.getDirectorySignature(dir)
             if (sig != lastPresetDirSignature) {
                 scanPresets()
@@ -319,13 +319,13 @@ class DeckPresetBrowser(
     }
 
     private fun scanPresets() {
-        val dir = File("library/presets").let { if (!it.exists() && File("presets/patches").exists()) File("presets/patches") else it }
+        val dir = File("library/presets")
         if (!dir.exists()) dir.mkdirs()
 
         lastPresetDirSignature = FileSystemManager.getDirectorySignature(dir)
         lastAutoRefreshTimeMs = System.currentTimeMillis()
 
-        val files = dir.listFiles { _, name -> name.endsWith(".lsd") || name.endsWith(".json") }
+        val files = dir.listFiles { _, name -> name.endsWith(".lsd") }
             ?.sortedBy { it.nameWithoutExtension.lowercase() }
             ?: emptyList()
 

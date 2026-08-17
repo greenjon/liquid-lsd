@@ -293,7 +293,7 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        val midiDir = java.io.File("library/midi").let { if (!it.exists() && java.io.File("presets/midi").exists()) java.io.File("presets/midi") else it }
+        val midiDir = java.io.File("library/midi")
         val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
             .map { it.nameWithoutExtension }
             .toMutableList()

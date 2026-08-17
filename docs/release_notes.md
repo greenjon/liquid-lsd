@@ -1,5 +1,20 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.24
+
+> [!NOTE]
+> **Release 1.0.0-beta.24** streamlines the codebase by removing legacy migration logic, obsolete file fallbacks, backwards compatibility shims, and deprecated helpers.
+
+### Key Highlights
+
+- **Codebase Streamlining & Legacy Code Removal**: Removed legacy backwards compatibility shims across data models, serialization, session management, and UI browsers.
+- **Direct DTO Serialization**: Standardized `ModulatorDto` serialization to directly serialize `depth`, `depthMin`, `depthMax`, and `randomizeDepth` without legacy `@SerialName("weight")` aliases.
+- **Clean Preset Loading**: Removed obsolete parameter name mapping (`Scale` -> `Zoom`, etc.), legacy Mandala recipe auto-calculation fallbacks, and monopolar-to-bipolar version branching.
+- **Unified Path Resolution**: Removed obsolete `presets/patches` and `.json` extension fallbacks; all user assets resolve directly and cleanly from the unified `library/` folder (`library/presets/*.lsd`, `library/midi/*.json`, `library/playlists/*.lsdset`).
+- **Clean Settings Persistence**: Removed `spirals-settings.properties` migration code and deprecated font helper functions in `UITheme`.
+
+---
+
 ## Version 1.0.0-beta.23
 
 > [!NOTE]

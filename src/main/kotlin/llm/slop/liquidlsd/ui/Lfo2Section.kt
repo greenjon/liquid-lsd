@@ -189,14 +189,44 @@ object Lfo2Section {
         session.uiTheme.body("LFO 2 Unit:")
         ImGui.sameLine(0f, 10f)
         val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
-        val modUnitLabels = arrayOf("Time", "Beat")
+        val modUnitLabels = arrayOf("Time", "Beat", "Frame")
         if (bypassed) ImGui.popStyleVar()
         ImGui.pushItemWidth(125f)
         if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {
-            onReplace(existing.copy(modGenUnit = GenUnit.entries[modUnitIdx.get()]))
+            val selectedUnit = GenUnit.entries[modUnitIdx.get()]
+            val adjustedSubdiv = when (selectedUnit) {
+                GenUnit.FRAME -> existing.modSubdivision.coerceIn(1f, 10000f).toInt().toFloat()
+                GenUnit.TIME -> existing.modSubdivision.coerceIn(0.01f, 86400f)
+                GenUnit.BEAT -> {
+                    val options = BeatDivisionSlider.subdivisionOptions
+                    options.minByOrNull { kotlin.math.abs(it - existing.modSubdivision) } ?: 1.0f
+                }
+            }
+            val adjustedMin = when (selectedUnit) {
+                GenUnit.FRAME -> existing.modSubdivisionMin.coerceIn(1f, 10000f).toInt().toFloat()
+                GenUnit.TIME -> existing.modSubdivisionMin.coerceIn(0.01f, 86400f)
+                GenUnit.BEAT -> {
+                    val options = BeatDivisionSlider.subdivisionOptions
+                    options.minByOrNull { kotlin.math.abs(it - existing.modSubdivisionMin) } ?: 1.0f
+                }
+            }
+            val adjustedMax = when (selectedUnit) {
+                GenUnit.FRAME -> existing.modSubdivisionMax.coerceIn(1f, 10000f).toInt().toFloat()
+                GenUnit.TIME -> existing.modSubdivisionMax.coerceIn(0.01f, 86400f)
+                GenUnit.BEAT -> {
+                    val options = BeatDivisionSlider.subdivisionOptions
+                    options.minByOrNull { kotlin.math.abs(it - existing.modSubdivisionMax) } ?: 1.0f
+                }
+            }
+            onReplace(existing.copy(
+                modGenUnit = selectedUnit,
+                modSubdivision = adjustedSubdiv,
+                modSubdivisionMin = adjustedMin,
+                modSubdivisionMax = adjustedMax
+            ))
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select frequency unit for LFO 2:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.")
+            ImGui.setTooltip("Select frequency unit for LFO 2:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.\nFrame: Rate is synchronized to render frame count (1-10000 frames).")
         }
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
@@ -283,7 +313,7 @@ object Lfo2Section {
 
             ImGui.spacing()
 
-            // LFO 2 Speed (Subdivision or Period)
+            // LFO 2 Speed (Subdivision, Period, or Frames)
             if (existing.modGenUnit == GenUnit.BEAT) {
                 val subdivisionOptions = BeatDivisionSlider.subdivisionOptions
                 val subdivisionLabels = BeatDivisionSlider.subdivisionLabels
@@ -347,6 +377,78 @@ object Lfo2Section {
                             modSubdivision = newVal,
                             modSubdivisionMin = newVal,
                             modSubdivisionMax = newVal
+                        ))
+                    }
+                )
+                ImGui.spacing()
+            } else if (existing.modGenUnit == GenUnit.FRAME) {
+                val formatFunc: (Float) -> String = { v ->
+                    val frames = v.toInt().coerceIn(1, 10000)
+                    val sec = frames / 60.0
+                    if (frames == 1) "1 frame (%.3fs)".format(sec)
+                    else "$frames frames (%.2fs)".format(sec)
+                }
+                val parseFunc: (String) -> Float? = { s ->
+                    s.replace(Regex("[^0-9.]"), "").toFloatOrNull()?.toInt()?.coerceIn(1, 10000)?.toFloat()
+                }
+
+                CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod",
+                    label = "LFO 2 Frames",
+                    themeColor = themeColor,
+                    currentValue = existing.modSubdivision.toInt().coerceIn(1, 10000).toFloat(),
+                    currentMin = existing.modSubdivisionMin.toInt().coerceIn(1, 10000).toFloat(),
+                    currentMax = existing.modSubdivisionMax.toInt().coerceIn(1, 10000).toFloat(),
+                    minLimit = 1f,
+                    maxLimit = 10000f,
+                    isRandomizable = existing.randomizeModSubdivision,
+                    formatValue = formatFunc,
+                    isLogarithmic = true,
+                    parseValue = parseFunc,
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.modSubdivisionMin.toInt().coerceIn(1, 10000)
+                            val rMax = existing.modSubdivisionMax.toInt().coerceIn(1, 10000)
+                            val cur = existing.modSubdivision.toInt().coerceIn(1, 10000)
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((cur / 2).coerceIn(1, 10000).toFloat(), (cur * 2).coerceIn(1, 10000).toFloat())
+                            } else {
+                                Pair(rMin.toFloat(), rMax.toFloat())
+                            }
+                            onReplace(existing.copy(
+                                randomizeModSubdivision = true,
+                                modSubdivisionMin = nextMin,
+                                modSubdivisionMax = nextMax
+                            ))
+                        } else {
+                            val cur = existing.modSubdivision.toInt().coerceIn(1, 10000).toFloat()
+                            onReplace(existing.copy(
+                                randomizeModSubdivision = false,
+                                modSubdivisionMin = cur,
+                                modSubdivisionMax = cur
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        onReplace(existing.randomizeModSubdivision())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val roundedMin = nextMin.toInt().coerceIn(1, 10000).toFloat()
+                        val roundedMax = nextMax.toInt().coerceIn(1, 10000).toFloat()
+                        val safeMin = minOf(roundedMin, roundedMax)
+                        val safeMax = maxOf(roundedMin, roundedMax)
+                        val nextActive = existing.modSubdivision.toInt().coerceIn(safeMin.toInt(), safeMax.toInt()).toFloat()
+                        onReplace(existing.copy(
+                            modSubdivisionMin = safeMin,
+                            modSubdivisionMax = safeMax,
+                            modSubdivision = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        val roundedVal = newVal.toInt().coerceIn(1, 10000).toFloat()
+                        onReplace(existing.copy(
+                            modSubdivision = roundedVal,
+                            modSubdivisionMin = roundedVal,
+                            modSubdivisionMax = roundedVal
                         ))
                     }
                 )

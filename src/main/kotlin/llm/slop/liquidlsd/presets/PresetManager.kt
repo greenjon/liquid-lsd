@@ -27,25 +27,6 @@ object PresetManager {
 
     private val LIBRARY_ROOT = File("library").absoluteFile
     private val PRESETS_ROOT = LIBRARY_ROOT
-
-    init {
-        val legacyRoot = File("presets").absoluteFile
-        val libraryRoot = LIBRARY_ROOT
-        if (legacyRoot.exists() && !libraryRoot.exists()) {
-            try {
-                legacyRoot.renameTo(libraryRoot)
-                val legacyPatches = File(libraryRoot, "patches")
-                val newPresets = File(libraryRoot, "presets")
-                if (legacyPatches.exists() && !newPresets.exists()) {
-                    legacyPatches.renameTo(newPresets)
-                }
-                logger.info { "Migrated legacy presets/ folder to library/" }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to auto-migrate legacy presets/ directory to library/" }
-            }
-        }
-    }
-
     @Volatile
     var sessionState = SessionState()
 
@@ -247,21 +228,6 @@ object PresetManager {
                 logger.info { "Deck preset loaded and queued for main thread swap" }
                 deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.IDLE))
             } catch (e: Exception) {
-                // Extension fallback: if .lsd fails, try .json, and vice versa.
-                val altFile = when {
-                    file.name.endsWith(".lsd") -> File(file.absolutePath.substringBeforeLast(".lsd") + ".json")
-                    file.name.endsWith(".json") -> File(file.absolutePath.substringBeforeLast(".json") + ".lsd")
-                    else -> null
-                }
-                
-                if (altFile != null && altFile.exists()) {
-                    logger.info { "File not found or failed, trying alternative: ${altFile.name}" }
-                    // clear flag before recursive call
-                    llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
-                    loadDeckPresetAsync(altFile, isDeckA, isDeckC)
-                    return@runAsync
-                }
-
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
                 deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
             } finally {
@@ -435,11 +401,7 @@ object PresetManager {
 
     fun loadSession(mixer: Mixer) {
         try {
-            var sessionFile = File(LIBRARY_ROOT, "last_session.json")
-            if (!sessionFile.exists()) {
-                val legacyFile = File("presets/last_session.json")
-                if (legacyFile.exists()) sessionFile = legacyFile
-            }
+            val sessionFile = File(LIBRARY_ROOT, "last_session.json")
             if (!sessionFile.exists()) {
                 logger.info { "No previous session file found." }
                 return
@@ -447,8 +409,7 @@ object PresetManager {
             val content = sessionFile.readText()
             val session = json.decodeFromString<SessionStateDto>(content)
             
-            val crossfadeDto = if (session.version <= 1) llm.slop.liquidlsd.models.mapMonopolarToBipolar(session.crossfade) else session.crossfade
-            mixer.crossfade.applyDto(crossfadeDto)
+            mixer.crossfade.applyDto(session.crossfade)
             mixer.masterAlpha.applyDto(session.masterAlpha)
             mixer.mode.set(session.blendMode)
             
@@ -457,15 +418,7 @@ object PresetManager {
             mixer.deckC.applyDto(session.deckC)
             
             session.bloom?.let { mixer.bloom.applyDto(it) }
-            session.xfadeSpeed?.let { 
-                if (session.version <= 3) {
-                    val oldVal = it.baseValue
-                    val convertedVal = (2.0f / (3.0f * oldVal)).coerceIn(0.1f, 30.0f)
-                    mixer.xfadeSpeed.applyDto(it.copy(baseValue = convertedVal))
-                } else {
-                    mixer.xfadeSpeed.applyDto(it)
-                }
-            }
+            session.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             session.queueNext?.let { mixer.queueNext.applyDto(it) }
             session.queuePrev?.let { mixer.queuePrev.applyDto(it) }
             mixer.queueNext.baseValue = 0f
@@ -510,10 +463,6 @@ object PresetManager {
         // Try as relative to library root first
         val relativeToRoot = File(LIBRARY_ROOT, path)
         if (relativeToRoot.exists()) return relativeToRoot
-
-        // Try as relative to legacy presets root
-        val relativeToLegacy = File("presets", path)
-        if (relativeToLegacy.exists()) return relativeToLegacy
 
         // Try as absolute path (or relative to CWD)
         val directFile = File(path)

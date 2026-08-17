@@ -85,42 +85,40 @@ fun evaluateModulator(modulator: CvModulator): Float {
             calculateRandomWaveform(positivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
         }
         "lfo" -> {
-            // Full LFO / generator: time-based or beat-based clocking (GenUnit), with optional LFO2 modulation (AM/PM/ADD).
+            // Full LFO / generator: time-based, beat-based, or frame-based clocking (GenUnit), with optional LFO2 modulation (AM/PM/ADD).
             val modVal = if (modulator.generatorModMode != llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) {
-                if (modulator.modGenUnit == GenUnit.TIME) {
-                    val seconds = CVRegistry.getElapsedRealtimeSec()
-                    val period = modulator.modSubdivision.toDouble().coerceAtLeast(0.001)
-                    val cyclePosition = (seconds / period) + modulator.modPhaseOffset
-                    val phase = cyclePosition % 1.0
-                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                    if (modulator.modWaveform == Waveform.RANDOM) {
-                        val currentCycle = kotlin.math.floor(cyclePosition).toInt()
-                        val previousCycle = currentCycle - 1
-                        val seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
-                        val currentValue = randomFloatFromSeed((currentCycle + seed).toLong())
-                        val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
-                        
-                        calculateRandomWaveform(positivePhase, modulator.modMorph, modulator.modHold, previousValue, currentValue)
-                    } else {
-                        calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope)
+                val cyclePosition: Double
+                val seed: Int
+                when (modulator.modGenUnit) {
+                    GenUnit.TIME -> {
+                        val seconds = CVRegistry.getElapsedRealtimeSec()
+                        val period = modulator.modSubdivision.toDouble().coerceAtLeast(0.001)
+                        cyclePosition = (seconds / period) + modulator.modPhaseOffset
+                        seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                     }
+                    GenUnit.BEAT -> {
+                        val beats = CVRegistry.getSynchronizedTotalBeats()
+                        val subdivisionD = modulator.modSubdivision.toDouble().coerceAtLeast(0.01)
+                        cyclePosition = (beats / subdivisionD) + modulator.modPhaseOffset
+                        seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
+                    }
+                    GenUnit.FRAME -> {
+                        val frameCount = CVRegistry.getRenderFrameCount().toDouble()
+                        val framePeriod = modulator.modSubdivision.toDouble().coerceAtLeast(1.0)
+                        cyclePosition = (frameCount / framePeriod) + modulator.modPhaseOffset
+                        seed = framePeriod.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
+                    }
+                }
+                val phase = cyclePosition % 1.0
+                val positivePhase = if (phase < 0.0) phase + 1.0 else phase
+                if (modulator.modWaveform == Waveform.RANDOM) {
+                    val currentCycle = kotlin.math.floor(cyclePosition).toInt()
+                    val previousCycle = currentCycle - 1
+                    val currentValue = randomFloatFromSeed((currentCycle + seed).toLong())
+                    val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
+                    calculateRandomWaveform(positivePhase, modulator.modMorph, modulator.modHold, previousValue, currentValue)
                 } else {
-                    val beats = CVRegistry.getSynchronizedTotalBeats()
-                    val subdivisionD = modulator.modSubdivision.toDouble().coerceAtLeast(0.01)
-                    val cyclePosition = (beats / subdivisionD) + modulator.modPhaseOffset
-                    val phase = cyclePosition % 1.0
-                    val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                    if (modulator.modWaveform == Waveform.RANDOM) {
-                        val currentCycle = kotlin.math.floor(cyclePosition).toInt()
-                        val previousCycle = currentCycle - 1
-                        val seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
-                        val currentValue = randomFloatFromSeed((currentCycle + seed).toLong())
-                        val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
-                        
-                        calculateRandomWaveform(positivePhase, modulator.modMorph, modulator.modHold, previousValue, currentValue)
-                    } else {
-                        calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope)
-                    }
+                    calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope)
                 }
             } else 0f
 
@@ -129,40 +127,38 @@ fun evaluateModulator(modulator: CvModulator): Float {
                 modVal * modulator.generatorModDepth
             } else 0f
 
-            val carrierVal = if (modulator.genUnit == GenUnit.TIME) {
-                val seconds = CVRegistry.getElapsedRealtimeSec()
-                val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
-                val cyclePosition = (seconds / period) + modulator.phaseOffset + pmShift
-                val phase = cyclePosition % 1.0
-                val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                if (modulator.waveform == Waveform.RANDOM) {
-                    val currentCycle = kotlin.math.floor(cyclePosition).toInt()
-                    val previousCycle = currentCycle - 1
-                    val seed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
-                    val currentValue = randomFloatFromSeed((currentCycle + seed).toLong())
-                    val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
-                    
-                    calculateRandomWaveform(positivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
-                } else {
-                    calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
+            val carrierCyclePosition: Double
+            val carrierSeed: Int
+            when (modulator.genUnit) {
+                GenUnit.TIME -> {
+                    val seconds = CVRegistry.getElapsedRealtimeSec()
+                    val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
+                    carrierCyclePosition = (seconds / period) + modulator.phaseOffset + pmShift
+                    carrierSeed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                 }
+                GenUnit.BEAT -> {
+                    val beats = CVRegistry.getSynchronizedTotalBeats()
+                    val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
+                    carrierCyclePosition = (beats / subdivisionD) + modulator.phaseOffset + pmShift
+                    carrierSeed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
+                }
+                GenUnit.FRAME -> {
+                    val frameCount = CVRegistry.getRenderFrameCount().toDouble()
+                    val framePeriod = modulator.subdivision.toDouble().coerceAtLeast(1.0)
+                    carrierCyclePosition = (frameCount / framePeriod) + modulator.phaseOffset + pmShift
+                    carrierSeed = framePeriod.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
+                }
+            }
+            val carrierPhase = carrierCyclePosition % 1.0
+            val carrierPositivePhase = if (carrierPhase < 0.0) carrierPhase + 1.0 else carrierPhase
+            val carrierVal = if (modulator.waveform == Waveform.RANDOM) {
+                val currentCycle = kotlin.math.floor(carrierCyclePosition).toInt()
+                val previousCycle = currentCycle - 1
+                val currentValue = randomFloatFromSeed((currentCycle + carrierSeed).toLong())
+                val previousValue = randomFloatFromSeed((previousCycle + carrierSeed).toLong())
+                calculateRandomWaveform(carrierPositivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
             } else {
-                val beats = CVRegistry.getSynchronizedTotalBeats()
-                val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
-                val cyclePosition = (beats / subdivisionD) + modulator.phaseOffset + pmShift
-                val phase = cyclePosition % 1.0
-                val positivePhase = if (phase < 0.0) phase + 1.0 else phase
-                if (modulator.waveform == Waveform.RANDOM) {
-                    val currentCycle = kotlin.math.floor(cyclePosition).toInt()
-                    val previousCycle = currentCycle - 1
-                    val seed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
-                    val currentValue = randomFloatFromSeed((currentCycle + seed).toLong())
-                    val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
-                    
-                    calculateRandomWaveform(positivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
-                } else {
-                    calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
-                }
+                calculateAdvancedLFO(carrierPositivePhase, modulator.morph, modulator.hold, modulator.slope)
             }
 
             // Apply final modulation operator (AM, ADD, or NONE/PM)

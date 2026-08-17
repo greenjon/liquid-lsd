@@ -24,7 +24,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
                 ImGui.sameLine()
                 if (ImGui.button("Locate...##$path")) {
                     browserOpenForItem = path
-                    fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("presets"))
+                    fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("library"))
                 }
             }
 

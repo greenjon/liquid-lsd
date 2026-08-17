@@ -1,5 +1,22 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.24
+
+> [!NOTE]
+> **Release 1.0.0-beta.24** streamlines the codebase by removing legacy migration logic, obsolete file fallbacks, backwards compatibility shims, and deprecated helpers.
+
+---
+
+### Key Highlights
+
+- **Codebase Streamlining & Legacy Code Removal**: Removed legacy backwards compatibility shims across data models, serialization, session management, and UI browsers.
+- **Direct DTO Serialization**: Standardized `ModulatorDto` serialization to directly serialize `depth`, `depthMin`, `depthMax`, and `randomizeDepth` without legacy `@SerialName("weight")` aliases.
+- **Clean Preset Loading**: Removed obsolete parameter name mapping (`Scale` -> `Zoom`, etc.), legacy Mandala recipe auto-calculation fallbacks, and monopolar-to-bipolar version branching.
+- **Unified Path Resolution**: Removed obsolete `presets/patches` and `.json` extension fallbacks; all user assets resolve directly and cleanly from the unified `library/` folder (`library/presets/*.lsd`, `library/midi/*.json`, `library/playlists/*.lsdset`).
+- **Clean Settings Persistence**: Removed `spirals-settings.properties` migration code and deprecated font helper functions in `UITheme`.
+
+---
+
 ## Version 1.0.0-beta.23
 
 > [!NOTE]
@@ -9,6 +26,7 @@
 
 ### Key Highlights
 
+- **Frame-Synced LFO Generator (LFO 1 & LFO 2)**: Added a third frequency clocking mode, `FRAME`, alongside `TIME` and `BEAT` in the unified LFO generator. Frame-synced LFOs oscillate deterministically based on elapsed render frame count (1 to 10,000 integer frames), enabling artifact-free feedback buffer harmonization, per-frame stroboscopic/flicker effects, sample-and-hold per-frame noise, and deterministic video frame captures. Both primary carrier (LFO 1) and modulator (LFO 2) support independent frame sync with integer-locked range sliders and duration readouts (e.g. `120 frames (2.00s)`).
 - **Mixer Monitor Vertical Scrollbar Elimination & Responsive Scaling**: Overhauled `MixerMonitorLayoutCalculator` to comprehensively calculate non-aspect vertical chrome (master crossfader controls, Deck A/B preset bars, Deck C preset bar, separator bands, and sub-pixel safety margins). Removed unconditional scrollbar width reservations and faulty cursor overshoot logic in `MixerMonitorPanel`. Monitor preview heights now automatically scale to fit the available pane height without displaying vertical scrollbars, while preserving 16:9 aspect ratios and utilizing the full pane width. Scrollbars appear only when window height drops below minimum preview dimensions on extremely small screens.
 - **Robust Splitter Hover & Drag Interaction**: Replaced dummy ImGui splitter windows with direct mouse hit-testing and foreground draw list rendering, adding `ImGuiWindowFlags.NoBringToFrontOnFocus` to docked layout panels. This prevents panels from capturing mouse hover or occluding the splitters in the window z-stack, ensuring the double-arrow resize cursor and drag interactions between panels remain active at all times.
 - **CV Modulation "Depth" Terminology Standardization**: Standardized the term for the value assigned to a CV modulator from "amplitude" (and legacy JSON "weight") to **"Depth"** across domain models (`CvModulator.depth`, `depthMin`, `depthMax`, `randomizeDepth`), evaluation logic, UI controls (Cell Config Depth range slider, LFO 2 AM Depth mode/tooltips), and documentation, while maintaining full backward serialization compatibility with existing presets.

@@ -125,6 +125,10 @@ data class CvModulator(
                     val options = floatArrayOf(0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f)
                     val valid = options.filter { it in subdivisionMin..subdivisionMax }
                     if (valid.isNotEmpty()) valid.random(random) else subdivisionMin
+                } else if (sourceId == "lfo" && genUnit == GenUnit.FRAME) {
+                    val minI = subdivisionMin.toInt().coerceIn(1, 10000)
+                    val maxI = subdivisionMax.toInt().coerceIn(minI, 10000)
+                    if (minI == maxI) minI.toFloat() else random.nextInt(minI, maxI + 1).toFloat()
                 } else {
                     // LFO Speed is continuous. 0.1s to 10s.
                     random.nextFloat() * (subdivisionMax - subdivisionMin) + subdivisionMin
@@ -156,6 +160,10 @@ data class CvModulator(
                     val options = floatArrayOf(0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f)
                     val valid = options.filter { it in modSubdivisionMin..modSubdivisionMax }
                     if (valid.isNotEmpty()) valid.random(random) else modSubdivisionMin
+                } else if (modGenUnit == GenUnit.FRAME) {
+                    val minI = modSubdivisionMin.toInt().coerceIn(1, 10000)
+                    val maxI = modSubdivisionMax.toInt().coerceIn(minI, 10000)
+                    if (minI == maxI) minI.toFloat() else random.nextInt(minI, maxI + 1).toFloat()
                 } else {
                     random.nextFloat() * (modSubdivisionMax - modSubdivisionMin) + modSubdivisionMin
                 }
@@ -204,6 +212,10 @@ data class CvModulator(
                 val options = floatArrayOf(0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f)
                 val valid = options.filter { it in subdivisionMin..subdivisionMax }
                 if (valid.isNotEmpty()) valid.random(random) else subdivisionMin
+            } else if (sourceId == "lfo" && genUnit == GenUnit.FRAME) {
+                val minI = subdivisionMin.toInt().coerceIn(1, 10000)
+                val maxI = subdivisionMax.toInt().coerceIn(minI, 10000)
+                if (minI == maxI) minI.toFloat() else random.nextInt(minI, maxI + 1).toFloat()
             } else {
                 random.nextFloat() * (subdivisionMax - subdivisionMin) + subdivisionMin
             }
@@ -244,6 +256,10 @@ data class CvModulator(
                 val options = floatArrayOf(0.125f, 0.25f, 0.5f, 1f, 2f, 4f, 8f, 16f, 32f, 64f, 128f, 256f)
                 val valid = options.filter { it in modSubdivisionMin..modSubdivisionMax }
                 if (valid.isNotEmpty()) valid.random(random) else modSubdivisionMin
+            } else if (modGenUnit == GenUnit.FRAME) {
+                val minI = modSubdivisionMin.toInt().coerceIn(1, 10000)
+                val maxI = modSubdivisionMax.toInt().coerceIn(minI, 10000)
+                if (minI == maxI) minI.toFloat() else random.nextInt(minI, maxI + 1).toFloat()
             } else {
                 random.nextFloat() * (modSubdivisionMax - modSubdivisionMin) + modSubdivisionMin
             }

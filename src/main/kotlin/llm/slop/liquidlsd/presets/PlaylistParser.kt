@@ -6,8 +6,8 @@ import java.io.File
 
 object PlaylistParser {
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    private val defaultPresetRoots = listOf(File("library/presets"), File("presets/patches"))
-    private val presetExtensions = listOf(".lsd", ".json", ".patch")
+    private val defaultPresetRoots = listOf(File("library/presets"))
+    private val presetExtensions = listOf(".lsd")
 
     fun parseItems(content: String): List<String> {
         return if (content.trimStart().startsWith("{")) {

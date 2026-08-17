@@ -33,7 +33,6 @@ library/last_session.json
 !library/presets/default.json
 library/*
 !library/sources/
-spirals-settings.properties
 lsd-settings.properties
 imgui.ini
 
