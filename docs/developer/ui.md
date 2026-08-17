@@ -37,6 +37,8 @@ All panel `draw(...)` methods receive `session: SessionContext`, the current `Mi
 
 Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckBottomBar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
+`MixerMonitorLayoutCalculator` calculates exact 16:9 aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights.
+
 ---
 
 ## Key Core UI Orchestrators

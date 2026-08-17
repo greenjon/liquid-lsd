@@ -48,6 +48,8 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
     // Set to true for one frame when the Settings menu item is clicked; consumed
     // immediately after endMainMenuBar so openPopup runs at root ID-stack level.
     private var pendingOpenSettings = false
+
+    private var activeSplitterId: String? = null
     private var pendingOpenAudioEngineMonitor = false
 
     private var lastBgVideoEnabled: Boolean? = null
@@ -827,7 +829,8 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         val contentH = displayHeight - menuBarH
         val noDecorate = ImGuiWindowFlags.NoResize or
                          ImGuiWindowFlags.NoMove or
-                         ImGuiWindowFlags.NoCollapse
+                         ImGuiWindowFlags.NoCollapse or
+                         ImGuiWindowFlags.NoBringToFrontOnFocus
 
         drawAssetManagementLayout(displayWidth, displayHeight, menuBarH, contentH, noDecorate)
     }
@@ -983,41 +986,40 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         onDrag: (Float) -> Unit,
         onDoubleClick: () -> Unit
     ) {
-        val splitterFlags = ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoResize or
-                            ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoCollapse or
-                            ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoBackground or
-                            ImGuiWindowFlags.NoSavedSettings
+        val io = ImGui.getIO()
+        val mouseX = io.mousePosX
+        val mouseY = io.mousePosY
+        val halfW = width / 2f
+        val inBounds = mouseX >= (posX - halfW) && mouseX <= (posX + halfW) && mouseY >= posY && mouseY <= (posY + height)
 
-        ImGui.setNextWindowPos(posX - width / 2f, posY)
-        ImGui.setNextWindowSize(width, height)
-        if (ImGui.begin(id, splitterFlags)) {
-            ImGui.invisibleButton("${id}_btn", width, height)
-            val hovered = ImGui.isItemHovered()
-            val active = ImGui.isItemActive()
+        val isActive = activeSplitterId == id
+        val isHovered = isActive || (activeSplitterId == null && inBounds)
 
-            if (hovered) {
-                ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
+        if (isActive) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
+            val deltaX = io.mouseDeltaX
+            if (deltaX != 0f) {
+                onDrag(deltaX)
             }
-
-            if (active) {
-                val deltaX = ImGui.getIO().mouseDeltaX
-                if (deltaX != 0f) {
-                    onDrag(deltaX)
-                }
+            if (!ImGui.isMouseDown(0)) {
+                activeSplitterId = null
             }
-
-            if (hovered && ImGui.isMouseDoubleClicked(0)) {
+        } else if (activeSplitterId == null && inBounds) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
+            if (ImGui.isMouseDoubleClicked(0)) {
                 onDoubleClick()
-            }
-
-            if (hovered || active) {
-                val color = if (active) ImGui.getColorU32(ImGuiCol.SeparatorActive) else ImGui.getColorU32(ImGuiCol.SeparatorHovered)
-                val drawList = ImGui.getWindowDrawList()
-                val midX = posX
-                drawList.addLine(midX, posY, midX, posY + height, color, 2f)
+            } else if (ImGui.isMouseClicked(0)) {
+                activeSplitterId = id
             }
         }
-        ImGui.end()
+
+        val color = when {
+            isActive -> ImGui.getColorU32(ImGuiCol.SeparatorActive)
+            isHovered -> ImGui.getColorU32(ImGuiCol.SeparatorHovered)
+            else -> ImGui.getColorU32(ImGuiCol.Separator)
+        }
+        val drawList = ImGui.getForegroundDrawList()
+        drawList.addLine(posX, posY, posX, posY + height, color, if (isActive || isHovered) 2.5f else 1.5f)
     }
 
     private fun drawHorizontalSplitter(
@@ -1030,41 +1032,40 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         onDrag: (Float) -> Unit,
         onDoubleClick: () -> Unit
     ) {
-        val splitterFlags = ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoResize or
-                            ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoCollapse or
-                            ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoBackground or
-                            ImGuiWindowFlags.NoSavedSettings
+        val io = ImGui.getIO()
+        val mouseX = io.mousePosX
+        val mouseY = io.mousePosY
+        val halfH = height / 2f
+        val inBounds = mouseX >= posX && mouseX <= (posX + width) && mouseY >= (posY - halfH) && mouseY <= (posY + halfH)
 
-        ImGui.setNextWindowPos(posX, posY - height / 2f)
-        ImGui.setNextWindowSize(width, height)
-        if (ImGui.begin(id, splitterFlags)) {
-            ImGui.invisibleButton("${id}_btn", width, height)
-            val hovered = ImGui.isItemHovered()
-            val active = ImGui.isItemActive()
+        val isActive = activeSplitterId == id
+        val isHovered = isActive || (activeSplitterId == null && inBounds)
 
-            if (hovered) {
-                ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeNS)
+        if (isActive) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeNS)
+            val deltaY = io.mouseDeltaY
+            if (deltaY != 0f) {
+                onDrag(deltaY)
             }
-
-            if (active) {
-                val deltaY = ImGui.getIO().mouseDeltaY
-                if (deltaY != 0f) {
-                    onDrag(deltaY)
-                }
+            if (!ImGui.isMouseDown(0)) {
+                activeSplitterId = null
             }
-
-            if (hovered && ImGui.isMouseDoubleClicked(0)) {
+        } else if (activeSplitterId == null && inBounds) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeNS)
+            if (ImGui.isMouseDoubleClicked(0)) {
                 onDoubleClick()
-            }
-
-            if (hovered || active) {
-                val color = if (active) ImGui.getColorU32(ImGuiCol.SeparatorActive) else ImGui.getColorU32(ImGuiCol.SeparatorHovered)
-                val drawList = ImGui.getWindowDrawList()
-                val midY = posY
-                drawList.addLine(posX, midY, posX + width, midY, color, 2f)
+            } else if (ImGui.isMouseClicked(0)) {
+                activeSplitterId = id
             }
         }
-        ImGui.end()
+
+        val color = when {
+            isActive -> ImGui.getColorU32(ImGuiCol.SeparatorActive)
+            isHovered -> ImGui.getColorU32(ImGuiCol.SeparatorHovered)
+            else -> ImGui.getColorU32(ImGuiCol.Separator)
+        }
+        val drawList = ImGui.getForegroundDrawList()
+        drawList.addLine(posX, posY, posX + width, posY, color, if (isActive || isHovered) 2.5f else 1.5f)
     }
 
     private fun drawMixerMonitor(mixer: Mixer) {

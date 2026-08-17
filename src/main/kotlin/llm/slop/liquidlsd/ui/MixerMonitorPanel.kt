@@ -96,13 +96,6 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, endY)
 
         // --- Deck C / Preview Monitor ---
-        val contentHeightRemaining = ImGui.getContentRegionAvailY()
-        val deckCHeightNeeded = layout.deckCHeight + ImGui.getFrameHeightWithSpacing() + 15f
-        
-        if (contentHeightRemaining > deckCHeightNeeded) {
-            ImGui.setCursorPosY(ImGui.getCursorPosY() + (contentHeightRemaining - deckCHeightNeeded))
-        }
-
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
