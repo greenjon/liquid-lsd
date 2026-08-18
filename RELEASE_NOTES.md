@@ -1,5 +1,23 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.27
+
+> [!NOTE]
+> **Release 1.0.0-beta.27** introduces a multi-scale oscilloscope engine with calibrated physical timebases ($1\text{s}$ to $24\text{h}$), real-time future waveform projection for deterministic LFOs, an interactive "NOW" playhead with history/future ratios, and calibrated grid divisions with dynamic timestamp labels.
+
+---
+
+### Key Highlights
+
+- **Multi-Scale Calibrated Timebases**: Oscilloscopes now support selectable physical time windows spanning from fast transients to circadian cycles: `1s` ($250\text{ms/div}$), `10s` ($2.0\text{s/div}$), `100s` ($20\text{s/div}$), `15m` ($3\text{m/div}$), `2.5h` ($30\text{m/div}$), and `24h` ($4\text{h/div}$), plus an intelligent `Auto` mode that dynamically fits $1\text{–}2$ periods of the active LFO.
+- **Real-Time Future Waveform Projection**: Deterministic modulators (single and compound LFOs with AM/PM/ADD modulation) are evaluated ahead in time, projecting future trajectories onto the right half of the oscilloscope. Modulating ultra-slow $15\text{m}$ or $24\text{h}$ LFOs no longer requires waiting to see modulation shapes.
+- **Interactive "NOW" Playhead (Default 50:50)**: Parameter oscilloscopes now default to a balanced 50% past / 50% future display with a distinct vertical `NOW` dividing line and glowing current value marker. Quick snap buttons (`0%` Lookahead, `50%` Balanced, `100%` History) and smooth click-and-drag cursor positioning let users customize past/future balance per parameter.
+- **Calibrated Grid Ticks & Dynamic Timestamp Badges**: Vertical division lines render at exact physical intervals anchored to the `NOW` playhead with formatted timestamp badges (`-250ms`, `-2s`, `NOW`, `+2s`, `+15m`, `+4h`, etc.).
+- **Contextual Tooltips**: Rich hover tooltips explain past recorded history vs. future mathematical projection and describe interactive playhead dragging.
+- **Unified Oscilloscope Architecture**: Consolidated all oscilloscope rendering into `OscilloscopeDrawer`, eliminating duplicated drawing code in `AudioEnginePanel`.
+
+---
+
 ## Version 1.0.0-beta.26
 
 > [!NOTE]

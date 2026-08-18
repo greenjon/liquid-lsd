@@ -95,7 +95,7 @@ object FinalParamSection {
         }
 
         // Oscilloscope showing final value history plus modulator histories
-        OscilloscopeDrawer.drawFinalOscilloscope(session, param.history, param.minClamp, param.maxClamp, themeColor, activeMods, modulatorHistories, isAngle = param.isAngle)
+        OscilloscopeDrawer.drawFinalOscilloscope(session, param, themeColor, activeMods, modulatorHistories)
 
         ImGui.spacing()
         ImGui.separator()

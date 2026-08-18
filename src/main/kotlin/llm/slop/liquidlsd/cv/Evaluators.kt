@@ -48,10 +48,12 @@ private fun calculateRandomWaveform(
     return previousValue + (currentValue - previousValue) * t
 }
 
-fun evaluateModulator(modulator: CvModulator): Float {
+fun evaluateModulator(modulator: CvModulator): Float = evaluateModulatorAtOffset(modulator, 0.0)
+
+fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Float {
     return when (modulator.sourceId) {
         "beatPhase" -> {
-            val beats = CVRegistry.getSynchronizedTotalBeats()
+            val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
             val localPhase = ((beats / modulator.subdivision) + modulator.phaseOffset) % 1.0
             val positivePhase = if (localPhase < 0.0) localPhase + 1.0 else localPhase
             if (modulator.waveform == Waveform.RANDOM) {
@@ -67,7 +69,7 @@ fun evaluateModulator(modulator: CvModulator): Float {
             }
         }
         "sampleAndHold" -> {
-            val beats = CVRegistry.getSynchronizedTotalBeats()
+            val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
             val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
             
             val cyclePosition = (beats / subdivisionD) + modulator.phaseOffset
@@ -91,19 +93,19 @@ fun evaluateModulator(modulator: CvModulator): Float {
                 val seed: Int
                 when (modulator.modGenUnit) {
                     GenUnit.TIME -> {
-                        val seconds = CVRegistry.getElapsedRealtimeSec()
+                        val seconds = CVRegistry.getElapsedRealtimeSec() + timeOffsetSec
                         val period = modulator.modSubdivision.toDouble().coerceAtLeast(0.001)
                         cyclePosition = (seconds / period) + modulator.modPhaseOffset
                         seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                     }
                     GenUnit.BEAT -> {
-                        val beats = CVRegistry.getSynchronizedTotalBeats()
+                        val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
                         val subdivisionD = modulator.modSubdivision.toDouble().coerceAtLeast(0.01)
                         cyclePosition = (beats / subdivisionD) + modulator.modPhaseOffset
                         seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                     }
                     GenUnit.FRAME -> {
-                        val frameCount = CVRegistry.getRenderFrameCount().toDouble()
+                        val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * 60.0
                         val framePeriod = modulator.modSubdivision.toDouble().coerceAtLeast(1.0)
                         cyclePosition = (frameCount / framePeriod) + modulator.modPhaseOffset
                         seed = framePeriod.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
@@ -131,19 +133,19 @@ fun evaluateModulator(modulator: CvModulator): Float {
             val carrierSeed: Int
             when (modulator.genUnit) {
                 GenUnit.TIME -> {
-                    val seconds = CVRegistry.getElapsedRealtimeSec()
+                    val seconds = CVRegistry.getElapsedRealtimeSec() + timeOffsetSec
                     val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
                     carrierCyclePosition = (seconds / period) + modulator.phaseOffset + pmShift
                     carrierSeed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                 }
                 GenUnit.BEAT -> {
-                    val beats = CVRegistry.getSynchronizedTotalBeats()
+                    val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
                     val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
                     carrierCyclePosition = (beats / subdivisionD) + modulator.phaseOffset + pmShift
                     carrierSeed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                 }
                 GenUnit.FRAME -> {
-                    val frameCount = CVRegistry.getRenderFrameCount().toDouble()
+                    val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * 60.0
                     val framePeriod = modulator.subdivision.toDouble().coerceAtLeast(1.0)
                     carrierCyclePosition = (frameCount / framePeriod) + modulator.phaseOffset + pmShift
                     carrierSeed = framePeriod.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
@@ -180,14 +182,16 @@ fun evaluateModulator(modulator: CvModulator): Float {
     }
 }
 
-fun getCombinedModulatorValue(mods: List<CvModulator>): Float {
+fun getCombinedModulatorValue(mods: List<CvModulator>): Float = getCombinedModulatorValueAtOffset(mods, 0.0)
+
+fun getCombinedModulatorValueAtOffset(mods: List<CvModulator>, timeOffsetSec: Double): Float {
     if (mods.isEmpty()) return 0f
     
     var result = 0f
     var first = true
     for (mod in mods) {
         if (mod.bypassed) continue
-        val cv = evaluateModulator(mod)
+        val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
         val modAmount = cv * mod.depth + mod.dcOffset
         if (first) {
             result = when (mod.operator) {
@@ -214,14 +218,17 @@ fun getCombinedModulatorValue(mods: List<CvModulator>): Float {
  *
  * Used by the O-scope in CellConfigPanel so its display matches the engine output.
  */
-fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean): Float {
+fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean): Float =
+    getCombinedEffectiveValueAtOffset(mods, isBipolar, 0.0)
+
+fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolean, timeOffsetSec: Double): Float {
     if (mods.isEmpty()) return 0f
 
     var result = 0f
     var first = true
     for (mod in mods) {
         if (mod.bypassed) continue
-        val cv = evaluateModulator(mod)
+        val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
         val modAmount = if (isBipolar) {
             cv * mod.depth + mod.dcOffset
         } else {
@@ -244,3 +251,4 @@ fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean): Floa
     }
     return if (isBipolar) result.coerceIn(-1f, 1f) else result.coerceIn(0f, 1f)
 }
+

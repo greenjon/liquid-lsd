@@ -31,6 +31,44 @@ class ModulatableParameter(
     var baseMin: Float = baseValue
     var baseMax: Float = baseValue
 
+    var scopeTimebase: ScopeTimebase = ScopeTimebase.AUTO
+    var scopePlayheadRatio: Float = 0.5f
+
+    /**
+     * Resolves the effective timebase duration and division interval.
+     * In AUTO mode, derives the timebase from the first active LFO modulator's period.
+     */
+    fun resolveEffectiveTimebase(): Pair<Float, Float> {
+        if (scopeTimebase != ScopeTimebase.AUTO) {
+            return Pair(scopeTimebase.durationSec, scopeTimebase.divSec)
+        }
+        val firstLfo = modulators.firstOrNull { !it.bypassed && (it.sourceId == "lfo" || it.sourceId == "beatPhase" || it.sourceId == "sampleAndHold") }
+        if (firstLfo == null) {
+            return Pair(ScopeTimebase.TEN_SEC.durationSec, ScopeTimebase.TEN_SEC.divSec)
+        }
+        val periodSec = when (firstLfo.sourceId) {
+            "beatPhase", "sampleAndHold" -> firstLfo.subdivision * (60.0f / 120.0f)
+            "lfo" -> {
+                when (firstLfo.genUnit) {
+                    GenUnit.TIME -> firstLfo.subdivision
+                    GenUnit.BEAT -> firstLfo.subdivision * (60.0f / 120.0f)
+                    GenUnit.FRAME -> firstLfo.subdivision / 60.0f
+                }
+            }
+            else -> 10.0f
+        }
+        val targetWindow = periodSec * 2.0f
+        val matchingTier = when {
+            targetWindow <= 2.0f -> ScopeTimebase.ONE_SEC
+            targetWindow <= 25.0f -> ScopeTimebase.TEN_SEC
+            targetWindow <= 250.0f -> ScopeTimebase.HUNDRED_SEC
+            targetWindow <= 2000.0f -> ScopeTimebase.FIFTEEN_MIN
+            targetWindow <= 25000.0f -> ScopeTimebase.TWO_POINT_FIVE_HOURS
+            else -> ScopeTimebase.TWENTY_FOUR_HOURS
+        }
+        return Pair(matchingTier.durationSec, matchingTier.divSec)
+    }
+
     @Volatile
     var modulatorFilter: ((CvModulator) -> Boolean)? = null
 

@@ -389,7 +389,7 @@ object AudioEnginePanel {
 
             session.audioEngine.rawHistory.copyTo(rawSamples)
             val rawColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 1.0f) // Neon Green
-            drawCustomOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 90f)
+            OscilloscopeDrawer.drawBufferOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 90f)
             
             ImGui.spacing()
 
@@ -414,7 +414,7 @@ object AudioEnginePanel {
                 val history = session.cvRegistry.getHistory(id)
                 if (history != null) {
                     history.copyTo(cvSamples)
-                    drawCustomOscilloscope(session, title,
+                    OscilloscopeDrawer.drawBufferOscilloscope(session, title,
                         cvSamples,
                         0.0f,
                         2.0f,
@@ -443,94 +443,5 @@ object AudioEnginePanel {
 
         ImGui.spacing()
         ImGui.endPopup()
-    }
-
-    /**
-     * Draws a highly customized, styled oscilloscope in an ImGui draw list.
-     */
-    private fun drawCustomOscilloscope(
-        session: llm.slop.liquidlsd.SessionContext,
-        title: String,
-        samples: FloatArray,
-        minVal: Float,
-        maxVal: Float,
-        lineColor: Int,
-        height: Float
-    ) {
-        val w = ImGui.getContentRegionAvailX()
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
-
-        // Reserve display box space
-        ImGui.dummy(w, height)
-
-        val dl = ImGui.getWindowDrawList()
-
-        // Background
-        val bgCol = ImGui.colorConvertFloat4ToU32(0.04f, 0.04f, 0.04f, 1.0f)
-        dl.addRectFilled(startX, startY, startX + w, startY + height, bgCol, 4f)
-
-        // Grid lines
-        val range = maxVal - minVal
-        val zeroY = if (minVal <= 0f && maxVal >= 0f) {
-            startY + height * (maxVal / range)
-        } else {
-            startY + height / 2f
-        }
-        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f)
-        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.10f, 0.10f, 0.10f, 0.4f)
-
-        // Center / Zero line
-        dl.addLine(startX, zeroY, startX + w, zeroY, gridColCenter, 1.5f)
-        // Top and bottom boundaries
-        dl.addLine(startX, startY + 4f, startX + w, startY + 4f, gridColFaint, 1.0f)
-        dl.addLine(startX, startY + height - 4f, startX + w, startY + height - 4f, gridColFaint, 1.0f)
-
-        // Vertical division lines (4 sections)
-        val numDivisions = 4
-        for (i in 1 until numDivisions) {
-            val gridX = startX + (w * i / numDivisions)
-            dl.addLine(gridX, startY, gridX, startY + height, gridColFaint, 1.0f)
-        }
-
-        // Draw waveform lines
-        if (samples.isNotEmpty()) {
-            val stepX = w / (samples.size - 1)
-            val usableHeight = height - 8f
-
-            for (i in 0 until samples.size - 1) {
-                val val1 = samples[i].coerceIn(minVal, maxVal)
-                val val2 = samples[i + 1].coerceIn(minVal, maxVal)
-
-                val x1 = startX + i * stepX
-                val normVal1 = (val1 - minVal) / range
-                val normVal2 = (val2 - minVal) / range
-
-                // Calculate Y coordinates (subtracting from bottom boundary)
-                val y1 = startY + height - 4f - normVal1 * usableHeight
-                val x2 = startX + (i + 1) * stepX
-                val y2 = startY + height - 4f - normVal2 * usableHeight
-
-                dl.addLine(x1, y1, x2, y2, lineColor, 2.0f)
-            }
-        }
-
-        // Border
-        val borderCol = ImGui.colorConvertFloat4ToU32(0.16f, 0.16f, 0.16f, 1.0f)
-        dl.addRect(startX, startY, startX + w, startY + height, borderCol, 4f)
-
-        // Axis boundary labels
-        ImGui.setCursorScreenPos(startX + 6f, startY + 3f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.1f".format(maxVal))
-
-        ImGui.setCursorScreenPos(startX + 6f, startY + height - 15f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.1f".format(minVal))
-
-        // Left-aligned chart title, offset slightly to not overlap with upper boundary label
-        ImGui.setCursorScreenPos(startX + 45f, startY + 3f)
-        session.uiTheme.captionColored(0.85f, 0.85f, 0.85f, 0.9f, title)
-
-        // Reset cursor location
-        ImGui.setCursorScreenPos(startX, startY + height)
     }
 }
