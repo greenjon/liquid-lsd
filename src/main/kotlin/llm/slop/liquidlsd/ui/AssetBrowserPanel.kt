@@ -69,7 +69,7 @@ object AssetBrowserPanel {
         refreshAssets()
     }
     
-    fun draw(session: llm.slop.liquidlsd.SessionContext, width: Float, height: Float, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
         checkAutoRefresh()
         val sidebarWidth = if (showSidebar) width * 0.33f else 0f
         val centerWidth = if (showSidebar) width * 0.33f else width * 0.5f
@@ -144,7 +144,7 @@ object AssetBrowserPanel {
         }
 
         ImGui.beginChild("AssetCenter", centerWidth - 6f, contentH, true)
-        drawCenterContent(session, mixer)
+        drawCenterContent(session, mixer, presetState)
         ImGui.endChild()
         ImGui.sameLine()
 
@@ -167,11 +167,11 @@ object AssetBrowserPanel {
     }
     
 
-    private fun drawCenterContent(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+    private fun drawCenterContent(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, presetState: PresetGridState) {
         when (val view = SidebarPanel.currentView) {
             is LibraryView.PlaylistsRoot -> drawPlaylistsRootView(session)
             is LibraryView.SpecificPlaylist -> drawSpecificPlaylistView(session, view.playlistFile, mixer)
-            is LibraryView.Presets -> drawPresetsView(session, view.currentDir, mixer)
+            is LibraryView.Presets -> drawPresetsView(session, view.currentDir, mixer, presetState)
         }
     }
     private fun drawPlaylistsRootView(session: llm.slop.liquidlsd.SessionContext) {
@@ -265,13 +265,19 @@ object AssetBrowserPanel {
 
 
 
-    private fun drawPresetsView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer) {
+    private fun drawPresetsView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer, presetState: PresetGridState) {
         // Header Row
         ImGui.inputText("Filter", searchBuffer)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to filter presets by filename.")
         }
         
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Create new preset row
+        drawCreateNewPresetRow(session, mixer, presetState)
+
         ImGui.separator()
         ImGui.spacing()
         
@@ -428,6 +434,69 @@ object AssetBrowserPanel {
             
             ImGui.popID()
         }
+    }
+
+    private fun drawCreateNewPresetRow(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, presetState: PresetGridState) {
+        ImGui.pushID("create_new_preset_row")
+        val btnSize = ImGui.getFrameHeight()
+        ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
+        ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
+
+        // Button A (Deck A color: Blue)
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.4f, 0.8f, 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.4f, 0.8f, 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
+        if (ImGui.button("A##new_preset_a", btnSize, btnSize)) {
+            UIManager.triggerDeckEject(mixer.deckA, isDeckA = true, isDeckC = false)
+            presetState.activeTopTab = "Deck A"
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Create new preset in Deck A (eject existing).")
+        }
+        ImGui.popStyleColor(5)
+
+        ImGui.sameLine()
+
+        // Button B (Deck B color: Orange)
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.4f, 0.2f, 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Border, 0.8f, 0.4f, 0.2f, 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
+        if (ImGui.button("B##new_preset_b", btnSize, btnSize)) {
+            UIManager.triggerDeckEject(mixer.deckB, isDeckA = false, isDeckC = false)
+            presetState.activeTopTab = "Deck B"
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Create new preset in Deck B (eject existing).")
+        }
+        ImGui.popStyleColor(5)
+
+        ImGui.sameLine()
+
+        // Button C (Deck C color: Green)
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.7f, 0.5f, 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.7f, 0.5f, 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
+        if (ImGui.button("C##new_preset_c", btnSize, btnSize)) {
+            UIManager.triggerDeckEject(mixer.deckC, isDeckA = false, isDeckC = true)
+            presetState.activeTopTab = "Deck C"
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Create new preset in Deck C (eject existing).")
+        }
+        ImGui.popStyleColor(5)
+
+        ImGui.popStyleVar(2)
+
+        ImGui.sameLine()
+        ImGui.textDisabled("[Create new preset...]")
+
+        ImGui.popID()
     }
 
 

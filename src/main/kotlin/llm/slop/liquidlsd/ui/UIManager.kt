@@ -643,6 +643,10 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
                 ui.popupManager.pendingDeckSourceFileB = file
             }
         }
+
+        fun triggerDeckEject(deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
+            instance?.ejectDeck(deck, isDeckA, isDeckC)
+        }
     }
 
 
@@ -890,7 +894,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
                 ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
         if (ImGui.begin("Asset Browser", flags)) {
             drawNeonBackgroundIfNeeded(ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            AssetBrowserPanel.draw(session, libraryW, assetBrowserH, currentMixer!!)
+            AssetBrowserPanel.draw(session, libraryW, assetBrowserH, currentMixer!!, presetState)
         }
         ImGui.end()
 

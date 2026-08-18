@@ -39,6 +39,7 @@ The Asset Browser provides a complete file system view of your presets and playl
 ### Features & Navigation
 - **Collapsible Sidebar Tree**: Click `📁 Show Tree` / `📁 Hide Tree` to toggle the directory sidebar.
 - **Search & Filter**: Type into the search bar at the top to quickly locate specific patch files or subfolders.
+- **[Create new preset...] Row**: Positioned directly above the preset list with `[ A ]`, `[ B ]`, and `[ C ]` buttons. Clicking a deck button ejects/resets that deck (prompting to save if dirty according to user preferences) and immediately switches Preset Grid focus to that deck.
 - **Visual File Type Icons**:
   - 🎨 **Patches** (`.lsd`, `.patch`): Visual presets.
   - 📋 **Playlists** (`.playlist`): Setlist files.
