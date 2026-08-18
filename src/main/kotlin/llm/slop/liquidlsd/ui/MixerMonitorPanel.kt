@@ -113,7 +113,10 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_C", availW, layout.deckCHeight)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Interactive Deck C monitor. Drag to copy/move/swap, or drop preset files to load.")
+            ImGui.setTooltip("Interactive Deck C monitor. Click to focus Preset Grid, drag to copy/move/swap, or drop preset files to load.")
+        }
+        if (ImGui.isItemClicked(0)) {
+            presetState.activeTopTab = "Deck C"
         }
 
         if (ImGui.beginDragDropSource()) {

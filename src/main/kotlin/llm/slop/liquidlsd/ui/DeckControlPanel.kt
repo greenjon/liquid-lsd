@@ -17,7 +17,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.math.roundToInt
 
-class DeckControlPanel {
+class DeckControlPanel(
+    private val presetState: PresetGridState
+) {
     private var pendingRightDragFrom: String? = null
 
     fun drawDeckControls(
@@ -75,7 +77,10 @@ class DeckControlPanel {
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_$label", imgAvailW, imgAvailH)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Interactive monitor for Deck $label. Drag to route to another deck or drop presets to load.")
+            ImGui.setTooltip("Interactive monitor for Deck $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
+        }
+        if (ImGui.isItemClicked(0)) {
+            presetState.activeTopTab = if (isDeckA) "Deck A" else "Deck B"
         }
         
         if (ImGui.beginDragDropSource()) {

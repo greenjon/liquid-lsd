@@ -359,7 +359,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         logger.info { "UIManager initialized" }
     }
 
-    private val deckControlPanel = DeckControlPanel()
+    private val deckControlPanel = DeckControlPanel(presetState)
 
     private val deckUtilityAction = { mode: Int, from: Deck, to: Deck ->
         val mixer = currentMixer

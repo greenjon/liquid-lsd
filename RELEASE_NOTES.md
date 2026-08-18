@@ -17,6 +17,7 @@
 - **Cell Config Tab Row Scaling**: Fixed hardcoded height and width values on the CV tab buttons in `CellConfigPanel` and quick-select pills in `FinalParamSection` to dynamically scale based on font line height and text metrics.
 - **Redundant Browser Removal**: Removed `DeckPresetBrowser.kt` and its duplicated search, tag filtering, and preset list UI; preset browsing and loading remain centralized in the docked **Asset Browser** (`F3`).
 - **Deck Control Cleanup**: Removed orphaned `drawDeckPresetDropdown` code, renamed `drawDeckBottomBar` to `drawDeckMonitorToolbar`, and streamlined deck preview headers to act as clean display indicators with rich tooltips.
+- **Mixer Monitor Left-Click Deck Focus**: Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) in the Mixer Monitor panel now directly focuses the Preset Grid to that deck (`activeTopTab`), complementing existing click-and-drag deck routing and preset drop loading.
 
 ---
 
