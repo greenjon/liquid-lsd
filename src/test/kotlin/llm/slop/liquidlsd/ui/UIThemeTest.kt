@@ -29,6 +29,7 @@ class UIThemeTest {
             UITheme.showTriggerCol = true
             UITheme.cleanModeEnabled = true
             UITheme.tooltipsEnabled = false
+            UITheme.maxFps = 60
 
             // Save to disk
             UITheme.saveSettings()
@@ -42,6 +43,7 @@ class UIThemeTest {
             UITheme.showTriggerCol = false
             UITheme.cleanModeEnabled = false
             UITheme.tooltipsEnabled = true
+            UITheme.maxFps = 30
 
             // Reload via reflection
             val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
@@ -56,6 +58,7 @@ class UIThemeTest {
             assertTrue(UITheme.showTriggerCol)
             assertTrue(UITheme.cleanModeEnabled)
             assertFalse(UITheme.tooltipsEnabled)
+            assertEquals(60, UITheme.maxFps)
 
         } finally {
             // Restore original settings file if backed up, or delete test file

@@ -321,16 +321,14 @@ fun main() {
             glfwMakeContextCurrent(window)
         }
 
-        // Cap frame rate to UITheme.maxFps
-        val targetFrameTime = 1.0 / UITheme.maxFps
+        // Cap frame rate to session.uiTheme.maxFps
+        val targetFrameTime = 1.0 / session.uiTheme.maxFps
         val elapsed = glfwGetTime() - frameStartTime
         var remaining = targetFrameTime - elapsed
-        if (remaining > 0) {
+        if (remaining > 0.0) {
             // First sleep with a 1 ms (1,000,000 ns) safety margin to avoid oversleeping.
             // A 1ms margin is safe for 30/60 FPS desktop apps, giving the OS scheduler 
             // plenty of leeway without wasting CPU in a spin loop.
-            // TODO: Since glfwSwapInterval(1) is used, we might rely purely on vsync in the future
-            // and drop this manual frame pacing entirely.
             val sleep1Ms = ((remaining * 1000.0) - 1.0).toLong()
             if (sleep1Ms > 0) {
                 try {
@@ -339,7 +337,7 @@ fun main() {
                     // Ignore
                 }
             }
-            
+
             // Second sleep with a smaller 0.2 ms (200,000 ns) margin to get closer to the target.
             // No spin loop is used (Thread.yield() removed) to conserve CPU.
             remaining = targetFrameTime - (glfwGetTime() - frameStartTime)
