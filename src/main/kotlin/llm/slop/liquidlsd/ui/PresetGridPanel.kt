@@ -419,42 +419,48 @@ object PresetGridPanel {
         val isDeckC = deckLabel == "Deck C"
         val deckColorU32 = PresetGridTabs.getDeckColor(deckLabel, 1f)
 
-        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(300f)
-        val cardW = (availW * 0.92f).coerceAtMost(520f)
-        val paddingX = (availW - cardW) * 0.5f
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
 
-        ImGui.dummy(0f, 15f)
+        val availW = ImGui.getContentRegionAvailX()
+        val cardW = (availW - 16f).coerceIn(160f, 360f * fontScale).coerceAtMost(availW)
+        val paddingX = ((availW - cardW) * 0.5f).coerceAtLeast(0f)
+
+        ImGui.dummy(0f, 12f * fontScale)
         ImGui.indent(paddingX)
 
-        if (ImGui.beginChild("##launchpad_$deckLabel", cardW, 200f, true)) {
+        val cardH = (270f * fontScale).coerceAtLeast(220f)
+        if (ImGui.beginChild("##launchpad_$deckLabel", cardW, cardH, true)) {
             ImGui.spacing()
             ImGui.spacing()
 
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, deckColorU32)
-            session.uiTheme.h2("$deckLabel is Empty")
+            session.uiTheme.withFont(UITheme.FontLevel.H2) {
+                ImGui.textWrapped("$deckLabel is Empty")
+            }
             ImGui.popStyleColor()
 
             ImGui.spacing()
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.70f, 1f))
-            session.uiTheme.body("No visual generator is currently assigned to this deck.\nChoose an action below to activate:")
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                ImGui.textWrapped("No visual generator is currently assigned to this deck. Choose an action below to activate:")
+            }
             ImGui.popStyleColor()
 
             ImGui.spacing()
-            ImGui.spacing()
             ImGui.separator()
             ImGui.spacing()
-            ImGui.spacing()
 
-            val buttonWidth = (cardW - 36f) / 3f
-            val buttonHeight = 36f
+            val availBtnW = ImGui.getContentRegionAvailX()
+            val buttonWidth = availBtnW
+            val buttonHeight = (32f * fontScale).coerceAtLeast(26f)
 
-            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 6f)
+            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 6f * fontScale)
 
             // --- Button 1: Add Visual Source ---
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.22f, 0.30f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.34f, 0.46f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.44f, 0.58f, 1f))
-            if (ImGui.button("+ Add Source", buttonWidth, buttonHeight)) {
+            if (ImGui.button("${Icons.PLUS}  Add Source", buttonWidth, buttonHeight)) {
                 ImGui.openPopup("##launchpad_source_popup_$deckLabel")
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -505,13 +511,13 @@ object PresetGridPanel {
                 ImGui.endPopup()
             }
 
-            ImGui.sameLine()
+            ImGui.spacing()
 
             // --- Button 2: Load Preset ---
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.26f, 0.24f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.38f, 0.34f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.48f, 0.44f, 1f))
-            if (ImGui.button("📂 Load Preset", buttonWidth, buttonHeight)) {
+            if (ImGui.button("${Icons.FOLDER}  Load Preset", buttonWidth, buttonHeight)) {
                 ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -545,13 +551,13 @@ object PresetGridPanel {
                 ImGui.endPopup()
             }
 
-            ImGui.sameLine()
+            ImGui.spacing()
 
             // --- Button 3: Quick Random ---
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("🎲 Quick Random", buttonWidth, buttonHeight)) {
+            if (ImGui.button("${Icons.DICES}  Quick Random", buttonWidth, buttonHeight)) {
                 val presetDir = File("library/presets")
                 val presetFiles = if (presetDir.exists()) {
                     presetDir.listFiles { f -> f.isFile && f.name.endsWith(".lsd") }?.toList() ?: emptyList()

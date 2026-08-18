@@ -66,35 +66,40 @@ object CellConfigPanel {
             if (session.uiTheme.showTriggerCol) availableTabs.add("Trigger" to "trigger")
         }
 
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 2f, 0f)
-        availableTabs.forEachIndexed { i, (label, targetCvId) ->
-            if (i > 0) ImGui.sameLine()
-            val isActive = currentCvId == targetCvId
-            if (isActive) {
-                val activeCol = when (targetCvId) {
-                    "final"   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 0.5f, 1f)
-                    "midi"    -> ImGui.colorConvertFloat4ToU32(0.5f, 0.2f, 0.8f, 1f)
-                    "lfo"     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.8f, 1f)
-                    "audio"   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.0f, 1f)
-                    "trigger" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.0f, 0.4f, 1f)
-                    else      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 1f)
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(24f * fontScale)
+
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f * fontScale, 4f * fontScale)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            availableTabs.forEachIndexed { i, (label, targetCvId) ->
+                if (i > 0) ImGui.sameLine()
+                val isActive = currentCvId == targetCvId
+                if (isActive) {
+                    val activeCol = when (targetCvId) {
+                        "final"   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 0.5f, 1f)
+                        "midi"    -> ImGui.colorConvertFloat4ToU32(0.5f, 0.2f, 0.8f, 1f)
+                        "lfo"     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.8f, 1f)
+                        "audio"   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.0f, 1f)
+                        "trigger" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.0f, 0.4f, 1f)
+                        else      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 1f)
+                    }
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
+                } else {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
                 }
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
-            } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+                val btnW = (ImGui.calcTextSize(label).x + 18f * fontScale).coerceAtLeast(44f * fontScale)
+                if (ImGui.button(label, btnW, btnH)) {
+                    state.selectedCell = PresetCellId(currentParamKey, targetCvId)
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Switch CellConfig view to $label CV modulation for parameter")
+                }
+                ImGui.popStyleColor(3)
             }
-            val btnW = 55f
-            if (ImGui.button(label, btnW, 22f)) {
-                state.selectedCell = PresetCellId(currentParamKey, targetCvId)
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Switch CellConfig view to $label CV modulation for parameter")
-            }
-            ImGui.popStyleColor(3)
         }
         ImGui.popStyleVar()
         ImGui.spacing()

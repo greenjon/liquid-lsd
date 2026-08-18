@@ -189,12 +189,14 @@ object FinalParamSection {
             if (isMaxPoints) {
                 session.uiTheme.caption("Point Count (GPU Performance):")
                 val currentPts = param.baseValue.roundToInt()
+                val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+                val pillH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 6f * fontScale }.coerceAtLeast(24f * fontScale)
                 val availW = ImGui.getContentRegionAvailX()
                 var startLine = true
 
                 for (preset in MAX_POINTS_PRESETS) {
                     val label = "$preset"
-                    val btnW = 46f
+                    val btnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) { (ImGui.calcTextSize(label).x + 16f * fontScale).coerceAtLeast(40f * fontScale) }
 
                     if (!startLine) {
                         val lastX = ImGui.getCursorPosX()
@@ -213,7 +215,7 @@ object FinalParamSection {
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
                     }
 
-                    if (ImGui.button("$label##maxpts_pill_$preset", btnW, 24f)) {
+                    if (ImGui.button("$label##maxpts_pill_$preset", btnW, pillH)) {
                         val newVal = preset.toFloat()
                         param.baseValue = newVal
                         param.baseMin = newVal
@@ -227,7 +229,7 @@ object FinalParamSection {
                     startLine = false
                 }
                 ImGui.spacing()
-                session.uiTheme.caption("⚠ Not CV-modulatable — higher counts may reduce frame rate.")
+                session.uiTheme.caption("${Icons.ALERT} Not CV-modulatable — higher counts may reduce frame rate.")
                 ImGui.spacing()
                 ImGui.separator()
                 ImGui.spacing()
@@ -235,12 +237,14 @@ object FinalParamSection {
                 session.uiTheme.caption("Lobe Count Quick Selection:")
                 val currentLobe = param.baseValue.roundToInt()
                 val availableLobes = MandalaLibrary.uniquePetals
+                val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+                val pillH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 6f * fontScale }.coerceAtLeast(24f * fontScale)
                 val availW = ImGui.getContentRegionAvailX()
                 var startLine = true
 
                 for (petal in availableLobes) {
                     val label = "$petal"
-                    val btnW = 30f
+                    val btnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) { (ImGui.calcTextSize(label).x + 14f * fontScale).coerceAtLeast(28f * fontScale) }
 
                     if (!startLine) {
                         val lastX = ImGui.getCursorPosX()
@@ -259,7 +263,7 @@ object FinalParamSection {
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
                     }
 
-                    if (ImGui.button("$label##lobe_pill_$petal", btnW, 24f)) {
+                    if (ImGui.button("$label##lobe_pill_$petal", btnW, pillH)) {
                         val newVal = petal.toFloat()
                         param.baseValue = newVal
                         if (!param.randomizeBase) {
