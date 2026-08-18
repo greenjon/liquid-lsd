@@ -422,9 +422,15 @@ object OscilloscopeDrawer {
         totalDuration: Float,
         divSec: Float
     ) {
-        val timebaseLabels = ScopeTimebase.values().map { it.label }.toTypedArray()
+        val isLfoScope = (scopeKey == "lfo" || scopeKey == "default")
+        val availableTimebases: List<ScopeTimebase> = if (isLfoScope) {
+            ScopeTimebase.values().toList()
+        } else {
+            ScopeTimebase.values().filter { it != ScopeTimebase.AUTO }
+        }
+        val timebaseLabels = availableTimebases.map { it.label }.toTypedArray()
         val currentTimebase = param.getScopeTimebase(scopeKey)
-        val currentIdx = currentTimebase.ordinal
+        val currentIdx = availableTimebases.indexOf(currentTimebase).coerceAtLeast(0)
         val selected = ImInt(currentIdx)
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
@@ -435,10 +441,15 @@ object OscilloscopeDrawer {
 
         ImGui.pushItemWidth(comboWidth)
         if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", selected, timebaseLabels)) {
-            param.setScopeTimebase(scopeKey, ScopeTimebase.values()[selected.get().coerceIn(0, ScopeTimebase.values().size - 1)])
+            param.setScopeTimebase(scopeKey, availableTimebases[selected.get().coerceIn(0, availableTimebases.size - 1)])
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Oscilloscope Time Window: Auto scales to LFO period, or choose a fixed window (1s to 24h).")
+            val tooltip = if (isLfoScope) {
+                "Oscilloscope Time Window: Auto scales to LFO period, or choose a fixed window (1s to 24h)."
+            } else {
+                "Oscilloscope Time Window: Choose a fixed window (1s to 24h)."
+            }
+            ImGui.setTooltip(tooltip)
         }
         ImGui.popItemWidth()
 

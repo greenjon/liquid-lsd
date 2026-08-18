@@ -76,11 +76,12 @@ class ScopeTimebaseTest {
         assertEquals(ScopeTimebase.TEN_SEC, param.getScopeTimebase("lfo"))
         assertEquals(ScopeTimebase.HUNDRED_SEC, param.getScopeTimebase("audio"))
         assertEquals(ScopeTimebase.FIFTEEN_MIN, param.getScopeTimebase("final"))
-        assertEquals(ScopeTimebase.AUTO, param.getScopeTimebase("trigger"))
+        assertEquals(ScopeTimebase.ONE_SEC, param.getScopeTimebase("trigger"))
 
         assertEquals(10.0f, param.resolveEffectiveTimebase("lfo").first)
         assertEquals(100.0f, param.resolveEffectiveTimebase("audio").first)
         assertEquals(900.0f, param.resolveEffectiveTimebase("final").first)
+        assertEquals(1.0f, param.resolveEffectiveTimebase("trigger").first)
     }
 
     @Test

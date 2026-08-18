@@ -34,7 +34,9 @@ class ModulatableParameter(
     val scopeTimebases: MutableMap<String, ScopeTimebase> = mutableMapOf()
 
     fun getScopeTimebase(scopeKey: String = "default"): ScopeTimebase {
-        return scopeTimebases[scopeKey] ?: ScopeTimebase.AUTO
+        val stored = scopeTimebases[scopeKey]
+        if (stored != null) return stored
+        return if (scopeKey == "lfo" || scopeKey == "default") ScopeTimebase.AUTO else ScopeTimebase.ONE_SEC
     }
 
     fun setScopeTimebase(scopeKey: String = "default", timebase: ScopeTimebase) {
