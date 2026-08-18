@@ -100,9 +100,10 @@
 - **Seamless Cards**: Connected active side tabs seamlessly into parameter cards with inline sub-tabs and logical category grouping (Visual Source before FX).
 - **Empty Deck Handling**: Added full support for inert empty deck states across `Deck`, `PresetGridPanel`, `PresetGridTabs`, and render loops.
 
-#### 5. Build & Toolchain
+#### 5. Build, Toolchain & Code Cleanup
 - Upgraded Gradle wrapper to **Gradle 9.7.0**.
 - Added middle-click flags and input guards to `PresetGridRenderer`.
+- **Legacy Global Preset Code Removal**: Cleaned up obsolete `GlobalPresetDto`, `isGlobalPresetDirty`, and related legacy global preset I/O queues and converter methods from `PresetManager` and `PresetModels`. Workspace state persistence is handled cleanly by `SessionStateDto`.
 
 ---
 

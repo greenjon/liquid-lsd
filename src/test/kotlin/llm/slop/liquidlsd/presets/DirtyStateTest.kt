@@ -6,7 +6,6 @@ import io.mockk.mockkStatic
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.models.DeckPresetDto
-import llm.slop.liquidlsd.models.GlobalPresetDto
 import llm.slop.liquidlsd.models.toDto
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,7 +24,6 @@ class DirtyStateTest {
         PresetManager.cachedDtoA = null
         PresetManager.cachedDtoB = null
         PresetManager.cachedDtoC = null
-        PresetManager.cachedGlobalDto = null
     }
 
     @Test
@@ -59,28 +57,6 @@ class DirtyStateTest {
         
         // Now it SHOULD be dirty
         assertTrue(PresetManager.isDeckDirty(deck, mixer))
-    }
-
-    @Test
-    fun testGlobalDirtyState() {
-        val mixer = mockk<Mixer>()
-        
-        val initialDto = mockk<GlobalPresetDto>()
-        every { initialDto.name } returns "Untitled Project"
-        
-        every { mixer.toDto(any()) } returns initialDto
-        PresetManager.initializeDefault(mixer)
-        
-        // Initial state should not be dirty
-        assertFalse(PresetManager.isGlobalPresetDirty(mixer))
-        
-        // Change something
-        val modifiedDto = mockk<GlobalPresetDto>()
-        every { modifiedDto.name } returns "Untitled Project"
-        every { mixer.toDto(any()) } returns modifiedDto
-        
-        // Now it SHOULD be dirty
-        assertTrue(PresetManager.isGlobalPresetDirty(mixer))
     }
 
     @Test

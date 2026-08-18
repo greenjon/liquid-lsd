@@ -33,7 +33,6 @@ object PresetManager {
     val deckStatus = Array(3) { AtomicReference(PresetIOStatus()) }
     private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
 
-    val globalPresetQueue = ConcurrentLinkedQueue<GlobalPresetDto>()
     val deckAPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
     val deckBPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
     val deckCPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
@@ -55,30 +54,6 @@ object PresetManager {
         val files: List<File>,
         val activeIndex: Int
     )
-
-    var cachedGlobalDto: GlobalPresetDto? = null
-    private var defaultGlobalPresetDto: GlobalPresetDto? = null
-
-    fun initializeDefault(mixer: Mixer) {
-        val dto = mixer.toDto("Untitled Project")
-        defaultGlobalPresetDto = dto
-        if (cachedGlobalDto == null) {
-            cachedGlobalDto = dto
-        }
-    }
-
-    fun isGlobalPresetDirty(mixer: Mixer): Boolean {
-        val cached = cachedGlobalDto ?: defaultGlobalPresetDto ?: return false
-        val current = mixer.toDto(cached.name)
-        return current != cached
-    }
-
-
-    fun resetToDefault(mixer: Mixer) {
-        val defaultDto = defaultGlobalPresetDto ?: return
-        mixer.applyDto(defaultDto)
-        cachedGlobalDto = defaultDto
-    }
 
     fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean {
         val cached = when {
@@ -180,23 +155,6 @@ object PresetManager {
         }
     }
 
-    fun loadGlobalPresetAsync(file: File) {
-        CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
-            try {
-                logger.info { "Loading global preset from ${file.absolutePath} in background..." }
-                val content = file.readText()
-                val dto = json.decodeFromString<GlobalPresetDto>(content)
-                globalPresetQueue.offer(dto)
-                logger.info { "Global preset loaded from file and queued for main thread apply" }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load global preset from ${file.absolutePath}" }
-            } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
-            }
-        }, presetIoExecutor)
-    }
-
     fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false) {
         val deckIndex = when {
             isDeckC -> 2
@@ -230,26 +188,6 @@ object PresetManager {
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
                 deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
-            } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
-            }
-        }, presetIoExecutor)
-    }
-
-    fun saveGlobalPresetAsync(file: File, mixer: Mixer, name: String) {
-        // Capture states on the main thread to ensure we don't read changing values from other threads
-        val dto = mixer.toDto(name)
-        cachedGlobalDto = dto
-        CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
-            try {
-                logger.info { "Saving global preset to ${file.absolutePath} in background..." }
-                val content = json.encodeToString(dto)
-                file.parentFile?.mkdirs()
-                file.writeText(content)
-                logger.info { "Global preset saved to file successfully" }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to save global preset to ${file.absolutePath}" }
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
             }
@@ -301,19 +239,6 @@ object PresetManager {
 
 
     fun applyPendingPresets(mixer: Mixer) {
-        // Poll global preset queue
-        var globalDto = globalPresetQueue.poll()
-        while (globalDto != null) {
-            try {
-                mixer.applyDto(globalDto)
-                cachedGlobalDto = globalDto
-                logger.info { "Successfully applied global preset: ${globalDto.name}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Error applying global preset" }
-            }
-            globalDto = globalPresetQueue.poll()
-        }
-
         // Poll deck A preset queue
         var deckADto = deckAPresetQueue.poll()
         while (deckADto != null) {

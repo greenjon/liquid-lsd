@@ -208,20 +208,6 @@ data class MandalaRecipeDto(
 )
 
 @Serializable
-data class GlobalPresetDto(
-    val version: Int = 2,
-    val name: String,
-    val crossfade: ParameterDto,
-    val masterAlpha: ParameterDto,
-    val blendMode: Float,
-    val deckA: DeckPresetDto,
-    val deckB: DeckPresetDto,
-    val bloom: ParameterDto? = null,
-    val queueNext: ParameterDto? = null,
-    val queuePrev: ParameterDto? = null
-)
-
-@Serializable
 data class SessionStateDto(
     val version: Int = 4,
     val deckA: DeckPresetDto,
@@ -441,29 +427,5 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
     
     // Apply global parameters
-    source.globalAlpha.applyDto(dto.globalAlpha)
-}
-
-fun Mixer.toDto(name: String): GlobalPresetDto = GlobalPresetDto(
-    name = name,
-    crossfade = crossfade.toDto(),
-    masterAlpha = masterAlpha.toDto(),
-    blendMode = mode.baseValue,
-    deckA = deckA.toDto("Deck A"),
-    deckB = deckB.toDto("Deck B"),
-    bloom = bloom.toDto(),
-    queueNext = queueNext.toDto(),
-    queuePrev = queuePrev.toDto()
-)
-
-fun Mixer.applyDto(dto: GlobalPresetDto) {
-    crossfade.applyDto(dto.crossfade)
-    masterAlpha.applyDto(dto.masterAlpha)
-    mode.set(dto.blendMode)
-    deckA.applyDto(dto.deckA)
-    deckB.applyDto(dto.deckB)
-    dto.bloom?.let { bloom.applyDto(it) }
-    dto.queueNext?.let { queueNext.applyDto(it) }
-    dto.queuePrev?.let { queuePrev.applyDto(it) }
 }
 

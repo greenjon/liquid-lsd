@@ -128,7 +128,6 @@ fun main() {
 
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckC)
-    PresetManager.initializeDefault(mixer)
     if (UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
         PresetManager.startEmpty(mixer)
     } else {
