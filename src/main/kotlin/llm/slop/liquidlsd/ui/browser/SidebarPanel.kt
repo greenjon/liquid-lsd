@@ -93,18 +93,30 @@ object SidebarPanel {
                             PlaylistManager.savePlaylist(activePl)
                         }
                     }
-                    if (ImGui.menuItem("Rename")) {
-                        BrowserPopupHandler.renameTarget = asset
-                        BrowserPopupHandler.renameBuffer.set(asset.name)
-                        BrowserPopupHandler.pendingOpenRenamePopup = true
-                    }
-                    if (ImGui.menuItem("Clone")) {
-                        if (activePl != null && activePl.filePath == asset.path && activePl.isDirty) {
-                            PlaylistManager.savePlaylist(activePl)
+                    if (asset.type == AssetType.PRESET) {
+                        if (ImGui.menuItem("Rename / Edit Tags...")) {
+                            BrowserPopupHandler.openRenamePresetModal(asset)
                         }
-                        FileSystemManager.cloneFile(asset.path).onSuccess { newPath ->
-                            currentView = LibraryView.SpecificPlaylist(File(newPath))
-                            AssetBrowserPanel.activePlaylistData = null
+                        if (ImGui.menuItem("Duplicate Preset...")) {
+                            BrowserPopupHandler.openDuplicatePresetModal(asset) { newPath ->
+                                currentView = LibraryView.SpecificPlaylist(File(newPath))
+                                AssetBrowserPanel.activePlaylistData = null
+                            }
+                        }
+                    } else {
+                        if (ImGui.menuItem("Rename")) {
+                            BrowserPopupHandler.renameTarget = asset
+                            BrowserPopupHandler.renameBuffer.set(asset.name)
+                            BrowserPopupHandler.pendingOpenRenamePopup = true
+                        }
+                        if (ImGui.menuItem("Clone")) {
+                            if (activePl != null && activePl.filePath == asset.path && activePl.isDirty) {
+                                PlaylistManager.savePlaylist(activePl)
+                            }
+                            FileSystemManager.cloneFile(asset.path).onSuccess { newPath ->
+                                currentView = LibraryView.SpecificPlaylist(File(newPath))
+                                AssetBrowserPanel.activePlaylistData = null
+                            }
                         }
                     }
                     if (ImGui.menuItem("Delete")) {

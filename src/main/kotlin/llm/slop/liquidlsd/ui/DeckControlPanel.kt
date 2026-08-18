@@ -17,152 +17,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.math.roundToInt
 
-class DeckControlPanel(
-    private val deckABrowser: DeckPresetBrowser,
-    private val deckBBrowser: DeckPresetBrowser,
-    private val onNewDeck: (Boolean, Boolean) -> Unit, // (isDeckA, isDirty)
-    private val onLoadDeck: (Boolean, Boolean) -> Unit, // (isDeckA, isDirty)
-    private val onSaveDeck: (String, Deck, Boolean) -> Unit,
-    private val onDeleteDeck: (Boolean) -> Unit
-) {
+class DeckControlPanel {
     private var pendingRightDragFrom: String? = null
-
-    fun drawDeckPresetDropdown(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, label: String, deck: Deck, isDeckA: Boolean, fixedWidth: Float) {
-        ImGui.beginGroup()
-        ImGui.pushID("presetRow_$label")
-
-        val activePreset = when {
-            isDeckA -> session.presetManager.activePresetA
-            deck === mixer.deckC -> session.presetManager.activePresetC
-            else -> session.presetManager.activePresetB
-        }
-        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-
-        val displayName = when {
-            activePreset == null -> "None"
-            isDirty              -> "$activePreset *"
-            else                 -> activePreset
-        }
-
-        val browser = if (isDeckA) deckABrowser else deckBBrowser
-
-        val menuBtnW = 50f
-        val browserBtnW = (fixedWidth - menuBtnW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(50f)
-
-        val deckIndex = when {
-            isDeckA -> 0
-            deck === mixer.deckC -> 2
-            else -> 1
-        }
-        val status = session.presetManager.deckStatus[deckIndex].get()
-
-        val statusText = when (status.state) {
-            PresetIOState.LOADING -> " [L...]"
-            PresetIOState.SAVING -> " [S...]"
-            PresetIOState.ERROR -> " [!]"
-            else -> ""
-        }
-        val btnText = "$displayName$statusText##presetBtn_$label"
-
-        // -- Preset browser trigger button -------------------------------------
-        if (ImGui.button(btnText, browserBtnW, 0f)) {
-            browser.open()
-        }
-        if (status.state == PresetIOState.ERROR && ImGui.isItemHovered()) {
-            ImGui.setTooltip("Error: ${status.errorMessage}")
-        } else if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            // Show engine description + global source note
-            val sourceId = (deck.source as? DynamicVisualSource)?.id ?: "mandala"
-            val engineDesc = SourceDocRegistry.getSourceDescription(sourceId)
-            val sourceNote = NotesManager.getSourceNote(sourceId)
-            if (engineDesc.isNotEmpty() || sourceNote.isNotEmpty()) {
-                ImGui.beginTooltip()
-                if (engineDesc.isNotEmpty()) {
-                    ImGui.textWrapped(engineDesc)
-                }
-                if (sourceNote.isNotEmpty()) {
-                    if (engineDesc.isNotEmpty()) ImGui.spacing()
-                    ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.85f, 0.4f, 1.0f)
-                    ImGui.textWrapped("\uD83D\uDCDD $sourceNote")
-                    ImGui.popStyleColor()
-                }
-                ImGui.endTooltip()
-            } else {
-                ImGui.setTooltip("Click to open the Tag Preset Browser for Deck $label.")
-            }
-        }
-
-        // -- Menu button -------------------------------------------------------
-        var openDeleteConfirm = false
-
-        ImGui.sameLine()
-        if (ImGui.button("Menu##menu_$label", menuBtnW, 0f)) {
-            ImGui.openPopup("deck_preset_menu_$label")
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Deck operations menu (Reset, Load, Save, Save As, Delete).")
-        }
-
-        if (ImGui.beginPopup("deck_preset_menu_$label")) {
-            if (ImGui.menuItem("New (Reset Deck)")) {
-                onNewDeck(isDeckA, isDirty)
-            }
-            if (ImGui.menuItem("Load File...")) {
-                onLoadDeck(isDeckA, isDirty)
-            }
-
-            ImGui.separator()
-
-            if (ImGui.menuItem("Save")) {
-                if (activePreset != null) onSaveDeck(activePreset, deck, isDeckA)
-                else browser.open()   // no active preset -> open browser to save as new
-            }
-            if (ImGui.menuItem("Save As...")) {
-                browser.open()        // browser's built-in Save As modal handles tags
-            }
-
-            if (activePreset != null) {
-                ImGui.separator()
-                if (ImGui.menuItem("Delete '$activePreset'")) {
-                    openDeleteConfirm = true
-                }
-            }
-
-            ImGui.separator()
-            // Source note editing
-            val sourceId = (deck.source as? DynamicVisualSource)?.id ?: "mandala"
-            val sourceName = (deck.source as? DynamicVisualSource)?.displayName ?: "Mandala"
-            val sourceNote = NotesManager.getSourceNote(sourceId)
-            val sourceNoteLabel = if (sourceNote.isNotEmpty()) "\uD83D\uDCDD Edit Source Note\u2026" else "\uD83D\uDCDD Add Source Note\u2026"
-            if (ImGui.menuItem(sourceNoteLabel)) {
-                NoteEditorModal.request(NoteContext.Source(sourceId, sourceName))
-            }
-
-            ImGui.endPopup()
-        }
-
-        if (openDeleteConfirm) ImGui.openPopup("delete_deck_preset_popup_$label")
-
-        // -- Delete confirmation modal -----------------------------------------
-        if (ImGui.beginPopupModal("delete_deck_preset_popup_$label", ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Permanently delete '$activePreset'?")
-            ImGui.spacing()
-            if (ImGui.button("Delete", 80f, 0f)) {
-                val file = File("library/presets/$activePreset.lsd")
-                if (file.exists()) file.delete()
-                onDeleteDeck(isDeckA)
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Cancel", 80f, 0f)) {
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.endPopup()
-        }
-
-        ImGui.popID()
-        ImGui.endGroup()
-    }
 
     fun drawDeckControls(
         session: llm.slop.liquidlsd.SessionContext,
@@ -207,8 +63,7 @@ class DeckControlPanel(
 
         // Interactive top preset bar: Save button, Eject button, Preset bar
         ImGui.setCursorPosX(inset)
-        val browser = if (isDeckA) deckABrowser else deckBBrowser
-        drawDeckBottomBar(session, label, deck, isDeckA = isDeckA, isDeckC = false, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, browser = browser, targetW = imgAvailW)
+        drawDeckMonitorToolbar(session, label, deck, isDeckA = isDeckA, isDeckC = false, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = imgAvailW)
         ImGui.spacing()
 
         ImGui.setCursorPosX(inset)
@@ -331,13 +186,13 @@ class DeckControlPanel(
 }
 
 /**
- * Draws the interactive bottom bar for a deck preview monitor.
+ * Draws the interactive toolbar for a deck preview monitor.
  *
  * Order: [Save Button] [Eject Button] [Preset Bar]
  * Buttons and Preset Bar stay aligned along their bottom baselines,
  * and the bar height grows dynamically as text size/scale increases.
  */
-fun drawDeckBottomBar(
+fun drawDeckMonitorToolbar(
     session: llm.slop.liquidlsd.SessionContext,
     deckLabel: String,
     deck: Deck,
@@ -346,10 +201,9 @@ fun drawDeckBottomBar(
     mixer: Mixer,
     onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
     onEjectDeck: (Deck, Boolean, Boolean) -> Unit,
-    browser: DeckPresetBrowser? = null,
     targetW: Float = 0f
 ) {
-    ImGui.pushID("bottom_bar_$deckLabel")
+    ImGui.pushID("monitor_toolbar_$deckLabel")
 
     val (activePreset, mtime, dtoVersion) = when {
         isDeckA -> Triple(
@@ -436,10 +290,6 @@ fun drawDeckBottomBar(
 
     ImGui.setCursorScreenPos(barX, startY)
     ImGui.invisibleButton("##preset_bar_btn_$tag", barW, rowH)
-
-    if (ImGui.isItemClicked(0) && browser != null) {
-        browser.open()
-    }
 
     if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
         val presetNote = NotesManager.getPresetNote(deckLabel)
@@ -536,4 +386,3 @@ private fun drawIconButton(
 
     return isClicked
 }
-

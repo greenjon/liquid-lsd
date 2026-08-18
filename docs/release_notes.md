@@ -1,6 +1,21 @@
 # Liquid LSD — Release Notes
 
-## Version 1.0.0-beta.24
+## Version 1.0.0-beta.26
+
+> [!NOTE]
+> **Release 1.0.0-beta.26** replaces the redundant floating `DeckPresetBrowser` modal with a clean, single-purpose `SavePresetModal` and removes orphaned deck UI code.
+
+### Key Highlights
+
+- **Dedicated SavePresetModal**: Replaced the floating `DeckPresetBrowser` popup with a clean, dedicated `SavePresetModal` for entering preset names and comma-separated tags directly when selecting "Save As..." (or "Save" on an untitled deck). Dynamic action titles (`Save Preset As`, `Rename / Edit Preset Tags`, `Duplicate Preset`) render cleanly in the ImGui modal title bar without redundant body text.
+- **Context-Aware Metadata Naming**: Standardized preset creation terminology between live saving (`Save As...` on Deck toolbars to preserve active deck state) and library management (**"Rename / Edit Tags..."** & **"Duplicate Preset..."** in Asset Browser context menus to copy/edit files on disk).
+- **Universal Overwrite Safety**: Added file existence detection and overwrite protection across all preset modal flows (`Save As...`, `Rename`, `Duplicate`). `Save As...` defaults to `${activeName}_copy` to create new files by default, and typing an existing file name prompts with an explicit amber warning badge and `[ Overwrite ]` confirmation button.
+- **Redundant Browser Removal**: Removed `DeckPresetBrowser.kt` and its duplicated search, tag filtering, and preset list UI; preset browsing and loading remain centralized in the docked **Asset Browser** (`F3`).
+- **Deck Control Cleanup**: Removed orphaned `drawDeckPresetDropdown` code, renamed `drawDeckBottomBar` to `drawDeckMonitorToolbar`, and streamlined deck preview headers to act as clean display indicators with rich tooltips.
+
+---
+
+## Version 1.0.0-beta.25
 
 > [!NOTE]
 > **Release 1.0.0-beta.24** streamlines the codebase by removing legacy migration logic, obsolete file fallbacks, backwards compatibility shims, and deprecated helpers.

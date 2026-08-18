@@ -102,7 +102,7 @@ class MixerMonitorPanel(
 
         // Interactive top preset bar for Deck C
         ImGui.setCursorScreenPos(startX, ImGui.getCursorScreenPosY())
-        drawDeckBottomBar(session, "Deck C", mixer.deckC, isDeckA = false, isDeckC = true, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = availW)
+        drawDeckMonitorToolbar(session, "Deck C", mixer.deckC, isDeckA = false, isDeckC = true, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = availW)
         ImGui.spacing()
         
         val imgX = startX

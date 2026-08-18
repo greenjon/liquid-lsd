@@ -400,14 +400,23 @@ object AssetBrowserPanel {
                     session.playQueueManager.appendToQueue(File(asset.path))
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Rename")) {
-                    BrowserPopupHandler.renameTarget = asset
-                    BrowserPopupHandler.renameBuffer.set(asset.name)
-                    BrowserPopupHandler.pendingOpenRenamePopup = true
-                }
-                if (ImGui.menuItem("Clone")) {
-                    FileSystemManager.cloneFile(asset.path).onSuccess {
-                        refreshAssets()
+                if (asset.type == AssetType.PRESET) {
+                    if (ImGui.menuItem("Rename / Edit Tags...")) {
+                        BrowserPopupHandler.openRenamePresetModal(asset)
+                    }
+                    if (ImGui.menuItem("Duplicate Preset...")) {
+                        BrowserPopupHandler.openDuplicatePresetModal(asset)
+                    }
+                } else {
+                    if (ImGui.menuItem("Rename")) {
+                        BrowserPopupHandler.renameTarget = asset
+                        BrowserPopupHandler.renameBuffer.set(asset.name)
+                        BrowserPopupHandler.pendingOpenRenamePopup = true
+                    }
+                    if (ImGui.menuItem("Clone")) {
+                        FileSystemManager.cloneFile(asset.path).onSuccess {
+                            refreshAssets()
+                        }
                     }
                 }
                 if (ImGui.menuItem("Delete")) {

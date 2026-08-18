@@ -317,10 +317,6 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         onOpenAudioEngineMonitor = { pendingOpenAudioEngineMonitor = true }
     )
 
-    // Phase 2 -- Deck preset browsers (replaces flat ImGui.combo)
-    private val deckABrowser = DeckPresetBrowser("A")
-    private val deckBBrowser = DeckPresetBrowser("B")
-
     private val missingItemsPanel = MissingItemsPanel()
 
 
@@ -363,46 +359,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         logger.info { "UIManager initialized" }
     }
 
-    private val deckControlPanel = DeckControlPanel(
-        deckABrowser = deckABrowser,
-        deckBBrowser = deckBBrowser,
-        onNewDeck = { isDeckA, isDirty ->
-            if (isDirty) {
-                if (isDeckA) popupManager.pendingDeckActionA = PopupManager.PendingDeckAction.NEW
-                else         popupManager.pendingDeckActionB = PopupManager.PendingDeckAction.NEW
-            } else {
-                if (isDeckA) {
-                    currentMixer?.deckA?.reset()
-                    session.presetManager.activePresetA = null
-                    session.presetManager.cachedDtoA = null
-                } else {
-                    currentMixer?.deckB?.reset()
-                    session.presetManager.activePresetB = null
-                    session.presetManager.cachedDtoB = null
-                }
-            }
-        },
-        onLoadDeck = { isDeckA, isDirty ->
-            if (isDirty) {
-                if (isDeckA) popupManager.pendingDeckActionA = PopupManager.PendingDeckAction.LOAD_FILE
-                else         popupManager.pendingDeckActionB = PopupManager.PendingDeckAction.LOAD_FILE
-            } else {
-                performLoadDeckPreset(isDeckA)
-            }
-        },
-        onSaveDeck = { name, deck, isDeckA -> saveDeckPreset(name, deck, isDeckA) },
-        onDeleteDeck = { isDeckA ->
-            if (isDeckA) {
-                currentMixer?.deckA?.reset()
-                session.presetManager.activePresetA = null
-                session.presetManager.cachedDtoA = null
-            } else {
-                currentMixer?.deckB?.reset()
-                session.presetManager.activePresetB = null
-                session.presetManager.cachedDtoB = null
-            }
-        }
-    )
+    private val deckControlPanel = DeckControlPanel()
 
     private val deckUtilityAction = { mode: Int, from: Deck, to: Deck ->
         val mixer = currentMixer
@@ -443,8 +400,41 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         if (activeName != null && !isSaveAs) {
             saveDeckPreset(activeName, deck, isDeckA)
         } else {
-            if (deck === currentMixer?.deckA) deckABrowser.open()
-            else if (deck === currentMixer?.deckB) deckBBrowser.open()
+            val cached = when {
+                deck === currentMixer?.deckA -> session.presetManager.cachedDtoA
+                deck === currentMixer?.deckB -> session.presetManager.cachedDtoB
+                deck === currentMixer?.deckC -> session.presetManager.cachedDtoC
+                else -> null
+            }
+            val defaultName = if (activeName != null && isSaveAs) {
+                generateUniqueCopyName(activeName)
+            } else {
+                activeName ?: ""
+            }
+            val defaultTags = cached?.tags ?: emptyList()
+            SavePresetModal.request(
+                title = "Save Preset As",
+                confirmLabel = "Save",
+                defaultName = defaultName,
+                defaultTags = defaultTags,
+                originalPath = activeName?.let { "library/presets/$it.lsd" }
+            ) { name, tags ->
+                saveDeckPreset(name, deck, isDeckA, tags)
+            }
+        }
+    }
+
+    private fun generateUniqueCopyName(baseName: String): String {
+        val presetsDir = FileSystemManager.getPresetsRoot()
+        val cleanBase = baseName.removeSuffix(".lsd").trim()
+        val candidate1 = "${cleanBase}_copy"
+        if (!java.io.File(presetsDir, "$candidate1.lsd").exists()) return candidate1
+
+        var idx = 2
+        while (true) {
+            val candidate = "${cleanBase}_copy$idx"
+            if (!java.io.File(presetsDir, "$candidate.lsd").exists()) return candidate
+            idx++
         }
     }
 
@@ -599,38 +589,10 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             popupManager.drawDeckConfirmPopups(session, mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
 
-            // Note editor modal (opened by NoteEditorModal.request() from anywhere in the UI)
             NoteEditorModal.draw()
+            SavePresetModal.draw(session)
 
             missingItemsPanel.draw(session)
-
-
-            deckABrowser.draw(session,
-                activePresetName = session.presetManager.activePresetA,
-                isDirty          = session.presetManager.isDeckDirty(mixer.deckA, mixer),
-                onSelect         = { name ->
-                    if (name == null) {
-                        session.presetManager.activePresetA = null
-                        session.presetManager.cachedDtoA = null
-                    } else {
-                        loadDeckPreset(name, mixer.deckA, true)
-                    }
-                },
-                onSaveAs = { name, tags -> saveDeckPreset(name, mixer.deckA, true, tags) }
-            )
-            deckBBrowser.draw(session,
-                activePresetName = session.presetManager.activePresetB,
-                isDirty          = session.presetManager.isDeckDirty(mixer.deckB, mixer),
-                onSelect         = { name ->
-                    if (name == null) {
-                        session.presetManager.activePresetB = null
-                        session.presetManager.cachedDtoB = null
-                    } else {
-                        loadDeckPreset(name, mixer.deckB, false)
-                    }
-                },
-                onSaveAs = { name, tags -> saveDeckPreset(name, mixer.deckB, false, tags) }
-            )
 
             deckAFileBrowser.draw { file ->
                 session.presetManager.loadDeckPresetAsync(file, true)

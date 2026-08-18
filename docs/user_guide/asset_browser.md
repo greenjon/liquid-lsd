@@ -51,8 +51,8 @@ For Patches & Playlists:
 - **Add to Playlist**: Appends the item to the active playlist open in the editor.
 - **Add to Play Queue**: Inserts item into the live AutoVJ queue (*Next*, *After Current*, or *At End*).
 - **Replace & Play**: Clears the current queue, loads the item, and triggers immediate playback.
-- **Clone**: Creates a duplicate file with `_copy` appended.
-- **Rename (`F2`)**: Renames the file on disk.
+- **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit both the preset's filename and comma-separated tags in a single step.
+- **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy` and existing tags, allowing instant duplication or immediate customization of the copied preset.
 - **Delete (`Delete`)**: Removes the file from disk (with confirmation modal).
 
 For Folders:
