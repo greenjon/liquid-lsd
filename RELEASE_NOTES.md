@@ -7,8 +7,10 @@
 
 ---
 
-### Key Highlights
-
+- **Unipolar CV Modulation & Zero Silence Baseline**: Fixed modulation evaluation formulas for unipolar sources (Audio RMS, Bass/Mid/High frequency bands, Triggers, and MIDI CC). Silence ($cv = 0.0$) now remains strictly at $0.0$ without introducing artificial DC offset shifts when increasing Depth, restoring full modulation dynamic range.
+- **Preset Grid Cell Dial Calibration**: Calibrated knob meters in `PresetGridRenderer` for unipolar audio, trigger, and MIDI cells so dial needles and indicator arcs accurately reflect the true parameter modulation range ($0.0 \dots 1.0$) rather than resting at $0.5$ on silence.
+- **Deterministic Lookahead Projection Isolation**: Isolated future lookahead projection on the Final Parameter tab strictly to deterministic periodic generators (LFOs), ensuring incoming live audio transients and drum hits do not introduce unwanted DC offset bounces to upcoming waveform curves.
+- **Peak-Detect Anti-Aliased Waveform Envelopes**: Implemented golden-ratio peak-detect envelope rendering for long-duration timebases ($100\text{s}$, $15\text{m}$, $2.5\text{h}$, $24\text{h}$). Fast-moving LFOs rendered on slow time scales now display their full illuminated dynamic envelope/ribbon without stroboscopic Nyquist aliasing or flatline artifacts.
 - **Hybrid Lookback & True Sample History Replay**: Restored full organic transient memory for reactive inputs (Audio RMS, frequency bands, Onset, Accent, and MIDI CC). Non-deterministic inputs now sample directly from the recorded `CvHistoryBuffer` in the past window, accurately replaying genuine live drum hits and audio dynamics rather than flat lines.
 - **Context-Aware Playhead Alignment**:
   - **Audio, Trigger & MIDI Tabs**: The `NOW` playhead is locked to the far right edge ($100\%$ full-screen historical seismograph) with division grid timestamps calibrated backwards (`-1s`, `-750ms`, `-500ms`, `-250ms`, `NOW`), defaulting to `1s` for high-resolution transient tracking.
