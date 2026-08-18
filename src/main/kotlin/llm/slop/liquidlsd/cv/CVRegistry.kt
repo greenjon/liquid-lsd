@@ -46,7 +46,7 @@ object CVRegistry {
      */
     fun register(source: CVSource) {
         sources[source.id] = source
-        histories[source.id] = CvHistoryBuffer(200)
+        histories[source.id] = CvHistoryBuffer(600)
     }
 
     fun updateBeatAnchor(beats: Double, bpm: Float, timeNs: Long) {

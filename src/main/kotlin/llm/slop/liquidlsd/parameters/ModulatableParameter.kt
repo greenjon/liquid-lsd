@@ -15,7 +15,7 @@ enum class MeterType {
  */
 class ModulatableParameter(
     var baseValue: Float = 0.0f,
-    val historySize: Int = 200,
+    val historySize: Int = 600,
     val minClamp: Float = 0.0f,
     val maxClamp: Float = 1.0f,
     var randomizeBase: Boolean = false,
@@ -35,15 +35,16 @@ class ModulatableParameter(
 
     /**
      * Resolves the effective timebase duration and division interval.
-     * In AUTO mode, derives the timebase from the first active LFO modulator's period.
+     * In AUTO mode, derives the timebase from the first active LFO modulator's period,
+     * or uses [defaultWhenNoLfo] (default: 1s for reactive transient visualization).
      */
-    fun resolveEffectiveTimebase(): Pair<Float, Float> {
+    fun resolveEffectiveTimebase(defaultWhenNoLfo: ScopeTimebase = ScopeTimebase.ONE_SEC): Pair<Float, Float> {
         if (scopeTimebase != ScopeTimebase.AUTO) {
             return Pair(scopeTimebase.durationSec, scopeTimebase.divSec)
         }
         val firstLfo = modulators.firstOrNull { !it.bypassed && (it.sourceId == "lfo" || it.sourceId == "beatPhase" || it.sourceId == "sampleAndHold") }
         if (firstLfo == null) {
-            return Pair(ScopeTimebase.TEN_SEC.durationSec, ScopeTimebase.TEN_SEC.divSec)
+            return Pair(defaultWhenNoLfo.durationSec, defaultWhenNoLfo.divSec)
         }
         val periodSec = when (firstLfo.sourceId) {
             "beatPhase", "sampleAndHold" -> firstLfo.subdivision * (60.0f / 120.0f)

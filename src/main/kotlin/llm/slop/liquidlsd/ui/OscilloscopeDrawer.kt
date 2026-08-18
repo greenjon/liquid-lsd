@@ -30,8 +30,11 @@ object OscilloscopeDrawer {
         val maxVal = param.maxClamp
         val isAngle = param.isAngle
 
-        val (totalDuration, divSec) = param.resolveEffectiveTimebase()
-        val playheadRatio = 0.5f
+        val hasLfo = activeMods.any { it.sourceId in setOf("lfo", "beatPhase", "sampleAndHold") }
+        val hasNonDet = activeMods.any { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high", "trigger_onset", "trigger_accent") || it.sourceId.startsWith("midi_cc_") }
+        val playheadRatio = if (hasLfo) 0.5f else 1.0f
+
+        val (totalDuration, divSec) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
 
         // 1. Top Controls Bar: Timebase Selector
         drawControlsBar(session, param, totalDuration, divSec)
@@ -58,7 +61,7 @@ object OscilloscopeDrawer {
         dl.addLine(startX, startY + 6f, startX + w, startY + 6f, gridColFaint, 1f)
         dl.addLine(startX, startY + h - 6f, startX + w, startY + h - 6f, gridColFaint, 1f)
 
-        // Calculate Playhead X position (Fixed Center)
+        // Calculate Playhead X position (Centered for LFO, Right-aligned for Audio/MIDI/Trigger)
         val nowX = startX + w * playheadRatio
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -68,7 +71,7 @@ object OscilloscopeDrawer {
             val pixelsPerSec = w / totalDuration
             val divPixels = divSec * pixelsPerSec
 
-            // Grid lines to the left of NOW (Past Lookback)
+            // Grid lines to the left of NOW (Past Lookback / History)
             var curX = nowX - divPixels
             var curOffset = -divSec
             while (curX >= startX + 1f) {
@@ -83,19 +86,21 @@ object OscilloscopeDrawer {
                 curOffset -= divSec
             }
 
-            // Grid lines to the right of NOW (Future Lookahead)
-            curX = nowX + divPixels
-            curOffset = divSec
-            while (curX <= startX + w - 1f) {
-                dl.addLine(curX, startY, curX, startY + h, gridColTick, 1f)
-                val label = ScopeTimebase.formatTimeOffset(curOffset)
-                val txtW = ImGui.calcTextSize(label).x
-                if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
-                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
-                    session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
+            // Grid lines to the right of NOW (Future Lookahead) - only if playhead is centered
+            if (playheadRatio < 0.999f) {
+                curX = nowX + divPixels
+                curOffset = divSec
+                while (curX <= startX + w - 1f) {
+                    dl.addLine(curX, startY, curX, startY + h, gridColTick, 1f)
+                    val label = ScopeTimebase.formatTimeOffset(curOffset)
+                    val txtW = ImGui.calcTextSize(label).x
+                    if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
+                        ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
+                        session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
+                    }
+                    curX += divPixels
+                    curOffset += divSec
                 }
-                curX += divPixels
-                curOffset += divSec
             }
         }
 
@@ -104,54 +109,96 @@ object OscilloscopeDrawer {
         val divisor = if (range == 0f) 1f else range
         val isBipolar = param.minClamp < 0f
 
-        // 2. Render Lookback (Left Half)
+        // 2. Render Lookback / Past History
         val pastW = w * playheadRatio
         val pastSec = totalDuration * playheadRatio
         if (pastW > 1f && pastSec > 0.001f) {
             val stepPastX = pastW / FUTURE_STEPS
+            val fps = session.uiTheme.maxFps.toFloat().coerceIn(30f, 240f)
+            val samplesInWindow = (pastSec * fps).toInt().coerceIn(2, history.size)
 
-            // Draw individual modulator past lines
-            for (mod in activeMods) {
-                val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
-                val modColor = CvTheme.getThemeColor(colorId, 0.5f)
+            if (hasNonDet || !hasLfo) {
+                // True recorded history for audio/midi/trigger
+                for (mod in activeMods) {
+                    val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
+                    val modColor = CvTheme.getThemeColor(colorId, 0.5f)
+                    val hist = modulatorHistories[mod.id]
+                    if (hist != null) {
+                        var prevX = startX
+                        var prevVal = hist.sampleWindow(samplesInWindow, 0.0f)
+                        var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+
+                        for (s in 1..FUTURE_STEPS) {
+                            val frac = s.toFloat() / FUTURE_STEPS
+                            val nextVal = hist.sampleWindow(samplesInWindow, frac)
+                            val nextX = startX + frac * pastW
+                            val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+
+                            dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
+                            prevX = nextX
+                            prevY = nextY
+                        }
+                    }
+                }
+
+                // Final combined past line from recorded param.history
+                var prevX = startX
+                var prevVal = history.sampleWindow(samplesInWindow, 0.0f)
+                var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+
+                for (s in 1..FUTURE_STEPS) {
+                    val frac = s.toFloat() / FUTURE_STEPS
+                    val nextVal = history.sampleWindow(samplesInWindow, frac)
+                    val nextX = startX + frac * pastW
+                    val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+
+                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
+                    prevX = nextX
+                    prevY = nextY
+                }
+            } else {
+                // Pure deterministic LFO past calculation
+                for (mod in activeMods) {
+                    val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
+                    val modColor = CvTheme.getThemeColor(colorId, 0.5f)
+
+                    var prevX = startX
+                    var prevVal = calculateModFutureVal(param, mod, isBipolar, -pastSec.toDouble())
+                    var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+
+                    for (s in 1..FUTURE_STEPS) {
+                        val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                        val nextVal = calculateModFutureVal(param, mod, isBipolar, tOffset)
+                        val nextX = startX + s * stepPastX
+                        val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+
+                        dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
+                        prevX = nextX
+                        prevY = nextY
+                    }
+                }
 
                 var prevX = startX
-                var prevVal = calculateModFutureVal(param, mod, isBipolar, -pastSec.toDouble())
+                var prevVal = calculateCombinedFutureVal(param, activeMods, isBipolar, -pastSec.toDouble())
                 var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
                 for (s in 1..FUTURE_STEPS) {
                     val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
-                    val nextVal = calculateModFutureVal(param, mod, isBipolar, tOffset)
+                    val nextVal = calculateCombinedFutureVal(param, activeMods, isBipolar, tOffset)
                     val nextX = startX + s * stepPastX
                     val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                    dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
+                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
                     prevX = nextX
                     prevY = nextY
                 }
             }
-
-            // Draw final combined past line (solid in themeColor)
-            var prevX = startX
-            var prevVal = calculateCombinedFutureVal(param, activeMods, isBipolar, -pastSec.toDouble())
-            var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-            for (s in 1..FUTURE_STEPS) {
-                val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
-                val nextVal = calculateCombinedFutureVal(param, activeMods, isBipolar, tOffset)
-                val nextX = startX + s * stepPastX
-                val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
-                prevX = nextX
-                prevY = nextY
-            }
         }
 
-        // 3. Render Lookahead (Right Half)
+        // 3. Render Lookahead (Right Half) - only if playhead is centered
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
-        if (futureW > 1f && futureSec > 0.001f) {
+        if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f) {
             val stepFutureX = futureW / FUTURE_STEPS
 
             // Draw individual modulator future projections
@@ -199,7 +246,7 @@ object OscilloscopeDrawer {
             }
         }
 
-        // 4. Draw Centered NOW Playhead
+        // 4. Draw NOW Playhead (Centered or Right-aligned)
         drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
 
         // 5. Border
@@ -219,7 +266,8 @@ object OscilloscopeDrawer {
 
         val title = "Final Parameter Value"
         val textWidth = ImGui.calcTextSize(title).x
-        ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
+        val titleX = if (playheadRatio >= 0.999f) (startX + 60f) else (startX + w - textWidth - 8f)
+        ImGui.setCursorScreenPos(titleX, startY + 4f)
         session.uiTheme.captionColored(0.78f, 0.82f, 0.86f, 0.90f, title)
 
         // 7. Contextual Tooltips
@@ -240,8 +288,10 @@ object OscilloscopeDrawer {
         val maxVal = param.maxClamp
         val isAngle = param.isAngle
 
-        val (totalDuration, divSec) = param.resolveEffectiveTimebase()
-        val playheadRatio = 0.5f
+        val hasLfo = activeMods.any { it.sourceId in setOf("lfo", "beatPhase", "sampleAndHold") }
+        val playheadRatio = if (hasLfo) 0.5f else 1.0f
+
+        val (totalDuration, divSec) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
 
         // Top Controls Bar
         drawControlsBar(session, param, totalDuration, divSec)
@@ -274,6 +324,7 @@ object OscilloscopeDrawer {
             dl.addLine(startX, startY + h - 6f, startX + w, startY + h - 6f, gridColFaint, 1f)
         }
 
+        // Calculate Playhead X position (Centered for LFO, Right-aligned for Audio/MIDI/Trigger)
         val nowX = startX + w * playheadRatio
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -297,18 +348,20 @@ object OscilloscopeDrawer {
                 curOffset -= divSec
             }
 
-            curX = nowX + divPixels
-            curOffset = divSec
-            while (curX <= startX + w - 1f) {
-                dl.addLine(curX, startY, curX, startY + h, gridColTick, 1f)
-                val label = ScopeTimebase.formatTimeOffset(curOffset)
-                val txtW = ImGui.calcTextSize(label).x
-                if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
-                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
-                    session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
+            if (playheadRatio < 0.999f) {
+                curX = nowX + divPixels
+                curOffset = divSec
+                while (curX <= startX + w - 1f) {
+                    dl.addLine(curX, startY, curX, startY + h, gridColTick, 1f)
+                    val label = ScopeTimebase.formatTimeOffset(curOffset)
+                    val txtW = ImGui.calcTextSize(label).x
+                    if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
+                        ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
+                        session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
+                    }
+                    curX += divPixels
+                    curOffset += divSec
                 }
-                curX += divPixels
-                curOffset += divSec
             }
         }
 
@@ -316,32 +369,56 @@ object OscilloscopeDrawer {
         val pastW = w * playheadRatio
         val pastSec = totalDuration * playheadRatio
 
-        // 1. Draw Lookback (Left Half)
+        // 1. Draw Lookback / Past History
         if (pastW > 1f && pastSec > 0.001f) {
             val stepPastX = pastW / FUTURE_STEPS
 
-            var prevX = startX
-            var prevRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, -pastSec.toDouble())
-            var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
-            var prevY = (startY + h - 6f) - prevNorm * usableHeight
+            if (!hasLfo) {
+                // True recorded history playback for Audio, Trigger, MIDI
+                val fps = session.uiTheme.maxFps.toFloat().coerceIn(30f, 240f)
+                val samplesInWindow = (pastSec * fps).toInt().coerceIn(2, history.size)
 
-            for (s in 1..FUTURE_STEPS) {
-                val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
-                val nextRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, tOffset)
-                val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
-                val nextX = startX + s * stepPastX
-                val nextY = (startY + h - 6f) - nextNorm * usableHeight
+                var prevX = startX
+                var prevRaw = history.sampleWindow(samplesInWindow, 0.0f)
+                var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
+                var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
-                prevX = nextX
-                prevY = nextY
+                for (s in 1..FUTURE_STEPS) {
+                    val frac = s.toFloat() / FUTURE_STEPS
+                    val nextRaw = history.sampleWindow(samplesInWindow, frac)
+                    val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
+                    val nextX = startX + frac * pastW
+                    val nextY = (startY + h - 6f) - nextNorm * usableHeight
+
+                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
+                    prevX = nextX
+                    prevY = nextY
+                }
+            } else {
+                // Deterministic LFO calculated lookback
+                var prevX = startX
+                var prevRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, -pastSec.toDouble())
+                var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
+                var prevY = (startY + h - 6f) - prevNorm * usableHeight
+
+                for (s in 1..FUTURE_STEPS) {
+                    val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                    val nextRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, tOffset)
+                    val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
+                    val nextX = startX + s * stepPastX
+                    val nextY = (startY + h - 6f) - nextNorm * usableHeight
+
+                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
+                    prevX = nextX
+                    prevY = nextY
+                }
             }
         }
 
-        // 2. Draw Lookahead (Right Half)
+        // 2. Draw Lookahead (Right Half) - only if playhead is centered
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
-        if (futureW > 1f && futureSec > 0.001f) {
+        if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f) {
             val stepFutureX = futureW / FUTURE_STEPS
             val projColor = ImGui.colorConvertFloat4ToU32(
                 ((themeColor and 0xFF)) / 255f,
@@ -369,7 +446,7 @@ object OscilloscopeDrawer {
         }
 
 
-        // 3. Draw Centered NOW Playhead
+        // 3. Draw NOW Playhead (Centered or Right-aligned)
         val range = maxVal - minVal
         val divisor = if (range == 0f) 1f else range
         drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
@@ -453,24 +530,25 @@ object OscilloscopeDrawer {
         val dl = ImGui.getWindowDrawList()
         val playheadLineCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.85f)
         val handleCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.85f, 1.0f, 1.0f)
+        val effectiveX = nowX.coerceIn(startX + 1f, startX + w - 1f)
 
-        // Vertical Playhead Line (Centered)
-        dl.addLine(nowX, startY, nowX, startY + h, playheadLineCol, 1.5f)
+        // Vertical Playhead Line
+        dl.addLine(effectiveX, startY, effectiveX, startY + h, playheadLineCol, 1.5f)
 
         // Top subtle indicator pip [▼]
         val handleSize = 5f
         dl.addTriangleFilled(
-            nowX - handleSize, startY,
-            nowX + handleSize, startY,
-            nowX, startY + handleSize * 1.2f,
+            effectiveX - handleSize, startY,
+            effectiveX + handleSize, startY,
+            effectiveX, startY + handleSize * 1.2f,
             handleCol
         )
 
         // Playhead current value dot
         val currentNorm = if (range == 0f) 0.5f else ((param.value - minVal) / divisor).coerceIn(0f, 1f)
         val currentY = (startY + h - 6f) - currentNorm * usableHeight
-        dl.addCircleFilled(nowX, currentY, 3.5f, handleCol)
-        dl.addCircle(nowX, currentY, 5.5f, ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.4f), 12, 1.5f)
+        dl.addCircleFilled(effectiveX, currentY, 3.5f, handleCol)
+        dl.addCircle(effectiveX, currentY, 5.5f, ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.4f), 12, 1.5f)
     }
 
     private fun handleOscilloscopeTooltips(
@@ -489,14 +567,22 @@ object OscilloscopeDrawer {
         val my = io.mousePos.y
 
         if (mx in startX..(startX + w) && my in startY..(startY + h)) {
-            if (abs(mx - nowX) <= 6f) {
-                ImGui.setTooltip("Playhead (NOW):\nCurrent parameter value & phase.")
-            } else if (mx < nowX) {
-                val pastSpan = totalDuration * playheadRatio
-                ImGui.setTooltip("Waveform Lookback:\nModulation trajectory leading into current phase (-${ScopeTimebase.formatTimeOffset(pastSpan).removePrefix("-").removePrefix("+")} to NOW).")
+            if (playheadRatio >= 0.999f) {
+                if (abs(mx - nowX) <= 10f) {
+                    ImGui.setTooltip("Playhead (NOW):\nCurrent live value.")
+                } else {
+                    ImGui.setTooltip("Waveform History:\nRecorded CV trajectory leading into current value (-${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("-").removePrefix("+")} to NOW).")
+                }
             } else {
-                val futureSpan = totalDuration * (1.0f - playheadRatio)
-                ImGui.setTooltip("Waveform Lookahead:\nProjected modulation trajectory ahead of current phase (NOW to +${ScopeTimebase.formatTimeOffset(futureSpan).removePrefix("+")}).")
+                if (abs(mx - nowX) <= 6f) {
+                    ImGui.setTooltip("Playhead (NOW):\nCurrent parameter value & phase.")
+                } else if (mx < nowX) {
+                    val pastSpan = totalDuration * playheadRatio
+                    ImGui.setTooltip("Waveform Lookback:\nModulation trajectory leading into current phase (-${ScopeTimebase.formatTimeOffset(pastSpan).removePrefix("-").removePrefix("+")} to NOW).")
+                } else {
+                    val futureSpan = totalDuration * (1.0f - playheadRatio)
+                    ImGui.setTooltip("Waveform Lookahead:\nProjected modulation trajectory ahead of current phase (NOW to +${ScopeTimebase.formatTimeOffset(futureSpan).removePrefix("+")}).")
+                }
             }
         }
     }

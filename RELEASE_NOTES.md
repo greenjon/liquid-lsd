@@ -9,10 +9,14 @@
 
 ### Key Highlights
 
+- **Hybrid Lookback & True Sample History Replay**: Restored full organic transient memory for reactive inputs (Audio RMS, frequency bands, Onset, Accent, and MIDI CC). Non-deterministic inputs now sample directly from the recorded `CvHistoryBuffer` in the past window, accurately replaying genuine live drum hits and audio dynamics rather than flat lines.
+- **Context-Aware Playhead Alignment**:
+  - **Audio, Trigger & MIDI Tabs**: The `NOW` playhead is locked to the far right edge ($100\%$ full-screen historical seismograph) with division grid timestamps calibrated backwards (`-1s`, `-750ms`, `-500ms`, `-250ms`, `NOW`), defaulting to `1s` for high-resolution transient tracking.
+  - **LFO & Beat Generators**: Centered $50/50$ playhead with calculated lookback and forward lookahead projection.
+  - **Final Parameter Tab**: Intelligently adapts — right-aligns for pure audio/MIDI modulations, and centers when LFOs are active (rendering $100\%$ true recorded history on the left and projected LFO modulation on the right).
 - **Multi-Scale Calibrated Timebases & Font Autoscaling**: Oscilloscopes support selectable physical time windows spanning from fast transients to circadian cycles: `1s` ($250\text{ms/div}$), `10s` ($2.0\text{s/div}$), `100s` ($20\text{s/div}$), `15m` ($3\text{m/div}$), `2.5h` ($30\text{m/div}$), and `24h` ($4\text{h/div}$), plus an intelligent `Auto` mode that dynamically fits $1\text{–}2$ periods of the active LFO. Time range dropdown combo widths and spacing dynamically autoscale with font size.
 - **Brightened Grid Ticks & Tick Numbers**: High-contrast, crisp grid division ticks and legible timestamp numbers with dynamic height positioning for clear readability across all themes and zoom levels.
 - **Real-Time Lookahead Projection & Lookback Context**: Deterministic modulators (single and compound LFOs with AM/PM/ADD modulation) are evaluated continuously across physical time, seamlessly rendering both the incoming trajectory (lookback) and upcoming trajectory (lookahead) without waiting for real-time history to accumulate.
-- **Centered "NOW" Playhead**: Parameter oscilloscopes feature a symmetrical centered layout with a crisp `NOW` vertical line and glowing live value marker, providing equal visual context for recent lookback and upcoming lookahead.
 - **Calibrated Grid Ticks & Dynamic Timestamp Badges**: Vertical division lines render at exact physical intervals anchored to the `NOW` playhead with formatted timestamp badges (`-250ms`, `-2s`, `NOW`, `+2s`, `+15m`, `+4h`, etc.).
 - **Contextual Tooltips**: Clean hover tooltips explain the modulation lookback trajectory, live playhead value, and projected lookahead.
 - **Unified Oscilloscope Architecture**: Consolidated all oscilloscope rendering into `OscilloscopeDrawer`, eliminating duplicated drawing code in `AudioEnginePanel`.

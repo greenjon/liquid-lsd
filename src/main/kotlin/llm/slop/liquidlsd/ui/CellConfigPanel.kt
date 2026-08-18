@@ -185,7 +185,7 @@ object CellConfigPanel {
         // Initialize or update oscilloscope history and virtual modulators
         val currentActiveIds = activeMods.map { it.id }.toSet()
         if (activeCellId != cell || activeHistory == null || currentActiveIds != lastActiveIds) {
-            activeHistory = CvHistoryBuffer(200)
+            activeHistory = CvHistoryBuffer(600)
             activeCellId = cell
             lastActiveIds = currentActiveIds
             initializeVirtualModulators(cvId, activeMods, hasAdvanced)

@@ -27,10 +27,14 @@ class ScopeTimebaseTest {
         val param = ModulatableParameter(baseValue = 0.5f)
         assertEquals(ScopeTimebase.AUTO, param.scopeTimebase)
 
-        // No modulators -> defaults to 10s
+        // No modulators -> defaults to 1s for reactive inputs
         val (dur1, div1) = param.resolveEffectiveTimebase()
-        assertEquals(10.0f, dur1)
-        assertEquals(2.0f, div1)
+        assertEquals(1.0f, dur1)
+        assertEquals(0.25f, div1)
+
+        val (durTen, divTen) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
+        assertEquals(10.0f, durTen)
+        assertEquals(2.0f, divTen)
 
         // Add 24-hour LFO
         val lfo24h = CvModulator(
@@ -86,4 +90,25 @@ class ScopeTimebaseTest {
         val combined = getCombinedEffectiveValueAtOffset(listOf(mod), isBipolar = false, timeOffsetSec = 1.0)
         assertTrue(combined in 0.0f..1.0f)
     }
+
+    @Test
+    fun `test CvHistoryBuffer sampleWindow interpolation and bounds`() {
+        val buffer = llm.slop.liquidlsd.cv.CvHistoryBuffer(10)
+        for (i in 1..10) {
+            buffer.add(i * 10f) // 10.0, 20.0, ..., 100.0 (NOW = 100.0)
+        }
+
+        // Fraction 1.0 is newest (NOW)
+        assertEquals(100f, buffer.sampleWindow(10, 1.0f))
+        // Fraction 0.0 is oldest (10.0)
+        assertEquals(10f, buffer.sampleWindow(10, 0.0f))
+        // Fraction 0.5 is midpoint (55.0)
+        assertEquals(55f, buffer.sampleWindow(10, 0.5f))
+
+        // Span smaller than buffer size (last 4 samples: 70, 80, 90, 100)
+        assertEquals(70f, buffer.sampleWindow(4, 0.0f))
+        assertEquals(100f, buffer.sampleWindow(4, 1.0f))
+        assertEquals(85f, buffer.sampleWindow(4, 0.5f))
+    }
 }
+

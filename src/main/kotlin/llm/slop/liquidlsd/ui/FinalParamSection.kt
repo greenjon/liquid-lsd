@@ -74,7 +74,7 @@ object FinalParamSection {
         modulatorHistories.keys.retainAll(activeIds)
 
         for (mod in activeMods) {
-            val hist = modulatorHistories.getOrPut(mod.id) { CvHistoryBuffer(200) }
+            val hist = modulatorHistories.getOrPut(mod.id) { CvHistoryBuffer(600) }
             val cvVal = evaluateModulator(mod)
             val isBipolar = param.minClamp < 0f
             val rawModAmount = if (isBipolar) {

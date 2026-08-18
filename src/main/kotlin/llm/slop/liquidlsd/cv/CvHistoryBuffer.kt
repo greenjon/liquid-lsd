@@ -43,9 +43,19 @@ class CvHistoryBuffer(val size: Int) {
      * Returns the samples in chronological order.
      * Warning: This allocates a new array.
      */
-    fun getSamples(): FloatArray {
-        val result = FloatArray(size)
-        copyTo(result)
-        return result
+    /**
+     * Samples a value from the most recent [historySpanCount] entries in the buffer.
+     * [fraction] ranges from 0.0 (oldest sample in the window) to 1.0 (newest sample / NOW).
+     */
+    fun sampleWindow(historySpanCount: Int, fraction: Float): Float {
+        val span = historySpanCount.coerceIn(1, size)
+        val floatIndex = (size - span) + fraction.coerceIn(0f, 1f) * (span - 1)
+        val baseIdx = floatIndex.toInt().coerceIn(0, size - 1)
+        val nextIdx = (baseIdx + 1).coerceIn(0, size - 1)
+        val frac = floatIndex - baseIdx
+        val v1 = getAt(baseIdx)
+        val v2 = getAt(nextIdx)
+        return v1 + (v2 - v1) * frac
     }
 }
+
