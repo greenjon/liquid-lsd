@@ -9,7 +9,8 @@
 
 ### Key Highlights
 
-- **Multi-Scale Calibrated Timebases**: Oscilloscopes support selectable physical time windows spanning from fast transients to circadian cycles: `1s` ($250\text{ms/div}$), `10s` ($2.0\text{s/div}$), `100s` ($20\text{s/div}$), `15m` ($3\text{m/div}$), `2.5h` ($30\text{m/div}$), and `24h` ($4\text{h/div}$), plus an intelligent `Auto` mode that dynamically fits $1\text{–}2$ periods of the active LFO.
+- **Multi-Scale Calibrated Timebases & Font Autoscaling**: Oscilloscopes support selectable physical time windows spanning from fast transients to circadian cycles: `1s` ($250\text{ms/div}$), `10s` ($2.0\text{s/div}$), `100s` ($20\text{s/div}$), `15m` ($3\text{m/div}$), `2.5h` ($30\text{m/div}$), and `24h` ($4\text{h/div}$), plus an intelligent `Auto` mode that dynamically fits $1\text{–}2$ periods of the active LFO. Time range dropdown combo widths and spacing dynamically autoscale with font size.
+- **Brightened Grid Ticks & Tick Numbers**: High-contrast, crisp grid division ticks and legible timestamp numbers with dynamic height positioning for clear readability across all themes and zoom levels.
 - **Real-Time Lookahead Projection & Lookback Context**: Deterministic modulators (single and compound LFOs with AM/PM/ADD modulation) are evaluated continuously across physical time, seamlessly rendering both the incoming trajectory (lookback) and upcoming trajectory (lookahead) without waiting for real-time history to accumulate.
 - **Centered "NOW" Playhead**: Parameter oscilloscopes feature a symmetrical centered layout with a crisp `NOW` vertical line and glowing live value marker, providing equal visual context for recent lookback and upcoming lookahead.
 - **Calibrated Grid Ticks & Dynamic Timestamp Badges**: Vertical division lines render at exact physical intervals anchored to the `NOW` playhead with formatted timestamp badges (`-250ms`, `-2s`, `NOW`, `+2s`, `+15m`, `+4h`, etc.).

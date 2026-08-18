@@ -49,9 +49,9 @@ object OscilloscopeDrawer {
         dl.addRectFilled(startX, startY, startX + w, startY + h, bgCol, 4f)
 
         val centerY = startY + h / 2f
-        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 0.8f)
-        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 0.4f)
-        val gridColTick = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.6f)
+        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.32f, 0.35f, 0.38f, 0.9f)
+        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.25f, 0.6f)
+        val gridColTick = ImGui.colorConvertFloat4ToU32(0.36f, 0.40f, 0.44f, 0.85f)
 
         // Horizontal Grid Lines
         dl.addLine(startX, centerY, startX + w, centerY, gridColCenter, 1.5f)
@@ -60,6 +60,8 @@ object OscilloscopeDrawer {
 
         // Calculate Playhead X position (Fixed Center)
         val nowX = startX + w * playheadRatio
+
+        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
 
         // Calibrated Vertical Grid Lines (based on time offsets from NOW)
         if (divSec > 0f && totalDuration > 0f) {
@@ -74,8 +76,8 @@ object OscilloscopeDrawer {
                 val label = ScopeTimebase.formatTimeOffset(curOffset)
                 val txtW = ImGui.calcTextSize(label).x
                 if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
-                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - 14f)
-                    session.uiTheme.captionColored(0.4f, 0.4f, 0.4f, 0.5f, label)
+                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
+                    session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
                 }
                 curX -= divPixels
                 curOffset -= divSec
@@ -89,8 +91,8 @@ object OscilloscopeDrawer {
                 val label = ScopeTimebase.formatTimeOffset(curOffset)
                 val txtW = ImGui.calcTextSize(label).x
                 if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
-                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - 14f)
-                    session.uiTheme.captionColored(0.4f, 0.4f, 0.4f, 0.5f, label)
+                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
+                    session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
                 }
                 curX += divPixels
                 curOffset += divSec
@@ -201,7 +203,7 @@ object OscilloscopeDrawer {
         drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
 
         // 5. Border
-        val borderCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1.0f)
+        val borderCol = ImGui.colorConvertFloat4ToU32(0.26f, 0.28f, 0.32f, 1.0f)
         dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
 
         // 6. Y-Axis Bounds Labels
@@ -209,16 +211,16 @@ object OscilloscopeDrawer {
         val suffix = if (isAngle) "°" else ""
 
         ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, "${"%.1f".format(maxVal * labelScale)}$suffix")
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, "${"%.1f".format(maxVal * labelScale)}$suffix")
         ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, "${"%.1f".format((minVal + range * 0.5f) * labelScale)}$suffix")
-        ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, "${"%.1f".format(minVal * labelScale)}$suffix")
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, "${"%.1f".format((minVal + range * 0.5f) * labelScale)}$suffix")
+        ImGui.setCursorScreenPos(startX + 6f, startY + h - captionH - 2f)
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, "${"%.1f".format(minVal * labelScale)}$suffix")
 
         val title = "Final Parameter Value"
         val textWidth = ImGui.calcTextSize(title).x
         ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, title)
+        session.uiTheme.captionColored(0.78f, 0.82f, 0.86f, 0.90f, title)
 
         // 7. Contextual Tooltips
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, playheadRatio)
@@ -258,9 +260,9 @@ object OscilloscopeDrawer {
 
         val isBipolar = param.minClamp < 0f
         val centerY = startY + h / 2f
-        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 0.8f)
-        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 0.4f)
-        val gridColTick = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.6f)
+        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.32f, 0.35f, 0.38f, 0.9f)
+        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.25f, 0.6f)
+        val gridColTick = ImGui.colorConvertFloat4ToU32(0.36f, 0.40f, 0.44f, 0.85f)
 
         if (isBipolar) {
             dl.addLine(startX, centerY, startX + w, centerY, gridColCenter, 1.5f)
@@ -274,6 +276,8 @@ object OscilloscopeDrawer {
 
         val nowX = startX + w * playheadRatio
 
+        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+
         // Calibrated Vertical Grid Lines
         if (divSec > 0f && totalDuration > 0f) {
             val pixelsPerSec = w / totalDuration
@@ -286,8 +290,8 @@ object OscilloscopeDrawer {
                 val label = ScopeTimebase.formatTimeOffset(curOffset)
                 val txtW = ImGui.calcTextSize(label).x
                 if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
-                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - 14f)
-                    session.uiTheme.captionColored(0.4f, 0.4f, 0.4f, 0.5f, label)
+                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
+                    session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
                 }
                 curX -= divPixels
                 curOffset -= divSec
@@ -300,8 +304,8 @@ object OscilloscopeDrawer {
                 val label = ScopeTimebase.formatTimeOffset(curOffset)
                 val txtW = ImGui.calcTextSize(label).x
                 if (curX - txtW / 2f >= startX + 40f && curX + txtW / 2f <= startX + w - 4f) {
-                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - 14f)
-                    session.uiTheme.captionColored(0.4f, 0.4f, 0.4f, 0.5f, label)
+                    ImGui.setCursorScreenPos(curX - txtW / 2f, startY + h - captionH - 2f)
+                    session.uiTheme.captionColored(0.85f, 0.88f, 0.92f, 0.95f, label)
                 }
                 curX += divPixels
                 curOffset += divSec
@@ -371,7 +375,7 @@ object OscilloscopeDrawer {
         drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
 
         // 4. Border
-        val borderCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1.0f)
+        val borderCol = ImGui.colorConvertFloat4ToU32(0.26f, 0.28f, 0.32f, 1.0f)
         dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
 
         // 5. Y-Axis labels
@@ -382,15 +386,15 @@ object OscilloscopeDrawer {
         val minLabel = "${"%.1f".format(param.minClamp * labelScale)}$suffix"
 
         ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, maxLabel)
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, maxLabel)
 
         if (isBipolar) {
             ImGui.setCursorScreenPos(startX + 6f, centerY - 6f)
-            session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, midLabel)
+            session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, midLabel)
         }
 
-        ImGui.setCursorScreenPos(startX + 6f, startY + h - 16f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, minLabel)
+        ImGui.setCursorScreenPos(startX + 6f, startY + h - captionH - 2f)
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, minLabel)
 
         // 6. Tooltips
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, playheadRatio)
@@ -408,7 +412,13 @@ object OscilloscopeDrawer {
         val currentIdx = param.scopeTimebase.ordinal
         val selected = ImInt(currentIdx)
 
-        ImGui.pushItemWidth(76f)
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val maxLabelWidth = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            timebaseLabels.maxOfOrNull { ImGui.calcTextSize(it).x } ?: 40f
+        }
+        val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 18f * fontScale).coerceAtLeast(80f * fontScale)
+
+        ImGui.pushItemWidth(comboWidth)
         if (ImGui.combo("##scope_timebase_${param.hashCode()}", selected, timebaseLabels)) {
             param.scopeTimebase = ScopeTimebase.values()[selected.get().coerceIn(0, ScopeTimebase.values().size - 1)]
         }
@@ -417,13 +427,13 @@ object OscilloscopeDrawer {
         }
         ImGui.popItemWidth()
 
-        ImGui.sameLine()
+        ImGui.sameLine(0f, 8f * fontScale)
         val infoLabel = if (param.scopeTimebase == ScopeTimebase.AUTO) {
             "Auto (${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")})"
         } else {
             "${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")} (${ScopeTimebase.formatTimeOffset(divSec).removePrefix("+")}/div)"
         }
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, infoLabel)
+        session.uiTheme.captionColored(0.75f, 0.78f, 0.82f, 0.95f, infoLabel)
         ImGui.spacing()
     }
 
@@ -571,8 +581,8 @@ object OscilloscopeDrawer {
         } else {
             startY + height / 2f
         }
-        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f)
-        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.10f, 0.10f, 0.10f, 0.4f)
+        val gridColCenter = ImGui.colorConvertFloat4ToU32(0.32f, 0.35f, 0.38f, 0.9f)
+        val gridColFaint = ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.25f, 0.6f)
 
         // Center / Zero line
         dl.addLine(startX, zeroY, startX + w, zeroY, gridColCenter, 1.5f)
@@ -611,19 +621,21 @@ object OscilloscopeDrawer {
         }
 
         // Border
-        val borderCol = ImGui.colorConvertFloat4ToU32(0.16f, 0.16f, 0.16f, 1.0f)
+        val borderCol = ImGui.colorConvertFloat4ToU32(0.26f, 0.28f, 0.32f, 1.0f)
         dl.addRect(startX, startY, startX + w, startY + height, borderCol, 4f)
+
+        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
 
         // Axis boundary labels
         ImGui.setCursorScreenPos(startX + 6f, startY + 3f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.1f".format(maxVal))
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, "%.1f".format(maxVal))
 
-        ImGui.setCursorScreenPos(startX + 6f, startY + height - 15f)
-        session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, "%.1f".format(minVal))
+        ImGui.setCursorScreenPos(startX + 6f, startY + height - captionH - 2f)
+        session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, "%.1f".format(minVal))
 
         // Left-aligned chart title
         ImGui.setCursorScreenPos(startX + 45f, startY + 3f)
-        session.uiTheme.captionColored(0.85f, 0.85f, 0.85f, 0.9f, title)
+        session.uiTheme.captionColored(0.88f, 0.90f, 0.94f, 0.95f, title)
 
         // Reset cursor location
         ImGui.setCursorScreenPos(startX, startY + height)

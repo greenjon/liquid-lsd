@@ -292,11 +292,15 @@ object FinalParamSection {
 
                 session.uiTheme.caption("Recipe Selection Stepper ($closestLobe lobes):")
                 
+                val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+                val stepBtnW = 36f * fontScale
+                val stepBtnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 6f * fontScale }.coerceAtLeast(24f * fontScale)
+
                 val canPrev = count > 1 && currentIdx > 0
                 val canNext = count > 1 && currentIdx < count - 1
 
                 if (!canPrev) ImGui.beginDisabled()
-                if (ImGui.button("◀##recipe_prev", 36f, 26f)) {
+                if (ImGui.button("◀##recipe_prev", stepBtnW, stepBtnH)) {
                     val prevIdx = (currentIdx - 1).coerceAtLeast(0)
                     val newVal = if (count > 1) prevIdx.toFloat() / (count - 1).toFloat() else 0f
                     param.baseValue = newVal
@@ -314,7 +318,7 @@ object FinalParamSection {
 
                 ImGui.sameLine()
                 if (!canNext) ImGui.beginDisabled()
-                if (ImGui.button("▶##recipe_next", 36f, 26f)) {
+                if (ImGui.button("▶##recipe_next", stepBtnW, stepBtnH)) {
                     val nextIdx = (currentIdx + 1).coerceAtMost(count - 1)
                     val newVal = if (count > 1) nextIdx.toFloat() / (count - 1).toFloat() else 0f
                     param.baseValue = newVal
@@ -413,11 +417,13 @@ object FinalParamSection {
 
         if (session.uiTheme.randomizationEnabled) {
             ImGui.spacing()
+            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+            val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(28f * fontScale)
             val randomizeBaseActive = param.randomizeBase
             if (!randomizeBaseActive) {
                 ImGui.beginDisabled()
             }
-            if (ImGui.button("Rand Randomize Initial Value", ImGui.getContentRegionAvailX(), 30f)) {
+            if (ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)) {
                 param.randomizeBaseValue()
             }
             if (!randomizeBaseActive) {
