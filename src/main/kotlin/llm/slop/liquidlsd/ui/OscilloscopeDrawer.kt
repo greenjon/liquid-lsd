@@ -187,13 +187,14 @@ object OscilloscopeDrawer {
         }
 
         // 3. Render Lookahead (Right Half) - only if playhead is centered
+        val lfoMods = activeMods.filter { isCvSourceBipolar(it.sourceId) }
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
-        if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f) {
+        if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f && lfoMods.isNotEmpty()) {
             val stepFutureX = futureW / FUTURE_STEPS
 
             // Draw individual modulator future projections
-            for (mod in activeMods) {
+            for (mod in lfoMods) {
                 val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
                 val modProjColor = CvTheme.getThemeColor(colorId, 0.35f)
 
@@ -213,7 +214,7 @@ object OscilloscopeDrawer {
                 }
             }
 
-            // Draw final combined future projection
+            // Draw final combined future projection of deterministic LFO modulators
             val projColor = ImGui.colorConvertFloat4ToU32(
                 ((themeColor and 0xFF)) / 255f,
                 (((themeColor shr 8) and 0xFF)) / 255f,
@@ -222,12 +223,12 @@ object OscilloscopeDrawer {
             )
 
             var prevX = nowX
-            var prevVal = calculateCombinedFutureVal(param, activeMods, isBipolar, 0.0)
+            var prevVal = calculateCombinedFutureVal(param, lfoMods, isBipolar, 0.0)
             var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
             for (s in 1..FUTURE_STEPS) {
                 val tOffset = (s.toDouble() / FUTURE_STEPS) * futureSec
-                val nextVal = calculateCombinedFutureVal(param, activeMods, isBipolar, tOffset)
+                val nextVal = calculateCombinedFutureVal(param, lfoMods, isBipolar, tOffset)
                 val nextX = nowX + s * stepFutureX
                 val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
@@ -416,9 +417,10 @@ object OscilloscopeDrawer {
         }
 
         // 2. Draw Lookahead (Right Half) - only if playhead is centered
+        val lfoMods = activeMods.filter { isCvSourceBipolar(it.sourceId) }
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
-        if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f) {
+        if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f && lfoMods.isNotEmpty()) {
             val stepFutureX = futureW / FUTURE_STEPS
             val projColor = ImGui.colorConvertFloat4ToU32(
                 ((themeColor and 0xFF)) / 255f,
@@ -428,13 +430,13 @@ object OscilloscopeDrawer {
             )
 
             var prevX = nowX
-            var prevRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, 0.0)
+            var prevRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, 0.0)
             var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
             var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
             for (s in 1..FUTURE_STEPS) {
                 val tOffset = (s.toDouble() / FUTURE_STEPS) * futureSec
-                val nextRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, tOffset)
+                val nextRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, tOffset)
                 val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
                 val nextX = nowX + s * stepFutureX
                 val nextY = (startY + h - 6f) - nextNorm * usableHeight
