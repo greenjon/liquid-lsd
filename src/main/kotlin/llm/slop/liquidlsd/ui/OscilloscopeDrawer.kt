@@ -100,46 +100,49 @@ object OscilloscopeDrawer {
         val usableHeight = h - 12f
         val range = maxVal - minVal
         val divisor = if (range == 0f) 1f else range
+        val isBipolar = param.minClamp < 0f
 
-        // 2. Render Past Modulators (History)
+        // 2. Render Past Modulators (Calibrated to Timebase)
         val pastW = w * playheadRatio
-        if (playheadRatio > 0.01f && historySize > 1) {
-            val stepPastX = pastW / (historySize - 1)
+        val pastSec = totalDuration * playheadRatio
+        if (pastW > 1f && pastSec > 0.001f) {
+            val stepPastX = pastW / FUTURE_STEPS
 
             // Draw individual modulator past lines
             for (mod in activeMods) {
-                val hist = modulatorHistories[mod.id] ?: continue
                 val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
                 val modColor = CvTheme.getThemeColor(colorId, 0.5f)
 
-                for (i in 0 until historySize - 1) {
-                    val raw1 = hist.getAt(i)
-                    val raw2 = hist.getAt(i + 1)
-                    val val1 = if (range == 0f) 0.5f else ((raw1 - minVal) / divisor).coerceIn(0f, 1f)
-                    val val2 = if (range == 0f) 0.5f else ((raw2 - minVal) / divisor).coerceIn(0f, 1f)
+                var prevX = startX
+                var prevVal = calculateModFutureVal(param, mod, isBipolar, -pastSec.toDouble())
+                var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                    val x1 = startX + i * stepPastX
-                    val y1 = (startY + h - 6f) - val1 * usableHeight
-                    val x2 = startX + (i + 1) * stepPastX
-                    val y2 = (startY + h - 6f) - val2 * usableHeight
+                for (s in 1..FUTURE_STEPS) {
+                    val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                    val nextVal = calculateModFutureVal(param, mod, isBipolar, tOffset)
+                    val nextX = startX + s * stepPastX
+                    val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                    dl.addLine(x1, y1, x2, y2, modColor, 1.25f)
+                    dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
+                    prevX = nextX
+                    prevY = nextY
                 }
             }
 
-            // Draw final combined past line
-            for (i in 0 until historySize - 1) {
-                val raw1 = history.getAt(i)
-                val raw2 = history.getAt(i + 1)
-                val val1 = if (range == 0f) 0.5f else ((raw1 - minVal) / divisor).coerceIn(0f, 1f)
-                val val2 = if (range == 0f) 0.5f else ((raw2 - minVal) / divisor).coerceIn(0f, 1f)
+            // Draw final combined past line (solid in themeColor)
+            var prevX = startX
+            var prevVal = calculateCombinedFutureVal(param, activeMods, isBipolar, -pastSec.toDouble())
+            var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                val x1 = startX + i * stepPastX
-                val y1 = (startY + h - 6f) - val1 * usableHeight
-                val x2 = startX + (i + 1) * stepPastX
-                val y2 = (startY + h - 6f) - val2 * usableHeight
+            for (s in 1..FUTURE_STEPS) {
+                val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                val nextVal = calculateCombinedFutureVal(param, activeMods, isBipolar, tOffset)
+                val nextX = startX + s * stepPastX
+                val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                dl.addLine(x1, y1, x2, y2, themeColor, 2.25f)
+                dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
+                prevX = nextX
+                prevY = nextY
             }
         }
 
@@ -308,22 +311,27 @@ object OscilloscopeDrawer {
 
         val usableHeight = h - 12f
         val pastW = w * playheadRatio
+        val pastSec = totalDuration * playheadRatio
 
-        // 1. Draw Past History
-        if (playheadRatio > 0.01f && historySize > 1) {
-            val stepPastX = pastW / (historySize - 1)
-            for (i in 0 until historySize - 1) {
-                val raw1 = history.getAt(i)
-                val raw2 = history.getAt(i + 1)
-                val norm1 = if (isBipolar) (raw1 + 1f) / 2f else raw1.coerceIn(0f, 1f)
-                val norm2 = if (isBipolar) (raw2 + 1f) / 2f else raw2.coerceIn(0f, 1f)
+        // 1. Draw Past History (Calibrated to Timebase)
+        if (pastW > 1f && pastSec > 0.001f) {
+            val stepPastX = pastW / FUTURE_STEPS
 
-                val x1 = startX + i * stepPastX
-                val y1 = (startY + h - 6f) - norm1 * usableHeight
-                val x2 = startX + (i + 1) * stepPastX
-                val y2 = (startY + h - 6f) - norm2 * usableHeight
+            var prevX = startX
+            var prevRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, -pastSec.toDouble())
+            var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
+            var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                dl.addLine(x1, y1, x2, y2, themeColor, 2.0f)
+            for (s in 1..FUTURE_STEPS) {
+                val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                val nextRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, tOffset)
+                val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
+                val nextX = startX + s * stepPastX
+                val nextY = (startY + h - 6f) - nextNorm * usableHeight
+
+                dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
+                prevX = nextX
+                prevY = nextY
             }
         }
 
