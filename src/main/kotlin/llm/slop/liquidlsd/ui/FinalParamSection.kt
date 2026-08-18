@@ -5,6 +5,7 @@ import imgui.type.ImInt
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.cv.CvHistoryBuffer
 import llm.slop.liquidlsd.cv.evaluateModulator
+import llm.slop.liquidlsd.cv.isCvSourceBipolar
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
@@ -77,10 +78,11 @@ object FinalParamSection {
             val hist = modulatorHistories.getOrPut(mod.id) { CvHistoryBuffer(600) }
             val cvVal = evaluateModulator(mod)
             val isBipolar = param.minClamp < 0f
-            val rawModAmount = if (isBipolar) {
-                cvVal * mod.depth + mod.dcOffset
+            val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
+            val rawModAmount = if (isSourceBipolar) {
+                if (isBipolar) cvVal * mod.depth + mod.dcOffset else ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
             } else {
-                ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
+                cvVal * mod.depth + mod.dcOffset
             }
             val scalar = if (mod.operator == ModulationOperator.ADD) {
                 if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)

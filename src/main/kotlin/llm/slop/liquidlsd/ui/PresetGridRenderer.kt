@@ -318,10 +318,14 @@ object PresetGridRenderer {
             }
             
             if (hasMidiMod || isMidiBypassed) {
-                val liveVal = llm.slop.liquidlsd.cv.getCombinedModulatorValue(midiMods).coerceIn(-1f, 1f)
-                val displayValue = run {
-                    val range = param.maxClamp - param.minClamp
-                    param.minClamp + ((liveVal + 1f) / 2f) * range
+                val isBipolar = param.minClamp < 0f
+                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(midiMods, isBipolar)
+                val displayValue = if (isBipolar) {
+                    val halfRange = (param.maxClamp - param.minClamp) / 2f
+                    val center = param.minClamp + halfRange
+                    center + liveVal * halfRange
+                } else {
+                    param.minClamp + liveVal * (param.maxClamp - param.minClamp)
                 }
                 
                 drawKnobMeter(
@@ -471,10 +475,14 @@ object PresetGridRenderer {
             }
 
             if (hasModulator || isBypassed) {
-                val liveVal = llm.slop.liquidlsd.cv.getCombinedModulatorValue(activeMods).coerceIn(-1f, 1f)
-                val displayValue = run {
-                    val range = param.maxClamp - param.minClamp
-                    param.minClamp + ((liveVal + 1f) / 2f) * range
+                val isBipolar = param.minClamp < 0f
+                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar)
+                val displayValue = if (isBipolar) {
+                    val halfRange = (param.maxClamp - param.minClamp) / 2f
+                    val center = param.minClamp + halfRange
+                    center + liveVal * halfRange
+                } else {
+                    param.minClamp + liveVal * (param.maxClamp - param.minClamp)
                 }
                 
                 drawKnobMeter(

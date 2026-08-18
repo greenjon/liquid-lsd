@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.cv.CvHistoryBuffer
 import llm.slop.liquidlsd.cv.evaluateModulatorAtOffset
 import llm.slop.liquidlsd.cv.getCombinedEffectiveValueAtOffset
+import llm.slop.liquidlsd.cv.isCvSourceBipolar
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
@@ -604,10 +605,11 @@ object OscilloscopeDrawer {
         timeOffsetSec: Double
     ): Float {
         val cvVal = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val rawModAmount = if (isBipolar) {
-            cvVal * mod.depth + mod.dcOffset
+        val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
+        val rawModAmount = if (isSourceBipolar) {
+            if (isBipolar) cvVal * mod.depth + mod.dcOffset else ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
         } else {
-            ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
+            cvVal * mod.depth + mod.dcOffset
         }
         val scalar = if (mod.operator == ModulationOperator.ADD) {
             if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
@@ -630,10 +632,11 @@ object OscilloscopeDrawer {
         for (mod in mods) {
             if (mod.bypassed) continue
             val cvVal = evaluateModulatorAtOffset(mod, timeOffsetSec)
-            val rawModAmount = if (isBipolar) {
-                cvVal * mod.depth + mod.dcOffset
+            val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
+            val rawModAmount = if (isSourceBipolar) {
+                if (isBipolar) cvVal * mod.depth + mod.dcOffset else ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
             } else {
-                ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
+                cvVal * mod.depth + mod.dcOffset
             }
             val scalar = if (mod.operator == ModulationOperator.ADD) {
                 if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
