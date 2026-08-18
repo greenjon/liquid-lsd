@@ -24,7 +24,8 @@ object OscilloscopeDrawer {
         param: ModulatableParameter,
         themeColor: Int,
         activeMods: List<CvModulator>,
-        modulatorHistories: Map<String, CvHistoryBuffer>
+        modulatorHistories: Map<String, CvHistoryBuffer>,
+        scopeKey: String = "final"
     ) {
         val history = param.history
         val minVal = param.minClamp
@@ -32,10 +33,10 @@ object OscilloscopeDrawer {
         val isAngle = param.isAngle
 
         val playheadRatio = 1.0f
-        val (totalDuration, divSec) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
+        val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
 
         // 1. Top Controls Bar: Timebase Selector
-        drawControlsBar(session, param, totalDuration, divSec)
+        drawControlsBar(session, param, scopeKey, totalDuration, divSec)
 
         val w = ImGui.getContentRegionAvailX()
         val h = 84f
@@ -154,7 +155,8 @@ object OscilloscopeDrawer {
         param: ModulatableParameter,
         themeColor: Int,
         activeHistory: CvHistoryBuffer?,
-        activeMods: List<CvModulator> = param.modulators
+        activeMods: List<CvModulator> = param.modulators,
+        scopeKey: String = "default"
     ) {
         val history = activeHistory ?: return
         val minVal = param.minClamp
@@ -164,10 +166,10 @@ object OscilloscopeDrawer {
         val hasLfo = activeMods.any { it.sourceId in setOf("lfo", "beatPhase", "sampleAndHold") }
         val playheadRatio = if (hasLfo) 0.5f else 1.0f
 
-        val (totalDuration, divSec) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
+        val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
 
         // Top Controls Bar
-        drawControlsBar(session, param, totalDuration, divSec)
+        drawControlsBar(session, param, scopeKey, totalDuration, divSec)
 
         val historySize = history.size
         val w = ImGui.getContentRegionAvailX()
@@ -416,11 +418,13 @@ object OscilloscopeDrawer {
     private fun drawControlsBar(
         session: SessionContext,
         param: ModulatableParameter,
+        scopeKey: String,
         totalDuration: Float,
         divSec: Float
     ) {
         val timebaseLabels = ScopeTimebase.values().map { it.label }.toTypedArray()
-        val currentIdx = param.scopeTimebase.ordinal
+        val currentTimebase = param.getScopeTimebase(scopeKey)
+        val currentIdx = currentTimebase.ordinal
         val selected = ImInt(currentIdx)
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
@@ -430,8 +434,8 @@ object OscilloscopeDrawer {
         val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 18f * fontScale).coerceAtLeast(80f * fontScale)
 
         ImGui.pushItemWidth(comboWidth)
-        if (ImGui.combo("##scope_timebase_${param.hashCode()}", selected, timebaseLabels)) {
-            param.scopeTimebase = ScopeTimebase.values()[selected.get().coerceIn(0, ScopeTimebase.values().size - 1)]
+        if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", selected, timebaseLabels)) {
+            param.setScopeTimebase(scopeKey, ScopeTimebase.values()[selected.get().coerceIn(0, ScopeTimebase.values().size - 1)])
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Oscilloscope Time Window: Auto scales to LFO period, or choose a fixed window (1s to 24h).")
@@ -439,7 +443,7 @@ object OscilloscopeDrawer {
         ImGui.popItemWidth()
 
         ImGui.sameLine(0f, 8f * fontScale)
-        val infoLabel = if (param.scopeTimebase == ScopeTimebase.AUTO) {
+        val infoLabel = if (currentTimebase == ScopeTimebase.AUTO) {
             "Auto (${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")})"
         } else {
             "${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")} (${ScopeTimebase.formatTimeOffset(divSec).removePrefix("+")}/div)"

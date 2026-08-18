@@ -31,16 +31,32 @@ class ModulatableParameter(
     var baseMin: Float = baseValue
     var baseMax: Float = baseValue
 
-    var scopeTimebase: ScopeTimebase = ScopeTimebase.AUTO
+    val scopeTimebases: MutableMap<String, ScopeTimebase> = mutableMapOf()
+
+    fun getScopeTimebase(scopeKey: String = "default"): ScopeTimebase {
+        return scopeTimebases[scopeKey] ?: ScopeTimebase.AUTO
+    }
+
+    fun setScopeTimebase(scopeKey: String = "default", timebase: ScopeTimebase) {
+        scopeTimebases[scopeKey] = timebase
+    }
+
+    var scopeTimebase: ScopeTimebase
+        get() = getScopeTimebase("default")
+        set(value) { setScopeTimebase("default", value) }
 
     /**
-     * Resolves the effective timebase duration and division interval.
+     * Resolves the effective timebase duration and division interval for a specific scope/tab.
      * In AUTO mode, derives the timebase from the first active LFO modulator's period,
      * or uses [defaultWhenNoLfo] (default: 1s for reactive transient visualization).
      */
-    fun resolveEffectiveTimebase(defaultWhenNoLfo: ScopeTimebase = ScopeTimebase.ONE_SEC): Pair<Float, Float> {
-        if (scopeTimebase != ScopeTimebase.AUTO) {
-            return Pair(scopeTimebase.durationSec, scopeTimebase.divSec)
+    fun resolveEffectiveTimebase(
+        scopeKey: String = "default",
+        defaultWhenNoLfo: ScopeTimebase = ScopeTimebase.ONE_SEC
+    ): Pair<Float, Float> {
+        val selectedTb = getScopeTimebase(scopeKey)
+        if (selectedTb != ScopeTimebase.AUTO) {
+            return Pair(selectedTb.durationSec, selectedTb.divSec)
         }
         val firstLfo = modulators.firstOrNull { !it.bypassed && (it.sourceId == "lfo" || it.sourceId == "beatPhase" || it.sourceId == "sampleAndHold") }
         if (firstLfo == null) {

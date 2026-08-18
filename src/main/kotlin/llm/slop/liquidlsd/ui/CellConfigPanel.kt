@@ -206,7 +206,7 @@ object CellConfigPanel {
         activeHistory?.add(combinedVal)
 
         // -- Unified Oscilloscope ---------------------------------
-        OscilloscopeDrawer.drawOscilloscope(session, param, themeColor, activeHistory, activeMods)
+        OscilloscopeDrawer.drawOscilloscope(session, param, themeColor, activeHistory, activeMods, scopeKey = cvId)
 
         ImGui.spacing()
         ImGui.separator()

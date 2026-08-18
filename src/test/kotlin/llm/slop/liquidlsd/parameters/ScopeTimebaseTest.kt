@@ -67,6 +67,23 @@ class ScopeTimebaseTest {
     }
 
     @Test
+    fun `test decoupled per-scope timebases across LFO, Audio, and Final tabs`() {
+        val param = ModulatableParameter(baseValue = 0.5f)
+        param.setScopeTimebase("lfo", ScopeTimebase.TEN_SEC)
+        param.setScopeTimebase("audio", ScopeTimebase.HUNDRED_SEC)
+        param.setScopeTimebase("final", ScopeTimebase.FIFTEEN_MIN)
+
+        assertEquals(ScopeTimebase.TEN_SEC, param.getScopeTimebase("lfo"))
+        assertEquals(ScopeTimebase.HUNDRED_SEC, param.getScopeTimebase("audio"))
+        assertEquals(ScopeTimebase.FIFTEEN_MIN, param.getScopeTimebase("final"))
+        assertEquals(ScopeTimebase.AUTO, param.getScopeTimebase("trigger"))
+
+        assertEquals(10.0f, param.resolveEffectiveTimebase("lfo").first)
+        assertEquals(100.0f, param.resolveEffectiveTimebase("audio").first)
+        assertEquals(900.0f, param.resolveEffectiveTimebase("final").first)
+    }
+
+    @Test
     fun `test evaluateModulatorAtOffset future lookahead calculation`() {
         val mod = CvModulator(
             id = "test_lfo",
