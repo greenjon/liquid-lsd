@@ -356,9 +356,9 @@ object PresetGridRenderer {
             val cellId = PresetCellId(paramKey, cvId)
             val isSelected = state.selectedCell == cellId
             val activeMods = if (cvId == "audio") {
-                param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+                param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
             } else if (cvId == "trigger") {
-                param.modulators.filter { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+                param.modulators.filter { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
             } else {
                 param.modulators.filter { it.sourceId == cvId }
             }

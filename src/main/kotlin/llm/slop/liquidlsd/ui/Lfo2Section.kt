@@ -11,7 +11,8 @@ import kotlin.math.roundToInt
 
 object Lfo2Section {
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState,
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
         param: ModulatableParameter,
         existing: CvModulator,
         idx: Int,

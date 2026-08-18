@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.type.ImInt
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.cv.CvHistoryBuffer
 import llm.slop.liquidlsd.cv.evaluateModulatorAtOffset
 import llm.slop.liquidlsd.cv.getCombinedEffectiveValueAtOffset
@@ -19,12 +20,19 @@ object OscilloscopeDrawer {
     // Number of steps to evaluate future curve projection
     private const val FUTURE_STEPS = 120
 
+    // Preallocated immutable timebase lists and label arrays to eliminate GC allocations on render path
+    private val LFO_TIMEBASES = ScopeTimebase.values().toList()
+    private val NON_LFO_TIMEBASES = ScopeTimebase.values().filter { it != ScopeTimebase.AUTO }
+    private val LFO_LABELS = LFO_TIMEBASES.map { it.label }.toTypedArray()
+    private val NON_LFO_LABELS = NON_LFO_TIMEBASES.map { it.label }.toTypedArray()
+
+    // Reusable ImInt wrapper for timebase dropdown combo to prevent per-frame allocations
+    private val timebaseComboIndex = ImInt(0)
+
     fun drawFinalOscilloscope(
         session: SessionContext,
         param: ModulatableParameter,
         themeColor: Int,
-        activeMods: List<CvModulator>,
-        modulatorHistories: Map<String, CvHistoryBuffer>,
         scopeKey: String = "final"
     ) {
         val history = param.history
@@ -90,7 +98,7 @@ object OscilloscopeDrawer {
 
         // 2. Render Full-Width Recorded History
         if (w > 1f && totalDuration > 0.001f) {
-            val fps = 60f
+            val fps = CVRegistry.getTargetFps()
             val samplesInSpan = (totalDuration * fps).toInt().coerceAtLeast(2)
             val visibleSamples = minOf(samplesInSpan, history.size)
             val pixelsPerSample = (w / totalDuration) / fps
@@ -161,9 +169,8 @@ object OscilloscopeDrawer {
         val history = activeHistory ?: return
         val minVal = param.minClamp
         val maxVal = param.maxClamp
-        val isAngle = param.isAngle
-
-        val hasLfo = activeMods.any { it.sourceId in setOf("lfo", "beatPhase", "sampleAndHold") }
+        val hasLfo = activeMods.any { isCvSourceBipolar(it.sourceId) }
+        val lfoMods = if (hasLfo) activeMods.filter { isCvSourceBipolar(it.sourceId) } else emptyList()
         val playheadRatio = if (hasLfo) 0.5f else 1.0f
 
         val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
@@ -248,7 +255,7 @@ object OscilloscopeDrawer {
         if (pastW > 1f && pastSec > 0.001f) {
             if (!hasLfo) {
                 // True recorded history playback for Audio, Trigger, MIDI (summed value)
-                val fps = 60f
+                val fps = CVRegistry.getTargetFps()
                 val samplesInSpan = (pastSec * fps).toInt().coerceAtLeast(2)
                 val visibleSamples = minOf(samplesInSpan, history.size)
                 val pixelsPerSample = (pastW / pastSec) / fps
@@ -280,7 +287,6 @@ object OscilloscopeDrawer {
                 }
             } else {
                 // Deterministic LFO calculated lookback with anti-aliased envelope
-                val lfoMods = activeMods.filter { isCvSourceBipolar(it.sourceId) }
                 val strokeColor = themeColor
                 val stepPastX = pastW / FUTURE_STEPS
 
@@ -325,7 +331,6 @@ object OscilloscopeDrawer {
         }
 
         // 2. Draw Lookahead (Right Half) - only if playhead is centered
-        val lfoMods = activeMods.filter { isCvSourceBipolar(it.sourceId) }
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
         if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f && lfoMods.isNotEmpty()) {
@@ -423,15 +428,11 @@ object OscilloscopeDrawer {
         divSec: Float
     ) {
         val isLfoScope = (scopeKey == "lfo" || scopeKey == "default")
-        val availableTimebases: List<ScopeTimebase> = if (isLfoScope) {
-            ScopeTimebase.values().toList()
-        } else {
-            ScopeTimebase.values().filter { it != ScopeTimebase.AUTO }
-        }
-        val timebaseLabels = availableTimebases.map { it.label }.toTypedArray()
+        val availableTimebases = if (isLfoScope) LFO_TIMEBASES else NON_LFO_TIMEBASES
+        val timebaseLabels = if (isLfoScope) LFO_LABELS else NON_LFO_LABELS
         val currentTimebase = param.getScopeTimebase(scopeKey)
         val currentIdx = availableTimebases.indexOf(currentTimebase).coerceAtLeast(0)
-        val selected = ImInt(currentIdx)
+        timebaseComboIndex.set(currentIdx)
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val maxLabelWidth = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -440,8 +441,8 @@ object OscilloscopeDrawer {
         val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 18f * fontScale).coerceAtLeast(80f * fontScale)
 
         ImGui.pushItemWidth(comboWidth)
-        if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", selected, timebaseLabels)) {
-            param.setScopeTimebase(scopeKey, availableTimebases[selected.get().coerceIn(0, availableTimebases.size - 1)])
+        if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", timebaseComboIndex, timebaseLabels)) {
+            param.setScopeTimebase(scopeKey, availableTimebases[timebaseComboIndex.get().coerceIn(0, availableTimebases.size - 1)])
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             val tooltip = if (isLfoScope) {
@@ -542,58 +543,7 @@ object OscilloscopeDrawer {
         }
     }
 
-    private fun calculateModFutureVal(
-        param: ModulatableParameter,
-        mod: CvModulator,
-        isBipolar: Boolean,
-        timeOffsetSec: Double
-    ): Float {
-        val cvVal = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
-        val rawModAmount = if (isSourceBipolar) {
-            if (isBipolar) cvVal * mod.depth + mod.dcOffset else ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
-        } else {
-            cvVal * mod.depth + mod.dcOffset
-        }
-        val scalar = if (mod.operator == ModulationOperator.ADD) {
-            if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
-        } else 1.0f
-        val modAmount = rawModAmount * scalar
-        return when (mod.operator) {
-            ModulationOperator.ADD -> param.baseValue + modAmount
-            ModulationOperator.MUL -> param.baseValue * (1.0f + modAmount)
-            ModulationOperator.SCALE -> param.baseValue * (1.0f - mod.depth + modAmount)
-        }.coerceIn(param.minClamp, param.maxClamp)
-    }
 
-    private fun calculateCombinedFutureVal(
-        param: ModulatableParameter,
-        mods: List<CvModulator>,
-        isBipolar: Boolean,
-        timeOffsetSec: Double
-    ): Float {
-        var result = param.baseValue
-        for (mod in mods) {
-            if (mod.bypassed) continue
-            val cvVal = evaluateModulatorAtOffset(mod, timeOffsetSec)
-            val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
-            val rawModAmount = if (isSourceBipolar) {
-                if (isBipolar) cvVal * mod.depth + mod.dcOffset else ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
-            } else {
-                cvVal * mod.depth + mod.dcOffset
-            }
-            val scalar = if (mod.operator == ModulationOperator.ADD) {
-                if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
-            } else 1.0f
-            val modAmount = rawModAmount * scalar
-            result = when (mod.operator) {
-                ModulationOperator.ADD -> result + modAmount
-                ModulationOperator.MUL -> result * (1.0f + modAmount)
-                ModulationOperator.SCALE -> result * (1.0f - mod.depth + modAmount)
-            }
-        }
-        return result.coerceIn(param.minClamp, param.maxClamp)
-    }
 
     fun drawBufferOscilloscope(
         session: SessionContext,

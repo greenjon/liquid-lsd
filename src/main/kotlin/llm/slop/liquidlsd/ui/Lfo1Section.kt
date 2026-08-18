@@ -10,10 +10,10 @@ import llm.slop.liquidlsd.utils.TimeUtils
 
 object Lfo1Section {
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState,
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
         param: ModulatableParameter,
         existing: CvModulator,
-        isLfo: Boolean,
         isBeat: Boolean,
         isSnh: Boolean,
         isGen: Boolean,

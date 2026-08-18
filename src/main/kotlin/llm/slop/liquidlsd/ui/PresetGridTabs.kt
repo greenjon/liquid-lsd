@@ -10,6 +10,11 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.roundToInt
 
 object PresetGridTabs {
+    private val TRANSFORM_PARAM_NAMES = setOf(
+        "Zoom", "Rotate X", "Rotate Y", "Rotate Z",
+        "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z"
+    )
+
     var activeBtnMinX: Float = 0f
     var activeBtnMinY: Float = 0f
     var activeBtnMaxX: Float = 0f
@@ -137,9 +142,7 @@ object PresetGridTabs {
         } else if (activeSource is DynamicVisualSource) {
             tabs.add(activeSource.displayName)
             tabs.add("FX")
-            val transformNames = setOf("Zoom", "Rotate X", "Rotate Y", "Rotate Z",
-                                       "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z")
-            if (activeSource.parameters.keys.any { transformNames.contains(it) }) {
+            if (activeSource.parameters.keys.any { TRANSFORM_PARAM_NAMES.contains(it) }) {
                 tabs.add("View")
             }
         } else {
@@ -419,13 +422,11 @@ object PresetGridTabs {
             }
 
         } else if (activeSource is DynamicVisualSource) {
-            val transformNames = setOf("Zoom", "Rotate X", "Rotate Y", "Rotate Z",
-                                       "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z")
             val transformParams = mutableListOf<Map.Entry<String, ModulatableParameter>>()
             val otherParams     = mutableListOf<Map.Entry<String, ModulatableParameter>>()
 
             activeSource.parameters.forEach { entry ->
-                if (transformNames.contains(entry.key)) transformParams.add(entry)
+                if (TRANSFORM_PARAM_NAMES.contains(entry.key)) transformParams.add(entry)
                 else otherParams.add(entry)
             }
 

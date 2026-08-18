@@ -2,13 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.type.ImInt
-import llm.slop.liquidlsd.cv.CVRegistry
-import llm.slop.liquidlsd.cv.CvHistoryBuffer
-import llm.slop.liquidlsd.cv.evaluateModulator
-import llm.slop.liquidlsd.cv.isCvSourceBipolar
-import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
-import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.MandalaLibrary
 import kotlin.math.roundToInt
@@ -17,12 +11,13 @@ private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
 
 object FinalParamSection {
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState,
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
+        state: PresetGridState,
         param: ModulatableParameter,
         paramKey: String,
         themeColor: Int,
-        mandala: Mandala?,
-        modulatorHistories: MutableMap<String, CvHistoryBuffer>
+        mandala: Mandala?
     ) {
         session.uiTheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey.replace("/", " | "))
         ImGui.separator()
@@ -67,37 +62,8 @@ object FinalParamSection {
         session.uiTheme.h3("Live Modulated Value: $liveLabel")
         ImGui.spacing()
 
-        // Update active modulators history
-        val activeMods = param.modulators.filter { 
-            !it.bypassed && (session.cvRegistry.exists(it.sourceId) || it.sourceId.startsWith("midi_cc_"))
-        }
-        val activeIds = activeMods.map { it.id }.toSet()
-        modulatorHistories.keys.retainAll(activeIds)
-
-        for (mod in activeMods) {
-            val hist = modulatorHistories.getOrPut(mod.id) { CvHistoryBuffer(600) }
-            val cvVal = evaluateModulator(mod)
-            val isBipolar = param.minClamp < 0f
-            val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
-            val rawModAmount = if (isSourceBipolar) {
-                if (isBipolar) cvVal * mod.depth + mod.dcOffset else ((cvVal + 1f) / 2f) * mod.depth + mod.dcOffset
-            } else {
-                cvVal * mod.depth + mod.dcOffset
-            }
-            val scalar = if (mod.operator == ModulationOperator.ADD) {
-                if (isBipolar) (param.maxClamp - param.minClamp) / 2.0f else (param.maxClamp - param.minClamp)
-            } else 1.0f
-            val modAmount = rawModAmount * scalar
-            val modulatorVal = when (mod.operator) {
-                ModulationOperator.ADD -> param.baseValue + modAmount
-                ModulationOperator.MUL -> param.baseValue * (1.0f + modAmount)
-                ModulationOperator.SCALE -> param.baseValue * (1.0f - mod.depth + modAmount)
-            }.coerceIn(param.minClamp, param.maxClamp)
-            hist.add(modulatorVal)
-        }
-
-        // Oscilloscope showing final value history plus modulator histories
-        OscilloscopeDrawer.drawFinalOscilloscope(session, param, themeColor, activeMods, modulatorHistories)
+        // Oscilloscope showing 100% true recorded history
+        OscilloscopeDrawer.drawFinalOscilloscope(session, param, themeColor)
 
         ImGui.spacing()
         ImGui.separator()

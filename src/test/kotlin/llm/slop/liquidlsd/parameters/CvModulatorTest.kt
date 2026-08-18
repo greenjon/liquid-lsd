@@ -250,6 +250,39 @@ class CvModulatorTest {
     }
 
     @Test
+    fun testFrameSyncedLfoAt30FpsRunsAt1Hz() {
+        CVRegistry.setTargetFps(30f)
+        CVRegistry.setRenderFrameCount(0L)
+        val mod = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 30f, // 30 frames at 30 FPS = 1.0 second period (1 Hz)
+            waveform = Waveform.TRIANGLE,
+            morph = 0f,
+            hold = 0f,
+            slope = 0.5f,
+            phaseOffset = 0f,
+            bypassed = false
+        )
+
+        // At t = 0.0s (offset 0.0): phase 0/30 = 0.0 -> bottom = -1.0
+        val v0 = llm.slop.liquidlsd.cv.evaluateModulatorAtOffset(mod, 0.0)
+        assertEquals(-1.0f, v0, 0.001f)
+
+        // At t = 0.25s (quarter second = 7.5 frames): phase 7.5/30 = 0.25 -> zero crossing = 0.0
+        val vQuarter = llm.slop.liquidlsd.cv.evaluateModulatorAtOffset(mod, 0.25)
+        assertEquals(0.0f, vQuarter, 0.001f)
+
+        // At t = 0.5s (half second = 15 frames): phase 15/30 = 0.5 -> peak = 1.0
+        val vHalf = llm.slop.liquidlsd.cv.evaluateModulatorAtOffset(mod, 0.5)
+        assertEquals(1.0f, vHalf, 0.001f)
+
+        // At t = 1.0s (one full second = 30 frames): phase 30/30 = 1.0 (0.0) -> bottom = -1.0
+        val vFull = llm.slop.liquidlsd.cv.evaluateModulatorAtOffset(mod, 1.0)
+        assertEquals(-1.0f, vFull, 0.001f)
+    }
+
+    @Test
     fun testFrameSyncedLfoRandomizationDiscreteIntegers() {
         val mod = CvModulator(
             sourceId = "lfo",

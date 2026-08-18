@@ -70,7 +70,7 @@ class ModulatableParameter(
                 when (firstLfo.genUnit) {
                     GenUnit.TIME -> firstLfo.subdivision
                     GenUnit.BEAT -> firstLfo.subdivision * (60.0f / 120.0f)
-                    GenUnit.FRAME -> firstLfo.subdivision / 60.0f
+                    GenUnit.FRAME -> firstLfo.subdivision / llm.slop.liquidlsd.cv.CVRegistry.getTargetFps()
                 }
             }
             else -> 10.0f
@@ -145,6 +145,9 @@ class ModulatableParameter(
         }
 
         var result = baseValue
+        val isBipolar = minClamp < 0f
+        val range = maxClamp - minClamp
+        val addScalar = if (isBipolar) range / 2.0f else range
 
         for (i in 0 until size) {
             val mod = modulators[i]
@@ -153,7 +156,6 @@ class ModulatableParameter(
                 continue
             }
             val finalCv = evaluateModulator(mod)
-            val isBipolar = minClamp < 0f
             val isSourceBipolar = llm.slop.liquidlsd.cv.isCvSourceBipolar(mod.sourceId)
             val rawModAmount = if (isSourceBipolar) {
                 if (isBipolar) {
@@ -166,9 +168,7 @@ class ModulatableParameter(
                 finalCv * mod.depth + mod.dcOffset
             }
             
-            val scalar = if (mod.operator == ModulationOperator.ADD) {
-                if (isBipolar) (maxClamp - minClamp) / 2.0f else (maxClamp - minClamp)
-            } else 1.0f
+            val scalar = if (mod.operator == ModulationOperator.ADD) addScalar else 1.0f
             val modAmount = rawModAmount * scalar
 
             result = when (mod.operator) {
@@ -208,6 +208,7 @@ class ModulatableParameter(
         )
         copy.baseMin = this.baseMin
         copy.baseMax = this.baseMax
+        copy.scopeTimebases.putAll(this.scopeTimebases)
         copy.modulatorFilter = this.modulatorFilter
         copy.modulators.addAll(this.modulators.map { it.copy(id = java.util.UUID.randomUUID().toString()) })
         @Suppress("DEPRECATION")

@@ -110,6 +110,35 @@ class ScopeTimebaseTest {
     }
 
     @Test
+    fun `test ModulatableParameter clone preserves customized scopeTimebases`() {
+        val param = ModulatableParameter(baseValue = 0.75f)
+        param.setScopeTimebase("lfo", ScopeTimebase.HUNDRED_SEC)
+        param.setScopeTimebase("audio", ScopeTimebase.FIFTEEN_MIN)
+        param.setScopeTimebase("final", ScopeTimebase.TWO_POINT_FIVE_HOURS)
+
+        val cloned = param.clone()
+        assertEquals(ScopeTimebase.HUNDRED_SEC, cloned.getScopeTimebase("lfo"))
+        assertEquals(ScopeTimebase.FIFTEEN_MIN, cloned.getScopeTimebase("audio"))
+        assertEquals(ScopeTimebase.TWO_POINT_FIVE_HOURS, cloned.getScopeTimebase("final"))
+        assertEquals(ScopeTimebase.TEN_SEC, cloned.getScopeTimebase("trigger"))
+    }
+
+    @Test
+    fun `test source classification helpers isAudioSource and isTriggerSource`() {
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_amp"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_bass"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_mid"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_high"))
+        assertTrue(!llm.slop.liquidlsd.cv.isAudioSource("lfo"))
+        assertTrue(!llm.slop.liquidlsd.cv.isAudioSource("trigger_onset"))
+
+        assertTrue(llm.slop.liquidlsd.cv.isTriggerSource("trigger_onset"))
+        assertTrue(llm.slop.liquidlsd.cv.isTriggerSource("trigger_accent"))
+        assertTrue(!llm.slop.liquidlsd.cv.isTriggerSource("audio_amp"))
+        assertTrue(!llm.slop.liquidlsd.cv.isTriggerSource("lfo"))
+    }
+
+    @Test
     fun `test CvHistoryBuffer sampleWindow interpolation and bounds`() {
         val buffer = llm.slop.liquidlsd.cv.CvHistoryBuffer(10)
         for (i in 1..10) {

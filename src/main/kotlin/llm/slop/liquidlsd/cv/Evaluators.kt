@@ -105,7 +105,8 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                         seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                     }
                     GenUnit.FRAME -> {
-                        val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * 60.0
+                        val fps = CVRegistry.getTargetFps().toDouble()
+                        val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * fps
                         val framePeriod = modulator.modSubdivision.toDouble().coerceAtLeast(1.0)
                         cyclePosition = (frameCount / framePeriod) + modulator.modPhaseOffset
                         seed = framePeriod.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
@@ -145,7 +146,8 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                     carrierSeed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                 }
                 GenUnit.FRAME -> {
-                    val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * 60.0
+                    val fps = CVRegistry.getTargetFps().toDouble()
+                    val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * fps
                     val framePeriod = modulator.subdivision.toDouble().coerceAtLeast(1.0)
                     carrierCyclePosition = (frameCount / framePeriod) + modulator.phaseOffset + pmShift
                     carrierSeed = framePeriod.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
@@ -182,50 +184,28 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
     }
 }
 
-fun isCvSourceBipolar(sourceId: String): Boolean =
-    sourceId in setOf("lfo", "beatSine", "beatPhase", "sampleAndHold")
+fun isCvSourceBipolar(sourceId: String): Boolean = when (sourceId) {
+    "lfo", "beatSine", "beatPhase", "sampleAndHold" -> true
+    else -> false
+}
 
-fun getCombinedModulatorValue(mods: List<CvModulator>): Float = getCombinedModulatorValueAtOffset(mods, 0.0)
+fun isAudioSource(sourceId: String): Boolean = when (sourceId) {
+    "audio_amp", "audio_bass", "audio_mid", "audio_high" -> true
+    else -> false
+}
 
-fun getCombinedModulatorValueAtOffset(mods: List<CvModulator>, timeOffsetSec: Double): Float {
-    if (mods.isEmpty()) return 0f
-    
-    var result = 0f
-    var first = true
-    for (mod in mods) {
-        if (mod.bypassed) continue
-        val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
-        val modAmount = if (isSourceBipolar) {
-            cv * mod.depth + mod.dcOffset
-        } else {
-            cv * mod.depth + mod.dcOffset
-        }
-        if (first) {
-            result = when (mod.operator) {
-                llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount
-                llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> modAmount
-                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> 1.0f - mod.depth + modAmount
-            }
-            first = false
-        } else {
-            result = when (mod.operator) {
-                llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> result + modAmount
-                llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> result * (1.0f + modAmount)
-                llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> result * (1.0f - mod.depth + modAmount)
-            }
-        }
-    }
-    return result.coerceIn(-1.0f, 1.0f)
+fun isTriggerSource(sourceId: String): Boolean = when (sourceId) {
+    "trigger_onset", "trigger_accent" -> true
+    else -> false
 }
 
 /**
- * Like getCombinedModulatorValue, but applies the correct formula per parameter polarity:
+ * Calculates combined effective modulator value with correct formula per parameter polarity:
  *   Bipolar source on Bipolar param:   modAmount = cv * depth + dc         → in [-1, 1]
  *   Bipolar source on Monopolar param: modAmount = ((cv+1)/2) * depth + dc → in [ 0, 1]
  *   Unipolar source (Audio/Trigger/MIDI): modAmount = cv * depth + dc       → in [ 0, 1] (silence is 0)
  *
- * Used by the O-scope in CellConfigPanel so its display matches the engine output.
+ * Used by the O-scope in CellConfigPanel and PresetGrid knob indicators so displays match engine output.
  */
 fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean): Float =
     getCombinedEffectiveValueAtOffset(mods, isBipolar, 0.0)

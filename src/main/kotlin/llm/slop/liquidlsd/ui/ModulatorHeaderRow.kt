@@ -8,13 +8,13 @@ import llm.slop.liquidlsd.parameters.ModulationOperator
 
 object ModulatorHeaderRow {
     private val operatorLabels = arrayOf("ADD", "MUL", "SCALE")
+    private val operatorIndex = ImInt(0)
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState,
-        param: ModulatableParameter,
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
         existing: CvModulator,
         idx: Int,
         modsToDraw: List<CvModulator>,
-        activeMods: List<CvModulator>,
         isVirtual: Boolean,
         isLfo: Boolean,
         hasAdvanced: Boolean,
@@ -22,7 +22,6 @@ object ModulatorHeaderRow {
         onReset: () -> Unit
     ) {
         val bypassed = existing.bypassed
-        val currentThemeColor = CvTheme.getThemeColor(existing.sourceId)
         
         // Draw background panel for modulator
         if (bypassed) {
@@ -38,13 +37,8 @@ object ModulatorHeaderRow {
             "trigger_accent" -> "Accent / Peak"
             else -> null
         }
-        val titleText = bandLabel ?: if (modsToDraw.size > 1) {
-            val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else "Modulator"
-            "$typeLabel ${idx + 1}"
-        } else {
-            val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else "Modulator"
-            typeLabel
-        }
+        val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else "Modulator"
+        val titleText = bandLabel ?: if (modsToDraw.size > 1) "$typeLabel ${idx + 1}" else typeLabel
 
         ImGui.indent(10f) // Indent controls slightly
 
@@ -96,14 +90,14 @@ object ModulatorHeaderRow {
         
         // 3. Operator dropdown (ADD/MUL/SCALE combo box)
         ImGui.sameLine(0f, 10f * fontScale)
-        val opIdx = ImInt(when (existing.operator) {
+        operatorIndex.set(when (existing.operator) {
             ModulationOperator.ADD -> 0
             ModulationOperator.MUL -> 1
             ModulationOperator.SCALE -> 2
         })
         ImGui.pushItemWidth(100f * fontScale)
-        if (ImGui.combo("##op", opIdx, operatorLabels)) {
-            val newOp = when (opIdx.get()) {
+        if (ImGui.combo("##op", operatorIndex, operatorLabels)) {
+            val newOp = when (operatorIndex.get()) {
                 0 -> ModulationOperator.ADD
                 1 -> ModulationOperator.MUL
                 else -> ModulationOperator.SCALE

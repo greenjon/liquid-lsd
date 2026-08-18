@@ -117,6 +117,20 @@ object CVRegistry {
      */
     fun getSourceIds(): List<String> = sources.keys().toList().sorted()
 
+    @Volatile private var targetFps: Float = 30f
+
+    /**
+     * Returns the configured target FPS (e.g. 30 or 60) for frame-synced time conversions.
+     */
+    fun getTargetFps(): Float = targetFps
+
+    /**
+     * Sets the configured target FPS.
+     */
+    fun setTargetFps(fps: Float) {
+        targetFps = fps.coerceAtLeast(1f)
+    }
+
     /**
      * Returns the total elapsed render frames since application launch.
      */
@@ -135,6 +149,7 @@ object CVRegistry {
      */
     fun updateAll() {
         currentFrameIndex++
+        targetFps = llm.slop.liquidlsd.ui.UITheme.maxFps.coerceAtLeast(1).toFloat()
         val totalBeats = getSynchronizedTotalBeats()
         val elapsedSeconds = getElapsedRealtimeSec()
 

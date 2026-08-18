@@ -11,6 +11,9 @@ import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Mandala
 
+private val AUDIO_BANDS = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
+private val TRIGGER_BANDS = listOf("trigger_onset", "trigger_accent")
+
 /**
  * Draws the Cell Config panel contents.
  * Call this inside an ImGui.begin("Cell Config") / ImGui.end() block.
@@ -18,7 +21,6 @@ import llm.slop.liquidlsd.rendering.Mandala
 object CellConfigPanel {
 
     private var activeHistory: CvHistoryBuffer? = null
-    private val modulatorHistories = mutableMapOf<String, CvHistoryBuffer>()
     private var activeCellId: PresetCellId? = null
     private val virtualModulators = mutableListOf<CvModulator>()
     private var lastActiveIds: Set<String> = emptySet()
@@ -26,28 +28,18 @@ object CellConfigPanel {
     private fun initializeVirtualModulators(cvId: String, activeMods: List<CvModulator>, hasAdvanced: Boolean) {
         virtualModulators.clear()
         if (cvId == "audio") {
-            val bands = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
-            for (band in bands) {
+            for (band in AUDIO_BANDS) {
                 val exists = activeMods.any { it.sourceId == band }
                 if (!exists) {
                     virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
                 }
             }
         } else if (cvId == "trigger") {
-            val bands = listOf("trigger_onset", "trigger_accent")
-            for (band in bands) {
+            for (band in TRIGGER_BANDS) {
                 val exists = activeMods.any { it.sourceId == band }
                 if (!exists) {
                     virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
                 }
-            }
-        } else if (hasAdvanced) {
-            val activeCount = activeMods.size
-            if (activeCount == 0) {
-                virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
-                // virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
-            } else if (activeCount == 1) {
-                // virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
             }
         } else {
             if (activeMods.isEmpty()) {
@@ -144,24 +136,21 @@ object CellConfigPanel {
         val activeMods = if (cvId == "midi") {
             param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
         } else if (cvId == "audio") {
-            param.modulators.filter { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+            param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
         } else if (cvId == "trigger") {
-            param.modulators.filter { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+            param.modulators.filter { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
         } else {
             param.modulators.filter { it.sourceId == cvId }
         }
-        val isMidiMod = cvId == "midi"
 
         val isBeat = cvId == "beatPhase"
         val isLfo = cvId == "lfo"
         val isSnh = cvId == "sampleAndHold"
         val isGen = cvId == "lfo"
-        val isAudio = cvId == "audio"
-        val isTrigger = cvId == "trigger"
-        val hasAdvanced = isBeat || isLfo || isSnh || isGen
+        val hasAdvanced = isBeat || isLfo || isSnh
 
         if (cvId == "final") {
-            FinalParamSection.draw(session, state, param, paramKey, themeColor, mandala, modulatorHistories)
+            FinalParamSection.draw(session, state, param, paramKey, themeColor, mandala)
             return
         }
 
@@ -193,11 +182,9 @@ object CellConfigPanel {
 
         var modsToDraw = activeMods + virtualModulators.filter { vm -> activeMods.none { am -> am.id == vm.id } }
         if (cvId == "audio") {
-            val order = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
-            modsToDraw = modsToDraw.sortedBy { order.indexOf(it.sourceId) }
+            modsToDraw = modsToDraw.sortedBy { AUDIO_BANDS.indexOf(it.sourceId) }
         } else if (cvId == "trigger") {
-            val order = listOf("trigger_onset", "trigger_accent")
-            modsToDraw = modsToDraw.sortedBy { order.indexOf(it.sourceId) }
+            modsToDraw = modsToDraw.sortedBy { TRIGGER_BANDS.indexOf(it.sourceId) }
         }
         val isBipolar = param.minClamp < 0f
         // Use the same formula as the engine so the O-scope displays what the parameter actually receives.
@@ -225,12 +212,9 @@ object CellConfigPanel {
             
             ModulatorHeaderRow.draw(
                 session = session,
-                state = state,
-                param = param,
                 existing = existing,
                 idx = idx,
                 modsToDraw = modsToDraw,
-                activeMods = activeMods,
                 isVirtual = isVirtual,
                 isLfo = isLfo,
                 hasAdvanced = hasAdvanced,
@@ -252,10 +236,8 @@ object CellConfigPanel {
             // Draw LFO 1 / primary timing/wave controls
             Lfo1Section.draw(
                 session = session,
-                state = state,
                 param = param,
                 existing = existing,
-                isLfo = isLfo,
                 isBeat = isBeat,
                 isSnh = isSnh,
                 isGen = isGen,
@@ -268,7 +250,6 @@ object CellConfigPanel {
             if (isGen) {
                 Lfo2Section.draw(
                     session = session,
-                    state = state,
                     param = param,
                     existing = existing,
                     idx = idx,
