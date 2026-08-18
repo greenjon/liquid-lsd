@@ -400,6 +400,9 @@ object UITheme {
                 setFontDataOwnedByAtlas(false)
                 setMergeMode(true)
                 setPixelSnapH(true)
+                // Offset icon glyphs downward proportionally so they are vertically centered
+                // and do not collide with the top border of buttons or bounding frames.
+                setGlyphOffset(0f, kotlin.math.round(size * 0.18f))
             }
             
             val iconFont = atlas.addFontFromMemoryTTF(lucideBytes!!, size, iconCfg, iconRange!!)

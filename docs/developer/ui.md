@@ -60,6 +60,7 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and 
 
 ### 3. `UITheme.kt`
 - Manages font rendering (Inter, JetBrains Mono, Lucide icons merged via `setMergeMode(true)`).
+- **Proportional Icon Glyph Offset**: Lucide icons are configured with a scaled `setGlyphOffset(0f, round(size * 0.18f))` to ensure optical vertical centering and prevent icon bounding boxes from touching the top edge of buttons across all font sizes.
 - **Critical Font Array Ownership**: Font `ByteArray` fields (`regularBytes`, `boldBytes`) and `iconRange: ShortArray` are stored as class fields. Calling `setFontDataOwnedByAtlas(false)` prevents native ImGui from attempting to free JVM-managed byte arrays.
 
 ---

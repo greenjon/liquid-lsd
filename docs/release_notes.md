@@ -13,6 +13,7 @@
 - **Asset Browser New Preset Creation**: Added a dedicated `[Create new preset...]` row with `[ A ] [ B ] [ C ]` buttons positioned above the preset list in the Asset Browser. Clicking a deck button ejects/resets the deck (handling dirty states according to user preferences) and switches Preset Grid focus directly to that deck.
 - **Redundant Browser Removal**: Removed `DeckPresetBrowser.kt` and its duplicated search, tag filtering, and preset list UI; preset browsing and loading remain centralized in the docked **Asset Browser** (`F3`).
 - **Deck Control Cleanup**: Removed orphaned `drawDeckPresetDropdown` code, renamed `drawDeckBottomBar` to `drawDeckMonitorToolbar`, and streamlined deck preview headers to act as clean display indicators with rich tooltips.
+- **Icon Button Alignment & Padding**: Added a scaled vertical glyph offset to Lucide icons merged into `UITheme`, eliminating top-border collisions and providing balanced padding for all icon buttons across all typography sizes and user UI scale settings.
 
 ---
 
