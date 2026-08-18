@@ -27,14 +27,14 @@ class ScopeTimebaseTest {
         val param = ModulatableParameter(baseValue = 0.5f)
         assertEquals(ScopeTimebase.AUTO, param.scopeTimebase)
 
-        // No modulators -> defaults to 1s for reactive inputs
-        val (dur1, div1) = param.resolveEffectiveTimebase()
-        assertEquals(1.0f, dur1)
-        assertEquals(0.25f, div1)
+        // No modulators -> defaults to 10s
+        val (dur10, div10) = param.resolveEffectiveTimebase()
+        assertEquals(10.0f, dur10)
+        assertEquals(2.0f, div10)
 
-        val (durTen, divTen) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
-        assertEquals(10.0f, durTen)
-        assertEquals(2.0f, divTen)
+        val (durOne, divOne) = param.resolveEffectiveTimebase(defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
+        assertEquals(1.0f, durOne)
+        assertEquals(0.25f, divOne)
 
         // Add 24-hour LFO
         val lfo24h = CvModulator(
@@ -76,12 +76,12 @@ class ScopeTimebaseTest {
         assertEquals(ScopeTimebase.TEN_SEC, param.getScopeTimebase("lfo"))
         assertEquals(ScopeTimebase.HUNDRED_SEC, param.getScopeTimebase("audio"))
         assertEquals(ScopeTimebase.FIFTEEN_MIN, param.getScopeTimebase("final"))
-        assertEquals(ScopeTimebase.ONE_SEC, param.getScopeTimebase("trigger"))
+        assertEquals(ScopeTimebase.TEN_SEC, param.getScopeTimebase("trigger"))
 
         assertEquals(10.0f, param.resolveEffectiveTimebase("lfo").first)
         assertEquals(100.0f, param.resolveEffectiveTimebase("audio").first)
         assertEquals(900.0f, param.resolveEffectiveTimebase("final").first)
-        assertEquals(1.0f, param.resolveEffectiveTimebase("trigger").first)
+        assertEquals(10.0f, param.resolveEffectiveTimebase("trigger").first)
     }
 
     @Test

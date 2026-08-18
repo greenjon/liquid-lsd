@@ -33,7 +33,7 @@ object OscilloscopeDrawer {
         val isAngle = param.isAngle
 
         val playheadRatio = 1.0f
-        val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
+        val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
 
         // 1. Top Controls Bar: Timebase Selector
         drawControlsBar(session, param, scopeKey, totalDuration, divSec)
@@ -166,7 +166,7 @@ object OscilloscopeDrawer {
         val hasLfo = activeMods.any { it.sourceId in setOf("lfo", "beatPhase", "sampleAndHold") }
         val playheadRatio = if (hasLfo) 0.5f else 1.0f
 
-        val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.ONE_SEC)
+        val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
 
         // Top Controls Bar
         drawControlsBar(session, param, scopeKey, totalDuration, divSec)

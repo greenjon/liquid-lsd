@@ -36,7 +36,7 @@ class ModulatableParameter(
     fun getScopeTimebase(scopeKey: String = "default"): ScopeTimebase {
         val stored = scopeTimebases[scopeKey]
         if (stored != null) return stored
-        return if (scopeKey == "lfo" || scopeKey == "default") ScopeTimebase.AUTO else ScopeTimebase.ONE_SEC
+        return if (scopeKey == "lfo" || scopeKey == "default") ScopeTimebase.AUTO else ScopeTimebase.TEN_SEC
     }
 
     fun setScopeTimebase(scopeKey: String = "default", timebase: ScopeTimebase) {
@@ -50,11 +50,11 @@ class ModulatableParameter(
     /**
      * Resolves the effective timebase duration and division interval for a specific scope/tab.
      * In AUTO mode, derives the timebase from the first active LFO modulator's period,
-     * or uses [defaultWhenNoLfo] (default: 1s for reactive transient visualization).
+     * or uses [defaultWhenNoLfo] (default: 10s).
      */
     fun resolveEffectiveTimebase(
         scopeKey: String = "default",
-        defaultWhenNoLfo: ScopeTimebase = ScopeTimebase.ONE_SEC
+        defaultWhenNoLfo: ScopeTimebase = ScopeTimebase.TEN_SEC
     ): Pair<Float, Float> {
         val selectedTb = getScopeTimebase(scopeKey)
         if (selectedTb != ScopeTimebase.AUTO) {
