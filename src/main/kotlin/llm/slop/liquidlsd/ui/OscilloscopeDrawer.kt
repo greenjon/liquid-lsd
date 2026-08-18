@@ -104,7 +104,8 @@ object OscilloscopeDrawer {
             if (prevX > startX + 1f) {
                 val baseNorm = if (range == 0f) 0.5f else ((param.defaultValue - minVal) / divisor).coerceIn(0f, 1f)
                 val baseY = (startY + h - 6f) - baseNorm * usableHeight
-                dl.addLine(startX, baseY, prevX, prevY, themeColor, 2.0f)
+                dl.addLine(startX, baseY, prevX, baseY, themeColor, 2.0f)
+                dl.addLine(prevX, baseY, prevX, prevY, themeColor, 2.0f)
             }
 
             for (idx in (startSampleIdx + 1) until history.size) {
@@ -256,11 +257,12 @@ object OscilloscopeDrawer {
                 var prevX = nowX - (history.size - 1 - startSampleIdx) * pixelsPerSample
                 var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                // Draw baseline if history buffer does not cover full selected pastSec
+                // Draw flat baseline if history buffer does not cover full selected pastSec
                 if (prevX > startX + 1f) {
                     val baseNorm = if (isBipolar) 0.5f else 0.0f
                     val baseY = (startY + h - 6f) - baseNorm * usableHeight
-                    dl.addLine(startX, baseY, prevX, prevY, themeColor, 2.0f)
+                    dl.addLine(startX, baseY, prevX, baseY, themeColor, 2.0f)
+                    dl.addLine(prevX, baseY, prevX, prevY, themeColor, 2.0f)
                 }
 
                 // Draw solid combined history line
