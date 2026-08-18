@@ -31,9 +31,9 @@ object OscilloscopeDrawer {
         val isAngle = param.isAngle
 
         val (totalDuration, divSec) = param.resolveEffectiveTimebase()
-        val playheadRatio = param.scopePlayheadRatio.coerceIn(0.0f, 1.0f)
+        val playheadRatio = 0.5f
 
-        // 1. Top Controls Bar: Timebase Selector + Playhead Snap Buttons
+        // 1. Top Controls Bar: Timebase Selector
         drawControlsBar(session, param, totalDuration, divSec)
 
         val historySize = history.size
@@ -58,7 +58,7 @@ object OscilloscopeDrawer {
         dl.addLine(startX, startY + 6f, startX + w, startY + 6f, gridColFaint, 1f)
         dl.addLine(startX, startY + h - 6f, startX + w, startY + h - 6f, gridColFaint, 1f)
 
-        // Calculate Playhead X position
+        // Calculate Playhead X position (Fixed Center)
         val nowX = startX + w * playheadRatio
 
         // Calibrated Vertical Grid Lines (based on time offsets from NOW)
@@ -66,7 +66,7 @@ object OscilloscopeDrawer {
             val pixelsPerSec = w / totalDuration
             val divPixels = divSec * pixelsPerSec
 
-            // Grid lines to the left of NOW (Past)
+            // Grid lines to the left of NOW (Past Lookback)
             var curX = nowX - divPixels
             var curOffset = -divSec
             while (curX >= startX + 1f) {
@@ -81,7 +81,7 @@ object OscilloscopeDrawer {
                 curOffset -= divSec
             }
 
-            // Grid lines to the right of NOW (Future)
+            // Grid lines to the right of NOW (Future Lookahead)
             curX = nowX + divPixels
             curOffset = divSec
             while (curX <= startX + w - 1f) {
@@ -102,7 +102,7 @@ object OscilloscopeDrawer {
         val divisor = if (range == 0f) 1f else range
         val isBipolar = param.minClamp < 0f
 
-        // 2. Render Past Modulators (Calibrated to Timebase)
+        // 2. Render Lookback (Left Half)
         val pastW = w * playheadRatio
         val pastSec = totalDuration * playheadRatio
         if (pastW > 1f && pastSec > 0.001f) {
@@ -146,12 +146,11 @@ object OscilloscopeDrawer {
             }
         }
 
-        // 3. Render Future Modulators (Projection)
+        // 3. Render Lookahead (Right Half)
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
         if (futureW > 1f && futureSec > 0.001f) {
             val stepFutureX = futureW / FUTURE_STEPS
-            val isBipolar = param.minClamp < 0f
 
             // Draw individual modulator future projections
             for (mod in activeMods) {
@@ -198,7 +197,7 @@ object OscilloscopeDrawer {
             }
         }
 
-        // 4. Draw NOW Playhead & Interactive Handle
+        // 4. Draw Centered NOW Playhead
         drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
 
         // 5. Border
@@ -221,7 +220,7 @@ object OscilloscopeDrawer {
         ImGui.setCursorScreenPos(startX + w - textWidth - 8f, startY + 4f)
         session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.6f, title)
 
-        // 7. Contextual Tooltips for Past / Playhead / Future
+        // 7. Contextual Tooltips
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, playheadRatio)
 
         ImGui.setCursorScreenPos(startX, startY + h)
@@ -240,7 +239,7 @@ object OscilloscopeDrawer {
         val isAngle = param.isAngle
 
         val (totalDuration, divSec) = param.resolveEffectiveTimebase()
-        val playheadRatio = param.scopePlayheadRatio.coerceIn(0.0f, 1.0f)
+        val playheadRatio = 0.5f
 
         // Top Controls Bar
         drawControlsBar(session, param, totalDuration, divSec)
@@ -313,7 +312,7 @@ object OscilloscopeDrawer {
         val pastW = w * playheadRatio
         val pastSec = totalDuration * playheadRatio
 
-        // 1. Draw Past History (Calibrated to Timebase)
+        // 1. Draw Lookback (Left Half)
         if (pastW > 1f && pastSec > 0.001f) {
             val stepPastX = pastW / FUTURE_STEPS
 
@@ -335,7 +334,7 @@ object OscilloscopeDrawer {
             }
         }
 
-        // 2. Draw Future Projection
+        // 2. Draw Lookahead (Right Half)
         val futureW = w * (1.0f - playheadRatio)
         val futureSec = totalDuration * (1.0f - playheadRatio)
         if (futureW > 1f && futureSec > 0.001f) {
@@ -366,7 +365,7 @@ object OscilloscopeDrawer {
         }
 
 
-        // 3. Draw NOW Playhead
+        // 3. Draw Centered NOW Playhead
         val range = maxVal - minVal
         val divisor = if (range == 0f) 1f else range
         drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
@@ -425,47 +424,6 @@ object OscilloscopeDrawer {
             "${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")} (${ScopeTimebase.formatTimeOffset(divSec).removePrefix("+")}/div)"
         }
         session.uiTheme.captionColored(0.5f, 0.5f, 0.5f, 0.7f, infoLabel)
-
-        // Quick Snap Buttons for Playhead
-        val btnW = 34f
-        val btnH = 18f
-        val rightX = ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - (btnW * 3 + 8f)
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.sameLine(rightX)
-            
-            val is0 = param.scopePlayheadRatio < 0.05f
-            val is50 = param.scopePlayheadRatio in 0.45f..0.55f
-            val is100 = param.scopePlayheadRatio > 0.95f
-
-            if (is0) ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 0.6f))
-            if (ImGui.button("0%##snap0_${param.hashCode()}", btnW, btnH)) {
-                param.scopePlayheadRatio = 0.0f
-            }
-            if (is0) ImGui.popStyleColor()
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Lookahead (100% Future Preview)")
-            }
-
-            ImGui.sameLine()
-            if (is50) ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 0.6f))
-            if (ImGui.button("50%##snap50_${param.hashCode()}", btnW, btnH)) {
-                param.scopePlayheadRatio = 0.5f
-            }
-            if (is50) ImGui.popStyleColor()
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Balanced (50% Past History / 50% Future Projection)")
-            }
-
-            ImGui.sameLine()
-            if (is100) ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 0.6f))
-            if (ImGui.button("100%##snap100_${param.hashCode()}", btnW, btnH)) {
-                param.scopePlayheadRatio = 1.0f
-            }
-            if (is100) ImGui.popStyleColor()
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("History (100% Recorded Past)")
-            }
-        }
         ImGui.spacing()
     }
 
@@ -486,15 +444,15 @@ object OscilloscopeDrawer {
         val playheadLineCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.85f)
         val handleCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.85f, 1.0f, 1.0f)
 
-        // Vertical Playhead Line
+        // Vertical Playhead Line (Centered)
         dl.addLine(nowX, startY, nowX, startY + h, playheadLineCol, 1.5f)
 
-        // Top triangle handle [▼]
-        val handleSize = 6f
+        // Top subtle indicator pip [▼]
+        val handleSize = 5f
         dl.addTriangleFilled(
             nowX - handleSize, startY,
             nowX + handleSize, startY,
-            nowX, startY + handleSize * 1.3f,
+            nowX, startY + handleSize * 1.2f,
             handleCol
         )
 
@@ -503,17 +461,6 @@ object OscilloscopeDrawer {
         val currentY = (startY + h - 6f) - currentNorm * usableHeight
         dl.addCircleFilled(nowX, currentY, 3.5f, handleCol)
         dl.addCircle(nowX, currentY, 5.5f, ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.4f), 12, 1.5f)
-
-        // Interactive dragging of playhead
-        val io = ImGui.getIO()
-        val mx = io.mousePos.x
-        val my = io.mousePos.y
-        val isHoveringHandle = mx in (nowX - 10f)..(nowX + 10f) && my in startY..(startY + h)
-
-        if (isHoveringHandle && ImGui.isMouseDown(0)) {
-            val newRatio = ((mx - startX) / w).coerceIn(0.0f, 1.0f)
-            param.scopePlayheadRatio = newRatio
-        }
     }
 
     private fun handleOscilloscopeTooltips(
@@ -533,13 +480,13 @@ object OscilloscopeDrawer {
 
         if (mx in startX..(startX + w) && my in startY..(startY + h)) {
             if (abs(mx - nowX) <= 6f) {
-                ImGui.setTooltip("Playhead (NOW):\nDrag left/right to adjust past history vs. future lookahead.")
+                ImGui.setTooltip("Playhead (NOW):\nCurrent parameter value & phase.")
             } else if (mx < nowX) {
                 val pastSpan = totalDuration * playheadRatio
-                ImGui.setTooltip("Recorded History:\nReal-time past parameter values (-${ScopeTimebase.formatTimeOffset(pastSpan).removePrefix("-").removePrefix("+")} to NOW).")
+                ImGui.setTooltip("Waveform Lookback:\nModulation trajectory leading into current phase (-${ScopeTimebase.formatTimeOffset(pastSpan).removePrefix("-").removePrefix("+")} to NOW).")
             } else {
                 val futureSpan = totalDuration * (1.0f - playheadRatio)
-                ImGui.setTooltip("Projected Future:\nMathematical lookahead of deterministic LFO modulators (NOW to +${ScopeTimebase.formatTimeOffset(futureSpan).removePrefix("+")}).")
+                ImGui.setTooltip("Waveform Lookahead:\nProjected modulation trajectory ahead of current phase (NOW to +${ScopeTimebase.formatTimeOffset(futureSpan).removePrefix("+")}).")
             }
         }
     }

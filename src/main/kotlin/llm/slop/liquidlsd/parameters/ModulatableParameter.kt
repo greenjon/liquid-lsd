@@ -32,7 +32,6 @@ class ModulatableParameter(
     var baseMax: Float = baseValue
 
     var scopeTimebase: ScopeTimebase = ScopeTimebase.AUTO
-    var scopePlayheadRatio: Float = 0.5f
 
     /**
      * Resolves the effective timebase duration and division interval.

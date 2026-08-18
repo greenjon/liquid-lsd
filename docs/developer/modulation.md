@@ -31,7 +31,6 @@ Key properties:
 | `value` | Last evaluated output (internal set; updated every `evaluate()` call) |
 | `history` | `CvHistoryBuffer` ring buffer — read by the oscilloscope in `CellConfigPanel` |
 | `scopeTimebase` | `ScopeTimebase` (`AUTO`, `1s`, `10s`, `100s`, `15m`, `2.5h`, `24h`) — transient per-parameter oscilloscope zoom |
-| `scopePlayheadRatio` | `Float` in `[0, 1]` — position of the interactive "NOW" playhead line (default 0.5 for 50:50 past/future) |
 
 MIDI mapping fields (`mappedMidiId`, `midiMapMin`, `midiMapMax`) are deprecated. Use
 `MidiMappingManager` profiles instead.
