@@ -47,12 +47,16 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immedia
 
 ### 1. `UIManager.kt`
 - **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`.
-- **Workspace Layout & Auto-Sizing Splitters**: Orchestrates the three-column desktop workspace. Left Panel (`PresetGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`). Splitter 1 is a static visual divider that repositions automatically, while Splitter 2 is interactive to resize Middle (`CellConfigPanel`) vs Right (`MixerMonitorPanel`).
+- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace by delegating splitting and styling to dedicated components. Left Panel (`PresetGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`).
 - **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
 - **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()` and `PopupManager.draw()` at root scope.
 
-### 2. `NoteEditorModal.kt`
+### 2. `UIThemeStyler.kt` & `SplitterManager.kt`
+- **`UIThemeStyler.kt`**: Applies ImGui color palettes across all themes (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), manages window transparency/alpha blending when background video is enabled, renders multi-color Neon gradient backgrounds, and handles proportional `ImGuiStyle` size scaling.
+- **`SplitterManager.kt`**: Manages mouse hit-testing, resize cursors (`ResizeEW` / `ResizeNS`), double-click reset positions, and draw-list divider rendering for vertical and horizontal layout splitters.
+
+### 3. `NoteEditorModal.kt`
 - **Role**: Stateful singleton modal editor for the 3-tier Note System.
 - **`NoteContext` Sealed Class**:
   - `Param(deckLabel, paramKey, displayLabel)`: Edits parameter-level notes.
