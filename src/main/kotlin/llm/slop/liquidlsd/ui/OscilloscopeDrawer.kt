@@ -148,40 +148,46 @@ object OscilloscopeDrawer {
                     prevY = nextY
                 }
             } else {
-                // Pure deterministic LFO past calculation
-                for (mod in activeMods) {
-                    val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
-                    val modColor = CvTheme.getThemeColor(colorId, 0.5f)
-
-                    var prevX = startX
-                    var prevVal = calculateModFutureVal(param, mod, isBipolar, -pastSec.toDouble())
-                    var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                    for (s in 1..FUTURE_STEPS) {
-                        val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
-                        val nextVal = calculateModFutureVal(param, mod, isBipolar, tOffset)
-                        val nextX = startX + s * stepPastX
-                        val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                        dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
-                        prevX = nextX
-                        prevY = nextY
-                    }
-                }
+                // Pure deterministic LFO past calculation with anti-aliasing envelope
+                val lfoMods = activeMods.filter { isCvSourceBipolar(it.sourceId) }
+                val strokeColor = themeColor
 
                 var prevX = startX
-                var prevVal = calculateCombinedFutureVal(param, activeMods, isBipolar, -pastSec.toDouble())
-                var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+                var prevRaw = calculateCombinedFutureVal(param, lfoMods, isBipolar, -pastSec.toDouble())
+                var prevNorm = if (range == 0f) 0.5f else ((prevRaw - minVal) / divisor).coerceIn(0f, 1f)
+                var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                for (s in 1..FUTURE_STEPS) {
-                    val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
-                    val nextVal = calculateCombinedFutureVal(param, activeMods, isBipolar, tOffset)
-                    val nextX = startX + s * stepPastX
-                    val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+                for (s in 0 until FUTURE_STEPS) {
+                    val tStart = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                    val tEnd = -pastSec.toDouble() * (1.0 - (s + 1).toDouble() / FUTURE_STEPS)
+                    val x = startX + (s + 1) * stepPastX
 
-                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
-                    prevX = nextX
-                    prevY = nextY
+                    var stepMin = Float.POSITIVE_INFINITY
+                    var stepMax = Float.NEGATIVE_INFINITY
+
+                    for (k in 0..12) {
+                        val frac = if (k == 0) 0.0 else (k * 0.618033988749895) % 1.0
+                        val t = tStart + (tEnd - tStart) * frac
+                        val v = calculateCombinedFutureVal(param, lfoMods, isBipolar, t)
+                        if (v < stepMin) stepMin = v
+                        if (v > stepMax) stepMax = v
+                    }
+
+                    val normMin = if (range == 0f) 0.5f else ((stepMin - minVal) / divisor).coerceIn(0f, 1f)
+                    val normMax = if (range == 0f) 0.5f else ((stepMax - minVal) / divisor).coerceIn(0f, 1f)
+                    val yTop = (startY + h - 6f) - normMax * usableHeight
+                    val yBottom = (startY + h - 6f) - normMin * usableHeight
+
+                    if (abs(yBottom - yTop) > 2.5f) {
+                        dl.addLine(x - stepPastX * 0.5f, yTop, x - stepPastX * 0.5f, yBottom, strokeColor, stepPastX + 0.5f)
+                        prevX = x
+                        prevY = (yTop + yBottom) / 2f
+                    } else {
+                        val yMid = (yTop + yBottom) / 2f
+                        dl.addLine(prevX, prevY, x, yMid, strokeColor, 2.25f)
+                        prevX = x
+                        prevY = yMid
+                    }
                 }
             }
         }
@@ -192,29 +198,6 @@ object OscilloscopeDrawer {
         val futureSec = totalDuration * (1.0f - playheadRatio)
         if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f && lfoMods.isNotEmpty()) {
             val stepFutureX = futureW / FUTURE_STEPS
-
-            // Draw individual modulator future projections
-            for (mod in lfoMods) {
-                val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
-                val modProjColor = CvTheme.getThemeColor(colorId, 0.35f)
-
-                var prevX = nowX
-                var prevVal: Float = calculateModFutureVal(param, mod, isBipolar, 0.0)
-                var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                for (s in 1..FUTURE_STEPS) {
-                    val tOffset = (s.toDouble() / FUTURE_STEPS) * futureSec
-                    val nextVal = calculateModFutureVal(param, mod, isBipolar, tOffset)
-                    val nextX = nowX + s * stepFutureX
-                    val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                    dl.addLine(prevX, prevY, nextX, nextY, modProjColor, 1.25f)
-                    prevX = nextX
-                    prevY = nextY
-                }
-            }
-
-            // Draw final combined future projection of deterministic LFO modulators
             val projColor = ImGui.colorConvertFloat4ToU32(
                 ((themeColor and 0xFF)) / 255f,
                 (((themeColor shr 8) and 0xFF)) / 255f,
@@ -223,18 +206,41 @@ object OscilloscopeDrawer {
             )
 
             var prevX = nowX
-            var prevVal = calculateCombinedFutureVal(param, lfoMods, isBipolar, 0.0)
-            var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+            var prevRaw = calculateCombinedFutureVal(param, lfoMods, isBipolar, 0.0)
+            var prevNorm = if (range == 0f) 0.5f else ((prevRaw - minVal) / divisor).coerceIn(0f, 1f)
+            var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-            for (s in 1..FUTURE_STEPS) {
-                val tOffset = (s.toDouble() / FUTURE_STEPS) * futureSec
-                val nextVal = calculateCombinedFutureVal(param, lfoMods, isBipolar, tOffset)
-                val nextX = nowX + s * stepFutureX
-                val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+            for (s in 0 until FUTURE_STEPS) {
+                val tStart = (s.toDouble() / FUTURE_STEPS) * futureSec
+                val tEnd = ((s + 1).toDouble() / FUTURE_STEPS) * futureSec
+                val x = nowX + (s + 1) * stepFutureX
 
-                dl.addLine(prevX, prevY, nextX, nextY, projColor, 2.0f)
-                prevX = nextX
-                prevY = nextY
+                var stepMin = Float.POSITIVE_INFINITY
+                var stepMax = Float.NEGATIVE_INFINITY
+
+                for (k in 0..12) {
+                    val frac = if (k == 0) 0.0 else (k * 0.618033988749895) % 1.0
+                    val t = tStart + (tEnd - tStart) * frac
+                    val v = calculateCombinedFutureVal(param, lfoMods, isBipolar, t)
+                    if (v < stepMin) stepMin = v
+                    if (v > stepMax) stepMax = v
+                }
+
+                val normMin = if (range == 0f) 0.5f else ((stepMin - minVal) / divisor).coerceIn(0f, 1f)
+                val normMax = if (range == 0f) 0.5f else ((stepMax - minVal) / divisor).coerceIn(0f, 1f)
+                val yTop = (startY + h - 6f) - normMax * usableHeight
+                val yBottom = (startY + h - 6f) - normMin * usableHeight
+
+                if (abs(yBottom - yTop) > 2.5f) {
+                    dl.addLine(x - stepFutureX * 0.5f, yTop, x - stepFutureX * 0.5f, yBottom, projColor, stepFutureX + 0.5f)
+                    prevX = x
+                    prevY = (yTop + yBottom) / 2f
+                } else {
+                    val yMid = (yTop + yBottom) / 2f
+                    dl.addLine(prevX, prevY, x, yMid, projColor, 2.0f)
+                    prevX = x
+                    prevY = yMid
+                }
             }
         }
 
@@ -395,23 +401,47 @@ object OscilloscopeDrawer {
                     prevY = nextY
                 }
             } else {
-                // Deterministic LFO calculated lookback
+                // Deterministic LFO calculated lookback with anti-aliased envelope
+                val lfoMods = activeMods.filter { isCvSourceBipolar(it.sourceId) }
+                val strokeColor = themeColor
                 val stepPastX = pastW / FUTURE_STEPS
+
                 var prevX = startX
-                var prevRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, -pastSec.toDouble())
+                var prevRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, -pastSec.toDouble())
                 var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
                 var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                for (s in 1..FUTURE_STEPS) {
-                    val tOffset = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
-                    val nextRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, tOffset)
-                    val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
-                    val nextX = startX + s * stepPastX
-                    val nextY = (startY + h - 6f) - nextNorm * usableHeight
+                for (s in 0 until FUTURE_STEPS) {
+                    val tStart = -pastSec.toDouble() * (1.0 - s.toDouble() / FUTURE_STEPS)
+                    val tEnd = -pastSec.toDouble() * (1.0 - (s + 1).toDouble() / FUTURE_STEPS)
+                    val x = startX + (s + 1) * stepPastX
 
-                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
-                    prevX = nextX
-                    prevY = nextY
+                    var stepMin = Float.POSITIVE_INFINITY
+                    var stepMax = Float.NEGATIVE_INFINITY
+
+                    for (k in 0..12) {
+                        val frac = if (k == 0) 0.0 else (k * 0.618033988749895) % 1.0
+                        val t = tStart + (tEnd - tStart) * frac
+                        val v = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, t)
+                        if (v < stepMin) stepMin = v
+                        if (v > stepMax) stepMax = v
+                    }
+
+                    val normMin = if (isBipolar) (stepMin + 1f) / 2f else stepMin.coerceIn(0f, 1f)
+                    val normMax = if (isBipolar) (stepMax + 1f) / 2f else stepMax.coerceIn(0f, 1f)
+                    val yTop = (startY + h - 6f) - normMax * usableHeight
+                    val yBottom = (startY + h - 6f) - normMin * usableHeight
+
+                    if (abs(yBottom - yTop) > 2.5f) {
+                        dl.addLine(x - stepPastX * 0.5f, yTop, x - stepPastX * 0.5f, yBottom, strokeColor, stepPastX + 0.5f)
+                        prevX = x
+                        prevY = (yTop + yBottom) / 2f
+                    } else {
+                        val yMid = (yTop + yBottom) / 2f
+                        dl.addLine(prevX, prevY, x, yMid, strokeColor, 2.0f)
+                        prevX = x
+                        prevY = yMid
+                    }
                 }
             }
         }
@@ -434,16 +464,37 @@ object OscilloscopeDrawer {
             var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
             var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-            for (s in 1..FUTURE_STEPS) {
-                val tOffset = (s.toDouble() / FUTURE_STEPS) * futureSec
-                val nextRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, tOffset)
-                val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
-                val nextX = nowX + s * stepFutureX
-                val nextY = (startY + h - 6f) - nextNorm * usableHeight
+            for (s in 0 until FUTURE_STEPS) {
+                val tStart = (s.toDouble() / FUTURE_STEPS) * futureSec
+                val tEnd = ((s + 1).toDouble() / FUTURE_STEPS) * futureSec
+                val x = nowX + (s + 1) * stepFutureX
 
-                dl.addLine(prevX, prevY, nextX, nextY, projColor, 1.8f)
-                prevX = nextX
-                prevY = nextY
+                var stepMin = Float.POSITIVE_INFINITY
+                var stepMax = Float.NEGATIVE_INFINITY
+
+                for (k in 0..12) {
+                    val frac = if (k == 0) 0.0 else (k * 0.618033988749895) % 1.0
+                    val t = tStart + (tEnd - tStart) * frac
+                    val v = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, t)
+                    if (v < stepMin) stepMin = v
+                    if (v > stepMax) stepMax = v
+                }
+
+                val normMin = if (isBipolar) (stepMin + 1f) / 2f else stepMin.coerceIn(0f, 1f)
+                val normMax = if (isBipolar) (stepMax + 1f) / 2f else stepMax.coerceIn(0f, 1f)
+                val yTop = (startY + h - 6f) - normMax * usableHeight
+                val yBottom = (startY + h - 6f) - normMin * usableHeight
+
+                if (abs(yBottom - yTop) > 2.5f) {
+                    dl.addLine(x - stepFutureX * 0.5f, yTop, x - stepFutureX * 0.5f, yBottom, projColor, stepFutureX + 0.5f)
+                    prevX = x
+                    prevY = (yTop + yBottom) / 2f
+                } else {
+                    val yMid = (yTop + yBottom) / 2f
+                    dl.addLine(prevX, prevY, x, yMid, projColor, 1.8f)
+                    prevX = x
+                    prevY = yMid
+                }
             }
         }
 
