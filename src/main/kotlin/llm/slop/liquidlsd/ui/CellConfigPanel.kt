@@ -200,8 +200,18 @@ object CellConfigPanel {
             modsToDraw = modsToDraw.sortedBy { order.indexOf(it.sourceId) }
         }
         val isBipolar = param.minClamp < 0f
-        // Use the same formula as the engine so the O-scope displays what the parameter actually receives.
-        val combinedVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar)
+        // Use the same formula as the engine so the O-scope displays what the parameter actually receives,
+        // or preview the incoming CV source if no modulator is active yet.
+        val combinedVal = if (activeMods.isEmpty()) {
+            val previewSourceId = when (cvId) {
+                "audio" -> "audio_amp"
+                "trigger" -> "trigger_onset"
+                else -> cvId
+            }
+            session.cvRegistry.get(previewSourceId)
+        } else {
+            llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar)
+        }
         activeHistory?.add(combinedVal)
 
         // -- Unified Oscilloscope ---------------------------------

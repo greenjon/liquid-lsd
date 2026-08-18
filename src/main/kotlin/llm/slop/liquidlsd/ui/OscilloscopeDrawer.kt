@@ -114,24 +114,25 @@ object OscilloscopeDrawer {
         val pastSec = totalDuration * playheadRatio
         if (pastW > 1f && pastSec > 0.001f) {
             val stepPastX = pastW / FUTURE_STEPS
-            val fps = session.uiTheme.maxFps.toFloat().coerceIn(30f, 240f)
-            val samplesInWindow = (pastSec * fps).toInt().coerceIn(2, history.size)
 
             if (hasNonDet || !hasLfo) {
                 // True recorded history for audio/midi/trigger
+                val fps = 60f
+                val count = (pastSec * fps).toInt().coerceIn(2, history.size)
+                val stepX = pastW / (count - 1)
+
                 for (mod in activeMods) {
                     val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
                     val modColor = CvTheme.getThemeColor(colorId, 0.5f)
-                    val hist = modulatorHistories[mod.id]
+                    val hist = modulatorHistories[mod.id] ?: session.cvRegistry.getHistory(mod.sourceId)
                     if (hist != null) {
                         var prevX = startX
-                        var prevVal = hist.sampleWindow(samplesInWindow, 0.0f)
+                        var prevVal = hist.getAt(hist.size - count)
                         var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                        for (s in 1..FUTURE_STEPS) {
-                            val frac = s.toFloat() / FUTURE_STEPS
-                            val nextVal = hist.sampleWindow(samplesInWindow, frac)
-                            val nextX = startX + frac * pastW
+                        for (i in 1 until count) {
+                            val nextVal = hist.getAt(hist.size - count + i)
+                            val nextX = startX + i * stepX
                             val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
                             dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
@@ -143,13 +144,12 @@ object OscilloscopeDrawer {
 
                 // Final combined past line from recorded param.history
                 var prevX = startX
-                var prevVal = history.sampleWindow(samplesInWindow, 0.0f)
+                var prevVal = history.getAt(history.size - count)
                 var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
-                for (s in 1..FUTURE_STEPS) {
-                    val frac = s.toFloat() / FUTURE_STEPS
-                    val nextVal = history.sampleWindow(samplesInWindow, frac)
-                    val nextX = startX + frac * pastW
+                for (i in 1 until count) {
+                    val nextVal = history.getAt(history.size - count + i)
+                    val nextX = startX + i * stepX
                     val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
 
                     dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
@@ -247,7 +247,7 @@ object OscilloscopeDrawer {
         }
 
         // 4. Draw NOW Playhead (Centered or Right-aligned)
-        drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
+        drawPlayhead(session, param.value, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor, isNormalized = false)
 
         // 5. Border
         val borderCol = ImGui.colorConvertFloat4ToU32(0.26f, 0.28f, 0.32f, 1.0f)
@@ -371,23 +371,48 @@ object OscilloscopeDrawer {
 
         // 1. Draw Lookback / Past History
         if (pastW > 1f && pastSec > 0.001f) {
-            val stepPastX = pastW / FUTURE_STEPS
-
             if (!hasLfo) {
                 // True recorded history playback for Audio, Trigger, MIDI
-                val fps = session.uiTheme.maxFps.toFloat().coerceIn(30f, 240f)
-                val samplesInWindow = (pastSec * fps).toInt().coerceIn(2, history.size)
+                val fps = 60f
+                val count = (pastSec * fps).toInt().coerceIn(2, history.size)
+                val stepX = pastW / (count - 1)
 
+                // Draw individual active modulator histories if multiple modulators
+                if (activeMods.size > 1) {
+                    for (mod in activeMods) {
+                        val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
+                        val modColor = CvTheme.getThemeColor(colorId, 0.5f)
+                        val modHist = session.cvRegistry.getHistory(mod.sourceId)
+                        if (modHist != null) {
+                            var prevX = startX
+                            var prevRaw = modHist.getAt(modHist.size - count)
+                            var prevNorm = if (isBipolar) (prevRaw * mod.depth + 1f) / 2f else (prevRaw * mod.depth).coerceIn(0f, 1f)
+                            var prevY = (startY + h - 6f) - prevNorm * usableHeight
+
+                            for (i in 1 until count) {
+                                val nextRaw = modHist.getAt(modHist.size - count + i)
+                                val nextNorm = if (isBipolar) (nextRaw * mod.depth + 1f) / 2f else (nextRaw * mod.depth).coerceIn(0f, 1f)
+                                val nextX = startX + i * stepX
+                                val nextY = (startY + h - 6f) - nextNorm * usableHeight
+
+                                dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
+                                prevX = nextX
+                                prevY = nextY
+                            }
+                        }
+                    }
+                }
+
+                // Draw solid combined history line
                 var prevX = startX
-                var prevRaw = history.sampleWindow(samplesInWindow, 0.0f)
+                var prevRaw = history.getAt(history.size - count)
                 var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
                 var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                for (s in 1..FUTURE_STEPS) {
-                    val frac = s.toFloat() / FUTURE_STEPS
-                    val nextRaw = history.sampleWindow(samplesInWindow, frac)
+                for (i in 1 until count) {
+                    val nextRaw = history.getAt(history.size - count + i)
                     val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
-                    val nextX = startX + frac * pastW
+                    val nextX = startX + i * stepX
                     val nextY = (startY + h - 6f) - nextNorm * usableHeight
 
                     dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
@@ -396,6 +421,7 @@ object OscilloscopeDrawer {
                 }
             } else {
                 // Deterministic LFO calculated lookback
+                val stepPastX = pastW / FUTURE_STEPS
                 var prevX = startX
                 var prevRaw = getCombinedEffectiveValueAtOffset(activeMods, isBipolar, -pastSec.toDouble())
                 var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
@@ -449,7 +475,12 @@ object OscilloscopeDrawer {
         // 3. Draw NOW Playhead (Centered or Right-aligned)
         val range = maxVal - minVal
         val divisor = if (range == 0f) 1f else range
-        drawPlayhead(session, param, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor)
+        val currentModVal = if (hasLfo) {
+            getCombinedEffectiveValueAtOffset(activeMods, isBipolar, 0.0)
+        } else {
+            if (history.size > 0) history.getAt(history.size - 1) else 0f
+        }
+        drawPlayhead(session, currentModVal, startX, startY, w, h, nowX, usableHeight, minVal, range, divisor, isNormalized = true, isBipolar = isBipolar)
 
         // 4. Border
         val borderCol = ImGui.colorConvertFloat4ToU32(0.26f, 0.28f, 0.32f, 1.0f)
@@ -516,7 +547,7 @@ object OscilloscopeDrawer {
 
     private fun drawPlayhead(
         session: SessionContext,
-        param: ModulatableParameter,
+        currentValue: Float,
         startX: Float,
         startY: Float,
         w: Float,
@@ -525,7 +556,9 @@ object OscilloscopeDrawer {
         usableHeight: Float,
         minVal: Float,
         range: Float,
-        divisor: Float
+        divisor: Float,
+        isNormalized: Boolean = false,
+        isBipolar: Boolean = false
     ) {
         val dl = ImGui.getWindowDrawList()
         val playheadLineCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.85f)
@@ -545,7 +578,11 @@ object OscilloscopeDrawer {
         )
 
         // Playhead current value dot
-        val currentNorm = if (range == 0f) 0.5f else ((param.value - minVal) / divisor).coerceIn(0f, 1f)
+        val currentNorm = if (isNormalized) {
+            if (isBipolar) (currentValue + 1f) / 2f else currentValue.coerceIn(0f, 1f)
+        } else {
+            if (range == 0f) 0.5f else ((currentValue - minVal) / divisor).coerceIn(0f, 1f)
+        }
         val currentY = (startY + h - 6f) - currentNorm * usableHeight
         dl.addCircleFilled(effectiveX, currentY, 3.5f, handleCol)
         dl.addCircle(effectiveX, currentY, 5.5f, ImGui.colorConvertFloat4ToU32(0.35f, 0.8f, 1.0f, 0.4f), 12, 1.5f)
