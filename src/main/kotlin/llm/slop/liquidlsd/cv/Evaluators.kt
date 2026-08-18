@@ -182,6 +182,9 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
     }
 }
 
+fun isCvSourceBipolar(sourceId: String): Boolean =
+    sourceId in setOf("lfo", "beatSine", "beatPhase", "sampleAndHold")
+
 fun getCombinedModulatorValue(mods: List<CvModulator>): Float = getCombinedModulatorValueAtOffset(mods, 0.0)
 
 fun getCombinedModulatorValueAtOffset(mods: List<CvModulator>, timeOffsetSec: Double): Float {
@@ -192,7 +195,12 @@ fun getCombinedModulatorValueAtOffset(mods: List<CvModulator>, timeOffsetSec: Do
     for (mod in mods) {
         if (mod.bypassed) continue
         val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val modAmount = cv * mod.depth + mod.dcOffset
+        val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
+        val modAmount = if (isSourceBipolar) {
+            cv * mod.depth + mod.dcOffset
+        } else {
+            cv * mod.depth + mod.dcOffset
+        }
         if (first) {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount
@@ -213,8 +221,9 @@ fun getCombinedModulatorValueAtOffset(mods: List<CvModulator>, timeOffsetSec: Do
 
 /**
  * Like getCombinedModulatorValue, but applies the correct formula per parameter polarity:
- *   Bipolar  (isBipolar=true):  modAmount = cv * depth + dc         → result in [-1, 1]
- *   Monopolar (isBipolar=false): modAmount = ((cv+1)/2) * depth + dc → result in [ 0, 1]
+ *   Bipolar source on Bipolar param:   modAmount = cv * depth + dc         → in [-1, 1]
+ *   Bipolar source on Monopolar param: modAmount = ((cv+1)/2) * depth + dc → in [ 0, 1]
+ *   Unipolar source (Audio/Trigger/MIDI): modAmount = cv * depth + dc       → in [ 0, 1] (silence is 0)
  *
  * Used by the O-scope in CellConfigPanel so its display matches the engine output.
  */
@@ -229,10 +238,16 @@ fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolea
     for (mod in mods) {
         if (mod.bypassed) continue
         val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val modAmount = if (isBipolar) {
-            cv * mod.depth + mod.dcOffset
+        val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
+        val modAmount = if (isSourceBipolar) {
+            if (isBipolar) {
+                cv * mod.depth + mod.dcOffset
+            } else {
+                ((cv + 1f) / 2f) * mod.depth + mod.dcOffset
+            }
         } else {
-            ((cv + 1f) / 2f) * mod.depth + mod.dcOffset
+            // Unipolar source (Audio, Trigger, MIDI CC)
+            cv * mod.depth + mod.dcOffset
         }
         if (first) {
             result = when (mod.operator) {

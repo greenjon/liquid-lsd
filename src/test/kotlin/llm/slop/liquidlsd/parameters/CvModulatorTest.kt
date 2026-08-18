@@ -46,17 +46,17 @@ class CvModulatorTest {
 
     @Test
     fun testModulatableParameterEvaluationWithDepth() {
-        if (!CVRegistry.exists("test_cv")) {
-            CVRegistry.register(MutableCVSource("test_cv", 1.0f))
-        }
-        CVRegistry.updatePushedValue("test_cv", 1.0f)
-
-        // Monopolar parameter (0.0 .. 1.0)
+        // Monopolar parameter (0.0 .. 1.0) with bipolar LFO source
         val param = ModulatableParameter(baseValue = 0.5f, minClamp = 0.0f, maxClamp = 1.0f)
 
-        // 1. ADD operator: rawModAmount = ((1 + 1)/2) * depth + 0 = depth
+        // 1. ADD operator with LFO at peak (+1.0): rawModAmount = ((1 + 1)/2) * depth = depth
+        // We set LFO subdivision such that at frame 30 phase is at peak (1.0)
+        CVRegistry.setRenderFrameCount(30L)
         val modAdd = CvModulator(
-            sourceId = "test_cv",
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 60f,
+            waveform = Waveform.TRIANGLE,
             operator = ModulationOperator.ADD,
             depth = 0.4f,
             bypassed = false
@@ -66,11 +66,14 @@ class CvModulatorTest {
         // baseValue (0.5) + depth (0.4) * (1.0 - 0.0) = 0.9
         assertEquals(0.9f, evaluated, 0.001f)
 
-        // 2. SCALE operator: result = baseValue * (1 - depth + modAmount)
+        // 2. SCALE operator at peak: result = baseValue * (1 - depth + modAmount)
         // With depth = 0.4 and modAmount = 0.4: 1 - 0.4 + 0.4 = 1.0 -> result = 0.5 * 1.0 = 0.5
         param.modulators.clear()
         val modScale = CvModulator(
-            sourceId = "test_cv",
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 60f,
+            waveform = Waveform.TRIANGLE,
             operator = ModulationOperator.SCALE,
             depth = 0.4f,
             bypassed = false
@@ -79,9 +82,9 @@ class CvModulatorTest {
         evaluated = param.evaluate()
         assertEquals(0.5f, evaluated, 0.001f)
 
-        // With rawCV = -1.0 (so (( -1 + 1 ) / 2 ) * depth = 0.0):
+        // With rawCV at trough = -1.0 (frame 0) -> (( -1 + 1 ) / 2 ) * depth = 0.0:
         // result = baseValue * (1 - depth + 0) = 0.5 * (1 - 0.4) = 0.3
-        CVRegistry.updatePushedValue("test_cv", -1.0f)
+        CVRegistry.setRenderFrameCount(0L)
         evaluated = param.evaluate()
         assertEquals(0.3f, evaluated, 0.001f)
     }
@@ -108,6 +111,32 @@ class CvModulatorTest {
         param.modulators.add(mod)
         val evaluated = param.evaluate()
         assertEquals(0.5f, evaluated, 0.001f)
+    }
+
+    @Test
+    fun testUnipolarAudioModulationEvaluation() {
+        if (!CVRegistry.exists("audio_amp")) {
+            CVRegistry.register(MutableCVSource("audio_amp", 0.0f))
+        }
+        CVRegistry.updatePushedValue("audio_amp", 0.0f) // Silence
+
+        val param = ModulatableParameter(baseValue = 0.2f, minClamp = 0.0f, maxClamp = 1.0f)
+        val audioMod = CvModulator(
+            sourceId = "audio_amp",
+            operator = ModulationOperator.ADD,
+            depth = 0.8f,
+            bypassed = false
+        )
+        param.modulators.add(audioMod)
+
+        // At silence (cv = 0), baseline should NOT shift
+        var evaluated = param.evaluate()
+        assertEquals(0.2f, evaluated, 0.001f, "Silence should not add DC offset to the base value")
+
+        // At peak audio (cv = 1.0), modulation adds depth * range = 0.8 * 1.0 = 0.8 -> 0.2 + 0.8 = 1.0
+        CVRegistry.updatePushedValue("audio_amp", 1.0f)
+        evaluated = param.evaluate()
+        assertEquals(1.0f, evaluated, 0.001f, "Loud audio should produce full depth modulation")
     }
 
     @Test

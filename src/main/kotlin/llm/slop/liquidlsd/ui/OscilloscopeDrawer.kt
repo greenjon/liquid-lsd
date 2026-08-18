@@ -118,39 +118,29 @@ object OscilloscopeDrawer {
             if (hasNonDet || !hasLfo) {
                 // True recorded history for audio/midi/trigger
                 val fps = 60f
-                val count = (pastSec * fps).toInt().coerceIn(2, history.size)
-                val stepX = pastW / (count - 1)
-
-                for (mod in activeMods) {
-                    val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
-                    val modColor = CvTheme.getThemeColor(colorId, 0.5f)
-                    val hist = modulatorHistories[mod.id] ?: session.cvRegistry.getHistory(mod.sourceId)
-                    if (hist != null) {
-                        var prevX = startX
-                        var prevVal = hist.getAt(hist.size - count)
-                        var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                        for (i in 1 until count) {
-                            val nextVal = hist.getAt(hist.size - count + i)
-                            val nextX = startX + i * stepX
-                            val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
-
-                            dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
-                            prevX = nextX
-                            prevY = nextY
-                        }
-                    }
-                }
+                val samplesInSpan = (pastSec * fps).toInt().coerceAtLeast(2)
+                val visibleSamples = minOf(samplesInSpan, history.size)
+                val pixelsPerSample = (pastW / pastSec) / fps
+                val startSampleIdx = history.size - visibleSamples
 
                 // Final combined past line from recorded param.history
-                var prevX = startX
-                var prevVal = history.getAt(history.size - count)
-                var prevY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((prevVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+                var prevRaw = history.getAt(startSampleIdx)
+                var prevNorm = if (range == 0f) 0.5f else ((prevRaw - minVal) / divisor).coerceIn(0f, 1f)
+                var prevX = nowX - (history.size - 1 - startSampleIdx) * pixelsPerSample
+                var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                for (i in 1 until count) {
-                    val nextVal = history.getAt(history.size - count + i)
-                    val nextX = startX + i * stepX
-                    val nextY = (startY + h - 6f) - (if (range == 0f) 0.5f else ((nextVal - minVal) / divisor).coerceIn(0f, 1f)) * usableHeight
+                // Draw baseline if history buffer does not cover full selected pastSec
+                if (prevX > startX + 1f) {
+                    val baseNorm = if (range == 0f) 0.5f else ((param.defaultValue - minVal) / divisor).coerceIn(0f, 1f)
+                    val baseY = (startY + h - 6f) - baseNorm * usableHeight
+                    dl.addLine(startX, baseY, prevX, prevY, themeColor, 2.0f)
+                }
+
+                for (idx in (startSampleIdx + 1) until history.size) {
+                    val nextRaw = history.getAt(idx)
+                    val nextNorm = if (range == 0f) 0.5f else ((nextRaw - minVal) / divisor).coerceIn(0f, 1f)
+                    val nextX = nowX - (history.size - 1 - idx) * pixelsPerSample
+                    val nextY = (startY + h - 6f) - nextNorm * usableHeight
 
                     dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.25f)
                     prevX = nextX
@@ -372,47 +362,30 @@ object OscilloscopeDrawer {
         // 1. Draw Lookback / Past History
         if (pastW > 1f && pastSec > 0.001f) {
             if (!hasLfo) {
-                // True recorded history playback for Audio, Trigger, MIDI
+                // True recorded history playback for Audio, Trigger, MIDI (summed value)
                 val fps = 60f
-                val count = (pastSec * fps).toInt().coerceIn(2, history.size)
-                val stepX = pastW / (count - 1)
+                val samplesInSpan = (pastSec * fps).toInt().coerceAtLeast(2)
+                val visibleSamples = minOf(samplesInSpan, history.size)
+                val pixelsPerSample = (pastW / pastSec) / fps
+                val startSampleIdx = history.size - visibleSamples
 
-                // Draw individual active modulator histories if multiple modulators
-                if (activeMods.size > 1) {
-                    for (mod in activeMods) {
-                        val colorId = if (mod.sourceId.startsWith("midi_cc_")) "midi" else mod.sourceId
-                        val modColor = CvTheme.getThemeColor(colorId, 0.5f)
-                        val modHist = session.cvRegistry.getHistory(mod.sourceId)
-                        if (modHist != null) {
-                            var prevX = startX
-                            var prevRaw = modHist.getAt(modHist.size - count)
-                            var prevNorm = if (isBipolar) (prevRaw * mod.depth + 1f) / 2f else (prevRaw * mod.depth).coerceIn(0f, 1f)
-                            var prevY = (startY + h - 6f) - prevNorm * usableHeight
+                var prevRaw = history.getAt(startSampleIdx)
+                var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
+                var prevX = nowX - (history.size - 1 - startSampleIdx) * pixelsPerSample
+                var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
-                            for (i in 1 until count) {
-                                val nextRaw = modHist.getAt(modHist.size - count + i)
-                                val nextNorm = if (isBipolar) (nextRaw * mod.depth + 1f) / 2f else (nextRaw * mod.depth).coerceIn(0f, 1f)
-                                val nextX = startX + i * stepX
-                                val nextY = (startY + h - 6f) - nextNorm * usableHeight
-
-                                dl.addLine(prevX, prevY, nextX, nextY, modColor, 1.25f)
-                                prevX = nextX
-                                prevY = nextY
-                            }
-                        }
-                    }
+                // Draw baseline if history buffer does not cover full selected pastSec
+                if (prevX > startX + 1f) {
+                    val baseNorm = if (isBipolar) 0.5f else 0.0f
+                    val baseY = (startY + h - 6f) - baseNorm * usableHeight
+                    dl.addLine(startX, baseY, prevX, prevY, themeColor, 2.0f)
                 }
 
                 // Draw solid combined history line
-                var prevX = startX
-                var prevRaw = history.getAt(history.size - count)
-                var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
-                var prevY = (startY + h - 6f) - prevNorm * usableHeight
-
-                for (i in 1 until count) {
-                    val nextRaw = history.getAt(history.size - count + i)
+                for (idx in (startSampleIdx + 1) until history.size) {
+                    val nextRaw = history.getAt(idx)
                     val nextNorm = if (isBipolar) (nextRaw + 1f) / 2f else nextRaw.coerceIn(0f, 1f)
-                    val nextX = startX + i * stepX
+                    val nextX = nowX - (history.size - 1 - idx) * pixelsPerSample
                     val nextY = (startY + h - 6f) - nextNorm * usableHeight
 
                     dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)

@@ -136,12 +136,16 @@ class ModulatableParameter(
             }
             val finalCv = evaluateModulator(mod)
             val isBipolar = minClamp < 0f
-            // Bipolar:    rawModAmount = (rawCV * depth) + dc      → symmetric around 0
-            // Monopolar:  rawModAmount = ((rawCV+1)/2 * depth) + dc → maps [−1,1] to [0,depth]+dc
-            val rawModAmount = if (isBipolar) {
-                finalCv * mod.depth + mod.dcOffset
+            val isSourceBipolar = llm.slop.liquidlsd.cv.isCvSourceBipolar(mod.sourceId)
+            val rawModAmount = if (isSourceBipolar) {
+                if (isBipolar) {
+                    finalCv * mod.depth + mod.dcOffset
+                } else {
+                    ((finalCv + 1f) / 2f) * mod.depth + mod.dcOffset
+                }
             } else {
-                ((finalCv + 1f) / 2f) * mod.depth + mod.dcOffset
+                // Unipolar source (Audio, Trigger, MIDI CC): 0 is silence/rest, 1 is peak
+                finalCv * mod.depth + mod.dcOffset
             }
             
             val scalar = if (mod.operator == ModulationOperator.ADD) {
