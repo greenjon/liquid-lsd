@@ -344,8 +344,8 @@ object ColorTunerPanel {
         if (!isOpen) return
 
         isOpenImBool.set(isOpen)
-        val targetW = 680f.coerceAtMost(displayW * 0.90f)
-        val targetH = 620f.coerceAtMost(displayH * 0.90f)
+        val targetW = 740f.coerceAtMost(displayW * 0.90f)
+        val targetH = 640f.coerceAtMost(displayH * 0.90f)
 
         ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.FirstUseEver)
         ImGui.setNextWindowPos(displayW * 0.5f - targetW * 0.5f, displayH * 0.5f - targetH * 0.5f, ImGuiCond.FirstUseEver)
@@ -385,13 +385,13 @@ object ColorTunerPanel {
             // Swatch Bank Display
             if (ImGui.collapsingHeader("Palette Swatches (${currentPalette.swatches.size})", imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
                 val itemSpacing = 6f
-                val chipSize = 22f
+                val chipSize = 20f
                 val dl = ImGui.getWindowDrawList()
                 val availW = ImGui.getContentRegionAvailX()
                 var curX = 0f
 
                 currentPalette.swatches.forEach { swatch ->
-                    val label = swatch.name
+                    val label = "${swatch.name} (${swatch.hex})"
                     val labelW = ImGui.calcTextSize(label).x
                     val totalW = chipSize + 6f + labelW + 12f
 
@@ -428,16 +428,15 @@ object ColorTunerPanel {
 
             // Table of UI Elements and their swatch assignments
             val categories = ELEMENTS.groupBy { it.category }
-            val swatchNames = currentPalette.swatches.map { it.name }.toTypedArray()
 
             if (ImGui.beginChild("##elementsList", 0f, -48f, true)) {
                 categories.forEach { (catName, elementDefs) ->
                     if (ImGui.collapsingHeader(catName, imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
                         if (ImGui.beginTable("##table_$catName", 4, ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg)) {
-                            ImGui.tableSetupColumn("Element", ImGuiTableColumnFlags.WidthStretch, 0.35f)
-                            ImGui.tableSetupColumn("Color", ImGuiTableColumnFlags.WidthFixed, 36f)
-                            ImGui.tableSetupColumn("Assigned Swatch", ImGuiTableColumnFlags.WidthStretch, 0.45f)
-                            ImGui.tableSetupColumn("Alpha?", ImGuiTableColumnFlags.WidthFixed, 60f)
+                            ImGui.tableSetupColumn("Element", ImGuiTableColumnFlags.WidthStretch, 0.32f)
+                            ImGui.tableSetupColumn("Color", ImGuiTableColumnFlags.WidthFixed, 34f)
+                            ImGui.tableSetupColumn("Assigned Swatch", ImGuiTableColumnFlags.WidthStretch, 0.52f)
+                            ImGui.tableSetupColumn("Alpha?", ImGuiTableColumnFlags.WidthFixed, 55f)
                             ImGui.tableHeadersRow()
 
                             elementDefs.forEach { elem ->
@@ -458,13 +457,35 @@ object ColorTunerPanel {
                                 ImGui.dummy(chipSize, chipSize)
 
                                 ImGui.tableNextColumn()
-                                val currentIdx = currentPalette.swatches.indexOfFirst { it.id == currentSwatch.id }.coerceAtLeast(0)
-                                val comboIdx = ImInt(currentIdx)
                                 ImGui.pushItemWidth(-1f)
-                                if (ImGui.combo("##combo_${elem.colId}", comboIdx, swatchNames)) {
-                                    val selectedSwatch = currentPalette.swatches[comboIdx.get()]
-                                    currentAssignments[elem.colId] = selectedSwatch.id
-                                    applySingleElementToImGui(session, elem.colId, selectedSwatch, currentRespectAlpha[elem.colId] ?: false)
+                                val previewLabel = "${currentSwatch.name}  (${currentSwatch.hex})"
+                                if (ImGui.beginCombo("##combo_${elem.colId}", previewLabel)) {
+                                    val comboDl = ImGui.getWindowDrawList()
+                                    val comboChipSize = 13f
+
+                                    currentPalette.swatches.forEach { swatch ->
+                                        val isSelected = swatch.id == currentSwatch.id
+                                        val itemText = "       ${swatch.name}  (${swatch.hex})##opt_${elem.colId}_${swatch.id}"
+
+                                        val itemMinX = ImGui.getCursorScreenPosX()
+                                        val itemMinY = ImGui.getCursorScreenPosY()
+
+                                        if (ImGui.selectable(itemText, isSelected)) {
+                                            currentAssignments[elem.colId] = swatch.id
+                                            applySingleElementToImGui(session, elem.colId, swatch, currentRespectAlpha[elem.colId] ?: false)
+                                        }
+
+                                        // Draw colored square swatch inside the dropdown item row
+                                        val itemChipY = itemMinY + (ImGui.getFrameHeight() - comboChipSize) * 0.5f - 1f
+                                        val itemChipX = itemMinX + 4f
+                                        comboDl.addRectFilled(itemChipX, itemChipY, itemChipX + comboChipSize, itemChipY + comboChipSize, swatch.u32, 2f)
+                                        comboDl.addRect(itemChipX, itemChipY, itemChipX + comboChipSize, itemChipY + comboChipSize, ImColor.rgba(0.5f, 0.5f, 0.5f, 0.7f), 1f)
+
+                                        if (isSelected) {
+                                            ImGui.setItemDefaultFocus()
+                                        }
+                                    }
+                                    ImGui.endCombo()
                                 }
                                 ImGui.popItemWidth()
 
