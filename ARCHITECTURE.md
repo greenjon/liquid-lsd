@@ -79,6 +79,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── FBO.kt                  — OpenGL framebuffer wrapper
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
+│   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
+│   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
+│   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
 │   ├── PresetGridPanel.kt       — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System

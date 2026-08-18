@@ -73,4 +73,22 @@ class UIThemeTest {
             loadMethod.invoke(UITheme)
         }
     }
+
+    @Test
+    fun testColorTunerPanelOpenToggle() {
+        ColorTunerPanel.isOpen = false
+        ColorTunerPanel.open()
+        assertTrue(ColorTunerPanel.isOpen)
+        ColorTunerPanel.toggle()
+        assertFalse(ColorTunerPanel.isOpen)
+        ColorTunerPanel.toggle()
+        assertTrue(ColorTunerPanel.isOpen)
+    }
+
+    @Test
+    fun testColorTunerSwatchHexCalculation() {
+        val swatch = ColorTunerPanel.Swatch("test", "Test", 1.0f, 0.0f, 0.5f)
+        assertEquals("#FF007F", swatch.hex)
+    }
 }
+

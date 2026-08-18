@@ -1,5 +1,26 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.25
+
+> [!NOTE]
+> **Release 1.0.0-beta.25** focuses on UI architecture modularization, power-efficient render loop frame rate limiting, and legacy data model streamlining.
+
+### Key Highlights
+
+#### 1. UI Architecture Modularization & Interactive Developer Tools
+- **`DeckPresetController` Extraction**: Decoupled deck preset file actions (Save, Save As, Rename, Duplicate, Overwrite, Eject, Reset), file dialog handling, and save status notifications from `UIManager` into a dedicated controller class.
+- **`UIThemeStyler` Extraction**: Extracted dynamic ImGui theme application, custom color palette mapping (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), window background alpha/video blending, neon gradient rendering, and proportional `ImGuiStyle` size scaling.
+- **`SplitterManager` Extraction**: Extracted multi-column workspace splitter state, drag interaction tracking, cursor hinting (`ResizeEW`/`ResizeNS`), double-click reset positions, and draw-list divider rendering from `UIManager`.
+- **Live Theme `ColorTunerPanel`**: Added interactive non-modal color tuner accessible via the top menu bar ("Color"), allowing real-time assignment of palette swatches across all 17 themed ImGui elements with live updates and instant Kotlin code generation for clipboard export.
+
+#### 2. Frame Rate Limiting & CPU Efficiency
+- **Restored 30 FPS Power-Saver Cap**: Re-enabled two-stage CPU-efficient pacing in the primary OpenGL/GLFW render loop honoring `session.uiTheme.maxFps` (30 FPS vs 60 FPS), reducing CPU and GPU utilization during background or power-sensitive operation.
+
+#### 3. Preset & Data Model Streamlining
+- **Legacy Global Preset Code Removal**: Completely removed obsolete `GlobalPresetDto` and unused global preset converter/queue methods from `PresetManager` and `PresetModels`. Full session state and multi-deck configurations continue to be cleanly and durably managed via `SessionStateDto` (`library/last_session.json`).
+
+---
+
 ## Version 1.0.0-beta.24
 
 > [!NOTE]

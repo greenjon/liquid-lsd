@@ -122,6 +122,13 @@ class MenuBar(
                     ImGui.popStyleColor()
                 }
 
+                if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
+                    ColorTunerPanel.toggle()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
+                }
+
                 if (ImGui.beginMenu("Help")) {
                     if (ImGui.menuItem("Documentation")) {
                         DocManager.openDocumentation()

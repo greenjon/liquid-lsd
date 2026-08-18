@@ -286,6 +286,8 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
 
             missingItemsPanel.draw(session)
 
+            ColorTunerPanel.draw(session, displayWidth, displayHeight)
+
             deckPresetController.drawFileBrowsers()
         }
 
