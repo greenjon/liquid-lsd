@@ -14,12 +14,14 @@ graph TD
     UITheme[UITheme.kt - Fonts, Styling, Settings]
     PresetGridState[PresetGridState.kt - Selection & 30-level Undo Stack]
     PopupManager[PopupManager.kt - Modal Dialog Management]
+    DeckPresetController[DeckPresetController.kt - Deck Presets & File Dialogs]
     NoteEditorModal[NoteEditorModal.kt - Note Editor Modal]
     
     UIManager --> SessionContext
     UIManager --> UITheme
     UIManager --> PresetGridState
     UIManager --> PopupManager
+    UIManager --> DeckPresetController
     UIManager --> NoteEditorModal
     
     UIManager --> MenuBar[MenuBar.kt]
@@ -56,7 +58,12 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immedia
 - **`UIThemeStyler.kt`**: Applies ImGui color palettes across all themes (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), manages window transparency/alpha blending when background video is enabled, renders multi-color Neon gradient backgrounds, and handles proportional `ImGuiStyle` size scaling.
 - **`SplitterManager.kt`**: Manages mouse hit-testing, resize cursors (`ResizeEW` / `ResizeNS`), double-click reset positions, and draw-list divider rendering for vertical and horizontal layout splitters.
 
-### 3. `NoteEditorModal.kt`
+### 3. `DeckPresetController.kt`
+- **Role**: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.
+- **Deck Actions**: Coordinates move/copy/swap deck utilities with dirty-state checks, quick save vs "Save As" flow (`SavePresetModal`), duplicate copy naming (`_copy`), and ejecting with Auto-VJ dirty behavior resolution.
+- **ImGui File Browsers**: Manages independent `ImGuiFileBrowser` dialogs for Deck A and Deck B and executes asynchronous disk I/O via `PresetManager`.
+
+### 4. `NoteEditorModal.kt`
 - **Role**: Stateful singleton modal editor for the 3-tier Note System.
 - **`NoteContext` Sealed Class**:
   - `Param(deckLabel, paramKey, displayLabel)`: Edits parameter-level notes.
@@ -64,12 +71,12 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immedia
   - `Preset(deckLabel, presetName)`: Edits preset-level notes.
 - **Zero-Allocation Buffer Safety**: Allocates a single `ImString(2048)` buffer at object instantiation (`textBuffer`). Calling `NoteEditorModal.request(context)` populates `textBuffer` with the current note text. Drawing `ImGui.inputTextMultiline` reuses this pre-allocated buffer every frame without heap allocation.
 
-### 3. `UITheme.kt`
+### 5. `UITheme.kt`
 - Manages font rendering (Inter, JetBrains Mono, Lucide icons merged via `setMergeMode(true)`).
 - **Proportional Icon Glyph Offset**: Lucide icons are configured with a scaled `setGlyphOffset(0f, round(size * 0.18f))` to ensure optical vertical centering and prevent icon bounding boxes from touching the top edge of buttons across all font sizes.
 - **Critical Font Array Ownership**: Font `ByteArray` fields (`regularBytes`, `boldBytes`) and `iconRange: ShortArray` are stored as class fields. Calling `setFontDataOwnedByAtlas(false)` prevents native ImGui from attempting to free JVM-managed byte arrays.
 
-### 4. Custom Sliders (`CustomRangeSlider.kt` & `BeatDivisionSlider.kt`)
+### 6. Custom Sliders (`CustomRangeSlider.kt` & `BeatDivisionSlider.kt`)
 - Compute row height (`h`), label positions (`labelY`), widget rows (`row2Y`), and center line (`centerY`) dynamically using font metrics (`captionHeight`, `getFrameHeight()`, and `fontScale`) to ensure the "Current:" label and slider tracks never overlap adjacent rows or widgets across all font scales.
 
 ---
