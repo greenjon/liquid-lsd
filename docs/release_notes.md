@@ -1,75 +1,70 @@
 # Liquid LSD — Release Notes
 
-## Version 1.0.0-beta.26
+## Version 1.0.0-beta.24
 
 > [!NOTE]
-> **Release 1.0.0-beta.26** replaces the redundant floating `DeckPresetBrowser` modal with a clean, single-purpose `SavePresetModal` and removes orphaned deck UI code.
+> **Release 1.0.0-beta.24** is a major consolidation release rolling up all features, architectural enhancements, performance optimizations, and UI overhauls since `v1.0.0-beta.21`.
+> Highlights include a multi-scale calibrated oscilloscope engine with real-time future waveform projection, deterministic frame-synced LFOs, a spectral-flux beat detection flywheel overhaul, industry-standard "Preset" terminology and unified `library/` storage, dedicated `SavePresetModal` with overwrite safety, unipolar modulation and dial calibrations, resolution-independent UI scaling, and comprehensive zero-allocation render loop hot-path optimizations.
 
-### Key Highlights
+---
 
+### Key Highlights (Rollup since v1.0.0-beta.21)
+
+#### 1. Multi-Scale Calibrated Oscilloscopes & Signal Visualization
+- **Dynamic FPS Sync for Frame-Based LFOs**: Fixed frame-synced LFO lookahead projection, auto-timebase calculations, and history sampling across `Evaluators`, `ModulatableParameter`, and `OscilloscopeDrawer` to dynamically bind to the configured target frame rate (`CVRegistry.getTargetFps()`) rather than assuming 60 FPS. At 30 FPS, setting an LFO to 30 frames now correctly oscillates at exactly $1.0\text{ Hz}$ ($1.0\text{s}$ period).
+- **Multi-Scale Calibrated Timebases**: Oscilloscopes support selectable physical time windows spanning from fast transients to circadian cycles: `1s` ($250\text{ms/div}$), `10s` ($2.0\text{s/div}$), `100s` ($20\text{s/div}$), `15m` ($3\text{m/div}$), `2.5h` ($30\text{m/div}$), and `24h` ($4\text{h/div}$). Time range dropdown combo widths and spacing dynamically autoscale with font size.
+- **Real-Time Lookahead Future Projection**: Real-time forward waveform projection for deterministic LFO modulators rendered in front of the `NOW` playhead.
+- **Decoupled Per-Scope Timebases**: Timebase selections across individual CV scopes (LFO, Audio, Trigger, MIDI) and the Final parameter oscilloscope are completely decoupled. Changing the time window on one tab no longer changes the scale of other tabs.
+- **Auto Scale Exclusively for LFO**: The `Auto` timebase option (which dynamically fits $1\text{–}2$ periods of the active waveform) is offered exclusively on the **LFO** oscilloscope. **Audio**, **Trigger**, **MIDI**, and **Final** default to **`10s`** (displaying the full recorded history window) and provide fixed physical options (`1s` to `24h`).
+- **100% True Recorded History on Final**: The Final parameter oscilloscope always renders $100\%$ recorded parameter history (`param.history`) across the entire screen width with a right-aligned `NOW` playhead and backward-calibrated timestamp divisions, functioning as a real-time historical seismograph combining all base value, LFO, Audio, Trigger, and MIDI modulations.
+- **Flat Zero Baseline Outside Recorded History**: When viewing extended timebases ($100\text{s}$, $15\text{m}$, $2.5\text{h}$, $24\text{h}$) where the physical window exceeds the buffer size, the pre-history span is rendered as a flat horizontal line resting strictly at zero ($0.0$), eliminating baseline see-saw tilt while live audio plays.
+- **Peak-Detect Anti-Aliased Waveform Envelopes**: Implemented golden-ratio peak-detect envelope rendering for long-duration timebases ($100\text{s}$, $15\text{m}$, $2.5\text{h}$, $24\text{h}$). Fast-moving LFOs rendered on slow time scales display their full illuminated dynamic envelope/ribbon without stroboscopic Nyquist aliasing or flatline artifacts.
+- **Brightened Grid Ticks & Dynamic Timestamp Badges**: High-contrast, crisp grid division ticks and legible timestamp numbers with dynamic height positioning for clear readability across all themes and zoom levels (`-250ms`, `-2s`, `NOW`, `+2s`, `+15m`, `+4h`, etc.).
+- **Unified Oscilloscope Architecture**: Consolidated all oscilloscope rendering into `OscilloscopeDrawer`, eliminating duplicated drawing code across UI panels.
+
+#### 2. Real-Time Beat Detection & Flywheel Engine Overhaul
+- **Spectral Flux Onset Beat Analysis**: Replaced raw RMS amplitude beat input with half-wave rectified multi-band spectral flux. Beat detection operates on sharp transient impulses, preventing false triggers on sustained drones or synth bass notes.
+- **Sub-Block Parabolic Peak Interpolation**: Added parabolic peak interpolation to STFT Comb and Autocorrelation analysis tasks. Eliminates discrete block-quantization BPM jumps for smooth, floating-point tempo tracking.
+- **Background Phase Anchor Alignment**: Background analysis computes cross-correlation beat phase alignment anchors, ensuring beat-synced oscillators (`beatSine`, beat LFOs) lock their peaks directly to audio transient hits.
+- **Dual-Time-Constant Peak-Triggered PLL**: Refined Phase-Locked Loop (`BeatDetectionMode.PLL`) to evaluate only on local onset peaks with fast phase correction ($\alpha$) and damped period inertia ($\beta$), eliminating tempo wobble on syncopated hits.
+- **Smooth Flywheel Phase Slewing**: Upgraded `AudioEngine` flywheel accumulation to apply second-order phase slewing, smoothly nudging beat phase over audio blocks without instantaneous phase jumps or visual pops.
+- **Beat Detection Confidence Metric**: Added a peak-to-average energy confidence metric $C \in [0, 1]$ to stabilize tempo during ambient breakdowns or silent sections.
+
+#### 3. Deterministic Frame-Synced LFOs (LFO 1 & LFO 2)
+- **Frame Frequency Mode**: Added a third frequency clocking mode, `FRAME`, alongside `TIME` and `BEAT` in the unified LFO generator. Frame-synced LFOs oscillate deterministically based on elapsed render frame count (1 to 10,000 integer frames), enabling artifact-free feedback buffer harmonization, per-frame stroboscopic/flicker effects, sample-and-hold per-frame noise, and deterministic video frame captures.
+- **Integer-Locked Sliders & Dual Readouts**: Both primary carrier (LFO 1) and modulator (LFO 2) support independent frame sync with integer-locked range sliders and duration readouts (e.g. `120 frames (2.00s)`).
+
+#### 4. Modulation Architecture & Calibration
+- **Unipolar CV Modulation & Zero Silence Baseline**: Fixed modulation evaluation formulas for unipolar sources (Audio RMS, Bass/Mid/High frequency bands, Triggers, and MIDI CC). Silence ($cv = 0.0$) remains strictly at $0.0$ without introducing artificial DC offset shifts when increasing Depth, restoring full modulation dynamic range.
+- **CV Modulation "Depth" Terminology Standardization**: Standardized the term for the value assigned to a CV modulator from "amplitude" (and legacy JSON "weight") to **"Depth"** across domain models (`CvModulator.depth`, `depthMin`, `depthMax`, `randomizeDepth`), evaluation logic, UI controls (Cell Config Depth range slider, LFO 2 AM Depth mode/tooltips), and documentation.
+- **Preset Grid Cell Dial Calibration**: Calibrated knob meters in `PresetGridRenderer` for unipolar audio, trigger, and MIDI cells so dial needles and indicator arcs accurately reflect the true parameter modulation range ($0.0 \dots 1.0$) rather than resting at $0.5$ on silence.
+- **Consolidated Modulation Evaluator**: Centralized parameter modulation evaluation into `Evaluators.kt` (`evaluateModulatedValue`), eliminating duplicate evaluation routines across UI panels.
+
+#### 5. Preset & Library Architecture Modernization ("Patch" → "Preset")
+- **Industry Standard 'Preset' Terminology Refactor**: Refactored visual parameter snapshots across the codebase from 'Patch' to 'Preset' (`PresetManager`, `DeckPresetDto`, `GlobalPresetDto`, `PresetGridPanel`, `PresetGridState`, `PresetGridRenderer`, `PresetGridTabs`, `PresetGridUndo`).
+- **Unified `library/` User Storage Directory**: Standardized user data root to `library/` (`library/presets/*.lsd`, `library/midi/*.json`, `library/playlists/*.lsdset`, `library/sources/`, `library/last_session.json`).
+- **Codebase Streamlining & Legacy Code Removal**: Removed legacy backwards compatibility shims across data models, serialization, session management, and UI browsers. Standardized `ModulatorDto` serialization to directly serialize `depth`, `depthMin`, `depthMax`, and `randomizeDepth` without legacy `@SerialName("weight")` aliases.
+
+#### 6. UI & UX Refinements, SavePresetModal & Responsive Layouts
 - **Dedicated SavePresetModal**: Replaced the floating `DeckPresetBrowser` popup with a clean, dedicated `SavePresetModal` for entering preset names and comma-separated tags directly when selecting "Save As..." (or "Save" on an untitled deck). Dynamic action titles (`Save Preset As`, `Rename / Edit Preset Tags`, `Duplicate Preset`) render cleanly in the ImGui modal title bar without redundant body text.
-- **Context-Aware Metadata Naming**: Standardized preset creation terminology between live saving (`Save As...` on Deck toolbars to preserve active deck state) and library management (**"Rename / Edit Tags..."** & **"Duplicate Preset..."** in Asset Browser context menus to copy/edit files on disk).
 - **Universal Overwrite Safety**: Added file existence detection and overwrite protection across all preset modal flows (`Save As...`, `Rename`, `Duplicate`). `Save As...` defaults to `${activeName}_copy` to create new files by default, and typing an existing file name prompts with an explicit amber warning badge and `[ Overwrite ]` confirmation button.
-- **Asset Browser New Preset Creation**: Added a dedicated `[Create new preset...]` row with `[ A ] [ B ] [ C ]` buttons positioned above the preset list in the Asset Browser. Clicking a deck button ejects/resets the deck (handling dirty states according to user preferences) and switches Preset Grid focus directly to that deck.
-- **Redundant Browser Removal**: Removed `DeckPresetBrowser.kt` and its duplicated search, tag filtering, and preset list UI; preset browsing and loading remain centralized in the docked **Asset Browser** (`F3`).
-- **Deck Control Cleanup**: Removed orphaned `drawDeckPresetDropdown` code, renamed `drawDeckBottomBar` to `drawDeckMonitorToolbar`, and streamlined deck preview headers to act as clean display indicators with rich tooltips.
-- **Mixer Monitor Left-Click Deck Focus**: Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) in the Mixer Monitor panel now directly focuses the Preset Grid to that deck (`activeTopTab`), complementing existing click-and-drag deck routing and preset drop loading.
-- **Preset Grid Knob Indicators**: Refined circular knob meters across `MONOPOLAR`, `BIPOLAR`, `ENDLESS`, and `DISCRETE` modes in `PresetGridRenderer` by replacing the solid value circle with an elongated inward radial needle pointer (`trackRadius * 0.3f`), boosting background track arc/circle brightness for clear visual differentiation between endless 360° and open 270° tracks, and replacing the base preset value dot with a vibrant yellow cross-track tick mark (`trackRadius - 3.5px` to `trackRadius + 2.5px`).
-- **Icon Button Alignment & Padding**: Added a scaled vertical glyph offset to Lucide icons merged into `UITheme`, eliminating top-border collisions and providing balanced padding for all icon buttons across all typography sizes and user UI scale settings.
-- **Cell Config Slider Dynamic Spacing**: Replaced hardcoded row heights and label offsets in `CustomRangeSlider` and `BeatDivisionSlider` with font-scaled dynamic metrics (`captionHeight`, `getFrameHeight()`, and `fontScale`), eliminating vertical overlap between "Current:" labels and adjacent input boxes.
+- **Asset Browser New Preset Creation**: Added a dedicated `[Create new preset...]` row with `[ A ] [ B ] [ C ]` buttons positioned above the preset list in the Asset Browser. Clicking a deck button ejects/resets the deck and switches Preset Grid focus directly to that deck.
+- **Mixer Monitor Left-Click Deck Focus**: Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) in the Mixer Monitor panel directly focuses the Preset Grid to that deck (`activeTopTab`).
+- **Redesigned Deck Monitor Toolbar**: Combined the top preset header row and bottom patch label across Deck A, Deck B, and Deck C preview monitors into a unified interactive bottom bar (`[Save] [Eject] [Preset Bar]`) with corner letter badges (`A`, `B`, `C`).
+- **Mixer Monitor Vertical Scrollbar Elimination**: Overhauled `MixerMonitorLayoutCalculator` to comprehensively calculate non-aspect vertical chrome, eliminating unwanted vertical scrollbars while preserving 16:9 aspect preview monitors.
+- **Robust Panel Splitters**: Replaced dummy ImGui splitter windows with direct mouse hit-testing and foreground draw list rendering, ensuring resize cursors and drag interactions remain active at all times.
+- **Preset Grid Knob Indicators**: Refined circular knob meters across `MONOPOLAR`, `BIPOLAR`, `ENDLESS`, and `DISCRETE` modes in `PresetGridRenderer` by replacing the solid value circle with an elongated inward radial needle pointer (`trackRadius * 0.3f`), boosting background track arc/circle brightness, and adding a vibrant yellow cross-track tick mark.
+- **Resolution-Independent Grid Scaling**: Replaced hardcoded cell pixel dimensions with a dynamic `GridMetrics` geometry token system that scales Preset Grid cells and circular readout knobs automatically with global UI font size (`baseSize`). Added a **"Grid Knob Cell Scale"** setting slider (0.70x to 2.00x) in **Settings -> Preset Grid**.
+- **Comprehensive Font Autoscaling**: Dynamic font-scaling across settings modals, empty deck launchpads, cell config tab rows, range sliders, and Lucide icons.
+- **Media Browser Live Auto-Refresh**: Real-time filesystem change monitoring across `AssetBrowserPanel` and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
+- **Playlist Menu Bar Streamlining**: Removed action buttons from the playlist editor menu bar in Media Browser and consolidated them into the right-click context menu.
 
----
-
-## Version 1.0.0-beta.25
-
-> [!NOTE]
-> **Release 1.0.0-beta.24** streamlines the codebase by removing legacy migration logic, obsolete file fallbacks, backwards compatibility shims, and deprecated helpers.
-
-### Key Highlights
-
-- **Codebase Streamlining & Legacy Code Removal**: Removed legacy backwards compatibility shims across data models, serialization, session management, and UI browsers.
-- **Direct DTO Serialization**: Standardized `ModulatorDto` serialization to directly serialize `depth`, `depthMin`, `depthMax`, and `randomizeDepth` without legacy `@SerialName("weight")` aliases.
-- **Clean Preset Loading**: Removed obsolete parameter name mapping (`Scale` -> `Zoom`, etc.), legacy Mandala recipe auto-calculation fallbacks, and monopolar-to-bipolar version branching.
-- **Unified Path Resolution**: Removed obsolete `presets/patches` and `.json` extension fallbacks; all user assets resolve directly and cleanly from the unified `library/` folder (`library/presets/*.lsd`, `library/midi/*.json`, `library/playlists/*.lsdset`).
-- **Clean Settings Persistence**: Removed `spirals-settings.properties` migration code and deprecated font helper functions in `UITheme`.
-
----
-
-## Version 1.0.0-beta.23
-
-> [!NOTE]
-> **Release 1.0.0-beta.23** completes the rename of all "patch" terminology to "preset" across the codebase, UI, and documentation. The CV modulation matrix is now called the **Preset Grid** (previously Patch Grid).
-
-### Key Highlights
-
-- **CV Modulation "Depth" Terminology Standardization**: Standardized the term for the value assigned to a CV modulator from "amplitude" (and legacy JSON "weight") to **"Depth"** across domain models (`CvModulator.depth`, `depthMin`, `depthMax`, `randomizeDepth`), evaluation logic, UI controls (Cell Config Depth range slider, LFO 2 AM Depth mode/tooltips), and documentation, while maintaining full backward serialization compatibility with existing presets.
-- **Patch → Preset Global Rename**: All internal APIs (`PatchManager`, `DeckPatchDto`, `GlobalPatchDto`, `PatchGridState`, `PatchCellId`, `PatchIOStatus`, etc.) and their stale legacy typealiases have been removed and replaced with canonical `Preset*` equivalents. `SessionContext.patchManager` is now `presetManager`; `PresetManager.applyPendingPatches` is `applyPendingPresets`; `NoteContext.Patch` is `NoteContext.Preset`.
-- **Preset Grid (formerly Patch Grid)**: The CV modulation matrix panel, settings category, keyboard shortcuts doc, and all UI tooltips now consistently use "Preset Grid".
-- **`AssetType.PATCH` Removed**: The `AssetType` enum no longer contains a `PATCH` variant; files are classified under `AssetType.PRESET`.
-- **Documentation Restructure**: `docs/developer/patch_management.md` renamed to `docs/developer/preset_management.md`; `mkdocs.yml` nav updated accordingly. All user-facing and developer docs updated to use preset terminology.
-
----
-
-## Version 1.0.0-beta.22
-
-> [!NOTE]
-> **Release 1.0.0-beta.22** rolls up all recent UI enhancements, media browser auto-refresh, Settings font scaling dynamic adjustments, monitor overlay badges, and playlist menu bar streamlining into right-click context menus.
-
----
-
-### Key Highlights
-
-- **Complete Save/Load & Session Persistence Overhaul**: Resolved preset save failures, parameter slider dirty state detection flaws (`ParameterDto.equals`), disk filename vs DTO name alignment, Deck C preset routing, false startup queue advance triggers when AutoVJ is disabled, and `lsd-settings.properties` persistence for font size, column visibility toggles, and clean mode.
-- **New `Dynamic Spiral` Visual Source**: Introduced a multi-point logarithmic spiral generator with integrated phase tracking for glitch-free speed/shear modulation and fragment shader radial culling for high-FPS rendering.
-- **`SessionContext` Dependency Injection Architecture**: Refactored UI panels and core managers to use `SessionContext` dependency injection for improved modularity, testability, and state isolation.
-- **PresetGrid Expressive Controls**: Added middle-click parameter reset to default, modulator bypass toggles, scroll-wheel hover guards, mandala lobe selection pills (`2`, `3`, `4`, `6`, `8`, `12`), and live recipe steppers.
-- **Dynamic UI Theming Engine**: Added customizable UI color themes, base font scaling hotkeys (`Ctrl-` / `Ctrl=`), clean mode (`F`), and persistent theme settings in `lsd-settings.properties`.
-- **Resizable 3-Column Layout & Seamless Cards**: Added resizable workspace column splits, toggleable Mixer Panel columns, and connected side tabs into parameter cards with inline sub-tabs.
-- **CV-Triggered Parameter Randomization**: Added CV-modulatable trigger parameters (`Deck A/B/C Param Rand` and `All Decks Param Rand`) for real-time audio- or beat-driven parameter randomization.
-- **Typography Font Sizing & Layout Alignment Overhaul**: Increased global base font limit from 28px to 36px. Added automatic vertical resizing for the main Menu Bar, Master Controls (Crossfader/Fade Speed), and Deck A/B monitors with preset name labels. Resolved UI text clipping and vertical misalignment across large font sizes, including left/sub tab button heights, Cell Config "Current" slider readouts, Mixer Monitor preset Save & Eject icons, Deck A/B header vertical padding, and Playlist preview buttons A, B, C.
-- **Media Browser Live Auto-Refresh**: Added real-time filesystem change monitoring across `AssetBrowserPanel`, `DeckPresetBrowser`, and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
-- **Playlist Menu Bar Streamlining**: Removed action buttons ("Rename Playlist", "Delete Playlist", "Clone Playlist", "Add to queue", "Save") from the playlist editor menu bar in Media Browser and consolidated them into the right-click context menu.
-- **Toolchain Upgrade**: Upgraded build toolchain to Gradle **9.7.0**.
+#### 7. Performance & Zero-Allocation Hot-Path Optimizations
+- **Oscilloscope & Modulation GC Optimization**: Replaced per-call `HashSet` instantiation in `isCvSourceBipolar` with a zero-allocation branch, eliminating over $180{,}000$ GC object allocations per second on the 60 FPS render path during anti-aliased waveform rendering.
+- **Render-Loop Hot-Path Cleanups**: Preallocated immutable timebase lists/arrays in `OscilloscopeDrawer` and reused persistent `ImInt` wrappers across oscilloscope timebase combos and `ModulatorHeaderRow` operator selectors, ensuring strict ImGui zero-allocation draw rules.
+- **Eliminated Dead Multi-Trace History Loops**: Removed unused per-frame modulator history evaluation loops and unreferenced `modulatorHistories` buffers in `FinalParamSection` and `CellConfigPanel`.
+- **Preserved Scope Timebases Across Clones**: Fixed `ModulatableParameter.clone()` to preserve custom per-scope timebase zoom settings across preset cloning, undo/redo snapshots, and deck preset duplication.
+- **Comprehensive Unit Testing**: Added unit tests for target-FPS frame-synced LFO calculations, scope timebase cloning, source classification helpers, and CV history buffer interpolations.
 
 ---
 
