@@ -18,6 +18,7 @@
 - **Redundant Browser Removal**: Removed `DeckPresetBrowser.kt` and its duplicated search, tag filtering, and preset list UI; preset browsing and loading remain centralized in the docked **Asset Browser** (`F3`).
 - **Deck Control Cleanup**: Removed orphaned `drawDeckPresetDropdown` code, renamed `drawDeckBottomBar` to `drawDeckMonitorToolbar`, and streamlined deck preview headers to act as clean display indicators with rich tooltips.
 - **Mixer Monitor Left-Click Deck Focus**: Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) in the Mixer Monitor panel now directly focuses the Preset Grid to that deck (`activeTopTab`), complementing existing click-and-drag deck routing and preset drop loading.
+- **Preset Grid Knob Indicators**: Refined circular knob meters across `MONOPOLAR`, `BIPOLAR`, `ENDLESS`, and `DISCRETE` modes in `PresetGridRenderer` by replacing the solid value circle with an elongated inward radial needle pointer (`trackRadius * 0.3f`), boosting background track arc/circle brightness for clear visual differentiation between endless 360° and open 270° tracks, and replacing the base preset value dot with a vibrant yellow cross-track tick mark (`trackRadius - 3.5px` to `trackRadius + 2.5px`).
 
 ---
 

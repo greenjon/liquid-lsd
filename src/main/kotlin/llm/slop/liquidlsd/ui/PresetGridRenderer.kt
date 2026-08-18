@@ -537,11 +537,16 @@ object PresetGridRenderer {
         val trackRadius = (r - 5f * scaleFactor).coerceAtLeast(3f)
         val strokeWidth = (1.5f * scaleFactor).coerceIn(1.0f, 4.0f)
         val fillStrokeWidth = (2.5f * scaleFactor).coerceIn(1.5f, 6.0f)
-        val dotRadius = (3.0f * scaleFactor).coerceIn(2.0f, 8.0f)
-        val baseDotRadius = (2.5f * scaleFactor).coerceIn(1.5f, 7.0f)
+        val needleInnerRadius = (trackRadius * 0.3f).coerceAtLeast(1.0f)
+        val needleStrokeWidth = (2.0f * scaleFactor).coerceIn(1.5f, 5.0f)
+        val baseTickInnerRadius = (trackRadius - 3.5f * scaleFactor).coerceAtLeast(1.5f)
+        val baseTickOuterRadius = trackRadius + 2.5f * scaleFactor
+        val baseTickStrokeWidth = (2.0f * scaleFactor).coerceIn(1.5f, 4.5f)
 
-        val trackCol = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, if (isBypassed) 0.2f else 0.4f)
+        val trackCol = ImGui.colorConvertFloat4ToU32(0.48f, 0.48f, 0.48f, if (isBypassed) 0.3f else 0.65f)
         val fillCol = if (isBypassed) ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 0.5f) else color
+        val baseTickCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, 1f)
+        val rangeCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, 0.4f)
 
         val aMin = PI.toFloat() * 0.75f  // 135 deg
         val aMax = PI.toFloat() * 2.25f  // 405 deg
@@ -554,17 +559,24 @@ object PresetGridRenderer {
             llm.slop.liquidlsd.parameters.MeterType.ENDLESS, llm.slop.liquidlsd.parameters.MeterType.DISCRETE -> {
                 dl.addCircle(cx, cy, trackRadius, trackCol, 32, strokeWidth)
                 val angle = (PI / 2.0) + normalized * 2.0 * PI
-                val dotX = cx + trackRadius * cos(angle).toFloat()
-                val dotY = cy + trackRadius * sin(angle).toFloat()
-                dl.addCircleFilled(dotX, dotY, dotRadius, fillCol)
+                val cosA = cos(angle).toFloat()
+                val sinA = sin(angle).toFloat()
+                val outerX = cx + trackRadius * cosA
+                val outerY = cy + trackRadius * sinA
+                val innerX = cx + needleInnerRadius * cosA
+                val innerY = cy + needleInnerRadius * sinA
+                dl.addLine(innerX, innerY, outerX, outerY, fillCol, needleStrokeWidth)
 
                 if (baseValue != null) {
                     val bNorm = if (range == 0f) 0.5f else ((baseValue - min) / range).coerceIn(0f, 1f)
                     val bAngle = (PI / 2.0) + bNorm * 2.0 * PI
-                    val bX = cx + trackRadius * cos(bAngle).toFloat()
-                    val bY = cy + trackRadius * sin(bAngle).toFloat()
-                    val bCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
-                    dl.addCircleFilled(bX, bY, dotRadius, bCol)
+                    val cosB = cos(bAngle).toFloat()
+                    val sinB = sin(bAngle).toFloat()
+                    val bOuterX = cx + baseTickOuterRadius * cosB
+                    val bOuterY = cy + baseTickOuterRadius * sinB
+                    val bInnerX = cx + baseTickInnerRadius * cosB
+                    val bInnerY = cy + baseTickInnerRadius * sinB
+                    dl.addLine(bInnerX, bInnerY, bOuterX, bOuterY, baseTickCol, baseTickStrokeWidth)
                 }
             }
             llm.slop.liquidlsd.parameters.MeterType.MONOPOLAR -> {
@@ -578,24 +590,30 @@ object PresetGridRenderer {
                 }
 
                 val valAngle = aMin + normalized * (aMax - aMin)
-                val dotX = cx + trackRadius * cos(valAngle)
-                val dotY = cy + trackRadius * sin(valAngle)
-                dl.addCircleFilled(dotX, dotY, dotRadius, fillCol)
+                val cosA = cos(valAngle)
+                val sinA = sin(valAngle)
+                val outerX = cx + trackRadius * cosA
+                val outerY = cy + trackRadius * sinA
+                val innerX = cx + needleInnerRadius * cosA
+                val innerY = cy + needleInnerRadius * sinA
+                dl.addLine(innerX, innerY, outerX, outerY, fillCol, needleStrokeWidth)
 
                 if (baseValue != null) {
                     val bNorm = if (range == 0f) 0.5f else ((baseValue - min) / range).coerceIn(0f, 1f)
                     val bAngle = aMin + bNorm * (aMax - aMin)
-                    val bX = cx + trackRadius * cos(bAngle)
-                    val bY = cy + trackRadius * sin(bAngle)
-                    val bCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
-                    dl.addCircleFilled(bX, bY, baseDotRadius, bCol)
+                    val cosB = cos(bAngle)
+                    val sinB = sin(bAngle)
+                    val bOuterX = cx + baseTickOuterRadius * cosB
+                    val bOuterY = cy + baseTickOuterRadius * sinB
+                    val bInnerX = cx + baseTickInnerRadius * cosB
+                    val bInnerY = cy + baseTickInnerRadius * sinB
+                    dl.addLine(bInnerX, bInnerY, bOuterX, bOuterY, baseTickCol, baseTickStrokeWidth)
 
                     if (baseMin != null && baseMax != null && baseMin != baseMax) {
                         val rMinNorm = if (range == 0f) 0.5f else ((baseMin - min) / range).coerceIn(0f, 1f)
                         val rMaxNorm = if (range == 0f) 0.5f else ((baseMax - min) / range).coerceIn(0f, 1f)
                         val rMinA = aMin + rMinNorm * (aMax - aMin)
                         val rMaxA = aMin + rMaxNorm * (aMax - aMin)
-                        val rangeCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 0.4f)
                         dl.pathArcTo(cx, cy, (trackRadius - 3f * scaleFactor).coerceAtLeast(2f), rMinA, rMaxA, 16)
                         dl.pathStroke(rangeCol, 0, (2f * scaleFactor).coerceIn(1f, 4f))
                     }
@@ -622,24 +640,30 @@ object PresetGridRenderer {
                 }
 
                 val valAngle = aMin + normalized * (aMax - aMin)
-                val dotX = cx + trackRadius * cos(valAngle)
-                val dotY = cy + trackRadius * sin(valAngle)
-                dl.addCircleFilled(dotX, dotY, dotRadius, fillCol)
+                val cosA = cos(valAngle)
+                val sinA = sin(valAngle)
+                val outerX = cx + trackRadius * cosA
+                val outerY = cy + trackRadius * sinA
+                val innerX = cx + needleInnerRadius * cosA
+                val innerY = cy + needleInnerRadius * sinA
+                dl.addLine(innerX, innerY, outerX, outerY, fillCol, needleStrokeWidth)
 
                 if (baseValue != null) {
                     val bNorm = if (range == 0f) 0.5f else ((baseValue - min) / range).coerceIn(0f, 1f)
                     val bAngle = aMin + bNorm * (aMax - aMin)
-                    val bX = cx + trackRadius * cos(bAngle)
-                    val bY = cy + trackRadius * sin(bAngle)
-                    val bCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f)
-                    dl.addCircleFilled(bX, bY, baseDotRadius, bCol)
+                    val cosB = cos(bAngle)
+                    val sinB = sin(bAngle)
+                    val bOuterX = cx + baseTickOuterRadius * cosB
+                    val bOuterY = cy + baseTickOuterRadius * sinB
+                    val bInnerX = cx + baseTickInnerRadius * cosB
+                    val bInnerY = cy + baseTickInnerRadius * sinB
+                    dl.addLine(bInnerX, bInnerY, bOuterX, bOuterY, baseTickCol, baseTickStrokeWidth)
 
                     if (baseMin != null && baseMax != null && baseMin != baseMax) {
                         val rMinNorm = if (range == 0f) 0.5f else ((baseMin - min) / range).coerceIn(0f, 1f)
                         val rMaxNorm = if (range == 0f) 0.5f else ((baseMax - min) / range).coerceIn(0f, 1f)
                         val rMinA = aMin + rMinNorm * (aMax - aMin)
                         val rMaxA = aMin + rMaxNorm * (aMax - aMin)
-                        val rangeCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 0.4f)
                         dl.pathArcTo(cx, cy, (trackRadius - 3f * scaleFactor).coerceAtLeast(2f), rMinA, rMaxA, 16)
                         dl.pathStroke(rangeCol, 0, (2f * scaleFactor).coerceIn(1f, 4f))
                     }
