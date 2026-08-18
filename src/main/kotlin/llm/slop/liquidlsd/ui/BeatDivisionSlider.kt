@@ -73,10 +73,19 @@ object BeatDivisionSlider {
         ImGui.pushID(label)
 
         val w = ImGui.getContentRegionAvailX()
-        val h = 44f
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
 
+        val buttonSize = ImGui.getFrameHeight()
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val captionHeight = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+
+        val labelY = startY + 2f * fontScale
+        val row2Y = labelY + captionHeight + 2.5f * fontScale
+        val centerY = row2Y + buttonSize * 0.5f
+        val h = (row2Y - startY) + buttonSize + 3f * fontScale
+
+        // Reserve space
         ImGui.dummy(w, h)
 
         val dl = ImGui.getWindowDrawList()
@@ -84,31 +93,29 @@ object BeatDivisionSlider {
         val mouseX = io.mousePos.x
         val mouseY = io.mousePos.y
 
-        val buttonSize = ImGui.getFrameHeight()
         val spacing = ImGui.getStyle().itemSpacing.x
         val combinedWidth = buttonSize
 
-        val labelColW = 175f
-        val textBoxesStartX = startX + labelColW + 20f
+        val labelColW = 110f * fontScale
+        val textBoxesStartX = startX + labelColW + 10f * fontScale
 
         // Combo dropdowns are slightly wider than plain text boxes so they can display labels
-        val comboWidth = 125f
+        val comboWidth = 80f * fontScale
         val comboSpacing = 8f
 
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (comboWidth * 2f + comboSpacing) else comboWidth) + 15f
         val lineStartX = sliderStartX
         val lineEndX = startX + w - 10f
         val lineWidth = lineEndX - lineStartX
-        val centerY = startY + 28f
 
         val rangeSpan = maxLimit - minLimit
 
         // --- ROW 1: Labels ---
         if (effectiveIsRandomizable) {
-            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
 
-            ImGui.setCursorScreenPos(textBoxesStartX + comboWidth + comboSpacing, startY + 2f)
+            ImGui.setCursorScreenPos(textBoxesStartX + comboWidth + comboSpacing, labelY)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
 
             val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
@@ -120,16 +127,15 @@ object BeatDivisionSlider {
             val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
             val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
 
-            ImGui.setCursorScreenPos(textX, startY + 2f)
+            ImGui.setCursorScreenPos(textX, labelY)
             session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
         } else {
-            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
             val formattedVal = formatValue(currentValue)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current: $formattedVal")
         }
 
         // --- ROW 2: Widgets ---
-        val row2Y = startY + 18f
 
         // Render name of variable beside the die, to its left, sharing vertical center
         val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }

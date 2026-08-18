@@ -72,7 +72,8 @@ object Lfo2Section {
 
 
         // Title text for LFO 2
-        ImGui.sameLine(0f, 225f)
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        ImGui.sameLine(0f, 15f * fontScale)
         val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
         val lfo2Title = if (existing.sourceId == "lfo") "LFO 2" else "Oscillator 2"
@@ -87,12 +88,12 @@ object Lfo2Section {
             ImGui.beginDisabled()
         }
 
-        val btnW = 35f
+        val btnW = 35f * fontScale
         val btnH = ImGui.getFrameHeight()
 
         // 1. LFO 2 Shape Preset buttons
         session.uiTheme.body("LFO 2 Shape:")
-        ImGui.sameLine(0f, 10f)
+        ImGui.sameLine(0f, 10f * fontScale)
 
         // Sine Button
         val isModSine = existing.modWaveform == Waveform.SINE && existing.modMorph == 0.0f && existing.modHold == 0.0f
@@ -108,7 +109,7 @@ object Lfo2Section {
         }
 
         // Triangle Button
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 4f * fontScale)
         val isModTri = existing.modWaveform == Waveform.TRIANGLE && existing.modMorph == 1.0f && existing.modHold == 0.0f
         if (CustomIconButton.drawWaveformButton("lfo2_tri_$idx", WaveShape.TRIANGLE, isModTri, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
@@ -122,7 +123,7 @@ object Lfo2Section {
         }
 
         // Square Button
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 4f * fontScale)
         val isModSquare = existing.modWaveform == Waveform.SQUARE && existing.modMorph == 1.0f && existing.modHold == 0.5f
         if (CustomIconButton.drawWaveformButton("lfo2_square_$idx", WaveShape.SQUARE, isModSquare, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
@@ -136,7 +137,7 @@ object Lfo2Section {
         }
 
         // Random Button
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 4f * fontScale)
         val isModRandom = existing.modWaveform == Waveform.RANDOM
         if (CustomIconButton.drawWaveformButton("lfo2_random_$idx", WaveShape.RANDOM, isModRandom, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
@@ -149,13 +150,13 @@ object Lfo2Section {
 
         // 2. LFO 2 Slew Preset buttons (only if not Random)
         if (existing.modWaveform != Waveform.RANDOM) {
-            ImGui.sameLine(0f, 20f)
+            ImGui.sameLine(0f, 20f * fontScale)
             session.uiTheme.body("Asymmetry:")
-            ImGui.sameLine(0f, 10f)
+            ImGui.sameLine(0f, 10f * fontScale)
 
             // Left Button
             val isModLeft = existing.modSlope <= 0.01f
-            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", WaveShape.RAMP_DOWN, isModLeft, themeColor, 35f, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", WaveShape.RAMP_DOWN, isModLeft, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = 0.001f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -163,9 +164,9 @@ object Lfo2Section {
             }
 
             // Center Button
-            ImGui.sameLine(0f, 4f)
+            ImGui.sameLine(0f, 4f * fontScale)
             val isModCenter = existing.modSlope >= 0.49f && existing.modSlope <= 0.51f
-            if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", WaveShape.TRIANGLE, isModCenter, themeColor, 35f, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", WaveShape.TRIANGLE, isModCenter, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = 0.5f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -173,9 +174,9 @@ object Lfo2Section {
             }
 
             // Right Button
-            ImGui.sameLine(0f, 4f)
+            ImGui.sameLine(0f, 4f * fontScale)
             val isModRight = existing.modSlope >= 0.99f
-            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", WaveShape.RAMP_UP, isModRight, themeColor, 35f, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", WaveShape.RAMP_UP, isModRight, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = 0.999f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -187,11 +188,11 @@ object Lfo2Section {
 
         // 3. Dropdowns Row for Unit and Mode
         session.uiTheme.body("LFO 2 Unit:")
-        ImGui.sameLine(0f, 10f)
+        ImGui.sameLine(0f, 10f * fontScale)
         val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
         val modUnitLabels = arrayOf("Time", "Beat", "Frame")
         if (bypassed) ImGui.popStyleVar()
-        ImGui.pushItemWidth(125f)
+        ImGui.pushItemWidth(110f * fontScale)
         if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {
             val selectedUnit = GenUnit.entries[modUnitIdx.get()]
             val adjustedSubdiv = when (selectedUnit) {
@@ -235,12 +236,12 @@ object Lfo2Section {
             ImGui.endDisabled()
         }
 
-        ImGui.sameLine(0f, 20f)
+        ImGui.sameLine(0f, 20f * fontScale)
         session.uiTheme.body("Modulation Mode:")
-        ImGui.sameLine(0f, 10f)
+        ImGui.sameLine(0f, 10f * fontScale)
 
         if (bypassed) ImGui.popStyleVar()
-        ImGui.pushItemWidth(200f)
+        ImGui.pushItemWidth(160f * fontScale)
         if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
             val nextMode = llm.slop.liquidlsd.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
             onReplace(existing.copy(generatorModMode = nextMode))
@@ -382,7 +383,8 @@ object Lfo2Section {
                 )
                 ImGui.spacing()
             } else if (existing.modGenUnit == GenUnit.FRAME) {
-                val formatFunc: (Float) -> String = { v ->
+                val formatFunc: (Float) -> String = { v -> "${v.toInt().coerceIn(1, 10000)}" }
+                val formatLabelFunc: (Float) -> String = { v ->
                     val frames = v.toInt().coerceIn(1, 10000)
                     val fps = session.uiTheme.maxFps.coerceAtLeast(1).toFloat()
                     val sec = frames / fps
@@ -404,6 +406,7 @@ object Lfo2Section {
                     maxLimit = 10000f,
                     isRandomizable = existing.randomizeModSubdivision,
                     formatValue = formatFunc,
+                    formatLabel = formatLabelFunc,
                     isLogarithmic = true,
                     parseValue = parseFunc,
                     onRandomizableChanged = { checked ->

@@ -140,6 +140,7 @@ object CustomRangeSlider {
         minLimit: Float,
         maxLimit: Float,
         formatValue: (Float) -> String,
+        formatLabel: ((Float) -> String)? = null,
         onRangeChanged: (Float, Float) -> Unit,
         idPrefix: String = "",
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
@@ -157,6 +158,7 @@ object CustomRangeSlider {
             isRandomizable = true,
             showControls = false,
             formatValue = formatValue,
+            formatLabel = formatLabel,
             onRangeChanged = onRangeChanged,
             idPrefix = idPrefix,
             themeColor = themeColor,
@@ -177,6 +179,7 @@ object CustomRangeSlider {
         showControls: Boolean = true,
         defaultValue: Float? = null,
         formatValue: (Float) -> String,
+        formatLabel: ((Float) -> String)? = null,
         onRandomizableChanged: (Boolean) -> Unit = {},
         onRandomizeNow: () -> Unit = {},
         onRangeChanged: (Float, Float) -> Unit = { _, _ -> },
@@ -195,9 +198,17 @@ object CustomRangeSlider {
         ImGui.pushID(label)
 
         val w = ImGui.getContentRegionAvailX()
-        val h = 44f
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
+        
+        val buttonSize = ImGui.getFrameHeight()
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val captionHeight = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+        
+        val labelY = startY + 2f * fontScale
+        val row2Y = labelY + captionHeight + 2.5f * fontScale
+        val centerY = row2Y + buttonSize * 0.5f
+        val h = (row2Y - startY) + buttonSize + 3f * fontScale
         
         // Reserve space
         ImGui.dummy(w, h)
@@ -207,24 +218,22 @@ object CustomRangeSlider {
         val mouseX = io.mousePos.x
         val mouseY = io.mousePos.y
         
-        val buttonSize = ImGui.getFrameHeight()
         val spacing = ImGui.getStyle().itemSpacing.x
         val combinedWidth = buttonSize
         
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val labelColW = 175f * fontScale
-        val textBoxesStartX = startX + labelColW + 20f
+        val labelColW = 110f * fontScale
+        val textBoxesStartX = startX + labelColW + 10f * fontScale
         
-        val boxWidth = 115f * fontScale
+        val boxWidth = 65f * fontScale
         val boxSpacing = 8f
         
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
         val lineStartX = sliderStartX
         val lineEndX = startX + w - 10f
         val lineWidth = lineEndX - lineStartX
-        val centerY = startY + 28f
         
         val rangeSpan = maxLimit - minLimit
+        val labelFormatFunc = formatLabel ?: formatValue
 
         val toPct: (Float) -> Float = { v ->
             if (isLogarithmic) {
@@ -250,32 +259,31 @@ object CustomRangeSlider {
 
         // --- ROW 1: Labels ---
         if (effectiveIsRandomizable) {
-            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
+            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
             
-            ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, startY + 2f)
+            ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, labelY)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
             
             // Add "Current" label with [value] centered above the dynamic dot on Row 1
             val curPct = toPct(currentValue)
             val curX = lineStartX + curPct * lineWidth
-            val formattedVal = formatValue(currentValue)
+            val formattedVal = labelFormatFunc(currentValue)
             val labelText = "Current: $formattedVal"
             val currentTextWidth = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.calcTextSize(labelText).x }
             val minAllowedX = lineStartX
             val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
             val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
             
-            ImGui.setCursorScreenPos(textX, startY + 2f)
+            ImGui.setCursorScreenPos(textX, labelY)
             session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
         } else {
-            ImGui.setCursorScreenPos(textBoxesStartX, startY + 2f)
-            val formattedVal = formatValue(currentValue)
+            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
+            val formattedVal = labelFormatFunc(currentValue)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current: $formattedVal")
         }
         
         // --- ROW 2: Widgets ---
-        val row2Y = startY + 18f
         
         // Render name of variable beside the die, to its left, sharing vertical center
         val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
@@ -555,9 +563,9 @@ object CustomRangeSlider {
                     val distToCur = kotlin.math.abs(mouseX - curX)
 
                     when {
-                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${formatValue(currentMin)}\nScroll to adjust. Middle-click track to reset.")
-                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${formatValue(currentMax)}\nScroll to adjust. Middle-click track to reset.")
-                        distToCur < 6f -> ImGui.setTooltip("Current modulated value for $label: ${formatValue(currentValue)}")
+                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${labelFormatFunc(currentMin)}\nScroll to adjust. Middle-click track to reset.")
+                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${labelFormatFunc(currentMax)}\nScroll to adjust. Middle-click track to reset.")
+                        distToCur < 6f -> ImGui.setTooltip("Current modulated value for $label: ${labelFormatFunc(currentValue)}")
                         else -> ImGui.setTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
                     }
                 } else {
@@ -566,7 +574,7 @@ object CustomRangeSlider {
                     val distToVal = kotlin.math.abs(mouseX - valHandleX)
 
                     if (distToVal < 8f) {
-                        ImGui.setTooltip("Base value for $label: ${formatValue(currentValue)}\nScroll to adjust. Middle-click to reset.")
+                        ImGui.setTooltip("Base value for $label: ${labelFormatFunc(currentValue)}\nScroll to adjust. Middle-click to reset.")
                     } else {
                         ImGui.setTooltip("Drag or Scroll to adjust base value for $label. Middle-click to reset.")
                     }

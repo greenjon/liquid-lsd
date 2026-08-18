@@ -48,9 +48,9 @@ object ModulatorHeaderRow {
 
         ImGui.indent(10f) // Indent controls slightly
 
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val btnHeight = ImGui.getFrameHeight()
-        val scale = btnHeight / 30f
-        val btnWidth = 50f * scale
+        val btnWidth = 50f * fontScale
 
         if (bypassed) {
             ImGui.popStyleVar() // Draw header controls at full opacity
@@ -78,7 +78,7 @@ object ModulatorHeaderRow {
 
         // 2. Dice icon (Randomize button)
         if (session.uiTheme.randomizationEnabled) {
-            ImGui.sameLine(0f, 10f)
+            ImGui.sameLine(0f, 10f * fontScale)
             if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
                 val randomized = existing
                     .randomizeDepth()
@@ -95,13 +95,13 @@ object ModulatorHeaderRow {
 
         
         // 3. Operator dropdown (ADD/MUL/SCALE combo box)
-        ImGui.sameLine(0f, 10f)
+        ImGui.sameLine(0f, 10f * fontScale)
         val opIdx = ImInt(when (existing.operator) {
             ModulationOperator.ADD -> 0
             ModulationOperator.MUL -> 1
             ModulationOperator.SCALE -> 2
         })
-        ImGui.pushItemWidth(100f)
+        ImGui.pushItemWidth(100f * fontScale)
         if (ImGui.combo("##op", opIdx, operatorLabels)) {
             val newOp = when (opIdx.get()) {
                 0 -> ModulationOperator.ADD
@@ -116,14 +116,14 @@ object ModulatorHeaderRow {
         ImGui.popItemWidth()
 
         // 4. Title Text (vertically centered in the row, left-aligned)
-        ImGui.sameLine(0f, 115f)
+        ImGui.sameLine(0f, 15f * fontScale)
         val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
         session.uiTheme.h2(titleText)
 
         // 5. Reset button (trash can icon)
         if (idx == 0) {
-            val resetWidth = 50f * scale
+            val resetWidth = 50f * fontScale
             ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)
             if (isVirtual) {
                 ImGui.beginDisabled()

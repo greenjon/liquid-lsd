@@ -31,7 +31,8 @@ object Lfo1Section {
             session.uiTheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
             ImGui.sameLine(0f, 10f)
 
-            val btnW = 35f
+            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+            val btnW = 35f * fontScale
             val btnH = ImGui.getFrameHeight()
 
             // Sine Button
@@ -48,7 +49,7 @@ object Lfo1Section {
             }
 
             // Triangle Button
-            ImGui.sameLine(0f, 4f)
+            ImGui.sameLine(0f, 4f * fontScale)
             val isTri = existing.waveform == Waveform.TRIANGLE && existing.morph == 1.0f && existing.hold == 0.0f
             if (CustomIconButton.drawWaveformButton("lfo1_tri", WaveShape.TRIANGLE, isTri, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
@@ -62,7 +63,7 @@ object Lfo1Section {
             }
 
             // Square Button
-            ImGui.sameLine(0f, 4f)
+            ImGui.sameLine(0f, 4f * fontScale)
             val isSquare = existing.waveform == Waveform.SQUARE && existing.morph == 1.0f && existing.hold == 0.5f
             if (CustomIconButton.drawWaveformButton("lfo1_square", WaveShape.SQUARE, isSquare, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
@@ -76,7 +77,7 @@ object Lfo1Section {
             }
 
             // Random Button
-            ImGui.sameLine(0f, 4f)
+            ImGui.sameLine(0f, 4f * fontScale)
             val isRandom = existing.waveform == Waveform.RANDOM
             if (CustomIconButton.drawWaveformButton("lfo1_random", WaveShape.RANDOM, isRandom, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
@@ -89,13 +90,13 @@ object Lfo1Section {
 
             // 2. Slew Preset buttons (only if not Random)
             if (existing.waveform != Waveform.RANDOM) {
-                ImGui.sameLine(0f, 20f)
+                ImGui.sameLine(0f, 20f * fontScale)
                 session.uiTheme.body("Asymmetry:")
-                ImGui.sameLine(0f, 10f)
+                ImGui.sameLine(0f, 10f * fontScale)
 
                 // Left Button
                 val isLeft = existing.slope <= 0.01f
-                if (CustomIconButton.drawWaveformButton("lfo1_left", WaveShape.RAMP_DOWN, isLeft, themeColor, 35f, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_left", WaveShape.RAMP_DOWN, isLeft, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = 0.001f))
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -103,9 +104,9 @@ object Lfo1Section {
                 }
 
                 // Center Button
-                ImGui.sameLine(0f, 4f)
+                ImGui.sameLine(0f, 4f * fontScale)
                 val isCenter = existing.slope >= 0.49f && existing.slope <= 0.51f
-                if (CustomIconButton.drawWaveformButton("lfo1_center", WaveShape.TRIANGLE, isCenter, themeColor, 35f, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_center", WaveShape.TRIANGLE, isCenter, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = 0.5f))
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -113,9 +114,9 @@ object Lfo1Section {
                 }
 
                 // Right Button
-                ImGui.sameLine(0f, 4f)
+                ImGui.sameLine(0f, 4f * fontScale)
                 val isRight = existing.slope >= 0.99f
-                if (CustomIconButton.drawWaveformButton("lfo1_right", WaveShape.RAMP_UP, isRight, themeColor, 35f, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_right", WaveShape.RAMP_UP, isRight, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = 0.999f))
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -128,11 +129,11 @@ object Lfo1Section {
             // -- Unit Selection Dropdown (Time/Beat/Frame) if applicable --
             if (isGen) {
                 session.uiTheme.body("LFO 1 Unit:")
-                ImGui.sameLine(0f, 10f)
+                ImGui.sameLine(0f, 10f * fontScale)
                 val unitIdx = ImInt(existing.genUnit.ordinal)
                 val unitLabels = arrayOf("Time", "Beat", "Frame")
                 if (bypassed) ImGui.popStyleVar()
-                ImGui.pushItemWidth(125f)
+                ImGui.pushItemWidth(110f * fontScale)
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {
                     val selectedUnit = GenUnit.entries[unitIdx.get()]
                     val adjustedSubdiv = when (selectedUnit) {
@@ -432,7 +433,8 @@ object Lfo1Section {
 
         // -- Frame Period / Speed ---------------------------------
         if (isGen && existing.genUnit == GenUnit.FRAME) {
-            val formatFunc: (Float) -> String = { v ->
+            val formatFunc: (Float) -> String = { v -> "${v.toInt().coerceIn(1, 10000)}" }
+            val formatLabelFunc: (Float) -> String = { v ->
                 val frames = v.toInt().coerceIn(1, 10000)
                 val fps = session.uiTheme.maxFps.coerceAtLeast(1).toFloat()
                 val sec = frames / fps
@@ -454,6 +456,7 @@ object Lfo1Section {
                 maxLimit = 10000f,
                 isRandomizable = existing.randomizeSubdivision,
                 formatValue = formatFunc,
+                formatLabel = formatLabelFunc,
                 isLogarithmic = true,
                 parseValue = parseFunc,
                 onRandomizableChanged = { checked ->

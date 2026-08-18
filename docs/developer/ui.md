@@ -63,6 +63,9 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and 
 - **Proportional Icon Glyph Offset**: Lucide icons are configured with a scaled `setGlyphOffset(0f, round(size * 0.18f))` to ensure optical vertical centering and prevent icon bounding boxes from touching the top edge of buttons across all font sizes.
 - **Critical Font Array Ownership**: Font `ByteArray` fields (`regularBytes`, `boldBytes`) and `iconRange: ShortArray` are stored as class fields. Calling `setFontDataOwnedByAtlas(false)` prevents native ImGui from attempting to free JVM-managed byte arrays.
 
+### 4. Custom Sliders (`CustomRangeSlider.kt` & `BeatDivisionSlider.kt`)
+- Compute row height (`h`), label positions (`labelY`), widget rows (`row2Y`), and center line (`centerY`) dynamically using font metrics (`captionHeight`, `getFrameHeight()`, and `fontScale`) to ensure the "Current:" label and slider tracks never overlap adjacent rows or widgets across all font scales.
+
 ---
 
 ## ImGui Native Memory & Allocation Rules
