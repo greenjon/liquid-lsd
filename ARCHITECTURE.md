@@ -84,8 +84,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
 │   ├── PresetGridPanel.kt       — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
-│   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
-│   ├── browser/                — Asset Browser, Playlist Editor, Queue Actions, Sidebar panels
+│   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
+│   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
 │   └── PresetGridState.kt       — Selection state & 30-level Undo Stack
 └── utils/
     └── TimeUtils.kt            — Timing utilities

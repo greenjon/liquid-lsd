@@ -28,7 +28,7 @@ graph TD
     UIManager --> PresetGridPanel[PresetGridPanel.kt]
     UIManager --> CellConfigPanel[CellConfigPanel.kt]
     UIManager --> MixerMonitorPanel[MixerMonitorPanel.kt]
-    UIManager --> AssetBrowserPanel[AssetBrowserPanel.kt & PlaylistEditorPanel.kt]
+    UIManager --> LibraryPanel[LibraryPanel.kt & PlaylistEditorPanel.kt]
     
     MixerMonitorPanel --> DeckControlPanel[DeckControlPanel.kt]
     DeckControlPanel --> drawDeckMonitorToolbar[drawDeckMonitorToolbar Helper]

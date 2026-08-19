@@ -17,7 +17,7 @@ Comprehensive guides for visual synthesis, modulation matrix routing, setlist ma
 - **[CV Modulation & Preset Grid](user_guide/modulation.md)**: Modulation routing matrix, operator math (ADD, MUL, SCALE), LFO 1/2 generators, audio/trigger CVs, and power-user mouse shortcuts.
 - **[Documentation & Notes System](user_guide/notes_and_tooltips.md)**: 3-tier note system (Global Source Notes, Preset Notes, Parameter Notes), rich UI hover tooltips, Deck Monitor preset name labels, and modal note editor.
 - **[Presets & MIDI Mapping](user_guide/midi_presets.md)**: Preset saving/loading, hardware MIDI profiles vs. preset grid cell modulators, MIDI Learn, and deck parameter clipboard.
-- **[Asset Browser & Playlists](user_guide/asset_browser.md)**: Asset Browser (`F3`), folder tree navigation, playlist editor, drag-and-drop unpacking matrix, and missing asset relinking.
+- **[Library & Playlists](user_guide/library.md)**: Preset library navigation, playlist editor, Auto-VJ play queue, and drag-and-drop setlist staging.
 - **[Custom Shaders & Sources](user_guide/custom_visuals.md)**: Adding dynamic visual sources in `presets/sources/`, `meta.json` manifests, parameter grouping, GLSL uniform injection, and custom shader creation.
 
 ### 🛠️ [Developer Reference](developer/architecture.md)

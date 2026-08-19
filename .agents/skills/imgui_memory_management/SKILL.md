@@ -28,7 +28,7 @@ fun draw() {
 
 **Correct — allocate once as a class/object field:**
 ```kotlin
-object AssetBrowserPanel {
+object LibraryPanel {
     private val renameBuffer = ImString(256)   // ✅ allocated once at object init
     private val searchBuffer = ImString(256)   //    reused every frame
 
@@ -39,7 +39,7 @@ object AssetBrowserPanel {
 }
 ```
 
-This is the pattern used throughout the codebase (`AssetBrowserPanel`, `DeckPresetBrowser`,
+This is the pattern used throughout the codebase (`LibraryPanel`, `DeckPresetController`,
 `ImGuiFileBrowser`, `CustomRangeSlider`).
 
 ---

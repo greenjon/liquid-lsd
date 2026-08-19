@@ -99,7 +99,7 @@ src/main/kotlin/llm/slop/liquidlsd/
   parameters/            Modulatable parameters and CV operators
   presets/               Preset, playlist, queue, and clipboard managers
   rendering/             Decks, mixer, shaders, FBOs, VisualSources, SourceDocRegistry
-  ui/                    ImGui panels, Asset Browser, NoteEditorModal, UI state
+  ui/                    ImGui panels, Library Panel, NoteEditorModal, UI state
   utils/                 Timing utilities
 
 src/main/resources/

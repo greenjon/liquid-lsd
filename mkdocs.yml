@@ -32,7 +32,7 @@ nav:
     - CV Modulation & Preset Grid: user_guide/modulation.md
     - Documentation & Notes: user_guide/notes_and_tooltips.md
     - Presets & MIDI Mapping: user_guide/midi_presets.md
-    - Asset Browser & Playlists: user_guide/asset_browser.md
+    - Library & Playlists: user_guide/library.md
     - Custom Shaders & Sources: user_guide/custom_visuals.md
   - Developer Reference:
     - Architecture Overview: developer/architecture.md

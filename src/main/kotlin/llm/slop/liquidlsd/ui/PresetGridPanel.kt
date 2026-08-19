@@ -545,8 +545,8 @@ object PresetGridPanel {
                     }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Open Asset Browser Panel...")) {
-                    session.uiTheme.assetBrowserMode = UITheme.AssetBrowserMode.HALF
+                if (ImGui.menuItem("Open Library Panel...")) {
+                    session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                 }
                 ImGui.endPopup()
             }

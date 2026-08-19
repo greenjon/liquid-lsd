@@ -12,7 +12,7 @@ data class AppSettings(
     val tooltipsEnabled: Boolean = true,
     val maxFps: Int = 30,
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
-    val assetBrowserMode: UITheme.AssetBrowserMode = UITheme.AssetBrowserMode.HALF,
+    val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
     val theme: UITheme.Theme = UITheme.Theme.BORING,
     val showMidiCol: Boolean = true,
     val showLfoCol: Boolean = true,
@@ -20,7 +20,7 @@ data class AppSettings(
     val showTriggerCol: Boolean = true,
     val col1Ratio: Float = 0.30f,
     val col2Ratio: Float = 0.40f,
-    val assetBrowserRatio: Float = 0.50f,
-    val lastCustomAssetBrowserRatio: Float = 0.50f,
+    val libraryRatio: Float = 0.50f,
+    val lastCustomLibraryRatio: Float = 0.50f,
     val gridCellRatio: Float = 1.0f
 )

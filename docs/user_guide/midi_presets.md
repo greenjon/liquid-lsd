@@ -9,8 +9,7 @@ Liquid LSD provides preset serialization, preset clipboard management, and exter
 Presets store the complete state of a deck, including all visual parameters, feedback settings, active CV modulators, and user notes.
 
 ### File Format (`.lsd`)
-- Presets are serialized using `kotlinx.serialization` into human-readable JSON files (`.lsd`).
-- Presets are stored in `library/presets/` (and subfolders) and managed via the **Asset Browser** (`F3`).
+- Presets are stored in `presets/` (and subfolders) and managed via the **Library** panel.
 
 ### Preset Clipboard (Copy & Paste)
 - **Deck Parameter Copying**: You can copy base parameter settings from one deck and paste them onto another deck using right-click context menus in the `FINAL` column or Deck Controls.

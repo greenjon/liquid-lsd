@@ -3,7 +3,7 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.ui.AssetBrowserPanel
+import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.LibraryView
@@ -27,7 +27,7 @@ object SidebarPanel {
         val presetsOpened = ImGui.treeNodeEx("Presets", presetsFlags)
         if (ImGui.isItemClicked() && !ImGui.isItemToggledOpen()) {
             currentView = LibraryView.Presets(presetsRoot)
-            AssetBrowserPanel.refreshAssets()
+            LibraryPanel.refreshAssets()
         }
         if (presetsOpened) {
             drawPresetsFolderTree(presetsRoot)
@@ -87,7 +87,7 @@ object SidebarPanel {
                         PlayQueueManager.appendPlaylistToQueue(File(asset.path))
                     }
                     ImGui.separator()
-                    val activePl = AssetBrowserPanel.activePlaylistData
+                    val activePl = LibraryPanel.activePlaylistData
                     if (activePl != null && activePl.filePath == asset.path && activePl.isDirty) {
                         if (ImGui.menuItem("Save")) {
                             PlaylistManager.savePlaylist(activePl)
@@ -100,7 +100,7 @@ object SidebarPanel {
                         if (ImGui.menuItem("Duplicate Preset...")) {
                             BrowserPopupHandler.openDuplicatePresetModal(asset) { newPath ->
                                 currentView = LibraryView.SpecificPlaylist(File(newPath))
-                                AssetBrowserPanel.activePlaylistData = null
+                                LibraryPanel.activePlaylistData = null
                             }
                         }
                     } else {
@@ -115,7 +115,7 @@ object SidebarPanel {
                             }
                             FileSystemManager.cloneFile(asset.path).onSuccess { newPath ->
                                 currentView = LibraryView.SpecificPlaylist(File(newPath))
-                                AssetBrowserPanel.activePlaylistData = null
+                                LibraryPanel.activePlaylistData = null
                             }
                         }
                     }
@@ -145,7 +145,7 @@ object SidebarPanel {
             val opened = ImGui.treeNodeEx("[D] ${subDir.name}##folder_${subDir.absolutePath}", finalFlags)
             if (ImGui.isItemClicked() && !ImGui.isItemToggledOpen()) {
                 currentView = LibraryView.Presets(subDir)
-                AssetBrowserPanel.refreshAssets()
+                LibraryPanel.refreshAssets()
             }
             if (opened) {
                 drawPresetsFolderTree(subDir)
@@ -157,8 +157,8 @@ object SidebarPanel {
     private fun handlePresetDropOnPlaylist(presetPath: String, playlistFile: File) {
         val droppedFile = File(presetPath)
         if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
-            val playlistToModify = if (AssetBrowserPanel.activePlaylistData?.filePath == playlistFile.absolutePath) {
-                AssetBrowserPanel.activePlaylistData
+            val playlistToModify = if (LibraryPanel.activePlaylistData?.filePath == playlistFile.absolutePath) {
+                LibraryPanel.activePlaylistData
             } else {
                 PlaylistManager.loadPlaylist(playlistFile).getOrNull()
             }

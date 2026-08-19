@@ -104,11 +104,11 @@ object UITheme {
         get() = settings.startupBehavior
         set(value) { settings = settings.copy(startupBehavior = value) }
 
-    enum class AssetBrowserMode { FULL, HALF, HIDE }
+    enum class LibraryMode { FULL, HALF, HIDE }
     
-    var assetBrowserMode: AssetBrowserMode
-        get() = settings.assetBrowserMode
-        set(value) { settings = settings.copy(assetBrowserMode = value) }
+    var libraryMode: LibraryMode
+        get() = settings.libraryMode
+        set(value) { settings = settings.copy(libraryMode = value) }
 
     var showMidiCol: Boolean
         get() = settings.showMidiCol
@@ -134,13 +134,13 @@ object UITheme {
         get() = settings.col2Ratio
         set(value) { settings = settings.copy(col2Ratio = value) }
 
-    var assetBrowserRatio: Float
-        get() = settings.assetBrowserRatio
-        set(value) { settings = settings.copy(assetBrowserRatio = value) }
+    var libraryRatio: Float
+        get() = settings.libraryRatio
+        set(value) { settings = settings.copy(libraryRatio = value) }
 
-    var lastCustomAssetBrowserRatio: Float
-        get() = settings.lastCustomAssetBrowserRatio
-        set(value) { settings = settings.copy(lastCustomAssetBrowserRatio = value) }
+    var lastCustomLibraryRatio: Float
+        get() = settings.lastCustomLibraryRatio
+        set(value) { settings = settings.copy(lastCustomLibraryRatio = value) }
 
     var gridCellRatio: Float
         get() = settings.gridCellRatio
@@ -213,15 +213,15 @@ object UITheme {
                     maxFps = if (savedMaxFps == 60) 60 else 30
                     logger.info { "Loaded maxFps from settings file: $maxFps" }
                 }
-                val savedMode = props.getProperty("assetBrowserMode")
+                val savedMode = props.getProperty("libraryMode") ?: props.getProperty("assetBrowserMode")
                 if (savedMode != null) {
-                    assetBrowserMode = try { AssetBrowserMode.valueOf(savedMode) } catch (e: Exception) { AssetBrowserMode.HALF }
-                    logger.info { "Loaded assetBrowserMode from settings file: $assetBrowserMode" }
+                    libraryMode = try { LibraryMode.valueOf(savedMode) } catch (e: Exception) { LibraryMode.HALF }
+                    logger.info { "Loaded libraryMode from settings file: $libraryMode" }
                 } else {
                     val savedHalfHeight = props.getBoolean("assetManagerHalfHeight")
                     if (savedHalfHeight != null) {
-                        assetBrowserMode = if (savedHalfHeight) AssetBrowserMode.HALF else AssetBrowserMode.FULL
-                        logger.info { "Migrated assetManagerHalfHeight to assetBrowserMode: $assetBrowserMode" }
+                        libraryMode = if (savedHalfHeight) LibraryMode.HALF else LibraryMode.FULL
+                        logger.info { "Migrated assetManagerHalfHeight to libraryMode: $libraryMode" }
                     }
                 }
                 val savedAutoVj = props.getProperty("autoVjDirtyBehavior")
@@ -253,8 +253,8 @@ object UITheme {
                 props.getBoolean("showTriggerCol")?.let { showTriggerCol = it }
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { col1Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { col2Ratio = it.coerceIn(0.10f, 0.70f) }
-                props.getProperty("assetBrowserRatio")?.toFloatOrNull()?.let { assetBrowserRatio = it.coerceIn(0.10f, 0.90f) }
-                props.getProperty("lastCustomAssetBrowserRatio")?.toFloatOrNull()?.let { lastCustomAssetBrowserRatio = it.coerceIn(0.10f, 0.90f) }
+                (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { libraryRatio = it.coerceIn(0.10f, 0.90f) }
+                (props.getProperty("lastCustomLibraryRatio") ?: props.getProperty("lastCustomAssetBrowserRatio"))?.toFloatOrNull()?.let { lastCustomLibraryRatio = it.coerceIn(0.10f, 0.90f) }
                 props.getProperty("gridCellRatio")?.toFloatOrNull()?.let { gridCellRatio = it.coerceIn(0.70f, 2.00f) }
             } else {
                 logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps" }
@@ -277,7 +277,7 @@ object UITheme {
             props.setProperty("randomizationEnabled", randomizationEnabled.toString())
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
             props.setProperty("maxFps", maxFps.toString())
-            props.setProperty("assetBrowserMode", assetBrowserMode.name)
+            props.setProperty("libraryMode", libraryMode.name)
             props.setProperty("autoVjDirtyBehavior", autoVjDirtyBehavior.name)
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("queueKeyTrigger", queueKeyTrigger.name)
@@ -289,8 +289,8 @@ object UITheme {
             props.setProperty("showTriggerCol", showTriggerCol.toString())
             props.setProperty("col1Ratio", col1Ratio.toString())
             props.setProperty("col2Ratio", col2Ratio.toString())
-            props.setProperty("assetBrowserRatio", assetBrowserRatio.toString())
-            props.setProperty("lastCustomAssetBrowserRatio", lastCustomAssetBrowserRatio.toString())
+            props.setProperty("libraryRatio", libraryRatio.toString())
+            props.setProperty("lastCustomLibraryRatio", lastCustomLibraryRatio.toString())
             props.setProperty("gridCellRatio", gridCellRatio.toString())
             val tmpFile = File("${settingsFile.absolutePath}.tmp")
             tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }

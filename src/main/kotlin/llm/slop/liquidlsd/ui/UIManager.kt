@@ -359,14 +359,14 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         val libraryW = col1W + col2W
         val rightW = displayWidth - libraryW
 
-        val assetBrowserH = when (theme.assetBrowserMode) {
-            UITheme.AssetBrowserMode.FULL -> contentH
-            UITheme.AssetBrowserMode.HIDE -> 38f
-            UITheme.AssetBrowserMode.HALF -> contentH * theme.assetBrowserRatio.coerceIn(minRatio, 0.85f)
+        val libraryH = when (theme.libraryMode) {
+            UITheme.LibraryMode.FULL -> contentH
+            UITheme.LibraryMode.HIDE -> 38f
+            UITheme.LibraryMode.HALF -> contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)
         }
 
-        if (theme.assetBrowserMode != UITheme.AssetBrowserMode.FULL) {
-            val topH = contentH - assetBrowserH
+        if (theme.libraryMode != UITheme.LibraryMode.FULL) {
+            val topH = contentH - libraryH
 
             // Column 1: Preset Grid
             ImGui.setNextWindowPos(0f, menuBarH)
@@ -397,55 +397,55 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
             drawList.addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
         }
 
-        // Horizontal Splitter (above Asset Browser when not FULL)
-        val assetBrowserPosH = if (theme.assetBrowserMode == UITheme.AssetBrowserMode.FULL) menuBarH else (menuBarH + contentH - assetBrowserH)
-        if (theme.assetBrowserMode != UITheme.AssetBrowserMode.FULL) {
+        // Horizontal Splitter (above Library when not FULL)
+        val libraryPosH = if (theme.libraryMode == UITheme.LibraryMode.FULL) menuBarH else (menuBarH + contentH - libraryH)
+        if (theme.libraryMode != UITheme.LibraryMode.FULL) {
             splitterManager.drawHorizontalSplitter(
                 id = "##hsplit",
                 posX = 0f,
-                posY = assetBrowserPosH,
+                posY = libraryPosH,
                 width = libraryW,
                 height = 8f,
                 displayHeight = displayHeight,
                 onDrag = { deltaY ->
-                    if (theme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) {
+                    if (theme.libraryMode == UITheme.LibraryMode.HIDE) {
                         if (deltaY < 0f) { // Dragging upward
-                            theme.assetBrowserMode = UITheme.AssetBrowserMode.HALF
-                            theme.assetBrowserRatio = theme.lastCustomAssetBrowserRatio.coerceIn(minRatio, 0.85f)
+                            theme.libraryMode = UITheme.LibraryMode.HALF
+                            theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
                             theme.saveSettings()
                         }
                     } else {
                         val deltaR = -deltaY / contentH
-                        val targetRatio = theme.assetBrowserRatio + deltaR
+                        val targetRatio = theme.libraryRatio + deltaR
                         val targetPixelH = contentH * targetRatio
                         if (targetPixelH < 60f || targetRatio < 0.10f) {
-                            theme.lastCustomAssetBrowserRatio = theme.assetBrowserRatio
-                            theme.assetBrowserMode = UITheme.AssetBrowserMode.HIDE
+                            theme.lastCustomLibraryRatio = theme.libraryRatio
+                            theme.libraryMode = UITheme.LibraryMode.HIDE
                         } else {
                             val newR = targetRatio.coerceIn(minRatio, 0.85f)
-                            theme.assetBrowserRatio = newR
-                            theme.lastCustomAssetBrowserRatio = newR
+                            theme.libraryRatio = newR
+                            theme.lastCustomLibraryRatio = newR
                         }
                         theme.saveSettings()
                     }
                 },
                 onDoubleClick = {
-                    theme.assetBrowserMode = UITheme.AssetBrowserMode.HALF
-                    theme.assetBrowserRatio = 0.50f
-                    theme.lastCustomAssetBrowserRatio = 0.50f
+                    theme.libraryMode = UITheme.LibraryMode.HALF
+                    theme.libraryRatio = 0.50f
+                    theme.lastCustomLibraryRatio = 0.50f
                     theme.saveSettings()
                 }
             )
         }
 
-        // Asset Browser (Bottom or Full)
-        ImGui.setNextWindowPos(0f, assetBrowserPosH)
-        ImGui.setNextWindowSize(libraryW, assetBrowserH)
-        val flags = (if (theme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) noDecorate or ImGuiWindowFlags.NoScrollbar else noDecorate) or
+        // Library (Bottom or Full)
+        ImGui.setNextWindowPos(0f, libraryPosH)
+        ImGui.setNextWindowSize(libraryW, libraryH)
+        val flags = (if (theme.libraryMode == UITheme.LibraryMode.HIDE) noDecorate or ImGuiWindowFlags.NoScrollbar else noDecorate) or
                 ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
-        if (ImGui.begin("Asset Browser", flags)) {
+        if (ImGui.begin("Library", flags)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            AssetBrowserPanel.draw(session, libraryW, assetBrowserH, currentMixer!!, presetState)
+            LibraryPanel.draw(session, libraryW, libraryH, currentMixer!!, presetState)
         }
         ImGui.end()
 
@@ -459,7 +459,7 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         }
         ImGui.end()
 
-        // Vertical Splitter 2 (between Cell Config/Asset Browser and Mixer/Monitor)
+        // Vertical Splitter 2 (between Cell Config/Library and Mixer/Monitor)
         splitterManager.drawVerticalSplitter(
             id = "##vsplit2",
             posX = libraryW,

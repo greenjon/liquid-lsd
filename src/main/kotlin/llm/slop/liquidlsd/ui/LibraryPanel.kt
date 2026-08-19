@@ -21,9 +21,8 @@ sealed class LibraryView {
     data class Presets(val currentDir: File) : LibraryView()
 }
 
-object AssetBrowserPanel {
+object LibraryPanel {
     private val logger = KotlinLogging.logger {}
-    
     
     internal var currentDirectory: File
         get() = when (val view = SidebarPanel.currentView) {
@@ -92,12 +91,12 @@ object AssetBrowserPanel {
             }
             ImGui.popStyleColor(4)
 
-            UITheme.AssetBrowserMode.entries.forEach { mode ->
-                val active = session.uiTheme.assetBrowserMode == mode
+            UITheme.LibraryMode.entries.forEach { mode ->
+                val active = session.uiTheme.libraryMode == mode
                 val icon = when (mode) {
-                    UITheme.AssetBrowserMode.FULL -> Icons.LAYOUT_FULL
-                    UITheme.AssetBrowserMode.HALF -> Icons.LAYOUT_HALF
-                    UITheme.AssetBrowserMode.HIDE -> Icons.LAYOUT_HIDE
+                    UITheme.LibraryMode.FULL -> Icons.LAYOUT_FULL
+                    UITheme.LibraryMode.HALF -> Icons.LAYOUT_HALF
+                    UITheme.LibraryMode.HIDE -> Icons.LAYOUT_HIDE
                 }
 
                 ImGui.sameLine(0f, 6f)
@@ -115,14 +114,14 @@ object AssetBrowserPanel {
                 }
 
                 if (ImGui.button("$icon##mode_${mode.name}")) {
-                    session.uiTheme.assetBrowserMode = mode
+                    session.uiTheme.libraryMode = mode
                     session.uiTheme.saveSettings()
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     val modeDesc = when (mode) {
-                        UITheme.AssetBrowserMode.FULL -> "Switch asset browser height to Full size."
-                        UITheme.AssetBrowserMode.HALF -> "Switch asset browser height to Half size."
-                        UITheme.AssetBrowserMode.HIDE -> "Hide the asset browser."
+                        UITheme.LibraryMode.FULL -> "Switch library height to Full size."
+                        UITheme.LibraryMode.HALF -> "Switch library height to Half size."
+                        UITheme.LibraryMode.HIDE -> "Hide the library."
                     }
                     ImGui.setTooltip(modeDesc)
                 }
@@ -133,22 +132,22 @@ object AssetBrowserPanel {
         }
         ImGui.popStyleVar()
 
-        if (session.uiTheme.assetBrowserMode == UITheme.AssetBrowserMode.HIDE) return
+        if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 
         val contentH = ImGui.getContentRegionAvailY() - 5f
         if (showSidebar) {
-            ImGui.beginChild("AssetSidebar", sidebarWidth - 6f, contentH, true)
+            ImGui.beginChild("LibrarySidebar", sidebarWidth - 6f, contentH, true)
             SidebarPanel.draw(session, mixer)
             ImGui.endChild()
             ImGui.sameLine()
         }
 
-        ImGui.beginChild("AssetCenter", centerWidth - 6f, contentH, true)
+        ImGui.beginChild("LibraryCenter", centerWidth - 6f, contentH, true)
         drawCenterContent(session, mixer, presetState)
         ImGui.endChild()
         ImGui.sameLine()
 
-        ImGui.beginChild("AssetQueue", queueWidth - 8f, contentH, true)
+        ImGui.beginChild("LibraryQueue", queueWidth - 8f, contentH, true)
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
@@ -499,13 +498,11 @@ object AssetBrowserPanel {
         ImGui.popID()
     }
 
-
-
     internal fun refreshAssets() {
         lastKnownSignature = FileSystemManager.getDirectorySignature(currentDirectory)
         lastAutoRefreshTimeMs = System.currentTimeMillis()
         assets = FileSystemManager.scanDirectory(currentDirectory)
-        logger.debug { "Refreshed assets: ${assets.size} items in ${currentDirectory.name}" }
+        logger.debug { "Refreshed library items: ${assets.size} items in ${currentDirectory.name}" }
     }
     
     fun getSelectedAsset(): AssetItem? = selectedAsset

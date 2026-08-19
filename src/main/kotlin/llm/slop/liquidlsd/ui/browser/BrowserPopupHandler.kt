@@ -4,7 +4,7 @@ import imgui.ImGui
 import imgui.type.ImString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
-import llm.slop.liquidlsd.ui.AssetBrowserPanel
+import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
@@ -49,14 +49,14 @@ object BrowserPopupHandler {
                 }
                 val newPath = result.getOrThrow()
                 PlaylistManager.updatePresetPathInAllPlaylists(oldPath, newPath)
-                AssetBrowserPanel.activePlaylistData = null
+                LibraryPanel.activePlaylistData = null
                 newPath
             } else {
                 oldPath
             }
 
             updatePresetFileMeta(File(targetPath), cleanName, newTags)
-            AssetBrowserPanel.refreshAssets()
+            LibraryPanel.refreshAssets()
         }
     }
 
@@ -83,12 +83,12 @@ object BrowserPopupHandler {
                 val updated = dto.copy(name = cleanName, tags = newTags)
                 targetFile.writeText(json.encodeToString(DeckPresetDto.serializer(), updated))
                 FileSystemManager.clearScanCache()
-                AssetBrowserPanel.refreshAssets()
+                LibraryPanel.refreshAssets()
                 onDuplicateSuccess?.invoke(targetFile.absolutePath)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to duplicate preset DTO; falling back to file copy" }
                 FileSystemManager.cloneFile(asset.path).onSuccess { newPath ->
-                    AssetBrowserPanel.refreshAssets()
+                    LibraryPanel.refreshAssets()
                     onDuplicateSuccess?.invoke(newPath)
                 }
             }
@@ -140,13 +140,13 @@ object BrowserPopupHandler {
                     FileSystemManager.renameFile(target.path, newName).onSuccess { newPath ->
                         if (target.type == AssetType.PRESET) {
                             PlaylistManager.updatePresetPathInAllPlaylists(target.path, newPath)
-                            AssetBrowserPanel.activePlaylistData = null
-                            AssetBrowserPanel.refreshAssets()
+                            LibraryPanel.activePlaylistData = null
+                            LibraryPanel.refreshAssets()
                         } else if (target.type == AssetType.PLAYLIST) {
                             val currentPlaylistPath = (SidebarPanel.currentView as? LibraryView.SpecificPlaylist)?.playlistFile?.absolutePath
                             if (target.path == currentPlaylistPath) {
                                 SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPath))
-                                AssetBrowserPanel.activePlaylistData = null
+                                LibraryPanel.activePlaylistData = null
                             }
                         }
                     }
@@ -186,12 +186,12 @@ object BrowserPopupHandler {
             if (ImGui.button("Delete", 120f, 0f)) {
                 FileSystemManager.deleteFile(target.path).onSuccess {
                     if (target.type == AssetType.PRESET) {
-                        AssetBrowserPanel.refreshAssets()
+                        LibraryPanel.refreshAssets()
                     } else if (target.type == AssetType.PLAYLIST) {
                         val currentPlaylistPath = (SidebarPanel.currentView as? LibraryView.SpecificPlaylist)?.playlistFile?.absolutePath
                         if (target.path == currentPlaylistPath) {
                             SidebarPanel.currentView = LibraryView.PlaylistsRoot
-                            AssetBrowserPanel.activePlaylistData = null
+                            LibraryPanel.activePlaylistData = null
                         }
                     }
                 }
