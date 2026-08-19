@@ -1,6 +1,6 @@
 # Audio Beat Synchronization & Stability
 
-This document details tempo detection, beat clock flywheel accumulator logic, background analysis threading safety, and sub-millisecond visual clock interpolation in Liquid LSD.
+This document details tempo detection, beat clock flywheel accumulator logic, and sub-millisecond visual clock interpolation in Liquid LSD.
 
 ---
 
@@ -10,9 +10,10 @@ This document details tempo detection, beat clock flywheel accumulator logic, ba
 JACK / Java Sound Callback (Audio Engine Thread)
     │
     ├─► BeatDetector.processBlock()   ← runs every audio block (~50–200 Hz)
-    │       └─► Calculates estimated BPM
+    │       └─► Calculates estimated BPM and onset phase target (0.0)
     │
     ├─► Flywheel Accumulator: totalBeats += (bufferFrames / sampleRate) * (BPM / 60.0)
+    │       └─► Second-order phase slew tracks pendingPhaseNudge
     │
     └─► CVRegistry.updateBeatAnchor(totalBeats, bpm, nanoTime)
               │  (@Volatile primitive fields update: zero heap allocation)
@@ -33,43 +34,27 @@ JACK / Java Sound Callback (Audio Engine Thread)
 The default and recommended mode for live performances. `AudioEngine.manualBpm` drives the flywheel directly. No background beat detection algorithms execute, guaranteeing zero tempo jitter.
 
 ### 2. Automatic Detection (`isBpmLocked = false`)
-When unlocked, [`BeatDetector.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/cv/BeatClock.kt) evaluates audio envelopes using one of three selectable algorithms:
+When unlocked, [`BeatDetector.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt) evaluates audio envelopes inline with zero allocations using one of two modes:
 
-#### A. Phase-Locked Loop (PLL) — `BeatDetectionMode.PLL`
-An internal oscillator nudges its period $T_{period}$ whenever a transient onset peak occurs:
-$$\text{Error} = \frac{\phi_{current}}{T_{period}} - 0.5$$
+#### A. Energy-Difference + PLL Soft-Sync — `BeatDetectionMode.ENERGY_DIFFERENCE`
+Maintains a short-time energy variance (`localEnergyAverage`). If the target band energy exceeds `localEnergyAverage * energyThreshold` and sufficient time has passed, an onset peak is registered.
+The time between peaks is used to estimate BPM, which is smoothed via a Phase-Locked Loop (PLL) adaptation rate.
+When an onset occurs, `pendingPhaseNudge` is set to `0.0`, signaling the flywheel to smoothly align its cosine output to the transient.
 
-Period and phase adjust toward transient alignment using dual time constants ($\alpha = \text{pllAdaptationRate}$, $\beta = \alpha \times 0.01$):
-$$\phi \leftarrow \phi - \text{Error} \times T \times \alpha$$
-$$T \leftarrow T - \text{Error} \times T \times \beta$$
-
-Evaluated strictly on local onset peaks ($\text{flux}_t > \text{flux}_{t-1} \land \text{flux}_t > \text{flux}_{t+1}$) to prevent sample-block over-triggering.
-
-#### B. STFT Comb Filter Bank — `BeatDetectionMode.STFT_COMB`
-Runs on a background analysis thread every 16 blocks over onset spectral flux history:
-$$\text{Energy}(BPM) = \sum_{k=0}^{3} \text{flux}\left[\text{histIdx} - k \times \text{delay}_{BPM}\right]$$
-Includes sub-grid parabolic interpolation around the peak comb energy index for floating-point BPM accuracy, and a phase anchor cross-correlation pass to align beat phase.
-
-#### C. Autocorrelation — `BeatDetectionMode.AUTOCORRELATION`
-Runs on a background analysis thread. Evaluates onset flux autocorrelation across candidate lags $\tau$:
-$$AC(\tau) = \sum_{i=0}^N \text{flux}[i] \cdot \text{flux}[i - \tau]$$
-Applies sub-block parabolic interpolation ($\tau_{\text{sub}} = k_{\text{best}} + \Delta k$) to eliminate integer block discretization steps, paired with phase anchor impulse tracking.
+#### B. Complex Domain Onset + Biquad Resonator — `BeatDetectionMode.RESONATOR`
+Passes the DC-blocked target band envelope into a highly resonant bandpass filter (Biquad) tuned to the current BPM.
+The resonator acts as a "ringing" flywheel that naturally outputs a sine wave. Zero crossings of this sine wave trigger phase nudges and update the underlying tempo estimation.
 
 ---
 
 ## Flywheel Phase Slewing & Thread Safety
 
-Background beat detection results publish a target phase anchor ($\text{pendingPhaseNudge}$). Rather than stepping `totalBeats` instantaneously—which creates visual phase pops or clicks—`AudioEngine` applies second-order phase slewing:
+Beat detection algorithms publish a target phase anchor (`pendingPhaseNudge = 0.0`). Rather than stepping `totalBeats` instantaneously—which creates visual phase pops or clicks—`AudioEngine` applies second-order phase slewing:
+
 $$\Delta \phi = \text{phaseTarget} - (\text{totalBeats} \bmod 1.0)$$
 $$\text{totalBeats} \leftarrow \text{totalBeats} + \text{slewAmount}$$
+
 The discrepancy bleeds off smoothly over subsequent audio blocks, delivering continuous, glitch-free sine wave modulation.
-
-Heavy comb filter and autocorrelation analysis tasks execute on a background daemon thread (`BeatDetector-Analysis`) to protect the real-time audio callback.
-
-To prevent data races without mutex locks:
-1. Two pre-allocated `AnalysisSnapshot` instances (`snapshot1`, `snapshot2`) store envelope history and frame metadata.
-2. The audio thread populates the inactive snapshot and publishes it via a `@Volatile pendingSnapshot` reference swap.
-3. The background thread reads `pendingSnapshot` once at the start of execution, maintaining thread safety without mutex contention.
 
 ---
 

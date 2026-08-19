@@ -4,13 +4,11 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import java.nio.FloatBuffer
-import llm.slop.liquidlsd.ui.UITheme
 
 class AudioEngineTest {
 
     @Test
     fun testProcessAudioBoundsSafety() {
-        // 1. processAudio with valid, zero, and max frames without throwing
         val maxFrames = 16384
         
         val buf1 = FloatBuffer.allocate(0)
@@ -28,23 +26,7 @@ class AudioEngineTest {
         AudioEngine.presetIOInFlight.set(true)
         assertTrue(AudioEngine.presetIOInFlight.get())
         
-        // Verify AudioEngine is accessible and we can set the flag,
-        // which the watchdog loop reads.
         AudioEngine.presetIOInFlight.set(false)
         assertFalse(AudioEngine.presetIOInFlight.get())
-    }
-
-    @Test
-    fun testBeatDetectorHandoff() {
-        val detector = BeatDetector()
-        val initialGen = detector.writeGen.get()
-        
-        // Simulate 16 blocks to trigger an analysis handoff
-        for (i in 0 until 16) {
-            detector.processBlock(0.5f, 0.5f, 0.5f, 0.5f, 44100f, 1024)
-        }
-        
-        val newGen = detector.writeGen.get()
-        assertTrue(newGen > initialGen, "Generation counter should have advanced")
     }
 }

@@ -232,39 +232,7 @@ object AudioEnginePanel {
 
             ImGui.spacing()
             
-            // Window Size Combo
-            val windowSizes = intArrayOf(1024, 2048, 4096, 8192)
-            if (ImGui.beginCombo("Window Size", settings.windowSize.toString())) {
-                windowSizes.forEach { ws ->
-                    val isSelected = settings.windowSize == ws
-                    if (ImGui.selectable(ws.toString(), isSelected)) {
-                        settings.windowSize = ws
-                    }
-                    if (isSelected) ImGui.setItemDefaultFocus()
-                }
-                ImGui.endCombo()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("FFT window size. Larger is more frequency-accurate; smaller is more time-accurate.")
-            }
-
-            // Hop Size Combo
-            val hopSizes = intArrayOf(128, 256, 512, 1024)
-            if (ImGui.beginCombo("Hop Size", settings.hopSize.toString())) {
-                hopSizes.forEach { hs ->
-                    val isSelected = settings.hopSize == hs
-                    if (ImGui.selectable(hs.toString(), isSelected)) {
-                        settings.hopSize = hs
-                    }
-                    if (isSelected) ImGui.setItemDefaultFocus()
-                }
-                ImGui.endCombo()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Step size between analysis frames. Lower values increase temporal resolution.")
-            }
-
-            floorArr[0] = settings.bpmSearchFloor
+                        floorArr[0] = settings.bpmSearchFloor
             if (ImGui.sliderInt("BPM Floor", floorArr, 40, 120)) { 
                 settings.bpmSearchFloor = floorArr[0]
             }
@@ -280,28 +248,34 @@ object AudioEnginePanel {
                 ImGui.setTooltip("Maximum limit for tempo estimation to prevent double-tempo octave tracking errors.")
             }
             
-            resArr[0] = settings.bpmGridResolution
-            if (ImGui.sliderFloat("BPM Resolution", resArr, 0.1f, 2.0f, "%.1f")) { 
-                settings.bpmGridResolution = resArr[0]
+            val thresholdArr = FloatArray(1) { settings.energyThreshold }
+            if (ImGui.sliderFloat("Energy Threshold", thresholdArr, 1.0f, 3.0f, "%.2f")) {
+                settings.energyThreshold = thresholdArr[0]
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("The granularity of the tempo search grid (in BPM steps).")
+                ImGui.setTooltip("Threshold multiplier for energy-difference trigger.")
+            }
+
+            val pllRateArr = FloatArray(1) { settings.pllAdaptationRate }
+            if (ImGui.sliderFloat("PLL Adaptation", pllRateArr, 0.01f, 1.0f, "%.2f")) {
+                settings.pllAdaptationRate = pllRateArr[0]
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("How quickly the PLL tracks tempo changes.")
+            }
+
+            val biquadQArr = FloatArray(1) { settings.biquadQ }
+            if (ImGui.sliderFloat("Resonator Q", biquadQArr, 0.5f, 10.0f, "%.2f")) {
+                settings.biquadQ = biquadQArr[0]
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Quality factor (resonance) for the Complex Domain biquad filter.")
             }
             
-            winLenArr[0] = settings.analysisWindowLength
-            if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) { 
-                settings.analysisWindowLength = winLenArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Duration of history buffer analyzed for autocorrelation and beat estimation.")
-            }
-            
-            pllArr[0] = settings.pllAdaptationRate
-            if (ImGui.sliderFloat("PLL Adaptation", pllArr, 0.01f, 1.0f, "%.2f")) { 
-                settings.pllAdaptationRate = pllArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Controls how quickly the Phase-Locked Loop (PLL) tracks sudden tempo changes.")
+            if (!session.audioEngine.beatDetector.isTargetLevelSufficient) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
+                ImGui.textWrapped("${Icons.ALERT} Low Signal: Not enough energy in the selected target band (${settings.target.name}) for reliable analysis. Consider switching the Target to HIGH or UNFILTERED if playing from small laptop speakers.")
+                ImGui.popStyleColor()
             }
             
             ImGui.spacing()
