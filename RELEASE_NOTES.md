@@ -1,5 +1,32 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.26
+
+> [!NOTE]
+> **Release 1.0.0-beta.26** introduces dynamic render resolution configuration, multi-aspect ratio rendering support, and configurable display output scaling modes.
+
+### Key Highlights
+
+#### 1. Dynamic Render Resolution Pipeline
+- **Resolution Presets & Custom Dimensions**: Added configurable internal rendering resolutions under **Settings -> Video & Display**, featuring standard 16:9 presets (1080p, 720p, 540p, 1440p, 4K UHD), 4:3 presets (UXGA 1600x1200, XGA 1024x768, SVGA 800x600), 1:1 square presets (1080x1080, 800x800, 600x600), and custom dimensions ($128 \times 128$ to $7680 \times 4320$).
+- **Live Pipeline Resizing**: Decks and Mixer support dynamic reallocation (`Deck.resize` and `Mixer.resize`) on the main OpenGL thread without interrupting playback or losing preset state.
+- **GPU Performance Relief**: Downscaling from 1080p to 720p or 540p reduces raymarching pixel evaluation by 55%–75%, allowing raymarchers to run smoothly on laptops and integrated GPUs.
+
+#### 2. Display Output Scaling Modes (`ViewportHelper`)
+- **Fit (Letterbox / Pillarbox)**: Preserves exact aspect ratio of the render target with border bars when outputting to mismatched monitor aspect ratios.
+- **Fill (Crop)**: Centers and crops edges to fill the display with no black bars.
+- **Stretch**: Stretches the image to fill the output display.
+
+#### 3. Aspect-Aware UI Previews
+- **Dynamic Preview Monitors**: `MixerMonitorLayoutCalculator` and `MixerMonitorPanel` dynamically scale Deck A, Deck B, Deck C, and Master preview heights to match the active render aspect ratio.
+
+#### 4. Opt-In Secondary Video Output & Menu Control
+- **No Unsolicited Window Popups**: The secondary window is strictly opt-in on single-monitor setups and will not pop up automatically over the UI on launch. When an external monitor is connected, it automatically fullscreens to that display.
+- **Top Menu Bar Toggle**: Added an **"Output Window"** menu item in the main menu bar to explicitly toggle the external/secondary output window when needed (e.g. for OBS window capture).
+- **Spacebar Hotkey Removed**: Removed the Spacebar toggle to prevent accidental window triggers during performance.
+
+---
+
 ## Version 1.0.0-beta.25
 
 > [!NOTE]

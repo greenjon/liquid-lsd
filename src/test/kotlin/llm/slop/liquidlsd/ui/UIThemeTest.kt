@@ -31,6 +31,10 @@ class UIThemeTest {
             UITheme.cleanModeEnabled = true
             UITheme.tooltipsEnabled = false
             UITheme.maxFps = 60
+            UITheme.renderResolutionPreset = UITheme.ResolutionPreset.CUSTOM
+            UITheme.customRenderWidth = 1600
+            UITheme.customRenderHeight = 1200
+            UITheme.outputScaleMode = UITheme.OutputScaleMode.FILL
 
             // Save to disk
             UITheme.saveSettings()
@@ -45,6 +49,10 @@ class UIThemeTest {
             UITheme.cleanModeEnabled = false
             UITheme.tooltipsEnabled = true
             UITheme.maxFps = 30
+            UITheme.renderResolutionPreset = UITheme.ResolutionPreset.RES_1080P
+            UITheme.customRenderWidth = 1920
+            UITheme.customRenderHeight = 1080
+            UITheme.outputScaleMode = UITheme.OutputScaleMode.FIT
 
             // Reload via reflection
             val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
@@ -60,6 +68,12 @@ class UIThemeTest {
             assertTrue(UITheme.cleanModeEnabled)
             assertFalse(UITheme.tooltipsEnabled)
             assertEquals(60, UITheme.maxFps)
+            assertEquals(UITheme.ResolutionPreset.CUSTOM, UITheme.renderResolutionPreset)
+            assertEquals(1600, UITheme.customRenderWidth)
+            assertEquals(1200, UITheme.customRenderHeight)
+            assertEquals(UITheme.OutputScaleMode.FILL, UITheme.outputScaleMode)
+            assertEquals(1600, UITheme.renderWidth)
+            assertEquals(1200, UITheme.renderHeight)
 
         } finally {
             // Restore original settings file if backed up, or delete test file

@@ -13,7 +13,9 @@ class MenuBar(
     private val presetState: PresetGridState,
     private val onTriggerExitFlow: () -> Unit,
     private val onOpenSettings: () -> Unit,
-    private val onOpenAudioEngineMonitor: () -> Unit
+    private val onOpenAudioEngineMonitor: () -> Unit,
+    private val onToggleOutputWindow: () -> Unit = {},
+    private val isOutputWindowOpen: () -> Boolean = { false }
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -127,6 +129,14 @@ class MenuBar(
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                     ImGui.setTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
+                }
+
+                val isOutOpen = isOutputWindowOpen()
+                if (ImGui.menuItem("Output Window", "", isOutOpen)) {
+                    onToggleOutputWindow()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
                 }
 
                 if (ImGui.beginMenu("Help")) {

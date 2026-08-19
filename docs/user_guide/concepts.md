@@ -100,3 +100,25 @@ The central Mixer blends the outputs of Deck A and Deck B to form the master vid
 
 ### Crossfader Modulation
 The `crossfade` slider interpolates between Deck A (0.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.
+
+---
+
+## Render Resolution & Video Output Scaling
+
+Liquid LSD provides granular control over internal render resolution and external display output scaling under **Settings -> Video & Display**:
+
+### 1. Resolution Presets & Custom Dimensions
+- **16:9 Presets**: 1080p ($1920 \times 1080$), 720p ($1280 \times 720$), 540p ($960 \times 540$), 1440p ($2560 \times 1440$), 4K UHD ($3840 \times 2160$).
+- **4:3 Presets**: UXGA ($1600 \times 1200$), XGA ($1024 \times 768$), SVGA ($800 \times 600$) for club projectors and vintage CRT displays.
+- **1:1 Square Presets**: $1080 \times 1080$, $800 \times 800$, $600 \times 600$ for modular stage LED walls and livestreams.
+- **Custom**: User-specified width and height (from $128 \times 128$ to $7680 \times 4320$).
+
+### 2. GPU Performance Scaling
+Running complex distance-field raymarchers (e.g., KIFS, Mandelbulb, Pseudo-Kleinian) across three decks simultaneously evaluates millions of pixels per frame. Switching from 1080p to 720p or 540p reduces GPU load by 55%–75%, allowing smooth 60 FPS performance on laptops and integrated GPUs.
+
+### 3. Display Scaling Modes
+When the internal render aspect ratio differs from the connected display or secondary projector:
+- **Fit (Letterbox / Pillarbox)**: Maintains exact render aspect ratio with black border bars.
+- **Fill (Crop)**: Centers and crops edges to completely fill the screen without borders.
+- **Stretch**: Stretches the image to fill the output screen.
+

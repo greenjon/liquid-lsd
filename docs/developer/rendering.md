@@ -35,6 +35,20 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 
 ---
 
+## Dynamic Render Resolution & Viewport Scaling
+
+Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios (e.g. 1080p, 720p, 540p, 4K, 4:3 UXGA 1600x1200, 1:1 Square 800x800, or Custom) configured via `UITheme`:
+
+- **Dynamic Pipeline Resizing**: `Mixer.resize(width, height)` and `Deck.resize(width, height)` reallocate `cleanFBO`, `fb1`, `fb2`, and `masterFBO` on the main OpenGL thread without interrupting playback or dropping preset states.
+- **Shader Aspect Awareness**: Generative fragment shaders evaluate `float aspect = uResolution.x / uResolution.y;` from `targetFBO` dimensions, rendering undistorted geometry across any aspect ratio.
+- **Display Scaling with `ViewportHelper`**: [`ViewportHelper.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/ViewportHelper.kt) computes letterbox, pillarbox, and fill coordinates for secondary monitor outputs and background video blits:
+  - `FIT`: Preserves exact content aspect ratio with letterboxing or pillarboxing.
+  - `FILL`: Centers and crops edges to completely fill the target screen.
+  - `STRETCH`: Stretches content to fill the target viewport.
+- **Aspect-Adaptive UI Previews**: `MixerMonitorLayoutCalculator` dynamically adjusts Deck A, Deck B, Deck C, and Master preview monitor heights to match the active render aspect ratio.
+
+---
+
 ## Source Documentation Registry (`SourceDocRegistry.kt`)
 
 [`SourceDocRegistry.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:

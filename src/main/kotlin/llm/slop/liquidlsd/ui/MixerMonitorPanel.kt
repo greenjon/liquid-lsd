@@ -27,7 +27,8 @@ class MixerMonitorPanel(
             scrollbarWidth = style.getScrollbarSize(),
             textLineHeightWithSpacing = ImGui.getTextLineHeightWithSpacing(),
             frameHeightWithSpacing = ImGui.getFrameHeightWithSpacing(),
-            itemSpacingY = style.getItemSpacingY()
+            itemSpacingY = style.getItemSpacingY(),
+            aspectRatio = session.uiTheme.renderAspectRatio
         )
         val availW = layout.renderWidth
         val masterH = layout.masterHeight

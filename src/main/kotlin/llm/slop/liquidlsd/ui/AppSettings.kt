@@ -22,5 +22,9 @@ data class AppSettings(
     val col2Ratio: Float = 0.40f,
     val libraryRatio: Float = 0.50f,
     val lastCustomLibraryRatio: Float = 0.50f,
-    val gridCellRatio: Float = 1.0f
+    val gridCellRatio: Float = 1.0f,
+    val renderResolutionPreset: UITheme.ResolutionPreset = UITheme.ResolutionPreset.RES_1080P,
+    val customRenderWidth: Int = 1920,
+    val customRenderHeight: Int = 1080,
+    val outputScaleMode: UITheme.OutputScaleMode = UITheme.OutputScaleMode.FIT
 )

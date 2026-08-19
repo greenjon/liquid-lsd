@@ -72,8 +72,22 @@ fun main() {
     // Initialize Session Context
     val session = llm.slop.liquidlsd.SessionContext()
 
+    var secondaryWindow = 0L
+
     // Initialize UI Manager
-    val uiManager = UIManager(window, session)
+    val uiManager = UIManager(
+        windowHandle = window,
+        session = session,
+        onToggleOutputWindow = {
+            if (secondaryWindow == 0L) {
+                secondaryWindow = createSecondaryWindow(window)
+            } else {
+                destroySecondaryWindow(secondaryWindow)
+                secondaryWindow = 0L
+            }
+        },
+        isOutputWindowOpen = { secondaryWindow != 0L }
+    )
 
     glfwSetWindowCloseCallback(window) { win ->
         glfwSetWindowShouldClose(win, false)
@@ -97,9 +111,12 @@ fun main() {
         c = 14,
         d = 14
     )
+    val initialWidth = UITheme.renderWidth
+    val initialHeight = UITheme.renderHeight
+
     val mandalaA = masterMandala.clone()
     mandalaA.recipe = recipeA
-    val deckA = Deck(mandalaA)
+    val deckA = Deck(mandalaA, initialWidth, initialHeight)
 
     // Create Deck B with a 3-petal recipe (shifted start hue)
     val recipeB = MandalaRatio(
@@ -112,7 +129,7 @@ fun main() {
     val mandalaB = masterMandala.clone()
     mandalaB.recipe = recipeB
     mandalaB.parameters["Hue Offset"]?.set(0.5f) // starting color offset for distinction
-    val deckB = Deck(mandalaB)
+    val deckB = Deck(mandalaB, initialWidth, initialHeight)
 
     // Create Deck C (for preview / live tweaking)
     val recipeC = MandalaRatio(
@@ -124,10 +141,10 @@ fun main() {
     )
     val mandalaC = masterMandala.clone()
     mandalaC.recipe = recipeC
-    val deckC = Deck(mandalaC)
+    val deckC = Deck(mandalaC, initialWidth, initialHeight)
 
     // Create Mixer
-    val mixer = Mixer(deckA, deckB, deckC)
+    val mixer = Mixer(deckA, deckB, deckC, initialWidth, initialHeight)
     if (UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
         PresetManager.startEmpty(mixer)
     } else {
@@ -154,21 +171,19 @@ fun main() {
     // Start background watchdogs for MIDI and JACK
     llm.slop.liquidlsd.audio.MidiJackWatchdog.start()
 
-    var secondaryWindow = 0L
-
-    // Auto-detect and open secondary window on startup if external monitor is found
+    // Auto-detect and open secondary window on startup ONLY if an external monitor is found
     val initialExternalMonitor = getExternalMonitor()
     if (initialExternalMonitor != null) {
         secondaryWindow = createSecondaryWindow(window)
     }
 
-    // Setup key callback chaining to allow "f", "Spacebar", CTRL-, and CTRL= controls
+    // Setup key callback chaining to allow "f", CTRL-, and CTRL= controls
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
         val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_EQUAL)
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
-        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_SPACE) && isShortcutAllowed) || isFontSizeHotKey
+        val isHotKey = (key == GLFW_KEY_F && isShortcutAllowed) || isFontSizeHotKey
 
         if (action == GLFW_PRESS) {
             if (isFontSizeHotKey) {
@@ -180,13 +195,6 @@ fun main() {
             } else if (key == GLFW_KEY_F && isShortcutAllowed) {
                 UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled
                 logger.info { "Clean mode toggled: ${UITheme.cleanModeEnabled}" }
-            } else if (key == GLFW_KEY_SPACE && isShortcutAllowed) {
-                if (secondaryWindow == 0L) {
-                    secondaryWindow = createSecondaryWindow(window)
-                } else {
-                    destroySecondaryWindow(secondaryWindow)
-                    secondaryWindow = 0L
-                }
             }
         }
         if (!isHotKey) {
@@ -228,6 +236,12 @@ fun main() {
         org.lwjgl.opengl.GL15.glBeginQuery(org.lwjgl.opengl.GL33.GL_TIME_ELAPSED, queryIds[frameIndex % 2])
 
         // === RENDERING PHASE ===
+        val targetRenderW = UITheme.renderWidth
+        val targetRenderH = UITheme.renderHeight
+        if (mixer.width != targetRenderW || mixer.height != targetRenderH) {
+            logger.info { "Resizing render pipeline from ${mixer.width}x${mixer.height} to ${targetRenderW}x${targetRenderH}" }
+            mixer.resize(targetRenderW, targetRenderH)
+        }
 
         // Apply loaded presets from queues atomically on the main thread
         PresetManager.applyPendingPresets(mixer)
@@ -265,6 +279,13 @@ fun main() {
         glClear(GL_COLOR_BUFFER_BIT)
 
         if (UITheme.backgroundVideoEnabled || UITheme.cleanModeEnabled) {
+            val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
+                w[0], h[0],
+                mixer.width, mixer.height,
+                UITheme.outputScaleMode
+            )
+            glViewport(vp.x, vp.y, vp.width, vp.height)
+
             glEnable(GL_BLEND)
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
 
@@ -303,6 +324,13 @@ fun main() {
             glViewport(0, 0, sw[0], sh[0])
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
             glClear(GL_COLOR_BUFFER_BIT)
+
+            val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
+                sw[0], sh[0],
+                mixer.width, mixer.height,
+                UITheme.outputScaleMode
+            )
+            glViewport(vp.x, vp.y, vp.width, vp.height)
 
             glEnable(GL_BLEND)
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)

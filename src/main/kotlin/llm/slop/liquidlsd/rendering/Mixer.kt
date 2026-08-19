@@ -13,11 +13,23 @@ class Mixer(
     val deckA: Deck,
     val deckB: Deck,
     val deckC: Deck,
-    val width: Int = 1920,
-    val height: Int = 1080
+    var width: Int = 1920,
+    var height: Int = 1080
 ) : ParameterOwner {
     // The master FBO where the blended result is rendered
-    val masterFBO = FBO(width, height)
+    var masterFBO = FBO(width, height)
+
+    fun resize(newWidth: Int, newHeight: Int) {
+        if (width == newWidth && height == newHeight) return
+        width = newWidth
+        height = newHeight
+        masterFBO.dispose()
+        masterFBO = FBO(width, height)
+        masterFBO.clear(0f, 0f, 0f, 0f)
+        deckA.resize(newWidth, newHeight)
+        deckB.resize(newWidth, newHeight)
+        deckC.resize(newWidth, newHeight)
+    }
 
     // Blend parameters
     val crossfade = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR) // -1.0 = Deck A, 1.0 = Deck B

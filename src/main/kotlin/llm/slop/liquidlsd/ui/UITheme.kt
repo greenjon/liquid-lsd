@@ -47,6 +47,27 @@ object UITheme {
         NEON
     }
 
+    enum class ResolutionPreset(val displayName: String, val width: Int, val height: Int) {
+        RES_1080P("1080p (1920x1080 - 16:9)", 1920, 1080),
+        RES_720P("720p (1280x720 - 16:9)", 1280, 720),
+        RES_540P("540p (960x540 - 16:9)", 960, 540),
+        RES_1440P("1440p (2560x1440 - 16:9)", 2560, 1440),
+        RES_4K("4K UHD (3840x2160 - 16:9)", 3840, 2160),
+        RES_UXGA("UXGA (1600x1200 - 4:3)", 1600, 1200),
+        RES_XGA("XGA (1024x768 - 4:3)", 1024, 768),
+        RES_SVGA("SVGA (800x600 - 4:3)", 800, 600),
+        RES_SQUARE_1080("Square (1080x1080 - 1:1)", 1080, 1080),
+        RES_SQUARE_800("Square (800x800 - 1:1)", 800, 800),
+        RES_SQUARE_600("Square (600x600 - 1:1)", 600, 600),
+        CUSTOM("Custom", 1920, 1080)
+    }
+
+    enum class OutputScaleMode(val displayName: String) {
+        FIT("Fit (Letterbox / Pillarbox)"),
+        FILL("Fill (Crop)"),
+        STRETCH("Stretch")
+    }
+
     // -- Mutable sizing knobs (user-tweakable from Settings later) -------------
 
     @Volatile
@@ -145,6 +166,31 @@ object UITheme {
     var gridCellRatio: Float
         get() = settings.gridCellRatio
         set(value) { settings = settings.copy(gridCellRatio = value) }
+
+    var renderResolutionPreset: ResolutionPreset
+        get() = settings.renderResolutionPreset
+        set(value) { settings = settings.copy(renderResolutionPreset = value) }
+
+    var customRenderWidth: Int
+        get() = settings.customRenderWidth
+        set(value) { settings = settings.copy(customRenderWidth = value.coerceIn(128, 7680)) }
+
+    var customRenderHeight: Int
+        get() = settings.customRenderHeight
+        set(value) { settings = settings.copy(customRenderHeight = value.coerceIn(128, 4320)) }
+
+    var outputScaleMode: OutputScaleMode
+        get() = settings.outputScaleMode
+        set(value) { settings = settings.copy(outputScaleMode = value) }
+
+    val renderWidth: Int
+        get() = if (renderResolutionPreset == ResolutionPreset.CUSTOM) customRenderWidth else renderResolutionPreset.width
+
+    val renderHeight: Int
+        get() = if (renderResolutionPreset == ResolutionPreset.CUSTOM) customRenderHeight else renderResolutionPreset.height
+
+    val renderAspectRatio: Float
+        get() = if (renderWidth > 0) renderHeight.toFloat() / renderWidth.toFloat() else 9f / 16f
 
     init {
         loadSettings()
@@ -256,6 +302,14 @@ object UITheme {
                 (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { libraryRatio = it.coerceIn(0.10f, 0.90f) }
                 (props.getProperty("lastCustomLibraryRatio") ?: props.getProperty("lastCustomAssetBrowserRatio"))?.toFloatOrNull()?.let { lastCustomLibraryRatio = it.coerceIn(0.10f, 0.90f) }
                 props.getProperty("gridCellRatio")?.toFloatOrNull()?.let { gridCellRatio = it.coerceIn(0.70f, 2.00f) }
+                props.getProperty("renderResolutionPreset")?.let { saved ->
+                    renderResolutionPreset = try { ResolutionPreset.valueOf(saved) } catch (e: Exception) { ResolutionPreset.RES_1080P }
+                }
+                props.getProperty("customRenderWidth")?.toIntOrNull()?.let { customRenderWidth = it.coerceIn(128, 7680) }
+                props.getProperty("customRenderHeight")?.toIntOrNull()?.let { customRenderHeight = it.coerceIn(128, 4320) }
+                props.getProperty("outputScaleMode")?.let { saved ->
+                    outputScaleMode = try { OutputScaleMode.valueOf(saved) } catch (e: Exception) { OutputScaleMode.FIT }
+                }
             } else {
                 logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps" }
             }
@@ -292,6 +346,10 @@ object UITheme {
             props.setProperty("libraryRatio", libraryRatio.toString())
             props.setProperty("lastCustomLibraryRatio", lastCustomLibraryRatio.toString())
             props.setProperty("gridCellRatio", gridCellRatio.toString())
+            props.setProperty("renderResolutionPreset", renderResolutionPreset.name)
+            props.setProperty("customRenderWidth", customRenderWidth.toString())
+            props.setProperty("customRenderHeight", customRenderHeight.toString())
+            props.setProperty("outputScaleMode", outputScaleMode.name)
             val tmpFile = File("${settingsFile.absolutePath}.tmp")
             tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             java.nio.file.Files.move(

@@ -11,18 +11,43 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
  */
 class Deck(
     var source: VisualSource,
-    val width: Int = 1920,
-    val height: Int = 1080
+    var width: Int = 1920,
+    var height: Int = 1080
 ) : ParameterOwner {
     var isEmpty: Boolean = false
 
     // FBO for rendering the clean visual source output
-    val cleanFBO = FBO(width, height)
+    var cleanFBO = FBO(width, height)
 
     // Ping-pong feedback FBOs
-    val fb1 = FBO(width, height)
-    val fb2 = FBO(width, height)
+    var fb1 = FBO(width, height)
+    var fb2 = FBO(width, height)
     private var fbIndex = 0
+
+    fun resize(newWidth: Int, newHeight: Int) {
+        if (width == newWidth && height == newHeight) return
+        width = newWidth
+        height = newHeight
+        cleanFBO.dispose()
+        fb1.dispose()
+        fb2.dispose()
+        cleanFBO = FBO(width, height)
+        fb1 = FBO(width, height)
+        fb2 = FBO(width, height)
+        fb1.clear(0f, 0f, 0f, 0f)
+        fb2.clear(0f, 0f, 0f, 0f)
+        cleanFBO.clear(0f, 0f, 0f, 0f)
+        fbIndex = 0
+        availableSources.forEach { src ->
+            if (src is DynamicVisualSource) {
+                src.fb1?.dispose()
+                src.fb2?.dispose()
+                src.fb1 = null
+                src.fb2 = null
+                src.fbIndex = 0
+            }
+        }
+    }
 
     // Keep instances of all visual sources
     val availableSources = mutableListOf<VisualSource>()

@@ -24,6 +24,7 @@ object SettingsPanel {
     enum class Category(val label: String) {
         APPEARANCE("Appearance"),
         PRESET_GRID("Preset Grid"),
+        VIDEO_DISPLAY("Video & Display"),
         AUDIO_ENGINE("Audio Engine"),
         MIDI_CONTROL("MIDI & Controls"),
         GENERAL("General")
@@ -93,11 +94,12 @@ object SettingsPanel {
         // Right Content Child
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
-                Category.APPEARANCE   -> drawAppearance(session, currentSize, onSizeChanged)
-                Category.PRESET_GRID  -> drawPresetGridSettings(session)
-                Category.AUDIO_ENGINE -> drawAudioEngineSettings(session)
-                Category.MIDI_CONTROL -> drawMidiControlSettings(session)
-                Category.GENERAL      -> drawGeneralSettings(session)
+                Category.APPEARANCE    -> drawAppearance(session, currentSize, onSizeChanged)
+                Category.PRESET_GRID   -> drawPresetGridSettings(session)
+                Category.VIDEO_DISPLAY -> drawVideoDisplaySettings(session)
+                Category.AUDIO_ENGINE  -> drawAudioEngineSettings(session)
+                Category.MIDI_CONTROL  -> drawMidiControlSettings(session)
+                Category.GENERAL       -> drawGeneralSettings(session)
             }
         }
         ImGui.endChild()
@@ -240,9 +242,72 @@ object SettingsPanel {
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Display Audio transient / trigger modulation column in Preset Grid")
         }
+    }
+
+    private fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+
+    private fun drawVideoDisplaySettings(session: llm.slop.liquidlsd.SessionContext) {
+        session.uiTheme.h2("Render Resolution")
+        ImGui.separator()
+        ImGui.spacing()
+
+        session.uiTheme.caption("Internal render resolution for Decks, Mixer, and Video Output:")
+        ImGui.spacing()
+
+        val presets = UITheme.ResolutionPreset.values()
+        val presetNames = presets.map { it.displayName }.toTypedArray()
+        val currentPresetIdx = imgui.type.ImInt(session.uiTheme.renderResolutionPreset.ordinal)
+        if (ImGui.combo("Resolution Preset", currentPresetIdx, presetNames)) {
+            val nextPreset = presets[currentPresetIdx.get()]
+            session.uiTheme.renderResolutionPreset = nextPreset
+            if (nextPreset != UITheme.ResolutionPreset.CUSTOM) {
+                session.uiTheme.customRenderWidth = nextPreset.width
+                session.uiTheme.customRenderHeight = nextPreset.height
+            }
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Select internal target rendering resolution. Lower resolutions (e.g. 720p or 540p) significantly reduce GPU load on heavy raymarch shaders.")
+        }
+
+        if (session.uiTheme.renderResolutionPreset == UITheme.ResolutionPreset.CUSTOM) {
+            ImGui.spacing()
+            val customW = imgui.type.ImInt(session.uiTheme.customRenderWidth)
+            if (ImGui.inputInt("Custom Width", customW)) {
+                session.uiTheme.customRenderWidth = customW.get().coerceIn(128, 7680)
+                session.uiTheme.saveSettings()
+            }
+            val customH = imgui.type.ImInt(session.uiTheme.customRenderHeight)
+            if (ImGui.inputInt("Custom Height", customH)) {
+                session.uiTheme.customRenderHeight = customH.get().coerceIn(128, 4320)
+                session.uiTheme.saveSettings()
+            }
+        }
 
         ImGui.spacing()
-        session.uiTheme.h2("Video & Performance")
+        val activeW = session.uiTheme.renderWidth
+        val activeH = session.uiTheme.renderHeight
+        val gcdVal = gcd(activeW, activeH).coerceAtLeast(1)
+        session.uiTheme.body("Active: ${activeW}x${activeH} (${activeW / gcdVal}:${activeH / gcdVal})")
+
+        ImGui.spacing()
+        session.uiTheme.h2("Display Scaling")
+        ImGui.separator()
+        ImGui.spacing()
+
+        val scaleModes = UITheme.OutputScaleMode.values()
+        val scaleModeNames = scaleModes.map { it.displayName }.toTypedArray()
+        val currentScaleIdx = imgui.type.ImInt(session.uiTheme.outputScaleMode.ordinal)
+        if (ImGui.combo("Output Scaling", currentScaleIdx, scaleModeNames)) {
+            session.uiTheme.outputScaleMode = scaleModes[currentScaleIdx.get()]
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("How output is scaled when target screen aspect ratio differs from render resolution: Fit (Letterbox/Pillarbox), Fill (Crop), or Stretch.")
+        }
+
+        ImGui.spacing()
+        session.uiTheme.h2("Performance & Background")
         ImGui.separator()
         ImGui.spacing()
 

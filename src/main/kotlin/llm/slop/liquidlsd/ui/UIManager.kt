@@ -29,7 +29,12 @@ import llm.slop.liquidlsd.presets.PlayQueueManager
 /**
  * Manages the ImGui overlay for desktop control.
  */
-class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.SessionContext) {
+class UIManager(
+    private val windowHandle: Long,
+    val session: llm.slop.liquidlsd.SessionContext,
+    private val onToggleOutputWindow: () -> Unit = {},
+    private val isOutputWindowOpen: () -> Boolean = { false }
+) {
     private val logger = KotlinLogging.logger {}
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
@@ -66,7 +71,9 @@ class UIManager(private val windowHandle: Long, val session: llm.slop.liquidlsd.
         presetState = presetState,
         onTriggerExitFlow = { triggerExitFlow() },
         onOpenSettings = { pendingOpenSettings = true },
-        onOpenAudioEngineMonitor = { pendingOpenAudioEngineMonitor = true }
+        onOpenAudioEngineMonitor = { pendingOpenAudioEngineMonitor = true },
+        onToggleOutputWindow = onToggleOutputWindow,
+        isOutputWindowOpen = isOutputWindowOpen
     )
 
     private val missingItemsPanel = MissingItemsPanel()
