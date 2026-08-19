@@ -123,5 +123,35 @@ class UIThemeTest {
             assertEquals(hex, swatch.hex)
         }
     }
+
+    @Test
+    fun testLunarizedPaletteExactHexCodes() {
+        val expected = mapOf(
+            "base03" to "#360b00",
+            "base02" to "#421307",
+            "base01" to "#755f58",
+            "base00" to "#836d65",
+            "base0"  to "#968583",
+            "base1"  to "#a19393",
+            "base2"  to "#d5dbee",
+            "base3"  to "#e3eafd",
+            "cyan"   to "#23cdd0",
+            "blue"   to "#34b4e9",
+            "indigo" to "#4a76ff",
+            "violet" to "#7a66ff",
+            "red"    to "#d55e67",
+            "orange" to "#d9742d",
+            "yellow" to "#938e3b",
+            "green"  to "#2cc97d"
+        )
+        val palette = ColorTunerPanel.PALETTES.find { it.theme == UITheme.Theme.DARK_LUNARIZED }
+        assertNotNull(palette)
+        assertEquals(16, palette.swatches.size)
+        expected.forEach { (id, hex) ->
+            val swatch = palette.swatches.find { it.id == id }
+            assertNotNull(swatch, "Swatch $id must exist")
+            assertEquals(hex, swatch.hex)
+        }
+    }
 }
 
