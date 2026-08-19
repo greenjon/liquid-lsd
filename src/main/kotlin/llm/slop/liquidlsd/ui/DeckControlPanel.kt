@@ -54,9 +54,10 @@ class DeckControlPanel(
         
         val inset = 3f
         val imgAvailW = panelW - (inset * 2f)
+        val aspect = session.uiTheme.renderAspectRatio
         val bottomBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { maxOf(ImGui.getFrameHeight(), ImGui.getTextLineHeight() + 6f) } + 6f
-        val childH = maxOf(previewH, (imgAvailW * (9f / 16f)) + bottomBarH + 6f)
-        val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * (9f / 16f)).coerceAtLeast(1f)
+        val childH = maxOf(previewH, (imgAvailW * aspect) + bottomBarH + 6f)
+        val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
         ImGui.beginChild("Child_$label", panelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
