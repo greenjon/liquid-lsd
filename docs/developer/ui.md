@@ -41,7 +41,7 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and 
 
 Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immediately focuses the Preset Grid to that deck by setting `PresetGridState.activeTopTab`. Dragging from a monitor initiates deck copy, move, or swap routing, and dropping preset files directly onto a monitor loads the preset into the corresponding deck.
 
-`MixerMonitorLayoutCalculator` calculates exact 16:9 aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights.
+`MixerMonitorLayoutCalculator` calculates exact aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights. It also calculates the maximum allowed window width (`calculateMaxAllowedWindowWidth`) to clamp the vertical panel splitter so that the Mixer / Monitor panel cannot be dragged wider than the maximum preview height capacity, preventing wasted letterbox blank space and preserving room for middle panels.
 
 ---
 

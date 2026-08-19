@@ -360,8 +360,22 @@ class UIManager(
         val col1W = reqCol1W.coerceIn(displayWidth * minRatio, maxCol1W)
         val col1R = col1W / displayWidth
 
+        val style = ImGui.getStyle()
+        val availHForMixer = (contentH - (style.getWindowPaddingY() * 2f)).coerceAtLeast(1f)
+        val maxRightW = MixerMonitorLayoutCalculator.calculateMaxAllowedWindowWidth(
+            availableHeight = availHForMixer,
+            windowPaddingX = style.getWindowPaddingX(),
+            textLineHeightWithSpacing = ImGui.getTextLineHeightWithSpacing(),
+            frameHeightWithSpacing = ImGui.getFrameHeightWithSpacing(),
+            itemSpacingY = style.getItemSpacingY(),
+            aspectRatio = theme.renderAspectRatio
+        )
+        val maxRightR = (maxRightW / displayWidth).coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
+        val maxC2 = (1.0f - minRatio - col1R).coerceAtLeast(minRatio)
+        val minC2 = (1.0f - col1R - maxRightR).coerceIn(minRatio, maxC2)
+
         // Column 2 (Middle Panel / Cell Config) and Column 3 (Right Panel / Mixer Monitor)
-        var col2R = theme.col2Ratio.coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
+        var col2R = theme.col2Ratio.coerceIn(minC2, maxC2)
         val col2W = displayWidth * col2R
         val libraryW = col1W + col2W
         val rightW = displayWidth - libraryW
@@ -476,13 +490,12 @@ class UIManager(
             displayWidth = displayWidth,
             onDrag = { deltaX ->
                 val deltaR = deltaX / displayWidth
-                val maxC2 = (1.0f - minRatio - col1R).coerceAtLeast(minRatio)
-                val newC2 = (theme.col2Ratio + deltaR).coerceIn(minRatio, maxC2)
+                val newC2 = (theme.col2Ratio + deltaR).coerceIn(minC2, maxC2)
                 theme.col2Ratio = newC2
                 theme.saveSettings()
             },
             onDoubleClick = {
-                theme.col2Ratio = 0.40f
+                theme.col2Ratio = 0.40f.coerceIn(minC2, maxC2)
                 theme.saveSettings()
             }
         )

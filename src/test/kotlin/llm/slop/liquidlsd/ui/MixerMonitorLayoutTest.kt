@@ -97,4 +97,46 @@ class MixerMonitorLayoutTest {
         assertEquals(layoutSquare.renderWidth * 1.0f, layoutSquare.masterHeight, 0.1f)
         assertEquals(layoutSquare.renderWidth * 1.0f, layoutSquare.deckCHeight, 0.1f)
     }
+
+    @Test
+    fun testMaxAllowedWindowWidthMatchesLayoutCapacity() {
+        val windowPaddingX = 8f
+        val maxAllowedW = MixerMonitorLayoutCalculator.calculateMaxAllowedWindowWidth(
+            availableHeight = 1048f,
+            windowPaddingX = windowPaddingX,
+            textLineHeightWithSpacing = 22f,
+            frameHeightWithSpacing = 25f,
+            itemSpacingY = 4f,
+            aspectRatio = 9f / 16f
+        )
+
+        // At exact maxAllowedWidth, renderWidth must equal contentWidth and offsetX must be 0
+        val exactLayout = MixerMonitorLayoutCalculator.calculate(
+            windowWidth = maxAllowedW,
+            availableHeight = 1048f,
+            windowPaddingX = windowPaddingX,
+            scrollbarWidth = 14f,
+            textLineHeightWithSpacing = 22f,
+            frameHeightWithSpacing = 25f,
+            itemSpacingY = 4f,
+            aspectRatio = 9f / 16f
+        )
+        assertEquals(maxAllowedW - (windowPaddingX * 2f), exactLayout.contentWidth, 0.01f)
+        assertEquals(exactLayout.contentWidth, exactLayout.renderWidth, 0.01f)
+        assertEquals(0f, exactLayout.offsetX, 0.01f)
+
+        // If windowWidth exceeds maxAllowedW, renderWidth stays capped at maxAllowedContentWidth and offsetX > 0
+        val oversizedLayout = MixerMonitorLayoutCalculator.calculate(
+            windowWidth = maxAllowedW + 200f,
+            availableHeight = 1048f,
+            windowPaddingX = windowPaddingX,
+            scrollbarWidth = 14f,
+            textLineHeightWithSpacing = 22f,
+            frameHeightWithSpacing = 25f,
+            itemSpacingY = 4f,
+            aspectRatio = 9f / 16f
+        )
+        assertEquals(exactLayout.renderWidth, oversizedLayout.renderWidth, 0.01f)
+        assertEquals(100f, oversizedLayout.offsetX, 0.01f)
+    }
 }

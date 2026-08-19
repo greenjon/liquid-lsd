@@ -15,6 +15,35 @@ object MixerMonitorLayoutCalculator {
     private const val MIN_DECK_CHILD_HEIGHT = 80f
     private const val MIN_DECK_C_HEIGHT = 120f
 
+    fun calculateMaxAllowedWindowWidth(
+        availableHeight: Float,
+        windowPaddingX: Float,
+        textLineHeightWithSpacing: Float,
+        frameHeightWithSpacing: Float,
+        itemSpacingY: Float,
+        aspectRatio: Float = 9f / 16f
+    ): Float {
+        val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
+        val masterControlsH = (frameHeightWithSpacing * 2f + itemSpacingY + 8f).coerceAtLeast(60f)
+        val presetNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
+
+        val verticalChrome = estimateVerticalChrome(
+            masterControlsH = masterControlsH,
+            presetNameExtraHeight = presetNameExtraHeight,
+            itemSpacingY = itemSpacingY
+        )
+        val availableForPreviews = (availableHeight - verticalChrome).coerceAtLeast(0f)
+
+        val aspectMultiplier = 2.5f * aspect
+        val aspectOffset = 8f * aspect
+        val maxAllowedContentWidth = if (availableForPreviews > 0f && aspectMultiplier > 0f) {
+            (availableForPreviews + aspectOffset) / aspectMultiplier
+        } else {
+            Float.MAX_VALUE
+        }
+        return maxAllowedContentWidth + (windowPaddingX * 2f)
+    }
+
     fun calculate(
         windowWidth: Float,
         availableHeight: Float,

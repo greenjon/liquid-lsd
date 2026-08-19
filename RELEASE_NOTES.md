@@ -17,8 +17,9 @@
 - **Fill (Crop)**: Centers and crops edges to fill the display with no black bars.
 - **Stretch**: Stretches the image to fill the output display.
 
-#### 3. Aspect-Aware UI Previews
+#### 3. Aspect-Aware UI Previews & Panel Width Bounds
 - **Dynamic Preview Monitors**: `MixerMonitorLayoutCalculator` and `MixerMonitorPanel` dynamically scale Deck A, Deck B, Deck C, and Master preview heights to match the active render aspect ratio.
+- **Mixer / Monitor Panel Resize Clamping**: `calculateMaxAllowedWindowWidth` clamps the vertical splitter between Column 2 (Cell Config / Library) and Column 3 (Mixer / Monitor) to the exact maximum preview capacity given the window height. This eliminates wasted blank letterbox space around the monitors and maximizes screen space for configuration and library views.
 
 #### 4. Opt-In Secondary Video Output & Menu Control
 - **No Unsolicited Window Popups**: The secondary window is strictly opt-in on single-monitor setups and will not pop up automatically over the UI on launch. When an external monitor is connected, it automatically fullscreens to that display.
