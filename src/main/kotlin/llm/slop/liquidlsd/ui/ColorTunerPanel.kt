@@ -28,10 +28,26 @@ object ColorTunerPanel {
         val name: String,
         val r: Float,
         val g: Float,
-        val b: Float
+        val b: Float,
+        val hex: String
     ) {
         val u32: Int get() = ImColor.rgba(r, g, b, 1.0f)
-        val hex: String get() = String.format("#%02X%02X%02X", (r * 255).toInt().coerceIn(0, 255), (g * 255).toInt().coerceIn(0, 255), (b * 255).toInt().coerceIn(0, 255))
+
+        companion object {
+            fun fromHex(id: String, name: String, hexCode: String): Swatch {
+                val clean = hexCode.removePrefix("#")
+                val num = clean.toInt(16)
+                val r = ((num shr 16) and 0xFF) / 255f
+                val g = ((num shr 8) and 0xFF) / 255f
+                val b = (num and 0xFF) / 255f
+                return Swatch(id, name, r, g, b, "#" + clean.lowercase())
+            }
+
+            fun fromRgb(id: String, name: String, r: Float, g: Float, b: Float): Swatch {
+                val hex = String.format("#%02x%02x%02x", (r * 255).toInt().coerceIn(0, 255), (g * 255).toInt().coerceIn(0, 255), (b * 255).toInt().coerceIn(0, 255))
+                return Swatch(id, name, r, g, b, hex)
+            }
+        }
     }
 
     data class Palette(
@@ -84,70 +100,70 @@ object ColorTunerPanel {
 
     // Palette Definitions
     private val SOLARIZED_SWATCHES = listOf(
-        Swatch("base03", "Base03", 0.00f, 0.17f, 0.21f),
-        Swatch("base02", "Base02", 0.03f, 0.21f, 0.26f),
-        Swatch("base01", "Base01", 0.35f, 0.43f, 0.46f),
-        Swatch("base00", "Base00", 0.40f, 0.48f, 0.51f),
-        Swatch("base0",  "Base0",  0.51f, 0.58f, 0.59f),
-        Swatch("base1",  "Base1",  0.58f, 0.63f, 0.63f),
-        Swatch("base2",  "Base2",  0.93f, 0.91f, 0.84f),
-        Swatch("base3",  "Base3",  0.99f, 0.96f, 0.89f),
-        Swatch("yellow", "Yellow", 0.71f, 0.54f, 0.00f),
-        Swatch("orange", "Orange", 0.80f, 0.29f, 0.09f),
-        Swatch("red",    "Red",    0.86f, 0.20f, 0.18f),
-        Swatch("magenta","Magenta",0.83f, 0.21f, 0.51f),
-        Swatch("violet", "Violet", 0.42f, 0.44f, 0.77f),
-        Swatch("blue",   "Blue",   0.15f, 0.55f, 0.82f),
-        Swatch("cyan",   "Cyan",   0.17f, 0.63f, 0.60f),
-        Swatch("green",  "Green",  0.52f, 0.60f, 0.00f)
+        Swatch.fromHex("base03", "Base03", "#002b36"),
+        Swatch.fromHex("base02", "Base02", "#073642"),
+        Swatch.fromHex("base01", "Base01", "#586e75"),
+        Swatch.fromHex("base00", "Base00", "#657b83"),
+        Swatch.fromHex("base0",  "Base0",  "#839496"),
+        Swatch.fromHex("base1",  "Base1",  "#93a1a1"),
+        Swatch.fromHex("base2",  "Base2",  "#eee8d5"),
+        Swatch.fromHex("base3",  "Base3",  "#fdf6e3"),
+        Swatch.fromHex("red",    "Red",    "#dc322f"),
+        Swatch.fromHex("orange", "Orange", "#cb4b16"),
+        Swatch.fromHex("yellow", "Yellow", "#b58900"),
+        Swatch.fromHex("green",  "Green",  "#859900"),
+        Swatch.fromHex("cyan",   "Cyan",   "#2aa198"),
+        Swatch.fromHex("blue",   "Blue",   "#268bd2"),
+        Swatch.fromHex("violet", "Violet", "#6c71c4"),
+        Swatch.fromHex("magenta","Magenta","#d33682")
     )
 
     private val LUNARIZED_SWATCHES = listOf(
-        Swatch("darkBase03", "DarkBase03", 0.21f, 0.04f, 0.00f),
-        Swatch("darkBase02", "DarkBase02", 0.28f, 0.07f, 0.00f),
-        Swatch("darkBase01", "DarkBase01", 0.37f, 0.16f, 0.08f),
-        Swatch("darkBase00", "DarkBase00", 0.58f, 0.40f, 0.35f),
-        Swatch("darkBase0",  "DarkBase0",  0.97f, 0.91f, 0.88f),
-        Swatch("lightBase3", "LightBase3", 0.89f, 0.92f, 0.99f),
-        Swatch("lightBase2", "LightBase2", 0.82f, 0.85f, 0.96f),
-        Swatch("lightBase1", "LightBase1", 0.69f, 0.75f, 0.92f),
-        Swatch("lightBase0", "LightBase0", 0.47f, 0.50f, 0.61f),
-        Swatch("lightBase00","LightBase00",0.15f, 0.17f, 0.21f),
-        Swatch("periwinkle", "Periwinkle", 0.42f, 0.44f, 0.77f),
-        Swatch("purple",     "Purple",     0.48f, 0.32f, 0.80f),
-        Swatch("royalBlue",  "RoyalBlue",  0.11f, 0.37f, 0.89f),
-        Swatch("cyan",       "Cyan",       0.00f, 0.64f, 0.80f)
+        Swatch.fromRgb("darkBase03", "DarkBase03", 0.21f, 0.04f, 0.00f),
+        Swatch.fromRgb("darkBase02", "DarkBase02", 0.28f, 0.07f, 0.00f),
+        Swatch.fromRgb("darkBase01", "DarkBase01", 0.37f, 0.16f, 0.08f),
+        Swatch.fromRgb("darkBase00", "DarkBase00", 0.58f, 0.40f, 0.35f),
+        Swatch.fromRgb("darkBase0",  "DarkBase0",  0.97f, 0.91f, 0.88f),
+        Swatch.fromRgb("lightBase3", "LightBase3", 0.89f, 0.92f, 0.99f),
+        Swatch.fromRgb("lightBase2", "LightBase2", 0.82f, 0.85f, 0.96f),
+        Swatch.fromRgb("lightBase1", "LightBase1", 0.69f, 0.75f, 0.92f),
+        Swatch.fromRgb("lightBase0", "LightBase0", 0.47f, 0.50f, 0.61f),
+        Swatch.fromRgb("lightBase00","LightBase00",0.15f, 0.17f, 0.21f),
+        Swatch.fromRgb("periwinkle", "Periwinkle", 0.42f, 0.44f, 0.77f),
+        Swatch.fromRgb("purple",     "Purple",     0.48f, 0.32f, 0.80f),
+        Swatch.fromRgb("royalBlue",  "RoyalBlue",  0.11f, 0.37f, 0.89f),
+        Swatch.fromRgb("cyan",       "Cyan",       0.00f, 0.64f, 0.80f)
     )
 
     private val NEON_SWATCHES = listOf(
-        Swatch("transparent","Transparent",0.00f, 0.00f, 0.00f),
-        Swatch("indigoDark", "IndigoDark", 0.04f, 0.04f, 0.10f),
-        Swatch("indigoMid",  "IndigoMid",  0.08f, 0.00f, 0.14f),
-        Swatch("purpleDeep", "PurpleDeep", 0.13f, 0.02f, 0.20f),
-        Swatch("frameDark",  "FrameDark",  0.11f, 0.05f, 0.16f),
-        Swatch("frameHover", "FrameHover", 0.18f, 0.07f, 0.28f),
-        Swatch("popupDark",  "PopupDark",  0.05f, 0.01f, 0.08f),
-        Swatch("hotPink",    "HotPink",    1.00f, 0.00f, 0.50f),
-        Swatch("neonYellow", "NeonYellow", 1.00f, 1.00f, 0.00f),
-        Swatch("neonGreen",  "NeonGreen",  0.50f, 1.00f, 0.00f),
-        Swatch("pureWhite",  "PureWhite",  1.00f, 1.00f, 1.00f),
-        Swatch("mutedViolet","MutedViolet",0.54f, 0.40f, 0.64f)
+        Swatch.fromRgb("transparent","Transparent",0.00f, 0.00f, 0.00f),
+        Swatch.fromRgb("indigoDark", "IndigoDark", 0.04f, 0.04f, 0.10f),
+        Swatch.fromRgb("indigoMid",  "IndigoMid",  0.08f, 0.00f, 0.14f),
+        Swatch.fromRgb("purpleDeep", "PurpleDeep", 0.13f, 0.02f, 0.20f),
+        Swatch.fromRgb("frameDark",  "FrameDark",  0.11f, 0.05f, 0.16f),
+        Swatch.fromRgb("frameHover", "FrameHover", 0.18f, 0.07f, 0.28f),
+        Swatch.fromRgb("popupDark",  "PopupDark",  0.05f, 0.01f, 0.08f),
+        Swatch.fromRgb("hotPink",    "HotPink",    1.00f, 0.00f, 0.50f),
+        Swatch.fromRgb("neonYellow", "NeonYellow", 1.00f, 1.00f, 0.00f),
+        Swatch.fromRgb("neonGreen",  "NeonGreen",  0.50f, 1.00f, 0.00f),
+        Swatch.fromRgb("pureWhite",  "PureWhite",  1.00f, 1.00f, 1.00f),
+        Swatch.fromRgb("mutedViolet","MutedViolet",0.54f, 0.40f, 0.64f)
     )
 
     private val BORING_SWATCHES = listOf(
-        Swatch("black04",   "Black04",   0.04f, 0.04f, 0.04f),
-        Swatch("black06",   "Black06",   0.06f, 0.06f, 0.06f),
-        Swatch("black08",   "Black08",   0.08f, 0.08f, 0.08f),
-        Swatch("gray14",    "Gray14",    0.14f, 0.14f, 0.14f),
-        Swatch("gray16",    "Gray16",    0.16f, 0.16f, 0.16f),
-        Swatch("gray30",    "Gray30",    0.30f, 0.30f, 0.30f),
-        Swatch("gray50",    "Gray50",    0.50f, 0.50f, 0.50f),
-        Swatch("gray80",    "Gray80",    0.80f, 0.80f, 0.80f),
-        Swatch("white",     "White",     1.00f, 1.00f, 1.00f),
-        Swatch("blueAccent","BlueAccent",0.26f, 0.59f, 0.98f)
+        Swatch.fromRgb("black04",   "Black04",   0.04f, 0.04f, 0.04f),
+        Swatch.fromRgb("black06",   "Black06",   0.06f, 0.06f, 0.06f),
+        Swatch.fromRgb("black08",   "Black08",   0.08f, 0.08f, 0.08f),
+        Swatch.fromRgb("gray14",    "Gray14",    0.14f, 0.14f, 0.14f),
+        Swatch.fromRgb("gray16",    "Gray16",    0.16f, 0.16f, 0.16f),
+        Swatch.fromRgb("gray30",    "Gray30",    0.30f, 0.30f, 0.30f),
+        Swatch.fromRgb("gray50",    "Gray50",    0.50f, 0.50f, 0.50f),
+        Swatch.fromRgb("gray80",    "Gray80",    0.80f, 0.80f, 0.80f),
+        Swatch.fromRgb("white",     "White",     1.00f, 1.00f, 1.00f),
+        Swatch.fromRgb("blueAccent","BlueAccent",0.26f, 0.59f, 0.98f)
     )
 
-    private val PALETTES = listOf(
+    val PALETTES = listOf(
         Palette(
             theme = UITheme.Theme.DARK_SOLARIZED,
             name = "Dark Solarized",

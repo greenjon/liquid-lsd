@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import java.io.File
 
@@ -87,8 +88,40 @@ class UIThemeTest {
 
     @Test
     fun testColorTunerSwatchHexCalculation() {
-        val swatch = ColorTunerPanel.Swatch("test", "Test", 1.0f, 0.0f, 0.5f)
-        assertEquals("#FF007F", swatch.hex)
+        val swatch = ColorTunerPanel.Swatch.fromHex("test", "Test", "#FF007F")
+        assertEquals("#ff007f", swatch.hex)
+        assertEquals(1.0f, swatch.r)
+        assertEquals(0.0f, swatch.g)
+    }
+
+    @Test
+    fun testSolarizedPaletteExactHexCodes() {
+        val expected = mapOf(
+            "base03" to "#002b36",
+            "base02" to "#073642",
+            "base01" to "#586e75",
+            "base00" to "#657b83",
+            "base0"  to "#839496",
+            "base1"  to "#93a1a1",
+            "base2"  to "#eee8d5",
+            "base3"  to "#fdf6e3",
+            "red"    to "#dc322f",
+            "orange" to "#cb4b16",
+            "yellow" to "#b58900",
+            "green"  to "#859900",
+            "cyan"   to "#2aa198",
+            "blue"   to "#268bd2",
+            "violet" to "#6c71c4",
+            "magenta" to "#d33682"
+        )
+        val palette = ColorTunerPanel.PALETTES.find { it.theme == UITheme.Theme.DARK_SOLARIZED }
+        assertNotNull(palette)
+        assertEquals(16, palette.swatches.size)
+        expected.forEach { (id, hex) ->
+            val swatch = palette.swatches.find { it.id == id }
+            assertNotNull(swatch, "Swatch $id must exist")
+            assertEquals(hex, swatch.hex)
+        }
     }
 }
 
