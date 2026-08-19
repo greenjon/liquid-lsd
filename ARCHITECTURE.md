@@ -85,6 +85,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── PresetGridPanel.kt       — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
+│   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
 │   └── PresetGridState.kt       — Selection state & 30-level Undo Stack
 └── utils/
