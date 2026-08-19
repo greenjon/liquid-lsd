@@ -9,28 +9,30 @@ import mu.KotlinLogging
 
 enum class SignalState { SILENT, ACTIVE }
 
-enum class BeatDetectionMode { ENERGY_DIFFERENCE, RESONATOR }
+enum class BeatDetectionMode { AUTOCORRELATION, ENERGY_DIFFERENCE, RESONATOR }
 enum class AudioTarget { UNFILTERED, LOW, MID, HIGH }
 
 data class BeatDetectionSettings(
-    var mode: BeatDetectionMode = BeatDetectionMode.ENERGY_DIFFERENCE,
+    var mode: BeatDetectionMode = BeatDetectionMode.AUTOCORRELATION,
     var target: AudioTarget = AudioTarget.LOW,
     var bpmSearchFloor: Int = 40,
     var bpmSearchCeiling: Int = 200,
+    var bpmGridResolution: Float = 0.5f,
+    var analysisWindowLength: Float = 4.0f,
     var energyThreshold: Float = 1.5f,
     var pllAdaptationRate: Float = 0.2f,
     var biquadQ: Float = 3.0f
 ) {
     companion object {
-        fun highAccuracy() = BeatDetectionSettings(mode = BeatDetectionMode.ENERGY_DIFFERENCE, energyThreshold = 1.8f)
-        fun balanced() = BeatDetectionSettings(mode = BeatDetectionMode.ENERGY_DIFFERENCE, energyThreshold = 1.5f)
+        fun highAccuracy() = BeatDetectionSettings(mode = BeatDetectionMode.AUTOCORRELATION, bpmGridResolution = 0.5f, pllAdaptationRate = 0.25f)
+        fun balanced() = BeatDetectionSettings(mode = BeatDetectionMode.AUTOCORRELATION, bpmGridResolution = 1.0f, pllAdaptationRate = 0.20f)
         fun eco() = BeatDetectionSettings(mode = BeatDetectionMode.RESONATOR, biquadQ = 5.0f)
     }
 }
 
 class BeatDetector {
     @Volatile
-    var settings = BeatDetectionSettings.balanced()
+    var settings = BeatDetectionSettings.highAccuracy()
         private set
 
     @Volatile
@@ -46,7 +48,15 @@ class BeatDetector {
     @Volatile
     private var currentBpm = 120.0f
 
-    // Energy difference state
+    // Pre-allocated ring buffers for multi-band onset history (zero allocation)
+    private val onsetHistory = FloatArray(2048)
+    private val bassHistory = FloatArray(2048)
+    private val midHistory = FloatArray(2048)
+    private val highHistory = FloatArray(2048)
+    private var historyCount = 0
+    private var historyIndex = 0
+
+    // Dynamic peak thresholding
     private var localEnergyAverage = 0.001f
     private var timeSinceLastBeatBlocks = 0f
     private var lastTargetAmp = 0f
@@ -60,6 +70,13 @@ class BeatDetector {
         this.settings = preset.copy()
     }
 
+    fun interpolateParabolicPeak(y1: Float, y2: Float, y3: Float): Float {
+        val denom = y1 - 2.0f * y2 + y3
+        if (kotlin.math.abs(denom) < 1e-6f) return 0.0f
+        val delta = (y1 - y3) / (2.0f * denom)
+        return delta.coerceIn(-0.5f, 0.5f)
+    }
+
     fun processBlock(
         unfilteredAmp: Float,
         lowAmp: Float,
@@ -71,7 +88,7 @@ class BeatDetector {
     ): Float {
         val targetAmp = when (settings.target) {
             AudioTarget.UNFILTERED -> if (onsetStrength > 0f) onsetStrength else unfilteredAmp
-            AudioTarget.LOW -> lowAmp
+            AudioTarget.LOW -> if (onsetStrength > 0f) onsetStrength else lowAmp
             AudioTarget.MID -> midAmp
             AudioTarget.HIGH -> highAmp
         }
@@ -85,43 +102,154 @@ class BeatDetector {
         val fps = sampleRate / nframes.coerceAtLeast(1)
         val floorBpm = settings.bpmSearchFloor.toFloat()
         val ceilBpm = settings.bpmSearchCeiling.toFloat()
-        val minPeriodBlocks = fps * (60.0f / ceilBpm)
-        val maxPeriodBlocks = fps * (60.0f / floorBpm)
+        val minPeriodBlocks = (fps * (60.0f / ceilBpm)).toInt().coerceAtLeast(1)
+        val maxPeriodBlocks = (fps * (60.0f / floorBpm)).toInt().coerceAtMost(onsetHistory.size / 2)
+
+        // Store target band & multi-band energies to history ring buffers (zero allocation)
+        onsetHistory[historyIndex] = targetAmp
+        bassHistory[historyIndex] = if (onsetStrength > 0f) lowAmp else lowAmp * 0.1f
+        midHistory[historyIndex] = midAmp
+        highHistory[historyIndex] = highAmp
+        historyIndex = (historyIndex + 1) % onsetHistory.size
+        if (historyCount < onsetHistory.size) historyCount++
 
         // Track target band energy to determine if sufficient signal exists
-        localEnergyAverage = localEnergyAverage * 0.99f + targetAmp * 0.01f
+        localEnergyAverage = localEnergyAverage * 0.98f + targetAmp * 0.02f
         isTargetLevelSufficient = localEnergyAverage > 0.005f
 
         timeSinceLastBeatBlocks += 1.0f
 
         val mode = settings.mode
 
-        if (mode == BeatDetectionMode.ENERGY_DIFFERENCE) {
-            // Energy Difference + PLL Soft-Sync
+        if (mode == BeatDetectionMode.AUTOCORRELATION) {
+            val availableMaxDelay = (historyCount - minPeriodBlocks).coerceAtLeast(0).coerceAtMost(maxPeriodBlocks)
+            if (availableMaxDelay >= minPeriodBlocks) {
+                var acSum = 0.0f
+                var delayCount = 0
+
+                val winLenBlocks = (historyCount - availableMaxDelay).coerceAtMost((settings.analysisWindowLength * fps).toInt())
+
+                var maxAc = -1.0f
+                var rawBestDelay = minPeriodBlocks
+
+                for (delay in minPeriodBlocks..availableMaxDelay) {
+                    var ac = 0.0f
+                    for (i in 0 until winLenBlocks) {
+                        val idx1 = (historyIndex - 1 - i + onsetHistory.size * 10) % onsetHistory.size
+                        val idx2 = (historyIndex - 1 - i - delay + onsetHistory.size * 10) % onsetHistory.size
+                        ac += bassHistory[idx1] * bassHistory[idx2] + midHistory[idx1] * midHistory[idx2] + highHistory[idx1] * highHistory[idx2]
+                    }
+                    acSum += ac
+                    delayCount++
+
+                    val candidateBpm = 60.0f / (delay / fps)
+                    val bpmDiff = candidateBpm - 120.0f
+                    val gaussianWeight = kotlin.math.exp(-(bpmDiff * bpmDiff) / (2.0f * 80.0f * 80.0f))
+                    val weightedAc = ac * (0.85f + 0.15f * gaussianWeight)
+
+                    if (weightedAc > maxAc) {
+                        maxAc = weightedAc
+                        rawBestDelay = delay
+                    }
+                }
+
+                val meanAc = acSum / maxOf(1, delayCount)
+                confidence = if (meanAc > 1e-5f) (maxAc / (meanAc * 3.0f)).coerceIn(0.0f, 1.0f) else 0.5f
+
+                // Harmonic Unwrapping: Check if half-lag (double tempo) is a valid fundamental beat period
+                var bestDelay = rawBestDelay
+                while (bestDelay / 2 >= minPeriodBlocks) {
+                    val halfDelay = bestDelay / 2
+                    var halfAc = 0.0f
+                    var fullAc = 0.0f
+                    for (i in 0 until winLenBlocks) {
+                        val idx1 = (historyIndex - 1 - i + onsetHistory.size * 10) % onsetHistory.size
+                        val idxHalf = (historyIndex - 1 - i - halfDelay + onsetHistory.size * 10) % onsetHistory.size
+                        val idxFull = (historyIndex - 1 - i - bestDelay + onsetHistory.size * 10) % onsetHistory.size
+                        halfAc += bassHistory[idx1] * bassHistory[idxHalf] + midHistory[idx1] * midHistory[idxHalf] + highHistory[idx1] * highHistory[idxHalf]
+                        fullAc += bassHistory[idx1] * bassHistory[idxFull] + midHistory[idx1] * midHistory[idxFull] + highHistory[idx1] * highHistory[idxFull]
+                    }
+                    val halfBpm = 60.0f / (halfDelay / fps)
+                    if (halfBpm <= 165.0f && fullAc > 1e-5f && (halfAc / fullAc) >= 0.45f) {
+                        bestDelay = halfDelay
+                    } else {
+                        break
+                    }
+                }
+
+                if (bestDelay >= minPeriodBlocks && bestDelay <= availableMaxDelay) {
+                    // Sub-block parabolic lag interpolation around bestDelay
+                    var prevAc = 0.0f
+                    var centerAc = 0.0f
+                    var nextAc = 0.0f
+
+                    val delayPrev = (bestDelay - 1).coerceAtLeast(minPeriodBlocks)
+                    val delayNext = (bestDelay + 1).coerceAtMost(availableMaxDelay)
+
+                    for (i in 0 until winLenBlocks) {
+                        val idx1 = (historyIndex - 1 - i + onsetHistory.size * 10) % onsetHistory.size
+                        val idxPrev = (historyIndex - 1 - i - delayPrev + onsetHistory.size * 10) % onsetHistory.size
+                        val idxCenter = (historyIndex - 1 - i - bestDelay + onsetHistory.size * 10) % onsetHistory.size
+                        val idxNext = (historyIndex - 1 - i - delayNext + onsetHistory.size * 10) % onsetHistory.size
+
+                        prevAc += bassHistory[idx1] * bassHistory[idxPrev] + midHistory[idx1] * midHistory[idxPrev] + highHistory[idx1] * highHistory[idxPrev]
+                        centerAc += bassHistory[idx1] * bassHistory[idxCenter] + midHistory[idx1] * midHistory[idxCenter] + highHistory[idx1] * highHistory[idxCenter]
+                        nextAc += bassHistory[idx1] * bassHistory[idxNext] + midHistory[idx1] * midHistory[idxNext] + highHistory[idx1] * highHistory[idxNext]
+                    }
+
+                    val deltaLag = interpolateParabolicPeak(prevAc, centerAc, nextAc)
+                    val subBlockLag = (bestDelay + deltaLag).coerceAtLeast(1.0f)
+                    val calcBpm = 60.0f / (subBlockLag / fps)
+
+                    // Adaptive PLL response: faster initial lock, smooth steady state
+                    val adaptRate = if (historyCount < maxPeriodBlocks * 2) 0.45f else settings.pllAdaptationRate.coerceIn(0.01f, 0.5f)
+                    currentBpm = currentBpm * (1.0f - adaptRate) + calcBpm.coerceIn(floorBpm, ceilBpm) * adaptRate
+
+                    // Phase alignment calculation
+                    val periodBlocks = subBlockLag.toInt().coerceAtLeast(1)
+                    var maxPhaseImpulse = 0.0f
+                    var bestPhaseShift = 0
+                    for (shift in 0 until periodBlocks) {
+                        var sum = 0.0f
+                        var k = 0
+                        while (true) {
+                            val kBlocks = shift + k * periodBlocks
+                            if (kBlocks >= historyCount) break
+                            val idx = (historyIndex - 1 - kBlocks + onsetHistory.size * 10) % onsetHistory.size
+                            sum += onsetHistory[idx]
+                            k++
+                        }
+                        if (sum > maxPhaseImpulse) {
+                            maxPhaseImpulse = sum
+                            bestPhaseShift = shift
+                        }
+                    }
+                    if (maxPhaseImpulse > 0.02f) {
+                        pendingPhaseNudge = bestPhaseShift.toDouble() / periodBlocks.toDouble()
+                    }
+                }
+            }
+        } else if (mode == BeatDetectionMode.ENERGY_DIFFERENCE) {
+            // Energy Difference + Dynamic Peak Sync
             if (targetAmp > localEnergyAverage * settings.energyThreshold && timeSinceLastBeatBlocks > minPeriodBlocks) {
-                // Must be a local peak
                 if (lastTargetAmp > targetAmp && lastTargetAmp > localEnergyAverage * settings.energyThreshold) {
                     pendingPhaseNudge = 0.0
                     
-                    val measuredPeriodBlocks = timeSinceLastBeatBlocks - 1.0f // peak was 1 block ago
+                    val measuredPeriodBlocks = timeSinceLastBeatBlocks - 1.0f
                     val calcBpm = 60.0f / (measuredPeriodBlocks / fps)
                     
-                    // PLL adaptation
                     currentBpm = currentBpm * (1f - settings.pllAdaptationRate) + calcBpm.coerceIn(floorBpm, ceilBpm) * settings.pllAdaptationRate
-                    
                     timeSinceLastBeatBlocks = 0f
                 }
             }
         } else if (mode == BeatDetectionMode.RESONATOR) {
-            // Option 3: Complex Domain Onset + Biquad Resonator
+            // Biquad Resonator
             resonator.frequency = currentBpm / 60.0f
             resonator.q = settings.biquadQ
             resonator.updateCoefficients()
             
-            // Feed DC-blocked envelope
             val out = resonator.process(targetAmp - localEnergyAverage)
             
-            // Zero crossing detector
             if (lastResonatorOut <= 0f && out > 0f) {
                 pendingPhaseNudge = 0.0
                 

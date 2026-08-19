@@ -248,6 +248,14 @@ object AudioEnginePanel {
                 ImGui.setTooltip("Maximum limit for tempo estimation to prevent double-tempo octave tracking errors.")
             }
             
+            val winLenArr = FloatArray(1) { settings.analysisWindowLength }
+            if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) {
+                settings.analysisWindowLength = winLenArr[0]
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Duration of onset history buffer analyzed for autocorrelation and beat estimation.")
+            }
+
             val thresholdArr = FloatArray(1) { settings.energyThreshold }
             if (ImGui.sliderFloat("Energy Threshold", thresholdArr, 1.0f, 3.0f, "%.2f")) {
                 settings.energyThreshold = thresholdArr[0]
