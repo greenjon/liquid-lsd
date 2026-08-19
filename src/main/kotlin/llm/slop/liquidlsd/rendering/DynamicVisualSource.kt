@@ -55,16 +55,7 @@ open class DynamicVisualSource(
     var fbIndex: Int = 0
 
     init {
-        if (ownsShader) {
-            val descriptors = mutableListOf<llm.slop.liquidlsd.parameters.ParameterDescriptor>()
-            for (deckLabel in listOf("Deck A", "Deck B", "Deck C")) {
-                parameters.keys.forEach { name ->
-                    descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/$displayName/$name", name, "DynamicVisualSource"))
-                }
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/$displayName/Gain", "Gain", "DynamicVisualSource"))
-            }
-            llm.slop.liquidlsd.parameters.ParameterResolver.register(*descriptors.toTypedArray())
-        }
+        // Registration moved to getParameterPaths
     }
 
     fun swapFeedbackBuffers() {
@@ -110,5 +101,14 @@ open class DynamicVisualSource(
             hasFeedback = this.hasFeedback,
             ownsShader = false // Cloned instances do not own the shared shader
         )
+    }
+
+    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
+        val list = mutableListOf<Pair<String, ModulatableParameter>>()
+        parameters.forEach { (name, param) ->
+            list.add("$prefix/$displayName/$name" to param)
+        }
+        list.add("$prefix/$displayName/Gain" to globalAlpha)
+        return list
     }
 }

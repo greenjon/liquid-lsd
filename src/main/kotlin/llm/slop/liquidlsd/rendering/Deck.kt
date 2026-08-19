@@ -2,6 +2,8 @@ package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
+import llm.slop.liquidlsd.parameters.ParameterOwner
+
 /**
  * Represents a single visual rendering chain (Deck).
  * Manages its own offscreen Framebuffer Objects (FBOs) for ping-pong feedback effects,
@@ -11,7 +13,7 @@ class Deck(
     var source: VisualSource,
     val width: Int = 1920,
     val height: Int = 1080
-) {
+) : ParameterOwner {
     var isEmpty: Boolean = false
 
     // FBO for rendering the clean visual source output
@@ -37,20 +39,7 @@ class Deck(
     val fbKaleido = ModulatableParameter(1.0f, minClamp = 1f, maxClamp = 12f)
 
     companion object {
-        init {
-            val descriptors = mutableListOf<llm.slop.liquidlsd.parameters.ParameterDescriptor>()
-            for (deckLabel in listOf("Deck A", "Deck B", "Deck C")) {
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Decay", "FB Decay", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Gain", "FB Gain", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Zoom", "FB Zoom", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Rotate", "FB Rotate", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/HueShift", "FB HueShift", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Blur", "FB Blur", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Chroma", "FB Chroma", "Deck"))
-                descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/FB/Mode", "FB Mode", "Deck"))
-            }
-            llm.slop.liquidlsd.parameters.ParameterResolver.register(*descriptors.toTypedArray())
-        }
+        // Registration moved to getParameterPaths
     }
 
     init {
@@ -174,5 +163,25 @@ class Deck(
         // forEach below already disposes it. Do NOT call source.dispose() here — that
         // would double-free the active source's GPU objects.
         availableSources.forEach { it.dispose() }
+    }
+
+    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
+        val list = mutableListOf<Pair<String, ModulatableParameter>>()
+        
+        // Add all source parameters first (Mandala or DynamicVisualSource)
+        list.addAll(source.getParameterPaths(prefix))
+
+        // Add Deck's own feedback parameters
+        list.add("$prefix/FB/Decay" to fbDecay)
+        list.add("$prefix/FB/Gain" to fbGain)
+        list.add("$prefix/FB/Zoom" to fbZoom)
+        list.add("$prefix/FB/Rotate" to fbRotate)
+        list.add("$prefix/FB/HueShift" to fbHueShift)
+        list.add("$prefix/FB/Blur" to fbBlur)
+        list.add("$prefix/FB/Chroma" to fbChroma)
+        list.add("$prefix/FB/Mode" to fbMode)
+        list.add("$prefix/FB/Kaleido" to fbKaleido)
+        
+        return list
     }
 }

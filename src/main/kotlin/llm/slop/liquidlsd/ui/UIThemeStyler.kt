@@ -58,22 +58,17 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.TitleBg, 0.03f, 0.21f, 0.26f, alpha)
                 style.setColor(ImGuiCol.TitleBgActive, 0.00f, 0.17f, 0.21f, alpha)
                 style.setColor(ImGuiCol.MenuBarBg, 0.03f, 0.21f, 0.26f, alpha)
-
                 style.setColor(ImGuiCol.FrameBg, 0.03f, 0.21f, 0.26f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgHovered, 0.00f, 0.17f, 0.21f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgActive, 0.80f, 0.29f, 0.09f, 1.00f)
-
                 style.setColor(ImGuiCol.Button, 0.03f, 0.21f, 0.26f, 1.00f)
                 style.setColor(ImGuiCol.ButtonHovered, 0.35f, 0.43f, 0.46f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 0.80f, 0.29f, 0.09f, 1.00f)
-
+                style.setColor(ImGuiCol.ButtonActive, 0.52f, 0.60f, 0.00f, 1.00f)
                 style.setColor(ImGuiCol.SliderGrab, 0.80f, 0.29f, 0.09f, 1.00f)
                 style.setColor(ImGuiCol.SliderGrabActive, 0.80f, 0.29f, 0.09f, 1.00f)
                 style.setColor(ImGuiCol.CheckMark, 0.80f, 0.29f, 0.09f, 1.00f)
-
                 style.setColor(ImGuiCol.Text, 0.51f, 0.58f, 0.59f, 1.00f)
                 style.setColor(ImGuiCol.TextDisabled, 0.35f, 0.43f, 0.46f, 1.00f)
-
                 style.setColor(ImGuiCol.Header, 0.03f, 0.21f, 0.26f, 1.00f)
                 style.setColor(ImGuiCol.HeaderHovered, 0.35f, 0.43f, 0.46f, 1.00f)
                 style.setColor(ImGuiCol.HeaderActive, 0.80f, 0.29f, 0.09f, 1.00f)

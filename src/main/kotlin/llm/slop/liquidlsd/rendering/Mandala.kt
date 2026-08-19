@@ -172,21 +172,58 @@ class Mandala(
         return copy
     }
 
-    companion object {
-        init {
-            val descriptors = mutableListOf<llm.slop.liquidlsd.parameters.ParameterDescriptor>()
-            for (deckLabel in listOf("Deck A", "Deck B", "Deck C")) {
-                val geom = listOf("Lobes", "Recipe", "L1", "L2", "L3", "L4", "FreqOffset", "HarmonicLock", "3DMode", "SphereWrapX", "SphereWrapY", "MirrorGroup", "PermuteXY", "PermuteYZ", "PermuteZX")
-                geom.forEach { descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/Geometry/$it", it, "Mandala")) }
-                val view = listOf("Zoom", "RotateZ", "RotateX", "RotateY", "Persp")
-                view.forEach { descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/View/$it", it, "Mandala")) }
-                val color = listOf("Thickness", "HueOffset", "HueSweep", "Depth", "Gain")
-                color.forEach { descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/Color/$it", it, "Mandala")) }
-                val bg = listOf("Style", "Feedback", "Hue", "Sat", "Val", "Sweep", "Speed", "Zoom")
-                bg.forEach { descriptors.add(llm.slop.liquidlsd.parameters.ParameterDescriptor("$deckLabel/Background/$it", it, "Mandala")) }
-            }
-            llm.slop.liquidlsd.parameters.ParameterResolver.register(*descriptors.toTypedArray())
+    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
+        val list = mutableListOf<Pair<String, ModulatableParameter>>()
+        
+        fun addParam(group: String, nameInList: String, nameInMap: String) {
+            parameters[nameInMap]?.let { list.add("$prefix/$group/$nameInList" to it) }
         }
+
+        // Geometry
+        addParam("Geometry", "Lobes", "Lobes")
+        addParam("Geometry", "Recipe", "Recipe Select")
+        addParam("Geometry", "L1", "L1")
+        addParam("Geometry", "L2", "L2")
+        addParam("Geometry", "L3", "L3")
+        addParam("Geometry", "L4", "L4")
+        addParam("Geometry", "FreqOffset", "Freq Offset")
+        addParam("Geometry", "HarmonicLock", "Harmonic Lock")
+        addParam("Geometry", "3DMode", "3D Mode")
+        addParam("Geometry", "SphereWrapX", "Sphere Wrap X")
+        addParam("Geometry", "SphereWrapY", "Sphere Wrap Y")
+        addParam("Geometry", "MirrorGroup", "Mirror Group")
+        addParam("Geometry", "PermuteXY", "Permute XY")
+        addParam("Geometry", "PermuteYZ", "Permute YZ")
+        addParam("Geometry", "PermuteZX", "Permute ZX")
+
+        // View
+        addParam("View", "Zoom", "Zoom")
+        addParam("View", "RotateZ", "Rotate Z")
+        addParam("View", "RotateX", "Rotate X")
+        addParam("View", "RotateY", "Rotate Y")
+        addParam("View", "Persp", "3D Persp")
+
+        // Color
+        addParam("Color", "Thickness", "Thickness")
+        addParam("Color", "HueOffset", "Hue Offset")
+        addParam("Color", "HueSweep", "Hue Sweep")
+        addParam("Color", "Depth", "Depth")
+        list.add("$prefix/Color/Gain" to globalAlpha)
+
+        // Background
+        addParam("Background", "Style", "Bg Style")
+        addParam("Background", "Feedback", "Bg Feedback")
+        addParam("Background", "Hue", "Bg Hue")
+        addParam("Background", "Sat", "Bg Sat")
+        addParam("Background", "Val", "Bg Val")
+        addParam("Background", "Sweep", "Bg Sweep")
+        addParam("Background", "Speed", "Bg Speed")
+        addParam("Background", "Zoom", "Bg Zoom")
+
+        return list
+    }
+
+    companion object {
         private val symmetricHueCyclesCache = java.util.concurrent.ConcurrentHashMap<Int, List<Int>>()
         const val POINTS = 2048
 

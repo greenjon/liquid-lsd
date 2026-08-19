@@ -3,6 +3,8 @@ package llm.slop.liquidlsd.rendering
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.MeterType
 
+import llm.slop.liquidlsd.parameters.ParameterOwner
+
 /**
  * Manages the blending of two Decks (Deck A and Deck B) into a master output FBO.
  * Provides controls for crossfade, master alpha, and blending mode.
@@ -13,7 +15,7 @@ class Mixer(
     val deckC: Deck,
     val width: Int = 1920,
     val height: Int = 1080
-) {
+) : ParameterOwner {
     // The master FBO where the blended result is rendered
     val masterFBO = FBO(width, height)
 
@@ -51,19 +53,25 @@ class Mixer(
     private var prevRandAllVal = 0.0f
     private var lastUpdateTimeNs: Long = System.nanoTime()
 
-    init {
-        llm.slop.liquidlsd.parameters.ParameterResolver.register(
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/crossfade", "Crossfade", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/masterAlpha", "Master Alpha", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/bloom", "Bloom", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/xfadeSpeed", "XFade Speed", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/queuePrev", "Queue Prev", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/queueNext", "Queue Next", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/randDeckA", "Rand Deck A", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/randDeckB", "Rand Deck B", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/randDeckC", "Rand Deck C", "Mixer"),
-            llm.slop.liquidlsd.parameters.ParameterDescriptor("Mixer/randAll", "Rand All", "Mixer")
-        )
+    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
+        val list = mutableListOf<Pair<String, ModulatableParameter>>()
+        
+        list.add("$prefix/crossfade" to crossfade)
+        list.add("$prefix/masterAlpha" to masterAlpha)
+        list.add("$prefix/bloom" to bloom)
+        list.add("$prefix/xfadeSpeed" to xfadeSpeed)
+        list.add("$prefix/queuePrev" to queuePrev)
+        list.add("$prefix/queueNext" to queueNext)
+        list.add("$prefix/randDeckA" to randDeckA)
+        list.add("$prefix/randDeckB" to randDeckB)
+        list.add("$prefix/randDeckC" to randDeckC)
+        list.add("$prefix/randAll" to randAll)
+
+        list.addAll(deckA.getParameterPaths("Deck A"))
+        list.addAll(deckB.getParameterPaths("Deck B"))
+        list.addAll(deckC.getParameterPaths("Deck C"))
+
+        return list
     }
 
     /**

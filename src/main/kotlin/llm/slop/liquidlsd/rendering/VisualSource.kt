@@ -2,11 +2,13 @@ package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
+import llm.slop.liquidlsd.parameters.ParameterOwner
+
 /**
  * Interface for renderable visual objects that consume modulatable parameters.
  * Designed to allow swap-in of different source types (Mandala, VideoFeed, etc.).
  */
-interface VisualSource {
+interface VisualSource : ParameterOwner {
     /**
      * Map of parameter names to their modulatable counterparts.
      */
