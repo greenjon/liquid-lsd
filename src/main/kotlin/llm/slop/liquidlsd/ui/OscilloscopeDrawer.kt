@@ -293,8 +293,8 @@ object OscilloscopeDrawer {
                 }
             } else {
                 // Deterministic LFO lookback: analytically computed from -pastSec to NOW.
-                // Steps proportional to pixel width for consistent sample density at any scope size.
-                val steps = (pastW * 0.5f).toInt().coerceIn(30, 300)
+                // Steps proportional to pixel width for high-density sample resolution at any scope size.
+                val steps = (pastW * 1.5f).toInt().coerceIn(60, 1000)
                 val initRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, -pastSec.toDouble(), includeBypassed = true)
                 val initNorm = if (isBipolar) (initRaw + 1f) / 2f else initRaw.coerceIn(0f, 1f)
                 val initY = (startY + h - 6f) - initNorm * usableHeight
@@ -319,7 +319,7 @@ object OscilloscopeDrawer {
             val b = (strokeColor ushr 16 and 0xFF) / 255f
             val projColor = ImGui.colorConvertFloat4ToU32(r, g, b, 0.65f)
 
-            val steps = (futureW * 0.5f).toInt().coerceIn(30, 300)
+            val steps = (futureW * 1.5f).toInt().coerceIn(60, 1000)
             drawLfoWaveSegments(
                 dl, lfoMods, isBipolar, startY, h, usableHeight,
                 segStartX = nowX, stepX = futureW / steps, steps = steps,
