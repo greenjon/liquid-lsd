@@ -47,8 +47,9 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immedia
 
 ## Key Core UI Orchestrators
 
-### 1. `UIManager.kt`
+### 1. `UIManager.kt` & Global Hotkey Routing (`Main.kt`)
 - **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`.
+- **Global Key Routing (`Main.kt`)**: Chained GLFW key callback intercepts `F` (clean mode toggle), `B` (background video toggle), and `Ctrl-`/`Ctrl=` (font scaling) whenever `!io.wantTextInput` or when clean mode is enabled, persisting settings changes immediately.
 - **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace by delegating splitting and styling to dedicated components. Left Panel (`PresetGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`).
 - **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.

@@ -317,7 +317,7 @@ object SettingsPanel {
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Render master output video behind the semi-transparent interface.")
+            ImGui.setTooltip("Render master output video behind the semi-transparent interface (Hotkey: B).")
         }
 
         val limit30 = ImBoolean(session.uiTheme.maxFps == 30)

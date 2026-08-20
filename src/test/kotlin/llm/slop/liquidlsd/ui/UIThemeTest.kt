@@ -29,6 +29,7 @@ class UIThemeTest {
             UITheme.showAudioCol = false
             UITheme.showTriggerCol = true
             UITheme.cleanModeEnabled = true
+            UITheme.backgroundVideoEnabled = true
             UITheme.tooltipsEnabled = false
             UITheme.maxFps = 60
             UITheme.renderResolutionPreset = UITheme.ResolutionPreset.CUSTOM
@@ -47,6 +48,7 @@ class UIThemeTest {
             UITheme.showAudioCol = true
             UITheme.showTriggerCol = false
             UITheme.cleanModeEnabled = false
+            UITheme.backgroundVideoEnabled = false
             UITheme.tooltipsEnabled = true
             UITheme.maxFps = 30
             UITheme.renderResolutionPreset = UITheme.ResolutionPreset.RES_1080P
@@ -66,6 +68,7 @@ class UIThemeTest {
             assertFalse(UITheme.showAudioCol)
             assertTrue(UITheme.showTriggerCol)
             assertTrue(UITheme.cleanModeEnabled)
+            assertTrue(UITheme.backgroundVideoEnabled)
             assertFalse(UITheme.tooltipsEnabled)
             assertEquals(60, UITheme.maxFps)
             assertEquals(UITheme.ResolutionPreset.CUSTOM, UITheme.renderResolutionPreset)

@@ -122,3 +122,11 @@ When the internal render aspect ratio differs from the connected display or seco
 - **Fill (Crop)**: Centers and crops edges to completely fill the screen without borders.
 - **Stretch**: Stretches the image to fill the output screen.
 
+---
+
+## UI Display Modes & Global Shortcuts
+
+- **Background Video (`B`)**: Toggles rendering the master video output directly behind the semi-transparent ImGui interface. Can also be toggled via **Settings -> Video & Display -> Background Video**.
+- **Clean Mode (`F`)**: Toggles clean fullscreen view, hiding the entire user interface to view pure master video output without distractions.
+- **Global Font Scaling (`Ctrl-` / `Ctrl=`)**: Zooms and scales the entire interface typography and widget layouts dynamically.
+
