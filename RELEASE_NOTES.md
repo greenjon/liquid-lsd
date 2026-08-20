@@ -10,6 +10,11 @@
   - **MIDI CC Modulators Preserved**: Modulators mapped to physical MIDI CCs are preserved and remain active.
 - **Auto-Centering on CV Unmute**: Unmuting any CV modulator on `Mixer/crossfade` automatically snaps `crossfade.baseValue` to `0.0` (unbiased center), allowing LFOs and audio followers to resume symmetrical oscillation across both decks without clipping against manual hold positions. Modulator `DC Offset` provides optional deck bias.
 - **Playlist "Play Now" Auto-VJ Fix**: Selecting *"Play now (and replace queue)"* on a playlist or individual preset now automatically turns on the `AUTO-VJ` toggle and mutes crossfade CVs so automated queue crossfading starts smoothly without modulation interference.
+- **Master Mixer Momentary Triggers**: Added a dedicated row of 6 momentary buttons right below the Crossfader:
+  - **Playlist Navigation**: `< Prev` (`Mixer/queuePrev`) and `Next >` (`Mixer/queueNext`) for stepping through the active playlist queue.
+  - **Deck & Master Randomization**: `Rand A`, `Rand B`, `Rand C`, and `Rand All` for instant re-rolling of active modulators and randomizable parameters with full Undo history support.
+  - **Simultaneous Momentary Operation**: Because these controls act as discrete rising-edge pulses rather than continuous positional holds, GUI mouse clicks, MIDI CC triggers, and CV gates operate concurrently without taking over or muting modulators.
+  - **Streamlined Launchpad**: Removed the redundant Quick Random button from empty deck launchpads, consolidating randomization controls into the Master Mixer.
 
 ---
 

@@ -123,6 +123,30 @@ class Mixer(
         return list
     }
 
+    fun randomizeDeckA() {
+        deckA.randomizeModulators()
+    }
+
+    fun randomizeDeckB() {
+        deckB.randomizeModulators()
+    }
+
+    fun randomizeDeckC() {
+        deckC.randomizeModulators()
+    }
+
+    fun randomizeAll() {
+        deckA.randomizeModulators()
+        deckB.randomizeModulators()
+        deckC.randomizeModulators()
+        listOf(crossfade, masterAlpha).forEach { param ->
+            val randomized = param.modulators.map { it.randomizeActiveValues() }
+            param.modulators.clear()
+            param.modulators.addAll(randomized)
+            param.randomizeBaseValue()
+        }
+    }
+
     /**
      * Evaluates mixer parameters.
      */
@@ -161,33 +185,25 @@ class Mixer(
 
         val valA = randDeckA.value
         if (prevRandDeckAVal < 0.5f && valA >= 0.5f) {
-            deckA.randomizeModulators()
+            randomizeDeckA()
         }
         prevRandDeckAVal = valA
 
         val valB = randDeckB.value
         if (prevRandDeckBVal < 0.5f && valB >= 0.5f) {
-            deckB.randomizeModulators()
+            randomizeDeckB()
         }
         prevRandDeckBVal = valB
 
         val valC = randDeckC.value
         if (prevRandDeckCVal < 0.5f && valC >= 0.5f) {
-            deckC.randomizeModulators()
+            randomizeDeckC()
         }
         prevRandDeckCVal = valC
 
         val valAll = randAll.value
         if (prevRandAllVal < 0.5f && valAll >= 0.5f) {
-            deckA.randomizeModulators()
-            deckB.randomizeModulators()
-            deckC.randomizeModulators()
-            listOf(crossfade, masterAlpha).forEach { param ->
-                val randomized = param.modulators.map { it.randomizeActiveValues() }
-                param.modulators.clear()
-                param.modulators.addAll(randomized)
-                param.randomizeBaseValue()
-            }
+            randomizeAll()
         }
         prevRandAllVal = valAll
     }

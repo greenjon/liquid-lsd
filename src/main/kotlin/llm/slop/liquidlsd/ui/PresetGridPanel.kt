@@ -428,7 +428,7 @@ object PresetGridPanel {
         ImGui.dummy(0f, 12f * fontScale)
         ImGui.indent(paddingX)
 
-        val cardH = (270f * fontScale).coerceAtLeast(220f)
+        val cardH = (220f * fontScale).coerceAtLeast(180f)
         if (ImGui.beginChild("##launchpad_$deckLabel", cardW, cardH, true)) {
             ImGui.spacing()
             ImGui.spacing()
@@ -551,63 +551,10 @@ object PresetGridPanel {
                 ImGui.endPopup()
             }
 
-            ImGui.spacing()
-
-            // --- Button 3: Quick Random ---
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("${Icons.DICES}  Quick Random", buttonWidth, buttonHeight)) {
-                val presetDir = File("library/presets")
-                val presetFiles = if (presetDir.exists()) {
-                    presetDir.listFiles { f -> f.isFile && f.name.endsWith(".lsd") }?.toList() ?: emptyList()
-                } else emptyList()
-
-                if (presetFiles.isNotEmpty()) {
-                    val randomFile = presetFiles.random()
-                    session.presetManager.loadDeckPresetAsync(randomFile, isDeckA, isDeckC)
-                } else {
-                    val randomRatio = MandalaLibrary.MandalaRatios.random()
-                    val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
-                    if (masterMandala != null) {
-                        val newMandala = masterMandala.clone() as Mandala
-                        newMandala.recipe = randomRatio
-                        deck.source = newMandala
-                        deck.isEmpty = false
-                        PresetGridUndo.pushUndoState(state, mixer)
-                    }
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Instantly load a random preset or Mandala recipe into $deckLabel")
-            }
-            ImGui.popStyleColor(3)
-
             ImGui.popStyleVar()
         }
         ImGui.endChild()
         ImGui.unindent(paddingX)
-    }
-}
-
-fun Deck.randomizeModulators() {
-    val allParams = mutableListOf<llm.slop.liquidlsd.parameters.ModulatableParameter>()
-    allParams.addAll(this.source.parameters.values)
-    allParams.add(this.source.globalAlpha)
-    allParams.add(this.fbDecay)
-    allParams.add(this.fbGain)
-    allParams.add(this.fbZoom)
-    allParams.add(this.fbRotate)
-    allParams.add(this.fbHueShift)
-    allParams.add(this.fbBlur)
-    allParams.add(this.fbChroma)
-    allParams.add(this.fbMode)
-
-    for (param in allParams) {
-        val randomized = param.modulators.map { it.randomizeActiveValues() }
-        param.modulators.clear()
-        param.modulators.addAll(randomized)
-        param.randomizeBaseValue()
     }
 }
 
