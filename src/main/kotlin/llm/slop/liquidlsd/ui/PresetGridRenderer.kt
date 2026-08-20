@@ -222,7 +222,9 @@ object PresetGridRenderer {
             dl = dl, x = finalX, y = finalY, r = r,
             value = param.value, min = param.minClamp, max = param.maxClamp,
             meterType = param.meterType,
-            baseValue = param.baseValue, baseMin = param.baseMin, baseMax = param.baseMax,
+            baseValue = param.baseValue,
+            baseMin = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMin else null,
+            baseMax = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMax else null,
             color = finalColor, bgCol = finalBgCol, borderCol = finalBorderCol,
             isHoveredRow = isHoveredRow, isHoveredCol = isFinalHoveredCol
         )
@@ -639,7 +641,7 @@ object PresetGridRenderer {
                     val bInnerY = cy + baseTickInnerRadius * sinB
                     dl.addLine(bInnerX, bInnerY, bOuterX, bOuterY, baseTickCol, baseTickStrokeWidth)
 
-                    if (baseMin != null && baseMax != null && baseMin != baseMax) {
+                    if (session.uiTheme.randomizationEnabled && baseMin != null && baseMax != null && baseMin != baseMax) {
                         val rMinNorm = if (range == 0f) 0.5f else ((baseMin - min) / range).coerceIn(0f, 1f)
                         val rMaxNorm = if (range == 0f) 0.5f else ((baseMax - min) / range).coerceIn(0f, 1f)
                         val rMinA = aMin + rMinNorm * (aMax - aMin)
@@ -689,7 +691,7 @@ object PresetGridRenderer {
                     val bInnerY = cy + baseTickInnerRadius * sinB
                     dl.addLine(bInnerX, bInnerY, bOuterX, bOuterY, baseTickCol, baseTickStrokeWidth)
 
-                    if (baseMin != null && baseMax != null && baseMin != baseMax) {
+                    if (session.uiTheme.randomizationEnabled && baseMin != null && baseMax != null && baseMin != baseMax) {
                         val rMinNorm = if (range == 0f) 0.5f else ((baseMin - min) / range).coerceIn(0f, 1f)
                         val rMaxNorm = if (range == 0f) 0.5f else ((baseMax - min) / range).coerceIn(0f, 1f)
                         val rMinA = aMin + rMinNorm * (aMax - aMin)

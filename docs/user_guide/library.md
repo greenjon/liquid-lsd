@@ -16,94 +16,85 @@ Liquid LSD features flexible workspace dock layouts:
 ## Panel Layout in Library Mode
 
 ```
-┌──────────────────┬──────────────────┬──────────────────┐
-│  Presets / Tree  │  Playlist Editor │  Queue & Auto-VJ │
-│   (Sidebar)      │   (Center)       │   (Right)        │
-│                  │                  │                  │
-│  Directory tree, │  Setlist editor  │  Play queue,     │
-│  preset files,   │  & playlist      │  Auto-VJ engine, │
-│  context menus   │  browser         │  repeat/shuffle  │
-└──────────────────┴──────────────────┴──────────────────┘
+┌───────────────────────────┬───────────────────────────┬───────────────────────────┐
+│     PRESET LIBRARY        │      PLAYLIST EDITOR      │        PLAY QUEUE         │
+│  (All Presets + Filters)  │   [ Playlist Dropdown ▾]  │     (Now Playing / Live)  │
+├───────────────────────────┼───────────────────────────┼───────────────────────────┤
+│ [🔍 Search presets & tags]│ [ + ] [ ••• ]             │ [Play] [Prev] [Next] [🔀] │
+│                           │                           │                           │
+│ [A][B][C] Create preset...│ 1. [A][B][C][Q] Preset 1  │ ▶ 1. Preset 1 (0:42)      │
+│                           │ 2. [A][B][C][Q] Preset 2  │   2. Preset 2             │
+│ [A][B][C][Q] Preset Alpha │ 3. [A][B][C][Q] Preset 3  │   3. Preset 3             │
+│ [A][B][C][Q] Preset Beta  │   (Drag from left to add) │                           │
+└───────────────────────────┴───────────────────────────┴───────────────────────────┘
 ```
 
 ---
 
-## Preset Library (Left / Sidebar & Center)
+## 1. Preset Library (Left Column)
 
-The Library provides a complete file system view of your presets and playlists (`presets/` and `playlists/`).
+The Left column displays the complete pool of all available presets discovered across `library/presets/`.
 
 ### Features & Navigation
-- **Collapsible Sidebar Tree**: Click the sidebar toggle icon to show or hide the directory sidebar.
-- **Search & Filter**: Type into the search bar at the top to quickly locate specific preset files or subfolders.
-- **[Create new preset...] Row**: Positioned directly above the preset list with `[ A ]`, `[ B ]`, and `[ C ]` buttons. Clicking a deck button ejects/resets that deck (prompting to save if dirty according to user preferences) and immediately switches Preset Grid focus to that deck.
-- **Visual File Type Icons**:
-  - 🎨 **Presets** (`.lsd`, `.patch`): Visual presets.
-  - 📋 **Playlists** (`.playlist`, `.lsdset`): Setlist files.
-  - 📁 **Folders**: Directories for organizing sets.
-  - ⚠ **Invalid / Missing**: Highlighted in red with a warning icon.
+- **Search & Tag Filter**: Type into the top search bar to filter presets in real-time by preset name or assigned tags.
+- **`[Create new preset...]` Row**: Positioned directly above the preset list with `[ A ]`, `[ B ]`, and `[ C ]` buttons. Clicking a deck button ejects/resets that deck and immediately switches focus to that deck.
+- **`[ A ] [ B ] [ C ] [ Q ]` Quick Action Buttons**:
+  - **`[ A ]`**: Load preset directly into Deck A.
+  - **`[ B ]`**: Load preset directly into Deck B.
+  - **`[ C ]`**: Preview preset in Deck C (Preview deck).
+  - **`[ Q ]`**: Append preset immediately to the end of the live Play Queue.
+- **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
+- **Drag-and-Drop**: Drag presets directly into the Playlist Editor (middle column) or Queue (right column).
 
 ### Context Menu Actions (Right-Click)
-
-For Presets & Playlists:
+- **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
 - **Play now (and replace queue)**: Clears the current queue, loads the item, and triggers immediate playback.
 - **Insert into the queue after current**: Inserts item into the live Auto-VJ queue after the currently playing preset.
 - **Add to the bottom of the queue**: Appends item to the end of the queue.
 - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit both the preset's filename and comma-separated tags in a single step.
-- **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy` and existing tags, allowing instant duplication or immediate customization of the copied preset.
-- **Delete (`Delete`)**: Removes the file from disk (with confirmation modal).
-
-For Folders:
-- **New Folder…**: Creates a subfolder in the current directory.
-- **Auto-Refresh**: Automatically monitors and updates directory contents in real time when files are added, modified, or removed on disk.
+- **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy` and existing tags.
+- **Delete**: Removes the preset from disk (with confirmation modal).
 
 ---
 
-## Playlist Editor (Center Panel)
+## 2. Playlist Editor (Middle Column)
 
-The Playlist Editor operates in two states:
+The Middle column allows inspecting and arranging setlists side-by-side with your preset library.
 
-### 1. Browser State (Default)
-Displays all saved `.playlist` files in the current folder.
-- **`+ New Playlist`**: Prompts for a setlist name and creates a new blank playlist.
-- **Double-Click**: Opens a playlist in Editor State.
+### Header & Playlist Switcher
+- **Playlist Dropdown Combo**: Click to instantly switch the active playlist from all discovered `.lsdset` files.
+- **`[ + ]` Create New Playlist**: Prompts for a playlist name and creates a new empty setlist file.
+- **`[ ••• ]` Playlist Actions Menu**:
+  - **Play now (and replace queue)**: Loads and starts playback of the entire playlist.
+  - **Insert into queue after current**: Inserts all playlist presets into the live queue after current track.
+  - **Add to bottom of queue**: Appends the playlist to the end of the queue.
+  - **Rename...**: Renames the active playlist file on disk.
+  - **Clone**: Duplicates the active playlist as `<name>_copy.lsdset`.
+  - **Delete**: Permanently removes the playlist file.
 
-### 2. Editor State
-Shows the active preset order for a performance setlist:
-- **Header Status**: Displays `Playlist: [Setlist Name]` with an unsaved changes indicator (`*`).
-- **Context Menu (Right-Click)**: All playlist options (Play now, Insert into queue, Add to queue, Save, Rename, Clone, Delete) are accessed by right-clicking in the Playlist Editor panel or header bar.
+### Playlist Preset Rows & Auto-Save
+- **Auto-Save on Edit**: Any modification (adding presets, dragging to reorder, or removing items) automatically saves to disk.
+- **`[ A ] [ B ] [ C ] [ Q ]` Buttons**: Fast deck loading and queue appending per playlist item.
+- **Drag Reordering**: Drag items up and down with mint-green insertion line feedback.
+- **Item Context Menu (Right-Click)**:
+  - Play now, Insert after current, Add to bottom of queue.
+  - **Remove from playlist**: Removes the preset from the playlist.
 
 ---
 
-## Drag-and-Drop Matrix
+## 3. Drag-and-Drop Matrix
 
-Liquid LSD supports intuitive drag-and-drop workflows across panels:
-
-| Dragged Item (Library) | Target Destination (Playlist Editor) | Resulting Action |
-|------------------------|--------------------------------------|------------------|
-| **Preset file** | Between presets in playlist | Inserts preset at target index |
-| **Preset file** | Empty playlist area | Appends preset to end of playlist |
-| **Playlist file** | Inside active playlist editor | **Flat Unpacks** all presets from the source playlist into the active setlist |
+| Dragged Item | Target Destination | Resulting Action |
+|---|---|---|
+| **Preset from Left Column** | Between presets in Playlist Editor | Inserts preset at hovered slot with mint-green guideline |
+| **Preset from Left Column** | Empty playlist area / bottom | Appends preset to the end of the playlist |
 | **Preset within playlist** | Reorder within active playlist | Reorders preset sequence |
+| **Preset from Left Column** | Queue panel | Adds preset to live queue |
 
 ---
 
-## Handling Missing Items
+## 4. Handling Missing Items
 
 If a playlist references a preset file that was moved or deleted from disk:
-- The preset row appears in **red** with a ⚠ warning icon.
-- Hovering shows the missing path.
-- Right-click the missing row to relink or remove the reference.
-
----
-
-## Keyboard Shortcuts Cheatsheet
-
-| Shortcut | Action |
-|----------|--------|
-| `F2` | Rename selected file in Library |
-| `Delete` | Delete selected file / remove preset from playlist |
-| `Ctrl+F` | Focus search bar in Library |
-| `Ctrl+N` | Create new playlist (when in Browser state) |
-| `Ctrl+S` | Save active playlist (when in Editor state) |
-| `Ctrl+W` | Close active playlist editor |
-| `Ctrl+Up / Down` | Reorder selected preset up/down in setlist |
+- The preset row appears in **red** with `[!] (missing)`.
+- Right-click the missing row to remove the reference.

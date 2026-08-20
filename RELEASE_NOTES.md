@@ -1,5 +1,17 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.31
+
+### Library Redesign & Workflow Modernization
+
+- **3-Column Side-by-Side Workflow**:
+  - **Left Column (Presets Library Pool)**: Displays a flat list of all visual presets with real-time text search filtering across both preset names and tags, plus `[Create new preset...]` deck eject rows.
+  - **Middle Column (Playlist Editor)**: Dedicated setlist editor featuring a top playlist selector dropdown combo, `[ + ]` new playlist button, `[ ••• ]` actions menu (Play now, Append to queue, Rename, Clone, Delete), drag-and-drop preset insertion from the library with visual mint-green insertion line, and **auto-save on edit**.
+  - **Right Column (Play Queue)**: Live volatile playback queue and transport controls.
+- **`[ A ] [ B ] [ C ] [ Q ]` Quick Action Buttons**: Standardized across preset items and playlist rows, adding `[ Q ]` (violet accent) to append presets directly to the end of the queue.
+
+---
+
 ## Version 1.0.0-beta.30
 
 ### Auto-VJ & Manual Deck Loading Integration ("Jump the Line")
@@ -9,6 +21,10 @@
 - **Queue Preservation**: Manual deck loading when Auto-VJ is OFF never modifies the queue contents or active index.
 - **Seamless Auto-VJ Mid-Set Arming**: Enabling Auto-VJ mid-set does not cause immediate jump cuts or transitions; it arms the standby deck and smoothly waits for the next advance trigger (CV pulse, beat trigger, MIDI CC, or manual Next button).
 - **Deck C Independence**: Manual loading and interactions on Deck C (master overlay) remain completely independent of the A/B Auto-VJ crossfader pipeline.
+- **Disabled Randomization UI Cleanups**:
+  - In the Preset Grid Mixer tab, hidden parameter rows for randomization (`rand Deck A`, `rand Deck B`, `rand Deck C`, `rand All`) when randomization is disabled in Settings.
+  - In Preset Grid cells, hidden the yellow randomization range arcs whenever randomization is disabled globally or deactivated on the parameter.
+  - In the Mixer Monitor panel, hidden the `Rand A`, `Rand B`, `Rand C`, and `Rand All` buttons and dynamically adapted playlist navigation button widths (`< Prev` and `Next >`) when randomization is disabled.
 
 ---
 

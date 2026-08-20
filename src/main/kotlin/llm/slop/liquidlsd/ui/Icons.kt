@@ -33,6 +33,8 @@ object Icons {
     const val PANEL_LEFT_OPEN = "\ue21d" // panel-left-open
     const val REPEAT      = "\ue146" // repeat
     const val SHUFFLE     = "\ue15e" // shuffle
+    const val MORE_HORIZONTAL = "\ue11f" // more-horizontal
+    const val MORE_VERTICAL   = "\ue120" // more-vertical
 
     // Wave Shapes
     const val WAVE_SINE   = "\ue38b" // spline

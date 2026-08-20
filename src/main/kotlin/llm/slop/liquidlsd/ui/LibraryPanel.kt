@@ -3,46 +3,26 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
-import imgui.flag.ImGuiTreeNodeFlags
-import imgui.type.ImString
-import llm.slop.liquidlsd.presets.PlayQueueManager
-import llm.slop.liquidlsd.presets.PresetManager
+import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
+import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
+import llm.slop.liquidlsd.ui.browser.PresetListPanel
+import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import mu.KotlinLogging
 import java.io.File
-import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
-import llm.slop.liquidlsd.ui.browser.SidebarPanel
-import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
-import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
-
-sealed class LibraryView {
-    object PlaylistsRoot : LibraryView()
-    data class SpecificPlaylist(val playlistFile: File) : LibraryView()
-    data class Presets(val currentDir: File) : LibraryView()
-}
 
 object LibraryPanel {
     private val logger = KotlinLogging.logger {}
-    
-    internal var currentDirectory: File
-        get() = when (val view = SidebarPanel.currentView) {
-            is LibraryView.Presets -> view.currentDir
-            else -> FileSystemManager.getPresetsRoot()
-        }
-        set(value) {
-            SidebarPanel.currentView = LibraryView.Presets(value)
-        }
-        
-    private var assets: List<AssetItem> = emptyList()
-    private var selectedAsset: AssetItem? = null
+
+    var selectedPlaylistFile: File? = null
+    internal var activePlaylistData: PlaylistManager.Playlist? = null
+
     private var showSidebar = true
     private var lastKnownSignature: String = ""
     private var lastAutoRefreshTimeMs: Long = 0L
-    
-    private val searchBuffer = ImString(256)
-    internal var activePlaylistData: PlaylistManager.Playlist? = null
-    
-    private fun getOrLoadPlaylist(file: File): PlaylistManager.Playlist? {
+
+    fun getOrLoadPlaylist(file: File): PlaylistManager.Playlist? {
         val current = activePlaylistData
         if (current != null && current.filePath == file.absolutePath) {
             return current
@@ -56,19 +36,24 @@ object LibraryPanel {
 
     private fun checkAutoRefresh() {
         val now = System.currentTimeMillis()
-        if (now - lastAutoRefreshTimeMs > 250L) {
-            val sig = FileSystemManager.getDirectorySignature(currentDirectory)
+        if (now - lastAutoRefreshTimeMs > 500L) {
+            val root = FileSystemManager.getPresetsRoot()
+            val sig = FileSystemManager.getRecursiveDirectorySignature(root)
             if (sig != lastKnownSignature) {
                 refreshAssets()
             }
         }
     }
-    
-    init {
-        refreshAssets()
+
+    fun refreshAssets() {
+        val root = FileSystemManager.getPresetsRoot()
+        lastKnownSignature = FileSystemManager.getRecursiveDirectorySignature(root)
+        lastAutoRefreshTimeMs = System.currentTimeMillis()
+        FileSystemManager.scanAllPresets()
+        FileSystemManager.scanAllPlaylists()
     }
-    
-    fun draw(session: llm.slop.liquidlsd.SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
+
+    fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
         checkAutoRefresh()
         val safeW = width.coerceAtLeast(60f)
         val sidebarWidth = if (showSidebar) (safeW * 0.33f).coerceAtLeast(20f) else 0f
@@ -88,7 +73,7 @@ object LibraryPanel {
                 showSidebar = !showSidebar
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Show/hide the library folders and playlists sidebar.")
+                ImGui.setTooltip("Show/hide the Presets library column.")
             }
             ImGui.popStyleColor(4)
 
@@ -136,27 +121,30 @@ object LibraryPanel {
         if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 
         val contentH = (ImGui.getContentRegionAvailY() - 5f).coerceAtLeast(1f)
+
+        // Column 1 (Left): Presets Library
         if (showSidebar) {
             val sw = (sidebarWidth - 6f).coerceAtLeast(1f)
-            ImGui.beginChild("LibrarySidebar", sw, contentH, true)
-            SidebarPanel.draw(session, mixer)
+            ImGui.beginChild("LibraryPresetsList", sw, contentH, true)
+            PresetListPanel.draw(session, mixer, presetState)
             ImGui.endChild()
             ImGui.sameLine()
         }
 
+        // Column 2 (Middle): Playlist Editor
         val cw = (centerWidth - 6f).coerceAtLeast(1f)
-        ImGui.beginChild("LibraryCenter", cw, contentH, true)
-        drawCenterContent(session, mixer, presetState)
+        ImGui.beginChild("LibraryPlaylistEditor", cw, contentH, true)
+        PlaylistEditorPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
+        // Column 3 (Right): Play Queue
         val qw = (queueWidth - 8f).coerceAtLeast(1f)
         ImGui.beginChild("LibraryQueue", qw, contentH, true)
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
-        // Deferred popup opens: ImGui does not allow openPopup() from inside a context menu popup.
-        // Flags are set inside the context menu block, and the actual open happens here, outside all popups.
+        // Popups
         if (BrowserPopupHandler.pendingOpenRenamePopup) {
             ImGui.openPopup("RenameAssetPopup")
             BrowserPopupHandler.pendingOpenRenamePopup = false
@@ -167,347 +155,9 @@ object LibraryPanel {
         }
         BrowserPopupHandler.drawRenameAssetPopup()
         BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
-    }
-    
-
-    private fun drawCenterContent(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, presetState: PresetGridState) {
-        when (val view = SidebarPanel.currentView) {
-            is LibraryView.PlaylistsRoot -> drawPlaylistsRootView(session)
-            is LibraryView.SpecificPlaylist -> drawSpecificPlaylistView(session, view.playlistFile, mixer)
-            is LibraryView.Presets -> drawPresetsView(session, view.currentDir, mixer, presetState)
-        }
-    }
-    private fun drawPlaylistsRootView(session: llm.slop.liquidlsd.SessionContext) {
-        ImGui.textDisabled("Playlists Root Settings")
-        ImGui.separator()
-        ImGui.spacing()
-        
-        // Centered-ish clickable text
-        ImGui.setCursorPosY(ImGui.getCursorPosY() + 100f)
-        val windowWidth = ImGui.getWindowWidth()
-        val text = "Create new playlist"
-        val textWidth = ImGui.calcTextSize(text).x
-        ImGui.setCursorPosX((windowWidth - textWidth) * 0.5f)
-        
-        ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, text)
-        if (ImGui.isItemHovered()) {
-            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
-        }
-        if (ImGui.isItemClicked()) {
-            ImGui.openPopup("NewPlaylistPopup")
-        }
-        
         BrowserPopupHandler.drawNewPlaylistPopup()
+        BrowserPopupHandler.drawExportQueuePopup(session)
     }
 
-    private fun drawSpecificPlaylistView(session: llm.slop.liquidlsd.SessionContext, playlistFile: File, mixer: Mixer) {
-        val playlist = getOrLoadPlaylist(playlistFile)
-        if (playlist == null) {
-            ImGui.textColored(1f, 0.3f, 0.3f, 1f, "Error loading playlist: ${playlistFile.name}")
-            return
-        }
-        
-        // Header Row
-        ImGui.text("Playlist: ${playlist.name}")
-        if (playlist.isDirty) {
-            ImGui.sameLine()
-            ImGui.textColored(1f, 0.7f, 0.3f, 1f, "*")
-        }
-
-        // Playlist Right-Click Context Menu
-        val playlistAsset = AssetItem(
-            path = playlistFile.absolutePath,
-            name = playlistFile.nameWithoutExtension,
-            type = AssetType.PLAYLIST
-        )
-
-        if (ImGui.beginPopupContextWindow("playlist_view_context_menu", imgui.flag.ImGuiPopupFlags.MouseButtonRight or imgui.flag.ImGuiPopupFlags.NoOpenOverExistingPopup)) {
-            if (ImGui.menuItem("Play now (and replace queue)")) {
-                session.playQueueManager.playPlaylistNow(playlistFile, mixer)
-            }
-            if (ImGui.menuItem("Insert into the queue after current")) {
-                session.playQueueManager.insertPlaylistAfterCurrent(playlistFile)
-            }
-            if (ImGui.menuItem("Add to the bottom of the queue")) {
-                session.playQueueManager.appendPlaylistToQueue(playlistFile)
-            }
-            ImGui.separator()
-            if (playlist.isDirty) {
-                if (ImGui.menuItem("Save")) {
-                    PlaylistManager.savePlaylist(playlist).onSuccess {
-                        logger.info { "Saved playlist: ${playlist.name}" }
-                    }
-                }
-            }
-            if (ImGui.menuItem("Rename")) {
-                BrowserPopupHandler.renameTarget = playlistAsset
-                BrowserPopupHandler.renameBuffer.set(playlistAsset.name)
-                BrowserPopupHandler.pendingOpenRenamePopup = true
-            }
-            if (ImGui.menuItem("Clone")) {
-                if (playlist.isDirty) {
-                    PlaylistManager.savePlaylist(playlist)
-                }
-                FileSystemManager.cloneFile(playlistFile.absolutePath).onSuccess { newPath ->
-                    SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPath))
-                    activePlaylistData = null
-                }
-            }
-            if (ImGui.menuItem("Delete")) {
-                BrowserPopupHandler.deleteTarget = playlistAsset
-                BrowserPopupHandler.pendingOpenDeletePopup = true
-            }
-            ImGui.endPopup()
-        }
-        
-        ImGui.separator()
-        ImGui.spacing()
-        
-        PlaylistEditorPanel.draw(session, playlist, mixer)
-    }
-
-
-
-    private fun drawPresetsView(session: llm.slop.liquidlsd.SessionContext, currentDir: File, mixer: Mixer, presetState: PresetGridState) {
-        // Header Row
-        ImGui.inputText("Filter", searchBuffer)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Type to filter presets by filename.")
-        }
-        
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Create new preset row
-        drawCreateNewPresetRow(session, mixer, presetState)
-
-        ImGui.separator()
-        ImGui.spacing()
-        
-        // List of presets in currentDir
-        val filterText = searchBuffer.get().trim().lowercase()
-        val filteredAssets = assets.filter { 
-            it.type == AssetType.PRESET && (filterText.isEmpty() || it.displayName.lowercase().contains(filterText)) 
-        }
-        
-        filteredAssets.forEachIndexed { index, asset ->
-            ImGui.pushID(index)
-            
-            // Preview buttons: A, B, C
-            val btnSize = ImGui.getFrameHeight()
-            ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
-            ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
-
-            // Button A (Deck A color: Blue)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.4f, 0.8f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.4f, 0.8f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
-            if (ImGui.button("A##preview_a_$index", btnSize, btnSize)) {
-                val targetDeck = mixer.deckA
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                if (!isDirty) {
-                    logger.info { "Loading preset ${asset.name} to Deck A" }
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = true, isDeckC = false)
-                } else {
-                    UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, true, mixer)
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load preset to Deck A.")
-            }
-            ImGui.popStyleColor(5)
-
-            ImGui.sameLine()
-
-            // Button B (Deck B color: Orange)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.4f, 0.2f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.8f, 0.4f, 0.2f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
-            if (ImGui.button("B##preview_b_$index", btnSize, btnSize)) {
-                val targetDeck = mixer.deckB
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                if (!isDirty) {
-                    logger.info { "Loading preset ${asset.name} to Deck B" }
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = false)
-                } else {
-                    UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load preset to Deck B.")
-            }
-            ImGui.popStyleColor(5)
-
-            ImGui.sameLine()
-
-            // Button C (Deck C color: Green)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.7f, 0.5f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.7f, 0.5f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
-            if (ImGui.button("C##preview_c_$index", btnSize, btnSize)) {
-                val targetDeck = mixer.deckC
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                if (!isDirty) {
-                    logger.info { "Previewing preset ${asset.name} on Deck C" }
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckC = true)
-                } else {
-                    UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
-            }
-            ImGui.popStyleColor(5)
-
-            ImGui.popStyleVar(2)
-
-            ImGui.sameLine()
-
-            val label = asset.displayName
-            val isSelected = selectedAsset == asset
-            
-            if (ImGui.selectable(label, isSelected)) {
-                selectedAsset = asset
-            }
-            
-            // Double-click: Load the preset to the inactive deck (>0% crossfader).
-            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
-                val targetIsA = mixer.crossfade.value > 0.0f
-                val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                
-                if (!isDirty) {
-                    logger.info { "Loading preset ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), targetIsA)
-                } else {
-                    UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, targetIsA, mixer)
-                }
-            }
-            
-            // Drag source: drag a preset
-            if (ImGui.beginDragDropSource()) {
-                ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
-                ImGui.text(asset.name)
-                ImGui.endDragDropSource()
-            }
-            
-            // Right-click context menu
-            if (ImGui.beginPopupContextItem("preset_context_menu_$index")) {
-                if (ImGui.menuItem("Play now (and replace queue)")) {
-                    session.playQueueManager.playNow(File(asset.path), mixer)
-                }
-                if (ImGui.menuItem("Insert into the queue after current")) {
-                    session.playQueueManager.insertAfterCurrent(File(asset.path))
-                }
-                if (ImGui.menuItem("Add to the bottom of the queue")) {
-                    session.playQueueManager.appendToQueue(File(asset.path))
-                }
-                ImGui.separator()
-                if (asset.type == AssetType.PRESET) {
-                    if (ImGui.menuItem("Rename / Edit Tags...")) {
-                        BrowserPopupHandler.openRenamePresetModal(asset)
-                    }
-                    if (ImGui.menuItem("Duplicate Preset...")) {
-                        BrowserPopupHandler.openDuplicatePresetModal(asset)
-                    }
-                } else {
-                    if (ImGui.menuItem("Rename")) {
-                        BrowserPopupHandler.renameTarget = asset
-                        BrowserPopupHandler.renameBuffer.set(asset.name)
-                        BrowserPopupHandler.pendingOpenRenamePopup = true
-                    }
-                    if (ImGui.menuItem("Clone")) {
-                        FileSystemManager.cloneFile(asset.path).onSuccess {
-                            refreshAssets()
-                        }
-                    }
-                }
-                if (ImGui.menuItem("Delete")) {
-                    BrowserPopupHandler.deleteTarget = asset
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
-                }
-                ImGui.endPopup()
-            }
-            
-            ImGui.popID()
-        }
-    }
-
-    private fun drawCreateNewPresetRow(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, presetState: PresetGridState) {
-        ImGui.pushID("create_new_preset_row")
-        val btnSize = ImGui.getFrameHeight()
-        ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
-        ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
-
-        // Button A (Deck A color: Blue)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.4f, 0.8f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.4f, 0.8f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
-        if (ImGui.button("A##new_preset_a", btnSize, btnSize)) {
-            UIManager.triggerDeckEject(mixer.deckA, isDeckA = true, isDeckC = false)
-            presetState.activeTopTab = "Deck A"
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset in Deck A (eject existing).")
-        }
-        ImGui.popStyleColor(5)
-
-        ImGui.sameLine()
-
-        // Button B (Deck B color: Orange)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.4f, 0.2f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Border, 0.8f, 0.4f, 0.2f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
-        if (ImGui.button("B##new_preset_b", btnSize, btnSize)) {
-            UIManager.triggerDeckEject(mixer.deckB, isDeckA = false, isDeckC = false)
-            presetState.activeTopTab = "Deck B"
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset in Deck B (eject existing).")
-        }
-        ImGui.popStyleColor(5)
-
-        ImGui.sameLine()
-
-        // Button C (Deck C color: Green)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.7f, 0.5f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.7f, 0.5f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
-        if (ImGui.button("C##new_preset_c", btnSize, btnSize)) {
-            UIManager.triggerDeckEject(mixer.deckC, isDeckA = false, isDeckC = true)
-            presetState.activeTopTab = "Deck C"
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset in Deck C (eject existing).")
-        }
-        ImGui.popStyleColor(5)
-
-        ImGui.popStyleVar(2)
-
-        ImGui.sameLine()
-        ImGui.textDisabled("[Create new preset...]")
-
-        ImGui.popID()
-    }
-
-    internal fun refreshAssets() {
-        lastKnownSignature = FileSystemManager.getDirectorySignature(currentDirectory)
-        lastAutoRefreshTimeMs = System.currentTimeMillis()
-        assets = FileSystemManager.scanDirectory(currentDirectory)
-        logger.debug { "Refreshed library items: ${assets.size} items in ${currentDirectory.name}" }
-    }
-    
-    fun getSelectedAsset(): AssetItem? = selectedAsset
+    fun getSelectedAsset(): AssetItem? = PresetListPanel.selectedAsset
 }

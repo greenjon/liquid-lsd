@@ -8,7 +8,6 @@ import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
-import llm.slop.liquidlsd.ui.LibraryView
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.SavePresetModal
 import mu.KotlinLogging
@@ -143,9 +142,9 @@ object BrowserPopupHandler {
                             LibraryPanel.activePlaylistData = null
                             LibraryPanel.refreshAssets()
                         } else if (target.type == AssetType.PLAYLIST) {
-                            val currentPlaylistPath = (SidebarPanel.currentView as? LibraryView.SpecificPlaylist)?.playlistFile?.absolutePath
+                            val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
                             if (target.path == currentPlaylistPath) {
-                                SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPath))
+                                LibraryPanel.selectedPlaylistFile = File(newPath)
                                 LibraryPanel.activePlaylistData = null
                             }
                         }
@@ -188,9 +187,9 @@ object BrowserPopupHandler {
                     if (target.type == AssetType.PRESET) {
                         LibraryPanel.refreshAssets()
                     } else if (target.type == AssetType.PLAYLIST) {
-                        val currentPlaylistPath = (SidebarPanel.currentView as? LibraryView.SpecificPlaylist)?.playlistFile?.absolutePath
+                        val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
                         if (target.path == currentPlaylistPath) {
-                            SidebarPanel.currentView = LibraryView.PlaylistsRoot
+                            LibraryPanel.selectedPlaylistFile = null
                             LibraryPanel.activePlaylistData = null
                         }
                     }
@@ -213,10 +212,11 @@ object BrowserPopupHandler {
             ImGui.separator()
             ImGui.inputText("Name", newPlaylistNameBuffer)
             if (ImGui.button("Create", 120f, 0f)) {
-                val name = newPlaylistNameBuffer.get()
+                val name = newPlaylistNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { newPlaylist ->
-                        SidebarPanel.currentView = LibraryView.SpecificPlaylist(File(newPlaylist.filePath))
+                        LibraryPanel.selectedPlaylistFile = File(newPlaylist.filePath)
+                        LibraryPanel.activePlaylistData = newPlaylist
                         newPlaylistNameBuffer.set("")
                     }
                 }

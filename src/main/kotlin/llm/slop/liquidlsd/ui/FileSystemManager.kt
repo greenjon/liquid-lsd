@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.presets.PlaylistParser
 import mu.KotlinLogging
 import java.io.File
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeUnit
  */
 object FileSystemManager {
     private val logger = KotlinLogging.logger {}
+    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
     
     private const val PRESETS_ROOT = "library/presets"
     private const val PLAYLISTS_ROOT = "library/playlists"
@@ -29,6 +32,7 @@ object FileSystemManager {
     )
 
     private val scanCache = ConcurrentHashMap<String, ScanCacheEntry>()
+    private val tagCache = ConcurrentHashMap<String, Pair<Long, List<String>>>()
     
     private val executor = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "FileSystemScanner").apply { isDaemon = true }
@@ -37,6 +41,25 @@ object FileSystemManager {
 
     internal fun clearScanCache() {
         scanCache.clear()
+        tagCache.clear()
+    }
+
+    internal fun getPresetTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        val lastMod = file.lastModified()
+        val path = file.canonicalPath
+        val cached = tagCache[path]
+        if (cached != null && cached.first == lastMod) {
+            return cached.second
+        }
+        val tags = try {
+            val dto = json.decodeFromString<DeckPresetDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+        tagCache[path] = lastMod to tags
+        return tags
     }
 
     internal fun getDirectorySignature(directory: File): String {
@@ -47,6 +70,12 @@ object FileSystemManager {
                 "${file.name}:${file.isDirectory}:${file.length()}:${file.lastModified()}"
             } ?: ""
         return "${directory.lastModified()}:$childrenSig"
+    }
+
+    internal fun getRecursiveDirectorySignature(directory: File): String {
+        if (!directory.exists() || !directory.isDirectory) return ""
+        val files = directory.walkTopDown().filter { it.isFile }.sortedBy { it.path }.toList()
+        return files.joinToString("|") { "${it.name}:${it.length()}:${it.lastModified()}" }
     }
 
     private fun directorySignature(directory: File): String = getDirectorySignature(directory)
@@ -69,6 +98,72 @@ object FileSystemManager {
         }
     }
     
+    fun scanAllPresets(): List<AssetItem> {
+        val root = getPresetsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_PRESETS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile }
+            .filter { file ->
+                val ext = file.extension.lowercase()
+                ext == "lsd" || ext == "patch" || ext == "json"
+            }
+            .map { file ->
+                val tags = getPresetTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.PRESET,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
+    fun scanAllPlaylists(): List<AssetItem> {
+        val root = getPlaylistsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_PLAYLISTS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdset" }
+            .map { file ->
+                val validation = validatePlaylistFile(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.PLAYLIST,
+                    isValid = validation.first,
+                    errorMessage = validation.second
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
     fun scanDirectory(directory: File): List<AssetItem> {
         if (!directory.exists() || !directory.isDirectory) {
             return emptyList()
@@ -104,7 +199,8 @@ object FileSystemManager {
                 ext == "lsd" || ext == "patch" || ext == "json" -> {
                     items.add(AssetItem(
                         path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PRESET,
-                        isValid = true // Assume valid for fast scan
+                        isValid = true, // Assume valid for fast scan
+                        tags = getPresetTags(file)
                     ))
                 }
                 ext == "lsdset" -> {
@@ -143,7 +239,8 @@ object FileSystemManager {
                                 path = file.absolutePath,
                                 name = file.nameWithoutExtension,
                                 type = AssetType.PRESET,
-                                isValid = validatePresetFile(file)
+                                isValid = validatePresetFile(file),
+                                tags = getPresetTags(file)
                             ))
                         }
                         ext == "lsdset" -> {

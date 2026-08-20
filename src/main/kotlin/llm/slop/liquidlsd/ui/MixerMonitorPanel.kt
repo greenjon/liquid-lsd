@@ -65,7 +65,7 @@ class MixerMonitorPanel(
         // --- Momentary Controls: Playlist Prev/Next & Randomize A/B/C/All ---
         val spacingX = ImGui.getStyle().itemSpacing.x
         val totalAvailW = ImGui.getContentRegionAvailX()
-        val numButtons = 6
+        val numButtons = if (session.uiTheme.randomizationEnabled) 6 else 2
         val mBtnW = ((totalAvailW - (spacingX * (numButtons - 1))) / numButtons).coerceAtLeast(20f)
         val mBtnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() * 0.9f }.coerceAtLeast(20f)
 
@@ -95,65 +95,67 @@ class MixerMonitorPanel(
         }
         ImGui.popStyleColor(3)
 
-        ImGui.sameLine()
+        if (session.uiTheme.randomizationEnabled) {
+            ImGui.sameLine()
 
-        // Rand A Button
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-        if (ImGui.button("${Icons.DICES} A##rand_deck_a", mBtnW, mBtnH)) {
-            PresetGridUndo.pushUndoState(presetState, mixer)
-            mixer.randomizeDeckA()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize Deck A modulators & base values (Mixer/randDeckA).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
-        }
-        ImGui.popStyleColor(3)
+            // Rand A Button
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
+            if (ImGui.button("${Icons.DICES} A##rand_deck_a", mBtnW, mBtnH)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                mixer.randomizeDeckA()
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize Deck A modulators & base values (Mixer/randDeckA).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+            }
+            ImGui.popStyleColor(3)
 
-        ImGui.sameLine()
+            ImGui.sameLine()
 
-        // Rand B Button
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-        if (ImGui.button("${Icons.DICES} B##rand_deck_b", mBtnW, mBtnH)) {
-            PresetGridUndo.pushUndoState(presetState, mixer)
-            mixer.randomizeDeckB()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize Deck B modulators & base values (Mixer/randDeckB).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
-        }
-        ImGui.popStyleColor(3)
+            // Rand B Button
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
+            if (ImGui.button("${Icons.DICES} B##rand_deck_b", mBtnW, mBtnH)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                mixer.randomizeDeckB()
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize Deck B modulators & base values (Mixer/randDeckB).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+            }
+            ImGui.popStyleColor(3)
 
-        ImGui.sameLine()
+            ImGui.sameLine()
 
-        // Rand C Button
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-        if (ImGui.button("${Icons.DICES} C##rand_deck_c", mBtnW, mBtnH)) {
-            PresetGridUndo.pushUndoState(presetState, mixer)
-            mixer.randomizeDeckC()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize Deck C modulators & base values (Mixer/randDeckC).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
-        }
-        ImGui.popStyleColor(3)
+            // Rand C Button
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
+            if (ImGui.button("${Icons.DICES} C##rand_deck_c", mBtnW, mBtnH)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                mixer.randomizeDeckC()
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize Deck C modulators & base values (Mixer/randDeckC).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+            }
+            ImGui.popStyleColor(3)
 
-        ImGui.sameLine()
+            ImGui.sameLine()
 
-        // Rand All Button
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.36f, 0.22f, 0.32f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.46f, 0.30f, 0.42f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.56f, 0.38f, 0.52f, 1f))
-        if (ImGui.button("${Icons.DICES} All##rand_all", mBtnW, mBtnH)) {
-            PresetGridUndo.pushUndoState(presetState, mixer)
-            mixer.randomizeAll()
+            // Rand All Button
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.36f, 0.22f, 0.32f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.46f, 0.30f, 0.42f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.56f, 0.38f, 0.52f, 1f))
+            if (ImGui.button("${Icons.DICES} All##rand_all", mBtnW, mBtnH)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                mixer.randomizeAll()
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize all Decks (A, B, C) and Master parameters (Mixer/randAll).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+            }
+            ImGui.popStyleColor(3)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Randomize all Decks (A, B, C) and Master parameters (Mixer/randAll).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
-        }
-        ImGui.popStyleColor(3)
 
         ImGui.spacing()
 

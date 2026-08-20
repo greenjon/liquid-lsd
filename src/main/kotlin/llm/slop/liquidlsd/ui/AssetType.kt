@@ -17,7 +17,8 @@ data class AssetItem(
     val name: String,
     val type: AssetType,
     val isValid: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val tags: List<String> = emptyList()
 ) {
     val displayName: String
         get() = if (isValid) name else "[!] $name"

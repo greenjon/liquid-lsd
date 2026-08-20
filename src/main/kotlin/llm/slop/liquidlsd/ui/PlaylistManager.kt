@@ -149,7 +149,7 @@ object PlaylistManager {
     /**
      * Inserts a preset at a specific index in the playlist.
      */
-    fun insertPreset(playlist: Playlist, presetPath: String, index: Int): Result<Unit> {
+    fun insertPreset(playlist: Playlist, presetPath: String, index: Int, autoSave: Boolean = true): Result<Unit> {
         return try {
             if (index < 0 || index > playlist.presets.size) {
                 return Result.failure(IllegalArgumentException("Invalid index: $index"))
@@ -168,6 +168,9 @@ object PlaylistManager {
             }
             
             playlist.presets.add(index, relativePath)
+            if (autoSave) {
+                savePlaylist(playlist)
+            }
             logger.info { "Inserted preset at index $index: $relativePath" }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -179,13 +182,16 @@ object PlaylistManager {
     /**
      * Removes a preset at a specific index from the playlist.
      */
-    fun removePreset(playlist: Playlist, index: Int): Result<Unit> {
+    fun removePreset(playlist: Playlist, index: Int, autoSave: Boolean = true): Result<Unit> {
         return try {
             if (index < 0 || index >= playlist.presets.size) {
                 return Result.failure(IllegalArgumentException("Invalid index: $index"))
             }
             
             val removed = playlist.presets.removeAt(index)
+            if (autoSave) {
+                savePlaylist(playlist)
+            }
             logger.debug { "Removed preset at index $index: $removed" }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -197,7 +203,7 @@ object PlaylistManager {
     /**
      * Moves a preset from one index to another within the playlist.
      */
-    fun movePreset(playlist: Playlist, fromIndex: Int, toIndex: Int): Result<Unit> {
+    fun movePreset(playlist: Playlist, fromIndex: Int, toIndex: Int, autoSave: Boolean = true): Result<Unit> {
         return try {
             if (fromIndex < 0 || fromIndex >= playlist.presets.size) {
                 return Result.failure(IllegalArgumentException("Invalid from index: $fromIndex"))
@@ -208,6 +214,9 @@ object PlaylistManager {
             
             val preset = playlist.presets.removeAt(fromIndex)
             playlist.presets.add(toIndex, preset)
+            if (autoSave) {
+                savePlaylist(playlist)
+            }
             logger.debug { "Moved preset from $fromIndex to $toIndex" }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -220,7 +229,7 @@ object PlaylistManager {
      * Unpacks a playlist and inserts all its presets at the specified index.
      * This is the "flat unpacking" operation for drag-and-drop.
      */
-    fun unpackPlaylistInto(targetPlaylist: Playlist, sourcePlaylistPath: String, insertIndex: Int): Result<Unit> {
+    fun unpackPlaylistInto(targetPlaylist: Playlist, sourcePlaylistPath: String, insertIndex: Int, autoSave: Boolean = true): Result<Unit> {
         return try {
             val sourceFile = File(sourcePlaylistPath)
             val sourcePlaylist = loadPlaylist(sourceFile).getOrThrow()
@@ -230,6 +239,9 @@ object PlaylistManager {
             }
             
             targetPlaylist.presets.addAll(insertIndex, sourcePlaylist.presets)
+            if (autoSave) {
+                savePlaylist(targetPlaylist)
+            }
             logger.info { "Unpacked ${sourcePlaylist.presets.size} presets from ${sourceFile.name} into ${targetPlaylist.name}" }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -241,7 +253,7 @@ object PlaylistManager {
     /**
      * Relinks a missing preset to a new path.
      */
-    fun relinkPreset(playlist: Playlist, index: Int, newPath: String): Result<Unit> {
+    fun relinkPreset(playlist: Playlist, index: Int, newPath: String, autoSave: Boolean = true): Result<Unit> {
         return try {
             if (index < 0 || index >= playlist.presets.size) {
                 return Result.failure(IllegalArgumentException("Invalid index: $index"))
@@ -264,6 +276,9 @@ object PlaylistManager {
             }
             
             playlist.presets[index] = relativePath
+            if (autoSave) {
+                savePlaylist(playlist)
+            }
             logger.info { "Relinked preset at index $index to $relativePath" }
             Result.success(Unit)
         } catch (e: Exception) {
