@@ -41,6 +41,43 @@ class Mixer(
     @Volatile var targetCrossfade = -1.0f
     var isAutoFading = false
 
+    /**
+     * Mutes all non-MIDI modulators on the crossfader (e.g. when Auto-VJ or auto-fading starts).
+     */
+    fun muteCrossfadeNonMidiCv() {
+        val hasActiveNonMidiMods = crossfade.modulators.any { !it.sourceId.startsWith("midi_cc_") && !it.bypassed }
+        if (hasActiveNonMidiMods) {
+            val updated = crossfade.modulators.map { mod ->
+                if (!mod.sourceId.startsWith("midi_cc_")) mod.copy(bypassed = true) else mod
+            }
+            crossfade.modulators.clear()
+            crossfade.modulators.addAll(updated)
+        }
+    }
+
+    /**
+     * Called when the user manually interacts with the crossfader (via mouse or MIDI).
+     * Disarms Auto-VJ, halts active auto-fade transitions, and mutes all non-MIDI CV modulators on crossfade.
+     */
+    fun onCrossfadeManualTakeover() {
+        llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled = false
+        isAutoFading = false
+        muteCrossfadeNonMidiCv()
+    }
+
+    /**
+     * Called when any CV modulator on the crossfader is unmuted or activated.
+     * Snaps crossfade.baseValue to 0.0f (unbiased center) so modulation oscillates symmetrically between decks.
+     */
+    fun onCrossfadeCvUnmuted() {
+        crossfade.baseValue = 0.0f
+        if (!crossfade.randomizeBase) {
+            crossfade.baseMin = 0.0f
+            crossfade.baseMax = 0.0f
+        }
+        targetCrossfade = 0.0f
+    }
+
     val queuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
         modulatorFilter = { mod ->
             llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled || mod.sourceId.startsWith("midi_cc_")

@@ -56,13 +56,13 @@ class MixerMonitorPanel(
         ImGui.beginChild("MasterControls", availW, masterControlsH, true, imgui.flag.ImGuiWindowFlags.NoScrollbar)
         
         // Crossfader (mapped display value from -1.0 to 1.0)
-        drawFlatSlider(session, "Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck C runs in parallel as a preview.") {
-            "%.2f".format(it)
+        drawFlatSlider(session, "Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck C runs in parallel as a preview.", mixer = mixer) {
+            ""
         }
 
         ImGui.spacing()
 
-        drawFlatSlider(session, "Mixer/xfadeSpeed", "Fade Speed", mixer.xfadeSpeed, 0.1f, 30.0f, 80f, 0.1f, 30.0f, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), "Adjust transition duration for automatic crossfading and Auto-VJ transitions.") {
+        drawFlatSlider(session, "Mixer/xfadeSpeed", "Fade Speed", mixer.xfadeSpeed, 0.1f, 30.0f, 80f, 0.1f, 30.0f, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), "Adjust transition duration for automatic crossfading and Auto-VJ transitions.", mixer = mixer) {
             "%.1fs".format(it)
         }
         
@@ -226,6 +226,7 @@ class MixerMonitorPanel(
         displayMax: Float = max,
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f),
         tooltip: String? = null,
+        mixer: Mixer? = null,
         formatValue: (Float) -> String = { "%.3f".format(it) }
     ) {
         ImGui.pushID(label)
@@ -263,6 +264,9 @@ class MixerMonitorPanel(
                 presetState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, label, param, min, max)
             }
         } else if (ImGui.isItemActive()) {
+            if (paramKey == "Mixer/crossfade") {
+                mixer?.onCrossfadeManualTakeover()
+            }
             val mouseX = ImGui.getIO().mousePos.x
             val pct = if (barW > 0f) ((mouseX - barStartX) / barW).coerceIn(0f, 1f) else 0f
             val newValue = min + pct * (max - min)
@@ -304,8 +308,9 @@ class MixerMonitorPanel(
         }
 
         // Fill mapping slider value
-        val currentDisplayVal = displayMin + if (valueRange > 0f) ((param.baseValue - min) / valueRange) * displayRange else 0f
-        val pct = if (valueRange > 0f) ((param.baseValue - min) / valueRange).coerceIn(0f, 1f) else 0f
+        val activeVal = if (paramKey == "Mixer/crossfade" || param.modulators.any { !it.bypassed }) param.value else param.baseValue
+        val currentDisplayVal = displayMin + if (valueRange > 0f) ((activeVal - min) / valueRange) * displayRange else 0f
+        val pct = if (valueRange > 0f) ((activeVal - min) / valueRange).coerceIn(0f, 1f) else 0f
 
         val isBipolar = min < 0f
         if (isBipolar && valueRange > 0f) {
@@ -335,6 +340,13 @@ class MixerMonitorPanel(
                     3f
                 )
             }
+        }
+
+        // Draw fader position thumb indicator (especially helpful for live crossfader modulation)
+        if (paramKey == "Mixer/crossfade" && valueRange > 0f) {
+            val thumbX = (barStartX + barW * pct).coerceIn(barStartX + 1f, barStartX + barW - 1f)
+            val thumbCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
+            dl.addLine(thumbX, barScreenY - 1.5f, thumbX, barScreenY + barH + 1.5f, thumbCol, 2.5f)
         }
 
         // MIDI mapped indicator

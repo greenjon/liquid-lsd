@@ -424,6 +424,9 @@ object PresetGridRenderer {
                     }
                     param.modulators.clear()
                     param.modulators.addAll(updated)
+                    if (!targetBypassed && paramKey == "Mixer/crossfade") {
+                        mixer.onCrossfadeCvUnmuted()
+                    }
                 } else {
                     // Middle-clicking an unmapped cell populates it with a default modulator and selects it
                     onPushUndo()
@@ -433,6 +436,9 @@ object PresetGridRenderer {
                         else -> cvId
                     }
                     param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = 0.5f, bypassed = false))
+                    if (paramKey == "Mixer/crossfade") {
+                        mixer.onCrossfadeCvUnmuted()
+                    }
                 }
             }
             if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {
@@ -443,6 +449,9 @@ object PresetGridRenderer {
                 if (ImGui.menuItem("Paste Modulator(s)", null, false, hasCellClip)) {
                     onPushUndo()
                     ClipboardManager.cellClipboard?.let { ClipboardManager.applyCellClipboard(param, cvId, it) }
+                    if (paramKey == "Mixer/crossfade") {
+                        mixer.onCrossfadeCvUnmuted()
+                    }
                 }
                 if (activeMods.isNotEmpty()) {
                     if (ImGui.menuItem("Clear Modulator(s)")) {
@@ -451,13 +460,17 @@ object PresetGridRenderer {
                     }
                     if (ImGui.menuItem(if (isBypassed) "Unmute Modulator(s)" else "Mute Modulator(s)")) {
                         onPushUndo()
+                        val nextBypassed = !isBypassed
                         val updated = param.modulators.map { mod ->
                             if (activeMods.any { it.id == mod.id }) {
-                                mod.copy(bypassed = !mod.bypassed)
+                                mod.copy(bypassed = nextBypassed)
                             } else mod
                         }
                         param.modulators.clear()
                         param.modulators.addAll(updated)
+                        if (!nextBypassed && paramKey == "Mixer/crossfade") {
+                            mixer.onCrossfadeCvUnmuted()
+                        }
                     }
                 }
                 ImGui.endPopup()

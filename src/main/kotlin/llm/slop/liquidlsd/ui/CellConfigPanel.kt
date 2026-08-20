@@ -221,7 +221,7 @@ object CellConfigPanel {
                     isVirtual = isVirtual,
                     isLfo = isLfo,
                     hasAdvanced = hasAdvanced,
-                    onReplace = { newMod -> replaceModulator(state, param, newMod) },
+                    onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
                     onReset = {
                         val toRemove = activeMods.toList()
                         for (mod in toRemove) {
@@ -246,7 +246,7 @@ object CellConfigPanel {
                     isGen = isGen,
                     hasAdvanced = hasAdvanced,
                     themeColor = currentThemeColor,
-                    onReplace = { newMod -> replaceModulator(state, param, newMod) }
+                    onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
                 )
 
                 // Draw LFO 2 / secondary generator modulator controls
@@ -257,7 +257,7 @@ object CellConfigPanel {
                         existing = existing,
                         idx = idx,
                         themeColor = currentThemeColor,
-                        onReplace = { newMod -> replaceModulator(state, param, newMod) }
+                        onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
                     )
                 }
 
@@ -286,12 +286,16 @@ object CellConfigPanel {
         ImGui.popStyleVar()
     }
 
-    private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator) {
+    private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator, mixer: Mixer? = null) {
         val idx = param.modulators.indexOfFirst { it.id == newMod.id }
+        val wasBypassed = if (idx >= 0) param.modulators[idx].bypassed else true
         if (idx >= 0) {
             param.modulators[idx] = newMod
         } else {
             param.modulators.add(newMod)
+        }
+        if (wasBypassed && !newMod.bypassed && state.selectedCell?.paramKey == "Mixer/crossfade") {
+            mixer?.onCrossfadeCvUnmuted()
         }
     }
 }

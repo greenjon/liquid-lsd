@@ -1,5 +1,18 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.29
+
+### Master Crossfader Manual Takeover & CV Auto-Centering
+
+- **Instant Manual Takeover**: Interacting with the master Crossfader via mouse or a physical MIDI controller immediately takes priority over background automation:
+  - **Auto-VJ Disarm**: Auto-VJ is turned off (`isAutoVJEnabled = false`) and any active auto-fade transition halts at the current position.
+  - **CV Modulation Muting**: All non-MIDI modulators (LFO, Audio Followers, Triggers) on `Mixer/crossfade` are automatically muted (`bypassed = true`), giving the performer 1:1 manual authority without fighting background modulation.
+  - **MIDI CC Modulators Preserved**: Modulators mapped to physical MIDI CCs are preserved and remain active.
+- **Auto-Centering on CV Unmute**: Unmuting any CV modulator on `Mixer/crossfade` automatically snaps `crossfade.baseValue` to `0.0` (unbiased center), allowing LFOs and audio followers to resume symmetrical oscillation across both decks without clipping against manual hold positions. Modulator `DC Offset` provides optional deck bias.
+- **Playlist "Play Now" Auto-VJ Fix**: Selecting *"Play now (and replace queue)"* on a playlist or individual preset now automatically turns on the `AUTO-VJ` toggle and mutes crossfade CVs so automated queue crossfading starts smoothly without modulation interference.
+
+---
+
 ## Version 1.0.0-beta.27
 
 ### GUI Scale Percentage Model & HiDPI Detection

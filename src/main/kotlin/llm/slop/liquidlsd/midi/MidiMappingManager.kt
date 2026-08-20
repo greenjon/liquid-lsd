@@ -122,6 +122,8 @@ object MidiMappingManager {
         return activeProfile.mappings[specialPath]?.cc ?: -1
     }
 
+    private val lastMidiValues = java.util.concurrent.ConcurrentHashMap<String, Float>()
+
     fun getChannelForSpecial(specialPath: String): Int {
         return activeProfile.mappings[specialPath]?.channel ?: 0
     }
@@ -131,6 +133,13 @@ object MidiMappingManager {
             if (path.startsWith("Global/")) continue // special trigger mappings
             val param = ParameterResolver.findParameterByPath(mixer, path) ?: continue
             val rawMidi = MidiEngine.getCcValue(mapping.channel, mapping.cc)
+            val prevMidi = lastMidiValues[path]
+            if (prevMidi != null && prevMidi != rawMidi) {
+                if (path == "Mixer/crossfade") {
+                    mixer.onCrossfadeManualTakeover()
+                }
+            }
+            lastMidiValues[path] = rawMidi
             val scaled = mapping.minVal + rawMidi * (mapping.maxVal - mapping.minVal)
             param.baseValue = scaled
         }

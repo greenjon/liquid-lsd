@@ -109,9 +109,10 @@ object PlayQueueManager {
     fun parsePlaylist(playlistFile: File): List<File> {
         return try {
             val items = PlaylistParser.parseFile(playlistFile)
+            val roots = listOfNotNull(playlistFile.parentFile, File("library/presets")).distinct()
             
             items.mapNotNull { itemName ->
-                val resolved = PlaylistParser.resolveItem(itemName)
+                val resolved = PlaylistParser.resolveItem(itemName, roots)
                 if (resolved == null) {
                     logger.warn { "Queue playlist item not found: $itemName" }
                 }
@@ -132,6 +133,8 @@ object PlayQueueManager {
     fun playNow(file: File, mixer: Mixer) {
         clearQueue()
         appendToQueue(file)
+        isAutoVJEnabled = true
+        mixer.muteCrossfadeNonMidiCv()
         triggerNext(mixer)
     }
 
@@ -141,6 +144,8 @@ object PlayQueueManager {
         if (files.isNotEmpty()) {
             queue.addAll(files)
             logger.info { "Replaced queue with playlist: ${playlistFile.name} (${files.size} items)" }
+            isAutoVJEnabled = true
+            mixer.muteCrossfadeNonMidiCv()
             triggerNext(mixer)
         }
     }
@@ -268,6 +273,7 @@ object PlayQueueManager {
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
         mixer.isAutoFading = true
+        mixer.muteCrossfadeNonMidiCv()
     }
     
     fun clearQueue() {
@@ -337,6 +343,7 @@ object PlayQueueManager {
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
         mixer.isAutoFading = true
+        mixer.muteCrossfadeNonMidiCv()
     }
 
     /**

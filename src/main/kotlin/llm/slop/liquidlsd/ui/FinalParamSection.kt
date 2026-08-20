@@ -69,6 +69,12 @@ object FinalParamSection {
         ImGui.separator()
         ImGui.spacing()
 
+        if (paramKey == "Mixer/crossfade") {
+            // The master crossfader is dynamically driven by manual takeover, Auto-VJ transitions,
+            // or unbiased center (0.0) CV modulation. Hide the Initial Range section.
+            return
+        }
+
         // --- SCROLLABLE BODY: INITIAL VALUE CONTROLS ---
         val childFlags = if (CustomRangeSlider.isAnySliderHovered) imgui.flag.ImGuiWindowFlags.NoScrollWithMouse else 0
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)

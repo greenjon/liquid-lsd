@@ -15,7 +15,11 @@ object QueueActionsPanel {
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         // Header Row
         if (ImGui.checkbox("AUTO-VJ", session.playQueueManager.isAutoVJEnabled)) {
-            session.playQueueManager.isAutoVJEnabled = !session.playQueueManager.isAutoVJEnabled
+            val nextState = !session.playQueueManager.isAutoVJEnabled
+            session.playQueueManager.isAutoVJEnabled = nextState
+            if (nextState) {
+                mixer.muteCrossfadeNonMidiCv()
+            }
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue presets at set intervals.")

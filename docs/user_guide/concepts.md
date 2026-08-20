@@ -98,8 +98,14 @@ The central Mixer blends the outputs of Deck A and Deck B to form the master vid
 - **`MAX`** (Lighten): Compares A and B per-pixel and selects the brightest color.
 - **`XFADE`** (Crossfade): Standard linear interpolation between Deck A and Deck B.
 
-### Crossfader Modulation
-The `crossfade` slider interpolates between Deck A (0.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.
+### Crossfader Modulation & Manual Takeover
+The `crossfade` slider interpolates between Deck A (-1.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.
+
+- **Manual Takeover**: If the user moves the crossfader slider using the mouse or a mapped MIDI controller:
+  - **Auto-VJ Disarms**: Auto-VJ is immediately turned off (`AUTO-VJ` checkbox unchecks) and any active automated crossfade transition is stopped.
+  - **CV Modulators Mute**: All non-MIDI CV modulators assigned to `Mixer/crossfade` are automatically muted (`bypassed = true`), giving the performer clean 1:1 manual authority over deck blending without fighting background modulation.
+  - **MIDI Controllers Remain Active**: Modulators mapped to physical MIDI CCs are preserved and remain active.
+- **Auto-Centering on CV Unmute**: When the user un-mutes any CV modulator on the crossfader in the modulation matrix or cell inspector, `crossfade.baseValue` automatically snaps to `0.0` (unbiased center). This ensures that LFOs or audio followers immediately resume full-range, symmetrical oscillation between Deck A and Deck B without clipping against previous manual hold positions. Modulator `DC Offset` can be used whenever an intentional deck bias is desired.
 
 ---
 

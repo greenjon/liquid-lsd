@@ -274,3 +274,19 @@ The full parameter list covers (per deck A/B/C):
 
 Dynamic visual sources (`DynamicVisualSource`, `Kifs`) expose their own parameter maps and are
 resolved generically via the source's `parameters` map + `globalAlpha`.
+
+---
+
+## Crossfade Manual Takeover & Auto-Centering
+
+**Files**: `rendering/Mixer.kt`, `ui/MixerMonitorPanel.kt`, `ui/PresetGridRenderer.kt`, `ui/CellConfigPanel.kt`, `midi/MidiMappingManager.kt`
+
+The master crossfader (`Mixer/crossfade`) implements a performance takeover workflow:
+1. **Manual Takeover (`Mixer.onCrossfadeManualTakeover()`)**: Triggered when the user interacts with the crossfader slider via mouse or incoming hardware MIDI CC.
+   - Disarms Auto-VJ (`PlayQueueManager.isAutoVJEnabled = false`).
+   - Halts any active automated fade (`Mixer.isAutoFading = false`).
+   - Mutes all non-MIDI modulators on the crossfader (`mod.bypassed = true`), ensuring immediate 1:1 manual authority.
+2. **Auto-Centering on Unmute (`Mixer.onCrossfadeCvUnmuted()`)**: Triggered when any CV modulator on `Mixer/crossfade` is unmuted or assigned.
+   - Resets `crossfade.baseValue = 0.0f` (and baseMin/baseMax if non-randomized).
+   - Guarantees immediate full-range, unbiased $[-1.0, +1.0]$ oscillation without waveform clipping against previous manual hold positions. Modulator `dcOffset` provides optional deck bias.
+

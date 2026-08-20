@@ -241,4 +241,30 @@ class PlayQueueManagerTest {
 
         assertEquals(listOf(patchFile.absoluteFile), resolved.map { it.absoluteFile })
     }
+
+    @Test
+    fun testPlayNowEnablesAutoVjAndMutesCrossfadeCv() {
+        PlayQueueManager.isAutoVJEnabled = false
+        val file = File("library/presets/testPreset.lsd")
+        
+        PlayQueueManager.playNow(file, mixer)
+
+        assertTrue(PlayQueueManager.isAutoVJEnabled, "playNow should enable Auto-VJ")
+        io.mockk.verify { mixer.muteCrossfadeNonMidiCv() }
+    }
+
+    @Test
+    fun testPlayPlaylistNowEnablesAutoVjAndMutesCrossfadeCv() {
+        PlayQueueManager.isAutoVJEnabled = false
+        val tempDir = createTempDirectory().toFile()
+        val patch1 = File(tempDir, "p1.lsd").apply { writeText("{}") }
+        val playlistFile = File(tempDir, "test.json").apply {
+            writeText("""{"version":1,"name":"Test","items":["${patch1.name}"]}""")
+        }
+
+        PlayQueueManager.playPlaylistNow(playlistFile, mixer)
+
+        assertTrue(PlayQueueManager.isAutoVJEnabled, "playPlaylistNow should enable Auto-VJ")
+        io.mockk.verify(atLeast = 1) { mixer.muteCrossfadeNonMidiCv() }
+    }
 }
