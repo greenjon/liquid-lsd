@@ -207,16 +207,16 @@ fun isTriggerSource(sourceId: String): Boolean = when (sourceId) {
  *
  * Used by the O-scope in CellConfigPanel and PresetGrid knob indicators so displays match engine output.
  */
-fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean): Float =
-    getCombinedEffectiveValueAtOffset(mods, isBipolar, 0.0)
+fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean, includeBypassed: Boolean = false): Float =
+    getCombinedEffectiveValueAtOffset(mods, isBipolar, 0.0, includeBypassed)
 
-fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolean, timeOffsetSec: Double): Float {
+fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolean, timeOffsetSec: Double, includeBypassed: Boolean = false): Float {
     if (mods.isEmpty()) return 0f
 
     var result = 0f
     var first = true
     for (mod in mods) {
-        if (mod.bypassed) continue
+        if (mod.bypassed && !includeBypassed) continue
         val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
         val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
         val modAmount = if (isSourceBipolar) {

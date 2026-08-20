@@ -50,13 +50,13 @@ object ModulatorHeaderRow {
             ImGui.popStyleVar() // Draw header controls at full opacity
         }
 
-        // 1. Power icon (Active/Bypass button)
+        // 1. Power icon (Active/Mute button)
         val btnY2 = ImGui.getCursorScreenPosY()
         
-        // Push styled button colors: Green for active, Red for bypassed
-        val btnColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
-        val btnHoverColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
-        val btnActiveColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
+        // Push styled button colors: Green for active, Amber/Yellow for muted
+        val btnColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
+        val btnHoverColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
+        val btnActiveColor = if (bypassed) ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
         
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
@@ -66,7 +66,7 @@ object ModulatorHeaderRow {
             onReplace(existing.copy(bypassed = !bypassed))
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (bypassed) "Enable modulator (Active)" else "Bypass modulator")
+            ImGui.setTooltip(if (bypassed) "Unmute modulator (Enable)" else "Mute modulator (Bypass)")
         }
         ImGui.popStyleColor(3)
 

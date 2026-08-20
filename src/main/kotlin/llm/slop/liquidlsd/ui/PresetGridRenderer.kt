@@ -218,6 +218,7 @@ object PresetGridRenderer {
         val finalColor = getCvColor("final", 1f) // Active meter color
         
         drawKnobMeter(
+            session = session,
             dl = dl, x = finalX, y = finalY, r = r,
             value = param.value, min = param.minClamp, max = param.maxClamp,
             meterType = param.meterType,
@@ -292,7 +293,7 @@ object PresetGridRenderer {
                         onPushUndo()
                         param.modulators.removeAll(midiMods)
                     }
-                    if (ImGui.menuItem(if (isMidiBypassed) "Enable MIDI Modulator" else "Bypass MIDI Modulator")) {
+                    if (ImGui.menuItem(if (isMidiBypassed) "Unmute MIDI Modulator" else "Mute MIDI Modulator")) {
                         onPushUndo()
                         val updated = param.modulators.map {
                             if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = !it.bypassed) else it
@@ -319,7 +320,7 @@ object PresetGridRenderer {
             
             if (hasMidiMod || isMidiBypassed) {
                 val isBipolar = param.minClamp < 0f
-                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(midiMods, isBipolar)
+                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(midiMods, isBipolar, includeBypassed = true)
                 val displayValue = if (isBipolar) {
                     val halfRange = (param.maxClamp - param.minClamp) / 2f
                     val center = param.minClamp + halfRange
@@ -329,6 +330,7 @@ object PresetGridRenderer {
                 }
                 
                 drawKnobMeter(
+                    session = session,
                     dl = dl, x = midiX, y = midiY, r = r,
                     value = displayValue, min = param.minClamp, max = param.maxClamp,
                     meterType = param.meterType,
@@ -390,7 +392,7 @@ object PresetGridRenderer {
                 val statusText = when {
                     isFiltered -> "Bypassed: Bypassed because AUTO-VJ is OFF."
                     hasModulator -> "Active: Modulation routed to parameter."
-                    isBypassed -> "Bypassed: Bypassed by user toggle."
+                    isBypassed -> "Muted: Modulation muted from parameter (O-scope live). Middle-click to unmute."
                     else -> "Unmapped: Middle-click or click to add & configure modulation."
                 }
                 val modSource = when (cvId) {
@@ -399,7 +401,7 @@ object PresetGridRenderer {
                     "trigger" -> "Transient Trigger"
                     else -> cvId
                 }
-                val tipText = "Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active to toggle bypass, inactive to populate cellconfig."
+                val tipText = "Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig."
                 ImGui.setTooltip(tipText)
             }
             if (ImGui.isItemClicked()) {
@@ -409,7 +411,7 @@ object PresetGridRenderer {
                     state.select(cellId, param)
                 }
             }
-            if (isCrosshair && ImGui.isMouseClicked(2)) { // Middle click: bypass toggle if active, populate default cellconfig if inactive
+            if (isCrosshair && ImGui.isMouseClicked(2)) { // Middle click: mute toggle if active/muted, populate default cellconfig if inactive
                 state.select(cellId, param)
                 if (activeMods.isNotEmpty()) {
                     onPushUndo()
@@ -447,7 +449,7 @@ object PresetGridRenderer {
                         onPushUndo()
                         param.modulators.removeAll(activeMods)
                     }
-                    if (ImGui.menuItem(if (isBypassed) "Enable Modulator(s)" else "Bypass Modulator(s)")) {
+                    if (ImGui.menuItem(if (isBypassed) "Unmute Modulator(s)" else "Mute Modulator(s)")) {
                         onPushUndo()
                         val updated = param.modulators.map { mod ->
                             if (activeMods.any { it.id == mod.id }) {
@@ -476,7 +478,7 @@ object PresetGridRenderer {
 
             if (hasModulator || isBypassed) {
                 val isBipolar = param.minClamp < 0f
-                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar)
+                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar, includeBypassed = true)
                 val displayValue = if (isBipolar) {
                     val halfRange = (param.maxClamp - param.minClamp) / 2f
                     val center = param.minClamp + halfRange
@@ -486,6 +488,7 @@ object PresetGridRenderer {
                 }
                 
                 drawKnobMeter(
+                    session = session,
                     dl = dl, x = x, y = y, r = r,
                     value = displayValue, min = param.minClamp, max = param.maxClamp,
                     meterType = param.meterType,
@@ -512,6 +515,7 @@ object PresetGridRenderer {
     }
 
     private fun drawKnobMeter(
+        session: llm.slop.liquidlsd.SessionContext,
         dl: ImDrawList,
         x: Float, y: Float, r: Float,
         value: Float,
@@ -551,10 +555,15 @@ object PresetGridRenderer {
         val baseTickOuterRadius = trackRadius + 2.5f * scaleFactor
         val baseTickStrokeWidth = (2.0f * scaleFactor).coerceIn(1.5f, 4.5f)
 
-        val trackCol = ImGui.colorConvertFloat4ToU32(0.48f, 0.48f, 0.48f, if (isBypassed) 0.3f else 0.65f)
-        val fillCol = if (isBypassed) ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 0.5f) else color
-        val baseTickCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, 1f)
-        val rangeCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, 0.4f)
+        val trackCol = ImGui.colorConvertFloat4ToU32(0.48f, 0.48f, 0.48f, if (isBypassed) 0.35f else 0.65f)
+        val fillCol = if (isBypassed) {
+            val rF = (color and 0xFF) / 255f
+            val gF = ((color shr 8) and 0xFF) / 255f
+            val bF = ((color shr 16) and 0xFF) / 255f
+            ImGui.colorConvertFloat4ToU32(rF, gF, bF, 0.35f)
+        } else color
+        val baseTickCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, if (isBypassed) 0.35f else 1f)
+        val rangeCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, if (isBypassed) 0.20f else 0.4f)
 
         val aMin = PI.toFloat() * 0.75f  // 135 deg
         val aMax = PI.toFloat() * 2.25f  // 405 deg
@@ -676,6 +685,16 @@ object PresetGridRenderer {
                         dl.pathStroke(rangeCol, 0, (2f * scaleFactor).coerceIn(1f, 4f))
                     }
                 }
+            }
+        }
+
+        if (isBypassed) {
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                val txtSize = ImGui.calcTextSize("M")
+                val mX = cx - txtSize.x / 2f
+                val mY = cy - txtSize.y / 2f
+                ImGui.setCursorScreenPos(mX, mY)
+                session.uiTheme.captionColored(1.0f, 0.85f, 0.2f, 0.95f, "M")
             }
         }
     }

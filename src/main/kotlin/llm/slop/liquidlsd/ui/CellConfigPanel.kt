@@ -189,7 +189,7 @@ object CellConfigPanel {
         val isBipolar = param.minClamp < 0f
         // Use the same formula as the engine so the O-scope displays what the parameter actually receives.
         // If all modulators in this section are bypassed or absent, combinedVal is 0.0f.
-        val combinedVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar)
+        val combinedVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar, includeBypassed = true)
         activeHistory?.add(combinedVal)
 
         // -- Unified Oscilloscope ---------------------------------

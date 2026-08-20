@@ -57,7 +57,7 @@ java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-S
 ## First Launch Walkthrough
 
 1. **Launch Liquid LSD**: Run `./gradlew run`.
-2. **Verify Interface**: A window titled **Liquid LSD — Libre Shader Decks** will open showing real-time generative visuals and a three-column interface:
+2. **Verify Interface**: A window titled **Liquid LSD - Libre Shader Decks** will open showing real-time generative visuals and a three-column interface:
    - **Left Panel**: Preset Grid (CV modulation matrix).
    - **Middle Panel**: Cell Config (parameter editor, LFO controls & oscilloscope).
    - **Right Panel**: Mixer / Master Output Monitor.

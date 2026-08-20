@@ -169,6 +169,9 @@ object OscilloscopeDrawer {
         val history = activeHistory ?: return
         val minVal = param.minClamp
         val maxVal = param.maxClamp
+        val isMuted = activeMods.isNotEmpty() && activeMods.all { it.bypassed }
+        val strokeColor = if (isMuted) ImGui.colorConvertFloat4ToU32(1.0f, 0.82f, 0.20f, 0.95f) else themeColor
+
         val hasLfo = activeMods.any { isCvSourceBipolar(it.sourceId) }
         val lfoMods = if (hasLfo) activeMods.filter { isCvSourceBipolar(it.sourceId) } else emptyList()
         val playheadRatio = if (hasLfo) 0.5f else 1.0f
@@ -176,7 +179,7 @@ object OscilloscopeDrawer {
         val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
 
         // Top Controls Bar
-        drawControlsBar(session, param, scopeKey, totalDuration, divSec)
+        drawControlsBar(session, param, scopeKey, totalDuration, divSec, activeMods)
 
         val historySize = history.size
         val w = ImGui.getContentRegionAvailX()
@@ -270,8 +273,8 @@ object OscilloscopeDrawer {
                 if (prevX > startX + 1f) {
                     val baseNorm = if (isBipolar) 0.5f else 0.0f
                     val baseY = (startY + h - 6f) - baseNorm * usableHeight
-                    dl.addLine(startX, baseY, prevX, baseY, themeColor, 2.0f)
-                    dl.addLine(prevX, baseY, prevX, prevY, themeColor, 2.0f)
+                    dl.addLine(startX, baseY, prevX, baseY, strokeColor, 2.0f)
+                    dl.addLine(prevX, baseY, prevX, prevY, strokeColor, 2.0f)
                 }
 
                 // Draw solid combined history line
@@ -281,17 +284,16 @@ object OscilloscopeDrawer {
                     val nextX = nowX - (history.size - 1 - idx) * pixelsPerSample
                     val nextY = (startY + h - 6f) - nextNorm * usableHeight
 
-                    dl.addLine(prevX, prevY, nextX, nextY, themeColor, 2.0f)
+                    dl.addLine(prevX, prevY, nextX, nextY, strokeColor, 2.0f)
                     prevX = nextX
                     prevY = nextY
                 }
             } else {
                 // Deterministic LFO calculated lookback with anti-aliased envelope
-                val strokeColor = themeColor
                 val stepPastX = pastW / FUTURE_STEPS
 
                 var prevX = startX
-                var prevRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, -pastSec.toDouble())
+                var prevRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, -pastSec.toDouble(), includeBypassed = true)
                 var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
                 var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
@@ -306,7 +308,7 @@ object OscilloscopeDrawer {
                     for (k in 0..12) {
                         val frac = if (k == 0) 0.0 else (k * 0.618033988749895) % 1.0
                         val t = tStart + (tEnd - tStart) * frac
-                        val v = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, t)
+                        val v = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, t, includeBypassed = true)
                         if (v < stepMin) stepMin = v
                         if (v > stepMax) stepMax = v
                     }
@@ -336,14 +338,14 @@ object OscilloscopeDrawer {
         if (playheadRatio < 0.999f && futureW > 1f && futureSec > 0.001f && lfoMods.isNotEmpty()) {
             val stepFutureX = futureW / FUTURE_STEPS
             val projColor = ImGui.colorConvertFloat4ToU32(
-                ((themeColor and 0xFF)) / 255f,
-                (((themeColor shr 8) and 0xFF)) / 255f,
-                (((themeColor shr 16) and 0xFF)) / 255f,
+                ((strokeColor and 0xFF)) / 255f,
+                (((strokeColor shr 8) and 0xFF)) / 255f,
+                (((strokeColor shr 16) and 0xFF)) / 255f,
                 0.65f
             )
 
             var prevX = nowX
-            var prevRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, 0.0)
+            var prevRaw = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, 0.0, includeBypassed = true)
             var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
             var prevY = (startY + h - 6f) - prevNorm * usableHeight
 
@@ -358,7 +360,7 @@ object OscilloscopeDrawer {
                 for (k in 0..12) {
                     val frac = if (k == 0) 0.0 else (k * 0.618033988749895) % 1.0
                     val t = tStart + (tEnd - tStart) * frac
-                    val v = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, t)
+                    val v = getCombinedEffectiveValueAtOffset(lfoMods, isBipolar, t, includeBypassed = true)
                     if (v < stepMin) stepMin = v
                     if (v > stepMax) stepMax = v
                 }
@@ -386,7 +388,7 @@ object OscilloscopeDrawer {
         val range = maxVal - minVal
         val divisor = if (range == 0f) 1f else range
         val currentModVal = if (hasLfo) {
-            getCombinedEffectiveValueAtOffset(activeMods, isBipolar, 0.0)
+            getCombinedEffectiveValueAtOffset(activeMods, isBipolar, 0.0, includeBypassed = true)
         } else {
             if (history.size > 0) history.getAt(history.size - 1) else 0f
         }
@@ -396,7 +398,13 @@ object OscilloscopeDrawer {
         val borderCol = ImGui.colorConvertFloat4ToU32(0.26f, 0.28f, 0.32f, 1.0f)
         dl.addRect(startX, startY, startX + w, startY + h, borderCol, 4f)
 
-        // 5. Y-Axis labels
+        // 5. Watermark caption when muted
+        if (isMuted) {
+            ImGui.setCursorScreenPos(startX + 60f, startY + 4f)
+            session.uiTheme.captionColored(1.0f, 0.82f, 0.20f, 0.90f, "[SCOPE LIVE — OUTPUT MUTED FROM FINAL]")
+        }
+
+        // 6. Y-Axis labels
         val labelScale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
         val suffix = if (param.isAngle) "°" else ""
         val maxLabel = "${"%.1f".format(param.maxClamp * labelScale)}$suffix"
@@ -414,7 +422,7 @@ object OscilloscopeDrawer {
         ImGui.setCursorScreenPos(startX + 6f, startY + h - captionH - 2f)
         session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, minLabel)
 
-        // 6. Tooltips
+        // 7. Tooltips
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, playheadRatio)
 
         ImGui.setCursorScreenPos(startX, startY + h)
@@ -425,7 +433,8 @@ object OscilloscopeDrawer {
         param: ModulatableParameter,
         scopeKey: String,
         totalDuration: Float,
-        divSec: Float
+        divSec: Float,
+        activeMods: List<CvModulator> = emptyList()
     ) {
         val isLfoScope = (scopeKey == "lfo" || scopeKey == "default")
         val availableTimebases = if (isLfoScope) LFO_TIMEBASES else NON_LFO_TIMEBASES
@@ -461,6 +470,38 @@ object OscilloscopeDrawer {
             "${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")} (${ScopeTimebase.formatTimeOffset(divSec).removePrefix("+")}/div)"
         }
         session.uiTheme.captionColored(0.75f, 0.78f, 0.82f, 0.95f, infoLabel)
+
+        // Master Cell Mute / Live Toggle Button at upper-right of control bar
+        if (activeMods.isNotEmpty()) {
+            val isMuted = activeMods.all { it.bypassed }
+            val btnText = if (isMuted) "[ MUTED ]" else "[ LIVE ]"
+            val btnW = (ImGui.calcTextSize(btnText).x + 16f * fontScale).coerceAtLeast(60f * fontScale)
+            val btnH = ImGui.getFrameHeight()
+
+            ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - btnW)
+            if (isMuted) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f))
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f))
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f))
+            } else {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.5f, 0.4f, 1f))
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.5f, 1f))
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 0.6f, 1f))
+            }
+
+            if (ImGui.button(btnText, btnW, btnH)) {
+                val targetBypassed = !isMuted
+                val updated = param.modulators.map { mod ->
+                    if (activeMods.any { it.id == mod.id }) mod.copy(bypassed = targetBypassed) else mod
+                }
+                param.modulators.clear()
+                param.modulators.addAll(updated)
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip(if (isMuted) "Unmute cell modulation (Route to Final)" else "Mute cell modulation (Preview on O-scope)")
+            }
+            ImGui.popStyleColor(3)
+        }
         ImGui.spacing()
     }
 

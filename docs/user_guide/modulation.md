@@ -81,9 +81,11 @@ Liquid LSD includes mouse and keyboard power shortcuts designed for live perform
 - **Middle-Click Reset**: Middle-click any slider track or `FINAL` knob cell to instantly reset parameter to factory default.
 
 ### Preset Grid Shortcuts
-- **Middle-Click Cell Bypass**: Middle-click any grid cell to toggle its `bypassed` state on/off immediately.
+- **Middle-Click Cell Mute**: Middle-click any active/muted grid cell to toggle its `Muted` (preview) state on/off immediately. Muted cells display **35% arc opacity with a sans-serif 'M'** centered in the knob. While muted, modulation is blocked from `Final`, but the Oscilloscope in `CellConfig` stays 100% live for real-time waveform previewing.
+- **Master Oscilloscope Mute Toggle**: Click the `[ LIVE ]` / `[ MUTED ]` toggle button in the top-right corner of the Cell Config Oscilloscope header to toggle cell mute status.
 - **Right-Click Row Context Menu**:
   - Copy / Paste parameter settings.
   - Reset parameter to default.
+  - **Mute / Unmute Modulator(s)**: Toggle cell mute state.
   - **📝 Add/Edit Parameter Note…**: Opens `NoteEditorModal` to attach a custom user note to this parameter.
 - **`Ctrl+Z` / `Ctrl+Y`**: Global Undo / Redo across all modulation edits (up to 30 steps).

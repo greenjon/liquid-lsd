@@ -49,8 +49,11 @@ fun main() {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE)
 
+    glfwWindowHintString(GLFW_X11_CLASS_NAME, "Liquid LSD")
+    glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "liquid-lsd")
+
     // Create window
-    val window = glfwCreateWindow(1920, 1080, "Liquid LSD — Libre Shader Decks", 0, 0)
+    val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
         ?: throw RuntimeException("Failed to create GLFW window")
 
     glfwMakeContextCurrent(window)

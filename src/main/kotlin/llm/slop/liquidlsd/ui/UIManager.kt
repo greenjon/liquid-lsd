@@ -154,8 +154,8 @@ class UIManager(
     fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
 
-        // Update window title dynamically with project name and dirty status
-        val title = "Liquid LSD"
+        // Update window title dynamically
+        val title = "Liquid LSD - Libre Shader Decks"
         if (title != lastWindowTitle) {
             org.lwjgl.glfw.GLFW.glfwSetWindowTitle(windowHandle, title)
             lastWindowTitle = title
