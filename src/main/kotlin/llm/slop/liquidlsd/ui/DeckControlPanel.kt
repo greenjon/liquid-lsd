@@ -52,15 +52,16 @@ class DeckControlPanel(
         // Ensure no internal padding interferes with drawing
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, 0f)
         
+        val safePanelW = panelW.coerceAtLeast(1f)
         val inset = 3f
-        val imgAvailW = panelW - (inset * 2f)
+        val imgAvailW = (safePanelW - (inset * 2f)).coerceAtLeast(1f)
         val aspect = session.uiTheme.renderAspectRatio
         val bottomBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { maxOf(ImGui.getFrameHeight(), ImGui.getTextLineHeight() + 6f) } + 6f
-        val childH = maxOf(previewH, (imgAvailW * aspect) + bottomBarH + 6f)
+        val childH = maxOf(previewH.coerceAtLeast(1f), (imgAvailW * aspect) + bottomBarH + 6f)
         val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
-        ImGui.beginChild("Child_$label", panelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
+        ImGui.beginChild("Child_$label", safePanelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
 
         ImGui.spacing()
 
@@ -76,7 +77,7 @@ class DeckControlPanel(
         ImGui.image(deck.getOutputTexture(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
         
         ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.invisibleButton("##drag_source_$label", imgAvailW, imgAvailH)
+        ImGui.invisibleButton("##drag_source_$label", imgAvailW.coerceAtLeast(1f), imgAvailH.coerceAtLeast(1f))
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive monitor for Deck $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
         }
@@ -295,7 +296,7 @@ fun drawDeckMonitorToolbar(
     }
 
     ImGui.setCursorScreenPos(barX, startY)
-    ImGui.invisibleButton("##preset_bar_btn_$tag", barW, rowH)
+    ImGui.invisibleButton("##preset_bar_btn_$tag", barW.coerceAtLeast(1f), rowH.coerceAtLeast(1f))
 
     if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
         val presetNote = NotesManager.getPresetNote(deckLabel)
@@ -353,7 +354,7 @@ private fun drawIconButton(
     val endX = startX + btnW
     val endY = startY + rowH
 
-    ImGui.invisibleButton(id, btnW, rowH)
+    ImGui.invisibleButton(id, btnW.coerceAtLeast(1f), rowH.coerceAtLeast(1f))
     val isHovered = ImGui.isItemHovered()
     val isActive = ImGui.isItemActive()
     val isClicked = ImGui.isItemClicked(0)

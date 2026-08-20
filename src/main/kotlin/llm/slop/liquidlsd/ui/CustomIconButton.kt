@@ -22,7 +22,7 @@ object CustomIconButton {
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
         ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
 
-        val clicked = ImGui.invisibleButton(id, width, height)
+        val clicked = ImGui.invisibleButton(id, width.coerceAtLeast(1f), height.coerceAtLeast(1f))
         
         ImGui.popStyleColor(3)
         

@@ -56,6 +56,28 @@ fun main() {
     val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
         ?: throw RuntimeException("Failed to create GLFW window")
 
+    // Enforce minimum window size to prevent desktop layout compression
+    glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE)
+
+    // Query OS DPI / HiDPI content scale so controls are legible on 4K screens.
+    // Only applied when no user settings file exists yet (first run / fresh install).
+    // On standard 1080p monitors xScale ≈ 1.0; on 4K HiDPI monitors it can be 1.5–2.0+.
+    if (!java.io.File("lsd-settings.properties").exists()) {
+        val xScaleBuf = FloatArray(1)
+        val yScaleBuf = FloatArray(1)
+        glfwGetWindowContentScale(window, xScaleBuf, yScaleBuf)
+        val dpiScale = xScaleBuf[0].coerceAtLeast(1.0f)
+        if (dpiScale > 1.05f) {
+            // BASE_PX=15f; snap to nearest 5 % step, clamp 75 %–200 %
+            val BASE_PX   = 15f
+            val STEP_PCT  = 5
+            val rawPct    = (dpiScale * 100f).toInt()
+            val snappedPct = (rawPct / STEP_PCT * STEP_PCT).coerceIn(75, 200)
+            UITheme.baseSize = snappedPct / 100f * BASE_PX
+            logger.info { "HiDPI scale detected: ${dpiScale}x → GUI scale ${snappedPct}%% (baseSize=${UITheme.baseSize}px)" }
+        }
+    }
+
     glfwMakeContextCurrent(window)
     glfwSwapInterval(1) // Enable vsync
 
@@ -280,38 +302,45 @@ fun main() {
         mixer.update()
         renderer.renderMixer(mixer)
 
-        // 4. Blit the Mixer's master FBO to the screen viewport if enabled
-        glViewport(0, 0, w[0], h[0])
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
-        glClear(GL_COLOR_BUFFER_BIT)
+        // 4. Blit the Mixer's master FBO to the screen viewport if enabled and window is visible
+        val fbW = w[0]
+        val fbH = h[0]
+        val winW = windowW[0]
+        val winH = windowH[0]
 
-        if (UITheme.backgroundVideoEnabled || UITheme.cleanModeEnabled) {
-            val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
-                w[0], h[0],
-                mixer.width, mixer.height,
-                UITheme.outputScaleMode
-            )
-            glViewport(vp.x, vp.y, vp.width, vp.height)
+        if (fbW > 0 && fbH > 0 && winW > 0 && winH > 0) {
+            glViewport(0, 0, fbW, fbH)
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
+            glClear(GL_COLOR_BUFFER_BIT)
 
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+            if (UITheme.backgroundVideoEnabled || UITheme.cleanModeEnabled) {
+                val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
+                    fbW, fbH,
+                    mixer.width, mixer.height,
+                    UITheme.outputScaleMode
+                )
+                glViewport(vp.x, vp.y, vp.width, vp.height)
 
-            renderer.blitShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, mixer.masterFBO.texture)
-            renderer.blitShader.setUniform("uTexture", 0)
-            Geometry.drawFullscreenQuad()
-            renderer.blitShader.unbind()
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+
+                renderer.blitShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, mixer.masterFBO.texture)
+                renderer.blitShader.setUniform("uTexture", 0)
+                Geometry.drawFullscreenQuad()
+                renderer.blitShader.unbind()
+            }
+            glBindVertexArray(0) // Ensure VAO is unbound for ImGui overlay rendering
+
+            // Check for errors (only first few frames to avoid spam)
+            if (frameCount < 3) {
+                GLDebug.checkErrors("Deck rendering and compositing")
+            }
+
+            // === UI PHASE ===
+            uiManager.render(mixer, winW.toFloat(), winH.toFloat())
         }
-        glBindVertexArray(0) // Ensure VAO is unbound for ImGui overlay rendering
-
-        // Check for errors (only first few frames to avoid spam)
-        if (frameCount < 3) {
-            GLDebug.checkErrors("Deck rendering and compositing")
-        }
-
-        // === UI PHASE ===
-        uiManager.render(mixer, windowW[0].toFloat(), windowH[0].toFloat())
 
         org.lwjgl.opengl.GL15.glEndQuery(org.lwjgl.opengl.GL33.GL_TIME_ELAPSED)
         if (frameIndex > 0) {
@@ -328,28 +357,30 @@ fun main() {
 
             glfwGetFramebufferSize(secondaryWindow, sw, sh)
 
-            glViewport(0, 0, sw[0], sh[0])
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-            glClear(GL_COLOR_BUFFER_BIT)
+            if (sw[0] > 0 && sh[0] > 0) {
+                glViewport(0, 0, sw[0], sh[0])
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+                glClear(GL_COLOR_BUFFER_BIT)
 
-            val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
-                sw[0], sh[0],
-                mixer.width, mixer.height,
-                UITheme.outputScaleMode
-            )
-            glViewport(vp.x, vp.y, vp.width, vp.height)
+                val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
+                    sw[0], sh[0],
+                    mixer.width, mixer.height,
+                    UITheme.outputScaleMode
+                )
+                glViewport(vp.x, vp.y, vp.width, vp.height)
 
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
 
-            renderer.blitShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, mixer.masterFBO.texture)
-            renderer.blitShader.setUniform("uTexture", 0)
-            Geometry.drawSecondaryFullscreenQuad()
-            renderer.blitShader.unbind()
+                renderer.blitShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, mixer.masterFBO.texture)
+                renderer.blitShader.setUniform("uTexture", 0)
+                Geometry.drawSecondaryFullscreenQuad()
+                renderer.blitShader.unbind()
 
-            glfwSwapBuffers(secondaryWindow)
+                glfwSwapBuffers(secondaryWindow)
+            }
 
             // Switch back to main context
             glfwMakeContextCurrent(window)

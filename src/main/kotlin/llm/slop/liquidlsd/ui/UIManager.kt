@@ -311,10 +311,18 @@ class UIManager(
     }
 
     fun adjustFontSize(delta: Float) {
+        // Work in percentage space (5 % steps, 75 %–200 %) then convert back to px.
+        // BASE_PX = 15f; 1 step = 5 % = 0.75 px.
+        val BASE_PX = 15f
+        val STEP_PX = BASE_PX * 0.05f          // 0.75 px per 5 % step
+        val MIN_PX  = BASE_PX * 0.75f          // 11.25 px  (75 %)
+        val MAX_PX  = BASE_PX * 2.00f          // 30.00 px  (200 %)
         val currentSize = session.uiTheme.baseSize
-        val targetSize = currentSize + delta
-        val constrainedSize = targetSize.coerceIn(10f, 36f)
-        applyFontSize(constrainedSize)
+        // Snap current to nearest 5 % step, then add the delta direction
+        val currentSteps = ((currentSize / STEP_PX).toInt())
+        val targetSteps  = currentSteps + if (delta > 0) 1 else -1
+        val newSize = (targetSteps * STEP_PX).coerceIn(MIN_PX, MAX_PX)
+        applyFontSize(newSize)
     }
 
     fun triggerExitFlow() {
@@ -337,14 +345,16 @@ class UIManager(
     }
 
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
+        val safeW = displayWidth.coerceAtLeast(100f)
+        val safeH = displayHeight.coerceAtLeast(100f)
         val menuBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)
-        val contentH = displayHeight - menuBarH
+        val contentH = (safeH - menuBarH).coerceAtLeast(50f)
         val noDecorate = ImGuiWindowFlags.NoResize or
                          ImGuiWindowFlags.NoMove or
                          ImGuiWindowFlags.NoCollapse or
                          ImGuiWindowFlags.NoBringToFrontOnFocus
 
-        drawAssetManagementLayout(displayWidth, displayHeight, menuBarH, contentH, noDecorate)
+        drawAssetManagementLayout(safeW, safeH, menuBarH, contentH, noDecorate)
     }
 
     private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
@@ -356,9 +366,10 @@ class UIManager(
 
         // Auto-calculate Column 1 (Left Panel / Preset Grid) width based on active columns & font scale
         val reqCol1W = currentMixer?.let { PresetGridPanel.calculateRequiredWidth(session, it, presetState) } ?: (displayWidth * 0.30f)
-        val maxCol1W = (displayWidth * 0.50f).coerceAtMost((displayWidth * (1.0f - minRatio)) - 250f)
-        val col1W = reqCol1W.coerceIn(displayWidth * minRatio, maxCol1W)
-        val col1R = col1W / displayWidth
+        val maxCol1W = (displayWidth * 0.50f).coerceAtMost(displayWidth - 200f).coerceAtLeast(displayWidth * minRatio)
+        val minCol1W = (displayWidth * minRatio).coerceAtMost(maxCol1W)
+        val col1W = reqCol1W.coerceIn(minCol1W, maxCol1W)
+        val col1R = (col1W / displayWidth).coerceIn(minRatio, 0.70f)
 
         val style = ImGui.getStyle()
         val availHForMixer = (contentH - (style.getWindowPaddingY() * 2f)).coerceAtLeast(1f)
@@ -370,28 +381,32 @@ class UIManager(
             itemSpacingY = style.getItemSpacingY(),
             aspectRatio = theme.renderAspectRatio
         )
-        val maxRightR = (maxRightW / displayWidth).coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
+        val maxRightR = if (displayWidth > 0f) {
+            (maxRightW / displayWidth).coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
+        } else {
+            minRatio
+        }
         val maxC2 = (1.0f - minRatio - col1R).coerceAtLeast(minRatio)
         val minC2 = (1.0f - col1R - maxRightR).coerceIn(minRatio, maxC2)
 
         // Column 2 (Middle Panel / Cell Config) and Column 3 (Right Panel / Mixer Monitor)
-        var col2R = theme.col2Ratio.coerceIn(minC2, maxC2)
-        val col2W = displayWidth * col2R
-        val libraryW = col1W + col2W
-        val rightW = displayWidth - libraryW
+        val col2R = theme.col2Ratio.coerceIn(minC2, maxC2)
+        val col2W = (displayWidth * col2R).coerceAtLeast(20f)
+        val libraryW = (col1W + col2W).coerceAtMost(displayWidth - 20f).coerceAtLeast(40f)
+        val rightW = (displayWidth - libraryW).coerceAtLeast(20f)
 
         val libraryH = when (theme.libraryMode) {
             UITheme.LibraryMode.FULL -> contentH
-            UITheme.LibraryMode.HIDE -> 38f
-            UITheme.LibraryMode.HALF -> contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)
+            UITheme.LibraryMode.HIDE -> 38f.coerceAtMost(contentH)
+            UITheme.LibraryMode.HALF -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(38f.coerceAtMost(contentH), contentH)
         }
 
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
-            val topH = contentH - libraryH
+            val topH = (contentH - libraryH).coerceAtLeast(1f)
 
             // Column 1: Preset Grid
             ImGui.setNextWindowPos(0f, menuBarH)
-            ImGui.setNextWindowSize(col1W, topH)
+            ImGui.setNextWindowSize(col1W.coerceAtLeast(1f), topH)
             if (ImGui.begin("Preset Grid", noDecorate or ImGuiWindowFlags.NoScrollbar)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                 PresetGridPanel.draw(session, currentMixer!!, presetState)
@@ -400,7 +415,7 @@ class UIManager(
 
             // Column 2: Cell Config
             ImGui.setNextWindowPos(col1W, menuBarH)
-            ImGui.setNextWindowSize(col2W, topH)
+            ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
             val cellConfigFlags = if (sliderWasHovered) {
                 noDecorate or ImGuiWindowFlags.NoScrollWithMouse
             } else {
@@ -425,7 +440,7 @@ class UIManager(
                 id = "##hsplit",
                 posX = 0f,
                 posY = libraryPosH,
-                width = libraryW,
+                width = libraryW.coerceAtLeast(1f),
                 height = 8f,
                 displayHeight = displayHeight,
                 onDrag = { deltaY ->
@@ -436,7 +451,7 @@ class UIManager(
                             theme.saveSettings()
                         }
                     } else {
-                        val deltaR = -deltaY / contentH
+                        val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
                         val targetRatio = theme.libraryRatio + deltaR
                         val targetPixelH = contentH * targetRatio
                         if (targetPixelH < 60f || targetRatio < 0.10f) {
@@ -461,18 +476,18 @@ class UIManager(
 
         // Library (Bottom or Full)
         ImGui.setNextWindowPos(0f, libraryPosH)
-        ImGui.setNextWindowSize(libraryW, libraryH)
+        ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f))
         val flags = (if (theme.libraryMode == UITheme.LibraryMode.HIDE) noDecorate or ImGuiWindowFlags.NoScrollbar else noDecorate) or
                 ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
         if (ImGui.begin("Library", flags)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            LibraryPanel.draw(session, libraryW, libraryH, currentMixer!!, presetState)
+            LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, presetState)
         }
         ImGui.end()
 
         // Column 3: Mixer / Monitor
         ImGui.setNextWindowPos(libraryW, menuBarH)
-        ImGui.setNextWindowSize(rightW, contentH)
+        ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
         val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar
         if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
@@ -486,10 +501,10 @@ class UIManager(
             posX = libraryW,
             posY = menuBarH,
             width = 8f,
-            height = contentH,
+            height = contentH.coerceAtLeast(1f),
             displayWidth = displayWidth,
             onDrag = { deltaX ->
-                val deltaR = deltaX / displayWidth
+                val deltaR = if (displayWidth > 0f) deltaX / displayWidth else 0f
                 val newC2 = (theme.col2Ratio + deltaR).coerceIn(minC2, maxC2)
                 theme.col2Ratio = newC2
                 theme.saveSettings()

@@ -208,7 +208,7 @@ object UITheme {
                 settingsFile.inputStream().use { props.load(it) }
                 val savedSize = props.getProperty("baseSize")?.toFloatOrNull()
                 if (savedSize != null) {
-                    baseSize = savedSize.coerceIn(10f, 36f)
+                    baseSize = savedSize.coerceIn(11.25f, 30f)
                     logger.info { "Loaded baseSize from settings file: $baseSize" }
                 }
                 val savedAudio = props.getBoolean("audioEngineEnabled")
@@ -382,13 +382,24 @@ object UITheme {
     private lateinit var fontCaption: ImFont
     private lateinit var fontCode:    ImFont
 
-    // Keep raw bytes of loaded fonts and range alive to prevent GC/JNI unpinning issues
+    // Keep raw bytes of loaded fonts and ranges permanently alive to prevent GC/JNI unpinning segfaults
     private var regularBytes: ByteArray? = null
     private var mediumBytes: ByteArray? = null
     private var boldBytes: ByteArray? = null
     private var codeBytes: ByteArray? = null
     private var lucideBytes: ByteArray? = null
-    private var iconRange: ShortArray? = null
+
+    // Range for standard Lucide (E000 - F8FF range)
+    // Range format is [start, end, ..., 0]
+    private val ICON_RANGE = shortArrayOf(0xe000.toShort(), 0xf8ff.toShort(), 0)
+
+    // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, Punctuation, Arrows, Math, Geometric Shapes
+    private val MAIN_RANGES = shortArrayOf(
+        0x0020.toShort(), 0x00FF.toShort(), // Basic Latin + Latin-1 Supplement
+        0x0100.toShort(), 0x017F.toShort(), // Latin Extended-A
+        0x2000.toShort(), 0x2BFF.toShort(), // Punctuation, Arrows, Math Operators, Geometric Shapes
+        0
+    )
 
     /** True once [loadFonts] has completed successfully. */
     var isLoaded: Boolean = false
@@ -404,6 +415,23 @@ object UITheme {
 
     // -- Initialisation --------------------------------------------------------
 
+    private fun loadFontBytesOnce() {
+        if (regularBytes != null && mediumBytes != null && boldBytes != null && codeBytes != null && lucideBytes != null) {
+            return
+        }
+        fun loadBytes(resource: String): ByteArray {
+            val stream = UITheme::class.java.getResourceAsStream(resource)
+                ?: error("Font resource not found on classpath: $resource")
+            return stream.use { it.readBytes() }
+        }
+        regularBytes = loadBytes(INTER_REGULAR)
+        mediumBytes  = loadBytes(INTER_MEDIUM)
+        boldBytes    = loadBytes(INTER_BOLD)
+        codeBytes    = loadBytes(JETBRAINS)
+        lucideBytes  = loadBytes(LUCIDE)
+        logger.info { "Font bytes loaded permanently: Inter=${regularBytes!!.size}, Lucide=${lucideBytes!!.size}" }
+    }
+
     /**
      * Loads all six font levels into ImGui's font atlas.
      * Must be called after [ImGui.createContext] but before the GL3 backend
@@ -415,43 +443,16 @@ object UITheme {
      */
     fun loadFonts(io: ImGuiIO) {
         val atlas = io.fonts
-
-        // Keep the raw bytes alive for ImGui (it may reference them until atlas
-        // is cleared). setFontDataOwnedByAtlas(false) so the JVM byte arrays
-        // are not double-freed by native code.
-        fun loadBytes(resource: String): ByteArray {
-            val stream = UITheme::class.java.getResourceAsStream(resource)
-                ?: error("Font resource not found on classpath: $resource")
-            return stream.use { it.readBytes() }
-        }
+        loadFontBytesOnce()
 
         fun cfg(owned: Boolean = false): ImFontConfig = ImFontConfig().apply {
             setFontDataOwnedByAtlas(owned)
         }
 
-        regularBytes = loadBytes(INTER_REGULAR)
-        mediumBytes  = loadBytes(INTER_MEDIUM)
-        boldBytes    = loadBytes(INTER_BOLD)
-        codeBytes    = loadBytes(JETBRAINS)
-        lucideBytes  = loadBytes(LUCIDE)
-
-        logger.info { "Font bytes loaded: Inter=${regularBytes!!.size}, Lucide=${lucideBytes!!.size}" }
-
-        // Range for standard Lucide (E000 - F8FF range)
-        // Range format is [start, end, ..., 0]
-        iconRange = shortArrayOf(0xe000.toShort(), 0xf8ff.toShort(), 0)
-
-        // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, Punctuation, Arrows, Math, Geometric Shapes
-        val mainRanges = shortArrayOf(
-            0x0020.toShort(), 0x00FF.toShort(), // Basic Latin + Latin-1 Supplement
-            0x0100.toShort(), 0x017F.toShort(), // Latin Extended-A
-            0x2000.toShort(), 0x2BFF.toShort(), // Punctuation, Arrows, Math Operators, Geometric Shapes
-            0
-        )
-
         fun addWithIcons(bytes: ByteArray, size: Float, config: ImFontConfig): ImFont {
-            val f = atlas.addFontFromMemoryTTF(bytes, size, config, mainRanges)
-            if (f.ptr == 0L) logger.error { "Failed to load main font at size $size" }
+            val safeSize = size.coerceIn(9f, 96f)
+            val f = atlas.addFontFromMemoryTTF(bytes, safeSize, config, MAIN_RANGES)
+            if (f.ptr == 0L) logger.error { "Failed to load main font at size $safeSize" }
             config.destroy()
 
             val iconCfg = ImFontConfig().apply {
@@ -460,11 +461,11 @@ object UITheme {
                 setPixelSnapH(true)
                 // Offset icon glyphs downward proportionally so they are vertically centered
                 // and do not collide with the top border of buttons or bounding frames.
-                setGlyphOffset(0f, kotlin.math.round(size * 0.18f))
+                setGlyphOffset(0f, kotlin.math.round(safeSize * 0.18f))
             }
             
-            val iconFont = atlas.addFontFromMemoryTTF(lucideBytes!!, size, iconCfg, iconRange!!)
-            if (iconFont.ptr == 0L) logger.error { "Failed to merge Lucide icons at size $size" }
+            val iconFont = atlas.addFontFromMemoryTTF(lucideBytes!!, safeSize, iconCfg, ICON_RANGE)
+            if (iconFont.ptr == 0L) logger.error { "Failed to merge Lucide icons at size $safeSize" }
             
             iconCfg.destroy()
             return f

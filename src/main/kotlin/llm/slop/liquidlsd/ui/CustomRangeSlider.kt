@@ -229,8 +229,8 @@ object CustomRangeSlider {
         
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
         val lineStartX = sliderStartX
-        val lineEndX = startX + w - 10f
-        val lineWidth = lineEndX - lineStartX
+        val lineEndX = maxOf(lineStartX + 1f, startX + w - 10f)
+        val lineWidth = (lineEndX - lineStartX).coerceAtLeast(1f)
         
         val rangeSpan = maxLimit - minLimit
         val labelFormatFunc = formatLabel ?: formatValue

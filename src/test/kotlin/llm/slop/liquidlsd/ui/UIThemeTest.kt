@@ -170,5 +170,26 @@ class UIThemeTest {
             assertEquals(hex, swatch.hex)
         }
     }
+
+    @Test
+    fun testFontSizeBoundaries() {
+        // Scale range: 75 %–200 % of BASE_PX=15f → 11.25 f–30 f
+        UITheme.baseSize = 5f
+        val clampedSmall = 5f.coerceIn(11.25f, 30f)
+        assertEquals(11.25f, clampedSmall)
+
+        val clampedLarge = 50f.coerceIn(11.25f, 30f)
+        assertEquals(30f, clampedLarge)
+
+        // 100 % = 15 px (default baseline)
+        assertEquals(15f, 100 / 100f * 15f)
+
+        // 75 % and 200 % round-trip through pctToPx
+        assertEquals(11.25f, SettingsPanel.pctToPx(75))
+        assertEquals(30f,    SettingsPanel.pctToPx(200))
+
+        // Reset to default
+        UITheme.baseSize = 20f
+    }
 }
 

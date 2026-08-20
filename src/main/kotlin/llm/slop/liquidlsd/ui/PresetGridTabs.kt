@@ -87,7 +87,7 @@ object PresetGridTabs {
             val pMaxX = pMinX + buttonWidth
             val pMaxY = pMinY + buttonHeight
 
-            if (ImGui.invisibleButton("##left_tab_$shortLabel", buttonWidth, buttonHeight)) {
+            if (ImGui.invisibleButton("##left_tab_$shortLabel", buttonWidth.coerceAtLeast(1f), buttonHeight.coerceAtLeast(1f))) {
                 state.activeTopTab = fullTab
             }
             val isHovered = ImGui.isItemHovered()

@@ -4,6 +4,17 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
+## GUI Scale: Percentage Model (75%–200%) instead of Raw Pixel Size
+
+- **Decision**: Express the global UI scale as a percentage (75%–200%, 5% steps) rather than a raw `baseSize` pixel value, with `glfwGetWindowContentScale` queried on first launch to seed a sensible default.
+- **Rationale**:
+  - **User mental model**: "I want a 150% UI" is immediately meaningful; "I want 22.5 px body text" is not.
+  - **Internally transparent**: `baseSize` (px) remains the storage format. The conversion is `baseSize = pct / 100 * 15f`. No existing save files break.
+  - **HiDPI hygiene**: Without OS DPI detection, a 4K monitor renders the default 15 px controls at microscopic size (~8 CSS px equivalent). `glfwGetWindowContentScale` returns the OS-reported logical→physical pixel ratio (e.g. 2.0 on macOS Retina, 1.5 on some 4K Linux setups), which is snapped to the nearest 5% step and applied only on first run.
+  - **Discrete steps**: 5% steps keep the slider tactile and prevent half-pixel font renders that look blurry in the ImGui atlas.
+
+---
+
 ## 1. Tech Stack Selection (Kotlin/JVM + LWJGL + JNAJack)
 - **Decision**: Build the VJ system using **Kotlin/JVM** on top of **LWJGL 3 (GLFW + OpenGL 3.3)** for graphics and **JNAJack** for Linux audio.
 - **Rationale**: 

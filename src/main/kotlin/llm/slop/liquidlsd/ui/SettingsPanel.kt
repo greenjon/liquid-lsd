@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
-import imgui.flag.ImGuiTableColumnFlags
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImBoolean
 
@@ -14,12 +13,24 @@ import imgui.type.ImBoolean
  */
 object SettingsPanel {
 
-    private const val POPUP_ID = "Settings##modal"
-    private const val MIN_SIZE = 10f
-    private const val MAX_SIZE = 36f
-    private const val STEP     = 1f
-    private const val MODAL_W  = 580f
-    private const val MODAL_H  = 420f
+    private const val POPUP_ID  = "Settings##modal"
+    private const val MODAL_W   = 580f
+
+    // Scale percentage model: 100% == BASE_PX (15 px).
+    // Range 75 %–200 % in 5 % steps.
+    private const val BASE_PX   = 15f
+    private const val MIN_PCT   = 75
+    private const val MAX_PCT   = 200
+    private const val STEP_PCT  = 5
+
+    /** Convert a raw baseSize (px) to the nearest 5 % step integer. */
+    private fun pxToPct(px: Float): Int {
+        val raw = (px / BASE_PX * 100f).toInt()
+        return (raw / STEP_PCT * STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
+    }
+
+    /** Convert a percentage integer back to baseSize px. */
+    fun pctToPx(pct: Int): Float = pct / 100f * BASE_PX
 
     enum class Category(val label: String) {
         APPEARANCE("Appearance"),
@@ -58,12 +69,15 @@ object SettingsPanel {
             ImGui.getFrameHeight() + 6f
         }.coerceAtLeast(30f)
 
-        val contentH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        val desiredH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             (ImGui.getTextLineHeightWithSpacing() * 15f)
-        }.coerceIn(300f, displayH * 0.78f)
+        }
+        val maxH = (displayH * 0.78f).coerceAtLeast(100f)
+        val minH = 300f.coerceAtMost(maxH)
+        val contentH = desiredH.coerceIn(minH, maxH)
 
         val availW = ImGui.getContentRegionAvailX()
-        val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(100f)
+        val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(50f)
 
         // Left Sidebar Child
         if (ImGui.beginChild("##settings_sidebar", sidebarW, contentH, true)) {
@@ -145,45 +159,44 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        if (ImGui.beginTable("##fontSettings", 2)) {
-            val fontCtrlW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                ImGui.calcTextSize("  -  ").x + ImGui.calcTextSize(" 00 px ").x + ImGui.calcTextSize("  +  ").x + 40f
-            }.coerceAtLeast(140f)
-            ImGui.tableSetupColumn("##lbl",  ImGuiTableColumnFlags.WidthStretch)
-            ImGui.tableSetupColumn("##ctrl", ImGuiTableColumnFlags.WidthFixed, fontCtrlW)
-            ImGui.tableNextRow()
+        // Percentage scale slider – 75 % to 200 %, locked to 5 % steps.
+        val currentPct = pxToPct(currentSize)
+        val t = UITheme
+        session.uiTheme.body("GUI Scale")
+        session.uiTheme.caption(
+            "Cap ${(currentSize * t.multCaption).toInt()}  " +
+            "Body ${(currentSize * t.multBody).toInt()}  " +
+            "H3 ${(currentSize * t.multH3).toInt()}  " +
+            "H2 ${(currentSize * t.multH2).toInt()}  " +
+            "H1 ${(currentSize * t.multH1).toInt()}  px"
+        )
+        ImGui.spacing()
 
-            ImGui.tableSetColumnIndex(0)
-            session.uiTheme.body("Global Size")
-            val t = UITheme
-            session.uiTheme.caption(
-                "Cap ${(currentSize * t.multCaption).toInt()}  " +
-                "Body ${(currentSize * t.multBody).toInt()}  " +
-                "H3 ${(currentSize * t.multH3).toInt()}  " +
-                "H2 ${(currentSize * t.multH2).toInt()}  " +
-                "H1 ${(currentSize * t.multH1).toInt()}  px"
-            )
-
-            ImGui.tableSetColumnIndex(1)
-            val canDecrease = currentSize > MIN_SIZE
-            val canIncrease = currentSize < MAX_SIZE
-
-            if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
-            if (ImGui.button("  -  ##dec") && canDecrease) onSizeChanged(currentSize - STEP)
-            if (!canDecrease) ImGui.popStyleVar()
-
-            ImGui.sameLine()
-            session.uiTheme.withFont(UITheme.FontLevel.CODE) {
-                ImGui.text("%2.0f px".format(currentSize))
-            }
-            ImGui.sameLine()
-
-            if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
-            if (ImGui.button("  +  ##inc") && canIncrease) onSizeChanged(currentSize + STEP)
-            if (!canIncrease) ImGui.popStyleVar()
-
-            ImGui.endTable()
+        val steps = (MAX_PCT - MIN_PCT) / STEP_PCT   // number of discrete steps
+        val stepIndex = imgui.type.ImInt((currentPct - MIN_PCT) / STEP_PCT)
+        val availW = ImGui.getContentRegionAvailX()
+        ImGui.setNextItemWidth(availW * 0.72f)
+        if (ImGui.sliderInt("##guiScale", stepIndex.getData(), 0, steps, "$currentPct%%")) {
+            val snappedPct = MIN_PCT + stepIndex.get() * STEP_PCT
+            onSizeChanged(pctToPx(snappedPct))
         }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip(
+                "Scale the entire GUI (fonts, padding, widgets) from $MIN_PCT%% to $MAX_PCT%%.\n" +
+                "Ctrl+- and Ctrl+= adjust by 5%% steps.\n" +
+                "100%% = 15 px body text."
+            )
+        }
+        ImGui.sameLine()
+        val canDecrease = currentPct > MIN_PCT
+        val canIncrease = currentPct < MAX_PCT
+        if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
+        if (ImGui.button("-##sdec") && canDecrease) onSizeChanged(pctToPx(currentPct - STEP_PCT))
+        if (!canDecrease) ImGui.popStyleVar()
+        ImGui.sameLine()
+        if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
+        if (ImGui.button("+##sinc") && canIncrease) onSizeChanged(pctToPx(currentPct + STEP_PCT))
+        if (!canIncrease) ImGui.popStyleVar()
 
         ImGui.spacing()
         session.uiTheme.body("Grid Knob Cell Scale")

@@ -1,5 +1,16 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.27
+
+### GUI Scale Percentage Model & HiDPI Detection
+
+- **GUI Scale Slider (75%–200%)**: Replaced the raw pixel font-size `+`/`-` controls in Settings → Appearance with a continuous slider showing the scale as a percentage of the 100% baseline (15 px body text). Steps are locked to 5% increments so the slider snaps cleanly on every tick.
+- **Hotkeys updated**: `Ctrl+-` / `Ctrl+=` now adjust the GUI scale by ±5% per press (previously ±1 px). The same 75%–200% bounds apply.
+- **HiDPI / 4K auto-detection**: On first launch (no saved settings file), the OS content-scale factor is queried via `glfwGetWindowContentScale`. If the OS reports a scale above 1.05× (e.g. a HiDPI or 4K display), the initial GUI scale is snapped to the nearest 5% step automatically, preventing microscopic controls on high-density monitors.
+- **Backwards compatible**: The `baseSize` (px) value stored in `lsd-settings.properties` is unchanged. Existing user settings load correctly; the clamp window now matches the new 75%–200% range (11.25 px–30 px).
+
+---
+
 ## Version 1.0.0-beta.26
 
 > [!NOTE]

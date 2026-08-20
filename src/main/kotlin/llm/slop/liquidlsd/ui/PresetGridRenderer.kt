@@ -64,7 +64,7 @@ object PresetGridRenderer {
         session.uiTheme.body(label)
         ImGui.sameLine(cursorStartX)
         val btnFlagsRow = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW, CELL, btnFlagsRow)
+        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsRow)
         val isLabelHovered = ImGui.isItemHovered()
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             // Rich tooltip: name, range, live value breakdown, description, user note
@@ -185,7 +185,7 @@ object PresetGridRenderer {
         
         ImGui.setCursorScreenPos(finalX, finalY)
         val btnFlagsFinal = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("##final_cell", CELL, CELL, btnFlagsFinal)
+        ImGui.invisibleButton("##final_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsFinal)
         val isFinalHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked()) {
             state.select(PresetCellId(paramKey, "final"), param)
@@ -253,7 +253,7 @@ object PresetGridRenderer {
 
             ImGui.setCursorScreenPos(midiX, midiY)
             val btnFlagsMidi = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-            ImGui.invisibleButton("##midi_cell", CELL, CELL, btnFlagsMidi)
+            ImGui.invisibleButton("##midi_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsMidi)
             val isMidiCellHovered = ImGui.isItemHovered()
             if (isMidiCellHovered && session.uiTheme.tooltipsEnabled) {
                 val details = if (hasMidiMod || isMidiBypassed) {
@@ -385,7 +385,7 @@ object PresetGridRenderer {
 
             ImGui.setCursorScreenPos(x, y)
             val btnFlagsCv = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-            ImGui.invisibleButton("##cell_$cvId", CELL, CELL, btnFlagsCv)
+            ImGui.invisibleButton("##cell_$cvId", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsCv)
             val isCellHovered = ImGui.isItemHovered()
             if (isCellHovered && session.uiTheme.tooltipsEnabled) {
                 val isFiltered = param.modulatorFilter != null && activeMods.any { mod -> param.modulatorFilter?.invoke(mod) == false }

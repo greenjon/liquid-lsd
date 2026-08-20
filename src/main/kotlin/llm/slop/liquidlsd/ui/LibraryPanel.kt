@@ -70,9 +70,10 @@ object LibraryPanel {
     
     fun draw(session: llm.slop.liquidlsd.SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
         checkAutoRefresh()
-        val sidebarWidth = if (showSidebar) width * 0.33f else 0f
-        val centerWidth = if (showSidebar) width * 0.33f else width * 0.5f
-        val queueWidth = width - sidebarWidth - centerWidth
+        val safeW = width.coerceAtLeast(60f)
+        val sidebarWidth = if (showSidebar) (safeW * 0.33f).coerceAtLeast(20f) else 0f
+        val centerWidth = (if (showSidebar) safeW * 0.33f else safeW * 0.5f).coerceAtLeast(20f)
+        val queueWidth = (safeW - sidebarWidth - centerWidth).coerceAtLeast(20f)
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6f)
         if (ImGui.beginMenuBar()) {
@@ -134,20 +135,23 @@ object LibraryPanel {
 
         if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 
-        val contentH = ImGui.getContentRegionAvailY() - 5f
+        val contentH = (ImGui.getContentRegionAvailY() - 5f).coerceAtLeast(1f)
         if (showSidebar) {
-            ImGui.beginChild("LibrarySidebar", sidebarWidth - 6f, contentH, true)
+            val sw = (sidebarWidth - 6f).coerceAtLeast(1f)
+            ImGui.beginChild("LibrarySidebar", sw, contentH, true)
             SidebarPanel.draw(session, mixer)
             ImGui.endChild()
             ImGui.sameLine()
         }
 
-        ImGui.beginChild("LibraryCenter", centerWidth - 6f, contentH, true)
+        val cw = (centerWidth - 6f).coerceAtLeast(1f)
+        ImGui.beginChild("LibraryCenter", cw, contentH, true)
         drawCenterContent(session, mixer, presetState)
         ImGui.endChild()
         ImGui.sameLine()
 
-        ImGui.beginChild("LibraryQueue", queueWidth - 8f, contentH, true)
+        val qw = (queueWidth - 8f).coerceAtLeast(1f)
+        ImGui.beginChild("LibraryQueue", qw, contentH, true)
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 

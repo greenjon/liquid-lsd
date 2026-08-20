@@ -12,6 +12,12 @@
 
 #### 1. Configurable Render Resolution & Multi-Aspect Output Pipeline
 - **Resolution Presets & Custom Dimensions**: Added user-configurable internal rendering resolutions under **Settings -> Video & Display**, featuring standard 16:9 presets (1080p, 720p, 540p, 1440p, 4K UHD), 4:3 presets (UXGA 1600x1200, XGA 1024x768, SVGA 800x600), 1:1 square presets (1080x1080, 800x800, 600x600), and custom dimensions ($128 \times 128$ to $7680 \times 4320$).
+- **Window Resize Safety & Minimum Dimension Constraints**:
+  - Enforced native GLFW window size limits (`glfwSetWindowSizeLimits` with minimum dimensions of $800 \times 600$), preventing operating systems from crushing the desktop UI.
+  - Patched layout clamping math in `UIManager` to eliminate `IllegalArgumentException: Cannot coerce value to an empty range` when resizing below $358\text{px}$.
+  - Fixed modal height clamping in `SettingsPanel` to prevent fatal empty range exceptions on short window heights.
+  - Hardened child window, texture preview, and slider dimension calculations across `LibraryPanel`, `MixerMonitorPanel`, `DeckControlPanel`, `CustomIconButton`, `PresetGridRenderer`, and `CustomRangeSlider` to guarantee strictly positive dimensions (`coerceAtLeast(1f)`), preventing Dear ImGui `size_arg.x != 0.0f && size_arg.y != 0.0f` assertion crashes when labels wrap on large font sizes or narrow widths.
+  - Guarded the main OpenGL render loop against 0-sized or minimized framebuffers.
 - **Live Zero-Downtime Pipeline Resizing**: Decks and Mixer support dynamic reallocation (`Deck.resize` and `Mixer.resize`) on the main OpenGL thread without interrupting playback or losing preset state.
 - **GPU Performance Scaling**: Downscaling from 1080p to 720p or 540p reduces raymarching pixel evaluation by 55%–75%, allowing heavy distance-field raymarchers (KIFS, Mandelbulb, Pseudo-Kleinian) to run at solid 60 FPS on laptops and integrated GPUs.
 - **Display Output Scaling Modes (`ViewportHelper`)**:
@@ -28,6 +34,7 @@
 - **Library Panel Renaming**: Refactored and renamed the 3-column Preset, Playlist, and Play Queue dock from "Asset Browser" to **"Library"**, standardizing terminology with DJ/VJ performance software, and modernizing `LibraryPanel`, `LibraryMode` (`FULL`, `HALF`, `HIDE`), and backward-compatible settings persistence.
 - **Live Theme `ColorTunerPanel`**: Added interactive non-modal color tuner accessible via the top menu bar ("Color"), allowing real-time assignment of palette swatches across all 17 themed ImGui elements with live updates and instant Kotlin code generation for clipboard export. Canonical HEX palettes enforced for Solarized and Lunarized themes.
 - **Background Video Keybinding (`B`)**: Added a global hotkey `B` to instantly toggle master video background rendering behind the semi-transparent UI with synchronized settings persistence.
+- **Font Atlas GC Dangling Pointer & Resize Crash Fix**: Fixed a critical JVM SegFault caused by allocating the font glyph ranges (`MAIN_RANGES`) as a local stack array inside `loadFonts`. Dear ImGui retains native C pointers to glyph range arrays; when ZGC collected the array during runtime font resizing (`ctrl-` / `ctrl=`) or startup, native font rasterization accessed freed memory. Moved glyph ranges and TTF byte arrays to permanent static fields and enforced font size floor clamping ($9\text{px} \dots 96\text{px}$).
 - **Linux Window Title & X11 Class Hints**: Replaced multi-byte Unicode em-dash (`—`) in GLFW window title with standard ASCII hyphen (`-`) and explicitly configured `GLFW_X11_CLASS_NAME` ("Liquid LSD") and `GLFW_X11_INSTANCE_NAME` ("liquid-lsd"), preventing mojibake/corrupted garbage characters in Linux alt-tab task switchers.
 
 #### 3. Multi-Scale Calibrated Oscilloscopes & Signal Visualization

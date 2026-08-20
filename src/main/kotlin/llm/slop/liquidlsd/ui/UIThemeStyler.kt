@@ -183,7 +183,7 @@ object UIThemeStyler {
     }
 
     fun drawNeonBackgroundIfNeeded(session: SessionContext, posX: Float, posY: Float, panelW: Float, panelH: Float, displayWidth: Float) {
-        if (session.uiTheme.settings.theme != UITheme.Theme.NEON) return
+        if (session.uiTheme.settings.theme != UITheme.Theme.NEON || displayWidth <= 0f) return
         val dl = ImGui.getWindowDrawList()
 
         fun getNeonBgColor(t: Float): Int {

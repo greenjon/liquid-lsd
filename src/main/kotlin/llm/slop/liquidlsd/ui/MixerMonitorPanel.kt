@@ -30,8 +30,8 @@ class MixerMonitorPanel(
             itemSpacingY = style.getItemSpacingY(),
             aspectRatio = session.uiTheme.renderAspectRatio
         )
-        val availW = layout.renderWidth
-        val masterH = layout.masterHeight
+        val availW = layout.renderWidth.coerceAtLeast(1f)
+        val masterH = layout.masterHeight.coerceAtLeast(1f)
         val offsetX = layout.offsetX
 
         val baseScreenX = ImGui.getCursorScreenPosX()
@@ -76,14 +76,15 @@ class MixerMonitorPanel(
         // --- Deck Monitors ---
         val btnW = 40f
         val padding = 16f
-        val halfW = (availW - padding) * 0.5f
+        val halfW = ((availW - padding) * 0.5f).coerceAtLeast(1f)
         
         val startX = baseScreenX + offsetX
         val centerY = ImGui.getCursorScreenPosY()
         val deckBStartX = startX + halfW + padding
 
         // --- Render child panels ---
-        val subH = layout.deckChildHeight
+        val subH = layout.deckChildHeight.coerceAtLeast(1f)
+        val deckCH = layout.deckCHeight.coerceAtLeast(1f)
         
         val childY = centerY
         
@@ -109,10 +110,10 @@ class MixerMonitorPanel(
         val imgX = startX
         val imgY = ImGui.getCursorScreenPosY()
         
-        ImGui.image(mixer.deckC.getOutputTexture(), availW, layout.deckCHeight, 0f, 1f, 1f, 0f)
+        ImGui.image(mixer.deckC.getOutputTexture(), availW, deckCH, 0f, 1f, 1f, 0f)
 
         ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.invisibleButton("##drag_source_C", availW, layout.deckCHeight)
+        ImGui.invisibleButton("##drag_source_C", availW.coerceAtLeast(1f), deckCH.coerceAtLeast(1f))
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive Deck C monitor. Click to focus Preset Grid, drag to copy/move/swap, or drop preset files to load.")
         }
@@ -229,15 +230,23 @@ class MixerMonitorPanel(
     ) {
         ImGui.pushID(label)
 
+        val totalAvailW = ImGui.getContentRegionAvailX()
         var textW = 0f
         session.uiTheme.withFont(UITheme.FontLevel.BODY) { textW = ImGui.calcTextSize(label).x }
         session.uiTheme.body(label)
-        ImGui.sameLine(textW + 15f)
+
+        val minSliderW = 40f
+        val canFitSameLine = totalAvailW - (textW + 15f) >= minSliderW
+        if (canFitSameLine) {
+            ImGui.sameLine(textW + 15f)
+        } else {
+            ImGui.spacing()
+        }
 
         val barStartX = ImGui.getCursorScreenPosX()
         val barScreenY = ImGui.getCursorScreenPosY() + 3f
-        val barW = ImGui.getContentRegionAvailX() - 5f
-        val barH = 14f
+        val barW = (ImGui.getContentRegionAvailX() - 5f).coerceAtLeast(minSliderW)
+        val barH = maxOf(14f, session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() * 0.75f })
 
         ImGui.invisibleButton("##slider", barW, barH)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -255,7 +264,7 @@ class MixerMonitorPanel(
             }
         } else if (ImGui.isItemActive()) {
             val mouseX = ImGui.getIO().mousePos.x
-            val pct = ((mouseX - barStartX) / barW).coerceIn(0f, 1f)
+            val pct = if (barW > 0f) ((mouseX - barStartX) / barW).coerceIn(0f, 1f) else 0f
             val newValue = min + pct * (max - min)
             param.set(newValue)
         }
