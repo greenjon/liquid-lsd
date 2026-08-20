@@ -50,10 +50,43 @@ object ModulatorHeaderRow {
             ImGui.popStyleVar() // Draw header controls at full opacity
         }
 
-        // 1. Power icon (Active/Mute button)
+        // Row 1: Title Text & Reset Button (trash can)
         val btnY2 = ImGui.getCursorScreenPosY()
-        
-        // Push styled button colors: Green for active, Amber/Yellow for muted
+        session.uiTheme.h2(titleText)
+
+        if (idx == 0) {
+            val resetWidth = 50f * fontScale
+            val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
+            ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)
+            ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
+            if (isVirtual) {
+                ImGui.beginDisabled()
+            }
+            
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
+            if (ImGui.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
+                onReset()
+                ImGui.popStyleColor(2)
+                if (isVirtual) {
+                    ImGui.endDisabled()
+                }
+                ImGui.unindent(10f)
+                return
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Clear/reset modulators")
+            }
+            ImGui.popStyleColor(2)
+            if (isVirtual) {
+                ImGui.endDisabled()
+            }
+        }
+
+        ImGui.spacing()
+
+        // Row 2: Header controls (Mute/Bypass, Dice, Operator)
+        // 1. Power icon (Active/Mute button)
         val btnColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
         val btnHoverColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
         val btnActiveColor = if (bypassed) ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
@@ -87,7 +120,6 @@ object ModulatorHeaderRow {
             }
         }
 
-        
         // 3. Operator dropdown (ADD/MUL/SCALE combo box)
         ImGui.sameLine(0f, 10f * fontScale)
         operatorIndex.set(when (existing.operator) {
@@ -108,39 +140,5 @@ object ModulatorHeaderRow {
             ImGui.setTooltip("Modulation Operator:\nADD: Modulator value is added to parameter's base.\nMUL: Modulator multiplies the base value.\nSCALE: Modulator scales the remaining range.")
         }
         ImGui.popItemWidth()
-
-        // 4. Title Text (vertically centered in the row, left-aligned)
-        ImGui.sameLine(0f, 15f * fontScale)
-        val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
-        ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
-        session.uiTheme.h2(titleText)
-
-        // 5. Reset button (trash can icon)
-        if (idx == 0) {
-            val resetWidth = 50f * fontScale
-            ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)
-            if (isVirtual) {
-                ImGui.beginDisabled()
-            }
-            
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
-            if (ImGui.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
-                onReset()
-                ImGui.popStyleColor(2)
-                if (isVirtual) {
-                    ImGui.endDisabled()
-                }
-                ImGui.unindent(10f)
-                return
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Clear/reset modulators")
-            }
-            ImGui.popStyleColor(2)
-            if (isVirtual) {
-                ImGui.endDisabled()
-            }
-        }
     }
 }

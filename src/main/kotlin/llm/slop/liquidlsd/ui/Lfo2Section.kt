@@ -32,8 +32,13 @@ object Lfo2Section {
         val modeLabels = arrayOf("AM (Depth)", "PM (Phase)", "ADD (Additive)")
         val modeIdx = ImInt(if (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
 
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val lfo2Title = if (existing.sourceId == "lfo") "LFO 2" else "Oscillator 2"
+        session.uiTheme.h2(lfo2Title)
+
+        ImGui.spacing()
+
         val lfo2Bypassed = (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
-        val btnY2 = ImGui.getCursorScreenPosY()
         
         // Push styled button colors: Green for active, Red for bypassed
         val btnColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
@@ -55,7 +60,7 @@ object Lfo2Section {
 
         // 2. Dice button for LFO 2
         if (session.uiTheme.randomizationEnabled) {
-            ImGui.sameLine(0f, 10f)
+            ImGui.sameLine(0f, 10f * fontScale)
             if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
                 val randomized = existing
                     .randomizeGeneratorModDepth()
@@ -71,15 +76,6 @@ object Lfo2Section {
             }
         }
 
-
-        // Title text for LFO 2
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        ImGui.sameLine(0f, 15f * fontScale)
-        val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
-        ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
-        val lfo2Title = if (existing.sourceId == "lfo") "LFO 2" else "Oscillator 2"
-        session.uiTheme.h2(lfo2Title)
-        
         ImGui.spacing()
 
         // 1. Modulation Mode Dropdown
