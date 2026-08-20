@@ -22,13 +22,97 @@ class PlayQueueManagerTest {
     fun setUp() {
         mockkObject(PresetManager)
         every { PresetManager.isDeckDirty(any(), any()) } returns false
-        every { PresetManager.loadDeckPresetAsync(any(), any()) } returns Unit
+        every { PresetManager.loadDeckPresetAsync(any(), any(), any(), any()) } returns Unit
         PlayQueueManager.clearQueue()
+        PlayQueueManager.isAutoVJEnabled = false
+        PlayQueueManager.isRepeatEnabled = false
+        PlayQueueManager.isShuffleEnabled = false
     }
 
     @AfterTest
     fun tearDown() {
         unmockkObject(PresetManager)
+    }
+
+    @Test
+    fun testManualLoadOnActiveDeckKeepsQueuePointer() {
+        PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/p2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/p3.lsd"))
+
+        // Crossfade at Deck A (-1.0)
+        every { mixer.crossfade.value } returns -1.0f
+
+        // First trigger -> loads p1 to Deck B, activeIndex = 0
+        PlayQueueManager.triggerNext(mixer)
+        assertEquals(0, PlayQueueManager.activeIndex)
+
+        // Deck A is active. Manual load on Deck A.
+        PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckC = false, mixer = mixer)
+        assertFalse(PlayQueueManager.stagedDeckA, "Active deck should not be flagged as staged")
+        assertEquals(0, PlayQueueManager.activeIndex, "Queue index must remain unchanged on manual load")
+
+        // Next trigger -> loads p2 to Deck B, activeIndex = 1
+        PlayQueueManager.triggerNext(mixer)
+        assertEquals(1, PlayQueueManager.activeIndex)
+    }
+
+    @Test
+    fun testManualLoadOnStandbyDeckJumpsTheLine() {
+        PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/p2.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/p3.lsd"))
+
+        // Crossfade at Deck A (-1.0f) -> Deck B is standby
+        every { mixer.crossfade.value } returns -1.0f
+
+        // Queue is at index 0
+        PlayQueueManager.triggerNext(mixer)
+        assertEquals(0, PlayQueueManager.activeIndex)
+
+        // User manually loads a preset into standby Deck B
+        PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = false, mixer = mixer)
+        assertTrue(PlayQueueManager.stagedDeckB, "Standby Deck B should be marked as staged")
+
+        // Trigger Next -> should trigger crossfade to Deck B without advancing queue index or loading next file
+        PlayQueueManager.triggerNext(mixer)
+        assertFalse(PlayQueueManager.stagedDeckB, "Staged flag should be cleared after trigger")
+        assertEquals(0, PlayQueueManager.activeIndex, "Active index must remain at 0 (p2 is saved for next transition)")
+        io.mockk.verify { mixer.targetCrossfade = 1.0f }
+
+        // Now crossfade reaches Deck B (+1.0f) -> Deck A is standby
+        every { mixer.crossfade.value } returns 1.0f
+
+        // Subsequent trigger -> normal queue advance loads p2 into Deck A
+        PlayQueueManager.triggerNext(mixer)
+        assertEquals(1, PlayQueueManager.activeIndex, "Queue resumes and advances to p2")
+        io.mockk.verify { mixer.targetCrossfade = -1.0f }
+    }
+
+    @Test
+    fun testManualLoadOnDeckCDoesNotAffectAutoVJ() {
+        PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
+        every { mixer.crossfade.value } returns -1.0f
+
+        PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = true, mixer = mixer)
+        assertFalse(PlayQueueManager.stagedDeckA)
+        assertFalse(PlayQueueManager.stagedDeckB)
+    }
+
+    @Test
+    fun testAutoVJArmedWhileManualPlayback() {
+        PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/p2.lsd"))
+
+        // Manual playback with Deck A live (-1.0f), AutoVJ enabled, activeIndex is -1
+        every { mixer.crossfade.value } returns -1.0f
+        PlayQueueManager.isAutoVJEnabled = true
+        assertEquals(-1, PlayQueueManager.activeIndex)
+
+        // First trigger loads queue[0] to standby Deck B
+        PlayQueueManager.triggerNext(mixer)
+        assertEquals(0, PlayQueueManager.activeIndex)
+        io.mockk.verify { mixer.targetCrossfade = 1.0f }
     }
 
     @Test

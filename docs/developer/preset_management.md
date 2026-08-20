@@ -58,13 +58,20 @@ val paramNotes: Map<String, String> = emptyMap()
 
 ### AutoVJ Crossfading Pipeline
 When `triggerNext()` is called:
-1. Identifies the inactive deck from `mixer.crossfade.value`.
-2. Polls the next preset file path from the queue.
-3. Invokes `PresetManager.loadDeckPresetAsync` to load the preset into the inactive deck in the background.
-4. Triggers automatic crossfader transition (`mixer.isAutoFading = true`), smoothly blending visuals to the new preset.
+1. Identifies the inactive/standby deck from `mixer.crossfade.value`.
+2. Checks if the standby deck has a **manually staged override** (`stagedDeckA` or `stagedDeckB`).
+   - If staged, Auto-VJ starts the crossfader transition (`mixer.isAutoFading = true`) directly to the staged preset without pulling from the queue or advancing `activeIndex`.
+   - If not staged, polls the next preset file path from the queue, loads it in background via `PresetManager.loadDeckPresetAsync`, advances `activeIndex`, and starts the crossfader transition.
+
+### Manual Deck Loading & Line-Jumping Behaviors
+- **Auto-VJ OFF**: Manually loading presets to any deck keeps the queue contents and `activeIndex` completely untouched.
+- **Auto-VJ ON (Active Deck)**: Loading a preset into the live deck plays immediately; Auto-VJ remains ON and transitions to the standby deck on the next trigger.
+- **Auto-VJ ON (Standby Deck / "Jump the Line")**: Loading a preset into the inactive deck flags it as staged. The next Auto-VJ trigger crossfades to that staged visual without overwriting it, preserving the next queue track for the subsequent cycle.
+- **Deck C (Overlay)**: Manual loading on Deck C is independent and never affects Auto-VJ or deck staging.
+- **Auto-VJ Mid-Session Arming**: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.
 
 ### Dirty Deck Handling Behaviors (`UITheme.autoVjDirtyBehavior`)
-If the active deck contains unsaved manual changes:
+If the target deck contains unsaved manual changes:
 - **`SKIP`**: Aborts queue advancement to protect unsaved work.
 - **`AUTO_SAVE`**: Automatically saves modified state to `library/presets/AutoVJ_<Deck>_<Timestamp>.lsd` before advancing.
 - **`AUTO_DISCARD`**: Discards manual changes and forces queue advancement.

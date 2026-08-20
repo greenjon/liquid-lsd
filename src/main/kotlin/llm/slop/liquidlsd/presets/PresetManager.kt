@@ -33,9 +33,14 @@ object PresetManager {
     val deckStatus = Array(3) { AtomicReference(PresetIOStatus()) }
     private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
 
-    val deckAPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
-    val deckBPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
-    val deckCPresetQueue = ConcurrentLinkedQueue<DeckPresetDto>()
+    data class PendingDeckLoad(
+        val dto: DeckPresetDto,
+        val isManual: Boolean = true
+    )
+
+    val deckAPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
+    val deckBPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
+    val deckCPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
 
 
     var activePresetA: String? = null
@@ -155,7 +160,7 @@ object PresetManager {
         }
     }
 
-    fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false) {
+    fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false, isManual: Boolean = true) {
         val deckIndex = when {
             isDeckC -> 2
             isDeckA -> 0
@@ -172,10 +177,11 @@ object PresetManager {
                 val content = file.readText()
                 val rawDto = json.decodeFromString<DeckPresetDto>(content)
                 val dto = rawDto.copy(name = file.nameWithoutExtension)
+                val pending = PendingDeckLoad(dto, isManual)
                 when {
-                    isDeckC -> deckCPresetQueue.offer(dto)
-                    isDeckA -> deckAPresetQueue.offer(dto)
-                    else -> deckBPresetQueue.offer(dto)
+                    isDeckC -> deckCPresetQueue.offer(pending)
+                    isDeckA -> deckAPresetQueue.offer(pending)
+                    else -> deckBPresetQueue.offer(pending)
                 }
                 // Mtime is captured before the background thread runs so it reflects the file on disk
                 when {
@@ -240,48 +246,60 @@ object PresetManager {
 
     fun applyPendingPresets(mixer: Mixer) {
         // Poll deck A preset queue
-        var deckADto = deckAPresetQueue.poll()
-        while (deckADto != null) {
+        var pendingA = deckAPresetQueue.poll()
+        while (pendingA != null) {
             try {
+                val deckADto = pendingA.dto
                 mixer.deckA.applyDto(deckADto)
                 activePresetA = deckADto.name
                 cachedDtoA = deckADto
                 NotesManager.syncFromDto("Deck A", deckADto)
+                if (pendingA.isManual) {
+                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckC = false, mixer = mixer)
+                }
                 logger.info { "Successfully applied Deck A preset: ${deckADto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck A preset" }
             }
-            deckADto = deckAPresetQueue.poll()
+            pendingA = deckAPresetQueue.poll()
         }
 
         // Poll deck B preset queue
-        var deckBDto = deckBPresetQueue.poll()
-        while (deckBDto != null) {
+        var pendingB = deckBPresetQueue.poll()
+        while (pendingB != null) {
             try {
+                val deckBDto = pendingB.dto
                 mixer.deckB.applyDto(deckBDto)
                 activePresetB = deckBDto.name
                 cachedDtoB = deckBDto
                 NotesManager.syncFromDto("Deck B", deckBDto)
+                if (pendingB.isManual) {
+                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = false, mixer = mixer)
+                }
                 logger.info { "Successfully applied Deck B preset: ${deckBDto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck B preset" }
             }
-            deckBDto = deckBPresetQueue.poll()
+            pendingB = deckBPresetQueue.poll()
         }
 
         // Poll deck C preset queue
-        var deckCDto = deckCPresetQueue.poll()
-        while (deckCDto != null) {
+        var pendingC = deckCPresetQueue.poll()
+        while (pendingC != null) {
             try {
+                val deckCDto = pendingC.dto
                 mixer.deckC.applyDto(deckCDto)
                 activePresetC = deckCDto.name
                 cachedDtoC = deckCDto
                 NotesManager.syncFromDto("Deck C", deckCDto)
+                if (pendingC.isManual) {
+                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = true, mixer = mixer)
+                }
                 logger.info { "Successfully applied Deck C preset: ${deckCDto.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Error applying Deck C preset" }
             }
-            deckCDto = deckCPresetQueue.poll()
+            pendingC = deckCPresetQueue.poll()
         }
     }
 

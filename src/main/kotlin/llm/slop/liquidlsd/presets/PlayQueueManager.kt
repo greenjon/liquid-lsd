@@ -29,6 +29,38 @@ object PlayQueueManager {
     var activeIndex = -1
         private set
 
+    @Volatile
+    var stagedDeckA = false
+
+    @Volatile
+    var stagedDeckB = false
+
+    /**
+     * Called when a preset is loaded into a deck manually by the user (not by the automated queue).
+     * If loaded onto the standby deck while AutoVJ is active, stages that deck for the next transition ("Jump the Line").
+     * If loaded onto the active deck, it plays immediately and clears any previous stage flag.
+     */
+    fun notifyManualDeckLoaded(isDeckA: Boolean, isDeckC: Boolean, mixer: Mixer) {
+        if (isDeckC) return
+        if (isDeckA) {
+            // crossfade > 0.0 means Deck B is dominant, so Deck A is standby
+            if (mixer.crossfade.value > 0.0f) {
+                stagedDeckA = true
+                logger.info { "AutoVJ: Deck A manually staged for next transition" }
+            } else {
+                stagedDeckA = false
+            }
+        } else {
+            // crossfade <= 0.0 means Deck A is dominant, so Deck B is standby
+            if (mixer.crossfade.value <= 0.0f) {
+                stagedDeckB = true
+                logger.info { "AutoVJ: Deck B manually staged for next transition" }
+            } else {
+                stagedDeckB = false
+            }
+        }
+    }
+
     // Track played indices in the current shuffle cycle to ensure each track plays once.
     val playedIndices = ConcurrentHashMap.newKeySet<Int>()
 
@@ -210,6 +242,22 @@ object PlayQueueManager {
     }
 
     fun triggerNext(mixer: Mixer) {
+        // Determine which deck is inactive
+        // crossfade -1.0 = Deck A, 1.0 = Deck B
+        val targetIsA = mixer.crossfade.value > 0.0f
+        val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
+
+        val isStaged = if (targetIsA) stagedDeckA else stagedDeckB
+        if (isStaged) {
+            if (targetIsA) stagedDeckA = false else stagedDeckB = false
+            logger.info { "Triggering next to manually staged Deck ${if (targetIsA) "A" else "B"}" }
+            // Start auto-fade to the target deck without loading from queue and without advancing queue pointer
+            mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
+            mixer.isAutoFading = true
+            mixer.muteCrossfadeNonMidiCv()
+            return
+        }
+
         if (queue.isEmpty()) return
 
         var nextIndex = -1
@@ -256,11 +304,6 @@ object PlayQueueManager {
 
         if (nextIndex == -1 || nextIndex !in queue.indices) return
 
-        // Determine which deck is inactive
-        // crossfade -1.0 = Deck A, 1.0 = Deck B
-        val targetIsA = mixer.crossfade.value > 0.0f
-        val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-        
         if (!handleDirtyDeck(targetIsA, targetDeck, mixer)) return
 
         activeIndex = nextIndex
@@ -268,7 +311,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering next: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PresetManager.loadDeckPresetAsync(file, targetIsA)
+        PresetManager.loadDeckPresetAsync(file, targetIsA, isDeckC = false, isManual = false)
         
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
@@ -279,6 +322,8 @@ object PlayQueueManager {
     fun clearQueue() {
         queue.clear()
         activeIndex = -1
+        stagedDeckA = false
+        stagedDeckB = false
         playedIndices.clear()
         playbackHistory.clear()
     }
@@ -292,6 +337,8 @@ object PlayQueueManager {
         isAutoVJEnabled = autoVJ
         isRepeatEnabled = repeat
         isShuffleEnabled = shuffle
+        stagedDeckA = false
+        stagedDeckB = false
         playedIndices.clear()
         playbackHistory.clear()
         if (shuffle && activeIdx in queue.indices) {
@@ -300,6 +347,22 @@ object PlayQueueManager {
     }
 
     fun triggerPrevious(mixer: Mixer) {
+        // Determine which deck is inactive
+        // crossfade -1.0 = Deck A, 1.0 = Deck B
+        val targetIsA = mixer.crossfade.value > 0.0f
+        val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
+
+        val isStaged = if (targetIsA) stagedDeckA else stagedDeckB
+        if (isStaged) {
+            if (targetIsA) stagedDeckA = false else stagedDeckB = false
+            logger.info { "Triggering previous to manually staged Deck ${if (targetIsA) "A" else "B"}" }
+            // Start auto-fade to the target deck without loading from queue and without altering queue pointer
+            mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
+            mixer.isAutoFading = true
+            mixer.muteCrossfadeNonMidiCv()
+            return
+        }
+
         if (queue.isEmpty()) return
         
         var prevIndex = -1
@@ -325,12 +388,7 @@ object PlayQueueManager {
         }
 
         if (prevIndex == -1 || prevIndex !in queue.indices) return
-        
-        // Determine which deck is inactive
-        // crossfade -1.0 = Deck A, 1.0 = Deck B
-        val targetIsA = mixer.crossfade.value > 0.0f
-        val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-        
+
         if (!handleDirtyDeck(targetIsA, targetDeck, mixer)) return
 
         activeIndex = prevIndex
@@ -338,7 +396,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering previous: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PresetManager.loadDeckPresetAsync(file, targetIsA)
+        PresetManager.loadDeckPresetAsync(file, targetIsA, isDeckC = false, isManual = false)
         
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f

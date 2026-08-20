@@ -1,5 +1,17 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.30
+
+### Auto-VJ & Manual Deck Loading Integration ("Jump the Line")
+
+- **Standby Deck Staging ("Jump the Line")**: When a preset is manually loaded into the standby/inactive deck while Auto-VJ is active, that deck is marked as staged. The next Auto-VJ transition automatically fades into the staged preset without overwriting it from the queue, preserving the next queue track for the subsequent cycle.
+- **Active Deck Overrides**: Manually loading into the live deck replaces the output immediately while keeping Auto-VJ armed and the queue untouched.
+- **Queue Preservation**: Manual deck loading when Auto-VJ is OFF never modifies the queue contents or active index.
+- **Seamless Auto-VJ Mid-Set Arming**: Enabling Auto-VJ mid-set does not cause immediate jump cuts or transitions; it arms the standby deck and smoothly waits for the next advance trigger (CV pulse, beat trigger, MIDI CC, or manual Next button).
+- **Deck C Independence**: Manual loading and interactions on Deck C (master overlay) remain completely independent of the A/B Auto-VJ crossfader pipeline.
+
+---
+
 ## Version 1.0.0-beta.29
 
 ### Master Crossfader Manual Takeover & CV Auto-Centering

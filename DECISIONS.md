@@ -4,6 +4,20 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
+## Auto-VJ Manual Deck Load & Line-Jumping Architecture
+
+- **Decision**: Integrate manual deck preset loading with Auto-VJ and the Play Queue using a non-destructive, staged line-jumping model:
+  - **Queue Preservation**: Manual deck loading when Auto-VJ is OFF never modifies queue contents or the active index.
+  - **Standby Staging ("Jump the Line")**: When a preset is manually loaded into the inactive/standby deck while Auto-VJ is active, that deck is marked as staged. The next Auto-VJ trigger initiates an automated crossfade directly to the staged preset without overwriting it from the queue, preserving the next queue track for the subsequent cycle.
+  - **Active Deck Overrides**: Manually loading into the live deck replaces the output immediately while keeping Auto-VJ armed and the queue index untouched.
+  - **Seamless Mid-Set Arming**: Enabling Auto-VJ mid-set does not trigger immediate jump cuts; it waits for the next advance trigger (CV pulse, MIDI CC, beat trigger, or UI button) to load into the standby deck.
+  - **Deck C Isolation**: Manual interactions with Deck C (master overlay) remain completely independent of the A/B Auto-VJ pipeline.
+- **Rationale**:
+  - Matches industry-standard DJ/VJ workflows (Traktor Pro Cruise mode, VirtualDJ Automix).
+  - Eliminates accidental queue mutation during manual performance and avoids jarring visual jump cuts.
+
+---
+
 ## GUI Scale: Percentage Model (75%–200%) instead of Raw Pixel Size
 
 - **Decision**: Express the global UI scale as a percentage (75%–200%, 5% steps) rather than a raw `baseSize` pixel value, with `glfwGetWindowContentScale` queried on first launch to seed a sensible default.
