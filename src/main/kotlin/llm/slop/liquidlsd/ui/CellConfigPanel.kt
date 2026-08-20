@@ -282,20 +282,10 @@ object CellConfigPanel {
 
     private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator) {
         val idx = param.modulators.indexOfFirst { it.id == newMod.id }
-        val existing = if (idx >= 0) param.modulators[idx] else virtualModulators.firstOrNull { it.id == newMod.id }
-        val wasBypassed = existing?.bypassed ?: false
-
-        // Auto-activate: if depth is adjusted to a non-zero value, activate/unbypass the modulator
-        val finalizedMod = if (wasBypassed && newMod.bypassed && newMod.depth != 0.0f) {
-            newMod.copy(bypassed = false)
-        } else {
-            newMod
-        }
-
         if (idx >= 0) {
-            param.modulators[idx] = finalizedMod
+            param.modulators[idx] = newMod
         } else {
-            param.modulators.add(finalizedMod)
+            param.modulators.add(newMod)
         }
     }
 }

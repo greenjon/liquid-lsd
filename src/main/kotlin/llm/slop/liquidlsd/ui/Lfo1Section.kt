@@ -25,15 +25,13 @@ object Lfo1Section {
         val showWaveform = hasAdvanced && (!isSnh || isGen)
 
         if (showWaveform) {
-            val startX = ImGui.getCursorPosX()
-
-            // 1. Shape Preset buttons
-            session.uiTheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
-            ImGui.sameLine(0f, 10f)
-
             val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
             val btnW = 35f * fontScale
             val btnH = ImGui.getFrameHeight()
+
+            // 1. Shape Preset buttons
+            session.uiTheme.body(if (isGen) "LFO 1 Shape:" else "Shape Preset:")
+            ImGui.sameLine(0f, 10f * fontScale)
 
             // Sine Button
             val isSine = existing.waveform == Waveform.SINE && existing.morph == 0.0f && existing.hold == 0.0f
@@ -90,7 +88,6 @@ object Lfo1Section {
 
             // 2. Slew Preset buttons (only if not Random)
             if (existing.waveform != Waveform.RANDOM) {
-                ImGui.sameLine(0f, 20f * fontScale)
                 session.uiTheme.body("Asymmetry:")
                 ImGui.sameLine(0f, 10f * fontScale)
 

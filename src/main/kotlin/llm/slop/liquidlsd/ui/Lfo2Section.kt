@@ -82,7 +82,24 @@ object Lfo2Section {
         
         ImGui.spacing()
 
-        val startX = ImGui.getCursorPosX()
+        // 1. Modulation Mode Dropdown
+        session.uiTheme.body("Modulation Mode:")
+        ImGui.sameLine(0f, 10f * fontScale)
+
+        if (bypassed) ImGui.popStyleVar()
+        ImGui.pushItemWidth(160f * fontScale)
+        if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
+            val nextMode = llm.slop.liquidlsd.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
+            onReplace(existing.copy(generatorModMode = nextMode))
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Depth.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
+        }
+        ImGui.popItemWidth()
+        if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+
+        ImGui.spacing()
+
         val lfo2Disabled = (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
 
         if (lfo2Disabled) {
@@ -92,7 +109,7 @@ object Lfo2Section {
         val btnW = 35f * fontScale
         val btnH = ImGui.getFrameHeight()
 
-        // 1. LFO 2 Shape Preset buttons
+        // 2. LFO 2 Shape Preset buttons
         session.uiTheme.body("LFO 2 Shape:")
         ImGui.sameLine(0f, 10f * fontScale)
 
@@ -149,9 +166,8 @@ object Lfo2Section {
             ImGui.setTooltip("Load step or smooth Random noise for LFO 2.")
         }
 
-        // 2. LFO 2 Slew Preset buttons (only if not Random)
+        // 3. LFO 2 Slew Preset buttons (only if not Random)
         if (existing.modWaveform != Waveform.RANDOM) {
-            ImGui.sameLine(0f, 20f * fontScale)
             session.uiTheme.body("Asymmetry:")
             ImGui.sameLine(0f, 10f * fontScale)
 
@@ -187,7 +203,7 @@ object Lfo2Section {
 
         ImGui.spacing()
 
-        // 3. Dropdowns Row for Unit and Mode
+        // 4. LFO 2 Unit Dropdown
         session.uiTheme.body("LFO 2 Unit:")
         ImGui.sameLine(0f, 10f * fontScale)
         val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
@@ -236,22 +252,6 @@ object Lfo2Section {
         if (lfo2Disabled) {
             ImGui.endDisabled()
         }
-
-        ImGui.sameLine(0f, 20f * fontScale)
-        session.uiTheme.body("Modulation Mode:")
-        ImGui.sameLine(0f, 10f * fontScale)
-
-        if (bypassed) ImGui.popStyleVar()
-        ImGui.pushItemWidth(160f * fontScale)
-        if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
-            val nextMode = llm.slop.liquidlsd.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
-            onReplace(existing.copy(generatorModMode = nextMode))
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Depth.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
-        }
-        ImGui.popItemWidth()
-        if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
 
         ImGui.spacing()
 

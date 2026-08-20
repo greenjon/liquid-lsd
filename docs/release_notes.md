@@ -85,6 +85,8 @@
 - **Comprehensive Font Autoscaling**: Dynamic font-scaling across settings modals, empty deck launchpads, cell config tab rows, range sliders, and Lucide icons.
 - **Library Live Auto-Refresh**: Real-time filesystem change monitoring across `LibraryPanel` and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
 - **Playlist Menu Bar Streamlining**: Removed action buttons from the playlist editor menu bar in Library and consolidated them into the right-click context menu.
+- **Cell Config LFO Layout & Responsive UI**: Moved Asymmetry preset buttons below Shape options across LFO 1 and LFO 2 sections to improve usability on compact/small screens, and relocated Modulation Mode above LFO 2 Shape options.
+- **Preserved Modulator Bypass on Depth Edits**: Removed auto-unbypassing when adjusting modulator Depth sliders in `CellConfigPanel`, ensuring bypassed modulators remain muted until explicitly enabled.
 
 #### 9. Performance & Zero-Allocation Hot-Path Optimizations
 - **Oscilloscope & Modulation GC Optimization**: Replaced per-call `HashSet` instantiation in `isCvSourceBipolar` with a zero-allocation branch, eliminating over $180{,}000$ GC object allocations per second on the 60 FPS render path during anti-aliased waveform rendering.
