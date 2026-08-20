@@ -417,9 +417,9 @@ class UIManager(
             ImGui.setNextWindowPos(col1W, menuBarH)
             ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
             val cellConfigFlags = if (sliderWasHovered) {
-                noDecorate or ImGuiWindowFlags.NoScrollWithMouse
+                noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar
             } else {
-                noDecorate
+                noDecorate or ImGuiWindowFlags.NoScrollbar
             }
             if (ImGui.begin("Cell Config", cellConfigFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)

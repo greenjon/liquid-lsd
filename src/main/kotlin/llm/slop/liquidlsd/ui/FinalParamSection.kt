@@ -69,11 +69,14 @@ object FinalParamSection {
         ImGui.separator()
         ImGui.spacing()
 
-        // --- INITIAL VALUE CONTROLS ---
-        session.uiTheme.h3("Initial Value Configuration")
-        ImGui.spacing()
+        // --- SCROLLABLE BODY: INITIAL VALUE CONTROLS ---
+        val childFlags = if (CustomRangeSlider.isAnySliderHovered) imgui.flag.ImGuiWindowFlags.NoScrollWithMouse else 0
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
+        if (ImGui.beginChild("##final_param_scroll", 0f, 0f, false, childFlags)) {
+            session.uiTheme.h3("Initial Value Configuration")
+            ImGui.spacing()
 
-        if (isHueSweep && mandala != null) {
+            if (isHueSweep && mandala != null) {
             val petals = mandala.recipe.petals
             val options = mandala.getSymmetricHueCycles(petals)
             val currentVal = param.baseValue
@@ -427,5 +430,9 @@ object FinalParamSection {
         baseDl.addRectFilled(cx, cy, cx + baseBarW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
         baseDl.addRectFilled(cx, cy, cx + baseBarW * param.baseValue, cy + 10f, CvTheme.getThemeColor("base"))
         ImGui.dummy(baseBarW, 10f)
+
+            ImGui.endChild()
+        }
+        ImGui.popStyleVar()
     }
 }

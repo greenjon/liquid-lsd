@@ -23,6 +23,7 @@
 - **Muted watermark layout fix**: The `[SCOPE LIVE — OUTPUT MUTED FROM FINAL]` label X-offset is now computed from the measured Y-axis label width via `ImGui.calcTextSize`, preventing overlap on narrow scopes where the old magic `60f` offset was too small.
 - **`projColor` clarity**: ABGR channel extraction now uses `ushr` (unsigned right-shift) with named `r/g/b` locals and a comment documenting the ImGui U32 byte layout.
 - **Named constant `PHI_FRAC`**: The golden-ratio conjugate `0.618033988749895` used for Halton jitter is now a named file-level constant.
+- **Sticky Oscilloscope & Header in Cell Config**: The top region of the Cell Config panel (CV tab switcher, parameter title, and the full live oscilloscope) is now fixed/sticky at the top of the panel. The extensive modulator controls (LFO 1, LFO 2, DC offset, depth, operators, randomization ranges) and Final parameter initial-value controls now scroll independently in a child scroll view, keeping the oscilloscope in view at all times while tweaking controls at the bottom.
 
 ---
 

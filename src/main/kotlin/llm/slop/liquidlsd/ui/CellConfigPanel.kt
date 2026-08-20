@@ -199,85 +199,91 @@ object CellConfigPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // -- Modulators -------------------------------------------
-        for ((idx, existing) in modsToDraw.withIndex()) {
-            ImGui.pushID(existing.id)
-            
-            val bypassed = existing.bypassed
-            val currentThemeColor = CvTheme.getThemeColor(existing.sourceId)
-            
-            val panelStartX = ImGui.getCursorScreenPosX()
-            val panelStartY = ImGui.getCursorScreenPosY()
-            val dl = ImGui.getWindowDrawList()
-            
-            ModulatorHeaderRow.draw(
-                session = session,
-                existing = existing,
-                idx = idx,
-                modsToDraw = modsToDraw,
-                isVirtual = isVirtual,
-                isLfo = isLfo,
-                hasAdvanced = hasAdvanced,
-                onReplace = { newMod -> replaceModulator(state, param, newMod) },
-                onReset = {
-                    val toRemove = activeMods.toList()
-                    for (mod in toRemove) {
-                        param.modulators.remove(mod)
+        // -- Modulators (Scrollable body below sticky header & oscilloscope) --
+        val childFlags = if (CustomRangeSlider.isAnySliderHovered) imgui.flag.ImGuiWindowFlags.NoScrollWithMouse else 0
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
+        if (ImGui.beginChild("##cell_config_mods_scroll", 0f, 0f, false, childFlags)) {
+            for ((idx, existing) in modsToDraw.withIndex()) {
+                ImGui.pushID(existing.id)
+                
+                val bypassed = existing.bypassed
+                val currentThemeColor = CvTheme.getThemeColor(existing.sourceId)
+                
+                val panelStartX = ImGui.getCursorScreenPosX()
+                val panelStartY = ImGui.getCursorScreenPosY()
+                val dl = ImGui.getWindowDrawList()
+                
+                ModulatorHeaderRow.draw(
+                    session = session,
+                    existing = existing,
+                    idx = idx,
+                    modsToDraw = modsToDraw,
+                    isVirtual = isVirtual,
+                    isLfo = isLfo,
+                    hasAdvanced = hasAdvanced,
+                    onReplace = { newMod -> replaceModulator(state, param, newMod) },
+                    onReset = {
+                        val toRemove = activeMods.toList()
+                        for (mod in toRemove) {
+                            param.modulators.remove(mod)
+                        }
                     }
+                )
+
+                if (bypassed) {
+                    ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f) // Re-push style var for sub-controls
                 }
-            )
 
-            if (bypassed) {
-                ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f) // Re-push style var for sub-controls
-            }
+                ImGui.spacing()
 
-            ImGui.spacing()
-
-            // Draw LFO 1 / primary timing/wave controls
-            Lfo1Section.draw(
-                session = session,
-                param = param,
-                existing = existing,
-                isBeat = isBeat,
-                isSnh = isSnh,
-                isGen = isGen,
-                hasAdvanced = hasAdvanced,
-                themeColor = currentThemeColor,
-                onReplace = { newMod -> replaceModulator(state, param, newMod) }
-            )
-
-            // Draw LFO 2 / secondary generator modulator controls
-            if (isGen) {
-                Lfo2Section.draw(
+                // Draw LFO 1 / primary timing/wave controls
+                Lfo1Section.draw(
                     session = session,
                     param = param,
                     existing = existing,
-                    idx = idx,
+                    isBeat = isBeat,
+                    isSnh = isSnh,
+                    isGen = isGen,
+                    hasAdvanced = hasAdvanced,
                     themeColor = currentThemeColor,
                     onReplace = { newMod -> replaceModulator(state, param, newMod) }
                 )
-            }
 
-            ImGui.unindent(10f) // Unindent at the end of block
-            
-            if (bypassed) {
-                ImGui.popStyleVar()
-            }
-            
-            val panelEndY = ImGui.getCursorScreenPosY()
-            
-            // Draw margin line for active modulators
-            if (!bypassed) {
-                dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, currentThemeColor, 4f)
-            }
+                // Draw LFO 2 / secondary generator modulator controls
+                if (isGen) {
+                    Lfo2Section.draw(
+                        session = session,
+                        param = param,
+                        existing = existing,
+                        idx = idx,
+                        themeColor = currentThemeColor,
+                        onReplace = { newMod -> replaceModulator(state, param, newMod) }
+                    )
+                }
 
-            ImGui.popID()
-            if (idx < modsToDraw.size - 1) {
-                ImGui.spacing()
-                ImGui.separator()
-                ImGui.spacing()
+                ImGui.unindent(10f) // Unindent at the end of block
+                
+                if (bypassed) {
+                    ImGui.popStyleVar()
+                }
+                
+                val panelEndY = ImGui.getCursorScreenPosY()
+                
+                // Draw margin line for active modulators
+                if (!bypassed) {
+                    dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, currentThemeColor, 4f)
+                }
+
+                ImGui.popID()
+                if (idx < modsToDraw.size - 1) {
+                    ImGui.spacing()
+                    ImGui.separator()
+                    ImGui.spacing()
+                }
             }
+            ImGui.endChild()
         }
+        ImGui.popStyleVar()
     }
 
     private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator) {
