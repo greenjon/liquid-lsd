@@ -11,7 +11,23 @@
 
 ---
 
-## Version 1.0.0-beta.26
+## Version 1.0.0-beta.28
+
+### LFO Oscilloscope Improvements
+
+- **Live BPM-aware AUTO timebase**: The oscilloscope's AUTO mode now reads the actual running BPM from `CVRegistry` when calculating beat-based LFO periods, instead of assuming 120 BPM. Scope windows are now correctly sized at any tempo.
+- **DRY rendering via `drawLfoWaveSegments` helper**: The identical Halton-jittered anti-aliasing loop that appeared in both the lookback and lookahead rendering passes has been unified into a single private helper. The helper returns the final pixel endpoint so both halves connect at the playhead without gaps.
+- **Pixel-perfect seam at NOW**: The past segment's final `prevY` is forwarded directly into the future segment's starting point (`lfoSeamY`), eliminating potential 1-pixel discontinuities at the playhead when the wide-bar anti-aliasing branch was active.
+- **Width-proportional step count**: The number of sampling steps for each half of the LFO scope is now derived from the actual pixel width of that half (`(pixelWidth * 0.5f).toInt().coerceIn(30, 300)`) instead of a fixed `FUTURE_STEPS = 120`. Wider scopes get more steps; narrower scopes fewer — consistent visual density at any panel size.
+- **Dead code removal**: `playheadRatio` (always 0.5f for LFO, 1.0f for non-LFO) has been eliminated. All conditional branches that gated on it now use `hasLfo` directly. `handleOscilloscopeTooltips` was updated from `Float` to `Boolean`.
+- **Muted watermark layout fix**: The `[SCOPE LIVE — OUTPUT MUTED FROM FINAL]` label X-offset is now computed from the measured Y-axis label width via `ImGui.calcTextSize`, preventing overlap on narrow scopes where the old magic `60f` offset was too small.
+- **`projColor` clarity**: ABGR channel extraction now uses `ushr` (unsigned right-shift) with named `r/g/b` locals and a comment documenting the ImGui U32 byte layout.
+- **Named constant `PHI_FRAC`**: The golden-ratio conjugate `0.618033988749895` used for Halton jitter is now a named file-level constant.
+
+---
+
+## Version 1.0.0-beta.27
+
 
 > [!NOTE]
 > **Release 1.0.0-beta.26** is a major cumulative milestone rolling up all features, architectural enhancements, performance optimizations, and UI overhauls since `v1.0.0-beta.21`.

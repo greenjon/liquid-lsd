@@ -64,12 +64,13 @@ class ModulatableParameter(
         if (firstLfo == null) {
             return Pair(defaultWhenNoLfo.durationSec, defaultWhenNoLfo.divSec)
         }
+        val bpm = llm.slop.liquidlsd.cv.CVRegistry.get("bpm").coerceAtLeast(1f)
         val periodSec = when (firstLfo.sourceId) {
-            "beatPhase", "sampleAndHold" -> firstLfo.subdivision * (60.0f / 120.0f)
+            "beatPhase", "sampleAndHold" -> firstLfo.subdivision * (60.0f / bpm)
             "lfo" -> {
                 when (firstLfo.genUnit) {
                     GenUnit.TIME -> firstLfo.subdivision
-                    GenUnit.BEAT -> firstLfo.subdivision * (60.0f / 120.0f)
+                    GenUnit.BEAT -> firstLfo.subdivision * (60.0f / bpm)
                     GenUnit.FRAME -> firstLfo.subdivision / llm.slop.liquidlsd.cv.CVRegistry.getTargetFps()
                 }
             }
