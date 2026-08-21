@@ -17,8 +17,8 @@ object VisualSourceRegistry {
     }
 
     private val vertexShaderSource: String by lazy {
-        val stream = Shader::class.java.classLoader.getResourceAsStream("shaders/mandelbulb.vert")
-            ?: throw RuntimeException("Vertex shader resource not found: shaders/mandelbulb.vert")
+        val stream = Shader::class.java.classLoader.getResourceAsStream("shaders/blit.vert")
+            ?: throw RuntimeException("Vertex shader resource not found: shaders/blit.vert")
         stream.bufferedReader().use { it.readText() }
     }
     
@@ -119,15 +119,6 @@ object VisualSourceRegistry {
                         hasFeedback = meta.feedback,
                         ownsShader = true,
                         recipe = initialRecipe
-                    )
-                } else if (meta.id == "kifs") {
-                    Kifs(
-                        id = meta.id,
-                        displayName = meta.name,
-                        shader = shader,
-                        parameters = parameters,
-                        hasFeedback = meta.feedback,
-                        ownsShader = true
                     )
                 } else if (meta.id == "dynamic_spiral") {
                     DynamicSpiral(

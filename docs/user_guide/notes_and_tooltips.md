@@ -37,7 +37,7 @@ Liquid LSD provides three distinct scopes for notes:
 
 | Note Tier | Scope | Storage Location | Lifetime |
 |-----------|-------|------------------|----------|
-| **Global Source Notes** | Visual Engine / Source (e.g. Mandala, KIFS) | `~/.liquid-lsd/source-notes.json` | App-global; persists across patch changes and app restarts |
+| **Global Source Notes** | Visual Engine / Source (e.g. Mandala, Gyroid) | `~/.liquid-lsd/source-notes.json` | App-global; persists across patch changes and app restarts |
 | **Patch Notes** | Loaded Visual Patch (.lsdpatch) | Inside `.lsdpatch` preset file (`patchNotes`) | Saved/loaded per patch file |
 | **Parameter Notes** | Specific parameter within a patch | Inside `.lsdpatch` preset file (`paramNotes`) | Saved/loaded per patch file |
 
@@ -53,7 +53,7 @@ Liquid LSD provides three distinct scopes for notes:
 ### 2. Global Source Notes
 - **How to edit**: In Deck Control, open the **Deck Menu** popup and select **📝 Add/Edit Source Note…**.
 - **Display**: Appears inside the hover tooltip when hovering over the source selection button in Deck Control.
-- **Persistence**: Stored globally in `~/.liquid-lsd/source-notes.json`. Perfect for keeping personal cheat-sheets or performance tips for specific shader engines (e.g. "KIFS folds best with low gain feedback").
+- **Persistence**: Stored globally in `~/.liquid-lsd/source-notes.json`. Perfect for keeping personal cheat-sheets or performance tips for specific shader engines (e.g. "Gyroid works best with low gain feedback").
 
 ### 3. Preset Notes & Deck Monitor Labels
 Each active Deck Monitor panel (Deck A and Deck B) features a soft blue-white **Preset Name Label** below the preview screen:

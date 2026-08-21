@@ -14,22 +14,12 @@ object SourceDocRegistry {
     val sourceDescriptions: Map<String, String> = mapOf(
         "mandala" to "Parametric 4-arm Lissajous mandala. Arm lengths and frequency ratios" +
                 " are set by the recipe; hue, depth, and 3D mode shape the final image.",
-        "kifs" to "Kaleidoscopic Iterated Function System (KIFS) fractal. Fold angles and" +
-                " scale drive the self-similar structure; Shape Morph blends between presets.",
         "dynamic_spiral" to "Particle trail system where points spiral outward under wave," +
                 " shear, and damping forces. High Trail Decay creates luminous streak patterns.",
         "gyroid" to "Triply-periodic minimal surface (Schoen gyroid) rendered by ray-marching." +
                 " Thickness and Wall Width control the shell density.",
-        "mandelbulb" to "3D analogue of the Mandelbrot set rendered by ray-marching. Power" +
-                " and Iterations control the fractal depth; Bailout sets the escape threshold.",
-        "mandelbox" to "Box-fold IFS fractal rendered by ray-marching. Negative Scale" +
-                " values invert the folding, producing very different morphologies.",
         "chladni" to "Chladni standing-wave nodal patterns. Frequency N/M/L select harmonic" +
                 " modes; Thickness and Wall Width control line weight.",
-        "clifford_torus" to "A 4-dimensional torus projected into 3D and rotated in" +
-                " 4-space via six independent rotation planes (XY, XZ, YZ, XW, YW, ZW).",
-        "pseudo_kleinian" to "Pseudo-Kleinian limit-set fractal. CX/CY/CZ and Scale set the" +
-                " Julia parameter; a separate camera rotation tracks the viewer.",
         "attractor_feedback" to "Two-layer strange-attractor system with cross-modulated" +
                 " Jacobian and variance coefficients. High Persistence burns in trails.",
     )
@@ -74,32 +64,6 @@ object SourceDocRegistry {
         "mandala/Harmonic Lock" to "When 1.0, locks Hue Sweep to the recipe's petal count for perceptually correct colours.",
         "mandala/Freq Offset" to "Offsets all four arm frequencies by a fractional amount, morphing the figure.",
 
-        // KIFS
-        "kifs/Iterations" to "Number of IFS fold iterations. Higher = more self-similar detail; also costs more GPU.",
-        "kifs/Scale" to "Global scale of the fractal attractor. Values near 2.0 produce the most structured forms.",
-        "kifs/Fold X" to "Enables folding along the X axis.",
-        "kifs/Fold Y" to "Enables folding along the Y axis.",
-        "kifs/Fold Z" to "Enables folding along the Z axis.",
-        "kifs/Fold Angle X" to "Manual X fold angle (overridden by Shape Morph when it is non-zero).",
-        "kifs/Fold Angle Y" to "Manual Y fold angle.",
-        "kifs/Fold Angle Z" to "Manual Z fold angle.",
-        "kifs/Shape Morph" to "Blends between four preset fold-angle configurations. Drive with a slow LFO for organic morphing.",
-        "kifs/Zoom" to "Camera zoom into the fractal. Higher values drill deeper into the structure.",
-        "kifs/Color Shift" to "Shifts the hue of the distance-based colouring.",
-        "kifs/Rotate Y" to "Camera yaw rotation.",
-        "kifs/Rotate X" to "Camera pitch rotation.",
-        "kifs/Rotate Z" to "Camera roll rotation.",
-        "kifs/Glow" to "Emission glow intensity around the fractal edges.",
-        "kifs/Repeat Spacing" to "Spatial tiling period. Lower values create a tighter repeating lattice.",
-        "kifs/Repeat 3D" to "Enables 3D space tiling.",
-        "kifs/Fly Speed" to "Auto-fly speed through the fractal along the camera axis.",
-        "kifs/Trap Mode" to "Orbit trap colouring mode.",
-        "kifs/Trap Glow" to "Glow intensity of the orbit-trap highlight region.",
-        "kifs/Smoothness" to "Smoothing applied to the distance estimator — higher softens hard edges.",
-        "kifs/Normal Coloring" to "Blends surface-normal-based shading into the colour. 1.0 = fully normal-shaded.",
-        "kifs/Normal Frequency" to "Frequency of the normal-based colour banding.",
-        "kifs/Rot Mode" to "Automatic rotation mode: 0 = manual, 1 = slow auto-tumble, 2 = beat-locked.",
-
         // Dynamic Spiral
         "dynamic_spiral/Max Points" to "Number of particles in the trail system. Higher = denser but costs more GPU.",
         "dynamic_spiral/Scale" to "Overall spatial scale of the spiral.",
@@ -128,30 +92,6 @@ object SourceDocRegistry {
         "gyroid/Rotate Z" to "Camera roll.",
         "gyroid/Glow" to "Edge glow emission intensity.",
 
-        // Mandelbulb
-        "mandelbulb/Power" to "Exponent of the Mandelbulb formula. 8 = classic bulb; lower = smoother, higher = spikier.",
-        "mandelbulb/Iterations" to "Ray-march iteration count. Higher = more detail and GPU cost.",
-        "mandelbulb/Glow" to "Surface glow emission.",
-        "mandelbulb/Zoom" to "Camera zoom.",
-        "mandelbulb/Color Shift" to "Hue of the iteration-count colouring.",
-        "mandelbulb/Bailout" to "Escape radius. Higher values let rays travel further before escaping.",
-        "mandelbulb/Rotate Y" to "Camera yaw.",
-        "mandelbulb/Rotate X" to "Camera pitch.",
-        "mandelbulb/Rotate Z" to "Camera roll.",
-
-        // Mandelbox
-        "mandelbox/Scale" to "Box-fold scale. Negative values invert the fold, producing a distinct morphology.",
-        "mandelbox/Min Radius" to "Minimum sphere-fold radius. Smaller values increase interior complexity.",
-        "mandelbox/Fixed Radius" to "Fixed sphere-fold radius reference.",
-        "mandelbox/Iterations" to "Number of fold iterations.",
-        "mandelbox/Fold Limit" to "Clamp value for the box fold step.",
-        "mandelbox/Zoom" to "Camera zoom.",
-        "mandelbox/Color Shift" to "Hue shift for distance-based colouring.",
-        "mandelbox/Rotate Y" to "Camera yaw.",
-        "mandelbox/Rotate X" to "Camera pitch.",
-        "mandelbox/Rotate Z" to "Camera roll.",
-        "mandelbox/Glow" to "Surface glow emission.",
-
         // Chladni
         "chladni/Mode" to "Standing-wave mode selector: blends between different harmonic pattern families.",
         "chladni/Frequency N" to "First frequency component. Controls primary nodal line spacing.",
@@ -167,38 +107,6 @@ object SourceDocRegistry {
         "chladni/Rotate X" to "Pattern rotation X.",
         "chladni/Rotate Z" to "Pattern rotation Z.",
         "chladni/Glow" to "Edge glow.",
-
-        // Clifford Torus 4D
-        "clifford_torus/Zoom" to "Camera zoom / projection scale.",
-        "clifford_torus/Rotate X" to "3D X-axis rotation.",
-        "clifford_torus/Rotate Y" to "3D Y-axis rotation.",
-        "clifford_torus/Rotate Z" to "3D Z-axis rotation.",
-        "clifford_torus/Rotate XW" to "4D XW plane rotation — creates a characteristic turning-inside-out motion.",
-        "clifford_torus/Rotate YW" to "4D YW plane rotation.",
-        "clifford_torus/Rotate ZW" to "4D ZW plane rotation.",
-        "clifford_torus/Mesh Density Theta" to "Number of segments along the first toroidal direction.",
-        "clifford_torus/Mesh Density Phi" to "Number of segments along the second toroidal direction.",
-        "clifford_torus/Thickness" to "Tube radius of the rendered torus wire.",
-        "clifford_torus/Wireframe Mode" to "0 = solid surface, 1 = wireframe grid.",
-        "clifford_torus/Color Shift" to "Hue of the surface colouring.",
-        "clifford_torus/Glow" to "Surface emission glow.",
-
-        // Pseudo-Kleinian
-        "pseudo_kleinian/Scale" to "IFS scale factor. Values close to 2 produce the densest limit sets.",
-        "pseudo_kleinian/Radius" to "Sphere inversion radius in the Kleinian group iteration.",
-        "pseudo_kleinian/CX" to "Julia parameter X component — shifts the attractor geometry.",
-        "pseudo_kleinian/CY" to "Julia parameter Y component.",
-        "pseudo_kleinian/CZ" to "Julia parameter Z component.",
-        "pseudo_kleinian/Rotate X" to "Fold-space X rotation.",
-        "pseudo_kleinian/Rotate Y" to "Fold-space Y rotation.",
-        "pseudo_kleinian/Rotate Z" to "Fold-space Z rotation.",
-        "pseudo_kleinian/Iterations" to "Iteration depth.",
-        "pseudo_kleinian/Zoom" to "Camera zoom.",
-        "pseudo_kleinian/Color Shift" to "Hue of orbit-trap colouring.",
-        "pseudo_kleinian/Cam Rotate Y" to "Camera yaw — independent of the fold-space rotation.",
-        "pseudo_kleinian/Cam Rotate X" to "Camera pitch.",
-        "pseudo_kleinian/Cam Rotate Z" to "Camera roll.",
-        "pseudo_kleinian/Glow" to "Surface emission glow.",
 
         // Attractor Feedback
         "attractor_feedback/Plane Scale" to "Global spatial scale of the attractor plane projection.",

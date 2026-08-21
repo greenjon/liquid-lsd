@@ -466,7 +466,7 @@ object PresetGridPanel {
                 ImGui.openPopup("##launchpad_source_popup_$deckLabel")
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Select a visual generator source (Mandala, Mandelbulb, Kifs, etc.)")
+                ImGui.setTooltip("Select a visual generator source (Mandala, Gyroid, Dynamic Spiral, etc.)")
             }
             ImGui.popStyleColor(3)
 

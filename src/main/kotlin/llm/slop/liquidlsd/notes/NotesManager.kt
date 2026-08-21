@@ -11,7 +11,7 @@ private val logger = KotlinLogging.logger {}
 /**
  * Manages three tiers of user notes:
  *
- * 1. **Global source notes** — one note per visual source engine (e.g. "Mandala", "KIFS"),
+ * 1. **Global source notes** — one note per visual source engine (e.g. "Mandala", "Dynamic Spiral"),
  *    persisted to `~/.liquid-lsd/source-notes.json`. Survives preset loads and app restarts.
  *
  * 2. **Preset notes** — one free-form note per loaded preset, stored in `DeckPresetDto.presetNotes`.

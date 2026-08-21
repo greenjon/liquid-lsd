@@ -1,5 +1,20 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.33
+
+### Visual Source Library Streamlining for Integrated GPUs
+
+- **Removed GPU-Heavy Raymarching Sources**: Removed heavy distance-field fractal and 4D raymarchers (`clifford_torus`, `kifs`, `mandelbox`, `pseudo_kleinian`, `mandelbulb`) that caused high ALU/transcendental load and frame drops on integrated GPUs (Intel Iris Xe / AMD APUs).
+- **Refocused Core Visual Engine**: Refocused the built-in generator collection on high-performance, lightweight sources:
+  - `mandala`: Ultra-low overhead 2D/3D hardware ribbon rasterization.
+  - `attractor_feedback`: 2D strange attractor density inverse mapping with feedback decay.
+  - `dynamic_spiral`: Analytical Newton-Raphson range-culled spiral particle trails.
+  - `gyroid`: Closed-form 3D triply periodic minimal surface raymarcher.
+  - `chladni`: Closed-form 2D/3D acoustic resonance standing wave raymarcher.
+- **Codebase & Documentation Synchronization**: Cleaned up `SourceDocRegistry`, `VisualSourceRegistry`, vertex shader resources, and developer/user guides.
+
+---
+
 ## Version 1.0.0-beta.32
 
 ### Preset Deletion & Keyboard Shortcut Enhancements

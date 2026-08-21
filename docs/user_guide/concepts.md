@@ -44,22 +44,12 @@ The core procedural geometry generator:
   - *Coordinate Permutation*: Projects curves onto XY, YZ, and ZX planes simultaneously.
   - *Perspective View*: Seamlessly transition from orthographic (`3D Persp` = 0) to immersive perspective projection (`3D Persp` = 1).
 
-### 2. KIFS Fractal Engine (`Kifs.kt`)
-Kaleidoscopic Iterated Function System generating complex fractal geometry using CPU-side mathematical folding:
-- **Shape Morph**: Smoothly interpolates geometry across 4 polyhedral symmetry modes:
-  1. *Cube Symmetry* (0.0 – 1.0)
-  2. *Tetrahedron Symmetry* (1.0 – 2.0)
-  3. *Dodecahedron / Icosahedron Symmetry* (2.0 – 3.0)
-  4. *Soccer Ball Symmetry* (3.0 – 4.0)
-- **Fold Angle Offsets**: Real-time X/Y/Z fold angle offsets that can be driven by LFOs or audio CVs.
-
-### 3. Procedural Shader Sources
-Built-in raymarched and procedural shaders:
-- **Gyroid**: Dynamic 3D triply periodic minimal surface.
-- **Mandelbulb & Mandelbox**: 3D hyper-complex fractal raymarchers.
-- **Chladni**: Acoustic vibration pattern generator.
-- **Pseudo-Kleinian**: Kleinian group fractal limit sets.
-- **Dynamic Spiral**: Multi-point spiral curve generator.
+### 2. Procedural & Raymarched Shader Sources
+Built-in procedural visual generators:
+- **Attractor Feedback**: Strange attractor log-density inverse mapping with feedback trail accumulation.
+- **Dynamic Spiral**: Multi-point spiral curve generator with radial range culling.
+- **Gyroid**: Dynamic 3D triply periodic minimal surface raymarcher.
+- **Chladni**: Acoustic 2D/3D vibration pattern generator.
 
 ---
 
@@ -128,7 +118,7 @@ Liquid LSD provides granular control over internal render resolution and externa
 - **Custom**: User-specified width and height (from $128 \times 128$ to $7680 \times 4320$).
 
 ### 2. GPU Performance Scaling
-Running complex distance-field raymarchers (e.g., KIFS, Mandelbulb, Pseudo-Kleinian) across three decks simultaneously evaluates millions of pixels per frame. Switching from 1080p to 720p or 540p reduces GPU load by 55%–75%, allowing smooth 60 FPS performance on laptops and integrated GPUs.
+Running complex shaders across three decks simultaneously evaluates millions of pixels per frame. Switching from 1080p to 720p or 540p reduces GPU load by 55%–75%, allowing smooth 60 FPS performance on laptops and integrated GPUs.
 
 ### 3. Display Scaling Modes
 When the internal render aspect ratio differs from the connected display or secondary projector:

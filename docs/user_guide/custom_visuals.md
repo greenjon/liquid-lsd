@@ -1,17 +1,17 @@
 # Custom Visual Sources & Shaders
 
-Liquid LSD is designed for extensibility. Beyond its 10 built-in procedural visual generators (Mandalas, KIFS, Mandelbulbs, Gyroids, Chladni, etc.), you can easily build, install, and share custom dynamic GLSL visual sources.
+Liquid LSD is designed for extensibility. Beyond its built-in procedural visual generators (Mandalas, Gyroids, Chladni, Dynamic Spiral, Attractor Feedback), you can easily build, install, and share custom dynamic GLSL visual sources.
 
 ---
 
 ## Installing a Custom Visual Source
 
-1. Open the `presets/sources/` directory inside your Liquid LSD installation folder.
-2. Create a new subfolder (e.g. `presets/sources/my_cool_shader/`).
-3. Place your `meta.json` manifest and `.frag` shader file into this folder.
+1. Open the `library/sources/` directory inside your Liquid LSD installation folder.
+2. Create a new subfolder (e.g. `library/sources/my_cool_shader/`).
+3. Place your `meta.json` manifest and `shader.frag` file into this folder.
 4. Launch Liquid LSD.
 
-The application automatically scans `presets/sources/` on startup, compiles new shaders against the shared vertex pipeline, generates UI sliders for parameters, and adds the source to the Deck Source selector.
+The application automatically scans `library/sources/` on startup, compiles new shaders against the shared vertex pipeline, generates UI sliders for parameters, and adds the source to the Deck Source selector.
 
 ---
 

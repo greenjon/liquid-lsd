@@ -19,7 +19,7 @@
   - Hardened child window, texture preview, and slider dimension calculations across `LibraryPanel`, `MixerMonitorPanel`, `DeckControlPanel`, `CustomIconButton`, `PresetGridRenderer`, and `CustomRangeSlider` to guarantee strictly positive dimensions (`coerceAtLeast(1f)`), preventing Dear ImGui `size_arg.x != 0.0f && size_arg.y != 0.0f` assertion crashes when labels wrap on large font sizes or narrow widths.
   - Guarded the main OpenGL render loop against 0-sized or minimized framebuffers.
 - **Live Zero-Downtime Pipeline Resizing**: Decks and Mixer support dynamic reallocation (`Deck.resize` and `Mixer.resize`) on the main OpenGL thread without interrupting playback or losing preset state.
-- **GPU Performance Scaling**: Downscaling from 1080p to 720p or 540p reduces raymarching pixel evaluation by 55%–75%, allowing heavy distance-field raymarchers (KIFS, Mandelbulb, Pseudo-Kleinian) to run at solid 60 FPS on laptops and integrated GPUs.
+- **GPU Performance Scaling**: Downscaling from 1080p to 720p or 540p reduces raymarching pixel evaluation by 55%–75%, allowing raymarchers and visual shaders to run at solid 60 FPS on laptops and integrated GPUs.
 - **Display Output Scaling Modes (`ViewportHelper`)**:
   - **Fit (Letterbox / Pillarbox)**: Preserves exact aspect ratio of the render target with border bars when outputting to mismatched monitor aspect ratios.
   - **Fill (Crop)**: Centers and crops edges to fill the display with no black bars.

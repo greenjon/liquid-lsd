@@ -272,7 +272,7 @@ The full parameter list covers (per deck A/B/C):
 - Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Source
 - Mixer: crossfade, masterAlpha, bloom, xfadeSpeed, queuePrev, queueNext
 
-Dynamic visual sources (`DynamicVisualSource`, `Kifs`) expose their own parameter maps and are
+Dynamic visual sources (`DynamicVisualSource`, `DynamicSpiral`) expose their own parameter maps and are
 resolved generically via the source's `parameters` map + `globalAlpha`.
 
 ---
