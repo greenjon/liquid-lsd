@@ -8,16 +8,7 @@
       "default": 0.0,
       "min": 0.0,
       "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 1.0
-    },
-    {
-      "name": "Stellation",
-      "default": 0.0,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR",
+      "type": "ENDLESS",
       "defaultMin": 0.0,
       "defaultMax": 1.0
     },

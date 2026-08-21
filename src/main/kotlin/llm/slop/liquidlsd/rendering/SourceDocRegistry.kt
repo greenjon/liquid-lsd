@@ -128,8 +128,7 @@ object SourceDocRegistry {
         "attractor_feedback/Jacobian 1" to "Jacobian strength for layer 1.",
 
         // Icosa-Dodeca
-        "icosa_dodeca/Morph" to "Morphs between Icosahedron (0.0), rectified Icosidodecahedron (0.5), and Dodecahedron (1.0).",
-        "icosa_dodeca/Stellation" to "Stellates face planes outward into Kepler-Poinsot stars: Great Icosahedron (at Morph 0.0) or Great Stellated Dodecahedron (at Morph 1.0).",
+        "icosa_dodeca/Morph" to "Continuous 4-stage cyclic morph: 0.0–0.25 (Icosahedron → Dodecahedron), 0.25–0.50 (Dodecahedron → Great Stellated Dodecahedron), 0.50–0.75 (Great Stellated Dodecahedron → Great Icosahedron), 0.75–1.00 (Great Icosahedron → Icosahedron).",
         "icosa_dodeca/Color Method" to "Coloring algorithm: 0 = Depth Gradient (distance from centroid), 1 = 5-Fold Sectors (72° symmetry pinwheel).",
         "icosa_dodeca/Depth Frame" to "Coordinate frame for depth gradient: 0 = Local shape frame (locked to geometry), 1 = World frame (colors flow across moving surface).",
         "icosa_dodeca/Hue Offset" to "Rotates the base hue of the color palette.",

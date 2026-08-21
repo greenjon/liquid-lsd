@@ -56,7 +56,7 @@
 - **Cell Mute / Preview System**: Toggle any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the oscilloscope live and animated. Muted cells in the Preset Grid drop knob arc/meter opacity to 35% and display a centered 'M'. Middle-clicking any active or muted cell toggles its mute state.
 
 #### 6. Visual Source Library Streamlining & Icosa-Dodeca Generator
-- **Added Icosa-Dodeca Morph & Stellation Source (`icosa_dodeca`)**: Added a closed-form geometric generator providing continuous duality morphing between Icosahedron and Dodecahedron with Kepler-Poinsot Great Stellations, depth/5-fold sector symmetry coloring, and semi-transparent crystal reveal face rendering.
+- **Added Icosa-Dodeca Morph & Stellation Source (`icosa_dodeca`)**: Added a closed-form geometric generator providing a unified 4-phase continuous cyclic morph across canonical polyhedra: `0.0–0.25` (Icosahedron → Dodecahedron), `0.25–0.50` (Dodecahedron → Great Stellated Dodecahedron), `0.50–0.75` (Great Stellated Dodecahedron → Great Icosahedron), and `0.75–1.00` (Great Icosahedron → Icosahedron), with mathematical depth/symmetry coloring and semi-transparent crystal reveal face rendering.
 - **Removed GPU-Heavy Raymarchers**: Removed heavy distance-field fractal and 4D raymarchers (`clifford_torus`, `kifs`, `mandelbox`, `pseudo_kleinian`, `mandelbulb`) that caused high ALU load and frame drops on integrated GPUs (Intel Iris Xe / AMD APUs).
 - **Refocused Core Visual Engine**: Refocused the built-in generator collection on high-performance, lightweight sources:
   - `icosa_dodeca`: Icosahedron-Dodecahedron duality morph and Kepler-Poinsot stellations.

@@ -56,7 +56,6 @@ class VisualSourceManifestTest {
         val paramNames = meta.parameters.map { it.name }.toSet()
         val expectedParams = setOf(
             "Morph",
-            "Stellation",
             "Color Method",
             "Depth Frame",
             "Hue Offset",
