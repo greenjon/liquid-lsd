@@ -80,5 +80,6 @@ If the target deck contains unsaved manual changes:
 
 ## 4. PlaylistManager & PlaylistParser
 
-- **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.playlist` files), supports reordering presets, and provides `pushToPlayQueue()` to dump playlists directly into `PlayQueueManager`.
+- **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdset` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
 - **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).
+- **`PlayQueueManager.kt`**: Provides `removeFileFromQueue(file)` to remove all references to a deleted file from the queue and shift active index/shuffle state.

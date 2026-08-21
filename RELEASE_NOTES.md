@@ -1,5 +1,17 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.32
+
+### Preset Deletion & Keyboard Shortcut Enhancements
+
+- **Play Queue & Playlist `Delete` / `Backspace` Key Support**: Pressing `Delete` or `Backspace` on a selected item in the Play Queue or Playlist Editor removes the preset from that list.
+- **Preset Library `Delete` / `Backspace` Key Support**: Pressing `Delete` or `Backspace` on a selected preset in the left Presets Library opens the permanent deletion modal.
+- **Permanent File Deletion Warnings**: Explicit modal popup warning ("Warning: This will permanently delete this preset from your library. This action cannot be undone.") when permanently deleting a preset.
+- **Context Menu Integration**: Added `"Delete preset from library..."` option to the context menu of items in both the Play Queue and Playlist Editor.
+- **Reference Cleanup**: Permanently deleting a preset file removes all occurrences from all `.lsdset` playlist files on disk and from the live Play Queue.
+
+---
+
 ## Version 1.0.0-beta.31
 
 ### Library Redesign & Workflow Modernization

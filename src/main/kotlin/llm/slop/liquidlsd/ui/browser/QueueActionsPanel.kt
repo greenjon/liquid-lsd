@@ -2,8 +2,11 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiKey
 import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.AssetItem
+import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
@@ -11,6 +14,7 @@ import java.io.File
 
 object QueueActionsPanel {
     private val logger = KotlinLogging.logger {}
+    var selectedIndex: Int = -1
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         // Header Row
@@ -67,6 +71,7 @@ object QueueActionsPanel {
         ImGui.sameLine()
         if (ImGui.button("Clear")) {
             session.playQueueManager.clearQueue()
+            selectedIndex = -1
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Empty the play queue.")
@@ -94,13 +99,16 @@ object QueueActionsPanel {
 
         session.playQueueManager.queue.forEachIndexed { index, file ->
             val isActive = index == session.playQueueManager.activeIndex
+            val isSelected = index == selectedIndex
             val label = "${index + 1}. ${file.nameWithoutExtension}${if (isActive) " ->" else ""}"
 
             if (isActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
             }
 
-            ImGui.selectable("$label##queue_$index", false)
+            if (ImGui.selectable("$label##queue_$index", isSelected)) {
+                selectedIndex = index
+            }
 
             // Drag source (QUEUE_ITEM reorder)
             if (ImGui.beginDragDropSource()) {
@@ -157,10 +165,26 @@ object QueueActionsPanel {
 
             // Right-click menu
             if (ImGui.beginPopupContextItem("queue_item_menu_$index")) {
-                if (ImGui.menuItem("Remove")) {
+                if (ImGui.menuItem("Remove from queue")) {
                     removeFromQueueIndex = index
                 }
+                if (ImGui.menuItem("Delete preset from library...")) {
+                    BrowserPopupHandler.deleteTarget = AssetItem(
+                        path = file.absolutePath,
+                        name = file.nameWithoutExtension,
+                        type = AssetType.PRESET
+                    )
+                    BrowserPopupHandler.pendingOpenDeletePopup = true
+                }
                 ImGui.endPopup()
+            }
+        }
+
+        // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
+        if (selectedIndex in session.playQueueManager.queue.indices && !ImGui.getIO().wantTextInput) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                removeFromQueueIndex = selectedIndex
             }
         }
 
@@ -175,9 +199,14 @@ object QueueActionsPanel {
 
         if (moveFrom != -1 && moveTo != -1) {
             session.playQueueManager.moveQueueItem(moveFrom, moveTo)
+            if (selectedIndex == moveFrom) selectedIndex = moveTo
         }
         if (removeFromQueueIndex != -1) {
             session.playQueueManager.removeFromQueue(removeFromQueueIndex)
+            val newSize = session.playQueueManager.queue.size
+            if (selectedIndex >= newSize) {
+                selectedIndex = newSize - 1
+            }
         }
 
         // Drop target for the empty space below all queue items (append to end)

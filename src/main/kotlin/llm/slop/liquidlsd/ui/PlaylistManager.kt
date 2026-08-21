@@ -327,4 +327,40 @@ object PlaylistManager {
                 }
             }
     }
+
+    /**
+     * Scans every playlist on disk and removes references to [presetAbsPath].
+     * Paths stored in playlists may be relative to the presets root or absolute.
+     */
+    fun removePresetFromAllPlaylists(presetAbsPath: String) {
+        val presetsRoot = FileSystemManager.getPresetsRoot().canonicalFile
+        val playlistsRoot = FileSystemManager.getPlaylistsRoot()
+
+        fun toRelative(abs: String): String? = try {
+            val f = File(abs).canonicalFile
+            if (f.path.startsWith(presetsRoot.path)) f.relativeTo(presetsRoot).path else null
+        } catch (e: Exception) { null }
+
+        val relPath = toRelative(presetAbsPath)
+        val candidates = listOfNotNull(presetAbsPath, relPath).toSet()
+
+        playlistsRoot.walkTopDown()
+            .filter { it.isFile && it.extension == "lsdset" }
+            .forEach { playlistFile ->
+                val lines = playlistFile.readLines()
+                var changed = false
+                val updated = lines.filter { line ->
+                    if (line.trim() in candidates) {
+                        changed = true
+                        false
+                    } else {
+                        true
+                    }
+                }
+                if (changed) {
+                    playlistFile.writeText(updated.joinToString("\n") + "\n")
+                    logger.info { "Removed deleted preset reference $presetAbsPath from playlist ${playlistFile.name}" }
+                }
+            }
+    }
 }

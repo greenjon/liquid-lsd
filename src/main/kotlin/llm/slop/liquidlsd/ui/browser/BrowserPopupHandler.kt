@@ -179,12 +179,16 @@ object BrowserPopupHandler {
                 AssetType.FOLDER -> "Folder"
             }
             
-            ImGui.text("Delete $typeStr ${target.name}?")
+            ImGui.text("Delete $typeStr '${target.name}'?")
+            ImGui.text("Warning: This will permanently delete this $typeStr from your library.")
             ImGui.text("This action cannot be undone.")
             ImGui.separator()
             if (ImGui.button("Delete", 120f, 0f)) {
                 FileSystemManager.deleteFile(target.path).onSuccess {
                     if (target.type == AssetType.PRESET) {
+                        PlaylistManager.removePresetFromAllPlaylists(target.path)
+                        llm.slop.liquidlsd.presets.PlayQueueManager.removeFileFromQueue(File(target.path))
+                        LibraryPanel.activePlaylistData = null
                         LibraryPanel.refreshAssets()
                     } else if (target.type == AssetType.PLAYLIST) {
                         val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath

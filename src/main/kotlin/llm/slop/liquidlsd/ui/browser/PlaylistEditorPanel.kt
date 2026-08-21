@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
+import imgui.flag.ImGuiKey
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
@@ -17,6 +18,7 @@ import java.io.File
 
 object PlaylistEditorPanel {
     private val logger = KotlinLogging.logger {}
+    var selectedPresetIndex: Int = -1
 
     fun draw(session: SessionContext, mixer: Mixer) {
         val allPlaylists = FileSystemManager.scanAllPlaylists()
@@ -61,6 +63,7 @@ object PlaylistEditorPanel {
                 if (ImGui.selectable(item.name, isSelected)) {
                     LibraryPanel.selectedPlaylistFile = File(item.path)
                     LibraryPanel.activePlaylistData = null
+                    selectedPresetIndex = -1
                 }
                 if (isSelected) {
                     ImGui.setItemDefaultFocus()
@@ -127,6 +130,7 @@ object PlaylistEditorPanel {
                     FileSystemManager.cloneFile(selectedFile.absolutePath).onSuccess { newPath ->
                         LibraryPanel.selectedPlaylistFile = File(newPath)
                         LibraryPanel.activePlaylistData = null
+                        selectedPresetIndex = -1
                     }
                 }
                 if (ImGui.menuItem("Delete")) {
@@ -177,6 +181,7 @@ object PlaylistEditorPanel {
             val exists = resolvedFile.exists()
             val displayName = resolvedFile.nameWithoutExtension.ifBlank { presetPath }
             val label = "${index + 1}. ${if (exists) "" else "[!] "}$displayName${if (!exists) " (missing)" else ""}"
+            val isSelected = index == selectedPresetIndex
 
             ImGui.pushID(index)
 
@@ -244,7 +249,9 @@ object PlaylistEditorPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1f, 0.3f, 0.3f, 1f)
             }
 
-            ImGui.selectable("$label##item", false)
+            if (ImGui.selectable("$label##item", isSelected)) {
+                selectedPresetIndex = index
+            }
 
             // Drag source for reordering within playlist
             if (ImGui.beginDragDropSource()) {
@@ -307,10 +314,26 @@ object PlaylistEditorPanel {
                 if (ImGui.menuItem("Remove from playlist")) {
                     removePresetIndex = index
                 }
+                if (ImGui.menuItem("Delete preset from library...")) {
+                    BrowserPopupHandler.deleteTarget = AssetItem(
+                        path = resolvedFile.absolutePath,
+                        name = displayName,
+                        type = AssetType.PRESET
+                    )
+                    BrowserPopupHandler.pendingOpenDeletePopup = true
+                }
                 ImGui.endPopup()
             }
 
             ImGui.popID()
+        }
+
+        // Keyboard shortcuts (Delete / Backspace removes selected preset from active playlist)
+        if (selectedPresetIndex in playlist.presets.indices && !ImGui.getIO().wantTextInput) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                removePresetIndex = selectedPresetIndex
+            }
         }
 
         // Draw insertion-line indicator
@@ -340,10 +363,15 @@ object PlaylistEditorPanel {
 
         if (moveFrom != -1 && moveTo != -1) {
             PlaylistManager.movePreset(playlist, moveFrom, moveTo)
+            if (selectedPresetIndex == moveFrom) selectedPresetIndex = moveTo
         }
 
         if (removePresetIndex != -1) {
             PlaylistManager.removePreset(playlist, removePresetIndex)
+            val newSize = playlist.presets.size
+            if (selectedPresetIndex >= newSize) {
+                selectedPresetIndex = newSize - 1
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiKey
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
@@ -196,6 +197,16 @@ object PresetListPanel {
             }
 
             ImGui.popID()
+        }
+
+        // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
+        val selected = selectedAsset
+        if (selected != null && !ImGui.getIO().wantTextInput) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                BrowserPopupHandler.deleteTarget = selected
+                BrowserPopupHandler.pendingOpenDeletePopup = true
+            }
         }
     }
 

@@ -224,6 +224,18 @@ object PlayQueueManager {
         }
     }
 
+    fun removeFileFromQueue(file: File) {
+        val targetPath = file.absolutePath
+        var i = 0
+        while (i < queue.size) {
+            if (queue[i].absolutePath == targetPath) {
+                removeFromQueue(i)
+            } else {
+                i++
+            }
+        }
+    }
+
     fun moveQueueItem(from: Int, to: Int) {
         if (from in queue.indices && to in queue.indices) {
             val item = queue.removeAt(from)

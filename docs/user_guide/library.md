@@ -46,14 +46,15 @@ The Left column displays the complete pool of all available presets discovered a
 - **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
 - **Drag-and-Drop**: Drag presets directly into the Playlist Editor (middle column) or Queue (right column).
 
-### Context Menu Actions (Right-Click)
-- **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
-- **Play now (and replace queue)**: Clears the current queue, loads the item, and triggers immediate playback.
-- **Insert into the queue after current**: Inserts item into the live Auto-VJ queue after the currently playing preset.
-- **Add to the bottom of the queue**: Appends item to the end of the queue.
-- **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit both the preset's filename and comma-separated tags in a single step.
-- **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy` and existing tags.
-- **Delete**: Removes the preset from disk (with confirmation modal).
+- **Keyboard Shortcuts**: Select a preset and press `Delete` or `Backspace` to delete the preset from your library (with permanent deletion confirmation).
+- **Context Menu Actions (Right-Click)**:
+  - **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
+  - **Play now (and replace queue)**: Clears the current queue, loads the item, and triggers immediate playback.
+  - **Insert into the queue after current**: Inserts item into the live Auto-VJ queue after the currently playing preset.
+  - **Add to the bottom of the queue**: Appends item to the end of the queue.
+  - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit both the preset's filename and comma-separated tags in a single step.
+  - **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy` and existing tags.
+  - **Delete**: Permanently deletes the preset from your disk/library with a warning modal, updating all playlists and queues.
 
 ---
 
@@ -75,10 +76,23 @@ The Middle column allows inspecting and arranging setlists side-by-side with you
 ### Playlist Preset Rows & Auto-Save
 - **Auto-Save on Edit**: Any modification (adding presets, dragging to reorder, or removing items) automatically saves to disk.
 - **`[ A ] [ B ] [ C ] [ Q ]` Buttons**: Fast deck loading and queue appending per playlist item.
+- **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the playlist and press `Delete` or `Backspace` to remove it from the playlist.
 - **Drag Reordering**: Drag items up and down with mint-green insertion line feedback.
 - **Item Context Menu (Right-Click)**:
   - Play now, Insert after current, Add to bottom of queue.
-  - **Remove from playlist**: Removes the preset from the playlist.
+  - **Remove from playlist**: Removes the preset from the playlist list.
+  - **Delete preset from library...**: Permanently deletes the preset file from your library with a warning modal.
+
+---
+
+## 3. Play Queue (Right Column)
+
+The Right column displays the live sequence of presets for Auto-VJ and playback.
+
+- **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
+- **Item Context Menu (Right-Click)**:
+  - **Remove from queue**: Removes the item from the play queue list.
+  - **Delete preset from library...**: Permanently deletes the preset file from your library with a warning modal.
 
 ---
 
