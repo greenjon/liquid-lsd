@@ -42,6 +42,13 @@ mat3 rotateZ(float theta) {
     return mat3(vec3(c, -s, 0.0), vec3(s, c, 0.0), vec3(0.0, 0.0, 1.0));
 }
 
+// Quintic smootherstep (C² continuous: zero 1st and 2nd derivative at endpoints)
+// Ken Perlin: 6t^5 - 15t^4 + 10t^3
+float smootherstep(float e0, float e1, float x) {
+    float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0);
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
 // Cosine-based color palette
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
     return a + b * cos(6.2831853 * (c * t + d));
@@ -97,19 +104,19 @@ vec3 getDodNormal(int i) {
 void getMorphState(float u, out float m, out float s) {
     float t = fract(u);
     if (t < 0.25) {
-        float f = t * 4.0;
+        float f = smootherstep(0.0, 1.0, t * 4.0);
         m = f;
         s = 0.0;
     } else if (t < 0.5) {
-        float f = (t - 0.25) * 4.0;
+        float f = smootherstep(0.0, 1.0, (t - 0.25) * 4.0);
         m = 1.0;
         s = f;
     } else if (t < 0.75) {
-        float f = (t - 0.5) * 4.0;
+        float f = smootherstep(0.0, 1.0, (t - 0.5) * 4.0);
         m = 1.0 - f;
         s = 1.0;
     } else {
-        float f = (t - 0.75) * 4.0;
+        float f = smootherstep(0.0, 1.0, (t - 0.75) * 4.0);
         m = 0.0;
         s = 1.0 - f;
     }
@@ -258,7 +265,7 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outAxis, out float outDepth) {
 vec3 getNormal(vec3 p) {
     float dummyEdge, dummyDepth;
     vec3 dummyAxis;
-    vec2 eps = vec2(0.002, 0.0);
+    vec2 eps = vec2(0.001, 0.0);
     float d = mapSDF(p, dummyEdge, dummyAxis, dummyDepth);
     return normalize(vec3(
         mapSDF(p + eps.xyy, dummyEdge, dummyAxis, dummyDepth) - d,
@@ -292,7 +299,7 @@ void main() {
 
     // Multi-layer crystal accumulation for inner-face transparency reveal
     vec4 accumColor = vec4(0.0);
-    float t = 0.5;
+    float t = 1.8;
     const int MAX_STEPS = 64;
     float opacity = clamp(uOpacity, 0.0, 1.0);
     float edgeThick = clamp(uEdgeThickness, 0.0, 0.2);
@@ -318,37 +325,40 @@ void main() {
                 float normDepth = clamp((dVal - 0.7) / 1.3, 0.0, 1.0);
                 surfaceCol = palette(normDepth + uHueOffset, palA, palB, palC, palD);
             } else {
-                // Method 4: Symmetry Sectors (3-Fold or 5-Fold)
-                // Azimuthal angle around closest symmetry axis
-                vec3 refV = vec3(0.0);
-                float maxDot = -1.0;
+                // Method: Symmetry Sectors — cross-fade 3-fold (Ico) <-> 5-fold (Dod)
                 float mState, sState;
                 getMorphState(uMorph, mState, sState);
-                if (mState < 0.5) {
-                    for (int k = 0; k < 6; k++) {
-                        vec3 v = getDodNormal(k);
-                        float d = dot(v, axis);
-                        if (abs(d) > maxDot + 0.001) {
-                            maxDot = abs(d);
-                            refV = sign(d) * v;
-                        }
-                    }
-                } else {
-                    for (int k = 0; k < 10; k++) {
-                        vec3 v = getIcoNormal(k);
-                        float d = dot(v, axis);
-                        if (abs(d) > maxDot + 0.001) {
-                            maxDot = abs(d);
-                            refV = sign(d) * v;
-                        }
-                    }
+
+                // 3-fold sector: reference axis from closest Dod face normal
+                vec3 refV3 = vec3(0.0);
+                float maxDot3 = -1.0;
+                for (int k = 0; k < 6; k++) {
+                    vec3 v = getDodNormal(k);
+                    float d = abs(dot(v, axis));
+                    if (d > maxDot3 + 0.001) { maxDot3 = d; refV3 = sign(dot(v, axis)) * v; }
                 }
-                vec3 refX = normalize(refV - axis * dot(refV, axis));
-                vec3 refY = cross(axis, refX);
-                float angle = atan(dot(p, refY), dot(p, refX));
-                float folds = (mState < 0.5) ? 3.0 : 5.0;
-                float sector = floor(mod((angle / (2.0 * PI / folds)) + uHueOffset * folds, folds)) / folds;
-                surfaceCol = palette(sector, palA, palB, palC, palD);
+                vec3 refX3 = normalize(refV3 - axis * dot(refV3, axis));
+                vec3 refY3 = cross(axis, refX3);
+                float angle3 = atan(dot(p, refY3), dot(p, refX3));
+                float sector3 = floor(mod((angle3 / (2.0 * PI / 3.0)) + uHueOffset * 3.0, 3.0)) / 3.0;
+                vec3 col3 = palette(sector3, palA, palB, palC, palD);
+
+                // 5-fold sector: reference axis from closest Ico face normal
+                vec3 refV5 = vec3(0.0);
+                float maxDot5 = -1.0;
+                for (int k = 0; k < 10; k++) {
+                    vec3 v = getIcoNormal(k);
+                    float d = abs(dot(v, axis));
+                    if (d > maxDot5 + 0.001) { maxDot5 = d; refV5 = sign(dot(v, axis)) * v; }
+                }
+                vec3 refX5 = normalize(refV5 - axis * dot(refV5, axis));
+                vec3 refY5 = cross(axis, refX5);
+                float angle5 = atan(dot(p, refY5), dot(p, refX5));
+                float sector5 = floor(mod((angle5 / (2.0 * PI / 5.0)) + uHueOffset * 5.0, 5.0)) / 5.0;
+                vec3 col5 = palette(sector5, palA, palB, palC, palD);
+
+                // Cross-fade: pure 3-fold at mState=0 (ico), pure 5-fold at mState=1 (dod)
+                surfaceCol = mix(col3, col5, mState);
             }
 
             surfaceCol = adjustColor(surfaceCol, uSaturation, uBrightness);
@@ -374,7 +384,7 @@ void main() {
             }
 
             // Step slightly past the surface to catch internal self-intersecting facets
-            t += max(0.04, dist + 0.04);
+            t += max(0.02, dist + 0.02);
         } else {
             t += max(0.012, dist * 0.8);
         }

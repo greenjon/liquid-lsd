@@ -9,6 +9,12 @@
 
 ### Key Highlights
 
+#### 0. Icosa-Dodeca Visual Source — Morph Smoothness & Color Improvements
+- **C² Morph Transitions (`smootherstep`)**: Replaced the four piecewise-linear ramps in `getMorphState` with Ken Perlin's quintic `smootherstep` (`6t⁵ - 15t⁴ + 10t³`), providing zero first *and* second derivative at every phase boundary (0, 0.25, 0.5, 0.75). Eliminates the visible velocity snap/pop when driving `uMorph` with an LFO.
+- **Cross-Faded Symmetry Sectors**: The "Sectors" color method now smoothly cross-fades between 3-fold (icosahedral) and 5-fold (dodecahedral) sector coloring, driven by the morph parameter `m`. Both sector palette values are computed independently and blended via `mix(col3, col5, mState)`, eliminating the previous hard visual flip at `m = 0.5`.
+- **Sharper Spike Normals**: Reduced the central-difference normal epsilon from `0.002` to `0.001`, improving normal accuracy at narrow stellated spike tips.
+- **Ray-Marcher Efficiency**: Advanced ray start from `t = 0.5` to `t = 1.8` (shape begins at ~`t = 2.0` from camera) and tightened the post-hit overstep from `+0.04` to `+0.02` to avoid skipping past thin spike features while reclaiming those early wasted steps.
+
 #### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
 - **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.
 - **Harmonic Comb Unwrapping**: Implemented half-lag ($d/2$) evaluation to eliminate half-tempo (e.g. 60 BPM) and double-tempo (e.g. 200 BPM) octave traps by verifying fundamental beat periods, ensuring 100, 120, 128, and 140 BPM tracks lock precisely to their fundamental tempo.
