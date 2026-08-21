@@ -22,6 +22,8 @@ object SourceDocRegistry {
                 " modes; Thickness and Wall Width control line weight.",
         "attractor_feedback" to "Two-layer strange-attractor system with cross-modulated" +
                 " Jacobian and variance coefficients. High Persistence burns in trails.",
+        "icosa_dodeca" to "Continuous duality morph between Icosahedron and Dodecahedron, with" +
+                " Great Kepler-Poinsot Stellations, mathematical depth/symmetry coloring, and inner-face crystal reveal.",
     )
 
     /**
@@ -124,6 +126,22 @@ object SourceDocRegistry {
         "attractor_feedback/Offset Y 1" to "Y translation for attractor layer 1.",
         "attractor_feedback/Var Coef 1" to "Variance coefficient for attractor layer 1.",
         "attractor_feedback/Jacobian 1" to "Jacobian strength for layer 1.",
+
+        // Icosa-Dodeca
+        "icosa_dodeca/Morph" to "Morphs between Icosahedron (0.0), rectified Icosidodecahedron (0.5), and Dodecahedron (1.0).",
+        "icosa_dodeca/Stellation" to "Stellates face planes outward into Kepler-Poinsot stars: Great Icosahedron (at Morph 0.0) or Great Stellated Dodecahedron (at Morph 1.0).",
+        "icosa_dodeca/Color Method" to "Coloring algorithm: 0 = Depth Gradient (distance from centroid), 1 = 5-Fold Sectors (72° symmetry pinwheel).",
+        "icosa_dodeca/Depth Frame" to "Coordinate frame for depth gradient: 0 = Local shape frame (locked to geometry), 1 = World frame (colors flow across moving surface).",
+        "icosa_dodeca/Hue Offset" to "Rotates the base hue of the color palette.",
+        "icosa_dodeca/Saturation" to "Color saturation of faces and edges.",
+        "icosa_dodeca/Brightness" to "Overall luminance multiplier for surface coloring.",
+        "icosa_dodeca/Opacity" to "Face opacity. Sweet spot is 0.6–0.8 for crystal reveal: semi-transparent faces illuminate inner self-intersecting facets without clutter.",
+        "icosa_dodeca/Edge Thickness" to "Line thickness of wireframe edges.",
+        "icosa_dodeca/Edge Brightness" to "Brightness and contrast of the complementary wireframe edge lines.",
+        "icosa_dodeca/Zoom" to "Camera zoom distance.",
+        "icosa_dodeca/Rotate X" to "Pitch rotation angle around the X axis.",
+        "icosa_dodeca/Rotate Y" to "Yaw rotation angle around the Y axis.",
+        "icosa_dodeca/Rotate Z" to "Roll rotation angle around the Z axis.",
 
         // Feedback chain (shared across all decks)
         "feedback/fbDecay" to "How much of the previous frame persists each step. 0 = no trail; 1 = infinite persistence.",

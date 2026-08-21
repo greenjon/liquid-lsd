@@ -1,6 +1,6 @@
 # Custom Visual Sources & Shaders
 
-Liquid LSD is designed for extensibility. Beyond its built-in procedural visual generators (Mandalas, Gyroids, Chladni, Dynamic Spiral, Attractor Feedback), you can easily build, install, and share custom dynamic GLSL visual sources.
+Liquid LSD is designed for extensibility. Beyond its built-in procedural visual generators (Mandalas, Gyroids, Chladni, Dynamic Spiral, Attractor Feedback, Icosa-Dodeca), you can easily build, install, and share custom dynamic GLSL visual sources.
 
 ---
 

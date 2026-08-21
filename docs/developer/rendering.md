@@ -53,7 +53,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 [`SourceDocRegistry.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:
 
-- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers all built-in engines (`mandala`, `dynamic_spiral`, `gyroid`, `chladni`, `attractor_feedback`).
+- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers all built-in engines (`mandala`, `dynamic_spiral`, `gyroid`, `chladni`, `attractor_feedback`, `icosa_dodeca`).
 - **Parameter Descriptions**: `paramDescriptions: Map<String, String>` keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
 - **UI Lookup API**: Surfaced by `PresetGridRenderer` and `DeckControlPanel` to draw rich tooltips.
 

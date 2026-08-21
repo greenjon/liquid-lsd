@@ -1,5 +1,104 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.27
+
+> [!NOTE]
+> **Release 1.0.0-beta.27** is a major feature and performance release introducing multi-band cross-spectral autocorrelation beat detection, master crossfader manual takeover with CV auto-centering, "Jump the Line" Auto-VJ standby staging, 3-column library workflow with quick action buttons, sticky oscilloscopes with high-resolution LFO rendering, percentage-based GUI scaling with HiDPI auto-detection, keyboard preset management with permanent deletion warnings, and core visual source streamlining for low-power and integrated GPUs.
+
+---
+
+### Key Highlights
+
+#### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
+- **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.
+- **Harmonic Comb Unwrapping**: Implemented half-lag ($d/2$) evaluation to eliminate half-tempo (e.g. 60 BPM) and double-tempo (e.g. 200 BPM) octave traps by verifying fundamental beat periods, ensuring 100, 120, 128, and 140 BPM tracks lock precisely to their fundamental tempo.
+- **Sub-Block Parabolic Lag Interpolation**: Fits a 2nd-order parabola over correlation peaks to extract sub-block fractional lag offsets $\delta$, achieving floating-point tempo tracking within $\pm 0.1$ BPM.
+- **Gaussian Musical Tempo Weighting**: Applies a subtle Gaussian curve centered at 120 BPM ($\sigma = 80$ BPM) to bias candidate selection towards natural musical tempos during ambiguous transients.
+- **Synthetic Audio Benchmark Suite (`BeatDetectorBenchmarkTest.kt`)**: Built automated synthetic audio tests for 120 BPM House, 128 BPM EDM, 140 BPM Dubstep, 100 BPM Hip-Hop, and silent breakdowns to validate lock speed (< 3.0s), lock accuracy (< 1.5 BPM error), and flywheel momentum.
+- **Audio Settings Sliders**: Refactored `AudioEnginePanel` controls for energy threshold, PLL adaptation, and correlation analysis window length ($1.0\text{s} \dots 10.0\text{s}$).
+
+#### 2. Master Crossfader Manual Takeover & CV Auto-Centering
+- **Instant Manual Takeover**: Interacting with the master Crossfader via mouse or physical MIDI CC immediately takes priority:
+  - **Auto-VJ Disarm**: Auto-VJ is turned off (`isAutoVJEnabled = false`) and any active auto-fade transition halts cleanly at current position.
+  - **CV Modulation Muting**: All non-MIDI modulators (LFO, Audio Followers, Triggers) on `Mixer/crossfade` are automatically muted (`bypassed = true`), giving the performer 1:1 manual control without fighting background modulation.
+  - **MIDI CC Modulators Preserved**: Modulators mapped to physical MIDI CCs are preserved and remain active.
+- **Auto-Centering on CV Unmute**: Unmuting any CV modulator on `Mixer/crossfade` automatically snaps `crossfade.baseValue` to `0.0` (unbiased center), allowing LFOs and audio followers to oscillate symmetrically across both decks without clipping against manual hold positions. Modulator `DC Offset` provides optional deck bias.
+- **Playlist "Play Now" Auto-VJ Fix**: Selecting *"Play now (and replace queue)"* on a playlist or preset automatically engages the `AUTO-VJ` toggle and mutes crossfade CVs for smooth automated queue crossfading.
+- **Master Mixer Momentary Triggers**: Added a dedicated row of 6 momentary buttons beneath the Crossfader:
+  - **Playlist Navigation**: `< Prev` (`Mixer/queuePrev`) and `Next >` (`Mixer/queueNext`) for stepping through the active playlist queue.
+  - **Deck & Master Randomization**: `Rand A`, `Rand B`, `Rand C`, and `Rand All` for instant re-rolling of active modulators and randomizable parameters with full Undo history support.
+- **Disabled Randomization Cleanups**: When randomization is disabled in Settings, parameter rows for randomization, yellow randomization range arcs in cell dials, and Mixer Monitor randomize buttons are automatically hidden.
+
+#### 3. Auto-VJ & Manual Deck Loading Integration ("Jump the Line")
+- **Standby Deck Staging ("Jump the Line")**: When a preset is manually loaded into the standby/inactive deck while Auto-VJ is active, that deck is marked as staged. The next Auto-VJ transition automatically fades into the staged preset without overwriting it from the queue, preserving the next queue track for the subsequent cycle.
+- **Active Deck Overrides**: Manually loading into the live deck replaces the output immediately while keeping Auto-VJ armed and the queue untouched.
+- **Queue Preservation**: Manual deck loading when Auto-VJ is OFF never modifies the queue contents or active index.
+- **Seamless Mid-Set Arming**: Enabling Auto-VJ mid-set does not cause jump cuts; it arms the standby deck and smoothly waits for the next advance trigger (CV pulse, beat trigger, MIDI CC, or manual Next button).
+- **Deck C Independence**: Manual loading and interactions on Deck C (master overlay) remain completely independent of the A/B Auto-VJ pipeline.
+
+#### 4. Library & Playlist Management Enhancements
+- **3-Column Side-by-Side Workflow**:
+  - **Left Column (Presets Library Pool)**: Displays a flat list of all visual presets with real-time text search filtering across preset names and tags, plus `[Create new preset...]` deck eject rows.
+  - **Middle Column (Playlist Editor)**: Dedicated setlist editor featuring playlist selector combo, `[ + ]` new playlist button, `[ ••• ]` actions menu (Play now, Append to queue, Rename, Clone, Delete), drag-and-drop preset insertion from the library with visual mint-green insertion line, and auto-save on edit.
+  - **Right Column (Play Queue)**: Live volatile playback queue and transport controls.
+- **`[ A ] [ B ] [ C ] [ Q ]` Quick Action Buttons**: Standardized across preset items and playlist rows, adding `[ Q ]` (violet accent) to append presets directly to the end of the queue.
+- **Play Queue & Playlist `Delete` / `Backspace` Key Support**: Pressing `Delete` or `Backspace` on a selected item in the Play Queue or Playlist Editor removes the preset from that list.
+- **Preset Library `Delete` / `Backspace` Key Support & Warnings**: Pressing `Delete` or `Backspace` on a selected preset in the library opens a permanent deletion warning modal ("Warning: This will permanently delete this preset from your library. This action cannot be undone.").
+- **Cascading Reference Cleanup**: Permanently deleting a preset file removes all occurrences from all `.lsdset` playlist files on disk and from the live Play Queue.
+- **UI Helper Modularization**: Extracted `BrowserDeckButtons` helper for unified deck button rendering.
+
+#### 5. Sticky Oscilloscope & Cell Config UX Overhaul
+- **Sticky Oscilloscope & Header in Cell Config**: The top region of the Cell Config panel (CV tab switcher, parameter title, and the full live oscilloscope) is fixed at the top of the panel, allowing modulator controls below to scroll independently in a child view.
+- **Live BPM-Aware AUTO Timebase**: Oscilloscope's `AUTO` mode reads actual running BPM from `CVRegistry` when calculating beat-based LFO periods, sizing scope windows accurately at any tempo.
+- **High Analytical Step Resolution**: Sampling steps for LFO scopes increased with a 1.5x pixel-width multiplier (`(pixelWidth * 1.5f).toInt().coerceIn(60, 1000)`), eliminating polygonal stepping and pixelation on fast LFO periods.
+- **Pixel-Perfect Seam Alignment**: Past segment endpoints connect seamlessly into future segment starting points (`lfoSeamY`), eliminating 1-pixel discontinuities at the `NOW` playhead.
+- **Modulator Header Organization**: Modulator titles (`Onset / Transient`, `Accent / Peak`, `Amplitude`, `Low`, `LFO 2`, etc.) and reset buttons render on the first row, with controls (mute/bypass, dice, operator combo) on the second row.
+- **Cell Mute / Preview System**: Toggle any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the oscilloscope live and animated. Muted cells in the Preset Grid drop knob arc/meter opacity to 35% and display a centered 'M'. Middle-clicking any active or muted cell toggles its mute state.
+
+#### 6. Visual Source Library Streamlining & Icosa-Dodeca Generator
+- **Added Icosa-Dodeca Morph & Stellation Source (`icosa_dodeca`)**: Added a closed-form geometric generator providing continuous duality morphing between Icosahedron and Dodecahedron with Kepler-Poinsot Great Stellations, depth/5-fold sector symmetry coloring, and semi-transparent crystal reveal face rendering.
+- **Removed GPU-Heavy Raymarchers**: Removed heavy distance-field fractal and 4D raymarchers (`clifford_torus`, `kifs`, `mandelbox`, `pseudo_kleinian`, `mandelbulb`) that caused high ALU load and frame drops on integrated GPUs (Intel Iris Xe / AMD APUs).
+- **Refocused Core Visual Engine**: Refocused the built-in generator collection on high-performance, lightweight sources:
+  - `icosa_dodeca`: Icosahedron-Dodecahedron duality morph and Kepler-Poinsot stellations.
+  - `mandala`: Ultra-low overhead 2D/3D hardware ribbon rasterization.
+  - `attractor_feedback`: 2D strange attractor density inverse mapping with feedback decay.
+  - `dynamic_spiral`: Analytical Newton-Raphson range-culled spiral particle trails.
+  - `gyroid`: Closed-form 3D triply periodic minimal surface raymarcher.
+  - `chladni`: Closed-form 2D/3D acoustic resonance standing wave raymarcher.
+  - `icosa_dodeca`: Continuous geometric duality morph between Icosahedron and Dodecahedron, with Great Kepler-Poinsot Stellations, mathematical depth/symmetry coloring, and inner-face crystal reveal.
+
+#### 7. GUI Scaling, Hotkeys & System Polish
+- **GUI Scale Percentage Model (75%–200%)**: Continuous percentage slider in Settings → Appearance with 5% snapping increments.
+- **Updated Hotkeys**: `Ctrl+-` / `Ctrl+=` adjust GUI scale by ±5% per press within 75%–200% bounds.
+- **HiDPI / 4K Auto-Detection**: Auto-detects OS content-scale factor via `glfwGetWindowContentScale` on first launch and snaps to the nearest 5% scale step.
+- **Background Video Keybinding (`B`)**: Global hotkey `B` instantly toggles master video background rendering behind semi-transparent UI.
+- **Production Logging**: Set default log level to `WARN` to eliminate console I/O overhead.
+
+---
+
+### 📜 Commit History (v1.0.0-beta.26 → v1.0.0-beta.27)
+
+- `fc1ad3f` Remove GPU-heavy visual sources (clifford_torus, kifs, mandelbox, pseudo_kleinian, mandelbulb)
+- `2a53f99` feat(library): add Delete key shortcut, permanent deletion warning, and reference cleanup to playqueue and playlist
+- `bc8a5b8` refactor(ui): extract BrowserDeckButtons helper and simplify preset grid UI buttons
+- `59bcbb0` feat(library): consolidate library browser and playlist editor with unified subtabs and asset actions
+- `193e9b9` feat(presets): integrate manual deck preset loading with Auto-VJ and PlayQueue line-jumping
+- `7e819dd` Add Master Mixer momentary controls for playlist navigation and randomization
+- `242c426` feat(mixer): improve crossfader manual takeover, CV modulation, and Auto-VJ transition behavior
+- `476610d` chore(logging): set default log level to warn
+- `3fe8258` feat(ui): make oscilloscope sticky at top of Cell Config panel with scrollable modulators
+- `835eb7d` fix(ui): increase analytical step resolution on LFO oscilloscope to eliminate pixelation
+- `7c5c7b6` feat(ui): improve LFO oscilloscope rendering, BPM-aware timebase, and seam alignment
+- `dcb6243` refactor(ui): place modulator titles on top row above controls in cell config
+- `2537cad` refactor(ui): refine LFO section layout and preserve modulator bypass state on depth changes
+- `d835368` fix(ui): percentage-based GUI scaling, font atlas GC stability, and window resize bounds
+- `9e260d7` feat(ui): add 'b' keybinding to toggle background video output
+- `7f0f915` feat(ui): add cell mute toggle with live oscilloscope preview and ASCII window title
+- `b40b399` feat(audio): overhaul multi-band autocorrelation beat engine and add benchmark test suite
+- `e768ed0` refactor(audio, ui): update beat detection settings and UI panel controls
+
+---
+
 ## Version 1.0.0-beta.26
 
 > [!NOTE]
