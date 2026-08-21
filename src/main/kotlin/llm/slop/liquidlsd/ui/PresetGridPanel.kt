@@ -171,7 +171,7 @@ object PresetGridPanel {
 
             // Column Headers (draw column headers & inline subtabs)
             if (!isDeckEmpty) {
-                drawColumnHeaders(session, labelColW, state, mixer)
+                drawColumnHeaders(session, labelColW, state, mixer, metrics)
             } else {
                 ImGui.spacing()
             }
@@ -291,8 +291,7 @@ object PresetGridPanel {
         return (maxH + 5f).coerceAtLeast(40f)
     }
 
-    private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PresetGridState, mixer: Mixer) {
-        val metrics = GridMetrics.compute(session)
+    private fun drawColumnHeaders(session: llm.slop.liquidlsd.SessionContext, labelColW: Float, state: PresetGridState, mixer: Mixer, metrics: GridMetrics) {
         val CELL = metrics.cell
         val CELL_PAD = metrics.cellPad
 
@@ -532,18 +531,14 @@ object PresetGridPanel {
                 ImGui.textDisabled("Quick Select Preset:")
                 ImGui.separator()
 
-                val presetDir = File("library/presets")
-                val presetFiles = if (presetDir.exists()) {
-                    presetDir.listFiles { f -> f.isFile && f.name.endsWith(".lsd") }?.toList() ?: emptyList()
-                } else emptyList()
+                val presetFiles = FileSystemManager.scanAllPresets()
 
                 if (presetFiles.isEmpty()) {
-                    ImGui.textDisabled("No presets found in library/presets/")
+                    ImGui.textDisabled("No presets found.")
                 } else {
-                    for (file in presetFiles.sortedBy { it.nameWithoutExtension }) {
-                        val displayName = file.nameWithoutExtension.replace('_', ' ')
-                        if (ImGui.menuItem(displayName)) {
-                            session.presetManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
+                    for (asset in presetFiles.sortedBy { it.name }) {
+                        if (ImGui.menuItem(asset.displayName)) {
+                            session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA, isDeckC)
                         }
                     }
                 }

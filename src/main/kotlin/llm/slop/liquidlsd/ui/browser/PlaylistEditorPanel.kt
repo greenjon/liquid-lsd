@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
-import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
@@ -181,15 +180,10 @@ object PlaylistEditorPanel {
 
             ImGui.pushID(index)
 
-            ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
-            ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
+            val btnAlpha = if (exists) 1f else 0.3f
 
-            // Button A (Deck A color: Blue)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.4f, 0.8f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.4f, 0.8f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
+            // Button A (Deck A — blue)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorA(), btnAlpha)
             if (ImGui.button("A##deck_a", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckA
                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
@@ -200,16 +194,12 @@ object PlaylistEditorPanel {
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck A.")
-            ImGui.popStyleColor(5)
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
-            // Button B (Deck B color: Orange)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.4f, 0.2f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.8f, 0.4f, 0.2f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
+            // Button B (Deck B — orange)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorB(), btnAlpha)
             if (ImGui.button("B##deck_b", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckB
                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
@@ -220,16 +210,12 @@ object PlaylistEditorPanel {
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck B.")
-            ImGui.popStyleColor(5)
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
-            // Button C (Deck C color: Green)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.7f, 0.5f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.7f, 0.5f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
+            // Button C (Deck C — green)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorC(), btnAlpha)
             if (ImGui.button("C##deck_c", btnSize, btnSize) && exists) {
                 val targetDeck = mixer.deckC
                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
@@ -240,23 +226,17 @@ object PlaylistEditorPanel {
                 }
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
-            ImGui.popStyleColor(5)
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
-            // Button Q (Queue color: Violet / Purple)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.7f, 0.4f, 0.9f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.7f, 0.4f, 0.9f, if (exists) 1.0f else 0.3f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.7f, 0.4f, 0.9f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.7f, 0.4f, 0.9f, 0.3f)
+            // Button Q (Queue — violet)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), btnAlpha)
             if (ImGui.button("Q##deck_q", btnSize, btnSize) && exists) {
                 session.playQueueManager.appendToQueue(resolvedFile)
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Add preset to the end of the queue.")
-            ImGui.popStyleColor(5)
-
-            ImGui.popStyleVar(2)
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 

@@ -2,7 +2,6 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiStyleVar
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
@@ -61,15 +60,8 @@ object PresetListPanel {
         filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
-            ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
-            ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
-
-            // Button A (Deck A color: Blue)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.4f, 0.8f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.4f, 0.8f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
+            // Button A (Deck A — blue)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorA())
             if (ImGui.button("A##preview_a_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckA
                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
@@ -80,19 +72,13 @@ object PresetListPanel {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, true, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load preset to Deck A.")
-            }
-            ImGui.popStyleColor(5)
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck A.")
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
-            // Button B (Deck B color: Orange)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.4f, 0.2f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.8f, 0.4f, 0.2f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
+            // Button B (Deck B — orange)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorB())
             if (ImGui.button("B##preview_b_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckB
                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
@@ -103,19 +89,13 @@ object PresetListPanel {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load preset to Deck B.")
-            }
-            ImGui.popStyleColor(5)
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck B.")
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
-            // Button C (Deck C color: Green)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.7f, 0.5f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.7f, 0.5f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
+            // Button C (Deck C — green)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorC())
             if (ImGui.button("C##preview_c_$index", btnSize, btnSize)) {
                 val targetDeck = mixer.deckC
                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
@@ -126,28 +106,18 @@ object PresetListPanel {
                     UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, false, mixer)
                 }
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
-            }
-            ImGui.popStyleColor(5)
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
-            // Button Q (Queue color: Violet / Purple)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.7f, 0.4f, 0.9f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Border, 0.7f, 0.4f, 0.9f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.7f, 0.4f, 0.9f, 0.15f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.7f, 0.4f, 0.9f, 0.3f)
+            // Button Q (Queue — violet)
+            BrowserDeckButtons.push(BrowserDeckButtons.colorQ())
             if (ImGui.button("Q##queue_q_$index", btnSize, btnSize)) {
                 session.playQueueManager.appendToQueue(File(asset.path))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Add preset to the end of the queue.")
-            }
-            ImGui.popStyleColor(5)
-
-            ImGui.popStyleVar(2)
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Add preset to the end of the queue.")
+            BrowserDeckButtons.pop()
 
             ImGui.sameLine()
 
@@ -232,59 +202,37 @@ object PresetListPanel {
     private fun drawCreateNewPresetRow(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
         ImGui.pushID("create_new_preset_row")
         val btnSize = ImGui.getFrameHeight()
-        ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f)
-        ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 0f)
 
-        // Button A (Deck A color: Blue)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.4f, 0.8f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.4f, 0.8f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.4f, 0.8f, 0.15f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.4f, 0.8f, 0.3f)
+        // Button A (Deck A — blue)
+        BrowserDeckButtons.push(BrowserDeckButtons.colorA())
         if (ImGui.button("A##new_preset_a", btnSize, btnSize)) {
             UIManager.triggerDeckEject(mixer.deckA, isDeckA = true, isDeckC = false)
             presetState.activeTopTab = "Deck A"
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset in Deck A (eject existing).")
-        }
-        ImGui.popStyleColor(5)
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Create new preset in Deck A (eject existing).")
+        BrowserDeckButtons.pop()
 
         ImGui.sameLine()
 
-        // Button B (Deck B color: Orange)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.4f, 0.2f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Border, 0.8f, 0.4f, 0.2f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.8f, 0.4f, 0.2f, 0.15f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.8f, 0.4f, 0.2f, 0.3f)
+        // Button B (Deck B — orange)
+        BrowserDeckButtons.push(BrowserDeckButtons.colorB())
         if (ImGui.button("B##new_preset_b", btnSize, btnSize)) {
             UIManager.triggerDeckEject(mixer.deckB, isDeckA = false, isDeckC = false)
             presetState.activeTopTab = "Deck B"
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset in Deck B (eject existing).")
-        }
-        ImGui.popStyleColor(5)
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Create new preset in Deck B (eject existing).")
+        BrowserDeckButtons.pop()
 
         ImGui.sameLine()
 
-        // Button C (Deck C color: Green)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.7f, 0.5f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Border, 0.2f, 0.7f, 0.5f, 1.0f)
-        ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.2f, 0.7f, 0.5f, 0.15f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.2f, 0.7f, 0.5f, 0.3f)
+        // Button C (Deck C — green)
+        BrowserDeckButtons.push(BrowserDeckButtons.colorC())
         if (ImGui.button("C##new_preset_c", btnSize, btnSize)) {
             UIManager.triggerDeckEject(mixer.deckC, isDeckA = false, isDeckC = true)
             presetState.activeTopTab = "Deck C"
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset in Deck C (eject existing).")
-        }
-        ImGui.popStyleColor(5)
-
-        ImGui.popStyleVar(2)
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Create new preset in Deck C (eject existing).")
+        BrowserDeckButtons.pop()
 
         ImGui.sameLine()
         ImGui.textDisabled("[Create new preset...]")

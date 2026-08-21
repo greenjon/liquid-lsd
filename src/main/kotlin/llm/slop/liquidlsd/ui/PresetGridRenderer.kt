@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImDrawList
 import imgui.ImGui
 import llm.slop.liquidlsd.notes.NotesManager
+import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.SourceDocRegistry
@@ -119,7 +120,7 @@ object PresetGridRenderer {
             if (userNote.isNotEmpty()) {
                 ImGui.spacing()
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.85f, 0.4f, 1.0f)
-                ImGui.textWrapped("\uD83D\uDCDD $userNote")
+                ImGui.textWrapped("${Icons.NOTE} $userNote")
                 ImGui.popStyleColor()
             }
             ImGui.endTooltip()
@@ -165,7 +166,7 @@ object PresetGridRenderer {
             // Note editing: derive deckLabel from paramKey
             val deckLabelForNote = paramKey.split("/").firstOrNull() ?: ""
             val existingNote = NotesManager.getParamNote(deckLabelForNote, paramKey)
-            val noteLabel = if (existingNote.isNotEmpty()) "\uD83D\uDCDD Edit Parameter Note\u2026" else "\uD83D\uDCDD Add Parameter Note\u2026"
+            val noteLabel = if (existingNote.isNotEmpty()) "${Icons.NOTE} Edit Parameter Note\u2026" else "${Icons.NOTE} Add Parameter Note\u2026"
             if (ImGui.menuItem(noteLabel)) {
                 NoteEditorModal.request(NoteContext.Param(deckLabelForNote, paramKey, label))
             }
@@ -177,15 +178,50 @@ object PresetGridRenderer {
         val r = CELL * 0.5f
 
         // 1. FINAL Cell
+        drawFinalCell(session, dl, param, paramKey, state, gridStartX, labelColW, rowScreenY, CELL, r,
+            isHoveredRow, mousePos, getColumnOffset, getCvColor, onPushUndo)
+
+        // 2. MIDI Cell
+        if (session.uiTheme.showMidiCol) {
+            drawMidiCell(session, dl, param, paramKey, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
+                isHoveredRow, mousePos, getColumnOffset, getCvColor, onPushUndo)
+        }
+
+        // 3. CV Cells
+        val cvCols = getCvColumns()
+        for (cvId in cvCols) {
+            drawCvCell(session, dl, param, paramKey, cvId, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
+                isHoveredRow, mousePos, getColumnOffset, getCvColor, onPushUndo)
+        }
+
+        ImGui.popID()
+        ImGui.setCursorPos(rowX, rowY + CELL)
+    }
+
+    // ── Cell helpers ──────────────────────────────────────────────────────────
+
+    private fun drawFinalCell(
+        session: llm.slop.liquidlsd.SessionContext,
+        dl: ImDrawList,
+        param: llm.slop.liquidlsd.parameters.ModulatableParameter,
+        paramKey: String,
+        state: PresetGridState,
+        gridStartX: Float, labelColW: Float, rowScreenY: Float,
+        CELL: Float, r: Float,
+        isHoveredRow: Boolean,
+        mousePos: imgui.ImVec2,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
         val finalX = gridStartX + labelColW + getColumnOffset("final")
         val finalY = rowScreenY
         val isFinalSelected = state.selectedCell?.paramKey == paramKey && state.selectedCell?.cvSourceId == "final"
         val isFinalHoveredCol = mousePos.x >= finalX && mousePos.x <= (finalX + CELL)
-        val isFinalCrosshair = isHoveredRow && isFinalHoveredCol
-        
+
         ImGui.setCursorScreenPos(finalX, finalY)
-        val btnFlagsFinal = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("##final_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsFinal)
+        val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+        ImGui.invisibleButton("##final_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
         val isFinalHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked()) {
             state.select(PresetCellId(paramKey, "final"), param)
@@ -197,7 +233,7 @@ object PresetGridRenderer {
         }
         if (isFinalHovered && session.uiTheme.tooltipsEnabled) {
             val displayValue = if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
-            val displayBase = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
+            val displayBase  = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
             if (param.modulatorFilter != null) {
                 ImGui.beginTooltip()
                 ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
@@ -206,17 +242,16 @@ object PresetGridRenderer {
                 ImGui.setTooltip("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds and default values. Middle-click to reset.")
             }
         }
-        
-        val finalBgCol = when {
+
+        val bgCol = when {
             isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-            else            -> getCvColor("final", 0.05f) // Subtle background tint
+            else            -> getCvColor("final", 0.05f)
         }
-        val finalBorderCol = when {
+        val borderCol = when {
             isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
             else            -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
-        val finalColor = getCvColor("final", 1f) // Active meter color
-        
+
         drawKnobMeter(
             session = session,
             dl = dl, x = finalX, y = finalY, r = r,
@@ -225,308 +260,307 @@ object PresetGridRenderer {
             baseValue = param.baseValue,
             baseMin = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMin else null,
             baseMax = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMax else null,
-            color = finalColor, bgCol = finalBgCol, borderCol = finalBorderCol,
+            color = getCvColor("final", 1f), bgCol = bgCol, borderCol = borderCol,
             isHoveredRow = isHoveredRow, isHoveredCol = isFinalHoveredCol
         )
+    }
 
-        // 2.5 MIDI Cell
-        if (session.uiTheme.showMidiCol) {
-            val midiX = gridStartX + labelColW + getColumnOffset("midi")
-            val midiY = rowScreenY
-            val midiCellId = PresetCellId(paramKey, "midi")
-            val isMidiSelected = state.selectedCell == midiCellId
-            val isMidiHoveredCol = mousePos.x >= midiX && mousePos.x <= (midiX + CELL)
-            val isMidiCrosshair = isHoveredRow && isMidiHoveredCol
-            
-            // Find any MIDI modulator for this parameter
-            val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
-            val hasMidiMod = midiMods.any { mod ->
-                val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
-                isAllowed && !mod.bypassed
-            }
-            val isMidiBypassed = midiMods.isNotEmpty() && midiMods.all { mod ->
-                val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
-                !isAllowed || mod.bypassed
-            }
-            
-            val isMidiTarget = state.midiLearnTarget?.let {
-                it is MidiLearnTarget.GridCell && it.cellId == midiCellId
-            } ?: false
+    private fun drawMidiCell(
+        session: llm.slop.liquidlsd.SessionContext,
+        dl: ImDrawList,
+        param: llm.slop.liquidlsd.parameters.ModulatableParameter,
+        paramKey: String,
+        state: PresetGridState,
+        mixer: llm.slop.liquidlsd.rendering.Mixer,
+        gridStartX: Float, labelColW: Float, rowScreenY: Float,
+        CELL: Float, r: Float,
+        isHoveredRow: Boolean,
+        mousePos: imgui.ImVec2,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        val midiX = gridStartX + labelColW + getColumnOffset("midi")
+        val midiY = rowScreenY
+        val midiCellId = PresetCellId(paramKey, "midi")
+        val isMidiSelected = state.selectedCell == midiCellId
+        val isMidiHoveredCol = mousePos.x >= midiX && mousePos.x <= (midiX + CELL)
+        val isMidiCrosshair  = isHoveredRow && isMidiHoveredCol
 
-            ImGui.setCursorScreenPos(midiX, midiY)
-            val btnFlagsMidi = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-            ImGui.invisibleButton("##midi_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsMidi)
-            val isMidiCellHovered = ImGui.isItemHovered()
-            if (isMidiCellHovered && session.uiTheme.tooltipsEnabled) {
-                val details = if (hasMidiMod || isMidiBypassed) {
-                    val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
-                    "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings. Middle-click to toggle bypass."
-                } else if (state.isMidiLearnMode) {
-                    "MIDI Learn active. Click this cell, then move/turn a control on your controller to bind it."
-                } else {
-                    "No MIDI mapping. Click to view CC mapping options (MIDI Map mode)."
-                }
-                ImGui.setTooltip(details)
+        val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+        val hasMidiMod = midiMods.any { mod ->
+            val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+            isAllowed && !mod.bypassed
+        }
+        val isMidiBypassed = midiMods.isNotEmpty() && midiMods.all { mod ->
+            val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+            !isAllowed || mod.bypassed
+        }
+        val isMidiTarget = state.midiLearnTarget?.let {
+            it is MidiLearnTarget.GridCell && it.cellId == midiCellId
+        } ?: false
+
+        ImGui.setCursorScreenPos(midiX, midiY)
+        val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+        ImGui.invisibleButton("##midi_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
+        val isCellHovered = ImGui.isItemHovered()
+        if (isCellHovered && session.uiTheme.tooltipsEnabled) {
+            val details = if (hasMidiMod || isMidiBypassed) {
+                val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
+                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings. Middle-click to toggle bypass."
+            } else if (state.isMidiLearnMode) {
+                "MIDI Learn active. Click this cell, then move/turn a control on your controller to bind it."
+            } else {
+                "No MIDI mapping. Click to view CC mapping options (MIDI Map mode)."
             }
-            if (ImGui.isItemClicked()) {
-                if (state.isMidiLearnMode) {
-                    state.midiLearnTarget = MidiLearnTarget.GridCell(midiCellId, param)
-                } else {
-                    state.select(midiCellId, param)
-                }
-            }
-            if (isMidiCellHovered && ImGui.isMouseReleased(2)) { // Middle click bypass toggle
+            ImGui.setTooltip(details)
+        }
+        if (ImGui.isItemClicked()) {
+            if (state.isMidiLearnMode) {
+                state.midiLearnTarget = MidiLearnTarget.GridCell(midiCellId, param)
+            } else {
                 state.select(midiCellId, param)
-                if (midiMods.isNotEmpty()) {
+            }
+        }
+        if (isCellHovered && ImGui.isMouseReleased(2)) {
+            state.select(midiCellId, param)
+            if (midiMods.isNotEmpty()) {
+                onPushUndo()
+                val allBypassed = midiMods.all { it.bypassed }
+                val targetBypassed = !allBypassed
+                val updated = param.modulators.map {
+                    if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = targetBypassed) else it
+                }
+                param.modulators.clear()
+                param.modulators.addAll(updated)
+            }
+        }
+        if (ImGui.beginPopupContextItem("midi_cell_menu_$paramKey")) {
+            if (midiMods.isNotEmpty()) {
+                if (ImGui.menuItem("Clear MIDI Modulator")) {
                     onPushUndo()
-                    val allBypassed = midiMods.all { it.bypassed }
-                    val targetBypassed = !allBypassed
+                    param.modulators.removeAll(midiMods)
+                }
+                if (ImGui.menuItem(if (isMidiBypassed) "Unmute MIDI Modulator" else "Mute MIDI Modulator")) {
+                    onPushUndo()
                     val updated = param.modulators.map {
-                        if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = targetBypassed) else it
+                        if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = !it.bypassed) else it
                     }
                     param.modulators.clear()
                     param.modulators.addAll(updated)
                 }
             }
-            
-            if (ImGui.beginPopupContextItem("midi_cell_menu_$paramKey")) {
-                if (midiMods.isNotEmpty()) {
-                    if (ImGui.menuItem("Clear MIDI Modulator")) {
-                        onPushUndo()
-                        param.modulators.removeAll(midiMods)
-                    }
-                    if (ImGui.menuItem(if (isMidiBypassed) "Unmute MIDI Modulator" else "Mute MIDI Modulator")) {
-                        onPushUndo()
-                        val updated = param.modulators.map {
-                            if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = !it.bypassed) else it
-                        }
-                        param.modulators.clear()
-                        param.modulators.addAll(updated)
-                    }
-                }
-                ImGui.endPopup()
-            }
-
-            val midiBgCol = when {
-                isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
-                isMidiSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-                hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
-                else           -> getCvColor("midi", 0.05f)
-            }
-            val midiBorderCol = when {
-                isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
-                isMidiSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
-                hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
-                else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
-            }
-            
-            if (hasMidiMod || isMidiBypassed) {
-                val isBipolar = param.minClamp < 0f
-                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(midiMods, isBipolar, includeBypassed = true)
-                val displayValue = if (isBipolar) {
-                    val halfRange = (param.maxClamp - param.minClamp) / 2f
-                    val center = param.minClamp + halfRange
-                    center + liveVal * halfRange
-                } else {
-                    param.minClamp + liveVal * (param.maxClamp - param.minClamp)
-                }
-                
-                drawKnobMeter(
-                    session = session,
-                    dl = dl, x = midiX, y = midiY, r = r,
-                    value = displayValue, min = param.minClamp, max = param.maxClamp,
-                    meterType = param.meterType,
-                    baseValue = null, baseMin = null, baseMax = null,
-                    color = getCvColor("midi", 1f),
-                    bgCol = midiBgCol, borderCol = midiBorderCol,
-                    isBypassed = isMidiBypassed,
-                    isHoveredRow = isHoveredRow, isHoveredCol = isMidiHoveredCol
-                )
-            } else {
-                dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, midiBgCol, 3f)
-                if (isMidiCrosshair) {
-                    dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
-                } else if (isMidiHoveredCol) {
-                    dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
-                }
-                val border = if (isMidiCrosshair) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else midiBorderCol
-                dl.addRect(midiX, midiY, midiX + CELL, midiY + CELL, border, 3f)
-            }
+            ImGui.endPopup()
         }
 
-        // 3. CV cells
-        val cvCols = getCvColumns()
-        for (cvId in cvCols) {
-            val cellId = PresetCellId(paramKey, cvId)
-            val isSelected = state.selectedCell == cellId
-            val activeMods = if (cvId == "audio") {
-                param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
-            } else if (cvId == "trigger") {
-                param.modulators.filter { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
+        val bgCol = when {
+            isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
+            isMidiSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
+            hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
+            else           -> getCvColor("midi", 0.05f)
+        }
+        val borderCol = when {
+            isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
+            isMidiSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
+            hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
+            else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
+        }
+
+        if (hasMidiMod || isMidiBypassed) {
+            val isBipolar = param.minClamp < 0f
+            val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(midiMods, isBipolar, includeBypassed = true)
+            val displayValue = if (isBipolar) {
+                val halfRange = (param.maxClamp - param.minClamp) / 2f
+                param.minClamp + halfRange + liveVal * halfRange
             } else {
-                param.modulators.filter { it.sourceId == cvId }
+                param.minClamp + liveVal * (param.maxClamp - param.minClamp)
             }
-            val hasModulator = activeMods.any { mod ->
-                val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
-                isAllowed && !mod.bypassed
+            drawKnobMeter(
+                session = session,
+                dl = dl, x = midiX, y = midiY, r = r,
+                value = displayValue, min = param.minClamp, max = param.maxClamp,
+                meterType = param.meterType,
+                baseValue = null, baseMin = null, baseMax = null,
+                color = getCvColor("midi", 1f),
+                bgCol = bgCol, borderCol = borderCol,
+                isBypassed = isMidiBypassed,
+                isHoveredRow = isHoveredRow, isHoveredCol = isMidiHoveredCol
+            )
+        } else {
+            dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, bgCol, 3f)
+            if (isMidiCrosshair) {
+                dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
+            } else if (isMidiHoveredCol) {
+                dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
             }
-            val isBypassed = activeMods.isNotEmpty() && activeMods.all { mod ->
-                val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
-                !isAllowed || mod.bypassed
-            }
+            val border = if (isMidiCrosshair) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+            dl.addRect(midiX, midiY, midiX + CELL, midiY + CELL, border, 3f)
+        }
+    }
 
-            val x = gridStartX + labelColW + getColumnOffset(cvId)
-            val y = rowScreenY
+    private fun drawCvCell(
+        session: llm.slop.liquidlsd.SessionContext,
+        dl: ImDrawList,
+        param: llm.slop.liquidlsd.parameters.ModulatableParameter,
+        paramKey: String,
+        cvId: String,
+        state: PresetGridState,
+        mixer: llm.slop.liquidlsd.rendering.Mixer,
+        gridStartX: Float, labelColW: Float, rowScreenY: Float,
+        CELL: Float, r: Float,
+        isHoveredRow: Boolean,
+        mousePos: imgui.ImVec2,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        val cellId = PresetCellId(paramKey, cvId)
+        val isSelected = state.selectedCell == cellId
+        val activeMods = when (cvId) {
+            "audio"   -> param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
+            "trigger" -> param.modulators.filter { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
+            else      -> param.modulators.filter { it.sourceId == cvId }
+        }
+        val hasModulator = activeMods.any { mod ->
+            val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+            isAllowed && !mod.bypassed
+        }
+        val isBypassed = activeMods.isNotEmpty() && activeMods.all { mod ->
+            val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
+            !isAllowed || mod.bypassed
+        }
 
-            val isHoveredCol = mousePos.x >= x && mousePos.x <= (x + CELL)
-            val isCrosshair = isHoveredRow && isHoveredCol
+        val x = gridStartX + labelColW + getColumnOffset(cvId)
+        val y = rowScreenY
+        val isHoveredCol = mousePos.x >= x && mousePos.x <= (x + CELL)
+        val isCrosshair  = isHoveredRow && isHoveredCol
+        val isTarget = state.midiLearnTarget?.let {
+            it is MidiLearnTarget.GridCell && it.cellId == cellId
+        } ?: false
 
-            val isTarget = state.midiLearnTarget?.let {
-                it is MidiLearnTarget.GridCell && it.cellId == cellId
-            } ?: false
+        ImGui.setCursorScreenPos(x, y)
+        val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
+        ImGui.invisibleButton("##cell_$cvId", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
+        val isCellHovered = ImGui.isItemHovered()
 
-            ImGui.setCursorScreenPos(x, y)
-            val btnFlagsCv = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-            ImGui.invisibleButton("##cell_$cvId", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsCv)
-            val isCellHovered = ImGui.isItemHovered()
-            if (isCellHovered && session.uiTheme.tooltipsEnabled) {
-                val isFiltered = param.modulatorFilter != null && activeMods.any { mod -> param.modulatorFilter?.invoke(mod) == false }
-                val statusText = when {
-                    isFiltered -> "Bypassed: Bypassed because AUTO-VJ is OFF."
-                    hasModulator -> "Active: Modulation routed to parameter."
-                    isBypassed -> "Muted: Modulation muted from parameter (O-scope live). Middle-click to unmute."
-                    else -> "Unmapped: Middle-click or click to add & configure modulation."
-                }
-                val modSource = when (cvId) {
-                    "lfo" -> "LFO / Oscillator"
-                    "audio" -> "Audio Envelope Follower"
-                    "trigger" -> "Transient Trigger"
-                    else -> cvId
-                }
-                val tipText = "Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig."
-                ImGui.setTooltip(tipText)
+        if (isCellHovered && session.uiTheme.tooltipsEnabled) {
+            val isFiltered = param.modulatorFilter != null && activeMods.any { param.modulatorFilter?.invoke(it) == false }
+            val statusText = when {
+                isFiltered   -> "Bypassed: Bypassed because AUTO-VJ is OFF."
+                hasModulator -> "Active: Modulation routed to parameter."
+                isBypassed   -> "Muted: Modulation muted from parameter (O-scope live). Middle-click to unmute."
+                else         -> "Unmapped: Middle-click or click to add & configure modulation."
             }
-            if (ImGui.isItemClicked()) {
-                if (state.isMidiLearnMode) {
-                    state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
-                } else {
-                    state.select(cellId, param)
-                }
+            val modSource = when (cvId) {
+                "lfo"     -> "LFO / Oscillator"
+                "audio"   -> "Audio Envelope Follower"
+                "trigger" -> "Transient Trigger"
+                else      -> cvId
             }
-            if (isCrosshair && ImGui.isMouseClicked(2)) { // Middle click: mute toggle if active/muted, populate default cellconfig if inactive
+            ImGui.setTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig.")
+        }
+        if (ImGui.isItemClicked()) {
+            if (state.isMidiLearnMode) {
+                state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
+            } else {
                 state.select(cellId, param)
-                if (activeMods.isNotEmpty()) {
+            }
+        }
+        if (isCrosshair && ImGui.isMouseClicked(2)) {
+            state.select(cellId, param)
+            if (activeMods.isNotEmpty()) {
+                onPushUndo()
+                val allBypassed = activeMods.all { it.bypassed }
+                val targetBypassed = !allBypassed
+                val updated = param.modulators.map { mod ->
+                    if (activeMods.any { it.id == mod.id }) mod.copy(bypassed = targetBypassed) else mod
+                }
+                param.modulators.clear()
+                param.modulators.addAll(updated)
+                if (!targetBypassed && paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+            } else {
+                onPushUndo()
+                val defaultSource = when (cvId) {
+                    "audio"   -> "audio_amp"
+                    "trigger" -> "trigger_onset"
+                    else      -> cvId
+                }
+                param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = 0.5f, bypassed = false))
+                if (paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+            }
+        }
+        if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {
+            if (ImGui.menuItem("Copy Cell Modulators")) {
+                ClipboardManager.cellClipboard = CellClipboardData(paramKey, cvId, activeMods.map { it.toDto() })
+            }
+            val hasCellClip = ClipboardManager.cellClipboard != null
+            if (ImGui.menuItem("Paste Modulator(s)", null, false, hasCellClip)) {
+                onPushUndo()
+                ClipboardManager.cellClipboard?.let { ClipboardManager.applyCellClipboard(param, cvId, it) }
+                if (paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+            }
+            if (activeMods.isNotEmpty()) {
+                if (ImGui.menuItem("Clear Modulator(s)")) {
                     onPushUndo()
-                    val allBypassed = activeMods.all { it.bypassed }
-                    val targetBypassed = !allBypassed
+                    param.modulators.removeAll(activeMods)
+                }
+                if (ImGui.menuItem(if (isBypassed) "Unmute Modulator(s)" else "Mute Modulator(s)")) {
+                    onPushUndo()
+                    val nextBypassed = !isBypassed
                     val updated = param.modulators.map { mod ->
-                        if (activeMods.any { it.id == mod.id }) {
-                            mod.copy(bypassed = targetBypassed)
-                        } else mod
+                        if (activeMods.any { it.id == mod.id }) mod.copy(bypassed = nextBypassed) else mod
                     }
                     param.modulators.clear()
                     param.modulators.addAll(updated)
-                    if (!targetBypassed && paramKey == "Mixer/crossfade") {
-                        mixer.onCrossfadeCvUnmuted()
-                    }
-                } else {
-                    // Middle-clicking an unmapped cell populates it with a default modulator and selects it
-                    onPushUndo()
-                    val defaultSource = when (cvId) {
-                        "audio" -> "audio_amp"
-                        "trigger" -> "trigger_onset"
-                        else -> cvId
-                    }
-                    param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = 0.5f, bypassed = false))
-                    if (paramKey == "Mixer/crossfade") {
-                        mixer.onCrossfadeCvUnmuted()
-                    }
+                    if (!nextBypassed && paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
                 }
             }
-            if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {
-                if (ImGui.menuItem("Copy Cell Modulators")) {
-                    ClipboardManager.cellClipboard = CellClipboardData(paramKey, cvId, activeMods.map { it.toDto() })
-                }
-                val hasCellClip = ClipboardManager.cellClipboard != null
-                if (ImGui.menuItem("Paste Modulator(s)", null, false, hasCellClip)) {
-                    onPushUndo()
-                    ClipboardManager.cellClipboard?.let { ClipboardManager.applyCellClipboard(param, cvId, it) }
-                    if (paramKey == "Mixer/crossfade") {
-                        mixer.onCrossfadeCvUnmuted()
-                    }
-                }
-                if (activeMods.isNotEmpty()) {
-                    if (ImGui.menuItem("Clear Modulator(s)")) {
-                        onPushUndo()
-                        param.modulators.removeAll(activeMods)
-                    }
-                    if (ImGui.menuItem(if (isBypassed) "Unmute Modulator(s)" else "Mute Modulator(s)")) {
-                        onPushUndo()
-                        val nextBypassed = !isBypassed
-                        val updated = param.modulators.map { mod ->
-                            if (activeMods.any { it.id == mod.id }) {
-                                mod.copy(bypassed = nextBypassed)
-                            } else mod
-                        }
-                        param.modulators.clear()
-                        param.modulators.addAll(updated)
-                        if (!nextBypassed && paramKey == "Mixer/crossfade") {
-                            mixer.onCrossfadeCvUnmuted()
-                        }
-                    }
-                }
-                ImGui.endPopup()
-            }
-
-            val bgCol = when {
-                isTarget      -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
-                isSelected    -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-                hasModulator  -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
-                else          -> getCvColor(cvId, 0.05f)
-            }
-            val borderCol = when {
-                isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
-                isSelected   -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
-                hasModulator -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
-                else         -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
-            }
-
-            if (hasModulator || isBypassed) {
-                val isBipolar = param.minClamp < 0f
-                val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar, includeBypassed = true)
-                val displayValue = if (isBipolar) {
-                    val halfRange = (param.maxClamp - param.minClamp) / 2f
-                    val center = param.minClamp + halfRange
-                    center + liveVal * halfRange
-                } else {
-                    param.minClamp + liveVal * (param.maxClamp - param.minClamp)
-                }
-                
-                drawKnobMeter(
-                    session = session,
-                    dl = dl, x = x, y = y, r = r,
-                    value = displayValue, min = param.minClamp, max = param.maxClamp,
-                    meterType = param.meterType,
-                    baseValue = null, baseMin = null, baseMax = null,
-                    color = getCvColor(cvId, 1f),
-                    bgCol = bgCol, borderCol = borderCol,
-                    isBypassed = isBypassed,
-                    isHoveredRow = isHoveredRow, isHoveredCol = isHoveredCol
-                )
-            } else {
-                dl.addRectFilled(x, y, x + CELL, y + CELL, bgCol, 3f)
-                if (isCrosshair) {
-                    dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
-                } else if (isHoveredCol) {
-                    dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
-                }
-                val border = if (isCrosshair) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
-                dl.addRect(x, y, x + CELL, y + CELL, border, 3f)
-            }
+            ImGui.endPopup()
         }
 
-        ImGui.popID()
-        ImGui.setCursorPos(rowX, rowY + CELL)
+        val bgCol = when {
+            isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
+            isSelected   -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
+            hasModulator -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
+            else         -> getCvColor(cvId, 0.05f)
+        }
+        val borderCol = when {
+            isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
+            isSelected   -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
+            hasModulator -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
+            else         -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
+        }
+
+        if (hasModulator || isBypassed) {
+            val isBipolar = param.minClamp < 0f
+            val liveVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar, includeBypassed = true)
+            val displayValue = if (isBipolar) {
+                val halfRange = (param.maxClamp - param.minClamp) / 2f
+                param.minClamp + halfRange + liveVal * halfRange
+            } else {
+                param.minClamp + liveVal * (param.maxClamp - param.minClamp)
+            }
+            drawKnobMeter(
+                session = session,
+                dl = dl, x = x, y = y, r = r,
+                value = displayValue, min = param.minClamp, max = param.maxClamp,
+                meterType = param.meterType,
+                baseValue = null, baseMin = null, baseMax = null,
+                color = getCvColor(cvId, 1f),
+                bgCol = bgCol, borderCol = borderCol,
+                isBypassed = isBypassed,
+                isHoveredRow = isHoveredRow, isHoveredCol = isHoveredCol
+            )
+        } else {
+            dl.addRectFilled(x, y, x + CELL, y + CELL, bgCol, 3f)
+            if (isCrosshair) {
+                dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
+            } else if (isHoveredCol) {
+                dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
+            }
+            val border = if (isCrosshair) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+            dl.addRect(x, y, x + CELL, y + CELL, border, 3f)
+        }
     }
 
     private fun drawKnobMeter(

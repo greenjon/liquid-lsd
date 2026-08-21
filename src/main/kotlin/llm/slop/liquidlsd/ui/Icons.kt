@@ -35,6 +35,7 @@ object Icons {
     const val SHUFFLE     = "\ue15e" // shuffle
     const val MORE_HORIZONTAL = "\ue11f" // more-horizontal
     const val MORE_VERTICAL   = "\ue120" // more-vertical
+    const val NOTE            = "\ue132" // pencil
 
     // Wave Shapes
     const val WAVE_SINE   = "\ue38b" // spline
