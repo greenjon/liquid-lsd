@@ -56,59 +56,69 @@ vec3 adjustColor(vec3 col, float sat, float bright) {
 }
 
 // -----------------------------------------------------------------------------
-// Icosahedral Symmetry Plane Sets (Normals)
+// Exact Icosahedral Symmetry Plane Sets (Normals)
 // -----------------------------------------------------------------------------
 
-// 10 pairs of 3-fold axes (Icosahedron face normals)
+// 10 pairs of 3-fold axes (Icosahedron face normals / Dodecahedron vertices)
+// All vectors are unit length (norm == 1.0)
 vec3 getIcoNormal(int i) {
     float a = 1.0 / sqrt(3.0);
-    float b = 1.0 / sqrt(1.0 + PHI * PHI);
-    float c = PHI / sqrt(1.0 + PHI * PHI);
+    float b = (1.0 / PHI) / sqrt(3.0);
+    float c = PHI / sqrt(3.0);
     if (i == 0) return vec3(a, a, a);
     if (i == 1) return vec3(-a, a, a);
     if (i == 2) return vec3(a, -a, a);
     if (i == 3) return vec3(a, a, -a);
-    if (i == 4) return vec3(0.0, b, c);
-    if (i == 5) return vec3(0.0, -b, c);
-    if (i == 6) return vec3(b, c, 0.0);
-    if (i == 7) return vec3(-b, c, 0.0);
-    if (i == 8) return vec3(c, 0.0, b);
-    return vec3(c, 0.0, -b); // i == 9
+    if (i == 4) return vec3(0.0, c, b);
+    if (i == 5) return vec3(0.0, -c, b);
+    if (i == 6) return vec3(b, 0.0, c);
+    if (i == 7) return vec3(-b, 0.0, c);
+    if (i == 8) return vec3(c, b, 0.0);
+    return vec3(-c, b, 0.0); // i == 9
 }
 
-// 6 pairs of 5-fold axes (Dodecahedron face normals)
+// 6 pairs of 5-fold axes (Dodecahedron face normals / Icosahedron vertices)
+// All vectors are unit length (norm == 1.0)
 vec3 getDodNormal(int i) {
     float b = 1.0 / sqrt(1.0 + PHI * PHI);
     float c = PHI / sqrt(1.0 + PHI * PHI);
     if (i == 0) return vec3(0.0, b, c);
     if (i == 1) return vec3(0.0, -b, c);
-    if (i == 2) return vec3(b, c, 0.0);
-    if (i == 3) return vec3(-b, c, 0.0);
-    if (i == 4) return vec3(c, 0.0, b);
-    return vec3(c, 0.0, -b); // i == 5
+    if (i == 2) return vec3(c, 0.0, b);
+    if (i == 3) return vec3(-c, 0.0, b);
+    if (i == 4) return vec3(b, c, 0.0);
+    return vec3(-b, c, 0.0); // i == 5
 }
 
-// Evaluates the dual morph + stellation SDF and extracts edge factor and symmetry info
+// Evaluates the dual morph + stellation SDF
 float mapSDF(vec3 p, out float outEdge, out vec3 outAxis, out float outDepth) {
     float m = clamp(uMorph, 0.0, 1.0);
     float s = clamp(uStellation, 0.0, 1.0);
 
-    // Plane threshold distances for dual rectification
-    // At m=0: icosahedron planes dominate; at m=0.5: icosidodecahedron; at m=1: dodecahedron planes dominate.
-    float rIco = 0.82 + 1.25 * (m * m);
-    float rDod = 0.82 + 1.25 * ((1.0 - m) * (1.0 - m));
+    // Plane threshold distances for dual rectification:
+    // Base radius is 0.82.
+    // At m=0: icosahedron planes at 0.82, dodecahedron planes at 2.05 (inactive).
+    // At m=0.5: both sets of planes at ~1.12 (icosidodecahedron).
+    // At m=1: dodecahedron planes at 0.82, icosahedron planes at 2.05 (inactive).
+    float r0 = 0.82;
+    float rRatio = 1.25840857; // R / r for Icosahedron/Dodecahedron
+    float rIco = r0 * mix(1.0, rRatio, m);
+    float rDod = r0 * mix(rRatio, 1.0, m);
 
     float maxIco1 = -1e5;
     float maxIco2 = -1e5;
     vec3 bestIcoAxis = vec3(0.0, 1.0, 0.0);
+    float bestIcoDot = 0.0;
 
     for (int i = 0; i < 10; i++) {
         vec3 n = getIcoNormal(i);
-        float d = abs(dot(p, n)) - rIco;
+        float dDot = dot(p, n);
+        float d = abs(dDot) - rIco;
         if (d > maxIco1) {
             maxIco2 = maxIco1;
             maxIco1 = d;
-            bestIcoAxis = n;
+            bestIcoAxis = (dDot >= 0.0) ? n : -n;
+            bestIcoDot = abs(dDot);
         } else if (d > maxIco2) {
             maxIco2 = d;
         }
@@ -117,14 +127,17 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outAxis, out float outDepth) {
     float maxDod1 = -1e5;
     float maxDod2 = -1e5;
     vec3 bestDodAxis = vec3(0.0, 1.0, 0.0);
+    float bestDodDot = 0.0;
 
     for (int j = 0; j < 6; j++) {
         vec3 n = getDodNormal(j);
-        float d = abs(dot(p, n)) - rDod;
+        float dDot = dot(p, n);
+        float d = abs(dDot) - rDod;
         if (d > maxDod1) {
             maxDod2 = maxDod1;
             maxDod1 = d;
-            bestDodAxis = n;
+            bestDodAxis = (dDot >= 0.0) ? n : -n;
+            bestDodDot = abs(dDot);
         } else if (d > maxDod2) {
             maxDod2 = d;
         }
@@ -133,54 +146,89 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outAxis, out float outDepth) {
     // Base convex polyhedron SDF
     float baseSdf = max(maxIco1, maxDod1);
 
-    // Closest secondary plane distance gives edge proximity
-    float edgeIco = maxIco1 - maxIco2;
-    float edgeDod = maxDod1 - maxDod2;
-    float baseEdge = min(edgeIco, edgeDod);
+    // Edge proximity: distance between primary and secondary planes
+    float d1 = baseSdf;
+    float d2 = max(max(maxIco2, maxDod2), min(maxIco1, maxDod1));
+    float baseEdge = d1 - d2;
 
     // -------------------------------------------------------------------------
-    // Stellation: Star spikes along 5-fold (dodeca) or 3-fold (icosa) axes
+    // Stellation: Kepler-Poinsot Star Spikes
     // -------------------------------------------------------------------------
-    float starSdf = 1e5;
-    float starEdge = 1e5;
+    float totalSdf = baseSdf;
 
     if (s > 0.001) {
-        // Spike height and tapering
-        float spikeIcoHeight = 0.95 * s * (1.0 - m * 0.5);
-        float spikeDodHeight = 1.15 * s * (0.5 + m * 0.5);
-
-        // 3-fold star spikes (for Great Icosahedron)
-        float dIcoStar = -1e5;
-        for (int i = 0; i < 10; i++) {
-            vec3 n = getIcoNormal(i);
-            float proj = abs(dot(p, n));
-            vec3 perp = p - n * dot(p, n);
-            float perpDist = length(perp);
-            float cone = perpDist * 2.1 - (rIco + spikeIcoHeight - proj);
-            dIcoStar = max(dIcoStar, -cone);
+        // 3-fold star spikes (for Great Icosahedron at m -> 0)
+        if (m < 0.85) {
+            float hIco = bestIcoDot;
+            if (hIco > rIco * 0.7) {
+                float spikeH = s * 0.95 * (1.0 - m * 0.6);
+                if (spikeH > 0.005) {
+                    vec3 vPerp = p - bestIcoAxis * dot(p, bestIcoAxis);
+                    float rPerp = length(vPerp);
+                    vec3 refV = vec3(0.0);
+                    float maxDot = -1.0;
+                    for (int k = 0; k < 6; k++) {
+                        vec3 v = getDodNormal(k);
+                        float d = dot(v, bestIcoAxis);
+                        if (abs(d) > maxDot + 0.001) {
+                            maxDot = abs(d);
+                            refV = sign(d) * v;
+                        }
+                    }
+                    vec3 e1 = normalize(refV - bestIcoAxis * dot(refV, bestIcoAxis));
+                    vec3 e2 = cross(bestIcoAxis, e1);
+                    float angle = atan(dot(vPerp, e2), dot(vPerp, e1));
+                    float foldAngle = mod(angle, 2.0 * PI / 3.0) - PI / 3.0;
+                    float rEdge = rPerp * cos(foldAngle);
+                    float rBase = rIco * 0.381966; // 1.0 / (PHI * PHI)
+                    float heightFrac = clamp((hIco - rIco) / spikeH, 0.0, 1.0);
+                    float rCone = rBase * (1.0 - heightFrac);
+                    float dCone = (rEdge - rCone) / sqrt(1.0 + (rBase / spikeH) * (rBase / spikeH));
+                    float spikeSdf = max(dCone, hIco - (rIco + spikeH));
+                    totalSdf = min(totalSdf, spikeSdf);
+                }
+            }
         }
 
-        // 5-fold star spikes (for Great Stellated Dodecahedron)
-        float dDodStar = -1e5;
-        for (int j = 0; j < 6; j++) {
-            vec3 n = getDodNormal(j);
-            float proj = abs(dot(p, n));
-            vec3 perp = p - n * dot(p, n);
-            float perpDist = length(perp);
-            float cone = perpDist * 2.3 - (rDod + spikeDodHeight - proj);
-            dDodStar = max(dDodStar, -cone);
+        // 5-fold star spikes (for Great Stellated Dodecahedron at m -> 1)
+        if (m > 0.15) {
+            float hDod = bestDodDot;
+            if (hDod > rDod * 0.7) {
+                float spikeH = s * 1.15 * (0.4 + m * 0.6);
+                if (spikeH > 0.005) {
+                    vec3 vPerp = p - bestDodAxis * dot(p, bestDodAxis);
+                    float rPerp = length(vPerp);
+                    vec3 refV = vec3(0.0);
+                    float maxDot = -1.0;
+                    for (int k = 0; k < 10; k++) {
+                        vec3 v = getIcoNormal(k);
+                        float d = dot(v, bestDodAxis);
+                        if (abs(d) > maxDot + 0.001) {
+                            maxDot = abs(d);
+                            refV = sign(d) * v;
+                        }
+                    }
+                    vec3 e1 = normalize(refV - bestDodAxis * dot(refV, bestDodAxis));
+                    vec3 e2 = cross(bestDodAxis, e1);
+                    float angle = atan(dot(vPerp, e2), dot(vPerp, e1));
+                    float foldAngle = mod(angle, 2.0 * PI / 5.0) - PI / 5.0;
+                    float rEdge = rPerp * cos(foldAngle);
+                    float rBase = rDod * 0.618034; // 1.0 / PHI
+                    float heightFrac = clamp((hDod - rDod) / spikeH, 0.0, 1.0);
+                    float rCone = rBase * (1.0 - heightFrac);
+                    float dCone = (rEdge - rCone) / sqrt(1.0 + (rBase / spikeH) * (rBase / spikeH));
+                    float spikeSdf = max(dCone, hDod - (rDod + spikeH));
+                    totalSdf = min(totalSdf, spikeSdf);
+                }
+            }
         }
-
-        float mixedStar = mix(dIcoStar, dDodStar, m);
-        // Union base shape with star spikes
-        baseSdf = min(baseSdf, mixedStar);
     }
 
     outEdge = baseEdge;
-    outAxis = mix(bestIcoAxis, bestDodAxis, m);
+    outAxis = (m < 0.5) ? bestIcoAxis : bestDodAxis;
     outDepth = length(p);
 
-    return baseSdf;
+    return totalSdf;
 }
 
 // Normal calculation via central differences
@@ -213,7 +261,7 @@ void main() {
     ro = rot * ro;
     rd = rot * rd;
 
-    // Palette base vectors
+    // Palette base vectors (vibrant cosine spectrum)
     vec3 palA = vec3(0.5, 0.5, 0.5);
     vec3 palB = vec3(0.5, 0.5, 0.5);
     vec3 palC = vec3(1.0, 1.0, 1.0);
@@ -221,7 +269,7 @@ void main() {
 
     // Multi-layer crystal accumulation for inner-face transparency reveal
     vec4 accumColor = vec4(0.0);
-    float t = 0.1;
+    float t = 0.5;
     const int MAX_STEPS = 64;
     float opacity = clamp(uOpacity, 0.0, 1.0);
     float edgeThick = clamp(uEdgeThickness, 0.0, 0.2);
@@ -244,15 +292,37 @@ void main() {
             if (uColorMethod < 0.5) {
                 // Method 5: Depth Gradient
                 float dVal = (uDepthFrame > 0.5) ? length(invRot * p) : depth;
-                float normDepth = clamp((dVal - 0.7) / 1.4, 0.0, 1.0);
+                float normDepth = clamp((dVal - 0.7) / 1.3, 0.0, 1.0);
                 surfaceCol = palette(normDepth + uHueOffset, palA, palB, palC, palD);
             } else {
-                // Method 4: 5-Fold Sectors
+                // Method 4: Symmetry Sectors (3-Fold or 5-Fold)
                 // Azimuthal angle around closest symmetry axis
-                vec3 refX = normalize(cross(axis, vec3(0.0, 1.0, 0.001)));
+                vec3 refV = vec3(0.0);
+                float maxDot = -1.0;
+                if (uMorph < 0.5) {
+                    for (int k = 0; k < 6; k++) {
+                        vec3 v = getDodNormal(k);
+                        float d = dot(v, axis);
+                        if (abs(d) > maxDot + 0.001) {
+                            maxDot = abs(d);
+                            refV = sign(d) * v;
+                        }
+                    }
+                } else {
+                    for (int k = 0; k < 10; k++) {
+                        vec3 v = getIcoNormal(k);
+                        float d = dot(v, axis);
+                        if (abs(d) > maxDot + 0.001) {
+                            maxDot = abs(d);
+                            refV = sign(d) * v;
+                        }
+                    }
+                }
+                vec3 refX = normalize(refV - axis * dot(refV, axis));
                 vec3 refY = cross(axis, refX);
                 float angle = atan(dot(p, refY), dot(p, refX));
-                float sector = floor(mod((angle / (2.0 * PI / 5.0)) + uHueOffset * 5.0, 5.0)) / 5.0;
+                float folds = (uMorph < 0.5) ? 3.0 : 5.0;
+                float sector = floor(mod((angle / (2.0 * PI / folds)) + uHueOffset * folds, folds)) / folds;
                 surfaceCol = palette(sector, palA, palB, palC, palD);
             }
 
@@ -281,10 +351,10 @@ void main() {
             // Step slightly past the surface to catch internal self-intersecting facets
             t += max(0.04, dist + 0.04);
         } else {
-            t += max(0.015, dist * 0.7);
+            t += max(0.012, dist * 0.8);
         }
 
-        if (t > 7.0) break;
+        if (t > 8.0) break;
     }
 
     // Final color with global alpha
