@@ -50,6 +50,30 @@ Built-in procedural visual generators:
 - **Dynamic Spiral**: Multi-point spiral curve generator with radial range culling.
 - **Gyroid**: Dynamic 3D triply periodic minimal surface raymarcher.
 - **Chladni**: Acoustic 2D/3D vibration pattern generator.
+- **Icosa-Dodeca**: Continuous $H_3$ Coxeter polyhedral morph and Kepler-Poinsot stellation raymarcher with translucent crystal reveal.
+
+#### Icosa-Dodeca Quick Reference & Classic Solids
+The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean bridges, and Kepler-Poinsot star polyhedra:
+
+* **`Morph` ($0.0 \to 1.0$)**: Primary 4-phase cyclic timeline sweeping across canonical shapes:
+  * `0.00`: **Icosahedron** (20 triangular faces)
+  * `0.125`: **Icosidodecahedron** (32 faces: 20 triangles + 12 pentagons)
+  * `0.25`: **Dodecahedron** (12 pentagonal faces)
+  * `0.50`: **Great Stellated Dodecahedron** (12 5-pointed star pyramids)
+  * `0.75`: **Great Icosahedron** (20 3-sided star spikes)
+  * `1.00`: Loops back smoothly to Icosahedron.
+* **`Stellation` ($0.0 \to 1.0$)**: Direct star spike height boost. Set `Morph = 0.0` or `0.25` and dial `Stellation` to grow star spikes manually.
+* **`Support H` ($-1.0 \to 1.0$)**: Plane distance from center. Lowering to `-0.15` produces truncated forms (e.g. Buckyball / Soccer Ball).
+* **`Opacity` ($0.0 \to 1.0$)**: Face transparency. Sweet spot is `0.6–0.8` for "Crystal Reveal" to see inner intersecting geometric facets.
+
+| Solid Name | Morph | Stellation | Support H | Description |
+| :--- | :---: | :---: | :---: | :--- |
+| **Icosahedron** | `0.00` | `0.00` | `0.00` | 20 equilateral triangular faces. |
+| **Icosidodecahedron** | `0.125` | `0.00` | `0.00` | Archimedean duality bridge (triangles + pentagons). |
+| **Dodecahedron** | `0.25` | `0.00` | `0.00` | 12 regular pentagonal faces. |
+| **Great Stellated Dodecahedron** | `0.50` | `0.00` | `0.00` | 12 sharp 5-fold star spikes. |
+| **Great Icosahedron** | `0.75` | `0.00` | `0.00` | 20 sharp 3-fold star spikes. |
+| **Truncated Icosahedron (Buckyball)** | `0.00` | `0.00` | `-0.15` | Classic soccer ball (pentagons & hexagons). |
 
 ---
 
