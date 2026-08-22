@@ -130,15 +130,18 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outFoldedP, out float outDepth)
     float tGen, sHeight;
     getMorphState(uMorph, tGen, sHeight);
 
-    // Apply manual stellation boost and support H offset
+    // Apply manual stellation boost
     float totalStell = clamp(sHeight + uStellation, 0.0, 1.0);
-    float baseH = 0.82 + uSupportH * 0.35;
+    float baseH = 0.82;
 
     // Fold point into fundamental H3 chamber
     vec3 pFolded = foldH3(p);
 
     // Active generator vector on the 3-fold <-> 5-fold arc
     vec3 v = getGenerator(tGen);
+
+    // Dual vertex truncation vector (opposite axis: 5-fold when v is 3-fold, 3-fold when v is 5-fold)
+    vec3 vDual = getGenerator(1.0 - tGen);
 
     // Adjacent reflection vector for stellation facet plane
     // C3 reflects across n0: (-C3.x, 0, C3.z)
@@ -154,16 +157,36 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outFoldedP, out float outDepth)
     // Continuous stellation plane: tilts from flat face v(t) at s=0 into star facets vAdj(t) at s=1
     vec3 vMorph = normalize(mix(v, vAdj, totalStell));
 
-    // Distance to active polyhedral surface in folded space
-    float totalSdf = dot(pFolded, vMorph) - baseH;
+    // 1. Primary face plane
+    float dPrimary = dot(pFolded, vMorph) - baseH;
 
-    // Edge proximity: distance to fundamental mirror walls
+    // 2. Vertex Truncation & Edge Cantellation via Support H:
+    // Support H < 0 cuts vertices inward (Truncation / Buckyball / Duality)
+    // Support H > 0 cuts edges inward (Cantellation / Rhombicosidodecahedron)
+    float hTrunc = baseH * (1.28 + min(0.0, uSupportH) * 0.65);
+    float dTrunc = dot(pFolded, vDual) - hTrunc;
+
+    float hEdge = baseH * (1.28 - max(0.0, uSupportH) * 0.50);
+    float dEdge = dot(pFolded, C2) - hEdge;
+
+    // Convex intersection of primary faces, vertex truncations, and edge cuts
+    float totalSdf = max(dPrimary, max(dTrunc, dEdge));
+
+    // Edge proximity: distance to fundamental mirror walls + facet intersection seams
     float dM0 = dot(pFolded, n0);
     float dM1 = dot(pFolded, n1);
     float dM2 = dot(pFolded, n2);
-    float edgeDist = min(dM0, min(dM1, dM2));
+    float mirrorEdge = min(dM0, min(dM1, dM2));
 
-    outEdge = edgeDist;
+    // Intersection seam detection when truncation / cantellation planes become active
+    float seamEdge = 100.0;
+    if (uSupportH < -0.01) {
+        seamEdge = abs(dPrimary - dTrunc);
+    } else if (uSupportH > 0.01) {
+        seamEdge = min(abs(dPrimary - dEdge), abs(dTrunc - dEdge));
+    }
+
+    outEdge = min(mirrorEdge, seamEdge);
     outFoldedP = pFolded;
     outDepth = length(p);
 

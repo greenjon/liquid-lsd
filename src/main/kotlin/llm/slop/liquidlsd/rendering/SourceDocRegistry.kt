@@ -130,7 +130,7 @@ object SourceDocRegistry {
         // Icosa-Dodeca
         "icosa_dodeca/Morph" to "Continuous 4-stage cyclic H3 Coxeter morph: 0.0–0.25 (Icosahedron → Dodecahedron), 0.25–0.50 (Dodecahedron → Great Stellated Dodecahedron), 0.50–0.75 (Great Stellated Dodecahedron → Great Icosahedron), 0.75–1.00 (Great Icosahedron → Icosahedron).",
         "icosa_dodeca/Stellation" to "Manual boost/override for CSG stellation star spike depth.",
-        "icosa_dodeca/Support H" to "Support plane distance offset along generator vector v(t).",
+        "icosa_dodeca/Support H" to "Wythoff facet cutting: negative values truncate vertices (e.g. -0.15 for Buckyball), positive values bevel/cantellate edges.",
         "icosa_dodeca/Color Method" to "Coloring algorithm: 0 = H3 Chamber & Angular Sectors, 1 = Radial Depth Gradient, 2 = Facet Normal Spectrum.",
         "icosa_dodeca/Hue Offset" to "Rotates the base hue of the color palette.",
         "icosa_dodeca/Saturation" to "Color saturation of faces and edges.",
