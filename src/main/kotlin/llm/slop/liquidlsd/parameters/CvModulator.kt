@@ -85,6 +85,17 @@ data class CvModulator(
     val generatorModDepthMax: Float = generatorModDepth,
     val randomizeGeneratorModDepth: Boolean = false,
 
+    // Audio envelope follower fields
+    val followerMode: AudioFollowerMode = AudioFollowerMode.RAW,
+    val attackMs: Float = 0.0f,
+    val decayMs: Float = 0.0f,
+    val attackMsMin: Float = attackMs,
+    val attackMsMax: Float = attackMs,
+    val decayMsMin: Float = decayMs,
+    val decayMsMax: Float = decayMs,
+    val randomizeAttackMs: Boolean = false,
+    val randomizeDecayMs: Boolean = false,
+
     val id: String = UUID.randomUUID().toString()
 ) {
     private fun isDiscreteSubdivision(): Boolean {
@@ -174,6 +185,14 @@ data class CvModulator(
             if (generatorModDepthMin == generatorModDepthMax) generatorModDepthMin else random.nextFloat() * (generatorModDepthMax - generatorModDepthMin) + generatorModDepthMin
         } else generatorModDepth
 
+        val newAttackMs = if (randomizeAttackMs) {
+            if (attackMsMin == attackMsMax) attackMsMin else random.nextFloat() * (attackMsMax - attackMsMin) + attackMsMin
+        } else attackMs
+
+        val newDecayMs = if (randomizeDecayMs) {
+            if (decayMsMin == decayMsMax) decayMsMin else random.nextFloat() * (decayMsMax - decayMsMin) + decayMsMin
+        } else decayMs
+
         return this.copy(
             depth = newDepth,
             dcOffset = newDcOffset,
@@ -187,7 +206,9 @@ data class CvModulator(
             modMorph = newModMorph,
             modHold = newModHold,
             modSubdivision = newModSubdiv,
-            generatorModDepth = newModDepth
+            generatorModDepth = newModDepth,
+            attackMs = newAttackMs,
+            decayMs = newDecayMs
         )
     }
 
@@ -296,4 +317,17 @@ data class CvModulator(
         val newDepth = if (generatorModDepthMin == generatorModDepthMax) generatorModDepthMin else random.nextFloat() * (generatorModDepthMax - generatorModDepthMin) + generatorModDepthMin
         return this.copy(generatorModDepth = newDepth)
     }
+
+    fun randomizeAttackMs(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeAttackMs) return this
+        val newAttack = if (attackMsMin == attackMsMax) attackMsMin else random.nextFloat() * (attackMsMax - attackMsMin) + attackMsMin
+        return this.copy(attackMs = newAttack)
+    }
+
+    fun randomizeDecayMs(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+        if (!randomizeDecayMs) return this
+        val newDecay = if (decayMsMin == decayMsMax) decayMsMin else random.nextFloat() * (decayMsMax - decayMsMin) + decayMsMin
+        return this.copy(decayMs = newDecay)
+    }
 }
+

@@ -179,8 +179,66 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
             }
         }
         else -> {
-            CVRegistry.get(modulator.sourceId)
+            val rawVal = CVRegistry.get(modulator.sourceId)
+            if (isAudioSource(modulator.sourceId)) {
+                if (modulator.followerMode == llm.slop.liquidlsd.parameters.AudioFollowerMode.RAW || 
+                    (modulator.attackMs <= 0f && modulator.decayMs <= 0f)) {
+                    rawVal
+                } else {
+                    AudioFollowerTracker.process(modulator.id, rawVal, modulator.attackMs, modulator.decayMs)
+                }
+            } else {
+                rawVal
+            }
         }
+    }
+}
+
+object AudioFollowerTracker {
+    private class FollowerState(
+        @Volatile var value: Float = 0f,
+        @Volatile var lastTimeNs: Long = 0L
+    )
+
+    private val states = java.util.concurrent.ConcurrentHashMap<String, FollowerState>()
+
+    fun process(id: String, input: Float, attackMs: Float, decayMs: Float): Float {
+        val now = System.nanoTime()
+        val state = states.computeIfAbsent(id) { FollowerState(value = input, lastTimeNs = now) }
+
+        val lastTime = state.lastTimeNs
+        val dtSec = if (lastTime == 0L) {
+            1.0 / CVRegistry.getTargetFps().toDouble()
+        } else {
+            ((now - lastTime) / 1_000_000_000.0).coerceIn(0.0001, 0.2)
+        }
+        state.lastTimeNs = now
+
+        val attTau = (attackMs / 1000.0).coerceAtLeast(0.001)
+        val decTau = (decayMs / 1000.0).coerceAtLeast(0.001)
+
+        val curVal = state.value
+        val nextVal = if (input > curVal) {
+            if (attackMs <= 0.5f) {
+                input
+            } else {
+                val alpha = (1.0 - kotlin.math.exp(-dtSec / attTau)).toFloat()
+                curVal + alpha * (input - curVal)
+            }
+        } else {
+            if (decayMs <= 0.5f) {
+                input
+            } else {
+                val alpha = (1.0 - kotlin.math.exp(-dtSec / decTau)).toFloat()
+                curVal + alpha * (input - curVal)
+            }
+        }
+        state.value = nextVal
+        return nextVal
+    }
+
+    fun reset() {
+        states.clear()
     }
 }
 

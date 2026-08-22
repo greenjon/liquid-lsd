@@ -21,6 +21,7 @@ private val TRIGGER_BANDS = listOf("trigger_onset", "trigger_accent")
 object CellConfigPanel {
 
     private var activeHistory: CvHistoryBuffer? = null
+    private var ghostHistory: CvHistoryBuffer? = null
     private var activeCellId: PresetCellId? = null
     private val virtualModulators = mutableListOf<CvModulator>()
     private var lastActiveIds: Set<String> = emptySet()
@@ -175,6 +176,7 @@ object CellConfigPanel {
         val currentActiveIds = activeMods.map { it.id }.toSet()
         if (activeCellId != cell || activeHistory == null || currentActiveIds != lastActiveIds) {
             activeHistory = CvHistoryBuffer(600)
+            ghostHistory = if (cvId == "audio") CvHistoryBuffer(600) else null
             activeCellId = cell
             lastActiveIds = currentActiveIds
             initializeVirtualModulators(cvId, activeMods, hasAdvanced)
@@ -192,8 +194,36 @@ object CellConfigPanel {
         val combinedVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar, includeBypassed = true)
         activeHistory?.add(combinedVal)
 
+        if (cvId == "audio") {
+            if (ghostHistory == null) ghostHistory = CvHistoryBuffer(600)
+            var rawResult = 0f
+            var first = true
+            for (mod in activeMods) {
+                val rawCv = llm.slop.liquidlsd.cv.CVRegistry.get(mod.sourceId)
+                val modAmount = rawCv * mod.depth + mod.dcOffset
+                if (first) {
+                    rawResult = when (mod.operator) {
+                        llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount
+                        llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> modAmount
+                        llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> 1.0f - mod.depth + modAmount
+                    }
+                    first = false
+                } else {
+                    rawResult = when (mod.operator) {
+                        llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> rawResult + modAmount
+                        llm.slop.liquidlsd.parameters.ModulationOperator.MUL -> rawResult * (1.0f + modAmount)
+                        llm.slop.liquidlsd.parameters.ModulationOperator.SCALE -> rawResult * (1.0f - mod.depth + modAmount)
+                    }
+                }
+            }
+            val clampedRaw = if (isBipolar) rawResult.coerceIn(-1f, 1f) else rawResult.coerceIn(0f, 1f)
+            ghostHistory?.add(clampedRaw)
+        } else {
+            ghostHistory = null
+        }
+
         // -- Unified Oscilloscope ---------------------------------
-        OscilloscopeDrawer.drawOscilloscope(session, param, themeColor, activeHistory, activeMods, scopeKey = cvId)
+        OscilloscopeDrawer.drawOscilloscope(session, param, themeColor, activeHistory, activeMods, scopeKey = cvId, ghostHistory = ghostHistory)
 
         ImGui.spacing()
         ImGui.separator()
@@ -236,29 +266,63 @@ object CellConfigPanel {
 
                 ImGui.spacing()
 
-                // Draw LFO 1 / primary timing/wave controls
-                Lfo1Section.draw(
-                    session = session,
-                    param = param,
-                    existing = existing,
-                    isBeat = isBeat,
-                    isSnh = isSnh,
-                    isGen = isGen,
-                    hasAdvanced = hasAdvanced,
-                    themeColor = currentThemeColor,
-                    onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                )
+                when {
+                    llm.slop.liquidlsd.cv.isAudioSource(existing.sourceId) -> {
+                        // Draw dedicated Audio Envelope Follower + dynamics controls
+                        AudioModulatorSection.draw(
+                            session = session,
+                            param = param,
+                            existing = existing,
+                            themeColor = currentThemeColor,
+                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                        )
+                    }
+                    llm.slop.liquidlsd.cv.isTriggerSource(existing.sourceId) -> {
+                        // Draw dedicated Trigger transient impulse controls
+                        TriggerModulatorSection.draw(
+                            session = session,
+                            param = param,
+                            existing = existing,
+                            themeColor = currentThemeColor,
+                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                        )
+                    }
+                    existing.sourceId.startsWith("midi_cc_") -> {
+                        // Draw dedicated MIDI CC controller controls
+                        MidiModulatorSection.draw(
+                            session = session,
+                            param = param,
+                            existing = existing,
+                            themeColor = currentThemeColor,
+                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                        )
+                    }
+                    else -> {
+                        // Draw LFO 1 / generator carrier timing and waveshaping controls
+                        Lfo1Section.draw(
+                            session = session,
+                            param = param,
+                            existing = existing,
+                            isBeat = isBeat,
+                            isSnh = isSnh,
+                            isGen = isGen,
+                            hasAdvanced = hasAdvanced,
+                            themeColor = currentThemeColor,
+                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                        )
 
-                // Draw LFO 2 / secondary generator modulator controls
-                if (isGen) {
-                    Lfo2Section.draw(
-                        session = session,
-                        param = param,
-                        existing = existing,
-                        idx = idx,
-                        themeColor = currentThemeColor,
-                        onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                    )
+                        // Draw LFO 2 / secondary generator modulator controls
+                        if (isGen) {
+                            Lfo2Section.draw(
+                                session = session,
+                                param = param,
+                                existing = existing,
+                                idx = idx,
+                                themeColor = currentThemeColor,
+                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                            )
+                        }
+                    }
                 }
 
                 ImGui.unindent(10f) // Unindent at the end of block

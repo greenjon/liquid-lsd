@@ -327,4 +327,70 @@ class CvModulatorTest {
         assertEquals(240f, decoded.subdivisionMax)
         assertTrue(decoded.randomizeSubdivision)
     }
+
+    @Test
+    fun testAudioFollowerModePresets() {
+        assertEquals(0f, AudioFollowerMode.RAW.defaultAttackMs)
+        assertEquals(0f, AudioFollowerMode.RAW.defaultDecayMs)
+
+        assertEquals(5f, AudioFollowerMode.PUNCHY.defaultAttackMs)
+        assertEquals(150f, AudioFollowerMode.PUNCHY.defaultDecayMs)
+
+        assertEquals(40f, AudioFollowerMode.SMOOTH.defaultAttackMs)
+        assertEquals(400f, AudioFollowerMode.SMOOTH.defaultDecayMs)
+
+        assertEquals(100f, AudioFollowerMode.SLOW.defaultAttackMs)
+        assertEquals(800f, AudioFollowerMode.SLOW.defaultDecayMs)
+
+        assertEquals(250f, AudioFollowerMode.AMBIENT.defaultAttackMs)
+        assertEquals(1500f, AudioFollowerMode.AMBIENT.defaultDecayMs)
+    }
+
+    @Test
+    fun testAudioFollowerTrackerSmoothing() {
+        val testId = "test_audio_follower_${System.nanoTime()}"
+        
+        // Instant peak rise from 0 to 1.0 with 5ms attack
+        val initial = llm.slop.liquidlsd.cv.AudioFollowerTracker.process(testId, 1.0f, 5f, 500f)
+        assertTrue(initial > 0f, "Follower should jump towards input")
+
+        // Step down to 0.0 with 500ms decay: should smoothly decay rather than drop instantly
+        val decayed1 = llm.slop.liquidlsd.cv.AudioFollowerTracker.process(testId, 0.0f, 5f, 500f)
+        assertTrue(decayed1 > 0.0f, "Value should decay smoothly, not jump to 0")
+    }
+
+    @Test
+    fun testAudioFollowerJsonSerialization() {
+        val json = Json { ignoreUnknownKeys = true }
+        val mod = CvModulator(
+            sourceId = "audio_bass",
+            followerMode = AudioFollowerMode.AMBIENT,
+            attackMs = 250f,
+            decayMs = 1500f,
+            attackMsMin = 200f,
+            attackMsMax = 300f,
+            decayMsMin = 1000f,
+            decayMsMax = 2000f,
+            randomizeAttackMs = true,
+            randomizeDecayMs = true
+        )
+        val dto = mod.toDto()
+        assertEquals("AMBIENT", dto.followerMode)
+        assertEquals(250f, dto.attackMs)
+        assertEquals(1500f, dto.decayMs)
+
+        val encoded = json.encodeToString(CvModulator.serializer(), mod)
+        val decoded = json.decodeFromString<CvModulator>(encoded)
+
+        assertEquals(AudioFollowerMode.AMBIENT, decoded.followerMode)
+        assertEquals(250f, decoded.attackMs)
+        assertEquals(1500f, decoded.decayMs)
+        assertEquals(200f, decoded.attackMsMin)
+        assertEquals(300f, decoded.attackMsMax)
+        assertEquals(1000f, decoded.decayMsMin)
+        assertEquals(2000f, decoded.decayMsMax)
+        assertTrue(decoded.randomizeAttackMs)
+        assertTrue(decoded.randomizeDecayMs)
+    }
 }
+

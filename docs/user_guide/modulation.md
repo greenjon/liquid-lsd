@@ -54,6 +54,21 @@ LFO 2 is a second internal oscillator that modulates LFO 1:
 
 ---
 
+## Audio Envelope Followers & Dynamics
+
+When configuring an **AUDIO** modulation cell (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), each frequency band has its own independent dynamics follower:
+
+- **Follower Preset Dropdown**:
+  - **`Raw (Instant Jitter)`**: Bypasses the envelope follower. Modulation tracks instantaneous block RMS directly for maximum high-frequency visual flutter.
+  - **`Punchy (Fast)`**: $5\text{ ms}$ attack, $150\text{ ms}$ decay. Captures drum transients instantly and drops cleanly between beats.
+  - **`Smooth Swell`**: $40\text{ ms}$ attack, $400\text{ ms}$ decay. Turns sharp beats into smooth, breathing pulses.
+  - **`Slow Pulse`**: $100\text{ ms}$ attack, $800\text{ ms}$ decay. Gradual swell with a lingering release tail.
+  - **`Ambient Drift`**: $250\text{ ms}$ attack, $1500\text{ ms}$ decay. Slow energy swells ideal for ambient drifting.
+  - **`Custom`**: Exposes fine-grained **Attack** ($0\text{ ms} \dots 500\text{ ms}$) and **Decay** ($10\text{ ms} \dots 3000\text{ ms}$) sliders. Selecting `Custom` automatically inherits the exact attack/decay timings from the previously active preset.
+- **Dual-Trace Oscilloscope**: The oscilloscope plots the raw audio energy in a faint ghost trace ($35\%$ opacity) beneath the solid smoothed follower curve, allowing you to visually see how the Attack catches transients and how the Decay tail descends.
+
+---
+
 ## Modulator Attributes & Operator Math
 
 Modulators dictate how CV signals modify parameter base values:

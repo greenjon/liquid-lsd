@@ -9,7 +9,13 @@
 
 ### Key Highlights
 
-#### 0. Icosa-Dodeca Visual Source — H₃ Coxeter Symmetry Folding IFS SDF
+#### 0. Per-Band Audio Envelope Followers & Dual-Trace Oscilloscope
+- **Independent Envelope Followers for All 4 Audio Bands**: Each audio modulator (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`) now has its own independent dynamics follower, allowing users to dial in sharp transient snap on one parameter and long sustained decay swells on another.
+- **Preset Dropdown Workflow**: Features pre-tuned envelope presets (`Raw (Instant Jitter)`, `Punchy (Fast)`, `Smooth Swell`, `Slow Pulse`, `Ambient Drift`, and `Custom`) with hardcoded Attack/Decay timings that hide unnecessary sliders unless `Custom` is chosen.
+- **Contextual Custom Controls**: Selecting `Custom` automatically populates the `Attack` ($0\text{ ms} \dots 500\text{ ms}$) and `Decay` ($10\text{ ms} \dots 3000\text{ ms}$) sliders with the current active preset values for seamless fine-tuning.
+- **Dual-Trace Oscilloscope Visualization**: The cell configuration oscilloscope renders the raw incoming audio band energy in a ghosted trace ($35\%$ alpha) beneath the solid smoothed follower curve, giving immediate visual feedback while respecting live vs. muted signal coloring.
+
+#### 0.1 Icosa-Dodeca Visual Source — H₃ Coxeter Symmetry Folding IFS SDF
 - **True $H_3$ Coxeter Reflection Group Substrate**: Replaced static symmetry arrays and approximate cone stellation SDFs with a mathematically pure **$H_3$ Coxeter symmetry folding (Iterated Function System)** shader engine. Reflects space iteratively across fundamental normalized mirrors ($n_0, n_1, n_2$), collapsing all 60 polyhedral faces and Wythoff constructions into a single base-plane evaluation ($p' \cdot v(t) = h$) in the fundamental chamber.
 - **Exact CSG Kepler-Poinsot Stellations**: Stellations (Great Stellated Dodecahedron & Great Icosahedron) now emerge naturally via Constructive Solid Geometry bounded by the fundamental mirror walls in folded space, eliminating smooth-minimum cone approximations and providing razor-sharp, mathematically exact star facets.
 - **Continuous 4-Phase Cyclic Morph & Slerp Generator**: The generator vector $v(t)$ slerps continuously along the spherical fundamental triangle arc ($C_3 \leftrightarrow C_5$), smoothly transitioning through Icosahedron $\to$ Icosidodecahedron $\to$ Dodecahedron $\to$ Great Stellated Dodecahedron $\to$ Great Icosahedron $\to$ Icosahedron with $C^2$ `smootherstep` boundary pacing.

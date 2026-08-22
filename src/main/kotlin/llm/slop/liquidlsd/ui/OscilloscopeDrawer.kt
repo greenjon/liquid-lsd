@@ -163,7 +163,8 @@ object OscilloscopeDrawer {
         themeColor: Int,
         activeHistory: CvHistoryBuffer?,
         activeMods: List<CvModulator> = param.modulators,
-        scopeKey: String = "default"
+        scopeKey: String = "default",
+        ghostHistory: CvHistoryBuffer? = null
     ) {
         val history = activeHistory ?: return
         val minVal = param.minClamp
@@ -267,6 +268,32 @@ object OscilloscopeDrawer {
                 val pixelsPerSample = (pastW / pastSec) / fps
                 val startSampleIdx = history.size - visibleSamples
 
+                // Draw Ghost Trace (e.g. Raw Audio Input) if provided
+                if (ghostHistory != null && ghostHistory.size > 1) {
+                    val r = (strokeColor and 0xFF) / 255f
+                    val g = (strokeColor ushr 8 and 0xFF) / 255f
+                    val b = (strokeColor ushr 16 and 0xFF) / 255f
+                    val ghostColor = ImGui.colorConvertFloat4ToU32(r, g, b, 0.35f)
+
+                    val visibleGhostSamples = minOf(samplesInSpan, ghostHistory.size)
+                    val startGhostIdx = ghostHistory.size - visibleGhostSamples
+                    var prevGhostRaw = ghostHistory.getAt(startGhostIdx)
+                    var prevGhostNorm = if (isBipolar) (prevGhostRaw + 1f) / 2f else prevGhostRaw.coerceIn(0f, 1f)
+                    var prevGhostX = nowX - (ghostHistory.size - 1 - startGhostIdx) * pixelsPerSample
+                    var prevGhostY = (startY + h - 6f) - prevGhostNorm * usableHeight
+
+                    for (idx in (startGhostIdx + 1) until ghostHistory.size) {
+                        val nextGhostRaw = ghostHistory.getAt(idx)
+                        val nextGhostNorm = if (isBipolar) (nextGhostRaw + 1f) / 2f else nextGhostRaw.coerceIn(0f, 1f)
+                        val nextGhostX = nowX - (ghostHistory.size - 1 - idx) * pixelsPerSample
+                        val nextGhostY = (startY + h - 6f) - nextGhostNorm * usableHeight
+
+                        dl.addLine(prevGhostX, prevGhostY, nextGhostX, nextGhostY, ghostColor, 1.5f)
+                        prevGhostX = nextGhostX
+                        prevGhostY = nextGhostY
+                    }
+                }
+
                 var prevRaw = history.getAt(startSampleIdx)
                 var prevNorm = if (isBipolar) (prevRaw + 1f) / 2f else prevRaw.coerceIn(0f, 1f)
                 var prevX = nowX - (history.size - 1 - startSampleIdx) * pixelsPerSample
@@ -287,7 +314,7 @@ object OscilloscopeDrawer {
                     val nextX = nowX - (history.size - 1 - idx) * pixelsPerSample
                     val nextY = (startY + h - 6f) - nextNorm * usableHeight
 
-                    dl.addLine(prevX, prevY, nextX, nextY, strokeColor, 2.0f)
+                    dl.addLine(prevX, prevY, nextX, nextY, strokeColor, 2.25f)
                     prevX = nextX
                     prevY = nextY
                 }

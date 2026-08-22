@@ -29,6 +29,12 @@ graph TD
     UIManager --> CellConfigPanel[CellConfigPanel.kt]
     UIManager --> MixerMonitorPanel[MixerMonitorPanel.kt]
     UIManager --> LibraryPanel[LibraryPanel.kt & PlaylistEditorPanel.kt]
+
+    CellConfigPanel --> AudioModulatorSection[AudioModulatorSection.kt - Audio Followers & Controls]
+    CellConfigPanel --> TriggerModulatorSection[TriggerModulatorSection.kt - Trigger Impulse Controls]
+    CellConfigPanel --> MidiModulatorSection[MidiModulatorSection.kt - MIDI CC Modulator Controls]
+    CellConfigPanel --> Lfo1Section[Lfo1Section.kt - LFO 1 / Generator Shaping]
+    CellConfigPanel --> Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
     
     MixerMonitorPanel --> DeckControlPanel[DeckControlPanel.kt]
     DeckControlPanel --> drawDeckMonitorToolbar[drawDeckMonitorToolbar Helper]

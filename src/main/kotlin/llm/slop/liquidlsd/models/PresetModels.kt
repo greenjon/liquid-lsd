@@ -47,6 +47,18 @@ data class ModulatorDto(
     val dcOffsetMin: Float = 0.0f,
     val dcOffsetMax: Float = 0.0f,
     val randomizeDcOffset: Boolean = false,
+
+    // Audio envelope follower fields
+    val followerMode: String = "RAW",
+    val attackMs: Float = 0.0f,
+    val decayMs: Float = 0.0f,
+    val attackMsMin: Float = 0.0f,
+    val attackMsMax: Float = 0.0f,
+    val decayMsMin: Float = 0.0f,
+    val decayMsMax: Float = 0.0f,
+    val randomizeAttackMs: Boolean = false,
+    val randomizeDecayMs: Boolean = false,
+
     val id: String? = null
 ) {
     override fun equals(other: Any?): Boolean {
@@ -272,6 +284,15 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     dcOffsetMin = dcOffsetMin,
     dcOffsetMax = dcOffsetMax,
     randomizeDcOffset = randomizeDcOffset,
+    followerMode = followerMode.name,
+    attackMs = attackMs,
+    decayMs = decayMs,
+    attackMsMin = attackMsMin,
+    attackMsMax = attackMsMax,
+    decayMsMin = decayMsMin,
+    decayMsMax = decayMsMax,
+    randomizeAttackMs = randomizeAttackMs,
+    randomizeDecayMs = randomizeDecayMs,
     id = id
 )
 
@@ -311,6 +332,15 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     dcOffsetMin = dcOffsetMin,
     dcOffsetMax = dcOffsetMax,
     randomizeDcOffset = randomizeDcOffset,
+    followerMode = try { AudioFollowerMode.valueOf(followerMode) } catch (_: Exception) { AudioFollowerMode.RAW },
+    attackMs = attackMs,
+    decayMs = decayMs,
+    attackMsMin = attackMsMin,
+    attackMsMax = attackMsMax,
+    decayMsMin = decayMsMin,
+    decayMsMax = decayMsMax,
+    randomizeAttackMs = randomizeAttackMs,
+    randomizeDecayMs = randomizeDecayMs,
     id = id ?: java.util.UUID.randomUUID().toString()
 )
 

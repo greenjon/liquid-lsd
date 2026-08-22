@@ -66,3 +66,18 @@ enum class ScopeTimebase(
         }
     }
 }
+
+@Serializable
+enum class AudioFollowerMode(
+    val label: String,
+    val defaultAttackMs: Float,
+    val defaultDecayMs: Float
+) {
+    RAW("Raw (Instant Jitter)", 0f, 0f),
+    PUNCHY("Punchy (Fast)", 5f, 150f),
+    SMOOTH("Smooth Swell", 40f, 400f),
+    SLOW("Slow Pulse", 100f, 800f),
+    AMBIENT("Ambient Drift", 250f, 1500f),
+    CUSTOM("Custom", 0f, 100f);
+}
+

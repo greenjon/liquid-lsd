@@ -120,6 +120,25 @@ When the preset randomize action fires, `randomizeActiveValues()` samples unifor
 `[min, max]` range. For beat-based subdivision the sample is drawn from a discrete set of musical
 values `{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}`. For frame-based subdivision, it samples discrete integers in `[min, max]`.
 
+### Audio Envelope Followers — applies when `isAudioSource(sourceId)`
+
+When a modulator uses an audio band source (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), it can apply an independent asymmetric one-pole IIR envelope follower:
+
+| Field | Type | Range | Purpose |
+|-------|------|-------|---------|
+| `followerMode` | `AudioFollowerMode` | `RAW`, `PUNCHY`, `SMOOTH`, `SLOW`, `AMBIENT`, `CUSTOM` | Envelope dynamics preset mode |
+| `attackMs` | `Float` | `[0, 500]` ms | Rise time constant ($\tau_{\text{att}}$) |
+| `decayMs` | `Float` | `[10, 3000]` ms | Fall time constant ($\tau_{\text{dec}}$) |
+| `attackMsMin / attackMsMax` | `Float` | `[0, 500]` ms | Randomization bounds for attack time |
+| `decayMsMin / decayMsMax` | `Float` | `[10, 3000]` ms | Randomization bounds for decay time |
+| `randomizeAttackMs / randomizeDecayMs` | `Boolean` | `true/false` | Enables randomization for attack/decay |
+
+- **Evaluation Pipeline**: Implemented in `AudioFollowerTracker` inside `Evaluators.kt`. Uses framerate-independent exponential one-pole smoothing:
+  $$\alpha = 1 - e^{-\Delta t / \tau}$$
+  $$\text{If } x > y_{\text{prev}}: \quad y = y_{\text{prev}} + \alpha_{\text{att}} \cdot (x - y_{\text{prev}})$$
+  $$\text{If } x \le y_{\text{prev}}: \quad y = y_{\text{prev}} + \alpha_{\text{dec}} \cdot (x - y_{\text{prev}})$$
+- **Dual-Trace Scope**: In `OscilloscopeDrawer.drawOscilloscope`, `ghostHistory` receives the un-followed raw band energy ($35\%$ alpha) while the main line plots the filtered follower output.
+
 ### LFO 2 (Modulator) — only evaluated when `sourceId == "lfo"`
 
 LFO 2 is a second oscillator that modulates properties of LFO 1. It has its own waveform,
