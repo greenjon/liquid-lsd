@@ -9,11 +9,13 @@
 
 ### Key Highlights
 
-#### 0. Icosa-Dodeca Visual Source — Morph Smoothness & Color Improvements
-- **C² Morph Transitions (`smootherstep`)**: Replaced the four piecewise-linear ramps in `getMorphState` with Ken Perlin's quintic `smootherstep` (`6t⁵ - 15t⁴ + 10t³`), providing zero first *and* second derivative at every phase boundary (0, 0.25, 0.5, 0.75). Eliminates the visible velocity snap/pop when driving `uMorph` with an LFO.
-- **Cross-Faded Symmetry Sectors**: The "Sectors" color method now smoothly cross-fades between 3-fold (icosahedral) and 5-fold (dodecahedral) sector coloring, driven by the morph parameter `m`. Both sector palette values are computed independently and blended via `mix(col3, col5, mState)`, eliminating the previous hard visual flip at `m = 0.5`.
-- **Sharper Spike Normals**: Reduced the central-difference normal epsilon from `0.002` to `0.001`, improving normal accuracy at narrow stellated spike tips.
-- **Ray-Marcher Efficiency**: Advanced ray start from `t = 0.5` to `t = 1.8` (shape begins at ~`t = 2.0` from camera) and tightened the post-hit overstep from `+0.04` to `+0.02` to avoid skipping past thin spike features while reclaiming those early wasted steps.
+#### 0. Icosa-Dodeca Visual Source — H₃ Coxeter Symmetry Folding IFS SDF
+- **True $H_3$ Coxeter Reflection Group Substrate**: Replaced static symmetry arrays and approximate cone stellation SDFs with a mathematically pure **$H_3$ Coxeter symmetry folding (Iterated Function System)** shader engine. Reflects space iteratively across fundamental normalized mirrors ($n_0, n_1, n_2$), collapsing all 60 polyhedral faces and Wythoff constructions into a single base-plane evaluation ($p' \cdot v(t) = h$) in the fundamental chamber.
+- **Exact CSG Kepler-Poinsot Stellations**: Stellations (Great Stellated Dodecahedron & Great Icosahedron) now emerge naturally via Constructive Solid Geometry bounded by the fundamental mirror walls in folded space, eliminating smooth-minimum cone approximations and providing razor-sharp, mathematically exact star facets.
+- **Continuous 4-Phase Cyclic Morph & Slerp Generator**: The generator vector $v(t)$ slerps continuously along the spherical fundamental triangle arc ($C_3 \leftrightarrow C_5$), smoothly transitioning through Icosahedron $\to$ Icosidodecahedron $\to$ Dodecahedron $\to$ Great Stellated Dodecahedron $\to$ Great Icosahedron $\to$ Icosahedron with $C^2$ `smootherstep` boundary pacing.
+- **Expanded $H_3$ VJ Controls**: Added direct modulation parameters for `Stellation` (manual CSG star spike depth boost/override) and `Support H` (support plane offset along generator vector $v(t)$).
+- **Kaleidoscopic Chamber & Normal Coloring**: Upgraded `Color Method` to support (0) $H_3$ Fundamental Chamber & Angular Sectors, (1) Radial Depth Gradient, and (2) Facet Normal Spectrum.
+- **Optimized Crystal Reveal & Proximity Glow**: Front-to-back translucent raymarching (80 steps with $0.65\times$ under-relaxation) smoothly illuminates inner polyhedral facets, complemented by atmospheric proximity ambient glow.
 
 #### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
 - **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.
@@ -63,6 +65,7 @@
 
 #### 6. Visual Source Library Streamlining & Icosa-Dodeca Generator
 - **Added Icosa-Dodeca Morph & Stellation Source (`icosa_dodeca`)**: Added a closed-form geometric generator providing a unified 4-phase continuous cyclic morph across canonical polyhedra: `0.0–0.25` (Icosahedron → Dodecahedron), `0.25–0.50` (Dodecahedron → Great Stellated Dodecahedron), `0.50–0.75` (Great Stellated Dodecahedron → Great Icosahedron), and `0.75–1.00` (Great Icosahedron → Icosahedron), with mathematical depth/symmetry coloring and semi-transparent crystal reveal face rendering.
+- **Icosa-Dodeca Shader Performance & Stability**: Fixed front-to-back alpha compositing weighting, eliminated dynamic inner loops in `mapSDF` via $O(1)$ static symmetry basis lookups, implemented dynamic slope scaling for flat-to-pyramid stellation emergence without fixed-slope needle artifacts, guaranteed $C^0$/$C^1$ continuity at emergence thresholds with vanishing blend radius, added zoom-scaled marching steps with $0.65\times$ under-relaxation for `smin` transitions, resolved angular sector discontinuities, and streamlined parameters by removing redundant depth frame toggles.
 - **Removed GPU-Heavy Raymarchers**: Removed heavy distance-field fractal and 4D raymarchers (`clifford_torus`, `kifs`, `mandelbox`, `pseudo_kleinian`, `mandelbulb`) that caused high ALU load and frame drops on integrated GPUs (Intel Iris Xe / AMD APUs).
 - **Refocused Core Visual Engine**: Refocused the built-in generator collection on high-performance, lightweight sources:
   - `icosa_dodeca`: Icosahedron-Dodecahedron duality morph and Kepler-Poinsot stellations.
@@ -78,6 +81,7 @@
 - **Updated Hotkeys**: `Ctrl+-` / `Ctrl+=` adjust GUI scale by ±5% per press within 75%–200% bounds.
 - **HiDPI / 4K Auto-Detection**: Auto-detects OS content-scale factor via `glfwGetWindowContentScale` on first launch and snaps to the nearest 5% scale step.
 - **Background Video Keybinding (`B`)**: Global hotkey `B` instantly toggles master video background rendering behind semi-transparent UI.
+- **Preview Screen Black Backgrounds**: Enforced solid opaque black backgrounds behind all 4 preview monitors (Deck A, Deck B, Deck C, and Master Output) across all themes, and removed colored child background tinting from Deck A and Deck B panels.
 - **Production Logging**: Set default log level to `WARN` to eliminate console I/O overhead.
 
 ---

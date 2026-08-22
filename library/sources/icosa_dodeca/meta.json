@@ -1,7 +1,7 @@
 {
   "id": "icosa_dodeca",
   "name": "Icosa-Dodeca",
-  "description": "Continuous duality morph between Icosahedron and Dodecahedron, with Great Kepler-Poinsot Stellations, mathematical depth/symmetry coloring, and inner-face crystal reveal.",
+  "description": "Continuous H3 Coxeter symmetry morph between Icosahedron and Dodecahedron, with Great Kepler-Poinsot Stellations, kaleidoscopic chamber coloring, and crystal reveal.",
   "parameters": [
     {
       "name": "Morph",
@@ -13,7 +13,7 @@
       "defaultMax": 1.0
     },
     {
-      "name": "Color Method",
+      "name": "Stellation",
       "default": 0.0,
       "min": 0.0,
       "max": 1.0,
@@ -22,13 +22,22 @@
       "defaultMax": 1.0
     },
     {
-      "name": "Depth Frame",
+      "name": "Support H",
+      "default": 0.0,
+      "min": -1.0,
+      "max": 1.0,
+      "type": "BIPOLAR",
+      "defaultMin": -0.5,
+      "defaultMax": 0.5
+    },
+    {
+      "name": "Color Method",
       "default": 0.0,
       "min": 0.0,
-      "max": 1.0,
+      "max": 2.0,
       "type": "MONOPOLAR",
       "defaultMin": 0.0,
-      "defaultMax": 1.0
+      "defaultMax": 2.0
     },
     {
       "name": "Hue Offset",

@@ -38,6 +38,9 @@ class MixerMonitorPanel(
         val imgScreenX = baseScreenX + offsetX
         val imgScreenY = ImGui.getCursorScreenPosY()
 
+        val dlMaster = ImGui.getWindowDrawList()
+        dlMaster.addRectFilled(imgScreenX, imgScreenY, imgScreenX + availW, imgScreenY + masterH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
+
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.image(mixer.masterFBO.texture, availW, masterH, 0f, 1f, 1f, 0f)
 
@@ -207,6 +210,9 @@ class MixerMonitorPanel(
         val imgX = startX
         val imgY = ImGui.getCursorScreenPosY()
         
+        val dlPreview = ImGui.getWindowDrawList()
+        dlPreview.addRectFilled(imgX, imgY, imgX + availW, imgY + deckCH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
+
         ImGui.image(mixer.deckC.getOutputTexture(), availW, deckCH, 0f, 1f, 1f, 0f)
 
         ImGui.setCursorScreenPos(imgX, imgY)
@@ -278,7 +284,6 @@ class MixerMonitorPanel(
         }
 
         val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
-        val dlPreview = ImGui.getWindowDrawList()
         dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + availW + 1f, imgY + layout.deckCHeight + 1f, deckCColor, 0f, 0, 2f)
 
         // Draw lower-left letter badge overlay ("C") on Deck C monitor

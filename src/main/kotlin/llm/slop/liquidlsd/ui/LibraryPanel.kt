@@ -18,7 +18,6 @@ object LibraryPanel {
     var selectedPlaylistFile: File? = null
     internal var activePlaylistData: PlaylistManager.Playlist? = null
 
-    private var showSidebar = true
     private var lastKnownSignature: String = ""
     private var lastAutoRefreshTimeMs: Long = 0L
 
@@ -56,28 +55,13 @@ object LibraryPanel {
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
         checkAutoRefresh()
         val safeW = width.coerceAtLeast(60f)
-        val sidebarWidth = if (showSidebar) (safeW * 0.33f).coerceAtLeast(20f) else 0f
-        val centerWidth = (if (showSidebar) safeW * 0.33f else safeW * 0.5f).coerceAtLeast(20f)
+        val sidebarWidth = (safeW * 0.33f).coerceAtLeast(20f)
+        val centerWidth = (safeW * 0.33f).coerceAtLeast(20f)
         val queueWidth = (safeW - sidebarWidth - centerWidth).coerceAtLeast(20f)
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6f)
         if (ImGui.beginMenuBar()) {
-            val toggleIcon = if (showSidebar) Icons.MINUS else Icons.PANEL_LEFT_OPEN
-
-            ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
-
-            if (ImGui.button("$toggleIcon##toggle_sidebar")) {
-                showSidebar = !showSidebar
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Show/hide the Presets library column.")
-            }
-            ImGui.popStyleColor(4)
-
-            UITheme.LibraryMode.entries.forEach { mode ->
+            UITheme.LibraryMode.entries.forEachIndexed { index, mode ->
                 val active = session.uiTheme.libraryMode == mode
                 val icon = when (mode) {
                     UITheme.LibraryMode.FULL -> Icons.LAYOUT_FULL
@@ -85,7 +69,9 @@ object LibraryPanel {
                     UITheme.LibraryMode.HIDE -> Icons.LAYOUT_HIDE
                 }
 
-                ImGui.sameLine(0f, 6f)
+                if (index > 0) {
+                    ImGui.sameLine(0f, 6f)
+                }
 
                 // Transparent button background style
                 ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
@@ -123,13 +109,11 @@ object LibraryPanel {
         val contentH = (ImGui.getContentRegionAvailY() - 5f).coerceAtLeast(1f)
 
         // Column 1 (Left): Presets Library
-        if (showSidebar) {
-            val sw = (sidebarWidth - 6f).coerceAtLeast(1f)
-            ImGui.beginChild("LibraryPresetsList", sw, contentH, true)
-            PresetListPanel.draw(session, mixer, presetState)
-            ImGui.endChild()
-            ImGui.sameLine()
-        }
+        val sw = (sidebarWidth - 6f).coerceAtLeast(1f)
+        ImGui.beginChild("LibraryPresetsList", sw, contentH, true)
+        PresetListPanel.draw(session, mixer, presetState)
+        ImGui.endChild()
+        ImGui.sameLine()
 
         // Column 2 (Middle): Playlist Editor
         val cw = (centerWidth - 6f).coerceAtLeast(1f)

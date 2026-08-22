@@ -25,9 +25,9 @@ object VisualSourceRegistry {
     private val errorFragmentShaderSource = """
         #version 330 core
         out vec4 FragColor;
-        in vec2 uv;
+        in vec2 vTexCoord;
         void main() {
-            vec2 p = mod(uv * 10.0, 1.0);
+            vec2 p = mod(vTexCoord * 10.0, 1.0);
             // ^^ (logical XOR) is GLSL 4.0+ only; use step+inequality for 3.30 compatibility.
             float c = (step(0.5, p.x) != step(0.5, p.y)) ? 1.0 : 0.0;
             FragColor = vec4(c, 0.0, 0.0, 1.0);

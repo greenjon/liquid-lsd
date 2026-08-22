@@ -41,14 +41,7 @@ class DeckControlPanel(
         } else {
             ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, 1f) // Deck B Orange
         }
-        
-        val bgCol = if (isDeckA) {
-            ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.8f, 0.15f)
-        } else {
-            ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, 0.15f)
-        }
 
-        ImGui.pushStyleColor(ImGuiCol.ChildBg, bgCol)
         // Ensure no internal padding interferes with drawing
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, 0f)
         
@@ -74,6 +67,9 @@ class DeckControlPanel(
         val imgX = ImGui.getCursorScreenPosX()
         val imgY = ImGui.getCursorScreenPosY()
         
+        val dl = ImGui.getWindowDrawList()
+        dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
+
         ImGui.image(deck.getOutputTexture(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
         
         ImGui.setCursorScreenPos(imgX, imgY)
@@ -152,7 +148,6 @@ class DeckControlPanel(
             ImGui.endPopup()
         }
         
-        val dl = ImGui.getWindowDrawList()
         // Draw border perfectly wrapped around the image
         dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
 
@@ -187,7 +182,6 @@ class DeckControlPanel(
 
         ImGui.endChild()
         ImGui.popStyleVar()
-        ImGui.popStyleColor()
         ImGui.popID()
     }
 }
