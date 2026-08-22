@@ -131,7 +131,7 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outFoldedP, out float outDepth)
     getMorphState(uMorph, tGen, sHeight);
 
     // Apply manual stellation boost and support H offset
-    float totalStell = clamp(sHeight + uStellation, 0.0, 1.5);
+    float totalStell = clamp(sHeight + uStellation, 0.0, 1.0);
     float baseH = 0.82 + uSupportH * 0.35;
 
     // Fold point into fundamental H3 chamber
@@ -140,30 +140,28 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outFoldedP, out float outDepth)
     // Active generator vector on the 3-fold <-> 5-fold arc
     vec3 v = getGenerator(tGen);
 
-    // Distance to base polyhedron face plane in folded space
-    float dBase = dot(pFolded, v) - baseH;
+    // Adjacent reflection vector for stellation facet plane
+    // C3 reflects across n0: (-C3.x, 0, C3.z)
+    // C5 reflects across n2: (0, -C5.y, C5.z)
+    vec3 c3Adj = vec3(-C3.x, 0.0, C3.z);
+    vec3 c5Adj = vec3(0.0, -C5.y, C5.z);
+    const float omega = 0.65235814;
+    const float sinOmega = 0.60706200;
+    float s0 = sin((1.0 - tGen) * omega) / sinOmega;
+    float s1 = sin(tGen * omega) / sinOmega;
+    vec3 vAdj = normalize(s0 * c3Adj + s1 * c5Adj);
+
+    // Continuous stellation plane: tilts from flat face v(t) at s=0 into star facets vAdj(t) at s=1
+    vec3 vMorph = normalize(mix(v, vAdj, totalStell));
+
+    // Distance to active polyhedral surface in folded space
+    float totalSdf = dot(pFolded, vMorph) - baseH;
 
     // Edge proximity: distance to fundamental mirror walls
     float dM0 = dot(pFolded, n0);
     float dM1 = dot(pFolded, n1);
     float dM2 = dot(pFolded, n2);
     float edgeDist = min(dM0, min(dM1, dM2));
-
-    float totalSdf = dBase;
-
-    // Constructive Solid Geometry (CSG) Stellations in folded chamber:
-    // A stellation spike extends outside the base plane into the pyramid bounded by mirror walls.
-    if (totalStell > 0.001) {
-        float spikeMaxH = totalStell * 0.75;
-        float dCap = dot(pFolded, v) - (baseH + spikeMaxH);
-        
-        // Mirror boundaries defining the pyramidal star volume
-        float dMirrors = max(-dM0, max(-dM1, -dM2));
-        float spikeSdf = max(dMirrors, dCap);
-
-        // Density 2 union: inside the core OR inside the pyramidal spike bounded by mirrors
-        totalSdf = min(dBase, spikeSdf);
-    }
 
     outEdge = edgeDist;
     outFoldedP = pFolded;

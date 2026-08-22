@@ -102,13 +102,19 @@ vec3 foldH3(vec3 p) {
 }
 ```
 
-### 4. Signed Distance Field & CSG Stellations
-In folded chamber space ($p' = \text{foldH3}(p)$), the base face plane equation is $d_{\text{base}} = p' \cdot v(t) - h$.
-- **Density 1 (Convex Core)**: $SDF_1(p) = d_{\text{base}}$.
-- **Density 2 (Kepler-Poinsot Stellations)**: Star spikes are bounded by mirror walls ($d_{m0} = p' \cdot n_0$, $d_{m1} = p' \cdot n_1$, $d_{m2} = p' \cdot n_2$) and the spike cap plane:
-  $$d_{\text{mirrors}} = \max(-d_{m0}, \max(-d_{m1}, -d_{m2}))$$
-  $$d_{\text{spike}} = \max(d_{\text{mirrors}}, p' \cdot v(t) - (h + H_{\text{spike}}))$$
-  $$SDF_2(p) = \min(d_{\text{base}}, d_{\text{spike}})$$
+### 4. Signed Distance Field & Continuous Stellation Plane Tilting
+In folded chamber space ($p' = \text{foldH3}(p)$), the generator vector $v(t)$ defines the face normal.
+Its adjacent reflection normal vector $v_{\text{adj}}(t)$ (derived from $C_3$ reflected across $n_0$ and $C_5$ reflected across $n_2$) defines the sloping stellation facet:
+$$C_3^{\text{adj}} = (-C_3.x, 0, C_3.z),\quad C_5^{\text{adj}} = (0, -C_5.y, C_5.z)$$
+$$v_{\text{adj}}(t) = \text{slerp}(C_3^{\text{adj}}, C_5^{\text{adj}}, t)$$
+
+The continuous stellation plane vector $v_{\text{morph}}$ tilts continuously between the flat face $v(t)$ at $s=0$ and the Kepler-Poinsot star facets $v_{\text{adj}}(t)$ at $s=1$:
+$$v_{\text{morph}} = \text{normalize}(\text{mix}(v(t), v_{\text{adj}}(t), s))$$
+$$SDF(p) = p' \cdot v_{\text{morph}} - h$$
+
+- **Convex Core ($s=0$)**: Evaluates flat Platonic/Archimedean faces.
+- **Kepler-Poinsot Stellations ($s=1$)**: Tilts face planes into intersecting star pyramids with exact sharp apexes at $r = h / (v \cdot v_{\text{adj}})$.
+- **Smooth Emergence ($0 < s < 1$)**: Spikes grow out of the face centers with continuous facet tilting.
 
 ### 5. Multi-Layer Crystal Raymarching
 - **Under-Relaxation**: Ray steps use a $0.65\times$ scaling factor (`t += dist * 0.65`) for numerical stability across sharp mirror boundaries.
