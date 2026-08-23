@@ -24,6 +24,8 @@ object SourceDocRegistry {
                 " Jacobian and variance coefficients. High Persistence burns in trails.",
         "icosa_dodeca" to "Continuous H3 Coxeter symmetry morph between Icosahedron and Dodecahedron, with" +
                 " Great Kepler-Poinsot Stellations, kaleidoscopic chamber coloring, and crystal reveal.",
+        "icosahedron" to "Continuous 2D Du Val manifold covering all 32 achiral stellations of the icosahedron," +
+                " driven by real-time H3 normal vector generation and 60-element icosahedral orbit evaluation.",
     )
 
     /**
@@ -142,6 +144,21 @@ object SourceDocRegistry {
         "icosa_dodeca/Rotate X" to "Pitch rotation angle around the X axis.",
         "icosa_dodeca/Rotate Y" to "Yaw rotation angle around the Y axis.",
         "icosa_dodeca/Rotate Z" to "Roll rotation angle around the Z axis.",
+
+        // Icosahedron (32-Stellation Du Val Manifold)
+        "icosahedron/Control X" to "Continuous density layer selector (X axis): sweeps through the 32 achiral stellations along the Du Val poset branch.",
+        "icosahedron/Control Y" to "Interpolation factor (Y axis) between 3-fold face pole and 5-fold face pole for real-time H3 normal generator vector.",
+        "icosahedron/Color Method" to "Coloring algorithm: 0 = Chamber Sectors, 1 = Depth Gradient, 2 = Normal Spectrum.",
+        "icosahedron/Hue Offset" to "Rotates the base hue of the color palette.",
+        "icosahedron/Saturation" to "Color saturation of faces and edges.",
+        "icosahedron/Brightness" to "Overall luminance multiplier for surface coloring.",
+        "icosahedron/Opacity" to "Face opacity for semi-transparent multi-layer crystal raymarching.",
+        "icosahedron/Edge Thickness" to "Line thickness of wireframe edges.",
+        "icosahedron/Edge Brightness" to "Brightness and contrast of the wireframe edges.",
+        "icosahedron/Zoom" to "Camera zoom distance.",
+        "icosahedron/Rotate X" to "Pitch rotation angle around the X axis.",
+        "icosahedron/Rotate Y" to "Yaw rotation angle around the Y axis.",
+        "icosahedron/Rotate Z" to "Roll rotation angle around the Z axis.",
 
         // Feedback chain (shared across all decks)
         "feedback/fbDecay" to "How much of the previous frame persists each step. 0 = no trail; 1 = infinite persistence.",

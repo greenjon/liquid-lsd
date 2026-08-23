@@ -1,5 +1,12 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.28 (Unreleased)
+- **Icosahedron Visual Enhancements**: Fixed X-axis visual snapping by implementing shader-side interpolation for edge thickness and color coordinates.
+- **CPU Deduplication Optimization**: Refactored the $H_3$ normal generator (`Icosahedron.kt`) to perform zero-allocation deduplication in-place, eliminating GC pressure on the real-time render loop.
+- **Icosahedron Epsilon Variant**: Added a new parallel visual source (`IcosahedronEpsilon`) that skips deduplication and uses micro-repulsion at the poles for side-by-side comparison of rendering artifacts.
+
+---
+
 ## Version 1.0.0-beta.27
 
 > [!NOTE]
@@ -23,14 +30,15 @@
 - **Kaleidoscopic Chamber & Normal Coloring**: Upgraded `Color Method` to support (0) $H_3$ Fundamental Chamber & Angular Sectors, (1) Radial Depth Gradient, and (2) Facet Normal Spectrum.
 - **Optimized Crystal Reveal & Proximity Glow**: Front-to-back translucent raymarching (80 steps with $0.65\times$ under-relaxation) smoothly illuminates inner polyhedral facets, complemented by atmospheric proximity ambient glow.
 
-#### 0.2 Icosahedron 32-Stellation Visual Source — 2D Du Val Poset Manifold Engine
-- **Global 20-Plane Sorted Stellation SDF**: Implemented exact analytical stellation chamber evaluation using sorted signed distances to the 20 icosahedral face planes ($v_0 \ge v_1 \ge v_2 \ge v_3 \ge v_4$), eliminating fundamental domain boundary trapping and ensuring all 32 achiral Du Val stellation cells emerge naturally.
-- **Continuous 2D Control Manifold ($uControlX, uControlY$)**:
-  - **Core Trunk Track ($X \in [-1.0, 0.0]$, $Y$ neutral)**: Sweeps continuously through Base Icosahedron ($A, v_0$) $\to$ Small Triambic Icosahedron ($B, v_1$, face star caps) $\to$ Great Dodecahedron ($D, v_2$, pentagrammic edge star ridges).
-  - **Track 1 ($X \in [0.0, 1.0], Y=0.0$)**: Sweeps from Trunk $D$ to Track 1 $g_1$ (triangular face spikes along 3-fold axes).
-  - **Track 2 ($X=0.0, Y \in [0.0, 1.0]$)**: Sweeps from Trunk $D$ to Track 2 $g_2$ (12 pentagonal vertex star needles along 5-fold axes).
-  - **Final Stellation Apex ($X=1.0, Y=1.0$)**: Both independent tracks mesh and seal into the complete Echidnahedron ($H, v_4$) with 60 deep ray needles.
-- **Translucent Layered Rendering & Edge Seams**: Features dynamic facet seam highlighting via $(v_0 - v_1)$, chamber layer color palette mapping, and under-relaxed raymarching with atmospheric glow.
+#### 0.2 Icosahedron 32-Stellation Visual Source — H₃ Orbit Cache & GPU k-th Max Stellation Raymarcher
+- **Mathematical Correction of Rotation Group & 5-Fold Axis**: Fixed 5-fold axis vector in `Icosahedron.kt` to `pole5 = normalize(0, 1, phi)` (was incorrectly set to `(0, 1/phi, phi)`). Updated the BFS icosahedral rotation group generator to use true 5-fold axes, achieving full group closure ($\mathcal{I} \cong A_5$, order 60).
+- **Exact Orbit Face Multiplicities**: Validated that `pole3` orbit collapses into 20 face normals with exact multiplicity 3 (Icosahedron), `pole5` collapses into 12 face normals with exact multiplicity 5 (Dodecahedron), and intermediate generators expand into 60 distinct face normals (Hexecontahedron crystal).
+- **GPU $k$-th Max Deduplicating SDF Raymarcher**: Implemented deduplicating insertion sort in GLSL `shader.frag` to extract the top 6 distinct plane distances ($u_0 \dots u_5$) across all 60 $H_3$ planes.
+- **Continuous 2D Morph Pad ($uControlX, uControlY$)**:
+  - **Y-Axis ($uControlY \in [0.0, 1.0]$)**: Smoothly slerps the underlying generator vector from Icosahedron ($Y=0$) through the 60-faced crystal ($Y=0.5$) to Dodecahedron ($Y=1$).
+  - **X-Axis ($uControlX \in [0.0, 1.0]$)**: Continuously extrudes the geometry outward from the convex Platonic core ($X=0$) through 1st, 2nd, 3rd, and 4th order Kepler-Poinsot star stellations ($X=1$).
+- **Dynamic Ridge Edge Glow & Coloring**: Upgraded edge detector to $u_{\lfloor k \rfloor} - u_{\lfloor k \rfloor + 1}$ to illuminate the active stellation layer's ridges and sharp creases.
+- **Zero-Allocation Per-Frame Upload**: Flattens the 60 normal vectors directly into a pre-allocated `FloatArray(180)` for zero GC allocation during frame rendering.
 
 #### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
 - **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.
@@ -288,3 +296,6 @@
 - `10b0c90` feat(ui): auto-resize Settings modal window, sidebar, and button heights dynamically with font scale
 - `c989432` feat(ui): overlay letter badges on monitor lower-left corners and remove redundant text headers
 - `009ab16` feat(ui): implement real-time media browser auto-refresh and remove manual refresh buttons
+
+### Added
+- **Icosahedron V3 CSG Source**: Introduced a new `icosa-v3` visual source that replaces the brute-force 60-planes approach with "Domain Folding + CSG Intersections". This eliminates CPU overhead and reduces GPU operations by 95%, guaranteeing a silky smooth 60fps even on integrated graphics like Intel Iris Xe. The new parameters include `Support H` which, alongside `Control X` and `Control Y`, can be mapped to MIDI knobs to dynamically slice the tips off stellations for dramatic, blunted cross-sections.

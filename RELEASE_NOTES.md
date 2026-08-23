@@ -1,5 +1,12 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.28 (Unreleased)
+- **Icosahedron Visual Enhancements**: Fixed X-axis visual snapping by implementing shader-side interpolation for edge thickness and color coordinates.
+- **CPU Deduplication Optimization**: Refactored the $H_3$ normal generator (`Icosahedron.kt`) to perform zero-allocation deduplication in-place, eliminating GC pressure on the real-time render loop.
+- **Icosahedron Epsilon Variant**: Added a new parallel visual source (`IcosahedronEpsilon`) that skips deduplication and uses micro-repulsion at the poles for side-by-side comparison of rendering artifacts.
+
+---
+
 ## Version 1.0.0-beta.27
 
 > [!NOTE]
@@ -20,6 +27,16 @@
 - **Expanded $H_3$ VJ Controls**: Added direct modulation parameters for `Stellation` (manual CSG star spike depth boost/override) and `Support H` (support plane offset along generator vector $v(t)$).
 - **Kaleidoscopic Chamber & Normal Coloring**: Upgraded `Color Method` to support (0) $H_3$ Fundamental Chamber & Angular Sectors, (1) Radial Depth Gradient, and (2) Facet Normal Spectrum.
 - **Optimized Crystal Reveal & Proximity Glow**: Front-to-back translucent raymarching (80 steps with $0.65\times$ under-relaxation) smoothly illuminates inner polyhedral facets, complemented by atmospheric proximity ambient glow.
+
+#### 0.2 Icosahedron 32-Stellation Visual Source — H₃ Orbit Cache & GPU k-th Max Stellation Raymarcher
+- **Mathematical Correction of Rotation Group & 5-Fold Axis**: Fixed 5-fold axis vector in `Icosahedron.kt` to `pole5 = normalize(0, 1, phi)` (was incorrectly set to `(0, 1/phi, phi)`). Updated the BFS icosahedral rotation group generator to use true 5-fold axes, achieving full group closure ($\mathcal{I} \cong A_5$, order 60).
+- **Exact Orbit Face Multiplicities**: Validated that `pole3` orbit collapses into 20 face normals with exact multiplicity 3 (Icosahedron), `pole5` collapses into 12 face normals with exact multiplicity 5 (Dodecahedron), and intermediate generators expand into 60 distinct face normals (Hexecontahedron crystal).
+- **GPU $k$-th Max Deduplicating SDF Raymarcher**: Implemented deduplicating insertion sort in GLSL `shader.frag` to extract the top 6 distinct plane distances ($u_0 \dots u_5$) across all 60 $H_3$ planes.
+- **Continuous 2D Morph Pad ($uControlX, uControlY$)**:
+  - **Y-Axis ($uControlY \in [0.0, 1.0]$)**: Smoothly slerps the underlying generator vector from Icosahedron ($Y=0$) through the 60-faced crystal ($Y=0.5$) to Dodecahedron ($Y=1$).
+  - **X-Axis ($uControlX \in [0.0, 1.0]$)**: Continuously extrudes the geometry outward from the convex Platonic core ($X=0$) through 1st, 2nd, 3rd, and 4th order Kepler-Poinsot star stellations ($X=1$).
+- **Dynamic Ridge Edge Glow & Coloring**: Upgraded edge detector to $u_{\lfloor k \rfloor} - u_{\lfloor k \rfloor + 1}$ to illuminate the active stellation layer's ridges and sharp creases.
+- **Zero-Allocation Per-Frame Upload**: Flattens the 60 normal vectors directly into a pre-allocated `FloatArray(180)` for zero GC allocation during frame rendering.
 
 #### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
 - **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.

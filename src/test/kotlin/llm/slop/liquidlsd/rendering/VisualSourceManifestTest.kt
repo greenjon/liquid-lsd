@@ -80,4 +80,40 @@ class VisualSourceManifestTest {
         val sourceDoc = SourceDocRegistry.getSourceDescription("icosa_dodeca")
         assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for icosa_dodeca")
     }
+
+    @Test
+    fun testIcosahedronSourceParametersAndDocs() {
+        val metaFile = File("library/sources/icosahedron/meta.json")
+        assertTrue(metaFile.exists(), "icosahedron/meta.json must exist")
+
+        val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+        assertEquals("icosahedron", meta.id)
+        assertEquals("Icosahedron 32-Stellation", meta.name)
+
+        val paramNames = meta.parameters.map { it.name }.toSet()
+        val expectedParams = setOf(
+            "Control X",
+            "Control Y",
+            "Color Method",
+            "Hue Offset",
+            "Saturation",
+            "Brightness",
+            "Opacity",
+            "Edge Thickness",
+            "Edge Brightness",
+            "Zoom",
+            "Rotate X",
+            "Rotate Y",
+            "Rotate Z"
+        )
+
+        for (expected in expectedParams) {
+            assertTrue(paramNames.contains(expected), "Missing expected parameter: $expected")
+            val doc = SourceDocRegistry.getParamDescription("icosahedron", expected)
+            assertTrue(doc.isNotBlank(), "Missing documentation in SourceDocRegistry for icosahedron/$expected")
+        }
+
+        val sourceDoc = SourceDocRegistry.getSourceDescription("icosahedron")
+        assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for icosahedron")
+    }
 }

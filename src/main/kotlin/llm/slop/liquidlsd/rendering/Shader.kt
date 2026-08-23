@@ -110,7 +110,10 @@ class Shader(vertexSource: String, fragmentSource: String) {
      */
     private fun getUniformLocation(name: String): Int {
         return uniformLocationCache.getOrPut(name) {
-            val location = glGetUniformLocation(programId, name)
+            var location = glGetUniformLocation(programId, name)
+            if (location == -1 && !name.endsWith("[0]")) {
+                location = glGetUniformLocation(programId, "$name[0]")
+            }
             if (location == -1) {
                 val isStandardSystemUniform = name == "uTime" || name == "uAlpha" || name == "uResolution"
                 if (!isStandardSystemUniform) {
@@ -140,6 +143,13 @@ class Shader(vertexSource: String, fragmentSource: String) {
 
     fun setUniform(name: String, x: Float, y: Float, z: Float, w: Float) {
         glUniform4f(getUniformLocation(name), x, y, z, w)
+    }
+
+    fun setUniform3fv(name: String, values: FloatArray) {
+        val location = getUniformLocation(name)
+        if (location != -1) {
+            glUniform3fv(location, values)
+        }
     }
 
     /**
