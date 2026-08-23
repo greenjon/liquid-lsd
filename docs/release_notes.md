@@ -23,6 +23,15 @@
 - **Kaleidoscopic Chamber & Normal Coloring**: Upgraded `Color Method` to support (0) $H_3$ Fundamental Chamber & Angular Sectors, (1) Radial Depth Gradient, and (2) Facet Normal Spectrum.
 - **Optimized Crystal Reveal & Proximity Glow**: Front-to-back translucent raymarching (80 steps with $0.65\times$ under-relaxation) smoothly illuminates inner polyhedral facets, complemented by atmospheric proximity ambient glow.
 
+#### 0.2 Icosahedron 32-Stellation Visual Source — 2D Du Val Poset Manifold Engine
+- **Global 20-Plane Sorted Stellation SDF**: Implemented exact analytical stellation chamber evaluation using sorted signed distances to the 20 icosahedral face planes ($v_0 \ge v_1 \ge v_2 \ge v_3 \ge v_4$), eliminating fundamental domain boundary trapping and ensuring all 32 achiral Du Val stellation cells emerge naturally.
+- **Continuous 2D Control Manifold ($uControlX, uControlY$)**:
+  - **Core Trunk Track ($X \in [-1.0, 0.0]$, $Y$ neutral)**: Sweeps continuously through Base Icosahedron ($A, v_0$) $\to$ Small Triambic Icosahedron ($B, v_1$, face star caps) $\to$ Great Dodecahedron ($D, v_2$, pentagrammic edge star ridges).
+  - **Track 1 ($X \in [0.0, 1.0], Y=0.0$)**: Sweeps from Trunk $D$ to Track 1 $g_1$ (triangular face spikes along 3-fold axes).
+  - **Track 2 ($X=0.0, Y \in [0.0, 1.0]$)**: Sweeps from Trunk $D$ to Track 2 $g_2$ (12 pentagonal vertex star needles along 5-fold axes).
+  - **Final Stellation Apex ($X=1.0, Y=1.0$)**: Both independent tracks mesh and seal into the complete Echidnahedron ($H, v_4$) with 60 deep ray needles.
+- **Translucent Layered Rendering & Edge Seams**: Features dynamic facet seam highlighting via $(v_0 - v_1)$, chamber layer color palette mapping, and under-relaxed raymarching with atmospheric glow.
+
 #### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
 - **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.
 - **Harmonic Comb Unwrapping**: Implemented half-lag ($d/2$) evaluation to eliminate half-tempo (e.g. 60 BPM) and double-tempo (e.g. 200 BPM) octave traps by verifying fundamental beat periods, ensuring 100, 120, 128, and 140 BPM tracks lock precisely to their fundamental tempo.

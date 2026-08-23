@@ -1,0 +1,118 @@
+{
+  "id": "icosahedron",
+  "name": "Icosahedron 32-Stellation",
+  "description": "Continuous 2D Du Val manifold covering all 32 achiral stellations of the icosahedron.",
+  "parameters": [
+    {
+      "name": "Control X",
+      "default": -1.0,
+      "min": -1.0,
+      "max": 1.0,
+      "type": "BIPOLAR",
+      "defaultMin": -1.0,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Control Y",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Color Method",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.0,
+      "defaultMax": 2.0
+    },
+    {
+      "name": "Hue Offset",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Saturation",
+      "default": 0.85,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.4,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Brightness",
+      "default": 0.85,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 1.2
+    },
+    {
+      "name": "Opacity",
+      "default": 0.75,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.4,
+      "defaultMax": 0.9
+    },
+    {
+      "name": "Edge Thickness",
+      "default": 0.025,
+      "min": 0.0,
+      "max": 0.15,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.01,
+      "defaultMax": 0.06
+    },
+    {
+      "name": "Edge Brightness",
+      "default": 1.2,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.8,
+      "defaultMax": 1.6
+    },
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.6,
+      "defaultMax": 1.6
+    },
+    {
+      "name": "Rotate X",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate Y",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    },
+    {
+      "name": "Rotate Z",
+      "default": 0.0,
+      "min": -3.14159,
+      "max": 3.14159,
+      "type": "ENDLESS"
+    }
+  ]
+}
