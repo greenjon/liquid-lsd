@@ -136,6 +136,7 @@ void main(){
     vec3 rd=normalize(vec3(uv,1.4));
     mat3 rot=rotateZ(uRotateZ)*rotateY(uRotateY)*rotateX(uRotateX);
     ro=rot*ro; rd=rot*rd;
+    vec3 lD = rot * vec3(0.0, 0.0, -1.0);
 
     vec3 palA=vec3(0.5),palB=vec3(0.5),palC=vec3(1.0),palD=vec3(0.0,0.33,0.67);
 
@@ -151,7 +152,6 @@ void main(){
 
         if(dist<0.003){
             vec3  n=getNormal(p);
-            vec3  lD=normalize(vec3(0.577,0.577,-0.577));
             float diff=max(0.25,dot(n,lD));
             float spec=pow(max(0.0,dot(reflect(-lD,n),-rd)),16.0)*0.4;
 
