@@ -138,15 +138,7 @@ object VisualSourceRegistry {
                         hasFeedback = meta.feedback,
                         ownsShader = true
                     )
-                } else if (meta.id == "icosahedron-epsilon") {
-                    IcosahedronEpsilon(
-                        id = meta.id,
-                        displayName = meta.name,
-                        shader = shader,
-                        parameters = parameters,
-                        hasFeedback = meta.feedback,
-                        ownsShader = true
-                    )
+
                 } else {
                     DynamicVisualSource(
                         id = meta.id,
