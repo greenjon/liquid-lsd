@@ -71,9 +71,15 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outColorCoord, out float outDep
 
     vec3 pole3 = normalize(vec3(1.0, 0.0, nc_PHI + 1.0));
     vec3 pole5 = normalize(vec3(0.0, 1.0, nc_PHI));
+    vec3 chamberCenter = normalize(pole3 + pole5);
 
-    // Continuous sweep around the symmetry group's great circle
-    vec3 corePole = slerp(pole3, pole5, uControlX);
+    // Map uControlX to a safe ping-pong phase between -1.0 and 2.0
+    // This prevents the planes from flipping inside-out and breaking the SDF volume.
+    float phaseOffset = asin(-1.0 / 3.0);
+    float safeX = 1.5 * sin(uControlX + phaseOffset) + 0.5;
+
+    // Continuous sweep around the symmetry group's safe hemisphere
+    vec3 corePole = slerp(pole3, pole5, safeX);
 
     // Reflect across the non-shared mirror planes to find adjacent faces
     vec3 adj1 = corePole - 2.0 * dot(corePole, n0) * n0;
@@ -83,15 +89,22 @@ float mapSDF(vec3 p, out float outEdge, out vec3 outColorCoord, out float outDep
     vec3 spikePole1 = normalize(mix(corePole, adj1, uStellationSpike));
     vec3 spikePole2 = normalize(mix(corePole, adj2, uStellationSpike));
 
+    // Dynamic Support H: scale the distance offset by the dot product with the chamber center.
+    // This mathematically guarantees the object stays EXACTLY the same size on screen, 
+    // no matter how deeply the planes tilt!
+    float h1 = uSupportH * max(0.1, dot(spikePole1, chamberCenter));
+    float h2 = uSupportH * max(0.1, dot(spikePole2, chamberCenter));
+
     // The spiked shape is the intersection of these tilted planes
-    float dSpike1 = dot(pFolded, spikePole1) - uSupportH;
-    float dSpike2 = dot(pFolded, spikePole2) - uSupportH;
+    float dSpike1 = dot(pFolded, spikePole1) - h1;
+    float dSpike2 = dot(pFolded, spikePole2) - h2;
     float stellationSpike = max(dSpike1, dSpike2);
 
     // The blocker chops off the tips. 
     // We use the "dual-like" face one phase step ahead.
-    vec3 blockerPole = slerp(pole3, pole5, uControlX + 1.0);
-    float blockerRadius = uSupportH + (1.0 - uBlockerSize) * 1.5;
+    vec3 blockerPole = slerp(pole3, pole5, safeX + 1.0);
+    float hBlocker = uSupportH * max(0.1, dot(blockerPole, chamberCenter));
+    float blockerRadius = hBlocker + (1.0 - uBlockerSize) * 1.5;
     float blocker = dot(pFolded, blockerPole) - blockerRadius;
 
     // CSG Intersection: max() acts as boolean AND.
