@@ -56,38 +56,49 @@ vec3 foldSpace(vec3 p) {
     return p;
 }
 
+vec3 slerp(vec3 p0, vec3 p1, float t) {
+    float dotp = clamp(dot(p0, p1), -1.0, 1.0);
+    float theta = acos(dotp);
+    float sinTheta = sin(theta);
+    if (sinTheta < 0.001) return normalize(mix(p0, p1, t));
+    float w0 = sin((1.0 - t) * theta) / sinTheta;
+    float w1 = sin(t * theta) / sinTheta;
+    return normalize(p0 * w0 + p1 * w1);
+}
+
 float mapSDF(vec3 p, out float outEdge, out vec3 outColorCoord, out float outDepth) {
     vec3 pFolded = foldSpace(p);
 
     vec3 pole3 = normalize(vec3(1.0, 0.0, nc_PHI + 1.0));
     vec3 pole5 = normalize(vec3(0.0, 1.0, nc_PHI));
 
-    vec3 pole3_adj = normalize(vec3(-1.0, 0.0, nc_PHI + 1.0));
-    vec3 pole5_adj = normalize(vec3(0.0, -1.0, nc_PHI));
+    // Continuous sweep around the symmetry group's great circle
+    vec3 corePole = slerp(pole3, pole5, uControlX);
 
-    // Tilt the normals based on uStellationSpike to form sharp pyramids
-    vec3 normal3 = normalize(mix(pole3, pole3_adj, uStellationSpike));
-    vec3 normal5 = normalize(mix(pole5, pole5_adj, uStellationSpike));
+    // Reflect across the non-shared mirror planes to find adjacent faces
+    vec3 adj1 = corePole - 2.0 * dot(corePole, n0) * n0;
+    vec3 adj2 = corePole - 2.0 * dot(corePole, n2) * n2;
 
-    float dIcosa = dot(pFolded, pole3) - uSupportH;
-    float dDodeca = dot(pFolded, pole5) - uSupportH;
+    // Tilt face normals toward adjacent faces to extrude pyramid spikes
+    vec3 spikePole1 = normalize(mix(corePole, adj1, uStellationSpike));
+    vec3 spikePole2 = normalize(mix(corePole, adj2, uStellationSpike));
 
-    float dIcosaSpike = dot(pFolded, normal3) - uSupportH;
-    float dDodecaSpike = dot(pFolded, normal5) - uSupportH;
+    // The spiked shape is the intersection of these tilted planes
+    float dSpike1 = dot(pFolded, spikePole1) - uSupportH;
+    float dSpike2 = dot(pFolded, spikePole2) - uSupportH;
+    float stellationSpike = max(dSpike1, dSpike2);
 
-    // Morph the core and the spike based on uControlX
-    float coreShape = mix(dIcosa, dDodeca, uControlX);
-    float stellationSpike = mix(dIcosaSpike, dDodecaSpike, uControlX);
-
-    // The blocker is the OPPOSITE shape, flattening the tips
-    float dBlockerBase = mix(dot(pFolded, pole5), dot(pFolded, pole3), uControlX);
+    // The blocker chops off the tips. 
+    // We use the "dual-like" face one phase step ahead.
+    vec3 blockerPole = slerp(pole3, pole5, uControlX + 1.0);
     float blockerRadius = uSupportH + (1.0 - uBlockerSize) * 1.5;
-    float blocker = dBlockerBase - blockerRadius;
+    float blocker = dot(pFolded, blockerPole) - blockerRadius;
 
     // CSG Intersection: max() acts as boolean AND.
     float finalShape = max(stellationSpike, blocker);
 
-    outEdge = abs(dIcosa - dDodeca);
+    // Calculate a nice dynamic edge based on the difference between the two spike planes
+    outEdge = abs(dSpike1 - dSpike2);
     outColorCoord = pFolded;
     outDepth = length(p);
 
