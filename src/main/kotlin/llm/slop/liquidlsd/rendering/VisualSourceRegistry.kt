@@ -129,6 +129,15 @@ object VisualSourceRegistry {
                         hasFeedback = meta.feedback,
                         ownsShader = true
                     )
+                } else if (meta.id == "hyper_mesh") {
+                    HyperMesh(
+                        id = meta.id,
+                        displayName = meta.name,
+                        shader = shader,
+                        parameters = parameters,
+                        hasFeedback = meta.feedback,
+                        ownsShader = true
+                    )
                 } else if (meta.id == "icosahedron") {
                     Icosahedron(
                         id = meta.id,

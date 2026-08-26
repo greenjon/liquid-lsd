@@ -1,6 +1,13 @@
 # Liquid LSD — Release Notes
 
 ## Version 1.0.0-beta.28 (Unreleased)
+- **4D Hyper-Mesh Visual Source (`hyper_mesh`)**:
+  - Implemented real-time GPU-accelerated 4D Polychoron rendering covering the **600-cell** (120 vertices, 720 edges) and **120-cell** (600 vertices, 1,200 edges, dual polytope).
+  - Added continuous 4D hyper-rotations across the $XW$, $YW$, and $ZW$ planes for hypnotic, inside-out polytope cell inversions and multi-axis tumbling.
+  - Added 4D perspective and conformal stereographic ($S^3 \to \mathbb{R}^3$) projection modes with modulatable 4D lens focal distance ($d \in [1.05, 5.0]$).
+  - Pre-computed Hopf fibration coordinates ($S^3 \to S^2$) per vertex, enabling dynamic harmonic color waves rippling along Hopf tori.
+  - Zero-allocation runtime execution on the main OS thread with screen-space extruded anti-aliased tube ribbons and billboard joint nodes ($< 0.3\,\text{ms}$ GPU frametime on Intel Iris Xe).
+- **Pure Black Window Backgrounds**: Set the primary window's OpenGL clear color to pure black (`0.0f, 0.0f, 0.0f, 1.0f`) across all modes, ensuring consistent pitch black backgrounds and pillarbox/letterbox borders during clean mode (`f`) and GUI view.
 - **Icosahedron Visual Enhancements**: Fixed X-axis visual snapping by implementing shader-side interpolation for edge thickness and color coordinates.
 - **CPU Deduplication Optimization**: Refactored the $H_3$ normal generator (`Icosahedron.kt`) to perform zero-allocation deduplication in-place, eliminating GC pressure on the real-time render loop.
 - **Icosahedron Epsilon Variant**: Added a new parallel visual source (`IcosahedronEpsilon`) that skips deduplication and uses micro-repulsion at the poles for side-by-side comparison of rendering artifacts.

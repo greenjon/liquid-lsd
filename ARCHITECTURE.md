@@ -73,6 +73,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders
 │   ├── DynamicSpiral.kt        — Specialized particle/spiral visual source
+│   ├── HyperMesh.kt            — Real-time 4D Polychoron (600-cell & 120-cell) visual source with Hopf fibration
+│   ├── Icosahedron.kt          — 32-Stellation icosahedral manifold visual source
 │   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
 │   ├── Shader.kt               — GLSL shader compilation/management
 │   ├── Geometry.kt             — Vertex buffers, basic shapes

@@ -1,0 +1,189 @@
+{
+  "id": "hyper_mesh",
+  "name": "4D Hyper-Mesh",
+  "description": "Real-time 4D Polychoron (600-cell & 120-cell) with hyper-rotations and Hopf fibration coloring.",
+  "feedback": false,
+  "parameters": [
+    {
+      "name": "Rotate XW",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "Primary 4D hyper-rotation through the XW plane (continuous inside-out cell inversion)."
+    },
+    {
+      "name": "Rotate YW",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "Secondary 4D hyper-rotation through the YW plane."
+    },
+    {
+      "name": "Rotate ZW",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "Tertiary 4D hyper-rotation through the ZW plane."
+    },
+    {
+      "name": "Rotate X",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "3D Pitch rotation of the projected object."
+    },
+    {
+      "name": "Rotate Y",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "3D Yaw rotation of the projected object."
+    },
+    {
+      "name": "Rotate Z",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "3D Roll rotation of the projected object."
+    },
+    {
+      "name": "Camera Dist",
+      "default": 2.2,
+      "min": 1.05,
+      "max": 5.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 1.1,
+      "defaultMax": 3.5,
+      "description": "4D lens distance (d in x,y,z / (d - w)). Low values explode inner cells; high values approach orthographic projection."
+    },
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 4.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 2.0,
+      "description": "Overall viewport scale factor."
+    },
+    {
+      "name": "Polytope",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "description": "0.0 = 600-cell (120 verts / 720 edges), 1.0 = 120-cell (600 verts / 1200 edges)."
+    },
+    {
+      "name": "Projection Mode",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "description": "0.0 = 4D Perspective Projection, 1.0 = Stereographic S3 -> R3 conformal projection."
+    },
+    {
+      "name": "Thickness",
+      "default": 0.008,
+      "min": 0.001,
+      "max": 0.04,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.003,
+      "defaultMax": 0.02,
+      "description": "Width of the strut edges in screen space."
+    },
+    {
+      "name": "Node Size",
+      "default": 0.015,
+      "min": 0.0,
+      "max": 0.05,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.0,
+      "defaultMax": 0.03,
+      "description": "Size of the vertex joint spheres/nodes."
+    },
+    {
+      "name": "Hue Offset",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS",
+      "description": "Base hue shift for palette mapping."
+    },
+    {
+      "name": "Hue Spread",
+      "default": 0.8,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.2,
+      "defaultMax": 1.5,
+      "description": "Spread of colors across Hopf fibration circles and W-depth."
+    },
+    {
+      "name": "Color Mode",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "description": "0 = Hopf Fibration Coordinates, 1 = 4D W-Depth, 2 = 3D Spatial Position."
+    },
+    {
+      "name": "Saturation",
+      "default": 0.85,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Brightness",
+      "default": 1.2,
+      "min": 0.0,
+      "max": 2.5,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.8,
+      "defaultMax": 1.8
+    },
+    {
+      "name": "Glow",
+      "default": 1.0,
+      "min": 0.0,
+      "max": 2.5,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 1.8,
+      "description": "Neon halo bloom and edge glow intensity."
+    },
+    {
+      "name": "Opacity",
+      "default": 0.85,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.4,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Depth Fog",
+      "default": 0.35,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "description": "Fog falloff attenuation based on 3D distance from viewer."
+    }
+  ]
+}

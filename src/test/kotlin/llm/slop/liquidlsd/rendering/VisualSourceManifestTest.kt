@@ -116,4 +116,48 @@ class VisualSourceManifestTest {
         val sourceDoc = SourceDocRegistry.getSourceDescription("icosahedron")
         assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for icosahedron")
     }
+
+    @Test
+    fun testHyperMeshSourceParametersAndDocs() {
+        val metaFile = File("library/sources/hyper_mesh/meta.json")
+        assertTrue(metaFile.exists(), "hyper_mesh/meta.json must exist")
+
+        val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+        assertEquals("hyper_mesh", meta.id)
+        assertEquals("4D Hyper-Mesh", meta.name)
+
+        val paramNames = meta.parameters.map { it.name }.toSet()
+        val expectedParams = setOf(
+            "Rotate XW",
+            "Rotate YW",
+            "Rotate ZW",
+            "Rotate X",
+            "Rotate Y",
+            "Rotate Z",
+            "Camera Dist",
+            "Zoom",
+            "Polytope",
+            "Projection Mode",
+            "Thickness",
+            "Node Size",
+            "Hue Offset",
+            "Hue Spread",
+            "Color Mode",
+            "Saturation",
+            "Brightness",
+            "Glow",
+            "Opacity",
+            "Depth Fog"
+        )
+
+        for (expected in expectedParams) {
+            assertTrue(paramNames.contains(expected), "Missing expected parameter: $expected")
+            val doc = SourceDocRegistry.getParamDescription("hyper_mesh", expected)
+            assertTrue(doc.isNotBlank(), "Missing documentation in SourceDocRegistry for hyper_mesh/$expected")
+        }
+
+        val sourceDoc = SourceDocRegistry.getSourceDescription("hyper_mesh")
+        assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for hyper_mesh")
+    }
 }
+

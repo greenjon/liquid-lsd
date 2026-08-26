@@ -26,6 +26,8 @@ object SourceDocRegistry {
                 " Great Kepler-Poinsot Stellations, kaleidoscopic chamber coloring, and crystal reveal.",
         "icosahedron" to "Continuous 2D Du Val manifold covering all 32 achiral stellations of the icosahedron," +
                 " driven by real-time H3 normal vector generation and 60-element icosahedral orbit evaluation.",
+        "hyper_mesh" to "Real-time 4D Polychoron (600-cell & 120-cell) with XW/YW/ZW hyper-rotations," +
+                " 4D perspective/stereographic projection, Hopf fibration coloring, and GPU tube rendering.",
     )
 
     /**
@@ -159,6 +161,28 @@ object SourceDocRegistry {
         "icosahedron/Rotate X" to "Pitch rotation angle around the X axis.",
         "icosahedron/Rotate Y" to "Yaw rotation angle around the Y axis.",
         "icosahedron/Rotate Z" to "Roll rotation angle around the Z axis.",
+
+        // 4D Hyper-Mesh (600-cell & 120-cell)
+        "hyper_mesh/Rotate XW" to "Primary 4D hyper-rotation through the XW plane (continuous inside-out cell inversion).",
+        "hyper_mesh/Rotate YW" to "Secondary 4D hyper-rotation through the YW plane.",
+        "hyper_mesh/Rotate ZW" to "Tertiary 4D hyper-rotation through the ZW plane.",
+        "hyper_mesh/Rotate X" to "3D Pitch rotation angle.",
+        "hyper_mesh/Rotate Y" to "3D Yaw rotation angle.",
+        "hyper_mesh/Rotate Z" to "3D Roll rotation angle.",
+        "hyper_mesh/Camera Dist" to "4D lens distance (d in x,y,z / (d - w)). Lower values explode inner cells toward the camera.",
+        "hyper_mesh/Zoom" to "Overall camera zoom scaling.",
+        "hyper_mesh/Polytope" to "Polychoron model: 0 = 600-cell (120 vertices, 720 edges), 1 = 120-cell (600 vertices, 1200 edges).",
+        "hyper_mesh/Projection Mode" to "4D projection algorithm: 0 = Central Perspective, 1 = Stereographic S3 -> R3 conformal.",
+        "hyper_mesh/Thickness" to "Screen-space width of the strut edges.",
+        "hyper_mesh/Node Size" to "Size of the vertex joint spheres.",
+        "hyper_mesh/Hue Offset" to "Base hue shift for palette mapping.",
+        "hyper_mesh/Hue Spread" to "Spread of colors across Hopf fibration circles and W-depth.",
+        "hyper_mesh/Color Mode" to "Color algorithm: 0 = Hopf Fibration Coordinates, 1 = 4D W-Depth, 2 = 3D Spatial Depth.",
+        "hyper_mesh/Saturation" to "Color saturation.",
+        "hyper_mesh/Brightness" to "Overall luminance multiplier.",
+        "hyper_mesh/Glow" to "Neon halo bloom and edge glow intensity.",
+        "hyper_mesh/Opacity" to "Strut and node transparency.",
+        "hyper_mesh/Depth Fog" to "Fog falloff attenuation based on 3D distance from viewer.",
 
         // Feedback chain (shared across all decks)
         "feedback/fbDecay" to "How much of the previous frame persists each step. 0 = no trail; 1 = infinite persistence.",

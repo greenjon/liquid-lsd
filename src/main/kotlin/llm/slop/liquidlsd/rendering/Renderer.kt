@@ -55,6 +55,8 @@ class Renderer {
     fun render(source: VisualSource, targetFBO: FBO) {
         if (source is Mandala) {
             renderMandala(source, targetFBO)
+        } else if (source is HyperMesh) {
+            renderHyperMesh(source, targetFBO)
         } else if (source is DynamicVisualSource) {
             val hasFb = source.hasFeedback
             val renderTarget = if (hasFb) {
@@ -151,6 +153,55 @@ class Renderer {
 
         Geometry.drawFullscreenQuad()
         backgroundShader.unbind()
+    }
+
+    /**
+     * Renders a 4D HyperMesh (600-cell or 120-cell) with instanced/indexed strut and node geometry.
+     */
+    private fun renderHyperMesh(hyperMesh: HyperMesh, targetFBO: FBO) {
+        targetFBO.bind()
+
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        hyperMesh.shader.bind()
+        hyperMesh.setupUniforms(hyperMesh.shader)
+
+        hyperMesh.shader.setUniform("uAlpha", hyperMesh.globalAlpha.value)
+        hyperMesh.shader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        hyperMesh.shader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+
+        val p = hyperMesh.parameters
+        val polytope = p["Polytope"]?.value ?: 0f
+        val is120 = polytope >= 0.5f
+
+        val edgeVao = if (is120) hyperMesh.edgeVao120 else hyperMesh.edgeVao600
+        val edgeCount = if (is120) hyperMesh.edgeCount120 else hyperMesh.edgeCount600
+        val nodeVao = if (is120) hyperMesh.nodeVao120 else hyperMesh.nodeVao600
+        val vertexCount = if (is120) hyperMesh.vertexCount120 else hyperMesh.vertexCount600
+
+        // 1. Draw strut edges
+        if (edgeVao != 0 && edgeCount > 0) {
+            hyperMesh.shader.setUniform("uPassType", 0)
+            glBindVertexArray(edgeVao)
+            glDrawElements(GL_TRIANGLES, edgeCount * 6, GL_UNSIGNED_INT, 0)
+            glBindVertexArray(0)
+        }
+
+        // 2. Draw node joints (if node size > 0.0)
+        val nodeSize = p["Node Size"]?.value ?: 0f
+        if (nodeSize > 0.0001f && nodeVao != 0 && vertexCount > 0) {
+            hyperMesh.shader.setUniform("uPassType", 1)
+            glBindVertexArray(nodeVao)
+            glDrawElements(GL_TRIANGLES, vertexCount * 6, GL_UNSIGNED_INT, 0)
+            glBindVertexArray(0)
+        }
+
+        hyperMesh.shader.unbind()
+        targetFBO.unbind()
     }
 
     /**
