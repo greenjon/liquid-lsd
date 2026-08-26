@@ -37,9 +37,9 @@ Liquid LSD provides three distinct scopes for notes:
 
 | Note Tier | Scope | Storage Location | Lifetime |
 |-----------|-------|------------------|----------|
-| **Global Source Notes** | Visual Engine / Source (e.g. Mandala, Gyroid) | `~/.liquid-lsd/source-notes.json` | App-global; persists across patch changes and app restarts |
-| **Patch Notes** | Loaded Visual Patch (.lsdpatch) | Inside `.lsdpatch` preset file (`patchNotes`) | Saved/loaded per patch file |
-| **Parameter Notes** | Specific parameter within a patch | Inside `.lsdpatch` preset file (`paramNotes`) | Saved/loaded per patch file |
+| **Global Source Notes** | Visual Engine / Source (e.g. Mandala, Gyroid) | `~/.liquid-lsd/source-notes.json` | App-global; persists across preset changes and app restarts |
+| **Preset Notes** | Loaded Visual Preset (.lsd) | Inside `.lsd` preset file (`presetNotes`) | Saved/loaded per preset file |
+| **Parameter Notes** | Specific parameter within a preset | Inside `.lsd` preset file (`paramNotes`) | Saved/loaded per preset file |
 
 ---
 
@@ -47,8 +47,8 @@ Liquid LSD provides three distinct scopes for notes:
 
 ### 1. Parameter Notes
 - **How to edit**: Right-click any parameter row in the Preset Grid to open the row context menu, then select **📝 Add/Edit Parameter Note…**.
-- **Display**: Appears inside the hover tooltip for that parameter whenever the patch is loaded.
-- **Persistence**: Saved directly inside the `.lsdpatch` file.
+- **Display**: Appears inside the hover tooltip for that parameter whenever the preset is loaded.
+- **Persistence**: Saved directly inside the `.lsd` file.
 
 ### 2. Global Source Notes
 - **How to edit**: In Deck Control, open the **Deck Menu** popup and select **📝 Add/Edit Source Note…**.
@@ -62,14 +62,14 @@ Each active Deck Monitor panel (Deck A and Deck B) features a soft blue-white **
 ┌───────────────────────────────────────────────────────────┐
 │                    [ Video Preview ]                      │
 └───────────────────────────────────────────────────────────┘
- 🎨 Sunset_Mandala.lsdpatch *
+ 🎨 Sunset_Mandala.lsd *
 ```
 
 - **Hovering**: Displays a detailed tooltip containing:
-  - Full patch file path and name
-  - Last saved timestamp and patch DTO schema version (`Last saved: 2026-08-13 04:30  v1`)
-  - The patch note body (or a hint to right-click if empty)
-- **Editing**: Right-click the preset name label and select **📝 Add/Edit Patch Note…** to open the note modal.
+  - Full preset file path and name
+  - Last saved timestamp and preset DTO schema version (`Last saved: 2026-08-13 04:30  v1`)
+  - The preset note body (or a hint to right-click if empty)
+- **Editing**: Right-click the preset name label and select **📝 Add/Edit Preset Note…** to open the note modal.
 - **Untitled Presets**: If a deck has no saved preset loaded, the label displays `Untitled` in dim grey. Notes cannot be attached to unsaved untitled decks until saved to disk.
 
 ---

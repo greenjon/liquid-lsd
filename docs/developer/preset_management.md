@@ -26,7 +26,8 @@ Data Transfer Objects (DTOs) generated on the background executor are offered to
 ```kotlin
 var activePresetMtimeA: Long? = null
 var activePresetMtimeB: Long? = null
-var activePresetMtimeC: Long? = null
+var activePresetMtimeBG: Long? = null
+var activePresetMtimePV: Long? = null
 ```
 - Populated from `File.lastModified()` prior to spawning background load tasks.
 - Updated upon completing successful `saveDeckPresetAsync` operations.

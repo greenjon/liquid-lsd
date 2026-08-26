@@ -41,7 +41,7 @@ graph TD
     UIManager --> SavePresetModal[SavePresetModal.kt]
 ```
 
-All panel `draw(...)` methods receive `session: SessionContext`, the current `Mixer` reference, and `presetState: PresetGridState` at frame render time. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
+Most panel `draw(...)` methods (like `PresetGridPanel`) receive `session: SessionContext`, the current `Mixer` reference, and `presetState: PresetGridState` at frame render time. Other panels like `MixerMonitorPanel` and `DeckControlPanel` receive state via dependency injection in their constructors. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
 
 Deck preview monitors (`Deck A`, `Deck B`, `Deck C`) in `MixerMonitorPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckMonitorToolbar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
@@ -61,7 +61,7 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immedia
 - **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace by delegating splitting and styling to dedicated components. Left Panel (`PresetGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`).
 - **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
-- **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()` and `PopupManager.draw()` at root scope.
+- **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()` and `PopupManager`'s specific draw methods (e.g. `drawExitPopup()`) at root scope.
 
 ### 2. `UIThemeStyler.kt`, `ColorTunerPanel.kt` & `SplitterManager.kt`
 - **`UIThemeStyler.kt`**: Applies ImGui color palettes across all themes (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), manages window transparency/alpha blending when background video is enabled, renders multi-color Neon gradient backgrounds, and handles proportional `ImGuiStyle` size scaling.

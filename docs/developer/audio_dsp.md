@@ -50,9 +50,9 @@ Every audio block processes the incoming mono signal sequentially:
 
 ```
 Input Audio ──► Biquad Filter Bank ──► Amplitude Extractor ──► CVRegistry
-                 ├── Low-Pass  (<= 150 Hz)    -> audio_bass
-                 ├── Band-Pass (~ 1000 Hz)   -> audio_mid
-                 └── High-Pass (>= 5000 Hz)   -> audio_high
+                 ├── Low-Pass  (<= 150 Hz)    -> bass
+                 ├── Band-Pass (~ 1000 Hz)   -> mid
+                 └── High-Pass (>= 5000 Hz)   -> high
 ```
 
 ### Biquad IIR Filter Bank (`BiquadFilter.kt`)
@@ -70,8 +70,8 @@ Calculates Root Mean Square (RMS) energy over each block:
 $$\text{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^N x_i^2}$$
 
 RMS values are normalized and published to `CVRegistry`:
-- `audio_amp`: Full-band input RMS.
-- `audio_bass`, `audio_mid`, `audio_high`: Per-band filter RMS values.
+- `amp`: Full-band input RMS.
+- `bass`, `mid`, `high`: Per-band filter RMS values.
 
 ---
 

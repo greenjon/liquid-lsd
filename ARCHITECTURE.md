@@ -1,7 +1,7 @@
 # Liquid LSD — Architecture
 
 Cross-platform VJ software (Linux x64/ARM64, macOS x64/ARM64, Windows x64). Real-time
-audio-reactive parametric mandala visuals, three-deck mixer with preview deck, CV modulation
+audio-reactive parametric mandala visuals, four-deck mixer with background and preview decks, CV modulation
 matrix. Built with Kotlin/JVM, OpenGL 3.3, ImGui, and JACK audio (with fallback) / Java Sound (cross-platform).
 
 ## Video Pipeline
@@ -34,13 +34,16 @@ Deck PV  (preview only — same pipeline as A/B/BG, excluded from Mixer output)
 ```
 src/main/kotlin/llm/slop/liquidlsd/
 ├── Main.kt                     — GLFW window, render loop
+├── SessionContext.kt           — Application state & context
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
 │   ├── JackClient.kt           — JNAJack callback wrapper
 │   ├── JavaSoundClient.kt      — Java Sound TargetDataLine fallback client
-│   ├── DSP.kt                  — Band-split FFT, RMS, onset detection
 │   ├── BiquadFilter.kt         — Zero-alloc biquad IIR filter
-│   └── AmplitudeExtractor.kt   — RMS amplitude per band
+│   ├── AmplitudeExtractor.kt   — RMS amplitude per band
+│   ├── AudioInputDevice.kt     — Input device selection
+│   ├── SystemAudioVolume.kt    — Master volume control
+│   └── MidiJackWatchdog.kt     — MIDI hotplug monitoring
 ├── cv/
 │   ├── CVRegistry.kt           — Singleton: all CV sources, beat sync, histories
 │   ├── CVSource.kt             — Interface: id, value, update()
@@ -52,21 +55,32 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MidiEngine.kt           — MIDI connection and event polling
 │   └── MidiMappingManager.kt   — Maps MIDI CC to UI/parameters
 ├── models/
-│   └── PresetModels.kt          — Data models + DTOs for preset serialization (includes presetNotes & paramNotes))
+│   ├── PresetModels.kt         — Data models + DTOs for preset serialization
+│   └── ClipboardManager.kt     — Copy/paste for preset elements
 ├── notes/
 │   └── NotesManager.kt         — 3-tier notes persistence manager (global source notes, preset notes, param notes)
 ├── parameters/
-│   └── Parameter.kt            — ModulatableParameter, CvModulator, ModulationOperator, Waveform, LfoSpeedMode
+│   ├── ModulatableParameter.kt — Parameter state and evaluation
+│   ├── CvModulator.kt          — CV modulation routing
+│   ├── Enums.kt                — Enums
+│   ├── ParameterOwner.kt       — Parameter ownership interface
+│   ├── ParameterResolver.kt    — Parameter lookup
+│   └── WaveformMath.kt         — Math utils
 ├── presets/
-│   ├── PresetManager.kt         — Save/load presets, state management, file modification timestamps (mtime)
-│   ├── PlayQueueManager.kt     — Manages deck playback queues & AutoVJ dirty deck behaviors
-│   ├── PlaylistManager.kt      — Manages saved setlists
-│   └── ClipboardManager.kt     — Copy/paste for preset elements
+│   ├── PresetManager.kt        — Save/load presets, state management
+│   ├── PlayQueueManager.kt     — Manages A/B playback queues
+│   ├── BgQueueManager.kt       — Manages background deck queue
+│   ├── PlaylistParser.kt       — Parses playlist files
+│   ├── SessionState.kt         — Session state management
+│   └── PresetIOStatus.kt       — IO status for UI feedback
+├── export/                     — Video & audio render export
+│   ├── OfflineRenderStudio.kt  — Single-threaded video rendering
+│   └── PboReadbackPipeline.kt  — Fast DMA pixel readback
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource)
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
-│   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params (Deck A & B -> live; Deck C -> preview)
-│   ├── Mixer.kt                — Blends Deck A+B -> masterFBO (Deck C excluded)
+│   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params (Deck A, B & BG -> live; Deck PV -> preview)
+│   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO (Deck PV excluded)
 │   ├── Renderer.kt             — Per-frame: source -> feedback -> mix -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
@@ -77,18 +91,28 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
 │   ├── Shader.kt               — GLSL shader compilation/management
 │   ├── Geometry.kt             — Vertex buffers, basic shapes
-│   └── FBO.kt                  — OpenGL framebuffer wrapper
+│   ├── FBO.kt                  — OpenGL framebuffer wrapper
+│   ├── GLDebug.kt              — OpenGL debug context callbacks
+│   ├── GLResourceTracker.kt    — OpenGL leak tracking
+│   ├── TextureStreamer.kt      — Async texture loading
+│   └── ViewportHelper.kt       — Output scaling modes
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
 │   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
-│   ├── PresetGridPanel.kt       — Modulation matrix: param rows × CV columns
+│   ├── PresetGridPanel.kt      — Modulation matrix: param rows × CV columns
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
+│   ├── SettingsPanel.kt        — App configuration
+│   ├── AudioEnginePanel.kt     — Audio input and beat detection settings
+│   ├── ColorTunerPanel.kt      — Interactive theme editor
+│   ├── DeckControlPanel.kt     — Individual deck controls
+│   ├── MixerMonitorPanel.kt    — 2x2 monitor matrix and crossfader
+│   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
-│   └── PresetGridState.kt       — Selection state & 30-level Undo Stack
+│   └── PresetGridState.kt      — Selection state & 30-level Undo Stack
 └── utils/
     └── TimeUtils.kt            — Timing utilities
 ```
@@ -128,10 +152,13 @@ value = result.coerceIn(0f, 1f)
 │  Preset Grid     │  Cell Config   │ Mixer/Monitor  │
 │  (40% width)     │  (30% width)   │  (30% width)   │
 │                  │                │                │
-└──────────────────┴────────────────┴────────────────┘
+├──────────────────┴────────────────┴────────────────┤
+│                 Library Panel                      │
+│        (Presets | Playlists | Q | BGQ)             │
+└────────────────────────────────────────────────────┘
 ```
 
-Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck C [same]  
+Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
 Preset Grid columns: LFO | AUDIO | TRIG
 
 ## Design Principles

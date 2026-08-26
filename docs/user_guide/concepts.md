@@ -14,18 +14,21 @@ graph TD
     subgraph Decks [Visual Generators]
         DeckA[Deck A: Live Source + Ping-Pong FBO]
         DeckB[Deck B: Live Source + Ping-Pong FBO]
-        DeckC[Deck C: Audition / Preview Deck]
+        DeckBG[Deck BG: Background Source + Ping-Pong FBO]
+        DeckPV[Deck PV: Audition / Preview Deck]
     end
     
     CV --> DeckA
     CV --> DeckB
-    CV --> DeckC
+    CV --> DeckBG
+    CV --> DeckPV
     
     DeckA --> Mixer[Central Mixer & Blend Modes]
     DeckB --> Mixer
+    DeckBG --> Mixer
     Mixer --> Master[Master Output FBO -> Screen]
     
-    style DeckC stroke:#f66,stroke-dasharray: 5 5
+    style DeckPV stroke:#f66,stroke-dasharray: 5 5
 ```
 
 ---
@@ -87,17 +90,20 @@ Each deck incorporates an independent dual Framebuffer Object (FBO) feedback loo
 
 ---
 
-## Deck Architecture: Live Decks A/B vs. Preview Deck C
+## Deck Architecture: Live Decks A/B vs. Background & Preview Decks
 
-Liquid LSD features a three-deck architecture tailored for live VJ performance:
+Liquid LSD features a four-deck architecture tailored for live VJ performance:
 
 ### Deck A & Deck B (Live Performance Decks)
 Decks A and B drive the live master output. They feed directly into the central Mixer.
 
-### Deck C (Preview / Audition Deck)
-Deck C runs the complete rendering pipeline (Visual Source + Ping-Pong Feedback), but is **strictly excluded from the Mixer master output**. 
-- **Auditioning Patches**: Performers can load, build, edit, and preview new patches on Deck C while Decks A and B continue delivering live visuals to the audience screen.
-- **Safe Preparation**: Test complex CV routings or shader parameters safely on Deck C before loading them onto live Decks A or B.
+### Deck BG (Background Layer)
+Deck BG renders beneath the crossfaded Deck A & Deck B composite, allowing transparent foregrounds to float naturally over dynamic background visuals.
+
+### Deck PV (Preview / Audition Deck)
+Deck PV runs the complete rendering pipeline (Visual Source + Ping-Pong Feedback), but is **strictly excluded from the Mixer master output**. 
+- **Auditioning Presets**: Performers can load, build, edit, and preview new presets on Deck PV while Decks A, B, and BG continue delivering live visuals to the audience screen.
+- **Safe Preparation**: Test complex CV routings or shader parameters safely on Deck PV before loading them onto live decks.
 
 ---
 
@@ -124,8 +130,8 @@ The `crossfade` slider interpolates between Deck A (-1.0) and Deck B (1.0). Like
 ### Momentary Controls & Triggers (Prev/Next, Rand A/B/C/All)
 Located directly beneath the Crossfader in the Master Mixer panel, a row of 6 momentary buttons provides direct access to queue navigation and randomization:
 - **`< Prev` / `Next >`**: Steps backward or forward through the active playlist queue (`Mixer/queuePrev`, `Mixer/queueNext`).
-- **`Rand A` / `Rand B` / `Rand C`**: Re-rolls all randomizable modulators and base values for the selected deck (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckC`).
-- **`Rand All`**: Re-rolls modulators and randomizable values across Deck A, Deck B, Deck C, and Master parameters simultaneously (`Mixer/randAll`).
+- **`Rand A` / `Rand B` / `Rand BG / Rand PV`**: Re-rolls all randomizable modulators and base values for the selected deck (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckC`).
+- **`Rand All`**: Re-rolls modulators and randomizable values across Deck A, Deck B, Deck PV, and Master parameters simultaneously (`Mixer/randAll`).
 
 **Simultaneous Triggers without Takeover**: Unlike continuous fader positions that hold a continuous value, momentary triggers are discrete pulses (rising-edge events). Using the mouse buttons, hardware MIDI triggers, or clock/LFO CV gates executes the discrete action immediately without muting modulators or disarming background automation.
 

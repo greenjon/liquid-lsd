@@ -91,15 +91,17 @@ Platform ZIP distribution tasks are also defined in `build.gradle.kts`.
 ```text
 src/main/kotlin/llm/slop/liquidlsd/
   Main.kt                GLFW window, OpenGL context, render loop
+  SessionContext.kt      Application state & context
   audio/                 JACK client, Java Sound fallback, DSP, beat/audio analysis
   cv/                    CV registry, beat clock, evaluators, history buffers
+  export/                Video & audio render export, OfflineRenderStudio
   midi/                  MIDI input, profiles, and mapping
   models/                Serializable preset/session DTOs
   notes/                 NotesManager and 3-tier notes persistence
   parameters/            Modulatable parameters and CV operators
   presets/               Preset, playlist, queue, and clipboard managers
   rendering/             Decks, mixer, shaders, FBOs, VisualSources, SourceDocRegistry
-  ui/                    ImGui panels, Library Panel, NoteEditorModal, UI state
+  ui/                    ImGui panels, browser subpackage, NoteEditorModal, UI state
   utils/                 Timing utilities
 
 src/main/resources/
@@ -108,7 +110,7 @@ src/main/resources/
   fonts/                 Bundled UI/icon fonts
   logback.xml            Logging configuration
 
-presets/sources/         User-loadable dynamic visual sources
+library/sources/         User-loadable dynamic visual sources
 docs/                    MkDocs source documentation
 ```
 
