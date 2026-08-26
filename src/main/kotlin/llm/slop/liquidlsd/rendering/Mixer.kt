@@ -12,10 +12,14 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
 class Mixer(
     val deckA: Deck,
     val deckB: Deck,
-    val deckC: Deck,
+    val deckBG: Deck,
+    val deckPV: Deck,
     var width: Int = 1920,
     var height: Int = 1080
 ) : ParameterOwner {
+    // Backward compatibility alias for Deck PV
+    val deckC: Deck get() = deckPV
+
     // The master FBO where the blended result is rendered
     var masterFBO = FBO(width, height)
 
@@ -28,7 +32,8 @@ class Mixer(
         masterFBO.clear(0f, 0f, 0f, 0f)
         deckA.resize(newWidth, newHeight)
         deckB.resize(newWidth, newHeight)
-        deckC.resize(newWidth, newHeight)
+        deckBG.resize(newWidth, newHeight)
+        deckPV.resize(newWidth, newHeight)
     }
 
     // Blend parameters
@@ -91,14 +96,17 @@ class Mixer(
 
     val randDeckA = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val randDeckB = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val randDeckC = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+    val randDeckBG = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+    val randDeckPV = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+    val randDeckC: ModulatableParameter get() = randDeckPV
     val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
 
     private var prevQueuePrevVal = 0.0f
     private var prevQueueNextVal = 0.0f
     private var prevRandDeckAVal = 0.0f
     private var prevRandDeckBVal = 0.0f
-    private var prevRandDeckCVal = 0.0f
+    private var prevRandDeckBGVal = 0.0f
+    private var prevRandDeckPVVal = 0.0f
     private var prevRandAllVal = 0.0f
     private var lastUpdateTimeNs: Long = System.nanoTime()
 
@@ -113,12 +121,15 @@ class Mixer(
         list.add("$prefix/queueNext" to queueNext)
         list.add("$prefix/randDeckA" to randDeckA)
         list.add("$prefix/randDeckB" to randDeckB)
-        list.add("$prefix/randDeckC" to randDeckC)
+        list.add("$prefix/randDeckBG" to randDeckBG)
+        list.add("$prefix/randDeckPV" to randDeckPV)
+        list.add("$prefix/randDeckC" to randDeckPV)
         list.add("$prefix/randAll" to randAll)
 
         list.addAll(deckA.getParameterPaths("Deck A"))
         list.addAll(deckB.getParameterPaths("Deck B"))
-        list.addAll(deckC.getParameterPaths("Deck C"))
+        list.addAll(deckBG.getParameterPaths("Deck BG"))
+        list.addAll(deckPV.getParameterPaths("Deck PV"))
 
         return list
     }
@@ -131,14 +142,23 @@ class Mixer(
         deckB.randomizeModulators()
     }
 
+    fun randomizeDeckBG() {
+        deckBG.randomizeModulators()
+    }
+
+    fun randomizeDeckPV() {
+        deckPV.randomizeModulators()
+    }
+
     fun randomizeDeckC() {
-        deckC.randomizeModulators()
+        randomizeDeckPV()
     }
 
     fun randomizeAll() {
         deckA.randomizeModulators()
         deckB.randomizeModulators()
-        deckC.randomizeModulators()
+        deckBG.randomizeModulators()
+        deckPV.randomizeModulators()
         listOf(crossfade, masterAlpha).forEach { param ->
             val randomized = param.modulators.map { it.randomizeActiveValues() }
             param.modulators.clear()
@@ -148,7 +168,7 @@ class Mixer(
     }
 
     /**
-     * Evaluates mixer parameters.
+     * Evaluates mixer parameters and background queue transitions.
      */
     fun update() {
         val now = System.nanoTime()
@@ -171,6 +191,9 @@ class Mixer(
             }
         }
 
+        // Update Background Queue transitions
+        llm.slop.liquidlsd.presets.BgQueueManager.update(this, deltaTime)
+
         crossfade.evaluate()
         mode.evaluate()
         masterAlpha.evaluate()
@@ -180,7 +203,8 @@ class Mixer(
         queueNext.evaluate()
         randDeckA.evaluate()
         randDeckB.evaluate()
-        randDeckC.evaluate()
+        randDeckBG.evaluate()
+        randDeckPV.evaluate()
         randAll.evaluate()
 
         val valA = randDeckA.value
@@ -195,11 +219,17 @@ class Mixer(
         }
         prevRandDeckBVal = valB
 
-        val valC = randDeckC.value
-        if (prevRandDeckCVal < 0.5f && valC >= 0.5f) {
-            randomizeDeckC()
+        val valBG = randDeckBG.value
+        if (prevRandDeckBGVal < 0.5f && valBG >= 0.5f) {
+            randomizeDeckBG()
         }
-        prevRandDeckCVal = valC
+        prevRandDeckBGVal = valBG
+
+        val valPV = randDeckPV.value
+        if (prevRandDeckPVVal < 0.5f && valPV >= 0.5f) {
+            randomizeDeckPV()
+        }
+        prevRandDeckPVVal = valPV
 
         val valAll = randAll.value
         if (prevRandAllVal < 0.5f && valAll >= 0.5f) {

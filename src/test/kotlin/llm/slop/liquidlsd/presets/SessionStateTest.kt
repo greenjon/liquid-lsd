@@ -38,9 +38,11 @@ class SessionStateTest {
             isEmpty = false
         )
         val session = SessionStateDto(
-            version = 4,
+            version = 5,
             deckA = dummyDeck,
             deckB = dummyDeck.copy(name = "Deck B"),
+            deckBG = dummyDeck.copy(name = "Deck BG", isEmpty = true),
+            deckPV = dummyDeck.copy(name = "Deck PV", isEmpty = true),
             deckC = dummyDeck.copy(name = "Deck C", isEmpty = true),
             crossfade = dummyParam,
             masterAlpha = dummyParam,
@@ -48,6 +50,9 @@ class SessionStateTest {
             queue = listOf("presets/test.lsd"),
             activeIndex = 0,
             isAutoVJEnabled = true,
+            bgQueue = listOf("presets/bg.lsd"),
+            bgActiveIndex = 0,
+            isAutoBGEnabled = true,
             bloom = dummyParam,
             xfadeSpeed = dummyParam,
             queueNext = dummyParam,
@@ -58,10 +63,15 @@ class SessionStateTest {
 
         val jsonStr = json.encodeToString(session)
         val decoded = json.decodeFromString<SessionStateDto>(jsonStr)
-        assertEquals(4, decoded.version)
+        assertEquals(5, decoded.version)
         assertEquals("Deck A", decoded.deckA.name)
         assertEquals("Deck B", decoded.deckB.name)
-        assertTrue(decoded.deckC.isEmpty)
+        assertNotNull(decoded.deckBG)
+        assertNotNull(decoded.deckPV)
+        assertEquals("Deck BG", decoded.deckBG?.name)
+        assertEquals("Deck PV", decoded.deckPV?.name)
+        assertTrue(decoded.deckBG?.isEmpty == true)
+        assertTrue(decoded.deckPV?.isEmpty == true)
         assertNotNull(decoded.bloom)
         assertEquals(0.5f, decoded.bloom?.baseValue)
         assertNotNull(decoded.xfadeSpeed)
@@ -72,6 +82,8 @@ class SessionStateTest {
         assertEquals(0.5f, decoded.queuePrev?.baseValue)
         assertTrue(decoded.isRepeatEnabled)
         assertTrue(decoded.isShuffleEnabled)
+        assertTrue(decoded.isAutoBGEnabled)
+        assertEquals(listOf("presets/bg.lsd"), decoded.bgQueue)
     }
 
     @Test

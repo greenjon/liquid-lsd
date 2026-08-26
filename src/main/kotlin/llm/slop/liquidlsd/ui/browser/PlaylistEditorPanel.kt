@@ -5,6 +5,7 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
 import imgui.flag.ImGuiKey
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
@@ -19,6 +20,14 @@ import java.io.File
 object PlaylistEditorPanel {
     private val logger = KotlinLogging.logger {}
     var selectedPresetIndex: Int = -1
+
+    fun getSelectedPresetFile(): File? {
+        val playlist = LibraryPanel.activePlaylistData ?: return null
+        if (selectedPresetIndex in playlist.presets.indices) {
+            return PlaylistManager.resolvePreset(playlist.presets[selectedPresetIndex])
+        }
+        return null
+    }
 
     fun draw(session: SessionContext, mixer: Mixer) {
         val allPlaylists = FileSystemManager.scanAllPlaylists()
@@ -185,72 +194,26 @@ object PlaylistEditorPanel {
 
             ImGui.pushID(index)
 
-            val btnAlpha = if (exists) 1f else 0.3f
-
-            // Button A (Deck A — blue)
-            BrowserDeckButtons.push(BrowserDeckButtons.colorA(), btnAlpha)
-            if (ImGui.button("A##deck_a", btnSize, btnSize) && exists) {
-                val targetDeck = mixer.deckA
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                if (!isDirty) {
-                    session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = true, isDeckC = false)
-                } else {
-                    UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, true, mixer)
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck A.")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine()
-
-            // Button B (Deck B — orange)
-            BrowserDeckButtons.push(BrowserDeckButtons.colorB(), btnAlpha)
-            if (ImGui.button("B##deck_b", btnSize, btnSize) && exists) {
-                val targetDeck = mixer.deckB
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                if (!isDirty) {
-                    session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = false)
-                } else {
-                    UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, false, mixer)
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load preset to Deck B.")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine()
-
-            // Button C (Deck C — green)
-            BrowserDeckButtons.push(BrowserDeckButtons.colorC(), btnAlpha)
-            if (ImGui.button("C##deck_c", btnSize, btnSize) && exists) {
-                val targetDeck = mixer.deckC
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                if (!isDirty) {
-                    session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckC = true)
-                } else {
-                    UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, false, mixer)
-                }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview preset on Deck C (Preview/C).")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine()
-
-            // Button Q (Queue — violet)
-            BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), btnAlpha)
-            if (ImGui.button("Q##deck_q", btnSize, btnSize) && exists) {
-                session.playQueueManager.appendToQueue(resolvedFile)
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Add preset to the end of the queue.")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine()
-
             if (!exists) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1f, 0.3f, 0.3f, 1f)
             }
 
-            if (ImGui.selectable("$label##item", isSelected)) {
+            if (ImGui.selectable(label, isSelected)) {
                 selectedPresetIndex = index
+                PresetListPanel.selectedAsset = null
+            }
+
+            // Double click loads to standby deck
+            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && exists) {
+                val targetIsA = mixer.crossfade.value > 0.0f
+                val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
+                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
+
+                if (!isDirty) {
+                    session.presetManager.loadDeckPresetAsync(resolvedFile, targetIsA)
+                } else {
+                    UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, targetIsA, mixer)
+                }
             }
 
             // Drag source for reordering within playlist
@@ -301,16 +264,28 @@ object PlaylistEditorPanel {
 
             // Right-click menu
             if (ImGui.beginPopupContextItem("playlist_item_menu")) {
-                if (ImGui.menuItem("Play now (and replace queue)")) {
-                    session.playQueueManager.playNow(resolvedFile, mixer)
+                if (exists) {
+                    if (ImGui.menuItem("Load to Deck A")) {
+                        session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = true)
+                    }
+                    if (ImGui.menuItem("Load to Deck B")) {
+                        session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                    }
+                    if (ImGui.menuItem("Load to Deck BG")) {
+                        session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckBG = true)
+                    }
+                    if (ImGui.menuItem("Preview on Deck PV")) {
+                        session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckPV = true)
+                    }
+                    ImGui.separator()
+                    if (ImGui.menuItem("Add to A/B Queue")) {
+                        session.playQueueManager.appendToQueue(resolvedFile)
+                    }
+                    if (ImGui.menuItem("Add to Background Queue")) {
+                        BgQueueManager.appendToQueue(resolvedFile)
+                    }
+                    ImGui.separator()
                 }
-                if (ImGui.menuItem("Insert into the queue after current")) {
-                    session.playQueueManager.insertAfterCurrent(resolvedFile)
-                }
-                if (ImGui.menuItem("Add to the bottom of the queue")) {
-                    session.playQueueManager.appendToQueue(resolvedFile)
-                }
-                ImGui.separator()
                 if (ImGui.menuItem("Remove from playlist")) {
                     removePresetIndex = index
                 }

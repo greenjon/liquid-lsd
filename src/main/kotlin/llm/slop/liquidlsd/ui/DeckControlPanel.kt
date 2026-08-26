@@ -36,11 +36,13 @@ class DeckControlPanel(
     ) {
         ImGui.pushID(label)
 
-        val themeCol = if (isDeckA) {
-            ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.8f, 1f) // Deck A Blue
-        } else {
-            ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, 1f) // Deck B Orange
+        val rgb = when (label) {
+            "Deck A" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorA()
+            "Deck B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
+            "Deck BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
+            else -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
         }
+        val themeCol = ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f)
 
         // Ensure no internal padding interferes with drawing
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, 0f)
@@ -60,7 +62,8 @@ class DeckControlPanel(
 
         // Interactive top preset bar: Save button, Eject button, Preset bar
         ImGui.setCursorPosX(inset)
-        drawDeckMonitorToolbar(session, label, deck, isDeckA = isDeckA, isDeckC = false, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = imgAvailW)
+        val isC = label == "Deck PV" || label == "Deck C"
+        drawDeckMonitorToolbar(session, label, deck, isDeckA = isDeckA, isDeckC = isC, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = imgAvailW)
         ImGui.spacing()
 
         ImGui.setCursorPosX(inset)
@@ -75,23 +78,28 @@ class DeckControlPanel(
         ImGui.setCursorScreenPos(imgX, imgY)
         ImGui.invisibleButton("##drag_source_$label", imgAvailW.coerceAtLeast(1f), imgAvailH.coerceAtLeast(1f))
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Interactive monitor for Deck $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
+            ImGui.setTooltip("Interactive monitor for $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
         }
         if (ImGui.isItemClicked(0)) {
-            presetState.activeTopTab = if (isDeckA) "Deck A" else "Deck B"
+            presetState.activeTopTab = label
         }
         
+        val deckPayloadName = when (label) {
+            "Deck A" -> "A"
+            "Deck B" -> "B"
+            "Deck BG" -> "BG"
+            else -> "PV"
+        }
+
         if (ImGui.beginDragDropSource()) {
-            val deckName = if (isDeckA) "A" else "B"
-            ImGui.setDragDropPayload("MONITOR_DRAG", deckName)
-            ImGui.text("Move Deck $deckName")
+            ImGui.setDragDropPayload("MONITOR_DRAG", deckPayloadName)
+            ImGui.text("Move $label")
             ImGui.endDragDropSource()
         }
 
         if (ImGui.beginDragDropSource(128)) { // 128 = ImGuiDragDropFlags.SourceButtonMouseButtonRight
-            val deckName = if (isDeckA) "A" else "B"
-            ImGui.setDragDropPayload("MONITOR_DRAG_RIGHT", deckName)
-            ImGui.text("Copy/Move/Swap Deck $deckName")
+            ImGui.setDragDropPayload("MONITOR_DRAG_RIGHT", deckPayloadName)
+            ImGui.text("Copy/Move/Swap $label")
             ImGui.endDragDropSource()
         }
         
@@ -102,10 +110,13 @@ class DeckControlPanel(
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                     val isDirty = session.presetManager.isDeckDirty(deck, mixer)
                     if (!isDirty) {
-                        session.presetManager.loadDeckPresetAsync(file, isDeckA, deck === mixer.deckC)
+                        session.presetManager.loadDeckPresetAsync(
+                            file,
+                            isDeckA = label == "Deck A",
+                            isDeckBG = label == "Deck BG",
+                            isDeckPV = label == "Deck PV" || label == "Deck C"
+                        )
                     } else {
-                        // Pass this to UIManager via a new callback or use PopupManager directly if we can
-                        // For now, let's assume we need to trigger the popup
                         UIManager.triggerDeckDragDrop(file, deck, isDeckA, mixer)
                     }
                 }
@@ -114,9 +125,12 @@ class DeckControlPanel(
             if (payloadMonitor != null) {
                 val fromName = payloadMonitor
                 val toDeck = deck
-                val fromDeck = if (fromName == "A") mixer.deckA
-                               else if (fromName == "B") mixer.deckB
-                               else mixer.deckC
+                val fromDeck = when (fromName) {
+                    "A" -> mixer.deckA
+                    "B" -> mixer.deckB
+                    "BG" -> mixer.deckBG
+                    else -> mixer.deckPV
+                }
                 if (fromDeck !== toDeck) {
                     onUtilityAction(0, fromDeck, toDeck)
                 }
@@ -132,9 +146,12 @@ class DeckControlPanel(
         if (ImGui.beginPopup("monitor_drag_menu_$label")) {
             val fromName = pendingRightDragFrom
             if (fromName != null) {
-                val fromDeck = if (fromName == "A") mixer.deckA
-                               else if (fromName == "B") mixer.deckB
-                               else mixer.deckC
+                val fromDeck = when (fromName) {
+                    "A" -> mixer.deckA
+                    "B" -> mixer.deckB
+                    "BG" -> mixer.deckBG
+                    else -> mixer.deckPV
+                }
                 if (ImGui.menuItem("Move")) {
                     onUtilityAction(0, fromDeck, deck)
                 }
@@ -151,8 +168,8 @@ class DeckControlPanel(
         // Draw border perfectly wrapped around the image
         dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
 
-        // Draw lower-left letter badge overlay ("A" or "B") on monitor
-        val letter = if (isDeckA) "A" else "B"
+        // Draw lower-left letter badge overlay on monitor
+        val letter = deckPayloadName
         val badgePadX = 8f
         val badgePadY = 3f
         val fontLevel = UITheme.FontLevel.H2
@@ -206,16 +223,21 @@ fun drawDeckMonitorToolbar(
 ) {
     ImGui.pushID("monitor_toolbar_$deckLabel")
 
-    val (activePreset, mtime, dtoVersion) = when {
-        isDeckA -> Triple(
+    val (activePreset, mtime, dtoVersion) = when (deckLabel) {
+        "Deck A" -> Triple(
             session.presetManager.activePresetA,
             session.presetManager.activePresetMtimeA,
             session.presetManager.cachedDtoA?.version ?: 1
         )
-        isDeckC -> Triple(
-            session.presetManager.activePresetC,
-            session.presetManager.activePresetMtimeC,
-            session.presetManager.cachedDtoC?.version ?: 1
+        "Deck BG" -> Triple(
+            session.presetManager.activePresetBG,
+            session.presetManager.activePresetMtimeBG,
+            session.presetManager.cachedDtoBG?.version ?: 1
+        )
+        "Deck PV", "Deck C" -> Triple(
+            session.presetManager.activePresetPV,
+            session.presetManager.activePresetMtimePV,
+            session.presetManager.cachedDtoPV?.version ?: 1
         )
         else -> Triple(
             session.presetManager.activePresetB,

@@ -30,8 +30,8 @@ object PresetManager {
     @Volatile
     var sessionState = SessionState()
 
-    val deckStatus = Array(3) { AtomicReference(PresetIOStatus()) }
-    private val pendingSaves = Array(3) { AtomicReference<CompletableFuture<*>?>(null) }
+    val deckStatus = Array(4) { AtomicReference(PresetIOStatus()) }
+    private val pendingSaves = Array(4) { AtomicReference<CompletableFuture<*>?>(null) }
 
     data class PendingDeckLoad(
         val dto: DeckPresetDto,
@@ -40,20 +40,34 @@ object PresetManager {
 
     val deckAPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
     val deckBPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-    val deckCPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-
+    val deckBGPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
+    val deckPVPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
+    val deckCPresetQueue get() = deckPVPresetQueue
 
     var activePresetA: String? = null
     var activePresetB: String? = null
-    var activePresetC: String? = null
+    var activePresetBG: String? = null
+    var activePresetPV: String? = null
+    var activePresetC: String?
+        get() = activePresetPV
+        set(value) { activePresetPV = value }
+
     var cachedDtoA: DeckPresetDto? = null
     var cachedDtoB: DeckPresetDto? = null
-    var cachedDtoC: DeckPresetDto? = null
+    var cachedDtoBG: DeckPresetDto? = null
+    var cachedDtoPV: DeckPresetDto? = null
+    var cachedDtoC: DeckPresetDto?
+        get() = cachedDtoPV
+        set(value) { cachedDtoPV = value }
 
-    /** File modification time (ms since epoch) of the most recently loaded deck preset, for Idea E tooltip. */
+    /** File modification time (ms since epoch) of the most recently loaded deck preset. */
     var activePresetMtimeA: Long? = null
     var activePresetMtimeB: Long? = null
-    var activePresetMtimeC: Long? = null
+    var activePresetMtimeBG: Long? = null
+    var activePresetMtimePV: Long? = null
+    var activePresetMtimeC: Long?
+        get() = activePresetMtimePV
+        set(value) { activePresetMtimePV = value }
 
     internal data class RestoredQueueState(
         val files: List<File>,
@@ -64,7 +78,8 @@ object PresetManager {
         val cached = when {
             deck === mixer.deckA -> cachedDtoA
             deck === mixer.deckB -> cachedDtoB
-            deck === mixer.deckC -> cachedDtoC
+            deck === mixer.deckBG -> cachedDtoBG
+            deck === mixer.deckPV -> cachedDtoPV
             else -> null
         }
         if (cached == null) return false
@@ -78,14 +93,16 @@ object PresetManager {
             when {
                 to === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
                 to === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
-                to === mixer.deckC -> { cachedDtoC = null; activePresetC = null }
+                to === mixer.deckBG -> { cachedDtoBG = null; activePresetBG = null }
+                to === mixer.deckPV -> { cachedDtoPV = null; activePresetPV = null }
             }
             return
         }
         val fromDto = when {
             from === mixer.deckA -> cachedDtoA?.let { from.toDto(it.name) } ?: from.toDto("Deck A")
             from === mixer.deckB -> cachedDtoB?.let { from.toDto(it.name) } ?: from.toDto("Deck B")
-            from === mixer.deckC -> cachedDtoC?.let { from.toDto(it.name) } ?: from.toDto("Deck C")
+            from === mixer.deckBG -> cachedDtoBG?.let { from.toDto(it.name) } ?: from.toDto("Deck BG")
+            from === mixer.deckPV -> cachedDtoPV?.let { from.toDto(it.name) } ?: from.toDto("Deck PV")
             else -> return
         }
         
@@ -94,34 +111,31 @@ object PresetManager {
         when {
             to === mixer.deckA -> { cachedDtoA = fromDto; activePresetA = fromDto.name }
             to === mixer.deckB -> { cachedDtoB = fromDto; activePresetB = fromDto.name }
-            to === mixer.deckC -> { cachedDtoC = fromDto; activePresetC = fromDto.name }
+            to === mixer.deckBG -> { cachedDtoBG = fromDto; activePresetBG = fromDto.name }
+            to === mixer.deckPV -> { cachedDtoPV = fromDto; activePresetPV = fromDto.name }
         }
     }
 
     fun moveDeck(mixer: Mixer, from: Deck, to: Deck) {
         copyDeck(mixer, from, to)
-        // Apply an explicit empty DTO rather than calling from.reset() so that all
-        // state — isEmpty, lastSourceSelectBase, modulators — is set atomically via
-        // applyDto and cannot drift on subsequent update() calls.
         from.applyDto(emptyDeckDto(from, mixer))
         when {
             from === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
             from === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
-            from === mixer.deckC -> { cachedDtoC = null; activePresetC = null }
+            from === mixer.deckBG -> { cachedDtoBG = null; activePresetBG = null }
+            from === mixer.deckPV -> { cachedDtoPV = null; activePresetPV = null }
         }
     }
 
     /**
      * Builds a canonical "empty" [DeckPresetDto] for the given deck.
-     * The DTO uses the deck's current active source name and default parameter
-     * values, with [isEmpty] = true and all modulators cleared, so that
-     * [Deck.applyDto] leaves the deck in an inert state that the renderer will skip.
      */
     private fun emptyDeckDto(deck: Deck, mixer: Mixer): DeckPresetDto {
         val label = when {
             deck === mixer.deckA -> "Deck A"
             deck === mixer.deckB -> "Deck B"
-            deck === mixer.deckC -> "Deck C"
+            deck === mixer.deckBG -> "Deck BG"
+            deck === mixer.deckPV -> "Deck PV"
             else -> "Deck"
         }
         return deck.toDto(label).copy(isEmpty = true, visualSourceType = "mandala")
@@ -131,40 +145,52 @@ object PresetManager {
         val dto1 = when {
             deck1 === mixer.deckA -> cachedDtoA?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck A")
             deck1 === mixer.deckB -> cachedDtoB?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck B")
-            deck1 === mixer.deckC -> cachedDtoC?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck C")
+            deck1 === mixer.deckBG -> cachedDtoBG?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck BG")
+            deck1 === mixer.deckPV -> cachedDtoPV?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck PV")
             else -> return
         }
         val dto2 = when {
             deck2 === mixer.deckA -> cachedDtoA?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck A")
             deck2 === mixer.deckB -> cachedDtoB?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck B")
-            deck2 === mixer.deckC -> cachedDtoC?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck C")
+            deck2 === mixer.deckBG -> cachedDtoBG?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck BG")
+            deck2 === mixer.deckPV -> cachedDtoPV?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck PV")
             else -> return
         }
 
         deck1.applyDto(dto2)
         deck2.applyDto(dto1)
 
-        // Update caches
         val oldDto1 = dto1
         val oldDto2 = dto2
 
         when {
             deck1 === mixer.deckA -> { cachedDtoA = oldDto2; activePresetA = oldDto2.name }
             deck1 === mixer.deckB -> { cachedDtoB = oldDto2; activePresetB = oldDto2.name }
-            deck1 === mixer.deckC -> { cachedDtoC = oldDto2; activePresetC = oldDto2.name }
+            deck1 === mixer.deckBG -> { cachedDtoBG = oldDto2; activePresetBG = oldDto2.name }
+            deck1 === mixer.deckPV -> { cachedDtoPV = oldDto2; activePresetPV = oldDto2.name }
         }
         when {
             deck2 === mixer.deckA -> { cachedDtoA = oldDto1; activePresetA = oldDto1.name }
             deck2 === mixer.deckB -> { cachedDtoB = oldDto1; activePresetB = oldDto1.name }
-            deck2 === mixer.deckC -> { cachedDtoC = oldDto1; activePresetC = oldDto1.name }
+            deck2 === mixer.deckBG -> { cachedDtoBG = oldDto1; activePresetBG = oldDto1.name }
+            deck2 === mixer.deckPV -> { cachedDtoPV = oldDto1; activePresetPV = oldDto1.name }
         }
     }
 
-    fun loadDeckPresetAsync(file: File, isDeckA: Boolean, isDeckC: Boolean = false, isManual: Boolean = true) {
+    fun loadDeckPresetAsync(
+        file: File,
+        isDeckA: Boolean = false,
+        isDeckC: Boolean = false,
+        isDeckBG: Boolean = false,
+        isDeckPV: Boolean = false,
+        isManual: Boolean = true
+    ) {
+        val targetPV = isDeckPV || isDeckC
         val deckIndex = when {
-            isDeckC -> 2
             isDeckA -> 0
-            else -> 1
+            isDeckBG -> 2
+            targetPV -> 3
+            else -> 1 // Deck B
         }
         deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.LOADING))
         val fileMtime = file.lastModified().takeIf { it > 0L }
@@ -179,14 +205,15 @@ object PresetManager {
                 val dto = rawDto.copy(name = file.nameWithoutExtension)
                 val pending = PendingDeckLoad(dto, isManual)
                 when {
-                    isDeckC -> deckCPresetQueue.offer(pending)
                     isDeckA -> deckAPresetQueue.offer(pending)
+                    isDeckBG -> deckBGPresetQueue.offer(pending)
+                    targetPV -> deckPVPresetQueue.offer(pending)
                     else -> deckBPresetQueue.offer(pending)
                 }
-                // Mtime is captured before the background thread runs so it reflects the file on disk
                 when {
-                    isDeckC -> activePresetMtimeC = fileMtime
                     isDeckA -> activePresetMtimeA = fileMtime
+                    isDeckBG -> activePresetMtimeBG = fileMtime
+                    targetPV -> activePresetMtimePV = fileMtime
                     else    -> activePresetMtimeB = fileMtime
                 }
                 logger.info { "Deck preset loaded and queued for main thread swap" }
@@ -200,13 +227,17 @@ object PresetManager {
         }, presetIoExecutor)
     }
 
-
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
-        // Capture deck state on the main thread (Phase 2c: include tags)
-        val deckLabel = when (deckIndex) { 0 -> "Deck A"; 2 -> "Deck C"; else -> "Deck B" }
+        val deckLabel = when (deckIndex) {
+            0 -> "Deck A"
+            1 -> "Deck B"
+            2 -> "Deck BG"
+            3 -> "Deck PV"
+            else -> "Deck"
+        }
         val dto = NotesManager.syncToDto(deckLabel, deck.toDto(name, tags))
 
-        if (deckIndex in 0..2) {
+        if (deckIndex in 0..3) {
             deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.SAVING))
             pendingSaves[deckIndex].getAndSet(null)?.cancel(false)
         }
@@ -218,19 +249,19 @@ object PresetManager {
                 val content = json.encodeToString(dto)
                 file.parentFile?.mkdirs()
                 file.writeText(content)
-                // Update mtime to reflect the newly written file
                 when (deckIndex) {
                     0 -> activePresetMtimeA = file.lastModified().takeIf { it > 0L }
                     1 -> activePresetMtimeB = file.lastModified().takeIf { it > 0L }
-                    2 -> activePresetMtimeC = file.lastModified().takeIf { it > 0L }
+                    2 -> activePresetMtimeBG = file.lastModified().takeIf { it > 0L }
+                    3 -> activePresetMtimePV = file.lastModified().takeIf { it > 0L }
                 }
                 logger.info { "Deck preset saved to file successfully" }
-                if (deckIndex in 0..2) {
+                if (deckIndex in 0..3) {
                     deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.IDLE))
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save deck preset to ${file.absolutePath}" }
-                if (deckIndex in 0..2) {
+                if (deckIndex in 0..3) {
                     deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
                 }
             } finally {
@@ -238,11 +269,10 @@ object PresetManager {
             }
         }, presetIoExecutor)
 
-        if (deckIndex in 0..2) {
+        if (deckIndex in 0..3) {
             pendingSaves[deckIndex].set(future)
         }
     }
-
 
     fun applyPendingPresets(mixer: Mixer) {
         // Poll deck A preset queue
@@ -283,26 +313,41 @@ object PresetManager {
             pendingB = deckBPresetQueue.poll()
         }
 
-        // Poll deck C preset queue
-        var pendingC = deckCPresetQueue.poll()
-        while (pendingC != null) {
+        // Poll deck BG preset queue
+        var pendingBG = deckBGPresetQueue.poll()
+        while (pendingBG != null) {
             try {
-                val deckCDto = pendingC.dto
-                mixer.deckC.applyDto(deckCDto)
-                activePresetC = deckCDto.name
-                cachedDtoC = deckCDto
-                NotesManager.syncFromDto("Deck C", deckCDto)
-                if (pendingC.isManual) {
+                val deckBGDto = pendingBG.dto
+                mixer.deckBG.applyDto(deckBGDto)
+                activePresetBG = deckBGDto.name
+                cachedDtoBG = deckBGDto
+                NotesManager.syncFromDto("Deck BG", deckBGDto)
+                logger.info { "Successfully applied Deck BG preset: ${deckBGDto.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Error applying Deck BG preset" }
+            }
+            pendingBG = deckBGPresetQueue.poll()
+        }
+
+        // Poll deck PV preset queue
+        var pendingPV = deckPVPresetQueue.poll()
+        while (pendingPV != null) {
+            try {
+                val deckPVDto = pendingPV.dto
+                mixer.deckPV.applyDto(deckPVDto)
+                activePresetPV = deckPVDto.name
+                cachedDtoPV = deckPVDto
+                NotesManager.syncFromDto("Deck PV", deckPVDto)
+                if (pendingPV.isManual) {
                     PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = true, mixer = mixer)
                 }
-                logger.info { "Successfully applied Deck C preset: ${deckCDto.name}" }
+                logger.info { "Successfully applied Deck PV preset: ${deckPVDto.name}" }
             } catch (e: Exception) {
-                logger.error(e) { "Error applying Deck C preset" }
+                logger.error(e) { "Error applying Deck PV preset" }
             }
-            pendingC = deckCPresetQueue.poll()
+            pendingPV = deckPVPresetQueue.poll()
         }
     }
-
 
     fun saveSession(mixer: Mixer) {
         try {
@@ -314,12 +359,15 @@ object PresetManager {
             
             val deckADto = if (mixer.deckA.isEmpty) emptyDeckDto(mixer.deckA, mixer) else mixer.deckA.toDto(activePresetA ?: "Deck A")
             val deckBDto = if (mixer.deckB.isEmpty) emptyDeckDto(mixer.deckB, mixer) else mixer.deckB.toDto(activePresetB ?: "Deck B")
-            val deckCDto = if (mixer.deckC.isEmpty) emptyDeckDto(mixer.deckC, mixer) else mixer.deckC.toDto(activePresetC ?: "Deck C")
+            val deckBGDto = if (mixer.deckBG.isEmpty) emptyDeckDto(mixer.deckBG, mixer) else mixer.deckBG.toDto(activePresetBG ?: "Deck BG")
+            val deckPVDto = if (mixer.deckPV.isEmpty) emptyDeckDto(mixer.deckPV, mixer) else mixer.deckPV.toDto(activePresetPV ?: "Deck PV")
             
             val session = SessionStateDto(
                 deckA = deckADto,
                 deckB = deckBDto,
-                deckC = deckCDto,
+                deckBG = deckBGDto,
+                deckPV = deckPVDto,
+                deckC = deckPVDto,
                 crossfade = mixer.crossfade.toDto(),
                 masterAlpha = mixer.masterAlpha.toDto(),
                 blendMode = mixer.mode.baseValue,
@@ -331,7 +379,12 @@ object PresetManager {
                 queueNext = mixer.queueNext.toDto(),
                 queuePrev = mixer.queuePrev.toDto(),
                 isRepeatEnabled = PlayQueueManager.isRepeatEnabled,
-                isShuffleEnabled = PlayQueueManager.isShuffleEnabled
+                isShuffleEnabled = PlayQueueManager.isShuffleEnabled,
+                bgQueue = BgQueueManager.queue.map { serializeSessionPath(it) },
+                bgActiveIndex = BgQueueManager.activeIndex,
+                isAutoBGEnabled = BgQueueManager.isAutoBGEnabled,
+                isBgRepeatEnabled = BgQueueManager.isRepeatEnabled,
+                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled
             )
             
             val content = json.encodeToString(session)
@@ -358,7 +411,12 @@ object PresetManager {
             
             mixer.deckA.applyDto(session.deckA)
             mixer.deckB.applyDto(session.deckB)
-            mixer.deckC.applyDto(session.deckC)
+            
+            val bgDto = session.deckBG ?: emptyDeckDto(mixer.deckBG, mixer)
+            mixer.deckBG.applyDto(bgDto)
+
+            val pvDto = session.deckPV ?: session.deckC ?: emptyDeckDto(mixer.deckPV, mixer)
+            mixer.deckPV.applyDto(pvDto)
             
             session.bloom?.let { mixer.bloom.applyDto(it) }
             session.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
@@ -373,9 +431,12 @@ object PresetManager {
             
             activePresetB = if (session.deckB.isEmpty) null else session.deckB.name
             cachedDtoB = if (session.deckB.isEmpty) null else session.deckB
-            
-            activePresetC = if (session.deckC.isEmpty) null else session.deckC.name
-            cachedDtoC = if (session.deckC.isEmpty) null else session.deckC
+
+            activePresetBG = if (bgDto.isEmpty) null else bgDto.name
+            cachedDtoBG = if (bgDto.isEmpty) null else bgDto
+
+            activePresetPV = if (pvDto.isEmpty) null else pvDto.name
+            cachedDtoPV = if (pvDto.isEmpty) null else pvDto
             
             val restoredQueue = resolveRestoredQueue(session.queue, session.activeIndex)
             PlayQueueManager.restoreSessionQueue(
@@ -384,6 +445,15 @@ object PresetManager {
                 session.isAutoVJEnabled,
                 session.isRepeatEnabled,
                 session.isShuffleEnabled
+            )
+
+            val restoredBgQueue = resolveRestoredQueue(session.bgQueue, session.bgActiveIndex)
+            BgQueueManager.restoreSessionQueue(
+                restoredBgQueue.files,
+                restoredBgQueue.activeIndex,
+                session.isAutoBGEnabled,
+                session.isBgRepeatEnabled,
+                session.isBgShuffleEnabled
             )
             logger.info { "Successfully loaded session state from ${sessionFile.name}" }
         } catch (e: Exception) {
@@ -403,11 +473,9 @@ object PresetManager {
     }
 
     internal fun resolveSessionPath(path: String): File? {
-        // Try as relative to library root first
         val relativeToRoot = File(LIBRARY_ROOT, path)
         if (relativeToRoot.exists()) return relativeToRoot
 
-        // Try as absolute path (or relative to CWD)
         val directFile = File(path)
         if (directFile.exists()) return directFile
 
@@ -442,14 +510,18 @@ object PresetManager {
     fun startEmpty(mixer: Mixer) {
         mixer.deckA.reset()
         mixer.deckB.reset()
-        mixer.deckC.reset()
+        mixer.deckBG.reset()
+        mixer.deckPV.reset()
         activePresetA = null
         cachedDtoA = null
         activePresetB = null
         cachedDtoB = null
-        activePresetC = null
-        cachedDtoC = null
+        activePresetBG = null
+        cachedDtoBG = null
+        activePresetPV = null
+        cachedDtoPV = null
         PlayQueueManager.clearQueue()
+        BgQueueManager.clearQueue()
         logger.info { "Started application empty" }
     }
 }

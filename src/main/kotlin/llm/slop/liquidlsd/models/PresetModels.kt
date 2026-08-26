@@ -221,10 +221,12 @@ data class MandalaRecipeDto(
 
 @Serializable
 data class SessionStateDto(
-    val version: Int = 4,
+    val version: Int = 5,
     val deckA: DeckPresetDto,
     val deckB: DeckPresetDto,
-    val deckC: DeckPresetDto,
+    val deckBG: DeckPresetDto? = null,
+    val deckPV: DeckPresetDto? = null,
+    val deckC: DeckPresetDto? = null, // Backward compatibility for v4 session files
     val crossfade: ParameterDto,
     val masterAlpha: ParameterDto,
     val blendMode: Float,
@@ -236,7 +238,12 @@ data class SessionStateDto(
     val queueNext: ParameterDto? = null,
     val queuePrev: ParameterDto? = null,
     val isRepeatEnabled: Boolean = false,
-    val isShuffleEnabled: Boolean = false
+    val isShuffleEnabled: Boolean = false,
+    val bgQueue: List<String> = emptyList(),
+    val bgActiveIndex: Int = -1,
+    val isAutoBGEnabled: Boolean = false,
+    val isBgRepeatEnabled: Boolean = false,
+    val isBgShuffleEnabled: Boolean = false
 )
 
 @Serializable

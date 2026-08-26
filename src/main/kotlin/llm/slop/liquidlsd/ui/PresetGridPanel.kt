@@ -98,7 +98,8 @@ object PresetGridPanel {
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
-            "Deck C" -> mixer.deckC
+            "Deck BG" -> mixer.deckBG
+            "Deck PV", "Deck C" -> mixer.deckPV
             else -> null
         }
         val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
@@ -133,13 +134,14 @@ object PresetGridPanel {
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
-                "Deck C" -> mixer.deckC
+                "Deck BG" -> mixer.deckBG
+                "Deck PV", "Deck C" -> mixer.deckPV
                 else -> null
             }
             val isDeckEmpty = activeDeck?.isEmpty == true
             val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
 
-            // Left column: Side tabs (MIX, A, B, C)
+            // Left column: Side tabs (MIX, A, B, BG, PV)
             ImGui.tableSetColumnIndex(0)
             PresetGridTabs.drawLeftTabs(session, state, mixer, topOffset = headerH)
 
@@ -189,7 +191,8 @@ object PresetGridPanel {
                         if (session.uiTheme.randomizationEnabled) {
                             PresetGridRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                             PresetGridRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
-                            PresetGridRenderer.drawParamRow(session, "rand Deck C", "Mixer/randDeckC", mixer.randDeckC, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                            PresetGridRenderer.drawParamRow(session, "rand Deck BG", "Mixer/randDeckBG", mixer.randDeckBG, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                            PresetGridRenderer.drawParamRow(session, "rand Deck PV", "Mixer/randDeckPV", mixer.randDeckPV, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                             PresetGridRenderer.drawParamRow(session, "rand All", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         }
                     }
@@ -205,11 +208,17 @@ object PresetGridPanel {
                     } else {
                         PresetGridTabs.drawDeckGroupContent(session, "Deck B", mixer.deckB, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
-                } else if (state.activeTopTab == "Deck C") {
-                    if (mixer.deckC.isEmpty) {
-                        drawLaunchpad(session, "Deck C", mixer.deckC, state, mixer)
+                } else if (state.activeTopTab == "Deck BG") {
+                    if (mixer.deckBG.isEmpty) {
+                        drawLaunchpad(session, "Deck BG", mixer.deckBG, state, mixer)
                     } else {
-                        PresetGridTabs.drawDeckGroupContent(session, "Deck C", mixer.deckC, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridTabs.drawDeckGroupContent(session, "Deck BG", mixer.deckBG, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                    }
+                } else if (state.activeTopTab == "Deck PV" || state.activeTopTab == "Deck C") {
+                    if (mixer.deckPV.isEmpty) {
+                        drawLaunchpad(session, "Deck PV", mixer.deckPV, state, mixer)
+                    } else {
+                        PresetGridTabs.drawDeckGroupContent(session, "Deck PV", mixer.deckPV, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 }
             }
@@ -312,7 +321,8 @@ object PresetGridPanel {
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
-            "Deck C" -> mixer.deckC
+            "Deck BG" -> mixer.deckBG
+            "Deck PV", "Deck C" -> mixer.deckPV
             else -> null
         }
         if (activeDeck != null && !activeDeck.isEmpty) {
@@ -418,7 +428,8 @@ object PresetGridPanel {
         mixer: Mixer
     ) {
         val isDeckA = deckLabel == "Deck A"
-        val isDeckC = deckLabel == "Deck C"
+        val isDeckBG = deckLabel == "Deck BG"
+        val isDeckPV = deckLabel == "Deck PV" || deckLabel == "Deck C"
         val deckColorU32 = PresetGridTabs.getDeckColor(deckLabel, 1f)
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
@@ -484,9 +495,13 @@ object PresetGridPanel {
                             session.presetManager.activePresetB = null
                             session.presetManager.cachedDtoB = null
                         }
-                        deck === mixer.deckC -> {
-                            session.presetManager.activePresetC = null
-                            session.presetManager.cachedDtoC = null
+                        deck === mixer.deckBG -> {
+                            session.presetManager.activePresetBG = null
+                            session.presetManager.cachedDtoBG = null
+                        }
+                        deck === mixer.deckPV -> {
+                            session.presetManager.activePresetPV = null
+                            session.presetManager.cachedDtoPV = null
                         }
                     }
                 }
@@ -538,7 +553,7 @@ object PresetGridPanel {
                 } else {
                     for (asset in presetFiles.sortedBy { it.name }) {
                         if (ImGui.menuItem(asset.displayName)) {
-                            session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA, isDeckC)
+                            session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = isDeckA, isDeckBG = isDeckBG, isDeckPV = isDeckPV)
                         }
                     }
                 }

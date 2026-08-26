@@ -6,14 +6,13 @@ data class MixerMonitorLayout(
     val offsetX: Float,
     val masterHeight: Float,
     val deckChildHeight: Float,
-    val deckCHeight: Float
+    val deckCHeight: Float = deckChildHeight
 )
 
 object MixerMonitorLayoutCalculator {
     private const val TWO_DECK_PADDING = 16f
     private const val MIN_MASTER_HEIGHT = 120f
     private const val MIN_DECK_CHILD_HEIGHT = 80f
-    private const val MIN_DECK_C_HEIGHT = 120f
 
     fun calculateMaxAllowedWindowWidth(
         availableHeight: Float,
@@ -34,8 +33,9 @@ object MixerMonitorLayoutCalculator {
         )
         val availableForPreviews = (availableHeight - verticalChrome).coerceAtLeast(0f)
 
-        val aspectMultiplier = 2.5f * aspect
-        val aspectOffset = 8f * aspect
+        // Sum of aspect preview heights: master (1.0 * aspect) + Row 1 (0.5 * aspect) + Row 2 (0.5 * aspect) = 2.0 * aspect
+        val aspectMultiplier = 2.0f * aspect
+        val aspectOffset = 16f * aspect
         val maxAllowedContentWidth = if (availableForPreviews > 0f && aspectMultiplier > 0f) {
             (availableForPreviews + aspectOffset) / aspectMultiplier
         } else {
@@ -67,17 +67,8 @@ object MixerMonitorLayoutCalculator {
         )
         val availableForPreviews = (availableHeight - verticalChrome).coerceAtLeast(0f)
 
-        // Calculate maximum allowed width to maintain exact aspect ratios given available height.
-        // Sum of aspect preview heights:
-        // masterHeight = renderWidth * aspect
-        // deckChildPreviewHeight = (halfWidth) * aspect = ((renderWidth - 16) * 0.5) * aspect = 0.5 * aspect * renderWidth - 8 * aspect
-        // deckCHeight = renderWidth * aspect
-        // Total aspect preview height = 2.5 * aspect * renderWidth - 8 * aspect
-        // To guarantee previews fit within availableForPreviews:
-        // (2.5 * aspect) * renderWidth - (8 * aspect) <= availableForPreviews
-        // renderWidth <= (availableForPreviews + 8 * aspect) / (2.5 * aspect)
-        val aspectMultiplier = 2.5f * aspect
-        val aspectOffset = 8f * aspect
+        val aspectMultiplier = 2.0f * aspect
+        val aspectOffset = 16f * aspect
         val maxAllowedWidth = if (availableForPreviews > 0f && aspectMultiplier > 0f) {
             (availableForPreviews + aspectOffset) / aspectMultiplier
         } else {
@@ -90,7 +81,6 @@ object MixerMonitorLayoutCalculator {
         val halfWidth = ((renderWidth - TWO_DECK_PADDING) * 0.5f).coerceAtLeast(1f)
         val desiredMasterHeight = renderWidth * aspect
         val desiredDeckChildHeight = (halfWidth * aspect) + presetNameExtraHeight
-        val desiredDeckCHeight = renderWidth * aspect
 
         return MixerMonitorLayout(
             contentWidth = contentWidth,
@@ -98,7 +88,7 @@ object MixerMonitorLayoutCalculator {
             offsetX = offsetX,
             masterHeight = desiredMasterHeight.coerceAtLeast(MIN_MASTER_HEIGHT),
             deckChildHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT),
-            deckCHeight = desiredDeckCHeight.coerceAtLeast(MIN_DECK_C_HEIGHT)
+            deckCHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT)
         )
     }
 

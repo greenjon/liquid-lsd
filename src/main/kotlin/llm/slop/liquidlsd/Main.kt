@@ -156,20 +156,32 @@ fun main() {
     mandalaB.parameters["Hue Offset"]?.set(0.5f) // starting color offset for distinction
     val deckB = Deck(mandalaB, initialWidth, initialHeight)
 
-    // Create Deck C (for preview / live tweaking)
-    val recipeC = MandalaRatio(
+    // Create Deck BG (background layer)
+    val recipeBG = MandalaRatio(
+        id = "7777777777777777777",
+        a = 4,
+        b = 4,
+        c = 2,
+        d = 2
+    )
+    val mandalaBG = masterMandala.clone()
+    mandalaBG.recipe = recipeBG
+    val deckBG = Deck(mandalaBG, initialWidth, initialHeight)
+
+    // Create Deck PV (for preview / live tweaking)
+    val recipePV = MandalaRatio(
         id = "9999999999999999999", // generic ID
         a = 3,
         b = 3,
         c = 3,
         d = 3
     )
-    val mandalaC = masterMandala.clone()
-    mandalaC.recipe = recipeC
-    val deckC = Deck(mandalaC, initialWidth, initialHeight)
+    val mandalaPV = masterMandala.clone()
+    mandalaPV.recipe = recipePV
+    val deckPV = Deck(mandalaPV, initialWidth, initialHeight)
 
     // Create Mixer
-    val mixer = Mixer(deckA, deckB, deckC, initialWidth, initialHeight)
+    val mixer = Mixer(deckA, deckB, deckBG, deckPV, initialWidth, initialHeight)
     if (UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
         PresetManager.startEmpty(mixer)
     } else {
@@ -294,11 +306,15 @@ fun main() {
         deckB.update()
         renderer.renderDeck(deckB)
 
-        // 3. Update and Render Deck C (preview)
-        mixer.deckC.update()
-        renderer.renderDeck(mixer.deckC)
+        // 3. Update and Render Deck BG (background layer)
+        mixer.deckBG.update()
+        renderer.renderDeck(mixer.deckBG)
 
-        // 4. Update and composite Deck A & B in the Mixer
+        // 4. Update and Render Deck PV (preview)
+        mixer.deckPV.update()
+        renderer.renderDeck(mixer.deckPV)
+
+        // 5. Update and composite Decks in the Mixer
         mixer.update()
         renderer.renderMixer(mixer)
 
@@ -438,7 +454,8 @@ fun main() {
     renderer.dispose()
     deckA.dispose()
     deckB.dispose()
-    deckC.dispose()
+    deckBG.dispose()
+    deckPV.dispose()
     mixer.dispose()
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.disposeAll()
     Geometry.dispose()

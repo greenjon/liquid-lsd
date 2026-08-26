@@ -4,6 +4,22 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
+## 4-Deck Architecture (Deck BG & Deck PV), 2x2 Monitor Grid, and 4-Column Library
+
+- **Decision**: Evolve the rendering and UI architecture from a 3-deck model (A, B, C) to a dedicated 4-deck pipeline (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`):
+  - **Background Compositing Layer (`Deck BG`)**: Rendered in GLSL (`mixer.frag`) directly beneath the crossfaded A/B foreground (`rgb = fg.rgb + bg.rgb * (1.0 - fg.a)`), allowing transparent and additive foreground visuals to float naturally over dynamic background visuals.
+  - **Dedicated Preview Deck (`Deck PV`)**: Renamed `Deck C` to `Deck PV` for visual monitoring and preparation without affecting master output.
+  - **2x2 Preview Monitor Matrix**: Arranged deck monitors in a symmetrical 2x2 grid (Top: A & B; Bottom: BG & PV) with interactive toolbars, letter badges, drag-and-drop routing, and individual deck theme coloring.
+  - **4-Column Library**: Organized the browser panel into 4 balanced columns: Presets | Playlists | A/B Play Queue | Background Queue (`BgQueueManager`).
+  - **Unified Top Action Toolbar**: Eliminated cluttered inline row buttons in favor of a top action bar (`[A] [B] [BG] [PV] [Q] [BGQ] [+]`) with mutual selection between Presets and Playlists.
+  - **Background Queue Engine**: Built a single-deck dip-to-black state transition machine for automated or manual background cycling.
+- **Rationale**:
+  - Solves the visual clutter problem of having separate load buttons on every preset row when multiple deck targets exist.
+  - Provides a dedicated background layer essential for multi-layer generative visual performance.
+  - Symmetrical 2x2 monitor grid maximizes screen estate and preserves equal aspect ratios for all decks.
+
+---
+
 ## Per-Modulator Audio Envelope Followers & Dual-Trace Oscilloscope
 
 - **Decision**: Implement independent per-modulator audio envelope followers with selectable dynamics presets and contextual custom sliders:

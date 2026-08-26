@@ -1,6 +1,23 @@
 # Liquid LSD — Release Notes
 
 ## Version 1.0.0-beta.28 (Unreleased)
+- **Dedicated Background (BG) Layer & Deck PV (Preview) Architecture**:
+  - Added a dedicated 4th rendering deck `deckBG` rendered beneath the Deck A & Deck B crossfade composite in `mixer.frag` (`rgb = fg.rgb + bg.rgb * (1.0 - fg.a)`).
+  - Renamed `Deck C` to `Deck PV` (Preview) across the entire UI and parameters, maintaining backward compatibility aliases for `deckC`.
+  - Added modulatable parameter paths `Deck BG/...`, `Deck PV/...`, `Mixer/randDeckBG`, and `Mixer/randDeckPV`.
+- **2x2 Preview Monitor Matrix**:
+  - Replaced the stacked monitor layout with a balanced 2x2 grid: Top row = `Deck A` & `Deck B`, Bottom row = `Deck BG` & `Deck PV`.
+  - Added dedicated letter overlay badges (`A`, `B`, `BG`, `PV`) and distinct deck theme colors (Amber/Gold for BG, Mint Green for PV).
+  - Each monitor includes interactive top preset status bars, `Save`, and `Eject` buttons, alongside full drag-and-drop routing and right-click Copy/Move/Swap menus.
+  - Expanded momentary mixer controls with 7 quick action buttons (`< Prev`, `Next >`, `Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`).
+- **4-Column Library Layout & Unified Top Action Toolbar**:
+  - Expanded the browser panel into 4 balanced columns: **Presets** | **Playlists** | **A/B Play Queue** | **Background Queue**.
+  - Added a unified Top Action Toolbar (`[A] [B] [BG] [PV] [Q] [BGQ] [+]`) above Presets and Playlists for instant loading, routing, and preset creation.
+  - Selecting a preset in the Presets column automatically deselects in Playlists (and vice versa) for clean, unambiguous routing.
+  - Added `[+]` button dropdown to quickly initialize a new blank preset on any deck (`[A]`, `[B]`, `[BG]`, or `[PV]`).
+- **Background Queue (`BgQueueManager`)**:
+  - Built a dedicated background playlist queue with automated cycling (`AUTO-BG`), repeat, and shuffle modes.
+  - Implemented single-deck dip-to-black fade transitions between background presets with configurable fade timings.
 - **4D Hyper-Mesh Visual Source (`hyper_mesh`)**:
   - Implemented real-time GPU-accelerated 4D Polychoron rendering covering the **600-cell** (120 vertices, 720 edges) and **120-cell** (600 vertices, 1,200 edges, dual polytope).
   - Added continuous 4D hyper-rotations across the $XW$, $YW$, and $ZW$ planes for hypnotic, inside-out polytope cell inversions and multi-axis tumbling.

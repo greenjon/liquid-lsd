@@ -68,7 +68,7 @@ class MixerMonitorPanel(
         // --- Momentary Controls: Playlist Prev/Next & Randomize A/B/C/All ---
         val spacingX = ImGui.getStyle().itemSpacing.x
         val totalAvailW = ImGui.getContentRegionAvailX()
-        val numButtons = if (session.uiTheme.randomizationEnabled) 6 else 2
+        val numButtons = if (session.uiTheme.randomizationEnabled) 7 else 2
         val mBtnW = ((totalAvailW - (spacingX * (numButtons - 1))) / numButtons).coerceAtLeast(20f)
         val mBtnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() * 0.9f }.coerceAtLeast(20f)
 
@@ -131,16 +131,31 @@ class MixerMonitorPanel(
 
             ImGui.sameLine()
 
-            // Rand C Button
+            // Rand BG Button
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("${Icons.DICES} C##rand_deck_c", mBtnW, mBtnH)) {
+            if (ImGui.button("${Icons.DICES} BG##rand_deck_bg", mBtnW, mBtnH)) {
                 PresetGridUndo.pushUndoState(presetState, mixer)
-                mixer.randomizeDeckC()
+                mixer.randomizeDeckBG()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck C modulators & base values (Mixer/randDeckC).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize Deck BG modulators & base values (Mixer/randDeckBG).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+            }
+            ImGui.popStyleColor(3)
+
+            ImGui.sameLine()
+
+            // Rand PV Button
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
+            if (ImGui.button("${Icons.DICES} PV##rand_deck_pv", mBtnW, mBtnH)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                mixer.randomizeDeckPV()
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize Deck PV modulators & base values (Mixer/randDeckPV).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
             }
             ImGui.popStyleColor(3)
 
@@ -155,7 +170,7 @@ class MixerMonitorPanel(
                 mixer.randomizeAll()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize all Decks (A, B, C) and Master parameters (Mixer/randAll).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
             }
             ImGui.popStyleColor(3)
         }
@@ -173,147 +188,33 @@ class MixerMonitorPanel(
         ImGui.separator()
         ImGui.spacing()
 
-        // --- Deck Monitors ---
-        val btnW = 40f
+        // --- Deck Monitors (2x2 Grid) ---
         val padding = 16f
         val halfW = ((availW - padding) * 0.5f).coerceAtLeast(1f)
         
         val startX = baseScreenX + offsetX
         val centerY = ImGui.getCursorScreenPosY()
-        val deckBStartX = startX + halfW + padding
+        val rightColStartX = startX + halfW + padding
 
-        // --- Render child panels ---
         val subH = layout.deckChildHeight.coerceAtLeast(1f)
-        val deckCH = layout.deckCHeight.coerceAtLeast(1f)
         
-        val childY = centerY
-        
-        ImGui.setCursorScreenPos(startX, childY)
+        // --- Row 1: Deck A & Deck B ---
+        ImGui.setCursorScreenPos(startX, centerY)
         drawDeckControls(mixer, "Deck A", mixer.deckA, halfW, subH, true)
         
-        ImGui.setCursorScreenPos(deckBStartX, childY)
+        ImGui.setCursorScreenPos(rightColStartX, centerY)
         drawDeckControls(mixer, "Deck B", mixer.deckB, halfW, subH, false)
         
-        val endY = ImGui.getCursorScreenPosY()
-        ImGui.setCursorScreenPos(startX, endY)
-
-        // --- Deck C / Preview Monitor ---
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Interactive top preset bar for Deck C
-        ImGui.setCursorScreenPos(startX, ImGui.getCursorScreenPosY())
-        drawDeckMonitorToolbar(session, "Deck C", mixer.deckC, isDeckA = false, isDeckC = true, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = availW)
-        ImGui.spacing()
+        // --- Row 2: Deck BG & Deck PV ---
+        val row2Y = centerY + subH + ImGui.getStyle().getItemSpacingY() + 6f
         
-        val imgX = startX
-        val imgY = ImGui.getCursorScreenPosY()
+        ImGui.setCursorScreenPos(startX, row2Y)
+        drawDeckControls(mixer, "Deck BG", mixer.deckBG, halfW, subH, false)
         
-        val dlPreview = ImGui.getWindowDrawList()
-        dlPreview.addRectFilled(imgX, imgY, imgX + availW, imgY + deckCH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
-
-        ImGui.image(mixer.deckC.getOutputTexture(), availW, deckCH, 0f, 1f, 1f, 0f)
-
-        ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.invisibleButton("##drag_source_C", availW.coerceAtLeast(1f), deckCH.coerceAtLeast(1f))
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Interactive Deck C monitor. Click to focus Preset Grid, drag to copy/move/swap, or drop preset files to load.")
-        }
-        if (ImGui.isItemClicked(0)) {
-            presetState.activeTopTab = "Deck C"
-        }
-
-        if (ImGui.beginDragDropSource()) {
-            ImGui.setDragDropPayload("MONITOR_DRAG", "C")
-            ImGui.text("Move Deck C")
-            ImGui.endDragDropSource()
-        }
-
-        if (ImGui.beginDragDropSource(128)) { // 128 = ImGuiDragDropFlags.SourceButtonMouseButtonRight
-            ImGui.setDragDropPayload("MONITOR_DRAG_RIGHT", "C")
-            ImGui.text("Copy/Move/Swap Deck C")
-            ImGui.endDragDropSource()
-        }
-
-        if (ImGui.beginDragDropTarget()) {
-            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-            if (payload != null) {
-                val file = java.io.File(payload)
-                if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckC = true)
-                }
-            }
-            val payloadMonitor = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG")
-            if (payloadMonitor != null) {
-                val fromName = payloadMonitor
-                val toDeck = mixer.deckC
-                val fromDeck = if (fromName == "A") mixer.deckA
-                               else if (fromName == "B") mixer.deckB
-                               else mixer.deckC
-                if (fromDeck !== toDeck) {
-                    onUtilityAction(0, fromDeck, toDeck)
-                }
-            }
-            val payloadMonitorRight = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG_RIGHT")
-            if (payloadMonitorRight != null) {
-                pendingRightDragFrom = payloadMonitorRight
-                ImGui.openPopup("monitor_drag_menu_C")
-            }
-            ImGui.endDragDropTarget()
-        }
-
-        if (ImGui.beginPopup("monitor_drag_menu_C")) {
-            val fromName = pendingRightDragFrom
-            if (fromName != null) {
-                val fromDeck = if (fromName == "A") mixer.deckA
-                               else if (fromName == "B") mixer.deckB
-                               else mixer.deckC
-                val toDeck = mixer.deckC
-                if (ImGui.menuItem("Move")) {
-                    onUtilityAction(0, fromDeck, toDeck)
-                }
-                if (ImGui.menuItem("Copy")) {
-                    onUtilityAction(1, fromDeck, toDeck)
-                }
-                if (ImGui.menuItem("Swap")) {
-                    onUtilityAction(2, fromDeck, toDeck)
-                }
-            }
-            ImGui.endPopup()
-        }
-
-        val deckCColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, 1f)
-        dlPreview.addRect(imgX - 1f, imgY - 1f, imgX + availW + 1f, imgY + layout.deckCHeight + 1f, deckCColor, 0f, 0, 2f)
-
-        // Draw lower-left letter badge overlay ("C") on Deck C monitor
-        val letterC = "C"
-        val badgePadXC = 8f
-        val badgePadYC = 3f
-        val fontLevelC = UITheme.FontLevel.H2
-        var textWC = 0f
-        var textHC = 0f
-        session.uiTheme.withFont(fontLevelC) {
-            val sz = ImGui.calcTextSize(letterC)
-            textWC = sz.x
-            textHC = sz.y
-        }
-        val badgeWC = (textWC + badgePadXC * 2f).coerceAtLeast(24f)
-        val badgeHC = (textHC + badgePadYC * 2f).coerceAtLeast(24f)
-        val badgeMarginC = 6f
-        val badgeMinXC = imgX + badgeMarginC
-        val badgeMaxYC = imgY + layout.deckCHeight - badgeMarginC
-        val badgeMinYC = badgeMaxYC - badgeHC
-        val badgeMaxXC = badgeMinXC + badgeWC
-
-        dlPreview.addRectFilled(badgeMinXC, badgeMinYC, badgeMaxXC, badgeMaxYC, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
-        dlPreview.addRect(badgeMinXC, badgeMinYC, badgeMaxXC, badgeMaxYC, deckCColor, 4f, 0, 1.5f)
-
-        val textXC = badgeMinXC + (badgeWC - textWC) * 0.5f
-        val textYC = badgeMinYC + (badgeHC - textHC) * 0.5f
-        session.uiTheme.withFont(fontLevelC) {
-            dlPreview.addText(textXC, textYC, deckCColor, letterC)
-        }
+        ImGui.setCursorScreenPos(rightColStartX, row2Y)
+        drawDeckControls(mixer, "Deck PV", mixer.deckPV, halfW, subH, false)
+        
+        ImGui.setCursorScreenPos(startX, row2Y + subH + 4f)
     }
 
     fun drawFlatSlider(

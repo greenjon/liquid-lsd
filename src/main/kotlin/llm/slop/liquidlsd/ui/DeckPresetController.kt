@@ -43,7 +43,8 @@ class DeckPresetController(
             val cached = when {
                 deck === mixer.deckA -> session.presetManager.cachedDtoA
                 deck === mixer.deckB -> session.presetManager.cachedDtoB
-                deck === mixer.deckC -> session.presetManager.cachedDtoC
+                deck === mixer.deckBG -> session.presetManager.cachedDtoBG
+                deck === mixer.deckPV || deck === mixer.deckC -> session.presetManager.cachedDtoPV
                 else -> null
             }
             cached?.tags ?: emptyList()
@@ -59,9 +60,13 @@ class DeckPresetController(
                 session.presetManager.activePresetB = cleanName
                 session.presetManager.cachedDtoB = dto
             }
-            deck === mixer.deckC -> {
-                session.presetManager.activePresetC = cleanName
-                session.presetManager.cachedDtoC = dto
+            deck === mixer.deckBG -> {
+                session.presetManager.activePresetBG = cleanName
+                session.presetManager.cachedDtoBG = dto
+            }
+            deck === mixer.deckPV || deck === mixer.deckC -> {
+                session.presetManager.activePresetPV = cleanName
+                session.presetManager.cachedDtoPV = dto
             }
         }
         val file = File("library/presets/$cleanName.lsd")
@@ -69,7 +74,8 @@ class DeckPresetController(
         val deckIndex = when {
             deck === mixer.deckA -> 0
             deck === mixer.deckB -> 1
-            deck === mixer.deckC -> 2
+            deck === mixer.deckBG -> 2
+            deck === mixer.deckPV || deck === mixer.deckC -> 3
             else -> -1
         }
         session.presetManager.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
@@ -93,7 +99,7 @@ class DeckPresetController(
                     popupManager.pendingDeckActionB = when (mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
                     popupManager.pendingDeckUtilitySourceB = from
                 }
-                mixer.deckC -> {
+                mixer.deckC, mixer.deckPV -> {
                     popupManager.pendingDeckActionC = when (mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
                     popupManager.pendingDeckUtilitySourceC = from
                 }
@@ -105,7 +111,8 @@ class DeckPresetController(
         val activeName = when {
             deck === mixer.deckA -> session.presetManager.activePresetA
             deck === mixer.deckB -> session.presetManager.activePresetB
-            deck === mixer.deckC -> session.presetManager.activePresetC
+            deck === mixer.deckBG -> session.presetManager.activePresetBG
+            deck === mixer.deckPV || deck === mixer.deckC -> session.presetManager.activePresetPV
             else -> null
         }
         if (activeName != null && !isSaveAs) {
@@ -114,7 +121,8 @@ class DeckPresetController(
             val cached = when {
                 deck === mixer.deckA -> session.presetManager.cachedDtoA
                 deck === mixer.deckB -> session.presetManager.cachedDtoB
-                deck === mixer.deckC -> session.presetManager.cachedDtoC
+                deck === mixer.deckBG -> session.presetManager.cachedDtoBG
+                deck === mixer.deckPV || deck === mixer.deckC -> session.presetManager.cachedDtoPV
                 else -> null
             }
             val defaultName = if (activeName != null && isSaveAs) {
@@ -143,9 +151,10 @@ class DeckPresetController(
             when (session.uiTheme.autoVjDirtyBehavior) {
                 UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
                     val activeName = when {
-                        deck === mixer.deckC -> session.presetManager.activePresetC
                         deck === mixer.deckA -> session.presetManager.activePresetA
-                        else -> session.presetManager.activePresetB
+                        deck === mixer.deckB -> session.presetManager.activePresetB
+                        deck === mixer.deckBG -> session.presetManager.activePresetBG
+                        else -> session.presetManager.activePresetPV
                     }
                     if (activeName != null && activeName != "None") {
                         saveDeckPreset(mixer, activeName, deck, isDeckA)
@@ -156,12 +165,12 @@ class DeckPresetController(
                     performEjectDeck(mixer, deck)
                 }
                 UITheme.AutoVjDirtyBehavior.SKIP -> {
-                    if (deck === mixer.deckC) {
-                        popupManager.pendingDeckActionC = PopupManager.PendingDeckAction.NEW
-                    } else if (deck === mixer.deckA) {
+                    if (deck === mixer.deckA) {
                         popupManager.pendingDeckActionA = PopupManager.PendingDeckAction.NEW
-                    } else {
+                    } else if (deck === mixer.deckB) {
                         popupManager.pendingDeckActionB = PopupManager.PendingDeckAction.NEW
+                    } else {
+                        popupManager.pendingDeckActionC = PopupManager.PendingDeckAction.NEW
                     }
                 }
             }
@@ -179,9 +188,13 @@ class DeckPresetController(
                 session.presetManager.activePresetB = null
                 session.presetManager.cachedDtoB = null
             }
-            deck === mixer.deckC -> {
-                session.presetManager.activePresetC = null
-                session.presetManager.cachedDtoC = null
+            deck === mixer.deckBG -> {
+                session.presetManager.activePresetBG = null
+                session.presetManager.cachedDtoBG = null
+            }
+            deck === mixer.deckPV || deck === mixer.deckC -> {
+                session.presetManager.activePresetPV = null
+                session.presetManager.cachedDtoPV = null
             }
         }
     }

@@ -54,10 +54,8 @@ object LibraryPanel {
 
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
         checkAutoRefresh()
-        val safeW = width.coerceAtLeast(60f)
-        val sidebarWidth = (safeW * 0.33f).coerceAtLeast(20f)
-        val centerWidth = (safeW * 0.33f).coerceAtLeast(20f)
-        val queueWidth = (safeW - sidebarWidth - centerWidth).coerceAtLeast(20f)
+        val safeW = width.coerceAtLeast(80f)
+        val colWidth = ((safeW - 24f) * 0.25f).coerceAtLeast(20f)
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6f)
         if (ImGui.beginMenuBar()) {
@@ -108,24 +106,28 @@ object LibraryPanel {
 
         val contentH = (ImGui.getContentRegionAvailY() - 5f).coerceAtLeast(1f)
 
-        // Column 1 (Left): Presets Library
-        val sw = (sidebarWidth - 6f).coerceAtLeast(1f)
-        ImGui.beginChild("LibraryPresetsList", sw, contentH, true)
+        // Column 1: Presets Library
+        ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true)
         PresetListPanel.draw(session, mixer, presetState)
         ImGui.endChild()
         ImGui.sameLine()
 
-        // Column 2 (Middle): Playlist Editor
-        val cw = (centerWidth - 6f).coerceAtLeast(1f)
-        ImGui.beginChild("LibraryPlaylistEditor", cw, contentH, true)
+        // Column 2: Playlist Editor
+        ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true)
         PlaylistEditorPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
-        // Column 3 (Right): Play Queue
-        val qw = (queueWidth - 8f).coerceAtLeast(1f)
-        ImGui.beginChild("LibraryQueue", qw, contentH, true)
+        // Column 3: Play Queue (A/B)
+        ImGui.beginChild("LibraryQueue", colWidth, contentH, true)
         QueueActionsPanel.draw(session, mixer)
+        ImGui.endChild()
+        ImGui.sameLine()
+
+        // Column 4: Background Queue (BG)
+        val lastColWidth = (ImGui.getContentRegionAvailX() - 4f).coerceAtLeast(colWidth)
+        ImGui.beginChild("LibraryBgQueue", lastColWidth, contentH, true)
+        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
         // Popups

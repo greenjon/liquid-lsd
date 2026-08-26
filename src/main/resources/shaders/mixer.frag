@@ -4,6 +4,7 @@ out vec4 fragColor;
 
 uniform sampler2D uTex1;
 uniform sampler2D uTex2;
+uniform sampler2D uTexBG;
 uniform int uMode; // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
 uniform float uBalance; // 0.0 = Tex1 (Deck A), 1.0 = Tex2 (Deck B)
 uniform float uAlpha; // Master output alpha / gain
@@ -40,23 +41,31 @@ vec4 sampleBlended(vec2 uv) {
     return blended;
 }
 
+vec4 sampleComposite(vec2 uv) {
+    vec4 bg = texture(uTexBG, uv);
+    vec4 fg = sampleBlended(uv);
+    vec3 rgb = fg.rgb + bg.rgb * (1.0 - fg.a);
+    float a = clamp(fg.a + bg.a * (1.0 - fg.a), 0.0, 1.0);
+    return vec4(rgb, a);
+}
+
 void main() {
-    vec4 baseColor = sampleBlended(vTexCoord);
+    vec4 baseColor = sampleComposite(vTexCoord);
 
     if (uBloom > 0.0) {
         float stepX = 0.004 * uBloom;
         float stepY = 0.004 * uBloom;
 
         vec4 blur = vec4(0.0);
-        blur += sampleBlended(vTexCoord + vec2(-stepX, -stepY)) * 0.075;
-        blur += sampleBlended(vTexCoord + vec2(0.0, -stepY)) * 0.125;
-        blur += sampleBlended(vTexCoord + vec2(stepX, -stepY)) * 0.075;
-        blur += sampleBlended(vTexCoord + vec2(-stepX, 0.0)) * 0.125;
+        blur += sampleComposite(vTexCoord + vec2(-stepX, -stepY)) * 0.075;
+        blur += sampleComposite(vTexCoord + vec2(0.0, -stepY)) * 0.125;
+        blur += sampleComposite(vTexCoord + vec2(stepX, -stepY)) * 0.075;
+        blur += sampleComposite(vTexCoord + vec2(-stepX, 0.0)) * 0.125;
         blur += baseColor * 0.2;
-        blur += sampleBlended(vTexCoord + vec2(stepX, 0.0)) * 0.125;
-        blur += sampleBlended(vTexCoord + vec2(-stepX, stepY)) * 0.075;
-        blur += sampleBlended(vTexCoord + vec2(0.0, stepY)) * 0.125;
-        blur += sampleBlended(vTexCoord + vec2(stepX, stepY)) * 0.075;
+        blur += sampleComposite(vTexCoord + vec2(stepX, 0.0)) * 0.125;
+        blur += sampleComposite(vTexCoord + vec2(-stepX, stepY)) * 0.075;
+        blur += sampleComposite(vTexCoord + vec2(0.0, stepY)) * 0.125;
+        blur += sampleComposite(vTexCoord + vec2(stepX, stepY)) * 0.075;
 
         // Screen-blend the blurred highlight additively
         fragColor = (baseColor + blur * uBloom * 1.5) * uAlpha;

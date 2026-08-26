@@ -461,6 +461,11 @@ class Renderer {
         glBindTexture(GL_TEXTURE_2D, mixer.deckB.getOutputTexture())
         mixerShader.setUniform("uTex2", 1)
 
+        // Bind Deck BG output texture to Unit 2
+        glActiveTexture(GL_TEXTURE2)
+        glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
+        mixerShader.setUniform("uTexBG", 2)
+
         // Set mix uniforms
         mixerShader.setUniform("uMode", mixer.mode.value.toInt())
         mixerShader.setUniform("uBalance", (mixer.crossfade.value + 1.0f) / 2.0f)

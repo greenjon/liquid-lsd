@@ -9,25 +9,24 @@ matrix. Built with Kotlin/JVM, OpenGL 3.3, ImGui, and JACK audio (with fallback)
 ```
 JACK / Java Sound ──► AudioEngine ──► CVRegistry
                                     │  (every frame: updateAll)
-                         ┌──────────┴──────────┐
-                      Deck A                Deck B
-                   (live output)         (live output)
-                         │                    │
-               ModulatableParams        ModulatableParams
-               evaluated via CV         evaluated via CV
-                         │                    │
-                    cleanFBO             cleanFBO
-                         │                    │
-               feedback.frag           feedback.frag
-               (ping-pong FBOs)        (ping-pong FBOs)
-                         └──────────┬──────────┘
-                                Mixer.kt
-                              mixer.frag
-                                  │
-                             masterFBO ──► screen
+                 ┌──────────────────┼──────────────────┐
+              Deck BG             Deck A             Deck B
+          (background layer)   (live output)      (live output)
+                 │                  │                  │
+         ModulatableParams  ModulatableParams  ModulatableParams
+                 │                  │                  │
+              cleanFBO           cleanFBO           cleanFBO
+                 │                  │                  │
+           feedback.frag      feedback.frag      feedback.frag
+                 └──────────────────┼──────────────────┘
+                                 Mixer.kt
+                                mixer.frag
+                          (Composite: (A+B) over BG)
+                                    │
+                               masterFBO ──► screen
 
-Deck C  (preview only — same pipeline as A/B, excluded from Mixer output)
-   └── used to build/audition presets while A and B are performing live
+Deck PV  (preview only — same pipeline as A/B/BG, excluded from Mixer output)
+   └── used to build/audition presets while A, B, and BG are performing live
 ```
 
 ## File Map

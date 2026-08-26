@@ -16,49 +16,58 @@ Liquid LSD features flexible workspace dock layouts:
 ## Panel Layout in Library Mode
 
 ```
-┌───────────────────────────┬───────────────────────────┬───────────────────────────┐
-│     PRESET LIBRARY        │      PLAYLIST EDITOR      │        PLAY QUEUE         │
-│  (All Presets + Filters)  │   [ Playlist Dropdown ▾]  │     (Now Playing / Live)  │
-├───────────────────────────┼───────────────────────────┼───────────────────────────┤
-│ [🔍 Search presets & tags]│ [ + ] [ ••• ]             │ [Play] [Prev] [Next] [🔀] │
-│                           │                           │                           │
-│ [A][B][C] Create preset...│ 1. [A][B][C][Q] Preset 1  │ ▶ 1. Preset 1 (0:42)      │
-│                           │ 2. [A][B][C][Q] Preset 2  │   2. Preset 2             │
-│ [A][B][C][Q] Preset Alpha │ 3. [A][B][C][Q] Preset 3  │   3. Preset 3             │
-│ [A][B][C][Q] Preset Beta  │   (Drag from left to add) │                           │
-└───────────────────────────┴───────────────────────────┴───────────────────────────┘
+┌───────────────────┬───────────────────┬───────────────────┬───────────────────┐
+│  PRESET LIBRARY   │  PLAYLIST EDITOR  │    PLAY QUEUE     │ BACKGROUND QUEUE  │
+│(All Presets/Search│[Playlist Selector]│   (A/B Auto-VJ)   │ (Dedicated BG/Dip)│
+├───────────────────┴───────────────────┼───────────────────┼───────────────────┤
+│ [A] [B] [BG] [PV] [Q] [BGQ] [ + ▾]    │ [AUTO-VJ] [🔁][🔀]│ [AUTO-BG] [🔁][🔀]│
+├───────────────────┬───────────────────┤                   │                   │
+│ [🔍 Search...]    │ 1. Preset Alpha   │ ▶ 1. Preset 1     │ ▶ 1. Nebula BG    │
+│ Preset Alpha      │ 2. Preset Beta    │   2. Preset 2     │   2. Dark Grid BG │
+│ Preset Beta       │ 3. Preset Gamma   │   3. Preset 3     │                   │
+└───────────────────┴───────────────────┴───────────────────┴───────────────────┘
 ```
 
 ---
 
-## 1. Preset Library (Left Column)
+## Unified Top Action Toolbar
+
+Directly above the Presets and Playlist Editor columns sits a streamlined 7-button routing toolbar:
+
+- **`[ A ]`**: Loads the currently selected preset into Deck A.
+- **`[ B ]`**: Loads the currently selected preset into Deck B.
+- **`[ BG ]`**: Loads the currently selected preset into Deck BG (Background).
+- **`[ PV ]`**: Previews the currently selected preset in Deck PV (Preview).
+- **`[ Q ]`**: Appends the currently selected preset to the A/B Play Queue.
+- **`[ BGQ ]`**: Appends the currently selected preset to the Background Queue.
+- **`[ + ▾ ]`**: Opens a dropdown to create a new blank preset on any deck (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`).
+
+> [!TIP]
+> Selecting any preset in the Presets column automatically deselects the current playlist selection (and vice versa) for unambiguous one-click routing.
+
+---
+
+## 1. Preset Library (Column 1)
 
 The Left column displays the complete pool of all available presets discovered across `library/presets/`.
 
 ### Features & Navigation
 - **Search & Tag Filter**: Type into the top search bar to filter presets in real-time by preset name or assigned tags.
-- **`[Create new preset...]` Row**: Positioned directly above the preset list with `[ A ]`, `[ B ]`, and `[ C ]` buttons. Clicking a deck button ejects/resets that deck and immediately switches focus to that deck.
-- **`[ A ] [ B ] [ C ] [ Q ]` Quick Action Buttons**:
-  - **`[ A ]`**: Load preset directly into Deck A.
-  - **`[ B ]`**: Load preset directly into Deck B.
-  - **`[ C ]`**: Preview preset in Deck C (Preview deck).
-  - **`[ Q ]`**: Append preset immediately to the end of the live Play Queue.
+- **Clean List View**: Preset rows display clean typography without cluttered inline buttons.
 - **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
-- **Drag-and-Drop**: Drag presets directly into the Playlist Editor (middle column) or Queue (right column).
-
+- **Drag-and-Drop**: Drag presets directly into the Playlist Editor, A/B Queue, Background Queue, or preview monitors.
 - **Keyboard Shortcuts**: Select a preset and press `Delete` or `Backspace` to delete the preset from your library (with permanent deletion confirmation).
 - **Context Menu Actions (Right-Click)**:
+  - **Load to Deck A / B / BG / PV**: Instant deck routing.
+  - **Add to A/B Queue / Background Queue**: Fast queue assignment.
   - **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
-  - **Play now (and replace queue)**: Clears the current queue, loads the item, and triggers immediate playback.
-  - **Insert into the queue after current**: Inserts item into the live Auto-VJ queue after the currently playing preset.
-  - **Add to the bottom of the queue**: Appends item to the end of the queue.
-  - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit both the preset's filename and comma-separated tags in a single step.
-  - **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy` and existing tags.
-  - **Delete**: Permanently deletes the preset from your disk/library with a warning modal, updating all playlists and queues.
+  - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit filename and tags.
+  - **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy`.
+  - **Delete**: Permanently deletes the preset from disk with a confirmation modal.
 
 ---
 
-## 2. Playlist Editor (Middle Column)
+## 2. Playlist Editor (Column 2)
 
 The Middle column allows inspecting and arranging setlists side-by-side with your preset library.
 
@@ -75,24 +84,33 @@ The Middle column allows inspecting and arranging setlists side-by-side with you
 
 ### Playlist Preset Rows & Auto-Save
 - **Auto-Save on Edit**: Any modification (adding presets, dragging to reorder, or removing items) automatically saves to disk.
-- **`[ A ] [ B ] [ C ] [ Q ]` Buttons**: Fast deck loading and queue appending per playlist item.
 - **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the playlist and press `Delete` or `Backspace` to remove it from the playlist.
 - **Drag Reordering**: Drag items up and down with mint-green insertion line feedback.
 - **Item Context Menu (Right-Click)**:
-  - Play now, Insert after current, Add to bottom of queue.
+  - **Load to Deck A / B / BG / PV / Q / BGQ**.
   - **Remove from playlist**: Removes the preset from the playlist list.
-  - **Delete preset from library...**: Permanently deletes the preset file from your library with a warning modal.
+  - **Delete preset from library...**: Permanently deletes the preset file from your library.
 
 ---
 
-## 3. Play Queue (Right Column)
+## 3. A/B Play Queue (Column 3)
 
-The Right column displays the live sequence of presets for Auto-VJ and playback.
+The 3rd column displays the live sequence of presets for main A/B deck Auto-VJ and playback.
 
+- **`AUTO-VJ`**: Enables automated cycling through queue presets at configured crossfade intervals.
+- **Repeat (`🔁`) & Shuffle (`🔀`)**: Controls queue cycle loop and randomization.
 - **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
-- **Item Context Menu (Right-Click)**:
-  - **Remove from queue**: Removes the item from the play queue list.
-  - **Delete preset from library...**: Permanently deletes the preset file from your library with a warning modal.
+
+---
+
+## 4. Background Queue (Column 4)
+
+The 4th column manages automated cycling and sequential playback for the dedicated background layer (`Deck BG`).
+
+- **`AUTO-BG`**: Enables automatic cycling through background presets.
+- **Dip-to-Black Transitions**: Smoothly fades out the current background, loads the new preset, and fades back in beneath the live foreground.
+- **Repeat (`🔁`) & Shuffle (`🔀`)**: Continuous loop and shuffle for background visuals.
+- **Double-Click & Right-Click Play**: Trigger instant cuts or dip-to-black transitions on demand.
 
 ---
 

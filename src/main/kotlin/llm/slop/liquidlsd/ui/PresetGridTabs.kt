@@ -21,12 +21,14 @@ object PresetGridTabs {
     var activeBtnMaxY: Float = 0f
 
     fun getDeckColor(tab: String, alpha: Float = 1f): Int {
-        return when (tab) {
-            "Deck A", "A" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.8f, alpha)
-            "Deck B", "B" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.4f, 0.2f, alpha)
-            "Deck C", "C" -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.5f, alpha)
-            else         -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, alpha) // Mixer / MIX
+        val rgb = when (tab) {
+            "Deck A", "A" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorA()
+            "Deck B", "B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
+            "Deck BG", "BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
+            "Deck PV", "PV", "Deck C", "C" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
+            else -> floatArrayOf(0.4f, 0.4f, 0.4f) // Mixer / MIX
         }
+        return ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], alpha)
     }
 
     fun getSubTabColor(state: PresetGridState, alpha: Float): Int {
@@ -34,7 +36,7 @@ object PresetGridTabs {
     }
 
     fun calculateLeftTabsWidth(session: llm.slop.liquidlsd.SessionContext): Float {
-        val labels = listOf("MIX", "A", "B", "C")
+        val labels = listOf("MIX", "A", "B", "BG", "PV")
         var maxW = 0f
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             labels.forEach { label ->
@@ -51,13 +53,15 @@ object PresetGridTabs {
         }
         val deckAEmpty = mixer?.deckA?.isEmpty == true
         val deckBEmpty = mixer?.deckB?.isEmpty == true
-        val deckCEmpty = mixer?.deckC?.isEmpty == true
+        val deckBGEmpty = mixer?.deckBG?.isEmpty == true
+        val deckPVEmpty = mixer?.deckPV?.isEmpty == true
 
         val tabs = listOf(
             Triple("MIX", "Mixer", "Mixer controls, Deck sources, and Crossfader parameters."),
             Triple("A",   "Deck A", if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A visual source, geometry, color, and feedback parameters."),
             Triple("B",   "Deck B", if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B visual source, geometry, color, and feedback parameters."),
-            Triple("C",   "Deck C", if (deckCEmpty) "Deck C [EMPTY] — Click to assign a source or preset." else "Deck C visual source, geometry, color, and feedback parameters.")
+            Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG (Background) visual source, geometry, color, and feedback parameters."),
+            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV (Preview) visual source, geometry, color, and feedback parameters.")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
         val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 12f }.coerceAtLeast(28f)
@@ -176,7 +180,8 @@ object PresetGridTabs {
         val deck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
-            "Deck C" -> mixer.deckC
+            "Deck BG" -> mixer.deckBG
+            "Deck PV", "Deck C" -> mixer.deckPV
             else -> mixer.deckA
         }
         if (deck.isEmpty) return
@@ -188,20 +193,23 @@ object PresetGridTabs {
         val activeSubTab = when (state.activeTopTab) {
             "Deck A" -> state.activeDeckASubTab
             "Deck B" -> state.activeDeckBSubTab
-            "Deck C" -> state.activeDeckCSubTab
+            "Deck BG" -> state.activeDeckBGSubTab
+            "Deck PV", "Deck C" -> state.activeDeckPVSubTab
             else -> state.activeDeckASubTab
         }
         if (activeSubTab !in tabs) {
             when (state.activeTopTab) {
                 "Deck A" -> state.activeDeckASubTab = tabs.first()
                 "Deck B" -> state.activeDeckBSubTab = tabs.first()
-                "Deck C" -> state.activeDeckCSubTab = tabs.first()
+                "Deck BG" -> state.activeDeckBGSubTab = tabs.first()
+                "Deck PV", "Deck C" -> state.activeDeckPVSubTab = tabs.first()
             }
         }
         val currentSubTab = when (state.activeTopTab) {
             "Deck A" -> state.activeDeckASubTab
             "Deck B" -> state.activeDeckBSubTab
-            "Deck C" -> state.activeDeckCSubTab
+            "Deck BG" -> state.activeDeckBGSubTab
+            "Deck PV", "Deck C" -> state.activeDeckPVSubTab
             else -> state.activeDeckASubTab
         }
 
@@ -232,7 +240,8 @@ object PresetGridTabs {
                         when (state.activeTopTab) {
                             "Deck A" -> state.activeDeckASubTab = tab
                             "Deck B" -> state.activeDeckBSubTab = tab
-                            "Deck C" -> state.activeDeckCSubTab = tab
+                            "Deck BG" -> state.activeDeckBGSubTab = tab
+                            "Deck PV", "Deck C" -> state.activeDeckPVSubTab = tab
                         }
                     } else {
                         ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
@@ -241,7 +250,8 @@ object PresetGridTabs {
                     when (state.activeTopTab) {
                         "Deck A" -> state.activeDeckASubTab = tab
                         "Deck B" -> state.activeDeckBSubTab = tab
-                        "Deck C" -> state.activeDeckCSubTab = tab
+                        "Deck BG" -> state.activeDeckBGSubTab = tab
+                        "Deck PV", "Deck C" -> state.activeDeckPVSubTab = tab
                     }
                 }
             }
@@ -258,18 +268,12 @@ object PresetGridTabs {
                     val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
                     if (masterMandala != null && deck.source != masterMandala) {
                         deck.source = masterMandala.clone()
-                        deck.isEmpty = false
                     }
                 }
 
-                for (source in VisualSourceRegistry.availableSources) {
-                    if (source.id == "mandala") continue
-                    val isSelected = (source.displayName == tab)
-                    if (ImGui.menuItem(source.displayName, null, isSelected)) {
-                        if (deck.source != source) {
-                            deck.source = source.clone()
-                            deck.isEmpty = false
-                        }
+                VisualSourceRegistry.availableSources.filter { it.id != "mandala" }.forEach { source ->
+                    if (ImGui.menuItem(source.displayName)) {
+                        deck.source = source.clone()
                     }
                 }
                 ImGui.endPopup()
@@ -301,7 +305,8 @@ object PresetGridTabs {
             val activeSubTab = when (parentLabel) {
                 "Deck A" -> state.activeDeckASubTab
                 "Deck B" -> state.activeDeckBSubTab
-                "Deck C" -> state.activeDeckCSubTab
+                "Deck BG" -> state.activeDeckBGSubTab
+                "Deck PV", "Deck C" -> state.activeDeckPVSubTab
                 else -> ""
             }
             activeSubTab == label

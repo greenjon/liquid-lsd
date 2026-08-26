@@ -123,7 +123,8 @@ object CellConfigPanel {
         val deck = when {
             paramKey.startsWith("Deck A/") -> mixer.deckA
             paramKey.startsWith("Deck B/") -> mixer.deckB
-            paramKey.startsWith("Deck C/") -> mixer.deckC
+            paramKey.startsWith("Deck BG/") -> mixer.deckBG
+            paramKey.startsWith("Deck PV/") || paramKey.startsWith("Deck C/") -> mixer.deckPV
             else -> null
         }
         if (deck?.isEmpty == true) {

@@ -16,15 +16,21 @@ import imgui.flag.ImGuiStyleVar
 internal object BrowserDeckButtons {
 
     // ── Deck accent colours ────────────────────────────────────────────────
-    private val DECK_A = floatArrayOf(0.2f, 0.4f, 0.8f) // blue
-    private val DECK_B = floatArrayOf(0.8f, 0.4f, 0.2f) // orange
-    private val DECK_C = floatArrayOf(0.2f, 0.7f, 0.5f) // green
-    private val DECK_Q = floatArrayOf(0.7f, 0.4f, 0.9f) // violet
+    private val DECK_A   = floatArrayOf(0.2f, 0.4f, 0.8f) // blue
+    private val DECK_B   = floatArrayOf(0.8f, 0.4f, 0.2f) // orange
+    private val DECK_BG  = floatArrayOf(0.85f, 0.65f, 0.2f) // amber / gold
+    private val DECK_PV  = floatArrayOf(0.2f, 0.7f, 0.5f) // mint green
+    private val DECK_C   = DECK_PV // alias
+    private val DECK_Q   = floatArrayOf(0.7f, 0.4f, 0.9f) // violet
+    private val DECK_BGQ = floatArrayOf(0.9f, 0.35f, 0.65f) // magenta / rose
 
     fun colorA() = DECK_A
     fun colorB() = DECK_B
+    fun colorBG() = DECK_BG
+    fun colorPV() = DECK_PV
     fun colorC() = DECK_C
     fun colorQ() = DECK_Q
+    fun colorBGQ() = DECK_BGQ
 
     /**
      * Push style vars + colours for a deck action button.

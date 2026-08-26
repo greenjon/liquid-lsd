@@ -34,10 +34,15 @@ class MenuBar(
                             session.presetManager.activePresetB = null
                             session.presetManager.cachedDtoB = null
                         }
-                        if (ImGui.menuItem("To Deck C")) {
-                            mixer.deckC.reset()
-                            session.presetManager.activePresetC = null
-                            session.presetManager.cachedDtoC = null
+                        if (ImGui.menuItem("To Deck BG")) {
+                            mixer.deckBG.reset()
+                            session.presetManager.activePresetBG = null
+                            session.presetManager.cachedDtoBG = null
+                        }
+                        if (ImGui.menuItem("To Deck PV")) {
+                            mixer.deckPV.reset()
+                            session.presetManager.activePresetPV = null
+                            session.presetManager.cachedDtoPV = null
                         }
                         ImGui.endMenu()
                     }
@@ -53,27 +58,23 @@ class MenuBar(
                     if (ImGui.beginMenu("Randomize")) {
                         if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
                             PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.deckA.randomizeModulators()
-                            mixer.deckB.randomizeModulators()
-                            mixer.deckC.randomizeModulators()
-                            listOf(mixer.crossfade, mixer.masterAlpha).forEach { param ->
-                                val randomized = param.modulators.map { it.randomizeActiveValues() }
-                                param.modulators.clear()
-                                param.modulators.addAll(randomized)
-                                param.randomizeBaseValue()
-                            }
+                            mixer.randomizeAll()
                         }
                         if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
                             PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.deckA.randomizeModulators()
+                            mixer.randomizeDeckA()
                         }
                         if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
                             PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.deckB.randomizeModulators()
+                            mixer.randomizeDeckB()
                         }
-                        if (ImGui.selectable("Deck C", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                        if (ImGui.selectable("Deck BG", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
                             PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.deckC.randomizeModulators()
+                            mixer.randomizeDeckBG()
+                        }
+                        if (ImGui.selectable("Deck PV", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
+                            PresetGridUndo.pushUndoState(presetState, mixer)
+                            mixer.randomizeDeckPV()
                         }
                         ImGui.endMenu()
                     }
