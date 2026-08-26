@@ -7,6 +7,11 @@
   - Added 4D perspective and conformal stereographic ($S^3 \to \mathbb{R}^3$) projection modes with modulatable 4D lens focal distance ($d \in [1.05, 5.0]$).
   - Pre-computed Hopf fibration coordinates ($S^3 \to S^2$) per vertex, enabling dynamic harmonic color waves rippling along Hopf tori.
   - Zero-allocation runtime execution on the main OS thread with screen-space extruded anti-aliased tube ribbons and billboard joint nodes ($< 0.3\,\text{ms}$ GPU frametime on Intel Iris Xe).
+- **4D Hyper-Slice Visual Source (`hyper_slice`)**:
+  - Implemented real-time raymarched 3D cross-sections ("MRI scan") through 4D 600-cell and 120-cell polychora using $H_4$ Coxeter reflection group symmetry folding (order 14,400).
+  - Added modulatable `Slice Offset` along the 4D $W$-axis, allowing users to sweep 3D cutting hyperplanes through 4D solids to witness continuous polyhedral births, morphs, and subdivisions.
+  - Added full $XW$, $YW$, and $ZW$ 4D hyper-rotations and continuous 600-cell $\leftrightarrow$ 120-cell Wythoff facet normal slerp morphing.
+  - Features Blinn-Phong specular lighting, Fresnel rim reflections, edge crease detection, and translucent crystal interior reveal.
 - **Icosahedron Visual Enhancements**: Fixed X-axis visual snapping by implementing shader-side interpolation for edge thickness and color coordinates.
 - **CPU Deduplication Optimization**: Refactored the $H_3$ normal generator (`Icosahedron.kt`) to perform zero-allocation deduplication in-place, eliminating GC pressure on the real-time render loop.
 - **Icosahedron Epsilon Variant**: Added a new parallel visual source (`IcosahedronEpsilon`) that skips deduplication and uses micro-repulsion at the poles for side-by-side comparison of rendering artifacts.

@@ -28,6 +28,8 @@ object SourceDocRegistry {
                 " driven by real-time H3 normal vector generation and 60-element icosahedral orbit evaluation.",
         "hyper_mesh" to "Real-time 4D Polychoron (600-cell & 120-cell) with XW/YW/ZW hyper-rotations," +
                 " 4D perspective/stereographic projection, Hopf fibration coloring, and GPU tube rendering.",
+        "hyper_slice" to "Raymarched 3D cross-section MRI scan through 4D 600-cell and 120-cell polychora" +
+                " using H4 Coxeter reflection group domain folding.",
     )
 
     /**
@@ -183,6 +185,26 @@ object SourceDocRegistry {
         "hyper_mesh/Glow" to "Neon halo bloom and edge glow intensity.",
         "hyper_mesh/Opacity" to "Strut and node transparency.",
         "hyper_mesh/Depth Fog" to "Fog falloff attenuation based on 3D distance from viewer.",
+
+        // 4D Hyper-Slice (3D Cross-Section MRI Scan)
+        "hyper_slice/Slice Offset" to "Position of the 3D cutting hyperplane along the W-axis (MRI scan cross-section sweep).",
+        "hyper_slice/Rotate XW" to "Primary 4D hyper-rotation through the XW plane (continuous inside-out polyhedron morphing).",
+        "hyper_slice/Rotate YW" to "Secondary 4D hyper-rotation through the YW plane.",
+        "hyper_slice/Rotate ZW" to "Tertiary 4D hyper-rotation through the ZW plane.",
+        "hyper_slice/Rotate X" to "3D Pitch rotation angle.",
+        "hyper_slice/Rotate Y" to "3D Yaw rotation angle.",
+        "hyper_slice/Rotate Z" to "3D Roll rotation angle.",
+        "hyper_slice/Morph" to "Continuous 4D Wythoff morph between 600-cell (0.0) and 120-cell (1.0).",
+        "hyper_slice/Support H" to "Facet radius / support plane distance in 4D fundamental chamber.",
+        "hyper_slice/Zoom" to "Camera zoom scaling factor.",
+        "hyper_slice/Color Method" to "Color algorithm: 0 = H4 Chamber Sector, 1 = 4D Radial Depth, 2 = 3D Surface Normal Spectrum.",
+        "hyper_slice/Hue Offset" to "Base color palette rotation.",
+        "hyper_slice/Saturation" to "Color saturation.",
+        "hyper_slice/Brightness" to "Overall luminance multiplier.",
+        "hyper_slice/Opacity" to "Face transparency for translucent crystal interior reveal.",
+        "hyper_slice/Edge Thickness" to "Thickness of surface ridge crease highlights.",
+        "hyper_slice/Edge Brightness" to "Brightness of ridge lines and facet boundaries.",
+        "hyper_slice/Glow" to "Proximity halo and volumetric bloom.",
 
         // Feedback chain (shared across all decks)
         "feedback/fbDecay" to "How much of the previous frame persists each step. 0 = no trail; 1 = infinite persistence.",

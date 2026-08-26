@@ -159,5 +159,47 @@ class VisualSourceManifestTest {
         val sourceDoc = SourceDocRegistry.getSourceDescription("hyper_mesh")
         assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for hyper_mesh")
     }
+
+    @Test
+    fun testHyperSliceSourceParametersAndDocs() {
+        val metaFile = File("library/sources/hyper_slice/meta.json")
+        assertTrue(metaFile.exists(), "hyper_slice/meta.json must exist")
+
+        val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+        assertEquals("hyper_slice", meta.id)
+        assertEquals("4D Hyper-Slice", meta.name)
+
+        val paramNames = meta.parameters.map { it.name }.toSet()
+        val expectedParams = setOf(
+            "Slice Offset",
+            "Rotate XW",
+            "Rotate YW",
+            "Rotate ZW",
+            "Rotate X",
+            "Rotate Y",
+            "Rotate Z",
+            "Morph",
+            "Support H",
+            "Zoom",
+            "Color Method",
+            "Hue Offset",
+            "Saturation",
+            "Brightness",
+            "Opacity",
+            "Edge Thickness",
+            "Edge Brightness",
+            "Glow"
+        )
+
+        for (expected in expectedParams) {
+            assertTrue(paramNames.contains(expected), "Missing expected parameter: $expected")
+            val doc = SourceDocRegistry.getParamDescription("hyper_slice", expected)
+            assertTrue(doc.isNotBlank(), "Missing documentation in SourceDocRegistry for hyper_slice/$expected")
+        }
+
+        val sourceDoc = SourceDocRegistry.getSourceDescription("hyper_slice")
+        assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for hyper_slice")
+    }
 }
+
 

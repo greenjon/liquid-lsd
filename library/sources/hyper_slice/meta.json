@@ -1,0 +1,176 @@
+{
+  "id": "hyper_slice",
+  "name": "4D Hyper-Slice",
+  "description": "Raymarched 3D cross-section MRI scan through 4D 600-cell and 120-cell polychora via H4 Coxeter domain folding.",
+  "feedback": false,
+  "parameters": [
+    {
+      "name": "Slice Offset",
+      "default": 0.0,
+      "min": -1.5,
+      "max": 1.5,
+      "type": "BIPOLAR",
+      "defaultMin": -1.0,
+      "defaultMax": 1.0,
+      "description": "Position of the 3D cutting hyperplane along the W-axis (MRI scan cross-section sweep)."
+    },
+    {
+      "name": "Rotate XW",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "Primary 4D hyper-rotation through the XW plane (continuous inside-out polyhedron morphing)."
+    },
+    {
+      "name": "Rotate YW",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "Secondary 4D hyper-rotation through the YW plane."
+    },
+    {
+      "name": "Rotate ZW",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "Tertiary 4D hyper-rotation through the ZW plane."
+    },
+    {
+      "name": "Rotate X",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "3D Pitch rotation of the cross-section solid."
+    },
+    {
+      "name": "Rotate Y",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "3D Yaw rotation of the cross-section solid."
+    },
+    {
+      "name": "Rotate Z",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 6.2831853,
+      "type": "ENDLESS",
+      "isAngle": true,
+      "description": "3D Roll rotation of the cross-section solid."
+    },
+    {
+      "name": "Morph",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0,
+      "description": "Continuous 4D Wythoff morph between 600-cell (0.0) and 120-cell (1.0)."
+    },
+    {
+      "name": "Support H",
+      "default": 0.85,
+      "min": 0.2,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 1.2,
+      "description": "Facet radius / support plane distance in 4D fundamental chamber."
+    },
+    {
+      "name": "Zoom",
+      "default": 1.0,
+      "min": 0.2,
+      "max": 3.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 1.8,
+      "description": "Camera zoom scaling factor."
+    },
+    {
+      "name": "Color Method",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 2.0,
+      "type": "MONOPOLAR",
+      "description": "0 = H4 Chamber Sector, 1 = 4D Radial Depth, 2 = 3D Surface Normal Spectrum."
+    },
+    {
+      "name": "Hue Offset",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "ENDLESS",
+      "description": "Base color palette rotation."
+    },
+    {
+      "name": "Saturation",
+      "default": 0.85,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.4,
+      "defaultMax": 1.0
+    },
+    {
+      "name": "Brightness",
+      "default": 1.1,
+      "min": 0.0,
+      "max": 2.5,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.7,
+      "defaultMax": 1.8
+    },
+    {
+      "name": "Opacity",
+      "default": 0.8,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.4,
+      "defaultMax": 1.0,
+      "description": "Face transparency for translucent crystal interior reveal."
+    },
+    {
+      "name": "Edge Thickness",
+      "default": 0.015,
+      "min": 0.001,
+      "max": 0.08,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.005,
+      "defaultMax": 0.04,
+      "description": "Thickness of surface ridge crease highlights."
+    },
+    {
+      "name": "Edge Brightness",
+      "default": 1.5,
+      "min": 0.0,
+      "max": 3.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.8,
+      "defaultMax": 2.2,
+      "description": "Brightness of ridge lines and facet boundaries."
+    },
+    {
+      "name": "Glow",
+      "default": 1.0,
+      "min": 0.0,
+      "max": 2.5,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.5,
+      "defaultMax": 1.8,
+      "description": "Proximity halo and volumetric bloom."
+    }
+  ]
+}
