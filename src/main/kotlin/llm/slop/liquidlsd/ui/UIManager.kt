@@ -17,6 +17,7 @@ import llm.slop.liquidlsd.rendering.MandalaRatio
 
 
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.presets.PresetManager
 import kotlin.math.roundToInt
 import mu.KotlinLogging
@@ -151,7 +152,7 @@ class UIManager(
         onEjectDeck = monitorEjectDeck
     )
 
-    fun render(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
+    fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
 
         // Update window title dynamically
@@ -283,6 +284,7 @@ class UIManager(
             }
 
             AudioEnginePanel.draw(session, displayWidth, displayHeight)
+            VideoExportModal.draw(session, mixer, renderer, displayWidth, displayHeight)
 
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
             popupManager.drawDeckConfirmPopups(session, mixer)

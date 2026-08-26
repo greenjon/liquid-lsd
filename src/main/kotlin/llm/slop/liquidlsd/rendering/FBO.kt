@@ -11,7 +11,12 @@ private val logger = KotlinLogging.logger {}
  * Currently supports a single color attachment.
  * Future: Can be extended to support multiple color attachments and depth buffers.
  */
-class FBO(val width: Int, val height: Int) {
+class FBO(
+    val width: Int,
+    val height: Int,
+    val internalFormat: Int = GL_RGBA8,
+    val pixelType: Int = if (internalFormat == GL_RGBA16F || internalFormat == GL_RGBA32F) GL_FLOAT else GL_UNSIGNED_BYTE
+) {
     val framebufferId: Int
     val texture: Int
     
@@ -25,7 +30,7 @@ class FBO(val width: Int, val height: Int) {
         // Create color texture attachment
         texture = glGenTextures()
         glBindTexture(GL_TEXTURE_2D, texture)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0)
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, pixelType, 0)
         
         // Set texture parameters (no mipmaps, linear filtering)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)

@@ -333,23 +333,37 @@ object SettingsPanel {
             ImGui.setTooltip("Render master output video behind the semi-transparent interface (Hotkey: B).")
         }
 
-        val limit30 = ImBoolean(session.uiTheme.maxFps == 30)
-        if (ImGui.checkbox("Limit FPS to 30", limit30)) {
-            session.uiTheme.maxFps = if (limit30.get()) 30 else 60
+        val fpsCapVal = ImBoolean(session.uiTheme.maxFps <= 30)
+        if (ImGui.checkbox("Cap UI to 30 FPS", fpsCapVal)) {
+            session.uiTheme.maxFps = if (fpsCapVal.get()) 30 else 60
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Limit frame rate to 30 FPS to conserve power.")
         }
+
+        ImGui.spacing()
+        session.uiTheme.h2("Live Texture Streaming (Resolume / OBS)")
+        ImGui.separator()
+        ImGui.spacing()
+
+        val streamingVal = ImBoolean(llm.slop.liquidlsd.rendering.TextureStreamerManager.isEnabled)
+        if (ImGui.checkbox("Enable Live GPU Texture Sharing (Spout / Syphon)", streamingVal)) {
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.isEnabled = streamingVal.get()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Broadcasts master visuals in real-time over GPU shared memory to Resolume Arena, OBS Studio, and TouchDesigner with zero-copy overhead.")
+        }
+        session.uiTheme.caption("Active Streamer: ${llm.slop.liquidlsd.rendering.TextureStreamerManager.activeStreamer.name}")
     }
 
     private fun drawAudioEngineSettings(session: llm.slop.liquidlsd.SessionContext) {
-        session.uiTheme.h2("Audio Engine (JACK)")
+        session.uiTheme.h2("Audio Engine & Input Device")
         ImGui.separator()
         ImGui.spacing()
 
         val audioEnabled = ImBoolean(session.uiTheme.audioEngineEnabled)
-        if (ImGui.checkbox("Enable Audio Engine (JACK)", audioEnabled)) {
+        if (ImGui.checkbox("Enable Audio Engine", audioEnabled)) {
             val nextVal = audioEnabled.get()
             if (nextVal != session.uiTheme.audioEngineEnabled) {
                 session.uiTheme.audioEngineEnabled = nextVal
@@ -358,12 +372,35 @@ object SettingsPanel {
             }
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Toggle the JACK audio backend. Disabling stops audio processing.")
+            ImGui.setTooltip("Toggle audio capture and analysis. Disabling stops audio processing.")
         }
 
-        ImGui.spacing()
-        session.uiTheme.caption("Disabling the audio engine stops JACK audio processing")
-        session.uiTheme.caption("and limits preset grid columns to LFO, RAND, and MIDI.")
+        if (session.uiTheme.audioEngineEnabled) {
+            ImGui.spacing()
+            session.uiTheme.body("Audio Backend:")
+            val backends = llm.slop.liquidlsd.audio.AudioEngine.AudioBackendMode.values()
+            val backendNames = arrayOf("Auto (JACK -> Java Sound fallback)", "JACK Only (Linux Pro Audio)", "Java Sound Only (Cross-Platform)")
+            val currentBackendIdx = imgui.type.ImInt(session.audioEngine.backendMode.ordinal)
+            if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
+                val nextBackend = backends[currentBackendIdx.get()]
+                session.audioEngine.selectDevice(session.audioEngine.selectedDeviceName, nextBackend)
+            }
+
+            ImGui.spacing()
+            session.uiTheme.body("Input Hardware Device:")
+            val devices = session.audioEngine.getAvailableInputDevices()
+            val deviceNames = devices.map { it.name }.toTypedArray()
+            val currentDeviceIdx = imgui.type.ImInt(
+                devices.indexOfFirst { it.name == session.audioEngine.selectedDeviceName }.coerceAtLeast(0)
+            )
+            if (ImGui.combo("##InputDevice", currentDeviceIdx, deviceNames)) {
+                val chosenDevice = devices[currentDeviceIdx.get()]
+                session.audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
+            }
+
+            ImGui.spacing()
+            session.uiTheme.caption("Active Backend: ${session.audioEngine.getActiveBackendName()}")
+        }
     }
 
     private fun drawMidiControlSettings(session: llm.slop.liquidlsd.SessionContext) {

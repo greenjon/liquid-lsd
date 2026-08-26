@@ -366,6 +366,25 @@ object AudioEngine {
         startClient()
     }
 
+    enum class AudioBackendMode { AUTO, JACK_ONLY, JAVASOUND_ONLY }
+
+    @Volatile
+    var backendMode: AudioBackendMode = AudioBackendMode.AUTO
+
+    @Volatile
+    var selectedDeviceName: String? = null
+
+    fun getAvailableInputDevices(): List<AudioInputDevice> {
+        return JavaSoundClient.getAvailableInputDevices()
+    }
+
+    fun selectDevice(deviceName: String?, backend: AudioBackendMode = backendMode) {
+        selectedDeviceName = deviceName
+        backendMode = backend
+        stop()
+        startClient()
+    }
+
     private fun startClient() {
         // Reset flywheel
         totalSamplesProcessed = 0L
@@ -382,29 +401,34 @@ object AudioEngine {
         accentLevel = 0f
         localOnsetMean = 0f
 
-        jackClient = JackClient("lsd") { buffer, nframes, sampleRate ->
-            processAudio(buffer, nframes, sampleRate)
-        }
-        val started = jackClient?.start() == true
-        lastJackFailure = jackClient?.lastStartFailure
-        lastJackFailureMessage = jackClient?.lastStartFailureMessage
-        
-        if (started) {
-            logger.info { "Successfully started JACK audio client." }
-        } else {
-            if (lastJackFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) {
-                automaticReconnectEnabled = false
-                logger.warn { "Automatic JACK reconnect disabled until manual retry; native library is missing." }
+        var jackStarted = false
+        if (backendMode != AudioBackendMode.JAVASOUND_ONLY) {
+            jackClient = JackClient("lsd") { buffer, nframes, sampleRate ->
+                processAudio(buffer, nframes, sampleRate)
             }
-            logger.info { "JACK audio client failed to start. Trying Java Sound fallback..." }
-            jackClient = null
-            
-            javaSoundClient = JavaSoundClient { buffer, nframes, sampleRate ->
+            jackStarted = jackClient?.start() == true
+            lastJackFailure = jackClient?.lastStartFailure
+            lastJackFailureMessage = jackClient?.lastStartFailureMessage
+
+            if (jackStarted) {
+                logger.info { "Successfully started JACK audio client." }
+            } else {
+                if (lastJackFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) {
+                    automaticReconnectEnabled = false
+                    logger.warn { "Automatic JACK reconnect disabled until manual retry; native library is missing." }
+                }
+                jackClient = null
+            }
+        }
+
+        if (!jackStarted && backendMode != AudioBackendMode.JACK_ONLY) {
+            logger.info { "Starting Java Sound client (device: ${selectedDeviceName ?: "Default"})..." }
+            javaSoundClient = JavaSoundClient(selectedDeviceName) { buffer, nframes, sampleRate ->
                 processAudio(buffer, nframes, sampleRate)
             }
             val javaStarted = javaSoundClient?.start() == true
             if (!javaStarted) {
-                logger.warn { "Java Sound fallback also failed to start. Audio engine is inactive." }
+                logger.warn { "Java Sound fallback failed to start. Audio engine is inactive." }
                 javaSoundClient = null
             }
         }
@@ -444,8 +468,8 @@ object AudioEngine {
      * - `Executors.submit { ... }` (lambda allocation)
      * - `String` manipulation or concatenation
      */
-    internal fun processAudio(buffer: FloatBuffer, nframes: Int, sampleRate: Float) {
-        val currentTime = System.nanoTime()
+    internal fun processAudio(buffer: FloatBuffer, nframes: Int, sampleRate: Float, timestampNanos: Long = System.nanoTime()) {
+        val currentTime = timestampNanos
 
         // Ensure nframes doesn't exceed our pre-allocated buffers
         val safeFrames = nframes.coerceAtMost(lowBuffer.size)

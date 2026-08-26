@@ -46,12 +46,62 @@ class MenuBar(
                         }
                         ImGui.endMenu()
                     }
+                    if (ImGui.menuItem("Export Video (Offline Studio)...")) {
+                        VideoExportModal.open()
+                    }
                     ImGui.separator()
                     if (ImGui.menuItem("Exit")) {
                         logger.info { "Exit clicked" }
                         onTriggerExitFlow()
                     }
                     ImGui.endMenu()
+                }
+
+                // ── Live Video Recording & Dropped Frames HUD ────────────────────────
+                val isRec = llm.slop.liquidlsd.export.RealtimeRecorder.isRecording
+                if (isRec) {
+                    val elapsed = llm.slop.liquidlsd.export.RealtimeRecorder.elapsedSeconds.toInt()
+                    val mins = elapsed / 60
+                    val secs = elapsed % 60
+                    val sizeMb = llm.slop.liquidlsd.export.RealtimeRecorder.fileSizeBytes / (1024f * 1024f)
+                    val dropped = llm.slop.liquidlsd.export.RealtimeRecorder.droppedFramesCount
+                    val dropPct = llm.slop.liquidlsd.export.RealtimeRecorder.droppedPercentage
+
+                    ImGui.pushStyleColor(ImGuiCol.Button, 0.85f, 0.15f, 0.15f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.95f, 0.25f, 0.25f, 1.0f)
+                    if (ImGui.button("REC %02d:%02d (%.1fMB)".format(mins, secs, sizeMb))) {
+                        llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
+                    }
+                    ImGui.popStyleColor(2)
+                    if (ImGui.isItemHovered()) {
+                        ImGui.setTooltip("Click to stop recording and finalize video file.")
+                    }
+
+                    ImGui.sameLine(0f, 4f)
+                    if (dropped > 0) {
+                        ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.35f, 0.35f, 1.0f)
+                    } else {
+                        ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.95f, 0.45f, 1.0f)
+                    }
+                    ImGui.text("Drop: %d (%.1f%%)".format(dropped, dropPct))
+                    ImGui.popStyleColor()
+                    if (ImGui.isItemHovered()) {
+                        ImGui.setTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
+                    }
+                } else {
+                    if (ImGui.menuItem("REC")) {
+                        val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
+                        val outFile = java.io.File("output/recordings/liquid_lsd_$dateStr.mp4")
+                        llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
+                            outputFile = outFile,
+                            width = mixer.width,
+                            height = mixer.height,
+                            fps = 60
+                        )
+                    }
+                    if (ImGui.isItemHovered()) {
+                        ImGui.setTooltip("Start live master output recording to output/recordings/ (60 FPS H.264)")
+                    }
                 }
 
                 if (session.uiTheme.randomizationEnabled) {

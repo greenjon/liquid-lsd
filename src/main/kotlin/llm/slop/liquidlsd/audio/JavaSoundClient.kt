@@ -11,6 +11,7 @@ private val logger = KotlinLogging.logger {}
  * This works natively on macOS, Windows, and Linux without native JACK/PipeWire dependencies.
  */
 class JavaSoundClient(
+    val deviceName: String? = null,
     val onProcess: (FloatBuffer, Int, Float) -> Unit // (buffer, nframes, sampleRate)
 ) {
     @Volatile
@@ -23,26 +24,24 @@ class JavaSoundClient(
     private var running = false
 
     /**
-     * Starts audio capture from the system's default input line.
+     * Starts audio capture from the system's default or selected input line.
      */
     fun start(): Boolean {
         try {
-            logger.info { "Starting Java Sound Audio client..." }
+            logger.info { "Starting Java Sound Audio client (device: ${deviceName ?: "Default"})..." }
             val format = AudioFormat(44100f, 16, 1, true, false) // 44.1kHz, 16-bit, Mono, Signed, Little-Endian
             val info = DataLine.Info(TargetDataLine::class.java, format)
             
-            val targetLine = if (AudioSystem.isLineSupported(info)) {
-                AudioSystem.getLine(info) as TargetDataLine
-            } else {
+            val targetLine = findTargetDataLine(info, deviceName) ?: run {
                 // Try 48kHz if 44.1kHz is not supported
                 val altFormat = AudioFormat(48000f, 16, 1, true, false)
                 val altInfo = DataLine.Info(TargetDataLine::class.java, altFormat)
-                if (AudioSystem.isLineSupported(altInfo)) {
-                    AudioSystem.getLine(altInfo) as TargetDataLine
-                } else {
-                    logger.warn { "No supported audio input TargetDataLine found." }
-                    return false
-                }
+                findTargetDataLine(altInfo, deviceName)
+            }
+
+            if (targetLine == null) {
+                logger.warn { "No supported audio input TargetDataLine found for device: ${deviceName ?: "Default"}." }
+                return false
             }
 
             val bufferSize = 512 // 512 samples per read chunk (approx. 11.6ms at 44.1kHz)
@@ -85,13 +84,43 @@ class JavaSoundClient(
             }, "JavaSoundClient-Capture").apply { isDaemon = true }
 
             thread?.start()
-            logger.info { "Java Sound Audio client started successfully." }
+            logger.info { "Java Sound Audio client started successfully on ${targetLine.format.sampleRate}Hz." }
             return true
         } catch (e: Throwable) {
             logger.warn { "Failed to start Java Sound audio: ${e.message}" }
             stop()
             return false
         }
+    }
+
+    private fun findTargetDataLine(info: DataLine.Info, preferredDeviceName: String?): TargetDataLine? {
+        if (preferredDeviceName == null || preferredDeviceName.equals("Default", ignoreCase = true)) {
+            if (AudioSystem.isLineSupported(info)) {
+                return AudioSystem.getLine(info) as? TargetDataLine
+            }
+        }
+
+        val mixers = AudioSystem.getMixerInfo()
+        for (mixerInfo in mixers) {
+            if (preferredDeviceName != null && !mixerInfo.name.contains(preferredDeviceName, ignoreCase = true) && !mixerInfo.description.contains(preferredDeviceName, ignoreCase = true)) {
+                continue
+            }
+            try {
+                val mixer = AudioSystem.getMixer(mixerInfo)
+                if (mixer.isLineSupported(info)) {
+                    return mixer.getLine(info) as? TargetDataLine
+                }
+            } catch (e: Exception) {
+                // Ignore incompatible mixers
+            }
+        }
+
+        // Fallback to system default if preferred not found
+        if (AudioSystem.isLineSupported(info)) {
+            return AudioSystem.getLine(info) as? TargetDataLine
+        }
+
+        return null
     }
 
     /**
@@ -116,6 +145,38 @@ class JavaSoundClient(
     }
 
     companion object {
+        /**
+         * Returns list of available input devices from Java Sound mixers.
+         */
+        fun getAvailableInputDevices(): List<AudioInputDevice> {
+            val devices = mutableListOf<AudioInputDevice>()
+            devices.add(AudioInputDevice("default", "System Default", "Default system capture device", isDefault = true))
+
+            val dummyFormat = AudioFormat(44100f, 16, 1, true, false)
+            val info = DataLine.Info(TargetDataLine::class.java, dummyFormat)
+
+            val mixers = AudioSystem.getMixerInfo()
+            for ((index, mixerInfo) in mixers.withIndex()) {
+                try {
+                    val mixer = AudioSystem.getMixer(mixerInfo)
+                    val targetLineInfos = mixer.targetLineInfo
+                    if (targetLineInfos.isNotEmpty()) {
+                        // Has input/capture lines
+                        devices.add(
+                            AudioInputDevice(
+                                id = "javasound_$index",
+                                name = mixerInfo.name,
+                                description = "${mixerInfo.description} (${mixerInfo.vendor})"
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
+            return devices
+        }
+
         /**
          * Converts 16-bit signed little-endian PCM byte data into floats in range [-1.0, 1.0].
          * Returns the number of samples successfully written to floatArray.

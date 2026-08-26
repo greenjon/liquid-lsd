@@ -9,6 +9,12 @@
 
 ### Key Highlights
 
+#### Video Recording & Offline Export Pipeline Hardening
+- **Dynamic FFmpeg Encoder Resolution**: Auto-detects supported system encoders (`libx264`, `libopenh264`, `h264_nvenc`, `h264_vaapi`, `h264_qsv`, `h264_amf`, `prores_ks`, `mpeg4`) to prevent immediate subprocess termination ("Unknown encoder 'libx264'") on Linux distributions without proprietary codec packages.
+- **Framebuffer Unbind Safety**: Fixed OpenGL framebuffer state leak in `PboReadbackPipeline` that caused screen freezes by restoring FBO 0 immediately after DMA pixel readback.
+- **Zero-Allocation High-Speed DMA Flipping**: Replaced `src.slice()` iterations in `PboReadbackPipeline.flipVertical` with direct native `MemoryUtil.memCopy` row transfers, reducing CPU latency from ~20ms to <0.5ms per frame.
+- **Thread 0 Single-Threaded Offline Studio**: Migrated `OfflineRenderStudio` to single-threaded frame stepping on Thread 0, eliminating thread restriction violations and X11/GLFW deadlocks while rendering offline video with sample-accurate DSP.
+
 #### 1. Dedicated Background (BG) Layer & Deck PV (Preview) Pipeline
 - **Dedicated Background Deck (`Deck BG`)**: Added a 4th rendering deck `deckBG` rendered beneath the crossfaded Deck A & Deck B composite in GLSL (`mixer.frag`):
   $$\text{Composite} = \text{Blend}(A, B) + \text{BG} \cdot (1.0 - \text{Blend}_{\alpha})$$

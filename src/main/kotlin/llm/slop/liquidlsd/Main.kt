@@ -259,6 +259,10 @@ fun main() {
         val frameStartTime = glfwGetTime()
         glfwPollEvents()
 
+        // Query window and framebuffer dimensions
+        glfwGetFramebufferSize(window, w, h)
+        glfwGetWindowSize(window, windowW, windowH)
+
         // Clean up secondary window if it was closed manually by the user
         if (secondaryWindow != 0L && glfwWindowShouldClose(secondaryWindow)) {
             destroySecondaryWindow(secondaryWindow)
@@ -277,46 +281,49 @@ fun main() {
         org.lwjgl.opengl.GL15.glBeginQuery(org.lwjgl.opengl.GL33.GL_TIME_ELAPSED, queryIds[frameIndex % 2])
 
         // === RENDERING PHASE ===
-        val targetRenderW = UITheme.renderWidth
-        val targetRenderH = UITheme.renderHeight
-        if (mixer.width != targetRenderW || mixer.height != targetRenderH) {
-            logger.info { "Resizing render pipeline from ${mixer.width}x${mixer.height} to ${targetRenderW}x${targetRenderH}" }
-            mixer.resize(targetRenderW, targetRenderH)
+        if (llm.slop.liquidlsd.export.OfflineRenderStudio.isRendering) {
+            llm.slop.liquidlsd.export.OfflineRenderStudio.step(mixer, renderer)
+        } else {
+            val targetRenderW = UITheme.renderWidth
+            val targetRenderH = UITheme.renderHeight
+            if (mixer.width != targetRenderW || mixer.height != targetRenderH) {
+                logger.info { "Resizing render pipeline from ${mixer.width}x${mixer.height} to ${targetRenderW}x${targetRenderH}" }
+                mixer.resize(targetRenderW, targetRenderH)
+            }
+
+            // Apply loaded presets from queues atomically on the main thread
+            PresetManager.applyPendingPresets(mixer)
+
+            // Update all global CV signals
+            CVRegistry.updateAll()
+
+            // 0. Update MIDI mappings
+            llm.slop.liquidlsd.midi.MidiMappingManager.update(mixer)
+
+            // 1. Update and Render Deck A (renders source + applies feedback loop)
+            deckA.update()
+            renderer.renderDeck(deckA)
+
+            // 2. Update and Render Deck B (renders source + applies feedback loop)
+            deckB.update()
+            renderer.renderDeck(deckB)
+
+            // 3. Update and Render Deck BG (background layer)
+            mixer.deckBG.update()
+            renderer.renderDeck(mixer.deckBG)
+
+            // 4. Update and Render Deck PV (preview)
+            mixer.deckPV.update()
+            renderer.renderDeck(mixer.deckPV)
+
+            // 5. Update and composite Decks in the Mixer
+            mixer.update()
+            renderer.renderMixer(mixer)
+
+            // 6. Broadcast live texture stream & capture live recording frame
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(mixer.masterFBO.texture, mixer.width, mixer.height)
+            llm.slop.liquidlsd.export.RealtimeRecorder.captureFrame(mixer.masterFBO.framebufferId)
         }
-
-        // Apply loaded presets from queues atomically on the main thread
-        PresetManager.applyPendingPresets(mixer)
-
-        // Update all global CV signals
-        CVRegistry.updateAll()
-
-        // Get framebuffer size for OpenGL and window size for ImGui layout.
-        // ImGui GLFW coordinates are logical window units, not framebuffer pixels.
-        glfwGetFramebufferSize(window, w, h)
-        glfwGetWindowSize(window, windowW, windowH)
-
-        // 0. Update MIDI mappings
-        llm.slop.liquidlsd.midi.MidiMappingManager.update(mixer)
-
-        // 1. Update and Render Deck A (renders source + applies feedback loop)
-        deckA.update()
-        renderer.renderDeck(deckA)
-
-        // 2. Update and Render Deck B (renders source + applies feedback loop)
-        deckB.update()
-        renderer.renderDeck(deckB)
-
-        // 3. Update and Render Deck BG (background layer)
-        mixer.deckBG.update()
-        renderer.renderDeck(mixer.deckBG)
-
-        // 4. Update and Render Deck PV (preview)
-        mixer.deckPV.update()
-        renderer.renderDeck(mixer.deckPV)
-
-        // 5. Update and composite Decks in the Mixer
-        mixer.update()
-        renderer.renderMixer(mixer)
 
         // 4. Blit the Mixer's master FBO to the screen viewport if enabled and window is visible
         val fbW = w[0]
@@ -355,7 +362,7 @@ fun main() {
             }
 
             // === UI PHASE ===
-            uiManager.render(mixer, winW.toFloat(), winH.toFloat())
+            uiManager.render(mixer, renderer, winW.toFloat(), winH.toFloat())
         }
 
         org.lwjgl.opengl.GL15.glEndQuery(org.lwjgl.opengl.GL33.GL_TIME_ELAPSED)
@@ -437,6 +444,8 @@ fun main() {
 
     // Cleanup
     logger.info { "Shutting down..." }
+    llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
+    llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
     PresetManager.saveSession(mixer)
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
