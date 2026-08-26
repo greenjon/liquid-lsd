@@ -1,124 +1,108 @@
 # Liquid LSD — Release Notes
 
-## Version 1.0.0-beta.28 (Unreleased)
-- **4D Hyper-Mesh Visual Source (`hyper_mesh`)**:
-  - Implemented real-time GPU-accelerated 4D Polychoron rendering covering the **600-cell** (120 vertices, 720 edges) and **120-cell** (600 vertices, 1,200 edges, dual polytope).
-  - Added continuous 4D hyper-rotations across the $XW$, $YW$, and $ZW$ planes for hypnotic, inside-out polytope cell inversions and multi-axis tumbling.
-  - Added 4D perspective and conformal stereographic ($S^3 \to \mathbb{R}^3$) projection modes with modulatable 4D lens focal distance ($d \in [1.05, 5.0]$).
-  - Pre-computed Hopf fibration coordinates ($S^3 \to S^2$) per vertex, enabling dynamic harmonic color waves rippling along Hopf tori.
-  - Zero-allocation runtime execution on the main OS thread with screen-space extruded anti-aliased tube ribbons and billboard joint nodes ($< 0.3\,\text{ms}$ GPU frametime on Intel Iris Xe).
-- **4D Hyper-Slice Visual Source (`hyper_slice`)**:
-  - Implemented real-time raymarched 3D cross-sections ("MRI scan") through 4D 600-cell and 120-cell polychora using $H_4$ Coxeter reflection group symmetry folding (order 14,400).
-  - Added modulatable `Slice Offset` along the 4D $W$-axis, allowing users to sweep 3D cutting hyperplanes through 4D solids to witness continuous polyhedral births, morphs, and subdivisions.
-  - Added full $XW$, $YW$, and $ZW$ 4D hyper-rotations and continuous 600-cell $\leftrightarrow$ 120-cell Wythoff facet normal slerp morphing.
-  - Features Blinn-Phong specular lighting, Fresnel rim reflections, edge crease detection, and translucent crystal interior reveal.
-- **Icosahedron Visual Enhancements**: Fixed X-axis visual snapping by implementing shader-side interpolation for edge thickness and color coordinates.
-- **CPU Deduplication Optimization**: Refactored the $H_3$ normal generator (`Icosahedron.kt`) to perform zero-allocation deduplication in-place, eliminating GC pressure on the real-time render loop.
-- **Icosahedron Epsilon Variant**: Added a new parallel visual source (`IcosahedronEpsilon`) that skips deduplication and uses micro-repulsion at the poles for side-by-side comparison of rendering artifacts.
-
----
-
-## Version 1.0.0-beta.27
+## Version 1.0.0-beta.28
 
 > [!NOTE]
-> **Release 1.0.0-beta.27** is a major feature and performance release introducing multi-band cross-spectral autocorrelation beat detection, master crossfader manual takeover with CV auto-centering, "Jump the Line" Auto-VJ standby staging, 3-column library workflow with quick action buttons, sticky oscilloscopes with high-resolution LFO rendering, percentage-based GUI scaling with HiDPI auto-detection, keyboard preset management with permanent deletion warnings, and core visual source streamlining for low-power and integrated GPUs.
+> **Release 1.0.0-beta.28** is a major milestone release that includes all features, architectural additions, visual sources, DSP engines, and workflow enhancements developed since **v1.0.0-beta.26** (incorporating all updates from beta 27 and beta 28).
 
 ---
 
-#### 0. Per-Band Audio Envelope Followers & Dual-Trace Oscilloscope
-- **Independent Envelope Followers for All 4 Audio Bands**: Each audio modulator (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`) now has its own independent dynamics follower, allowing users to dial in sharp transient snap on one parameter and long sustained decay swells on another.
-- **Preset Dropdown Workflow**: Features pre-tuned envelope presets (`Raw (Instant Jitter)`, `Punchy (Fast)`, `Smooth Swell`, `Slow Pulse`, `Ambient Drift`, and `Custom`) with hardcoded Attack/Decay timings that hide unnecessary sliders unless `Custom` is chosen.
-- **Contextual Custom Controls**: Selecting `Custom` automatically populates the `Attack` ($0\text{ ms} \dots 500\text{ ms}$) and `Decay` ($10\text{ ms} \dots 3000\text{ ms}$) sliders with the current active preset values for seamless fine-tuning.
-- **Dual-Trace Oscilloscope Visualization**: The cell configuration oscilloscope renders the raw incoming audio band energy in a ghosted trace ($35\%$ alpha) beneath the solid smoothed follower curve, giving immediate visual feedback while respecting live vs. muted signal coloring.
+### Key Highlights
 
-#### 0.1 Icosa-Dodeca Visual Source — H₃ Coxeter Symmetry Folding IFS SDF
-- **True $H_3$ Coxeter Reflection Group Substrate**: Replaced static symmetry arrays and approximate cone stellation SDFs with a mathematically pure **$H_3$ Coxeter symmetry folding (Iterated Function System)** shader engine. Reflects space iteratively across fundamental normalized mirrors ($n_0, n_1, n_2$), collapsing all 60 polyhedral faces and Wythoff constructions into a single base-plane evaluation ($p' \cdot v(t) = h$) in the fundamental chamber.
-- **Exact CSG Kepler-Poinsot Stellations**: Stellations (Great Stellated Dodecahedron & Great Icosahedron) now emerge naturally via Constructive Solid Geometry bounded by the fundamental mirror walls in folded space, eliminating smooth-minimum cone approximations and providing razor-sharp, mathematically exact star facets.
-- **Continuous 4-Phase Cyclic Morph & Slerp Generator**: The generator vector $v(t)$ slerps continuously along the spherical fundamental triangle arc ($C_3 \leftrightarrow C_5$), smoothly transitioning through Icosahedron $\to$ Icosidodecahedron $\to$ Dodecahedron $\to$ Great Stellated Dodecahedron $\to$ Great Icosahedron $\to$ Icosahedron with $C^2$ `smootherstep` boundary pacing.
-- **Expanded $H_3$ VJ Controls**: Added direct modulation parameters for `Stellation` (manual CSG star spike depth boost/override) and `Support H` (support plane offset along generator vector $v(t)$).
-- **Kaleidoscopic Chamber & Normal Coloring**: Upgraded `Color Method` to support (0) $H_3$ Fundamental Chamber & Angular Sectors, (1) Radial Depth Gradient, and (2) Facet Normal Spectrum.
-- **Optimized Crystal Reveal & Proximity Glow**: Front-to-back translucent raymarching (80 steps with $0.65\times$ under-relaxation) smoothly illuminates inner polyhedral facets, complemented by atmospheric proximity ambient glow.
+#### 1. Dedicated Background (BG) Layer & Deck PV (Preview) Pipeline
+- **Dedicated Background Deck (`Deck BG`)**: Added a 4th rendering deck `deckBG` rendered beneath the crossfaded Deck A & Deck B composite in GLSL (`mixer.frag`):
+  $$\text{Composite} = \text{Blend}(A, B) + \text{BG} \cdot (1.0 - \text{Blend}_{\alpha})$$
+  allowing transparent, generative foregrounds to float naturally over dynamic background visuals.
+- **Dedicated Preview Deck (`Deck PV`)**: Renamed `Deck C` to `Deck PV` (Preview) across the entire UI and parameter tree, maintaining backwards-compatible aliases for `deckC`.
+- **Expanded Modulatable Parameter Tree**: Added first-class parameter routing for `Deck BG/...`, `Deck PV/...`, `Mixer/randDeckBG`, and `Mixer/randDeckPV`.
 
-#### 0.2 Icosahedron 32-Stellation Visual Source — H₃ Orbit Cache & GPU k-th Max Stellation Raymarcher
-- **Mathematical Correction of Rotation Group & 5-Fold Axis**: Fixed 5-fold axis vector in `Icosahedron.kt` to `pole5 = normalize(0, 1, phi)` (was incorrectly set to `(0, 1/phi, phi)`). Updated the BFS icosahedral rotation group generator to use true 5-fold axes, achieving full group closure ($\mathcal{I} \cong A_5$, order 60).
-- **Exact Orbit Face Multiplicities**: Validated that `pole3` orbit collapses into 20 face normals with exact multiplicity 3 (Icosahedron), `pole5` collapses into 12 face normals with exact multiplicity 5 (Dodecahedron), and intermediate generators expand into 60 distinct face normals (Hexecontahedron crystal).
-- **GPU $k$-th Max Deduplicating SDF Raymarcher**: Implemented deduplicating insertion sort in GLSL `shader.frag` to extract the top 6 distinct plane distances ($u_0 \dots u_5$) across all 60 $H_3$ planes.
-- **Continuous 2D Morph Pad ($uControlX, uControlY$)**:
-  - **Y-Axis ($uControlY \in [0.0, 1.0]$)**: Smoothly slerps the underlying generator vector from Icosahedron ($Y=0$) through the 60-faced crystal ($Y=0.5$) to Dodecahedron ($Y=1$).
-  - **X-Axis ($uControlX \in [0.0, 1.0]$)**: Continuously extrudes the geometry outward from the convex Platonic core ($X=0$) through 1st, 2nd, 3rd, and 4th order Kepler-Poinsot star stellations ($X=1$).
-- **Dynamic Ridge Edge Glow & Coloring**: Upgraded edge detector to $u_{\lfloor k \rfloor} - u_{\lfloor k \rfloor + 1}$ to illuminate the active stellation layer's ridges and sharp creases.
-- **Zero-Allocation Per-Frame Upload**: Flattens the 60 normal vectors directly into a pre-allocated `FloatArray(180)` for zero GC allocation during frame rendering.
+#### 2. Symmetrical 2x2 Preview Monitor Matrix
+- **Balanced 2x2 Grid Layout**:
+  - **Top Row**: `Deck A` (Electric Blue) & `Deck B` (Warm Orange).
+  - **Bottom Row**: `Deck BG` (Amber/Gold) & `Deck PV` (Mint Green).
+  - Equal aspect ratios and sizes across all four decks with letter overlay badges (`A`, `B`, `BG`, `PV`).
+  - Interactive top preset status bars, `Save`, and `Eject` buttons on each monitor.
+  - Full drag-and-drop routing and right-click Move/Copy/Swap menus between all 4 decks.
+- **Momentary Mixer Controls Bar**: 7 quick action buttons beneath the master crossfader: `< Prev`, `Next >`, `Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`.
 
-#### 1. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
-- **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat tracking to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks) on the real-time audio callback thread.
-- **Harmonic Comb Unwrapping**: Implemented half-lag ($d/2$) evaluation to eliminate half-tempo (e.g. 60 BPM) and double-tempo (e.g. 200 BPM) octave traps by verifying fundamental beat periods, ensuring 100, 120, 128, and 140 BPM tracks lock precisely to their fundamental tempo.
-- **Sub-Block Parabolic Lag Interpolation**: Fits a 2nd-order parabola over correlation peaks to extract sub-block fractional lag offsets $\delta$, achieving floating-point tempo tracking within $\pm 0.1$ BPM.
-- **Gaussian Musical Tempo Weighting**: Applies a subtle Gaussian curve centered at 120 BPM ($\sigma = 80$ BPM) to bias candidate selection towards natural musical tempos during ambiguous transients.
-- **Synthetic Audio Benchmark Suite (`BeatDetectorBenchmarkTest.kt`)**: Built automated synthetic audio tests for 120 BPM House, 128 BPM EDM, 140 BPM Dubstep, 100 BPM Hip-Hop, and silent breakdowns to validate lock speed (< 3.0s), lock accuracy (< 1.5 BPM error), and flywheel momentum.
-- **Audio Settings Sliders**: Refactored `AudioEnginePanel` controls for energy threshold, PLL adaptation, and correlation analysis window length ($1.0\text{s} \dots 10.0\text{s}$).
+#### 3. 4-Column Library Layout & Unified Top Action Toolbar
+- **4-Column Side-by-Side Library**:
+  - **Column 1 (Presets Pool)**: Real-time search and tag filtering across all `.lsd` presets.
+  - **Column 2 (Playlist Editor)**: Setlist inspection, drag reordering with mint-green insertion feedback, and instant auto-save.
+  - **Column 3 (A/B Play Queue)**: Live Auto-VJ queue with automated crossfading, repeat (`🔁`), and shuffle (`🔀`).
+  - **Column 4 (Background Queue)**: Dedicated playlist queue for `Deck BG` featuring automated cycling (`AUTO-BG`) and smooth single-deck dip-to-black fade transitions.
+- **Unified Top Action Toolbar (`[A] [B] [BG] [PV] [Q] [BGQ] [+]`)**:
+  - Direct routing buttons located cleanly above the Presets and Playlist Editor columns.
+  - Removed cluttered inline buttons from individual preset/playlist rows.
+  - Mutual selection: Selecting a preset in the Presets column automatically deselects in Playlists (and vice versa).
+  - `[+]` button dropdown to quickly initialize a new blank preset on any deck (`[A]`, `[B]`, `[BG]`, or `[PV]`).
 
-#### 2. Master Crossfader Manual Takeover & CV Auto-Centering
-- **Instant Manual Takeover**: Interacting with the master Crossfader via mouse or physical MIDI CC immediately takes priority:
-  - **Auto-VJ Disarm**: Auto-VJ is turned off (`isAutoVJEnabled = false`) and any active auto-fade transition halts cleanly at current position.
-  - **CV Modulation Muting**: All non-MIDI modulators (LFO, Audio Followers, Triggers) on `Mixer/crossfade` are automatically muted (`bypassed = true`), giving the performer 1:1 manual control without fighting background modulation.
-  - **MIDI CC Modulators Preserved**: Modulators mapped to physical MIDI CCs are preserved and remain active.
-- **Auto-Centering on CV Unmute**: Unmuting any CV modulator on `Mixer/crossfade` automatically snaps `crossfade.baseValue` to `0.0` (unbiased center), allowing LFOs and audio followers to oscillate symmetrically across both decks without clipping against manual hold positions. Modulator `DC Offset` provides optional deck bias.
-- **Playlist "Play Now" Auto-VJ Fix**: Selecting *"Play now (and replace queue)"* on a playlist or preset automatically engages the `AUTO-VJ` toggle and mutes crossfade CVs for smooth automated queue crossfading.
-- **Master Mixer Momentary Triggers**: Added a dedicated row of 6 momentary buttons beneath the Crossfader:
-  - **Playlist Navigation**: `< Prev` (`Mixer/queuePrev`) and `Next >` (`Mixer/queueNext`) for stepping through the active playlist queue.
-  - **Deck & Master Randomization**: `Rand A`, `Rand B`, `Rand C`, and `Rand All` for instant re-rolling of active modulators and randomizable parameters with full Undo history support.
-- **Disabled Randomization Cleanups**: When randomization is disabled in Settings, parameter rows for randomization, yellow randomization range arcs in cell dials, and Mixer Monitor randomize buttons are automatically hidden.
+#### 4. 4D Polychoron Visual Sources: Hyper-Mesh & Hyper-Slice
+- **4D Hyper-Mesh (`hyper_mesh`)**:
+  - Real-time GPU-accelerated 4D Polychoron rendering covering the **600-cell** (120 vertices, 720 edges) and **120-cell** (600 vertices, 1,200 edges, dual polytope).
+  - Continuous 4D hyper-rotations across the $XW$, $YW$, and $ZW$ planes for inside-out polytope cell inversions and multi-axis tumbling.
+  - 4D perspective and conformal stereographic ($S^3 \to \mathbb{R}^3$) projection modes with modulatable focal distance ($d \in [1.05, 5.0]$).
+  - Pre-computed Hopf fibration coordinates ($S^3 \to S^2$) per vertex, enabling dynamic harmonic color waves rippling along Hopf tori.
+  - Screen-space extruded anti-aliased tube ribbons and billboard joint nodes with zero heap allocation on the render loop ($< 0.3\,\text{ms}$ GPU frametime on Intel Iris Xe).
+- **4D Hyper-Slice (`hyper_slice`)**:
+  - Real-time raymarched 3D cross-sections ("MRI scan") through 4D 600-cell and 120-cell polychora using $H_4$ Coxeter reflection group symmetry folding (order 14,400).
+  - Modulatable `Slice Offset` along the 4D $W$-axis to sweep 3D cutting hyperplanes through 4D solids to witness continuous polyhedral births, morphs, and subdivisions.
+  - Full $XW$, $YW$, and $ZW$ 4D hyper-rotations with continuous 600-cell $\leftrightarrow$ 120-cell Wythoff facet normal slerp morphing.
+  - Blinn-Phong specular lighting, Fresnel rim reflections, edge crease detection, and translucent crystal interior reveal.
 
-#### 3. Auto-VJ & Manual Deck Loading Integration ("Jump the Line")
-- **Standby Deck Staging ("Jump the Line")**: When a preset is manually loaded into the standby/inactive deck while Auto-VJ is active, that deck is marked as staged. The next Auto-VJ transition automatically fades into the staged preset without overwriting it from the queue, preserving the next queue track for the subsequent cycle.
-- **Active Deck Overrides**: Manually loading into the live deck replaces the output immediately while keeping Auto-VJ armed and the queue untouched.
-- **Queue Preservation**: Manual deck loading when Auto-VJ is OFF never modifies the queue contents or active index.
-- **Seamless Mid-Set Arming**: Enabling Auto-VJ mid-set does not cause jump cuts; it arms the standby deck and smoothly waits for the next advance trigger (CV pulse, beat trigger, MIDI CC, or manual Next button).
-- **Deck C Independence**: Manual loading and interactions on Deck C (master overlay) remain completely independent of the A/B Auto-VJ pipeline.
+#### 5. Analytic 32-Stellation Du Val Poset Manifold & CSG Visual Sources
+- **Icosahedron 32-Stellation (`icosahedron`)**:
+  - GPU $k$-th max deduplicating SDF raymarcher extracting the top 6 distinct plane distances across all 60 $H_3$ planes.
+  - Continuous 2D morph pad ($uControlX, uControlY$): $Y$-axis slerps the generator vector between Icosahedron and Dodecahedron; $X$-axis continuously extrudes geometry outward through 1st, 2nd, 3rd, and 4th order Kepler-Poinsot star stellations.
+  - In-place zero-allocation normal deduplication on the CPU, eliminating GC pauses on the render loop.
+- **Icosa-Dodeca ($H_3$ Coxeter Symmetry Folding IFS SDF)**:
+  - Mathematically pure $H_3$ Coxeter symmetry folding shader collapsing all 60 polyhedral faces into single base-plane evaluations in the fundamental chamber.
+  - Continuous 4-phase cyclic morph slerping along the spherical fundamental triangle arc ($C_3 \leftrightarrow C_5$) through Icosahedron $\to$ Icosidodecahedron $\to$ Dodecahedron $\to$ Great Stellated Dodecahedron $\to$ Great Icosahedron with $C^2$ `smootherstep` pacing.
 
-#### 4. Library & Playlist Management Enhancements
-- **3-Column Side-by-Side Workflow**:
-  - **Left Column (Presets Library Pool)**: Displays a flat list of all visual presets with real-time text search filtering across preset names and tags, plus `[Create new preset...]` deck eject rows.
-  - **Middle Column (Playlist Editor)**: Dedicated setlist editor featuring playlist selector combo, `[ + ]` new playlist button, `[ ••• ]` actions menu (Play now, Append to queue, Rename, Clone, Delete), drag-and-drop preset insertion from the library with visual mint-green insertion line, and auto-save on edit.
-  - **Right Column (Play Queue)**: Live volatile playback queue and transport controls.
-- **`[ A ] [ B ] [ C ] [ Q ]` Quick Action Buttons**: Standardized across preset items and playlist rows, adding `[ Q ]` (violet accent) to append presets directly to the end of the queue.
-- **Play Queue & Playlist `Delete` / `Backspace` Key Support**: Pressing `Delete` or `Backspace` on a selected item in the Play Queue or Playlist Editor removes the preset from that list.
-- **Preset Library `Delete` / `Backspace` Key Support & Warnings**: Pressing `Delete` or `Backspace` on a selected preset in the library opens a permanent deletion warning modal ("Warning: This will permanently delete this preset from your library. This action cannot be undone.").
-- **Cascading Reference Cleanup**: Permanently deleting a preset file removes all occurrences from all `.lsdset` playlist files on disk and from the live Play Queue.
-- **UI Helper Modularization**: Extracted `BrowserDeckButtons` helper for unified deck button rendering.
+#### 6. Per-Band Audio Envelope Followers & Dual-Trace Oscilloscope
+- **Independent Dynamics Followers**: Independent envelope followers for all 4 audio bands (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), allowing punchy transient response on one parameter and long sustained decay swells on another.
+- **Musical Dynamics Presets**: `Raw (Instant Jitter)`, `Punchy (Fast)`, `Smooth Swell`, `Slow Pulse`, `Ambient Drift`, and `Custom` (with $0\text{ ms} \dots 500\text{ ms}$ Attack and $10\text{ ms} \dots 3000\text{ ms}$ Decay sliders).
+- **Dual-Trace Oscilloscope**: Renders raw incoming audio energy in a ghosted trace ($35\%$ alpha) beneath the solid smoothed follower curve.
 
-#### 5. Sticky Oscilloscope & Cell Config UX Overhaul
-- **Sticky Oscilloscope & Header in Cell Config**: The top region of the Cell Config panel (CV tab switcher, parameter title, and the full live oscilloscope) is fixed at the top of the panel, allowing modulator controls below to scroll independently in a child view.
-- **Live BPM-Aware AUTO Timebase**: Oscilloscope's `AUTO` mode reads actual running BPM from `CVRegistry` when calculating beat-based LFO periods, sizing scope windows accurately at any tempo.
-- **High Analytical Step Resolution**: Sampling steps for LFO scopes increased with a 1.5x pixel-width multiplier (`(pixelWidth * 1.5f).toInt().coerceIn(60, 1000)`), eliminating polygonal stepping and pixelation on fast LFO periods.
-- **Pixel-Perfect Seam Alignment**: Past segment endpoints connect seamlessly into future segment starting points (`lfoSeamY`), eliminating 1-pixel discontinuities at the `NOW` playhead.
-- **Modulator Header Organization**: Modulator titles (`Onset / Transient`, `Accent / Peak`, `Amplitude`, `Low`, `LFO 2`, etc.) and reset buttons render on the first row, with controls (mute/bypass, dice, operator combo) on the second row.
-- **Cell Mute / Preview System**: Toggle any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the oscilloscope live and animated. Muted cells in the Preset Grid drop knob arc/meter opacity to 35% and display a centered 'M'. Middle-clicking any active or muted cell toggles its mute state.
+#### 7. Multi-Band Autocorrelation Beat Engine & Benchmarking Suite
+- **Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Zero-allocation primitive ring buffers on the real-time audio callback thread.
+- **Harmonic Comb Unwrapping**: Eliminates half-tempo and double-tempo octave traps by verifying fundamental beat periods.
+- **Sub-Block Parabolic Lag Interpolation**: Parabolic curve fitting across correlation peaks achieving floating-point tempo tracking within $\pm 0.1$ BPM.
+- **Synthetic Audio Benchmark Suite (`BeatDetectorBenchmarkTest.kt`)**: Automated synthetic audio tests for 120 BPM House, 128 BPM EDM, 140 BPM Dubstep, 100 BPM Hip-Hop, and silent breakdowns.
 
-#### 6. Visual Source Library Streamlining & Icosa-Dodeca Generator
-- **Added Icosa-Dodeca Morph & Stellation Source (`icosa_dodeca`)**: Added a closed-form geometric generator providing a unified 4-phase continuous cyclic morph across canonical polyhedra: `0.0–0.25` (Icosahedron → Dodecahedron), `0.25–0.50` (Dodecahedron → Great Stellated Dodecahedron), `0.50–0.75` (Great Stellated Dodecahedron → Great Icosahedron), and `0.75–1.00` (Great Icosahedron → Icosahedron), with mathematical depth/symmetry coloring and semi-transparent crystal reveal face rendering.
-- **Icosa-Dodeca Shader Performance & Stability**: Fixed front-to-back alpha compositing weighting, eliminated dynamic inner loops in `mapSDF` via $O(1)$ static symmetry basis lookups, implemented dynamic slope scaling for flat-to-pyramid stellation emergence without fixed-slope needle artifacts, guaranteed $C^0$/$C^1$ continuity at emergence thresholds with vanishing blend radius, added zoom-scaled marching steps with $0.65\times$ under-relaxation for `smin` transitions, resolved angular sector discontinuities, and streamlined parameters by removing redundant depth frame toggles.
-- **Removed GPU-Heavy Raymarchers**: Removed heavy distance-field fractal and 4D raymarchers (`clifford_torus`, `kifs`, `mandelbox`, `pseudo_kleinian`, `mandelbulb`) that caused high ALU load and frame drops on integrated GPUs (Intel Iris Xe / AMD APUs).
-- **Refocused Core Visual Engine**: Refocused the built-in generator collection on high-performance, lightweight sources:
-  - `icosa_dodeca`: Icosahedron-Dodecahedron duality morph and Kepler-Poinsot stellations.
-  - `mandala`: Ultra-low overhead 2D/3D hardware ribbon rasterization.
-  - `attractor_feedback`: 2D strange attractor density inverse mapping with feedback decay.
-  - `dynamic_spiral`: Analytical Newton-Raphson range-culled spiral particle trails.
-  - `gyroid`: Closed-form 3D triply periodic minimal surface raymarcher.
-  - `chladni`: Closed-form 2D/3D acoustic resonance standing wave raymarcher.
+#### 8. Master Crossfader Manual Takeover & Auto-VJ "Jump the Line" Staging
+- **Instant Manual Takeover**: Interacting with the master crossfader via mouse or MIDI CC disarms Auto-VJ and temporarily mutes conflicting crossfade CVs for 1:1 physical control.
+- **CV Auto-Centering**: Unmuting any CV modulator on `Mixer/crossfade` automatically centers `crossfade.baseValue` to `0.0`.
+- **Standby Deck Staging ("Jump the Line")**: Manually loading a preset into the inactive deck while Auto-VJ is running stages it for the next automated crossfade without overwriting the queue sequence.
 
-#### 7. GUI Scaling, Hotkeys & System Polish
-- **GUI Scale Percentage Model (75%–200%)**: Continuous percentage slider in Settings → Appearance with 5% snapping increments.
-- **Updated Hotkeys**: `Ctrl+-` / `Ctrl+=` adjust GUI scale by ±5% per press within 75%–200% bounds.
-- **HiDPI / 4K Auto-Detection**: Auto-detects OS content-scale factor via `glfwGetWindowContentScale` on first launch and snaps to the nearest 5% scale step.
-- **Background Video Keybinding (`B`)**: Global hotkey `B` instantly toggles master video background rendering behind semi-transparent UI.
-- **Preview Screen Black Backgrounds**: Enforced solid opaque black backgrounds behind all 4 preview monitors (Deck A, Deck B, Deck C, and Master Output) across all themes, and removed colored child background tinting from Deck A and Deck B panels.
-- **Production Logging**: Set default log level to `WARN` to eliminate console I/O overhead.
+#### 9. Sticky Oscilloscope, Cell Muting, GUI Scaling & Engine Polish
+- **Sticky Oscilloscope in Cell Config**: Parameter title, CV tab switcher, and live oscilloscope remain pinned at the top while modulator controls scroll independently below.
+- **Cell Muting System**: Toggle any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the oscilloscope live and animated. Middle-clicking any active or muted cell toggles its mute state.
+- **Percentage-Based GUI Scaling (75%–200%)**: Continuous scaling slider in Settings with 5% increments, `Ctrl+-` / `Ctrl+=` hotkeys, and automatic OS content-scale factor detection on launch.
+- **Pitch Black Backgrounds**: Enforced solid opaque black OpenGL clear color across GUI mode, clean mode (`f`), and preview monitors.
 
 ---
 
-### 📜 Commit History (v1.0.0-beta.26 → v1.0.0-beta.27)
+### 📜 Full Commit History (v1.0.0-beta.26 → v1.0.0-beta.28)
 
+- `ea862c6` Add Background Deck, Deck PV preview, 2x2 monitor matrix, and 4-column library layout
+- `159db62` feat(source): add 4D Hyper-Slice raymarched visual source with H4 domain folding
+- `b9a19fa` feat(source): add 4D Hyper-Mesh polychoron visual generator (600-cell & 120-cell)
+- `4c2e487` fix(icosa-v3): Lock lighting to screen center in camera space
+- `d088f80` fix: Prevent icosa-v3 unbounded growth at high Control X values
+- `2182751` feat: Upgrade Control X to endless slerp for infinite stellations
+- `0f31f62` feat: Add Icosahedron V3 CSG visual source
+- `f150640` feat(shaders): implement analytic 32-stellation Du Val poset manifold for icosahedron
+- `cea75ef` feat(visuals): add Icosahedron 32-Stellation 2D Du Val poset manifold visual source
+- `a6bab1a` feat(modulation): add per-modulator audio envelope followers, UI sections, and dual-trace oscilloscope
+- `304ba02` feat(icosa_dodeca): add geometric Wythoff vertex truncation and edge cantellation to Support H
+- `06dc5d2` feat(shaders): implement continuous stellation plane tilting for icosa_dodeca
+- `f8f6aaf` docs: document H3 Coxeter IFS engine and polyhedral morphs for icosa_dodeca
+- `b679aac` fix(ui): enforce solid black background on all 4 preview monitor screens
+- `e14ab61` feat(shaders): add smootherstep C2 morph transitions, cross-faded symmetry sectors, and raymarch optimizations for icosa_dodeca
+- `1e9565d` feat(shaders): unify icosa_dodeca into continuous 4-stage cyclic morph and add finite cone bounds
+- `56e99d7` feat(shaders): improve icosa_dodeca stellation cones, symmetry sectors, and raymarch stepping
+- `60ae86c` docs: update release notes and documentation for v1.0.0-beta.27
 - `fc1ad3f` Remove GPU-heavy visual sources (clifford_torus, kifs, mandelbox, pseudo_kleinian, mandelbulb)
 - `2a53f99` feat(library): add Delete key shortcut, permanent deletion warning, and reference cleanup to playqueue and playlist
 - `bc8a5b8` refactor(ui): extract BrowserDeckButtons helper and simplify preset grid UI buttons
