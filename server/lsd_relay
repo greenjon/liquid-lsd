@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# PROVIDE: lsd_relay
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# Add the following to /etc/rc.conf to enable:
+#   lsd_relay_enable="YES"
+#
+# Optional rc.conf overrides:
+#   lsd_relay_port="9004"
+#   lsd_relay_host="127.1.0.1"
+#   lsd_relay_token="lsd25"
+#   lsd_relay_dir="/www/spaz/htdocs/lsd-relay"
+#   lsd_relay_user="www"
+#   lsd_relay_logfile="/var/log/lsd_relay.log"
+
+. /etc/rc.subr
+
+name="lsd_relay"
+rcvar="lsd_relay_enable"
+desc="Liquid LSD WebSocket Relay"
+
+# Defaults — override any of these in /etc/rc.conf
+: ${lsd_relay_enable:="NO"}
+: ${lsd_relay_port:="9004"}
+: ${lsd_relay_host:="127.1.0.1"}
+: ${lsd_relay_token:="lsd25"}
+: ${lsd_relay_dir:="/www/spaz/htdocs/lsd-relay"}
+: ${lsd_relay_user:="www"}
+: ${lsd_relay_logfile:="/var/log/lsd_relay.log"}
+
+pidfile="/var/run/${name}.pid"
+
+# Use daemon(8) to daemonize, manage the pidfile, and restart on crash (-r)
+command="/usr/sbin/daemon"
+command_args="-P ${pidfile} -r -u ${lsd_relay_user} -o ${lsd_relay_logfile} \
+    /usr/bin/env \
+    LSD_PORT=${lsd_relay_port} \
+    LSD_HOST=${lsd_relay_host} \
+    LSD_TOKEN=${lsd_relay_token} \
+    /usr/local/bin/node ${lsd_relay_dir}/server.js"
+
+load_rc_config $name
+run_rc_command "$1"

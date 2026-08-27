@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liquid LSD — Spaz Radio</title>
+  <link rel="stylesheet" href="tv.css">
+</head>
+<body>
+  <audio id="lsdAudio" crossorigin="anonymous" preload="none"></audio>
+
+  <div id="tv-wrapper">
+    <div id="tv-body">
+
+      <!-- Screen area — canvas is sized to fill this via CSS -->
+      <div id="tv-screen-border">
+        <div id="tv-screen-area">
+          <canvas id="glCanvas"></canvas>
+          <!-- Overlay shown when TV is off; hidden by .powered-on class -->
+          <div id="screen-off-overlay"></div>
+        </div>
+      </div>
+
+      <!-- Controls row below screen -->
+      <div id="tv-controls">
+
+        <!-- Power switch -->
+        <div class="control-group">
+          <button id="powerSwitch" class="power-switch" title="Power">
+            <div class="switch-knob"></div>
+          </button>
+          <span class="control-label">PWR</span>
+        </div>
+
+        <!-- Volume dial -->
+        <div class="control-group">
+          <div id="volumeDial" class="rotary-dial">
+            <div class="dial-marker"></div>
+          </div>
+          <span class="control-label">VOL</span>
+        </div>
+
+        <!-- Station badge -->
+        <div id="station-badge">
+          <div class="led" id="stationLed"></div>
+          <span class="station-text">SPAZ RADIO &bull; CH.1</span>
+        </div>
+
+      </div><!-- /tv-controls -->
+
+    </div><!-- /tv-body -->
+  </div><!-- /tv-wrapper -->
+
+  <script type="module" src="ui.js"></script>
+  <script type="module" src="renderer.js"></script>
+</body>
+</html>

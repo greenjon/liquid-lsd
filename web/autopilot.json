@@ -1,0 +1,137 @@
+[
+  {
+    "id": "ap_01",
+    "duration": 45,
+    "preset": {
+      "deckA": {
+        "source": "mandala",
+        "L1": 0.4, "L2": 0.3, "L3": 0.2, "L4": 0.1,
+        "A": 3, "B": 4, "C": 5, "D": 7,
+        "thickness": 0.012, "zoom": 0.8, "rotateZ": 0.0,
+        "hueOffset": 0.0, "hueSweep": 0.3, "depth": 0.35, "maxR": 0.85,
+        "feedback": { "decay": 0.04, "gain": 0.96, "zoom": 0.005,
+                      "rotate": 0.008, "hueShift": 0.001, "blur": 0.0,
+                      "chroma": 0.0, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "deckB": {
+        "source": "dynamic_spiral",
+        "maxPoints": 500, "scale": 0.5, "damping": 100.0,
+        "waveFreq": 0.2, "waveAmp": 0.0, "shear": 0.1, "speed": 0.5,
+        "dotSize": 0.01, "glow": 1.5, "hueOffset": 0.33, "hueSweep": 0.01,
+        "trailDecay": 0.85,
+        "feedback": { "decay": 0.03, "gain": 0.97, "zoom": 0.003,
+                      "rotate": -0.005, "hueShift": 0.0, "blur": 0.0,
+                      "chroma": 0.0, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "mixer": { "mode": 0, "balance": 0.5, "alpha": 1.0, "bloom": 0.0 }
+    }
+  },
+  {
+    "id": "ap_02",
+    "duration": 50,
+    "preset": {
+      "deckA": {
+        "source": "mandala",
+        "L1": 0.35, "L2": 0.35, "L3": 0.2, "L4": 0.1,
+        "A": 5, "B": 7, "C": 3, "D": 11,
+        "thickness": 0.009, "zoom": 0.7, "rotateZ": 0.0,
+        "hueOffset": 0.55, "hueSweep": 0.5, "depth": 0.4, "maxR": 0.9,
+        "feedback": { "decay": 0.03, "gain": 0.97, "zoom": 0.008,
+                      "rotate": -0.012, "hueShift": 0.002, "blur": 0.0,
+                      "chroma": 0.3, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "deckB": {
+        "source": "dynamic_spiral",
+        "maxPoints": 400, "scale": 0.6, "damping": 60.0,
+        "waveFreq": 0.3, "waveAmp": 0.003, "shear": -0.15, "speed": 0.35,
+        "dotSize": 0.008, "glow": 2.0, "hueOffset": 0.7, "hueSweep": 0.02,
+        "trailDecay": 0.9,
+        "feedback": { "decay": 0.02, "gain": 0.98, "zoom": 0.005,
+                      "rotate": 0.007, "hueShift": 0.001, "blur": 0.0,
+                      "chroma": 0.0, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "mixer": { "mode": 1, "balance": 0.4, "alpha": 1.0, "bloom": 0.3 }
+    }
+  },
+  {
+    "id": "ap_03",
+    "duration": 40,
+    "preset": {
+      "deckA": {
+        "source": "mandala",
+        "L1": 0.45, "L2": 0.25, "L3": 0.2, "L4": 0.1,
+        "A": 7, "B": 11, "C": 13, "D": 5,
+        "thickness": 0.014, "zoom": 0.65, "rotateZ": 0.0,
+        "hueOffset": 0.15, "hueSweep": 0.7, "depth": 0.5, "maxR": 1.0,
+        "feedback": { "decay": 0.05, "gain": 0.95, "zoom": 0.003,
+                      "rotate": 0.015, "hueShift": 0.003, "blur": 0.2,
+                      "chroma": 0.0, "mode": 0.0, "kaleido": 4.0 }
+      },
+      "deckB": {
+        "source": "dynamic_spiral",
+        "maxPoints": 600, "scale": 0.4, "damping": 150.0,
+        "waveFreq": 0.15, "waveAmp": 0.002, "shear": 0.2, "speed": 0.7,
+        "dotSize": 0.012, "glow": 1.2, "hueOffset": 0.0, "hueSweep": 0.015,
+        "trailDecay": 0.8,
+        "feedback": { "decay": 0.04, "gain": 0.96, "zoom": 0.002,
+                      "rotate": -0.008, "hueShift": 0.0, "blur": 0.3,
+                      "chroma": 0.0, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "mixer": { "mode": 0, "balance": 0.6, "alpha": 1.0, "bloom": 0.0 }
+    }
+  },
+  {
+    "id": "ap_04",
+    "duration": 55,
+    "preset": {
+      "deckA": {
+        "source": "mandala",
+        "L1": 0.3, "L2": 0.3, "L3": 0.25, "L4": 0.15,
+        "A": 2, "B": 3, "C": 7, "D": 5,
+        "thickness": 0.018, "zoom": 0.9, "rotateZ": 0.0,
+        "hueOffset": 0.75, "hueSweep": 0.2, "depth": 0.25, "maxR": 0.75,
+        "feedback": { "decay": 0.02, "gain": 0.98, "zoom": 0.01,
+                      "rotate": 0.005, "hueShift": 0.0, "blur": 0.0,
+                      "chroma": 0.5, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "deckB": {
+        "source": "dynamic_spiral",
+        "maxPoints": 350, "scale": 0.7, "damping": 80.0,
+        "waveFreq": 0.4, "waveAmp": 0.005, "shear": -0.05, "speed": 0.3,
+        "dotSize": 0.015, "glow": 3.0, "hueOffset": 0.5, "hueSweep": 0.008,
+        "trailDecay": 0.92,
+        "feedback": { "decay": 0.02, "gain": 0.98, "zoom": 0.006,
+                      "rotate": 0.004, "hueShift": 0.002, "blur": 0.0,
+                      "chroma": 0.0, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "mixer": { "mode": 3, "balance": 0.5, "alpha": 1.0, "bloom": 0.5 }
+    }
+  },
+  {
+    "id": "ap_05",
+    "duration": 45,
+    "preset": {
+      "deckA": {
+        "source": "mandala",
+        "L1": 0.4, "L2": 0.2, "L3": 0.25, "L4": 0.15,
+        "A": 11, "B": 13, "C": 7, "D": 3,
+        "thickness": 0.01, "zoom": 0.75, "rotateZ": 0.0,
+        "hueOffset": 0.4, "hueSweep": 0.4, "depth": 0.45, "maxR": 0.95,
+        "feedback": { "decay": 0.035, "gain": 0.965, "zoom": 0.006,
+                      "rotate": -0.01, "hueShift": 0.002, "blur": 0.1,
+                      "chroma": 0.2, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "deckB": {
+        "source": "dynamic_spiral",
+        "maxPoints": 450, "scale": 0.55, "damping": 120.0,
+        "waveFreq": 0.25, "waveAmp": 0.001, "shear": 0.05, "speed": 0.45,
+        "dotSize": 0.009, "glow": 2.5, "hueOffset": 0.8, "hueSweep": 0.012,
+        "trailDecay": 0.87,
+        "feedback": { "decay": 0.025, "gain": 0.975, "zoom": 0.004,
+                      "rotate": -0.006, "hueShift": 0.001, "blur": 0.0,
+                      "chroma": 0.1, "mode": 0.0, "kaleido": 1.0 }
+      },
+      "mixer": { "mode": 4, "balance": 0.55, "alpha": 1.0, "bloom": 0.2 }
+    }
+  }
+]

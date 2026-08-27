@@ -1,0 +1,12 @@
+{
+  "name": "lsd-relay",
+  "version": "1.0.0",
+  "description": "Liquid LSD WebSocket relay server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

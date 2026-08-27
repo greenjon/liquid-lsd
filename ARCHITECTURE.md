@@ -175,6 +175,44 @@ Preset Grid columns: LFO | AUDIO | TRIG
 - **Thread safety** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
 - **Serializable presets** — `CvModulator` is `@Serializable`; clean, direct serialization without legacy aliases
 
+## WebGL2 Core Renderer (Standalone Web Port)
+
+Directory: `web/`
+
+```
+web/
+├── index.html              — Entry point: TV bezel DOM shell, audio element & controls
+├── tv.css                  — Retro TV bezel styling, power switch, rotary dial, LED badge
+├── ui.js                   — UI state machine: power switch, rotary volume dial, fullscreen toggle
+├── dsp.js                  — Web Audio DSP: live stream analysis, beat detection, GainNode volume control
+├── renderer.js             — Standalone ES module: WebGL2 context, multi-pass pipeline, CRT post-processing
+├── preset.json             — Hardcoded test preset schema
+└── shaders/
+    ├── blit.vert           — Fullscreen quad vertex shader (GLSL ES 3.0)
+    ├── blit.frag           — Passthrough blit (GLSL ES 3.0)
+    ├── mandala.vert        — Mandala ribbon vertex shader (GLSL ES 3.0)
+    ├── mandala.frag        — Mandala ribbon fragment shader (GLSL ES 3.0)
+    ├── dynamic_spiral.frag — Dynamic Spiral fullscreen fragment shader (GLSL ES 3.0)
+    ├── feedback.frag       — Ping-pong feedback shader (GLSL ES 3.0)
+    ├── mixer.frag          — Deck A + Deck B + BG composite (GLSL ES 3.0)
+    └── crt_post.frag       — CRT post-processing, static snow, barrel distortion & warmup (GLSL ES 3.0)
+```
+
+The WebGL2 standalone player replicates the core desktop multi-pass pipeline and audio reactivity directly in the browser with zero dependencies:
+- **Interactive Retro TV Shell (`tv.css`, `ui.js`)**: Encapsulates the visualizer in a retro CRT TV bezel. The physical power switch initiates user-gesture Web Audio initialization and triggers a realistic 1.5s CRT warmup animation (thin expanding raster line with phosphor glow). Rotary volume dial with mouse/touch drag controls audio gain with a squared perceptual curve (`setVolume`). Canvas double-click toggles borderless fullscreen projection mode.
+- **Web Audio DSP Pipeline (`dsp.js`)**: Real-time analysis of `https://radio.spaz.org:8060/radio.ogg` Icecast stream via lowpass (bass < 180 Hz), bandpass (mid ~1 kHz), highpass (high > 5 kHz), and broadband analysers with peak-hold normalization and `GainNode` master volume control.
+- **Beat & Onset Tracking**: Dual-envelope follower (fast vs baseline energy) with inter-onset interval (IOI) median filtering for real-time BPM estimation, beat phase (0..1), and beat sine oscillation.
+- **Audio-Reactive Uniforms**: Per-frame uniform modulation dynamically blending baseline preset parameters with live CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `beatPhase`, `beatSine`, `trigger_onset`).
+- **Ping-Pong Feedback FBOs**: Supports `RGBA16F` HDR render targets via `EXT_color_buffer_float` with fallback to `RGBA8`.
+- **Render Passes**:
+  1. `deckA.cleanFBO`: Generates Mandala ribbon source geometry (4096 vertices).
+  2. `deckA.writeFBO`: Applies zoom/rotate/decay feedback blending with `deckA.readTex`.
+  3. `deckB.cleanFBO`: Generates Dynamic Spiral with internal trail history (`src` sampler).
+  4. `deckB.writeFBO`: Applies outer feedback transformation on Deck B.
+  5. `deckBG`: Clears background layer.
+  6. `masterFBO`: Blends Deck A + Deck B over BG with selectable blend modes (`mixer.frag`).
+  7. `crt_post.frag` -> Screen: Final CRT post-processing with barrel glass distortion, chromatic aberration, scanlines, RGB phosphor shadow mask triad, corner vignette, animated static noise when powered off, and raster warmup sequence. Passes 1–4 are bypassed when powered off to minimize GPU load.
+
 ## Build & Run
 ```bash
 ./gradlew run              # launch (JACK/PipeWire recommended for Linux, Java Sound fallback runs otherwise)
@@ -183,3 +221,4 @@ Preset Grid columns: LFO | AUDIO | TRIG
 ```
 Custom visual shaders are loaded from `library/sources/`.
 For deeper notes see `docs/developer/` and `.agents/PROJECT.md`.
+

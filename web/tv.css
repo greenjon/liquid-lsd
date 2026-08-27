@@ -1,0 +1,238 @@
+/* tv.css — Retro CRT Television Shell */
+
+:root {
+  --tv-bg:           #2a2520;   /* dark warm charcoal plastic body */
+  --tv-highlight:    #3d3830;   /* lighter bevel edge */
+  --tv-shadow:       #18140f;   /* darker bevel edge */
+  --tv-screen-bg:    #050a05;   /* deep screen surround — slight green tint */
+  --tv-screen-w:     min(72vw, 128vh);  /* screen width, respects both axes */
+  --tv-aspect:       calc(9 / 16);      /* 16:9 screen */
+  --led-off:         #1a0000;
+  --led-on:          #ff2200;
+  --switch-off:      #1c1c1c;
+  --switch-on:       #cc2200;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: monospace;
+}
+
+/* --- TV Outer Wrapper --- */
+#tv-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- TV Body --- */
+#tv-body {
+  background: var(--tv-bg);
+  border-radius: 18px 18px 12px 12px;
+  padding: 28px 28px 20px 28px;
+  box-shadow:
+    inset 0 2px 1px var(--tv-highlight),
+    inset 0 -2px 1px var(--tv-shadow),
+    inset 2px 0 1px var(--tv-highlight),
+    inset -2px 0 1px var(--tv-shadow),
+    0 8px 40px rgba(0,0,0,0.85),
+    0 2px 8px rgba(0,0,0,0.6);
+
+  /* Subtle plastic texture via gradient */
+  background-image: radial-gradient(
+    ellipse at 30% 20%,
+    rgba(255,255,255,0.04) 0%,
+    transparent 60%
+  );
+}
+
+/* --- Screen Outer Border (thick inset surround) --- */
+#tv-screen-border {
+  width: var(--tv-screen-w);
+  background: var(--tv-screen-bg);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,0.9),
+    inset 0 0 4px rgba(0,200,0,0.04),  /* faint green phosphor glow */
+    0 0 0 2px var(--tv-shadow);
+}
+
+/* --- Screen Area (canvas container) --- */
+#tv-screen-area {
+  position: relative;
+  width: 100%;
+  padding-bottom: calc(var(--tv-aspect) * 100%);   /* aspect ratio trick */
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+}
+
+#tv-screen-area canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Screen-off overlay — solid black shown when TV is off */
+#screen-off-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* When powered on, fade out the black overlay to reveal canvas */
+#tv-body.powered-on #screen-off-overlay {
+  opacity: 0;
+}
+
+/* --- Controls Row --- */
+#tv-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 8px 4px 8px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.control-label {
+  color: #555;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* --- Power Switch --- */
+.power-switch {
+  width: 32px;
+  height: 48px;
+  background: var(--tv-shadow);
+  border: 2px solid #333;
+  border-radius: 6px 6px 4px 4px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  transition: background 0.2s;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.switch-knob {
+  width: 18px;
+  height: 22px;
+  background: var(--switch-off);
+  border-radius: 3px;
+  border: 1px solid #444;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.power-switch.active .switch-knob {
+  background: var(--switch-on);
+  transform: translateY(6px);
+  box-shadow: 0 0 8px rgba(200,0,0,0.5);
+}
+
+/* --- Rotary Dial --- */
+.rotary-dial {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, #3a3530, #1a1510);
+  border: 2px solid #222;
+  cursor: ns-resize;
+  position: relative;
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.7),
+    inset 0 1px 2px rgba(255,255,255,0.1);
+  user-select: none;
+  transition: transform 0s;  /* transform is set directly, no transition */
+}
+
+/* Marker line at top — shows rotation angle */
+.dial-marker {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 10px;
+  background: #aaa;
+  border-radius: 1px;
+}
+
+/* --- Station Badge --- */
+#station-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  padding: 4px 10px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 4px;
+  border: 1px solid #222;
+}
+
+.led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--led-off);
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+#tv-body.powered-on .led {
+  background: var(--led-on);
+  box-shadow: 0 0 6px rgba(255,30,0,0.8), 0 0 12px rgba(255,30,0,0.3);
+}
+
+.station-text {
+  color: #444;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  user-select: none;
+  transition: color 0.3s;
+}
+
+#tv-body.powered-on .station-text {
+  color: #888;
+}
+
+/* --- Fullscreen mode — hide TV chrome, canvas fills viewport --- */
+body.fullscreen-mode #tv-wrapper {
+  display: none;
+}
+
+body.fullscreen-mode canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 100;
+}

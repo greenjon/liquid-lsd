@@ -1,0 +1,63 @@
+{
+  "deckA": {
+    "source": "mandala",
+    "L1": 0.4,
+    "L2": 0.3,
+    "L3": 0.2,
+    "L4": 0.1,
+    "A": 3,
+    "B": 4,
+    "C": 5,
+    "D": 7,
+    "thickness": 0.012,
+    "zoom": 0.8,
+    "rotateZ": 0.0,
+    "hueOffset": 0.0,
+    "hueSweep": 0.3,
+    "depth": 0.35,
+    "maxR": 0.85,
+    "feedback": {
+      "decay": 0.04,
+      "gain": 0.96,
+      "zoom": 0.005,
+      "rotate": 0.008,
+      "hueShift": 0.001,
+      "blur": 0.0,
+      "chroma": 0.0,
+      "mode": 0.0,
+      "kaleido": 1.0
+    }
+  },
+  "deckB": {
+    "source": "dynamic_spiral",
+    "maxPoints": 500,
+    "scale": 0.5,
+    "damping": 100.0,
+    "waveFreq": 0.2,
+    "waveAmp": 0.0,
+    "shear": 0.1,
+    "speed": 0.5,
+    "dotSize": 0.01,
+    "glow": 1.5,
+    "hueOffset": 0.33,
+    "hueSweep": 0.01,
+    "trailDecay": 0.85,
+    "feedback": {
+      "decay": 0.03,
+      "gain": 0.97,
+      "zoom": 0.003,
+      "rotate": -0.005,
+      "hueShift": 0.0,
+      "blur": 0.0,
+      "chroma": 0.0,
+      "mode": 0.0,
+      "kaleido": 1.0
+    }
+  },
+  "mixer": {
+    "mode": 0,
+    "balance": 0.5,
+    "alpha": 1.0,
+    "bloom": 0.0
+  }
+}

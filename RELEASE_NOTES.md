@@ -37,6 +37,24 @@
 - **Dynamic Flexible Layout**: Sidebar navigation and content panes stretch seamlessly to fill window dimensions.
 - **Auto-Save Dimensions**: Window width and height are preserved across sessions in `lsd-settings.properties`.
 
+#### 7. Standalone WebGL2 Core Renderer (`web/`)
+- **Zero-Dependency Web Pipeline**: Complete browser-based WebGL2 / GLSL ES 3.0 port of the core multi-pass rendering pipeline (`Mandala`, `DynamicSpiral`, `feedback.frag`, `mixer.frag`, `blit.frag`).
+- **Ping-Pong Feedback FBOs**: Implemented `RGBA16F` half-float framebuffer textures with `EXT_color_buffer_float` and automatic fallback to `RGBA8`.
+- **Dynamic Viewport & Preset Loading**: Responsive fullscreen canvas handling and JSON preset configuration loader (`web/preset.json`).
+
+#### 8. Web Audio DSP & Live Stream Integration (`web/dsp.js`)
+- **Live Stream DSP**: Connected `https://radio.spaz.org:8060/radio.ogg` to real-time Web Audio graph via lowpass (bass), bandpass (mid), highpass (high), and broadband RMS analysers.
+- **Beat Detection & Phase Tracking**: Implemented dual-average onset detection with IOI history for adaptive BPM calculation and beat-synced LFO signals.
+- **Audio-Reactive Uniforms**: Wired live CV channels (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `beatPhase`, `beatSine`, `trigger_onset`) to dynamically modulate Deck A & Deck B shader parameters.
+- **Click-to-Start Gesture UX**: Autoplay policy compliance with single-click unlock overlay and AudioContext auto-resumption.
+
+#### 9. Retro TV Shell & CRT Post-Processing (`web/tv.css`, `web/ui.js`, `web/shaders/crt_post.frag`)
+- **Interactive Retro TV Shell**: Wrapped the browser visualizer in a realistic retro CRT TV bezel with an illuminated LED station indicator (`SPAZ RADIO • CH.1`), clickable physical power toggle, and mouse/touch draggable rotary volume dial.
+- **CRT Warmup & Static Sequence**: Cold-boot state renders animated high-frequency static snow; toggling power initiates a 1.5s raster warmup sequence with expanding green-tinted beam line and phosphor decay flash.
+- **Comprehensive CRT Shader Pipeline (`crt_post.frag`)**: Single-pass post-processing shader replacing final blit with barrel distortion curvature, scanlines, 3-pixel RGB phosphor shadow mask triad, corner vignette, chromatic aberration channel splitting, and ambient phosphor persistence.
+- **Draggable Rotary Volume Dial**: Drag up/down on the rotary dial controls audio output volume via Web Audio `GainNode` with a perceptually linear squared response curve ($V^2$).
+- **Fullscreen Projection Mode**: Double-clicking the screen expands the visualizer to borderless fullscreen projection mode, hiding the TV chrome.
+
 ---
 
 ## Version 1.0.0-beta.28
