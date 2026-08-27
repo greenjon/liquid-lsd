@@ -91,16 +91,20 @@ class MenuBar(
                 } else {
                     if (ImGui.menuItem("REC")) {
                         val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
-                        val outFile = java.io.File("output/recordings/liquid_lsd_$dateStr.mp4")
+                        val recDir = session.uiTheme.getDefaultVideosDirectory()
+                        val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
                         llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
                             outputFile = outFile,
                             width = mixer.width,
                             height = mixer.height,
-                            fps = 60
+                            fps = session.uiTheme.recordingFps,
+                            bitrateMbps = session.uiTheme.recordingBitrateMbps,
+                            includeAudio = session.uiTheme.recordingIncludeAudio
                         )
                     }
                     if (ImGui.isItemHovered()) {
-                        ImGui.setTooltip("Start live master output recording to output/recordings/ (60 FPS H.264)")
+                        val audioTxt = if (session.uiTheme.recordingIncludeAudio) "with audio" else "video only"
+                        ImGui.setTooltip("Start live master output recording (Hotkey: Ctrl+R)\nFolder: ${session.uiTheme.getDefaultVideosDirectory().absolutePath}\nSettings: ${session.uiTheme.recordingFps} FPS @ ${session.uiTheme.recordingBitrateMbps} Mbps ($audioTxt)")
                     }
                 }
 

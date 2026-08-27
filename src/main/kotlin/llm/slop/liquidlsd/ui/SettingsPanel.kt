@@ -49,17 +49,31 @@ object SettingsPanel {
              onSizeChanged: (Float) -> Unit) {
 
         val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
-        val targetW = (MODAL_W * fontScale).coerceIn(540f, displayW * 0.90f)
+        val defaultW = (MODAL_W * fontScale).coerceIn(580f, displayW * 0.95f)
+        val defaultH = (480f * fontScale).coerceIn(380f, displayH * 0.90f)
+
+        val targetW = if (session.uiTheme.settingsWidth > 100f) session.uiTheme.settingsWidth.coerceIn(480f, displayW * 0.98f) else defaultW
+        val targetH = if (session.uiTheme.settingsHeight > 100f) session.uiTheme.settingsHeight.coerceIn(320f, displayH * 0.98f) else defaultH
 
         ImGui.setNextWindowPos(
             displayW * 0.5f, displayH * 0.5f,
-            ImGuiCond.Always, 0.5f, 0.5f
+            ImGuiCond.Appearing, 0.5f, 0.5f
         )
-        ImGui.setNextWindowSize(targetW, 0f, ImGuiCond.Always)
+        ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.Appearing)
+        ImGui.setNextWindowSizeConstraints(480f, 320f, displayW * 0.98f, displayH * 0.98f)
 
-        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.AlwaysAutoResize or ImGuiWindowFlags.NoScrollbar
+        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoScrollbar
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
+
+        val currentWinW = ImGui.getWindowWidth()
+        val currentWinH = ImGui.getWindowHeight()
+        if (kotlin.math.abs(currentWinW - session.uiTheme.settingsWidth) > 1f ||
+            kotlin.math.abs(currentWinH - session.uiTheme.settingsHeight) > 1f) {
+            session.uiTheme.settingsWidth = currentWinW
+            session.uiTheme.settingsHeight = currentWinH
+            session.uiTheme.saveSettings()
+        }
 
         val sidebarW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             Category.values().maxOf { ImGui.calcTextSize(it.label).x } + 36f
@@ -69,14 +83,13 @@ object SettingsPanel {
             ImGui.getFrameHeight() + 6f
         }.coerceAtLeast(30f)
 
-        val desiredH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            (ImGui.getTextLineHeightWithSpacing() * 15f)
+        val footerH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.getFrameHeightWithSpacing() + ImGui.getStyle().itemSpacing.y * 2f + 14f
         }
-        val maxH = (displayH * 0.78f).coerceAtLeast(100f)
-        val minH = 300f.coerceAtMost(maxH)
-        val contentH = desiredH.coerceIn(minH, maxH)
 
         val availW = ImGui.getContentRegionAvailX()
+        val availH = ImGui.getContentRegionAvailY()
+        val contentH = (availH - footerH).coerceAtLeast(180f)
         val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(50f)
 
         // Left Sidebar Child
@@ -355,6 +368,50 @@ object SettingsPanel {
             ImGui.setTooltip("Broadcasts master visuals in real-time over GPU shared memory to Resolume Arena, OBS Studio, and TouchDesigner with zero-copy overhead.")
         }
         session.uiTheme.caption("Active Streamer: ${llm.slop.liquidlsd.rendering.TextureStreamerManager.activeStreamer.name}")
+
+        ImGui.spacing()
+        session.uiTheme.h2("Live Video Recording")
+        ImGui.separator()
+        ImGui.spacing()
+
+        session.uiTheme.body("Recording Output Directory:")
+        val defaultDir = session.uiTheme.getDefaultVideosDirectory().absolutePath
+        val currentRecDir = if (session.uiTheme.recordingDirectory.isNotBlank()) session.uiTheme.recordingDirectory else defaultDir
+        val dirInput = imgui.type.ImString(currentRecDir, 512)
+        if (ImGui.inputText("##RecDir", dirInput)) {
+            session.uiTheme.recordingDirectory = dirInput.get().trim()
+            session.uiTheme.saveSettings()
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Reset to Default##RecDir")) {
+            session.uiTheme.recordingDirectory = ""
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Reset recording output folder to standard system Videos directory: $defaultDir")
+        }
+
+        val recAudioVal = ImBoolean(session.uiTheme.recordingIncludeAudio)
+        if (ImGui.checkbox("Record with Audio Muxing", recAudioVal)) {
+            session.uiTheme.recordingIncludeAudio = recAudioVal.get()
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
+        }
+
+        val bitrateInt = imgui.type.ImInt(session.uiTheme.recordingBitrateMbps)
+        if (ImGui.sliderInt("Video Bitrate (Mbps)", bitrateInt.getData(), 4, 50)) {
+            session.uiTheme.recordingBitrateMbps = bitrateInt.get()
+            session.uiTheme.saveSettings()
+        }
+
+        val fpsOptions = arrayOf("30 FPS", "60 FPS")
+        val fpsIdx = imgui.type.ImInt(if (session.uiTheme.recordingFps <= 30) 0 else 1)
+        if (ImGui.combo("Recording Framerate", fpsIdx, fpsOptions)) {
+            session.uiTheme.recordingFps = if (fpsIdx.get() == 0) 30 else 60
+            session.uiTheme.saveSettings()
+        }
     }
 
     private fun drawAudioEngineSettings(session: llm.slop.liquidlsd.SessionContext) {

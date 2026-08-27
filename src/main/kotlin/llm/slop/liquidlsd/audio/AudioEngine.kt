@@ -497,6 +497,9 @@ object AudioEngine {
             highBuffer[i] = highPass.process(sample)
         }
 
+        // Tap live audio stream for real-time video recording (zero allocation)
+        llm.slop.liquidlsd.export.RealtimeRecorder.pushAudioBlock(buffer, startPos, safeFrames, sampleRate, gain)
+
         // 4. RMS amplitudes per band
         val amp  = extractor.calculateRms(buffer, safeFrames) * gain
         val bass = extractor.calculateRms(lowBuffer,  safeFrames)

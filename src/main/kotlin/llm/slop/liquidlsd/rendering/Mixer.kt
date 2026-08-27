@@ -171,9 +171,14 @@ class Mixer(
      * Evaluates mixer parameters and background queue transitions.
      */
     fun update() {
-        val now = System.nanoTime()
-        val deltaTime = (now - lastUpdateTimeNs) / 1_000_000_000f
-        lastUpdateTimeNs = now
+        val deltaTime = if (llm.slop.liquidlsd.utils.TimeSource.isSimulated) {
+            llm.slop.liquidlsd.utils.TimeSource.getDeltaTimeSec().toFloat()
+        } else {
+            val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
+            val dt = (now - lastUpdateTimeNs) / 1_000_000_000f
+            lastUpdateTimeNs = now
+            dt
+        }
 
         if (isAutoFading) {
             val current = crossfade.baseValue

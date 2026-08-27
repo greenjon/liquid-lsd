@@ -60,7 +60,7 @@ object CVRegistry {
         val beats = anchorBeats
         val bpm = anchorBpm
         val timeNs = anchorTimeNs
-        val now = System.nanoTime()
+        val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
         val elapsedSec = (now - timeNs) / 1_000_000_000.0
         val beatDelta = elapsedSec * (bpm / 60.0)
         return beats + beatDelta
@@ -70,7 +70,7 @@ object CVRegistry {
      * Returns the elapsed application time in seconds.
      */
     fun getElapsedRealtimeSec(): Double {
-        return (System.nanoTime() - startTimeNs) / 1_000_000_000.0
+        return (llm.slop.liquidlsd.utils.TimeSource.getTimeNanos() - startTimeNs) / 1_000_000_000.0
     }
 
     /**

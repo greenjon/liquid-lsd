@@ -169,3 +169,27 @@ vec3 foldSpace(vec3 p) {
 
 ### 2. CSG Intersections and Blunting
 Once folded, an entire Icosidodecahedron is defined by evaluating only **two** dot products (the 3-fold and 5-fold poles). Stellations and dramatic transformations (such as slicing off the tips of stars to reveal cross-sections) are performed using mathematically cheap `max()` CSG intersections between the extruded spikes and a dynamic blocker plane. This eliminates Kotlin overhead completely and offloads all computation to the GPU while dropping operations by 95%.
+
+---
+
+## Video Recording & Deterministic Offline Studio
+
+Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate offline rendering studio in the `llm.slop.liquidlsd.export` package.
+
+### 1. Zero-Copy DMA Readback (`PboReadbackPipeline`)
+- **Ping-Pong PBO Ring Buffer**: Uses two `GL_PIXEL_PACK_BUFFER` objects. While PBO $A$ is mapped into CPU memory via `glMapBufferRange(GL_READ_ONLY)`, PBO $B$ executes an asynchronous GPU DMA transfer via `glReadPixels(..., 0)`.
+- **Direct Memory Copy**: Frame transfers use direct C-pointer block copies (`MemoryUtil.memCopy`) to eliminate CPU overhead on Thread 0. Vertical flipping is delegated to the FFmpeg filter graph (`-vf vflip`).
+
+### 2. Live Session Recording (`RealtimeRecorder`)
+- **Background Frame Queue**: Bounded `ArrayBlockingQueue<ByteBuffer>(10)` prevents frame capture from stalling the main OpenGL render loop. If disk I/O stalls, frames are cleanly dropped with a live HUD counter and percentage indicator.
+- **Zero-Allocation Audio Tapping**: Live audio blocks from `AudioEngine.processAudio` are captured into a pre-allocated pool of `AudioBlock` instances without heap allocations or locks on the real-time audio thread. Audio is written to a temporary PCM WAV file and losslessly remuxed with FFmpeg (`-c:v copy -c:a aac -b:a 320k`) upon stopping.
+- **Live REC Tally Badge**: Pulsing red record badge overlaid directly on the master preview monitor with elapsed timer (`REC MM:SS`).
+
+### 3. Deterministic Time Virtualization (`TimeSource`)
+- **Central Time Authority**: All shaders (`uTime`), `CVRegistry` evaluators, `DynamicSpiral`, and `Mixer` query `TimeSource.getTimeSec()` and `TimeSource.getTimeNanos()`.
+- **Offline Simulation Clock**: During `OfflineRenderStudio` passes, `TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)` is set before stepping DSP analysis and deck rendering, guaranteeing sample-accurate synchronization between audio frequencies and visual animations regardless of rendering speed.
+
+### 4. Offline Render Studio (`OfflineRenderStudio`)
+- **Frame-Accurate Stepping**: Iterates frame-by-frame on Thread 0 while yielding to GLFW events.
+- **Multi-Pass Motion Blur (`AccumulationBuffer`)**: Supports up to 8x temporal super-sampling, blending sub-frame passes to generate cinematic motion blur.
+- **Automatic Encoder Prioritization & Fallback**: Automatically probes and prioritizes hardware encoders (`h264_nvenc`, `h264_qsv`) with transparent fallback to software encoders (`libx264`, `libx265`, `prores_ks`).

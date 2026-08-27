@@ -22,12 +22,16 @@ object VideoExportModal {
 
     private var isOpen = false
 
-    private val audioPath = ImString("audio.wav", 512)
-    private val outputPath = ImString("output.mp4", 512)
+    private val audioPath = ImString("", 512)
+    private val outputPath = ImString("", 512)
+    private val presetPath = ImString("", 512)
+
+    private val audioBrowser = ImGuiFileBrowser("##exportAudioBrowser")
+    private val outputBrowser = ImGuiFileBrowser("##exportOutputBrowser")
+    private val presetBrowser = ImGuiFileBrowser("##exportPresetBrowser")
 
     private val resolutionPresets = VideoResolutionPreset.values()
-    private val resolutionPresetNames = resolutionPresets.map { it.label }.toTypedArray()
-    private val selectedResolutionIdx = ImInt(1) // Default to 1080p
+    private val selectedResolutionIdx = ImInt(0) // Default 0 = Match Project Canvas
 
     private val fpsOptions = intArrayOf(24, 30, 60, 120)
     private val fpsOptionLabels = arrayOf("24 FPS", "30 FPS", "60 FPS", "120 FPS")
@@ -48,9 +52,10 @@ object VideoExportModal {
         isOpen = true
         statusMessage = null
         isSuccess = null
-        if (outputPath.get() == "output.mp4" || outputPath.get().isBlank()) {
+        if (outputPath.get().isBlank()) {
             val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
-            outputPath.set("output/renders/liquid_lsd_$dateStr.mp4")
+            val exportDir = File(UITheme.getDefaultVideosDirectory(), "renders").apply { mkdirs() }
+            outputPath.set(File(exportDir, "liquid_lsd_export_$dateStr.mp4").absolutePath)
         }
         ImGui.openPopup(POPUP_ID)
     }
@@ -58,7 +63,7 @@ object VideoExportModal {
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, renderer: Renderer, displayW: Float, displayH: Float) {
         if (!isOpen) return
 
-        val modalW = (640f * (session.uiTheme.baseSize / 15f)).coerceIn(580f, displayW * 0.95f)
+        val modalW = (660f * (session.uiTheme.baseSize / 15f)).coerceIn(600f, displayW * 0.95f)
         ImGui.setNextWindowPos(displayW * 0.5f, displayH * 0.5f, ImGuiCond.Always, 0.5f, 0.5f)
         ImGui.setNextWindowSize(modalW, 0f, ImGuiCond.Always)
 
@@ -79,6 +84,19 @@ object VideoExportModal {
             drawConfigForm(session, mixer, renderer)
         }
 
+        // Draw child file browsers at modal scope
+        audioBrowser.draw { chosenFile ->
+            audioPath.set(chosenFile.absolutePath)
+        }
+
+        outputBrowser.draw { chosenFile ->
+            outputPath.set(chosenFile.absolutePath)
+        }
+
+        presetBrowser.draw { chosenFile ->
+            presetPath.set(chosenFile.absolutePath)
+        }
+
         ImGui.endPopup()
     }
 
@@ -90,12 +108,18 @@ object VideoExportModal {
         ImGui.progressBar(prog.percent / 100f, -1f, 24f, "%.1f%% (Frame %d / %d)".format(prog.percent, prog.currentFrame, prog.totalFrames))
         ImGui.spacing()
 
-        session.uiTheme.caption("Speed: %.1f FPS | ETA: %.0f seconds".format(prog.currentFps, prog.etaSeconds))
+        val elapsedMin = prog.elapsedSeconds.toInt() / 60
+        val elapsedSec = prog.elapsedSeconds.toInt() % 60
+        val etaMin = prog.etaSeconds.toInt() / 60
+        val etaSec = prog.etaSeconds.toInt() % 60
+
+        session.uiTheme.body("Speed: %.1f FPS | Elapsed: %02d:%02d | ETA: %02d:%02d | File Size: %.1f MB"
+            .format(prog.currentFps, elapsedMin, elapsedSec, etaMin, etaSec, prog.estimatedFileSizeMb))
         ImGui.spacing()
 
         if (prog.previewTextureId != 0) {
             val previewAspect = 16f / 9f
-            val previewW = 320f
+            val previewW = 340f
             val previewH = previewW / previewAspect
             ImGui.image(prog.previewTextureId, previewW, previewH)
         }
@@ -115,35 +139,66 @@ object VideoExportModal {
         ImGui.inputText("##AudioInput", audioPath)
         ImGui.sameLine()
         if (ImGui.button("Browse...##Audio")) {
-            // Simple default pick helper or native dialog
-            val audioDir = File("library/audio")
-            audioDir.mkdirs()
-            val files = audioDir.listFiles { _, name -> name.matches(Regex(".*\\.(wav|mp3|flac|ogg|m4a|aac)$", RegexOption.IGNORE_CASE)) }
-            if (!files.isNullOrEmpty()) {
-                audioPath.set(files.first().path)
-            }
+            val startDir = File("library/audio").takeIf { it.exists() } ?: File(System.getProperty("user.home") ?: ".")
+            audioBrowser.open(
+                mode = ImGuiFileBrowser.Mode.LOAD,
+                startDir = startDir,
+                extensions = listOf(".wav", ".mp3", ".flac", ".ogg", ".m4a", ".aac")
+            )
         }
-        session.uiTheme.caption("Supports .wav, .mp3, .flac, .ogg, .m4a, .aac")
+        session.uiTheme.caption("Select an audio track (.wav, .mp3, .flac, .ogg, .m4a, .aac)")
         ImGui.spacing()
 
-        // 2. Output Video File
+        // 2. Preset / Setlist Snapshot (Optional)
+        session.uiTheme.body("Preset Snapshot (Optional):")
+        ImGui.inputText("##PresetInput", presetPath)
+        ImGui.sameLine()
+        if (ImGui.button("Browse...##Preset")) {
+            val startDir = File("library/presets").takeIf { it.exists() } ?: File("library")
+            presetBrowser.open(
+                mode = ImGuiFileBrowser.Mode.LOAD,
+                startDir = startDir,
+                extensions = listOf(".lsd", ".json", ".lsdset")
+            )
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Clear##Preset")) {
+            presetPath.set("")
+        }
+        session.uiTheme.caption("Leave blank to render current live session, or select a .lsd preset / .lsdset setlist.")
+        ImGui.spacing()
+
+        // 3. Output Video File
         session.uiTheme.body("Destination Video File:")
         ImGui.inputText("##VideoOutput", outputPath)
+        ImGui.sameLine()
+        if (ImGui.button("Browse...##Output")) {
+            val startDir = File(outputPath.get()).parentFile?.takeIf { it.exists() } ?: session.uiTheme.getDefaultVideosDirectory()
+            val initialName = File(outputPath.get()).name.takeIf { it.isNotBlank() } ?: "liquid_lsd_export.mp4"
+            outputBrowser.open(
+                mode = ImGuiFileBrowser.Mode.SAVE,
+                startDir = startDir,
+                initialName = initialName,
+                extensions = listOf(".mp4", ".mov")
+            )
+        }
         ImGui.spacing()
 
-        // 3. Resolution Preset
+        // 4. Resolution Preset
         session.uiTheme.body("Video Resolution:")
-        ImGui.combo("##Resolution", selectedResolutionIdx, resolutionPresetNames)
+        val resolutionLabels = arrayOf("Match Project Canvas (%dx%d)".format(session.uiTheme.renderWidth, session.uiTheme.renderHeight)) +
+                resolutionPresets.map { it.label }.toTypedArray()
+        ImGui.combo("##Resolution", selectedResolutionIdx, resolutionLabels)
         ImGui.spacing()
 
-        // 4. Framerate & Codec
+        // 5. Framerate & Codec
         session.uiTheme.body("Framerate & Codec:")
         ImGui.combo("##Framerate", selectedFpsIdx, fpsOptionLabels)
         ImGui.sameLine()
         ImGui.combo("##Codec", selectedCodecIdx, codecOptionLabels)
         ImGui.spacing()
 
-        // 5. Motion Blur / Super-Sampling
+        // 6. Motion Blur / Super-Sampling
         session.uiTheme.body("Temporal Super-Sampling (Motion Blur):")
         ImGui.combo("##SuperSampling", selectedSamplingIdx, samplingOptionLabels)
         session.uiTheme.caption("Renders multiple sub-frames per output frame to create smooth, natural motion trails.")
@@ -165,24 +220,45 @@ object VideoExportModal {
         ImGui.spacing()
 
         if (ImGui.button("Start Export", 140f, 32f)) {
-            val audioFile = File(audioPath.get())
-            if (!audioFile.exists()) {
-                statusMessage = "Audio file not found: ${audioFile.path}"
+            val audioFile = File(audioPath.get().trim())
+            if (!audioFile.exists() || audioFile.isDirectory) {
+                statusMessage = "Audio file not found: ${audioPath.get()}"
                 isSuccess = false
             } else {
                 statusMessage = null
                 isSuccess = null
-                val res = resolutionPresets[selectedResolutionIdx.get()]
+
+                // Optionally load selected preset snapshot
+                val pPath = presetPath.get().trim()
+                if (pPath.isNotBlank()) {
+                    val pFile = File(pPath)
+                    if (pFile.exists()) {
+                        try {
+                            session.presetManager.loadDeckPresetAsync(pFile, isDeckA = true)
+                            logger.info { "Loaded preset snapshot for export: ${pFile.name}" }
+                        } catch (e: Exception) {
+                            logger.warn(e) { "Could not load preset snapshot before export: ${e.message}" }
+                        }
+                    }
+                }
+
+                val (exportW, exportH) = if (selectedResolutionIdx.get() == 0) {
+                    session.uiTheme.renderWidth to session.uiTheme.renderHeight
+                } else {
+                    val res = resolutionPresets[selectedResolutionIdx.get() - 1]
+                    res.width to res.height
+                }
+
                 val chosenFps = fpsOptions[selectedFpsIdx.get()]
                 val chosenCodec = codecOptions[selectedCodecIdx.get()]
                 val chosenSampling = samplingOptions[selectedSamplingIdx.get()]
-                val outFile = File(outputPath.get())
+                val outFile = File(outputPath.get().trim())
                 outFile.parentFile?.mkdirs()
 
                 val config = VideoExportConfig(
                     outputFile = outFile,
-                    width = res.width,
-                    height = res.height,
+                    width = exportW,
+                    height = exportH,
                     fps = chosenFps,
                     codec = chosenCodec,
                     audioFile = audioFile,

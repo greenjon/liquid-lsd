@@ -214,13 +214,14 @@ fun main() {
         secondaryWindow = createSecondaryWindow(window)
     }
 
-    // Setup key callback chaining to allow "f", "b", CTRL-, and CTRL= controls
+    // Setup key callback chaining to allow "f", "b", CTRL-, CTRL=, and CTRL-R controls
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
         val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_EQUAL)
+        val isRecordHotKey = (mods and GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_R
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
-        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed) || isFontSizeHotKey
+        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed) || isFontSizeHotKey || isRecordHotKey
 
         if (action == GLFW_PRESS) {
             if (isFontSizeHotKey) {
@@ -228,6 +229,22 @@ fun main() {
                     uiManager.adjustFontSize(-1f)
                 } else if (key == GLFW_KEY_EQUAL) {
                     uiManager.adjustFontSize(1f)
+                }
+            } else if (isRecordHotKey) {
+                if (llm.slop.liquidlsd.export.RealtimeRecorder.isRecording) {
+                    llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
+                } else {
+                    val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
+                    val recDir = UITheme.getDefaultVideosDirectory()
+                    val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
+                    llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
+                        outputFile = outFile,
+                        width = mixer.width,
+                        height = mixer.height,
+                        fps = UITheme.recordingFps,
+                        bitrateMbps = UITheme.recordingBitrateMbps,
+                        includeAudio = UITheme.recordingIncludeAudio
+                    )
                 }
             } else if (key == GLFW_KEY_F && isShortcutAllowed) {
                 UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled

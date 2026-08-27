@@ -183,6 +183,52 @@ object UITheme {
         get() = settings.outputScaleMode
         set(value) { settings = settings.copy(outputScaleMode = value) }
 
+    var recordingDirectory: String
+        get() = settings.recordingDirectory
+        set(value) { settings = settings.copy(recordingDirectory = value) }
+
+    var recordingIncludeAudio: Boolean
+        get() = settings.recordingIncludeAudio
+        set(value) { settings = settings.copy(recordingIncludeAudio = value) }
+
+    var recordingBitrateMbps: Int
+        get() = settings.recordingBitrateMbps
+        set(value) { settings = settings.copy(recordingBitrateMbps = value.coerceIn(2, 100)) }
+
+    var recordingFps: Int
+        get() = settings.recordingFps
+        set(value) { settings = settings.copy(recordingFps = if (value == 30) 30 else 60) }
+
+    var settingsWidth: Float
+        get() = settings.settingsWidth
+        set(value) { settings = settings.copy(settingsWidth = value.coerceIn(400f, 3840f)) }
+
+    var settingsHeight: Float
+        get() = settings.settingsHeight
+        set(value) { settings = settings.copy(settingsHeight = value.coerceIn(300f, 2160f)) }
+
+    fun getDefaultVideosDirectory(): File {
+        val configured = settings.recordingDirectory.trim()
+        if (configured.isNotBlank()) {
+            val f = File(configured)
+            if (f.exists() || f.mkdirs()) return f
+        }
+        val xdg = System.getenv("XDG_VIDEOS_DIR")
+        if (!xdg.isNullOrBlank()) {
+            val dir = File(xdg, "liquid-lsd")
+            if (dir.exists() || dir.mkdirs()) return dir
+        }
+        val userHome = System.getProperty("user.home") ?: "."
+        val os = System.getProperty("os.name")?.lowercase() ?: ""
+        val standardDir = if (os.contains("mac")) File(userHome, "Movies/liquid-lsd") else File(userHome, "Videos/liquid-lsd")
+        return try {
+            standardDir.mkdirs()
+            if (standardDir.isDirectory) standardDir else File("output/recordings").apply { mkdirs() }
+        } catch (e: Exception) {
+            File("output/recordings").apply { mkdirs() }
+        }
+    }
+
     val renderWidth: Int
         get() = if (renderResolutionPreset == ResolutionPreset.CUSTOM) customRenderWidth else renderResolutionPreset.width
 
@@ -310,6 +356,12 @@ object UITheme {
                 props.getProperty("outputScaleMode")?.let { saved ->
                     outputScaleMode = try { OutputScaleMode.valueOf(saved) } catch (e: Exception) { OutputScaleMode.FIT }
                 }
+                props.getProperty("recordingDirectory")?.let { recordingDirectory = it }
+                props.getBoolean("recordingIncludeAudio")?.let { recordingIncludeAudio = it }
+                props.getProperty("recordingBitrateMbps")?.toIntOrNull()?.let { recordingBitrateMbps = it }
+                props.getProperty("recordingFps")?.toIntOrNull()?.let { recordingFps = it }
+                props.getProperty("settingsWidth")?.toFloatOrNull()?.let { settingsWidth = it.coerceIn(400f, 3840f) }
+                props.getProperty("settingsHeight")?.toFloatOrNull()?.let { settingsHeight = it.coerceIn(300f, 2160f) }
             } else {
                 logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps" }
             }
@@ -350,6 +402,12 @@ object UITheme {
             props.setProperty("customRenderWidth", customRenderWidth.toString())
             props.setProperty("customRenderHeight", customRenderHeight.toString())
             props.setProperty("outputScaleMode", outputScaleMode.name)
+            props.setProperty("recordingDirectory", recordingDirectory)
+            props.setProperty("recordingIncludeAudio", recordingIncludeAudio.toString())
+            props.setProperty("recordingBitrateMbps", recordingBitrateMbps.toString())
+            props.setProperty("recordingFps", recordingFps.toString())
+            props.setProperty("settingsWidth", settingsWidth.toString())
+            props.setProperty("settingsHeight", settingsHeight.toString())
             val tmpFile = File("${settingsFile.absolutePath}.tmp")
             tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             java.nio.file.Files.move(

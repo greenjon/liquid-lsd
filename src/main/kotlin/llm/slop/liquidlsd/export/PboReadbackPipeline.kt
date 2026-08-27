@@ -81,8 +81,15 @@ class PboReadbackPipeline(
         var result: ByteBuffer? = null
         if (mappedBuffer != null) {
             val target = destination ?: flippedBuffer
-            // Flip vertically from OpenGL bottom-left to standard top-left video frame
-            flipVertical(mappedBuffer, target, width, height)
+            if (mappedBuffer.isDirect && target.isDirect) {
+                MemoryUtil.memCopy(MemoryUtil.memAddress(mappedBuffer), MemoryUtil.memAddress(target), bufferSizeBytes.toLong())
+            } else {
+                mappedBuffer.rewind()
+                target.rewind()
+                target.put(mappedBuffer)
+                mappedBuffer.rewind()
+                target.rewind()
+            }
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER)
             result = target
         }
@@ -92,23 +99,18 @@ class PboReadbackPipeline(
     }
 
     /**
-     * Synchronously reads the currently bound framebuffer into a flipped ByteBuffer.
+     * Synchronously reads the currently bound framebuffer into a direct ByteBuffer.
      * Useful for offline / single-frame captures.
      */
     fun readFrameSync(sourceFboId: Int): ByteBuffer {
-        val tempBuffer = MemoryUtil.memAlloc(bufferSizeBytes)
         try {
             glBindFramebuffer(GL_FRAMEBUFFER, sourceFboId)
-            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, tempBuffer)
-        } finally {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        }
-
-        try {
-            flipVertical(tempBuffer, flippedBuffer, width, height)
+            flippedBuffer.rewind()
+            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, flippedBuffer)
+            flippedBuffer.rewind()
             return flippedBuffer
         } finally {
-            MemoryUtil.memFree(tempBuffer)
+            glBindFramebuffer(GL_FRAMEBUFFER, 0)
         }
     }
 

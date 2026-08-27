@@ -74,8 +74,12 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SessionState.kt         — Session state management
 │   └── PresetIOStatus.kt       — IO status for UI feedback
 ├── export/                     — Video & audio render export
-│   ├── OfflineRenderStudio.kt  — Single-threaded video rendering
-│   └── PboReadbackPipeline.kt  — Fast DMA pixel readback
+│   ├── AccumulationBuffer.kt   — HDR multi-pass motion blur accumulation
+│   ├── AudioDecoder.kt         — Audio file decoding (WAV, MP3, FLAC, OGG, M4A)
+│   ├── FFmpegProcessPipe.kt    — Non-blocking FFmpeg subprocess pipe with HW encoder prioritization
+│   ├── OfflineRenderStudio.kt  — Deterministic offline video rendering with sample-accurate DSP
+│   ├── PboReadbackPipeline.kt  — High-speed DMA GPU-to-CPU framebuffer readback
+│   └── RealtimeRecorder.kt     — Live session video & audio capture and muxing
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource)
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
@@ -111,9 +115,11 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── DeckControlPanel.kt     — Individual deck controls
 │   ├── MixerMonitorPanel.kt    — 2x2 monitor matrix and crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
+│   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
 │   └── PresetGridState.kt      — Selection state & 30-level Undo Stack
 └── utils/
+    ├── TimeSource.kt           — Time virtualization provider for live and deterministic rendering
     └── TimeUtils.kt            — Timing utilities
 ```
 

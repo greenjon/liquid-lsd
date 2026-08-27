@@ -44,6 +44,20 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.image(mixer.masterFBO.texture, availW, masterH, 0f, 1f, 1f, 0f)
 
+        // Live recording tally badge overlay
+        if (llm.slop.liquidlsd.export.RealtimeRecorder.isRecording) {
+            val elapsed = llm.slop.liquidlsd.export.RealtimeRecorder.elapsedSeconds.toInt()
+            val mins = elapsed / 60
+            val secs = elapsed % 60
+            val recText = "REC %02d:%02d".format(mins, secs)
+            val badgeX = imgScreenX + availW - 100f
+            val badgeY = imgScreenY + 8f
+            val pulse = (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getTimeSec() * 4.0) * 0.25 + 0.75).toFloat()
+            dlMaster.addRectFilled(badgeX - 4f, badgeY - 2f, badgeX + 94f, badgeY + 20f, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 0.75f), 4f)
+            dlMaster.addCircleFilled(badgeX + 6f, badgeY + 9f, 4f, ImGui.colorConvertFloat4ToU32(1f, 0.15f, 0.15f, pulse))
+            dlMaster.addText(badgeX + 16f, badgeY + 1f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f), recText)
+        }
+
         // Restore Y cursor position
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY + masterH)
         ImGui.spacing()

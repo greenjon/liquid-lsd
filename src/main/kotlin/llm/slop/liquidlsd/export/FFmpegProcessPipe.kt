@@ -69,13 +69,49 @@ class FFmpegProcessPipe(
             }
         }
 
-        fun getBestEncoder(codec: VideoCodec): String {
+        private val workingEncoders: Set<String> by lazy {
             val available = detectedEncoders
+            val tested = mutableSetOf<String>()
+            for (enc in available) {
+                // If it's a known software encoder, it works if compiled in
+                if (enc == "libx264" || enc == "libx265" || enc == "libopenh264" || enc == "mpeg4" || enc.startsWith("prores")) {
+                    tested.add(enc)
+                    continue
+                }
+                // For hardware encoders (nvenc, qsv, amf), verify device availability
+                if (isEncoderFunctional(enc)) {
+                    tested.add(enc)
+                }
+            }
+            logger.info { "Verified working FFmpeg encoders: $tested" }
+            tested
+        }
+
+        private fun isEncoderFunctional(encoder: String): Boolean {
+            return try {
+                val proc = ProcessBuilder(
+                    "ffmpeg", "-v", "error",
+                    "-f", "rawvideo", "-pix_fmt", "rgba", "-s", "64x64", "-i", "-",
+                    "-c:v", encoder, "-f", "null", "-"
+                ).start()
+                val dummy = ByteArray(64 * 64 * 4)
+                proc.outputStream.write(dummy)
+                proc.outputStream.flush()
+                proc.outputStream.close()
+                val code = proc.waitFor()
+                code == 0
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        fun getBestEncoder(codec: VideoCodec): String {
+            val available = workingEncoders
             if (available.isEmpty()) return codec.ffmpegCodecName // fallback to default
 
             val candidates = when (codec) {
-                VideoCodec.H264 -> listOf("libx264", "libopenh264", "mpeg4", "h264_nvenc", "h264_vaapi", "h264_qsv", "h264_amf", "h264_v4l2m2m")
-                VideoCodec.H265 -> listOf("libx265", "hevc_nvenc", "hevc_vaapi", "hevc_qsv", "hevc_amf", "hevc_v4l2m2m")
+                VideoCodec.H264 -> listOf("h264_nvenc", "h264_qsv", "libx264", "libopenh264", "mpeg4")
+                VideoCodec.H265 -> listOf("hevc_nvenc", "hevc_qsv", "libx265")
                 VideoCodec.PRORES -> listOf("prores_ks", "prores", "prores_aw")
             }
 
@@ -88,6 +124,7 @@ class FFmpegProcessPipe(
     private val isRunning = AtomicBoolean(false)
     private var stderrReaderThread: Thread? = null
     private val errorLogs = StringBuilder()
+    private val streamChunkBuffer = ByteArray(65536)
 
     fun isAlive(): Boolean = isRunning.get() && (process?.isAlive ?: false)
 
@@ -95,7 +132,31 @@ class FFmpegProcessPipe(
         if (isRunning.get()) return true
 
         val chosenEncoder = getBestEncoder(config.codec)
-        logger.info { "Selected video encoder '$chosenEncoder' for codec ${config.codec}" }
+        if (startWithEncoder(chosenEncoder)) {
+            // Verify process didn't immediately exit due to missing GPU/driver
+            Thread.sleep(50)
+            val proc = process
+            if (proc != null && !proc.isAlive && proc.exitValue() != 0) {
+                logger.warn { "Encoder '$chosenEncoder' exited immediately with code ${proc.exitValue()}. Logs: ${getErrorLogs().trim()}" }
+                cancel()
+                if (chosenEncoder != config.codec.ffmpegCodecName) {
+                    logger.info { "Retrying export with software encoder '${config.codec.ffmpegCodecName}'..." }
+                    return startWithEncoder(config.codec.ffmpegCodecName)
+                }
+                return false
+            }
+            return true
+        }
+
+        if (chosenEncoder != config.codec.ffmpegCodecName) {
+            logger.warn { "Failed to launch '$chosenEncoder'. Retrying with fallback '${config.codec.ffmpegCodecName}'..." }
+            return startWithEncoder(config.codec.ffmpegCodecName)
+        }
+        return false
+    }
+
+    private fun startWithEncoder(chosenEncoder: String): Boolean {
+        logger.info { "Launching FFmpeg pipe with encoder '$chosenEncoder' for codec ${config.codec}" }
 
         val cmd = mutableListOf(
             "ffmpeg",
@@ -111,6 +172,9 @@ class FFmpegProcessPipe(
         if (config.audioFile != null && config.audioFile.exists()) {
             cmd.addAll(listOf("-i", config.audioFile.absolutePath))
         }
+
+        // Delegate vertical flip from OpenGL coordinate system to FFmpeg
+        cmd.addAll(listOf("-vf", "vflip"))
 
         when (config.codec) {
             VideoCodec.H264 -> {
@@ -149,7 +213,7 @@ class FFmpegProcessPipe(
         cmd.add(config.outputFile.absolutePath)
 
         try {
-            logger.info { "Launching FFmpeg pipe: ${cmd.joinToString(" ")}" }
+            logger.info { "Launching FFmpeg pipe command: ${cmd.joinToString(" ")}" }
             val pb = ProcessBuilder(cmd)
             val proc = pb.start()
             process = proc
@@ -198,7 +262,7 @@ class FFmpegProcessPipe(
     }
 
     /**
-     * Pushes a ByteBuffer containing RGBA bytes to FFmpeg's stdin.
+     * Pushes a ByteBuffer containing RGBA bytes to FFmpeg's stdin without heap allocation.
      */
     fun pushFrame(byteBuffer: ByteBuffer) {
         val stream = outputStream ?: return
@@ -207,11 +271,10 @@ class FFmpegProcessPipe(
             if (byteBuffer.hasArray()) {
                 stream.write(byteBuffer.array(), byteBuffer.arrayOffset() + byteBuffer.position(), byteBuffer.remaining())
             } else {
-                val tempArray = ByteArray(minOf(65536, byteBuffer.remaining()))
                 while (byteBuffer.hasRemaining()) {
-                    val toRead = minOf(tempArray.size, byteBuffer.remaining())
-                    byteBuffer.get(tempArray, 0, toRead)
-                    stream.write(tempArray, 0, toRead)
+                    val toRead = minOf(streamChunkBuffer.size, byteBuffer.remaining())
+                    byteBuffer.get(streamChunkBuffer, 0, toRead)
+                    stream.write(streamChunkBuffer, 0, toRead)
                 }
             }
         } catch (e: Exception) {
@@ -259,4 +322,9 @@ class FFmpegProcessPipe(
     }
 
     fun getErrorLogs(): String = synchronized(errorLogs) { errorLogs.toString() }
+
+    fun getRecentErrorLines(maxLines: Int = 5): String = synchronized(errorLogs) {
+        val lines = errorLogs.lines().filter { it.isNotBlank() }
+        lines.takeLast(maxLines).joinToString("\n")
+    }
 }

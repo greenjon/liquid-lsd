@@ -4,6 +4,7 @@ import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Renderer
+import llm.slop.liquidlsd.utils.TimeSource
 import java.io.File
 import java.nio.FloatBuffer
 import java.util.concurrent.atomic.AtomicBoolean
@@ -16,13 +17,16 @@ data class OfflineRenderProgress(
     val totalFrames: Int,
     val percent: Float,
     val currentFps: Float,
+    val elapsedSeconds: Float,
     val etaSeconds: Float,
+    val estimatedFileSizeMb: Float,
     val previewTextureId: Int
 )
 
 /**
  * Deterministic offline audio-to-video rendering studio.
- * Renders frame-by-frame with sample-accurate DSP stepping and optional multi-pass motion blur.
+ * Renders frame-by-frame with sample-accurate DSP stepping, deterministic time virtualization,
+ * and optional multi-pass motion blur.
  * Runs on Thread 0 without blocking OS window event processing.
  */
 object OfflineRenderStudio {
@@ -34,7 +38,7 @@ object OfflineRenderStudio {
     private val cancelRequested = AtomicBoolean(false)
 
     @Volatile
-    var progress = OfflineRenderProgress(0, 1, 0f, 0f, 0f, 0)
+    var progress = OfflineRenderProgress(0, 1, 0f, 0f, 0f, 0f, 0f, 0)
         private set
 
     @Volatile
@@ -49,6 +53,7 @@ object OfflineRenderStudio {
     private var decodedAudio: DecodedAudio? = null
     private var totalFrames = 1
     private var currentFrame = 0
+    private var renderStartTimeMs = 0L
     private var ffmpegPipe: FFmpegProcessPipe? = null
     private var pboPipeline: PboReadbackPipeline? = null
     private var accumulationBuffer: AccumulationBuffer? = null
@@ -90,7 +95,7 @@ object OfflineRenderStudio {
         val pipe = FFmpegProcessPipe(config)
         if (!pipe.start()) {
             mixer.resize(origMixerW, origMixerH)
-            val err = pipe.getErrorLogs()
+            val err = pipe.getRecentErrorLines(4)
             statusMessage = "Failed to launch FFmpeg: ${if (err.isNotBlank()) err else "encoder/process error"}"
             isSuccess = false
             return false
@@ -106,6 +111,7 @@ object OfflineRenderStudio {
         decodedAudio = decoded
         totalFrames = frames
         currentFrame = 0
+        renderStartTimeMs = System.currentTimeMillis()
         ffmpegPipe = pipe
         pboPipeline = pbo
         accumulationBuffer = accum
@@ -117,7 +123,7 @@ object OfflineRenderStudio {
         lastFpsTimeMs = System.currentTimeMillis()
         framesSinceLastFps = 0
         currentFps = 0f
-        progress = OfflineRenderProgress(0, totalFrames, 0f, 0f, 0f, accum?.fbo?.texture ?: mixer.masterFBO.texture)
+        progress = OfflineRenderProgress(0, totalFrames, 0f, 0f, 0f, 0f, 0f, accum?.fbo?.texture ?: mixer.masterFBO.texture)
 
         return true
     }
@@ -140,6 +146,7 @@ object OfflineRenderStudio {
         }
 
         val frameDeltaSec = 1.0 / config.fps.toDouble()
+        val subFrameDt = frameDeltaSec / superSampling.toDouble()
         val sampleRate = decoded.sampleRate
         val totalAudioSamples = decoded.samples.size
 
@@ -148,6 +155,9 @@ object OfflineRenderStudio {
         for (sampleIdx in 0 until superSampling) {
             val subFrameTimeSec = (currentFrame + (sampleIdx.toDouble() / superSampling.toDouble())) * frameDeltaSec
             val timeNanos = (subFrameTimeSec * 1_000_000_000.0).toLong()
+
+            // Enable virtualized deterministic time across all shaders, evaluators, and models
+            TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)
 
             val sampleCenter = (subFrameTimeSec * sampleRate).toInt()
             val startSample = (sampleCenter - audioBlockSize / 2).coerceIn(0, totalAudioSamples)
@@ -192,17 +202,22 @@ object OfflineRenderStudio {
             lastFpsTimeMs = now
         }
 
+        val elapsedSec = (now - renderStartTimeMs) / 1000f
         val percent = (currentFrame.toFloat() / totalFrames.toFloat()) * 100f
         val remainingFrames = totalFrames - currentFrame
         val etaSec = if (currentFps > 0) remainingFrames / currentFps else 0f
         val previewTexture = accum?.fbo?.texture ?: mixer.masterFBO.texture
+
+        val currentFileSizeMb = (config.outputFile.length() / (1024f * 1024f)).coerceAtLeast(0f)
 
         progress = OfflineRenderProgress(
             currentFrame = currentFrame,
             totalFrames = totalFrames,
             percent = percent,
             currentFps = currentFps,
+            elapsedSeconds = elapsedSec,
             etaSeconds = etaSec,
+            estimatedFileSizeMb = currentFileSizeMb,
             previewTextureId = previewTexture
         )
 
@@ -217,6 +232,8 @@ object OfflineRenderStudio {
     private fun finish(mixer: Mixer) {
         if (!isRendering) return
         isRendering = false
+        TimeSource.clearSimulatedTime()
+
         val pipe = ffmpegPipe
         val accum = accumulationBuffer
         val pbo = pboPipeline
@@ -247,7 +264,8 @@ object OfflineRenderStudio {
             statusMessage = "Export complete: ${config?.outputFile?.name}"
             isSuccess = true
         } else {
-            statusMessage = "Export failed. Check logs for details."
+            val err = pipe?.getRecentErrorLines(3)
+            statusMessage = "Export failed.${if (!err.isNullOrBlank()) " FFmpeg:\n$err" else " Check logs for details."}"
             isSuccess = false
         }
     }

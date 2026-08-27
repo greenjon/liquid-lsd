@@ -203,11 +203,13 @@ object AudioFollowerTracker {
     private val states = java.util.concurrent.ConcurrentHashMap<String, FollowerState>()
 
     fun process(id: String, input: Float, attackMs: Float, decayMs: Float): Float {
-        val now = System.nanoTime()
+        val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
         val state = states.computeIfAbsent(id) { FollowerState(value = input, lastTimeNs = now) }
 
         val lastTime = state.lastTimeNs
-        val dtSec = if (lastTime == 0L) {
+        val dtSec = if (llm.slop.liquidlsd.utils.TimeSource.isSimulated) {
+            llm.slop.liquidlsd.utils.TimeSource.getDeltaTimeSec()
+        } else if (lastTime == 0L) {
             1.0 / CVRegistry.getTargetFps().toDouble()
         } else {
             ((now - lastTime) / 1_000_000_000.0).coerceIn(0.0001, 0.2)

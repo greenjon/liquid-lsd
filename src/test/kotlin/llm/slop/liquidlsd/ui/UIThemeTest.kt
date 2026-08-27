@@ -36,6 +36,8 @@ class UIThemeTest {
             UITheme.customRenderWidth = 1600
             UITheme.customRenderHeight = 1200
             UITheme.outputScaleMode = UITheme.OutputScaleMode.FILL
+            UITheme.settingsWidth = 750f
+            UITheme.settingsHeight = 600f
 
             // Save to disk
             UITheme.saveSettings()
@@ -55,6 +57,8 @@ class UIThemeTest {
             UITheme.customRenderWidth = 1920
             UITheme.customRenderHeight = 1080
             UITheme.outputScaleMode = UITheme.OutputScaleMode.FIT
+            UITheme.settingsWidth = 640f
+            UITheme.settingsHeight = 520f
 
             // Reload via reflection
             val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
@@ -77,6 +81,8 @@ class UIThemeTest {
             assertEquals(UITheme.OutputScaleMode.FILL, UITheme.outputScaleMode)
             assertEquals(1600, UITheme.renderWidth)
             assertEquals(1200, UITheme.renderHeight)
+            assertEquals(750f, UITheme.settingsWidth)
+            assertEquals(600f, UITheme.settingsHeight)
 
         } finally {
             // Restore original settings file if backed up, or delete test file

@@ -2,24 +2,30 @@ package llm.slop.liquidlsd.export
 
 import org.lwjgl.system.MemoryUtil
 import java.io.File
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
 /**
  * Real-time video recorder for live VJ sessions.
- * Uses an asynchronous PBO readback ring buffer and a background queue to write frames to FFmpeg
- * without stalling the OpenGL render loop.
+ * Uses an asynchronous PBO readback ring buffer and a background queue to write video frames and
+ * audio PCM blocks to disk without stalling the OpenGL render loop or the real-time audio thread.
  */
 object RealtimeRecorder {
 
     @Volatile
     var isRecording = false
+        private set
+
+    @Volatile
+    var isRecordingAudio = false
         private set
 
     @Volatile
@@ -38,15 +44,32 @@ object RealtimeRecorder {
     var currentOutputFile: File? = null
         private set
 
+    private var finalDestinationFile: File? = null
+    private var tempVideoFile: File? = null
+    private var tempAudioFile: File? = null
+
     private var pboPipeline: PboReadbackPipeline? = null
     private var ffmpegPipe: FFmpegProcessPipe? = null
-    private var workerThread: Thread? = null
+    private var videoWorkerThread: Thread? = null
+    private var audioWorkerThread: Thread? = null
     private val isWorkerRunning = AtomicBoolean(false)
 
-    // Bounded frame queue to cap memory usage (~10 frames buffer)
+    // Bounded video frame queue to cap memory usage (~10 frames buffer)
     private const val QUEUE_CAPACITY = 10
     private var frameQueue: ArrayBlockingQueue<ByteBuffer>? = null
     private val bufferPool = mutableListOf<ByteBuffer>()
+
+    // Audio block pre-allocated pool for zero-allocation audio callback tapping
+    class AudioBlock(val buffer: FloatArray = FloatArray(8192)) {
+        @Volatile var length: Int = 0
+        @Volatile var sampleRate: Float = 44100f
+    }
+
+    private const val AUDIO_POOL_SIZE = 128
+    private val freeAudioBlocks = ArrayBlockingQueue<AudioBlock>(AUDIO_POOL_SIZE).apply {
+        for (i in 0 until AUDIO_POOL_SIZE) add(AudioBlock())
+    }
+    private val pendingAudioBlocks = ArrayBlockingQueue<AudioBlock>(AUDIO_POOL_SIZE)
 
     val droppedPercentage: Float
         get() {
@@ -61,7 +84,7 @@ object RealtimeRecorder {
         }
 
     val fileSizeBytes: Long
-        get() = currentOutputFile?.length() ?: 0L
+        get() = (tempVideoFile?.length() ?: currentOutputFile?.length()) ?: 0L
 
     /**
      * Starts live recording to a destination file.
@@ -73,15 +96,28 @@ object RealtimeRecorder {
         height: Int,
         fps: Int = 60,
         codec: VideoCodec = VideoCodec.H264,
-        bitrateMbps: Int = 12
+        bitrateMbps: Int = 12,
+        includeAudio: Boolean = true
     ): Boolean {
         if (isRecording) return true
 
-        logger.info { "Starting live recording to ${outputFile.name} (${width}x${height} @ ${fps}fps)..." }
+        logger.info { "Starting live recording to ${outputFile.name} (${width}x${height} @ ${fps}fps, audio: $includeAudio)..." }
         outputFile.parentFile?.mkdirs()
 
+        finalDestinationFile = outputFile
+        isRecordingAudio = includeAudio
+
+        if (includeAudio) {
+            tempVideoFile = File(outputFile.parentFile, ".tmp_vid_${System.currentTimeMillis()}_${outputFile.name}")
+            tempAudioFile = File(outputFile.parentFile, ".tmp_aud_${System.currentTimeMillis()}_${outputFile.nameWithoutExtension}.wav")
+        } else {
+            tempVideoFile = outputFile
+            tempAudioFile = null
+        }
+
+        val videoTarget = tempVideoFile ?: outputFile
         val config = VideoExportConfig(
-            outputFile = outputFile,
+            outputFile = videoTarget,
             width = width,
             height = height,
             fps = fps,
@@ -102,7 +138,7 @@ object RealtimeRecorder {
         totalFramesCount = 0L
         recordingStartTimeMs = System.currentTimeMillis()
 
-        // Allocate buffer pool for queue
+        // Allocate buffer pool for video queue
         val bufferSize = width * height * 4
         bufferPool.clear()
         for (i in 0 until (QUEUE_CAPACITY + 2)) {
@@ -113,8 +149,8 @@ object RealtimeRecorder {
         frameQueue = queue
         isWorkerRunning.set(true)
 
-        workerThread = Thread({
-            logger.info { "RealtimeRecorder worker thread started." }
+        videoWorkerThread = Thread({
+            logger.info { "RealtimeRecorder video worker thread started." }
             while (isWorkerRunning.get() || queue.isNotEmpty()) {
                 val frame = queue.poll(50, TimeUnit.MILLISECONDS) ?: continue
                 try {
@@ -125,12 +161,87 @@ object RealtimeRecorder {
                     }
                 }
             }
-            logger.info { "RealtimeRecorder worker thread finished." }
-        }, "RealtimeRecorder-Worker").apply { isDaemon = true }
-        workerThread?.start()
+            logger.info { "RealtimeRecorder video worker thread finished." }
+        }, "RealtimeRecorder-VideoWorker").apply { isDaemon = true }
+        videoWorkerThread?.start()
+
+        if (includeAudio && tempAudioFile != null) {
+            val audioFile = tempAudioFile!!
+            audioWorkerThread = Thread({
+                logger.info { "RealtimeRecorder audio worker thread started: ${audioFile.name}" }
+                var raf: RandomAccessFile? = null
+                var recordedSampleRate = 44100
+                var totalBytesWritten = 0L
+                val pcmBuffer = ByteArray(16384)
+
+                try {
+                    raf = RandomAccessFile(audioFile, "rw")
+                    raf.setLength(0)
+                    // Write placeholder 44-byte WAV header
+                    raf.write(ByteArray(44))
+
+                    while (isWorkerRunning.get() || pendingAudioBlocks.isNotEmpty()) {
+                        val block = pendingAudioBlocks.poll(50, TimeUnit.MILLISECONDS) ?: continue
+                        try {
+                            recordedSampleRate = block.sampleRate.toInt()
+                            val count = block.length
+                            var pcmOffset = 0
+
+                            for (i in 0 until count) {
+                                val s = (block.buffer[i].coerceIn(-1.0f, 1.0f) * 32767.0f).toInt().toShort()
+                                pcmBuffer[pcmOffset] = (s.toInt() and 0xFF).toByte()
+                                pcmBuffer[pcmOffset + 1] = ((s.toInt() shr 8) and 0xFF).toByte()
+                                pcmOffset += 2
+
+                                if (pcmOffset >= pcmBuffer.size) {
+                                    raf.write(pcmBuffer, 0, pcmOffset)
+                                    totalBytesWritten += pcmOffset
+                                    pcmOffset = 0
+                                }
+                            }
+                            if (pcmOffset > 0) {
+                                raf.write(pcmBuffer, 0, pcmOffset)
+                                totalBytesWritten += pcmOffset
+                            }
+                        } finally {
+                            freeAudioBlocks.offer(block)
+                        }
+                    }
+
+                    // Write finalized WAV header
+                    writeWavHeader(raf, recordedSampleRate, 1, 16, totalBytesWritten)
+                } catch (e: Exception) {
+                    logger.error(e) { "Error in RealtimeRecorder audio worker thread: ${e.message}" }
+                } finally {
+                    try {
+                        raf?.close()
+                    } catch (e: Exception) { /* ignore */ }
+                    logger.info { "RealtimeRecorder audio worker thread finished ($totalBytesWritten bytes recorded)." }
+                }
+            }, "RealtimeRecorder-AudioWorker").apply { isDaemon = true }
+            audioWorkerThread?.start()
+        }
 
         isRecording = true
         return true
+    }
+
+    /**
+     * Called from AudioEngine.processAudio on the audio callback thread.
+     * Zero allocations and non-blocking.
+     */
+    fun pushAudioBlock(buffer: FloatBuffer, offset: Int, count: Int, sampleRate: Float, gain: Float) {
+        if (!isRecording || !isRecordingAudio) return
+        val block = freeAudioBlocks.poll() ?: return // Drop if congested
+        val len = count.coerceAtMost(block.buffer.size)
+        for (i in 0 until len) {
+            block.buffer[i] = buffer.get(offset + i) * gain
+        }
+        block.length = len
+        block.sampleRate = sampleRate
+        if (!pendingAudioBlocks.offer(block)) {
+            freeAudioBlocks.offer(block)
+        }
     }
 
     /**
@@ -195,12 +306,17 @@ object RealtimeRecorder {
         logger.info { "Stopping live recording. Total frames: $totalFramesCount, Dropped: $droppedFramesCount (${"%.2f".format(droppedPercentage)}%)" }
 
         isRecording = false
+        val wasRecordingAudio = isRecordingAudio
+        isRecordingAudio = false
         isWorkerRunning.set(false)
 
-        workerThread?.join(3000)
-        workerThread = null
+        videoWorkerThread?.join(4000)
+        videoWorkerThread = null
 
-        val success = ffmpegPipe?.finish(waitForExit = true) ?: true
+        audioWorkerThread?.join(4000)
+        audioWorkerThread = null
+
+        val videoSuccess = ffmpegPipe?.finish(waitForExit = true) ?: true
         ffmpegPipe = null
 
         pboPipeline?.dispose()
@@ -214,6 +330,74 @@ object RealtimeRecorder {
         }
         frameQueue = null
 
-        return success
+        val tempVid = tempVideoFile
+        val tempAud = tempAudioFile
+        val finalOut = finalDestinationFile
+
+        if (wasRecordingAudio && tempVid != null && tempAud != null && finalOut != null && tempVid.exists() && tempAud.exists() && tempAud.length() > 44) {
+            logger.info { "Muxing live audio (${tempAud.name}) and video (${tempVid.name}) to ${finalOut.name}..." }
+            val muxSuccess = try {
+                val cmd = listOf(
+                    "ffmpeg", "-y",
+                    "-i", tempVid.absolutePath,
+                    "-i", tempAud.absolutePath,
+                    "-c:v", "copy",
+                    "-c:a", "aac",
+                    "-b:a", "320k",
+                    "-shortest",
+                    finalOut.absolutePath
+                )
+                val pb = ProcessBuilder(cmd)
+                pb.redirectErrorStream(true)
+                val proc = pb.start()
+                val exited = proc.waitFor(15, TimeUnit.SECONDS)
+                exited && proc.exitValue() == 0
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to mux audio into live recording: ${e.message}" }
+                false
+            }
+
+            if (muxSuccess && finalOut.exists() && finalOut.length() > 0) {
+                logger.info { "Muxing complete: ${finalOut.absolutePath} (${finalOut.length() / (1024 * 1024)} MB)" }
+                tempVid.delete()
+                tempAud.delete()
+            } else {
+                logger.warn { "Muxing failed; falling back to raw video file." }
+                tempVid.renameTo(finalOut)
+                tempAud.delete()
+            }
+        } else if (tempVid != null && finalOut != null && tempVid != finalOut && tempVid.exists()) {
+            tempVid.renameTo(finalOut)
+            tempAud?.delete()
+        }
+
+        tempVideoFile = null
+        tempAudioFile = null
+        finalDestinationFile = null
+
+        return videoSuccess
+    }
+
+    private fun writeWavHeader(raf: RandomAccessFile, sampleRate: Int, channels: Int, bitsPerSample: Int, totalAudioBytes: Long) {
+        raf.seek(0)
+        val totalDataLen = totalAudioBytes + 36
+        val byteRate = sampleRate * channels * bitsPerSample / 8
+
+        val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        header.put("RIFF".toByteArray())
+        header.putInt(totalDataLen.toInt())
+        header.put("WAVE".toByteArray())
+        header.put("fmt ".toByteArray())
+        header.putInt(16) // Subchunk1Size for PCM
+        header.putShort(1) // AudioFormat 1 = PCM
+        header.putShort(channels.toShort())
+        header.putInt(sampleRate)
+        header.putInt(byteRate)
+        header.putShort((channels * bitsPerSample / 8).toShort()) // BlockAlign
+        header.putShort(bitsPerSample.toShort())
+        header.put("data".toByteArray())
+        header.putInt(totalAudioBytes.toInt())
+
+        raf.write(header.array())
     }
 }

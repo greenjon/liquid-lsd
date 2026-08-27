@@ -26,5 +26,11 @@ data class AppSettings(
     val renderResolutionPreset: UITheme.ResolutionPreset = UITheme.ResolutionPreset.RES_1080P,
     val customRenderWidth: Int = 1920,
     val customRenderHeight: Int = 1080,
-    val outputScaleMode: UITheme.OutputScaleMode = UITheme.OutputScaleMode.FIT
+    val outputScaleMode: UITheme.OutputScaleMode = UITheme.OutputScaleMode.FIT,
+    val recordingDirectory: String = "",
+    val recordingIncludeAudio: Boolean = true,
+    val recordingBitrateMbps: Int = 12,
+    val recordingFps: Int = 60,
+    val settingsWidth: Float = 640f,
+    val settingsHeight: Float = 520f
 )

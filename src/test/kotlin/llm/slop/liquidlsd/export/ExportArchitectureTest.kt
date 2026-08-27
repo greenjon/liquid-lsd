@@ -80,7 +80,7 @@ class ExportArchitectureTest {
     fun testBestEncoderSelection() {
         val h264Encoder = FFmpegProcessPipe.getBestEncoder(VideoCodec.H264)
         assertNotNull(h264Encoder)
-        assertTrue(h264Encoder == "libopenh264" || h264Encoder == "libx264" || h264Encoder == "mpeg4")
+        assertTrue(h264Encoder in listOf("h264_nvenc", "h264_qsv", "libopenh264", "libx264", "mpeg4"))
 
         val proresEncoder = FFmpegProcessPipe.getBestEncoder(VideoCodec.PRORES)
         assertNotNull(proresEncoder)
@@ -187,5 +187,20 @@ class ExportArchitectureTest {
         assertTrue(finished, "FFmpeg should complete successfully without broken pipes. Logs:\n${pipe.getErrorLogs()}")
         assertTrue(outFile.exists(), "Output video file should exist")
         assertTrue(outFile.length() > 1000, "Output video file should contain valid encoded data")
+    }
+
+    @Test
+    fun testTimeSourceVirtualization() {
+        llm.slop.liquidlsd.utils.TimeSource.clearSimulatedTime()
+        assertEquals(false, llm.slop.liquidlsd.utils.TimeSource.isSimulated)
+
+        llm.slop.liquidlsd.utils.TimeSource.setSimulatedTime(12.5, 1.0 / 60.0)
+        assertEquals(true, llm.slop.liquidlsd.utils.TimeSource.isSimulated)
+        assertEquals(12.5, llm.slop.liquidlsd.utils.TimeSource.getTimeSec(), 0.0001)
+        assertEquals(12_500_000_000L, llm.slop.liquidlsd.utils.TimeSource.getTimeNanos())
+        assertEquals(1.0 / 60.0, llm.slop.liquidlsd.utils.TimeSource.getDeltaTimeSec(), 0.0001)
+
+        llm.slop.liquidlsd.utils.TimeSource.clearSimulatedTime()
+        assertEquals(false, llm.slop.liquidlsd.utils.TimeSource.isSimulated)
     }
 }

@@ -1,5 +1,44 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.29
+
+> [!NOTE]
+> **Release 1.0.0-beta.29** delivers high-performance live video recording with real-time audio muxing, deterministic time virtualization for offline rendering, hardware encoder prioritization, and a fully resizable settings panel with automatic persistence.
+
+---
+
+### Key Highlights
+
+#### 1. Live Video Recording with Zero-Allocation Audio Muxing
+- **Real-Time Audio Tapping (`AudioEngine.kt` & `RealtimeRecorder.kt`)**: Zero-allocation audio tapping directly inside `AudioEngine.processAudio` using a pre-allocated pool of `AudioBlock` instances on the real-time audio thread (Linux/JACK & cross-platform Java Sound).
+- **Asynchronous Audio PCM Writer & Lossless Remuxing**: Background worker streams 16-bit PCM WAV audio during recording and losslessly multiplexes it into the final container using FFmpeg (`-c:v copy -c:a aac -b:a 320k -shortest`) upon stopping.
+- **Master Preview Tally Overlay**: Pulsing red `REC MM:SS` badge rendered dynamically on the Master preview monitor.
+- **Recording Hotkey (`Ctrl+R`) & OS Standard Directory**: Toggle live recording anytime with `Ctrl+R`. Default recording folder automatically resolves to the system Videos directory (`~/Videos/liquid-lsd` or `~/Movies/liquid-lsd`).
+
+#### 2. Deterministic Time Virtualization (`TimeSource.kt`)
+- **Centralized Simulation Time Provider**: Replaced non-deterministic OS/GLFW time queries across all shaders (`uTime`), `CVRegistry` evaluators (`AudioFollowerTracker`), `DynamicSpiral`, and `Mixer` with `TimeSource`.
+- **Sample-Accurate Audio/Visual Synchronization**: In `OfflineRenderStudio`, `TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)` ensures complete deterministic frame-accurate lockstep between audio DSP analysis and visual motion curves regardless of render speed.
+
+#### 3. Hardware Encoder Prioritization with Dynamic Probing
+- **GPU Hardware Acceleration**: Automatically probes and prioritizes hardware encoders (`h264_nvenc`, `h264_qsv`) for high-throughput exporting.
+- **Seamless Software Fallback**: Validates encoder functionality with 1-frame probe and automatically falls back to `libx264`, `libx265`, or `prores_ks` if GPU hardware is unavailable.
+
+#### 4. PBO Readback & Zero-Allocation Buffer Pipelines
+- **Fast DMA Transfers**: Replaced row-by-row CPU vertical flipping with `MemoryUtil.memCopy` block DMA transfers and delegated vertical flip to FFmpeg filter graph (`-vf vflip`).
+- **Zero-Allocation Stream Buffer**: Reused persistent class-level 64 KB stream chunk buffers in `FFmpegProcessPipe`, eliminating ~4 MB/s GC heap churn during recording.
+
+#### 5. Offline Render Studio Enhancements (`VideoExportModal.kt`)
+- **Integrated File Browser**: Modal file picker (`ImGuiFileBrowser`) for audio tracks, output paths, and preset/setlist snapshots.
+- **Match Project Canvas**: Option to match internal project render resolution or standard presets (1080p, 4K, 720p, 9:16 vertical, 1:1 square).
+- **Progress Metrics & Error Diagnostics**: Live speed (FPS), elapsed time, ETA, estimated output file size, and multi-line FFmpeg error reporting.
+
+#### 6. Resizable Settings Panel with Automatic Persistence
+- **Interactive Sizing**: Enabled free resizing of the Settings modal with minimum bounds and display-clamping constraints.
+- **Dynamic Flexible Layout**: Sidebar navigation and content panes stretch seamlessly to fill window dimensions.
+- **Auto-Save Dimensions**: Window width and height are preserved across sessions in `lsd-settings.properties`.
+
+---
+
 ## Version 1.0.0-beta.28
 
 > [!NOTE]
@@ -79,7 +118,16 @@
 - **Sticky Oscilloscope in Cell Config**: Parameter title, CV tab switcher, and live oscilloscope remain pinned at the top while modulator controls scroll independently below.
 - **Cell Muting System**: Toggle any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the oscilloscope live and animated. Middle-clicking any active or muted cell toggles its mute state.
 - **Percentage-Based GUI Scaling (75%–200%)**: Continuous scaling slider in Settings with 5% increments, `Ctrl+-` / `Ctrl+=` hotkeys, and automatic OS content-scale factor detection on launch.
+- **Resizable Settings Panel with Automatic Persistence**: Settings modal is now freely resizable with dynamic sidebar and content resizing, bounded by display constraints and automatically saved to `lsd-settings.properties`.
 - **Pitch Black Backgrounds**: Enforced solid opaque black OpenGL clear color across GUI mode, clean mode (`f`), and preview monitors.
+
+#### 10. High-Performance Live Video Recording & Deterministic Offline Studio
+- **Live Audio Recording & Muxing**: Real-time audio stream capture from `AudioEngine` backed by a zero-allocation pre-allocated block pool on the real-time audio thread. Background worker writes temporary 16-bit PCM WAV audio and losslessly remuxes it with FFmpeg (`-c:v copy -c:a aac -b:a 320k -shortest`) upon stopping. Configurable toggle in Settings.
+- **Deterministic Time Virtualization (`TimeSource`)**: Centralized simulation clock eliminating audio/visual desync across all shaders (`uTime`), `CVRegistry` evaluators, `DynamicSpiral`, and `Mixer` during offline rendering.
+- **Hardware Encoder Prioritization & Probing**: Probes and prioritizes GPU hardware encoders (`h264_nvenc`, `h264_qsv`) with automatic software fallback (`libx264`, `libx265`, `prores_ks`).
+- **Direct Memory Copy & Zero-Allocation Pipelines**: Replaced line-by-line CPU vertical flips with direct `MemoryUtil.memCopy` block transfers and FFmpeg `-vf vflip`. Reused persistent 64KB chunk buffers in `FFmpegProcessPipe`, eliminating 4 MB/s GC heap churn.
+- **Live Recording HUD & Settings**: Pulsing red `REC MM:SS` tally badge overlaid on the Master preview monitor, `Ctrl+R` hotkey, and automatic OS standard Videos folder resolution (`~/Videos/liquid-lsd` or `~/Movies/liquid-lsd`).
+- **Offline Studio Upgrades**: Integrated `ImGuiFileBrowser` for audio and destination selection, "Match Project Canvas" resolution option, preset/playlist snapshotting, detailed progress & ETA metrics, and multi-line FFmpeg error diagnostics.
 
 ---
 

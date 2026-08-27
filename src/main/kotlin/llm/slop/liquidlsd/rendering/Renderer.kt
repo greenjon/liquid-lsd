@@ -95,7 +95,7 @@ class Renderer {
 
             source.shader.setUniform("uAlpha", source.globalAlpha.value)
             source.shader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-            source.shader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+            source.shader.setUniform("uTime", llm.slop.liquidlsd.utils.TimeSource.getTimeSec().toFloat())
             if (hasFb) {
                 source.shader.setUniform("src", 0)
             }
@@ -148,7 +148,7 @@ class Renderer {
         backgroundShader.setUniform("uBgSweep", p["Bg Sweep"]?.value ?: 0.2f)
         backgroundShader.setUniform("uBgSpeed", p["Bg Speed"]?.value ?: 0.2f)
         backgroundShader.setUniform("uBgZoom", p["Bg Zoom"]?.value ?: 1.0f)
-        backgroundShader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+        backgroundShader.setUniform("uTime", llm.slop.liquidlsd.utils.TimeSource.getTimeSec().toFloat())
         backgroundShader.setUniform("uAlpha", alpha)
 
         Geometry.drawFullscreenQuad()
@@ -172,7 +172,7 @@ class Renderer {
 
         hyperMesh.shader.setUniform("uAlpha", hyperMesh.globalAlpha.value)
         hyperMesh.shader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        hyperMesh.shader.setUniform("uTime", org.lwjgl.glfw.GLFW.glfwGetTime().toFloat())
+        hyperMesh.shader.setUniform("uTime", llm.slop.liquidlsd.utils.TimeSource.getTimeSec().toFloat())
 
         val p = hyperMesh.parameters
         val polytope = p["Polytope"]?.value ?: 0f

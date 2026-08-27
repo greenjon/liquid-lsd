@@ -35,9 +35,14 @@ class DynamicSpiral(
 
     override fun update() {
         super.update()
-        val now = System.nanoTime()
-        val dt = ((now - lastTimeNanos) / 1_000_000_000.0).toFloat().coerceIn(0.0f, 0.1f)
-        lastTimeNanos = now
+        val dt = if (llm.slop.liquidlsd.utils.TimeSource.isSimulated) {
+            llm.slop.liquidlsd.utils.TimeSource.getDeltaTimeSec().toFloat()
+        } else {
+            val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
+            val computed = ((now - lastTimeNanos) / 1_000_000_000.0).toFloat().coerceIn(0.0f, 0.1f)
+            lastTimeNanos = now
+            computed
+        }
 
         val speed = parameters["Speed"]?.value ?: 0.5f
         val shear = parameters["Shear"]?.value ?: 0.1f
