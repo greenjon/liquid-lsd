@@ -279,7 +279,7 @@ class UIManager(
 
             drawLayout(mixer, displayWidth, displayHeight)
 
-            SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight) { newSize ->
+            SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newSize ->
                 applyFontSize(newSize)
             }
 

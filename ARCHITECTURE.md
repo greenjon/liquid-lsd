@@ -44,6 +44,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── AudioInputDevice.kt     — Input device selection
 │   ├── SystemAudioVolume.kt    — Master volume control
 │   └── MidiJackWatchdog.kt     — MIDI hotplug monitoring
+├── broadcast/
+│   ├── BroadcastEngine.kt      — Live WebSocket relay client, throttled delta streaming, auto-reconnect
+│   ├── BroadcastSettings.kt    — Broadcast configuration and persistence (lsd-settings.properties)
+│   └── WebPresetSerializer.kt  — Converts desktop Deck/Mixer state to WebGL2 TV JSON schema
 ├── cv/
 │   ├── CVRegistry.kt           — Singleton: all CV sources, beat sync, histories
 │   ├── CVSource.kt             — Interface: id, value, update()
@@ -213,10 +217,18 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
   6. `masterFBO`: Blends Deck A + Deck B over BG with selectable blend modes (`mixer.frag`).
   7. `crt_post.frag` -> Screen: Final CRT post-processing with barrel glass distortion, chromatic aberration, scanlines, RGB phosphor shadow mask triad, corner vignette, animated static noise when powered off, and raster warmup sequence. Passes 1–4 are bypassed when powered off to minimize GPU load.
 
+## Web Broadcast Subsystem & WebSocket Relay
+
+- **Broadcaster (`BroadcastEngine.kt`, `WebPresetSerializer.kt`)**: Runs in the desktop app on a dedicated daemon background thread (`BroadcastEngine-IO`), completely decoupled from OpenGL rendering and JACK audio callback threads. Translates active `Deck` and `Mixer` states into the WebGL2 TV JSON schema.
+- **Throttled Delta Streaming**: Emits full state snapshots (`state_full`) upon connection and preset/queue changes. Emits lightweight diff packets (`state_delta`) throttled at configurable rate (default 25 Hz) during live parameter/crossfader adjustments.
+- **Relay Server (`server/server.js`)**: Lightweight Node.js WebSocket relay that authenticates the desktop broadcaster (`role=broadcast&key=...`), caches the latest `state_full` message for new viewers, and fans out updates to all active Web TV clients with near-zero latency.
+- **24/7 Autopilot Fallback (`web/autopilot.js`)**: The web client automatically cycles through curated presets via fade-through-black when offline, and smoothly crossfades to live broadcast state when the VJ connects.
+
 ## Build & Run
 ```bash
 ./gradlew run              # launch (JACK/PipeWire recommended for Linux, Java Sound fallback runs otherwise)
 ./gradlew compileKotlin    # type-check only, no run
+./gradlew test             # run test suite
 ./gradlew packageThumbDrive  # bundle fat JAR + JREs for all 5 platforms
 ```
 Custom visual shaders are loaded from `library/sources/`.

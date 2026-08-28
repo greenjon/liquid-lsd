@@ -16,9 +16,9 @@
 const { WebSocketServer, WebSocket } = require('ws');
 const { createServer }               = require('http');
 
-const PORT            = parseInt(process.env.LSD_PORT  || '9000', 10);
-const HOST            = process.env.LSD_HOST           || '127.0.0.1';
-const BROADCAST_TOKEN = process.env.LSD_TOKEN          || 'changeme';
+const PORT            = parseInt(process.env.LSD_PORT  || '9004', 10);
+const HOST            = process.env.LSD_HOST           || '0.0.0.0';
+const BROADCAST_TOKEN = process.env.LSD_TOKEN          || 'lsd25';
 
 // -------------------------------------------------------
 // HTTP server (health check + WebSocket upgrade target)

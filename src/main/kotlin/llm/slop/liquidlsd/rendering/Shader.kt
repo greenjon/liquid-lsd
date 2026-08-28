@@ -75,8 +75,14 @@ class Shader(vertexSource: String, fragmentSource: String) {
      * Compile a shader from source code
      */
     private fun compileShader(type: Int, source: String): Int {
+        val adaptedSource = if (source.contains("#version 300 es")) {
+            source.replace(Regex("^#version 300 es", RegexOption.MULTILINE), "#version 330 core")
+                .replace(Regex("^precision (highp|mediump|lowp) (float|int);", RegexOption.MULTILINE), "// precision qualification")
+        } else {
+            source
+        }
         val shaderId = glCreateShader(type)
-        glShaderSource(shaderId, source)
+        glShaderSource(shaderId, adaptedSource)
         glCompileShader(shaderId)
         
         // Check compilation status

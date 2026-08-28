@@ -347,6 +347,9 @@ object PresetManager {
             }
             pendingPV = deckPVPresetQueue.poll()
         }
+
+        // Notify broadcast engine if connected so full state is pushed immediately
+        llm.slop.liquidlsd.broadcast.BroadcastEngine.notifyStateChanged()
     }
 
     fun saveSession(mixer: Mixer) {

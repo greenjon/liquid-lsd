@@ -55,6 +55,17 @@
 - **Draggable Rotary Volume Dial**: Drag up/down on the rotary dial controls audio output volume via Web Audio `GainNode` with a perceptually linear squared response curve ($V^2$).
 - **Fullscreen Projection Mode**: Double-clicking the screen expands the visualizer to borderless fullscreen projection mode, hiding the TV chrome.
 
+#### 10. WebSocket Relay Server & 24/7 Autopilot Scheduler (`server/`, `web/autopilot.js`)
+- **Stateless WebSocket Relay (`server/server.js`)**: Lightweight Node.js relay server featuring role-based token authentication (`role=broadcast&key=...`), `state_full` payload caching, and fan-out distribution to all active web viewers with zero transcoding latency.
+- **24/7 Autopilot Scheduler (`web/autopilot.js`)**: Autonomous client-side playlist scheduler executing smooth fade-through-black transitions across curated presets when offline.
+- **Seamless Live Broadcast Handshake**: Automatically transitions web viewers from the 24/7 Autopilot to the live broadcast when the VJ connects, updating the station LED badge to `SPAZ RADIO • LIVE`.
+
+#### 11. Desktop Broadcaster Subsystem (`llm.slop.liquidlsd.broadcast`)
+- **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
+- **Throttled Parameter Delta Streaming**: Generates full state snapshots (`state_full`) upon connection and preset/queue changes, and lightweight diff patches (`state_delta`) throttled at configurable rate (default 25 Hz) during live parameter adjustments.
+- **Web Preset Serializer (`WebPresetSerializer.kt`)**: Automatically translates desktop `Mandala`, `DynamicSpiral`, and `Mixer` parameters into the WebGL2 TV JSON schema.
+- **Dedicated Web Broadcast Settings & Menu Bar HUD**: Added "Web Broadcast" category in `SettingsPanel.kt` (relay URL, auth token, auto-connect, rate limits) and a live `[LIVE]` status indicator with one-click broadcast toggle in `MenuBar.kt`.
+
 ---
 
 ## Version 1.0.0-beta.28

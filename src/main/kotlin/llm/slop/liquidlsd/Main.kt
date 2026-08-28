@@ -260,6 +260,11 @@ fun main() {
         }
     }
 
+    // Start broadcast relay if autoConnect is enabled
+    if (llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect) {
+        llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+    }
+
     // Main loop
     var frameCount = 0
     var frameIndex = 0
@@ -340,6 +345,7 @@ fun main() {
             // 6. Broadcast live texture stream & capture live recording frame
             llm.slop.liquidlsd.rendering.TextureStreamerManager.update(mixer.masterFBO.texture, mixer.width, mixer.height)
             llm.slop.liquidlsd.export.RealtimeRecorder.captureFrame(mixer.masterFBO.framebufferId)
+            llm.slop.liquidlsd.broadcast.BroadcastEngine.tick(mixer)
         }
 
         // 4. Blit the Mixer's master FBO to the screen viewport if enabled and window is visible
@@ -461,6 +467,7 @@ fun main() {
 
     // Cleanup
     logger.info { "Shutting down..." }
+    llm.slop.liquidlsd.broadcast.BroadcastEngine.shutdown()
     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
     PresetManager.saveSession(mixer)

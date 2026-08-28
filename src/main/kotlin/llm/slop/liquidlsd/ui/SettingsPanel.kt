@@ -37,6 +37,7 @@ object SettingsPanel {
         PRESET_GRID("Preset Grid"),
         VIDEO_DISPLAY("Video & Display"),
         AUDIO_ENGINE("Audio Engine"),
+        BROADCAST("Web Broadcast"),
         MIDI_CONTROL("MIDI & Controls"),
         GENERAL("General")
     }
@@ -46,6 +47,7 @@ object SettingsPanel {
     fun open() = ImGui.openPopup(POPUP_ID)
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, displayW: Float, displayH: Float,
+             mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
              onSizeChanged: (Float) -> Unit) {
 
         val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
@@ -125,6 +127,7 @@ object SettingsPanel {
                 Category.PRESET_GRID   -> drawPresetGridSettings(session)
                 Category.VIDEO_DISPLAY -> drawVideoDisplaySettings(session)
                 Category.AUDIO_ENGINE  -> drawAudioEngineSettings(session)
+                Category.BROADCAST     -> drawBroadcastSettings(session, mixer)
                 Category.MIDI_CONTROL  -> drawMidiControlSettings(session)
                 Category.GENERAL       -> drawGeneralSettings(session)
             }
@@ -548,6 +551,136 @@ object SettingsPanel {
         if (ImGui.combo("AutoVJ Dirty Behavior", currentAutoVjIdx, autoVjBehaviorNames)) {
             session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
             session.uiTheme.saveSettings()
+        }
+    }
+
+    private val serverUrlBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl, 256)
+    private val tokenBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastSettings.token, 128)
+    private var showToken = false
+
+    private fun drawBroadcastSettings(session: llm.slop.liquidlsd.SessionContext, mixer: llm.slop.liquidlsd.rendering.Mixer?) {
+        val theme = session.uiTheme
+        theme.h2("Web Broadcast Relay")
+        ImGui.separator()
+        ImGui.spacing()
+
+        ImGui.textWrapped("Broadcasts real-time preset state, mixer balance, and parameter modulations to the Liquid LSD Web TV client.")
+        ImGui.spacing()
+
+        // Server URL
+        theme.caption("RELAY SERVER URL")
+        if (serverUrlBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl) {
+            serverUrlBuf.set(llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl)
+        }
+        if (ImGui.inputText("##broadcast_url", serverUrlBuf)) {
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl = serverUrlBuf.get().trim()
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("WebSocket relay URL (e.g. ws://127.0.0.1:9000 or wss://spaz.org/lsd-relay)")
+        }
+
+        ImGui.spacing()
+
+        // Secret Token
+        theme.caption("BROADCASTER SECRET TOKEN")
+        if (tokenBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastSettings.token) {
+            tokenBuf.set(llm.slop.liquidlsd.broadcast.BroadcastSettings.token)
+        }
+        val tokenFlags = if (showToken) 0 else imgui.flag.ImGuiInputTextFlags.Password
+        if (ImGui.inputText("##broadcast_token", tokenBuf, tokenFlags)) {
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.token = tokenBuf.get().trim()
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+        }
+        ImGui.sameLine()
+        val eyeLabel = if (showToken) "Hide" else "Show"
+        if (ImGui.button(eyeLabel)) {
+            showToken = !showToken
+        }
+
+        ImGui.spacing()
+
+        // Target Update Rate
+        theme.caption("STREAMING RATE LIMIT (FPS)")
+        val fpsVal = intArrayOf(llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps)
+        if (ImGui.sliderInt("##target_fps", fpsVal, 5, 60, "%d Hz")) {
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps = fpsVal[0]
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Maximum rate to dispatch parameter delta packets to the relay.")
+        }
+
+        ImGui.spacing()
+
+        // Auto-connect checkbox
+        val autoConn = ImBoolean(llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect)
+        if (ImGui.checkbox("Auto-connect on launch", autoConn)) {
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect = autoConn.get()
+            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+        }
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Connection Status HUD
+        theme.h3("Connection Status")
+        val state = llm.slop.liquidlsd.broadcast.BroadcastEngine.connectionState
+        val isLive = llm.slop.liquidlsd.broadcast.BroadcastEngine.isLive
+
+        when (state) {
+            llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.2f, 0.9f, 0.2f, 1f)
+                ImGui.text("${Icons.ACTIVITY} CONNECTED (LIVE)")
+                ImGui.popStyleColor()
+            }
+            llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.9f, 0.8f, 0.2f, 1f)
+                ImGui.text("${Icons.REFRESH} CONNECTING...")
+                ImGui.popStyleColor()
+            }
+            llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.95f, 0.3f, 0.3f, 1f)
+                ImGui.text("${Icons.ALERT} ERROR: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Connection failed"}")
+                ImGui.popStyleColor()
+            }
+            llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.6f, 0.6f, 0.6f, 1f)
+                ImGui.text("${Icons.POWER} OFFLINE (DISCONNECTED)")
+                ImGui.popStyleColor()
+            }
+        }
+
+        ImGui.spacing()
+
+        // Control Buttons
+        if (isLive) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1f)
+            if (ImGui.button("${Icons.POWER} Disconnect Broadcast", 200f, 32f)) {
+                llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+            }
+            ImGui.popStyleColor(2)
+        } else {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.15f, 0.6f, 0.25f, 1f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1f)
+            if (ImGui.button("${Icons.ZAP} Go Live (Connect)", 200f, 32f)) {
+                if (mixer != null) {
+                    llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                }
+            }
+            ImGui.popStyleColor(2)
+        }
+
+        if (state == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED) {
+            ImGui.sameLine()
+            if (ImGui.button("${Icons.REFRESH} Force Sync State", 160f, 32f)) {
+                llm.slop.liquidlsd.broadcast.BroadcastEngine.forceSync()
+            }
+            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+                ImGui.setTooltip("Re-send full state snapshot to relay immediately.")
+            }
         }
     }
 }

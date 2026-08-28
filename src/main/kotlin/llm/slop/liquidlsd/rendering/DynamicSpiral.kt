@@ -57,6 +57,7 @@ class DynamicSpiral(
      */
     override fun setupUniforms(shader: Shader) {
         parameters.forEach { (name, param) ->
+            if (name == "Speed" || name == "Shear") return@forEach
             val uniformName = "u" + name.replace(" ", "")
             if (name == "Max Points") {
                 shader.setUniform(uniformName, param.value.roundToInt().toFloat())

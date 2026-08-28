@@ -1,0 +1,12 @@
+{
+  "fgPlaylist": "default.lsdset",
+  "bgPlaylist": "default_bg.lsdset",
+  "fgHoldDuration": 45.0,
+  "fgFadeDuration": 2.5,
+  "fgPlaybackOrder": "sequential",
+  "bgHoldDuration": 90.0,
+  "bgFadeDuration": 4.0,
+  "bgPlaybackOrder": "sequential",
+  "audioStreamUrl": "https://radio.spaz.org:8060/radio.ogg",
+  "fallbackBpm": 120.0
+}

@@ -108,6 +108,52 @@ class MenuBar(
                     }
                 }
 
+                // ── Web Broadcast Status & Quick Toggle ──────────────────────────────
+                val broadcastState = llm.slop.liquidlsd.broadcast.BroadcastEngine.connectionState
+                when (broadcastState) {
+                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.65f, 0.25f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1.0f)
+                        if (ImGui.button("${Icons.ACTIVITY} LIVE")) {
+                            llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                        }
+                        ImGui.popStyleColor(2)
+                        if (ImGui.isItemHovered()) {
+                            ImGui.setTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
+                        }
+                    }
+                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.7f, 0.15f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.8f, 0.25f, 1.0f)
+                        if (ImGui.button("${Icons.REFRESH} CONNECTING")) {
+                            llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                        }
+                        ImGui.popStyleColor(2)
+                        if (ImGui.isItemHovered()) {
+                            ImGui.setTooltip("Connecting to relay server...\nClick to cancel.")
+                        }
+                    }
+                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1.0f)
+                        if (ImGui.button("${Icons.ALERT} LIVE ERR")) {
+                            llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                        }
+                        ImGui.popStyleColor(2)
+                        if (ImGui.isItemHovered()) {
+                            ImGui.setTooltip("Broadcast error: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Failed"}\nClick to retry.")
+                        }
+                    }
+                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
+                        if (ImGui.menuItem("Broadcast", "", false)) {
+                            llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                        }
+                        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                            ImGui.setTooltip("Connect and start broadcasting live state to the Web TV client.")
+                        }
+                    }
+                }
+
                 if (session.uiTheme.randomizationEnabled) {
                     if (ImGui.beginMenu("Randomize")) {
                         if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {

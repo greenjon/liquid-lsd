@@ -1,4 +1,5 @@
-#version 330 core
+#version 300 es
+precision highp float;
 in float vPhase;
 in vec2 vCurvePos;
 
