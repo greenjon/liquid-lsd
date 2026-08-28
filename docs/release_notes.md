@@ -1,5 +1,106 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.30
+
+> [!NOTE]
+> **Release 1.0.0-beta.30** introduces live WebSocket broadcasting from Liquid LSD Desktop, the standalone browser-based WebGL2 visualizer with 10+ shader ports, real-time Web Audio DSP streaming, an interactive retro CRT TV shell with phosphor/scanline post-processing, and a stateless Node.js relay server with 24/7 Autopilot fallback.
+
+---
+
+### Key Highlights
+
+#### 1. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
+- **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
+- **Non-Blocking WebSocket Dispatch**: Protected asynchronous transmission using `CompletableFuture` to prevent transmission queue buildup, memory leaks, and `IllegalStateException` on high-latency or slow network connections.
+- **Throttled Parameter Delta Streaming**: Dispatches full state snapshots (`state_full`) upon initial handshake or preset switching, and lightweight differential patches (`state_delta`) throttled at a configurable rate (default 25 Hz) during live parameter adjustments. Includes JSON `null` deletion semantics when swapping visual source types.
+- **Live Modulation Tracking**: Transmits real-time modulated parameter values (`param.value`) instead of static knobs, reproducing dynamic audio reactivity on remote TV clients.
+- **Dedicated Web Broadcast Settings & Menu Bar HUD**: Added "Web Broadcast" category in `SettingsPanel.kt` (relay URL, auth token, auto-connect, rate limits) and a live `[LIVE]` status indicator with one-click broadcast toggle in `MenuBar.kt`.
+
+#### 2. Standalone WebGL2 Core Visualizer & Multi-Shader Parity (`web/`)
+- **Zero-Dependency Browser Pipeline**: Complete browser-based WebGL2 / GLSL ES 3.0 port of the core multi-pass rendering pipeline (`Mandala`, `DynamicSpiral`, `feedback.frag`, `mixer.frag`, `blit.frag`).
+- **Full Visual Source Parity (10+ Shaders)**: High-performance WebGL GLSL ports for `Mandala` (vert/frag), `DynamicSpiral`, `AttractorFeedback`, `Chladni`, `Gyroid`, `HyperSlice`, `Icosahedron`, `IcosaDodeca`, and `IcosaV3`.
+- **Ping-Pong Feedback FBOs**: Implemented `RGBA16F` half-float framebuffer textures with `EXT_color_buffer_float` and automatic fallback to `RGBA8`.
+- **Mathematical Geometry Engine (`web/icosahedron_math.js`, `web/evaluator.js`)**: Client-side mathematical evaluation for complex plane math, Du Val stellation planes, and $H_3$/$H_4$ symmetry folding.
+
+#### 3. Retro TV Shell & CRT Post-Processing (`web/tv.css`, `web/ui.js`, `web/shaders/crt_post.frag`)
+- **Interactive Retro TV Shell**: Wrapped the browser visualizer in a realistic retro CRT TV bezel with an illuminated LED station indicator (`SPAZ RADIO • CH.1` / `SPAZ RADIO • LIVE`), clickable physical power toggle, and mouse/touch draggable rotary volume dial.
+- **CRT Warmup & Cold-Boot Sequence**: Animated high-frequency static snow on cold boot; toggling power initiates a 1.5s raster warmup sequence with expanding green-tinted beam line and phosphor decay flash.
+- **Comprehensive CRT Shader Pipeline (`crt_post.frag`)**: Single-pass post-processing shader replacing final blit with barrel distortion curvature, scanlines, 3-pixel RGB phosphor shadow mask triad, corner vignette, chromatic aberration channel splitting, and ambient phosphor persistence.
+- **Draggable Rotary Volume Dial & Fullscreen Mode**: Drag up/down on the rotary dial controls audio output volume via Web Audio `GainNode` with a perceptually linear squared response curve ($V^2$). Double-clicking the screen expands the visualizer to borderless fullscreen projection mode.
+
+#### 4. Web Audio DSP & Live Stream Integration (`web/dsp.js`)
+- **Live Stream DSP**: Connected `https://radio.spaz.org:8060/radio.ogg` to real-time Web Audio graph via lowpass (bass), bandpass (mid), highpass (high), and broadband RMS analysers.
+- **Beat Detection & Phase Tracking**: Implemented dual-average onset detection with IOI history for adaptive BPM calculation and beat-synced LFO signals.
+- **Audio-Reactive Uniforms**: Wired live CV channels (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `beatPhase`, `beatSine`, `trigger_onset`) to dynamically modulate Deck A & Deck B shader parameters in standalone web mode.
+- **Click-to-Start Gesture UX**: Autoplay policy compliance with single-click unlock overlay and AudioContext auto-resumption.
+
+#### 5. WebSocket Relay Server & 24/7 Autopilot Scheduler (`server/`, `web/autopilot.js`)
+- **Stateless WebSocket Relay (`server/server.js`)**: Lightweight Node.js relay server featuring role-based token authentication (`role=broadcast&key=...`), `state_full` payload caching, and fan-out distribution to all active web viewers with zero transcoding latency. Includes `server/lsd_relay` CLI runner.
+- **24/7 Autopilot Scheduler (`web/autopilot.js`)**: Autonomous client-side playlist scheduler executing smooth fade-through-black transitions across curated presets when offline.
+- **Seamless Live Broadcast Handshake**: Automatically transitions web viewers from the 24/7 Autopilot to the live broadcast when the VJ connects, updating the station LED badge to `SPAZ RADIO • LIVE`.
+
+#### 6. Dynamic Spiral Continuous Phase Tracking & Stability Hotfixes
+- **Continuous Dead-Reckoning Integration**: Synchronizes `integratedTime` and `integratedShear` from desktop to WebGL while maintaining local dead-reckoning between updates, eliminating 60fps stutter.
+- **WebSocket URL & Encoding Robustness**: Correctly URL-encodes tokens and handles base URLs with fragment identifiers.
+- **Safe Fallback for Unknown Sources**: Safely maps unknown visual sources to `"unknown_source"`.
+
+---
+
+### 📜 Full Commit History (v1.0.0-beta.29 → v1.0.0-beta.30)
+
+- `50b047b` fix(broadcast): resolve WebSocket sync, phase tracking, and state serialization issues
+- `5eae5c6` feat(broadcast): add live WebSocket broadcasting, web math/evaluator modules, and shader parity
+- `ac95831` feat(web): add standalone WebGL2 core visualizer, Web Audio DSP, retro CRT TV shell, and relay server
+
+---
+
+## Version 1.0.0-beta.29
+
+> [!NOTE]
+> **Release 1.0.0-beta.29** delivers high-performance live video recording with real-time audio muxing, deterministic time virtualization for offline rendering, hardware encoder prioritization, and a fully resizable settings panel with automatic persistence.
+
+---
+
+### Key Highlights
+
+#### 1. Live Video Recording with Zero-Allocation Audio Muxing
+- **Real-Time Audio Tapping (`AudioEngine.kt` & `RealtimeRecorder.kt`)**: Zero-allocation audio tapping directly inside `AudioEngine.processAudio` using a pre-allocated pool of `AudioBlock` instances on the real-time audio thread (Linux/JACK & cross-platform Java Sound).
+- **Asynchronous Audio PCM Writer & Lossless Remuxing**: Background worker streams 16-bit PCM WAV audio during recording and losslessly multiplexes it into the final container using FFmpeg (`-c:v copy -c:a aac -b:a 320k -shortest`) upon stopping.
+- **Master Preview Tally Overlay**: Pulsing red `REC MM:SS` badge rendered dynamically on the Master preview monitor.
+- **Recording Hotkey (`Ctrl+R`) & OS Standard Directory**: Toggle live recording anytime with `Ctrl+R`. Default recording folder automatically resolves to the system Videos directory (`~/Videos/liquid-lsd` or `~/Movies/liquid-lsd`).
+
+#### 2. Deterministic Time Virtualization (`TimeSource.kt`)
+- **Centralized Simulation Time Provider**: Replaced non-deterministic OS/GLFW time queries across all shaders (`uTime`), `CVRegistry` evaluators (`AudioFollowerTracker`), `DynamicSpiral`, and `Mixer` with `TimeSource`.
+- **Sample-Accurate Audio/Visual Synchronization**: In `OfflineRenderStudio`, `TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)` ensures complete deterministic frame-accurate lockstep between audio DSP analysis and visual motion curves regardless of render speed.
+
+#### 3. Hardware Encoder Prioritization with Dynamic Probing
+- **GPU Hardware Acceleration**: Automatically probes and prioritizes hardware encoders (`h264_nvenc`, `h264_qsv`) for high-throughput exporting.
+- **Seamless Software Fallback**: Validates encoder functionality with 1-frame probe and automatically falls back to `libx264`, `libx265`, or `prores_ks` if GPU hardware is unavailable.
+
+#### 4. PBO Readback & Zero-Allocation Buffer Pipelines
+- **Fast DMA Transfers**: Replaced row-by-row CPU vertical flipping with `MemoryUtil.memCopy` block DMA transfers and delegated vertical flip to FFmpeg filter graph (`-vf vflip`).
+- **Zero-Allocation Stream Buffer**: Reused persistent class-level 64 KB stream chunk buffers in `FFmpegProcessPipe`, eliminating ~4 MB/s GC heap churn during recording.
+
+#### 5. Offline Render Studio Enhancements (`VideoExportModal.kt`)
+- **Integrated File Browser**: Modal file picker (`ImGuiFileBrowser`) for audio tracks, output paths, and preset/setlist snapshots.
+- **Match Project Canvas**: Option to match internal project render resolution or standard presets (1080p, 4K, 720p, 9:16 vertical, 1:1 square).
+- **Progress Metrics & Error Diagnostics**: Live speed (FPS), elapsed time, ETA, estimated output file size, and multi-line FFmpeg error reporting.
+
+#### 6. Resizable Settings Panel with Automatic Persistence
+- **Interactive Sizing**: Enabled free resizing of the Settings modal with minimum bounds and display-clamping constraints.
+- **Dynamic Flexible Layout**: Sidebar navigation and content panes stretch seamlessly to fill window dimensions.
+- **Auto-Save Dimensions**: Window width and height are preserved across sessions in `lsd-settings.properties`.
+
+---
+
+### 📜 Full Commit History (v1.0.0-beta.28 → v1.0.0-beta.29)
+
+- `45eb36e` feat(export): upgrade live video recording with audio muxing, deterministic time virtualization, and resizable settings
+- `88d0760` docs: align architecture, user guide, and developer docs with deck architecture and preset naming
+- `bdd3b80` Fix video recording freeze and FFmpeg broken pipe issues
+
+---
+
 ## Version 1.0.0-beta.28
 
 > [!NOTE]
@@ -8,12 +109,6 @@
 ---
 
 ### Key Highlights
-
-#### Video Recording & Offline Export Pipeline Hardening
-- **Dynamic FFmpeg Encoder Resolution**: Auto-detects supported system encoders (`libx264`, `libopenh264`, `h264_nvenc`, `h264_vaapi`, `h264_qsv`, `h264_amf`, `prores_ks`, `mpeg4`) to prevent immediate subprocess termination ("Unknown encoder 'libx264'") on Linux distributions without proprietary codec packages.
-- **Framebuffer Unbind Safety**: Fixed OpenGL framebuffer state leak in `PboReadbackPipeline` that caused screen freezes by restoring FBO 0 immediately after DMA pixel readback.
-- **Zero-Allocation High-Speed DMA Flipping**: Replaced `src.slice()` iterations in `PboReadbackPipeline.flipVertical` with direct native `MemoryUtil.memCopy` row transfers, reducing CPU latency from ~20ms to <0.5ms per frame.
-- **Thread 0 Single-Threaded Offline Studio**: Migrated `OfflineRenderStudio` to single-threaded frame stepping on Thread 0, eliminating thread restriction violations and X11/GLFW deadlocks while rendering offline video with sample-accurate DSP.
 
 #### 1. Dedicated Background (BG) Layer & Deck PV (Preview) Pipeline
 - **Dedicated Background Deck (`Deck BG`)**: Added a 4th rendering deck `deckBG` rendered beneath the crossfaded Deck A & Deck B composite in GLSL (`mixer.frag`):
@@ -85,7 +180,16 @@
 - **Sticky Oscilloscope in Cell Config**: Parameter title, CV tab switcher, and live oscilloscope remain pinned at the top while modulator controls scroll independently below.
 - **Cell Muting System**: Toggle any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the oscilloscope live and animated. Middle-clicking any active or muted cell toggles its mute state.
 - **Percentage-Based GUI Scaling (75%–200%)**: Continuous scaling slider in Settings with 5% increments, `Ctrl+-` / `Ctrl+=` hotkeys, and automatic OS content-scale factor detection on launch.
+- **Resizable Settings Panel with Automatic Persistence**: Settings modal is now freely resizable with dynamic sidebar and content resizing, bounded by display constraints and automatically saved to `lsd-settings.properties`.
 - **Pitch Black Backgrounds**: Enforced solid opaque black OpenGL clear color across GUI mode, clean mode (`f`), and preview monitors.
+
+#### 10. High-Performance Live Video Recording & Deterministic Offline Studio
+- **Live Audio Recording & Muxing**: Real-time audio stream capture from `AudioEngine` backed by a zero-allocation pre-allocated block pool on the real-time audio thread. Background worker writes temporary 16-bit PCM WAV audio and losslessly remuxes it with FFmpeg (`-c:v copy -c:a aac -b:a 320k -shortest`) upon stopping. Configurable toggle in Settings.
+- **Deterministic Time Virtualization (`TimeSource`)**: Centralized simulation clock eliminating audio/visual desync across all shaders (`uTime`), `CVRegistry` evaluators, `DynamicSpiral`, and `Mixer` during offline rendering.
+- **Hardware Encoder Prioritization & Probing**: Probes and prioritizes GPU hardware encoders (`h264_nvenc`, `h264_qsv`) with automatic software fallback (`libx264`, `libx265`, `prores_ks`).
+- **Direct Memory Copy & Zero-Allocation Pipelines**: Replaced line-by-line CPU vertical flips with direct `MemoryUtil.memCopy` block transfers and FFmpeg `-vf vflip`. Reused persistent 64KB chunk buffers in `FFmpegProcessPipe`, eliminating 4 MB/s GC heap churn.
+- **Live Recording HUD & Settings**: Pulsing red `REC MM:SS` tally badge overlaid on the Master preview monitor, `Ctrl+R` hotkey, and automatic OS standard Videos folder resolution (`~/Videos/liquid-lsd` or `~/Movies/liquid-lsd`).
+- **Offline Studio Upgrades**: Integrated `ImGuiFileBrowser` for audio and destination selection, "Match Project Canvas" resolution option, preset/playlist snapshotting, detailed progress & ETA metrics, and multi-line FFmpeg error diagnostics.
 
 ---
 
@@ -142,14 +246,8 @@
 
 #### 1. Configurable Render Resolution & Multi-Aspect Output Pipeline
 - **Resolution Presets & Custom Dimensions**: Added user-configurable internal rendering resolutions under **Settings -> Video & Display**, featuring standard 16:9 presets (1080p, 720p, 540p, 1440p, 4K UHD), 4:3 presets (UXGA 1600x1200, XGA 1024x768, SVGA 800x600), 1:1 square presets (1080x1080, 800x800, 600x600), and custom dimensions ($128 \times 128$ to $7680 \times 4320$).
-- **Window Resize Safety & Minimum Dimension Constraints**:
-  - Enforced native GLFW window size limits (`glfwSetWindowSizeLimits` with minimum dimensions of $800 \times 600$), preventing operating systems from crushing the desktop UI.
-  - Patched layout clamping math in `UIManager` to eliminate `IllegalArgumentException: Cannot coerce value to an empty range` when resizing below $358\text{px}$.
-  - Fixed modal height clamping in `SettingsPanel` to prevent fatal empty range exceptions on short window heights.
-  - Hardened child window, texture preview, and slider dimension calculations across `LibraryPanel`, `MixerMonitorPanel`, `DeckControlPanel`, `CustomIconButton`, `PresetGridRenderer`, and `CustomRangeSlider` to guarantee strictly positive dimensions (`coerceAtLeast(1f)`), preventing Dear ImGui `size_arg.x != 0.0f && size_arg.y != 0.0f` assertion crashes when labels wrap on large font sizes or narrow widths.
-  - Guarded the main OpenGL render loop against 0-sized or minimized framebuffers.
 - **Live Zero-Downtime Pipeline Resizing**: Decks and Mixer support dynamic reallocation (`Deck.resize` and `Mixer.resize`) on the main OpenGL thread without interrupting playback or losing preset state.
-- **GPU Performance Scaling**: Downscaling from 1080p to 720p or 540p reduces raymarching pixel evaluation by 55%–75%, allowing raymarchers and visual shaders to run at solid 60 FPS on laptops and integrated GPUs.
+- **GPU Performance Scaling**: Downscaling from 1080p to 720p or 540p reduces raymarching pixel evaluation by 55%–75%, allowing heavy distance-field raymarchers (KIFS, Mandelbulb, Pseudo-Kleinian) to run at solid 60 FPS on laptops and integrated GPUs.
 - **Display Output Scaling Modes (`ViewportHelper`)**:
   - **Fit (Letterbox / Pillarbox)**: Preserves exact aspect ratio of the render target with border bars when outputting to mismatched monitor aspect ratios.
   - **Fill (Crop)**: Centers and crops edges to fill the display with no black bars.
@@ -161,14 +259,9 @@
 - **`DeckPresetController` Extraction**: Decoupled deck preset file actions (Save, Save As, Rename, Duplicate, Overwrite, Eject, Reset), file dialog handling, and save status notifications from `UIManager` into a dedicated controller class.
 - **`UIThemeStyler` Extraction**: Extracted dynamic ImGui theme application, custom color palette mapping (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), window background alpha/video blending, neon gradient rendering, and proportional `ImGuiStyle` size scaling.
 - **`SplitterManager` Extraction**: Extracted multi-column workspace splitter state, drag interaction tracking, cursor hinting (`ResizeEW`/`ResizeNS`), double-click reset positions, and draw-list divider rendering from `UIManager`.
-- **Library Panel Renaming & 3-Column Redesign**: Refactored the Library into an intuitive 3-column layout:
-  - **Column 1 (Left - Presets Pool)**: Flat list of all presets with real-time text search filtering by name and preset tags, plus `[Create new preset...]` deck eject rows.
-  - **Column 2 (Middle - Playlist Editor)**: Dedicated setlist editor with top playlist selector dropdown combo, `[ + ]` new playlist button, `[ ••• ]` actions menu, drag-and-drop preset insertion, and automatic persistence (auto-save on edit).
-  - **Column 3 (Right - Play Queue)**: Live volatile playback queue and transport controls.
-  - **`[ A ] [ B ] [ C ] [ Q ]` Quick Action Buttons**: Standardized across preset items and playlist rows, adding `[ Q ]` to append presets directly to the end of the queue.
+- **Library Panel Renaming**: Refactored and renamed the 3-column Preset, Playlist, and Play Queue dock from "Asset Browser" to **"Library"**, standardizing terminology with DJ/VJ performance software, and modernizing `LibraryPanel`, `LibraryMode` (`FULL`, `HALF`, `HIDE`), and backward-compatible settings persistence.
 - **Live Theme `ColorTunerPanel`**: Added interactive non-modal color tuner accessible via the top menu bar ("Color"), allowing real-time assignment of palette swatches across all 17 themed ImGui elements with live updates and instant Kotlin code generation for clipboard export. Canonical HEX palettes enforced for Solarized and Lunarized themes.
 - **Background Video Keybinding (`B`)**: Added a global hotkey `B` to instantly toggle master video background rendering behind the semi-transparent UI with synchronized settings persistence.
-- **Font Atlas GC Dangling Pointer & Resize Crash Fix**: Fixed a critical JVM SegFault caused by allocating the font glyph ranges (`MAIN_RANGES`) as a local stack array inside `loadFonts`. Dear ImGui retains native C pointers to glyph range arrays; when ZGC collected the array during runtime font resizing (`ctrl-` / `ctrl=`) or startup, native font rasterization accessed freed memory. Moved glyph ranges and TTF byte arrays to permanent static fields and enforced font size floor clamping ($9\text{px} \dots 96\text{px}$).
 - **Linux Window Title & X11 Class Hints**: Replaced multi-byte Unicode em-dash (`—`) in GLFW window title with standard ASCII hyphen (`-`) and explicitly configured `GLFW_X11_CLASS_NAME` ("Liquid LSD") and `GLFW_X11_INSTANCE_NAME` ("liquid-lsd"), preventing mojibake/corrupted garbage characters in Linux alt-tab task switchers.
 
 #### 3. Multi-Scale Calibrated Oscilloscopes & Signal Visualization
@@ -177,19 +270,21 @@
 - **Real-Time Lookahead Future Projection**: Real-time forward waveform projection for deterministic LFO modulators rendered in front of the `NOW` playhead.
 - **Decoupled Per-Scope Timebases**: Timebase selections across individual CV scopes (LFO, Audio, Trigger, MIDI) and the Final parameter oscilloscope are completely decoupled. Changing the time window on one tab no longer changes the scale of other tabs.
 - **Auto Scale Exclusively for LFO**: The `Auto` timebase option (which dynamically fits $1\text{–}2$ periods of the active waveform) is offered exclusively on the **LFO** oscilloscope. **Audio**, **Trigger**, **MIDI**, and **Final** default to **`10s`** (displaying the full recorded history window) and provide fixed physical options (`1s` to `24h`).
-- **100% True Recorded History on Final**: The Final parameter oscilloscope always renders $100\%$ recorded parameter history (`param.history`) across the entire screen width with a right-aligned `NOW` playhead and backward-calibrated timestamp divisions, functioning as a real-time historical seismograph combining all base value, LFO, Audio, Trigger, and MIDI modulations.
-- **Flat Zero Baseline Outside Recorded History**: When viewing extended timebases ($100\text{s}$, $15\text{m}$, $2.5\text{h}$, $24\text{h}$) where the physical window exceeds the buffer size, the pre-history span is rendered as a flat horizontal line resting strictly at zero ($0.0$), eliminating baseline see-saw tilt while live audio plays.
-- **Peak-Detect Anti-Aliased Waveform Envelopes**: Implemented golden-ratio peak-detect envelope rendering for long-duration timebases ($100\text{s}$, $15\text{m}$, $2.5\text{h}$, $24\text{h}$). Fast-moving LFOs rendered on slow time scales display their full illuminated dynamic envelope/ribbon without stroboscopic Nyquist aliasing or flatline artifacts.
+#### 4. Cell-Level Mute & Live Oscilloscope Preview
+- **Cell Mute / Preview System**: Users can mute any CV modulation cell (LFO, Audio, Trigger, MIDI) from sending values to live parameters (`Final`) while keeping the Oscilloscope 100% live and animated in Cell Config for real-time waveform previewing.
+- **Preset Grid Visual Indicators**: Muted cells in the Preset Grid drop knob arc/meter opacity to **35%** and display a centered sans-serif **'M'** inside the knob.
+- **Master Scope Mute Toggle**: Cell Config features a master `[ LIVE ]` / `[ MUTED ]` toggle button in the top-right corner of the Oscilloscope header bar, with an amber `[SCOPE LIVE — OUTPUT MUTED FROM FINAL]` watermark when muted.
+- **Middle-Click Shortcuts**: Middle-clicking any active or muted cell in the Preset Grid immediately toggles its Mute/Unmute state without clearing modulators or losing dial settings.
 - **Brightened Grid Ticks & Dynamic Timestamp Badges**: High-contrast, crisp grid division ticks and legible timestamp numbers with dynamic height positioning for clear readability across all themes and zoom levels (`-250ms`, `-2s`, `NOW`, `+2s`, `+15m`, `+4h`, etc.).
 - **Unified Oscilloscope Architecture**: Consolidated all oscilloscope rendering into `OscilloscopeDrawer`, eliminating duplicated drawing code across UI panels.
 
-#### 4. Real-Time Beat Detection & Flywheel Engine Overhaul
-- **Spectral Flux Onset Beat Analysis**: Replaced raw RMS amplitude beat input with half-wave rectified multi-band spectral flux. Beat detection operates on sharp transient impulses, preventing false triggers on sustained drones or synth bass notes.
-- **Sub-Block Parabolic Peak Interpolation**: Added parabolic peak interpolation to STFT Comb and Autocorrelation analysis tasks. Eliminates discrete block-quantization BPM jumps for smooth, floating-point tempo tracking.
-- **Background Phase Anchor Alignment**: Background analysis computes cross-correlation beat phase alignment anchors, ensuring beat-synced oscillators (`beatSine`, beat LFOs) lock their peaks directly to audio transient hits.
-- **Dual-Time-Constant Peak-Triggered PLL**: Refined Phase-Locked Loop (`BeatDetectionMode.PLL`) to evaluate only on local onset peaks with fast phase correction ($\alpha$) and damped period inertia ($\beta$), eliminating tempo wobble on syncopated hits.
-- **Smooth Flywheel Phase Slewing**: Upgraded `AudioEngine` flywheel accumulation to apply second-order phase slewing, smoothly nudging beat phase over audio blocks without instantaneous phase jumps or visual pops.
-- **Beat Detection Confidence Metric**: Added a peak-to-average energy confidence metric $C \in [0, 1]$ to stabilize tempo during ambient breakdowns or silent sections.
+#### 4. Real-Time Multi-Band Beat Detection Engine & Automated Benchmark Testing
+- **Multi-Band Cross-Spectral Autocorrelation Engine (`BeatDetectionMode.AUTOCORRELATION`)**: Upgraded beat detection to maintain zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks). Computes cross-spectral correlation over candidate lags (40–200 BPM) without allocating memory on the JACK/audio callback thread.
+- **Harmonic Comb Unwrapping**: Implemented harmonic comb unwrapping to evaluate half-lags ($d/2$). Eliminates half-tempo (60 BPM) and double-tempo (200 BPM) octave traps by verifying fundamental beat periods, ensuring 120, 128, 140, and 100 BPM tracks lock precisely to their true fundamental tempo.
+- **Sub-Block Parabolic Lag Interpolation**: Fits a 2nd-order parabola over lag correlation points $(d-1, d, d+1)$ to extract sub-block fractional lag offsets $\delta$, achieving floating-point precision within $\pm 0.1$ BPM.
+- **Gaussian Tempo Weighting**: Applies a subtle Gaussian curve centered at 120 BPM ($\sigma = 80$ BPM) to bias candidate selection towards natural musical tempos.
+- **Automated Synthetic Audio Benchmark Test Suite (`BeatDetectorBenchmarkTest.kt`)**: Built an automated audio benchmark test suite that generates multi-band synthetic audio for 120 BPM House, 128 BPM EDM, 140 BPM Dubstep, 100 BPM Hip-Hop, and 4-beat silent drum breakdowns. Automatically validates convergence time (< 3.0s), lock accuracy (< 1.5 BPM error), and flywheel momentum retention.
+- **UI Analysis Length Slider**: Restored the `Analysis Window Length` slider in `AudioEnginePanel` when `AUTOCORRELATION` mode is active, allowing live tuning of the correlation history window from 1.0 to 10.0 seconds.
 
 #### 5. Deterministic Frame-Synced LFOs (LFO 1 & LFO 2)
 - **Frame Frequency Mode**: Added a third frequency clocking mode, `FRAME`, alongside `TIME` and `BEAT` in the unified LFO generator. Frame-synced LFOs oscillate deterministically based on elapsed render frame count (1 to 10,000 integer frames), enabling artifact-free feedback buffer harmonization, per-frame stroboscopic/flicker effects, sample-and-hold per-frame noise, and deterministic video frame captures.
@@ -219,8 +314,6 @@
 - **Comprehensive Font Autoscaling**: Dynamic font-scaling across settings modals, empty deck launchpads, cell config tab rows, range sliders, and Lucide icons.
 - **Library Live Auto-Refresh**: Real-time filesystem change monitoring across `LibraryPanel` and `ImGuiFileBrowser`, removing redundant manual Refresh buttons and automatically updating file listings when on-disk files change.
 - **Playlist Menu Bar Streamlining**: Removed action buttons from the playlist editor menu bar in Library and consolidated them into the right-click context menu.
-- **Cell Config Modulator Layout & Responsive UI**: Restructured modulator headers (`ModulatorHeaderRow` and `Lfo2Section`) so the modulator title (`Onset / Transient`, `Accent / Peak`, `Amplitude`, `Low`, `LFO 2`, etc.) renders on the first row with the clear/reset button, and controls (mute/bypass, dice, operator combo) render cleanly on the second row. Moved Asymmetry preset buttons below Shape options across LFO 1 and LFO 2 sections to improve usability on compact/small screens, and relocated Modulation Mode above LFO 2 Shape options.
-- **Preserved Modulator Bypass on Depth Edits**: Removed auto-unbypassing when adjusting modulator Depth sliders in `CellConfigPanel`, ensuring bypassed modulators remain muted until explicitly enabled.
 
 #### 9. Performance & Zero-Allocation Hot-Path Optimizations
 - **Oscilloscope & Modulation GC Optimization**: Replaced per-call `HashSet` instantiation in `isCvSourceBipolar` with a zero-allocation branch, eliminating over $180{,}000$ GC object allocations per second on the 60 FPS render path during anti-aliased waveform rendering.
@@ -295,5 +388,3 @@
 - `c989432` feat(ui): overlay letter badges on monitor lower-left corners and remove redundant text headers
 - `009ab16` feat(ui): implement real-time media browser auto-refresh and remove manual refresh buttons
 
-### Added
-- **Icosahedron V3 CSG Source**: Introduced a new `icosa-v3` visual source that replaces the brute-force 60-planes approach with "Domain Folding + CSG Intersections". This eliminates CPU overhead and reduces GPU operations by 95%, guaranteeing a silky smooth 60fps even on integrated graphics like Intel Iris Xe. The new parameters include `Support H` which, alongside `Control X` and `Control Y`, can be mapped to MIDI knobs to dynamically slice the tips off stellations for dramatic, blunted cross-sections.

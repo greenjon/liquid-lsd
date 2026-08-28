@@ -1,5 +1,59 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.30
+
+> [!NOTE]
+> **Release 1.0.0-beta.30** introduces live WebSocket broadcasting from Liquid LSD Desktop, the standalone browser-based WebGL2 visualizer with 10+ shader ports, real-time Web Audio DSP streaming, an interactive retro CRT TV shell with phosphor/scanline post-processing, and a stateless Node.js relay server with 24/7 Autopilot fallback.
+
+---
+
+### Key Highlights
+
+#### 1. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
+- **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
+- **Non-Blocking WebSocket Dispatch**: Protected asynchronous transmission using `CompletableFuture` to prevent transmission queue buildup, memory leaks, and `IllegalStateException` on high-latency or slow network connections.
+- **Throttled Parameter Delta Streaming**: Dispatches full state snapshots (`state_full`) upon initial handshake or preset switching, and lightweight differential patches (`state_delta`) throttled at a configurable rate (default 25 Hz) during live parameter adjustments. Includes JSON `null` deletion semantics when swapping visual source types.
+- **Live Modulation Tracking**: Transmits real-time modulated parameter values (`param.value`) instead of static knobs, reproducing dynamic audio reactivity on remote TV clients.
+- **Dedicated Web Broadcast Settings & Menu Bar HUD**: Added "Web Broadcast" category in `SettingsPanel.kt` (relay URL, auth token, auto-connect, rate limits) and a live `[LIVE]` status indicator with one-click broadcast toggle in `MenuBar.kt`.
+
+#### 2. Standalone WebGL2 Core Visualizer & Multi-Shader Parity (`web/`)
+- **Zero-Dependency Browser Pipeline**: Complete browser-based WebGL2 / GLSL ES 3.0 port of the core multi-pass rendering pipeline (`Mandala`, `DynamicSpiral`, `feedback.frag`, `mixer.frag`, `blit.frag`).
+- **Full Visual Source Parity (10+ Shaders)**: High-performance WebGL GLSL ports for `Mandala` (vert/frag), `DynamicSpiral`, `AttractorFeedback`, `Chladni`, `Gyroid`, `HyperSlice`, `Icosahedron`, `IcosaDodeca`, and `IcosaV3`.
+- **Ping-Pong Feedback FBOs**: Implemented `RGBA16F` half-float framebuffer textures with `EXT_color_buffer_float` and automatic fallback to `RGBA8`.
+- **Mathematical Geometry Engine (`web/icosahedron_math.js`, `web/evaluator.js`)**: Client-side mathematical evaluation for complex plane math, Du Val stellation planes, and $H_3$/$H_4$ symmetry folding.
+
+#### 3. Retro TV Shell & CRT Post-Processing (`web/tv.css`, `web/ui.js`, `web/shaders/crt_post.frag`)
+- **Interactive Retro TV Shell**: Wrapped the browser visualizer in a realistic retro CRT TV bezel with an illuminated LED station indicator (`SPAZ RADIO • CH.1` / `SPAZ RADIO • LIVE`), clickable physical power toggle, and mouse/touch draggable rotary volume dial.
+- **CRT Warmup & Cold-Boot Sequence**: Animated high-frequency static snow on cold boot; toggling power initiates a 1.5s raster warmup sequence with expanding green-tinted beam line and phosphor decay flash.
+- **Comprehensive CRT Shader Pipeline (`crt_post.frag`)**: Single-pass post-processing shader replacing final blit with barrel distortion curvature, scanlines, 3-pixel RGB phosphor shadow mask triad, corner vignette, chromatic aberration channel splitting, and ambient phosphor persistence.
+- **Draggable Rotary Volume Dial & Fullscreen Mode**: Drag up/down on the rotary dial controls audio output volume via Web Audio `GainNode` with a perceptually linear squared response curve ($V^2$). Double-clicking the screen expands the visualizer to borderless fullscreen projection mode.
+
+#### 4. Web Audio DSP & Live Stream Integration (`web/dsp.js`)
+- **Live Stream DSP**: Connected `https://radio.spaz.org:8060/radio.ogg` to real-time Web Audio graph via lowpass (bass), bandpass (mid), highpass (high), and broadband RMS analysers.
+- **Beat Detection & Phase Tracking**: Implemented dual-average onset detection with IOI history for adaptive BPM calculation and beat-synced LFO signals.
+- **Audio-Reactive Uniforms**: Wired live CV channels (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `beatPhase`, `beatSine`, `trigger_onset`) to dynamically modulate Deck A & Deck B shader parameters in standalone web mode.
+- **Click-to-Start Gesture UX**: Autoplay policy compliance with single-click unlock overlay and AudioContext auto-resumption.
+
+#### 5. WebSocket Relay Server & 24/7 Autopilot Scheduler (`server/`, `web/autopilot.js`)
+- **Stateless WebSocket Relay (`server/server.js`)**: Lightweight Node.js relay server featuring role-based token authentication (`role=broadcast&key=...`), `state_full` payload caching, and fan-out distribution to all active web viewers with zero transcoding latency. Includes `server/lsd_relay` CLI runner.
+- **24/7 Autopilot Scheduler (`web/autopilot.js`)**: Autonomous client-side playlist scheduler executing smooth fade-through-black transitions across curated presets when offline.
+- **Seamless Live Broadcast Handshake**: Automatically transitions web viewers from the 24/7 Autopilot to the live broadcast when the VJ connects, updating the station LED badge to `SPAZ RADIO • LIVE`.
+
+#### 6. Dynamic Spiral Continuous Phase Tracking & Stability Hotfixes
+- **Continuous Dead-Reckoning Integration**: Synchronizes `integratedTime` and `integratedShear` from desktop to WebGL while maintaining local dead-reckoning between updates, eliminating 60fps stutter.
+- **WebSocket URL & Encoding Robustness**: Correctly URL-encodes tokens and handles base URLs with fragment identifiers.
+- **Safe Fallback for Unknown Sources**: Safely maps unknown visual sources to `"unknown_source"`.
+
+---
+
+### 📜 Full Commit History (v1.0.0-beta.29 → v1.0.0-beta.30)
+
+- `50b047b` fix(broadcast): resolve WebSocket sync, phase tracking, and state serialization issues
+- `5eae5c6` feat(broadcast): add live WebSocket broadcasting, web math/evaluator modules, and shader parity
+- `ac95831` feat(web): add standalone WebGL2 core visualizer, Web Audio DSP, retro CRT TV shell, and relay server
+
+---
+
 ## Version 1.0.0-beta.29
 
 > [!NOTE]
@@ -37,34 +91,13 @@
 - **Dynamic Flexible Layout**: Sidebar navigation and content panes stretch seamlessly to fill window dimensions.
 - **Auto-Save Dimensions**: Window width and height are preserved across sessions in `lsd-settings.properties`.
 
-#### 7. Standalone WebGL2 Core Renderer (`web/`)
-- **Zero-Dependency Web Pipeline**: Complete browser-based WebGL2 / GLSL ES 3.0 port of the core multi-pass rendering pipeline (`Mandala`, `DynamicSpiral`, `feedback.frag`, `mixer.frag`, `blit.frag`).
-- **Ping-Pong Feedback FBOs**: Implemented `RGBA16F` half-float framebuffer textures with `EXT_color_buffer_float` and automatic fallback to `RGBA8`.
-- **Dynamic Viewport & Preset Loading**: Responsive fullscreen canvas handling and JSON preset configuration loader (`web/preset.json`).
+---
 
-#### 8. Web Audio DSP & Live Stream Integration (`web/dsp.js`)
-- **Live Stream DSP**: Connected `https://radio.spaz.org:8060/radio.ogg` to real-time Web Audio graph via lowpass (bass), bandpass (mid), highpass (high), and broadband RMS analysers.
-- **Beat Detection & Phase Tracking**: Implemented dual-average onset detection with IOI history for adaptive BPM calculation and beat-synced LFO signals.
-- **Audio-Reactive Uniforms**: Wired live CV channels (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `beatPhase`, `beatSine`, `trigger_onset`) to dynamically modulate Deck A & Deck B shader parameters.
-- **Click-to-Start Gesture UX**: Autoplay policy compliance with single-click unlock overlay and AudioContext auto-resumption.
+### 📜 Full Commit History (v1.0.0-beta.28 → v1.0.0-beta.29)
 
-#### 9. Retro TV Shell & CRT Post-Processing (`web/tv.css`, `web/ui.js`, `web/shaders/crt_post.frag`)
-- **Interactive Retro TV Shell**: Wrapped the browser visualizer in a realistic retro CRT TV bezel with an illuminated LED station indicator (`SPAZ RADIO • CH.1`), clickable physical power toggle, and mouse/touch draggable rotary volume dial.
-- **CRT Warmup & Static Sequence**: Cold-boot state renders animated high-frequency static snow; toggling power initiates a 1.5s raster warmup sequence with expanding green-tinted beam line and phosphor decay flash.
-- **Comprehensive CRT Shader Pipeline (`crt_post.frag`)**: Single-pass post-processing shader replacing final blit with barrel distortion curvature, scanlines, 3-pixel RGB phosphor shadow mask triad, corner vignette, chromatic aberration channel splitting, and ambient phosphor persistence.
-- **Draggable Rotary Volume Dial**: Drag up/down on the rotary dial controls audio output volume via Web Audio `GainNode` with a perceptually linear squared response curve ($V^2$).
-- **Fullscreen Projection Mode**: Double-clicking the screen expands the visualizer to borderless fullscreen projection mode, hiding the TV chrome.
-
-#### 10. WebSocket Relay Server & 24/7 Autopilot Scheduler (`server/`, `web/autopilot.js`)
-- **Stateless WebSocket Relay (`server/server.js`)**: Lightweight Node.js relay server featuring role-based token authentication (`role=broadcast&key=...`), `state_full` payload caching, and fan-out distribution to all active web viewers with zero transcoding latency.
-- **24/7 Autopilot Scheduler (`web/autopilot.js`)**: Autonomous client-side playlist scheduler executing smooth fade-through-black transitions across curated presets when offline.
-- **Seamless Live Broadcast Handshake**: Automatically transitions web viewers from the 24/7 Autopilot to the live broadcast when the VJ connects, updating the station LED badge to `SPAZ RADIO • LIVE`.
-
-#### 11. Desktop Broadcaster Subsystem (`llm.slop.liquidlsd.broadcast`)
-- **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
-- **Throttled Parameter Delta Streaming**: Generates full state snapshots (`state_full`) upon connection and preset/queue changes, and lightweight diff patches (`state_delta`) throttled at configurable rate (default 25 Hz) during live parameter adjustments.
-- **Web Preset Serializer (`WebPresetSerializer.kt`)**: Automatically translates desktop `Mandala`, `DynamicSpiral`, and `Mixer` parameters into the WebGL2 TV JSON schema.
-- **Dedicated Web Broadcast Settings & Menu Bar HUD**: Added "Web Broadcast" category in `SettingsPanel.kt` (relay URL, auth token, auto-connect, rate limits) and a live `[LIVE]` status indicator with one-click broadcast toggle in `MenuBar.kt`.
+- `45eb36e` feat(export): upgrade live video recording with audio muxing, deterministic time virtualization, and resizable settings
+- `88d0760` docs: align architecture, user guide, and developer docs with deck architecture and preset naming
+- `bdd3b80` Fix video recording freeze and FFmpeg broken pipe issues
 
 ---
 
@@ -355,16 +388,3 @@
 - `c989432` feat(ui): overlay letter badges on monitor lower-left corners and remove redundant text headers
 - `009ab16` feat(ui): implement real-time media browser auto-refresh and remove manual refresh buttons
 
-### Added
-- **Icosahedron V3 CSG Source**: Introduced a new `icosa-v3` visual source that replaces the brute-force 60-planes approach with "Domain Folding + CSG Intersections". This eliminates CPU overhead and reduces GPU operations by 95%, guaranteeing a silky smooth 60fps even on integrated graphics like Intel Iris Xe. The new parameters include `Support H` which, alongside `Control X` and `Control Y`, can be mapped to MIDI knobs to dynamically slice the tips off stellations for dramatic, blunted cross-sections.
-
-## [Unreleased] - Broadcast Feature Hotfixes
-### Fixed
-* **Broadcast State Sync**: Fixed a critical `IllegalStateException` bug when sending fast WebGL payloads over slow networks, resolving permanent client desyncs.
-* **Broadcast Visual Parity**: Broadcast client now properly tracks real-time modulated parameters (`value`) instead of static knobs (`baseValue`), restoring live audio reactivity on the TV client.
-* **Broadcast Patch Consistency**: `computeDeltaPatch` now correctly issues JSON deletion instructions (`null`) for removed state properties when swapping Visual Source types.
-* **Broadcast Concurrency**: Eliminated data races on `activeWebSocket` and `reconnectAttempt` between the main render thread and I/O scheduler.
-* **Dynamic Spiral Phase Tracking**: Exposes `integratedTime` and `integratedShear` so the WebGL client maintains continuous rotation and shear without phase drift.
-* **WebSocket URL Builder**: The broadcast connection builder now correctly URL-encodes tokens and handles base URLs with fragment identifiers.
-* **Unknown Source Safe Fallback**: Unknown visual sources now properly serialize as `"unknown_source"` rather than misrepresenting themselves as `"mandala"`.
-* **WebGL TV Client Phase Sync Stutter**: Fixed a bug where the TV client would freeze `integratedTime` and `integratedShear` between network updates. It now correctly falls back to local dead-reckoning integration, resulting in buttery smooth 60fps animations that seamlessly track the broadcaster's phase.
