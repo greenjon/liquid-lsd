@@ -24,8 +24,10 @@ class DynamicSpiral(
 ) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader) {
 
     private var lastTimeNanos: Long = System.nanoTime()
-    private var integratedTime: Float = 0f
-    private var integratedShear: Float = 0f
+    var integratedTime: Float = 0f
+        private set
+    var integratedShear: Float = 0f
+        private set
 
     init {
         // Max Points is a quality/performance dial, not a CV target.

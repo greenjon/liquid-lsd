@@ -21,15 +21,15 @@ object WebPresetSerializer {
     }
 
     fun serializeFeedback(deck: Deck): JsonObject = buildJsonObject {
-        put("decay", JsonPrimitive(round4(deck.fbDecay.baseValue)))
-        put("gain", JsonPrimitive(round4(deck.fbGain.baseValue)))
-        put("zoom", JsonPrimitive(round4(deck.fbZoom.baseValue)))
-        put("rotate", JsonPrimitive(round4(deck.fbRotate.baseValue)))
-        put("hueShift", JsonPrimitive(round4(deck.fbHueShift.baseValue)))
-        put("blur", JsonPrimitive(round4(deck.fbBlur.baseValue)))
-        put("chroma", JsonPrimitive(round4(deck.fbChroma.baseValue)))
-        put("mode", JsonPrimitive(round4(deck.fbMode.baseValue)))
-        put("kaleido", JsonPrimitive(round4(deck.fbKaleido.baseValue)))
+        put("decay", JsonPrimitive(round4(deck.fbDecay.value)))
+        put("gain", JsonPrimitive(round4(deck.fbGain.value)))
+        put("zoom", JsonPrimitive(round4(deck.fbZoom.value)))
+        put("rotate", JsonPrimitive(round4(deck.fbRotate.value)))
+        put("hueShift", JsonPrimitive(round4(deck.fbHueShift.value)))
+        put("blur", JsonPrimitive(round4(deck.fbBlur.value)))
+        put("chroma", JsonPrimitive(round4(deck.fbChroma.value)))
+        put("mode", JsonPrimitive(round4(deck.fbMode.value)))
+        put("kaleido", JsonPrimitive(round4(deck.fbKaleido.value)))
     }
 
     fun serializeDeck(deck: Deck): JsonObject {
@@ -39,44 +39,48 @@ object WebPresetSerializer {
         return buildJsonObject {
             if (src is Mandala) {
                 put("source", JsonPrimitive("mandala"))
-                put("L1", JsonPrimitive(round4(src.parameters["L1"]?.baseValue ?: 0.4f)))
-                put("L2", JsonPrimitive(round4(src.parameters["L2"]?.baseValue ?: 0.3f)))
-                put("L3", JsonPrimitive(round4(src.parameters["L3"]?.baseValue ?: 0.2f)))
-                put("L4", JsonPrimitive(round4(src.parameters["L4"]?.baseValue ?: 0.1f)))
+                put("L1", JsonPrimitive(round4(src.parameters["L1"]?.value ?: 0.4f)))
+                put("L2", JsonPrimitive(round4(src.parameters["L2"]?.value ?: 0.3f)))
+                put("L3", JsonPrimitive(round4(src.parameters["L3"]?.value ?: 0.2f)))
+                put("L4", JsonPrimitive(round4(src.parameters["L4"]?.value ?: 0.1f)))
                 put("A", JsonPrimitive(src.recipe.a))
                 put("B", JsonPrimitive(src.recipe.b))
                 put("C", JsonPrimitive(src.recipe.c))
                 put("D", JsonPrimitive(src.recipe.d))
-                put("thickness", JsonPrimitive(round4(src.parameters["Thickness"]?.baseValue ?: 0.012f)))
-                put("zoom", JsonPrimitive(round4(src.parameters["Zoom"]?.baseValue ?: 0.8f)))
-                put("rotateZ", JsonPrimitive(round4(src.parameters["Rotate Z"]?.baseValue ?: 0.0f)))
-                put("hueOffset", JsonPrimitive(round4(src.parameters["Hue Offset"]?.baseValue ?: 0.0f)))
-                put("hueSweep", JsonPrimitive(round4(src.parameters["Hue Sweep"]?.baseValue ?: 0.3f)))
-                put("depth", JsonPrimitive(round4(src.parameters["Depth"]?.baseValue ?: 0.35f)))
-                put("maxR", JsonPrimitive(round4(src.parameters["Max R"]?.baseValue ?: 0.85f)))
+                put("thickness", JsonPrimitive(round4(src.parameters["Thickness"]?.value ?: 0.012f)))
+                put("zoom", JsonPrimitive(round4(src.parameters["Zoom"]?.value ?: 0.8f)))
+                put("rotateZ", JsonPrimitive(round4(src.parameters["Rotate Z"]?.value ?: 0.0f)))
+                put("hueOffset", JsonPrimitive(round4(src.parameters["Hue Offset"]?.value ?: 0.0f)))
+                put("hueSweep", JsonPrimitive(round4(src.parameters["Hue Sweep"]?.value ?: 0.3f)))
+                put("depth", JsonPrimitive(round4(src.parameters["Depth"]?.value ?: 0.35f)))
+                put("maxR", JsonPrimitive(round4(src.parameters["Max R"]?.value ?: 0.85f)))
                 put("feedback", fb)
             } else if (src is DynamicSpiral || (src is DynamicVisualSource && src.id == "dynamic_spiral")) {
                 put("source", JsonPrimitive("dynamic_spiral"))
-                put("maxPoints", JsonPrimitive(round4(src.parameters["Max Points"]?.baseValue ?: 500f)))
-                put("scale", JsonPrimitive(round4(src.parameters["Scale"]?.baseValue ?: 0.5f)))
-                put("damping", JsonPrimitive(round4(src.parameters["Damping"]?.baseValue ?: 100.0f)))
-                put("waveFreq", JsonPrimitive(round4(src.parameters["Wave Freq"]?.baseValue ?: 0.2f)))
-                put("waveAmp", JsonPrimitive(round4(src.parameters["Wave Amp"]?.baseValue ?: 0.0f)))
-                put("shear", JsonPrimitive(round4(src.parameters["Shear"]?.baseValue ?: 0.1f)))
-                put("speed", JsonPrimitive(round4(src.parameters["Speed"]?.baseValue ?: 0.5f)))
-                put("dotSize", JsonPrimitive(round4(src.parameters["Dot Size"]?.baseValue ?: 0.01f)))
-                put("glow", JsonPrimitive(round4(src.parameters["Glow"]?.baseValue ?: 1.5f)))
-                put("hueOffset", JsonPrimitive(round4(src.parameters["Hue Offset"]?.baseValue ?: 0.33f)))
-                put("hueSweep", JsonPrimitive(round4(src.parameters["Hue Sweep"]?.baseValue ?: 0.01f)))
-                put("trailDecay", JsonPrimitive(round4(src.parameters["Trail Decay"]?.baseValue ?: 0.85f)))
+                put("maxPoints", JsonPrimitive(round4(src.parameters["Max Points"]?.value ?: 500f)))
+                put("scale", JsonPrimitive(round4(src.parameters["Scale"]?.value ?: 0.5f)))
+                put("damping", JsonPrimitive(round4(src.parameters["Damping"]?.value ?: 100.0f)))
+                put("waveFreq", JsonPrimitive(round4(src.parameters["Wave Freq"]?.value ?: 0.2f)))
+                put("waveAmp", JsonPrimitive(round4(src.parameters["Wave Amp"]?.value ?: 0.0f)))
+                put("shear", JsonPrimitive(round4(src.parameters["Shear"]?.value ?: 0.1f)))
+                put("speed", JsonPrimitive(round4(src.parameters["Speed"]?.value ?: 0.5f)))
+                put("dotSize", JsonPrimitive(round4(src.parameters["Dot Size"]?.value ?: 0.01f)))
+                put("glow", JsonPrimitive(round4(src.parameters["Glow"]?.value ?: 1.5f)))
+                put("hueOffset", JsonPrimitive(round4(src.parameters["Hue Offset"]?.value ?: 0.33f)))
+                put("hueSweep", JsonPrimitive(round4(src.parameters["Hue Sweep"]?.value ?: 0.01f)))
+                put("trailDecay", JsonPrimitive(round4(src.parameters["Trail Decay"]?.value ?: 0.85f)))
+                if (src is DynamicSpiral) {
+                    put("integratedTime", JsonPrimitive(round4(src.integratedTime)))
+                    put("integratedShear", JsonPrimitive(round4(src.integratedShear)))
+                }
                 put("feedback", fb)
             } else {
-                val sourceId = if (src is DynamicVisualSource) src.id else "mandala"
+                val sourceId = if (src is DynamicVisualSource) src.id else "unknown_source"
                 put("source", JsonPrimitive(sourceId))
                 for ((key, param) in src.parameters) {
                     val cleanKey = key.replace(" ", "")
                     val camelKey = cleanKey.replaceFirstChar { it.lowercase() }
-                    put(camelKey, JsonPrimitive(round4(param.baseValue)))
+                    put(camelKey, JsonPrimitive(round4(param.value)))
                 }
                 put("feedback", fb)
             }
@@ -84,11 +88,11 @@ object WebPresetSerializer {
     }
 
     fun serializeMixer(mixer: Mixer): JsonObject = buildJsonObject {
-        put("mode", JsonPrimitive(mixer.mode.baseValue.roundToInt()))
-        val balance01 = ((mixer.crossfade.baseValue + 1.0f) * 0.5f).coerceIn(0.0f, 1.0f)
+        put("mode", JsonPrimitive(mixer.mode.value.roundToInt()))
+        val balance01 = ((mixer.crossfade.value + 1.0f) * 0.5f).coerceIn(0.0f, 1.0f)
         put("balance", JsonPrimitive(round4(balance01)))
-        put("alpha", JsonPrimitive(round4(mixer.masterAlpha.baseValue)))
-        put("bloom", JsonPrimitive(round4(mixer.bloom.baseValue)))
+        put("alpha", JsonPrimitive(round4(mixer.masterAlpha.value)))
+        put("bloom", JsonPrimitive(round4(mixer.bloom.value)))
     }
 
     fun serializeFullPreset(mixer: Mixer): JsonObject = buildJsonObject {
@@ -121,6 +125,11 @@ object WebPresetSerializer {
                 }
             }
         }
+        for ((key, _) in lastFull) {
+            if (!currentFull.containsKey(key)) {
+                patch[key] = JsonNull
+            }
+        }
         if (patch.isEmpty()) return null
         return JsonObject(patch)
     }
@@ -136,6 +145,11 @@ object WebPresetSerializer {
                 } else {
                     sub[k] = curV
                 }
+            }
+        }
+        for ((k, _) in prev) {
+            if (!curr.containsKey(k)) {
+                sub[k] = JsonNull
             }
         }
         return sub

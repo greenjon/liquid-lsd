@@ -48,11 +48,14 @@ object BroadcastEngine {
         .connectTimeout(Duration.ofSeconds(5))
         .build()
 
+    @Volatile
     private var activeWebSocket: WebSocket? = null
-    private var reconnectAttempt = 0
+    private val reconnectAttempt = java.util.concurrent.atomic.AtomicInteger(0)
     private val needsFullSync = AtomicBoolean(false)
     private var lastSentFull: JsonObject? = null
     private var lastTickTimeNanos: Long = 0L
+    @Volatile
+    private var sendFuture: java.util.concurrent.CompletableFuture<WebSocket>? = null
 
     /**
      * Toggles live broadcast on or off.
@@ -72,7 +75,7 @@ object BroadcastEngine {
         if (isLive) return
         logger.info { "Starting live broadcast to ${BroadcastSettings.serverUrl}..." }
         isLive = true
-        reconnectAttempt = 0
+        reconnectAttempt.set(0)
         lastError = null
         needsFullSync.set(true)
         connectAsync(mixer)
@@ -84,7 +87,7 @@ object BroadcastEngine {
     fun stopBroadcast() {
         logger.info { "Stopping live broadcast..." }
         isLive = false
-        reconnectAttempt = 0
+        reconnectAttempt.set(0)
         connectionState = ConnectionState.DISCONNECTED
         closeActiveWebSocket("Broadcaster stopped")
     }
@@ -112,9 +115,10 @@ object BroadcastEngine {
         } else if (!base.startsWith("ws://", ignoreCase = true) && !base.startsWith("wss://", ignoreCase = true)) {
             base = "ws://$base"
         }
-        val separator = if (base.contains("?")) "&" else "?"
-        val fullUrl = "$base${separator}role=broadcast&key=$token"
-        return URI.create(fullUrl)
+        val encodedToken = java.net.URLEncoder.encode(token, "UTF-8")
+        val uri = URI.create(base)
+        val query = if (uri.query == null) "role=broadcast&key=$encodedToken" else "${uri.query}&role=broadcast&key=$encodedToken"
+        return URI(uri.scheme, uri.userInfo, uri.host, uri.port, uri.path, query, uri.fragment)
     }
 
     private fun connectAsync(mixer: Mixer) {
@@ -136,7 +140,7 @@ object BroadcastEngine {
                             activeWebSocket = webSocket
                             connectionState = ConnectionState.CONNECTED
                             lastError = null
-                            reconnectAttempt = 0
+                            reconnectAttempt.set(0)
                             needsFullSync.set(true)
                             webSocket.request(1)
                         }
@@ -226,9 +230,9 @@ object BroadcastEngine {
 
     private fun scheduleReconnect(mixer: Mixer) {
         if (!isLive) return
-        reconnectAttempt++
-        val delaySec = (1L shl (reconnectAttempt.coerceAtMost(4))).coerceIn(2L, 16L)
-        logger.info { "Scheduling broadcast reconnect attempt #$reconnectAttempt in ${delaySec}s..." }
+        val currentAttempt = reconnectAttempt.incrementAndGet()
+        val delaySec = (1L shl (currentAttempt.coerceAtMost(4))).coerceIn(2L, 16L)
+        logger.info { "Scheduling broadcast reconnect attempt #$currentAttempt in ${delaySec}s..." }
         ioExecutor.schedule({
             if (isLive && connectionState != ConnectionState.CONNECTED) {
                 connectAsync(mixer)
@@ -250,11 +254,6 @@ object BroadcastEngine {
         }
     }
 
-    /**
-     * Called once per frame in Main.kt render loop on the main thread.
-     * Evaluates parameter changes, throttles transmissions to targetFps,
-     * and dispatches state_full or state_delta to the relay.
-     */
     fun tick(mixer: Mixer) {
         if (!isLive || connectionState != ConnectionState.CONNECTED) return
 
@@ -268,16 +267,20 @@ object BroadcastEngine {
         try {
             val currentFull = WebPresetSerializer.serializeFullPreset(mixer)
 
+            if (sendFuture != null && !sendFuture!!.isDone) {
+                return
+            }
+
             if (needsFullSync.getAndSet(false) || lastSentFull == null) {
-                lastSentFull = currentFull
                 val msg = WebPresetSerializer.buildStateFullMessage(mixer)
                 sendTextAsync(ws, msg)
+                lastSentFull = currentFull
             } else {
                 val patch = WebPresetSerializer.computeDeltaPatch(lastSentFull!!, currentFull)
                 if (patch != null) {
-                    lastSentFull = currentFull
                     val msg = WebPresetSerializer.buildStateDeltaMessage(patch)
                     sendTextAsync(ws, msg)
+                    lastSentFull = currentFull
                 }
             }
         } catch (e: Exception) {
@@ -286,12 +289,13 @@ object BroadcastEngine {
     }
 
     private fun sendTextAsync(ws: WebSocket, text: String) {
-        ioExecutor.execute {
-            try {
-                ws.sendText(text, true)
-            } catch (e: Exception) {
+        try {
+            sendFuture = ws.sendText(text, true).exceptionally { e ->
                 logger.warn(e) { "Failed to send WebSocket payload" }
+                ws
             }
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to initiate WebSocket payload send" }
         }
     }
 

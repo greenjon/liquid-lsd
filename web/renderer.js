@@ -454,8 +454,8 @@ async function init() {
         gl.uniform1f(locs.uHueOffset,   evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.33));
         gl.uniform1f(locs.uHueSweep,    evalP(deckData['Hue Sweep'] || deckData.hueSweep, 0.01));
         gl.uniform1f(locs.uTrailDecay,  evalP(deckData['Trail Decay'] || deckData.trailDecay, 0.85));
-        gl.uniform1f(locs.uIntegratedTime,  integratedTime);
-        gl.uniform1f(locs.uIntegratedShear, integratedShear);
+        gl.uniform1f(locs.uIntegratedTime,  deckData.integratedTime !== undefined ? deckData.integratedTime : integratedTime);
+        gl.uniform1f(locs.uIntegratedShear, deckData.integratedShear !== undefined ? deckData.integratedShear : integratedShear);
 
       } else if (srcType === 'attractor_feedback') {
         gl.activeTexture(gl.TEXTURE0);
@@ -664,10 +664,22 @@ async function init() {
     }
 
     // Dynamic spiral speed integration
-    const speedA = evalP(autopilotState.deckA?.speed, 0.5);
-    const shearA = evalP(autopilotState.deckA?.shear, 0.1);
-    integratedTime  += dt * speedA;
-    integratedShear += dt * speedA * shearA;
+    const speedA = evalP(autopilotState.deckA?.speed || autopilotState.deckA?.Speed, 0.5);
+    const shearA = evalP(autopilotState.deckA?.shear || autopilotState.deckA?.Shear, 0.1);
+
+    if (autopilotState.deckA?.integratedTime !== undefined) {
+      integratedTime = autopilotState.deckA.integratedTime;
+      delete autopilotState.deckA.integratedTime;
+    } else {
+      integratedTime += dt * speedA;
+    }
+
+    if (autopilotState.deckA?.integratedShear !== undefined) {
+      integratedShear = autopilotState.deckA.integratedShear;
+      delete autopilotState.deckA.integratedShear;
+    } else {
+      integratedShear += dt * speedA * shearA;
+    }
 
     gl.disable(gl.BLEND);
     gl.disable(gl.DEPTH_TEST);

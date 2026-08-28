@@ -357,3 +357,14 @@
 
 ### Added
 - **Icosahedron V3 CSG Source**: Introduced a new `icosa-v3` visual source that replaces the brute-force 60-planes approach with "Domain Folding + CSG Intersections". This eliminates CPU overhead and reduces GPU operations by 95%, guaranteeing a silky smooth 60fps even on integrated graphics like Intel Iris Xe. The new parameters include `Support H` which, alongside `Control X` and `Control Y`, can be mapped to MIDI knobs to dynamically slice the tips off stellations for dramatic, blunted cross-sections.
+
+## [Unreleased] - Broadcast Feature Hotfixes
+### Fixed
+* **Broadcast State Sync**: Fixed a critical `IllegalStateException` bug when sending fast WebGL payloads over slow networks, resolving permanent client desyncs.
+* **Broadcast Visual Parity**: Broadcast client now properly tracks real-time modulated parameters (`value`) instead of static knobs (`baseValue`), restoring live audio reactivity on the TV client.
+* **Broadcast Patch Consistency**: `computeDeltaPatch` now correctly issues JSON deletion instructions (`null`) for removed state properties when swapping Visual Source types.
+* **Broadcast Concurrency**: Eliminated data races on `activeWebSocket` and `reconnectAttempt` between the main render thread and I/O scheduler.
+* **Dynamic Spiral Phase Tracking**: Exposes `integratedTime` and `integratedShear` so the WebGL client maintains continuous rotation and shear without phase drift.
+* **WebSocket URL Builder**: The broadcast connection builder now correctly URL-encodes tokens and handles base URLs with fragment identifiers.
+* **Unknown Source Safe Fallback**: Unknown visual sources now properly serialize as `"unknown_source"` rather than misrepresenting themselves as `"mandala"`.
+* **WebGL TV Client Phase Sync Stutter**: Fixed a bug where the TV client would freeze `integratedTime` and `integratedShear` between network updates. It now correctly falls back to local dead-reckoning integration, resulting in buttery smooth 60fps animations that seamlessly track the broadcaster's phase.
