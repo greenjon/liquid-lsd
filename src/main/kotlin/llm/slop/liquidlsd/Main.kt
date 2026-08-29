@@ -214,14 +214,15 @@ fun main() {
         secondaryWindow = createSecondaryWindow(window)
     }
 
-    // Setup key callback chaining to allow "f", "b", CTRL-, CTRL=, and CTRL-R controls
+    // Setup key callback chaining to allow "f", "b", ESC, CTRL-, CTRL=, and CTRL-R controls
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
         val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_EQUAL)
         val isRecordHotKey = (mods and GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_R
+        val isEscapeFullscreen = key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
-        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed) || isFontSizeHotKey || isRecordHotKey
+        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed) || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen
 
         if (action == GLFW_PRESS) {
             if (isFontSizeHotKey) {
@@ -249,6 +250,9 @@ fun main() {
             } else if (key == GLFW_KEY_F && isShortcutAllowed) {
                 UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled
                 logger.info { "Clean mode toggled: ${UITheme.cleanModeEnabled}" }
+            } else if (key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled) {
+                UITheme.cleanModeEnabled = false
+                logger.info { "Clean mode exited via ESC: ${UITheme.cleanModeEnabled}" }
             } else if (key == GLFW_KEY_B && isShortcutAllowed) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
                 UITheme.saveSettings()

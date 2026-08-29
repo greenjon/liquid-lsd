@@ -29,14 +29,9 @@ object BrowserActionToolbar {
         // 1. [ A ]
         BrowserDeckButtons.push(BrowserDeckButtons.colorA(), alpha)
         if (ImGui.button("A##toolbar_deck_a", btnW, btnH) && selectedFile != null) {
-            val targetDeck = mixer.deckA
-            if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                session.presetManager.loadDeckPresetAsync(selectedFile, isDeckA = true)
-            } else {
-                UIManager.triggerDeckDragDrop(selectedFile, targetDeck, true, mixer)
-            }
+            BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 1)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load selected preset to Deck A.")
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load selected preset to Deck A (Hotkey: 1).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine()
@@ -44,14 +39,9 @@ object BrowserActionToolbar {
         // 2. [ B ]
         BrowserDeckButtons.push(BrowserDeckButtons.colorB(), alpha)
         if (ImGui.button("B##toolbar_deck_b", btnW, btnH) && selectedFile != null) {
-            val targetDeck = mixer.deckB
-            if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                session.presetManager.loadDeckPresetAsync(selectedFile, isDeckA = false, isDeckBG = false, isDeckPV = false)
-            } else {
-                UIManager.triggerDeckDragDrop(selectedFile, targetDeck, false, mixer)
-            }
+            BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 2)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load selected preset to Deck B.")
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load selected preset to Deck B (Hotkey: 2).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine()
@@ -59,14 +49,9 @@ object BrowserActionToolbar {
         // 3. [ BG ]
         BrowserDeckButtons.push(BrowserDeckButtons.colorBG(), alpha)
         if (ImGui.button("BG##toolbar_deck_bg", btnW, btnH) && selectedFile != null) {
-            val targetDeck = mixer.deckBG
-            if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                session.presetManager.loadDeckPresetAsync(selectedFile, isDeckBG = true)
-            } else {
-                UIManager.triggerDeckDragDrop(selectedFile, targetDeck, false, mixer)
-            }
+            BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 3)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load selected preset to Deck BG (Background).")
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Load selected preset to Deck BG / Background (Hotkey: 3).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine()
@@ -74,14 +59,9 @@ object BrowserActionToolbar {
         // 4. [ PV ]
         BrowserDeckButtons.push(BrowserDeckButtons.colorPV(), alpha)
         if (ImGui.button("PV##toolbar_deck_pv", btnW, btnH) && selectedFile != null) {
-            val targetDeck = mixer.deckPV
-            if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                session.presetManager.loadDeckPresetAsync(selectedFile, isDeckPV = true)
-            } else {
-                UIManager.triggerDeckDragDrop(selectedFile, targetDeck, false, mixer)
-            }
+            BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 4)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview selected preset on Deck PV.")
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Preview selected preset on Deck PV (Hotkey: 4).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine()

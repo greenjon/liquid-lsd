@@ -125,7 +125,11 @@ object PresetGridRenderer {
             }
             ImGui.endTooltip()
         }
+        if (ImGui.isItemClicked()) {
+            state.select(PresetCellId(paramKey, "final"), param)
+        }
         if (isLabelHovered && ImGui.isMouseReleased(2)) {
+            state.select(PresetCellId(paramKey, "final"), param)
             onPushUndo()
             param.reset()
         }
@@ -466,7 +470,7 @@ object PresetGridRenderer {
                 state.select(cellId, param)
             }
         }
-        if (isCrosshair && ImGui.isMouseClicked(2)) {
+        if (isCellHovered && ImGui.isMouseReleased(2)) {
             state.select(cellId, param)
             if (activeMods.isNotEmpty()) {
                 onPushUndo()

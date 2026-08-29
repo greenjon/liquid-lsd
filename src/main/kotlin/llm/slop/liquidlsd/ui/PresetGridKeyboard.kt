@@ -2,21 +2,43 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiKey
+import llm.slop.liquidlsd.cv.isAudioSource
+import llm.slop.liquidlsd.cv.isTriggerSource
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.models.ClipboardManager
 import llm.slop.liquidlsd.models.CellClipboardData
 import llm.slop.liquidlsd.models.RowClipboardData
+import llm.slop.liquidlsd.parameters.CvModulator
+import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.models.toDto
 
 object PresetGridKeyboard {
-    fun handleKeyboardShortcuts(state: PresetGridState, mixer: Mixer, onPushUndo: (PresetGridState, Mixer) -> Unit, onPerformUndo: (PresetGridState, Mixer) -> Unit) {
+    fun getModsForCell(param: ModulatableParameter, cvSourceId: String): List<CvModulator> {
+        return when (cvSourceId) {
+            "final", "base" -> emptyList()
+            "audio"   -> param.modulators.filter { isAudioSource(it.sourceId) }
+            "trigger" -> param.modulators.filter { isTriggerSource(it.sourceId) }
+            "midi"    -> param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+            else      -> param.modulators.filter { it.sourceId == cvSourceId }
+        }
+    }
+
+    fun handleKeyboardShortcuts(
+        state: PresetGridState,
+        mixer: Mixer,
+        onPushUndo: (PresetGridState, Mixer) -> Unit,
+        onPerformUndo: (PresetGridState, Mixer) -> Unit
+    ) {
         val io = ImGui.getIO()
+        if (io.wantTextInput) return
+
         val isCtrl = io.keyCtrl
         val isShift = io.keyShift
         val isCmd = io.keySuper
         val modActive = isCtrl || isCmd
         
+        // Undo: Ctrl+Z / Cmd+Z
         if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Z), false)) {
             if (isShift) {
                 // Currently no redo queue is tracked by PresetGridUndo.kt but we swallow the key
@@ -25,23 +47,28 @@ object PresetGridKeyboard {
             }
         }
         
+        // Copy: Ctrl+C / Cmd+C
         if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.C), false)) {
             val cell = state.selectedCell
             if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
                 if (p != null) {
-                    val modsToCopy = if (cell.cvSourceId == "base") emptyList() else p.modulators.filter { it.sourceId == cell.cvSourceId }
-                    ClipboardManager.cellClipboard = CellClipboardData(
-                        sourceParamKey = cell.paramKey,
-                        sourceCvId = cell.cvSourceId,
-                        modulators = modsToCopy.map { it.toDto() }
-                    )
+                    if (cell.cvSourceId == "final" || cell.cvSourceId == "base") {
+                        ClipboardManager.rowClipboard = RowClipboardData(
+                            sourceParamKey = cell.paramKey,
+                            parameter = p.toDto()
+                        )
+                    } else {
+                        val modsToCopy = getModsForCell(p, cell.cvSourceId)
+                        ClipboardManager.cellClipboard = CellClipboardData(
+                            sourceParamKey = cell.paramKey,
+                            sourceCvId = cell.cvSourceId,
+                            modulators = modsToCopy.map { it.toDto() }
+                        )
+                    }
                 }
             } else if (state.selectedParam != null) {
                 val p = state.selectedParam!!
-                // We need the param key for RowClipboardData. Let's find it.
-                // ParameterResolver.getAllParameterPaths(mixer) would be O(N), but selectedParamKey is not in state.
-                // We'll iterate.
                 val key = ParameterResolver.getAllParameterPaths(mixer).find { it.second === p }?.first
                 if (key != null) {
                     ClipboardManager.rowClipboard = RowClipboardData(
@@ -52,16 +79,28 @@ object PresetGridKeyboard {
             }
         }
         
+        // Paste: Ctrl+V / Cmd+V
         if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.V), false)) {
             val cellData = ClipboardManager.cellClipboard
             val rowData = ClipboardManager.rowClipboard
             
             val cell = state.selectedCell
-            if (cell != null && cellData != null) {
+            if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
                 if (p != null) {
-                    onPushUndo(state, mixer)
-                    ClipboardManager.applyCellClipboard(p, cell.cvSourceId, cellData)
+                    if (cell.cvSourceId == "final" || cell.cvSourceId == "base") {
+                        if (rowData != null) {
+                            onPushUndo(state, mixer)
+                            ClipboardManager.applyRowClipboard(p, rowData, mixer)
+                            if (cell.paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+                        }
+                    } else {
+                        if (cellData != null) {
+                            onPushUndo(state, mixer)
+                            ClipboardManager.applyCellClipboard(p, cell.cvSourceId, cellData)
+                            if (cell.paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+                        }
+                    }
                 }
             } else if (state.selectedParam != null && rowData != null) {
                 val p = state.selectedParam!!
@@ -70,6 +109,7 @@ object PresetGridKeyboard {
             }
         }
         
+        // Delete / Backspace: Reset parameter or clear cell modulators
         if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false) ||
             ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false)) {
             
@@ -77,25 +117,25 @@ object PresetGridKeyboard {
             if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
                 if (p != null) {
-                    if (cell.cvSourceId == "base") {
+                    if (cell.cvSourceId == "final" || cell.cvSourceId == "base") {
                         onPushUndo(state, mixer)
-                        p.value = p.defaultValue
+                        p.reset()
                     } else {
-                        val mod = p.modulators.find { it.sourceId == cell.cvSourceId }
-                        if (mod != null) {
+                        val modsToRemove = getModsForCell(p, cell.cvSourceId)
+                        if (modsToRemove.isNotEmpty()) {
                             onPushUndo(state, mixer)
-                            p.modulators.remove(mod)
+                            p.modulators.removeAll(modsToRemove)
                         }
                     }
                 }
             } else if (state.selectedParam != null) {
                 val p = state.selectedParam!!
                 onPushUndo(state, mixer)
-                p.value = p.defaultValue
-                p.modulators.clear()
+                p.reset()
             }
         }
     }
 }
+
 
 

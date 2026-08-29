@@ -30,6 +30,9 @@ object ClipboardManager {
                     else -> "trigger_onset"
                 }
             }
+            "midi" -> {
+                if (dto.sourceId.startsWith("midi_cc_")) dto.sourceId else "midi_cc_1"
+            }
             else -> destCvId
         }
 
@@ -63,9 +66,11 @@ object ClipboardManager {
         
         // Remove existing modulators for this CV ID and append the new ones
         if (destCvId == "audio") {
-            param.modulators.removeIf { it.sourceId in setOf("audio_amp", "audio_bass", "audio_mid", "audio_high") }
+            param.modulators.removeIf { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
         } else if (destCvId == "trigger") {
-            param.modulators.removeIf { it.sourceId in setOf("trigger_onset", "trigger_accent") }
+            param.modulators.removeIf { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
+        } else if (destCvId == "midi") {
+            param.modulators.removeIf { it.sourceId.startsWith("midi_cc_") }
         } else {
             param.modulators.removeIf { it.sourceId == destCvId }
         }
@@ -135,6 +140,7 @@ object ClipboardManager {
 
     fun applyRowClipboard(destParam: ModulatableParameter, data: RowClipboardData, mixer: Mixer) {
         val srcParam = findParameterByKey(mixer, data.sourceParamKey)
+            ?: try { llm.slop.liquidlsd.parameters.ParameterResolver.findParameterByPath(mixer, data.sourceParamKey) } catch (_: Throwable) { null }
         val srcMin = srcParam?.minClamp ?: 0f
         val srcMax = srcParam?.maxClamp ?: 1f
         

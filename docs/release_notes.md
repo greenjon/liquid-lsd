@@ -49,10 +49,22 @@
 - **Oscilloscope Active Modulator Filtering**: Fixed `CellConfigPanel.kt` oscilloscope calculation to only evaluate active, unbypassed modulators when active bands exist, preventing muted raw bands from dominating and flattening follower smoothing curves.
 - **Virtual Modulator Auto-Activation**: Automatically activates (`bypassed = false`) virtual audio bands when users adjust their presets or attack/decay/depth sliders.
 
+#### 8. Preset Grid Keyboard Shortcuts & Cell Middle-Click Mute Fixes
+- **Robust Modulator Extraction for Copy/Paste**: Fixed `PresetGridKeyboard.kt` copying logic to correctly resolve composite modulator source IDs for `AUDIO` (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), `TRIGGER` (`trigger_onset`, `trigger_accent`), `MIDI` (`midi_cc_*`), and `FINAL` / row selections instead of failing with empty lists.
+- **Cross-Column Routing on Paste**: Enhanced `ClipboardManager.kt` to safely remap pasted modulators across differing destination column types (`MIDI`, `AUDIO`, `TRIGGER`, `LFO`) while properly removing existing modulators of the target source family.
+- **Row-Level Copy/Paste with Clamp Scaling**: Selecting `FINAL` or clicking the parameter row label copies full parameter definitions with automated range scaling (`srcRange` $\to$ `destRange`) applied on paste.
+- **Reliable Middle-Click Cell Mute/Unmute**: Fixed CV cell middle-click detection to use `isCellHovered && ImGui.isMouseReleased(2)` consistent with MIDI, Final, and Row label cells, eliminating missed clicks caused by raw coordinate box checking. Middle-clicking an unmapped CV cell now immediately instantiates a default active modulator.
+- **Text Input Shielding**: Keyboard shortcuts in `PresetGridKeyboard.kt` safely yield when text input fields (`io.wantTextInput`) are active to prevent accidental edits while naming presets or typing parameter notes.
+
 #### 8. Desktop-to-Web File Synchronization & Drift Tracking Subsystem
 - **Sync Manifest (`web/sync_manifest.json`)**: Configured authoritative mapping of all desktop shaders (`src/main/resources/shaders/`, `library/sources/`) and algorithmic Kotlin math modules (`Icosahedron.kt`, `Evaluators.kt`, `WebPresetSerializer.kt`).
 - **Zero-Dependency CLI Tool (`scripts/sync_web.py`)**: Standalone tool providing `--check` (detailed color-coded drift report), `--apply` (automatic WebGL2 shader transpilation), and `--mark-synced` (manifest hash synchronization for manual review files).
 - **Gradle & CI Drift Verification (`checkWebSync`, `syncWeb`, `WebSyncTest.kt`)**: Added Gradle tasks and a fast JVM unit test to guarantee zero asset/algorithmic drift between Desktop and Web.
+
+#### 9. Keyboard Shortcuts Settings Page, 1-4 Deck Loading & ESC Fullscreen Exit
+- **Settings Keyboard Shortcuts Reference (`SettingsPanel.kt`)**: Added dedicated "Keyboard Shortcuts" category inside Settings presenting grouped reference tables for Global & Display controls, Preset Grid matrix operations, Cell Config number input scrubbing, Library & Browser management, and active Play Queue trigger bindings.
+- **Preset Quick-Loading Keys 1, 2, 3, 4 (`LibraryPanel.kt`, `BrowserDeckButtons.kt`)**: Pressing `1`, `2`, `3`, or `4` when a preset is selected in the Library or Playlist Editor loads the preset into Deck A, Deck B, Deck BG (Background), or Deck PV (Preview) respectively.
+- **ESC Key Fullscreen Exit (`Main.kt`)**: Added `Esc` key shortcut to exit Clean Mode / Fullscreen video view alongside `F`.
 
 ---
 

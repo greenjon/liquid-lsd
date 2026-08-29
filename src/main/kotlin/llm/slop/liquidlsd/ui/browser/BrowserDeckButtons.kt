@@ -3,6 +3,10 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
+import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.UIManager
+import java.io.File
 
 /**
  * Shared deck-button styling helpers used by [PresetListPanel] and [PlaylistEditorPanel].
@@ -51,5 +55,45 @@ internal object BrowserDeckButtons {
     fun pop() {
         ImGui.popStyleColor(5)
         ImGui.popStyleVar(2)
+    }
+
+    /**
+     * Load a preset file into Deck A (1), B (2), BG (3), or PV (4).
+     */
+    fun loadPresetToDeck(session: SessionContext, mixer: Mixer, file: File, deckIndex: Int) {
+        when (deckIndex) {
+            1 -> {
+                val targetDeck = mixer.deckA
+                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
+                } else {
+                    UIManager.triggerDeckDragDrop(file, targetDeck, true, mixer)
+                }
+            }
+            2 -> {
+                val targetDeck = mixer.deckB
+                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                } else {
+                    UIManager.triggerDeckDragDrop(file, targetDeck, false, mixer)
+                }
+            }
+            3 -> {
+                val targetDeck = mixer.deckBG
+                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckBG = true)
+                } else {
+                    UIManager.triggerDeckDragDrop(file, targetDeck, false, mixer)
+                }
+            }
+            4 -> {
+                val targetDeck = mixer.deckPV
+                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckPV = true)
+                } else {
+                    UIManager.triggerDeckDragDrop(file, targetDeck, false, mixer)
+                }
+            }
+        }
     }
 }

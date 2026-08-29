@@ -197,5 +197,18 @@ class UIThemeTest {
         // Reset to default
         UITheme.baseSize = 20f
     }
+
+    @Test
+    fun testSettingsCategories() {
+        val categories = SettingsPanel.Category.values()
+        assertTrue(categories.contains(SettingsPanel.Category.SHORTCUTS))
+        assertEquals("Keyboard Shortcuts", SettingsPanel.Category.SHORTCUTS.label)
+    }
+
+    @Test
+    fun testImGuiKeys() {
+        val fields = imgui.flag.ImGuiKey::class.java.fields
+        assertTrue(fields.isNotEmpty(), "ImGuiKey fields should not be empty")
+    }
 }
 

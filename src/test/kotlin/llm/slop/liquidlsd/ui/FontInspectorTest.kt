@@ -58,7 +58,10 @@ class FontInspectorTest {
             "WAVE_SQUARE" to 0xe167,
             "ALIGN_LEFT_LINE" to 0xe457,
             "ALIGN_CENTER_LINE" to 0xe5cf,
-            "ALIGN_RIGHT_LINE" to 0xe459
+            "ALIGN_RIGHT_LINE" to 0xe459,
+            "LOCK" to 0xe111,
+            "UNLOCK" to 0xe19f,
+            "LOCK_OPEN" to 0xe110
         )
 
         for ((name, codepoint) in codepointsToCheck) {

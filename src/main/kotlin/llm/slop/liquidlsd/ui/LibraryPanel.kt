@@ -5,6 +5,7 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
 import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
@@ -129,6 +130,21 @@ object LibraryPanel {
         ImGui.beginChild("LibraryBgQueue", lastColWidth, contentH, true)
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
+
+        // Number key shortcuts: 1 -> Deck A, 2 -> Deck B, 3 -> Deck BG, 4 -> Deck PV
+        val selectedFile = PresetListPanel.selectedAsset?.let { File(it.path) } ?: PlaylistEditorPanel.getSelectedPresetFile()
+        val io = ImGui.getIO()
+        if (selectedFile != null && selectedFile.exists() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+            if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_1, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_1, false)) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 1)
+            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_2, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_2, false)) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 2)
+            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_3, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_3, false)) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 3)
+            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_4, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_4, false)) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 4)
+            }
+        }
 
         // Popups
         if (BrowserPopupHandler.pendingOpenRenamePopup) {

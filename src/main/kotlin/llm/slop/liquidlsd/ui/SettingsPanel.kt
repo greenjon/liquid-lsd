@@ -6,6 +6,9 @@ import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImBoolean
 
+import imgui.flag.ImGuiTableFlags
+import imgui.flag.ImGuiTableColumnFlags
+
 /**
  * Modal settings overlay with a left vertical navigation bar.
  * Call [open] when the menu item is clicked.
@@ -39,6 +42,7 @@ object SettingsPanel {
         AUDIO_ENGINE("Audio Engine"),
         BROADCAST("Web Broadcast"),
         MIDI_CONTROL("MIDI & Controls"),
+        SHORTCUTS("Keyboard Shortcuts"),
         GENERAL("General")
     }
 
@@ -129,6 +133,7 @@ object SettingsPanel {
                 Category.AUDIO_ENGINE  -> drawAudioEngineSettings(session)
                 Category.BROADCAST     -> drawBroadcastSettings(session, mixer)
                 Category.MIDI_CONTROL  -> drawMidiControlSettings(session)
+                Category.SHORTCUTS     -> drawShortcutsSettings(session)
                 Category.GENERAL       -> drawGeneralSettings(session)
             }
         }
@@ -682,5 +687,147 @@ object SettingsPanel {
                 ImGui.setTooltip("Re-send full state snapshot to relay immediately.")
             }
         }
+    }
+
+    private data class ShortcutItem(val key: String, val action: String, val detail: String? = null)
+
+    private fun drawShortcutTable(
+        session: llm.slop.liquidlsd.SessionContext,
+        tableId: String,
+        shortcuts: List<ShortcutItem>
+    ) {
+        val keyColW = session.uiTheme.withFont(UITheme.FontLevel.CODE) {
+            shortcuts.maxOfOrNull { ImGui.calcTextSize(it.key).x } ?: 120f
+        } + 24f
+
+        val tableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp
+        if (ImGui.beginTable(tableId, 2, tableFlags)) {
+            ImGui.tableSetupColumn("Key / Input", ImGuiTableColumnFlags.WidthFixed, keyColW.coerceAtLeast(130f))
+            ImGui.tableSetupColumn("Action & Description", ImGuiTableColumnFlags.WidthStretch, 1f)
+            ImGui.tableHeadersRow()
+
+            shortcuts.forEach { item ->
+                ImGui.tableNextRow()
+                ImGui.tableNextColumn()
+                session.uiTheme.withFont(UITheme.FontLevel.CODE) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.35f, 0.85f, 1.0f, 1.0f)
+                    ImGui.text(item.key)
+                    ImGui.popStyleColor()
+                }
+                ImGui.tableNextColumn()
+                session.uiTheme.body(item.action)
+                if (item.detail != null) {
+                    session.uiTheme.captionColored(0.7f, 0.7f, 0.7f, 0.85f, item.detail)
+                }
+            }
+            ImGui.endTable()
+        }
+    }
+
+    private fun drawShortcutsSettings(session: llm.slop.liquidlsd.SessionContext) {
+        session.uiTheme.h2("Keyboard Shortcuts & Gestures")
+        ImGui.separator()
+        ImGui.spacing()
+
+        session.uiTheme.caption("Quick reference for keyboard shortcuts and interactive gestures grouped by panel:")
+        ImGui.spacing()
+
+        // 1. Global & Display
+        session.uiTheme.h3("Global & Display Controls")
+        ImGui.spacing()
+        drawShortcutTable(
+            session,
+            "##global_shortcuts",
+            listOf(
+                ShortcutItem("F", "Toggle Fullscreen / Clean Mode", "Hides all UI chrome to display full master video output."),
+                ShortcutItem("Esc", "Exit Fullscreen / Clean Mode", "Restores the user interface when in Fullscreen Clean Mode."),
+                ShortcutItem("B", "Toggle Background Video", "Renders master visuals behind the semi-transparent interface."),
+                ShortcutItem("Ctrl + - / Cmd + -", "Decrease GUI Scale", "Reduces interface font size and widget padding by 5%."),
+                ShortcutItem("Ctrl + = / Cmd + =", "Increase GUI Scale", "Increases interface font size and widget padding by 5%."),
+                ShortcutItem("Ctrl + R / Cmd + R", "Start / Stop Recording", "Toggles live master output recording to MP4 video.")
+            )
+        )
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // 2. Preset Grid & Modulation Matrix
+        session.uiTheme.h3("Preset Grid & Modulation Matrix")
+        ImGui.spacing()
+        drawShortcutTable(
+            session,
+            "##grid_shortcuts",
+            listOf(
+                ShortcutItem("Ctrl + Z / Cmd + Z", "Undo Parameter Action", "Reverts last parameter tweak, randomize, paste, or reset."),
+                ShortcutItem("Ctrl + C / Cmd + C", "Copy Cell or Row", "Copies modulation routing (or row settings if Base/Final cell is selected)."),
+                ShortcutItem("Ctrl + V / Cmd + V", "Paste Cell or Row", "Applies copied modulators or parameter settings with an undo point."),
+                ShortcutItem("Delete / Backspace", "Clear Cell / Reset Parameter", "Clears modulators on active cell, or resets parameter to default."),
+                ShortcutItem("Middle Click", "Mute / Bypass Modulation Cell", "Toggles modulation source on/off without discarding dial parameters.")
+            )
+        )
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // 3. Cell Config & Number Inputs
+        session.uiTheme.h3("Cell Config & Number Inputs")
+        ImGui.spacing()
+        drawShortcutTable(
+            session,
+            "##cellconfig_shortcuts",
+            listOf(
+                ShortcutItem("Up / Down Arrow", "Step Numeric Value (Focused Input)", "Increments/decrements focused number box: \u00B10.001 (fine), Shift: \u00B10.01, Ctrl+Shift: \u00B10.1."),
+                ShortcutItem("Mouse Wheel (Hover)", "Adjust Value / Range Bounds", "Scrolls value or hovered min/max range handle: \u00B10.001 (fine), Shift: \u00B10.01, Ctrl+Shift: \u00B10.1."),
+                ShortcutItem("Middle Click", "Reset to Default Value", "Resets focused input field or range slider track to default value."),
+                ShortcutItem("Left Click (Dice)", "Toggle Random Range", "Enables or disables randomized modulation boundaries."),
+                ShortcutItem("Right Click (Dice)", "Randomize Now", "Immediately samples a random value within the active parameter range.")
+            )
+        )
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // 4. Library & Asset Browser
+        session.uiTheme.h3("Library & Asset Browser")
+        ImGui.spacing()
+        drawShortcutTable(
+            session,
+            "##library_shortcuts",
+            listOf(
+                ShortcutItem("1", "Load to Deck A", "Loads selected preset into Deck A."),
+                ShortcutItem("2", "Load to Deck B", "Loads selected preset into Deck B."),
+                ShortcutItem("3", "Load to Deck BG", "Loads selected preset into Background Deck (BG)."),
+                ShortcutItem("4", "Preview on Deck PV", "Loads selected preset into Preview Deck (PV)."),
+                ShortcutItem("Up / Down Arrow", "Navigate List Items", "Moves focus selection across presets, playlists, and queue items."),
+                ShortcutItem("Delete / Backspace", "Delete Preset (Library)", "Deletes selected user preset with permanent deletion confirmation."),
+                ShortcutItem("Delete / Backspace", "Remove from Playlist", "Removes selected preset entry from active playlist editor."),
+                ShortcutItem("Delete / Backspace", "Remove from Play Queue", "Removes selected item from current or background play queue.")
+            )
+        )
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // 5. Play Queue Navigation Triggers
+        session.uiTheme.h3("Play Queue Triggers")
+        ImGui.spacing()
+        val triggerMode = session.uiTheme.queueKeyTrigger.name
+        val triggerDesc = when (session.uiTheme.queueKeyTrigger) {
+            UITheme.QueueKeyTrigger.ARROWS          -> "Left Arrow (Previous) / Right Arrow (Next)"
+            UITheme.QueueKeyTrigger.PAGE_UP_DOWN    -> "Page Up (Previous) / Page Down (Next)"
+            UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> "Backspace (Previous) / Spacebar (Next)"
+            UITheme.QueueKeyTrigger.NONE            -> "Disabled (No keyboard trigger active)"
+        }
+        drawShortcutTable(
+            session,
+            "##queue_shortcuts",
+            listOf(
+                ShortcutItem("Active Key Trigger ($triggerMode)", triggerDesc, "Advances or steps back through active play queue (Configurable in MIDI & Controls).")
+            )
+        )
     }
 }

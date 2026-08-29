@@ -96,7 +96,12 @@ Liquid LSD includes mouse and keyboard power shortcuts designed for live perform
 - **Middle-Click Reset**: Middle-click any slider track or `FINAL` knob cell to instantly reset parameter to factory default.
 
 ### Preset Grid Shortcuts
-- **Middle-Click Cell Mute**: Middle-click any active/muted grid cell to toggle its `Muted` (preview) state on/off immediately. Muted cells display **35% arc opacity with a sans-serif 'M'** centered in the knob. While muted, modulation is blocked from `Final`, but the Oscilloscope in `CellConfig` stays 100% live for real-time waveform previewing.
+- **Middle-Click Cell Mute**: Middle-click any active/muted grid cell to toggle its `Muted` (preview) state on/off immediately. Muted cells display **35% arc opacity with a sans-serif 'M'** centered in the knob. While muted, modulation is blocked from `Final`, but the Oscilloscope in `CellConfig` stays 100% live for real-time waveform previewing. Middle-clicking an unmapped CV cell automatically assigns a default modulator.
+- **Middle-Click Parameter Reset**: Middle-click the row label or `FINAL` cell to reset the parameter to default.
+- **Copy / Paste (`Ctrl+C` / `Ctrl+V` or `Cmd+C` / `Cmd+V`)**:
+  - Selecting a CV cell (LFO, Audio, Trigger, MIDI) and pressing `Ctrl+C` copies that cell's active modulators. Pasting onto another cell (`Ctrl+V`) routes the modulator to the new source type with automatic envelope and frequency mapping.
+  - Selecting the row label or `FINAL` cell and pressing `Ctrl+C` copies the full parameter row (base values, bounds, randomization flags, and all modulators). Pasting onto another parameter (`Ctrl+V`) scales depths and DC offsets to the destination clamp range.
+- **Clear / Reset (`Delete` or `Backspace`)**: Clears the modulators on the selected CV cell, or resets the parameter to default if the `FINAL` cell or row is selected.
 - **Master Oscilloscope Mute Toggle**: Click the `[ LIVE ]` / `[ MUTED ]` toggle button in the top-right corner of the Cell Config Oscilloscope header to toggle cell mute status.
 - **Right-Click Row Context Menu**:
   - Copy / Paste parameter settings.
@@ -104,3 +109,4 @@ Liquid LSD includes mouse and keyboard power shortcuts designed for live perform
   - **Mute / Unmute Modulator(s)**: Toggle cell mute state.
   - **📝 Add/Edit Parameter Note…**: Opens `NoteEditorModal` to attach a custom user note to this parameter.
 - **`Ctrl+Z` / `Ctrl+Y`**: Global Undo / Redo across all modulation edits (up to 30 steps).
+- **Settings Summary**: View **Settings -> Keyboard Shortcuts** for a complete, grouped list of all shortcuts across the application.

@@ -162,5 +162,7 @@ When the internal render aspect ratio differs from the connected display or seco
 
 - **Background Video (`B`)**: Toggles rendering the master video output directly behind the semi-transparent ImGui interface. Can also be toggled via **Settings -> Video & Display -> Background Video**.
 - **Clean Mode (`F`)**: Toggles clean fullscreen view, hiding the entire user interface to view pure master video output without distractions.
+- **Exit Fullscreen (`Esc`)**: Exits clean fullscreen view immediately and returns to standard UI layout.
 - **Global Font Scaling (`Ctrl-` / `Ctrl=`)**: Zooms and scales the entire interface typography and widget layouts dynamically.
+- **Keyboard Shortcuts Reference**: Open **Settings -> Keyboard Shortcuts** for a comprehensive panel-by-panel reference of all application shortcuts and mouse gestures.
 
