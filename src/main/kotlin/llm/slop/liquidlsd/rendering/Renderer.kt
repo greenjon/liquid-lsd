@@ -470,6 +470,7 @@ class Renderer {
         mixerShader.setUniform("uMode", mixer.mode.value.toInt())
         mixerShader.setUniform("uBalance", (mixer.crossfade.value + 1.0f) / 2.0f)
         mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
+        mixerShader.setUniform("uBgAlpha", 1.0f)
         mixerShader.setUniform("uBloom", mixer.bloom.value)
 
         // Blit mixed output

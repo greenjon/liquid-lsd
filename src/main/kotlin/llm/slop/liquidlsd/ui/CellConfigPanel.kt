@@ -190,16 +190,18 @@ object CellConfigPanel {
             modsToDraw = modsToDraw.sortedBy { TRIGGER_BANDS.indexOf(it.sourceId) }
         }
         val isBipolar = param.minClamp < 0f
-        // Use the same formula as the engine so the O-scope displays what the parameter actually receives.
-        // If all modulators in this section are bypassed or absent, combinedVal is 0.0f.
-        val combinedVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(activeMods, isBipolar, includeBypassed = true)
+        val hasAnyUnbypassed = activeMods.any { !it.bypassed }
+        // If there are unbypassed modulators, only evaluate active ones.
+        // If all are bypassed, evaluate with includeBypassed = true so the preview oscilloscope works in muted state.
+        val targetMods = if (hasAnyUnbypassed) activeMods.filter { !it.bypassed } else activeMods
+        val combinedVal = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(targetMods, isBipolar, includeBypassed = true)
         activeHistory?.add(combinedVal)
 
         if (cvId == "audio") {
             if (ghostHistory == null) ghostHistory = CvHistoryBuffer(600)
             var rawResult = 0f
             var first = true
-            for (mod in activeMods) {
+            for (mod in targetMods) {
                 val rawCv = llm.slop.liquidlsd.cv.CVRegistry.get(mod.sourceId)
                 val modAmount = rawCv * mod.depth + mod.dcOffset
                 if (first) {
@@ -357,7 +359,9 @@ object CellConfigPanel {
         if (idx >= 0) {
             param.modulators[idx] = newMod
         } else {
-            param.modulators.add(newMod)
+            // Newly added from virtual placeholder: activate immediately so it routes to parameter
+            val modToAdd = if (newMod.bypassed && wasBypassed) newMod.copy(bypassed = false) else newMod
+            param.modulators.add(modToAdd)
         }
         if (wasBypassed && !newMod.bypassed && state.selectedCell?.paramKey == "Mixer/crossfade") {
             mixer?.onCrossfadeCvUnmuted()

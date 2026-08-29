@@ -8,6 +8,7 @@ uniform sampler2D uTexBG;
 uniform int uMode; // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
 uniform float uBalance; // 0.0 = Tex1 (Deck A), 1.0 = Tex2 (Deck B)
 uniform float uAlpha; // Master output alpha / gain
+uniform float uBgAlpha; // Background layer alpha multiplier
 uniform float uBloom; // 0.0 = no bloom, 1.0 = full bloom
 
 vec4 sampleBlended(vec2 uv) {
@@ -42,7 +43,7 @@ vec4 sampleBlended(vec2 uv) {
 }
 
 vec4 sampleComposite(vec2 uv) {
-    vec4 bg = texture(uTexBG, uv);
+    vec4 bg = texture(uTexBG, uv) * uBgAlpha;
     vec4 fg = sampleBlended(uv);
     vec3 rgb = fg.rgb + bg.rgb * (1.0 - fg.a);
     float a = clamp(fg.a + bg.a * (1.0 - fg.a), 0.0, 1.0);

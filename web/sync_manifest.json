@@ -1,0 +1,114 @@
+{
+  "$schema": "./sync_manifest.schema.json",
+  "version": "1.0.0",
+  "description": "Tracks desktop-to-web synchronization, auto-transpiled shaders, and manual review parity hashes.",
+  "shaders": [
+    {
+      "desktop": "src/main/resources/shaders/blit.vert",
+      "web": "web/shaders/blit.vert",
+      "mode": "auto_shader",
+      "description": "Blit fullscreen quad vertex shader"
+    },
+    {
+      "desktop": "src/main/resources/shaders/blit.frag",
+      "web": "web/shaders/blit.frag",
+      "mode": "auto_shader",
+      "description": "Blit texture sampler fragment shader"
+    },
+    {
+      "desktop": "src/main/resources/shaders/feedback.frag",
+      "web": "web/shaders/feedback.frag",
+      "mode": "auto_shader",
+      "description": "Multi-pass ping-pong feedback loop shader"
+    },
+    {
+      "desktop": "src/main/resources/shaders/mixer.frag",
+      "web": "web/shaders/mixer.frag",
+      "mode": "auto_shader",
+      "description": "Master deck mixer & crossfader compositing shader"
+    },
+    {
+      "desktop": "library/sources/attractor_feedback/shader.frag",
+      "web": "web/shaders/attractor_feedback.frag",
+      "mode": "auto_shader",
+      "description": "Clifford / Lorenz strange attractor feedback visualizer"
+    },
+    {
+      "desktop": "library/sources/chladni/shader.frag",
+      "web": "web/shaders/chladni.frag",
+      "mode": "auto_shader",
+      "description": "Acoustic Chladni resonance plate simulation"
+    },
+    {
+      "desktop": "library/sources/dynamic_spiral/shader.frag",
+      "web": "web/shaders/dynamic_spiral.frag",
+      "mode": "auto_shader",
+      "description": "Dynamic logarithmic spiral visualizer"
+    },
+    {
+      "desktop": "library/sources/gyroid/shader.frag",
+      "web": "web/shaders/gyroid.frag",
+      "mode": "auto_shader",
+      "description": "Triply periodic minimal surface gyroid raymarcher"
+    },
+    {
+      "desktop": "library/sources/hyper_slice/shader.frag",
+      "web": "web/shaders/hyper_slice.frag",
+      "mode": "auto_shader",
+      "description": "4D hyper-slice polytope projection visualizer"
+    },
+    {
+      "desktop": "library/sources/icosa-v3/shader.frag",
+      "web": "web/shaders/icosa_v3.frag",
+      "mode": "auto_shader",
+      "description": "Icosahedral symmetry V3 visualizer"
+    },
+    {
+      "desktop": "library/sources/icosa_dodeca/shader.frag",
+      "web": "web/shaders/icosa_dodeca.frag",
+      "mode": "auto_shader",
+      "description": "Icosidodecahedral dual polyhedron visualizer"
+    },
+    {
+      "desktop": "library/sources/icosahedron/shader.frag",
+      "web": "web/shaders/icosahedron.frag",
+      "mode": "auto_shader",
+      "description": "Du Val stellation and 60-plane icosahedron raymarcher"
+    },
+    {
+      "desktop": "library/sources/mandala/shader.frag",
+      "web": "web/shaders/mandala.frag",
+      "mode": "auto_shader",
+      "description": "Multi-ribbon mandala geometry fragment shader"
+    },
+    {
+      "desktop": "library/sources/mandala/shader.vert",
+      "web": "web/shaders/mandala.vert",
+      "mode": "auto_shader",
+      "description": "Mandala Fourier series ribbon vertex displacement shader"
+    }
+  ],
+  "monitored_sources": [
+    {
+      "desktop": "src/main/kotlin/llm/slop/liquidlsd/rendering/Icosahedron.kt",
+      "web": "web/icosahedron_math.js",
+      "mode": "manual_review",
+      "description": "Icosahedral projection and Du Val 60-orbit vectors parity",
+      "last_synced_hash": "31900896cb2032cf56273f5b87921a1c682f94955f1858622b261e34eb41aaee"
+    },
+    {
+      "desktop": "src/main/kotlin/llm/slop/liquidlsd/cv/Evaluators.kt",
+      "web": "web/evaluator.js",
+      "mode": "manual_review",
+      "description": "Modulation signal evaluators and math function parity",
+      "last_synced_hash": "7e91b7627df5f6e5afbe93a9cffa25f6cbc1b0e7597b5a9ef957ef74d065463d"
+    },
+    {
+      "desktop": "src/main/kotlin/llm/slop/liquidlsd/broadcast/WebPresetSerializer.kt",
+      "web": "web/renderer.js",
+      "mode": "manual_review",
+      "description": "JSON preset serialization schema & dead reckoning state sync",
+      "last_synced_hash": "4188fb540e80f8750ba5de522a4c8cd569ed8af2492f09e45b09a3eac1e8380e"
+    }
+  ]
+}

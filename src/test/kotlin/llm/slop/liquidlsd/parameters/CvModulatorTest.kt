@@ -392,5 +392,35 @@ class CvModulatorTest {
         assertTrue(decoded.randomizeAttackMs)
         assertTrue(decoded.randomizeDecayMs)
     }
+
+    @Test
+    fun testAudioModulatorUnipolarScaling() {
+        // Mock peak audio input pushed to CVRegistry
+        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
+        
+        val mod = CvModulator(sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW)
+        val param = ModulatableParameter(baseValue = 0.0f, minClamp = 0.0f, maxClamp = 1.0f)
+        param.modulators.add(mod)
+
+        // Peak audio at depth 0.5 on a 0..1 parameter should yield 0.5, not 1.0 or 2.0
+        val value = param.evaluate()
+        assertEquals(0.5f, value, 0.001f)
+    }
+
+    @Test
+    fun testActiveModulatorsFilterBypassedBands() {
+        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
+        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_bass", 1.0f)
+
+        val activeAmp = CvModulator(sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = false)
+        val mutedBass = CvModulator(sourceId = "audio_bass", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = true)
+
+        val mods = listOf(activeAmp, mutedBass)
+        val hasAnyUnbypassed = mods.any { !it.bypassed }
+        val targetMods = if (hasAnyUnbypassed) mods.filter { !it.bypassed } else mods
+
+        val combined = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(targetMods, isBipolar = false, includeBypassed = true)
+        assertEquals(0.5f, combined, 0.001f, "Muted bass band should not bleed into active amp modulation sum")
+    }
 }
 

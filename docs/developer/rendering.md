@@ -193,3 +193,20 @@ Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate 
 - **Frame-Accurate Stepping**: Iterates frame-by-frame on Thread 0 while yielding to GLFW events.
 - **Multi-Pass Motion Blur (`AccumulationBuffer`)**: Supports up to 8x temporal super-sampling, blending sub-frame passes to generate cinematic motion blur.
 - **Automatic Encoder Prioritization & Fallback**: Automatically probes and prioritizes hardware encoders (`h264_nvenc`, `h264_qsv`) with transparent fallback to software encoders (`libx264`, `libx265`, `prores_ks`).
+
+---
+
+## Desktop-to-Web Shader & Asset Synchronization
+
+To ensure continuous parity between desktop visual sources and the browser-based WebGL2 visualizer (`web/`), an automated synchronization subsystem tracks file changes and translates shader dialects.
+
+### 1. Dialect Conversion
+- **GLSL 3.30 Core $\rightarrow$ WebGL2 (GLSL ES 3.00)**:
+  - Desktop shaders in `src/main/resources/shaders/` and `library/sources/*/shader.frag` use `#version 330 core`.
+  - The synchronization tool transpiles `#version 330 core` into `#version 300 es\nprecision highp float;` for `web/shaders/`.
+- **Sole Source of Truth**: Shaders and visual sources should always be authored in desktop directories; running `./scripts/sync_web.py --apply` or `./gradlew syncWeb` mechanically updates the web client.
+
+### 2. Algorithmic Drift Tracking
+- For procedural geometry and math modules (`Icosahedron.kt` $\rightarrow$ `web/icosahedron_math.js`, `Evaluators.kt` $\rightarrow$ `web/evaluator.js`), `web/sync_manifest.json` tracks SHA-256 hashes.
+- Whenever a desktop Kotlin algorithm is modified, running `./scripts/sync_web.py --check` or `./gradlew checkWebSync` alerts the developer to review and update the JavaScript equivalent. Once verified, `./scripts/sync_web.py --mark-synced <target>` records the updated hash.
+

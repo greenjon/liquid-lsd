@@ -44,6 +44,16 @@
 - **WebSocket URL & Encoding Robustness**: Correctly URL-encodes tokens and handles base URLs with fragment identifiers.
 - **Safe Fallback for Unknown Sources**: Safely maps unknown visual sources to `"unknown_source"`.
 
+#### 7. Audio CV Normalization & Envelope Follower Isolation Fixes
+- **Unipolar Unit Scaling (`[0.0, 1.0]`)**: Normalized audio band RMS energy (`amp`, `bass`, `mid`, `high`) and onset/accent triggers in `AudioEngine.kt` to the standard $[0.0, 1.0]$ range, preventing parameter clipping at moderate depth values ($0.5$).
+- **Oscilloscope Active Modulator Filtering**: Fixed `CellConfigPanel.kt` oscilloscope calculation to only evaluate active, unbypassed modulators when active bands exist, preventing muted raw bands from dominating and flattening follower smoothing curves.
+- **Virtual Modulator Auto-Activation**: Automatically activates (`bypassed = false`) virtual audio bands when users adjust their presets or attack/decay/depth sliders.
+
+#### 8. Desktop-to-Web File Synchronization & Drift Tracking Subsystem
+- **Sync Manifest (`web/sync_manifest.json`)**: Configured authoritative mapping of all desktop shaders (`src/main/resources/shaders/`, `library/sources/`) and algorithmic Kotlin math modules (`Icosahedron.kt`, `Evaluators.kt`, `WebPresetSerializer.kt`).
+- **Zero-Dependency CLI Tool (`scripts/sync_web.py`)**: Standalone tool providing `--check` (detailed color-coded drift report), `--apply` (automatic WebGL2 shader transpilation), and `--mark-synced` (manifest hash synchronization for manual review files).
+- **Gradle & CI Drift Verification (`checkWebSync`, `syncWeb`, `WebSyncTest.kt`)**: Added Gradle tasks and a fast JVM unit test to guarantee zero asset/algorithmic drift between Desktop and Web.
+
 ---
 
 ### 📜 Full Commit History (v1.0.0-beta.29 → v1.0.0-beta.30)

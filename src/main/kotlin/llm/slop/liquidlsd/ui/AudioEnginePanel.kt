@@ -396,10 +396,12 @@ object AudioEnginePanel {
                 val history = session.cvRegistry.getHistory(id)
                 if (history != null) {
                     history.copyTo(cvSamples)
+                    val minV = if (id == "beatSine") -1.0f else 0.0f
+                    val maxV = 1.0f
                     OscilloscopeDrawer.drawBufferOscilloscope(session, title,
                         cvSamples,
-                        0.0f,
-                        2.0f,
+                        minV,
+                        maxV,
                         color,
                         60f
                     )

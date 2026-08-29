@@ -1,3 +1,4 @@
+import java.io.File
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -394,4 +395,17 @@ val packageZips = tasks.register("packageZips") {
     description = "Assembles all platform-specific distribution ZIP archives."
     dependsOn(zipWindows, zipLinux, zipLinuxArm, zipMacArm, zipMacIntel)
 }
+
+val checkWebSync = tasks.register<Exec>("checkWebSync") {
+    group = "verification"
+    description = "Checks synchronization state and detects drift between Desktop and Web application assets."
+    commandLine("python3", "scripts/sync_web.py", "--check")
+}
+
+val syncWeb = tasks.register<Exec>("syncWeb") {
+    group = "build"
+    description = "Synchronizes and transpiles Desktop shaders and assets into the WebGL2 web application (web/)."
+    commandLine("python3", "scripts/sync_web.py", "--apply")
+}
+
 

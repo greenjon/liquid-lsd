@@ -529,8 +529,8 @@ object AudioEngine {
             accentLevel *= 0.88f
         }
 
-        // Normalized onset for CV output (0–2 range)
-        val onsetNormalized = (onsetStrength / 0.05f).coerceIn(0f, 2f)
+        // Normalized onset for CV output (0–1 range)
+        val onsetNormalized = (onsetStrength / 0.1f).coerceIn(0f, 1f)
 
         // 6. Silence gate
         val currentRmsDb = 20f * log10(amp + 1e-6f)
@@ -568,14 +568,14 @@ object AudioEngine {
         // 8. Manual BPM lock override
         estimatedBpm = if (isBpmLocked) manualBpm else autoBpm
 
-        // 9. Publish to CV Registry
+        // 9. Publish to CV Registry (normalized to unipolar 0.0..1.0 unit range)
         CVRegistry.updateBeatAnchor(totalBeats, estimatedBpm, currentTime)
-        CVRegistry.updatePushedValue("amp",    (amp  / 0.1f).coerceIn(0f, 2f))
-        CVRegistry.updatePushedValue("bass",   (bass / 0.1f).coerceIn(0f, 2f))
-        CVRegistry.updatePushedValue("mid",    (mid  / 0.1f).coerceIn(0f, 2f))
-        CVRegistry.updatePushedValue("high",   (high / 0.1f).coerceIn(0f, 2f))
+        CVRegistry.updatePushedValue("amp",    (amp  / 0.25f).coerceIn(0f, 1f))
+        CVRegistry.updatePushedValue("bass",   (bass / 0.25f).coerceIn(0f, 1f))
+        CVRegistry.updatePushedValue("mid",    (mid  / 0.25f).coerceIn(0f, 1f))
+        CVRegistry.updatePushedValue("high",   (high / 0.25f).coerceIn(0f, 1f))
         CVRegistry.updatePushedValue("onset",  onsetNormalized)
-        CVRegistry.updatePushedValue("accent", accentLevel)
+        CVRegistry.updatePushedValue("accent", accentLevel.coerceIn(0f, 1f))
 
         val callbackNanos = System.nanoTime() - currentTime
         callbackLatencyNanos.set(callbackNanos)

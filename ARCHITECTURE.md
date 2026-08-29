@@ -217,18 +217,25 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
   6. `masterFBO`: Blends Deck A + Deck B over BG with selectable blend modes (`mixer.frag`).
   7. `crt_post.frag` -> Screen: Final CRT post-processing with barrel glass distortion, chromatic aberration, scanlines, RGB phosphor shadow mask triad, corner vignette, animated static noise when powered off, and raster warmup sequence. Passes 1–4 are bypassed when powered off to minimize GPU load.
 
-## Web Broadcast Subsystem & WebSocket Relay
+## Desktop-to-Web Sync & Drift Tracking Subsystem
 
-- **Broadcaster (`BroadcastEngine.kt`, `WebPresetSerializer.kt`)**: Runs in the desktop app on a dedicated daemon background thread (`BroadcastEngine-IO`), completely decoupled from OpenGL rendering and JACK audio callback threads. Translates active `Deck` and `Mixer` states into the WebGL2 TV JSON schema.
-- **Throttled Delta Streaming**: Emits full state snapshots (`state_full`) upon connection and preset/queue changes. Emits lightweight diff packets (`state_delta`) throttled at configurable rate (default 25 Hz) during live parameter/crossfader adjustments.
-- **Relay Server (`server/server.js`)**: Lightweight Node.js WebSocket relay that authenticates the desktop broadcaster (`role=broadcast&key=...`), caches the latest `state_full` message for new viewers, and fans out updates to all active Web TV clients with near-zero latency.
-- **24/7 Autopilot Fallback (`web/autopilot.js`)**: The web client automatically cycles through curated presets via fade-through-black when offline, and smoothly crossfades to live broadcast state when the VJ connects.
+- **Sync Manifest (`web/sync_manifest.json`)**: Authoritative mapping of desktop assets, GLSL 3.3 Core shaders (`src/main/resources/shaders/`, `library/sources/`), and algorithmic math files (`Icosahedron.kt`, `Evaluators.kt`, `WebPresetSerializer.kt`) to their WebGL2 / ES module equivalents.
+- **Sync Engine (`scripts/sync_web.py`)**: Zero-dependency Python CLI tool providing:
+  - `--check`: Compares actual web files vs transpiled desktop sources and SHA-256 hashes, producing a formatted status report. Returns exit code 1 if drift exists.
+  - `--apply`: Automatically transpiles desktop `#version 330 core` shaders into WebGL2 `#version 300 es` (`precision highp float;`) and writes them directly to `web/shaders/`.
+  - `--mark-synced <target>`: Updates recorded hashes for verified manual Kotlin-to-JS ports.
+- **CI / Build Integration (`WebSyncTest.kt`, Gradle Tasks)**:
+  - `./gradlew checkWebSync`: Gradle `Exec` task that validates zero drift across all tracked assets.
+  - `./gradlew syncWeb`: Gradle `Exec` task that applies automated shader translation.
+  - `WebSyncTest.kt`: JVM unit test executed on every `./gradlew test` run to guard against accidental drift.
 
 ## Build & Run
 ```bash
 ./gradlew run              # launch (JACK/PipeWire recommended for Linux, Java Sound fallback runs otherwise)
 ./gradlew compileKotlin    # type-check only, no run
-./gradlew test             # run test suite
+./gradlew test             # run test suite (includes WebSyncTest)
+./gradlew checkWebSync     # verify desktop ↔ web asset synchronization
+./gradlew syncWeb          # auto-transpile desktop shaders into web/
 ./gradlew packageThumbDrive  # bundle fat JAR + JREs for all 5 platforms
 ```
 Custom visual shaders are loaded from `library/sources/`.

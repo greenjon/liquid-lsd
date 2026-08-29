@@ -312,4 +312,3 @@ void main() {
     // Final color with global alpha
     fragColor = vec4(accumColor.rgb, accumColor.a * uAlpha);
 }
-
