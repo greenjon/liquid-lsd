@@ -97,6 +97,11 @@ object BgQueueActionsPanel {
                 LibraryPanel.selectQueueBg(index, session, mixer)
             }
 
+            val io = ImGui.getIO()
+            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+                LibraryPanel.selectQueueBg(index, session, mixer)
+            }
+
             // Double-click to trigger dip-to-black play
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
                 BgQueueManager.playIndex(index, mixer, withDipToBlack = true)
@@ -172,25 +177,12 @@ object BgQueueActionsPanel {
             }
         }
 
-        // Keyboard navigation (Up / Down arrows navigate and audition presets)
+        // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
         val io = ImGui.getIO()
-        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper && BgQueueManager.queue.isNotEmpty()) {
-            if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.QUEUE_BG && selectedIndex in BgQueueManager.queue.indices) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow), true)) {
-                    val newIndex = (selectedIndex - 1).coerceAtLeast(0)
-                    LibraryPanel.selectQueueBg(newIndex, session, mixer)
-                } else if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.DownArrow), true)) {
-                    val newIndex = (selectedIndex + 1).coerceAtMost(BgQueueManager.queue.lastIndex)
-                    LibraryPanel.selectQueueBg(newIndex, session, mixer)
-                }
-            }
-
-            // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
-            if (selectedIndex in BgQueueManager.queue.indices) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                    ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
-                    removeFromQueueIndex = selectedIndex
-                }
+        if (selectedIndex in BgQueueManager.queue.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                removeFromQueueIndex = selectedIndex
             }
         }
 

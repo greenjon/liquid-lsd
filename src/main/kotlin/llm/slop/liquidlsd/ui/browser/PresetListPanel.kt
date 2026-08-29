@@ -54,9 +54,14 @@ object PresetListPanel {
             ImGui.pushID(index)
 
             val label = asset.displayName
-            val isSelected = selectedAsset == asset
+            val isSelected = selectedAsset?.path == asset.path
 
             if (ImGui.selectable(label, isSelected)) {
+                LibraryPanel.selectPreset(asset, session, mixer)
+            }
+
+            val io = ImGui.getIO()
+            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
 
@@ -138,28 +143,14 @@ object PresetListPanel {
             ImGui.popID()
         }
 
-        // Keyboard navigation (Up / Down arrows navigate and audition presets)
+        // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
         val io = ImGui.getIO()
         val selected = selectedAsset
-        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper && filtered.isNotEmpty()) {
-            if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PRESETS && selected != null) {
-                val currentIndex = filtered.indexOf(selected)
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow), true)) {
-                    val newIndex = (if (currentIndex >= 0) currentIndex - 1 else 0).coerceAtLeast(0)
-                    LibraryPanel.selectPreset(filtered[newIndex], session, mixer)
-                } else if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.DownArrow), true)) {
-                    val newIndex = (if (currentIndex >= 0) currentIndex + 1 else 0).coerceAtMost(filtered.lastIndex)
-                    LibraryPanel.selectPreset(filtered[newIndex], session, mixer)
-                }
-            }
-
-            // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
-            if (selected != null) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                    ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
-                    BrowserPopupHandler.deleteTarget = selected
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
-                }
+        if (selected != null && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                BrowserPopupHandler.deleteTarget = selected
+                BrowserPopupHandler.pendingOpenDeletePopup = true
             }
         }
     }

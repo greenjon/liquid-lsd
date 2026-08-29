@@ -111,6 +111,11 @@ object QueueActionsPanel {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }
 
+            val io = ImGui.getIO()
+            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+                LibraryPanel.selectQueueAb(index, session, mixer)
+            }
+
             // Drag source (QUEUE_ITEM reorder)
             if (ImGui.beginDragDropSource()) {
                 ImGui.setDragDropPayload("QUEUE_ITEM", index as Any)
@@ -181,25 +186,12 @@ object QueueActionsPanel {
             }
         }
 
-        // Keyboard navigation (Up / Down arrows navigate and audition presets)
+        // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
         val io = ImGui.getIO()
-        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper && session.playQueueManager.queue.isNotEmpty()) {
-            if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.QUEUE_AB && selectedIndex in session.playQueueManager.queue.indices) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow), true)) {
-                    val newIndex = (selectedIndex - 1).coerceAtLeast(0)
-                    LibraryPanel.selectQueueAb(newIndex, session, mixer)
-                } else if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.DownArrow), true)) {
-                    val newIndex = (selectedIndex + 1).coerceAtMost(session.playQueueManager.queue.lastIndex)
-                    LibraryPanel.selectQueueAb(newIndex, session, mixer)
-                }
-            }
-
-            // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
-            if (selectedIndex in session.playQueueManager.queue.indices) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                    ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
-                    removeFromQueueIndex = selectedIndex
-                }
+        if (selectedIndex in session.playQueueManager.queue.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                removeFromQueueIndex = selectedIndex
             }
         }
 

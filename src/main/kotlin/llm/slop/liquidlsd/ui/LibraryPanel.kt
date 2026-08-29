@@ -185,8 +185,13 @@ object LibraryPanel {
                 ImGui.popStyleColor(4)
             }
 
-            // Menu Bar Separator and Action Toolbar
-            ImGui.sameLine(0f, 12f)
+            // Calculate centering for Action Toolbar
+            val totalToolbarW = 302f
+            val currentX = ImGui.getCursorPosX()
+            val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceAtLeast(currentX + 16f)
+            ImGui.sameLine(0f, 0f)
+            ImGui.setCursorPosX(targetCenterX)
+
             val selectedFile = getActiveSelectedFile(session)
             llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.draw(
                 session = session,

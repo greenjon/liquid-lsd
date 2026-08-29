@@ -60,7 +60,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 6f)
 
         // 1. [ A ]
         val isLatchedA = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_A
@@ -81,7 +81,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 6f)
 
         // 2. [ B ]
         val isLatchedB = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_B
@@ -102,7 +102,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 6f)
 
         // 3. [ BG ]
         val isLatchedBG = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_BG
@@ -123,7 +123,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 6f)
 
         // 4. [ PV ]
         val isLatchedPV = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_PV
@@ -144,7 +144,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 10f)
+        ImGui.sameLine(0f, 14f)
 
         // 5. [ Q ] (Disabled/dimmed if already from Play Queue A/B or no selection)
         val canQueueAB = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_AB
@@ -159,7 +159,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 4f)
+        ImGui.sameLine(0f, 6f)
 
         // 6. [ BGQ ] (Disabled/dimmed if already from BG Queue or no selection)
         val canQueueBG = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_BG
@@ -174,7 +174,7 @@ object BrowserActionToolbar {
         }
         BrowserDeckButtons.pop()
 
-        ImGui.sameLine(0f, 10f)
+        ImGui.sameLine(0f, 14f)
 
         // 7. [ + ] (Create New Preset Dropdown)
         if (ImGui.button("${Icons.PLUS}##toolbar_new_preset", baseBtnW, btnH)) {

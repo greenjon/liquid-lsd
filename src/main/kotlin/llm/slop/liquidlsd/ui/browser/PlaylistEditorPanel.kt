@@ -202,6 +202,11 @@ object PlaylistEditorPanel {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }
 
+            val io = ImGui.getIO()
+            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+                LibraryPanel.selectPlaylistPreset(index, session, mixer)
+            }
+
             // Double click loads to standby deck
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && exists) {
                 val targetIsA = mixer.crossfade.value > 0.0f
@@ -302,25 +307,12 @@ object PlaylistEditorPanel {
             ImGui.popID()
         }
 
-        // Keyboard navigation (Up / Down arrows navigate and audition presets)
+        // Keyboard shortcuts (Delete / Backspace removes selected preset from active playlist)
         val io = ImGui.getIO()
-        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper && playlist.presets.isNotEmpty()) {
-            if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PLAYLIST && selectedPresetIndex in playlist.presets.indices) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow), true)) {
-                    val newIndex = (selectedPresetIndex - 1).coerceAtLeast(0)
-                    LibraryPanel.selectPlaylistPreset(newIndex, session, mixer)
-                } else if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.DownArrow), true)) {
-                    val newIndex = (selectedPresetIndex + 1).coerceAtMost(playlist.presets.lastIndex)
-                    LibraryPanel.selectPlaylistPreset(newIndex, session, mixer)
-                }
-            }
-
-            // Keyboard shortcuts (Delete / Backspace removes selected preset from active playlist)
-            if (selectedPresetIndex in playlist.presets.indices) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                    ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
-                    removePresetIndex = selectedPresetIndex
-                }
+        if (selectedPresetIndex in playlist.presets.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                removePresetIndex = selectedPresetIndex
             }
         }
 
