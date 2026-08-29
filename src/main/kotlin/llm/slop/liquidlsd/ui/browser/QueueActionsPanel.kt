@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
+import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
 import java.io.File
@@ -107,7 +108,7 @@ object QueueActionsPanel {
             }
 
             if (ImGui.selectable("$label##queue_$index", isSelected)) {
-                selectedIndex = index
+                LibraryPanel.selectQueueAb(index, session, mixer)
             }
 
             // Drag source (QUEUE_ITEM reorder)
@@ -180,11 +181,25 @@ object QueueActionsPanel {
             }
         }
 
-        // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
-        if (selectedIndex in session.playQueueManager.queue.indices && !ImGui.getIO().wantTextInput) {
-            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
-                removeFromQueueIndex = selectedIndex
+        // Keyboard navigation (Up / Down arrows navigate and audition presets)
+        val io = ImGui.getIO()
+        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper && session.playQueueManager.queue.isNotEmpty()) {
+            if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.QUEUE_AB && selectedIndex in session.playQueueManager.queue.indices) {
+                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow), true)) {
+                    val newIndex = (selectedIndex - 1).coerceAtLeast(0)
+                    LibraryPanel.selectQueueAb(newIndex, session, mixer)
+                } else if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.DownArrow), true)) {
+                    val newIndex = (selectedIndex + 1).coerceAtMost(session.playQueueManager.queue.lastIndex)
+                    LibraryPanel.selectQueueAb(newIndex, session, mixer)
+                }
+            }
+
+            // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
+            if (selectedIndex in session.playQueueManager.queue.indices) {
+                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                    ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                    removeFromQueueIndex = selectedIndex
+                }
             }
         }
 

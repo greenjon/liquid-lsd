@@ -16,34 +16,39 @@ Liquid LSD features flexible workspace dock layouts:
 ## Panel Layout in Library Mode
 
 ```
-┌───────────────────┬───────────────────┬───────────────────┬───────────────────┐
-│  PRESET LIBRARY   │  PLAYLIST EDITOR  │    PLAY QUEUE     │ BACKGROUND QUEUE  │
-│(All Presets/Search│[Playlist Selector]│   (A/B Auto-VJ)   │ (Dedicated BG/Dip)│
-├───────────────────┴───────────────────┼───────────────────┼───────────────────┤
-│ [A] [B] [BG] [PV] [Q] [BGQ] [ + ▾]    │ [AUTO-VJ] [🔁][🔀]│ [AUTO-BG] [🔁][🔀]│
-├───────────────────┬───────────────────┤                   │                   │
-│ [🔍 Search...]    │ 1. Preset Alpha   │ ▶ 1. Preset 1     │ ▶ 1. Nebula BG    │
-│ Preset Alpha      │ 2. Preset Beta    │   2. Preset 2     │   2. Dark Grid BG │
-│ Preset Beta       │ 3. Preset Gamma   │   3. Preset 3     │                   │
-└───────────────────┴───────────────────┴───────────────────┴───────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ [FULL] [HALF] [HIDE]  │  [🔒] [A] [B] [BG] [PV]  │  [Q] [BGQ]  │  [ + ▾]          │
+├───────────────────┬───────────────────┬───────────────────┬───────────────────────┤
+│  PRESET LIBRARY   │  PLAYLIST EDITOR  │    PLAY QUEUE     │   BACKGROUND QUEUE    │
+│(All Presets/Search│[Playlist Selector]│   (A/B Auto-VJ)   │  (Dedicated BG/Dip)   │
+├───────────────────┼───────────────────┼───────────────────┼───────────────────────┤
+│ [🔍 Search...]    │ 1. Preset Alpha   │ [AUTO-VJ] [🔁][🔀]│ [AUTO-BG] [🔁][🔀]   │
+│ Preset Alpha      │ 2. Preset Beta    │ ▶ 1. Preset 1     │ ▶ 1. Nebula BG        │
+│ Preset Beta       │ 3. Preset Gamma   │   2. Preset 2     │   2. Dark Grid BG     │
+└───────────────────┴───────────────────┴───────────────────┴───────────────────────┘
 ```
 
 ---
 
-## Unified Top Action Toolbar
+## Unified Menu Bar Action Toolbar & Quick Audition Latch
 
-Directly above the Presets and Playlist Editor columns sits a streamlined 7-button routing toolbar:
+Located in the top Library Menu Bar, the action toolbar provides a unified control strip operating on whichever preset is currently selected across all four columns:
 
-- **`[ A ]`**: Loads the currently selected preset into Deck A.
-- **`[ B ]`**: Loads the currently selected preset into Deck B.
-- **`[ BG ]`**: Loads the currently selected preset into Deck BG (Background).
-- **`[ PV ]`**: Previews the currently selected preset in Deck PV (Preview).
-- **`[ Q ]`**: Appends the currently selected preset to the A/B Play Queue.
-- **`[ BGQ ]`**: Appends the currently selected preset to the Background Queue.
+- **`[ 🔒 ]` Quick Audition Latch**: Toggles sticky audition mode.
+  - When turned **ON**, it automatically latches to **Deck PV** (Preview) by default. Clicking any preset or navigating with **`↑` / `↓` arrow keys** in any column instantly loads the preset into the latched deck for rapid auditioning.
+  - Clicking any deck button (`A`, `B`, `BG`, `PV`) while locked switches the latch target.
+  - Clicking the *currently latched* deck button unlatches it.
+  - Turning the padlock **OFF** clears all latches and restores standard selection mode.
+- **`[ A ]`**: Loads the currently selected preset into Deck A (or latches Deck A when audition mode is armed).
+- **`[ B ]`**: Loads the currently selected preset into Deck B (or latches Deck B when audition mode is armed).
+- **`[ BG ]`**: Loads the currently selected preset into Deck BG / Background (or latches Deck BG when audition mode is armed).
+- **`[ PV ]`**: Previews the currently selected preset in Deck PV / Preview (or latches Deck PV when audition mode is armed).
+- **`[ Q ]`**: Appends the currently selected preset to the A/B Play Queue (automatically dimmed if the selection is already in the A/B Play Queue).
+- **`[ BGQ ]`**: Appends the currently selected preset to the Background Queue (automatically dimmed if the selection is already in the Background Queue).
 - **`[ + ▾ ]`**: Opens a dropdown to create a new blank preset on any deck (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`).
 
 > [!TIP]
-> Selecting any preset in the Presets column automatically deselects the current playlist selection (and vice versa) for unambiguous one-click routing.
+> Selecting any preset in **any of the 4 columns** (Preset Library, Playlist Editor, A/B Queue, BG Queue) focuses that patch globally across the Library for unambiguous one-click routing.
 
 ---
 
@@ -56,8 +61,12 @@ The Left column displays the complete pool of all available presets discovered a
 - **Clean List View**: Preset rows display clean typography without cluttered inline buttons.
 - **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
 - **Keyboard Shortcuts**:
+  - `↑` / `↓` Arrows: Navigate through presets (auto-loading to the latched deck if Audition Lock `[🔒]` is armed).
   - `1`: Load selected preset into **Deck A**.
   - `2`: Load selected preset into **Deck B**.
+  - `3`: Load selected preset into **Deck BG** (Background).
+  - `4`: Preview selected preset on **Deck PV** (Preview).
+  - `Delete` / `Backspace`: Delete selected preset from your library (with permanent deletion confirmation).
   - `3`: Load selected preset into **Deck BG** (Background).
   - `4`: Preview selected preset on **Deck PV** (Preview).
   - `Delete` / `Backspace`: Delete selected preset from your library (with permanent deletion confirmation).

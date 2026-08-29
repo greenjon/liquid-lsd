@@ -16,11 +16,97 @@ import java.io.File
 object LibraryPanel {
     private val logger = KotlinLogging.logger {}
 
+    enum class SelectionSource {
+        PRESETS,
+        PLAYLIST,
+        QUEUE_AB,
+        QUEUE_BG
+    }
+
+    var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
     internal var activePlaylistData: PlaylistManager.Playlist? = null
 
     private var lastKnownSignature: String = ""
     private var lastAutoRefreshTimeMs: Long = 0L
+
+    fun getActiveSelectedFile(session: SessionContext): File? {
+        return when (activeSelectionSource) {
+            SelectionSource.PRESETS -> PresetListPanel.selectedAsset?.let { File(it.path) }
+            SelectionSource.PLAYLIST -> PlaylistEditorPanel.getSelectedPresetFile()
+            SelectionSource.QUEUE_AB -> {
+                val idx = QueueActionsPanel.selectedIndex
+                if (idx in session.playQueueManager.queue.indices) session.playQueueManager.queue[idx] else null
+            }
+            SelectionSource.QUEUE_BG -> {
+                val idx = llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex
+                if (idx in llm.slop.liquidlsd.presets.BgQueueManager.queue.indices) llm.slop.liquidlsd.presets.BgQueueManager.queue[idx] else null
+            }
+            null -> null
+        }
+    }
+
+    fun selectPreset(asset: AssetItem?, session: SessionContext, mixer: Mixer) {
+        PresetListPanel.selectedAsset = asset
+        if (asset != null) {
+            activeSelectionSource = SelectionSource.PRESETS
+            PlaylistEditorPanel.selectedPresetIndex = -1
+            QueueActionsPanel.selectedIndex = -1
+            llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
+            auditionIfLocked(File(asset.path), session, mixer)
+        }
+    }
+
+    fun selectPlaylistPreset(index: Int, session: SessionContext, mixer: Mixer) {
+        PlaylistEditorPanel.selectedPresetIndex = index
+        if (index >= 0) {
+            activeSelectionSource = SelectionSource.PLAYLIST
+            PresetListPanel.selectedAsset = null
+            QueueActionsPanel.selectedIndex = -1
+            llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
+            val file = PlaylistEditorPanel.getSelectedPresetFile()
+            if (file != null) auditionIfLocked(file, session, mixer)
+        }
+    }
+
+    fun selectQueueAb(index: Int, session: SessionContext, mixer: Mixer) {
+        QueueActionsPanel.selectedIndex = index
+        if (index >= 0) {
+            activeSelectionSource = SelectionSource.QUEUE_AB
+            PresetListPanel.selectedAsset = null
+            PlaylistEditorPanel.selectedPresetIndex = -1
+            llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
+            val file = session.playQueueManager.queue.getOrNull(index)
+            if (file != null) auditionIfLocked(file, session, mixer)
+        }
+    }
+
+    fun selectQueueBg(index: Int, session: SessionContext, mixer: Mixer) {
+        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = index
+        if (index >= 0) {
+            activeSelectionSource = SelectionSource.QUEUE_BG
+            PresetListPanel.selectedAsset = null
+            PlaylistEditorPanel.selectedPresetIndex = -1
+            QueueActionsPanel.selectedIndex = -1
+            val file = llm.slop.liquidlsd.presets.BgQueueManager.queue.getOrNull(index)
+            if (file != null) auditionIfLocked(file, session, mixer)
+        }
+    }
+
+    fun clearAllSelection() {
+        activeSelectionSource = null
+        PresetListPanel.selectedAsset = null
+        PlaylistEditorPanel.selectedPresetIndex = -1
+        QueueActionsPanel.selectedIndex = -1
+        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
+    }
+
+    fun auditionIfLocked(file: File, session: SessionContext, mixer: Mixer) {
+        if (llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.isAuditionLocked) {
+            val target = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.latchedDeckTarget ?: return
+            BrowserDeckButtons.loadPresetToDeck(session, mixer, file, target.deckIndex)
+        }
+    }
 
     fun getOrLoadPlaylist(file: File): PlaylistManager.Playlist? {
         val current = activePlaylistData
@@ -99,6 +185,17 @@ object LibraryPanel {
                 ImGui.popStyleColor(4)
             }
 
+            // Menu Bar Separator and Action Toolbar
+            ImGui.sameLine(0f, 12f)
+            val selectedFile = getActiveSelectedFile(session)
+            llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.draw(
+                session = session,
+                mixer = mixer,
+                presetState = presetState,
+                selectedFile = selectedFile,
+                source = activeSelectionSource
+            )
+
             ImGui.endMenuBar()
         }
         ImGui.popStyleVar()
@@ -132,17 +229,17 @@ object LibraryPanel {
         ImGui.endChild()
 
         // Number key shortcuts: 1 -> Deck A, 2 -> Deck B, 3 -> Deck BG, 4 -> Deck PV
-        val selectedFile = PresetListPanel.selectedAsset?.let { File(it.path) } ?: PlaylistEditorPanel.getSelectedPresetFile()
+        val activeFile = getActiveSelectedFile(session)
         val io = ImGui.getIO()
-        if (selectedFile != null && selectedFile.exists() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+        if (activeFile != null && activeFile.exists() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
             if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_1, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_1, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 1)
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
             } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_2, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_2, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 2)
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
             } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_3, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_3, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 3)
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
             } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_4, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_4, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 4)
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
             }
         }
 

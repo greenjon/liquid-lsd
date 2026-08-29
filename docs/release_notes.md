@@ -9,7 +9,14 @@
 
 ### Key Highlights
 
-#### 1. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
+#### 1. Library Menu Bar Action Toolbar & Quick Audition Padlock (`llm.slop.liquidlsd.ui.browser`)
+- **Unified Menu Bar Action Strip**: Migrated the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ] [+]`) into the top Library Menu Bar alongside the layout mode buttons, utilizing previously empty horizontal space and expanding list visibility in Column 1.
+- **Global 4-Column Preset Selection**: Single-clicking or navigating any item across **Preset Library**, **Playlist Editor**, **A/B Play Queue**, or **Background Queue** sets a unified global selection and clears other columns for unambiguous routing.
+- **Context-Aware Button Dimming**: Dynamically dims destination buttons when redundant (e.g. `[Q]` dims when selecting an item already in the A/B Queue, `[BGQ]` dims for items in the Background Queue).
+- **Quick Audition Latch (`[🔒]`) & Smart `PV` Auto-Latch**: Toggling the padlock button arms sticky audition mode and auto-latches to **Deck PV** (Preview) by default. Clicking another deck button (`A`, `B`, `BG`) switches the latch target, while clicking the active deck button unlatches it.
+- **Single-Click & Arrow Key Auditioning**: With the padlock armed, single-clicking any preset or navigating with `↑`/`↓` arrow keys in any column immediately triggers non-blocking asynchronous patch loading (`loadDeckPresetAsync`) to the latched deck.
+
+#### 2. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
 - **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
 - **Non-Blocking WebSocket Dispatch**: Protected asynchronous transmission using `CompletableFuture` to prevent transmission queue buildup, memory leaks, and `IllegalStateException` on high-latency or slow network connections.
 - **Throttled Parameter Delta Streaming**: Dispatches full state snapshots (`state_full`) upon initial handshake or preset switching, and lightweight differential patches (`state_delta`) throttled at a configurable rate (default 25 Hz) during live parameter adjustments. Includes JSON `null` deletion semantics when swapping visual source types.

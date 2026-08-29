@@ -23,18 +23,6 @@ object PresetListPanel {
     var selectedAsset: AssetItem? = null
 
     fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
-        // Top Action Toolbar
-        BrowserActionToolbar.draw(
-            session = session,
-            mixer = mixer,
-            presetState = presetState,
-            getSelectedFile = {
-                selectedAsset?.let { File(it.path) } ?: PlaylistEditorPanel.getSelectedPresetFile()
-            }
-        )
-
-        ImGui.spacing()
-
         // Search Filter Bar
         ImGui.inputTextWithHint("##presetSearch", "Search presets & tags...", searchBuffer)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -69,8 +57,7 @@ object PresetListPanel {
             val isSelected = selectedAsset == asset
 
             if (ImGui.selectable(label, isSelected)) {
-                selectedAsset = asset
-                PlaylistEditorPanel.selectedPresetIndex = -1
+                LibraryPanel.selectPreset(asset, session, mixer)
             }
 
             // Double-click: Load the preset to the inactive deck (>0% crossfader).
@@ -151,13 +138,28 @@ object PresetListPanel {
             ImGui.popID()
         }
 
-        // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
+        // Keyboard navigation (Up / Down arrows navigate and audition presets)
+        val io = ImGui.getIO()
         val selected = selectedAsset
-        if (selected != null && !ImGui.getIO().wantTextInput) {
-            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
-                BrowserPopupHandler.deleteTarget = selected
-                BrowserPopupHandler.pendingOpenDeletePopup = true
+        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper && filtered.isNotEmpty()) {
+            if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PRESETS && selected != null) {
+                val currentIndex = filtered.indexOf(selected)
+                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow), true)) {
+                    val newIndex = (if (currentIndex >= 0) currentIndex - 1 else 0).coerceAtLeast(0)
+                    LibraryPanel.selectPreset(filtered[newIndex], session, mixer)
+                } else if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.DownArrow), true)) {
+                    val newIndex = (if (currentIndex >= 0) currentIndex + 1 else 0).coerceAtMost(filtered.lastIndex)
+                    LibraryPanel.selectPreset(filtered[newIndex], session, mixer)
+                }
+            }
+
+            // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
+            if (selected != null) {
+                if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
+                    ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+                    BrowserPopupHandler.deleteTarget = selected
+                    BrowserPopupHandler.pendingOpenDeletePopup = true
+                }
             }
         }
     }

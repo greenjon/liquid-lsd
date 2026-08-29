@@ -36,6 +36,8 @@ object Icons {
     const val MORE_HORIZONTAL = "\ue11f" // more-horizontal
     const val MORE_VERTICAL   = "\ue120" // more-vertical
     const val NOTE            = "\ue132" // pencil
+    const val LOCK            = "\ue111" // lock
+    const val UNLOCK          = "\ue19f" // unlock
 
     // Wave Shapes
     const val WAVE_SINE   = "\ue38b" // spline
