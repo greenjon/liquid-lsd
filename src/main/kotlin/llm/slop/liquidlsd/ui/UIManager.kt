@@ -103,7 +103,12 @@ class UIManager(
         session.uiTheme.loadFonts(io)
 
         // Save the default style right after context initialization so we can revert sizes
-        defaultStyle = imgui.ImGuiStyle()
+        defaultStyle = imgui.ImGuiStyle().apply {
+            setFrameBorderSize(1.0f)
+            setFrameRounding(3.0f)
+            setPopupBorderSize(1.0f)
+            setPopupRounding(4.0f)
+        }
 
         // Scale style sizes proportionally to the loaded baseSize relative to the baseline of 15f
         UIThemeStyler.scaleStyleFromDefault(defaultStyle, session.uiTheme.baseSize)

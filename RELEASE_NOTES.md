@@ -18,6 +18,8 @@
 - **Robot Icon Queue Toggles (`BOT` / `BOT_OFF`)**: Replaced raw text checkboxes in A/B Queue and Background Queue (`AUTO-VJ`, `AUTO-BG`) with robot icon toggle buttons (`Icons.BOT` active / `Icons.BOT_OFF` inactive), matching DJ software conventions like Mixxx.
 
 #### 2. Audio Engine Settings & Real-Time Monitor Consolidation (`llm.slop.liquidlsd.ui`)
+- **Low-Signal 120 BPM Fallback Lock**: When incoming audio energy drops below analysis thresholds (silence, quiet passages, or background noise), `BeatDetector` smoothly transitions to and locks at **120.0 BPM** (`slewRate = 0.05f`), suppressing erratic phase nudges and eliminating wild counter swings.
+- **Tempo Stability Gating**: When a valid signal is detected, the engine holds the stable 120 BPM lock while analyzing candidate tempos. Once a steady tempo is locked with harmonic octave matching for the required duration, the flywheel PLL seamlessly transitions to the live music BPM.
 - **Integrated Audio Engine Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection configuration, input gain, and real-time oscilloscopes into the dedicated "Audio Engine" tab within `SettingsPanel.kt`.
 - **Modular Zero-Allocation Architecture (`AudioEnginePanel.kt`)**: Retained modular file separation in `AudioEnginePanel.kt` with class-level pre-allocated buffers and zero runtime memory allocations.
 - **Direct Menu Bar Routing**: Clicking "Audio Engine" in `MenuBar.kt` now opens the Settings dialog directly on the Audio Engine tab for quick 1-click access.

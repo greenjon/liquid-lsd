@@ -29,17 +29,7 @@ object AudioEnginePanel {
     private val rawSamples = FloatArray(1024)
     private val cvSamples = FloatArray(200)
 
-    private val manualBpmArr = FloatArray(1)
-    private val gainArr = FloatArray(1)
-    private val sysVolArr = FloatArray(1)
-
-    // Beat Detection UI arrays
-    private val floorArr = IntArray(1)
-    private val ceilArr = IntArray(1)
-    private val winLenArr = FloatArray(1)
-    private val thresholdArr = FloatArray(1)
-    private val pllRateArr = FloatArray(1)
-    private val biquadQArr = FloatArray(1)
+    // Beat Detection & Lock UI state
     private val isLocked = ImBoolean()
 
     // Pre-allocated enum arrays to eliminate per-frame allocations
@@ -263,20 +253,23 @@ object AudioEnginePanel {
 
         ImGui.spacing()
 
-        // Manual BPM Slider
-        ImGui.alignTextToFramePadding()
-        theme.body("Manual BPM:")
-        ImGui.sameLine()
-        ImGui.setNextItemWidth(180f)
-        manualBpmArr[0] = audioEngine.manualBpm
-        if (ImGui.sliderFloat("##manual_bpm", manualBpmArr, 40f, 200f, "%.1f")) {
-            audioEngine.manualBpm = manualBpmArr[0]
-            audioEngine.setBpmDirectly(manualBpmArr[0])
-            theme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Set fallback tempo. Used when 'Lock to Manual BPM' is active or input signal is silent.")
-        }
+        // Manual BPM Slider (Compact CustomRangeSlider)
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Manual BPM",
+            currentValue = audioEngine.manualBpm,
+            minLimit = 40f,
+            maxLimit = 200f,
+            defaultValue = 120f,
+            formatValue = { "%.1f".format(it) },
+            idPrefix = "audio_engine_manual_bpm",
+            themeColor = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f),
+            onValueChanged = { newVal ->
+                audioEngine.manualBpm = newVal
+                audioEngine.setBpmDirectly(newVal)
+                theme.saveSettings()
+            }
+        )
 
         ImGui.spacing()
 
@@ -340,58 +333,102 @@ object AudioEnginePanel {
 
         ImGui.spacing()
 
-        floorArr[0] = settings.bpmSearchFloor
-        if (ImGui.sliderInt("BPM Floor", floorArr, 40, 120)) {
-            settings.bpmSearchFloor = floorArr[0]
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Minimum limit for tempo estimation to prevent half-tempo octave errors.")
-        }
+        val beatThemeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
 
-        ceilArr[0] = settings.bpmSearchCeiling
-        if (ImGui.sliderInt("BPM Ceiling", ceilArr, 120, 240)) {
-            settings.bpmSearchCeiling = ceilArr[0]
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Maximum limit for tempo estimation to prevent double-tempo octave errors.")
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "BPM Floor",
+            currentValue = settings.bpmSearchFloor.toFloat(),
+            minLimit = 40f,
+            maxLimit = 120f,
+            defaultValue = 40f,
+            formatValue = { "${it.toInt()}" },
+            idPrefix = "audio_engine_bpm_floor",
+            themeColor = beatThemeCol,
+            onValueChanged = { newVal ->
+                settings.bpmSearchFloor = newVal.toInt()
+            }
+        )
 
-        winLenArr[0] = settings.analysisWindowLength
-        if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) {
-            settings.analysisWindowLength = winLenArr[0]
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Duration of onset history buffer analyzed for autocorrelation.")
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "BPM Ceiling",
+            currentValue = settings.bpmSearchCeiling.toFloat(),
+            minLimit = 120f,
+            maxLimit = 240f,
+            defaultValue = 200f,
+            formatValue = { "${it.toInt()}" },
+            idPrefix = "audio_engine_bpm_ceiling",
+            themeColor = beatThemeCol,
+            onValueChanged = { newVal ->
+                settings.bpmSearchCeiling = newVal.toInt()
+            }
+        )
 
-        thresholdArr[0] = settings.energyThreshold
-        if (ImGui.sliderFloat("Energy Threshold", thresholdArr, 1.0f, 3.0f, "%.2f")) {
-            settings.energyThreshold = thresholdArr[0]
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Threshold multiplier for energy-difference trigger.")
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Analysis Length",
+            currentValue = settings.analysisWindowLength,
+            minLimit = 1.0f,
+            maxLimit = 8.0f,
+            defaultValue = 4.0f,
+            formatValue = { "%.1fs".format(it) },
+            idPrefix = "audio_engine_win_len",
+            themeColor = beatThemeCol,
+            onValueChanged = { newVal ->
+                settings.analysisWindowLength = newVal
+            }
+        )
 
-        pllRateArr[0] = settings.pllAdaptationRate
-        if (ImGui.sliderFloat("PLL Adaptation", pllRateArr, 0.01f, 1.0f, "%.2f")) {
-            settings.pllAdaptationRate = pllRateArr[0]
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("How quickly the PLL tracks tempo changes.")
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Energy Threshold",
+            currentValue = settings.energyThreshold,
+            minLimit = 1.0f,
+            maxLimit = 3.0f,
+            defaultValue = 1.5f,
+            formatValue = { "%.2f".format(it) },
+            idPrefix = "audio_engine_energy_thresh",
+            themeColor = beatThemeCol,
+            onValueChanged = { newVal ->
+                settings.energyThreshold = newVal
+            }
+        )
 
-        biquadQArr[0] = settings.biquadQ
-        if (ImGui.sliderFloat("Resonator Q", biquadQArr, 0.5f, 10.0f, "%.2f")) {
-            settings.biquadQ = biquadQArr[0]
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Quality factor (resonance) for the Complex Domain biquad filter.")
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "PLL Adaptation",
+            currentValue = settings.pllAdaptationRate,
+            minLimit = 0.01f,
+            maxLimit = 1.0f,
+            defaultValue = 0.2f,
+            formatValue = { "%.2f".format(it) },
+            idPrefix = "audio_engine_pll_rate",
+            themeColor = beatThemeCol,
+            onValueChanged = { newVal ->
+                settings.pllAdaptationRate = newVal
+            }
+        )
+
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Resonator Q",
+            currentValue = settings.biquadQ,
+            minLimit = 0.5f,
+            maxLimit = 10.0f,
+            defaultValue = 3.0f,
+            formatValue = { "%.2f".format(it) },
+            idPrefix = "audio_engine_biquad_q",
+            themeColor = beatThemeCol,
+            onValueChanged = { newVal ->
+                settings.biquadQ = newVal
+            }
+        )
 
         if (!audioEngine.beatDetector.isTargetLevelSufficient) {
             ImGui.spacing()
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
-            ImGui.textWrapped("${Icons.ALERT} Low Signal: Not enough energy in the selected target band (${settings.target.name}) for reliable analysis. Consider switching the Target to HIGH or UNFILTERED if playing from small laptop speakers.")
+            ImGui.textWrapped("${Icons.ALERT} Low Signal: Not enough energy in the selected target band (${settings.target.name}) for reliable analysis. Tempo is gracefully locked to 120.0 BPM fallback.")
             ImGui.popStyleColor()
         }
 
@@ -406,44 +443,41 @@ object AudioEnginePanel {
         ImGui.separator()
         ImGui.spacing()
 
-        gainArr[0] = audioEngine.inputGain
-        ImGui.alignTextToFramePadding()
-        theme.body("Input Level Gain:")
-        ImGui.sameLine()
-        ImGui.setNextItemWidth(180f)
-        if (ImGui.sliderFloat("##input_gain", gainArr, 0.0f, 10.0f, "%.2fx")) {
-            audioEngine.inputGain = gainArr[0]
-            theme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Pre-amplify incoming audio before analysis and oscilloscope display.")
-        }
-        ImGui.sameLine()
-        if (ImGui.button("Reset##gain")) {
-            audioEngine.inputGain = 1.0f
-            theme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Reset input gain to 1.0x.")
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Input Gain",
+            currentValue = audioEngine.inputGain,
+            minLimit = 0.0f,
+            maxLimit = 10.0f,
+            defaultValue = 1.0f,
+            formatValue = { "%.2fx".format(it) },
+            idPrefix = "audio_engine_input_gain",
+            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 0.9f),
+            onValueChanged = { newVal ->
+                audioEngine.inputGain = newVal
+                theme.saveSettings()
+            }
+        )
 
         if (SystemAudioVolume.isSupported) {
             SystemAudioVolume.queryAsync()
-            sysVolArr[0] = SystemAudioVolume.systemInputVolume
-            ImGui.alignTextToFramePadding()
-            theme.body("System Input Volume:")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(180f)
-            if (ImGui.sliderFloat("##system_gain", sysVolArr, 0.0f, 1.0f, "%.2f")) {
-                SystemAudioVolume.updateSystemVolume(sysVolArr[0])
-            }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("System-level recording input volume.")
-            }
-            if (SystemAudioVolume.isMuted) {
-                ImGui.sameLine()
-                theme.bodyColored(1f, 0.3f, 0.3f, 1f, "[MUTED]")
-            }
+            val sysVol = SystemAudioVolume.systemInputVolume
+            val isMuted = SystemAudioVolume.isMuted
+            val label = if (isMuted) "System Volume [MUTED]" else "System Volume"
+            CustomRangeSlider.drawCompactSlider(
+                session = session,
+                label = label,
+                currentValue = sysVol,
+                minLimit = 0.0f,
+                maxLimit = 1.0f,
+                defaultValue = 1.0f,
+                formatValue = { "%.2f".format(it) },
+                idPrefix = "audio_engine_sys_vol",
+                themeColor = if (isMuted) ImGui.colorConvertFloat4ToU32(1f, 0.3f, 0.3f, 0.9f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+                onValueChanged = { newVal ->
+                    SystemAudioVolume.updateSystemVolume(newVal)
+                }
+            )
         }
 
         ImGui.spacing()

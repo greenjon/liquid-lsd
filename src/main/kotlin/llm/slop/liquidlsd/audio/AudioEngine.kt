@@ -46,7 +46,17 @@ class BeatDetector {
     var isTargetLevelSufficient: Boolean = true
 
     @Volatile
+    var isTempoLocked: Boolean = false
+        private set
+
+    @Volatile
     private var currentBpm = 120.0f
+
+    // Low-signal & tempo stability gating state (all primitives, zero allocation)
+    private var stableCandidateBpm = 120.0f
+    private var stableLockAccumulatedSec = 0.0f
+    private val requiredLockDurationSec = 0.4f
+    private val fallbackBpm = 120.0f
 
     // Pre-allocated ring buffers for multi-band onset history (zero allocation)
     private val onsetHistory = FloatArray(2048)
@@ -100,6 +110,7 @@ class BeatDetector {
         }
 
         val fps = sampleRate / nframes.coerceAtLeast(1)
+        val dt = nframes.toFloat() / sampleRate.coerceAtLeast(1f)
         val floorBpm = settings.bpmSearchFloor.toFloat()
         val ceilBpm = settings.bpmSearchCeiling.toFloat()
         val minPeriodBlocks = (fps * (60.0f / ceilBpm)).toInt().coerceAtLeast(1)
@@ -114,12 +125,29 @@ class BeatDetector {
         if (historyCount < onsetHistory.size) historyCount++
 
         // Track target band energy to determine if sufficient signal exists
-        localEnergyAverage = localEnergyAverage * 0.98f + targetAmp * 0.02f
-        isTargetLevelSufficient = localEnergyAverage > 0.005f
+        localEnergyAverage = localEnergyAverage * 0.985f + targetAmp * 0.015f
+        val signalSufficient = localEnergyAverage > 0.003f
+        isTargetLevelSufficient = signalSufficient
 
         timeSinceLastBeatBlocks += 1.0f
 
+        // If low signal is detected, gracefully lock to 120 BPM fallback and suppress phase nudges
+        if (!signalSufficient) {
+            isTempoLocked = false
+            stableLockAccumulatedSec = 0.0f
+            stableCandidateBpm = fallbackBpm
+            pendingPhaseNudge = -1.0
+            confidence = 0.0f
+
+            val slewRate = 0.05f
+            currentBpm = currentBpm * (1.0f - slewRate) + fallbackBpm * slewRate
+            lastTargetAmp = targetAmp
+            return currentBpm.coerceIn(floorBpm, ceilBpm)
+        }
+
         val mode = settings.mode
+        var calcBpm = -1.0f
+        var phaseNudgeCandidate = -1.0
 
         if (mode == BeatDetectionMode.AUTOCORRELATION) {
             val availableMaxDelay = (historyCount - minPeriodBlocks).coerceAtLeast(0).coerceAtMost(maxPeriodBlocks)
@@ -199,11 +227,7 @@ class BeatDetector {
 
                     val deltaLag = interpolateParabolicPeak(prevAc, centerAc, nextAc)
                     val subBlockLag = (bestDelay + deltaLag).coerceAtLeast(1.0f)
-                    val calcBpm = 60.0f / (subBlockLag / fps)
-
-                    // Adaptive PLL response: faster initial lock, smooth steady state
-                    val adaptRate = if (historyCount < maxPeriodBlocks * 2) 0.45f else settings.pllAdaptationRate.coerceIn(0.01f, 0.5f)
-                    currentBpm = currentBpm * (1.0f - adaptRate) + calcBpm.coerceIn(floorBpm, ceilBpm) * adaptRate
+                    calcBpm = 60.0f / (subBlockLag / fps)
 
                     // Phase alignment calculation
                     val periodBlocks = subBlockLag.toInt().coerceAtLeast(1)
@@ -225,7 +249,7 @@ class BeatDetector {
                         }
                     }
                     if (maxPhaseImpulse > 0.02f) {
-                        pendingPhaseNudge = bestPhaseShift.toDouble() / periodBlocks.toDouble()
+                        phaseNudgeCandidate = bestPhaseShift.toDouble() / periodBlocks.toDouble()
                     }
                 }
             }
@@ -233,12 +257,9 @@ class BeatDetector {
             // Energy Difference + Dynamic Peak Sync
             if (targetAmp > localEnergyAverage * settings.energyThreshold && timeSinceLastBeatBlocks > minPeriodBlocks) {
                 if (lastTargetAmp > targetAmp && lastTargetAmp > localEnergyAverage * settings.energyThreshold) {
-                    pendingPhaseNudge = 0.0
-                    
+                    phaseNudgeCandidate = 0.0
                     val measuredPeriodBlocks = timeSinceLastBeatBlocks - 1.0f
-                    val calcBpm = 60.0f / (measuredPeriodBlocks / fps)
-                    
-                    currentBpm = currentBpm * (1f - settings.pllAdaptationRate) + calcBpm.coerceIn(floorBpm, ceilBpm) * settings.pllAdaptationRate
+                    calcBpm = 60.0f / (measuredPeriodBlocks / fps)
                     timeSinceLastBeatBlocks = 0f
                 }
             }
@@ -251,18 +272,55 @@ class BeatDetector {
             val out = resonator.process(targetAmp - localEnergyAverage)
             
             if (lastResonatorOut <= 0f && out > 0f) {
-                pendingPhaseNudge = 0.0
-                
+                phaseNudgeCandidate = 0.0
                 if (timeSinceLastBeatBlocks > minPeriodBlocks) {
                     val measuredPeriodBlocks = timeSinceLastBeatBlocks
-                    val calcBpm = 60.0f / (measuredPeriodBlocks / fps)
-                    currentBpm = currentBpm * 0.8f + calcBpm.coerceIn(floorBpm, ceilBpm) * 0.2f
+                    calcBpm = 60.0f / (measuredPeriodBlocks / fps)
                     timeSinceLastBeatBlocks = 0f
                 }
             }
             lastResonatorOut = out
         }
-        
+
+        val clampedCalcBpm = calcBpm.coerceIn(floorBpm, ceilBpm)
+
+        // Find closest harmonic octave match to stable candidate (e.g. 70 <-> 140 BPM)
+        val bpmMatch = when {
+            kotlin.math.abs(clampedCalcBpm - stableCandidateBpm) <= 4.0f -> clampedCalcBpm
+            clampedCalcBpm * 2.0f <= ceilBpm && kotlin.math.abs(clampedCalcBpm * 2.0f - stableCandidateBpm) <= 4.0f -> clampedCalcBpm * 2.0f
+            else -> clampedCalcBpm
+        }
+
+        // Stability gating & tempo lock state machine
+        if (calcBpm > 0.0f) {
+            val bpmDifference = kotlin.math.abs(bpmMatch - stableCandidateBpm)
+            if (bpmDifference <= 4.0f) {
+                stableLockAccumulatedSec += dt
+                stableCandidateBpm = stableCandidateBpm * 0.9f + bpmMatch * 0.1f
+                if (!isTempoLocked && stableLockAccumulatedSec >= requiredLockDurationSec) {
+                    isTempoLocked = true
+                    currentBpm = stableCandidateBpm
+                }
+            } else {
+                stableCandidateBpm = clampedCalcBpm
+                stableLockAccumulatedSec = 0.0f
+            }
+        }
+
+        if (isTempoLocked && calcBpm > 0.0f) {
+            // Adaptive PLL response: faster initial lock, smooth steady state
+            val adaptRate = if (historyCount < maxPeriodBlocks * 2) 0.45f else settings.pllAdaptationRate.coerceIn(0.01f, 0.5f)
+            currentBpm = currentBpm * (1.0f - adaptRate) + bpmMatch * adaptRate
+            if (phaseNudgeCandidate >= 0.0) {
+                pendingPhaseNudge = phaseNudgeCandidate
+            }
+        } else if (!isTempoLocked) {
+            // Gracefully lock to 120 BPM fallback until a good signal has established a stable tempo
+            val slewRate = 0.05f
+            currentBpm = currentBpm * (1.0f - slewRate) + fallbackBpm * slewRate
+            pendingPhaseNudge = -1.0
+        }
+
         lastTargetAmp = targetAmp
 
         return currentBpm.coerceIn(floorBpm, ceilBpm)

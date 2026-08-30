@@ -36,21 +36,40 @@ object UIThemeStyler {
 
         val alpha = if (bgVideoEnabled) 0.75f else 1.00f
 
+        style.setFrameBorderSize(1.0f)
+        style.setFrameRounding(3.0f)
+        style.setPopupBorderSize(1.0f)
+        style.setPopupRounding(4.0f)
+
         when (theme) {
             UITheme.Theme.BORING -> {
-                if (bgVideoEnabled) {
-                    style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 0.75f)
-                    style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 0.75f)
-                    style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 0.75f)
-                    style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 0.75f)
-                    style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-                } else {
-                    style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, 1.00f)
-                    style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, 1.00f)
-                    style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, 1.00f)
-                    style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, 1.00f)
-                    style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-                }
+                style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, alpha)
+                style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
+                style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, alpha)
+                style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, alpha)
+                style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, alpha)
+
+                style.setColor(ImGuiCol.FrameBg, 0.13f, 0.13f, 0.15f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgHovered, 0.20f, 0.20f, 0.24f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgActive, 0.26f, 0.26f, 0.30f, 1.00f)
+
+                style.setColor(ImGuiCol.Border, 0.22f, 0.22f, 0.25f, 0.90f)
+                style.setColor(ImGuiCol.BorderShadow, 0.00f, 0.00f, 0.00f, 0.00f)
+
+                style.setColor(ImGuiCol.Button, 0.14f, 0.14f, 0.16f, 1.00f)
+                style.setColor(ImGuiCol.ButtonHovered, 0.24f, 0.24f, 0.28f, 1.00f)
+                style.setColor(ImGuiCol.ButtonActive, 0.32f, 0.32f, 0.38f, 1.00f)
+
+                style.setColor(ImGuiCol.CheckMark, 0.25f, 0.70f, 1.00f, 1.00f)
+                style.setColor(ImGuiCol.SliderGrab, 0.25f, 0.65f, 0.85f, 1.00f)
+                style.setColor(ImGuiCol.SliderGrabActive, 0.35f, 0.80f, 1.00f, 1.00f)
+
+                style.setColor(ImGuiCol.Header, 0.14f, 0.14f, 0.18f, 1.00f)
+                style.setColor(ImGuiCol.HeaderHovered, 0.22f, 0.22f, 0.28f, 1.00f)
+                style.setColor(ImGuiCol.HeaderActive, 0.30f, 0.30f, 0.38f, 1.00f)
+
+                style.setColor(ImGuiCol.Text, 0.90f, 0.90f, 0.92f, 1.00f)
+                style.setColor(ImGuiCol.TextDisabled, 0.48f, 0.48f, 0.52f, 1.00f)
             }
             UITheme.Theme.DARK_SOLARIZED -> {
                 style.setColor(ImGuiCol.WindowBg, 0.00f, 0.17f, 0.21f, alpha)
@@ -58,9 +77,12 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.TitleBg, 0.03f, 0.21f, 0.26f, alpha)
                 style.setColor(ImGuiCol.TitleBgActive, 0.00f, 0.17f, 0.21f, alpha)
                 style.setColor(ImGuiCol.MenuBarBg, 0.03f, 0.21f, 0.26f, alpha)
-                style.setColor(ImGuiCol.FrameBg, 0.03f, 0.21f, 0.26f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.00f, 0.17f, 0.21f, 1.00f)
+
+                style.setColor(ImGuiCol.FrameBg, 0.05f, 0.26f, 0.32f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgHovered, 0.08f, 0.32f, 0.38f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgActive, 0.80f, 0.29f, 0.09f, 1.00f)
+                style.setColor(ImGuiCol.Border, 0.08f, 0.30f, 0.36f, 0.90f)
+
                 style.setColor(ImGuiCol.Button, 0.03f, 0.21f, 0.26f, 1.00f)
                 style.setColor(ImGuiCol.ButtonHovered, 0.35f, 0.43f, 0.46f, 1.00f)
                 style.setColor(ImGuiCol.ButtonActive, 0.52f, 0.60f, 0.00f, 1.00f)
@@ -80,9 +102,10 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.TitleBgActive, 0.99f, 0.96f, 0.89f, alpha)
                 style.setColor(ImGuiCol.MenuBarBg, 0.93f, 0.91f, 0.84f, alpha)
 
-                style.setColor(ImGuiCol.FrameBg, 0.93f, 0.91f, 0.84f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.99f, 0.96f, 0.89f, 1.00f)
+                style.setColor(ImGuiCol.FrameBg, 0.88f, 0.85f, 0.77f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgHovered, 0.94f, 0.91f, 0.83f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgActive, 0.17f, 0.63f, 0.60f, 1.00f)
+                style.setColor(ImGuiCol.Border, 0.75f, 0.72f, 0.64f, 0.90f)
 
                 style.setColor(ImGuiCol.Button, 0.93f, 0.91f, 0.84f, 1.00f)
                 style.setColor(ImGuiCol.ButtonHovered, 0.58f, 0.63f, 0.63f, 1.00f)
@@ -106,9 +129,10 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.TitleBgActive, 0.21f, 0.04f, 0.00f, alpha)
                 style.setColor(ImGuiCol.MenuBarBg, 0.28f, 0.07f, 0.00f, alpha)
 
-                style.setColor(ImGuiCol.FrameBg, 0.28f, 0.07f, 0.00f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.21f, 0.04f, 0.00f, 1.00f)
+                style.setColor(ImGuiCol.FrameBg, 0.35f, 0.12f, 0.04f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgHovered, 0.45f, 0.18f, 0.08f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgActive, 0.42f, 0.44f, 0.77f, 1.00f)
+                style.setColor(ImGuiCol.Border, 0.42f, 0.16f, 0.08f, 0.90f)
 
                 style.setColor(ImGuiCol.Button, 0.28f, 0.07f, 0.00f, 1.00f)
                 style.setColor(ImGuiCol.ButtonHovered, 0.37f, 0.16f, 0.08f, 1.00f)
@@ -132,9 +156,10 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.TitleBgActive, 0.89f, 0.92f, 0.99f, alpha)
                 style.setColor(ImGuiCol.MenuBarBg, 0.82f, 0.85f, 0.96f, alpha)
 
-                style.setColor(ImGuiCol.FrameBg, 0.82f, 0.85f, 0.96f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.89f, 0.92f, 0.99f, 1.00f)
+                style.setColor(ImGuiCol.FrameBg, 0.75f, 0.79f, 0.92f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgHovered, 0.82f, 0.86f, 0.97f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgActive, 0.11f, 0.37f, 0.89f, 1.00f)
+                style.setColor(ImGuiCol.Border, 0.65f, 0.70f, 0.85f, 0.90f)
 
                 style.setColor(ImGuiCol.Button, 0.82f, 0.85f, 0.96f, 1.00f)
                 style.setColor(ImGuiCol.ButtonHovered, 0.69f, 0.75f, 0.92f, 1.00f)
@@ -158,9 +183,10 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.TitleBgActive, 0.08f, 0.00f, 0.14f, if (bgVideoEnabled) 0.65f else 0.90f)
                 style.setColor(ImGuiCol.MenuBarBg, 0.04f, 0.04f, 0.10f, if (bgVideoEnabled) 0.65f else 0.90f)
 
-                style.setColor(ImGuiCol.FrameBg, 0.11f, 0.05f, 0.16f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.18f, 0.07f, 0.28f, 1.00f)
+                style.setColor(ImGuiCol.FrameBg, 0.16f, 0.08f, 0.24f, 1.00f)
+                style.setColor(ImGuiCol.FrameBgHovered, 0.24f, 0.10f, 0.35f, 1.00f)
                 style.setColor(ImGuiCol.FrameBgActive, 1.00f, 0.00f, 0.50f, 1.00f)
+                style.setColor(ImGuiCol.Border, 0.40f, 0.10f, 0.50f, 0.85f)
 
                 style.setColor(ImGuiCol.Button, 0.13f, 0.02f, 0.20f, 1.00f)
                 style.setColor(ImGuiCol.ButtonHovered, 1.00f, 0.00f, 0.50f, 1.00f)

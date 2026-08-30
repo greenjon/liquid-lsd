@@ -132,6 +132,40 @@ object CustomRangeSlider {
         ImGui.popItemWidth()
     }
 
+    fun drawCompactSlider(
+        session: llm.slop.liquidlsd.SessionContext,
+        label: String,
+        currentValue: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        defaultValue: Float? = null,
+        formatValue: (Float) -> String = { "%.2f".format(it) },
+        idPrefix: String = "",
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+        isLogarithmic: Boolean = false,
+        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        onValueChanged: (Float) -> Unit
+    ) {
+        drawCustomRangeSlider(
+            session = session,
+            label = label,
+            currentValue = currentValue,
+            currentMin = currentValue,
+            currentMax = currentValue,
+            minLimit = minLimit,
+            maxLimit = maxLimit,
+            isRandomizable = false,
+            showControls = false,
+            defaultValue = defaultValue,
+            formatValue = formatValue,
+            onValueChanged = onValueChanged,
+            idPrefix = idPrefix,
+            themeColor = themeColor,
+            isLogarithmic = isLogarithmic,
+            parseValue = parseValue
+        )
+    }
+
     fun drawCustomRangeSlider(
         session: llm.slop.liquidlsd.SessionContext,
         label: String,

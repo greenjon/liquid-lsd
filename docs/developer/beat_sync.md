@@ -54,6 +54,12 @@ When an onset occurs, `pendingPhaseNudge` is set to `0.0`, signaling the flywhee
 Passes the DC-blocked target band envelope into a highly resonant bandpass filter (Biquad) tuned to the current BPM.
 The resonator acts as a "ringing" flywheel that naturally outputs a sine wave. Zero crossings of this sine wave trigger phase nudges and update the underlying tempo estimation.
 
+#### D. Low-Signal Detection & Graceful 120 BPM Fallback Lock
+When incoming audio level drops below the analysis threshold (`localEnergyAverage <= 0.003f`), or during extended pauses/silence:
+- **Zero Jitter Fallback**: Autocorrelation on spectral noise is bypassed, and `currentBpm` smoothly transitions/locks to **120.0 BPM** using an exponential slew rate (`slewRate = 0.05f`), preventing wild counter swings or erroneous tempo jumps.
+- **Phase Nudge Suppression**: Phase realignment signals are suppressed (`pendingPhaseNudge = -1.0`), keeping the beat flywheel accumulator steady.
+- **Tempo Stability Gating**: When a valid audio signal returns (`localEnergyAverage > 0.003f`), the engine holds the 120.0 BPM lock while analyzing candidate tempos. Only after a consistent tempo estimate ($\Delta \text{BPM} \le 4.0$ BPM, with harmonic octave awareness) is continuously observed for the stability threshold (`requiredLockDurationSec = 0.4f`), the lock is established (`isTempoLocked = true`), and the flywheel PLL seamlessly adapts to the new track tempo.
+
 ---
 
 ## Automated Audio Benchmark Test Suite
