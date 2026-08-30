@@ -62,8 +62,8 @@ class DeckControlPanel(
 
         // Interactive top preset bar: Save button, Eject button, Preset bar
         ImGui.setCursorPosX(inset)
-        val isC = label == "Deck PV" || label == "Deck C"
-        drawDeckMonitorToolbar(session, label, deck, isDeckA = isDeckA, isDeckC = isC, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = imgAvailW)
+        val isPV = label == "Deck PV"
+        drawDeckMonitorToolbar(session, label, deck, isDeckA = isDeckA, isDeckPV = isPV, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = imgAvailW)
         ImGui.spacing()
 
         ImGui.setCursorPosX(inset)
@@ -114,7 +114,7 @@ class DeckControlPanel(
                             file,
                             isDeckA = label == "Deck A",
                             isDeckBG = label == "Deck BG",
-                            isDeckPV = label == "Deck PV" || label == "Deck C"
+                            isDeckPV = label == "Deck PV"
                         )
                     } else {
                         UIManager.triggerDeckDragDrop(file, deck, isDeckA, mixer)
@@ -215,7 +215,7 @@ fun drawDeckMonitorToolbar(
     deckLabel: String,
     deck: Deck,
     isDeckA: Boolean,
-    isDeckC: Boolean,
+    isDeckPV: Boolean,
     mixer: Mixer,
     onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
     onEjectDeck: (Deck, Boolean, Boolean) -> Unit,
@@ -234,7 +234,7 @@ fun drawDeckMonitorToolbar(
             session.presetManager.activePresetMtimeBG,
             session.presetManager.cachedDtoBG?.version ?: 1
         )
-        "Deck PV", "Deck C" -> Triple(
+        "Deck PV" -> Triple(
             session.presetManager.activePresetPV,
             session.presetManager.activePresetMtimePV,
             session.presetManager.cachedDtoPV?.version ?: 1
@@ -278,7 +278,7 @@ fun drawDeckMonitorToolbar(
     val ejectX = ImGui.getCursorScreenPosX()
     ImGui.setCursorScreenPos(ejectX, startY)
     if (drawIconButton(session, "##btn_Eject_$tag", Icons.EJECT, rowH, "Eject this preset")) {
-        onEjectDeck(deck, isDeckA, isDeckC)
+        onEjectDeck(deck, isDeckA, isDeckPV)
     }
 
     // 3. Preset Bar

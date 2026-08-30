@@ -6,7 +6,7 @@ data class MixerMonitorLayout(
     val offsetX: Float,
     val masterHeight: Float,
     val deckChildHeight: Float,
-    val deckCHeight: Float = deckChildHeight
+    val deckPVHeight: Float = deckChildHeight
 )
 
 object MixerMonitorLayoutCalculator {
@@ -88,7 +88,7 @@ object MixerMonitorLayoutCalculator {
             offsetX = offsetX,
             masterHeight = desiredMasterHeight.coerceAtLeast(MIN_MASTER_HEIGHT),
             deckChildHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT),
-            deckCHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT)
+            deckPVHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT)
         )
     }
 

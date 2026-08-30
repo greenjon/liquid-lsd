@@ -25,7 +25,7 @@ object PresetGridTabs {
             "Deck A", "A" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorA()
             "Deck B", "B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
             "Deck BG", "BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
-            "Deck PV", "PV", "Deck C", "C" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
+            "Deck PV", "PV" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
             else -> floatArrayOf(0.4f, 0.4f, 0.4f) // Mixer / MIX
         }
         return ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], alpha)
@@ -181,7 +181,7 @@ object PresetGridTabs {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
             "Deck BG" -> mixer.deckBG
-            "Deck PV", "Deck C" -> mixer.deckPV
+            "Deck PV" -> mixer.deckPV
             else -> mixer.deckA
         }
         if (deck.isEmpty) return
@@ -194,7 +194,7 @@ object PresetGridTabs {
             "Deck A" -> state.activeDeckASubTab
             "Deck B" -> state.activeDeckBSubTab
             "Deck BG" -> state.activeDeckBGSubTab
-            "Deck PV", "Deck C" -> state.activeDeckPVSubTab
+            "Deck PV" -> state.activeDeckPVSubTab
             else -> state.activeDeckASubTab
         }
         if (activeSubTab !in tabs) {
@@ -202,14 +202,14 @@ object PresetGridTabs {
                 "Deck A" -> state.activeDeckASubTab = tabs.first()
                 "Deck B" -> state.activeDeckBSubTab = tabs.first()
                 "Deck BG" -> state.activeDeckBGSubTab = tabs.first()
-                "Deck PV", "Deck C" -> state.activeDeckPVSubTab = tabs.first()
+                "Deck PV" -> state.activeDeckPVSubTab = tabs.first()
             }
         }
         val currentSubTab = when (state.activeTopTab) {
             "Deck A" -> state.activeDeckASubTab
             "Deck B" -> state.activeDeckBSubTab
             "Deck BG" -> state.activeDeckBGSubTab
-            "Deck PV", "Deck C" -> state.activeDeckPVSubTab
+            "Deck PV" -> state.activeDeckPVSubTab
             else -> state.activeDeckASubTab
         }
 
@@ -241,7 +241,7 @@ object PresetGridTabs {
                             "Deck A" -> state.activeDeckASubTab = tab
                             "Deck B" -> state.activeDeckBSubTab = tab
                             "Deck BG" -> state.activeDeckBGSubTab = tab
-                            "Deck PV", "Deck C" -> state.activeDeckPVSubTab = tab
+                            "Deck PV" -> state.activeDeckPVSubTab = tab
                         }
                     } else {
                         ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
@@ -251,7 +251,7 @@ object PresetGridTabs {
                         "Deck A" -> state.activeDeckASubTab = tab
                         "Deck B" -> state.activeDeckBSubTab = tab
                         "Deck BG" -> state.activeDeckBGSubTab = tab
-                        "Deck PV", "Deck C" -> state.activeDeckPVSubTab = tab
+                        "Deck PV" -> state.activeDeckPVSubTab = tab
                     }
                 }
             }
@@ -306,7 +306,7 @@ object PresetGridTabs {
                 "Deck A" -> state.activeDeckASubTab
                 "Deck B" -> state.activeDeckBSubTab
                 "Deck BG" -> state.activeDeckBGSubTab
-                "Deck PV", "Deck C" -> state.activeDeckPVSubTab
+                "Deck PV" -> state.activeDeckPVSubTab
                 else -> ""
             }
             activeSubTab == label

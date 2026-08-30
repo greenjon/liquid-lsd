@@ -26,12 +26,12 @@ class DeckPresetController(
         )
     }
 
-    fun loadDeckPreset(mixer: Mixer, presetName: String, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = (deck === mixer.deckC)) {
+    fun loadDeckPreset(mixer: Mixer, presetName: String, deck: Deck, isDeckA: Boolean, isDeckPV: Boolean = (deck === mixer.deckPV)) {
         if (presetName == "None") return
         val cleanName = presetName.removeSuffix(".lsd").trim()
         val file = File("library/presets/$cleanName.lsd")
         if (file.exists()) {
-            session.presetManager.loadDeckPresetAsync(file, isDeckA, isDeckC)
+            session.presetManager.loadDeckPresetAsync(file, isDeckA = isDeckA, isDeckPV = isDeckPV)
         }
     }
 
@@ -44,7 +44,7 @@ class DeckPresetController(
                 deck === mixer.deckA -> session.presetManager.cachedDtoA
                 deck === mixer.deckB -> session.presetManager.cachedDtoB
                 deck === mixer.deckBG -> session.presetManager.cachedDtoBG
-                deck === mixer.deckPV || deck === mixer.deckC -> session.presetManager.cachedDtoPV
+                deck === mixer.deckPV -> session.presetManager.cachedDtoPV
                 else -> null
             }
             cached?.tags ?: emptyList()
@@ -64,7 +64,7 @@ class DeckPresetController(
                 session.presetManager.activePresetBG = cleanName
                 session.presetManager.cachedDtoBG = dto
             }
-            deck === mixer.deckPV || deck === mixer.deckC -> {
+            deck === mixer.deckPV -> {
                 session.presetManager.activePresetPV = cleanName
                 session.presetManager.cachedDtoPV = dto
             }
@@ -75,7 +75,7 @@ class DeckPresetController(
             deck === mixer.deckA -> 0
             deck === mixer.deckB -> 1
             deck === mixer.deckBG -> 2
-            deck === mixer.deckPV || deck === mixer.deckC -> 3
+            deck === mixer.deckPV -> 3
             else -> -1
         }
         session.presetManager.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
@@ -148,7 +148,7 @@ class DeckPresetController(
             deck === mixer.deckA -> session.presetManager.activePresetA
             deck === mixer.deckB -> session.presetManager.activePresetB
             deck === mixer.deckBG -> session.presetManager.activePresetBG
-            deck === mixer.deckPV || deck === mixer.deckC -> session.presetManager.activePresetPV
+            deck === mixer.deckPV -> session.presetManager.activePresetPV
             else -> null
         }
         if (activeName != null && !isSaveAs) {
@@ -158,7 +158,7 @@ class DeckPresetController(
                 deck === mixer.deckA -> session.presetManager.cachedDtoA
                 deck === mixer.deckB -> session.presetManager.cachedDtoB
                 deck === mixer.deckBG -> session.presetManager.cachedDtoBG
-                deck === mixer.deckPV || deck === mixer.deckC -> session.presetManager.cachedDtoPV
+                deck === mixer.deckPV -> session.presetManager.cachedDtoPV
                 else -> null
             }
             val defaultName = if (activeName != null && isSaveAs) {
@@ -179,7 +179,7 @@ class DeckPresetController(
         }
     }
 
-    fun handleEjectDeck(mixer: Mixer, deck: Deck, isDeckA: Boolean = false, isDeckC: Boolean = false) {
+    fun handleEjectDeck(mixer: Mixer, deck: Deck, isDeckA: Boolean = false, isDeckPV: Boolean = false) {
         guardDeckTransition(mixer, deck) {
             performEjectDeck(mixer, deck)
         }
@@ -191,7 +191,7 @@ class DeckPresetController(
                 file,
                 isDeckA = deck === mixer.deckA,
                 isDeckBG = deck === mixer.deckBG,
-                isDeckPV = deck === mixer.deckPV || deck === mixer.deckC
+                isDeckPV = deck === mixer.deckPV
             )
         }
     }
@@ -217,7 +217,7 @@ class DeckPresetController(
                 session.presetManager.activePresetBG = null
                 session.presetManager.cachedDtoBG = null
             }
-            deck === mixer.deckPV || deck === mixer.deckC -> {
+            deck === mixer.deckPV -> {
                 session.presetManager.activePresetPV = null
                 session.presetManager.cachedDtoPV = null
             }

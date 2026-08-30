@@ -138,10 +138,10 @@ class UIManager(
         }
     }
 
-    private val monitorEjectDeck = { deck: Deck, isDeckA: Boolean, isDeckC: Boolean ->
+    private val monitorEjectDeck = { deck: Deck, isDeckA: Boolean, isDeckPV: Boolean ->
         val mixer = currentMixer
         if (mixer != null) {
-            deckPresetController.handleEjectDeck(mixer, deck, isDeckA, isDeckC)
+            deckPresetController.handleEjectDeck(mixer, deck, isDeckA, isDeckPV)
         }
     }
 
@@ -339,10 +339,10 @@ class UIManager(
             ui.deckPresetController.loadDeckPresetSafely(mixer, deck, file)
         }
 
-        fun triggerDeckEject(deck: Deck, isDeckA: Boolean = false, isDeckC: Boolean = false) {
+        fun triggerDeckEject(deck: Deck, isDeckA: Boolean = false, isDeckPV: Boolean = false) {
             val ui = instance ?: return
             val mixer = ui.currentMixer ?: return
-            ui.deckPresetController.handleEjectDeck(mixer, deck, isDeckA, isDeckC)
+            ui.deckPresetController.handleEjectDeck(mixer, deck, isDeckA, isDeckPV)
         }
 
         fun loadDeckPresetSafely(mixer: Mixer, deck: Deck, file: File) {

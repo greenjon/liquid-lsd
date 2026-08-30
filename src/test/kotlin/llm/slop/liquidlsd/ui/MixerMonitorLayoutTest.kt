@@ -20,7 +20,7 @@ class MixerMonitorLayoutTest {
         assertEquals(560f, layout.contentWidth)
         assertTrue(layout.masterHeight > 0f)
         assertTrue(layout.deckChildHeight > 0f)
-        assertTrue(layout.deckCHeight > 0f)
+        assertTrue(layout.deckPVHeight > 0f)
     }
 
     @Test
@@ -47,7 +47,7 @@ class MixerMonitorLayoutTest {
         assertTrue(tight.renderWidth < roomy.renderWidth)
         assertTrue(tight.masterHeight < roomy.masterHeight)
         assertTrue(tight.deckChildHeight < roomy.deckChildHeight)
-        assertTrue(tight.deckCHeight < roomy.deckCHeight)
+        assertTrue(tight.deckPVHeight < roomy.deckPVHeight)
     }
 
     @Test
@@ -64,7 +64,7 @@ class MixerMonitorLayoutTest {
 
         assertEquals(120f, tiny.masterHeight)
         assertEquals(80f, tiny.deckChildHeight)
-        assertEquals(80f, tiny.deckCHeight)
+        assertEquals(80f, tiny.deckPVHeight)
     }
 
     @Test

@@ -48,7 +48,7 @@ class PlayQueueManagerTest {
         assertEquals(0, PlayQueueManager.activeIndex)
 
         // Deck A is active. Manual load on Deck A.
-        PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckC = false, mixer = mixer)
+        PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckPV = false, mixer = mixer)
         assertFalse(PlayQueueManager.stagedDeckA, "Active deck should not be flagged as staged")
         assertEquals(0, PlayQueueManager.activeIndex, "Queue index must remain unchanged on manual load")
 
@@ -71,7 +71,7 @@ class PlayQueueManagerTest {
         assertEquals(0, PlayQueueManager.activeIndex)
 
         // User manually loads a preset into standby Deck B
-        PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = false, mixer = mixer)
+        PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckPV = false, mixer = mixer)
         assertTrue(PlayQueueManager.stagedDeckB, "Standby Deck B should be marked as staged")
 
         // Trigger Next -> should trigger crossfade to Deck B without advancing queue index or loading next file
@@ -90,11 +90,11 @@ class PlayQueueManagerTest {
     }
 
     @Test
-    fun testManualLoadOnDeckCDoesNotAffectAutoVJ() {
+    fun testManualLoadOnDeckPVDoesNotAffectAutoVJ() {
         PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
         every { mixer.crossfade.value } returns -1.0f
 
-        PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = true, mixer = mixer)
+        PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckPV = true, mixer = mixer)
         assertFalse(PlayQueueManager.stagedDeckA)
         assertFalse(PlayQueueManager.stagedDeckB)
     }

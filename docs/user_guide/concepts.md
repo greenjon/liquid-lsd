@@ -127,11 +127,11 @@ The `crossfade` slider interpolates between Deck A (-1.0) and Deck B (1.0). Like
   - **MIDI Controllers Remain Active**: Modulators mapped to physical MIDI CCs are preserved and remain active.
 - **Auto-Centering on CV Unmute**: When the user un-mutes any CV modulator on the crossfader in the modulation matrix or cell inspector, `crossfade.baseValue` automatically snaps to `0.0` (unbiased center). This ensures that LFOs or audio followers immediately resume full-range, symmetrical oscillation between Deck A and Deck B without clipping against previous manual hold positions. Modulator `DC Offset` can be used whenever an intentional deck bias is desired.
 
-### Momentary Controls & Triggers (Prev/Next, Rand A/B/C/All)
-Located directly beneath the Crossfader in the Master Mixer panel, a row of 6 momentary buttons provides direct access to queue navigation and randomization:
+### Momentary Controls & Triggers (Prev/Next, Rand A/B/BG/PV/All)
+Located directly beneath the Crossfader in the Master Mixer panel, a row of momentary buttons provides direct access to queue navigation and randomization:
 - **`< Prev` / `Next >`**: Steps backward or forward through the active playlist queue (`Mixer/queuePrev`, `Mixer/queueNext`).
-- **`Rand A` / `Rand B` / `Rand BG / Rand PV`**: Re-rolls all randomizable modulators and base values for the selected deck (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckC`).
-- **`Rand All`**: Re-rolls modulators and randomizable values across Deck A, Deck B, Deck PV, and Master parameters simultaneously (`Mixer/randAll`).
+- **`Rand A` / `Rand B` / `Rand BG` / `Rand PV`**: Re-rolls all randomizable modulators and base values for the selected deck (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckBG`, `Mixer/randDeckPV`).
+- **`Rand All`**: Re-rolls modulators and randomizable values across Deck A, Deck B, Deck BG, Deck PV, and Master parameters simultaneously (`Mixer/randAll`).
 
 **Simultaneous Triggers without Takeover**: Unlike continuous fader positions that hold a continuous value, momentary triggers are discrete pulses (rising-edge events). Using the mouse buttons, hardware MIDI triggers, or clock/LFO CV gates executes the discrete action immediately without muting modulators or disarming background automation.
 

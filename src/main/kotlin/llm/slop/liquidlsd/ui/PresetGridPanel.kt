@@ -99,7 +99,7 @@ object PresetGridPanel {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
             "Deck BG" -> mixer.deckBG
-            "Deck PV", "Deck C" -> mixer.deckPV
+            "Deck PV" -> mixer.deckPV
             else -> null
         }
         val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
@@ -135,7 +135,7 @@ object PresetGridPanel {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
                 "Deck BG" -> mixer.deckBG
-                "Deck PV", "Deck C" -> mixer.deckPV
+                "Deck PV" -> mixer.deckPV
                 else -> null
             }
             val isDeckEmpty = activeDeck?.isEmpty == true
@@ -214,7 +214,7 @@ object PresetGridPanel {
                     } else {
                         PresetGridTabs.drawDeckGroupContent(session, "Deck BG", mixer.deckBG, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
-                } else if (state.activeTopTab == "Deck PV" || state.activeTopTab == "Deck C") {
+                } else if (state.activeTopTab == "Deck PV") {
                     if (mixer.deckPV.isEmpty) {
                         drawLaunchpad(session, "Deck PV", mixer.deckPV, state, mixer)
                     } else {
@@ -322,7 +322,7 @@ object PresetGridPanel {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
             "Deck BG" -> mixer.deckBG
-            "Deck PV", "Deck C" -> mixer.deckPV
+            "Deck PV" -> mixer.deckPV
             else -> null
         }
         if (activeDeck != null && !activeDeck.isEmpty) {
@@ -429,7 +429,7 @@ object PresetGridPanel {
     ) {
         val isDeckA = deckLabel == "Deck A"
         val isDeckBG = deckLabel == "Deck BG"
-        val isDeckPV = deckLabel == "Deck PV" || deckLabel == "Deck C"
+        val isDeckPV = deckLabel == "Deck PV"
         val deckColorU32 = PresetGridTabs.getDeckColor(deckLabel, 1f)
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)

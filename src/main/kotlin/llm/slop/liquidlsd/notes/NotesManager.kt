@@ -20,7 +20,7 @@ private val logger = KotlinLogging.logger {}
  * 3. **Parameter notes** — one note per (deckLabel, paramKey) pair, stored in
  *    `DeckPresetDto.paramNotes`. Same sync lifecycle as preset notes.
  *
- * In-memory maps for preset/param notes are keyed by deckLabel ("Deck A", "Deck B", "Deck C").
+ * In-memory maps for preset/param notes are keyed by deckLabel ("Deck A", "Deck B", "Deck PV").
  */
 object NotesManager {
 

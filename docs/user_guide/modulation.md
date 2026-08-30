@@ -17,7 +17,7 @@ The Preset Grid is located in the left panel of Performance Mode.
 └─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
 ```
 
-- **Top Navigation Tabs**: Switch view focus between **Deck A**, **Deck B**, and **Deck C**.
+- **Top Navigation Tabs**: Switch view focus between **Deck A**, **Deck B**, **Deck BG**, and **Deck PV**.
 - **Undo / Redo History**: Maintains a 30-level undo/redo stack (`Ctrl+Z` / `Ctrl+Y`) tracking all modulator edits, additions, and parameter changes.
 - **Rows**: Modulatable parameters grouped logically: Mixer, Deck Geometry, View, Color, Background, and Feedback.
 - **Columns**: Active modulation sources:

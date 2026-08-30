@@ -226,7 +226,6 @@ data class SessionStateDto(
     val deckB: DeckPresetDto,
     val deckBG: DeckPresetDto? = null,
     val deckPV: DeckPresetDto? = null,
-    val deckC: DeckPresetDto? = null, // Backward compatibility for v4 session files
     val crossfade: ParameterDto,
     val masterAlpha: ParameterDto,
     val blendMode: Float,

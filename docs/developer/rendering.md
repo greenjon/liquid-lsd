@@ -45,7 +45,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
   - `FIT`: Preserves exact content aspect ratio with letterboxing or pillarboxing.
   - `FILL`: Centers and crops edges to completely fill the target screen.
   - `STRETCH`: Stretches content to fill the target viewport.
-- **Aspect-Adaptive UI Previews**: `MixerMonitorLayoutCalculator` dynamically adjusts Deck A, Deck B, Deck C, and Master preview monitor heights to match the active render aspect ratio.
+- **Aspect-Adaptive UI Previews**: `MixerMonitorLayoutCalculator` dynamically adjusts Deck A, Deck B, Deck PV, and Master preview monitor heights to match the active render aspect ratio.
 
 ---
 

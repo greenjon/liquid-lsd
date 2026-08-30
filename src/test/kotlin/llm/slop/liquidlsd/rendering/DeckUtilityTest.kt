@@ -20,10 +20,10 @@ class DeckUtilityTest {
         mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
         PresetManager.activePresetA = null
         PresetManager.activePresetB = null
-        PresetManager.activePresetC = null
+        PresetManager.activePresetPV = null
         PresetManager.cachedDtoA = null
         PresetManager.cachedDtoB = null
-        PresetManager.cachedDtoC = null
+        PresetManager.cachedDtoPV = null
     }
 
     @Test
@@ -34,7 +34,6 @@ class DeckUtilityTest {
         
         every { mixer.deckA } returns deckA
         every { mixer.deckB } returns deckB
-        every { mixer.deckC } returns mockk()
 
         every { deckA.isEmpty } returns false
         every { deckB.isEmpty } returns false
@@ -59,7 +58,6 @@ class DeckUtilityTest {
         
         every { mixer.deckA } returns deckA
         every { mixer.deckB } returns deckB
-        every { mixer.deckC } returns mockk()
 
         every { deckA.isEmpty } returns false
         every { deckB.isEmpty } returns false
@@ -93,7 +91,6 @@ class DeckUtilityTest {
         
         every { mixer.deckA } returns deckA
         every { mixer.deckB } returns deckB
-        every { mixer.deckC } returns mockk()
 
         val dtoA = mockk<DeckPresetDto>()
         every { dtoA.name } returns "Preset A"

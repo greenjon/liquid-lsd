@@ -124,7 +124,7 @@ object CellConfigPanel {
             paramKey.startsWith("Deck A/") -> mixer.deckA
             paramKey.startsWith("Deck B/") -> mixer.deckB
             paramKey.startsWith("Deck BG/") -> mixer.deckBG
-            paramKey.startsWith("Deck PV/") || paramKey.startsWith("Deck C/") -> mixer.deckPV
+            paramKey.startsWith("Deck PV/") -> mixer.deckPV
             else -> null
         }
         if (deck?.isEmpty == true) {

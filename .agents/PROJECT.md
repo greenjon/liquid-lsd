@@ -78,7 +78,16 @@ JACK audio input
             └─► CVRegistry  (volatile writes)
                     └─► ModulatableParameter.evaluate()  (render thread, per-frame)
                             ├─► Deck A / Deck B  →  FBO ping-pong  →  Mixer  →  screen
-                            └─► Deck C  →  FBO ping-pong  →  preview only (not in final output)
+                            └─► Deck PV  →  FBO ping-pong  →  preview only (not in final output)
+                        │
+                        ▼
+            ┌───────────────────────┐
+            │   Master Framebuffer  │
+            │   (FBO ping-pong)     │
+            └───────────┬───────────┘
+                        │
+                        ▼
+                GLFW Window / Screen
 ```
 
 ImGui reads the same `CVRegistry` values for the oscilloscope and meter displays.
@@ -95,7 +104,7 @@ MIDI CCs are polled each frame from a queue and applied to parameters or UI stat
 | `ModulatableParameter` | A float param with up to N `CvModulator`s stacked on it |
 | `CvModulator` | One modulation slot: source id + depth + operator (ADD/MUL) + waveform |
 | `Deck` | One visual channel: holds a `VisualSource` + ping-pong FBOs + feedback params |
-| `Mixer` | Blends Deck A + Deck B → `masterFBO` → screen (Deck C is excluded from output) |
+| `Mixer` | Blends Deck A + Deck B → `masterFBO` → screen (Deck PV is excluded from output) |
 | `Renderer` | Orchestrates per-frame: source→feedback→mix→blit |
 | `UIManager` | Top-level ImGui layout (PresetGrid 40% | CellConfig 30% | Mixer 30%) |
 | `PresetManager` | Save/load presets; owns current preset state |

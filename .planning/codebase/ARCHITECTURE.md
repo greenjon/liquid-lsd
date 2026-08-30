@@ -37,7 +37,7 @@
 | UI manager | Owns ImGui context/backends, menu/popups, asset browser layout, preset grid, deck preset browser coordination, MIDI learn event draining, and font/style updates. | `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt` |
 | Renderer | Owns core shader programs, Mandala VAO/VBO, deck rendering, feedback passes, dynamic visual source rendering, and mixer compositing. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt` |
 | Deck | Represents one visual chain with source selection, source FBO, ping-pong feedback FBOs, and per-deck feedback parameters. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Deck.kt` |
-| Mixer | Holds Deck A, Deck B, Deck C, master FBO, crossfade/blend/master controls, queue trigger parameters, and auto-fade state. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Mixer.kt` |
+| Mixer | Holds Deck A, Deck B, Deck PV, master FBO, crossfade/blend/master controls, queue trigger parameters, and auto-fade state. | `src/main/kotlin/llm/slop/liquidlsd/rendering/Mixer.kt` |
 | Visual source registry | Loads dynamic shader sources from `library/sources/*/meta.json` and `library/sources/*/shader.frag`, compiles shaders, and creates master source instances. | `src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt` |
 | Preset manager | Serializes/deserializes deck/global/session DTOs, queues background loads for main-thread apply, saves presets/session files, and tracks dirty state caches. | `src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt` |
 | Preset DTO converters | Defines persisted preset/session/playlist models and extension converters between DTOs and domain objects. | `src/main/kotlin/llm/slop/liquidlsd/models/PresetModels.kt` |
@@ -121,7 +121,7 @@
 3. Drain patch load queues and apply DTOs to `Mixer`/`Deck` objects on the main thread (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:220`, `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt:239`).
 4. Update registered CV sources and histories (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:223`, `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt:147`).
 5. Apply MIDI mappings to parameter base values (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:229`, `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt:101`).
-6. Update and render Deck A, Deck B, and Deck C through `Renderer.renderDeck()` (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:233`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt:305`).
+6. Update and render Deck A, Deck B, and Deck PV through `Renderer.renderDeck()` (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:233`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt:305`).
 7. Update mixer parameters and composite Deck A/B into `mixer.masterFBO` (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:245`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt:396`).
 8. Blit the master output into the main framebuffer when background/clean mode requires it (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:252`).
 9. Render ImGui controls and popups (`src/main/kotlin/llm/slop/liquidlsd/Main.kt:271`, `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt:260`).
@@ -180,7 +180,7 @@
 - Pattern: Mutable domain object updated once per frame, then rendered by `Renderer`.
 
 **Mixer:**
-- Purpose: Composite Deck A and Deck B, hold preview Deck C, and expose global modulation controls.
+- Purpose: Composite Deck A and Deck B, hold preview Deck PV, and expose global modulation controls.
 - Examples: `src/main/kotlin/llm/slop/liquidlsd/rendering/Mixer.kt`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt:396`
 - Pattern: Aggregate root for global patch DTOs and UI control surfaces.
 

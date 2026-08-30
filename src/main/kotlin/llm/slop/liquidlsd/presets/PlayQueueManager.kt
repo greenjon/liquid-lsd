@@ -39,9 +39,10 @@ object PlayQueueManager {
      * Called when a preset is loaded into a deck manually by the user (not by the automated queue).
      * If loaded onto the standby deck while AutoVJ is active, stages that deck for the next transition ("Jump the Line").
      * If loaded onto the active deck, it plays immediately and clears any previous stage flag.
+     * Deck PV loads are silently ignored — PV is a preview-only deck and does not affect Auto-VJ staging.
      */
-    fun notifyManualDeckLoaded(isDeckA: Boolean, isDeckC: Boolean, mixer: Mixer) {
-        if (isDeckC) return
+    fun notifyManualDeckLoaded(isDeckA: Boolean, isDeckPV: Boolean, mixer: Mixer) {
+        if (isDeckPV) return
         if (isDeckA) {
             // crossfade > 0.0 means Deck B is dominant, so Deck A is standby
             if (mixer.crossfade.value > 0.0f) {
@@ -323,7 +324,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering next: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PresetManager.loadDeckPresetAsync(file, targetIsA, isDeckC = false, isManual = false)
+        PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
@@ -408,7 +409,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering previous: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PresetManager.loadDeckPresetAsync(file, targetIsA, isDeckC = false, isManual = false)
+        PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f

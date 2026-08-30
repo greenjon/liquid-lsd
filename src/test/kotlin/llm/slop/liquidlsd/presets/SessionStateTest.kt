@@ -43,7 +43,6 @@ class SessionStateTest {
             deckB = dummyDeck.copy(name = "Deck B"),
             deckBG = dummyDeck.copy(name = "Deck BG", isEmpty = true),
             deckPV = dummyDeck.copy(name = "Deck PV", isEmpty = true),
-            deckC = dummyDeck.copy(name = "Deck C", isEmpty = true),
             crossfade = dummyParam,
             masterAlpha = dummyParam,
             blendMode = 4.0f,

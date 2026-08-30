@@ -225,7 +225,7 @@ object SourceDocRegistry {
         "mixer/queueNext" to "Trigger: steps the play queue forward by one preset.",
         "mixer/randDeckA" to "Trigger: randomises all modulation values on Deck A.",
         "mixer/randDeckB" to "Trigger: randomises all modulation values on Deck B.",
-        "mixer/randDeckC" to "Trigger: randomises all modulation values on Deck C.",
+        "mixer/randDeckPV" to "Trigger: randomises all modulation values on Deck PV.",
         "mixer/randAll" to "Trigger: randomises all modulation values on all three decks simultaneously.",
     )
 

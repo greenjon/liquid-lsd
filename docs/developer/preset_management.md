@@ -77,7 +77,7 @@ When `triggerNext()` is called:
 - **Auto-VJ OFF**: Manually loading presets to any deck keeps the queue contents and `activeIndex` completely untouched.
 - **Auto-VJ ON (Active Deck)**: Loading a preset into the live deck plays immediately; Auto-VJ remains ON and transitions to the standby deck on the next trigger.
 - **Auto-VJ ON (Standby Deck / "Jump the Line")**: Loading a preset into the inactive deck flags it as staged. The next Auto-VJ trigger crossfades to that staged visual without overwriting it, preserving the next queue track for the subsequent cycle.
-- **Deck C (Overlay)**: Manual loading on Deck C is independent and never affects Auto-VJ or deck staging.
+- **Deck PV (Preview)**: Manual loading on Deck PV is independent and never affects Auto-VJ or deck staging.
 - **Auto-VJ Mid-Session Arming**: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.
 
 ### Unified Dirty Deck Transition Guard (`DeckPresetController.guardDeckTransition`)

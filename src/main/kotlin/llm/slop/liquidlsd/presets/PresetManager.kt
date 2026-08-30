@@ -43,32 +43,22 @@ object PresetManager {
     val deckBPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
     val deckBGPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
     val deckPVPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-    val deckCPresetQueue get() = deckPVPresetQueue
 
     var activePresetA: String? = null
     var activePresetB: String? = null
     var activePresetBG: String? = null
     var activePresetPV: String? = null
-    var activePresetC: String?
-        get() = activePresetPV
-        set(value) { activePresetPV = value }
 
     var cachedDtoA: DeckPresetDto? = null
     var cachedDtoB: DeckPresetDto? = null
     var cachedDtoBG: DeckPresetDto? = null
     var cachedDtoPV: DeckPresetDto? = null
-    var cachedDtoC: DeckPresetDto?
-        get() = cachedDtoPV
-        set(value) { cachedDtoPV = value }
 
     /** File modification time (ms since epoch) of the most recently loaded deck preset. */
     var activePresetMtimeA: Long? = null
     var activePresetMtimeB: Long? = null
     var activePresetMtimeBG: Long? = null
     var activePresetMtimePV: Long? = null
-    var activePresetMtimeC: Long?
-        get() = activePresetMtimePV
-        set(value) { activePresetMtimePV = value }
 
     internal data class RestoredQueueState(
         val files: List<File>,
@@ -271,16 +261,14 @@ object PresetManager {
     fun loadDeckPresetAsync(
         file: File,
         isDeckA: Boolean = false,
-        isDeckC: Boolean = false,
         isDeckBG: Boolean = false,
         isDeckPV: Boolean = false,
         isManual: Boolean = true
     ) {
-        val targetPV = isDeckPV || isDeckC
         val deckIndex = when {
             isDeckA -> 0
             isDeckBG -> 2
-            targetPV -> 3
+            isDeckPV -> 3
             else -> 1 // Deck B
         }
         deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.LOADING))
@@ -309,13 +297,13 @@ object PresetManager {
                 when {
                     isDeckA -> deckAPresetQueue.offer(pending)
                     isDeckBG -> deckBGPresetQueue.offer(pending)
-                    targetPV -> deckPVPresetQueue.offer(pending)
+                    isDeckPV -> deckPVPresetQueue.offer(pending)
                     else -> deckBPresetQueue.offer(pending)
                 }
                 when {
                     isDeckA -> activePresetMtimeA = fileMtime
                     isDeckBG -> activePresetMtimeBG = fileMtime
-                    targetPV -> activePresetMtimePV = fileMtime
+                    isDeckPV -> activePresetMtimePV = fileMtime
                     else    -> activePresetMtimeB = fileMtime
                 }
                 logger.info { "Deck preset loaded and queued for main thread swap" }
@@ -390,7 +378,7 @@ object PresetManager {
                 )
                 NotesManager.syncFromDto("Deck A", deckADto)
                 if (pendingA.isManual) {
-                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckC = false, mixer = mixer)
+                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckPV = false, mixer = mixer)
                 }
                 logger.info { "Successfully applied Deck A preset: ${deckADto.name}" }
             } catch (e: Exception) {
@@ -412,7 +400,7 @@ object PresetManager {
                 )
                 NotesManager.syncFromDto("Deck B", deckBDto)
                 if (pendingB.isManual) {
-                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = false, mixer = mixer)
+                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckPV = false, mixer = mixer)
                 }
                 logger.info { "Successfully applied Deck B preset: ${deckBDto.name}" }
             } catch (e: Exception) {
@@ -453,7 +441,7 @@ object PresetManager {
                 )
                 NotesManager.syncFromDto("Deck PV", deckPVDto)
                 if (pendingPV.isManual) {
-                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = true, mixer = mixer)
+                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckPV = true, mixer = mixer)
                 }
                 logger.info { "Successfully applied Deck PV preset: ${deckPVDto.name}" }
             } catch (e: Exception) {
@@ -484,7 +472,6 @@ object PresetManager {
                 deckB = deckBDto,
                 deckBG = deckBGDto,
                 deckPV = deckPVDto,
-                deckC = deckPVDto,
                 crossfade = mixer.crossfade.toDto(),
                 masterAlpha = mixer.masterAlpha.toDto(),
                 blendMode = mixer.mode.baseValue,
@@ -532,7 +519,7 @@ object PresetManager {
             val bgDto = session.deckBG ?: emptyDeckDto(mixer.deckBG, mixer)
             mixer.deckBG.applyDto(bgDto)
 
-            val pvDto = session.deckPV ?: session.deckC ?: emptyDeckDto(mixer.deckPV, mixer)
+            val pvDto = session.deckPV ?: emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
             
             session.bloom?.let { mixer.bloom.applyDto(it) }

@@ -91,7 +91,7 @@ object ClipboardManager {
                     }
                 } else null
             }
-            "Deck A", "Deck B", "Deck BG", "Deck PV", "Deck C" -> {
+            "Deck A", "Deck B", "Deck BG", "Deck PV" -> {
                 val deck = when (parts[0]) {
                     "Deck A" -> mixer.deckA
                     "Deck B" -> mixer.deckB

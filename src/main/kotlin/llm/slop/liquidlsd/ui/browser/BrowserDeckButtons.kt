@@ -24,7 +24,6 @@ internal object BrowserDeckButtons {
     private val DECK_B   = floatArrayOf(0.8f, 0.4f, 0.2f) // orange
     private val DECK_BG  = floatArrayOf(0.85f, 0.65f, 0.2f) // amber / gold
     private val DECK_PV  = floatArrayOf(0.2f, 0.7f, 0.5f) // mint green
-    private val DECK_C   = DECK_PV // alias
     private val DECK_Q   = floatArrayOf(0.7f, 0.4f, 0.9f) // violet
     private val DECK_BGQ = floatArrayOf(0.9f, 0.35f, 0.65f) // magenta / rose
 
@@ -34,7 +33,6 @@ internal object BrowserDeckButtons {
     fun colorB() = DECK_B
     fun colorBG() = DECK_BG
     fun colorPV() = DECK_PV
-    fun colorC() = DECK_C
     fun colorQ() = DECK_Q
     fun colorBGQ() = DECK_BGQ
     fun colorLock() = LOCK_COLOR

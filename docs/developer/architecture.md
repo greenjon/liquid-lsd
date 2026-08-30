@@ -22,19 +22,19 @@ graph TD
         subgraph Deck_Generators [Visual Source Generators & Ping-Pong FBOs]
             DeckA[Deck A: VisualSource -> feedback.frag -> cleanFBO]
             DeckB[Deck B: VisualSource -> feedback.frag -> cleanFBO]
-            DeckC[Deck C: Preview Deck - Audition Only]
+            DeckPV[Deck PV: Preview Deck - Audition Only]
         end
         
         ModEval --> DeckA
         ModEval --> DeckB
-        ModEval --> DeckC
+        ModEval --> DeckPV
         
         DeckA --> Mixer[Mixer.kt -> mixer.frag]
         DeckB --> Mixer
         Mixer --> Screen[Master Framebuffer -> GLFW Window Screen]
     end
     
-    style DeckC stroke:#f66,stroke-dasharray: 5 5
+    style DeckPV stroke:#f66,stroke-dasharray: 5 5
 ```
 
 ---

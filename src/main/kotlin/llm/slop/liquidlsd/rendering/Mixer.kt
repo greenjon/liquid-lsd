@@ -17,8 +17,6 @@ class Mixer(
     var width: Int = 1920,
     var height: Int = 1080
 ) : ParameterOwner {
-    // Backward compatibility alias for Deck PV
-    val deckC: Deck get() = deckPV
 
     // The master FBO where the blended result is rendered
     var masterFBO = FBO(width, height)
@@ -98,7 +96,6 @@ class Mixer(
     val randDeckB = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val randDeckBG = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val randDeckPV = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val randDeckC: ModulatableParameter get() = randDeckPV
     val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
 
     private var prevQueuePrevVal = 0.0f
@@ -123,7 +120,6 @@ class Mixer(
         list.add("$prefix/randDeckB" to randDeckB)
         list.add("$prefix/randDeckBG" to randDeckBG)
         list.add("$prefix/randDeckPV" to randDeckPV)
-        list.add("$prefix/randDeckC" to randDeckPV)
         list.add("$prefix/randAll" to randAll)
 
         list.addAll(deckA.getParameterPaths("Deck A"))
@@ -148,10 +144,6 @@ class Mixer(
 
     fun randomizeDeckPV() {
         deckPV.randomizeModulators()
-    }
-
-    fun randomizeDeckC() {
-        randomizeDeckPV()
     }
 
     fun randomizeAll() {

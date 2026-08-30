@@ -20,10 +20,10 @@ class DirtyStateTest {
         mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
         PresetManager.activePresetA = null
         PresetManager.activePresetB = null
-        PresetManager.activePresetC = null
+        PresetManager.activePresetPV = null
         PresetManager.cachedDtoA = null
         PresetManager.cachedDtoB = null
-        PresetManager.cachedDtoC = null
+        PresetManager.cachedDtoPV = null
     }
 
     @Test
@@ -33,7 +33,6 @@ class DirtyStateTest {
         
         every { mixer.deckA } returns deck
         every { mixer.deckB } returns mockk()
-        every { mixer.deckC } returns mockk()
 
         // Initial state should not be dirty because cachedDto is null
         assertFalse(PresetManager.isDeckDirty(deck, mixer))
@@ -75,7 +74,6 @@ class DirtyStateTest {
         val deck = mockk<Deck>()
         every { mixer.deckA } returns deck
         every { mixer.deckB } returns mockk()
-        every { mixer.deckC } returns mockk()
 
         val globalAlpha = llm.slop.liquidlsd.models.ParameterDto(1f, 0f, 1f, false, emptyList())
 

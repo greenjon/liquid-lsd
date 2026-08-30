@@ -13,7 +13,7 @@ System prerequisites, compilation instructions (Linux, macOS, Windows), fat JAR 
 
 ### 🎨 [User Guide](user_guide/concepts.md)
 Comprehensive guides for visual synthesis, modulation matrix routing, setlist management, custom shaders, and rich tooltips.
-- **[Core Concepts & Visual Sources](user_guide/concepts.md)**: Mandalas, Dynamic Visual Sources, 3D projections, Deck A/B live mixer, and Deck C preview deck.
+- **[Core Concepts & Visual Sources](user_guide/concepts.md)**: Mandalas, Dynamic Visual Sources, 3D projections, Deck A/B live mixer, and Deck PV preview deck.
 - **[CV Modulation & Preset Grid](user_guide/modulation.md)**: Modulation routing matrix, operator math (ADD, MUL, SCALE), LFO 1/2 generators, audio/trigger CVs, and power-user mouse shortcuts.
 - **[Documentation & Notes System](user_guide/notes_and_tooltips.md)**: 3-tier note system (Global Source Notes, Preset Notes, Parameter Notes), rich UI hover tooltips, Deck Monitor preset name labels, and modal note editor.
 - **[Presets & MIDI Mapping](user_guide/midi_presets.md)**: Preset saving/loading, hardware MIDI profiles vs. preset grid cell modulators, MIDI Learn, and deck parameter clipboard.
