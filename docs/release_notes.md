@@ -9,7 +9,8 @@
 
 ### Key Highlights
 
-#### 1. Library Menu Bar Action Toolbar & Quick Audition Padlock (`llm.slop.liquidlsd.ui.browser`)
+#### 1. Library Menu Bar Action Toolbar & Column Title Bars (`llm.slop.liquidlsd.ui.browser`)
+- **Column Title Bars & Header Relocations**: Added upper title bars for all four columns (`Presets`, `Playlists`, `Queue`, `BG Queue`). Relocated the `[+]` preset creation button to the right side of the `Presets` title bar (allowing the search input to span full width), relocated `[+]` (New) and `[...]` (Actions) to the `Playlists` title bar (allowing the playlist selector dropdown to span full width), and moved `[Clear]` to the title bars of both `Queue` and `BG Queue`.
 - **Unified Menu Bar Action Strip**: Centered the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ]`) in the top Library Menu Bar with widened 80px buttons for clear text legibility and expanded title bar vertical height (+35%) with symmetrical top/bottom spacing.
 - **Column 1 Header `[+]` Button**: Positioned the Create New Preset `[+]` dropdown button directly adjacent to the preset search filter bar in the first column, matching the header layout of the Playlist Editor column.
 - **Global 4-Column Preset Selection**: Single-clicking or navigating any item across **Preset Library**, **Playlist Editor**, **A/B Play Queue**, or **Background Queue** sets a unified global selection and clears other columns for unambiguous routing.

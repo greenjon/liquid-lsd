@@ -19,12 +19,11 @@ Liquid LSD features flexible workspace dock layouts:
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │ [FULL] [HALF] [HIDE]  │  [🔒] [A] [B] [BG] [PV]  │  [Q] [BGQ]  │  [ + ▾]          │
 ├───────────────────┬───────────────────┬───────────────────┬───────────────────────┤
-│  PRESET LIBRARY   │  PLAYLIST EDITOR  │    PLAY QUEUE     │   BACKGROUND QUEUE    │
-│(All Presets/Search│[Playlist Selector]│   (A/B Auto-VJ)   │  (Dedicated BG/Dip)   │
+│ Presets       [+] │ Playlists [+] [••]│ Queue     [Clear] │ BG Queue      [Clear] │
 ├───────────────────┼───────────────────┼───────────────────┼───────────────────────┤
-│ [🔍 Search...]    │ 1. Preset Alpha   │ [AUTO-VJ] [🔁][🔀]│ [AUTO-BG] [🔁][🔀]   │
-│ Preset Alpha      │ 2. Preset Beta    │ ▶ 1. Preset 1     │ ▶ 1. Nebula BG        │
-│ Preset Beta       │ 3. Preset Gamma   │   2. Preset 2     │   2. Dark Grid BG     │
+│ [🔍 Search...]    │ [Select Playlist▾]│ [AUTO-VJ] [🔁][🔀]│ [AUTO-BG] [🔁][🔀]   │
+│ Preset Alpha      │ 1. Preset Alpha   │ ▶ 1. Preset 1     │ ▶ 1. Nebula BG        │
+│ Preset Beta       │ 2. Preset Beta    │   2. Preset 2     │   2. Dark Grid BG     │
 └───────────────────┴───────────────────┴───────────────────┴───────────────────────┘
 ```
 
