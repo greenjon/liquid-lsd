@@ -46,7 +46,7 @@
 - Shadow plugin 8.1.1 - Builds the fat JAR used by distribution tasks in `build.gradle.kts`.
 - MkDocs + Material theme - Documentation generator invoked by the `generateDocs` Gradle task in `build.gradle.kts` and installed by `.github/workflows/release.yml`; site navigation is in `mkdocs.yml`.
 - Logback 1.4.14 with kotlin-logging 3.0.5 - Runtime logging stack configured by `src/main/resources/logback.xml`.
-- GitHub Actions - Release workflow builds ZIP artifacts and publishes tagged releases via `.github/workflows/release.yml`.
+- GitHub Actions - Release workflow builds ZIP artifacts, generates release notes, and publishes releases on push to `main` and `v*` tags via `.github/workflows/release.yml`.
 
 ## Key Dependencies
 
@@ -101,7 +101,7 @@
 - Distribution target is platform-specific ZIP archives assembled by `build.gradle.kts` into `build/distributions/`.
 - Fat JAR output is `build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar` from the Shadow plugin, documented in `README.md`.
 - `packageThumbDrive` downloads Temurin JRE 17 binaries from Adoptium endpoints in `build.gradle.kts` and writes launchers for Windows, Linux x64, Linux ARM64, macOS x64, and macOS ARM64.
-- GitHub releases are built on `ubuntu-latest` and published for `v*` tags by `.github/workflows/release.yml`.
+- GitHub releases are built on `ubuntu-latest` and published automatically on push to `main` or for `v*` tags by `.github/workflows/release.yml`.
 - Production runtime remains a local desktop app; no hosted server, database, auth provider, or cloud runtime was detected.
 
 ---

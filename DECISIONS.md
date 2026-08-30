@@ -4,6 +4,19 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
+## Automated Continuous Beta Releases & Release Notes Generation
+
+- **Decision**: Automate the creation and publishing of GitHub beta releases and release notes on every push to `main`:
+  - **Push Triggers**: Configure `.github/workflows/release.yml` to trigger on `push: branches: [ main ]`, `push: tags: [ 'v*' ]`, and `workflow_dispatch`.
+  - **Sequential Concurrency**: Enforce concurrency grouping (`cancel-in-progress: false`) to ensure sequential, non-colliding releases.
+  - **Dynamic Beta Versioning**: On branch push, introspect existing tags, determine the latest `v1.0.0-beta.N` tag, calculate `v1.0.0-beta.(N+1)`, tag the commit via `github-actions[bot]`, and push the tag.
+  - **Automated Changelog Aggregation**: Compile all commits between the previous release tag and current HEAD into structured Markdown with commit links and authors, integrating with GitHub's automated release notes generator and marking beta releases as `prerelease: true`.
+- **Rationale**:
+  - Eliminates manual release creation and manual release notes editing after every commit push.
+  - Guarantees immediate binary distribution builds (`windows-x64`, `linux-x64`, `linux-arm64`, `macos-arm64`, `macos-x64`) for rapid testing across all platforms.
+
+---
+
 ## Play Queue and Background Queue Feature & Interaction Parity
 
 - **Decision**: Symmetrize modulation, auto-advance triggers, dirty-state protection, navigation controls, and interaction models between the A/B Play Queue and Background Queue:

@@ -48,7 +48,7 @@
   - SDK/Client: `java.net.URL(...).openStream()` in `build.gradle.kts`.
   - Auth: Not detected.
   - Endpoints: platform-specific `https://api.adoptium.net/v3/binary/latest/17/ga/...` URLs in `build.gradle.kts`.
-- GitHub Actions and GitHub Releases - CI builds distribution ZIPs and publishes releases for `v*` tags.
+- GitHub Actions and GitHub Releases - CI builds distribution ZIPs, generates commit-history release notes, and publishes releases automatically on push to `main` or `v*` tags.
   - SDK/Client: `.github/workflows/release.yml` uses `actions/checkout@v4`, `actions/setup-java@v4`, `actions/upload-artifact@v4`, and `softprops/action-gh-release@v2`.
   - Auth: GitHub Actions-provided repository token through workflow permissions; no repository secret names are declared in `.github/workflows/release.yml`.
 - Python package tools for docs - Release workflow installs MkDocs tooling.
