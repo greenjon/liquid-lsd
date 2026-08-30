@@ -210,8 +210,17 @@ object BeatDivisionSlider {
         }
 
         // --- Dragging & Slider Render ---
-        val mousePressed = ImGui.isMouseClicked(0)
-        val mouseDown = ImGui.isMouseDown(0)
+        val trackPadX = 6f
+        val trackW = (lineWidth + trackPadX * 2f).coerceAtLeast(1f)
+        val trackH = buttonSize
+        ImGui.setCursorScreenPos(lineStartX - trackPadX, row2Y)
+        ImGui.invisibleButton("##bd_track_${idPrefix}_$label", trackW, trackH)
+        val isTrackHovered = ImGui.isItemHovered()
+        val isTrackItemActive = ImGui.isItemActive()
+        val isTrackActivated = ImGui.isItemActivated()
+
+        val mousePressed = isTrackActivated || (isTrackHovered && ImGui.isMouseClicked(0))
+        val mouseDown = isTrackItemActive
 
         if (effectiveIsRandomizable) {
             val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
@@ -220,28 +229,24 @@ object BeatDivisionSlider {
             val maxHandleX = lineStartX + maxPct * lineWidth
 
             if (mousePressed) {
-                val inRowY = mouseY >= row2Y && mouseY <= row2Y + buttonSize
-                val inRowX = mouseX >= lineStartX - 10f && mouseX <= lineEndX + 10f
-                if (inRowY && inRowX) {
-                    activeSliderLabel = idPrefix + label
-                    val isOverlapping = kotlin.math.abs(minHandleX - maxHandleX) < 4f
-                    if (isOverlapping) {
-                        if (mouseX < minHandleX - 5f) {
-                            draggingMin = true; draggingMax = false
-                        } else if (mouseX > maxHandleX + 5f) {
-                            draggingMax = true; draggingMin = false
-                        } else {
-                            draggingMin = false; draggingMax = false
-                            clickMouseX = mouseX
-                        }
+                activeSliderLabel = idPrefix + label
+                val isOverlapping = kotlin.math.abs(minHandleX - maxHandleX) < 4f
+                if (isOverlapping) {
+                    if (mouseX < minHandleX - 5f) {
+                        draggingMin = true; draggingMax = false
+                    } else if (mouseX > maxHandleX + 5f) {
+                        draggingMax = true; draggingMin = false
                     } else {
-                        val distToMin = kotlin.math.abs(mouseX - minHandleX)
-                        val distToMax = kotlin.math.abs(mouseX - maxHandleX)
-                        if (distToMin < distToMax) {
-                            draggingMin = true; draggingMax = false
-                        } else {
-                            draggingMax = true; draggingMin = false
-                        }
+                        draggingMin = false; draggingMax = false
+                        clickMouseX = mouseX
+                    }
+                } else {
+                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                    if (distToMin < distToMax) {
+                        draggingMin = true; draggingMax = false
+                    } else {
+                        draggingMax = true; draggingMin = false
                     }
                 }
             }
@@ -294,12 +299,8 @@ object BeatDivisionSlider {
             val valHandleX = lineStartX + valPct * lineWidth
 
             if (mousePressed) {
-                val inRowY = mouseY >= row2Y && mouseY <= row2Y + buttonSize
-                val inRowX = mouseX >= lineStartX - 10f && mouseX <= lineEndX + 10f
-                if (inRowY && inRowX) {
-                    activeSliderLabel = idPrefix + label
-                    draggingMin = true; draggingMax = false
-                }
+                activeSliderLabel = idPrefix + label
+                draggingMin = true; draggingMax = false
             }
 
             if (mouseDown && activeSliderLabel == (idPrefix + label)) {
@@ -323,10 +324,8 @@ object BeatDivisionSlider {
         }
 
         // Hover-zone handling & tooltips for beat division slider track/handles
-        val inTrackY = mouseY >= centerY - 8f && mouseY <= centerY + 8f
-        val inTrackX = mouseX >= lineStartX - 4f && mouseX <= lineEndX + 4f
-        val isTrackActive = activeSliderLabel == (idPrefix + label)
-        if ((inTrackY && inTrackX) || isTrackActive) {
+        val isTrackActive = isTrackItemActive || activeSliderLabel == (idPrefix + label)
+        if (isTrackHovered || isTrackActive) {
             CustomRangeSlider.isAnySliderHovered = true
             val borderCol = if (isTrackActive) {
                 ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while active dragging

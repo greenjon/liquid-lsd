@@ -186,9 +186,10 @@ object SettingsPanel {
         ImGui.spacing()
 
         // Percentage scale slider – 75 % to 200 %, locked to 5 % steps.
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val sliderBoxW = 52f * fontScale
         val currentPct = pxToPct(currentSize)
         val t = UITheme
-        session.uiTheme.body("GUI Scale")
         session.uiTheme.caption(
             "Cap ${(currentSize * t.multCaption).toInt()}  " +
             "Body ${(currentSize * t.multBody).toInt()}  " +
@@ -198,22 +199,31 @@ object SettingsPanel {
         )
         ImGui.spacing()
 
-        val steps = (MAX_PCT - MIN_PCT) / STEP_PCT   // number of discrete steps
-        val stepIndex = imgui.type.ImInt((currentPct - MIN_PCT) / STEP_PCT)
-        val availW = ImGui.getContentRegionAvailX()
-        ImGui.setNextItemWidth(availW * 0.72f)
-        if (ImGui.sliderInt("##guiScale", stepIndex.getData(), 0, steps, "$currentPct%%")) {
-            val snappedPct = MIN_PCT + stepIndex.get() * STEP_PCT
-            onSizeChanged(pctToPx(snappedPct))
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "GUI Scale",
+            currentValue = currentPct.toFloat(),
+            minLimit = MIN_PCT.toFloat(),
+            maxLimit = MAX_PCT.toFloat(),
+            defaultValue = 100f,
+            formatValue = { "${(it / STEP_PCT).toInt() * STEP_PCT}%" },
+            idPrefix = "settings_gui_scale",
+            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+            showCurrentLabel = false,
+            customBoxWidth = sliderBoxW,
+            onValueChanged = { newVal ->
+                val snappedPct = ((newVal / STEP_PCT).toInt() * STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
+                onSizeChanged(pctToPx(snappedPct))
+            }
+        )
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip(
-                "Scale the entire GUI (fonts, padding, widgets) from $MIN_PCT%% to $MAX_PCT%%.\n" +
-                "Ctrl+- and Ctrl+= adjust by 5%% steps.\n" +
-                "100%% = 15 px body text."
+                "Scale the entire GUI (fonts, padding, widgets) from $MIN_PCT% to $MAX_PCT%.\n" +
+                "Ctrl+- and Ctrl+= adjust by 5% steps.\n" +
+                "100% = 15 px body text."
             )
         }
-        ImGui.sameLine()
+        ImGui.spacing()
         val canDecrease = currentPct > MIN_PCT
         val canIncrease = currentPct < MAX_PCT
         if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
@@ -225,14 +235,25 @@ object SettingsPanel {
         if (!canIncrease) ImGui.popStyleVar()
 
         ImGui.spacing()
-        session.uiTheme.body("Grid Knob Cell Scale")
         session.uiTheme.caption("Scale Preset Grid readouts relative to font size (0.70x – 2.00x):")
         ImGui.spacing()
-        val ratioVal = imgui.type.ImFloat(session.uiTheme.gridCellRatio)
-        if (ImGui.sliderFloat("##GridKnobScale", ratioVal.getData(), 0.70f, 2.00f, "%.2fx")) {
-            session.uiTheme.gridCellRatio = ratioVal.get()
-            session.uiTheme.saveSettings()
-        }
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Grid Knob Scale",
+            currentValue = session.uiTheme.gridCellRatio,
+            minLimit = 0.70f,
+            maxLimit = 2.00f,
+            defaultValue = 1.00f,
+            formatValue = { "%.2fx".format(it) },
+            idPrefix = "settings_grid_knob_scale",
+            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+            showCurrentLabel = false,
+            customBoxWidth = sliderBoxW,
+            onValueChanged = { newVal ->
+                session.uiTheme.gridCellRatio = newVal
+                session.uiTheme.saveSettings()
+            }
+        )
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Scale circular readout knobs and grid cells relative to global font size (0.70x – 2.00x).")
         }
@@ -413,12 +434,27 @@ object SettingsPanel {
             ImGui.setTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
         }
 
-        val bitrateInt = imgui.type.ImInt(session.uiTheme.recordingBitrateMbps)
-        if (ImGui.sliderInt("Video Bitrate (Mbps)", bitrateInt.getData(), 4, 50)) {
-            session.uiTheme.recordingBitrateMbps = bitrateInt.get()
-            session.uiTheme.saveSettings()
-        }
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val sliderBoxW = 52f * fontScale
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Video Bitrate",
+            currentValue = session.uiTheme.recordingBitrateMbps.toFloat(),
+            minLimit = 4f,
+            maxLimit = 50f,
+            defaultValue = 16f,
+            formatValue = { "${it.toInt()} Mbps" },
+            idPrefix = "settings_video_bitrate",
+            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+            showCurrentLabel = false,
+            customBoxWidth = sliderBoxW,
+            onValueChanged = { newVal ->
+                session.uiTheme.recordingBitrateMbps = newVal.toInt()
+                session.uiTheme.saveSettings()
+            }
+        )
 
+        ImGui.spacing()
         val fpsOptions = arrayOf("30 FPS", "60 FPS")
         val fpsIdx = imgui.type.ImInt(if (session.uiTheme.recordingFps <= 30) 0 else 1)
         if (ImGui.combo("Recording Framerate", fpsIdx, fpsOptions)) {
@@ -569,12 +605,25 @@ object SettingsPanel {
         ImGui.spacing()
 
         // Target Update Rate
-        theme.caption("STREAMING RATE LIMIT (FPS)")
-        val fpsVal = intArrayOf(llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps)
-        if (ImGui.sliderInt("##target_fps", fpsVal, 5, 60, "%d Hz")) {
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps = fpsVal[0]
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
-        }
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val sliderBoxW = 52f * fontScale
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Rate Limit",
+            currentValue = llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps.toFloat(),
+            minLimit = 5f,
+            maxLimit = 60f,
+            defaultValue = 30f,
+            formatValue = { "${it.toInt()} Hz" },
+            idPrefix = "settings_broadcast_target_fps",
+            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+            showCurrentLabel = false,
+            customBoxWidth = sliderBoxW,
+            onValueChanged = { newVal ->
+                llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps = newVal.toInt()
+                llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+            }
+        )
         if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
             ImGui.setTooltip("Maximum rate to dispatch parameter delta packets to the relay.")
         }
