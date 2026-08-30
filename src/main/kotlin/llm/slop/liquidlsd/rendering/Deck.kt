@@ -113,17 +113,9 @@ class Deck(
     fun getCurrentHistoryFBO(): FBO = if (fbIndex == 0) fb1 else fb2
 
     /**
-     * Retrieves the final output texture of the Deck (reconstructed clean FBO if background is active,
-     * otherwise the current history FBO texture).
+     * Retrieves the final output texture of the Deck (the current history FBO texture).
      */
-    fun getOutputTexture(): Int {
-        val bgStyle = source.parameters["Bg Style"]?.value ?: 0f
-        return if (bgStyle > 0.5f) {
-            cleanFBO.texture
-        } else {
-            getCurrentHistoryFBO().texture
-        }
-    }
+    fun getOutputTexture(): Int = getCurrentHistoryFBO().texture
 
     /**
      * Retrieves the target FBO for the new feedback combination.

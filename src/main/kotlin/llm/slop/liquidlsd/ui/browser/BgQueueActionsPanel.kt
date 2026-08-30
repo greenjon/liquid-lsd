@@ -19,18 +19,37 @@ object BgQueueActionsPanel {
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+        val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
+        val itemSpacingX = ImGui.getStyle().getItemSpacingX()
+        val totalRightW = clearBtnW + navBtnW * 2f + itemSpacingX * 2f
 
-        // Title Bar: "BG Queue" on the left, "Clear" button on the right
+        // Title Bar: "BG Queue" on the left, "<", ">", "Clear" buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ImGui.text("BG Queue")
         }
         ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - clearBtnW
+        val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
         if (rightX > ImGui.getCursorPosX()) {
             ImGui.setCursorPosX(rightX)
         }
 
+        if (ImGui.button("<##bgQueuePrev", navBtnW, 0f)) {
+            BgQueueManager.triggerPrevious(mixer)
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Trigger previous preset in Background Queue (Mixer/bgQueuePrev).")
+        }
+
+        ImGui.sameLine()
+        if (ImGui.button(">##bgQueueNext", navBtnW, 0f)) {
+            BgQueueManager.triggerNext(mixer)
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Trigger next preset in Background Queue (Mixer/bgQueueNext).")
+        }
+
+        ImGui.sameLine()
         if (ImGui.button("Clear##bgQueue", clearBtnW, 0f)) {
             BgQueueManager.clearQueue()
             selectedIndex = -1
@@ -99,6 +118,15 @@ object BgQueueActionsPanel {
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Shuffle BG Queue: play presets in a random order.")
         }
+
+        ImGui.sameLine()
+        if (ImGui.button("Export##bgQueueExport")) {
+            ImGui.openPopup("ExportBgQueuePopup")
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Save current background queue sequence as a new playlist.")
+        }
+        BrowserPopupHandler.drawExportBgQueuePopup()
 
         ImGui.separator()
         ImGui.spacing()
@@ -194,6 +222,19 @@ object BgQueueActionsPanel {
                 }
                 if (ImGui.menuItem("Play (Instant Cut)")) {
                     BgQueueManager.playIndex(index, mixer, withDipToBlack = false)
+                }
+                if (ImGui.menuItem("Load to Deck A")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
+                }
+                if (ImGui.menuItem("Load to Deck B")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                }
+                if (ImGui.menuItem("Preview on Deck PV")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckPV = true)
+                }
+                ImGui.separator()
+                if (ImGui.menuItem("Add to A/B Queue")) {
+                    session.playQueueManager.appendToQueue(file)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Remove from BG queue")) {

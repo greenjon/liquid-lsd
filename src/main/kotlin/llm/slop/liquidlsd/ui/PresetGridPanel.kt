@@ -188,6 +188,8 @@ object PresetGridPanel {
                         PresetGridRenderer.drawParamRow(session, "fade speed",  "Mixer/xfadeSpeed",  mixer.xfadeSpeed,  state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         PresetGridRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         PresetGridRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "bg queue prev", "Mixer/bgQueuePrev", mixer.bgQueuePrev, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "bg queue next", "Mixer/bgQueueNext", mixer.bgQueueNext, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         if (session.uiTheme.randomizationEnabled) {
                             PresetGridRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                             PresetGridRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
@@ -338,8 +340,8 @@ object PresetGridPanel {
         val finalColX = startX + labelColW + getColumnOffset(session, "final")
         dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
         
-        val isFinalHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
-        if (isFinalHovered) {
+        val isFinalHeaderHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        if (isFinalHeaderHovered) {
             dl.addRectFilled(finalColX, startY, finalColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
         }
         
@@ -351,7 +353,6 @@ object PresetGridPanel {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("final"))
         session.uiTheme.caption(labelFinal)
         ImGui.popStyleColor()
-        val isFinalHeaderHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
         if (isFinalHeaderHovered && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("FINAL: Base parameter value and modulation bounds/limits.")
         }
@@ -361,8 +362,8 @@ object PresetGridPanel {
             val midiColX = startX + labelColW + getColumnOffset(session, "midi")
             dl.addLine(midiColX - CELL_PAD * 0.5f, startY, midiColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
             
-            val isMidiHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
-            if (isMidiHovered) {
+            val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+            if (isMidiHeaderHovered) {
                 dl.addRectFilled(midiColX, startY, midiColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
             }
             
@@ -374,7 +375,6 @@ object PresetGridPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("midi"))
             session.uiTheme.caption(labelMidi)
             ImGui.popStyleColor()
-            val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
             if (isMidiHeaderHovered && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip("MIDI: Map MIDI CC/Notes from controllers to modulate this parameter.")
             }
@@ -387,8 +387,8 @@ object PresetGridPanel {
             val colX = startX + labelColW + getColumnOffset(session, cvId)
             dl.addLine(colX - CELL_PAD * 0.5f, startY, colX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
             
-            val isCvHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= bottomY
-            if (isCvHovered) {
+            val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+            if (isCvHeaderHovered) {
                 dl.addRectFilled(colX, startY, colX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
             }
             
@@ -399,7 +399,6 @@ object PresetGridPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor(cvId))
             session.uiTheme.caption(label)
             ImGui.popStyleColor()
-            val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
             if (isCvHeaderHovered && session.uiTheme.tooltipsEnabled) {
                 val cvDesc = when (cvId) {
                     "lfo" -> "LFO: Synthetic low-frequency oscillator waveforms (Sine, Triangle, Square, Random)."

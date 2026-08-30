@@ -25,6 +25,7 @@ object BrowserPopupHandler {
     val renameBuffer = ImString(256)
     val newPlaylistNameBuffer = ImString(256)
     val exportQueueNameBuffer = ImString(256)
+    val exportBgQueueNameBuffer = ImString(256)
 
     fun openRenamePresetModal(asset: AssetItem) {
         val file = File(asset.path)
@@ -255,6 +256,33 @@ object BrowserPopupHandler {
             ImGui.sameLine()
             if (ImGui.button("Cancel", 120f, 0f)) {
                 exportQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
+    fun drawExportBgQueuePopup() {
+        if (ImGui.beginPopupModal("ExportBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("Export Background Queue as Playlist")
+            ImGui.separator()
+            ImGui.inputText("Playlist Name", exportBgQueueNameBuffer)
+            if (ImGui.button("Export", 120f, 0f)) {
+                val name = exportBgQueueNameBuffer.get().trim()
+                if (name.isNotBlank()) {
+                    PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
+                        llm.slop.liquidlsd.presets.BgQueueManager.queue.forEach { queueFile ->
+                            PlaylistManager.insertPreset(playlist, queueFile.absolutePath, playlist.presets.size)
+                        }
+                        PlaylistManager.savePlaylist(playlist)
+                    }
+                }
+                exportBgQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 120f, 0f)) {
+                exportBgQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()

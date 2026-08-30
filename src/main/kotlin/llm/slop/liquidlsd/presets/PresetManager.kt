@@ -482,6 +482,8 @@ object PresetManager {
                 xfadeSpeed = mixer.xfadeSpeed.toDto(),
                 queueNext = mixer.queueNext.toDto(),
                 queuePrev = mixer.queuePrev.toDto(),
+                bgQueueNext = mixer.bgQueueNext.toDto(),
+                bgQueuePrev = mixer.bgQueuePrev.toDto(),
                 isRepeatEnabled = PlayQueueManager.isRepeatEnabled,
                 isShuffleEnabled = PlayQueueManager.isShuffleEnabled,
                 bgQueue = BgQueueManager.queue.map { serializeSessionPath(it) },
@@ -526,8 +528,12 @@ object PresetManager {
             session.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             session.queueNext?.let { mixer.queueNext.applyDto(it) }
             session.queuePrev?.let { mixer.queuePrev.applyDto(it) }
+            session.bgQueueNext?.let { mixer.bgQueueNext.applyDto(it) }
+            session.bgQueuePrev?.let { mixer.bgQueuePrev.applyDto(it) }
             mixer.queueNext.baseValue = 0f
             mixer.queuePrev.baseValue = 0f
+            mixer.bgQueueNext.baseValue = 0f
+            mixer.bgQueuePrev.baseValue = 0f
             mixer.syncQueueTriggerPrevValues()
             
             activePresetA = if (session.deckA.isEmpty) null else session.deckA.name

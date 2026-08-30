@@ -85,6 +85,8 @@ class UIManager(
 
     private var lastNextMidiCcHigh = false
     private var lastPrevMidiCcHigh = false
+    private var lastBgNextMidiCcHigh = false
+    private var lastBgPrevMidiCcHigh = false
 
     private var currentMixer: Mixer? = null
 
@@ -172,6 +174,7 @@ class UIManager(
 
         // Drain all MIDI events queued by the MIDI receiver thread.
         var midiCcDelta = 0
+        var bgMidiCcDelta = 0
         while (true) {
             val event = llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.poll() ?: break
             val (channel, cc) = event
@@ -220,6 +223,26 @@ class UIManager(
                     }
                     lastPrevMidiCcHigh = isHigh
                 }
+                val bgNextCc = session.midiMappingManager.getCcForSpecial("Global/bgQueueNext")
+                val bgNextCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueueNext")
+                if (bgNextCc != -1 && cc == bgNextCc && channel == bgNextCh) {
+                    val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                    val isHigh = valNow > 0.5f
+                    if (isHigh && !lastBgNextMidiCcHigh) {
+                        bgMidiCcDelta += 1
+                    }
+                    lastBgNextMidiCcHigh = isHigh
+                }
+                val bgPrevCc = session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev")
+                val bgPrevCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueuePrev")
+                if (bgPrevCc != -1 && cc == bgPrevCc && channel == bgPrevCh) {
+                    val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                    val isHigh = valNow > 0.5f
+                    if (isHigh && !lastBgPrevMidiCcHigh) {
+                        bgMidiCcDelta -= 1
+                    }
+                    lastBgPrevMidiCcHigh = isHigh
+                }
             }
         }
 
@@ -248,6 +271,16 @@ class UIManager(
                 session.playQueueManager.triggerNext(mixer)
             } else {
                 session.playQueueManager.triggerPrevious(mixer)
+            }
+        }
+
+        val bgCvDelta = if (session.bgQueueManager.isAutoBGEnabled) mixer.pollBgQueueAdvance() else { mixer.pollBgQueueAdvance(); 0 }
+        val totalBgDelta = bgMidiCcDelta + bgCvDelta
+        if (totalBgDelta != 0) {
+            if (totalBgDelta > 0) {
+                session.bgQueueManager.triggerNext(mixer)
+            } else {
+                session.bgQueueManager.triggerPrevious(mixer)
             }
         }
 

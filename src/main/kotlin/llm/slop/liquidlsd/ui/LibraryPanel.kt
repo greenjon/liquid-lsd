@@ -294,6 +294,7 @@ object LibraryPanel {
         BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
         BrowserPopupHandler.drawNewPlaylistPopup()
         BrowserPopupHandler.drawExportQueuePopup(session)
+        BrowserPopupHandler.drawExportBgQueuePopup()
 
         // Reset one-shot focus/scroll flags at end of frame
         shouldReclaimFocus = false

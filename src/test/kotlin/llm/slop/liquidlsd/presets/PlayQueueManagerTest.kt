@@ -351,4 +351,22 @@ class PlayQueueManagerTest {
         assertTrue(PlayQueueManager.isAutoVJEnabled, "playPlaylistNow should enable Auto-VJ")
         io.mockk.verify(atLeast = 1) { mixer.muteCrossfadeNonMidiCv() }
     }
+
+    @Test
+    fun testPlayIndexLoadsStandbyDeckAndAutoFades() {
+        val f1 = File("library/presets/p1.lsd")
+        val f2 = File("library/presets/p2.lsd")
+        PlayQueueManager.appendToQueue(f1)
+        PlayQueueManager.appendToQueue(f2)
+
+        // Crossfade at Deck A (-1.0) -> inactive deck is Deck B
+        every { mixer.crossfade.value } returns -1.0f
+
+        PlayQueueManager.playIndex(1, mixer)
+
+        assertEquals(1, PlayQueueManager.activeIndex)
+        io.mockk.verify { mixer.targetCrossfade = 1.0f }
+        io.mockk.verify { mixer.isAutoFading = true }
+        io.mockk.verify { mixer.muteCrossfadeNonMidiCv() }
+    }
 }

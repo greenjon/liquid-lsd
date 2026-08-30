@@ -92,6 +92,16 @@ When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500
 
 ---
 
+## BTrack Real-Time Beat Tracking Engine (`BeatTrackerEngine.kt`)
+
+Beat detection and continuous modulation signal generation are handled by [`BeatTrackerEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt):
+- **Complex Spectral Difference ODF**: 512-point zero-allocation FFT detecting percussive and tonal onsets.
+- **Two-State Multi-Band Autocorrelation**: Unconstrained acquisition (40–200 BPM) vs. locked tracking with harmonic comb unwrapping and $\pm 2.0$ BPM/beat human tracking inertia.
+- **Causal Dynamic Programming Recurrence**: Evaluates causal DP beat score recurrence using pre-tabulated logarithm tables (`logTauTable`).
+- **Continuous Phase & Cosine Generator**: Outputs continuous normalized phase $\phi(t) \in [0.0, 1.0)$ and locked cosine modulation signal $\cos(2\pi \phi(t))$ via zero-allocation queries (`getPhase`, `getCosine`, `getPhaseAndCosine`, `getPhaseAndCosinePacked`).
+
+---
+
 ## Audio Hardware Discovery & UI Caching
 
 Querying audio devices via `AudioSystem.getMixerInfo()` and `AudioSystem.getMixer()` in Java Sound invokes native ALSA/OS audio layer introspection. Probing mixers inside the real-time ImGui render loop creates native memory allocations and file descriptor pressure that can lead to memory exhaustion (OOM).

@@ -86,20 +86,27 @@ The Middle column allows inspecting and arranging setlists side-by-side with you
 - **Playlist Dropdown Combo**: Click to instantly switch the active playlist from all discovered `.lsdset` files.
 - **`[ + ]` Create New Playlist**: Prompts for a playlist name and creates a new empty setlist file.
 - **`[ ••• ]` Playlist Actions Menu**:
-  - **Play now (and replace queue)**: Loads and starts playback of the entire playlist.
-  - **Insert into queue after current**: Inserts all playlist presets into the live queue after current track.
-  - **Add to bottom of queue**: Appends the playlist to the end of the queue.
-  - **Rename...**: Renames the active playlist file on disk.
-  - **Clone**: Duplicates the active playlist as `<name>_copy.lsdset`.
-  - **Delete**: Permanently removes the playlist file.
+  - **A/B Play Queue Actions**:
+    - **Play now in A/B Queue (and replace queue)**: Loads and starts Auto-VJ playback of the entire playlist in the A/B queue.
+    - **Insert into A/B Queue after current**: Inserts all playlist presets into the live A/B queue after the current track.
+    - **Add to the bottom of A/B Queue**: Appends the playlist to the end of the A/B queue.
+  - **Background Queue Actions**:
+    - **Play now in BG Queue (and replace queue)**: Loads and starts Auto-BG playback of the entire playlist in the Background queue.
+    - **Insert into BG Queue after current**: Inserts all playlist presets into the live Background queue after the current track.
+    - **Add to the bottom of BG Queue**: Appends the playlist to the end of the Background queue.
+  - **File Operations**:
+    - **Rename...**: Renames the active playlist file on disk.
+    - **Clone**: Duplicates the active playlist as `<name>_copy.lsdset`.
+    - **Delete**: Permanently removes the playlist file.
 
 ### Playlist Preset Rows & Auto-Save
 - **Auto-Save on Edit**: Any modification (adding presets, dragging to reorder, or removing items) automatically saves to disk.
 - **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the playlist and press `Delete` or `Backspace` to remove it from the playlist.
 - **Drag Reordering**: Drag items up and down with mint-green insertion line feedback.
 - **Item Context Menu (Right-Click)**:
-  - **Load to Deck A / B / BG / PV / Q / BGQ**.
-  - **Remove from playlist**: Removes the preset from the playlist list.
+  - **Load to Deck A / B / BG / PV**: Routes the preset to the specified deck.
+  - **Add to A/B Queue / Background Queue**: Appends the preset to either queue.
+  - **Remove from playlist**: Removes the preset from the playlist.
   - **Delete preset from library...**: Permanently deletes the preset file from your library.
 
 ---
@@ -110,6 +117,12 @@ The 3rd column displays the live sequence of presets for main A/B deck Auto-VJ a
 
 - **Auto-VJ (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automated cycling through queue presets at configured crossfade intervals.
 - **Repeat & Shuffle**: Controls queue cycle loop and randomization.
+- **Export Button**: Exports the current live A/B queue as a new `.lsdset` playlist file.
+- **Item Context Menu (Right-Click)**:
+  - **Load to Deck A / B / BG / PV**: Instantly loads the queued preset to any deck.
+  - **Add to Background Queue**: Routes the queued preset over to the Background queue.
+  - **Remove from queue**: Removes the preset from the active queue.
+  - **Delete preset from library...**: Permanently deletes the preset file.
 - **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
 
 ---
@@ -121,7 +134,14 @@ The 4th column manages automated cycling and sequential playback for the dedicat
 - **Auto-BG (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automatic cycling through background presets.
 - **Dip-to-Black Transitions**: Smoothly fades out the current background, loads the new preset, and fades back in beneath the live foreground.
 - **Repeat & Shuffle**: Continuous loop and shuffle for background visuals.
+- **Export Button**: Exports the current background queue as a new `.lsdset` playlist file.
 - **Double-Click & Right-Click Play**: Trigger instant cuts or dip-to-black transitions on demand.
+- **Item Context Menu (Right-Click)**:
+  - **Play (Dip to Black) / Play (Instant Cut)**: Triggers playback with or without dip-to-black fade.
+  - **Load to Deck A / B / PV**: Routes the background preset to other decks.
+  - **Add to A/B Queue**: Routes the background preset over to the live A/B play queue.
+  - **Remove from BG queue**: Removes the preset from the background queue.
+  - **Delete preset from library...**: Permanently deletes the preset file.
 
 ---
 

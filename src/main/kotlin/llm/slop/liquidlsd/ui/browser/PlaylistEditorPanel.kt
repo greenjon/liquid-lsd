@@ -134,14 +134,24 @@ object PlaylistEditorPanel {
             )
 
             if (ImGui.beginPopup("playlist_header_more_menu")) {
-                if (ImGui.menuItem("Play now (and replace queue)")) {
+                if (ImGui.menuItem("Play now in A/B Queue (and replace queue)")) {
                     session.playQueueManager.playPlaylistNow(selectedFile, mixer)
                 }
-                if (ImGui.menuItem("Insert into the queue after current")) {
+                if (ImGui.menuItem("Insert into A/B Queue after current")) {
                     session.playQueueManager.insertPlaylistAfterCurrent(selectedFile)
                 }
-                if (ImGui.menuItem("Add to the bottom of the queue")) {
+                if (ImGui.menuItem("Add to the bottom of A/B Queue")) {
                     session.playQueueManager.appendPlaylistToQueue(selectedFile)
+                }
+                ImGui.separator()
+                if (ImGui.menuItem("Play now in BG Queue (and replace queue)")) {
+                    BgQueueManager.playPlaylistNow(selectedFile, mixer)
+                }
+                if (ImGui.menuItem("Insert into BG Queue after current")) {
+                    BgQueueManager.insertPlaylistAfterCurrent(selectedFile)
+                }
+                if (ImGui.menuItem("Add to the bottom of BG Queue")) {
+                    BgQueueManager.appendPlaylistToQueue(selectedFile)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Rename...")) {
@@ -343,6 +353,7 @@ object PlaylistEditorPanel {
         // Bottom drop target area to append to the end
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(30f)
         ImGui.dummy(ImGui.getContentRegionAvailX(), availH)
+        ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
             if (payload != null) {
@@ -355,6 +366,7 @@ object PlaylistEditorPanel {
             }
             ImGui.endDragDropTarget()
         }
+        ImGui.popStyleColor()
 
         if (moveFrom != -1 && moveTo != -1) {
             PlaylistManager.movePreset(playlist, moveFrom, moveTo)

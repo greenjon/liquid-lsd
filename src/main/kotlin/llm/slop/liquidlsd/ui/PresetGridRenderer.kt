@@ -36,21 +36,15 @@ object PresetGridRenderer {
         val CELL_PAD = metrics.cellPad
         val isEven = (rowIndex % 2 == 0)
 
-        val mousePos = ImGui.getIO().mousePos
         val rowScreenY = ImGui.getCursorScreenPosY()
         val lastVisibleCol = getCvColumns().lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
         val rowWidth = labelColW + getColumnOffset(lastVisibleCol) + CELL + CELL_PAD * 0.5f
-        val isHoveredRow = mousePos.y >= rowScreenY && mousePos.y <= (rowScreenY + CELL) && mousePos.x >= gridStartX && mousePos.x <= (gridStartX + rowWidth)
 
         ImGui.pushID(paramKey)
 
-        if (isEven || isHoveredRow) {
+        if (isEven) {
             val dl = ImGui.getWindowDrawList()
-            val stripeCol = if (isHoveredRow) {
-                ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.06f)
-            } else {
-                ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
-            }
+            val stripeCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
             dl.addRectFilled(gridStartX, rowScreenY, gridStartX + rowWidth, rowScreenY + CELL, stripeCol)
         }
 
@@ -183,19 +177,19 @@ object PresetGridRenderer {
 
         // 1. FINAL Cell
         drawFinalCell(session, dl, param, paramKey, state, gridStartX, labelColW, rowScreenY, CELL, r,
-            isHoveredRow, mousePos, getColumnOffset, getCvColor, onPushUndo)
+            getColumnOffset, getCvColor, onPushUndo)
 
         // 2. MIDI Cell
         if (session.uiTheme.showMidiCol) {
             drawMidiCell(session, dl, param, paramKey, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
-                isHoveredRow, mousePos, getColumnOffset, getCvColor, onPushUndo)
+                getColumnOffset, getCvColor, onPushUndo)
         }
 
         // 3. CV Cells
         val cvCols = getCvColumns()
         for (cvId in cvCols) {
             drawCvCell(session, dl, param, paramKey, cvId, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
-                isHoveredRow, mousePos, getColumnOffset, getCvColor, onPushUndo)
+                getColumnOffset, getCvColor, onPushUndo)
         }
 
         ImGui.popID()
@@ -212,8 +206,6 @@ object PresetGridRenderer {
         state: PresetGridState,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
-        isHoveredRow: Boolean,
-        mousePos: imgui.ImVec2,
         getColumnOffset: (String) -> Float,
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
@@ -221,7 +213,6 @@ object PresetGridRenderer {
         val finalX = gridStartX + labelColW + getColumnOffset("final")
         val finalY = rowScreenY
         val isFinalSelected = state.selectedCell?.paramKey == paramKey && state.selectedCell?.cvSourceId == "final"
-        val isFinalHoveredCol = mousePos.x >= finalX && mousePos.x <= (finalX + CELL)
 
         ImGui.setCursorScreenPos(finalX, finalY)
         val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
@@ -265,7 +256,7 @@ object PresetGridRenderer {
             baseMin = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMin else null,
             baseMax = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMax else null,
             color = getCvColor("final", 1f), bgCol = bgCol, borderCol = borderCol,
-            isHoveredRow = isHoveredRow, isHoveredCol = isFinalHoveredCol
+            isHovered = isFinalHovered
         )
     }
 
@@ -278,8 +269,6 @@ object PresetGridRenderer {
         mixer: llm.slop.liquidlsd.rendering.Mixer,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
-        isHoveredRow: Boolean,
-        mousePos: imgui.ImVec2,
         getColumnOffset: (String) -> Float,
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
@@ -288,8 +277,6 @@ object PresetGridRenderer {
         val midiY = rowScreenY
         val midiCellId = PresetCellId(paramKey, "midi")
         val isMidiSelected = state.selectedCell == midiCellId
-        val isMidiHoveredCol = mousePos.x >= midiX && mousePos.x <= (midiX + CELL)
-        val isMidiCrosshair  = isHoveredRow && isMidiHoveredCol
 
         val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
         val hasMidiMod = midiMods.any { mod ->
@@ -388,16 +375,14 @@ object PresetGridRenderer {
                 color = getCvColor("midi", 1f),
                 bgCol = bgCol, borderCol = borderCol,
                 isBypassed = isMidiBypassed,
-                isHoveredRow = isHoveredRow, isHoveredCol = isMidiHoveredCol
+                isHovered = isCellHovered
             )
         } else {
             dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, bgCol, 3f)
-            if (isMidiCrosshair) {
+            if (isCellHovered) {
                 dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
-            } else if (isMidiHoveredCol) {
-                dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
             }
-            val border = if (isMidiCrosshair) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+            val border = if (isCellHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
             dl.addRect(midiX, midiY, midiX + CELL, midiY + CELL, border, 3f)
         }
     }
@@ -412,8 +397,6 @@ object PresetGridRenderer {
         mixer: llm.slop.liquidlsd.rendering.Mixer,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
-        isHoveredRow: Boolean,
-        mousePos: imgui.ImVec2,
         getColumnOffset: (String) -> Float,
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
@@ -436,8 +419,6 @@ object PresetGridRenderer {
 
         val x = gridStartX + labelColW + getColumnOffset(cvId)
         val y = rowScreenY
-        val isHoveredCol = mousePos.x >= x && mousePos.x <= (x + CELL)
-        val isCrosshair  = isHoveredRow && isHoveredCol
         val isTarget = state.midiLearnTarget?.let {
             it is MidiLearnTarget.GridCell && it.cellId == cellId
         } ?: false
@@ -553,16 +534,14 @@ object PresetGridRenderer {
                 color = getCvColor(cvId, 1f),
                 bgCol = bgCol, borderCol = borderCol,
                 isBypassed = isBypassed,
-                isHoveredRow = isHoveredRow, isHoveredCol = isHoveredCol
+                isHovered = isCellHovered
             )
         } else {
             dl.addRectFilled(x, y, x + CELL, y + CELL, bgCol, 3f)
-            if (isCrosshair) {
+            if (isCellHovered) {
                 dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
-            } else if (isHoveredCol) {
-                dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
             }
-            val border = if (isCrosshair) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+            val border = if (isCellHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
             dl.addRect(x, y, x + CELL, y + CELL, border, 3f)
         }
     }
@@ -581,21 +560,18 @@ object PresetGridRenderer {
         bgCol: Int,
         borderCol: Int,
         isBypassed: Boolean = false,
-        isHoveredRow: Boolean = false,
-        isHoveredCol: Boolean = false
+        isHovered: Boolean = false
     ) {
         val cx = x + r
         val cy = y + r
 
         dl.addRectFilled(x, y, x + r * 2f, y + r * 2f, bgCol, 3f)
         
-        if (isHoveredRow && isHoveredCol) {
+        if (isHovered) {
             dl.addRectFilled(x, y, x + r * 2f, y + r * 2f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
-        } else if (isHoveredCol) {
-            dl.addRectFilled(x, y, x + r * 2f, y + r * 2f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f), 3f)
         }
 
-        val border = if (isHoveredRow && isHoveredCol) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+        val border = if (isHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
         dl.addRect(x, y, x + r * 2f, y + r * 2f, border, 3f)
 
         val scaleFactor = r / 17.5f

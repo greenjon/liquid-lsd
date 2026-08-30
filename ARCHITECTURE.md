@@ -37,6 +37,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── SessionContext.kt           — Application state & context
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
+│   ├── BeatTrackerEngine.kt    — Real-time BTrack causal dynamic programming beat tracker and continuous phase generator
 │   ├── JackClient.kt           — JNAJack callback wrapper
 │   ├── JavaSoundClient.kt      — Java Sound TargetDataLine fallback client
 │   ├── BiquadFilter.kt         — Zero-alloc biquad IIR filter

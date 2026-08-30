@@ -171,6 +171,35 @@ object PlayQueueManager {
         triggerNext(mixer)
     }
 
+    fun playIndex(index: Int, mixer: Mixer) {
+        if (index !in queue.indices) return
+
+        // Determine which deck is inactive
+        // crossfade -1.0 = Deck A, 1.0 = Deck B
+        val targetIsA = mixer.crossfade.value > 0.0f
+        val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
+
+        if (!handleDirtyDeck(targetIsA, targetDeck, mixer)) return
+
+        activeIndex = index
+        stagedDeckA = false
+        stagedDeckB = false
+        val file = queue[activeIndex]
+
+        if (isShuffleEnabled) {
+            playedIndices.add(index)
+            playbackHistory.add(index)
+        }
+
+        logger.info { "Playing index $index: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
+        PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
+
+        // Start auto-fade to the target deck
+        mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
+        mixer.isAutoFading = true
+        mixer.muteCrossfadeNonMidiCv()
+    }
+
     fun playPlaylistNow(playlistFile: File, mixer: Mixer) {
         clearQueue()
         val files = parsePlaylist(playlistFile)

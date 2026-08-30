@@ -210,16 +210,6 @@ class Mandala(
         addParam("Color", "Depth", "Depth")
         list.add("$prefix/Color/Gain" to globalAlpha)
 
-        // Background
-        addParam("Background", "Style", "Bg Style")
-        addParam("Background", "Feedback", "Bg Feedback")
-        addParam("Background", "Hue", "Bg Hue")
-        addParam("Background", "Sat", "Bg Sat")
-        addParam("Background", "Val", "Bg Val")
-        addParam("Background", "Sweep", "Bg Sweep")
-        addParam("Background", "Speed", "Bg Speed")
-        addParam("Background", "Zoom", "Bg Zoom")
-
         return list
     }
 

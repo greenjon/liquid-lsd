@@ -92,6 +92,17 @@ class Mixer(
         }
     }
 
+    val bgQueuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod ->
+            llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled || mod.sourceId.startsWith("midi_cc_")
+        }
+    }
+    val bgQueueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod ->
+            llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled || mod.sourceId.startsWith("midi_cc_")
+        }
+    }
+
     val randDeckA = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val randDeckB = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val randDeckBG = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
@@ -100,6 +111,8 @@ class Mixer(
 
     private var prevQueuePrevVal = 0.0f
     private var prevQueueNextVal = 0.0f
+    private var prevBgQueuePrevVal = 0.0f
+    private var prevBgQueueNextVal = 0.0f
     private var prevRandDeckAVal = 0.0f
     private var prevRandDeckBVal = 0.0f
     private var prevRandDeckBGVal = 0.0f
@@ -116,6 +129,8 @@ class Mixer(
         list.add("$prefix/xfadeSpeed" to xfadeSpeed)
         list.add("$prefix/queuePrev" to queuePrev)
         list.add("$prefix/queueNext" to queueNext)
+        list.add("$prefix/bgQueuePrev" to bgQueuePrev)
+        list.add("$prefix/bgQueueNext" to bgQueueNext)
         list.add("$prefix/randDeckA" to randDeckA)
         list.add("$prefix/randDeckB" to randDeckB)
         list.add("$prefix/randDeckBG" to randDeckBG)
@@ -198,6 +213,8 @@ class Mixer(
         xfadeSpeed.evaluate()
         queuePrev.evaluate()
         queueNext.evaluate()
+        bgQueuePrev.evaluate()
+        bgQueueNext.evaluate()
         randDeckA.evaluate()
         randDeckB.evaluate()
         randDeckBG.evaluate()
@@ -236,7 +253,7 @@ class Mixer(
     }
 
     /**
-     * Evaluates if either parameter crossed the 0.5 threshold since the last frame.
+     * Evaluates if either A/B queue parameter crossed the 0.5 threshold since the last frame.
      * Returns +1 if queueNext was triggered, -1 if queuePrev was triggered, or 0.
      */
     fun pollQueueAdvance(): Int {
@@ -261,14 +278,43 @@ class Mixer(
     }
 
     /**
+     * Evaluates if either BG queue parameter crossed the 0.5 threshold since the last frame.
+     * Returns +1 if bgQueueNext was triggered, -1 if bgQueuePrev was triggered, or 0.
+     */
+    fun pollBgQueueAdvance(): Int {
+        val nextVal = bgQueueNext.value
+        val prevVal = bgQueuePrev.value
+
+        var delta = 0
+        if (prevBgQueueNextVal < 0.5f && nextVal >= 0.5f) {
+            delta += 1
+        }
+        if (prevBgQueuePrevVal < 0.5f && prevVal >= 0.5f) {
+            delta -= 1
+        }
+
+        prevBgQueueNextVal = nextVal
+        prevBgQueuePrevVal = prevVal
+
+        if (bgQueueNext.baseValue != 0f) bgQueueNext.baseValue = 0f
+        if (bgQueuePrev.baseValue != 0f) bgQueuePrev.baseValue = 0f
+
+        return delta
+    }
+
+    /**
      * Synchronizes current queue trigger parameter values into edge-detection trackers.
      * Prevents false 0->1 trigger edge detection on startup / session load.
      */
     fun syncQueueTriggerPrevValues() {
         queueNext.evaluate()
         queuePrev.evaluate()
+        bgQueueNext.evaluate()
+        bgQueuePrev.evaluate()
         prevQueueNextVal = queueNext.value
         prevQueuePrevVal = queuePrev.value
+        prevBgQueueNextVal = bgQueueNext.value
+        prevBgQueuePrevVal = bgQueuePrev.value
     }
 
     /**

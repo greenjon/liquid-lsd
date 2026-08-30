@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.presets
 
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
@@ -105,6 +106,74 @@ object BgQueueManager {
         playbackHistory.addAll(newHist)
     }
 
+    fun parsePlaylist(playlistFile: File): List<File> {
+        return PlayQueueManager.parsePlaylist(playlistFile)
+    }
+
+    fun appendPlaylistToQueue(playlistFile: File) {
+        val files = parsePlaylist(playlistFile)
+        queue.addAll(files)
+        logger.info { "Appended playlist to BG queue: ${playlistFile.name} (${files.size} items)" }
+    }
+
+    fun playNow(file: File, mixer: Mixer, withDipToBlack: Boolean = true) {
+        clearQueue()
+        appendToQueue(file)
+        isAutoBGEnabled = true
+        playIndex(0, mixer, withDipToBlack)
+    }
+
+    fun playPlaylistNow(playlistFile: File, mixer: Mixer, withDipToBlack: Boolean = true) {
+        clearQueue()
+        val files = parsePlaylist(playlistFile)
+        if (files.isNotEmpty()) {
+            queue.addAll(files)
+            logger.info { "Replaced BG queue with playlist: ${playlistFile.name} (${files.size} items)" }
+            isAutoBGEnabled = true
+            playIndex(0, mixer, withDipToBlack)
+        }
+    }
+
+    fun insertAfterCurrent(file: File) {
+        val insertIndex = if (activeIndex in queue.indices) activeIndex + 1 else 0
+        if (insertIndex <= queue.size) {
+            insertAt(insertIndex, file)
+            logger.info { "Inserted after current in BG queue (at $insertIndex): ${file.name}" }
+        } else {
+            appendToQueue(file)
+        }
+    }
+
+    fun insertPlaylistAfterCurrent(playlistFile: File) {
+        val files = parsePlaylist(playlistFile)
+        if (files.isNotEmpty()) {
+            val insertIndex = if (activeIndex in queue.indices) activeIndex + 1 else 0
+            if (insertIndex <= queue.size) {
+                shiftIndicesAfter(insertIndex - 1, files.size)
+                queue.addAll(insertIndex, files)
+                if (activeIndex >= insertIndex) {
+                    activeIndex += files.size
+                }
+                logger.info { "Inserted playlist after current in BG queue (at $insertIndex): ${playlistFile.name} (${files.size} items)" }
+            } else {
+                queue.addAll(files)
+                logger.info { "Appended playlist to BG queue: ${playlistFile.name} (${files.size} items)" }
+            }
+        }
+    }
+
+    fun removeFileFromQueue(file: File) {
+        val targetPath = file.absolutePath
+        var i = 0
+        while (i < queue.size) {
+            if (queue[i].absolutePath == targetPath) {
+                removeAt(i)
+            } else {
+                i++
+            }
+        }
+    }
+
     fun appendToQueue(file: File) {
         queue.add(file)
     }
@@ -179,6 +248,7 @@ object BgQueueManager {
 
     fun playIndex(index: Int, mixer: Mixer, withDipToBlack: Boolean = true) {
         if (index in queue.indices) {
+            if (!handleDirtyDeck(mixer)) return
             activeIndex = index
             timeOnCurrentPresetSec = 0f
             val file = queue[index]
@@ -222,6 +292,7 @@ object BgQueueManager {
 
         if (isShuffleEnabled) {
             if (playbackHistory.size > 1) {
+                if (!handleDirtyDeck(mixer)) return
                 playbackHistory.removeAt(playbackHistory.size - 1)
                 val prevIdx = playbackHistory.last()
                 activeIndex = prevIdx
@@ -236,6 +307,31 @@ object BgQueueManager {
             playIndex(prevIndex, mixer)
         } else if (isRepeatEnabled && queue.isNotEmpty()) {
             playIndex(queue.size - 1, mixer)
+        }
+    }
+
+    /**
+     * Handles a dirty target Deck BG according to the configured AutoVJ dirty behavior.
+     * @return true if the queue advance should proceed, false if it should be skipped.
+     */
+    private fun handleDirtyDeck(mixer: Mixer): Boolean {
+        if (!PresetManager.isDeckDirty(mixer.deckBG, mixer)) return true
+        return when (UITheme.autoVjDirtyBehavior) {
+            UITheme.AutoVjDirtyBehavior.SKIP -> {
+                logger.info { "AutoBG: Skipping because Deck BG is dirty" }
+                false
+            }
+            UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
+                val activeName = PresetManager.activePresetBG
+                val saveName = activeName ?: "AutoBG_BG_${System.currentTimeMillis()}"
+                logger.info { "AutoBG: Autosaving dirty deck to $saveName" }
+                PresetManager.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), mixer.deckBG, saveName)
+                true
+            }
+            UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
+                logger.info { "AutoBG: Discarding changes on dirty Deck BG" }
+                true
+            }
         }
     }
 

@@ -236,6 +236,8 @@ data class SessionStateDto(
     val xfadeSpeed: ParameterDto? = null,
     val queueNext: ParameterDto? = null,
     val queuePrev: ParameterDto? = null,
+    val bgQueueNext: ParameterDto? = null,
+    val bgQueuePrev: ParameterDto? = null,
     val isRepeatEnabled: Boolean = false,
     val isShuffleEnabled: Boolean = false,
     val bgQueue: List<String> = emptyList(),

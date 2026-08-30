@@ -19,18 +19,37 @@ object QueueActionsPanel {
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+        val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
+        val itemSpacingX = ImGui.getStyle().getItemSpacingX()
+        val totalRightW = clearBtnW + navBtnW * 2f + itemSpacingX * 2f
 
-        // Title Bar: "Queue" on the left, "Clear" button on the right
+        // Title Bar: "Queue" on the left, "<", ">", "Clear" buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ImGui.text("Queue")
         }
         ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - clearBtnW
+        val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
         if (rightX > ImGui.getCursorPosX()) {
             ImGui.setCursorPosX(rightX)
         }
 
+        if (ImGui.button("<##queuePrev", navBtnW, 0f)) {
+            session.playQueueManager.triggerPrevious(mixer)
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Trigger previous preset in Play Queue (Mixer/queuePrev).")
+        }
+
+        ImGui.sameLine()
+        if (ImGui.button(">##queueNext", navBtnW, 0f)) {
+            session.playQueueManager.triggerNext(mixer)
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
+        }
+
+        ImGui.sameLine()
         if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
             session.playQueueManager.clearQueue()
             selectedIndex = -1
@@ -150,6 +169,11 @@ object QueueActionsPanel {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }
 
+            // Double-click to load to standby deck and auto-fade
+            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
+                session.playQueueManager.playIndex(index, mixer)
+            }
+
             // Drag source (QUEUE_ITEM reorder)
             if (ImGui.beginDragDropSource()) {
                 ImGui.setDragDropPayload("QUEUE_ITEM", index as Any)
@@ -205,6 +229,23 @@ object QueueActionsPanel {
 
             // Right-click menu
             if (ImGui.beginPopupContextItem("queue_item_menu_$index")) {
+                if (ImGui.menuItem("Load to Deck A")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
+                }
+                if (ImGui.menuItem("Load to Deck B")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                }
+                if (ImGui.menuItem("Load to Deck BG")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckBG = true)
+                }
+                if (ImGui.menuItem("Preview on Deck PV")) {
+                    session.presetManager.loadDeckPresetAsync(file, isDeckPV = true)
+                }
+                ImGui.separator()
+                if (ImGui.menuItem("Add to Background Queue")) {
+                    llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(file)
+                }
+                ImGui.separator()
                 if (ImGui.menuItem("Remove from queue")) {
                     removeFromQueueIndex = index
                 }

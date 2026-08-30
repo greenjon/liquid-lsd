@@ -495,16 +495,30 @@ object SettingsPanel {
 
         ImGui.spacing()
         val nextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queueNext"))
-        if (ImGui.inputInt("Next CC", nextCc)) {
+        if (ImGui.inputInt("A/B Next CC", nextCc)) {
             val newVal = nextCc.get().coerceIn(-1, 127)
             session.midiMappingManager.addMapping("Global/queueNext", newVal)
             session.midiMappingManager.saveActiveProfile()
         }
 
         val prevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queuePrev"))
-        if (ImGui.inputInt("Prev CC", prevCc)) {
+        if (ImGui.inputInt("A/B Prev CC", prevCc)) {
             val newVal = prevCc.get().coerceIn(-1, 127)
             session.midiMappingManager.addMapping("Global/queuePrev", newVal)
+            session.midiMappingManager.saveActiveProfile()
+        }
+
+        val bgNextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/bgQueueNext"))
+        if (ImGui.inputInt("BG Next CC", bgNextCc)) {
+            val newVal = bgNextCc.get().coerceIn(-1, 127)
+            session.midiMappingManager.addMapping("Global/bgQueueNext", newVal)
+            session.midiMappingManager.saveActiveProfile()
+        }
+
+        val bgPrevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev"))
+        if (ImGui.inputInt("BG Prev CC", bgPrevCc)) {
+            val newVal = bgPrevCc.get().coerceIn(-1, 127)
+            session.midiMappingManager.addMapping("Global/bgQueuePrev", newVal)
             session.midiMappingManager.saveActiveProfile()
         }
 

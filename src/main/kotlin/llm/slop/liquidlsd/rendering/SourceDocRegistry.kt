@@ -30,6 +30,7 @@ object SourceDocRegistry {
                 " 4D perspective/stereographic projection, Hopf fibration coloring, and GPU tube rendering.",
         "hyper_slice" to "Raymarched 3D cross-section MRI scan through 4D 600-cell and 120-cell polychora" +
                 " using H4 Coxeter reflection group domain folding.",
+        "colors" to "Color field and plasma pattern generator with customizable HSV palette, hue sweep gradient, and animated motion.",
     )
 
     /**
@@ -37,6 +38,15 @@ object SourceDocRegistry {
      * or "mixer/<paramName>".
      */
     val paramDescriptions: Map<String, String> = mapOf(
+
+        // Colors
+        "colors/Style" to "Color generator mode: 0 = off/transparent, 1 = solid color, 2 = animated plasma.",
+        "colors/Hue" to "Base hue of the color palette.",
+        "colors/Sat" to "Saturation of the color palette.",
+        "colors/Val" to "Brightness / value of the color palette.",
+        "colors/Sweep" to "Hue sweep range across the plasma gradient.",
+        "colors/Speed" to "Animation speed of the plasma pattern cycle.",
+        "colors/Zoom" to "Spatial scale/zoom of the plasma pattern.",
 
         // Mandala
         "mandala/L1" to "Length of arm 1 (primary arm). Larger values extend the outermost petal tips.",
@@ -51,14 +61,6 @@ object SourceDocRegistry {
         "mandala/Depth" to "Controls z-depth layering for 3D mode extrusion.",
         "mandala/Lobes" to "Selects the petal-count group. Each value corresponds to a curated set of recipes.",
         "mandala/Recipe Select" to "Picks a specific recipe within the current Lobes group. Scrub to browse shapes.",
-        "mandala/Bg Style" to "Background style: 0 = black, 1 = solid colour, 2 = animated gradient.",
-        "mandala/Bg Feedback" to "Blends the previous frame into the background — creates motion trails.",
-        "mandala/Bg Hue" to "Hue of the background colour (Bg Style 1 or 2).",
-        "mandala/Bg Sat" to "Saturation of the background colour.",
-        "mandala/Bg Val" to "Brightness of the background colour.",
-        "mandala/Bg Sweep" to "Hue sweep width of the background gradient.",
-        "mandala/Bg Speed" to "Animation speed of the background gradient cycle.",
-        "mandala/Bg Zoom" to "Scale of the background pattern.",
         "mandala/3D Mode" to "3D projection mode: 0 = flat, 1–4 = various sphere/tube wrap modes.",
         "mandala/Sphere Wrap X" to "Horizontal stretch of the sphere-wrap UV mapping.",
         "mandala/Sphere Wrap Y" to "Vertical stretch of the sphere-wrap UV mapping.",
@@ -223,10 +225,13 @@ object SourceDocRegistry {
         "mixer/xfadeSpeed" to "Auto-crossfade transition speed when queue playback is active.",
         "mixer/queuePrev" to "Trigger: steps the play queue backward by one preset.",
         "mixer/queueNext" to "Trigger: steps the play queue forward by one preset.",
+        "mixer/bgQueuePrev" to "Trigger: steps the background queue backward by one preset.",
+        "mixer/bgQueueNext" to "Trigger: steps the background queue forward by one preset.",
         "mixer/randDeckA" to "Trigger: randomises all modulation values on Deck A.",
         "mixer/randDeckB" to "Trigger: randomises all modulation values on Deck B.",
+        "mixer/randDeckBG" to "Trigger: randomises all modulation values on Deck BG.",
         "mixer/randDeckPV" to "Trigger: randomises all modulation values on Deck PV.",
-        "mixer/randAll" to "Trigger: randomises all modulation values on all three decks simultaneously.",
+        "mixer/randAll" to "Trigger: randomises all modulation values on all decks simultaneously.",
     )
 
     /** Returns the source description, or an empty string if none is registered. */

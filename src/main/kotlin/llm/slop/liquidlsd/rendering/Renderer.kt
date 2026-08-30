@@ -14,7 +14,6 @@ class Renderer {
 
     private val feedbackShader: Shader
     private val mixerShader: Shader
-    private val backgroundShader: Shader
     val blitShader: Shader
 
     private var mandalaVAO: Int = 0
@@ -25,7 +24,6 @@ class Renderer {
         // Load the shaders
         feedbackShader = Shader.fromResources("shaders/blit.vert", "shaders/feedback.frag")
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
-        backgroundShader = Shader.fromResources("shaders/blit.vert", "shaders/background.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
@@ -131,30 +129,6 @@ class Renderer {
         }
     }
 
-
-
-
-
-
-
-    private fun renderBackground(mandala: Mandala, alpha: Float) {
-        backgroundShader.bind()
-        val p = mandala.parameters
-        val style = p["Bg Style"]?.value?.toInt() ?: 0
-        backgroundShader.setUniform("uBgStyle", style)
-        backgroundShader.setUniform("uBgHue", p["Bg Hue"]?.value ?: 0f)
-        backgroundShader.setUniform("uBgSat", p["Bg Sat"]?.value ?: 0.8f)
-        backgroundShader.setUniform("uBgVal", p["Bg Val"]?.value ?: 0.5f)
-        backgroundShader.setUniform("uBgSweep", p["Bg Sweep"]?.value ?: 0.2f)
-        backgroundShader.setUniform("uBgSpeed", p["Bg Speed"]?.value ?: 0.2f)
-        backgroundShader.setUniform("uBgZoom", p["Bg Zoom"]?.value ?: 1.0f)
-        backgroundShader.setUniform("uTime", llm.slop.liquidlsd.utils.TimeSource.getTimeSec().toFloat())
-        backgroundShader.setUniform("uAlpha", alpha)
-
-        Geometry.drawFullscreenQuad()
-        backgroundShader.unbind()
-    }
-
     /**
      * Renders a 4D HyperMesh (600-cell or 120-cell) with instanced/indexed strut and node geometry.
      */
@@ -219,14 +193,6 @@ class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         val p = mandala.parameters
-        val bgStyle = p["Bg Style"]?.value ?: 0f
-        if (bgStyle > 0.5f) {
-            val bgFeedback = p["Bg Feedback"]?.value ?: 0f
-            val alpha = bgFeedback * mandala.globalAlpha.value
-            if (alpha > 0.001f) {
-                renderBackground(mandala, alpha)
-            }
-        }
 
         mandalaShader.bind()
 
@@ -398,36 +364,6 @@ class Renderer {
         feedbackShader.unbind()
         nextHistoryFBO.unbind()
 
-        val mandala = deck.source as? Mandala
-        val bgStyle = mandala?.parameters?.get("Bg Style")?.value ?: 0f
-        if (bgStyle > 0.5f && mandala != null) {
-            deck.cleanFBO.bind()
-            glClearColor(0f, 0f, 0f, 0f)
-            glClear(GL_COLOR_BUFFER_BIT)
-
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-            val bgFeedback = mandala.parameters["Bg Feedback"]?.value ?: 0f
-            val staticAlpha = (1.0f - bgFeedback) * mandala.globalAlpha.value
-            if (staticAlpha > 0.001f) {
-                renderBackground(mandala, staticAlpha)
-            }
-
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
-
-            blitShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, nextHistoryFBO.texture)
-            blitShader.setUniform("uTexture", 0)
-
-            Geometry.drawFullscreenQuad()
-
-            blitShader.unbind()
-            deck.cleanFBO.unbind()
-        }
-
         // Re-enable blending for subsequent rendering passes
         glEnable(GL_BLEND)
 
@@ -490,7 +426,6 @@ class Renderer {
 
             feedbackShader.dispose()
             mixerShader.dispose()
-            backgroundShader.dispose()
             blitShader.dispose()
             isDisposed = true
         }

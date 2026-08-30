@@ -97,8 +97,20 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
 
 ---
 
-## 4. PlaylistManager & PlaylistParser
+## 4. Background Queue Manager (`BgQueueManager.kt`)
+
+[`BgQueueManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/BgQueueManager.kt) controls the background video / generator deck (`Deck BG`) playlist and single-deck dip-to-black transitions.
+
+### Dip-to-Black & Modulation Pipeline
+- **Transition States**: `IDLE` -> `FADING_OUT` -> `FADING_IN` -> `IDLE`.
+- **Modulation & MIDI Triggers**: Symmetrically modulated by `Mixer/bgQueuePrev` and `Mixer/bgQueueNext`, along with dedicated MIDI CC bindings (`Global/bgQueuePrev`, `Global/bgQueueNext`).
+- **Dirty Deck Guard**: Observes `UITheme.autoVjDirtyBehavior` (`SKIP`, `AUTO_SAVE`, `AUTO_DISCARD`) when transitioning or advancing on Deck BG.
+- **Double-Click Playback**: Double-clicking any track in BG Queue triggers immediate playback with dip-to-black (`playIndex(index, mixer, withDipToBlack = true)`), while double-clicking in Play Queue triggers standby deck load and auto-fade crossfading.
+
+---
+
+## 5. PlaylistManager & PlaylistParser
 
 - **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdset` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
 - **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).
-- **`PlayQueueManager.kt`**: Provides `removeFileFromQueue(file)` to remove all references to a deleted file from the queue and shift active index/shuffle state.
+- **`PlayQueueManager.kt` / `BgQueueManager.kt`**: Provides `removeFileFromQueue(file)` to remove all references to a deleted file from both queues and shift active index/shuffle state.

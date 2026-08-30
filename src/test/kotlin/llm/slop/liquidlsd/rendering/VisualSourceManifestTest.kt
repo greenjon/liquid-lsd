@@ -200,6 +200,54 @@ class VisualSourceManifestTest {
         val sourceDoc = SourceDocRegistry.getSourceDescription("hyper_slice")
         assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for hyper_slice")
     }
+
+    @Test
+    fun testColorsSourceParametersAndDocs() {
+        val metaFile = File("library/sources/colors/meta.json")
+        assertTrue(metaFile.exists(), "colors/meta.json must exist")
+
+        val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+        assertEquals("colors", meta.id)
+        assertEquals("Colors", meta.name)
+
+        val paramNames = meta.parameters.map { it.name }.toSet()
+        val expectedParams = setOf(
+            "Style",
+            "Hue",
+            "Sat",
+            "Val",
+            "Sweep",
+            "Speed",
+            "Zoom"
+        )
+
+        for (expected in expectedParams) {
+            assertTrue(paramNames.contains(expected), "Missing expected parameter: $expected")
+            val doc = SourceDocRegistry.getParamDescription("colors", expected)
+            assertTrue(doc.isNotBlank(), "Missing documentation in SourceDocRegistry for colors/$expected")
+        }
+
+        val sourceDoc = SourceDocRegistry.getSourceDescription("colors")
+        assertTrue(sourceDoc.isNotBlank(), "Missing source description in SourceDocRegistry for colors")
+    }
+
+    @Test
+    fun testMandalaSourceHasNoBgParams() {
+        val metaFile = File("library/sources/mandala/meta.json")
+        assertTrue(metaFile.exists(), "mandala/meta.json must exist")
+
+        val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+        assertEquals("mandala", meta.id)
+
+        val paramNames = meta.parameters.map { it.name }.toSet()
+        val legacyBgParams = listOf(
+            "Bg Style", "Bg Feedback", "Bg Hue", "Bg Sat", "Bg Val", "Bg Sweep", "Bg Speed", "Bg Zoom"
+        )
+        for (bgParam in legacyBgParams) {
+            assertTrue(!paramNames.contains(bgParam), "Mandala should not contain legacy background parameter: $bgParam")
+        }
+    }
 }
+
 
 

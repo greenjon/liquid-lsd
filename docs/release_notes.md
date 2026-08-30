@@ -1,5 +1,76 @@
 # Liquid LSD — Release Notes
 
+## Version 1.0.0-beta.31
+
+> [!NOTE]
+> **Release 1.0.0-beta.31** introduces the standalone "Colors" visual source generator, the zero-allocation BTrack real-time beat tracking engine with complex spectral difference ODF and causal dynamic programming, an overhaul of the Library browser with a unified menu bar action strip, quick audition padlock, and full keyboard navigation, symmetrical Background Queue controls with modulation routing and dirty state checking, consolidated 2-column Audio Engine settings with zero-lag CV oscilloscopes, and slider drag-isolation fixes.
+
+---
+
+### Key Highlights
+
+#### 1. Standalone "Colors" Visual Source & Mandala Background Extraction (`library/sources/colors`, `Mandala.kt`, `Renderer.kt`)
+- **Extracted "Colors" Visual Source**: Packaged solid-color and plasma generation capabilities into a new standalone visual source (`library/sources/colors/`) featuring `Style` (0 = Off, 1 = Solid, 2 = Plasma), `Hue`, `Sat`, `Val`, `Sweep`, `Speed`, and `Zoom` parameters.
+- **Mandala Source Simplification**: Removed legacy background parameters (`Bg Style`, `Bg Feedback`, `Bg Hue`, `Bg Sat`, `Bg Val`, `Bg Sweep`, `Bg Speed`, `Bg Zoom`) from Mandala's parameter metadata, shaders, and UI layout.
+- **Rendering Pipeline Cleanup (`Renderer.kt`, `Deck.kt`)**: Removed legacy secondary background passes from `renderMandala()` and `renderDeck()`, along with `Deck.getOutputTexture()` branch hacks and the unused `background.frag` resource shader.
+- **Uniform Multi-Deck Compositing**: Any deck layer (`Deck A`, `Deck B`, `Deck BG`, or `Deck PV`) can now seamlessly host the `Colors` generator with full modulation and feedback support.
+
+#### 2. BTrack Real-Time Beat Tracking Engine & Complex Spectral Difference ODF (`llm.slop.liquidlsd.audio.BeatTrackerEngine`)
+- **BTrack & Causal Dynamic Programming Architecture**: Fully integrated a stateful, zero-allocation beat tracking engine modeled on BTrack (Adam Stark) and the Dan Ellis causal DP beat tracker.
+- **Complex Spectral Difference ODF**: Evaluates a 512-point Radix-2 Cooley-Tukey FFT with pre-computed twiddle factors and 2nd-order phase trajectory prediction to detect pitched notes and percussive transients while suppressing steady tones.
+- **Two-State Multi-Band Periodicity Estimation**: State 1 (Acquisition) searches 40–200 BPM across circular history buffers; State 2 (Locked Tracking) constrains search to $\pm 15\%$ around current tempo period with $\pm 2.0$ BPM/beat human tracking inertia and harmonic comb unwrapping.
+- **Causal Dynamic Programming Recurrence**: Pre-computed $\log(\tau)$ table (`logTauTable`) evaluates DP recurrence without transcendental `Math.log()` calls on the real-time audio thread.
+- **Zero-Allocation Phase & Cosine Queries**: Exposes primitive queries (`getPhase(t)`, `getCosine(t)`, `getPhaseAndCosine(t, out)`, `getPhaseAndCosinePacked(t)`) for continuous visual phase modulation $\cos(2\pi \phi(t))$ with zero object allocations on the render thread.
+- **120 BPM Low-Signal Fallback & Gating**: When incoming audio energy drops below analysis thresholds (silence, quiet passages, or background noise), `BeatDetector` smoothly transitions to and locks at **120.0 BPM** (`slewRate = 0.05f`), suppressing erratic phase nudges and wild counter swings.
+- **Monotonic Visual Clock Extrapolation**: Enforced strict monotonic progression in `CVRegistry.getSynchronizedTotalBeats()` to eliminate micro-hesitations from audio callback timing jitter.
+- **Zero-Centered Bipolar `BeatSine`**: Standardized `BeatSine` to oscillate as a true zero-centered bipolar sine wave between `-1.0` and `1.0`.
+
+#### 3. Library Menu Bar Action Strip, Quick Audition Padlock & Keyboard Navigation (`llm.slop.liquidlsd.ui.browser`)
+- **Unified Menu Bar Action Strip**: Migrated the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ]`) into the top Library Menu Bar with widened buttons and centered layout.
+- **Global 4-Column Preset Selection**: Single-clicking or navigating any item across Preset Library, Playlist Editor, A/B Play Queue, or Background Queue sets a unified global selection and clears other columns.
+- **Quick Audition Latch (`[🔒]`) & Smart `PV` Auto-Latch**: Toggling the padlock button arms sticky audition mode and auto-latches to **Deck PV** (Preview) by default. Clicking another deck button (`A`, `B`, `BG`) switches the latch target, while clicking the active deck button unlatches it.
+- **Seamless Focus Restoration & Keyboard Hotkeys**: Restores keyboard navigation focus to selected items after clicking routing buttons. Added instant hotkeys `Q` (append to Play Queue) and `Shift+Q` (append to Background Queue) alongside `1`–`4` deck quick-load keys.
+- **Column Title Bars & Full-Width Filter Bars**: Added top header title bars across all four columns (`Presets`, `Playlists`, `Queue`, `BG Queue`), allowing search input and playlist dropdowns to span full column width.
+
+#### 4. Symmetrical Background Queue Management & Modulation Parity (`llm.slop.liquidlsd.presets`)
+- **Complete Playlist & Queue Parity**: Added BG Queue context menu options ("Play now in BG Queue", "Insert into BG Queue after current", "Add to bottom of BG Queue"), bidirectional routing between queues, and dedicated `.lsdset` export.
+- **Modulation & MIDI Auto-Advance**: Added `Mixer/bgQueuePrev` and `Mixer/bgQueueNext` modulatable parameters with MIDI CC inputs (`Global/bgQueuePrev`, `Global/bgQueueNext`).
+- **Robot Icon Queue Toggles**: Replaced text checkboxes with robot toggle buttons (`Icons.BOT` / `Icons.BOT_OFF`) for both A/B Queue (`AUTO-VJ`) and Background Queue (`AUTO-BG`).
+- **Deck BG Dirty State Protection**: Symmetrically guards BG Queue auto-advances with `PresetManager.isDeckDirty` respecting `UITheme.autoVjDirtyBehavior`.
+
+#### 5. Consolidated Audio Engine Settings & UI Polish (`llm.slop.liquidlsd.ui`)
+- **Two-Column Audio Engine Settings Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection settings, interactive dual-headed BPM range slider, input gain, and sound-derived CV oscilloscopes into a balanced 2-column layout in Settings.
+- **Zero-Lag Oscilloscope Slicing**: Fixed `CvHistoryBuffer.copyTo()` to display the true latest chronological window without latency delay, and expanded the trace buffer to 400 samples.
+- **Hardware Device Caching**: Cached ALSA/JavaSound device introspection in `AudioEngine.kt` to prevent per-frame querying handle leaks and out-of-memory crashes.
+- **Slider Drag Isolation Fix**: Upgraded settings sliders to `CustomRangeSlider` with underlying invisible button registration, preventing unpinned modal dialogs from accidentally moving when dragging slider tracks.
+- **Theme High-Contrast Palette**: Refined frame borders and contrast across Boring, Solarized, Lunarized, and Neon themes.
+- **Deck PV Standardization**: Replaced all remaining legacy "Deck C" references across codebase, UI, and documentation with "Deck PV" (Preview).
+
+---
+
+### 📜 Full Commit History (v1.0.0-beta.30 → v1.0.0-beta.31)
+
+- `ea3bddd` fix(ui): prevent window dragging on slider click-drag and standardize settings sliders
+- `b03064b` Fix Audio Engine oscilloscope display lag, zero-center BeatSine, and expand history window
+- `ae82e39` fix(audio,ui): eliminate beat clock hesitation, enforce monotonic sync extrapolation, and refine audio settings layout
+- `d5ec95a` feat(audio,ui): add low-signal 120 BPM fallback, tempo stability gating, and theme contrast enhancements
+- `1d55d71` fix(audio): cache input hardware devices and prevent OOM crash in AudioEnginePanel
+- `6457da1` refactor(deck): remove legacy Deck C compatibility layer and enforce Deck PV across codebase
+- `65cd5ff` Replace AUTO-VJ and AUTO-BG checkboxes with robot icon toggle buttons
+- `6b41f59` fix(ui): fix ColorTuner z-order, close handling, double scrollbar, and column clipping
+- `0058614` ui: consolidate Audio Engine into Settings tab with zero-allocation monitor drawer
+- `1bc689f` feat(ui,library): add seamless focus restoration, continuous arrow navigation, and Q/Shift+Q queue hotkeys
+- `07e37ac` docs(library): update user guide and release notes for column title bars and button layout
+- `458e5bd` feat(ui,browser): add panel title headers and full-width search/dropdown bars across library views
+- `92c5903` refactor(ui,presets): unify deck transition guards across all load and new preset pathways
+- `b670b1d` fix(presets,ui): resolve false dirty state after preset load and clean up browser toolbar layout
+- `0a269a5` feat(ui,browser): center action toolbar in menu bar and enable focus-based keyboard navigation
+- `c89f920` feat(ui,browser): add unified library menu bar action strip and quick audition lock
+- `c818573` feat(ui,grid): add grid shortcuts, middle-click mute, deck quick-load keys, and shortcuts settings page
+- `bb2f7a2` feat(audio,sync): normalize audio CV follow scaling and add desktop-to-web sync tooling
+
+---
+
 ## Version 1.0.0-beta.30
 
 > [!NOTE]
@@ -9,42 +80,7 @@
 
 ### Key Highlights
 
-#### 1. Library Menu Bar Action Toolbar & Column Title Bars (`llm.slop.liquidlsd.ui.browser`)
-- **Seamless Focus Restoration & Continuous Arrow Navigation**: Restores keyboard navigation focus to the selected preset item whenever clicking toolbar buttons (`[🔒]`, `[A]`, `[B]`, `[BG]`, `[PV]`, `[Q]`, `[BGQ]`), allowing uninterrupted `↑`/`↓` arrow scrolling and locked-deck auto-auditioning without needing to re-click into the list.
-- **Queue Keyboard Hotkeys (`Q` & `Shift + Q`)**: Added instant keyboard shortcuts `Q` (append selected preset to A/B Play Queue) and `Shift + Q` (append to Background Queue) alongside deck routing keys `1`–`4` for fully keyboard-driven library browsing.
-- **Column Title Bars & Header Relocations**: Added upper title bars for all four columns (`Presets`, `Playlists`, `Queue`, `BG Queue`). Relocated the `[+]` preset creation button to the right side of the `Presets` title bar (allowing the search input to span full width), relocated `[+]` (New) and `[...]` (Actions) to the `Playlists` title bar (allowing the playlist selector dropdown to span full width), and moved `[Clear]` to the title bars of both `Queue` and `BG Queue`.
-- **Unified Menu Bar Action Strip**: Centered the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ]`) in the top Library Menu Bar with widened 80px buttons for clear text legibility and expanded title bar vertical height (+35%) with symmetrical top/bottom spacing.
-- **Column 1 Header `[+]` Button**: Positioned the Create New Preset `[+]` dropdown button directly adjacent to the preset search filter bar in the first column, matching the header layout of the Playlist Editor column.
-- **Global 4-Column Preset Selection**: Single-clicking or navigating any item across **Preset Library**, **Playlist Editor**, **A/B Play Queue**, or **Background Queue** sets a unified global selection and clears other columns for unambiguous routing.
-- **Context-Aware Button Dimming**: Dynamically dims destination buttons when redundant (e.g. `[Q]` dims when selecting an item already in the A/B Queue, `[BGQ]` dims for items in the Background Queue).
-- **Quick Audition Latch (`[🔒]`) & Smart `PV` Auto-Latch**: Toggling the padlock button arms sticky audition mode and auto-latches to **Deck PV** (Preview) by default. Clicking another deck button (`A`, `B`, `BG`) switches the latch target, while clicking the active deck button unlatches it.
-- **Single-Click & Arrow Key Auditioning**: With the padlock armed, single-clicking any preset or navigating with `↑`/`↓` arrow keys in any column immediately triggers non-blocking asynchronous patch loading (`loadDeckPresetAsync`) to the latched deck.
-- **Robot Icon Queue Toggles (`BOT` / `BOT_OFF`)**: Replaced raw text checkboxes in A/B Queue and Background Queue (`AUTO-VJ`, `AUTO-BG`) with robot icon toggle buttons (`Icons.BOT` active / `Icons.BOT_OFF` inactive), matching DJ software conventions like Mixxx.
-
-#### 2. Audio Engine Settings & Real-Time Monitor Consolidation (`llm.slop.liquidlsd.ui`)
-- **Zero-Lag Oscilloscope History Fix (`CvHistoryBuffer.kt`)**: Fixed an issue where the audio band and CV oscilloscopes displayed several seconds of latency. `CvHistoryBuffer.copyTo()` now correctly slices the most recent chronological samples when copying into display buffers smaller than the full history size.
-- **Zero-Centered Bipolar `BeatSine` (`BeatClock.kt`)**: Standardized `BeatSine` to oscillate as a true zero-centered bipolar sine wave between `-1.0` and `1.0`, aligning its waveform with the `[-1.0, 1.0]` oscilloscope grid, bipolar modulation rules, and the web visualizer DSP engine.
-- **Audio Engine CV Oscilloscope Reordering & 2x History Window (`AudioEnginePanel.kt`)**: Relocated `Beat Sine (Oscillator)` to the top of the sound-derived CV oscilloscope stack (directly above Amplitude), and expanded the trace buffer to 400 samples so oscilloscopes scroll half as fast and display twice as much history.
-- **Single-Source Frame-Synchronized CV History Recording (`CVRegistry.kt`)**: Consolidated all history additions to `CVRegistry.updateAll()` at uniform render frame rate, removing redundant history writes from the audio callback thread and eliminating thread-safety races and sampling rate discrepancies.
-- **Beat Clock & Cosine Hesitation Fix**: Eliminated intermittent dragging and stutter in beat-synchronized LFOs, cosine color palettes, and shader animations by strictly suppressing automated phase nudges and clearing phase slew buffers when manual BPM lock is active (`isBpmLocked = true`).
-- **120 BPM Startup & Audio Source Switch Lock**: On application launch, audio engine start, or audio device switching, the engine initializes and holds a steady 120.0 BPM lock until `BeatDetector` has continuously observed and confirmed a stable candidate tempo (`isTempoLocked = true`).
-- **Continuous Flywheel Coasting**: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing.
-- **Monotonic Visual Beat Clock Extrapolation**: Enforced strict monotonic progression in `CVRegistry.getSynchronizedTotalBeats()` to eliminate micro-hesitations caused by asynchronous audio thread callback timing.
-- **Low-Signal 120 BPM Fallback Lock**: When incoming audio energy drops below analysis thresholds (silence, quiet passages, or background noise), `BeatDetector` smoothly transitions to and locks at **120.0 BPM** (`slewRate = 0.05f`), suppressing erratic phase nudges and eliminating wild counter swings.
-- **Tempo Stability Gating**: When a valid signal is detected, the engine holds the stable 120 BPM lock while analyzing candidate tempos. Once a steady tempo is locked with harmonic octave matching for the required duration, the flywheel PLL seamlessly adapts to the live music BPM.
-- **Integrated Audio Engine Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection configuration, input gain, and real-time oscilloscopes into the dedicated "Audio Engine" tab within `SettingsPanel.kt`.
-- **Hardware Device Introspection Caching & OOM Prevention**: Cached audio input device discovery in `AudioEngine.kt` to eliminate per-frame ALSA mixer probing in Java Sound. Resolved an issue where continuously rendering the Audio Engine tab probed `AudioSystem.getMixerInfo()` 60+ times per second, leaking native ALSA handles and causing out-of-memory crashes (exit code 137). Added manual device rescan (`Icons.REFRESH`) and pre-allocated enum arrays.
-- **Two-Column Audio Engine Layout & Dual-Headed BPM Range Slider**: Restructured the Audio Engine tab in Settings into a balanced 2-column layout:
-  - **Left Column**: Audio Backend and Device configuration, Driver/Sync status, Beat Sync & Detection settings, and an interactive dual-headed **BPM Range (Floor / Ceiling)** slider with real-time dynamic tempo tracking.
-  - **Right Column**: Begins with Raw Audio Input controls (Gain & System Volume) and cleanly stacks the Raw Buffer oscilloscope followed by all 7 Sound-Derived Control Voltage (CV) oscilloscopes vertically.
-  - Audio Engine parameter sliders omit redundant "Current: x" labels and feature 20% more compact numeric input boxes.
-- **CellConfig Compact Sliders Migration & Window Drag Fix (`CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `SettingsPanel.kt`)**: Upgraded all audio engine and settings parameter controls (GUI Scale, Grid Knob Scale, Video Bitrate, Broadcast Streaming Rate Limit, Manual BPM, BPM Range, Analysis Window, Energy Threshold, PLL Adaptation, Resonator Q, Input Gain, and System Volume) to use the sleek compact `CustomRangeSlider` with direct numeric typing, $\uparrow/\downarrow$ arrow key stepping, scroll wheel fine-tuning, and middle-click reset. Added underlying `invisibleButton` widgets to slider tracks to register active IDs with ImGui, eliminating the bug where click-dragging sliders in unpinned/modal dialogs inadvertently moved the parent window.
-- **UI Element Background Contrast & Border Fixes (`UIThemeStyler.kt`, `UIManager.kt`)**: Enforced a `1.0px` frame border and `3.0px` rounding across default styles, and configured high-contrast `FrameBg`, `Border`, and `CheckMark` palettes across all themes (Boring, Solarized, Lunarized, Neon) so checkboxes, combos, and input boxes remain distinctly visible against dark modal backgrounds.
-- **Robust Process Lifecycle in `SystemAudioVolume`**: Ensured all system process streams are reliably closed, processes destroyed, and exponential backoff applied when PipeWire/`wpctl` is absent or unresponsive.
-- **Modular Zero-Allocation Architecture (`AudioEnginePanel.kt`)**: Retained modular file separation in `AudioEnginePanel.kt` with class-level pre-allocated buffers and zero runtime memory allocations.
-- **Direct Menu Bar Routing**: Clicking "Audio Engine" in `MenuBar.kt` now opens the Settings dialog directly on the Audio Engine tab for quick 1-click access.
-
-#### 3. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
+#### 1. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
 - **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
 - **Non-Blocking WebSocket Dispatch**: Protected asynchronous transmission using `CompletableFuture` to prevent transmission queue buildup, memory leaks, and `IllegalStateException` on high-latency or slow network connections.
 - **Throttled Parameter Delta Streaming**: Dispatches full state snapshots (`state_full`) upon initial handshake or preset switching, and lightweight differential patches (`state_delta`) throttled at a configurable rate (default 25 Hz) during live parameter adjustments. Includes JSON `null` deletion semantics when swapping visual source types.
@@ -78,30 +114,6 @@
 - **Continuous Dead-Reckoning Integration**: Synchronizes `integratedTime` and `integratedShear` from desktop to WebGL while maintaining local dead-reckoning between updates, eliminating 60fps stutter.
 - **WebSocket URL & Encoding Robustness**: Correctly URL-encodes tokens and handles base URLs with fragment identifiers.
 - **Safe Fallback for Unknown Sources**: Safely maps unknown visual sources to `"unknown_source"`.
-
-#### 7. Audio CV Normalization & Envelope Follower Isolation Fixes
-- **Unipolar Unit Scaling (`[0.0, 1.0]`)**: Normalized audio band RMS energy (`amp`, `bass`, `mid`, `high`) and onset/accent triggers in `AudioEngine.kt` to the standard $[0.0, 1.0]$ range, preventing parameter clipping at moderate depth values ($0.5$).
-- **Oscilloscope Active Modulator Filtering**: Fixed `CellConfigPanel.kt` oscilloscope calculation to only evaluate active, unbypassed modulators when active bands exist, preventing muted raw bands from dominating and flattening follower smoothing curves.
-- **Virtual Modulator Auto-Activation**: Automatically activates (`bypassed = false`) virtual audio bands when users adjust their presets or attack/decay/depth sliders.
-
-#### 8. Preset Grid Keyboard Shortcuts & Cell Middle-Click Mute Fixes
-- **Robust Modulator Extraction for Copy/Paste**: Fixed `PresetGridKeyboard.kt` copying logic to correctly resolve composite modulator source IDs for `AUDIO` (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), `TRIGGER` (`trigger_onset`, `trigger_accent`), `MIDI` (`midi_cc_*`), and `FINAL` / row selections instead of failing with empty lists.
-- **Cross-Column Routing on Paste**: Enhanced `ClipboardManager.kt` to safely remap pasted modulators across differing destination column types (`MIDI`, `AUDIO`, `TRIGGER`, `LFO`) while properly removing existing modulators of the target source family.
-- **Row-Level Copy/Paste with Clamp Scaling**: Selecting `FINAL` or clicking the parameter row label copies full parameter definitions with automated range scaling (`srcRange` $\to$ `destRange`) applied on paste.
-- **Reliable Middle-Click Cell Mute/Unmute**: Fixed CV cell middle-click detection to use `isCellHovered && ImGui.isMouseReleased(2)` consistent with MIDI, Final, and Row label cells, eliminating missed clicks caused by raw coordinate box checking. Middle-clicking an unmapped CV cell now immediately instantiates a default active modulator.
-- **Text Input Shielding**: Keyboard shortcuts in `PresetGridKeyboard.kt` safely yield when text input fields (`io.wantTextInput`) are active to prevent accidental edits while naming presets or typing parameter notes.
-
-#### 8. Desktop-to-Web File Synchronization & Drift Tracking Subsystem
-- **Sync Manifest (`web/sync_manifest.json`)**: Configured authoritative mapping of all desktop shaders (`src/main/resources/shaders/`, `library/sources/`) and algorithmic Kotlin math modules (`Icosahedron.kt`, `Evaluators.kt`, `WebPresetSerializer.kt`).
-- **Zero-Dependency CLI Tool (`scripts/sync_web.py`)**: Standalone tool providing `--check` (detailed color-coded drift report), `--apply` (automatic WebGL2 shader transpilation), and `--mark-synced` (manifest hash synchronization for manual review files).
-- **Gradle & CI Drift Verification (`checkWebSync`, `syncWeb`, `WebSyncTest.kt`)**: Added Gradle tasks and a fast JVM unit test to guarantee zero asset/algorithmic drift between Desktop and Web.
-
-#### 10. Auto-Healing Preset Loader & Unified Dirty Transition Guard
-- **Unified Dirty Transition Guard (`DeckPresetController.guardDeckTransition`)**: Centralized all dirty preset transition checks across the entire UI into a single robust guard pipeline. Whether ejecting a deck, performing utility Move/Copy/Swap drag actions, loading via Library buttons (`[A] [B] [BG] [PV]`, numeric keys `1`–`4`, Quick Audition Padlock), double-clicking in Library/Playlist Editor, creating new presets, or dragging `.lsd` files onto decks, `AutoVjDirtyBehavior.AUTO_SAVE` and `AUTO_DISCARD` now immediately execute without unwanted prompts.
-- **Universal 4-Deck Confirmation Modal (`PopupManager.kt`)**: Refactored `PopupManager` to use a callback-driven confirmation dialog supporting all 4 decks (Deck A, Deck B, Deck BG, Deck PV) whenever the behavior is set to `SKIP` (Prompt).
-- **Auto-Healing Schema Sanitization & Migration (`PresetManager.kt`)**: Implemented `sanitizePresetDto` in `PresetManager.loadDeckPresetAsync`. When loading presets with legacy or missing visual source/feedback parameters, the loader automatically injects engine defaults, purges obsolete keys, silently rewrites the updated `.lsd` file to disk on a background I/O thread, and ensures zero schema drift.
-- **Canonical Baseline Snapshotting (`PresetManager.kt`)**: Captured canonical `DeckPresetDto` snapshots immediately following asynchronous preset and session loading (`mixer.deckX.toDto(...)`). Newly loaded presets consistently start in a clean state (`isDeckDirty == false`), while correctly marking decks dirty upon subsequent parameter modifications.
-- **Complete Visual Source & Feedback Parameter Restoration (`PresetModels.kt`)**: Fixed `Deck.applyDto` to reset baseline parameter defaults before applying incoming preset maps, restored `source.globalAlpha` application from `dto.globalAlpha`, and added full `fbKaleido` serialization support across `Deck.toDto` and `Deck.applyDto`.
 
 ---
 
