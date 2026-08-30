@@ -33,12 +33,14 @@ object Lfo2Section {
         val modeIdx = ImInt(if (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val lfo2Title = if (existing.sourceId == "lfo") "LFO 2" else "Oscillator 2"
-        session.uiTheme.h2(lfo2Title)
+        val isLfo2Active = (currentMode != llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
+        val dirtyMarker = if (isLfo2Active) " [ON] •" else ""
+        val lfo2Title = (if (existing.sourceId == "lfo") "LFO 2 (Modulator)" else "Oscillator 2 (Modulator)") + dirtyMarker
 
-        ImGui.spacing()
+        if (ImGui.collapsingHeader(lfo2Title, if (isLfo2Active) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0)) {
+            ImGui.spacing()
 
-        val lfo2Bypassed = (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
+            val lfo2Bypassed = (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
         
         // Push styled button colors: Green for active, Red for bypassed
         val btnColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
@@ -741,6 +743,7 @@ object Lfo2Section {
                     }
                 )
                 ImGui.spacing()
+            }
             }
         }
     }

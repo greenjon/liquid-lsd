@@ -462,8 +462,9 @@ class BeatTrackerEngine(
         }
 
         if (isLocked && calcBpm > 0.0f) {
-            val adaptRate = if (historyCount < maxPeriodBlocks * 2) 0.45f else 0.20f
-            currentBpm = currentBpm * (1.0f - adaptRate) + bpmMatch * adaptRate
+            val maxBpmDeltaPerBlock = (trackingInertiaBpmPerBeat * (dt / (60.0f / currentBpm))).coerceAtLeast(0.01f)
+            val deltaBpm = (bpmMatch - currentBpm).coerceIn(-maxBpmDeltaPerBlock, maxBpmDeltaPerBlock)
+            currentBpm = (currentBpm + deltaBpm).coerceIn(bpmFloor, bpmCeiling)
             targetBeatIntervalTau0 = fps * (60.0f / currentBpm)
         } else if (!isLocked) {
             val slewRate = 0.05f
@@ -553,10 +554,13 @@ class BeatTrackerEngine(
                 }
             }
 
-            // Timing offset from projected beat in blocks
-            val deltaBlocks = bestBlock - projectedBlock
-            val rawPhaseError = if (tau0 > 1.0f) (-deltaBlocks.toDouble() / tau0.toDouble()) else 0.0
-            val wrappedError = (rawPhaseError + 1.5) % 1.0 - 0.5 // Wrap error to [-0.5, 0.5]
+            // We know a true beat occurred exactly at bestBlock.
+            val blocksSinceBeat = currentBlock - bestBlock
+            val idealPhase = (blocksSinceBeat.toDouble() / tau0.coerceAtLeast(1.0f).toDouble()) % 1.0
+
+            // Measure how far accumulatedPhase has drifted from absolute ideal phase
+            val phaseDiff = idealPhase - accumulatedPhase
+            val wrappedError = (phaseDiff + 1.5) % 1.0 - 0.5 // Wrap to [-0.5, 0.5]
 
             // Integrate phase correction into 2nd-order exponential slew
             phaseSlewError = (phaseSlewError * 0.80) + (wrappedError * 0.20)

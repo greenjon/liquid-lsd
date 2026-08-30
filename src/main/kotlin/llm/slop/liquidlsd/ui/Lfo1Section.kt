@@ -507,230 +507,235 @@ object Lfo1Section {
             ImGui.spacing()
         }
 
-        // -- Phase Offset -----------------------------------------
-        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
-            label = if (isGen) "LFO 1 Phase" else "Phase Offset",
-            themeColor = themeColor,
-            currentValue = existing.phaseOffset,
-            currentMin = existing.phaseOffsetMin,
-            currentMax = existing.phaseOffsetMax,
-            minLimit = 0f,
-            maxLimit = 1f,
-            isRandomizable = existing.randomizePhaseOffset,
-            formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.phaseOffsetMin
-                    val rMax = existing.phaseOffsetMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.phaseOffset - 0.1f).coerceAtLeast(0f), (existing.phaseOffset + 0.1f).coerceAtMost(1f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizePhaseOffset = true,
-                        phaseOffsetMin = nextMin,
-                        phaseOffsetMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizePhaseOffset = false,
-                        phaseOffsetMin = existing.phaseOffset,
-                        phaseOffsetMax = existing.phaseOffset
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizePhaseOffset())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.phaseOffset.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    phaseOffsetMin = safeMin,
-                    phaseOffsetMax = safeMax,
-                    phaseOffset = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    phaseOffset = newVal,
-                    phaseOffsetMin = newVal,
-                    phaseOffsetMax = newVal
-                ))
-            }
-        )
-        ImGui.spacing()
-
-        // -- Morph Slider --
-        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_morph",
-            label = if (isGen) "LFO 1 Morph" else "Morph",
-            themeColor = themeColor,
-            currentValue = existing.morph,
-            currentMin = existing.morphMin,
-            currentMax = existing.morphMax,
-            minLimit = 0f,
-            maxLimit = 1f,
-            isRandomizable = existing.randomizeMorph,
-            formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.morphMin
-                    val rMax = existing.morphMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.morph - 0.1f).coerceAtLeast(0f), (existing.morph + 0.1f).coerceAtMost(1f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizeMorph = true,
-                        morphMin = nextMin,
-                        morphMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizeMorph = false,
-                        morphMin = existing.morph,
-                        morphMax = existing.morph
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeMorph())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.morph.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    morphMin = safeMin,
-                    morphMax = safeMax,
-                    morph = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    morph = newVal,
-                    morphMin = newVal,
-                    morphMax = newVal
-                ))
-            }
-        )
-        ImGui.spacing()
-
-        // -- Hold Slider --
-        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_hold",
-            label = if (isGen) "LFO 1 Hold" else "Hold",
-            themeColor = themeColor,
-            currentValue = existing.hold,
-            currentMin = existing.holdMin,
-            currentMax = existing.holdMax,
-            minLimit = 0f,
-            maxLimit = 0.99f,
-            isRandomizable = existing.randomizeHold,
-            formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.holdMin
-                    val rMax = existing.holdMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.99f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizeHold = true,
-                        holdMin = nextMin,
-                        holdMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizeHold = false,
-                        holdMin = existing.hold,
-                        holdMax = existing.hold
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeHold())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.hold.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    holdMin = safeMin,
-                    holdMax = safeMax,
-                    hold = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    hold = newVal,
-                    holdMin = newVal,
-                    holdMax = newVal
-                ))
-            }
-        )
-        ImGui.spacing()
-
-        // -- Slew / Slope Slider (only if not Random) --
-        if (existing.waveform != Waveform.RANDOM) {
+        // -- Advanced Parameters Accordion --
+        val isAdvancedDirty = existing.phaseOffset != 0f || existing.morph != 0f || existing.hold != 0f || (existing.slope != 0.5f && existing.waveform != Waveform.RANDOM)
+        val dirtyMarker = if (isAdvancedDirty) " •" else ""
+        val advHeader = "Advanced Parameters$dirtyMarker"
+        if (ImGui.collapsingHeader(advHeader, if (isAdvancedDirty) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0)) {
+            // -- Phase Offset -----------------------------------------
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
-                label = if (isGen) "LFO 1 Slew" else "Slew",
+                label = if (isGen) "LFO 1 Phase" else "Phase Offset",
                 themeColor = themeColor,
-                currentValue = existing.slope,
-                currentMin = existing.slopeMin,
-                currentMax = existing.slopeMax,
-                minLimit = 0.001f,
-                maxLimit = 0.999f,
-                isRandomizable = existing.randomizeSlope,
+                currentValue = existing.phaseOffset,
+                currentMin = existing.phaseOffsetMin,
+                currentMax = existing.phaseOffsetMax,
+                minLimit = 0f,
+                maxLimit = 1f,
+                isRandomizable = existing.randomizePhaseOffset,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
-                        val rMin = existing.slopeMin
-                        val rMax = existing.slopeMax
+                        val rMin = existing.phaseOffsetMin
+                        val rMax = existing.phaseOffsetMax
                         val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.slope - 0.1f).coerceAtLeast(0.001f), (existing.slope + 0.1f).coerceAtMost(0.999f))
+                            Pair((existing.phaseOffset - 0.1f).coerceAtLeast(0f), (existing.phaseOffset + 0.1f).coerceAtMost(1f))
                         } else {
                             Pair(rMin, rMax)
                         }
                         onReplace(existing.copy(
-                            randomizeSlope = true,
-                            slopeMin = nextMin,
-                            slopeMax = nextMax
+                            randomizePhaseOffset = true,
+                            phaseOffsetMin = nextMin,
+                            phaseOffsetMax = nextMax
                         ))
                     } else {
                         onReplace(existing.copy(
-                            randomizeSlope = false,
-                            slopeMin = existing.slope,
-                            slopeMax = existing.slope
+                            randomizePhaseOffset = false,
+                            phaseOffsetMin = existing.phaseOffset,
+                            phaseOffsetMax = existing.phaseOffset
                         ))
                     }
                 },
                 onRandomizeNow = {
-                    onReplace(existing.randomizeSlope())
+                    onReplace(existing.randomizePhaseOffset())
                 },
                 onRangeChanged = { nextMin, nextMax ->
                     val safeMin = minOf(nextMin, nextMax)
                     val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.slope.coerceIn(safeMin, safeMax)
+                    val nextActive = existing.phaseOffset.coerceIn(safeMin, safeMax)
                     onReplace(existing.copy(
-                        slopeMin = safeMin,
-                        slopeMax = safeMax,
-                        slope = nextActive
+                        phaseOffsetMin = safeMin,
+                        phaseOffsetMax = safeMax,
+                        phaseOffset = nextActive
                     ))
                 },
                 onValueChanged = { newVal ->
                     onReplace(existing.copy(
-                        slope = newVal,
-                        slopeMin = newVal,
-                        slopeMax = newVal
+                        phaseOffset = newVal,
+                        phaseOffsetMin = newVal,
+                        phaseOffsetMax = newVal
                     ))
                 }
             )
             ImGui.spacing()
+
+            // -- Morph Slider --
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_morph",
+                label = if (isGen) "LFO 1 Morph" else "Morph",
+                themeColor = themeColor,
+                currentValue = existing.morph,
+                currentMin = existing.morphMin,
+                currentMax = existing.morphMax,
+                minLimit = 0f,
+                maxLimit = 1f,
+                isRandomizable = existing.randomizeMorph,
+                formatValue = { "%.3f".format(it) },
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.morphMin
+                        val rMax = existing.morphMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            Pair((existing.morph - 0.1f).coerceAtLeast(0f), (existing.morph + 0.1f).coerceAtMost(1f))
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        onReplace(existing.copy(
+                            randomizeMorph = true,
+                            morphMin = nextMin,
+                            morphMax = nextMax
+                        ))
+                    } else {
+                        onReplace(existing.copy(
+                            randomizeMorph = false,
+                            morphMin = existing.morph,
+                            morphMax = existing.morph
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    onReplace(existing.randomizeMorph())
+                },
+                onRangeChanged = { nextMin, nextMax ->
+                    val safeMin = minOf(nextMin, nextMax)
+                    val safeMax = maxOf(nextMin, nextMax)
+                    val nextActive = existing.morph.coerceIn(safeMin, safeMax)
+                    onReplace(existing.copy(
+                        morphMin = safeMin,
+                        morphMax = safeMax,
+                        morph = nextActive
+                    ))
+                },
+                onValueChanged = { newVal ->
+                    onReplace(existing.copy(
+                        morph = newVal,
+                        morphMin = newVal,
+                        morphMax = newVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+
+            // -- Hold Slider --
+            CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_hold",
+                label = if (isGen) "LFO 1 Hold" else "Hold",
+                themeColor = themeColor,
+                currentValue = existing.hold,
+                currentMin = existing.holdMin,
+                currentMax = existing.holdMax,
+                minLimit = 0f,
+                maxLimit = 0.99f,
+                isRandomizable = existing.randomizeHold,
+                formatValue = { "%.3f".format(it) },
+                onRandomizableChanged = { checked ->
+                    if (checked) {
+                        val rMin = existing.holdMin
+                        val rMax = existing.holdMax
+                        val (nextMin, nextMax) = if (rMin == rMax) {
+                            Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.99f))
+                        } else {
+                            Pair(rMin, rMax)
+                        }
+                        onReplace(existing.copy(
+                            randomizeHold = true,
+                            holdMin = nextMin,
+                            holdMax = nextMax
+                        ))
+                    } else {
+                        onReplace(existing.copy(
+                            randomizeHold = false,
+                            holdMin = existing.hold,
+                            holdMax = existing.hold
+                        ))
+                    }
+                },
+                onRandomizeNow = {
+                    onReplace(existing.randomizeHold())
+                },
+                onRangeChanged = { nextMin, nextMax ->
+                    val safeMin = minOf(nextMin, nextMax)
+                    val safeMax = maxOf(nextMin, nextMax)
+                    val nextActive = existing.hold.coerceIn(safeMin, safeMax)
+                    onReplace(existing.copy(
+                        holdMin = safeMin,
+                        holdMax = safeMax,
+                        hold = nextActive
+                    ))
+                },
+                onValueChanged = { newVal ->
+                    onReplace(existing.copy(
+                        hold = newVal,
+                        holdMin = newVal,
+                        holdMax = newVal
+                    ))
+                }
+            )
+            ImGui.spacing()
+
+            // -- Slew / Slope Slider (only if not Random) --
+            if (existing.waveform != Waveform.RANDOM) {
+                CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
+                    label = if (isGen) "LFO 1 Slew" else "Slew",
+                    themeColor = themeColor,
+                    currentValue = existing.slope,
+                    currentMin = existing.slopeMin,
+                    currentMax = existing.slopeMax,
+                    minLimit = 0.001f,
+                    maxLimit = 0.999f,
+                    isRandomizable = existing.randomizeSlope,
+                    formatValue = { "%.3f".format(it) },
+                    onRandomizableChanged = { checked ->
+                        if (checked) {
+                            val rMin = existing.slopeMin
+                            val rMax = existing.slopeMax
+                            val (nextMin, nextMax) = if (rMin == rMax) {
+                                Pair((existing.slope - 0.1f).coerceAtLeast(0.001f), (existing.slope + 0.1f).coerceAtMost(0.999f))
+                            } else {
+                                Pair(rMin, rMax)
+                            }
+                            onReplace(existing.copy(
+                                randomizeSlope = true,
+                                slopeMin = nextMin,
+                                slopeMax = nextMax
+                            ))
+                        } else {
+                            onReplace(existing.copy(
+                                randomizeSlope = false,
+                                slopeMin = existing.slope,
+                                slopeMax = existing.slope
+                            ))
+                        }
+                    },
+                    onRandomizeNow = {
+                        onReplace(existing.randomizeSlope())
+                    },
+                    onRangeChanged = { nextMin, nextMax ->
+                        val safeMin = minOf(nextMin, nextMax)
+                        val safeMax = maxOf(nextMin, nextMax)
+                        val nextActive = existing.slope.coerceIn(safeMin, safeMax)
+                        onReplace(existing.copy(
+                            slopeMin = safeMin,
+                            slopeMax = safeMax,
+                            slope = nextActive
+                        ))
+                    },
+                    onValueChanged = { newVal ->
+                        onReplace(existing.copy(
+                            slope = newVal,
+                            slopeMin = newVal,
+                            slopeMax = newVal
+                        ))
+                    }
+                )
+            }
         }
     }
 }

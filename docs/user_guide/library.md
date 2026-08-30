@@ -64,6 +64,8 @@ The Left column displays the complete pool of all available presets discovered a
 - **Clean List View**: Preset rows display clean typography without cluttered inline buttons.
 - **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
 - **Keyboard Shortcuts**:
+  - `Ctrl + F` / `/`: Focus Preset Search filter bar (automatically opens Library if hidden).
+  - `Esc` (while search is focused): Clears search query and returns focus to the preset table.
   - `↑` / `↓` Arrows: Navigate through presets across columns (auto-loading to the latched deck if Audition Lock `[🔒]` is armed) without focus interruption.
   - `1`: Load selected preset into **Deck A**.
   - `2`: Load selected preset into **Deck B**.

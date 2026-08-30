@@ -85,6 +85,7 @@ class BeatDetector(
         engine.bpmFloor = settings.bpmSearchFloor.toFloat()
         engine.bpmCeiling = settings.bpmSearchCeiling.toFloat()
         engine.transitionWeightAlpha = settings.transitionWeightAlpha
+        engine.trackingInertiaBpmPerBeat = settings.trackingInertiaBpmPerBeat
         val targetAmp = when (settings.target) {
             AudioTarget.UNFILTERED -> if (onsetStrength > 0f) onsetStrength else unfilteredAmp
             AudioTarget.LOW -> if (onsetStrength > 0f) onsetStrength else lowAmp

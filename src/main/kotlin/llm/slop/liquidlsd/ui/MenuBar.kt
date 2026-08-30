@@ -275,6 +275,12 @@ class MenuBar(
         val audioActive = session.audioEngine.isActive()
         val audioLatency = PerformanceStats.audioCallbackMs
         val showAudio = audioActive && session.uiTheme.audioEngineEnabled && audioLatency > 0.0f
+        val showBeatDots = audioActive && session.uiTheme.audioEngineEnabled
+
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val dotR = 3.5f * fontScale
+        val dotGap = 7f * fontScale
+        val dotsTotalW = if (showBeatDots) (dotR * 2f * 4f) + (dotGap * 3f) + (10f * fontScale) else 0f
 
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
         val bpmText = if (audioActive && session.uiTheme.audioEngineEnabled) "BPM: %3.0f  ".format(bpm) else ""
@@ -286,7 +292,7 @@ class MenuBar(
         session.uiTheme.withFont(UITheme.FontLevel.CODE) {
             val barWidth  = ImGui.getContentRegionAvailX()
             val textWidth = ImGui.calcTextSize(fullLabel).x
-            val startX    = ImGui.getCursorPosX() + barWidth - textWidth
+            val startX    = ImGui.getCursorPosX() + barWidth - textWidth - dotsTotalW
 
             if (startX > ImGui.getCursorPosX()) {
                 ImGui.setCursorPosX(startX)
@@ -303,6 +309,41 @@ class MenuBar(
                 ImGui.text(cpuText)
                 ImGui.popStyleColor()
                 ImGui.sameLine(0f, 0f)
+            }
+
+            // ── 4-Beat Phase Meter ────────────────────────────────────────────────
+            if (showBeatDots) {
+                val totalBeats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
+                val currentBeat = (((totalBeats.toLong() % 4) + 4) % 4).toInt()
+                val beatFract = (totalBeats - kotlin.math.floor(totalBeats)).toFloat()
+
+                val dotsStartX = ImGui.getCursorScreenPosX()
+                val dotsStartY = ImGui.getCursorScreenPosY()
+                val dl = ImGui.getWindowDrawList()
+                val textH = ImGui.getTextLineHeight()
+                val cy = dotsStartY + (textH * 0.5f)
+
+                for (i in 0..3) {
+                    val cx = dotsStartX + dotR + (i * (dotR * 2f + dotGap))
+                    if (i == currentBeat) {
+                        val intensity = (1.0f - beatFract * 0.35f).coerceIn(0.65f, 1.0f)
+                        val col = if (i == 0) {
+                            ImGui.colorConvertFloat4ToU32(0.2f * intensity, 0.95f * intensity, 1.0f * intensity, 1.0f)
+                        } else {
+                            ImGui.colorConvertFloat4ToU32(0.85f * intensity, 0.95f * intensity, 0.85f * intensity, 1.0f)
+                        }
+                        dl.addCircleFilled(cx, cy, dotR, col)
+                    } else {
+                        val dimCol = ImGui.colorConvertFloat4ToU32(0.40f, 0.45f, 0.50f, 0.6f)
+                        dl.addCircle(cx, cy, dotR, dimCol, 0, 1.2f)
+                    }
+                }
+
+                ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - (4f * fontScale), textH)
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4")
+                }
+                ImGui.sameLine(0f, 4f * fontScale)
             }
 
             // ── BPM ───────────────────────────────────────────────────────────────

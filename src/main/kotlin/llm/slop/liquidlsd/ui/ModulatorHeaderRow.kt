@@ -52,7 +52,9 @@ object ModulatorHeaderRow {
 
         // Row 1: Title Text & Reset Button (trash can)
         val btnY2 = ImGui.getCursorScreenPosY()
-        session.uiTheme.h2(titleText)
+        if (modsToDraw.size <= 1) {
+            session.uiTheme.h2(titleText)
+        }
 
         if (idx == 0) {
             val resetWidth = 50f * fontScale

@@ -249,6 +249,17 @@ class UIManager(
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
         var keyDelta = 0
         if (!ImGui.getIO().wantTextInput) {
+            val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_F, false)
+            val isSlash = ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_SLASH, false)
+            if (isCtrlF || isSlash) {
+                if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
+                    session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
+                    LibraryPanel.isLibraryExpanding = true
+                    session.uiTheme.saveSettings()
+                }
+                llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
+            }
+
             if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
                 if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Space))) {
                     LibraryPanel.cycleMode(session)

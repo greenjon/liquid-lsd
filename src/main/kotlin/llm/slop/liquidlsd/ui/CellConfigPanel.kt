@@ -246,99 +246,117 @@ object CellConfigPanel {
                 val panelStartY = ImGui.getCursorScreenPosY()
                 val dl = ImGui.getWindowDrawList()
                 
-                ModulatorHeaderRow.draw(
-                    session = session,
-                    existing = existing,
-                    idx = idx,
-                    modsToDraw = modsToDraw,
-                    isVirtual = isVirtual,
-                    isLfo = isLfo,
-                    hasAdvanced = hasAdvanced,
-                    onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
-                    onReset = {
-                        val toRemove = activeMods.toList()
-                        for (mod in toRemove) {
-                            param.modulators.remove(mod)
-                        }
-                    }
-                )
-
-                if (bypassed) {
-                    ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f) // Re-push style var for sub-controls
+                val isMultiBand = modsToDraw.size > 1
+                val isBandActive = !existing.bypassed && existing.depth != 0.0f
+                val bandLabel = when (existing.sourceId) {
+                    "audio_amp" -> "Amplitude / Master"
+                    "audio_bass" -> "Low / Bass"
+                    "audio_mid" -> "Mid"
+                    "audio_high" -> "High"
+                    "trigger_onset" -> "Onset / Beat"
+                    "trigger_accent" -> "Accent / Peak"
+                    else -> "Modulator ${idx + 1}"
                 }
+                val dirtyMarker = if (isBandActive) " [ACTIVE] •" else if (!existing.bypassed) " •" else ""
+                val headerTitle = "$bandLabel$dirtyMarker"
+                val defaultOpen = if (isBandActive || (idx == 0 && activeMods.isEmpty()) || existing.sourceId == "audio_bass" || !isMultiBand) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0
 
-                ImGui.spacing()
+                val isHeaderOpen = if (isMultiBand) ImGui.collapsingHeader(headerTitle, defaultOpen) else true
+                if (isHeaderOpen) {
+                    ModulatorHeaderRow.draw(
+                        session = session,
+                        existing = existing,
+                        idx = idx,
+                        modsToDraw = modsToDraw,
+                        isVirtual = isVirtual,
+                        isLfo = isLfo,
+                        hasAdvanced = hasAdvanced,
+                        onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
+                        onReset = {
+                            val toRemove = activeMods.toList()
+                            for (mod in toRemove) {
+                                param.modulators.remove(mod)
+                            }
+                        }
+                    )
 
-                when {
-                    llm.slop.liquidlsd.cv.isAudioSource(existing.sourceId) -> {
-                        // Draw dedicated Audio Envelope Follower + dynamics controls
-                        AudioModulatorSection.draw(
-                            session = session,
-                            param = param,
-                            existing = existing,
-                            themeColor = currentThemeColor,
-                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                        )
+                    if (bypassed) {
+                        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f) // Re-push style var for sub-controls
                     }
-                    llm.slop.liquidlsd.cv.isTriggerSource(existing.sourceId) -> {
-                        // Draw dedicated Trigger transient impulse controls
-                        TriggerModulatorSection.draw(
-                            session = session,
-                            param = param,
-                            existing = existing,
-                            themeColor = currentThemeColor,
-                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                        )
-                    }
-                    existing.sourceId.startsWith("midi_cc_") -> {
-                        // Draw dedicated MIDI CC controller controls
-                        MidiModulatorSection.draw(
-                            session = session,
-                            param = param,
-                            existing = existing,
-                            themeColor = currentThemeColor,
-                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                        )
-                    }
-                    else -> {
-                        // Draw LFO 1 / generator carrier timing and waveshaping controls
-                        Lfo1Section.draw(
-                            session = session,
-                            param = param,
-                            existing = existing,
-                            isBeat = isBeat,
-                            isSnh = isSnh,
-                            isGen = isGen,
-                            hasAdvanced = hasAdvanced,
-                            themeColor = currentThemeColor,
-                            onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                        )
 
-                        // Draw LFO 2 / secondary generator modulator controls
-                        if (isGen) {
-                            Lfo2Section.draw(
+                    ImGui.spacing()
+
+                    when {
+                        llm.slop.liquidlsd.cv.isAudioSource(existing.sourceId) -> {
+                            // Draw dedicated Audio Envelope Follower + dynamics controls
+                            AudioModulatorSection.draw(
                                 session = session,
                                 param = param,
                                 existing = existing,
-                                idx = idx,
                                 themeColor = currentThemeColor,
                                 onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
                             )
                         }
-                    }
-                }
+                        llm.slop.liquidlsd.cv.isTriggerSource(existing.sourceId) -> {
+                            // Draw dedicated Trigger transient impulse controls
+                            TriggerModulatorSection.draw(
+                                session = session,
+                                param = param,
+                                existing = existing,
+                                themeColor = currentThemeColor,
+                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                            )
+                        }
+                        existing.sourceId.startsWith("midi_cc_") -> {
+                            // Draw dedicated MIDI CC controller controls
+                            MidiModulatorSection.draw(
+                                session = session,
+                                param = param,
+                                existing = existing,
+                                themeColor = currentThemeColor,
+                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                            )
+                        }
+                        else -> {
+                            // Draw LFO 1 / generator carrier timing and waveshaping controls
+                            Lfo1Section.draw(
+                                session = session,
+                                param = param,
+                                existing = existing,
+                                isBeat = isBeat,
+                                isSnh = isSnh,
+                                isGen = isGen,
+                                hasAdvanced = hasAdvanced,
+                                themeColor = currentThemeColor,
+                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                            )
 
-                ImGui.unindent(10f) // Unindent at the end of block
-                
-                if (bypassed) {
-                    ImGui.popStyleVar()
-                }
-                
-                val panelEndY = ImGui.getCursorScreenPosY()
-                
-                // Draw margin line for active modulators
-                if (!bypassed) {
-                    dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, currentThemeColor, 4f)
+                            // Draw LFO 2 / secondary generator modulator controls
+                            if (isGen) {
+                                Lfo2Section.draw(
+                                    session = session,
+                                    param = param,
+                                    existing = existing,
+                                    idx = idx,
+                                    themeColor = currentThemeColor,
+                                    onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                                )
+                            }
+                        }
+                    }
+
+                    ImGui.unindent(10f) // Unindent at the end of block
+                    
+                    if (bypassed) {
+                        ImGui.popStyleVar()
+                    }
+                    
+                    val panelEndY = ImGui.getCursorScreenPosY()
+                    
+                    // Draw margin line for active modulators
+                    if (!bypassed) {
+                        dl.addLine(panelStartX + 2f, panelStartY, panelStartX + 2f, panelEndY - 10f, currentThemeColor, 4f)
+                    }
                 }
 
                 ImGui.popID()

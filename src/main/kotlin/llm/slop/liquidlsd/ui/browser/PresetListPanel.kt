@@ -22,6 +22,7 @@ object PresetListPanel {
     private val logger = KotlinLogging.logger {}
     val searchBuffer = ImString(256)
     var selectedAsset: AssetItem? = null
+    var shouldFocusSearch: Boolean = false
     var filteredPresets: List<AssetItem> = emptyList()
 
     fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
@@ -74,9 +75,19 @@ object PresetListPanel {
         // Search Filter Bar (Full width)
         val searchWidth = ImGui.getContentRegionAvailX()
         ImGui.setNextItemWidth(searchWidth)
-        ImGui.inputTextWithHint("##presetSearch", "Search presets & tags...", searchBuffer)
+        if (shouldFocusSearch) {
+            ImGui.setKeyboardFocusHere()
+            shouldFocusSearch = false
+        }
+        ImGui.inputTextWithHint("##presetSearch", "Search presets & tags... (Ctrl+F)", searchBuffer)
+        if (ImGui.isItemActive()) {
+            if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Escape))) {
+                searchBuffer.set("")
+                LibraryPanel.shouldReclaimFocus = true
+            }
+        }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Type to filter presets by name or tags.")
+            ImGui.setTooltip("Type to filter presets by name or tags.\nPress Esc while searching to clear.")
         }
 
         ImGui.separator()

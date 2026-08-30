@@ -65,7 +65,7 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
 ### 4. Continuous Visual Phase & Cosine Modulation Signal
 Provides zero-allocation primitive queries for visual rendering at arbitrary frame query timestamps:
 - **Strictly $C^0$ Continuous Phase Accumulator**: Operates an internal Numerically Controlled Oscillator (NCO) phase accumulator $\phi \in [0.0, 1.0)$.
-- **Smooth 2nd-Order Slew on Beat Anchors**: When beat anchors or DP peak offsets are detected, the timing difference is converted into fractional phase error $\epsilon \in [-0.5, 0.5]$ and integrated into a 2nd-order exponential frequency slew ($k_{\text{slew}} = 0.35$). This completely eliminates discrete ~11.6ms phase snapping or visual jitter.
+- **Smooth 2nd-Order Slew on Beat Anchors**: When beat anchors or DP peak offsets are detected at `bestBlock`, the absolute phase error between elapsed time since the anchor (`idealPhase`) and `accumulatedPhase` is converted into fractional phase error $\epsilon \in [-0.5, 0.5]$ and integrated into a 2nd-order exponential frequency slew ($k_{\text{slew}} = 0.35$). This securely locks phase $\phi = 0.0$ to true beat arrivals and eliminates open-loop drift without discrete phase snapping or visual jitter.
 - **Lock-Free Atomic Seqlock Snapshot**: Synchronizes multi-word phase state (`snapTimestampSec`, `snapPhase`, `snapFreqHz`) across threads using a zero-allocation sequence lock counter (`snapSeq`). Eliminates torn reads between the real-time JACK audio thread and high-framerate render threads without locks, blocking, or heap allocations:
   $$\phi(t) = \left( \text{snapPhase} + (t - \text{snapTimestampSec}) \cdot \text{snapFreqHz} \right) \pmod{1.0}$$
 - **Locked Cosine Output**: $\cos(2\pi \phi(t)) \in [-1.0, 1.0]$.

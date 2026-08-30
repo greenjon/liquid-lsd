@@ -3,11 +3,20 @@
 ## Version 1.0.0-beta.31
 
 > [!NOTE]
-> **Release 1.0.0-beta.31** introduces the standalone "Colors" visual source generator, the zero-allocation BTrack real-time beat tracking engine with complex spectral difference ODF and causal dynamic programming, an overhaul of the Library browser with a unified menu bar action strip, quick audition padlock, and full keyboard navigation, streamlined 3-column layout sizing with locked aspect ends and flexible center panel, 4-step Spacebar library ping-pong cycling (`HIDE` $\rightarrow$ `HALF` $\rightarrow$ `FULL` $\rightarrow$ `HALF` $\rightarrow$ `HIDE`), title bar click-drag library resizing, symmetrical Background Queue controls with modulation routing and dirty state checking, consolidated 2-column Audio Engine settings with zero-lag CV oscilloscopes, and slider drag-isolation fixes.
+> **Release 1.0.0-beta.31** introduces the standalone "Colors" visual source generator, the zero-allocation BTrack real-time beat tracking engine with complex spectral difference ODF and causal dynamic programming, an overhaul of the Library browser with a unified menu bar action strip, quick audition padlock, and full keyboard navigation (including <kbd>Ctrl+F</kbd>/<kbd>/</kbd> instant search focus and <kbd>Esc</kbd> clear), dynamic on-air deck illumination proportional to the crossfader, modular Cell Config collapsible accordions with LFO advanced parameter dirty dot indicators (`•`), a 4-beat phase meter in the top menu bar, streamlined 3-column layout sizing with locked aspect ends and flexible center panel, 4-step Spacebar library ping-pong cycling (`HIDE` $\rightarrow$ `HALF` $\rightarrow$ `FULL` $\rightarrow$ `HALF` $\rightarrow$ `HIDE`), title bar click-drag library resizing, symmetrical Background Queue controls with modulation routing and dirty state checking, consolidated 2-column Audio Engine settings with zero-lag CV oscilloscopes, and slider drag-isolation fixes.
 
 ---
 
 ### Key Highlights
+
+#### 1. Performance-Driven UI & Ergonomics Enhancements (`UIManager.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`, `MenuBar.kt`, `CellConfigPanel.kt`)
+- **Instant Search Focus (<kbd>Ctrl+F</kbd> / <kbd>/</kbd>) & Clear (<kbd>Esc</kbd>)**: Pressing <kbd>Ctrl+F</kbd> or <kbd>/</kbd> (when not focused on a text input) automatically opens the Library (if hidden) and focuses the preset search bar with text highlighted. Pressing <kbd>Esc</kbd> while the search box is active clears the filter query and returns focus back to the preset table for seamless keyboard navigation (`1`–`4`, `Q`, `Shift+Q`, `↑`, `↓`).
+- **Dynamic "On-Air" Deck Illumination & Glow**: Decks A and B dynamically scale header, toolbar, and border brightness based on `Mixer.crossfade` position. Active on-air decks render at 100% full saturation with bright glowing borders, while off-air decks smoothly dim to $\sim 35\%$ opacity.
+- **Cell Config Modular Accordions & Dirty Indicator (`•`)**: 
+  - Converted LFO 2 from an auto-hiding section into an explicit collapsible accordion (`▶ LFO 2 (Modulator)` / `▼ LFO 2`).
+  - Wrapped Audio and Trigger multi-band modulators in collapsible headers (`Amplitude`, `Low / Bass`, `Mid`, `High`, `Onset`, `Accent`).
+  - Grouped secondary LFO 1 parameters (`Phase Offset`, `Morph`, `Hold`, `Slew`) into an `Advanced Parameters` accordion with an illuminated dirty indicator dot (`•`) whenever any collapsed parameter differs from its default.
+- **4-Beat Phase Meter in Top Menu Bar**: Added a 4-dot quarter-note beat meter (`[ ● ○ ○ ○ ]`) immediately preceding the `BPM` display in the top Menu Bar, giving instant, zero-clutter confirmation of audio sync and downbeat alignment in sync with the BTrack engine.
 
 #### 1. Streamlined 3-Column Layout Architecture & Spacebar Library Cycling (`UIManager.kt`, `LibraryPanel.kt`)
 - **Locked Aspect-Ratio End Columns**: Sized Column 1 (Preset Grid) dynamically to its active columns and Column 3 (Mixer / Monitor) strictly to its aspect-ratio preview capacity, eliminating wasted horizontal letterboxing and removing manual column splitters.

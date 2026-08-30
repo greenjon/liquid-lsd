@@ -222,7 +222,8 @@ fun main() {
         val isRecordHotKey = (mods and GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_R
         val isEscapeFullscreen = key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
-        val isHotKey = ((key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed) || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen
+        val isPlainFOrB = (mods == 0) && (key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed
+        val isHotKey = isPlainFOrB || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen
 
         if (action == GLFW_PRESS) {
             if (isFontSizeHotKey) {
@@ -247,13 +248,13 @@ fun main() {
                         includeAudio = UITheme.recordingIncludeAudio
                     )
                 }
-            } else if (key == GLFW_KEY_F && isShortcutAllowed) {
+            } else if (isPlainFOrB && key == GLFW_KEY_F) {
                 UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled
                 logger.info { "Clean mode toggled: ${UITheme.cleanModeEnabled}" }
             } else if (key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled) {
                 UITheme.cleanModeEnabled = false
                 logger.info { "Clean mode exited via ESC: ${UITheme.cleanModeEnabled}" }
-            } else if (key == GLFW_KEY_B && isShortcutAllowed) {
+            } else if (isPlainFOrB && key == GLFW_KEY_B) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
                 UITheme.saveSettings()
                 logger.info { "Background video toggled: ${UITheme.backgroundVideoEnabled}" }
