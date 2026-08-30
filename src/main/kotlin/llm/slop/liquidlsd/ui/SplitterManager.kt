@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import imgui.ImDrawList
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiMouseCursor
@@ -19,6 +20,7 @@ class SplitterManager {
         width: Float,
         height: Float,
         displayWidth: Float,
+        drawList: ImDrawList? = null,
         onDrag: (Float) -> Unit,
         onDoubleClick: () -> Unit
     ) {
@@ -54,8 +56,8 @@ class SplitterManager {
             isHovered -> ImGui.getColorU32(ImGuiCol.SeparatorHovered)
             else -> ImGui.getColorU32(ImGuiCol.Separator)
         }
-        val drawList = ImGui.getForegroundDrawList()
-        drawList.addLine(posX, posY, posX, posY + height, color, if (isActive || isHovered) 2.5f else 1.5f)
+        val dl = drawList ?: ImGui.getWindowDrawList()
+        dl.addLine(posX, posY, posX, posY + height, color, if (isActive || isHovered) 2.5f else 1.5f)
     }
 
     fun drawHorizontalSplitter(
@@ -65,6 +67,7 @@ class SplitterManager {
         width: Float,
         height: Float,
         displayHeight: Float,
+        drawList: ImDrawList? = null,
         onDrag: (Float) -> Unit,
         onDoubleClick: () -> Unit
     ) {
@@ -100,7 +103,7 @@ class SplitterManager {
             isHovered -> ImGui.getColorU32(ImGuiCol.SeparatorHovered)
             else -> ImGui.getColorU32(ImGuiCol.Separator)
         }
-        val drawList = ImGui.getForegroundDrawList()
-        drawList.addLine(posX, posY, posX + width, posY, color, if (isActive || isHovered) 2.5f else 1.5f)
+        val dl = drawList ?: ImGui.getWindowDrawList()
+        dl.addLine(posX, posY, posX + width, posY, color, if (isActive || isHovered) 2.5f else 1.5f)
     }
 }

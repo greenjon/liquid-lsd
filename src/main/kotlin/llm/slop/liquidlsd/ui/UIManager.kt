@@ -436,55 +436,16 @@ class UIManager(
             if (ImGui.begin("Cell Config", cellConfigFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                 CellConfigPanel.draw(session, presetState, currentMixer!!)
+
+                // Vertical Splitter 1 (Static divider line between Preset Grid & Cell Config)
+                val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+                ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
             }
             ImGui.end()
-
-            // Vertical Splitter 1 (Static divider line between Preset Grid & Cell Config)
-            val drawList = ImGui.getForegroundDrawList()
-            val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
-            drawList.addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
         }
 
         // Horizontal Splitter (above Library when not FULL)
         val libraryPosH = if (theme.libraryMode == UITheme.LibraryMode.FULL) menuBarH else (menuBarH + contentH - libraryH)
-        if (theme.libraryMode != UITheme.LibraryMode.FULL) {
-            splitterManager.drawHorizontalSplitter(
-                id = "##hsplit",
-                posX = 0f,
-                posY = libraryPosH,
-                width = libraryW.coerceAtLeast(1f),
-                height = 8f,
-                displayHeight = displayHeight,
-                onDrag = { deltaY ->
-                    if (theme.libraryMode == UITheme.LibraryMode.HIDE) {
-                        if (deltaY < 0f) { // Dragging upward
-                            theme.libraryMode = UITheme.LibraryMode.HALF
-                            theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
-                            theme.saveSettings()
-                        }
-                    } else {
-                        val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
-                        val targetRatio = theme.libraryRatio + deltaR
-                        val targetPixelH = contentH * targetRatio
-                        if (targetPixelH < 60f || targetRatio < 0.10f) {
-                            theme.lastCustomLibraryRatio = theme.libraryRatio
-                            theme.libraryMode = UITheme.LibraryMode.HIDE
-                        } else {
-                            val newR = targetRatio.coerceIn(minRatio, 0.85f)
-                            theme.libraryRatio = newR
-                            theme.lastCustomLibraryRatio = newR
-                        }
-                        theme.saveSettings()
-                    }
-                },
-                onDoubleClick = {
-                    theme.libraryMode = UITheme.LibraryMode.HALF
-                    theme.libraryRatio = 0.50f
-                    theme.lastCustomLibraryRatio = 0.50f
-                    theme.saveSettings()
-                }
-            )
-        }
 
         // Library (Bottom or Full)
         ImGui.setNextWindowPos(0f, libraryPosH)
@@ -495,6 +456,46 @@ class UIManager(
         if (ImGui.begin("Library", flags)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, presetState)
+
+            if (theme.libraryMode != UITheme.LibraryMode.FULL) {
+                splitterManager.drawHorizontalSplitter(
+                    id = "##hsplit",
+                    posX = 0f,
+                    posY = libraryPosH,
+                    width = libraryW.coerceAtLeast(1f),
+                    height = 8f,
+                    displayHeight = displayHeight,
+                    drawList = ImGui.getWindowDrawList(),
+                    onDrag = { deltaY ->
+                        if (theme.libraryMode == UITheme.LibraryMode.HIDE) {
+                            if (deltaY < 0f) { // Dragging upward
+                                theme.libraryMode = UITheme.LibraryMode.HALF
+                                theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
+                                theme.saveSettings()
+                            }
+                        } else {
+                            val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
+                            val targetRatio = theme.libraryRatio + deltaR
+                            val targetPixelH = contentH * targetRatio
+                            if (targetPixelH < 60f || targetRatio < 0.10f) {
+                                theme.lastCustomLibraryRatio = theme.libraryRatio
+                                theme.libraryMode = UITheme.LibraryMode.HIDE
+                            } else {
+                                val newR = targetRatio.coerceIn(minRatio, 0.85f)
+                                theme.libraryRatio = newR
+                                theme.lastCustomLibraryRatio = newR
+                            }
+                            theme.saveSettings()
+                        }
+                    },
+                    onDoubleClick = {
+                        theme.libraryMode = UITheme.LibraryMode.HALF
+                        theme.libraryRatio = 0.50f
+                        theme.lastCustomLibraryRatio = 0.50f
+                        theme.saveSettings()
+                    }
+                )
+            }
         }
         ImGui.end()
         ImGui.popStyleVar()
@@ -506,28 +507,29 @@ class UIManager(
         if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             drawMixerMonitor(currentMixer!!)
+
+            // Vertical Splitter 2 (between Cell Config/Library and Mixer/Monitor)
+            splitterManager.drawVerticalSplitter(
+                id = "##vsplit2",
+                posX = libraryW,
+                posY = menuBarH,
+                width = 8f,
+                height = contentH.coerceAtLeast(1f),
+                displayWidth = displayWidth,
+                drawList = ImGui.getWindowDrawList(),
+                onDrag = { deltaX ->
+                    val deltaR = if (displayWidth > 0f) deltaX / displayWidth else 0f
+                    val newC2 = (theme.col2Ratio + deltaR).coerceIn(minC2, maxC2)
+                    theme.col2Ratio = newC2
+                    theme.saveSettings()
+                },
+                onDoubleClick = {
+                    theme.col2Ratio = 0.40f.coerceIn(minC2, maxC2)
+                    theme.saveSettings()
+                }
+            )
         }
         ImGui.end()
-
-        // Vertical Splitter 2 (between Cell Config/Library and Mixer/Monitor)
-        splitterManager.drawVerticalSplitter(
-            id = "##vsplit2",
-            posX = libraryW,
-            posY = menuBarH,
-            width = 8f,
-            height = contentH.coerceAtLeast(1f),
-            displayWidth = displayWidth,
-            onDrag = { deltaX ->
-                val deltaR = if (displayWidth > 0f) deltaX / displayWidth else 0f
-                val newC2 = (theme.col2Ratio + deltaR).coerceIn(minC2, maxC2)
-                theme.col2Ratio = newC2
-                theme.saveSettings()
-            },
-            onDoubleClick = {
-                theme.col2Ratio = 0.40f.coerceIn(minC2, maxC2)
-                theme.saveSettings()
-            }
-        )
     }
 
     private fun drawMixerMonitor(mixer: Mixer) {

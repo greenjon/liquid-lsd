@@ -352,10 +352,17 @@ object ColorTunerPanel {
 
     fun open() {
         isOpen = true
+        isOpenImBool.set(true)
+    }
+
+    fun close() {
+        isOpen = false
+        isOpenImBool.set(false)
     }
 
     fun toggle() {
         isOpen = !isOpen
+        isOpenImBool.set(isOpen)
     }
 
     fun draw(session: SessionContext, displayW: Float, displayH: Float) {
@@ -368,9 +375,11 @@ object ColorTunerPanel {
         ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.FirstUseEver)
         ImGui.setNextWindowPos(displayW * 0.5f - targetW * 0.5f, displayH * 0.5f - targetH * 0.5f, ImGuiCond.FirstUseEver)
 
-        val windowFlags = ImGuiWindowFlags.None
+        val windowFlags = ImGuiWindowFlags.NoScrollbar
         if (ImGui.begin("Color Tuner (Live)###ColorTunerTool", isOpenImBool, windowFlags)) {
-            isOpen = isOpenImBool.get()
+            if (!isOpenImBool.get()) {
+                close()
+            }
 
             session.uiTheme.withFont(UITheme.FontLevel.H2) {
                 ImGui.text("Theme Color Tuner")
@@ -446,15 +455,16 @@ object ColorTunerPanel {
 
             // Table of UI Elements and their swatch assignments
             val categories = ELEMENTS.groupBy { it.category }
+            val footerH = ImGui.getFrameHeightWithSpacing() + ImGui.getStyle().getItemSpacingY() + 8f
 
-            if (ImGui.beginChild("##elementsList", 0f, -48f, true)) {
+            if (ImGui.beginChild("##elementsList", 0f, -footerH, true)) {
                 categories.forEach { (catName, elementDefs) ->
                     if (ImGui.collapsingHeader(catName, imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
                         if (ImGui.beginTable("##table_$catName", 4, ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg)) {
                             ImGui.tableSetupColumn("Element", ImGuiTableColumnFlags.WidthStretch, 0.32f)
-                            ImGui.tableSetupColumn("Color", ImGuiTableColumnFlags.WidthFixed, 34f)
+                            ImGui.tableSetupColumn("Color", ImGuiTableColumnFlags.WidthFixed, 36f)
                             ImGui.tableSetupColumn("Assigned Swatch", ImGuiTableColumnFlags.WidthStretch, 0.52f)
-                            ImGui.tableSetupColumn("Alpha?", ImGuiTableColumnFlags.WidthFixed, 55f)
+                            ImGui.tableSetupColumn("Alpha", ImGuiTableColumnFlags.WidthFixed, 75f)
                             ImGui.tableHeadersRow()
 
                             elementDefs.forEach { elem ->
@@ -543,11 +553,13 @@ object ColorTunerPanel {
             }
             ImGui.sameLine()
             if (ImGui.button("Close", 100f, 0f)) {
-                isOpen = false
+                close()
             }
         }
         ImGui.end()
-        isOpen = isOpenImBool.get()
+        if (!isOpenImBool.get()) {
+            isOpen = false
+        }
     }
 
     private fun applySingleElementToImGui(session: SessionContext, colId: Int, swatch: Swatch, respectsAlpha: Boolean) {

@@ -103,6 +103,10 @@ class UIThemeTest {
         ColorTunerPanel.isOpen = false
         ColorTunerPanel.open()
         assertTrue(ColorTunerPanel.isOpen)
+        ColorTunerPanel.close()
+        assertFalse(ColorTunerPanel.isOpen)
+        ColorTunerPanel.open()
+        assertTrue(ColorTunerPanel.isOpen)
         ColorTunerPanel.toggle()
         assertFalse(ColorTunerPanel.isOpen)
         ColorTunerPanel.toggle()
