@@ -14,6 +14,7 @@ object CVRegistry {
     @Volatile private var anchorBeats: Double = 0.0
     @Volatile private var anchorBpm: Float = 120f
     @Volatile private var anchorTimeNs: Long = System.nanoTime()
+    @Volatile private var lastRenderBeats: Double = 0.0
 
     private val sources = ConcurrentHashMap<String, CVSource>()
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
@@ -56,14 +57,33 @@ object CVRegistry {
         updatePushedValue("bpm", bpm)
     }
 
+    fun resetBeatAnchor(beats: Double = 0.0, bpm: Float = 120f, timeNs: Long = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()) {
+        anchorBeats = beats
+        anchorBpm = bpm
+        anchorTimeNs = timeNs
+        lastRenderBeats = beats
+        updatePushedValue("bpm", bpm)
+    }
+
     fun getSynchronizedTotalBeats(): Double {
         val beats = anchorBeats
         val bpm = anchorBpm
         val timeNs = anchorTimeNs
         val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
-        val elapsedSec = (now - timeNs) / 1_000_000_000.0
+        val elapsedSec = kotlin.math.max(0.0, (now - timeNs) / 1_000_000_000.0)
         val beatDelta = elapsedSec * (bpm / 60.0)
-        return beats + beatDelta
+        val synchronized = beats + beatDelta
+
+        // Ensure strictly monotonic forward progress on the render thread;
+        // prevent small backward time jitter (< 0.25 beats) caused by asynchronous audio thread anchor updates.
+        val current = lastRenderBeats
+        val safeBeats = if (synchronized < current && (current - synchronized) < 0.25) {
+            current
+        } else {
+            synchronized
+        }
+        lastRenderBeats = safeBeats
+        return safeBeats
     }
 
     /**

@@ -31,10 +31,11 @@ JACK / Java Sound Callback (Audio Engine Thread)
 ## BPM Sources & Locking
 
 ### 1. Manual BPM Lock (`isBpmLocked = true`)
-The default and recommended mode for live performances. `AudioEngine.manualBpm` drives the flywheel directly. No background beat detection algorithms execute, guaranteeing zero tempo jitter.
+The default and recommended mode for live performances. `AudioEngine.manualBpm` drives the flywheel directly. Automated phase realignment nudges and phase slew buffers are strictly bypassed, guaranteeing zero tempo jitter and perfectly smooth cosine / sine modulation.
 
 ### 2. Automatic Detection (`isBpmLocked = false`)
 When unlocked, [`BeatDetector.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt) evaluates audio envelopes inline with zero allocations using one of three modes:
+- **120 BPM Startup & Source Switch Lock**: On application launch, audio engine start, or audio device switching, the engine initializes and holds a steady 120.0 BPM lock until `BeatDetector` has continuously observed and confirmed a stable candidate tempo (`isTempoLocked = true`). Only upon confirmed lock does the engine smoothly transition from 120 BPM to the track's tempo.
 
 #### A. Multi-Band Autocorrelation + Harmonic Comb Unwrapping — `BeatDetectionMode.AUTOCORRELATION` (Default / Recommended)
 Maintains zero-allocation primitive FloatArray ring buffers (`bassHistory`, `midHistory`, `highHistory`, 2048 blocks).
@@ -58,6 +59,7 @@ The resonator acts as a "ringing" flywheel that naturally outputs a sine wave. Z
 When incoming audio level drops below the analysis threshold (`localEnergyAverage <= 0.003f`), or during extended pauses/silence:
 - **Zero Jitter Fallback**: Autocorrelation on spectral noise is bypassed, and `currentBpm` smoothly transitions/locks to **120.0 BPM** using an exponential slew rate (`slewRate = 0.05f`), preventing wild counter swings or erroneous tempo jumps.
 - **Phase Nudge Suppression**: Phase realignment signals are suppressed (`pendingPhaseNudge = -1.0`), keeping the beat flywheel accumulator steady.
+- **Continuous Flywheel Coasting**: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing.
 - **Tempo Stability Gating**: When a valid audio signal returns (`localEnergyAverage > 0.003f`), the engine holds the 120.0 BPM lock while analyzing candidate tempos. Only after a consistent tempo estimate ($\Delta \text{BPM} \le 4.0$ BPM, with harmonic octave awareness) is continuously observed for the stability threshold (`requiredLockDurationSec = 0.4f`), the lock is established (`isTempoLocked = true`), and the flywheel PLL seamlessly adapts to the new track tempo.
 
 ---
@@ -76,12 +78,12 @@ This automated suite simulates multi-band drum audio across diverse genres and t
 
 ## Flywheel Phase Slewing & Thread Safety
 
-Beat detection algorithms publish a target phase anchor (`pendingPhaseNudge = 0.0`). Rather than stepping `totalBeats` instantaneously—which creates visual phase pops or clicks—`AudioEngine` applies second-order phase slewing:
+In automatic mode, beat detection algorithms publish a target phase anchor (`pendingPhaseNudge = 0.0`). Rather than stepping `totalBeats` instantaneously—which creates visual phase pops or clicks—`AudioEngine` applies second-order phase slewing:
 
 $$\Delta \phi = \text{phaseTarget} - (\text{totalBeats} \bmod 1.0)$$
 $$\text{totalBeats} \leftarrow \text{totalBeats} + \text{slewAmount}$$
 
-The discrepancy bleeds off smoothly over subsequent audio blocks, delivering continuous, glitch-free sine wave modulation.
+The discrepancy bleeds off smoothly over subsequent audio blocks, delivering continuous, glitch-free sine wave modulation. When manual BPM lock is active, phase nudges are suppressed and the slew buffer is zeroed out.
 
 ---
 
@@ -91,4 +93,4 @@ Because screen rendering runs independently of audio callbacks, `CVRegistry.getS
 
 $$\text{SynchronizedBeats} = \text{anchorBeats} + \frac{(t_{now} - t_{anchor}) \times \text{BPM}_{anchor}}{60.0 \times 10^9}$$
 
-where $t$ represents nanoseconds from `System.nanoTime()`. This provides sub-millisecond visual phase smoothness across all frame rates.
+where $t$ represents nanoseconds from `TimeSource.getTimeNanos()`. `CVRegistry` enforces strict monotonicity on consecutive render frames to eliminate micro-hesitations or backward jitter caused by asynchronous audio thread callback timing.

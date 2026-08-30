@@ -144,6 +144,8 @@ object CustomRangeSlider {
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
         isLogarithmic: Boolean = false,
         parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        showCurrentLabel: Boolean = true,
+        customBoxWidth: Float? = null,
         onValueChanged: (Float) -> Unit
     ) {
         drawCustomRangeSlider(
@@ -162,7 +164,9 @@ object CustomRangeSlider {
             idPrefix = idPrefix,
             themeColor = themeColor,
             isLogarithmic = isLogarithmic,
-            parseValue = parseValue
+            parseValue = parseValue,
+            showCurrentLabel = showCurrentLabel,
+            customBoxWidth = customBoxWidth
         )
     }
 
@@ -179,7 +183,9 @@ object CustomRangeSlider {
         idPrefix: String = "",
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
         isLogarithmic: Boolean = false,
-        parseValue: (String) -> Float? = { it.toFloatOrNull() }
+        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        showCurrentLabel: Boolean = true,
+        customBoxWidth: Float? = null
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -197,7 +203,9 @@ object CustomRangeSlider {
             idPrefix = idPrefix,
             themeColor = themeColor,
             isLogarithmic = isLogarithmic,
-            parseValue = parseValue
+            parseValue = parseValue,
+            showCurrentLabel = showCurrentLabel,
+            customBoxWidth = customBoxWidth
         )
     }
 
@@ -221,9 +229,11 @@ object CustomRangeSlider {
         idPrefix: String = "",
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
         isLogarithmic: Boolean = false,
-        parseValue: (String) -> Float? = { it.toFloatOrNull() }
+        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        showCurrentLabel: Boolean = true,
+        customBoxWidth: Float? = null
     ) {
-        val effectiveIsRandomizable = isRandomizable && session.uiTheme.randomizationEnabled
+        val effectiveIsRandomizable = (isRandomizable && session.uiTheme.randomizationEnabled) || (!showControls && isRandomizable)
         val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
 
         val rowStartX = ImGui.getCursorScreenPosX()
@@ -258,7 +268,7 @@ object CustomRangeSlider {
         val labelColW = 110f * fontScale
         val textBoxesStartX = startX + labelColW + 10f * fontScale
         
-        val boxWidth = 65f * fontScale
+        val boxWidth = customBoxWidth ?: (65f * fontScale)
         val boxSpacing = 8f
         
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
@@ -299,22 +309,26 @@ object CustomRangeSlider {
             ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, labelY)
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
             
-            // Add "Current" label with [value] centered above the dynamic dot on Row 1
-            val curPct = toPct(currentValue)
-            val curX = lineStartX + curPct * lineWidth
-            val formattedVal = labelFormatFunc(currentValue)
-            val labelText = "Current: $formattedVal"
-            val currentTextWidth = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.calcTextSize(labelText).x }
-            val minAllowedX = lineStartX
-            val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
-            val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
-            
-            ImGui.setCursorScreenPos(textX, labelY)
-            session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
+            if (showCurrentLabel) {
+                // Add "Current" label with [value] centered above the dynamic dot on Row 1
+                val curPct = toPct(currentValue)
+                val curX = lineStartX + curPct * lineWidth
+                val formattedVal = labelFormatFunc(currentValue)
+                val labelText = "Current: $formattedVal"
+                val currentTextWidth = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.calcTextSize(labelText).x }
+                val minAllowedX = lineStartX
+                val maxAllowedX = (lineEndX - currentTextWidth).coerceAtLeast(minAllowedX)
+                val textX = (curX - currentTextWidth / 2f).coerceIn(minAllowedX, maxAllowedX)
+                
+                ImGui.setCursorScreenPos(textX, labelY)
+                session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, labelText)
+            }
         } else {
-            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
-            val formattedVal = labelFormatFunc(currentValue)
-            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current: $formattedVal")
+            if (showCurrentLabel) {
+                ImGui.setCursorScreenPos(textBoxesStartX, labelY)
+                val formattedVal = labelFormatFunc(currentValue)
+                session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Current: $formattedVal")
+            }
         }
         
         // --- ROW 2: Widgets ---

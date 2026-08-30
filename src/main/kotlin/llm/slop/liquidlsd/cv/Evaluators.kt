@@ -53,7 +53,8 @@ fun evaluateModulator(modulator: CvModulator): Float = evaluateModulatorAtOffset
 fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Float {
     return when (modulator.sourceId) {
         "beatPhase" -> {
-            val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
+            val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
+            val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
             val localPhase = ((beats / modulator.subdivision) + modulator.phaseOffset) % 1.0
             val positivePhase = if (localPhase < 0.0) localPhase + 1.0 else localPhase
             if (modulator.waveform == Waveform.RANDOM) {
@@ -69,7 +70,8 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
             }
         }
         "sampleAndHold" -> {
-            val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
+            val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
+            val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
             val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
             
             val cyclePosition = (beats / subdivisionD) + modulator.phaseOffset
@@ -99,7 +101,8 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                         seed = period.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
                     }
                     GenUnit.BEAT -> {
-                        val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
+                        val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
+                        val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
                         val subdivisionD = modulator.modSubdivision.toDouble().coerceAtLeast(0.01)
                         cyclePosition = (beats / subdivisionD) + modulator.modPhaseOffset
                         seed = subdivisionD.hashCode() xor modulator.modPhaseOffset.hashCode() xor modulator.sourceId.hashCode() xor 999 xor modulator.id.hashCode()
@@ -140,7 +143,8 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                     carrierSeed = period.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()
                 }
                 GenUnit.BEAT -> {
-                    val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (120.0 / 60.0)
+                    val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
+                    val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
                     val subdivisionD = modulator.subdivision.toDouble().coerceAtLeast(0.01)
                     carrierCyclePosition = (beats / subdivisionD) + modulator.phaseOffset + pmShift
                     carrierSeed = subdivisionD.hashCode() xor modulator.phaseOffset.hashCode() xor modulator.sourceId.hashCode() xor modulator.id.hashCode()

@@ -80,6 +80,22 @@ class BeatDetector {
         this.settings = preset.copy()
     }
 
+    fun reset() {
+        confidence = 1.0f
+        pendingPhaseNudge = -1.0
+        isTargetLevelSufficient = false
+        isTempoLocked = false
+        currentBpm = fallbackBpm
+        stableCandidateBpm = fallbackBpm
+        stableLockAccumulatedSec = 0.0f
+        historyCount = 0
+        historyIndex = 0
+        localEnergyAverage = 0.001f
+        timeSinceLastBeatBlocks = 0f
+        lastTargetAmp = 0f
+        lastResonatorOut = 0f
+    }
+
     fun interpolateParabolicPeak(y1: Float, y2: Float, y3: Float): Float {
         val denom = y1 - 2.0f * y2 + y3
         if (kotlin.math.abs(denom) < 1e-6f) return 0.0f
@@ -469,9 +485,15 @@ object AudioEngine {
         totalSamplesProcessed = 0L
         totalBeats = 0.0
         phaseSlewBuffer = 0.0
-        estimatedBpm = manualBpm
+        estimatedBpm = if (isBpmLocked) manualBpm else 120.0f
         currentState = SignalState.SILENT
         lastSignalTime = System.nanoTime()
+
+        // Reset beat detector (locks to 120 BPM until new tempo is locked)
+        beatDetector.reset()
+
+        // Reset CV anchor
+        CVRegistry.resetBeatAnchor(0.0, estimatedBpm, lastSignalTime)
 
         // Reset onset trackers
         prevBass = 0f
@@ -625,30 +647,36 @@ object AudioEngine {
         }
 
         // 7. Tick the flywheel (sample-accurate) with phase slewing
-        val phaseNudge = beatDetector.pendingPhaseNudge
-        if (phaseNudge >= 0.0) {
+        if (!isBpmLocked) {
+            val phaseNudge = beatDetector.pendingPhaseNudge
+            if (phaseNudge >= 0.0) {
+                beatDetector.pendingPhaseNudge = -1.0
+                val currentPhase = totalBeats % 1.0
+                var phaseDiff = phaseNudge - currentPhase
+                if (phaseDiff > 0.5) phaseDiff -= 1.0
+                if (phaseDiff < -0.5) phaseDiff += 1.0
+                phaseSlewBuffer += phaseDiff * 0.2
+            }
+
+            val activeSlew = phaseSlewBuffer * 0.1
+            totalBeats += activeSlew
+            phaseSlewBuffer -= activeSlew
+        } else {
+            // Under manual BPM lock, suppress phase nudges and clear slew buffer
             beatDetector.pendingPhaseNudge = -1.0
-            val currentPhase = totalBeats % 1.0
-            var phaseDiff = phaseNudge - currentPhase
-            if (phaseDiff > 0.5) phaseDiff -= 1.0
-            if (phaseDiff < -0.5) phaseDiff += 1.0
-            phaseSlewBuffer += phaseDiff * 0.2
+            phaseSlewBuffer = 0.0
         }
 
-        val activeSlew = phaseSlewBuffer * 0.1
-        totalBeats += activeSlew
-        phaseSlewBuffer -= activeSlew
+        // 8. Determine effective BPM and advance totalBeats
+        val effectiveBpm = if (isBpmLocked) manualBpm else autoBpm
+        estimatedBpm = effectiveBpm
 
         val deltaTimeSec = safeFrames.toDouble() / sampleRate.toDouble()
-        if (currentState != SignalState.SILENT) {
-            totalBeats += deltaTimeSec * (estimatedBpm / 60.0)
-        }
-
-        // 8. Manual BPM lock override
-        estimatedBpm = if (isBpmLocked) manualBpm else autoBpm
+        // Flywheel momentum: always advance totalBeats using effective BPM (smooth coasting even through silence)
+        totalBeats += deltaTimeSec * (effectiveBpm / 60.0)
 
         // 9. Publish to CV Registry (normalized to unipolar 0.0..1.0 unit range)
-        CVRegistry.updateBeatAnchor(totalBeats, estimatedBpm, currentTime)
+        CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime)
         CVRegistry.updatePushedValue("amp",    (amp  / 0.25f).coerceIn(0f, 1f))
         CVRegistry.updatePushedValue("bass",   (bass / 0.25f).coerceIn(0f, 1f))
         CVRegistry.updatePushedValue("mid",    (mid  / 0.25f).coerceIn(0f, 1f))

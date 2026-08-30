@@ -18,8 +18,16 @@
 - **Robot Icon Queue Toggles (`BOT` / `BOT_OFF`)**: Replaced raw text checkboxes in A/B Queue and Background Queue (`AUTO-VJ`, `AUTO-BG`) with robot icon toggle buttons (`Icons.BOT` active / `Icons.BOT_OFF` inactive), matching DJ software conventions like Mixxx.
 
 #### 2. Audio Engine Settings & Real-Time Monitor Consolidation (`llm.slop.liquidlsd.ui`)
+- **Beat Clock & Cosine Hesitation Fix**: Eliminated intermittent dragging and stutter in beat-synchronized LFOs, cosine color palettes, and shader animations by strictly suppressing automated phase nudges and clearing phase slew buffers when manual BPM lock is active (`isBpmLocked = true`).
+- **120 BPM Startup & Audio Source Switch Lock**: On application launch, audio engine start, or audio device switching, the engine initializes and holds a steady 120.0 BPM lock until `BeatDetector` has continuously observed and confirmed a stable candidate tempo (`isTempoLocked = true`).
+- **Continuous Flywheel Coasting**: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing.
+- **Monotonic Visual Beat Clock Extrapolation**: Enforced strict monotonic progression in `CVRegistry.getSynchronizedTotalBeats()` to eliminate micro-hesitations caused by asynchronous audio thread callback timing.
 - **Low-Signal 120 BPM Fallback Lock**: When incoming audio energy drops below analysis thresholds (silence, quiet passages, or background noise), `BeatDetector` smoothly transitions to and locks at **120.0 BPM** (`slewRate = 0.05f`), suppressing erratic phase nudges and eliminating wild counter swings.
 - **Tempo Stability Gating**: When a valid signal is detected, the engine holds the stable 120 BPM lock while analyzing candidate tempos. Once a steady tempo is locked with harmonic octave matching for the required duration, the flywheel PLL seamlessly transitions to the live music BPM.
+- **Two-Column Audio Engine Layout & Dual-Headed BPM Range Slider**: Restructured the Audio Engine tab in Settings into a balanced 2-column layout:
+  - **Left Column**: Audio Backend and Device configuration, Driver/Sync status, Beat Sync & Detection settings, and an interactive dual-headed **BPM Range (Floor / Ceiling)** slider with real-time dynamic tempo tracking.
+  - **Right Column**: Begins with Raw Audio Input controls (Gain & System Volume) and cleanly stacks the Raw Buffer oscilloscope followed by all 7 Sound-Derived Control Voltage (CV) oscilloscopes vertically.
+  - Audio Engine parameter sliders omit redundant "Current: x" labels and feature 20% more compact numeric input boxes.
 - **Integrated Audio Engine Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection configuration, input gain, and real-time oscilloscopes into the dedicated "Audio Engine" tab within `SettingsPanel.kt`.
 - **Modular Zero-Allocation Architecture (`AudioEnginePanel.kt`)**: Retained modular file separation in `AudioEnginePanel.kt` with class-level pre-allocated buffers and zero runtime memory allocations.
 - **Direct Menu Bar Routing**: Clicking "Audio Engine" in `MenuBar.kt` now opens the Settings dialog directly on the Audio Engine tab for quick 1-click access.
