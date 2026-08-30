@@ -4,7 +4,7 @@ import llm.slop.liquidlsd.SessionContext
 
 /**
  * Dynamic resolution-independent layout tokens for Preset Grid cell rendering.
- * All sizes derive from fontScale (baseSize / 15f) multiplied by user gridCellRatio.
+ * All sizes derive proportionally from fontScale (baseSize / 15f).
  */
 data class GridMetrics(
     val cell: Float,          // Cell bounding box diameter (px)
@@ -18,9 +18,7 @@ data class GridMetrics(
 ) {
     companion object {
         fun compute(session: SessionContext): GridMetrics {
-            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-            val userRatio = session.uiTheme.gridCellRatio.coerceIn(0.70f, 2.00f)
-            val scale = (fontScale * userRatio).coerceIn(0.6f, 3.0f)
+            val scale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
             
             val cell = 35f * scale
             val r = cell * 0.5f

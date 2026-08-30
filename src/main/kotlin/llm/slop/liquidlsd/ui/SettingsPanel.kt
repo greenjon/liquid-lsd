@@ -233,30 +233,6 @@ object SettingsPanel {
         if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
         if (ImGui.button("+##sinc") && canIncrease) onSizeChanged(pctToPx(currentPct + STEP_PCT))
         if (!canIncrease) ImGui.popStyleVar()
-
-        ImGui.spacing()
-        session.uiTheme.caption("Scale Preset Grid readouts relative to font size (0.70x – 2.00x):")
-        ImGui.spacing()
-        CustomRangeSlider.drawCompactSlider(
-            session = session,
-            label = "Grid Knob Scale",
-            currentValue = session.uiTheme.gridCellRatio,
-            minLimit = 0.70f,
-            maxLimit = 2.00f,
-            defaultValue = 1.00f,
-            formatValue = { "%.2fx".format(it) },
-            idPrefix = "settings_grid_knob_scale",
-            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
-            showCurrentLabel = false,
-            customBoxWidth = sliderBoxW,
-            onValueChanged = { newVal ->
-                session.uiTheme.gridCellRatio = newVal
-                session.uiTheme.saveSettings()
-            }
-        )
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Scale circular readout knobs and grid cells relative to global font size (0.70x – 2.00x).")
-        }
     }
 
     private fun drawPresetGridSettings(session: llm.slop.liquidlsd.SessionContext) {
