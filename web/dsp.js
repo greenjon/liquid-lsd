@@ -7,7 +7,7 @@ export const cvState = {
   audio_mid:      0.0,   // mid-frequency RMS (~1 kHz), range 0..1
   audio_high:     0.0,   // high-frequency RMS (> 5 kHz), range 0..1
   beatPhase:      0.0,   // current position in beat cycle, range 0..1
-  beatSine:       0.0,   // sin wave locked to beat, range 0..2 (matches desktop CVSource range)
+  beatSine:       0.0,   // sin wave locked to beat, range -1..1 (zero-centered bipolar)
   trigger_onset:  0.0,   // 1.0 on beat onset frame, decays to 0 over ~100ms
   bpm:            120.0, // estimated BPM
   isLive:         false, // true once AudioContext is running and stream is connected
@@ -116,7 +116,7 @@ function updateBeat(dt) {
   totalBeats += (bpmEstimate / 60) * dt;
 
   cvState.beatPhase = totalBeats % 1.0;
-  cvState.beatSine  = 1.0 + Math.sin(totalBeats * 2 * Math.PI);
+  cvState.beatSine  = Math.sin(totalBeats * 2 * Math.PI);
 
   // Decay onset trigger (~100ms decay)
   cvState.trigger_onset *= 0.85;

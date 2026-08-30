@@ -157,5 +157,45 @@ class ScopeTimebaseTest {
         assertEquals(100f, buffer.sampleWindow(4, 1.0f))
         assertEquals(85f, buffer.sampleWindow(4, 0.5f))
     }
+
+    @Test
+    fun `test CvHistoryBuffer copyTo copies most recent samples without lag when target is smaller`() {
+        val buffer = llm.slop.liquidlsd.cv.CvHistoryBuffer(10)
+        for (i in 1..10) {
+            buffer.add(i.toFloat()) // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 (NOW = 10)
+        }
+
+        // Full copy
+        val fullTarget = FloatArray(10)
+        buffer.copyTo(fullTarget)
+        for (i in 0 until 10) {
+            assertEquals((i + 1).toFloat(), fullTarget[i])
+        }
+
+        // Smaller target (size 4) -> must receive the most recent 4 samples: 7, 8, 9, 10 (NOT oldest 1, 2, 3, 4)
+        val smallTarget = FloatArray(4)
+        buffer.copyTo(smallTarget)
+        assertEquals(7.0f, smallTarget[0])
+        assertEquals(8.0f, smallTarget[1])
+        assertEquals(9.0f, smallTarget[2])
+        assertEquals(10.0f, smallTarget[3])
+    }
+
+    @Test
+    fun `test BeatSine is zero-centered bipolar oscillating between -1 and 1`() {
+        val beatSine = llm.slop.liquidlsd.cv.BeatSine()
+        beatSine.update(0.0, 0.0)
+        assertEquals(0.0f, beatSine.value, 0.001f) // sin(0) = 0
+
+        beatSine.update(0.25, 0.0)
+        assertEquals(1.0f, beatSine.value, 0.001f) // sin(pi/2) = 1
+
+        beatSine.update(0.5, 0.0)
+        assertEquals(0.0f, beatSine.value, 0.001f) // sin(pi) = 0
+
+        beatSine.update(0.75, 0.0)
+        assertEquals(-1.0f, beatSine.value, 0.001f) // sin(3pi/2) = -1
+    }
 }
+
 

@@ -78,7 +78,7 @@ export function evaluateModulator(mod, elapsedTime, totalBeats, frameCount) {
   } else if (mod.sourceId === 'trigger_onset' || mod.sourceId === 'onset') {
     rawSignal = cvState.trigger_onset;
   } else if (mod.sourceId === 'beatSine') {
-    rawSignal = cvState.beatSine - 1.0;
+    rawSignal = cvState.beatSine;
   } else if (mod.sourceId === 'beatPhase') {
     rawSignal = cvState.beatPhase;
   } else {

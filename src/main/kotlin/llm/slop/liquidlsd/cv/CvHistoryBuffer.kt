@@ -30,12 +30,14 @@ class CvHistoryBuffer(val size: Int) {
 
     /**
      * Copies the samples in chronological order into the target array.
+     * When target is smaller than buffer size, copies the most recent samples.
      */
     fun copyTo(target: FloatArray) {
         val count = size.coerceAtMost(target.size)
+        val startOffset = size - count
         val currentIndex = index // Read once
         for (i in 0 until count) {
-            target[i] = buffer[(currentIndex + i) % size]
+            target[i] = buffer[(currentIndex + startOffset + i) % size]
         }
     }
 

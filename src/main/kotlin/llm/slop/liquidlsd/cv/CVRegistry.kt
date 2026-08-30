@@ -101,7 +101,6 @@ object CVRegistry {
         if (src is MutableCVSource) {
             src.value = value
         }
-        histories[id]?.add(value)
         when (id) {
             "amp"    -> updatePushedValue("audio_amp",      value)
             "bass"   -> updatePushedValue("audio_bass",     value)

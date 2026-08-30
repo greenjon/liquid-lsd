@@ -27,7 +27,7 @@ object AudioEnginePanel {
 
     // Pre-allocated arrays and primitive wrappers to avoid runtime allocations
     private val rawSamples = FloatArray(1024)
-    private val cvSamples = FloatArray(200)
+    private val cvSamples = FloatArray(400)
 
     // Beat Detection & Lock UI state
     private val isLocked = ImBoolean()
@@ -51,11 +51,11 @@ object AudioEnginePanel {
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
 
     private val cvSignals = arrayOf(
+        CvSignalDef("beatSine", "Beat Sine (Oscillator)", ImGui.colorConvertFloat4ToU32(0.6f, 0.4f, 1.0f, 1.0f)), // Neon Purple
         CvSignalDef("audio_amp", "Amplitude (RMS)", ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, 1.0f)), // Neon Cyan
         CvSignalDef("audio_bass", "Bass Band (Low-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, 1.0f)), // Neon Pink
         CvSignalDef("audio_mid", "Mid Band (Band-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.1f, 1.0f)), // Neon Orange
         CvSignalDef("audio_high", "High Band (High-pass)", ImGui.colorConvertFloat4ToU32(0.1f, 0.9f, 0.8f, 1.0f)), // Neon Teal
-        CvSignalDef("beatSine", "Beat Sine (Oscillator)", ImGui.colorConvertFloat4ToU32(0.6f, 0.4f, 1.0f, 1.0f)), // Neon Purple
         CvSignalDef("trigger_onset", "Onset Signal", ImGui.colorConvertFloat4ToU32(0.9f, 0.8f, 0.1f, 1.0f)), // Neon Yellow
         CvSignalDef("trigger_accent", "Accent Level (Decay)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.3f, 1.0f)) // Neon Red
     )
