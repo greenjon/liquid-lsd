@@ -14,6 +14,7 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.UIManager
+import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
 import java.io.File
 
@@ -38,7 +39,7 @@ object PlaylistEditorPanel {
 
         val currentPlaylist = selectedFile?.let { LibraryPanel.getOrLoadPlaylist(it) }
 
-        // Top Header: Dropdown selector + [ + ] New + [ ... ] Actions
+        // Top Header: Title bar + Dropdown selector + Action buttons
         drawHeader(session, mixer, allPlaylists, currentPlaylist, selectedFile)
 
         ImGui.separator()
@@ -61,30 +62,18 @@ object PlaylistEditorPanel {
     ) {
         val btnSize = ImGui.getFrameHeight()
         val spacing = ImGui.getStyle().getItemSpacingX()
-        val comboWidth = (ImGui.getContentRegionAvailX() - (btnSize * 2f + spacing * 2f)).coerceAtLeast(100f)
 
-        // Dropdown Combo
-        val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No playlists" else "Select playlist..."
-        ImGui.setNextItemWidth(comboWidth)
-        if (ImGui.beginCombo("##playlistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
-            allPlaylists.forEach { item ->
-                val isSelected = selectedFile?.absolutePath == item.path
-                if (ImGui.selectable(item.name, isSelected)) {
-                    LibraryPanel.selectedPlaylistFile = File(item.path)
-                    LibraryPanel.activePlaylistData = null
-                    selectedPresetIndex = -1
-                }
-                if (isSelected) {
-                    ImGui.setItemDefaultFocus()
-                }
-            }
-            ImGui.endCombo()
+        // Title Bar: "Playlists" on the left, [+] and [...] on the right
+        ImGui.alignTextToFramePadding()
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            ImGui.text("Playlists")
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select active playlist.")
-        }
-
         ImGui.sameLine()
+        val totalButtonsWidth = btnSize * 2f + spacing
+        val rightX = ImGui.getWindowContentRegionMaxX() - totalButtonsWidth
+        if (rightX > ImGui.getCursorPosX()) {
+            ImGui.setCursorPosX(rightX)
+        }
 
         // [ + ] Create New Playlist button
         if (ImGui.button("${Icons.PLUS}##createNewPlaylistBtn", btnSize, btnSize)) {
@@ -109,6 +98,31 @@ object PlaylistEditorPanel {
         }
         if (moreDisabled) {
             ImGui.endDisabled()
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Dropdown Combo (Full width)
+        val comboWidth = ImGui.getContentRegionAvailX()
+        val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No playlists" else "Select playlist..."
+        ImGui.setNextItemWidth(comboWidth)
+        if (ImGui.beginCombo("##playlistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
+            allPlaylists.forEach { item ->
+                val isSelected = selectedFile?.absolutePath == item.path
+                if (ImGui.selectable(item.name, isSelected)) {
+                    LibraryPanel.selectedPlaylistFile = File(item.path)
+                    LibraryPanel.activePlaylistData = null
+                    selectedPresetIndex = -1
+                }
+                if (isSelected) {
+                    ImGui.setItemDefaultFocus()
+                }
+            }
+            ImGui.endCombo()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Select active playlist.")
         }
 
         // Popup menu for playlist actions

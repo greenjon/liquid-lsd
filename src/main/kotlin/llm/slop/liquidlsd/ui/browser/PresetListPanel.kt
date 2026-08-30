@@ -14,6 +14,7 @@ import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.PresetGridState
 import llm.slop.liquidlsd.ui.UIManager
+import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
 import java.io.File
 
@@ -24,17 +25,17 @@ object PresetListPanel {
 
     fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
         val btnSize = ImGui.getFrameHeight()
-        val spacing = ImGui.getStyle().getItemSpacingX()
-        val searchWidth = (ImGui.getContentRegionAvailX() - (btnSize + spacing)).coerceAtLeast(60f)
 
-        // Search Filter Bar
-        ImGui.setNextItemWidth(searchWidth)
-        ImGui.inputTextWithHint("##presetSearch", "Search presets & tags...", searchBuffer)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Type to filter presets by name or tags.")
+        // Title Bar: "Presets" on the left, [+] button on the right
+        ImGui.alignTextToFramePadding()
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            ImGui.text("Presets")
         }
-
         ImGui.sameLine()
+        val rightX = ImGui.getWindowContentRegionMaxX() - btnSize
+        if (rightX > ImGui.getCursorPosX()) {
+            ImGui.setCursorPosX(rightX)
+        }
 
         // [ + ] Create New Preset dropdown button
         if (ImGui.button("${Icons.PLUS}##preset_new_preset", btnSize, btnSize)) {
@@ -64,6 +65,17 @@ object PresetListPanel {
                 presetState.activeTopTab = "Deck PV"
             }
             ImGui.endPopup()
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Search Filter Bar (Full width)
+        val searchWidth = ImGui.getContentRegionAvailX()
+        ImGui.setNextItemWidth(searchWidth)
+        ImGui.inputTextWithHint("##presetSearch", "Search presets & tags...", searchBuffer)
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Type to filter presets by name or tags.")
         }
 
         ImGui.separator()

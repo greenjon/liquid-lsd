@@ -18,7 +18,31 @@ object QueueActionsPanel {
     var selectedIndex: Int = -1
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        // Header Row
+        val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+
+        // Title Bar: "Queue" on the left, "Clear" button on the right
+        ImGui.alignTextToFramePadding()
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            ImGui.text("Queue")
+        }
+        ImGui.sameLine()
+        val rightX = ImGui.getWindowContentRegionMaxX() - clearBtnW
+        if (rightX > ImGui.getCursorPosX()) {
+            ImGui.setCursorPosX(rightX)
+        }
+
+        if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
+            session.playQueueManager.clearQueue()
+            selectedIndex = -1
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Empty the play queue.")
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Controls Row
         if (ImGui.checkbox("AUTO-VJ", session.playQueueManager.isAutoVJEnabled)) {
             val nextState = !session.playQueueManager.isAutoVJEnabled
             session.playQueueManager.isAutoVJEnabled = nextState
@@ -69,14 +93,6 @@ object QueueActionsPanel {
             ImGui.setTooltip("Shuffle Queue: play presets in a random order.")
         }
 
-        ImGui.sameLine()
-        if (ImGui.button("Clear")) {
-            session.playQueueManager.clearQueue()
-            selectedIndex = -1
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Empty the play queue.")
-        }
         ImGui.sameLine()
         if (ImGui.button("Export")) {
             ImGui.openPopup("ExportQueuePopup")

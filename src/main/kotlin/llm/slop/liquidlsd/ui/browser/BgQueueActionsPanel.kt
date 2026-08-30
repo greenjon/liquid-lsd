@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
+import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
 import java.io.File
 
@@ -17,7 +18,31 @@ object BgQueueActionsPanel {
     var selectedIndex: Int = -1
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        // Header Row
+        val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+
+        // Title Bar: "BG Queue" on the left, "Clear" button on the right
+        ImGui.alignTextToFramePadding()
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            ImGui.text("BG Queue")
+        }
+        ImGui.sameLine()
+        val rightX = ImGui.getWindowContentRegionMaxX() - clearBtnW
+        if (rightX > ImGui.getCursorPosX()) {
+            ImGui.setCursorPosX(rightX)
+        }
+
+        if (ImGui.button("Clear##bgQueue", clearBtnW, 0f)) {
+            BgQueueManager.clearQueue()
+            selectedIndex = -1
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Empty the background queue.")
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Controls Row
         if (ImGui.checkbox("AUTO-BG", BgQueueManager.isAutoBGEnabled)) {
             BgQueueManager.isAutoBGEnabled = !BgQueueManager.isAutoBGEnabled
         }
@@ -62,15 +87,6 @@ object BgQueueActionsPanel {
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Shuffle BG Queue: play presets in a random order.")
-        }
-
-        ImGui.sameLine()
-        if (ImGui.button("Clear##bgQueue")) {
-            BgQueueManager.clearQueue()
-            selectedIndex = -1
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Empty the background queue.")
         }
 
         ImGui.separator()
