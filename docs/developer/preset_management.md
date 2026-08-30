@@ -16,10 +16,19 @@ private val presetIoExecutor: ExecutorService = Executors.newSingleThreadExecuto
 }
 ```
 
-### Thread-Safe Deferred Queue (`applyPendingPresets`)
-Data Transfer Objects (DTOs) generated on the background executor are offered to concurrent queues (`deckAPresetQueue`, `deckBPresetQueue`, `deckCPresetQueue`).
+### Auto-Healing Preset Loader (`sanitizePresetDto`)
+To eliminate schema drift and prevent dirty-flag trip bugs when shaders or feedback parameters evolve:
+- When a preset is loaded asynchronously in `loadDeckPresetAsync`, `PresetManager.sanitizePresetDto(dto)` verifies the incoming parameter map against the target visual source's `meta.json` and canonical feedback parameter specifications.
+- **Fills Missing Parameters**: Injects default `ParameterDto` instances for any newly introduced visual source or feedback parameters (`fbKaleido`, `Stellation`, `Support H`, etc.).
+- **Prunes Obsolete Keys**: Strips unknown or deprecated legacy fields (e.g. `sourceSelect`, `globalScale`).
+- **Background Auto-Save**: If schema changes are detected, `loadDeckPresetAsync` immediately and quietly rewrites the updated `.lsd` file to disk on `presetIoExecutor` without blocking the main rendering thread.
+
+### Thread-Safe Deferred Queue (`applyPendingPresets`) & Canonical Baseline Caching
+Data Transfer Objects (DTOs) generated on the background executor are offered to concurrent queues (`deckAPresetQueue`, `deckBPresetQueue`, `deckBGPresetQueue`, `deckPVPresetQueue`).
 - Every frame, Thread 0 invokes `applyPendingPresets(mixer)`.
-- `applyPendingPresets` polls the queues, applies parameter values to `Deck` instances safely on Thread 0, and triggers `NotesManager.syncFromDto(deckLabel, dto)` to load patch and parameter notes into memory.
+- `applyPendingPresets` polls the queues, resets baseline parameters and applies incoming DTO parameter values to `Deck` instances safely on Thread 0.
+- Captures a canonical snapshot of the initialized deck (`deck.toDto(...)`) into `cachedDtoA`/`cachedDtoB`/`cachedDtoBG`/`cachedDtoPV`, ensuring that newly loaded presets start with a clean dirty flag (`isDeckDirty == false`).
+- Triggers `NotesManager.syncFromDto(deckLabel, dto)` to load patch and parameter notes into memory.
 
 ### Active Preset Timestamp Tracking
 `PresetManager` tracks file modification timestamps for active deck presets:

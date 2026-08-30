@@ -10,7 +10,8 @@
 ### Key Highlights
 
 #### 1. Library Menu Bar Action Toolbar & Quick Audition Padlock (`llm.slop.liquidlsd.ui.browser`)
-- **Unified Menu Bar Action Strip**: Migrated the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ] [+]`) into the top Library Menu Bar alongside the layout mode buttons, utilizing previously empty horizontal space and expanding list visibility in Column 1.
+- **Unified Menu Bar Action Strip**: Centered the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ]`) in the top Library Menu Bar with widened 80px buttons for clear text legibility and expanded title bar vertical height (+35%) with symmetrical top/bottom spacing.
+- **Column 1 Header `[+]` Button**: Positioned the Create New Preset `[+]` dropdown button directly adjacent to the preset search filter bar in the first column, matching the header layout of the Playlist Editor column.
 - **Global 4-Column Preset Selection**: Single-clicking or navigating any item across **Preset Library**, **Playlist Editor**, **A/B Play Queue**, or **Background Queue** sets a unified global selection and clears other columns for unambiguous routing.
 - **Context-Aware Button Dimming**: Dynamically dims destination buttons when redundant (e.g. `[Q]` dims when selecting an item already in the A/B Queue, `[BGQ]` dims for items in the Background Queue).
 - **Quick Audition Latch (`[🔒]`) & Smart `PV` Auto-Latch**: Toggling the padlock button arms sticky audition mode and auto-latches to **Deck PV** (Preview) by default. Clicking another deck button (`A`, `B`, `BG`) switches the latch target, while clicking the active deck button unlatches it.
@@ -68,10 +69,10 @@
 - **Zero-Dependency CLI Tool (`scripts/sync_web.py`)**: Standalone tool providing `--check` (detailed color-coded drift report), `--apply` (automatic WebGL2 shader transpilation), and `--mark-synced` (manifest hash synchronization for manual review files).
 - **Gradle & CI Drift Verification (`checkWebSync`, `syncWeb`, `WebSyncTest.kt`)**: Added Gradle tasks and a fast JVM unit test to guarantee zero asset/algorithmic drift between Desktop and Web.
 
-#### 9. Keyboard Shortcuts Settings Page, 1-4 Deck Loading & ESC Fullscreen Exit
-- **Settings Keyboard Shortcuts Reference (`SettingsPanel.kt`)**: Added dedicated "Keyboard Shortcuts" category inside Settings presenting grouped reference tables for Global & Display controls, Preset Grid matrix operations, Cell Config number input scrubbing, Library & Browser management, and active Play Queue trigger bindings.
-- **Preset Quick-Loading Keys 1, 2, 3, 4 (`LibraryPanel.kt`, `BrowserDeckButtons.kt`)**: Pressing `1`, `2`, `3`, or `4` when a preset is selected in the Library or Playlist Editor loads the preset into Deck A, Deck B, Deck BG (Background), or Deck PV (Preview) respectively.
-- **ESC Key Fullscreen Exit (`Main.kt`)**: Added `Esc` key shortcut to exit Clean Mode / Fullscreen video view alongside `F`.
+#### 10. Auto-Healing Preset Loader & Dirty State Synchronization Fixes
+- **Auto-Healing Schema Sanitization & Migration (`PresetManager.kt`)**: Implemented `sanitizePresetDto` in `PresetManager.loadDeckPresetAsync`. When loading presets with legacy or missing visual source/feedback parameters, the loader automatically injects engine defaults, purges obsolete keys, silently rewrites the updated `.lsd` file to disk on a background I/O thread, and ensures zero schema drift.
+- **Canonical Baseline Snapshotting (`PresetManager.kt`)**: Captured canonical `DeckPresetDto` snapshots immediately following asynchronous preset and session loading (`mixer.deckX.toDto(...)`). Newly loaded presets consistently start in a clean state (`isDeckDirty == false`), while correctly marking decks dirty upon subsequent parameter modifications.
+- **Complete Visual Source & Feedback Parameter Restoration (`PresetModels.kt`)**: Fixed `Deck.applyDto` to reset baseline parameter defaults before applying incoming preset maps, restored `source.globalAlpha` application from `dto.globalAlpha`, and added full `fbKaleido` serialization support across `Deck.toDto` and `Deck.applyDto`.
 
 ---
 

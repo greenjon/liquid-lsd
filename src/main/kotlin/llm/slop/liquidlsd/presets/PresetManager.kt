@@ -6,6 +6,7 @@ import llm.slop.liquidlsd.models.*
 import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.SourceMeta
 import mu.KotlinLogging
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
@@ -177,6 +178,96 @@ object PresetManager {
         }
     }
 
+    /**
+     * Sanitizes an incoming [DeckPresetDto] against the active visual source and feedback schemas.
+     * Fills in defaults for any missing parameters and removes obsolete/legacy keys.
+     * Returns a pair of the sanitized DTO and a boolean indicating whether any modifications occurred.
+     */
+    fun sanitizePresetDto(dto: DeckPresetDto): Pair<DeckPresetDto, Boolean> {
+        if (dto.isEmpty) return Pair(dto, false)
+        var modified = false
+
+        val metaFile = File(LIBRARY_ROOT, "sources/${dto.visualSourceType}/meta.json")
+        val sanitizedParams = LinkedHashMap<String, ParameterDto>()
+
+        if (metaFile.exists()) {
+            try {
+                val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+                val expectedNames = meta.parameters.map { it.name }.toSet()
+
+                for (pMeta in meta.parameters) {
+                    val existing = dto.parameters[pMeta.name]
+                    if (existing != null) {
+                        sanitizedParams[pMeta.name] = existing
+                    } else {
+                        modified = true
+                        sanitizedParams[pMeta.name] = ParameterDto(
+                            baseValue = pMeta.default,
+                            baseMin = pMeta.defaultMin ?: pMeta.default,
+                            baseMax = pMeta.defaultMax ?: pMeta.default,
+                            randomizeBase = false,
+                            modulators = emptyList()
+                        )
+                    }
+                }
+
+                if (dto.parameters.keys != expectedNames) {
+                    modified = true
+                }
+            } catch (e: Exception) {
+                logger.warn(e) { "Could not parse meta.json for source '${dto.visualSourceType}' during sanitization" }
+                sanitizedParams.putAll(dto.parameters)
+            }
+        } else {
+            sanitizedParams.putAll(dto.parameters)
+        }
+
+        // Canonical feedback parameters
+        val canonicalFeedbackDefaults = mapOf(
+            "fbDecay" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbGain" to ParameterDto(1.0f, 1.0f, 1.0f, false, emptyList()),
+            "fbZoom" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbRotate" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbHueShift" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbBlur" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbChroma" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbMode" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
+            "fbKaleido" to ParameterDto(1.0f, 1.0f, 1.0f, false, emptyList())
+        )
+
+        val sanitizedFeedback = LinkedHashMap<String, ParameterDto>()
+        for ((key, defaultDto) in canonicalFeedbackDefaults) {
+            val existing = dto.feedbackParameters[key]
+            if (existing != null) {
+                sanitizedFeedback[key] = existing
+            } else {
+                modified = true
+                sanitizedFeedback[key] = defaultDto
+            }
+        }
+
+        if (dto.feedbackParameters.keys != canonicalFeedbackDefaults.keys) {
+            modified = true
+        }
+
+        val sanitizedGlobalAlpha = dto.globalAlpha ?: run {
+            modified = true
+            ParameterDto(1.0f, 1.0f, 1.0f, false, emptyList())
+        }
+
+        val sanitizedDto = if (modified) {
+            dto.copy(
+                parameters = sanitizedParams,
+                feedbackParameters = sanitizedFeedback,
+                globalAlpha = sanitizedGlobalAlpha
+            )
+        } else {
+            dto
+        }
+
+        return Pair(sanitizedDto, modified)
+    }
+
     fun loadDeckPresetAsync(
         file: File,
         isDeckA: Boolean = false,
@@ -202,8 +293,19 @@ object PresetManager {
                 
                 val content = file.readText()
                 val rawDto = json.decodeFromString<DeckPresetDto>(content)
-                val dto = rawDto.copy(name = file.nameWithoutExtension)
-                val pending = PendingDeckLoad(dto, isManual)
+                val namedDto = rawDto.copy(name = file.nameWithoutExtension)
+                val (sanitizedDto, wasMigrated) = sanitizePresetDto(namedDto)
+
+                if (wasMigrated && file.canWrite()) {
+                    try {
+                        file.writeText(json.encodeToString(sanitizedDto))
+                        logger.info { "Auto-healed and migrated preset '${file.name}' to latest schema" }
+                    } catch (e: Exception) {
+                        logger.warn(e) { "Could not auto-save migrated preset '${file.name}'" }
+                    }
+                }
+
+                val pending = PendingDeckLoad(sanitizedDto, isManual)
                 when {
                     isDeckA -> deckAPresetQueue.offer(pending)
                     isDeckBG -> deckBGPresetQueue.offer(pending)
@@ -282,7 +384,10 @@ object PresetManager {
                 val deckADto = pendingA.dto
                 mixer.deckA.applyDto(deckADto)
                 activePresetA = deckADto.name
-                cachedDtoA = deckADto
+                cachedDtoA = mixer.deckA.toDto(deckADto.name, deckADto.tags).copy(
+                    presetNotes = deckADto.presetNotes,
+                    paramNotes = deckADto.paramNotes
+                )
                 NotesManager.syncFromDto("Deck A", deckADto)
                 if (pendingA.isManual) {
                     PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckC = false, mixer = mixer)
@@ -301,7 +406,10 @@ object PresetManager {
                 val deckBDto = pendingB.dto
                 mixer.deckB.applyDto(deckBDto)
                 activePresetB = deckBDto.name
-                cachedDtoB = deckBDto
+                cachedDtoB = mixer.deckB.toDto(deckBDto.name, deckBDto.tags).copy(
+                    presetNotes = deckBDto.presetNotes,
+                    paramNotes = deckBDto.paramNotes
+                )
                 NotesManager.syncFromDto("Deck B", deckBDto)
                 if (pendingB.isManual) {
                     PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = false, mixer = mixer)
@@ -320,7 +428,10 @@ object PresetManager {
                 val deckBGDto = pendingBG.dto
                 mixer.deckBG.applyDto(deckBGDto)
                 activePresetBG = deckBGDto.name
-                cachedDtoBG = deckBGDto
+                cachedDtoBG = mixer.deckBG.toDto(deckBGDto.name, deckBGDto.tags).copy(
+                    presetNotes = deckBGDto.presetNotes,
+                    paramNotes = deckBGDto.paramNotes
+                )
                 NotesManager.syncFromDto("Deck BG", deckBGDto)
                 logger.info { "Successfully applied Deck BG preset: ${deckBGDto.name}" }
             } catch (e: Exception) {
@@ -336,7 +447,10 @@ object PresetManager {
                 val deckPVDto = pendingPV.dto
                 mixer.deckPV.applyDto(deckPVDto)
                 activePresetPV = deckPVDto.name
-                cachedDtoPV = deckPVDto
+                cachedDtoPV = mixer.deckPV.toDto(deckPVDto.name, deckPVDto.tags).copy(
+                    presetNotes = deckPVDto.presetNotes,
+                    paramNotes = deckPVDto.paramNotes
+                )
                 NotesManager.syncFromDto("Deck PV", deckPVDto)
                 if (pendingPV.isManual) {
                     PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckC = true, mixer = mixer)
@@ -430,16 +544,28 @@ object PresetManager {
             mixer.syncQueueTriggerPrevValues()
             
             activePresetA = if (session.deckA.isEmpty) null else session.deckA.name
-            cachedDtoA = if (session.deckA.isEmpty) null else session.deckA
+            cachedDtoA = if (session.deckA.isEmpty) null else mixer.deckA.toDto(session.deckA.name, session.deckA.tags).copy(
+                presetNotes = session.deckA.presetNotes,
+                paramNotes = session.deckA.paramNotes
+            )
             
             activePresetB = if (session.deckB.isEmpty) null else session.deckB.name
-            cachedDtoB = if (session.deckB.isEmpty) null else session.deckB
+            cachedDtoB = if (session.deckB.isEmpty) null else mixer.deckB.toDto(session.deckB.name, session.deckB.tags).copy(
+                presetNotes = session.deckB.presetNotes,
+                paramNotes = session.deckB.paramNotes
+            )
 
             activePresetBG = if (bgDto.isEmpty) null else bgDto.name
-            cachedDtoBG = if (bgDto.isEmpty) null else bgDto
+            cachedDtoBG = if (bgDto.isEmpty) null else mixer.deckBG.toDto(bgDto.name, bgDto.tags).copy(
+                presetNotes = bgDto.presetNotes,
+                paramNotes = bgDto.paramNotes
+            )
 
             activePresetPV = if (pvDto.isEmpty) null else pvDto.name
-            cachedDtoPV = if (pvDto.isEmpty) null else pvDto
+            cachedDtoPV = if (pvDto.isEmpty) null else mixer.deckPV.toDto(pvDto.name, pvDto.tags).copy(
+                presetNotes = pvDto.presetNotes,
+                paramNotes = pvDto.paramNotes
+            )
             
             val restoredQueue = resolveRestoredQueue(session.queue, session.activeIndex)
             PlayQueueManager.restoreSessionQueue(

@@ -68,10 +68,10 @@
 - **Zero-Dependency CLI Tool (`scripts/sync_web.py`)**: Standalone tool providing `--check` (detailed color-coded drift report), `--apply` (automatic WebGL2 shader transpilation), and `--mark-synced` (manifest hash synchronization for manual review files).
 - **Gradle & CI Drift Verification (`checkWebSync`, `syncWeb`, `WebSyncTest.kt`)**: Added Gradle tasks and a fast JVM unit test to guarantee zero asset/algorithmic drift between Desktop and Web.
 
-#### 9. Keyboard Shortcuts Settings Page, 1-4 Deck Loading & ESC Fullscreen Exit
-- **Settings Keyboard Shortcuts Reference (`SettingsPanel.kt`)**: Added dedicated "Keyboard Shortcuts" category inside Settings presenting grouped reference tables for Global & Display controls, Preset Grid matrix operations, Cell Config number input scrubbing, Library & Browser management, and active Play Queue trigger bindings.
-- **Preset Quick-Loading Keys 1, 2, 3, 4 (`LibraryPanel.kt`, `BrowserDeckButtons.kt`)**: Pressing `1`, `2`, `3`, or `4` when a preset is selected in the Library or Playlist Editor loads the preset into Deck A, Deck B, Deck BG (Background), or Deck PV (Preview) respectively.
-- **ESC Key Fullscreen Exit (`Main.kt`)**: Added `Esc` key shortcut to exit Clean Mode / Fullscreen video view alongside `F`.
+#### 10. Auto-Healing Preset Loader & Dirty State Synchronization Fixes
+- **Auto-Healing Schema Sanitization & Migration (`PresetManager.kt`)**: Implemented `sanitizePresetDto` in `PresetManager.loadDeckPresetAsync`. When loading presets with legacy or missing visual source/feedback parameters, the loader automatically injects engine defaults, purges obsolete keys, silently rewrites the updated `.lsd` file to disk on a background I/O thread, and ensures zero schema drift.
+- **Canonical Baseline Snapshotting (`PresetManager.kt`)**: Captured canonical `DeckPresetDto` snapshots immediately following asynchronous preset and session loading (`mixer.deckX.toDto(...)`). Newly loaded presets consistently start in a clean state (`isDeckDirty == false`), while correctly marking decks dirty upon subsequent parameter modifications.
+- **Complete Visual Source & Feedback Parameter Restoration (`PresetModels.kt`)**: Fixed `Deck.applyDto` to reset baseline parameter defaults before applying incoming preset maps, restored `source.globalAlpha` application from `dto.globalAlpha`, and added full `fbKaleido` serialization support across `Deck.toDto` and `Deck.applyDto`.
 
 ---
 

@@ -144,8 +144,11 @@ object LibraryPanel {
         val safeW = width.coerceAtLeast(80f)
         val colWidth = ((safeW - 24f) * 0.25f).coerceAtLeast(20f)
 
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6f)
         if (ImGui.beginMenuBar()) {
+            val menuBarH = ImGui.getFrameHeight()
+            val btnH = (menuBarH - 8f).coerceAtLeast(20f)
+            val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
+
             UITheme.LibraryMode.entries.forEachIndexed { index, mode ->
                 val active = session.uiTheme.libraryMode == mode
                 val icon = when (mode) {
@@ -157,6 +160,7 @@ object LibraryPanel {
                 if (index > 0) {
                     ImGui.sameLine(0f, 6f)
                 }
+                ImGui.setCursorPosY(yOffset)
 
                 // Transparent button background style
                 ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
@@ -170,7 +174,7 @@ object LibraryPanel {
                     ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
                 }
 
-                if (ImGui.button("$icon##mode_${mode.name}")) {
+                if (ImGui.button("$icon##mode_${mode.name}", 0f, btnH)) {
                     session.uiTheme.libraryMode = mode
                     session.uiTheme.saveSettings()
                 }
@@ -186,11 +190,12 @@ object LibraryPanel {
             }
 
             // Calculate centering for Action Toolbar
-            val totalToolbarW = 302f
+            val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.TOOLBAR_WIDTH
             val currentX = ImGui.getCursorPosX()
             val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceAtLeast(currentX + 16f)
             ImGui.sameLine(0f, 0f)
             ImGui.setCursorPosX(targetCenterX)
+            ImGui.setCursorPosY(yOffset)
 
             val selectedFile = getActiveSelectedFile(session)
             llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.draw(
@@ -198,12 +203,12 @@ object LibraryPanel {
                 mixer = mixer,
                 presetState = presetState,
                 selectedFile = selectedFile,
-                source = activeSelectionSource
+                source = activeSelectionSource,
+                btnHeight = btnH
             )
 
             ImGui.endMenuBar()
         }
-        ImGui.popStyleVar()
 
         if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 

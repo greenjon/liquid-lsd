@@ -23,10 +23,47 @@ object PresetListPanel {
     var selectedAsset: AssetItem? = null
 
     fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
+        val btnSize = ImGui.getFrameHeight()
+        val spacing = ImGui.getStyle().getItemSpacingX()
+        val searchWidth = (ImGui.getContentRegionAvailX() - (btnSize + spacing)).coerceAtLeast(60f)
+
         // Search Filter Bar
+        ImGui.setNextItemWidth(searchWidth)
         ImGui.inputTextWithHint("##presetSearch", "Search presets & tags...", searchBuffer)
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Type to filter presets by name or tags.")
+        }
+
+        ImGui.sameLine()
+
+        // [ + ] Create New Preset dropdown button
+        if (ImGui.button("${Icons.PLUS}##preset_new_preset", btnSize, btnSize)) {
+            ImGui.openPopup("create_new_preset_popup")
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Create new preset on a deck...")
+        }
+
+        if (ImGui.beginPopup("create_new_preset_popup")) {
+            ImGui.textDisabled("Create new preset on:")
+            ImGui.separator()
+            if (ImGui.menuItem("Deck A")) {
+                UIManager.triggerDeckEject(mixer.deckA, isDeckA = true, isDeckC = false)
+                presetState.activeTopTab = "Deck A"
+            }
+            if (ImGui.menuItem("Deck B")) {
+                UIManager.triggerDeckEject(mixer.deckB, isDeckA = false, isDeckC = false)
+                presetState.activeTopTab = "Deck B"
+            }
+            if (ImGui.menuItem("Deck BG")) {
+                UIManager.triggerDeckEject(mixer.deckBG, isDeckA = false, isDeckC = false)
+                presetState.activeTopTab = "Deck BG"
+            }
+            if (ImGui.menuItem("Deck PV")) {
+                UIManager.triggerDeckEject(mixer.deckPV, isDeckA = false, isDeckC = true)
+                presetState.activeTopTab = "Deck PV"
+            }
+            ImGui.endPopup()
         }
 
         ImGui.separator()

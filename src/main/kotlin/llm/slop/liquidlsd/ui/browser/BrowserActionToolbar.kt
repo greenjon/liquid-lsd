@@ -18,6 +18,9 @@ enum class DeckAuditionTarget(val label: String, val deckIndex: Int) {
 }
 
 object BrowserActionToolbar {
+    const val BTN_WIDTH: Float = 80f
+    const val TOOLBAR_WIDTH: Float = (7 * BTN_WIDTH) + (5 * 6f) + (1 * 14f)
+
     var isAuditionLocked: Boolean = false
     var latchedDeckTarget: DeckAuditionTarget? = null
 
@@ -31,14 +34,13 @@ object BrowserActionToolbar {
     ) {
         val hasSelection = selectedFile != null && selectedFile.exists()
         val btnH = if (btnHeight > 0f) btnHeight else ImGui.getFrameHeight()
-        val baseBtnW = 28f
-        val wideBtnW = 34f
+        val btnW = BTN_WIDTH
 
         // 0. [ LOCK / PADLOCK ]
         val lockColor = BrowserDeckButtons.colorLock()
         BrowserDeckButtons.push(lockColor, alpha = 1f, isLatched = isAuditionLocked)
         val lockIcon = if (isAuditionLocked) Icons.LOCK else Icons.UNLOCK
-        if (ImGui.button("$lockIcon##toolbar_lock", baseBtnW, btnH)) {
+        if (ImGui.button("$lockIcon##toolbar_lock", btnW, btnH)) {
             isAuditionLocked = !isAuditionLocked
             if (isAuditionLocked) {
                 // Auto-latch to PV when turned ON
@@ -66,7 +68,7 @@ object BrowserActionToolbar {
         val isLatchedA = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_A
         val alphaA = if (isLatchedA || hasSelection) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorA(), alphaA, isLatched = isLatchedA)
-        if (ImGui.button("A##toolbar_deck_a", baseBtnW, btnH)) {
+        if (ImGui.button("A##toolbar_deck_a", btnW, btnH)) {
             if (isAuditionLocked) {
                 latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_A) null else DeckAuditionTarget.DECK_A
                 if (latchedDeckTarget == DeckAuditionTarget.DECK_A && selectedFile != null) {
@@ -87,7 +89,7 @@ object BrowserActionToolbar {
         val isLatchedB = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_B
         val alphaB = if (isLatchedB || hasSelection) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorB(), alphaB, isLatched = isLatchedB)
-        if (ImGui.button("B##toolbar_deck_b", baseBtnW, btnH)) {
+        if (ImGui.button("B##toolbar_deck_b", btnW, btnH)) {
             if (isAuditionLocked) {
                 latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_B) null else DeckAuditionTarget.DECK_B
                 if (latchedDeckTarget == DeckAuditionTarget.DECK_B && selectedFile != null) {
@@ -108,7 +110,7 @@ object BrowserActionToolbar {
         val isLatchedBG = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_BG
         val alphaBG = if (isLatchedBG || hasSelection) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorBG(), alphaBG, isLatched = isLatchedBG)
-        if (ImGui.button("BG##toolbar_deck_bg", wideBtnW, btnH)) {
+        if (ImGui.button("BG##toolbar_deck_bg", btnW, btnH)) {
             if (isAuditionLocked) {
                 latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_BG) null else DeckAuditionTarget.DECK_BG
                 if (latchedDeckTarget == DeckAuditionTarget.DECK_BG && selectedFile != null) {
@@ -129,7 +131,7 @@ object BrowserActionToolbar {
         val isLatchedPV = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_PV
         val alphaPV = if (isLatchedPV || hasSelection) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorPV(), alphaPV, isLatched = isLatchedPV)
-        if (ImGui.button("PV##toolbar_deck_pv", wideBtnW, btnH)) {
+        if (ImGui.button("PV##toolbar_deck_pv", btnW, btnH)) {
             if (isAuditionLocked) {
                 latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_PV) null else DeckAuditionTarget.DECK_PV
                 if (latchedDeckTarget == DeckAuditionTarget.DECK_PV && selectedFile != null) {
@@ -147,10 +149,10 @@ object BrowserActionToolbar {
         ImGui.sameLine(0f, 14f)
 
         // 5. [ Q ] (Disabled/dimmed if already from Play Queue A/B or no selection)
-        val canQueueAB = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_AB
+        val canQueueAB = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_AB && selectedFile != null
         val alphaQ = if (canQueueAB) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), alphaQ)
-        if (ImGui.button("Q##toolbar_deck_q", baseBtnW, btnH) && canQueueAB && selectedFile != null) {
+        if (ImGui.button("Q##toolbar_deck_q", btnW, btnH) && canQueueAB) {
             session.playQueueManager.appendToQueue(selectedFile)
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -162,10 +164,10 @@ object BrowserActionToolbar {
         ImGui.sameLine(0f, 6f)
 
         // 6. [ BGQ ] (Disabled/dimmed if already from BG Queue or no selection)
-        val canQueueBG = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_BG
+        val canQueueBG = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_BG && selectedFile != null
         val alphaBGQ = if (canQueueBG) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), alphaBGQ)
-        if (ImGui.button("BGQ##toolbar_deck_bgq", wideBtnW, btnH) && canQueueBG && selectedFile != null) {
+        if (ImGui.button("BGQ##toolbar_deck_bgq", btnW, btnH) && canQueueBG) {
             BgQueueManager.appendToQueue(selectedFile)
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -173,35 +175,5 @@ object BrowserActionToolbar {
             ImGui.setTooltip(tip)
         }
         BrowserDeckButtons.pop()
-
-        ImGui.sameLine(0f, 14f)
-
-        // 7. [ + ] (Create New Preset Dropdown)
-        if (ImGui.button("${Icons.PLUS}##toolbar_new_preset", baseBtnW, btnH)) {
-            ImGui.openPopup("create_new_preset_popup")
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) ImGui.setTooltip("Create new preset on a deck...")
-
-        if (ImGui.beginPopup("create_new_preset_popup")) {
-            ImGui.textDisabled("Create new preset on:")
-            ImGui.separator()
-            if (ImGui.menuItem("Deck A")) {
-                UIManager.triggerDeckEject(mixer.deckA, isDeckA = true, isDeckC = false)
-                presetState.activeTopTab = "Deck A"
-            }
-            if (ImGui.menuItem("Deck B")) {
-                UIManager.triggerDeckEject(mixer.deckB, isDeckA = false, isDeckC = false)
-                presetState.activeTopTab = "Deck B"
-            }
-            if (ImGui.menuItem("Deck BG")) {
-                UIManager.triggerDeckEject(mixer.deckBG, isDeckA = false, isDeckC = false)
-                presetState.activeTopTab = "Deck BG"
-            }
-            if (ImGui.menuItem("Deck PV")) {
-                UIManager.triggerDeckEject(mixer.deckPV, isDeckA = false, isDeckC = true)
-                presetState.activeTopTab = "Deck PV"
-            }
-            ImGui.endPopup()
-        }
     }
 }

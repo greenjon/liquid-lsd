@@ -204,7 +204,7 @@ data class DeckPresetDto(
     val recipe: MandalaRecipeDto? = null, // For restoring recipe structure (Mandala-only)
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
-    val globalAlpha: ParameterDto,
+    val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
@@ -395,7 +395,8 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         "fbHueShift" to fbHueShift.toDto(),
         "fbBlur" to fbBlur.toDto(),
         "fbChroma" to fbChroma.toDto(),
-        "fbMode" to fbMode.toDto()
+        "fbMode" to fbMode.toDto(),
+        "fbKaleido" to fbKaleido.toDto()
     )
     
     return DeckPresetDto(
@@ -429,6 +430,7 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     
     if (source is Mandala) {
         val mandalaObj = source as Mandala
+        mandalaObj.parameters.values.forEach { it.reset() }
         val recipeDto = dto.recipe ?: MandalaRecipeDto(3, 3, 3, 3)
         // Recreate or lookup recipe
         val recipe = dto.recipe?.id?.let { savedId ->
@@ -448,11 +450,23 @@ fun Deck.applyDto(dto: DeckPresetDto) {
         }
     } else if (source is llm.slop.liquidlsd.rendering.DynamicVisualSource) {
         val dynObj = source as llm.slop.liquidlsd.rendering.DynamicVisualSource
+        dynObj.parameters.values.forEach { it.reset() }
         for ((key, paramDto) in dto.parameters) {
             dynObj.parameters[key]?.applyDto(paramDto)
         }
     }
     
+    // Reset feedback parameters to baseline defaults before applying
+    fbDecay.reset()
+    fbGain.reset()
+    fbZoom.reset()
+    fbRotate.reset()
+    fbHueShift.reset()
+    fbBlur.reset()
+    fbChroma.reset()
+    fbMode.reset()
+    fbKaleido.reset()
+
     // Apply feedback parameters
     dto.feedbackParameters["fbDecay"]?.let { fbDecay.applyDto(it) }
     dto.feedbackParameters["fbGain"]?.let { fbGain.applyDto(it) }
@@ -462,7 +476,10 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.feedbackParameters["fbBlur"]?.let { fbBlur.applyDto(it) }
     dto.feedbackParameters["fbChroma"]?.let { fbChroma.applyDto(it) }
     dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
+    dto.feedbackParameters["fbKaleido"]?.let { fbKaleido.applyDto(it) }
     
     // Apply global parameters
+    source.globalAlpha.reset()
+    dto.globalAlpha?.let { source.globalAlpha.applyDto(it) }
 }
 
