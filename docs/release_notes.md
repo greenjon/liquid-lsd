@@ -23,6 +23,8 @@
 
 #### 2. Audio Engine Settings & Real-Time Monitor Consolidation (`llm.slop.liquidlsd.ui`)
 - **Integrated Audio Engine Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection configuration, input gain, and real-time oscilloscopes into the dedicated "Audio Engine" tab within `SettingsPanel.kt`.
+- **Hardware Device Introspection Caching & OOM Prevention**: Cached audio input device discovery in `AudioEngine.kt` to eliminate per-frame ALSA mixer probing in Java Sound. Resolved an issue where continuously rendering the Audio Engine tab probed `AudioSystem.getMixerInfo()` 60+ times per second, leaking native ALSA handles and causing out-of-memory crashes (exit code 137). Added manual device rescan (`Icons.REFRESH`) and pre-allocated enum arrays.
+- **Robust Process Lifecycle in `SystemAudioVolume`**: Ensured all system process streams are reliably closed, processes destroyed, and exponential backoff applied when PipeWire/`wpctl` is absent or unresponsive.
 - **Modular Zero-Allocation Architecture (`AudioEnginePanel.kt`)**: Retained modular file separation in `AudioEnginePanel.kt` with class-level pre-allocated buffers and zero runtime memory allocations.
 - **Direct Menu Bar Routing**: Clicking "Audio Engine" in `MenuBar.kt` now opens the Settings dialog directly on the Audio Engine tab for quick 1-click access.
 

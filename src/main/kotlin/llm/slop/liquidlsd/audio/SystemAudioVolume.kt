@@ -42,8 +42,9 @@ object SystemAudioVolume {
         private set
 
     private var lastQueryTime = 0L
-    private val queryIntervalMs = 2000L
+    private var queryIntervalMs = 2000L
     private var isQuerying = false
+    private var consecutiveErrors = 0
 
     private fun waitForProcess(process: Process): Boolean {
         if (process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
@@ -61,6 +62,7 @@ object SystemAudioVolume {
         if (!isSupported) return
         systemInputVolume = volume.coerceIn(0f, 1f)
         volumeExecutor.execute {
+            var process: Process? = null
             try {
                 val pb = when (os) {
                     OS.LINUX -> ProcessBuilder("wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", "%.2f".format(volume))
@@ -70,12 +72,18 @@ object SystemAudioVolume {
                     }
                     else -> return@execute
                 }
-                val process = pb.start()
+                pb.redirectErrorStream(true)
+                process = pb.start()
                 if (!waitForProcess(process)) {
                     logger.warn { "Timed out setting system volume" }
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to set system volume" }
+            } finally {
+                try { process?.inputStream?.close() } catch (_: Exception) {}
+                try { process?.outputStream?.close() } catch (_: Exception) {}
+                try { process?.errorStream?.close() } catch (_: Exception) {}
+                try { process?.destroy() } catch (_: Exception) {}
             }
         }
     }
@@ -86,18 +94,25 @@ object SystemAudioVolume {
         if (now - lastQueryTime < queryIntervalMs || isQuerying) return
         isQuerying = true
         volumeExecutor.execute {
+            var process: Process? = null
             try {
                 val pb = when (os) {
                     OS.LINUX -> ProcessBuilder("wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@")
                     OS.MAC -> ProcessBuilder("osascript", "-e", "input volume of (get volume settings)")
                     else -> return@execute
                 }
-                val process = pb.start()
+                pb.redirectErrorStream(true)
+                process = pb.start()
                 if (!waitForProcess(process)) {
                     logger.warn { "Timed out querying system volume" }
+                    consecutiveErrors++
                     return@execute
                 }
-                val output = process.inputStream.bufferedReader().readText().trim()
+                if (process.exitValue() != 0) {
+                    consecutiveErrors++
+                    return@execute
+                }
+                val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
                 when (os) {
                     OS.LINUX -> {
                         if (output.startsWith("Volume:")) {
@@ -107,6 +122,9 @@ object SystemAudioVolume {
                                 systemInputVolume = vol
                             }
                             isMuted = output.contains("[MUTED]")
+                            consecutiveErrors = 0
+                        } else {
+                            consecutiveErrors++
                         }
                     }
                     OS.MAC -> {
@@ -114,13 +132,22 @@ object SystemAudioVolume {
                         if (vol != null) {
                             systemInputVolume = vol / 100f
                             isMuted = (vol == 0f)
+                            consecutiveErrors = 0
+                        } else {
+                            consecutiveErrors++
                         }
                     }
-                    else -> {}
+                    OS.WINDOWS, OS.UNKNOWN -> {}
                 }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to query system volume" }
+                consecutiveErrors++
+                logger.debug { "Failed to query system volume: ${e.message}" }
             } finally {
+                try { process?.inputStream?.close() } catch (_: Exception) {}
+                try { process?.outputStream?.close() } catch (_: Exception) {}
+                try { process?.errorStream?.close() } catch (_: Exception) {}
+                try { process?.destroy() } catch (_: Exception) {}
+                queryIntervalMs = if (consecutiveErrors >= 3) 30000L else 2000L
                 lastQueryTime = System.currentTimeMillis()
                 isQuerying = false
             }

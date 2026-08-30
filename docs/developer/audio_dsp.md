@@ -89,3 +89,15 @@ $$\text{OnsetStrength} = \text{Flux}_{bass} \times 2.0 + \text{Flux}_{mid} \time
 
 ### Silence Gate
 When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500 ms, `SignalState` switches to `SILENT`, suppressing accidental trigger firing during quiet sections.
+
+---
+
+## Audio Hardware Discovery & UI Caching
+
+Querying audio devices via `AudioSystem.getMixerInfo()` and `AudioSystem.getMixer()` in Java Sound invokes native ALSA/OS audio layer introspection. Probing mixers inside the real-time ImGui render loop creates native memory allocations and file descriptor pressure that can lead to memory exhaustion (OOM).
+
+To prevent this:
+- [`AudioEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt) maintains a cached list of input devices (`cachedInputDevices`) and pre-allocated name strings (`cachedDeviceNames`).
+- The UI layer ([`AudioEnginePanel.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt)) reads from this cache with 0 allocations on the render loop.
+- Dynamic rescan is triggered explicitly via `AudioEngine.refreshInputDevices()` or the UI refresh button (`Icons.REFRESH`).
+

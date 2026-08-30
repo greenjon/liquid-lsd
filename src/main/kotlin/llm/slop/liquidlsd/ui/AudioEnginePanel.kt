@@ -42,6 +42,11 @@ object AudioEnginePanel {
     private val biquadQArr = FloatArray(1)
     private val isLocked = ImBoolean()
 
+    // Pre-allocated enum arrays to eliminate per-frame allocations
+    private val backendModes = AudioEngine.AudioBackendMode.values()
+    private val beatDetectionModes = BeatDetectionMode.values()
+    private val audioTargets = AudioTarget.values()
+
     // Device & Backend UI wrappers
     private val isAudioEnabled = ImBoolean()
     private val currentBackendIdx = ImInt()
@@ -109,11 +114,10 @@ object AudioEnginePanel {
 
         // Audio Backend Selection
         theme.body("Audio Backend:")
-        val backends = AudioEngine.AudioBackendMode.values()
         currentBackendIdx.set(audioEngine.backendMode.ordinal)
         ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
         if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
-            val nextBackend = backends[currentBackendIdx.get()]
+            val nextBackend = backendModes[currentBackendIdx.get()]
             audioEngine.selectDevice(audioEngine.selectedDeviceName, nextBackend)
         }
         if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
@@ -122,19 +126,28 @@ object AudioEnginePanel {
 
         ImGui.spacing()
 
-        // Hardware Input Device Selection
+        // Hardware Input Device Selection (cached list to prevent ALSA resource leakage)
         theme.body("Input Hardware Device:")
         val devices = audioEngine.getAvailableInputDevices()
-        val deviceNames = devices.map { it.name }.toTypedArray()
+        val deviceNames = audioEngine.getAvailableDeviceNames()
         val currentDevIdx = devices.indexOfFirst { it.name == audioEngine.selectedDeviceName }.coerceAtLeast(0)
         currentDeviceIdx.set(currentDevIdx)
-        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(340f))
         if (ImGui.combo("##InputDevice", currentDeviceIdx, deviceNames)) {
-            val chosenDevice = devices[currentDeviceIdx.get()]
-            audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
+            val chosenDevice = devices.getOrNull(currentDeviceIdx.get())
+            if (chosenDevice != null) {
+                audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
+            }
         }
         if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
             ImGui.setTooltip("Select the audio input capture device.")
+        }
+        ImGui.sameLine()
+        if (ImGui.button("${Icons.REFRESH}##refreshDevices")) {
+            audioEngine.refreshInputDevices()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Rescan for newly connected audio input hardware.")
         }
 
         ImGui.spacing()
@@ -274,7 +287,7 @@ object AudioEnginePanel {
         ImGui.sameLine()
         ImGui.setNextItemWidth(180f)
         if (ImGui.beginCombo("##BeatDetectionMode", settings.mode.name)) {
-            BeatDetectionMode.values().forEach { mode ->
+            for (mode in beatDetectionModes) {
                 val isSelected = settings.mode == mode
                 if (ImGui.selectable(mode.name, isSelected)) {
                     settings.mode = mode
@@ -292,7 +305,7 @@ object AudioEnginePanel {
         ImGui.sameLine()
         ImGui.setNextItemWidth(140f)
         if (ImGui.beginCombo("##BeatDetectionTarget", settings.target.name)) {
-            AudioTarget.values().forEach { target ->
+            for (target in audioTargets) {
                 val isSelected = settings.target == target
                 if (ImGui.selectable(target.name, isSelected)) {
                     settings.target = target

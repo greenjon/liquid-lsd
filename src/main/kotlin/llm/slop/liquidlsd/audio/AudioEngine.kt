@@ -374,8 +374,29 @@ object AudioEngine {
     @Volatile
     var selectedDeviceName: String? = null
 
-    fun getAvailableInputDevices(): List<AudioInputDevice> {
-        return JavaSoundClient.getAvailableInputDevices()
+    @Volatile
+    private var cachedInputDevices: List<AudioInputDevice> = emptyList()
+    @Volatile
+    private var cachedDeviceNames: Array<String> = emptyArray()
+
+    fun getAvailableInputDevices(forceRefresh: Boolean = false): List<AudioInputDevice> {
+        if (forceRefresh || cachedInputDevices.isEmpty()) {
+            val devices = JavaSoundClient.getAvailableInputDevices()
+            cachedInputDevices = devices
+            cachedDeviceNames = devices.map { it.name }.toTypedArray()
+        }
+        return cachedInputDevices
+    }
+
+    fun getAvailableDeviceNames(): Array<String> {
+        if (cachedDeviceNames.isEmpty()) {
+            getAvailableInputDevices(forceRefresh = true)
+        }
+        return cachedDeviceNames
+    }
+
+    fun refreshInputDevices() {
+        getAvailableInputDevices(forceRefresh = true)
     }
 
     fun selectDevice(deviceName: String?, backend: AudioBackendMode = backendMode) {

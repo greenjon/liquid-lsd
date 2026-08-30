@@ -29,4 +29,19 @@ class AudioEngineTest {
         AudioEngine.presetIOInFlight.set(false)
         assertFalse(AudioEngine.presetIOInFlight.get())
     }
+
+    @Test
+    fun testAudioDeviceCaching() {
+        val devices1 = AudioEngine.getAvailableInputDevices()
+        val devices2 = AudioEngine.getAvailableInputDevices()
+        assertTrue(devices1 === devices2, "Subsequent calls should return cached device list instance")
+
+        val names = AudioEngine.getAvailableDeviceNames()
+        assertTrue(names.isNotEmpty())
+        assertTrue(names.size == devices1.size)
+
+        AudioEngine.refreshInputDevices()
+        val devices3 = AudioEngine.getAvailableInputDevices()
+        assertTrue(devices3.isNotEmpty())
+    }
 }
