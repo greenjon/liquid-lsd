@@ -22,6 +22,7 @@ object PresetListPanel {
     private val logger = KotlinLogging.logger {}
     val searchBuffer = ImString(256)
     var selectedAsset: AssetItem? = null
+    var filteredPresets: List<AssetItem> = emptyList()
 
     fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
         val btnSize = ImGui.getFrameHeight()
@@ -93,6 +94,7 @@ object PresetListPanel {
                     asset.tags.any { it.lowercase().contains(query) }
             }
         }
+        filteredPresets = filtered
 
         if (filtered.isEmpty()) {
             ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
@@ -104,6 +106,13 @@ object PresetListPanel {
 
             val label = asset.displayName
             val isSelected = selectedAsset?.path == asset.path
+
+            if (isSelected && LibraryPanel.shouldReclaimFocus) {
+                ImGui.setKeyboardFocusHere()
+            }
+            if (isSelected && LibraryPanel.shouldScrollToSelection) {
+                ImGui.setScrollHereY(0.5f)
+            }
 
             if (ImGui.selectable(label, isSelected)) {
                 LibraryPanel.selectPreset(asset, session, mixer)

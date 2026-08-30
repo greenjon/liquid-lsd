@@ -123,6 +123,13 @@ object QueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
             }
 
+            if (isSelected && LibraryPanel.shouldReclaimFocus) {
+                ImGui.setKeyboardFocusHere()
+            }
+            if (isSelected && LibraryPanel.shouldScrollToSelection) {
+                ImGui.setScrollHereY(0.5f)
+            }
+
             if (ImGui.selectable("$label##queue_$index", isSelected)) {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }

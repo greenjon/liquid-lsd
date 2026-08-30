@@ -10,6 +10,8 @@
 ### Key Highlights
 
 #### 1. Library Menu Bar Action Toolbar & Column Title Bars (`llm.slop.liquidlsd.ui.browser`)
+- **Seamless Focus Restoration & Continuous Arrow Navigation**: Restores keyboard navigation focus to the selected preset item whenever clicking toolbar buttons (`[🔒]`, `[A]`, `[B]`, `[BG]`, `[PV]`, `[Q]`, `[BGQ]`), allowing uninterrupted `↑`/`↓` arrow scrolling and locked-deck auto-auditioning without needing to re-click into the list.
+- **Queue Keyboard Hotkeys (`Q` & `Shift + Q`)**: Added instant keyboard shortcuts `Q` (append selected preset to A/B Play Queue) and `Shift + Q` (append to Background Queue) alongside deck routing keys `1`–`4` for fully keyboard-driven library browsing.
 - **Column Title Bars & Header Relocations**: Added upper title bars for all four columns (`Presets`, `Playlists`, `Queue`, `BG Queue`). Relocated the `[+]` preset creation button to the right side of the `Presets` title bar (allowing the search input to span full width), relocated `[+]` (New) and `[...]` (Actions) to the `Playlists` title bar (allowing the playlist selector dropdown to span full width), and moved `[Clear]` to the title bars of both `Queue` and `BG Queue`.
 - **Unified Menu Bar Action Strip**: Centered the preset routing toolbar (`[🔒] [A] [B] [BG] [PV] [Q] [BGQ]`) in the top Library Menu Bar with widened 80px buttons for clear text legibility and expanded title bar vertical height (+35%) with symmetrical top/bottom spacing.
 - **Column 1 Header `[+]` Button**: Positioned the Create New Preset `[+]` dropdown button directly adjacent to the preset search filter bar in the first column, matching the header layout of the Playlist Editor column.

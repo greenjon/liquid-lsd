@@ -27,6 +27,9 @@ object LibraryPanel {
     var selectedPlaylistFile: File? = null
     internal var activePlaylistData: PlaylistManager.Playlist? = null
 
+    var shouldReclaimFocus: Boolean = false
+    var shouldScrollToSelection: Boolean = false
+
     private var lastKnownSignature: String = ""
     private var lastAutoRefreshTimeMs: Long = 0L
 
@@ -238,18 +241,43 @@ object LibraryPanel {
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
-        // Number key shortcuts: 1 -> Deck A, 2 -> Deck B, 3 -> Deck BG, 4 -> Deck PV
+        // Global library keyboard shortcuts: 1-4 (Decks), Q / Shift+Q (Queues), Up/Down (Navigation)
         val activeFile = getActiveSelectedFile(session)
         val io = ImGui.getIO()
-        if (activeFile != null && activeFile.exists() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
             if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_1, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_1, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
+                if (activeFile != null && activeFile.exists()) {
+                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
+                    shouldReclaimFocus = true
+                }
             } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_2, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_2, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
+                if (activeFile != null && activeFile.exists()) {
+                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
+                    shouldReclaimFocus = true
+                }
             } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_3, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_3, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
+                if (activeFile != null && activeFile.exists()) {
+                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
+                    shouldReclaimFocus = true
+                }
             } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_4, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_4, false)) {
-                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
+                if (activeFile != null && activeFile.exists()) {
+                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
+                    shouldReclaimFocus = true
+                }
+            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_Q, false)) {
+                if (activeFile != null && activeFile.exists()) {
+                    if (io.keyShift) {
+                        llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(activeFile)
+                    } else {
+                        session.playQueueManager.appendToQueue(activeFile)
+                    }
+                    shouldReclaimFocus = true
+                }
+            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_UP, false)) {
+                navigateSelection(-1, session, mixer)
+            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN, false)) {
+                navigateSelection(1, session, mixer)
             }
         }
 
@@ -266,6 +294,87 @@ object LibraryPanel {
         BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
         BrowserPopupHandler.drawNewPlaylistPopup()
         BrowserPopupHandler.drawExportQueuePopup(session)
+
+        // Reset one-shot focus/scroll flags at end of frame
+        shouldReclaimFocus = false
+        shouldScrollToSelection = false
+    }
+
+    fun navigateSelection(delta: Int, session: SessionContext, mixer: Mixer) {
+        when (activeSelectionSource) {
+            SelectionSource.PRESETS -> {
+                val list = PresetListPanel.filteredPresets
+                if (list.isNotEmpty()) {
+                    val currentIdx = list.indexOfFirst { it.path == PresetListPanel.selectedAsset?.path }
+                    val targetIdx = if (currentIdx < 0) {
+                        if (delta > 0) 0 else list.lastIndex
+                    } else {
+                        (currentIdx + delta).coerceIn(0, list.lastIndex)
+                    }
+                    if (targetIdx != currentIdx) {
+                        selectPreset(list[targetIdx], session, mixer)
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
+            }
+            SelectionSource.PLAYLIST -> {
+                val playlist = activePlaylistData
+                if (playlist != null && playlist.presets.isNotEmpty()) {
+                    val currentIdx = PlaylistEditorPanel.selectedPresetIndex
+                    val targetIdx = if (currentIdx < 0) {
+                        if (delta > 0) 0 else playlist.presets.lastIndex
+                    } else {
+                        (currentIdx + delta).coerceIn(0, playlist.presets.lastIndex)
+                    }
+                    if (targetIdx != currentIdx) {
+                        selectPlaylistPreset(targetIdx, session, mixer)
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
+            }
+            SelectionSource.QUEUE_AB -> {
+                val queue = session.playQueueManager.queue
+                if (queue.isNotEmpty()) {
+                    val currentIdx = QueueActionsPanel.selectedIndex
+                    val targetIdx = if (currentIdx < 0) {
+                        if (delta > 0) 0 else queue.lastIndex
+                    } else {
+                        (currentIdx + delta).coerceIn(0, queue.lastIndex)
+                    }
+                    if (targetIdx != currentIdx) {
+                        selectQueueAb(targetIdx, session, mixer)
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
+            }
+            SelectionSource.QUEUE_BG -> {
+                val queue = llm.slop.liquidlsd.presets.BgQueueManager.queue
+                if (queue.isNotEmpty()) {
+                    val currentIdx = llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex
+                    val targetIdx = if (currentIdx < 0) {
+                        if (delta > 0) 0 else queue.lastIndex
+                    } else {
+                        (currentIdx + delta).coerceIn(0, queue.lastIndex)
+                    }
+                    if (targetIdx != currentIdx) {
+                        selectQueueBg(targetIdx, session, mixer)
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
+            }
+            null -> {
+                val list = PresetListPanel.filteredPresets
+                if (list.isNotEmpty()) {
+                    selectPreset(list.first(), session, mixer)
+                    shouldScrollToSelection = true
+                    shouldReclaimFocus = true
+                }
+            }
+        }
     }
 
     fun getSelectedAsset(): AssetItem? = PresetListPanel.selectedAsset

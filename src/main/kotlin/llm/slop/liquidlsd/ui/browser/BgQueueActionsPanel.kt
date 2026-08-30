@@ -109,6 +109,13 @@ object BgQueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.9f, 0.35f, 0.65f, 1.0f)
             }
 
+            if (isSelected && LibraryPanel.shouldReclaimFocus) {
+                ImGui.setKeyboardFocusHere()
+            }
+            if (isSelected && LibraryPanel.shouldScrollToSelection) {
+                ImGui.setScrollHereY(0.5f)
+            }
+
             if (ImGui.selectable("$label##bg_queue_$index", isSelected)) {
                 LibraryPanel.selectQueueBg(index, session, mixer)
             }

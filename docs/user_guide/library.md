@@ -60,14 +60,13 @@ The Left column displays the complete pool of all available presets discovered a
 - **Clean List View**: Preset rows display clean typography without cluttered inline buttons.
 - **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
 - **Keyboard Shortcuts**:
-  - `↑` / `↓` Arrows: Navigate through presets (auto-loading to the latched deck if Audition Lock `[🔒]` is armed).
+  - `↑` / `↓` Arrows: Navigate through presets across columns (auto-loading to the latched deck if Audition Lock `[🔒]` is armed) without focus interruption.
   - `1`: Load selected preset into **Deck A**.
   - `2`: Load selected preset into **Deck B**.
   - `3`: Load selected preset into **Deck BG** (Background).
   - `4`: Preview selected preset on **Deck PV** (Preview).
-  - `Delete` / `Backspace`: Delete selected preset from your library (with permanent deletion confirmation).
-  - `3`: Load selected preset into **Deck BG** (Background).
-  - `4`: Preview selected preset on **Deck PV** (Preview).
+  - `Q`: Append selected preset to **A/B Play Queue**.
+  - `Shift + Q`: Append selected preset to **Background Queue (BG)**.
   - `Delete` / `Backspace`: Delete selected preset from your library (with permanent deletion confirmation).
 - **Context Menu Actions (Right-Click)**:
   - **Load to Deck A / B / BG / PV**: Instant deck routing.

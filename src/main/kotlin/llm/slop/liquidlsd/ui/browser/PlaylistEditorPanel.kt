@@ -212,6 +212,13 @@ object PlaylistEditorPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1f, 0.3f, 0.3f, 1f)
             }
 
+            if (isSelected && LibraryPanel.shouldReclaimFocus) {
+                ImGui.setKeyboardFocusHere()
+            }
+            if (isSelected && LibraryPanel.shouldScrollToSelection) {
+                ImGui.setScrollHereY(0.5f)
+            }
+
             if (ImGui.selectable(label, isSelected)) {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }

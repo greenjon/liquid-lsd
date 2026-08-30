@@ -801,7 +801,9 @@ object SettingsPanel {
                 ShortcutItem("2", "Load to Deck B", "Loads selected preset into Deck B."),
                 ShortcutItem("3", "Load to Deck BG", "Loads selected preset into Background Deck (BG)."),
                 ShortcutItem("4", "Preview on Deck PV", "Loads selected preset into Preview Deck (PV)."),
-                ShortcutItem("Up / Down Arrow", "Navigate List Items", "Moves focus selection across presets, playlists, and queue items."),
+                ShortcutItem("Q", "Add to A/B Queue", "Appends selected preset to the A/B Play Queue."),
+                ShortcutItem("Shift + Q", "Add to Background Queue", "Appends selected preset to the Background Queue (BG)."),
+                ShortcutItem("Up / Down Arrow", "Navigate List Items", "Moves focus selection across presets, playlists, and queue items (auto-auditions when locked)."),
                 ShortcutItem("Delete / Backspace", "Delete Preset (Library)", "Deletes selected user preset with permanent deletion confirmation."),
                 ShortcutItem("Delete / Backspace", "Remove from Playlist", "Removes selected preset entry from active playlist editor."),
                 ShortcutItem("Delete / Backspace", "Remove from Play Queue", "Removes selected item from current or background play queue.")
