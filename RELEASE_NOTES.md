@@ -16,7 +16,12 @@
 - **Quick Audition Latch (`[🔒]`) & Smart `PV` Auto-Latch**: Toggling the padlock button arms sticky audition mode and auto-latches to **Deck PV** (Preview) by default. Clicking another deck button (`A`, `B`, `BG`) switches the latch target, while clicking the active deck button unlatches it.
 - **Single-Click & Arrow Key Auditioning**: With the padlock armed, single-clicking any preset or navigating with `↑`/`↓` arrow keys in any column immediately triggers non-blocking asynchronous patch loading (`loadDeckPresetAsync`) to the latched deck.
 
-#### 2. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
+#### 2. Audio Engine Settings & Real-Time Monitor Consolidation (`llm.slop.liquidlsd.ui`)
+- **Integrated Audio Engine Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection configuration, input gain, and real-time oscilloscopes into the dedicated "Audio Engine" tab within `SettingsPanel.kt`.
+- **Modular Zero-Allocation Architecture (`AudioEnginePanel.kt`)**: Retained modular file separation in `AudioEnginePanel.kt` with class-level pre-allocated buffers and zero runtime memory allocations.
+- **Direct Menu Bar Routing**: Clicking "Audio Engine" in `MenuBar.kt` now opens the Settings dialog directly on the Audio Engine tab for quick 1-click access.
+
+#### 3. Live Web Broadcasting & Desktop WebSocket Broadcaster (`llm.slop.liquidlsd.broadcast`)
 - **Zero-Impact Asynchronous Architecture (`BroadcastEngine.kt`)**: Decoupled WebSocket broadcaster running on a dedicated daemon background thread (`BroadcastEngine-IO`), ensuring 0 ms impact on JACK audio processing and GLFW/OpenGL frame rates.
 - **Non-Blocking WebSocket Dispatch**: Protected asynchronous transmission using `CompletableFuture` to prevent transmission queue buildup, memory leaks, and `IllegalStateException` on high-latency or slow network connections.
 - **Throttled Parameter Delta Streaming**: Dispatches full state snapshots (`state_full`) upon initial handshake or preset switching, and lightweight differential patches (`state_delta`) throttled at a configurable rate (default 25 Hz) during live parameter adjustments. Includes JSON `null` deletion semantics when swapping visual source types.

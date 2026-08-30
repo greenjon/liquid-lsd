@@ -17,7 +17,7 @@ import imgui.flag.ImGuiTableColumnFlags
 object SettingsPanel {
 
     private const val POPUP_ID  = "Settings##modal"
-    private const val MODAL_W   = 580f
+    private const val MODAL_W   = 780f
 
     // Scale percentage model: 100% == BASE_PX (15 px).
     // Range 75 %–200 % in 5 % steps.
@@ -48,15 +48,20 @@ object SettingsPanel {
 
     private var activeCategory = Category.APPEARANCE
 
-    fun open() = ImGui.openPopup(POPUP_ID)
+    fun open(category: Category? = null) {
+        if (category != null) {
+            activeCategory = category
+        }
+        ImGui.openPopup(POPUP_ID)
+    }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, displayW: Float, displayH: Float,
              mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
              onSizeChanged: (Float) -> Unit) {
 
         val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
-        val defaultW = (MODAL_W * fontScale).coerceIn(580f, displayW * 0.95f)
-        val defaultH = (480f * fontScale).coerceIn(380f, displayH * 0.90f)
+        val defaultW = (MODAL_W * fontScale).coerceIn(600f, displayW * 0.95f)
+        val defaultH = (520f * fontScale).coerceIn(400f, displayH * 0.90f)
 
         val targetW = if (session.uiTheme.settingsWidth > 100f) session.uiTheme.settingsWidth.coerceIn(480f, displayW * 0.98f) else defaultW
         val targetH = if (session.uiTheme.settingsHeight > 100f) session.uiTheme.settingsHeight.coerceIn(320f, displayH * 0.98f) else defaultH
@@ -423,49 +428,7 @@ object SettingsPanel {
     }
 
     private fun drawAudioEngineSettings(session: llm.slop.liquidlsd.SessionContext) {
-        session.uiTheme.h2("Audio Engine & Input Device")
-        ImGui.separator()
-        ImGui.spacing()
-
-        val audioEnabled = ImBoolean(session.uiTheme.audioEngineEnabled)
-        if (ImGui.checkbox("Enable Audio Engine", audioEnabled)) {
-            val nextVal = audioEnabled.get()
-            if (nextVal != session.uiTheme.audioEngineEnabled) {
-                session.uiTheme.audioEngineEnabled = nextVal
-                session.uiTheme.saveSettings()
-                if (nextVal) session.audioEngine.start() else session.audioEngine.stop()
-            }
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Toggle audio capture and analysis. Disabling stops audio processing.")
-        }
-
-        if (session.uiTheme.audioEngineEnabled) {
-            ImGui.spacing()
-            session.uiTheme.body("Audio Backend:")
-            val backends = llm.slop.liquidlsd.audio.AudioEngine.AudioBackendMode.values()
-            val backendNames = arrayOf("Auto (JACK -> Java Sound fallback)", "JACK Only (Linux Pro Audio)", "Java Sound Only (Cross-Platform)")
-            val currentBackendIdx = imgui.type.ImInt(session.audioEngine.backendMode.ordinal)
-            if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
-                val nextBackend = backends[currentBackendIdx.get()]
-                session.audioEngine.selectDevice(session.audioEngine.selectedDeviceName, nextBackend)
-            }
-
-            ImGui.spacing()
-            session.uiTheme.body("Input Hardware Device:")
-            val devices = session.audioEngine.getAvailableInputDevices()
-            val deviceNames = devices.map { it.name }.toTypedArray()
-            val currentDeviceIdx = imgui.type.ImInt(
-                devices.indexOfFirst { it.name == session.audioEngine.selectedDeviceName }.coerceAtLeast(0)
-            )
-            if (ImGui.combo("##InputDevice", currentDeviceIdx, deviceNames)) {
-                val chosenDevice = devices[currentDeviceIdx.get()]
-                session.audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
-            }
-
-            ImGui.spacing()
-            session.uiTheme.caption("Active Backend: ${session.audioEngine.getActiveBackendName()}")
-        }
+        AudioEnginePanel.drawContent(session)
     }
 
     private fun drawMidiControlSettings(session: llm.slop.liquidlsd.SessionContext) {

@@ -1,104 +1,237 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
-import imgui.flag.ImGuiCond
-import imgui.flag.ImGuiWindowFlags
+import imgui.flag.ImGuiTableColumnFlags
+import imgui.flag.ImGuiTableFlags
+import imgui.type.ImBoolean
+import imgui.type.ImInt
 import llm.slop.liquidlsd.audio.AudioEngine
+import llm.slop.liquidlsd.audio.BeatDetectionMode
+import llm.slop.liquidlsd.audio.BeatDetectionSettings
+import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.SignalState
 import llm.slop.liquidlsd.audio.SystemAudioVolume
-import llm.slop.liquidlsd.cv.CVRegistry
+import llm.slop.liquidlsd.midi.MidiEngine
 
 /**
- * Overlay panel that displays a real-time monitor for the audio engine:
- * - Live BPM readout with a flashing beat visualizer.
- * - Raw audio input oscilloscope.
- * - Oscilloscopes for all sound-derived Control Voltage (CV) signals.
+ * Dedicated UI component for the Audio Engine settings and real-time monitor:
+ * - Device & backend selection (Auto, JACK, Java Sound).
+ * - Real-time BPM readout with flashing beat indicator.
+ * - Auto Beat Detection parameters & preset buttons.
+ * - Input gain and system recording volume controls.
+ * - Raw audio buffer oscilloscope and sound-derived Control Voltage (CV) oscilloscopes.
+ *
+ * Rendered within the "Audio Engine" category of [SettingsPanel].
  */
 object AudioEnginePanel {
 
-    private const val POPUP_ID = "Audio Engine##modal"
-    private const val MODAL_W = 1080f
-    private const val MODAL_MARGIN = 48f
-    private const val MIN_MODAL_W = 640f
-    private const val MIN_MODAL_H = 360f
-
-    // Pre-allocated arrays to avoid runtime allocations
+    // Pre-allocated arrays and primitive wrappers to avoid runtime allocations
     private val rawSamples = FloatArray(1024)
     private val cvSamples = FloatArray(200)
 
     private val manualBpmArr = FloatArray(1)
     private val gainArr = FloatArray(1)
     private val sysVolArr = FloatArray(1)
-    
+
     // Beat Detection UI arrays
     private val floorArr = IntArray(1)
     private val ceilArr = IntArray(1)
-    private val resArr = FloatArray(1)
     private val winLenArr = FloatArray(1)
-    private val pllArr = FloatArray(1)
-    private val isLocked = imgui.type.ImBoolean()
+    private val thresholdArr = FloatArray(1)
+    private val pllRateArr = FloatArray(1)
+    private val biquadQArr = FloatArray(1)
+    private val isLocked = ImBoolean()
 
-    fun open() = ImGui.openPopup(POPUP_ID)
+    // Device & Backend UI wrappers
+    private val isAudioEnabled = ImBoolean()
+    private val currentBackendIdx = ImInt()
+    private val currentDeviceIdx = ImInt()
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, displayWidth: Float, displayHeight: Float) {
-        val modalW = MODAL_W.coerceAtMost((displayWidth - MODAL_MARGIN).coerceAtLeast(MIN_MODAL_W))
-        val modalH = (displayHeight - MODAL_MARGIN).coerceAtLeast(MIN_MODAL_H)
+    private val backendNames = arrayOf(
+        "Auto (JACK -> Java Sound fallback)",
+        "JACK Only (Linux Pro Audio)",
+        "Java Sound Only (Cross-Platform)"
+    )
 
-        // Center the modal
-        ImGui.setNextWindowPos(
-            displayWidth * 0.5f, displayHeight * 0.5f,
-            ImGuiCond.Always, 0.5f, 0.5f
-        )
-        ImGui.setNextWindowSize(modalW, modalH, ImGuiCond.Always)
+    private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
 
-        val flags = ImGuiWindowFlags.NoCollapse or
-                    ImGuiWindowFlags.NoResize or
-                    ImGuiWindowFlags.NoMove
+    private val cvSignals = arrayOf(
+        CvSignalDef("audio_amp", "Amplitude (RMS)", ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, 1.0f)), // Neon Cyan
+        CvSignalDef("audio_bass", "Bass Band (Low-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, 1.0f)), // Neon Pink
+        CvSignalDef("audio_mid", "Mid Band (Band-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.1f, 1.0f)), // Neon Orange
+        CvSignalDef("audio_high", "High Band (High-pass)", ImGui.colorConvertFloat4ToU32(0.1f, 0.9f, 0.8f, 1.0f)), // Neon Teal
+        CvSignalDef("beatSine", "Beat Sine (Oscillator)", ImGui.colorConvertFloat4ToU32(0.6f, 0.4f, 1.0f, 1.0f)), // Neon Purple
+        CvSignalDef("trigger_onset", "Onset Signal", ImGui.colorConvertFloat4ToU32(0.9f, 0.8f, 0.1f, 1.0f)), // Neon Yellow
+        CvSignalDef("trigger_accent", "Accent Level (Decay)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.3f, 1.0f)) // Neon Red
+    )
 
-        if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
+    /**
+     * Opens the Settings modal focused directly on the Audio Engine tab.
+     */
+    fun open() {
+        SettingsPanel.open(SettingsPanel.Category.AUDIO_ENGINE)
+    }
+
+    /**
+     * Renders the complete Audio Engine settings and real-time monitor content inside [SettingsPanel].
+     */
+    fun drawContent(session: llm.slop.liquidlsd.SessionContext) {
+        val theme = session.uiTheme
+        val audioEngine = session.audioEngine
 
         // ---------------------------------------------------------------------
-        // Header: Title & Info
+        // 1. Audio Backend & Input Device Configuration
         // ---------------------------------------------------------------------
-        session.uiTheme.h2("${Icons.ACTIVITY} Audio Engine Monitor")
+        theme.h2("${Icons.ACTIVITY} Audio Engine & Input Device")
+        ImGui.separator()
+        ImGui.spacing()
+
+        isAudioEnabled.set(theme.audioEngineEnabled)
+        if (ImGui.checkbox("Enable Audio Engine", isAudioEnabled)) {
+            val nextVal = isAudioEnabled.get()
+            if (nextVal != theme.audioEngineEnabled) {
+                theme.audioEngineEnabled = nextVal
+                theme.saveSettings()
+                if (nextVal) audioEngine.start() else audioEngine.stop()
+            }
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Toggle audio capture and analysis. Disabling stops audio processing.")
+        }
+
+        if (!theme.audioEngineEnabled) {
+            ImGui.spacing()
+            theme.caption("Audio engine is currently disabled. Enable it above to process live audio and CV signals.")
+            return
+        }
+
+        ImGui.spacing()
+
+        // Audio Backend Selection
+        theme.body("Audio Backend:")
+        val backends = AudioEngine.AudioBackendMode.values()
+        currentBackendIdx.set(audioEngine.backendMode.ordinal)
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
+        if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
+            val nextBackend = backends[currentBackendIdx.get()]
+            audioEngine.selectDevice(audioEngine.selectedDeviceName, nextBackend)
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Select audio capture backend (JACK for low-latency Linux, Java Sound for cross-platform).")
+        }
+
+        ImGui.spacing()
+
+        // Hardware Input Device Selection
+        theme.body("Input Hardware Device:")
+        val devices = audioEngine.getAvailableInputDevices()
+        val deviceNames = devices.map { it.name }.toTypedArray()
+        val currentDevIdx = devices.indexOfFirst { it.name == audioEngine.selectedDeviceName }.coerceAtLeast(0)
+        currentDeviceIdx.set(currentDevIdx)
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
+        if (ImGui.combo("##InputDevice", currentDeviceIdx, deviceNames)) {
+            val chosenDevice = devices[currentDeviceIdx.get()]
+            audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Select the audio input capture device.")
+        }
+
+        ImGui.spacing()
+
+        // Backend Status & Reconnection Options
+        val backend = audioEngine.getActiveBackendName()
+        val isAudioActive = audioEngine.isActive()
+        val state = audioEngine.currentState
+
+        ImGui.alignTextToFramePadding()
+        theme.body("Driver: ")
+        ImGui.sameLine()
+        theme.bodyColored(0.2f, 0.7f, 0.9f, 1.0f, backend)
+        ImGui.sameLine(0f, 20f)
+        theme.body("Sync State: ")
+        ImGui.sameLine()
+        when (state) {
+            SignalState.SILENT -> theme.bodyColored(0.5f, 0.5f, 0.5f, 1.0f, "SILENT")
+            SignalState.ACTIVE -> theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "ACTIVE")
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Active: Signal detected and tracking tempo. Silent: No input audio or level too low.")
+        }
+
+        if (!isAudioActive) {
+            ImGui.spacing()
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.35f, 0.35f, 1.0f)
+            ImGui.textWrapped("${Icons.ALERT} Warning: Audio Engine is inactive. No audio signal received.")
+            ImGui.popStyleColor()
+            ImGui.spacing()
+            if (ImGui.button("${Icons.REFRESH} Retry Connection", 220f, 28f)) {
+                Thread {
+                    audioEngine.tryReconnect(force = true)
+                }.start()
+            }
+            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+                ImGui.setTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
+            }
+        } else if (backend == "Java Sound") {
+            ImGui.spacing()
+            if (ImGui.button("${Icons.REFRESH} Switch to JACK Audio", 220f, 28f)) {
+                Thread {
+                    audioEngine.tryReconnect(force = true)
+                }.start()
+            }
+            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+                ImGui.setTooltip("Stops Java Sound and attempts to connect to a running JACK/PipeWire audio server.")
+            }
+        }
+
+        // MIDI Controllers Status
+        val midiCount = MidiEngine.getActiveDeviceCount()
+        ImGui.spacing()
+        if (midiCount == 0) {
+            theme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "MIDI: No hardware controllers detected.")
+        } else {
+            theme.captionColored(0.2f, 0.9f, 0.4f, 1.0f, "MIDI: $midiCount active MIDI controller(s) connected.")
+        }
+
+        ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
         // ---------------------------------------------------------------------
-        // 2-Column Area
+        // 2. Real-Time BPM Readout & Beat Synchronization
         // ---------------------------------------------------------------------
-        if (ImGui.beginTable("##audio_layout_table", 2)) {
-            ImGui.tableNextColumn()
+        theme.h2("${Icons.SETTINGS} Beat Sync & Detection")
+        ImGui.separator()
+        ImGui.spacing()
 
-        // BPM Sync & Flashing Beat Indicator
-        val bpm = session.audioEngine.getEstimatedBpm()
+        val bpm = audioEngine.getEstimatedBpm()
         val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
         val beatPhase = totalBeats % 1.0
         val flashIntensity = if (beatPhase < 0.25) {
-            (1.0 - (beatPhase / 0.25)).toFloat() // linear decay over 1/4 of a beat
+            (1.0 - (beatPhase / 0.25)).toFloat()
         } else {
             0.0f
         }
 
         ImGui.alignTextToFramePadding()
-        session.uiTheme.h3("BPM: ")
+        theme.h3("BPM: ")
         ImGui.sameLine()
-        
-        // Pulse the BPM text color slightly on beat
+
         val r = 1.0f
         val g = 0.8f + 0.2f * (1.0f - flashIntensity)
         val b = 0.2f + 0.8f * (1.0f - flashIntensity)
-        session.uiTheme.h3Colored(r, g, b, 1.0f, "%.1f".format(bpm))
+        theme.h3Colored(r, g, b, 1.0f, "%.1f".format(bpm))
 
         ImGui.sameLine(0f, 12f)
-        
+
         // Beat flashing dot
         val indicatorSize = 14f
         val curX = ImGui.getCursorScreenPosX()
         val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
         ImGui.dummy(indicatorSize, indicatorSize)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Real-time tempo estimate. Flashes on the detected beat phase.")
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Real-time tempo estimate. Flashes on detected beat phase.")
         }
         val dl = ImGui.getWindowDrawList()
         val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
@@ -106,310 +239,147 @@ object AudioEnginePanel {
         dl.addCircleFilled(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, indicatorCol)
         dl.addCircle(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, borderCol, 16, 1.0f)
 
-        ImGui.spacing()
-
-        // Display tracking state
-        val state = session.audioEngine.currentState
-        val backend = session.audioEngine.getActiveBackendName()
-
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.body("Sync State: ")
-        ImGui.sameLine()
-        when (state) {
-            SignalState.SILENT -> session.uiTheme.bodyColored(0.5f, 0.5f, 0.5f, 1.0f, "SILENT")
-            SignalState.ACTIVE -> session.uiTheme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "ACTIVE")
+        ImGui.sameLine(0f, 24f)
+        isLocked.set(audioEngine.isBpmLocked)
+        if (ImGui.checkbox("Lock to Manual BPM", isLocked)) {
+            audioEngine.isBpmLocked = isLocked.get()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Active: Signal detected and tracking tempo. Silent: No input audio or level too low.")
-        }
-
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.body("Audio Driver: ")
-        ImGui.sameLine()
-        session.uiTheme.bodyColored(0.2f, 0.7f, 0.9f, 1.0f, backend)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("The active audio input capture backend.")
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
         }
 
         ImGui.spacing()
 
-        // Show inactive banner or options to switch to JACK if using Java Sound fallback
-        if (!session.audioEngine.isActive()) {
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.3f, 0.3f, 1.0f)
-            ImGui.textWrapped("Warning: Audio Engine is inactive. No audio source detected.")
-            ImGui.popStyleColor()
-            session.uiTheme.caption("You can enable JACK in Settings or run a JACK/PipeWire backend.")
-            ImGui.spacing()
-            if (ImGui.button("Retry JACK Connection", ImGui.getContentRegionAvailX(), 0f)) {
-                Thread {
-                    session.audioEngine.tryReconnect(force = true)
-                }.start()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
-            }
-            ImGui.spacing()
-        } else if (backend == "Java Sound") {
-            if (ImGui.button("Switch to JACK Audio", ImGui.getContentRegionAvailX(), 0f)) {
-                Thread {
-                    session.audioEngine.tryReconnect(force = true)
-                }.start()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Stops Java Sound and attempts to connect to a running JACK/PipeWire audio server.")
-            }
-            ImGui.spacing()
+        // Manual BPM Slider
+        ImGui.alignTextToFramePadding()
+        theme.body("Manual BPM:")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(180f)
+        manualBpmArr[0] = audioEngine.manualBpm
+        if (ImGui.sliderFloat("##manual_bpm", manualBpmArr, 40f, 200f, "%.1f")) {
+            audioEngine.manualBpm = manualBpmArr[0]
+            audioEngine.setBpmDirectly(manualBpmArr[0])
+            theme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Set fallback tempo. Used when 'Lock to Manual BPM' is active or input signal is silent.")
         }
 
-        // MIDI status
-        val midiCount = llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount()
-        if (midiCount == 0) {
+        ImGui.spacing()
+
+        // Auto Beat Detection Parameters
+        val settings = audioEngine.beatDetector.settings
+
+        theme.body("Beat Detection Mode:")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(180f)
+        if (ImGui.beginCombo("##BeatDetectionMode", settings.mode.name)) {
+            BeatDetectionMode.values().forEach { mode ->
+                val isSelected = settings.mode == mode
+                if (ImGui.selectable(mode.name, isSelected)) {
+                    settings.mode = mode
+                }
+                if (isSelected) ImGui.setItemDefaultFocus()
+            }
+            ImGui.endCombo()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Select algorithm used for beat tracking (e.g., spectral energy flux).")
+        }
+
+        ImGui.sameLine(0f, 16f)
+        theme.body("Target:")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(140f)
+        if (ImGui.beginCombo("##BeatDetectionTarget", settings.target.name)) {
+            AudioTarget.values().forEach { target ->
+                val isSelected = settings.target == target
+                if (ImGui.selectable(target.name, isSelected)) {
+                    settings.target = target
+                }
+                if (isSelected) ImGui.setItemDefaultFocus()
+            }
+            ImGui.endCombo()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Choose which audio input channel to analyze (Left, Right, or Mixed Mono).")
+        }
+
+        ImGui.spacing()
+
+        // Detection Presets
+        theme.body("Presets:")
+        ImGui.sameLine()
+        if (ImGui.button("High Accuracy")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Apply configuration tuned for precise tempo detection.")
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Balanced")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Apply configuration balanced between latency and precision.")
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Eco")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Apply configuration with low CPU usage.")
+        }
+
+        ImGui.spacing()
+
+        floorArr[0] = settings.bpmSearchFloor
+        if (ImGui.sliderInt("BPM Floor", floorArr, 40, 120)) {
+            settings.bpmSearchFloor = floorArr[0]
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Minimum limit for tempo estimation to prevent half-tempo octave errors.")
+        }
+
+        ceilArr[0] = settings.bpmSearchCeiling
+        if (ImGui.sliderInt("BPM Ceiling", ceilArr, 120, 240)) {
+            settings.bpmSearchCeiling = ceilArr[0]
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Maximum limit for tempo estimation to prevent double-tempo octave errors.")
+        }
+
+        winLenArr[0] = settings.analysisWindowLength
+        if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) {
+            settings.analysisWindowLength = winLenArr[0]
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Duration of onset history buffer analyzed for autocorrelation.")
+        }
+
+        thresholdArr[0] = settings.energyThreshold
+        if (ImGui.sliderFloat("Energy Threshold", thresholdArr, 1.0f, 3.0f, "%.2f")) {
+            settings.energyThreshold = thresholdArr[0]
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Threshold multiplier for energy-difference trigger.")
+        }
+
+        pllRateArr[0] = settings.pllAdaptationRate
+        if (ImGui.sliderFloat("PLL Adaptation", pllRateArr, 0.01f, 1.0f, "%.2f")) {
+            settings.pllAdaptationRate = pllRateArr[0]
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("How quickly the PLL tracks tempo changes.")
+        }
+
+        biquadQArr[0] = settings.biquadQ
+        if (ImGui.sliderFloat("Resonator Q", biquadQArr, 0.5f, 10.0f, "%.2f")) {
+            settings.biquadQ = biquadQArr[0]
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Quality factor (resonance) for the Complex Domain biquad filter.")
+        }
+
+        if (!audioEngine.beatDetector.isTargetLevelSufficient) {
+            ImGui.spacing()
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
-            ImGui.textWrapped("Warning: No MIDI devices detected. Connect a controller to map controls.")
+            ImGui.textWrapped("${Icons.ALERT} Low Signal: Not enough energy in the selected target band (${settings.target.name}) for reliable analysis. Consider switching the Target to HIGH or UNFILTERED if playing from small laptop speakers.")
             ImGui.popStyleColor()
-        } else {
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.2f, 0.9f, 0.4f, 1.0f)
-            ImGui.textWrapped("MIDI Status: $midiCount active MIDI input device(s) connected.")
-            ImGui.popStyleColor()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Displays the count of connected MIDI input controllers.")
-        }
-        ImGui.spacing()
-
-        // Beat Sync Settings
-        session.uiTheme.h3("${Icons.SETTINGS} Beat Sync Settings")
-
-            ImGui.alignTextToFramePadding()
-            session.uiTheme.body("Manual BPM:")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(180f)
-            manualBpmArr[0] = session.audioEngine.manualBpm
-            if (ImGui.sliderFloat("##manual_bpm", manualBpmArr, 40f, 200f, "%.1f")) {
-                session.audioEngine.manualBpm = manualBpmArr[0]
-                session.audioEngine.setBpmDirectly(manualBpmArr[0])
-                session.uiTheme.saveSettings()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Set fallback tempo. Used when 'Lock to Manual BPM' is active or input signal is silent.")
-            }
-
-            ImGui.spacing()
-            
-            // -- New Beat Detection UI --
-            session.uiTheme.h3("${Icons.ZAP} Auto Beat Detection")
-            ImGui.spacing()
-            
-            val settings = session.audioEngine.beatDetector.settings
-            
-            if (ImGui.beginCombo("Mode", settings.mode.name)) {
-                llm.slop.liquidlsd.audio.BeatDetectionMode.values().forEach { mode ->
-                    val isSelected = settings.mode == mode
-                    if (ImGui.selectable(mode.name, isSelected)) {
-                        settings.mode = mode
-                    }
-                    if (isSelected) ImGui.setItemDefaultFocus()
-                }
-                ImGui.endCombo()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Select algorithm used for beat tracking (e.g., spectral energy flux).")
-            }
-            
-            if (ImGui.beginCombo("Target", settings.target.name)) {
-                llm.slop.liquidlsd.audio.AudioTarget.values().forEach { target ->
-                    val isSelected = settings.target == target
-                    if (ImGui.selectable(target.name, isSelected)) {
-                        settings.target = target
-                    }
-                    if (isSelected) ImGui.setItemDefaultFocus()
-                }
-                ImGui.endCombo()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Choose which audio input channel to analyze (Left, Right, or Mixed Mono).")
-            }
-
-            ImGui.spacing()
-            
-                        floorArr[0] = settings.bpmSearchFloor
-            if (ImGui.sliderInt("BPM Floor", floorArr, 40, 120)) { 
-                settings.bpmSearchFloor = floorArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Minimum limit for tempo estimation to prevent half-tempo octave tracking errors.")
-            }
-            
-            ceilArr[0] = settings.bpmSearchCeiling
-            if (ImGui.sliderInt("BPM Ceiling", ceilArr, 120, 240)) { 
-                settings.bpmSearchCeiling = ceilArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Maximum limit for tempo estimation to prevent double-tempo octave tracking errors.")
-            }
-            
-            val winLenArr = FloatArray(1) { settings.analysisWindowLength }
-            if (ImGui.sliderFloat("Analysis Length (s)", winLenArr, 1.0f, 8.0f, "%.1f")) {
-                settings.analysisWindowLength = winLenArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Duration of onset history buffer analyzed for autocorrelation and beat estimation.")
-            }
-
-            val thresholdArr = FloatArray(1) { settings.energyThreshold }
-            if (ImGui.sliderFloat("Energy Threshold", thresholdArr, 1.0f, 3.0f, "%.2f")) {
-                settings.energyThreshold = thresholdArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Threshold multiplier for energy-difference trigger.")
-            }
-
-            val pllRateArr = FloatArray(1) { settings.pllAdaptationRate }
-            if (ImGui.sliderFloat("PLL Adaptation", pllRateArr, 0.01f, 1.0f, "%.2f")) {
-                settings.pllAdaptationRate = pllRateArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("How quickly the PLL tracks tempo changes.")
-            }
-
-            val biquadQArr = FloatArray(1) { settings.biquadQ }
-            if (ImGui.sliderFloat("Resonator Q", biquadQArr, 0.5f, 10.0f, "%.2f")) {
-                settings.biquadQ = biquadQArr[0]
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Quality factor (resonance) for the Complex Domain biquad filter.")
-            }
-            
-            if (!session.audioEngine.beatDetector.isTargetLevelSufficient) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
-                ImGui.textWrapped("${Icons.ALERT} Low Signal: Not enough energy in the selected target band (${settings.target.name}) for reliable analysis. Consider switching the Target to HIGH or UNFILTERED if playing from small laptop speakers.")
-                ImGui.popStyleColor()
-            }
-            
-            ImGui.spacing()
-            session.uiTheme.body("Presets:")
-            ImGui.sameLine()
-            if (ImGui.button("High Accuracy")) session.audioEngine.beatDetector.applyPreset(llm.slop.liquidlsd.audio.BeatDetectionSettings.highAccuracy())
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply configuration tuned for precise tempo detection (larger FFT window).")
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Balanced")) session.audioEngine.beatDetector.applyPreset(llm.slop.liquidlsd.audio.BeatDetectionSettings.balanced())
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply configuration balanced between latency and precision.")
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Eco")) session.audioEngine.beatDetector.applyPreset(llm.slop.liquidlsd.audio.BeatDetectionSettings.eco())
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply configuration with low CPU usage (smaller FFT window).")
-            }
-            
-            ImGui.spacing()
-            isLocked.set(session.audioEngine.isBpmLocked)
-            if (ImGui.checkbox("Lock to Manual BPM", isLocked)) {
-                session.audioEngine.isBpmLocked = isLocked.get()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
-            }
-
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-
-            // 1. Raw Audio Oscilloscope
-            session.uiTheme.h3("Raw Audio Input")
-
-            gainArr[0] = session.audioEngine.inputGain
-            ImGui.alignTextToFramePadding()
-            session.uiTheme.body("Input Level Gain:")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(180f)
-            if (ImGui.sliderFloat("##input_gain", gainArr, 0.0f, 10.0f, "%.2fx")) {
-                session.audioEngine.inputGain = gainArr[0]
-                session.uiTheme.saveSettings()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Pre-amplify the incoming audio signal before analysis and oscilloscope display.")
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Reset##gain")) {
-                session.audioEngine.inputGain = 1.0f
-                session.uiTheme.saveSettings()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Reset input gain to 1.0x.")
-            }
-            ImGui.spacing()
-
-            // System input volume slider
-            if (SystemAudioVolume.isSupported) {
-                SystemAudioVolume.queryAsync()
-                sysVolArr[0] = SystemAudioVolume.systemInputVolume
-                ImGui.alignTextToFramePadding()
-                session.uiTheme.body("System Input Volume:")
-                ImGui.sameLine()
-                ImGui.setNextItemWidth(180f)
-                if (ImGui.sliderFloat("##system_gain", sysVolArr, 0.0f, 1.0f, "%.2f")) {
-                    SystemAudioVolume.updateSystemVolume(sysVolArr[0])
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("System-level recording input volume (operating system volume control).")
-                }
-                if (SystemAudioVolume.isMuted) {
-                    ImGui.sameLine()
-                    session.uiTheme.bodyColored(1f, 0.3f, 0.3f, 1f, "[MUTED]")
-                }
-                ImGui.spacing()
-            } else {
-                ImGui.alignTextToFramePadding()
-                session.uiTheme.body("System Input Volume:")
-                ImGui.sameLine()
-                session.uiTheme.caption("(System control not supported on this OS)")
-                ImGui.spacing()
-            }
-
-            session.audioEngine.rawHistory.copyTo(rawSamples)
-            val rawColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 1.0f) // Neon Green
-            OscilloscopeDrawer.drawBufferOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 90f)
-            
-            ImGui.spacing()
-
-            // Column 2: CV Oscilloscopes
-            ImGui.tableNextColumn()
-
-            // 2. Sound Derived CV Oscilloscopes
-            session.uiTheme.h3("Sound-Derived CVs")
-            ImGui.spacing()
-
-            val cvSignals = listOf(
-                Triple("audio_amp", "Amplitude (RMS)", ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, 1.0f)), // Neon Cyan
-                Triple("audio_bass", "Bass Band (Low-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, 1.0f)), // Neon Pink
-                Triple("audio_mid", "Mid Band (Band-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.1f, 1.0f)), // Neon Orange
-                Triple("audio_high", "High Band (High-pass)", ImGui.colorConvertFloat4ToU32(0.1f, 0.9f, 0.8f, 1.0f)), // Neon Teal
-                Triple("beatSine", "Beat Sine (Oscillator)", ImGui.colorConvertFloat4ToU32(0.6f, 0.4f, 1.0f, 1.0f)), // Neon Purple
-                Triple("trigger_onset", "Onset Signal", ImGui.colorConvertFloat4ToU32(0.9f, 0.8f, 0.1f, 1.0f)), // Neon Yellow
-                Triple("trigger_accent", "Accent Level (Decay)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.3f, 1.0f)) // Neon Red
-            )
-
-            for ((id, title, color) in cvSignals) {
-                val history = session.cvRegistry.getHistory(id)
-                if (history != null) {
-                    history.copyTo(cvSamples)
-                    val minV = if (id == "beatSine") -1.0f else 0.0f
-                    val maxV = 1.0f
-                    OscilloscopeDrawer.drawBufferOscilloscope(session, title,
-                        cvSamples,
-                        minV,
-                        maxV,
-                        color,
-                        60f
-                    )
-                    ImGui.spacing()
-                }
-            }
-
-            ImGui.endTable()
         }
 
         ImGui.spacing()
@@ -417,15 +387,95 @@ object AudioEnginePanel {
         ImGui.spacing()
 
         // ---------------------------------------------------------------------
-        // Footer: Close Button
+        // 3. Raw Audio Input Level & Oscilloscope
         // ---------------------------------------------------------------------
-        val closeW = 120f
-        ImGui.setCursorPosX(ImGui.getWindowContentRegionMinX() + (ImGui.getContentRegionAvailX() - closeW) * 0.5f)
-        if (ImGui.button("Close", closeW, 0f)) {
-            ImGui.closeCurrentPopup()
+        theme.h2("Raw Audio Input")
+        ImGui.separator()
+        ImGui.spacing()
+
+        gainArr[0] = audioEngine.inputGain
+        ImGui.alignTextToFramePadding()
+        theme.body("Input Level Gain:")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(180f)
+        if (ImGui.sliderFloat("##input_gain", gainArr, 0.0f, 10.0f, "%.2fx")) {
+            audioEngine.inputGain = gainArr[0]
+            theme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Pre-amplify incoming audio before analysis and oscilloscope display.")
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Reset##gain")) {
+            audioEngine.inputGain = 1.0f
+            theme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+            ImGui.setTooltip("Reset input gain to 1.0x.")
+        }
+
+        if (SystemAudioVolume.isSupported) {
+            SystemAudioVolume.queryAsync()
+            sysVolArr[0] = SystemAudioVolume.systemInputVolume
+            ImGui.alignTextToFramePadding()
+            theme.body("System Input Volume:")
+            ImGui.sameLine()
+            ImGui.setNextItemWidth(180f)
+            if (ImGui.sliderFloat("##system_gain", sysVolArr, 0.0f, 1.0f, "%.2f")) {
+                SystemAudioVolume.updateSystemVolume(sysVolArr[0])
+            }
+            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+                ImGui.setTooltip("System-level recording input volume.")
+            }
+            if (SystemAudioVolume.isMuted) {
+                ImGui.sameLine()
+                theme.bodyColored(1f, 0.3f, 0.3f, 1f, "[MUTED]")
+            }
         }
 
         ImGui.spacing()
-        ImGui.endPopup()
+        audioEngine.rawHistory.copyTo(rawSamples)
+        val rawColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 1.0f) // Neon Green
+        OscilloscopeDrawer.drawBufferOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 80f)
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // ---------------------------------------------------------------------
+        // 4. Sound-Derived CV Oscilloscopes
+        // ---------------------------------------------------------------------
+        theme.h2("Sound-Derived Control Voltages (CV)")
+        ImGui.separator()
+        ImGui.spacing()
+
+        val availW = ImGui.getContentRegionAvailX()
+        val numCols = if (availW >= 480f) 2 else 1
+
+        if (ImGui.beginTable("##cv_osc_grid", numCols, ImGuiTableFlags.SizingStretchProp)) {
+            for (i in 0 until numCols) {
+                ImGui.tableSetupColumn("##col_$i", ImGuiTableColumnFlags.WidthStretch, 1f)
+            }
+
+            for (sig in cvSignals) {
+                val history = session.cvRegistry.getHistory(sig.id) ?: continue
+                ImGui.tableNextColumn()
+                history.copyTo(cvSamples)
+                val minV = if (sig.id == "beatSine") -1.0f else 0.0f
+                val maxV = 1.0f
+                OscilloscopeDrawer.drawBufferOscilloscope(
+                    session,
+                    sig.title,
+                    cvSamples,
+                    minV,
+                    maxV,
+                    sig.colorU32,
+                    55f
+                )
+                ImGui.spacing()
+            }
+            ImGui.endTable()
+        }
     }
 }
+

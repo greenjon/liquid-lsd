@@ -113,8 +113,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
-│   ├── SettingsPanel.kt        — App configuration
-│   ├── AudioEnginePanel.kt     — Audio input and beat detection settings
+│   ├── SettingsPanel.kt        — App configuration & tabbed preferences modal
+│   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Settings tab drawer)
 │   ├── ColorTunerPanel.kt      — Interactive theme editor
 │   ├── DeckControlPanel.kt     — Individual deck controls
 │   ├── MixerMonitorPanel.kt    — 2x2 monitor matrix and crossfader

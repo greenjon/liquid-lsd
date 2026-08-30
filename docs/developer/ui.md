@@ -89,6 +89,11 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, or `Deck C`) immedia
 ### 6. Custom Sliders (`CustomRangeSlider.kt` & `BeatDivisionSlider.kt`)
 - Compute row height (`h`), label positions (`labelY`), widget rows (`row2Y`), and center line (`centerY`) dynamically using font metrics (`captionHeight`, `getFrameHeight()`, and `fontScale`) to ensure the "Current:" label and slider tracks never overlap adjacent rows or widgets across all font scales.
 
+### 7. `SettingsPanel.kt` & `AudioEnginePanel.kt`
+- **Settings Category Routing**: `SettingsPanel` organizes application preferences into 8 tabs (`APPEARANCE`, `PRESET_GRID`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `BROADCAST`, `MIDI_CONTROL`, `SHORTCUTS`, `GENERAL`) and supports targeted opening via `SettingsPanel.open(category)`.
+- **Audio Engine Tab & Oscilloscopes (`AudioEnginePanel.kt`)**: The entire audio subsystem UI (driver selection, JACK reconnection, beat detection algorithms, tempo lock, input gain/system volume, and real-time raw/CV oscilloscopes) is encapsulated within `AudioEnginePanel.kt` and drawn directly within the `AUDIO_ENGINE` category of the Settings modal with zero runtime allocations.
+- **Menu Bar Quick Access**: Clicking "Audio Engine" in `MenuBar.kt` opens `SettingsPanel` focused directly on the `AUDIO_ENGINE` category.
+
 ---
 
 ## ImGui Native Memory & Allocation Rules

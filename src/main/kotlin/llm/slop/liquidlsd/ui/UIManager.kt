@@ -51,9 +51,9 @@ class UIManager(
     // Set to true for one frame when the Settings menu item is clicked; consumed
     // immediately after endMainMenuBar so openPopup runs at root ID-stack level.
     private var pendingOpenSettings = false
+    private var pendingOpenSettingsCategory: SettingsPanel.Category? = null
 
     private val splitterManager = SplitterManager()
-    private var pendingOpenAudioEngineMonitor = false
 
     private val presetState = PresetGridState()
 
@@ -68,8 +68,14 @@ class UIManager(
         popupManager = popupManager,
         presetState = presetState,
         onTriggerExitFlow = { triggerExitFlow() },
-        onOpenSettings = { pendingOpenSettings = true },
-        onOpenAudioEngineMonitor = { pendingOpenAudioEngineMonitor = true },
+        onOpenSettings = {
+            pendingOpenSettings = true
+            pendingOpenSettingsCategory = null
+        },
+        onOpenAudioEngineMonitor = {
+            pendingOpenSettings = true
+            pendingOpenSettingsCategory = SettingsPanel.Category.AUDIO_ENGINE
+        },
         onToggleOutputWindow = onToggleOutputWindow,
         isOutputWindowOpen = isOutputWindowOpen
     )
@@ -257,12 +263,9 @@ class UIManager(
         if (!session.uiTheme.cleanModeEnabled) {
             menuBar.draw(session, mixer)
             if (pendingOpenSettings) {
-                SettingsPanel.open()
+                SettingsPanel.open(pendingOpenSettingsCategory)
                 pendingOpenSettings = false
-            }
-            if (pendingOpenAudioEngineMonitor) {
-                AudioEnginePanel.open()
-                pendingOpenAudioEngineMonitor = false
+                pendingOpenSettingsCategory = null
             }
 
             if (popupManager.pendingOpenExitPopup) {
@@ -280,7 +283,6 @@ class UIManager(
                 applyFontSize(newSize)
             }
 
-            AudioEnginePanel.draw(session, displayWidth, displayHeight)
             VideoExportModal.draw(session, mixer, renderer, displayWidth, displayHeight)
 
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
