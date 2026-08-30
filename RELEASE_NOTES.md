@@ -15,6 +15,7 @@
 - **Context-Aware Button Dimming**: Dynamically dims destination buttons when redundant (e.g. `[Q]` dims when selecting an item already in the A/B Queue, `[BGQ]` dims for items in the Background Queue).
 - **Quick Audition Latch (`[🔒]`) & Smart `PV` Auto-Latch**: Toggling the padlock button arms sticky audition mode and auto-latches to **Deck PV** (Preview) by default. Clicking another deck button (`A`, `B`, `BG`) switches the latch target, while clicking the active deck button unlatches it.
 - **Single-Click & Arrow Key Auditioning**: With the padlock armed, single-clicking any preset or navigating with `↑`/`↓` arrow keys in any column immediately triggers non-blocking asynchronous patch loading (`loadDeckPresetAsync`) to the latched deck.
+- **Robot Icon Queue Toggles (`BOT` / `BOT_OFF`)**: Replaced raw text checkboxes in A/B Queue and Background Queue (`AUTO-VJ`, `AUTO-BG`) with robot icon toggle buttons (`Icons.BOT` active / `Icons.BOT_OFF` inactive), matching DJ software conventions like Mixxx.
 
 #### 2. Audio Engine Settings & Real-Time Monitor Consolidation (`llm.slop.liquidlsd.ui`)
 - **Integrated Audio Engine Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection configuration, input gain, and real-time oscilloscopes into the dedicated "Audio Engine" tab within `SettingsPanel.kt`.

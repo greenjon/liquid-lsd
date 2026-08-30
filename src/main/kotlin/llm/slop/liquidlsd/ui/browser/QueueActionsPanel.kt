@@ -43,15 +43,26 @@ object QueueActionsPanel {
         ImGui.spacing()
 
         // Controls Row
-        if (ImGui.checkbox("AUTO-VJ", session.playQueueManager.isAutoVJEnabled)) {
+        val autoVjActive = session.playQueueManager.isAutoVJEnabled
+        if (autoVjActive) {
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+        }
+        val autoVjIcon = if (autoVjActive) Icons.BOT else Icons.BOT_OFF
+        if (ImGui.button("$autoVjIcon##autoVj")) {
             val nextState = !session.playQueueManager.isAutoVJEnabled
             session.playQueueManager.isAutoVJEnabled = nextState
             if (nextState) {
                 mixer.muteCrossfadeNonMidiCv()
             }
         }
+        if (autoVjActive) {
+            ImGui.popStyleColor(4)
+        }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Enable automatic transition queue. Will cycle through queue presets at set intervals.")
+            ImGui.setTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
         }
         
         ImGui.sameLine()

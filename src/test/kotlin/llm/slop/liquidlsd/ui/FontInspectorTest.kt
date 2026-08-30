@@ -61,7 +61,9 @@ class FontInspectorTest {
             "ALIGN_RIGHT_LINE" to 0xe459,
             "LOCK" to 0xe111,
             "UNLOCK" to 0xe19f,
-            "LOCK_OPEN" to 0xe110
+            "LOCK_OPEN" to 0xe110,
+            "BOT" to 0xe1bb,
+            "BOT_OFF" to 0xe5e0
         )
 
         for ((name, codepoint) in codepointsToCheck) {

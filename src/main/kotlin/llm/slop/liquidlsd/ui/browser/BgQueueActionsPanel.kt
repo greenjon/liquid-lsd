@@ -43,11 +43,22 @@ object BgQueueActionsPanel {
         ImGui.spacing()
 
         // Controls Row
-        if (ImGui.checkbox("AUTO-BG", BgQueueManager.isAutoBGEnabled)) {
+        val autoBgActive = BgQueueManager.isAutoBGEnabled
+        if (autoBgActive) {
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.9f, 0.35f, 0.65f, 1.0f) // Rose/magenta for active
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.4f, 0.1f, 0.3f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.5f, 0.15f, 0.4f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.3f, 0.05f, 0.2f, 1.0f)
+        }
+        val autoBgIcon = if (autoBgActive) Icons.BOT else Icons.BOT_OFF
+        if (ImGui.button("$autoBgIcon##autoBg")) {
             BgQueueManager.isAutoBGEnabled = !BgQueueManager.isAutoBGEnabled
         }
+        if (autoBgActive) {
+            ImGui.popStyleColor(4)
+        }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Enable automatic background queue. Will cycle through background presets with smooth dip-to-black transitions.")
+            ImGui.setTooltip("Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.")
         }
         
         ImGui.sameLine()

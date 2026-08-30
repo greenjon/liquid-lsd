@@ -108,8 +108,8 @@ The Middle column allows inspecting and arranging setlists side-by-side with you
 
 The 3rd column displays the live sequence of presets for main A/B deck Auto-VJ and playback.
 
-- **`AUTO-VJ`**: Enables automated cycling through queue presets at configured crossfade intervals.
-- **Repeat (`🔁`) & Shuffle (`🔀`)**: Controls queue cycle loop and randomization.
+- **Auto-VJ (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automated cycling through queue presets at configured crossfade intervals.
+- **Repeat & Shuffle**: Controls queue cycle loop and randomization.
 - **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
 
 ---
@@ -118,9 +118,9 @@ The 3rd column displays the live sequence of presets for main A/B deck Auto-VJ a
 
 The 4th column manages automated cycling and sequential playback for the dedicated background layer (`Deck BG`).
 
-- **`AUTO-BG`**: Enables automatic cycling through background presets.
+- **Auto-BG (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automatic cycling through background presets.
 - **Dip-to-Black Transitions**: Smoothly fades out the current background, loads the new preset, and fades back in beneath the live foreground.
-- **Repeat (`🔁`) & Shuffle (`🔀`)**: Continuous loop and shuffle for background visuals.
+- **Repeat & Shuffle**: Continuous loop and shuffle for background visuals.
 - **Double-Click & Right-Click Play**: Trigger instant cuts or dip-to-black transitions on demand.
 
 ---
