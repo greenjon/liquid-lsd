@@ -81,28 +81,64 @@ class DeckPresetController(
         session.presetManager.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
     }
 
-    fun handleUtilityAction(mixer: Mixer, mode: Int, from: Deck, to: Deck) {
-        val isDirty = session.presetManager.isDeckDirty(to, mixer)
+    /**
+     * Guards any operation that overwrites or resets a deck (eject, load, move, copy, swap, new preset).
+     * If the target deck is clean, [onProceed] is called immediately.
+     * If dirty, respects [UITheme.AutoVjDirtyBehavior]:
+     * - AUTO_SAVE: Silently saves the dirty preset to disk, then runs [onProceed].
+     * - AUTO_DISCARD: Runs [onProceed] immediately without saving.
+     * - SKIP (Prompt): Asks the user via [PopupManager] confirmation modal.
+     */
+    fun guardDeckTransition(mixer: Mixer, deck: Deck, onProceed: () -> Unit) {
+        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
         if (!isDirty) {
+            onProceed()
+            return
+        }
+
+        when (session.uiTheme.autoVjDirtyBehavior) {
+            UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
+                val activeName = when {
+                    deck === mixer.deckA -> session.presetManager.activePresetA
+                    deck === mixer.deckB -> session.presetManager.activePresetB
+                    deck === mixer.deckBG -> session.presetManager.activePresetBG
+                    else -> session.presetManager.activePresetPV
+                }
+                val deckLabel = when {
+                    deck === mixer.deckA -> "Deck A"
+                    deck === mixer.deckB -> "Deck B"
+                    deck === mixer.deckBG -> "Deck BG"
+                    else -> "Deck PV"
+                }
+                val saveName = if (!activeName.isNullOrBlank() && activeName != "None") {
+                    activeName
+                } else {
+                    "AutoSave_${deckLabel.replace(" ", "")}_${System.currentTimeMillis()}"
+                }
+                saveDeckPreset(mixer, saveName, deck, deck === mixer.deckA)
+                onProceed()
+            }
+            UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
+                onProceed()
+            }
+            UITheme.AutoVjDirtyBehavior.SKIP -> {
+                val deckLabel = when {
+                    deck === mixer.deckA -> "Deck A"
+                    deck === mixer.deckB -> "Deck B"
+                    deck === mixer.deckBG -> "Deck BG"
+                    else -> "Deck PV"
+                }
+                popupManager.requestDeckConfirm(deck, deckLabel, onProceed)
+            }
+        }
+    }
+
+    fun handleUtilityAction(mixer: Mixer, mode: Int, from: Deck, to: Deck) {
+        guardDeckTransition(mixer, to) {
             when (mode) {
                 0 -> session.presetManager.moveDeck(mixer, from, to)
                 1 -> session.presetManager.copyDeck(mixer, from, to)
                 2 -> session.presetManager.swapDecks(mixer, from, to)
-            }
-        } else {
-            when (to) {
-                mixer.deckA -> {
-                    popupManager.pendingDeckActionA = when (mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
-                    popupManager.pendingDeckUtilitySourceA = from
-                }
-                mixer.deckB -> {
-                    popupManager.pendingDeckActionB = when (mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
-                    popupManager.pendingDeckUtilitySourceB = from
-                }
-                mixer.deckC, mixer.deckPV -> {
-                    popupManager.pendingDeckActionC = when (mode) { 0 -> PopupManager.PendingDeckAction.MOVE; 1 -> PopupManager.PendingDeckAction.COPY; else -> PopupManager.PendingDeckAction.SWAP }
-                    popupManager.pendingDeckUtilitySourceC = from
-                }
             }
         }
     }
@@ -143,37 +179,26 @@ class DeckPresetController(
         }
     }
 
-    fun handleEjectDeck(mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
-        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-        if (!isDirty) {
+    fun handleEjectDeck(mixer: Mixer, deck: Deck, isDeckA: Boolean = false, isDeckC: Boolean = false) {
+        guardDeckTransition(mixer, deck) {
             performEjectDeck(mixer, deck)
-        } else {
-            when (session.uiTheme.autoVjDirtyBehavior) {
-                UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
-                    val activeName = when {
-                        deck === mixer.deckA -> session.presetManager.activePresetA
-                        deck === mixer.deckB -> session.presetManager.activePresetB
-                        deck === mixer.deckBG -> session.presetManager.activePresetBG
-                        else -> session.presetManager.activePresetPV
-                    }
-                    if (activeName != null && activeName != "None") {
-                        saveDeckPreset(mixer, activeName, deck, isDeckA)
-                    }
-                    performEjectDeck(mixer, deck)
-                }
-                UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
-                    performEjectDeck(mixer, deck)
-                }
-                UITheme.AutoVjDirtyBehavior.SKIP -> {
-                    if (deck === mixer.deckA) {
-                        popupManager.pendingDeckActionA = PopupManager.PendingDeckAction.NEW
-                    } else if (deck === mixer.deckB) {
-                        popupManager.pendingDeckActionB = PopupManager.PendingDeckAction.NEW
-                    } else {
-                        popupManager.pendingDeckActionC = PopupManager.PendingDeckAction.NEW
-                    }
-                }
-            }
+        }
+    }
+
+    fun loadDeckPresetSafely(mixer: Mixer, deck: Deck, file: File) {
+        guardDeckTransition(mixer, deck) {
+            session.presetManager.loadDeckPresetAsync(
+                file,
+                isDeckA = deck === mixer.deckA,
+                isDeckBG = deck === mixer.deckBG,
+                isDeckPV = deck === mixer.deckPV || deck === mixer.deckC
+            )
+        }
+    }
+
+    fun newPresetSafely(mixer: Mixer, deck: Deck) {
+        guardDeckTransition(mixer, deck) {
+            performEjectDeck(mixer, deck)
         }
     }
 
@@ -214,65 +239,7 @@ class DeckPresetController(
     }
 
     fun triggerDeckDragDrop(file: File, deck: Deck, isDeckA: Boolean, mixer: Mixer) {
-        val isDeckC = deck === mixer.deckC
-        if (isDeckC) {
-            popupManager.pendingDeckActionC = PopupManager.PendingDeckAction.DRAG_DROP
-            popupManager.pendingDeckSourceFileC = file
-        } else if (isDeckA) {
-            popupManager.pendingDeckActionA = PopupManager.PendingDeckAction.DRAG_DROP
-            popupManager.pendingDeckSourceFileA = file
-        } else {
-            popupManager.pendingDeckActionB = PopupManager.PendingDeckAction.DRAG_DROP
-            popupManager.pendingDeckSourceFileB = file
-        }
-    }
-
-    fun onExecuteDeckAction(mixer: Mixer, deck: Deck, isDeckA: Boolean, action: PopupManager.PendingDeckAction, targetPreset: String?) {
-        when (action) {
-            PopupManager.PendingDeckAction.NEW -> {
-                deck.reset()
-                when {
-                    deck === mixer.deckA -> {
-                        session.presetManager.activePresetA = null
-                        session.presetManager.cachedDtoA = null
-                    }
-                    deck === mixer.deckB -> {
-                        session.presetManager.activePresetB = null
-                        session.presetManager.cachedDtoB = null
-                    }
-                    deck === mixer.deckC -> {
-                        session.presetManager.activePresetC = null
-                        session.presetManager.cachedDtoC = null
-                    }
-                }
-            }
-            PopupManager.PendingDeckAction.LOAD_FILE -> {
-                performLoadDeckPreset(isDeckA)
-            }
-            PopupManager.PendingDeckAction.LOAD_PRESET -> {
-                if (targetPreset != null) {
-                    if (targetPreset == "None") {
-                        when {
-                            deck === mixer.deckA -> {
-                                session.presetManager.activePresetA = null
-                                session.presetManager.cachedDtoA = null
-                            }
-                            deck === mixer.deckB -> {
-                                session.presetManager.activePresetB = null
-                                session.presetManager.cachedDtoB = null
-                            }
-                            deck === mixer.deckC -> {
-                                session.presetManager.activePresetC = null
-                                session.presetManager.cachedDtoC = null
-                            }
-                        }
-                    } else {
-                        loadDeckPreset(mixer, targetPreset, deck, deck === mixer.deckA)
-                    }
-                }
-            }
-            else -> {}
-        }
+        loadDeckPresetSafely(mixer, deck, file)
     }
 
     fun drawFileBrowsers() {

@@ -80,11 +80,20 @@ When `triggerNext()` is called:
 - **Deck C (Overlay)**: Manual loading on Deck C is independent and never affects Auto-VJ or deck staging.
 - **Auto-VJ Mid-Session Arming**: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.
 
-### Dirty Deck Handling Behaviors (`UITheme.autoVjDirtyBehavior`)
-If the target deck contains unsaved manual changes:
-- **`SKIP`**: Aborts queue advancement to protect unsaved work.
-- **`AUTO_SAVE`**: Automatically saves modified state to `library/presets/AutoVJ_<Deck>_<Timestamp>.lsd` before advancing.
-- **`AUTO_DISCARD`**: Discards manual changes and forces queue advancement.
+### Unified Dirty Deck Transition Guard (`DeckPresetController.guardDeckTransition`)
+Whenever a deck preset is replaced, ejected, overwritten, or reset through any UI pathway:
+- **Pathways Guarded**:
+  - Eject button on deck monitor toolbars
+  - Deck click-and-drag utility actions (Move, Copy, Swap)
+  - Library 4-column loader buttons (`[A] [B] [BG] [PV]`, numeric keys `1`–`4`, Quick Audition Padlock)
+  - Double-clicking presets in Preset Library or Playlist Editor
+  - "New Preset" popups in Preset Library
+  - "File -> New Preset" and "File -> Reset" in the main menu bar
+  - Dragging and dropping `.lsd` files directly onto decks
+- **Configured Behaviors (`UITheme.autoVjDirtyBehavior`)**:
+  - **`AUTO_SAVE`**: Silently saves the modified preset to disk immediately (preserving active name or creating timestamped backup) and proceeds with the transition without prompt.
+  - **`AUTO_DISCARD`**: Discards modifications immediately and executes the transition without prompt.
+  - **`SKIP` (Prompt)**: Dispatches a confirmation request to `PopupManager.requestDeckConfirm` to prompt the user (Save, Discard, or Cancel).
 
 ---
 

@@ -211,13 +211,7 @@ object PlaylistEditorPanel {
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && exists) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-
-                if (!isDirty) {
-                    session.presetManager.loadDeckPresetAsync(resolvedFile, targetIsA)
-                } else {
-                    UIManager.triggerDeckDragDrop(resolvedFile, targetDeck, targetIsA, mixer)
-                }
+                UIManager.loadDeckPresetSafely(mixer, targetDeck, resolvedFile)
             }
 
             // Drag source for reordering within playlist

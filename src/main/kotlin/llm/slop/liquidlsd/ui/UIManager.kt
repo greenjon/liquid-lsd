@@ -59,10 +59,7 @@ class UIManager(
 
     private val popupManager: PopupManager = PopupManager(
         onTriggerExit = { org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose(windowHandle, true) },
-        onSaveDeck = { name, deck, isDeckA -> currentMixer?.let { deckPresetController.saveDeckPreset(it, name, deck, isDeckA) } },
-        onExecuteDeckAction = { deck, isDeckA, action, targetPreset ->
-            currentMixer?.let { deckPresetController.onExecuteDeckAction(it, deck, isDeckA, action, targetPreset) }
-        }
+        onSaveDeck = { name, deck, isDeckA -> currentMixer?.let { deckPresetController.saveDeckPreset(it, name, deck, isDeckA) } }
     )
 
     val deckPresetController = DeckPresetController(session, popupManager)
@@ -336,13 +333,24 @@ class UIManager(
         private var instance: UIManager? = null
 
         fun triggerDeckDragDrop(file: File, deck: Deck, isDeckA: Boolean, mixer: Mixer) {
-            instance?.deckPresetController?.triggerDeckDragDrop(file, deck, isDeckA, mixer)
+            val ui = instance ?: return
+            ui.deckPresetController.loadDeckPresetSafely(mixer, deck, file)
         }
 
-        fun triggerDeckEject(deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
+        fun triggerDeckEject(deck: Deck, isDeckA: Boolean = false, isDeckC: Boolean = false) {
             val ui = instance ?: return
             val mixer = ui.currentMixer ?: return
             ui.deckPresetController.handleEjectDeck(mixer, deck, isDeckA, isDeckC)
+        }
+
+        fun loadDeckPresetSafely(mixer: Mixer, deck: Deck, file: File) {
+            val ui = instance ?: return
+            ui.deckPresetController.loadDeckPresetSafely(mixer, deck, file)
+        }
+
+        fun newPresetSafely(mixer: Mixer, deck: Deck) {
+            val ui = instance ?: return
+            ui.deckPresetController.newPresetSafely(mixer, deck)
         }
     }
 

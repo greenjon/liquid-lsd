@@ -25,24 +25,16 @@ class MenuBar(
                 if (ImGui.beginMenu("File")) {
                     if (ImGui.beginMenu("New Preset")) {
                         if (ImGui.menuItem("To Deck A")) {
-                            mixer.deckA.reset()
-                            session.presetManager.activePresetA = null
-                            session.presetManager.cachedDtoA = null
+                            UIManager.newPresetSafely(mixer, mixer.deckA)
                         }
                         if (ImGui.menuItem("To Deck B")) {
-                            mixer.deckB.reset()
-                            session.presetManager.activePresetB = null
-                            session.presetManager.cachedDtoB = null
+                            UIManager.newPresetSafely(mixer, mixer.deckB)
                         }
                         if (ImGui.menuItem("To Deck BG")) {
-                            mixer.deckBG.reset()
-                            session.presetManager.activePresetBG = null
-                            session.presetManager.cachedDtoBG = null
+                            UIManager.newPresetSafely(mixer, mixer.deckBG)
                         }
                         if (ImGui.menuItem("To Deck PV")) {
-                            mixer.deckPV.reset()
-                            session.presetManager.activePresetPV = null
-                            session.presetManager.cachedDtoPV = null
+                            UIManager.newPresetSafely(mixer, mixer.deckPV)
                         }
                         ImGui.endMenu()
                     }

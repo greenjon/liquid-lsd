@@ -48,19 +48,19 @@ object PresetListPanel {
             ImGui.textDisabled("Create new preset on:")
             ImGui.separator()
             if (ImGui.menuItem("Deck A")) {
-                UIManager.triggerDeckEject(mixer.deckA, isDeckA = true, isDeckC = false)
+                UIManager.newPresetSafely(mixer, mixer.deckA)
                 presetState.activeTopTab = "Deck A"
             }
             if (ImGui.menuItem("Deck B")) {
-                UIManager.triggerDeckEject(mixer.deckB, isDeckA = false, isDeckC = false)
+                UIManager.newPresetSafely(mixer, mixer.deckB)
                 presetState.activeTopTab = "Deck B"
             }
             if (ImGui.menuItem("Deck BG")) {
-                UIManager.triggerDeckEject(mixer.deckBG, isDeckA = false, isDeckC = false)
+                UIManager.newPresetSafely(mixer, mixer.deckBG)
                 presetState.activeTopTab = "Deck BG"
             }
             if (ImGui.menuItem("Deck PV")) {
-                UIManager.triggerDeckEject(mixer.deckPV, isDeckA = false, isDeckC = true)
+                UIManager.newPresetSafely(mixer, mixer.deckPV)
                 presetState.activeTopTab = "Deck PV"
             }
             ImGui.endPopup()
@@ -106,14 +106,8 @@ object PresetListPanel {
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-
-                if (!isDirty) {
-                    logger.info { "Loading preset ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), targetIsA)
-                } else {
-                    UIManager.triggerDeckDragDrop(File(asset.path), targetDeck, targetIsA, mixer)
-                }
+                logger.info { "Loading preset ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
+                UIManager.loadDeckPresetSafely(mixer, targetDeck, File(asset.path))
             }
 
             // Drag source: drag a preset

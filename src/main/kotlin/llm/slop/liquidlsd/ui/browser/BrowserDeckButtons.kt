@@ -70,42 +70,16 @@ internal object BrowserDeckButtons {
     }
 
     /**
-     * Load a preset file into Deck A (1), B (2), BG (3), or PV (4).
+     * Load a preset file into Deck A (1), B (2), BG (3), or PV (4) using the unified transition guard.
      */
     fun loadPresetToDeck(session: SessionContext, mixer: Mixer, file: File, deckIndex: Int) {
-        when (deckIndex) {
-            1 -> {
-                val targetDeck = mixer.deckA
-                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
-                } else {
-                    UIManager.triggerDeckDragDrop(file, targetDeck, true, mixer)
-                }
-            }
-            2 -> {
-                val targetDeck = mixer.deckB
-                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
-                } else {
-                    UIManager.triggerDeckDragDrop(file, targetDeck, false, mixer)
-                }
-            }
-            3 -> {
-                val targetDeck = mixer.deckBG
-                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckBG = true)
-                } else {
-                    UIManager.triggerDeckDragDrop(file, targetDeck, false, mixer)
-                }
-            }
-            4 -> {
-                val targetDeck = mixer.deckPV
-                if (!session.presetManager.isDeckDirty(targetDeck, mixer)) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckPV = true)
-                } else {
-                    UIManager.triggerDeckDragDrop(file, targetDeck, false, mixer)
-                }
-            }
+        val targetDeck = when (deckIndex) {
+            1 -> mixer.deckA
+            2 -> mixer.deckB
+            3 -> mixer.deckBG
+            4 -> mixer.deckPV
+            else -> return
         }
+        UIManager.loadDeckPresetSafely(mixer, targetDeck, file)
     }
 }

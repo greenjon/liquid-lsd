@@ -10,31 +10,26 @@ import llm.slop.liquidlsd.presets.PresetManager
 
 class PopupManager(
     private val onTriggerExit: () -> Unit,
-    private val onSaveDeck: (String, Deck, Boolean) -> Unit,
-    private val onExecuteDeckAction: (Deck, Boolean, PendingDeckAction, String?) -> Unit
+    private val onSaveDeck: (String, Deck, Boolean) -> Unit
 ) {
     var pendingOpenExitPopup = false
     var pendingOpenMidiWarningPopup = false
 
-    enum class PendingDeckAction {
-        NONE, NEW, LOAD_FILE, LOAD_PRESET, DRAG_DROP, MOVE, COPY, SWAP
+    private var pendingConfirmDeck: Deck? = null
+    private var pendingConfirmLabel: String? = null
+    private var pendingConfirmCallback: (() -> Unit)? = null
+
+    fun requestDeckConfirm(deck: Deck, label: String, onProceed: () -> Unit) {
+        pendingConfirmDeck = deck
+        pendingConfirmLabel = label
+        pendingConfirmCallback = onProceed
     }
-    
-    var pendingDeckActionA = PendingDeckAction.NONE
-    var pendingDeckActionB = PendingDeckAction.NONE
-    var pendingDeckActionC = PendingDeckAction.NONE
 
-    var pendingDeckTargetPresetA: String? = null
-    var pendingDeckTargetPresetB: String? = null
-    var pendingDeckTargetPresetC: String? = null
-
-    var pendingDeckSourceFileA: java.io.File? = null
-    var pendingDeckSourceFileB: java.io.File? = null
-    var pendingDeckSourceFileC: java.io.File? = null
-
-    var pendingDeckUtilitySourceA: Deck? = null
-    var pendingDeckUtilitySourceB: Deck? = null
-    var pendingDeckUtilitySourceC: Deck? = null
+    fun clearDeckConfirm() {
+        pendingConfirmDeck = null
+        pendingConfirmLabel = null
+        pendingConfirmCallback = null
+    }
 
     fun drawExitPopup(mixer: Mixer, displayW: Float, displayH: Float) {
         ImGui.setNextWindowPos(
@@ -97,107 +92,41 @@ class PopupManager(
     }
 
     fun drawDeckConfirmPopups(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        drawDeckPopup(session, mixer, mixer.deckA, true)
-        drawDeckPopup(session, mixer, mixer.deckB, false)
-        drawDeckPopup(session, mixer, mixer.deckC, false, isDeckC = true)
-    }
+        val deck = pendingConfirmDeck ?: return
+        val label = pendingConfirmLabel ?: "Deck"
+        val onProceed = pendingConfirmCallback ?: return
 
-    private fun drawDeckPopup(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean = false) {
-        val action = when {
-            isDeckC -> pendingDeckActionC
-            isDeckA -> pendingDeckActionA
-            else -> pendingDeckActionB
-        }
-        if (action == PendingDeckAction.NONE) return
-
-        val label = when {
-            isDeckC -> "Deck C"
-            isDeckA -> "Deck A"
-            else -> "Deck B"
-        }
         val popupId = "Save Changes $label?##confirm"
         ImGui.openPopup(popupId)
 
         if (ImGui.beginPopupModal(popupId, ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("You have unsaved changes in $label. Save before proceeding?")
             ImGui.spacing()
-            
+
             if (ImGui.button("Save", 80f, 0f)) {
                 val activeName = when {
-                    isDeckC -> session.presetManager.activePresetC
-                    isDeckA -> session.presetManager.activePresetA
-                    else -> session.presetManager.activePresetB
+                    deck === mixer.deckA -> session.presetManager.activePresetA
+                    deck === mixer.deckB -> session.presetManager.activePresetB
+                    deck === mixer.deckBG -> session.presetManager.activePresetBG
+                    else -> session.presetManager.activePresetPV
                 }
-                onSaveDeck(activeName ?: "Untitled_${label.last()}", deck, isDeckA || isDeckC) // Note: UIManager handles Deck C mapping
-                executeAction(session, mixer, deck, isDeckA, isDeckC, action)
-                clearAction(isDeckA, isDeckC)
+                onSaveDeck(activeName ?: "Untitled_${label.replace(" ", "")}", deck, deck === mixer.deckA)
+                onProceed()
+                clearDeckConfirm()
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
             if (ImGui.button("Discard", 80f, 0f)) {
-                executeAction(session, mixer, deck, isDeckA, isDeckC, action)
-                clearAction(isDeckA, isDeckC)
+                onProceed()
+                clearDeckConfirm()
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
             if (ImGui.button("Cancel", 80f, 0f)) {
-                clearAction(isDeckA, isDeckC)
+                clearDeckConfirm()
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
-        }
-    }
-
-    private fun executeAction(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, deck: Deck, isDeckA: Boolean, isDeckC: Boolean, action: PendingDeckAction) {
-        val targetPreset = when {
-            isDeckC -> pendingDeckTargetPresetC
-            isDeckA -> pendingDeckTargetPresetA
-            else -> pendingDeckTargetPresetB
-        }
-        val sourceFile = when {
-            isDeckC -> pendingDeckSourceFileC
-            isDeckA -> pendingDeckSourceFileA
-            else -> pendingDeckSourceFileB
-        }
-        val utilitySource = when {
-            isDeckC -> pendingDeckUtilitySourceC
-            isDeckA -> pendingDeckUtilitySourceA
-            else -> pendingDeckUtilitySourceB
-        }
-
-        when (action) {
-            PendingDeckAction.DRAG_DROP -> {
-                sourceFile?.let { session.presetManager.loadDeckPresetAsync(it, isDeckA, isDeckC) }
-            }
-            PendingDeckAction.MOVE -> {
-                utilitySource?.let { session.presetManager.moveDeck(mixer, it, deck) }
-            }
-            PendingDeckAction.COPY -> {
-                utilitySource?.let { session.presetManager.copyDeck(mixer, it, deck) }
-            }
-            PendingDeckAction.SWAP -> {
-                utilitySource?.let { session.presetManager.swapDecks(mixer, it, deck) }
-            }
-            else -> onExecuteDeckAction(deck, isDeckA || isDeckC, action, targetPreset)
-        }
-    }
-
-    private fun clearAction(isDeckA: Boolean, isDeckC: Boolean) {
-        if (isDeckC) {
-            pendingDeckActionC = PendingDeckAction.NONE
-            pendingDeckTargetPresetC = null
-            pendingDeckSourceFileC = null
-            pendingDeckUtilitySourceC = null
-        } else if (isDeckA) {
-            pendingDeckActionA = PendingDeckAction.NONE
-            pendingDeckTargetPresetA = null
-            pendingDeckSourceFileA = null
-            pendingDeckUtilitySourceA = null
-        } else {
-            pendingDeckActionB = PendingDeckAction.NONE
-            pendingDeckTargetPresetB = null
-            pendingDeckSourceFileB = null
-            pendingDeckUtilitySourceB = null
         }
     }
 }
