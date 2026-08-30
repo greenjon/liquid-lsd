@@ -26,7 +26,7 @@ class WindowLayoutSafetyTest {
 
     @Test
     fun testColumnWidthClampingMathOnSmallWidths() {
-        val testWidths = listOf(0f, 10f, 50f, 100f, 200f, 300f, 350f, 400f, 800f, 1920f)
+        val testWidths = listOf(0f, 10f, 50f, 100f, 200f, 300f, 350f, 400f, 800f, 1280f, 1920f)
         val minRatio = 0.15f
 
         for (w in testWidths) {
@@ -37,23 +37,13 @@ class WindowLayoutSafetyTest {
             assertTrue(minCol1W <= maxCol1W, "minCol1W ($minCol1W) must be <= maxCol1W ($maxCol1W) for width $w")
 
             val col1W = reqCol1W.coerceIn(minCol1W, maxCol1W)
-            val col1R = if (w > 0f) (col1W / w).coerceIn(minRatio, 0.70f) else minRatio
 
             val maxRightW = 300f
-            val maxRightR = if (w > 0f) {
-                (maxRightW / w).coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
-            } else {
-                minRatio
-            }
-            val maxC2 = (1.0f - minRatio - col1R).coerceAtLeast(minRatio)
-            val minC2 = (1.0f - col1R - maxRightR).coerceIn(minRatio, maxC2)
+            val maxAllowedRightW = (w - col1W - 50f).coerceAtLeast(100f)
+            val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
-            assertTrue(minC2 <= maxC2, "minC2 ($minC2) must be <= maxC2 ($maxC2) for width $w")
-
-            val col2R = 0.35f.coerceIn(minC2, maxC2)
-            val col2W = (w * col2R).coerceAtLeast(20f)
-            val libraryW = (col1W + col2W).coerceAtMost(w - 20f).coerceAtLeast(40f)
-            val rightW = (w - libraryW).coerceAtLeast(20f)
+            val libraryW = (w - rightW).coerceAtLeast(100f)
+            val col2W = (libraryW - col1W).coerceAtLeast(20f)
 
             assertTrue(col1W >= 0f, "col1W should be non-negative")
             assertTrue(col2W >= 0f, "col2W should be non-negative")
@@ -87,5 +77,32 @@ class WindowLayoutSafetyTest {
         val tinyVp = ViewportHelper.computeViewport(10, 10, 1920, 1080, UITheme.OutputScaleMode.FIT)
         assertTrue(tinyVp.width >= 1)
         assertTrue(tinyVp.height >= 1)
+    }
+
+    @Test
+    fun testLibraryModeCycleSequence() {
+        val session = llm.slop.liquidlsd.SessionContext()
+        session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
+        LibraryPanel.isLibraryExpanding = true
+
+        // Step 1: HIDE -> HALF (expanding)
+        LibraryPanel.cycleMode(session)
+        assertEquals(UITheme.LibraryMode.HALF, session.uiTheme.libraryMode)
+        assertTrue(LibraryPanel.isLibraryExpanding)
+
+        // Step 2: HALF -> FULL
+        LibraryPanel.cycleMode(session)
+        assertEquals(UITheme.LibraryMode.FULL, session.uiTheme.libraryMode)
+        assertTrue(!LibraryPanel.isLibraryExpanding)
+
+        // Step 3: FULL -> HALF (collapsing)
+        LibraryPanel.cycleMode(session)
+        assertEquals(UITheme.LibraryMode.HALF, session.uiTheme.libraryMode)
+        assertTrue(!LibraryPanel.isLibraryExpanding)
+
+        // Step 4: HALF -> HIDE
+        LibraryPanel.cycleMode(session)
+        assertEquals(UITheme.LibraryMode.HIDE, session.uiTheme.libraryMode)
+        assertTrue(LibraryPanel.isLibraryExpanding)
     }
 }

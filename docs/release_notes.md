@@ -3,13 +3,19 @@
 ## Version 1.0.0-beta.31
 
 > [!NOTE]
-> **Release 1.0.0-beta.31** introduces the standalone "Colors" visual source generator, the zero-allocation BTrack real-time beat tracking engine with complex spectral difference ODF and causal dynamic programming, an overhaul of the Library browser with a unified menu bar action strip, quick audition padlock, and full keyboard navigation, symmetrical Background Queue controls with modulation routing and dirty state checking, consolidated 2-column Audio Engine settings with zero-lag CV oscilloscopes, and slider drag-isolation fixes.
+> **Release 1.0.0-beta.31** introduces the standalone "Colors" visual source generator, the zero-allocation BTrack real-time beat tracking engine with complex spectral difference ODF and causal dynamic programming, an overhaul of the Library browser with a unified menu bar action strip, quick audition padlock, and full keyboard navigation, streamlined 3-column layout sizing with locked aspect ends and flexible center panel, 4-step Spacebar library ping-pong cycling (`HIDE` $\rightarrow$ `HALF` $\rightarrow$ `FULL` $\rightarrow$ `HALF` $\rightarrow$ `HIDE`), title bar click-drag library resizing, symmetrical Background Queue controls with modulation routing and dirty state checking, consolidated 2-column Audio Engine settings with zero-lag CV oscilloscopes, and slider drag-isolation fixes.
 
 ---
 
 ### Key Highlights
 
-#### 1. Standalone "Colors" Visual Source & Mandala Background Extraction (`library/sources/colors`, `Mandala.kt`, `Renderer.kt`)
+#### 1. Streamlined 3-Column Layout Architecture & Spacebar Library Cycling (`UIManager.kt`, `LibraryPanel.kt`)
+- **Locked Aspect-Ratio End Columns**: Sized Column 1 (Preset Grid) dynamically to its active columns and Column 3 (Mixer / Monitor) strictly to its aspect-ratio preview capacity, eliminating wasted horizontal letterboxing and removing manual column splitters.
+- **Flexible Middle Column & Library Spanning**: Configured Column 2 (Cell Config) and the docked Library to flexibly absorb all remaining horizontal workspace width across all display resolutions.
+- **4-Step Spacebar Library Cycling**: Tapping <kbd>Space</kbd> (when not focused on a text input or search bar) cleanly cycles through `HIDE` $\rightarrow$ `HALF` $\rightarrow$ `FULL` $\rightarrow$ `HALF` $\rightarrow$ `HIDE`.
+- **Title Bar Drag-to-Resize**: Dragging empty space in the Library menu bar vertically resizes the Library height smoothly without interfering with toolbar buttons or filters, with double-click snapping to 50% height.
+
+#### 2. Standalone "Colors" Visual Source & Mandala Background Extraction (`library/sources/colors`, `Mandala.kt`, `Renderer.kt`)
 - **Extracted "Colors" Visual Source**: Packaged solid-color and plasma generation capabilities into a new standalone visual source (`library/sources/colors/`) featuring `Style` (0 = Off, 1 = Solid, 2 = Plasma), `Hue`, `Sat`, `Val`, `Sweep`, `Speed`, and `Zoom` parameters.
 - **Mandala Source Simplification**: Removed legacy background parameters (`Bg Style`, `Bg Feedback`, `Bg Hue`, `Bg Sat`, `Bg Val`, `Bg Sweep`, `Bg Speed`, `Bg Zoom`) from Mandala's parameter metadata, shaders, and UI layout.
 - **Rendering Pipeline Cleanup (`Renderer.kt`, `Deck.kt`)**: Removed legacy secondary background passes from `renderMandala()` and `renderDeck()`, along with `Deck.getOutputTexture()` branch hacks and the unused `background.frag` resource shader.

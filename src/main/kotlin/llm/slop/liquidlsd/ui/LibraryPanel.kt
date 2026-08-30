@@ -29,6 +29,32 @@ object LibraryPanel {
 
     var shouldReclaimFocus: Boolean = false
     var shouldScrollToSelection: Boolean = false
+    var isLibraryExpanding: Boolean = true
+
+    fun cycleMode(session: SessionContext) {
+        val current = session.uiTheme.libraryMode
+        val next = when (current) {
+            UITheme.LibraryMode.HIDE -> {
+                isLibraryExpanding = true
+                UITheme.LibraryMode.HALF
+            }
+            UITheme.LibraryMode.HALF -> {
+                if (isLibraryExpanding) {
+                    isLibraryExpanding = false
+                    UITheme.LibraryMode.FULL
+                } else {
+                    isLibraryExpanding = true
+                    UITheme.LibraryMode.HIDE
+                }
+            }
+            UITheme.LibraryMode.FULL -> {
+                isLibraryExpanding = false
+                UITheme.LibraryMode.HALF
+            }
+        }
+        session.uiTheme.libraryMode = next
+        session.uiTheme.saveSettings()
+    }
 
     private var lastKnownSignature: String = ""
     private var lastAutoRefreshTimeMs: Long = 0L
@@ -179,6 +205,11 @@ object LibraryPanel {
 
                 if (ImGui.button("$icon##mode_${mode.name}", 0f, btnH)) {
                     session.uiTheme.libraryMode = mode
+                    when (mode) {
+                        UITheme.LibraryMode.FULL -> isLibraryExpanding = false
+                        UITheme.LibraryMode.HIDE -> isLibraryExpanding = true
+                        UITheme.LibraryMode.HALF -> {}
+                    }
                     session.uiTheme.saveSettings()
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {

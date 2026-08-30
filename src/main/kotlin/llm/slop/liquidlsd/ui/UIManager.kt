@@ -249,6 +249,11 @@ class UIManager(
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
         var keyDelta = 0
         if (!ImGui.getIO().wantTextInput) {
+            if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
+                if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Space))) {
+                    LibraryPanel.cycleMode(session)
+                }
+            }
             when (session.uiTheme.queueKeyTrigger) {
                 UITheme.QueueKeyTrigger.ARROWS -> {
                     if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.LeftArrow))) keyDelta -= 1
@@ -414,13 +419,13 @@ class UIManager(
         val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
         CustomRangeSlider.isAnySliderHovered = false
 
-        // Auto-calculate Column 1 (Left Panel / Preset Grid) width based on active columns & font scale
+        // Column 1 (Left Panel / Preset Grid): Auto-calculated based on active columns & font scale
         val reqCol1W = currentMixer?.let { PresetGridPanel.calculateRequiredWidth(session, it, presetState) } ?: (displayWidth * 0.30f)
         val maxCol1W = (displayWidth * 0.50f).coerceAtMost(displayWidth - 200f).coerceAtLeast(displayWidth * minRatio)
         val minCol1W = (displayWidth * minRatio).coerceAtMost(maxCol1W)
         val col1W = reqCol1W.coerceIn(minCol1W, maxCol1W)
-        val col1R = (col1W / displayWidth).coerceIn(minRatio, 0.70f)
 
+        // Column 3 (Right Panel / Mixer Monitor): Sized strictly to max allowed width based on height & aspect ratio
         val style = ImGui.getStyle()
         val availHForMixer = (contentH - (style.getWindowPaddingY() * 2f)).coerceAtLeast(1f)
         val maxRightW = MixerMonitorLayoutCalculator.calculateMaxAllowedWindowWidth(
@@ -431,19 +436,12 @@ class UIManager(
             itemSpacingY = style.getItemSpacingY(),
             aspectRatio = theme.renderAspectRatio
         )
-        val maxRightR = if (displayWidth > 0f) {
-            (maxRightW / displayWidth).coerceIn(minRatio, (1.0f - minRatio - col1R).coerceAtLeast(minRatio))
-        } else {
-            minRatio
-        }
-        val maxC2 = (1.0f - minRatio - col1R).coerceAtLeast(minRatio)
-        val minC2 = (1.0f - col1R - maxRightR).coerceIn(minRatio, maxC2)
+        val maxAllowedRightW = (displayWidth - col1W - 50f).coerceAtLeast(100f)
+        val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
-        // Column 2 (Middle Panel / Cell Config) and Column 3 (Right Panel / Mixer Monitor)
-        val col2R = theme.col2Ratio.coerceIn(minC2, maxC2)
-        val col2W = (displayWidth * col2R).coerceAtLeast(20f)
-        val libraryW = (col1W + col2W).coerceAtMost(displayWidth - 20f).coerceAtLeast(40f)
-        val rightW = (displayWidth - libraryW).coerceAtLeast(20f)
+        // Column 2 (Middle Panel / Cell Config) and Library (Spans Col 1 + Col 2)
+        val libraryW = (displayWidth - rightW).coerceAtLeast(100f)
+        val col2W = (libraryW - col1W).coerceAtLeast(20f)
 
         val libraryH = when (theme.libraryMode) {
             UITheme.LibraryMode.FULL -> contentH
@@ -475,14 +473,14 @@ class UIManager(
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                 CellConfigPanel.draw(session, presetState, currentMixer!!)
 
-                // Vertical Splitter 1 (Static divider line between Preset Grid & Cell Config)
+                // Static divider line between Preset Grid & Cell Config
                 val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
                 ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
             }
             ImGui.end()
         }
 
-        // Horizontal Splitter (above Library when not FULL)
+        // Horizontal Splitter / Title bar drag region (above Library when not FULL)
         val libraryPosH = if (theme.libraryMode == UITheme.LibraryMode.FULL) menuBarH else (menuBarH + contentH - libraryH)
 
         // Library (Bottom or Full)
@@ -496,18 +494,20 @@ class UIManager(
             LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, presetState)
 
             if (theme.libraryMode != UITheme.LibraryMode.FULL) {
+                val titleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)
                 splitterManager.drawHorizontalSplitter(
                     id = "##hsplit",
                     posX = 0f,
                     posY = libraryPosH,
                     width = libraryW.coerceAtLeast(1f),
-                    height = 8f,
+                    height = titleBarH,
                     displayHeight = displayHeight,
                     drawList = ImGui.getWindowDrawList(),
                     onDrag = { deltaY ->
                         if (theme.libraryMode == UITheme.LibraryMode.HIDE) {
                             if (deltaY < 0f) { // Dragging upward
                                 theme.libraryMode = UITheme.LibraryMode.HALF
+                                LibraryPanel.isLibraryExpanding = true
                                 theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
                                 theme.saveSettings()
                             }
@@ -518,6 +518,7 @@ class UIManager(
                             if (targetPixelH < 60f || targetRatio < 0.10f) {
                                 theme.lastCustomLibraryRatio = theme.libraryRatio
                                 theme.libraryMode = UITheme.LibraryMode.HIDE
+                                LibraryPanel.isLibraryExpanding = true
                             } else {
                                 val newR = targetRatio.coerceIn(minRatio, 0.85f)
                                 theme.libraryRatio = newR
@@ -528,6 +529,7 @@ class UIManager(
                     },
                     onDoubleClick = {
                         theme.libraryMode = UITheme.LibraryMode.HALF
+                        LibraryPanel.isLibraryExpanding = true
                         theme.libraryRatio = 0.50f
                         theme.lastCustomLibraryRatio = 0.50f
                         theme.saveSettings()
@@ -546,26 +548,9 @@ class UIManager(
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             drawMixerMonitor(currentMixer!!)
 
-            // Vertical Splitter 2 (between Cell Config/Library and Mixer/Monitor)
-            splitterManager.drawVerticalSplitter(
-                id = "##vsplit2",
-                posX = libraryW,
-                posY = menuBarH,
-                width = 8f,
-                height = contentH.coerceAtLeast(1f),
-                displayWidth = displayWidth,
-                drawList = ImGui.getWindowDrawList(),
-                onDrag = { deltaX ->
-                    val deltaR = if (displayWidth > 0f) deltaX / displayWidth else 0f
-                    val newC2 = (theme.col2Ratio + deltaR).coerceIn(minC2, maxC2)
-                    theme.col2Ratio = newC2
-                    theme.saveSettings()
-                },
-                onDoubleClick = {
-                    theme.col2Ratio = 0.40f.coerceIn(minC2, maxC2)
-                    theme.saveSettings()
-                }
-            )
+            // Static divider line between Center Column/Library and Mixer/Monitor
+            val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+            ImGui.getWindowDrawList().addLine(libraryW, menuBarH, libraryW, menuBarH + contentH, dividerColor, 1.5f)
         }
         ImGui.end()
     }

@@ -74,11 +74,11 @@ class SplitterManager {
         val io = ImGui.getIO()
         val mouseX = io.mousePosX
         val mouseY = io.mousePosY
-        val halfH = height / 2f
-        val inBounds = mouseX >= posX && mouseX <= (posX + width) && mouseY >= (posY - halfH) && mouseY <= (posY + halfH)
+        val inBounds = mouseX >= posX && mouseX <= (posX + width) && mouseY >= (posY - 4f) && mouseY <= (posY + height)
 
+        val isAnyItemInteracted = ImGui.isAnyItemHovered() || ImGui.isAnyItemActive()
         val isActive = activeSplitterId == id
-        val isHovered = isActive || (activeSplitterId == null && inBounds)
+        val isHovered = isActive || (activeSplitterId == null && inBounds && !isAnyItemInteracted)
 
         if (isActive) {
             ImGui.setMouseCursor(ImGuiMouseCursor.ResizeNS)
@@ -89,7 +89,7 @@ class SplitterManager {
             if (!ImGui.isMouseDown(0)) {
                 activeSplitterId = null
             }
-        } else if (activeSplitterId == null && inBounds) {
+        } else if (activeSplitterId == null && inBounds && !isAnyItemInteracted) {
             ImGui.setMouseCursor(ImGuiMouseCursor.ResizeNS)
             if (ImGui.isMouseDoubleClicked(0)) {
                 onDoubleClick()

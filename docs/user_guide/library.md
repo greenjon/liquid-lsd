@@ -4,12 +4,16 @@ Liquid LSD includes a dedicated **Library Management System** for organizing vis
 
 ---
 
-## Toggling Modes
+## Toggling Modes & Resizing
 
 Liquid LSD features flexible workspace dock layouts:
 
 1. **Performance Mode (Default)**: Preset Grid, Cell Config, and Mixer / Monitor panels with the Library docked at the bottom.
-2. **Library View Modes**: Switch between **Half Height**, **Full Height**, and **Hide** via the toolbar buttons or layout splitters.
+2. **Library View Modes**: Switch between **Half Height**, **Full Height**, and **Hide** via:
+   - **Mode Buttons**: Click `[FULL]`, `[HALF]`, or `[HIDE]` in the Library's top menu bar.
+   - **Spacebar Quick-Cycle**: Press <kbd>Space</kbd> (when not typing in a search bar or text input) to seamlessly ping-pong cycle through:
+     $$\text{HIDE} \longrightarrow \text{HALF} \longrightarrow \text{FULL} \longrightarrow \text{HALF} \longrightarrow \text{HIDE}$$
+   - **Title Bar Drag-to-Resize**: Click-drag anywhere in the empty area of the Library title/menu bar to smoothly adjust the Library's height. Dragging all the way down collapses it into **Hide** mode. Double-clicking empty space in the title bar snaps the Library back to 50% Half height.
 
 ---
 

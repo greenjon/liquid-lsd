@@ -49,7 +49,7 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerMonito
 
 Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck PV`) immediately focuses the Preset Grid to that deck by setting `PresetGridState.activeTopTab`. Dragging from a monitor initiates deck copy, move, or swap routing, and dropping preset files directly onto a monitor loads the preset into the corresponding deck.
 
-`MixerMonitorLayoutCalculator` calculates exact aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights. It also calculates the maximum allowed window width (`calculateMaxAllowedWindowWidth`) to clamp the vertical panel splitter so that the Mixer / Monitor panel cannot be dragged wider than the maximum preview height capacity, preventing wasted letterbox blank space and preserving room for middle panels.
+`MixerMonitorLayoutCalculator` calculates exact aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights. It also calculates the exact maximum allowed window width (`calculateMaxAllowedWindowWidth`) to lock the Mixer / Monitor panel to its ideal aspect-ratio width, preventing wasted letterbox blank space and ensuring the flexible center column (`CellConfigPanel` / `LibraryPanel`) absorbs all remaining display space.
 
 ---
 
@@ -57,8 +57,9 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck 
 
 ### 1. `UIManager.kt` & Global Hotkey Routing (`Main.kt`)
 - **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`.
-- **Global Key Routing (`Main.kt`)**: Chained GLFW key callback intercepts `F` (clean mode toggle), `B` (background video toggle), and `Ctrl-`/`Ctrl=` (font scaling) whenever `!io.wantTextInput` or when clean mode is enabled, persisting settings changes immediately.
-- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace by delegating splitting and styling to dedicated components. Left Panel (`PresetGridPanel`) width auto-fits active CV columns, label widths, and font zoom (`CTRL-`/`CTRL=`).
+- **Global Key Routing (`Main.kt` & `UIManager.kt`)**: Chained GLFW key callback intercepts `F` (clean mode toggle), `B` (background video toggle), and `Ctrl-`/`Ctrl=` (font scaling) whenever `!io.wantTextInput` or when clean mode is enabled. Spacebar cycles Library view (`HIDE` $\leftrightarrow$ `HALF` $\leftrightarrow$ `FULL`) when not typing.
+- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace with mathematically locked left/right ends (Preset Grid fitted to active columns, Mixer Monitor fitted to aspect preview height) and a flexible middle column (Cell Config & Library).
+- **Title Bar Drag-to-Resize**: Supports vertical resizing of the docked Library by click-dragging empty areas of the Library menu bar.
 - **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
 - **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()` and `PopupManager`'s specific draw methods (e.g. `drawExitPopup()`) at root scope.
