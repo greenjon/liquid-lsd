@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Determine Version and Release Notes
         id: version
@@ -31,7 +32,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF: ${{ github.ref }}
         run: |
-          python3 -c '
+          git fetch --tags --force || true
+          python3 - << 'EOF'
           import os, re, subprocess
 
           ref = os.environ.get("GITHUB_REF", "")
@@ -66,8 +68,22 @@ jobs:
               subprocess.run(["git", "tag", tag_name], check=True)
               subprocess.run(["git", "push", "origin", tag_name], check=True)
 
-          # 2. Extract release notes from docs/release_notes.md or RELEASE_NOTES.md
           v_num = tag_name.lstrip("v")
+
+          # Export immediately to both GITHUB_OUTPUT and GITHUB_ENV
+          github_output = os.environ.get("GITHUB_OUTPUT")
+          if github_output:
+              with open(github_output, "a", encoding="utf-8") as f:
+                  f.write(f"tag_name={tag_name}\n")
+                  f.write(f"v_num={v_num}\n")
+
+          github_env = os.environ.get("GITHUB_ENV")
+          if github_env:
+              with open(github_env, "a", encoding="utf-8") as f:
+                  f.write(f"RELEASE_TAG={tag_name}\n")
+                  f.write(f"RELEASE_VNUM={v_num}\n")
+
+          # 2. Extract release notes from docs/release_notes.md or RELEASE_NOTES.md
           candidate_files = [
               "docs/release_notes.md",
               "RELEASE_NOTES.md",
@@ -101,7 +117,6 @@ jobs:
 
                   if match:
                       extracted = match.group(1).strip()
-                      # Strip any leading markdown header line so we can output a unified version header
                       human_notes_body = re.sub(r"^##\s+(?:Version\s+[^\n]+|\[?Unreleased\]?)\s*", "", extracted, flags=re.IGNORECASE).strip()
                       break
 
@@ -113,27 +128,20 @@ jobs:
           body += f"### 📦 Commits in {tag_name}\n\n"
           if prev_tag:
               body += f"Changes since **{prev_tag}**:\n\n"
-              commit_range = f"{prev_tag}..HEAD"
+              commit_range = [f"{prev_tag}..HEAD"]
           else:
-              commit_range = "-n 30"
+              commit_range = ["-n", "30"]
 
           try:
-              commits = subprocess.check_output(
-                  ["git", "log", commit_range, f"--pretty=format:- [%h](https://github.com/{repo}/commit/%H) %s (%an)"],
-                  text=True
-              )
+              cmd = ["git", "log"] + commit_range + [f"--pretty=format:- [%h](https://github.com/{repo}/commit/%H) %s (%an)"]
+              commits = subprocess.check_output(cmd, text=True)
               body += commits + "\n"
           except Exception as e:
               body += f"- No commit history found ({e})\n"
 
           with open("release_notes.md", "w", encoding="utf-8") as f:
               f.write(body + "\n")
-
-          github_output = os.environ.get("GITHUB_OUTPUT")
-          if github_output:
-              with open(github_output, "a", encoding="utf-8") as f:
-                  f.write(f"tag_name={tag_name}\n")
-          '
+          EOF
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -162,8 +170,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag_name }}
-          name: ${{ steps.version.outputs.tag_name }}
+          tag_name: ${{ steps.version.outputs.tag_name || env.RELEASE_TAG }}
+          name: ${{ steps.version.outputs.tag_name || env.RELEASE_TAG }}
           body_path: release_notes.md
           draft: false
           prerelease: false
