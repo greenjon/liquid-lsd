@@ -4,7 +4,7 @@ import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioTarget
 
 data class AppSettings(
-    val baseSize: Float = 20f,
+    val guiScalePercent: Int = 100,
     val audioEngineEnabled: Boolean = true,
     val audioBackend: AudioEngine.AudioBackendMode = AudioEngine.AudioBackendMode.AUTO,
     val audioDeviceName: String = "",

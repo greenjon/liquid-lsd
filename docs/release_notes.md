@@ -12,6 +12,7 @@
 #### 1. Performance-Driven UI & Ergonomics Enhancements (`UIManager.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`, `MenuBar.kt`, `CellConfigPanel.kt`)
 
 - **Instant Search Focus (<kbd>Ctrl+F</kbd> / <kbd>/</kbd>) & Clear (<kbd>Esc</kbd>)**: Pressing <kbd>Ctrl+F</kbd> or <kbd>/</kbd> (when not focused on a text input) automatically opens the Library (if hidden) and focuses the preset search bar with text highlighted. Pressing <kbd>Esc</kbd> while the search box is active clears the filter query and returns focus back to the preset table for seamless keyboard navigation (`1`–`4`, `Q`, `Shift+Q`, `↑`, `↓`).
+- **Dynamic HiDPI Scale Detection & Multi-Monitor Adaptation**: Separated UI scaling into dynamic system DPI auto-detection (`systemDpiScale`) and persistent user zoom preference (`guiScalePercent`). Liquid LSD now queries GLFW content scale on every startup and responds dynamically via `glfwSetWindowContentScaleCallback` when dragging windows across displays or changing OS scaling, automatically rebuilding the Dear ImGui font atlas and UI geometry.
 - **Dynamic "On-Air" Deck Illumination & Glow**: Decks A and B dynamically scale header, toolbar, and border brightness based on `Mixer.crossfade` position. Active on-air decks render at 100% full saturation with bright glowing borders, while off-air decks smoothly dim to $\sim 35\%$ opacity.
 - **Cell Config Modular Accordions & Dirty Indicator (`•`)**: 
   - Converted LFO 2 from an auto-hiding section into an explicit collapsible accordion (`▶ LFO 2 (Modulator)` / `▼ LFO 2`).

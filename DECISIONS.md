@@ -112,14 +112,15 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## GUI Scale: Percentage Model (75%–200%) instead of Raw Pixel Size
+## GUI Scale: Dynamic System DPI Detection & User Zoom Factor Separation
 
-- **Decision**: Express the global UI scale as a percentage (75%–200%, 5% steps) rather than a raw `baseSize` pixel value, with `glfwGetWindowContentScale` queried on first launch to seed a sensible default.
+- **Decision**: Separate GUI scaling into dynamic runtime OS DPI detection (`systemDpiScale`, via `glfwGetWindowContentScale` and `glfwSetWindowContentScaleCallback`) and persistent user zoom preference (`guiScalePercent`, 75%–200%, 5% steps). The effective base font size is dynamically computed as:
+  $$\text{Effective Base Size (px)} = 15.0\text{px} \times \left(\frac{\text{guiScalePercent}}{100}\right) \times \text{systemDpiScale}$$
 - **Rationale**:
-  - **User mental model**: "I want a 150% UI" is immediately meaningful; "I want 22.5 px body text" is not.
-  - **Internally transparent**: `baseSize` (px) remains the storage format. The conversion is `baseSize = pct / 100 * 15f`. No existing save files break.
-  - **HiDPI hygiene**: Without OS DPI detection, a 4K monitor renders the default 15 px controls at microscopic size (~8 CSS px equivalent). `glfwGetWindowContentScale` returns the OS-reported logical→physical pixel ratio (e.g. 2.0 on macOS Retina, 1.5 on some 4K Linux setups), which is snapped to the nearest 5% step and applied only on first run.
-  - **Discrete steps**: 5% steps keep the slider tactile and prevent half-pixel font renders that look blurry in the ImGui atlas.
+  - **Dynamic Multi-Monitor & DPI Adaptation**: Users frequently connect laptops to external 4K / 150% / 200% displays or switch display resolutions. Detecting `systemDpiScale` on every launch and tracking window movement across monitors via `glfwSetWindowContentScaleCallback` prevents UI elements from shrinking or blowing up.
+  - **Separation of Preferences**: The persistent settings file stores the user's relative scaling preference (`guiScalePercent`, default 100%) rather than an absolute pixel size baked on one specific monitor.
+  - **Automatic Font Atlas Rebuild**: When DPI changes, the ImGui font atlas is dynamically rebuilt and uploaded to the GPU, keeping typography sharp and correctly proportioned across varying pixel densities.
+  - **Discrete Steps**: 5% steps keep the slider tactile and prevent blurry fractional font rasterization in the Dear ImGui atlas.
 
 ---
 

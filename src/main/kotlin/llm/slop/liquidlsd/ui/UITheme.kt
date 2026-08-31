@@ -79,9 +79,17 @@ object UITheme {
         get() = settings.theme
         set(value) { settings = settings.copy(theme = value) }
 
-    var baseSize: Float
-        get() = settings.baseSize
-        set(value) { settings = settings.copy(baseSize = value) }
+    const val BASE_FONT_PX = 15f
+
+    @Volatile
+    var systemDpiScale: Float = 1.0f
+
+    var guiScalePercent: Int
+        get() = settings.guiScalePercent
+        set(value) { settings = settings.copy(guiScalePercent = value.coerceIn(75, 200)) }
+
+    val baseSize: Float
+        get() = BASE_FONT_PX * (guiScalePercent / 100f) * systemDpiScale
 
     var audioEngineEnabled: Boolean
         get() = settings.audioEngineEnabled
@@ -254,10 +262,16 @@ object UITheme {
             if (settingsFile.exists()) {
                 val props = Properties()
                 settingsFile.inputStream().use { props.load(it) }
-                val savedSize = props.getProperty("baseSize")?.toFloatOrNull()
-                if (savedSize != null) {
-                    baseSize = savedSize.coerceIn(11.25f, 30f)
-                    logger.info { "Loaded baseSize from settings file: $baseSize" }
+                val savedPct = props.getProperty("guiScalePercent")?.toIntOrNull()
+                if (savedPct != null) {
+                    guiScalePercent = savedPct.coerceIn(75, 200)
+                    logger.info { "Loaded guiScalePercent from settings file: $guiScalePercent%" }
+                } else {
+                    val savedSize = props.getProperty("baseSize")?.toFloatOrNull()
+                    if (savedSize != null) {
+                        guiScalePercent = ((savedSize / BASE_FONT_PX) * 100f).toInt().coerceIn(75, 200)
+                        logger.info { "Migrated baseSize ($savedSize px) to guiScalePercent: $guiScalePercent%" }
+                    }
                 }
                 val savedAudio = props.getBoolean("audioEngineEnabled")
                 if (savedAudio != null) {
@@ -411,6 +425,7 @@ object UITheme {
             if (settingsFile.exists()) {
                 settingsFile.inputStream().use { props.load(it) }
             }
+            props.setProperty("guiScalePercent", guiScalePercent.toString())
             props.setProperty("baseSize", baseSize.toString())
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
             props.setProperty("audioBackend", AudioEngine.backendMode.name)
@@ -492,15 +507,18 @@ object UITheme {
     private var codeBytes: ByteArray? = null
     private var lucideBytes: ByteArray? = null
 
-    // Range for standard Lucide (E000 - F8FF range)
+    // Range for standard Lucide (E000 - E5FF covers all Lucide icons used in the app)
     // Range format is [start, end, ..., 0]
-    private val ICON_RANGE = shortArrayOf(0xe000.toShort(), 0xf8ff.toShort(), 0)
+    private val ICON_RANGE = shortArrayOf(0xe000.toShort(), 0xe5ff.toShort(), 0)
 
-    // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, Punctuation, Arrows, Math, Geometric Shapes
+    // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, General Punctuation, Arrows, Math, Geometric Shapes
     private val MAIN_RANGES = shortArrayOf(
         0x0020.toShort(), 0x00FF.toShort(), // Basic Latin + Latin-1 Supplement
         0x0100.toShort(), 0x017F.toShort(), // Latin Extended-A
-        0x2000.toShort(), 0x2BFF.toShort(), // Punctuation, Arrows, Math Operators, Geometric Shapes
+        0x2000.toShort(), 0x206F.toShort(), // General Punctuation (dashes, quotes, bullets, ellipses)
+        0x2190.toShort(), 0x21FF.toShort(), // Arrows (←, ↑, →, ↓)
+        0x2200.toShort(), 0x22FF.toShort(), // Mathematical Operators (±, −, ×, etc.)
+        0x25A0.toShort(), 0x25FF.toShort(), // Geometric Shapes (▶, ▼, ●, ○)
         0
     )
 
@@ -552,35 +570,37 @@ object UITheme {
             setFontDataOwnedByAtlas(owned)
         }
 
-        fun addWithIcons(bytes: ByteArray, size: Float, config: ImFontConfig): ImFont {
-            val safeSize = size.coerceIn(9f, 96f)
+        fun addFont(bytes: ByteArray, size: Float, config: ImFontConfig, withIcons: Boolean = true): ImFont {
+            val safeSize = size.coerceIn(9f, 64f)
             val f = atlas.addFontFromMemoryTTF(bytes, safeSize, config, MAIN_RANGES)
             if (f.ptr == 0L) logger.error { "Failed to load main font at size $safeSize" }
             config.destroy()
 
-            val iconCfg = ImFontConfig().apply {
-                setFontDataOwnedByAtlas(false)
-                setMergeMode(true)
-                setPixelSnapH(true)
-                // Offset icon glyphs downward proportionally so they are vertically centered
-                // and do not collide with the top border of buttons or bounding frames.
-                setGlyphOffset(0f, kotlin.math.round(safeSize * 0.18f))
+            if (withIcons) {
+                val iconCfg = ImFontConfig().apply {
+                    setFontDataOwnedByAtlas(false)
+                    setMergeMode(true)
+                    setPixelSnapH(true)
+                    // Offset icon glyphs downward proportionally so they are vertically centered
+                    // and do not collide with the top border of buttons or bounding frames.
+                    setGlyphOffset(0f, kotlin.math.round(safeSize * 0.18f))
+                }
+                
+                val iconFont = atlas.addFontFromMemoryTTF(lucideBytes!!, safeSize, iconCfg, ICON_RANGE)
+                if (iconFont.ptr == 0L) logger.error { "Failed to merge Lucide icons at size $safeSize" }
+                
+                iconCfg.destroy()
             }
-            
-            val iconFont = atlas.addFontFromMemoryTTF(lucideBytes!!, safeSize, iconCfg, ICON_RANGE)
-            if (iconFont.ptr == 0L) logger.error { "Failed to merge Lucide icons at size $safeSize" }
-            
-            iconCfg.destroy()
             return f
         }
 
-        // Load each level; bodies/captions use Regular, headers use Bold/Medium.
-        fontBody    = addWithIcons(regularBytes!!, baseSize * multBody,    cfg())
-        fontCaption = addWithIcons(regularBytes!!, baseSize * multCaption, cfg())
-        fontH3      = addWithIcons(mediumBytes!!,  baseSize * multH3,      cfg())
-        fontH2      = addWithIcons(boldBytes!!,    baseSize * multH2,      cfg())
-        fontH1      = addWithIcons(boldBytes!!,    baseSize * multH1,      cfg())
-        fontCode    = addWithIcons(codeBytes!!,    baseSize * multCode,    cfg())
+        // Load each level; bodies/captions/H3 use icons, large headers and code don't duplicate icons.
+        fontBody    = addFont(regularBytes!!, baseSize * multBody,    cfg(), withIcons = true)
+        fontCaption = addFont(regularBytes!!, baseSize * multCaption, cfg(), withIcons = true)
+        fontH3      = addFont(mediumBytes!!,  baseSize * multH3,      cfg(), withIcons = true)
+        fontH2      = addFont(boldBytes!!,    baseSize * multH2,      cfg(), withIcons = false)
+        fontH1      = addFont(boldBytes!!,    baseSize * multH1,      cfg(), withIcons = false)
+        fontCode    = addFont(codeBytes!!,    baseSize * multCode,    cfg(), withIcons = false)
 
         isLoaded = true
         logger.info {

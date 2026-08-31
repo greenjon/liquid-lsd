@@ -47,8 +47,10 @@ object SettingsPanel {
     }
 
     private var activeCategory = Category.APPEARANCE
+    private var pendingGuiScale: Int? = null
 
     fun open(category: Category? = null) {
+        pendingGuiScale = null
         if (category != null) {
             activeCategory = category
         }
@@ -57,7 +59,7 @@ object SettingsPanel {
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, displayW: Float, displayH: Float,
              mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
-             onSizeChanged: (Float) -> Unit) {
+             onScaleChanged: (Int) -> Unit) {
 
         val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
         val defaultW = (MODAL_W * fontScale).coerceIn(600f, displayW * 0.95f)
@@ -132,7 +134,7 @@ object SettingsPanel {
         // Right Content Child
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
-                Category.APPEARANCE    -> drawAppearance(session, currentSize, onSizeChanged)
+                Category.APPEARANCE    -> drawAppearance(session, currentSize, onScaleChanged)
                 Category.PRESET_GRID   -> drawPresetGridSettings(session)
                 Category.VIDEO_DISPLAY -> drawVideoDisplaySettings(session)
                 Category.AUDIO_ENGINE  -> drawAudioEngineSettings(session)
@@ -158,7 +160,7 @@ object SettingsPanel {
         ImGui.endPopup()
     }
 
-    private fun drawAppearance(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onSizeChanged: (Float) -> Unit) {
+    private fun drawAppearance(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onScaleChanged: (Int) -> Unit) {
         session.uiTheme.h2("Appearance")
         ImGui.separator()
         ImGui.spacing()
@@ -188,14 +190,17 @@ object SettingsPanel {
         // Percentage scale slider – 75 % to 200 %, locked to 5 % steps.
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val sliderBoxW = 52f * fontScale
-        val currentPct = pxToPct(currentSize)
+        val committedPct = session.uiTheme.guiScalePercent
+        val currentPct = pendingGuiScale ?: committedPct
         val t = UITheme
+        val basePx = 15.0f * (currentPct / 100f) * session.uiTheme.systemDpiScale
+        val dpiPct = (session.uiTheme.systemDpiScale * 100f).toInt()
         session.uiTheme.caption(
-            "Cap ${(currentSize * t.multCaption).toInt()}  " +
-            "Body ${(currentSize * t.multBody).toInt()}  " +
-            "H3 ${(currentSize * t.multH3).toInt()}  " +
-            "H2 ${(currentSize * t.multH2).toInt()}  " +
-            "H1 ${(currentSize * t.multH1).toInt()}  px"
+            "Cap ${(basePx * t.multCaption).toInt()}  " +
+            "Body ${(basePx * t.multBody).toInt()}  " +
+            "H3 ${(basePx * t.multH3).toInt()}  " +
+            "H2 ${(basePx * t.multH2).toInt()}  " +
+            "H1 ${(basePx * t.multH1).toInt()} px  |  Display Scale: ${dpiPct}% (${session.uiTheme.systemDpiScale}x)"
         )
         ImGui.spacing()
 
@@ -213,26 +218,44 @@ object SettingsPanel {
             customBoxWidth = sliderBoxW,
             onValueChanged = { newVal ->
                 val snappedPct = ((newVal / STEP_PCT).toInt() * STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
-                onSizeChanged(pctToPx(snappedPct))
+                pendingGuiScale = snappedPct
             }
         )
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip(
                 "Scale the entire GUI (fonts, padding, widgets) from $MIN_PCT% to $MAX_PCT%.\n" +
+                "Drag smoothly and release mouse to apply.\n" +
                 "Ctrl+- and Ctrl+= adjust by 5% steps.\n" +
-                "100% = 15 px body text."
+                "System display DPI scaling (${dpiPct}%) is automatically applied."
             )
         }
         ImGui.spacing()
         val canDecrease = currentPct > MIN_PCT
         val canIncrease = currentPct < MAX_PCT
         if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
-        if (ImGui.button("-##sdec") && canDecrease) onSizeChanged(pctToPx(currentPct - STEP_PCT))
+        if (ImGui.button("-##sdec") && canDecrease) {
+            val next = (currentPct - STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
+            pendingGuiScale = null
+            onScaleChanged(next)
+        }
         if (!canDecrease) ImGui.popStyleVar()
         ImGui.sameLine()
         if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
-        if (ImGui.button("+##sinc") && canIncrease) onSizeChanged(pctToPx(currentPct + STEP_PCT))
+        if (ImGui.button("+##sinc") && canIncrease) {
+            val next = (currentPct + STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
+            pendingGuiScale = null
+            onScaleChanged(next)
+        }
         if (!canIncrease) ImGui.popStyleVar()
+
+        // Commit on mouse release
+        if (!ImGui.isMouseDown(0) && pendingGuiScale != null) {
+            val target = pendingGuiScale!!
+            pendingGuiScale = null
+            if (target != committedPct) {
+                onScaleChanged(target)
+            }
+        }
     }
 
     private fun drawPresetGridSettings(session: llm.slop.liquidlsd.SessionContext) {

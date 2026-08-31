@@ -59,24 +59,14 @@ fun main() {
     // Enforce minimum window size to prevent desktop layout compression
     glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE)
 
-    // Query OS DPI / HiDPI content scale so controls are legible on 4K screens.
-    // Only applied when no user settings file exists yet (first run / fresh install).
+    // Query OS DPI / HiDPI content scale so controls are legible on HiDPI and 4K screens.
     // On standard 1080p monitors xScale ≈ 1.0; on 4K HiDPI monitors it can be 1.5–2.0+.
-    if (!java.io.File("lsd-settings.properties").exists()) {
-        val xScaleBuf = FloatArray(1)
-        val yScaleBuf = FloatArray(1)
-        glfwGetWindowContentScale(window, xScaleBuf, yScaleBuf)
-        val dpiScale = xScaleBuf[0].coerceAtLeast(1.0f)
-        if (dpiScale > 1.05f) {
-            // BASE_PX=15f; snap to nearest 5 % step, clamp 75 %–200 %
-            val BASE_PX   = 15f
-            val STEP_PCT  = 5
-            val rawPct    = (dpiScale * 100f).toInt()
-            val snappedPct = (rawPct / STEP_PCT * STEP_PCT).coerceIn(75, 200)
-            UITheme.baseSize = snappedPct / 100f * BASE_PX
-            logger.info { "HiDPI scale detected: ${dpiScale}x → GUI scale ${snappedPct}%% (baseSize=${UITheme.baseSize}px)" }
-        }
-    }
+    val xScaleBuf = FloatArray(1)
+    val yScaleBuf = FloatArray(1)
+    glfwGetWindowContentScale(window, xScaleBuf, yScaleBuf)
+    val startupDpi = xScaleBuf[0].coerceAtLeast(1.0f)
+    UITheme.systemDpiScale = startupDpi
+    logger.info { "Display DPI scale detected: ${startupDpi}x → Base UI font size ${UITheme.baseSize}px (userScale=${UITheme.guiScalePercent}%)" }
 
     glfwMakeContextCurrent(window)
     glfwSwapInterval(1) // Enable vsync
@@ -117,6 +107,11 @@ fun main() {
     glfwSetWindowCloseCallback(window) { win ->
         glfwSetWindowShouldClose(win, false)
         uiManager.triggerExitFlow()
+    }
+
+    glfwSetWindowContentScaleCallback(window) { _, xScale, _ ->
+        val newDpi = xScale.coerceAtLeast(1.0f)
+        uiManager.onContentScaleChanged(newDpi)
     }
 
     logger.info { "Initialization complete" }

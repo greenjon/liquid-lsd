@@ -45,8 +45,8 @@ class UIManager(
     private var defaultStyle: imgui.ImGuiStyle
 
     // Font rebuild must happen between frames (atlas is locked during a frame).
-    // Store the requested size here; it is consumed at the top of the next render().
-    private var pendingFontSize: Float? = null
+    // Store rebuild request flag here; it is consumed at the top of the next render().
+    private var pendingFontRebuild = false
 
     // Set to true for one frame when the Settings menu item is clicked; consumed
     // immediately after endMainMenuBar so openPopup runs at root ID-stack level.
@@ -300,14 +300,13 @@ class UIManager(
             }
         }
 
-        pendingFontSize?.let { newSize ->
-            pendingFontSize = null
-            session.uiTheme.baseSize = newSize
+        if (pendingFontRebuild) {
+            pendingFontRebuild = false
+            val currentBaseSize = session.uiTheme.baseSize
             session.uiTheme.rebuildFonts(ImGui.getIO())
             imguiGl3.updateFontsTexture()
-            UIThemeStyler.scaleStyleFromDefault(defaultStyle, newSize)
-            session.uiTheme.saveSettings()
-            logger.info { "Font size applied: ${newSize}px" }
+            UIThemeStyler.scaleStyleFromDefault(defaultStyle, currentBaseSize)
+            logger.info { "Font size applied: ${currentBaseSize}px (guiScale=${session.uiTheme.guiScalePercent}%, dpiScale=${session.uiTheme.systemDpiScale}x)" }
         }
 
         imguiGlfw.newFrame()
@@ -333,8 +332,8 @@ class UIManager(
 
             drawLayout(mixer, displayWidth, displayHeight)
 
-            SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newSize ->
-                applyFontSize(newSize)
+            SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newPct ->
+                applyGuiScalePercent(newPct)
             }
 
             VideoExportModal.draw(session, mixer, renderer, displayWidth, displayHeight)
@@ -357,27 +356,30 @@ class UIManager(
         imguiGl3.renderDrawData(ImGui.getDrawData())
     }
 
-    /**
-     * Rebuilds the font atlas at [newSize] and scales widget style proportionally.
-     * Scale is computed relative to the baseline of 15f from a clean default style.
-     */
-    private fun applyFontSize(newSize: Float) {
-        if (newSize != session.uiTheme.baseSize) pendingFontSize = newSize
+    fun onContentScaleChanged(newScale: Float) {
+        val clamped = newScale.coerceAtLeast(1.0f)
+        if (session.uiTheme.systemDpiScale != clamped) {
+            session.uiTheme.systemDpiScale = clamped
+            pendingFontRebuild = true
+            logger.info { "System DPI scale changed to: ${clamped}x, scheduling font rebuild (effective baseSize=${session.uiTheme.baseSize}px)" }
+        }
+    }
+
+    fun applyGuiScalePercent(newPct: Int) {
+        val clamped = newPct.coerceIn(75, 200)
+        if (clamped != session.uiTheme.guiScalePercent) {
+            session.uiTheme.guiScalePercent = clamped
+            pendingFontRebuild = true
+            session.uiTheme.saveSettings()
+            logger.info { "User GUI scale changed to: ${clamped}%, scheduling font rebuild (effective baseSize=${session.uiTheme.baseSize}px)" }
+        }
     }
 
     fun adjustFontSize(delta: Float) {
-        // Work in percentage space (5 % steps, 75 %–200 %) then convert back to px.
-        // BASE_PX = 15f; 1 step = 5 % = 0.75 px.
-        val BASE_PX = 15f
-        val STEP_PX = BASE_PX * 0.05f          // 0.75 px per 5 % step
-        val MIN_PX  = BASE_PX * 0.75f          // 11.25 px  (75 %)
-        val MAX_PX  = BASE_PX * 2.00f          // 30.00 px  (200 %)
-        val currentSize = session.uiTheme.baseSize
-        // Snap current to nearest 5 % step, then add the delta direction
-        val currentSteps = ((currentSize / STEP_PX).toInt())
-        val targetSteps  = currentSteps + if (delta > 0) 1 else -1
-        val newSize = (targetSteps * STEP_PX).coerceIn(MIN_PX, MAX_PX)
-        applyFontSize(newSize)
+        val step = 5
+        val currentPct = session.uiTheme.guiScalePercent
+        val targetPct = if (delta > 0) currentPct + step else currentPct - step
+        applyGuiScalePercent(targetPct)
     }
 
     fun triggerExitFlow() {
