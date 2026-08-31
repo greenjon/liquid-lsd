@@ -97,7 +97,8 @@ When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500
 Beat detection and continuous modulation signal generation are handled by [`BeatTrackerEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt) (inspired by BTrack and the Dan Ellis causal dynamic programming model):
 - **Complex Spectral Difference ODF**: 512-point zero-allocation FFT detecting percussive and tonal onsets.
 - **Two-State Multi-Band Autocorrelation**: Unconstrained acquisition (40–200 BPM) vs. locked tracking with harmonic comb unwrapping and $\pm 2.0$ BPM/beat human tracking inertia.
-- **Causal Dynamic Programming Recurrence**: Evaluates causal DP beat score recurrence using pre-tabulated logarithm tables (`logTauTable`).
+- **Decoupled Periodic Tempo Estimation**: Autocorrelation search across multi-second history is decoupled from the per-block rate via `tempoEstimationIntervalBlocks` (default 4 blocks / ~46 ms, ~21.5 Hz), reducing CPU iterations by 75% to prevent real-time XRUNs while preserving instantaneous onset reactivity.
+- **Causal Dynamic Programming Recurrence**: Evaluates causal DP beat score recurrence on every audio frame using pre-tabulated logarithm tables (`logTauTable`).
 - **Continuous Phase & Cosine Generator**: Outputs continuous normalized phase $\phi(t) \in [0.0, 1.0)$ and locked cosine modulation signal $\cos(2\pi \phi(t))$ via zero-allocation queries (`getPhase`, `getCosine`, `getPhaseAndCosine`, `getPhaseAndCosinePacked`).
 
 ---

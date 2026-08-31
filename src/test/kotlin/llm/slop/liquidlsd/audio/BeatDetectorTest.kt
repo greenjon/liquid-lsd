@@ -311,4 +311,26 @@ class BeatDetectorTest {
 
         assertEquals(0, errors.get(), "Concurrent phase/cosine queries must have zero torn reads or corrupted states")
     }
+
+    @Test
+    fun testDecoupledTempoEstimationInterval() {
+        val engine = BeatTrackerEngine(sampleRate = 44100f, fftSize = 512)
+        engine.reset(120.0f)
+        engine.tempoEstimationIntervalBlocks = 4
+
+        val sampleRate = 44100f
+        val nframes = 512
+        val blocksPerBeat = ((60.0f / 130.0f) * (sampleRate / nframes)).toInt()
+
+        var currentBpm = 120.0f
+        for (i in 0..260) {
+            val isOnset = (i % blocksPerBeat == 0)
+            val flux = if (isOnset) 1.0f else 0.01f
+            currentBpm = engine.processOdfSample(flux, timestampSeconds = i * (nframes / sampleRate).toDouble(), signalSufficient = true)
+        }
+
+        val expectedBpm = 60.0f / (blocksPerBeat * nframes / sampleRate)
+        assertTrue(engine.isLocked, "Engine should lock onto tempo with decoupled interval = 4")
+        assertTrue(abs(currentBpm - expectedBpm) < 2.0f, "BPM estimate ($currentBpm) should match expected ($expectedBpm)")
+    }
 }

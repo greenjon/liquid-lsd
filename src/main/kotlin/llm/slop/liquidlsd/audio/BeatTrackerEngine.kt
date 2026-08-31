@@ -44,6 +44,7 @@ class BeatTrackerEngine(
     @Volatile var trackingInertiaBpmPerBeat: Float = 2.0f
     @Volatile var stabilityLockDurationSec: Float = 0.40f
     @Volatile var energySilenceThreshold: Float = 0.0025f
+    @Volatile var tempoEstimationIntervalBlocks: Int = 4
 
     // ── Pre-Allocated FFT Buffers & Lookup Tables (Zero Allocation) ─────────
     private val halfFft = fftSize / 2
@@ -730,8 +731,11 @@ class BeatTrackerEngine(
             return currentBpm.coerceIn(bpmFloor, bpmCeiling)
         }
 
-        // 1. Two-State Periodicity & Tempo Estimation
-        val bpm = estimateTempo(fps, dt, minPeriodBlocks, maxPeriodBlocks)
+        // 1. Periodic Two-State Periodicity & Tempo Estimation (Autocorrelation)
+        val interval = tempoEstimationIntervalBlocks.coerceAtLeast(1)
+        if (totalBlocksProcessed % interval.toLong() == 0L) {
+            estimateTempo(fps, dt * interval.toFloat(), minPeriodBlocks, maxPeriodBlocks)
+        }
 
         // 2. Causal Dynamic Programming Recurrence
         evaluateCausalDynamicProgramming(odfSample, minPeriodBlocks, maxPeriodBlocks)
@@ -739,7 +743,7 @@ class BeatTrackerEngine(
         // 3. Beat Anchor Flywheel Tracking
         updateBeatAnchors(effectiveTimestamp, fps)
 
-        return bpm.coerceIn(bpmFloor, bpmCeiling)
+        return currentBpm.coerceIn(bpmFloor, bpmCeiling)
     }
 
     /**
