@@ -9,26 +9,19 @@ import mu.KotlinLogging
 
 enum class SignalState { SILENT, ACTIVE }
 
-enum class BeatDetectionMode { BTRACK, AUTOCORRELATION, ENERGY_DIFFERENCE, RESONATOR }
 enum class AudioTarget { UNFILTERED, LOW, MID, HIGH }
 
 data class BeatDetectionSettings(
-    var mode: BeatDetectionMode = BeatDetectionMode.BTRACK,
     var target: AudioTarget = AudioTarget.LOW,
     var bpmSearchFloor: Int = 40,
     var bpmSearchCeiling: Int = 200,
-    var bpmGridResolution: Float = 0.5f,
-    var analysisWindowLength: Float = 4.0f,
-    var energyThreshold: Float = 1.5f,
-    var pllAdaptationRate: Float = 0.2f,
-    var biquadQ: Float = 3.0f,
     var transitionWeightAlpha: Float = 120.0f,
     var trackingInertiaBpmPerBeat: Float = 2.0f
 ) {
     companion object {
-        fun highAccuracy() = BeatDetectionSettings(mode = BeatDetectionMode.BTRACK, bpmSearchFloor = 40, bpmSearchCeiling = 200, transitionWeightAlpha = 120.0f, trackingInertiaBpmPerBeat = 2.0f)
-        fun balanced() = BeatDetectionSettings(mode = BeatDetectionMode.BTRACK, bpmSearchFloor = 40, bpmSearchCeiling = 200, transitionWeightAlpha = 100.0f, trackingInertiaBpmPerBeat = 2.5f)
-        fun eco() = BeatDetectionSettings(mode = BeatDetectionMode.BTRACK, bpmSearchFloor = 40, bpmSearchCeiling = 200, transitionWeightAlpha = 80.0f, trackingInertiaBpmPerBeat = 3.0f)
+        fun highAccuracy() = BeatDetectionSettings(target = AudioTarget.LOW, bpmSearchFloor = 40, bpmSearchCeiling = 200, transitionWeightAlpha = 120.0f, trackingInertiaBpmPerBeat = 2.0f)
+        fun balanced() = BeatDetectionSettings(target = AudioTarget.LOW, bpmSearchFloor = 40, bpmSearchCeiling = 200, transitionWeightAlpha = 100.0f, trackingInertiaBpmPerBeat = 2.5f)
+        fun eco() = BeatDetectionSettings(target = AudioTarget.LOW, bpmSearchFloor = 40, bpmSearchCeiling = 200, transitionWeightAlpha = 80.0f, trackingInertiaBpmPerBeat = 3.0f)
     }
 }
 

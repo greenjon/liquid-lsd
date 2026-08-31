@@ -6,7 +6,6 @@ import imgui.flag.ImGuiTableFlags
 import imgui.type.ImBoolean
 import imgui.type.ImInt
 import llm.slop.liquidlsd.audio.AudioEngine
-import llm.slop.liquidlsd.audio.BeatDetectionMode
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.SignalState
@@ -34,7 +33,6 @@ object AudioEnginePanel {
 
     // Pre-allocated enum arrays to eliminate per-frame allocations
     private val backendModes = AudioEngine.AudioBackendMode.values()
-    private val beatDetectionModes = BeatDetectionMode.values()
     private val audioTargets = AudioTarget.values()
 
     // Device & Backend UI wrappers
@@ -290,30 +288,12 @@ object AudioEnginePanel {
 
             ImGui.spacing()
 
-            // Auto Beat Detection Parameters
+            // Auto Beat Detection Parameters (BTrack)
             val settings = audioEngine.beatDetector.settings
 
-            theme.body("Mode:")
+            theme.body("Target Band:")
             ImGui.sameLine()
-            ImGui.setNextItemWidth(150f)
-            if (ImGui.beginCombo("##BeatDetectionMode", settings.mode.name)) {
-                for (mode in beatDetectionModes) {
-                    val isSelected = settings.mode == mode
-                    if (ImGui.selectable(mode.name, isSelected)) {
-                        settings.mode = mode
-                    }
-                    if (isSelected) ImGui.setItemDefaultFocus()
-                }
-                ImGui.endCombo()
-            }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Select algorithm used for beat tracking (e.g., spectral energy flux).")
-            }
-
-            ImGui.sameLine(0f, 12f)
-            theme.body("Target:")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(120f)
+            ImGui.setNextItemWidth(140f)
             if (ImGui.beginCombo("##BeatDetectionTarget", settings.target.name)) {
                 for (target in audioTargets) {
                     val isSelected = settings.target == target
@@ -325,7 +305,7 @@ object AudioEnginePanel {
                 ImGui.endCombo()
             }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Choose which audio input channel to analyze (Left, Right, or Mixed Mono).")
+                ImGui.setTooltip("Select frequency band for primary onset detection (LOW/Kick, MID/Snare, HIGH/Hi-hat, or UNFILTERED).")
             }
 
             ImGui.spacing()
@@ -335,17 +315,17 @@ object AudioEnginePanel {
             ImGui.sameLine()
             if (ImGui.button("High Accuracy")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply configuration tuned for precise tempo detection.")
+                ImGui.setTooltip("Apply BTrack configuration tuned for precise tempo detection.")
             }
             ImGui.sameLine()
             if (ImGui.button("Balanced")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply configuration balanced between latency and precision.")
+                ImGui.setTooltip("Apply BTrack configuration balanced between tracking reactivity and stability.")
             }
             ImGui.sameLine()
             if (ImGui.button("Eco")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply configuration with low CPU usage.")
+                ImGui.setTooltip("Apply BTrack configuration with relaxed inertia.")
             }
 
             ImGui.spacing()
@@ -374,74 +354,6 @@ object AudioEnginePanel {
                     val safeMax = maxOf(nextMin, nextMax)
                     settings.bpmSearchFloor = safeMin.toInt()
                     settings.bpmSearchCeiling = safeMax.toInt()
-                }
-            )
-
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Analysis Length",
-                currentValue = settings.analysisWindowLength,
-                minLimit = 1.0f,
-                maxLimit = 8.0f,
-                defaultValue = 4.0f,
-                formatValue = { "%.1fs".format(it) },
-                idPrefix = "audio_engine_win_len",
-                themeColor = beatThemeCol,
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    settings.analysisWindowLength = newVal
-                }
-            )
-
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Energy Threshold",
-                currentValue = settings.energyThreshold,
-                minLimit = 1.0f,
-                maxLimit = 3.0f,
-                defaultValue = 1.5f,
-                formatValue = { "%.2f".format(it) },
-                idPrefix = "audio_engine_energy_thresh",
-                themeColor = beatThemeCol,
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    settings.energyThreshold = newVal
-                }
-            )
-
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "PLL Adaptation",
-                currentValue = settings.pllAdaptationRate,
-                minLimit = 0.01f,
-                maxLimit = 1.0f,
-                defaultValue = 0.2f,
-                formatValue = { "%.2f".format(it) },
-                idPrefix = "audio_engine_pll_rate",
-                themeColor = beatThemeCol,
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    settings.pllAdaptationRate = newVal
-                }
-            )
-
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Resonator Q",
-                currentValue = settings.biquadQ,
-                minLimit = 0.5f,
-                maxLimit = 10.0f,
-                defaultValue = 3.0f,
-                formatValue = { "%.2f".format(it) },
-                idPrefix = "audio_engine_biquad_q",
-                themeColor = beatThemeCol,
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    settings.biquadQ = newVal
                 }
             )
 

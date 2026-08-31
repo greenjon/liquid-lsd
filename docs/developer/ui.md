@@ -93,7 +93,7 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck 
 ### 7. `SettingsPanel.kt` & `AudioEnginePanel.kt`
 - **Settings Category Routing**: `SettingsPanel` organizes application preferences into 8 tabs (`APPEARANCE`, `PRESET_GRID`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `BROADCAST`, `MIDI_CONTROL`, `SHORTCUTS`, `GENERAL`) and supports targeted opening via `SettingsPanel.open(category)`.
 - **Audio Engine Tab & Oscilloscopes (`AudioEnginePanel.kt`)**: The audio subsystem UI is encapsulated within `AudioEnginePanel.kt` and drawn in a balanced two-column layout:
-  - **Left Column**: Backend & hardware device configuration, status readouts, reconnection triggers, tempo synchronization, manual BPM locking, beat detection modes, and a dual-headed interactive BPM Range (Floor/Ceiling) slider with real-time tempo indicator dot.
+  - **Left Column**: Backend & hardware device configuration, status readouts, reconnection triggers, tempo synchronization, manual BPM locking, BTrack target band selection, detection presets (High Accuracy, Balanced, Eco), and a dual-headed interactive BPM Range (Floor/Ceiling) slider with real-time tempo indicator dot.
   - **Right Column**: Raw Audio Input controls (Input Gain, System Volume), Raw Audio Buffer oscilloscope, and all sound-derived Control Voltage (CV) oscilloscopes stacked vertically.
   - Audio Engine sliders omit redundant "Current: x" text labels and use compact numeric input boxes.
 - **Menu Bar Quick Access**: Clicking "Audio Engine" in `MenuBar.kt` opens `SettingsPanel` focused directly on the `AUDIO_ENGINE` category.

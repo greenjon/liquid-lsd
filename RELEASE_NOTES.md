@@ -37,6 +37,7 @@
 - **Causal Dynamic Programming Recurrence**: Pre-computed $\log(\tau)$ table (`logTauTable`) evaluates DP recurrence without transcendental `Math.log()` calls on the real-time audio thread.
 - **Zero-Allocation Phase & Cosine Queries**: Exposes primitive queries (`getPhase(t)`, `getCosine(t)`, `getPhaseAndCosine(t, out)`, `getPhaseAndCosinePacked(t)`) for continuous visual phase modulation $\cos(2\pi \phi(t))$ with zero object allocations on the render thread.
 - **120 BPM Low-Signal Fallback & Gating**: When incoming audio energy drops below analysis thresholds (silence, quiet passages, or background noise), `BeatDetector` smoothly transitions to and locks at **120.0 BPM** (`slewRate = 0.05f`), suppressing erratic phase nudges and wild counter swings.
+- **Legacy Beat Detection Algorithm & Slider Removal**: Removed obsolete detection modes (`BeatDetectionMode.AUTOCORRELATION`, `ENERGY_DIFFERENCE`, `RESONATOR`) and deprecated sliders (`Analysis Length`, `Energy Threshold`, `PLL Adaptation`, `Resonator Q`) from `AudioEngine` and `AudioEnginePanel`, standardizing the audio subsystem entirely on BTrack with clean target band selection (`LOW`, `MID`, `HIGH`, `UNFILTERED`) and presets (`High Accuracy`, `Balanced`, `Eco`).
 - **Monotonic Visual Clock Extrapolation**: Enforced strict monotonic progression in `CVRegistry.getSynchronizedTotalBeats()` to eliminate micro-hesitations from audio callback timing jitter.
 - **Zero-Centered Bipolar `BeatSine`**: Standardized `BeatSine` to oscillate as a true zero-centered bipolar sine wave between `-1.0` and `1.0`.
 
