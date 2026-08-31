@@ -203,4 +203,72 @@ class ExportArchitectureTest {
         llm.slop.liquidlsd.utils.TimeSource.clearSimulatedTime()
         assertEquals(false, llm.slop.liquidlsd.utils.TimeSource.isSimulated)
     }
+
+    @Test
+    fun testSpscQueueBasicOperations() {
+        val queue = RealtimeRecorder.SpscQueue<String>(4)
+        assertTrue(queue.isEmpty())
+        assertEquals(0, queue.size())
+
+        assertTrue(queue.offer("A"))
+        assertTrue(queue.offer("B"))
+        assertTrue(queue.offer("C"))
+        assertTrue(queue.offer("D"))
+        assertEquals(4, queue.size())
+        assertTrue(!queue.offer("E"), "Queue should reject when capacity is full")
+
+        assertEquals("A", queue.poll())
+        assertEquals("B", queue.poll())
+        assertEquals(2, queue.size())
+
+        assertTrue(queue.offer("E"))
+        assertTrue(queue.offer("F"))
+        assertEquals(4, queue.size())
+
+        assertEquals("C", queue.poll())
+        assertEquals("D", queue.poll())
+        assertEquals("E", queue.poll())
+        assertEquals("F", queue.poll())
+        assertEquals(null, queue.poll())
+        assertTrue(queue.isEmpty())
+    }
+
+    @Test
+    fun testSpscQueueConcurrentProducerConsumer() {
+        val capacity = 64
+        val queue = RealtimeRecorder.SpscQueue<Int>(capacity)
+        val itemCount = 50_000
+        val received = mutableListOf<Int>()
+        val isFinished = java.util.concurrent.atomic.AtomicBoolean(false)
+
+        val consumerThread = Thread {
+            while (!isFinished.get() || queue.isNotEmpty()) {
+                val item = queue.poll()
+                if (item != null) {
+                    received.add(item)
+                } else {
+                    Thread.yield()
+                }
+            }
+        }
+        consumerThread.start()
+
+        val producerThread = Thread {
+            for (i in 0 until itemCount) {
+                while (!queue.offer(i)) {
+                    Thread.yield()
+                }
+            }
+            isFinished.set(true)
+        }
+        producerThread.start()
+
+        producerThread.join(5000)
+        consumerThread.join(5000)
+
+        assertEquals(itemCount, received.size, "All items should be successfully transferred across threads")
+        for (i in 0 until itemCount) {
+            assertEquals(i, received[i], "Items should arrive in exact FIFO order")
+        }
+    }
 }

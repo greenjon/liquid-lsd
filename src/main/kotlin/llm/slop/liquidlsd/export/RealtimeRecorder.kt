@@ -59,17 +59,82 @@ object RealtimeRecorder {
     private var frameQueue: ArrayBlockingQueue<ByteBuffer>? = null
     private val bufferPool = mutableListOf<ByteBuffer>()
 
-    // Audio block pre-allocated pool for zero-allocation audio callback tapping
+    // Audio block pre-allocated pool for zero-allocation, lock-free audio callback tapping
     class AudioBlock(val buffer: FloatArray = FloatArray(8192)) {
         @Volatile var length: Int = 0
         @Volatile var sampleRate: Float = 44100f
     }
 
-    private const val AUDIO_POOL_SIZE = 128
-    private val freeAudioBlocks = ArrayBlockingQueue<AudioBlock>(AUDIO_POOL_SIZE).apply {
-        for (i in 0 until AUDIO_POOL_SIZE) add(AudioBlock())
+    /**
+     * Lock-free, wait-free Single-Producer Single-Consumer (SPSC) bounded queue.
+     * Operates with zero heap allocations during offer/poll and zero mutex locks.
+     */
+    class SpscQueue<T : Any>(val capacity: Int) {
+        init {
+            require(capacity > 0 && (capacity and (capacity - 1)) == 0) { "Capacity must be a power of 2" }
+        }
+
+        private val mask = capacity - 1
+        @Suppress("UNCHECKED_CAST")
+        private val buffer = arrayOfNulls<Any>(capacity) as Array<T?>
+
+        @Volatile private var head: Long = 0L // Write index (Producer)
+        @Volatile private var tail: Long = 0L // Read index (Consumer)
+
+        fun offer(element: T): Boolean {
+            val currentHead = head
+            val currentTail = tail
+            if ((currentHead - currentTail).toInt() >= capacity) {
+                return false // Queue full
+            }
+            buffer[(currentHead.toInt() and mask)] = element
+            head = currentHead + 1L
+            return true
+        }
+
+        fun poll(): T? {
+            val currentTail = tail
+            val currentHead = head
+            if (currentTail >= currentHead) {
+                return null // Queue empty
+            }
+            val idx = currentTail.toInt() and mask
+            val item = buffer[idx]
+            buffer[idx] = null
+            tail = currentTail + 1L
+            return item
+        }
+
+        fun isNotEmpty(): Boolean = head > tail
+        fun isEmpty(): Boolean = tail >= head
+
+        fun size(): Int = (head - tail).toInt().coerceAtLeast(0)
+
+        @Synchronized
+        fun clear() {
+            head = 0L
+            tail = 0L
+            for (i in buffer.indices) {
+                buffer[i] = null
+            }
+        }
     }
-    private val pendingAudioBlocks = ArrayBlockingQueue<AudioBlock>(AUDIO_POOL_SIZE)
+
+    private const val AUDIO_POOL_SIZE = 128
+    private val staticAudioBlockPool = Array(AUDIO_POOL_SIZE) { AudioBlock() }
+    private val freeAudioBlocks = SpscQueue<AudioBlock>(AUDIO_POOL_SIZE).apply {
+        for (b in staticAudioBlockPool) offer(b)
+    }
+    private val pendingAudioBlocks = SpscQueue<AudioBlock>(AUDIO_POOL_SIZE)
+
+    @Synchronized
+    private fun resetAudioPool() {
+        pendingAudioBlocks.clear()
+        freeAudioBlocks.clear()
+        for (b in staticAudioBlockPool) {
+            freeAudioBlocks.offer(b)
+        }
+    }
 
     val droppedPercentage: Float
         get() {
@@ -166,6 +231,7 @@ object RealtimeRecorder {
         videoWorkerThread?.start()
 
         if (includeAudio && tempAudioFile != null) {
+            resetAudioPool()
             val audioFile = tempAudioFile!!
             audioWorkerThread = Thread({
                 logger.info { "RealtimeRecorder audio worker thread started: ${audioFile.name}" }
@@ -181,7 +247,15 @@ object RealtimeRecorder {
                     raf.write(ByteArray(44))
 
                     while (isWorkerRunning.get() || pendingAudioBlocks.isNotEmpty()) {
-                        val block = pendingAudioBlocks.poll(50, TimeUnit.MILLISECONDS) ?: continue
+                        val block = pendingAudioBlocks.poll()
+                        if (block == null) {
+                            try {
+                                Thread.sleep(5)
+                            } catch (e: InterruptedException) {
+                                // proceed
+                            }
+                            continue
+                        }
                         try {
                             recordedSampleRate = block.sampleRate.toInt()
                             val count = block.length
@@ -315,6 +389,7 @@ object RealtimeRecorder {
 
         audioWorkerThread?.join(4000)
         audioWorkerThread = null
+        resetAudioPool()
 
         val videoSuccess = ffmpegPipe?.finish(waitForExit = true) ?: true
         ffmpegPipe = null

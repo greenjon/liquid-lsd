@@ -64,6 +64,8 @@ Three parallel second-order IIR (Infinite Impulse Response) biquad filters proce
 The filter difference equation evaluates without allocations:
 $$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$
 
+- **Subnormal / Denormal Protection**: To avoid CPU microcode stalls during trailing audio silence or decaying states, recursive state variables (`z1`, `z2`) are flushed to zero when $|\text{state}| < 10^{-15}\text{ f}$.
+
 ### Amplitude Extractor (`AmplitudeExtractor.kt`)
 Calculates Root Mean Square (RMS) energy over each block:
 

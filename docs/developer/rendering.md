@@ -182,7 +182,7 @@ Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate 
 
 ### 2. Live Session Recording (`RealtimeRecorder`)
 - **Background Frame Queue**: Bounded `ArrayBlockingQueue<ByteBuffer>(10)` prevents frame capture from stalling the main OpenGL render loop. If disk I/O stalls, frames are cleanly dropped with a live HUD counter and percentage indicator.
-- **Zero-Allocation Audio Tapping**: Live audio blocks from `AudioEngine.processAudio` are captured into a pre-allocated pool of `AudioBlock` instances without heap allocations or locks on the real-time audio thread. Audio is written to a temporary PCM WAV file and losslessly remuxed with FFmpeg (`-c:v copy -c:a aac -b:a 320k`) upon stopping.
+- **Lock-Free Zero-Allocation Audio Tapping**: Live audio blocks from `AudioEngine.processAudio` are captured into a pre-allocated pool of `AudioBlock` instances via a lock-free, wait-free Single-Producer Single-Consumer (`SpscQueue`) ring buffer without heap allocations or mutex acquisitions on the real-time audio thread. Audio is written to a temporary PCM WAV file on a background worker thread and losslessly remuxed with FFmpeg (`-c:v copy -c:a aac -b:a 320k`) upon stopping.
 - **Live REC Tally Badge**: Pulsing red record badge overlaid directly on the master preview monitor with elapsed timer (`REC MM:SS`).
 
 ### 3. Deterministic Time Virtualization (`TimeSource`)

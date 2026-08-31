@@ -71,6 +71,11 @@ class BiquadFilter(
         val output = a0 * input + z1
         z1 = a1 * input + z2 - b1 * output
         z2 = a2 * input - b2 * output
+
+        // Flush subnormals to true zero to prevent CPU microcode stalls
+        if (Math.abs(z1) < 1e-15f) z1 = 0.0f
+        if (Math.abs(z2) < 1e-15f) z2 = 0.0f
+
         return output
     }
 

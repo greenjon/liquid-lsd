@@ -50,10 +50,11 @@ This document outlines the key architectural decisions made in the development o
   - **Two-State Multi-Band Periodicity Estimation**: State 1 (Acquisition) searches 40–200 BPM across circular history buffers; State 2 (Locked Tracking) constrains search to $\pm 15\%$ around current tempo period with $\pm 2.0$ BPM/beat human tracking inertia and harmonic comb unwrapping.
   - **Decoupled Periodic Autocorrelation**: Decouples multi-second autocorrelation calculation from the per-block rate to run periodically every 4 blocks (~46 ms, ~21.5 Hz) with physical time-step scaling ($dt_{\text{interval}} = dt \cdot 4$), slashing loop iterations by 75% without compromising tempo lock speed or accuracy.
   - **Causal Dynamic Programming Recurrence**: Circular cumulative score buffer evaluating causal DP recurrence with pre-tabulated $\log(\tau)$ tables (`logTauTable`) to eliminate transcendental functions from the real-time audio thread.
+  - **Subnormal / Denormal Float Flushing (`BiquadFilter.kt`)**: Flushes biquad filter recursive state variables (`z1`, `z2`) to zero when $|\text{state}| < 10^{-15}\text{ f}$, eliminating hardware microcode exceptions and CPU pipeline stalls when audio decays toward silence.
   - **Continuous Phase & Cosine Generator**: Outputs continuous normalized phase $\phi(t) \in [0.0, 1.0)$ and locked cosine modulation signal $\cos(2\pi \phi(t))$ via zero-allocation queries (`getPhase`, `getCosine`, `getPhaseAndCosine`, `getPhaseAndCosinePacked`).
 - **Rationale**:
   - Eliminates visual phase stutter and snapping during tempo adjustments or syncopated drum breaks.
-  - Guarantees strict zero-allocation real-time safety on JACK/PipeWire audio callback threads and 60–144Hz+ rendering loops, preventing audio buffer underruns (XRUNs).
+  - Guarantees strict zero-allocation real-time safety and prevents subnormal floating-point stalls on JACK/PipeWire audio callback threads and 60–144Hz+ rendering loops, preventing audio buffer underruns (XRUNs).
 
 ---
 
@@ -144,11 +145,11 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## 5. Lock-Free Audio-to-Render Data Passing
-- **Decision**: Avoid mutexes/locks for thread synchronization. Instead, pass data from the audio thread to the rendering thread using `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`), and the custom single-writer `CvHistoryBuffer` ring-buffer.
+## 5. Lock-Free Audio-to-Render & Audio-to-Worker Data Passing
+- **Decision**: Avoid mutexes/locks (`ReentrantLock`, `synchronized`, blocking queues) on the real-time audio thread. Instead, pass data from the audio thread to the rendering thread using `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`), the custom single-writer `CvHistoryBuffer` ring-buffer, and lock-free Single-Producer Single-Consumer (`SpscQueue`) ring buffers for live audio session recording (`RealtimeRecorder`).
 - **Rationale**: 
-  - Locking on the audio thread can cause **priority inversion**, where a lower-priority rendering thread holding the lock blocks the real-time audio thread.
-  - Lock-free structures keep the threads decoupled; transient data races in visualization buffers (like the oscilloscope) are acceptable, as they cause at most a single-frame visual glitch rather than an application-wide crash or xrun.
+  - Locking on the audio thread can cause **priority inversion**, where a lower-priority rendering or background worker thread holding the lock blocks the real-time audio thread.
+  - Lock-free structures keep all threads decoupled and wait-free; transient data races in visualization buffers (like the oscilloscope) cause at most a single-frame visual glitch rather than an application-wide crash or xrun.
 
 ---
 
