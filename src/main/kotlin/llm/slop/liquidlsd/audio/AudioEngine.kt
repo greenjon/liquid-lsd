@@ -143,6 +143,14 @@ object AudioEngine {
     // a minor data race is harmless and preferred over introducing locks or allocation.
     val rawHistory = CvHistoryBuffer(1024)
 
+    // Direct pre-cached buffer references for zero-overhead, lock-free audio thread pushes
+    private val ampHistory    = CVRegistry.getHistory("audio_amp")
+    private val bassHistory   = CVRegistry.getHistory("audio_bass")
+    private val midHistory    = CVRegistry.getHistory("audio_mid")
+    private val highHistory   = CVRegistry.getHistory("audio_high")
+    private val onsetHistory  = CVRegistry.getHistory("trigger_onset")
+    private val accentHistory = CVRegistry.getHistory("trigger_accent")
+
     // Temporary processing buffers — sized to standard maximum JACK limits to guarantee no allocations.
     private val lowBuffer  = FloatArray(16384)
     private val midBuffer  = FloatArray(16384)
@@ -428,14 +436,30 @@ object AudioEngine {
         // Flywheel momentum: always advance totalBeats using effective BPM (smooth coasting even through silence)
         totalBeats += deltaTimeSec * (effectiveBpm / 60.0)
 
-        // 9. Publish to CV Registry (normalized to unipolar 0.0..1.0 unit range)
-        CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime)
-        CVRegistry.updatePushedValue("amp",    (amp  / 0.25f).coerceIn(0f, 1f))
-        CVRegistry.updatePushedValue("bass",   (bass / 0.25f).coerceIn(0f, 1f))
-        CVRegistry.updatePushedValue("mid",    (mid  / 0.25f).coerceIn(0f, 1f))
-        CVRegistry.updatePushedValue("high",   (high / 0.25f).coerceIn(0f, 1f))
+        // 9. Publish to CV Registry and history buffers directly at audio block rate (normalized to unipolar 0.0..1.0 unit range)
+        val blockDurationNs = (deltaTimeSec * 1_000_000_000.0).toLong()
+        CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
+
+        val ampNorm    = (amp  / 0.25f).coerceIn(0f, 1f)
+        val bassNorm   = (bass / 0.25f).coerceIn(0f, 1f)
+        val midNorm    = (mid  / 0.25f).coerceIn(0f, 1f)
+        val highNorm   = (high / 0.25f).coerceIn(0f, 1f)
+        val accentNorm = accentLevel.coerceIn(0f, 1f)
+
+        CVRegistry.updatePushedValue("amp",    ampNorm)
+        CVRegistry.updatePushedValue("bass",   bassNorm)
+        CVRegistry.updatePushedValue("mid",    midNorm)
+        CVRegistry.updatePushedValue("high",   highNorm)
         CVRegistry.updatePushedValue("onset",  onsetNormalized)
-        CVRegistry.updatePushedValue("accent", accentLevel.coerceIn(0f, 1f))
+        CVRegistry.updatePushedValue("accent", accentNorm)
+
+        // Direct O(1) primitive array ring buffer writes
+        ampHistory?.add(ampNorm)
+        bassHistory?.add(bassNorm)
+        midHistory?.add(midNorm)
+        highHistory?.add(highNorm)
+        onsetHistory?.add(onsetNormalized)
+        accentHistory?.add(accentNorm)
 
         val callbackNanos = System.nanoTime() - currentTime
         callbackLatencyNanos.set(callbackNanos)
