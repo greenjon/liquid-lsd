@@ -15,6 +15,7 @@ object CVRegistry {
     @Volatile private var anchorBpm: Float = 120f
     @Volatile private var anchorTimeNs: Long = System.nanoTime()
     @Volatile private var lastRenderBeats: Double = 0.0
+    @Volatile private var lastRenderTimeNs: Long = System.nanoTime()
 
     private val sources = ConcurrentHashMap<String, CVSource>()
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
@@ -62,6 +63,7 @@ object CVRegistry {
         anchorBpm = bpm
         anchorTimeNs = timeNs
         lastRenderBeats = beats
+        lastRenderTimeNs = timeNs
         updatePushedValue("bpm", bpm)
     }
 
@@ -75,10 +77,13 @@ object CVRegistry {
         val synchronized = beats + beatDelta
 
         // Ensure strictly monotonic forward progress on the render thread;
-        // prevent small backward time jitter (< 0.25 beats) caused by asynchronous audio thread anchor updates.
+        // prevent backward time jitter (< 0.25 beats) caused by asynchronous audio thread anchor updates.
         val current = lastRenderBeats
+        val frameDtSec = kotlin.math.max(0.0, (now - lastRenderTimeNs) / 1_000_000_000.0)
+        lastRenderTimeNs = now
+
         val safeBeats = if (synchronized < current && (current - synchronized) < 0.25) {
-            current
+            current + frameDtSec * (bpm / 60.0)
         } else {
             synchronized
         }
@@ -173,8 +178,14 @@ object CVRegistry {
         val elapsedSeconds = getElapsedRealtimeSec()
 
         for (source in sources.values) {
+            if (isAudioOrTriggerSource(source.id)) continue
             source.update(totalBeats, elapsedSeconds)
             histories[source.id]?.add(source.value)
         }
+    }
+
+    private fun isAudioOrTriggerSource(id: String): Boolean = when (id) {
+        "audio_amp", "audio_bass", "audio_mid", "audio_high", "trigger_onset", "trigger_accent" -> true
+        else -> false
     }
 }
