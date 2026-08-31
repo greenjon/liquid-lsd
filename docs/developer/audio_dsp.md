@@ -114,3 +114,19 @@ To prevent this:
 - The UI layer ([`AudioEnginePanel.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt)) reads from this cache with 0 allocations on the render loop.
 - Dynamic rescan is triggered explicitly via `AudioEngine.refreshInputDevices()` or the UI refresh button (`Icons.REFRESH`).
 
+---
+
+## Audio Engine Settings Persistence
+
+All Audio Engine configuration parameters are serialized to and restored from `lsd-settings.properties` via [`UITheme.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt):
+- `audioEngineEnabled`: Master toggle for audio processing.
+- `audioBackend`: Selected audio backend mode (`AUTO`, `JACK_ONLY`, `JAVASOUND_ONLY`).
+- `audioDeviceName`: Explicitly selected audio hardware input device name (or default).
+- `audioInputGain`: Input pre-amplification multiplier (0.0x–10.0x).
+- `audioBpmLocked`: Manual BPM lock state.
+- `audioManualBpm`: Manual tempo setting (40–200 BPM).
+- `audioBeatTarget`: Frequency band target for onset detection (`LOW`, `MID`, `HIGH`, `UNFILTERED`).
+- `audioBpmFloor` & `audioBpmCeiling`: BPM search range bounds for the Beat Tracker.
+- `audioTransitionAlpha` & `audioTrackingInertia`: Beat Tracker tuning constants.
+
+

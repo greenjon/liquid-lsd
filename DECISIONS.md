@@ -21,9 +21,9 @@ This document outlines the key architectural decisions made in the development o
   - **Push Triggers**: Configure `.github/workflows/release.yml` to trigger on `push: branches: [ main ]`, `push: tags: [ 'v*' ]`, and `workflow_dispatch`.
   - **Sequential Concurrency**: Enforce concurrency grouping (`cancel-in-progress: false`) to ensure sequential, non-colliding releases.
   - **Dynamic Beta Versioning**: On branch push, introspect existing tags, determine the latest `v1.0.0-beta.N` tag, calculate `v1.0.0-beta.(N+1)`, tag the commit via `github-actions[bot]`, and push the tag.
-  - **Automated Changelog & Release Notes Extraction**: Automatically extract the rich release notes description from `RELEASE_NOTES.md` (or `docs/release_notes.md`) matching the version, falling back to compiled commit history with links and authors, naming the release directly as `${TAG_NAME}` (e.g., `v1.0.0-beta.32`), and setting `make_latest: true`.
+  - **Automated Changelog & Resilient Release Notes Extraction**: Automatically extract rich release notes from `docs/release_notes.md`, `RELEASE_NOTES.md`, or alternative changelog files. The extractor checks for an exact version match, an `[Unreleased]` staging block, or falls back to the topmost version block in the file (normalizing the header), and prepends these human-friendly highlights above the compiled commit history with links and authors. Releases are named directly as `${TAG_NAME}` (e.g., `v1.0.0-beta.38`) with `make_latest: true`.
 - **Rationale**:
-  - Eliminates manual release creation and manual release notes editing after every commit push.
+  - Eliminates manual release creation and keeps human-curated documentation synchronized with rapid push-based releases even when the exact beta tag count outpaces manual version bumps.
   - Guarantees immediate binary distribution builds (`windows-x64`, `linux-x64`, `linux-arm64`, `macos-arm64`, `macos-x64`) for rapid testing across all platforms.
 
 ---

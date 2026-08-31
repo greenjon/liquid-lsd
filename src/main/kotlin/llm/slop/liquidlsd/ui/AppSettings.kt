@@ -1,8 +1,21 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.audio.AudioEngine
+import llm.slop.liquidlsd.audio.AudioTarget
+
 data class AppSettings(
     val baseSize: Float = 20f,
     val audioEngineEnabled: Boolean = true,
+    val audioBackend: AudioEngine.AudioBackendMode = AudioEngine.AudioBackendMode.AUTO,
+    val audioDeviceName: String = "",
+    val audioInputGain: Float = 1.0f,
+    val audioBpmLocked: Boolean = true,
+    val audioManualBpm: Float = 120.0f,
+    val audioBeatTarget: AudioTarget = AudioTarget.LOW,
+    val audioBpmFloor: Int = 40,
+    val audioBpmCeiling: Int = 200,
+    val audioTransitionAlpha: Float = 120.0f,
+    val audioTrackingInertia: Float = 2.0f,
     val backgroundVideoEnabled: Boolean = false,
     val cleanModeEnabled: Boolean = false,
     val randomizationEnabled: Boolean = true,

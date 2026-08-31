@@ -66,36 +66,65 @@ jobs:
               subprocess.run(["git", "tag", tag_name], check=True)
               subprocess.run(["git", "push", "origin", tag_name], check=True)
 
-          # 2. Extract release notes from RELEASE_NOTES.md or docs/release_notes.md
+          # 2. Extract release notes from docs/release_notes.md or RELEASE_NOTES.md
           v_num = tag_name.lstrip("v")
-          notes = ""
-          for fpath in ["RELEASE_NOTES.md", "docs/release_notes.md"]:
+          candidate_files = [
+              "docs/release_notes.md",
+              "RELEASE_NOTES.md",
+              "docs/RELEASE_NOTES.md",
+              "release_notes.md",
+              "RELEASES.md",
+              "releases.md",
+              "docs/RELEASES.md",
+              "docs/releases.md",
+          ]
+
+          human_notes_body = ""
+          for fpath in candidate_files:
               if os.path.exists(fpath):
                   with open(fpath, "r", encoding="utf-8") as f:
                       content = f.read()
-                  pattern = rf"(##\s+Version\s+{re.escape(v_num)}.*?)(?=\n---\s*\n##\s+Version|\Z)"
-                  match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+
+                  # 2a. Match exact version heading (e.g. ## Version 1.0.0-beta.38)
+                  pattern_version = rf"(##\s+Version\s+{re.escape(v_num)}.*?)(?=\n---\s*\n##\s+Version|\Z)"
+                  match = re.search(pattern_version, content, re.DOTALL | re.IGNORECASE)
+
+                  # 2b. If no exact match, look for an Unreleased heading
+                  if not match:
+                      pattern_unreleased = r"(##\s+\[?Unreleased\]?.*?)(?=\n---\s*\n##\s+|\Z)"
+                      match = re.search(pattern_unreleased, content, re.DOTALL | re.IGNORECASE)
+
+                  # 2c. Fallback: extract the topmost '## Version ...' section from the file
+                  if not match:
+                      pattern_top = r"(##\s+Version\s+[^\n]+.*?)(?=\n---\s*\n##\s+Version|\Z)"
+                      match = re.search(pattern_top, content, re.DOTALL | re.IGNORECASE)
+
                   if match:
-                      notes = match.group(1).strip()
+                      extracted = match.group(1).strip()
+                      # Strip any leading markdown header line so we can output a unified version header
+                      human_notes_body = re.sub(r"^##\s+(?:Version\s+[^\n]+|\[?Unreleased\]?)\s*", "", extracted, flags=re.IGNORECASE).strip()
                       break
 
-          if notes:
-              body = notes
+          # 3. Assemble release body (Human-friendly notes + Git commit log)
+          body = f"## Version {v_num}\n\n"
+          if human_notes_body:
+              body += f"{human_notes_body}\n\n---\n\n"
+
+          body += f"### 📦 Commits in {tag_name}\n\n"
+          if prev_tag:
+              body += f"Changes since **{prev_tag}**:\n\n"
+              commit_range = f"{prev_tag}..HEAD"
           else:
-              body = f"## Version {v_num}\n\n### 📦 Changes in {tag_name}\n\n"
-              if prev_tag:
-                  body += f"Changes since **{prev_tag}**:\n\n"
-                  commit_range = f"{prev_tag}..HEAD"
-              else:
-                  commit_range = "-n 30"
-              try:
-                  commits = subprocess.check_output(
-                      ["git", "log", commit_range, f"--pretty=format:- [%h](https://github.com/{repo}/commit/%H) %s (%an)"],
-                      text=True
-                  )
-                  body += commits + "\n"
-              except Exception as e:
-                  body += f"- No commit history found ({e})\n"
+              commit_range = "-n 30"
+
+          try:
+              commits = subprocess.check_output(
+                  ["git", "log", commit_range, f"--pretty=format:- [%h](https://github.com/{repo}/commit/%H) %s (%an)"],
+                  text=True
+              )
+              body += commits + "\n"
+          except Exception as e:
+              body += f"- No commit history found ({e})\n"
 
           with open("release_notes.md", "w", encoding="utf-8") as f:
               f.write(body + "\n")

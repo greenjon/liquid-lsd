@@ -121,6 +121,7 @@ object AudioEnginePanel {
             if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
                 val nextBackend = backendModes[currentBackendIdx.get()]
                 audioEngine.selectDevice(audioEngine.selectedDeviceName, nextBackend)
+                theme.saveSettings()
             }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
                 ImGui.setTooltip("Select audio capture backend (JACK for low-latency Linux, Java Sound for cross-platform).")
@@ -140,6 +141,7 @@ object AudioEnginePanel {
                 val chosenDevice = devices.getOrNull(currentDeviceIdx.get())
                 if (chosenDevice != null) {
                     audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
+                    theme.saveSettings()
                 }
             }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
@@ -259,6 +261,7 @@ object AudioEnginePanel {
             isLocked.set(audioEngine.isBpmLocked)
             if (ImGui.checkbox("Lock Manual BPM", isLocked)) {
                 audioEngine.isBpmLocked = isLocked.get()
+                theme.saveSettings()
             }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
                 ImGui.setTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
@@ -299,6 +302,7 @@ object AudioEnginePanel {
                     val isSelected = settings.target == target
                     if (ImGui.selectable(target.name, isSelected)) {
                         settings.target = target
+                        theme.saveSettings()
                     }
                     if (isSelected) ImGui.setItemDefaultFocus()
                 }
@@ -313,17 +317,26 @@ object AudioEnginePanel {
             // Detection Presets
             theme.body("Presets:")
             ImGui.sameLine()
-            if (ImGui.button("High Accuracy")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
+            if (ImGui.button("High Accuracy")) {
+                audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
+                theme.saveSettings()
+            }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
                 ImGui.setTooltip("Apply Beat Tracker configuration tuned for precise tempo detection.")
             }
             ImGui.sameLine()
-            if (ImGui.button("Balanced")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
+            if (ImGui.button("Balanced")) {
+                audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
+                theme.saveSettings()
+            }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
                 ImGui.setTooltip("Apply Beat Tracker configuration balanced between tracking reactivity and stability.")
             }
             ImGui.sameLine()
-            if (ImGui.button("Eco")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
+            if (ImGui.button("Eco")) {
+                audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
+                theme.saveSettings()
+            }
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
                 ImGui.setTooltip("Apply Beat Tracker configuration with relaxed inertia.")
             }
@@ -354,6 +367,7 @@ object AudioEnginePanel {
                     val safeMax = maxOf(nextMin, nextMax)
                     settings.bpmSearchFloor = safeMin.toInt()
                     settings.bpmSearchCeiling = safeMax.toInt()
+                    theme.saveSettings()
                 }
             )
 

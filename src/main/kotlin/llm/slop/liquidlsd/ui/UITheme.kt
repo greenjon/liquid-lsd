@@ -5,6 +5,8 @@ import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.ImGuiIO
 import llm.slop.liquidlsd.audio.AudioEngine
+import llm.slop.liquidlsd.audio.AudioTarget
+import llm.slop.liquidlsd.audio.BeatDetectionSettings
 import mu.KotlinLogging
 import java.io.File
 import java.util.Properties
@@ -262,19 +264,52 @@ object UITheme {
                     audioEngineEnabled = savedAudio
                     logger.info { "Loaded audioEngineEnabled from settings file: $audioEngineEnabled" }
                 }
+                val savedBackend = props.getProperty("audioBackend")
+                if (savedBackend != null) {
+                    try {
+                        AudioEngine.backendMode = AudioEngine.AudioBackendMode.valueOf(savedBackend)
+                        logger.info { "Loaded audioBackend from settings: ${AudioEngine.backendMode}" }
+                    } catch (e: Exception) {
+                        logger.warn(e) { "Failed to parse audioBackend '$savedBackend'" }
+                    }
+                }
+                val savedDevice = props.getProperty("audioDeviceName")
+                if (savedDevice != null) {
+                    AudioEngine.selectedDeviceName = if (savedDevice.isBlank()) null else savedDevice
+                    logger.info { "Loaded audioDeviceName from settings: ${AudioEngine.selectedDeviceName ?: "<default>"}" }
+                }
                 val savedGain = props.getProperty("audioInputGain")?.toFloatOrNull()
                 if (savedGain != null) {
-                    AudioEngine.inputGain = savedGain
+                    AudioEngine.inputGain = savedGain.coerceIn(0.0f, 10.0f)
                     logger.info { "Loaded audioInputGain from settings file: $savedGain" }
                 }
                 props.getBoolean("audioBpmLocked")?.let { savedBpmLocked ->
                     AudioEngine.isBpmLocked = savedBpmLocked
                 }
                 props.getProperty("audioManualBpm")?.toFloatOrNull()?.let { savedManualBpm ->
-                    AudioEngine.manualBpm = savedManualBpm
+                    AudioEngine.manualBpm = savedManualBpm.coerceIn(40f, 200f)
+                    AudioEngine.setBpmDirectly(AudioEngine.manualBpm)
                     logger.info { "Loaded audioManualBpm from settings: $savedManualBpm" }
                 }
 
+                val savedBeatTarget = props.getProperty("audioBeatTarget")?.let {
+                    try { AudioTarget.valueOf(it) } catch (e: Exception) { null }
+                }
+                val savedFloor = props.getProperty("audioBpmFloor")?.toIntOrNull()?.coerceIn(40, 240)
+                val savedCeiling = props.getProperty("audioBpmCeiling")?.toIntOrNull()?.coerceIn(40, 240)
+                val savedAlpha = props.getProperty("audioTransitionAlpha")?.toFloatOrNull()
+                val savedInertia = props.getProperty("audioTrackingInertia")?.toFloatOrNull()
+
+                val currentDetectorSettings = AudioEngine.beatDetector.settings
+                AudioEngine.beatDetector.applyPreset(
+                    BeatDetectionSettings(
+                        target = savedBeatTarget ?: currentDetectorSettings.target,
+                        bpmSearchFloor = savedFloor ?: currentDetectorSettings.bpmSearchFloor,
+                        bpmSearchCeiling = savedCeiling ?: currentDetectorSettings.bpmSearchCeiling,
+                        transitionWeightAlpha = savedAlpha ?: currentDetectorSettings.transitionWeightAlpha,
+                        trackingInertiaBpmPerBeat = savedInertia ?: currentDetectorSettings.trackingInertiaBpmPerBeat
+                    )
+                )
 
                 val savedBgVideo = props.getBoolean("backgroundVideoEnabled")
                 if (savedBgVideo != null) {
@@ -373,11 +408,21 @@ object UITheme {
     fun saveSettings() {
         try {
             val props = Properties()
+            if (settingsFile.exists()) {
+                settingsFile.inputStream().use { props.load(it) }
+            }
             props.setProperty("baseSize", baseSize.toString())
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
+            props.setProperty("audioBackend", AudioEngine.backendMode.name)
+            props.setProperty("audioDeviceName", AudioEngine.selectedDeviceName ?: "")
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
+            props.setProperty("audioBeatTarget", AudioEngine.beatDetector.settings.target.name)
+            props.setProperty("audioBpmFloor", AudioEngine.beatDetector.settings.bpmSearchFloor.toString())
+            props.setProperty("audioBpmCeiling", AudioEngine.beatDetector.settings.bpmSearchCeiling.toString())
+            props.setProperty("audioTransitionAlpha", AudioEngine.beatDetector.settings.transitionWeightAlpha.toString())
+            props.setProperty("audioTrackingInertia", AudioEngine.beatDetector.settings.trackingInertiaBpmPerBeat.toString())
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
             props.setProperty("cleanModeEnabled", cleanModeEnabled.toString())
             props.setProperty("randomizationEnabled", randomizationEnabled.toString())
