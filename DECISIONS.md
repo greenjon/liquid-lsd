@@ -43,7 +43,7 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## BTrack Real-Time Beat Tracking Engine & Continuous Modulation Generator
+## Beat Tracker (BeatTrackerEngine) Real-Time Engine & Continuous Modulation Generator
 
 - **Decision**: Replace heuristic beat detection with a stateful, zero-allocation beat tracking engine modeled on **BTrack** (Adam Stark) and the Dan Ellis causal dynamic programming model:
   - **Complex Spectral Difference ODF**: 512-point Radix-2 Cooley-Tukey FFT with pre-allocated twiddle factors and Hann windowing. Evaluates 2nd-order phase trajectory prediction to detect pitched attacks and percussive transients while suppressing steady-state tones.

@@ -34,7 +34,7 @@ JACK / Java Sound Callback (Audio Engine Thread)
 
 ---
 
-## BTrack Beat Tracking Model (`BeatTrackerEngine.kt`)
+## Beat Tracker Model (`BeatTrackerEngine.kt`)
 
 Liquid LSD features a real-time beat tracker and continuous phase generator modeled on BTrack (Adam Stark) and the Dan Ellis causal dynamic programming beat tracker.
 
@@ -51,8 +51,9 @@ The engine operates in two distinct states to prevent octave jumps and frequency
 - **State 2: Locked Tracking**: Constrains candidate search to a narrow observation window ($\pm 15\%$) around current tempo period $\tau_0$. Clamps maximum tempo adjustment to $\pm 2.0$ BPM/beat human tracking inertia.
 
 #### Multi-Band Cross-Spectral Autocorrelation
-Maintains zero-allocation circular ring buffers (`bassHistory`, `midHistory`, `highHistory`, `odfHistory`):
-$$\text{AC}(d) = \frac{1}{W} \sum_{i=0}^{W-1} \left[ H_{\text{bass}}[t-i] H_{\text{bass}}[t-i-d] + H_{\text{mid}}[t-i] H_{\text{mid}}[t-i-d] + H_{\text{high}}[t-i] H_{\text{high}}[t-i-d] \right]$$
+Maintains zero-allocation circular ring buffers (`bassHistory`, `midHistory`, `highHistory`, `odfHistory`) with dynamic linear (Bartlett) windowing $w(i) = 1 - \frac{i}{W}$ to eliminate abrupt boundary dropouts at history window edges:
+$$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \left[ H_{\text{bass}}[t-i] H_{\text{bass}}[t-i-d] + H_{\text{mid}}[t-i] H_{\text{mid}}[t-i-d] + H_{\text{high}}[t-i] H_{\text{high}}[t-i-d] \right]$$
+- **Dynamic Linear (Bartlett) Windowing**: Applies linearly decaying weights from 1.0 down to 0.0 at the history buffer edge, eliminating periodic 4-second edge dropouts when onsets exit the history window.
 - **Gaussian Human Prior**: Multiplies correlation by Gaussian tempo prior centered at 120 BPM ($\sigma = 80$ BPM).
 - **Harmonic Comb Unwrapping**: Eliminates half-tempo/double-tempo octave traps by evaluating half-lags ($d / 2$). If $\text{AC}(d/2) \ge 0.45 \times \text{AC}(d)$ and $\text{BPM}(d/2) \le 165.0$, the fundamental beat period unwraps to the quarter-note tempo octave.
 - **Sub-Block Parabolic Lag Interpolation**: Fits a 2nd-order parabola across $(d-1, d, d+1)$ to extract sub-block fractional lag offsets $\delta \in [-0.5, 0.5]$, achieving precision within $\pm 0.1$ BPM.
@@ -91,7 +92,7 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 - **Zero Jitter Fallback**: Autocorrelation on spectral noise is bypassed, and `currentBpm` smoothly transitions/locks to **120.0 BPM** using an exponential slew rate (`slewRate = 0.05f`), preventing wild counter swings or erroneous tempo jumps.
 - **Phase Nudge Suppression**: Phase realignment signals are suppressed (`pendingPhaseNudge = -1.0`), keeping the beat flywheel accumulator steady.
 - **Continuous Flywheel Coasting**: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing.
-- **Tempo Stability Gating**: When a valid audio signal returns (`localAudioEnergy > 0.0025f`), the engine holds the 120.0 BPM lock while analyzing candidate tempos. Only after a consistent tempo estimate ($\Delta \text{BPM} \le 4.0$ BPM, with harmonic octave awareness) is continuously observed for the stability threshold (`stabilityLockDurationSec = 0.40f`), the lock is established (`isTempoLocked = true`), and the flywheel PLL seamlessly adapts to the new track tempo.
+- **Tempo Stability Gating with Leaky Decay Hysteresis**: When a valid audio signal returns (`localAudioEnergy > 0.0025f`), the engine holds candidate tempo analysis in an accumulator. Consistent tempo estimates ($\Delta \text{BPM} \le 4.0$ BPM, with harmonic octave awareness) accumulate stability time up to a capped maximum (`min(stabilityLockDurationSec * 1.5f, stableAccumulatedSec + dt)`) with smooth exponential weighting ($0.95 / 0.05$). Outlier frames decay accumulated stability gracefully via a leaky decay rate (`dt * 2.0f`) instead of a hard reset to zero, acting as a shock absorber against transient noise/hiccups while dropping lock swiftly within $\sim 300\text{ ms}$ on genuine tempo shifts.
 
 ---
 

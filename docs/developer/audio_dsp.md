@@ -92,9 +92,9 @@ When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500
 
 ---
 
-## BTrack Real-Time Beat Tracking Engine (`BeatTrackerEngine.kt`)
+## Beat Tracker Engine (`BeatTrackerEngine.kt`)
 
-Beat detection and continuous modulation signal generation are handled by [`BeatTrackerEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt):
+Beat detection and continuous modulation signal generation are handled by [`BeatTrackerEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt) (inspired by BTrack and the Dan Ellis causal dynamic programming model):
 - **Complex Spectral Difference ODF**: 512-point zero-allocation FFT detecting percussive and tonal onsets.
 - **Two-State Multi-Band Autocorrelation**: Unconstrained acquisition (40–200 BPM) vs. locked tracking with harmonic comb unwrapping and $\pm 2.0$ BPM/beat human tracking inertia.
 - **Causal Dynamic Programming Recurrence**: Evaluates causal DP beat score recurrence using pre-tabulated logarithm tables (`logTauTable`).

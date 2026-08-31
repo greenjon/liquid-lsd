@@ -360,17 +360,26 @@ class BeatTrackerEngine(
             return fallbackBpm
         }
 
+        // Pre-calculate inverse length for the dynamic linear (Bartlett) window
+        val invWinLen = 1.0f / winLenBlocks.coerceAtLeast(1)
+
         var maxAc = -1.0f
         var rawBestDelay = minPeriodBlocks
         var acSum = 0.0f
         var delayCount = 0
 
+        // 1. The Main Search Loop
         for (delay in minPeriodBlocks..availableMaxDelay) {
             var ac = 0.0f
             for (i in 0 until winLenBlocks) {
                 val idx1 = (historyIndex - 1 - i + historySize * 10) and historyMask
                 val idx2 = (historyIndex - 1 - i - delay + historySize * 10) and historyMask
-                ac += bassHistory[idx1] * bassHistory[idx2] + midHistory[idx1] * midHistory[idx2] + highHistory[idx1] * highHistory[idx2]
+
+                val weight = 1.0f - (i * invWinLen)
+
+                ac += weight * (bassHistory[idx1] * bassHistory[idx2] +
+                                midHistory[idx1] * midHistory[idx2] +
+                                highHistory[idx1] * highHistory[idx2])
             }
             acSum += ac
             delayCount++
@@ -389,7 +398,7 @@ class BeatTrackerEngine(
         val meanAc = acSum / max(1, delayCount)
         confidence = if (meanAc > 1e-5f) (maxAc / (meanAc * 3.0f)).coerceIn(0.0f, 1.0f) else 0.5f
 
-        // Harmonic Unwrapping: Check if half-lag (double tempo) is a valid fundamental beat period
+        // 2. Harmonic Unwrapping Loop: Check if half-lag (double tempo) is a valid fundamental beat period
         var bestDelay = rawBestDelay
         while (bestDelay / 2 >= minPeriodBlocks) {
             val halfDelay = bestDelay / 2
@@ -399,8 +408,11 @@ class BeatTrackerEngine(
                 val idx1 = (historyIndex - 1 - i + historySize * 10) and historyMask
                 val idxHalf = (historyIndex - 1 - i - halfDelay + historySize * 10) and historyMask
                 val idxFull = (historyIndex - 1 - i - bestDelay + historySize * 10) and historyMask
-                halfAc += bassHistory[idx1] * bassHistory[idxHalf] + midHistory[idx1] * midHistory[idxHalf] + highHistory[idx1] * highHistory[idxHalf]
-                fullAc += bassHistory[idx1] * bassHistory[idxFull] + midHistory[idx1] * midHistory[idxFull] + highHistory[idx1] * highHistory[idxFull]
+
+                val weight = 1.0f - (i * invWinLen)
+
+                halfAc += weight * (bassHistory[idx1] * bassHistory[idxHalf] + midHistory[idx1] * midHistory[idxHalf] + highHistory[idx1] * highHistory[idxHalf])
+                fullAc += weight * (bassHistory[idx1] * bassHistory[idxFull] + midHistory[idx1] * midHistory[idxFull] + highHistory[idx1] * highHistory[idxFull])
             }
             val halfBpm = 60.0f / (halfDelay.toFloat() / fps)
             if (halfBpm <= 165.0f && fullAc > 1e-5f && (halfAc / fullAc) >= 0.45f) {
@@ -412,7 +424,7 @@ class BeatTrackerEngine(
 
         var calcBpm = -1.0f
         if (bestDelay >= minPeriodBlocks && bestDelay <= availableMaxDelay) {
-            // Sub-block parabolic lag interpolation around bestDelay
+            // 3. Sub-block parabolic lag interpolation around bestDelay
             var prevAc = 0.0f
             var centerAc = 0.0f
             var nextAc = 0.0f
@@ -426,9 +438,11 @@ class BeatTrackerEngine(
                 val idxCenter = (historyIndex - 1 - i - bestDelay + historySize * 10) and historyMask
                 val idxNext = (historyIndex - 1 - i - delayNext + historySize * 10) and historyMask
 
-                prevAc += bassHistory[idx1] * bassHistory[idxPrev] + midHistory[idx1] * midHistory[idxPrev] + highHistory[idx1] * highHistory[idxPrev]
-                centerAc += bassHistory[idx1] * bassHistory[idxCenter] + midHistory[idx1] * midHistory[idxCenter] + highHistory[idx1] * highHistory[idxCenter]
-                nextAc += bassHistory[idx1] * bassHistory[idxNext] + midHistory[idx1] * midHistory[idxNext] + highHistory[idx1] * highHistory[idxNext]
+                val weight = 1.0f - (i * invWinLen)
+
+                prevAc += weight * (bassHistory[idx1] * bassHistory[idxPrev] + midHistory[idx1] * midHistory[idxPrev] + highHistory[idx1] * highHistory[idxPrev])
+                centerAc += weight * (bassHistory[idx1] * bassHistory[idxCenter] + midHistory[idx1] * midHistory[idxCenter] + highHistory[idx1] * highHistory[idxCenter])
+                nextAc += weight * (bassHistory[idx1] * bassHistory[idxNext] + midHistory[idx1] * midHistory[idxNext] + highHistory[idx1] * highHistory[idxNext])
             }
 
             val deltaLag = interpolateParabolicPeak(prevAc, centerAc, nextAc)
@@ -445,19 +459,29 @@ class BeatTrackerEngine(
             else -> clampedCalcBpm
         }
 
-        // Stability gating & tempo lock state machine
+        // Stability gating & tempo lock state machine (Synthesized with Hysteresis)
         if (calcBpm > 0.0f) {
             val bpmDifference = abs(bpmMatch - stableCandidateBpm)
             if (bpmDifference <= 4.0f) {
-                stableAccumulatedSec += dt
-                stableCandidateBpm = stableCandidateBpm * 0.9f + bpmMatch * 0.1f
+                // Build stability, capped at a maximum duration (1.5x threshold)
+                stableAccumulatedSec = min(stabilityLockDurationSec * 1.5f, stableAccumulatedSec + dt)
+
+                // Slightly smoother smoothing factor (0.95/0.05 instead of 0.9/0.1)
+                stableCandidateBpm = stableCandidateBpm * 0.95f + bpmMatch * 0.05f
+
                 if (!isLocked && stableAccumulatedSec >= stabilityLockDurationSec) {
                     isLocked = true
                     currentBpm = stableCandidateBpm
                 }
             } else {
-                stableCandidateBpm = clampedCalcBpm
-                stableAccumulatedSec = 0.0f
+                // Leaky decay instead of an instant hard reset to 0.0f.
+                // It decays at 2x the rate it builds, dropping lock gracefully if the tempo actually shifted.
+                stableAccumulatedSec = max(0.0f, stableAccumulatedSec - (dt * 2.0f))
+
+                if (stableAccumulatedSec == 0.0f) {
+                    stableCandidateBpm = clampedCalcBpm
+                    isLocked = false
+                }
             }
         }
 

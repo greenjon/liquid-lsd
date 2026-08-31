@@ -34,7 +34,7 @@ class BeatDetectorTest {
     }
 
     @Test
-    fun testBTrackMode() {
+    fun testBeatTrackerEngine() {
         val detector = BeatDetector()
         detector.applyPreset(BeatDetectionSettings.highAccuracy())
 

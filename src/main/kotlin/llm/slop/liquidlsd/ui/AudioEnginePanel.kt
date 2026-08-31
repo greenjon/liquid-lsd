@@ -288,7 +288,7 @@ object AudioEnginePanel {
 
             ImGui.spacing()
 
-            // Auto Beat Detection Parameters (BTrack)
+            // Auto Beat Detection Parameters (Beat Tracker)
             val settings = audioEngine.beatDetector.settings
 
             theme.body("Target Band:")
@@ -315,17 +315,17 @@ object AudioEnginePanel {
             ImGui.sameLine()
             if (ImGui.button("High Accuracy")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply BTrack configuration tuned for precise tempo detection.")
+                ImGui.setTooltip("Apply Beat Tracker configuration tuned for precise tempo detection.")
             }
             ImGui.sameLine()
             if (ImGui.button("Balanced")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply BTrack configuration balanced between tracking reactivity and stability.")
+                ImGui.setTooltip("Apply Beat Tracker configuration balanced between tracking reactivity and stability.")
             }
             ImGui.sameLine()
             if (ImGui.button("Eco")) audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
             if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply BTrack configuration with relaxed inertia.")
+                ImGui.setTooltip("Apply Beat Tracker configuration with relaxed inertia.")
             }
 
             ImGui.spacing()
