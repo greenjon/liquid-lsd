@@ -56,7 +56,10 @@
 - **Robot Icon Queue Toggles**: Replaced text checkboxes with robot toggle buttons (`Icons.BOT` / `Icons.BOT_OFF`) for both A/B Queue (`AUTO-VJ`) and Background Queue (`AUTO-BG`).
 - **Deck BG Dirty State Protection**: Symmetrically guards BG Queue auto-advances with `PresetManager.isDeckDirty` respecting `UITheme.autoVjDirtyBehavior`.
 
-#### 5. Consolidated Audio Engine Settings & UI Polish (`llm.slop.liquidlsd.ui`)
+#### 5. Consolidated Audio Engine Settings & UI Polish (`llm.slop.liquidlsd.ui`, `llm.slop.liquidlsd.cv`, `llm.slop.liquidlsd.audio`)
+- **Decoupled Audio-Rate CV History Pushing**: Directly appends audio RMS and onset signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `trigger_onset`, `trigger_accent`) to `CvHistoryBuffer` ring buffers inside `AudioEngine.processAudio()` at the audio block rate (~86–344 Hz). Eagerly caches buffer references on `AudioEngine` to maintain zero-allocation, lock-free JACK callback safety, making audio oscilloscopes immune to UI frame drops, GC pauses, or render-thread hitches.
+- **Frame-Delta Beat Clock Extrapolation**: Replaced the static flatline clamp (`safeBeats = current`) in `CVRegistry.getSynchronizedTotalBeats()` with elapsed frame-delta forward extrapolation (`current + frameDtSec * (bpm / 60.0)`), completely eliminating periodic oscilloscope freezes, flatlines, and stutter on `beatSine`, `beatPhase`, and beat-synced LFO modulators.
+- **Anchor Block Duration Alignment**: Fixed beat anchor timestamps in `AudioEngine.kt` to reflect `currentTime + blockDurationNs`, perfectly aligning `anchorTimeNs` with `totalBeats` calculated at the end of the processed block.
 - **Two-Column Audio Engine Settings Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection settings, interactive dual-headed BPM range slider, input gain, and sound-derived CV oscilloscopes into a balanced 2-column layout in Settings.
 - **Zero-Lag Oscilloscope Slicing**: Fixed `CvHistoryBuffer.copyTo()` to display the true latest chronological window without latency delay, and expanded the trace buffer to 400 samples.
 - **Hardware Device Caching**: Cached ALSA/JavaSound device introspection in `AudioEngine.kt` to prevent per-frame querying handle leaks and out-of-memory crashes.

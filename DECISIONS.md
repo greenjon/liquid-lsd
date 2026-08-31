@@ -2,6 +2,17 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Decoupled Audio-Rate CV Oscilloscope History & Frame-Delta Beat Extrapolation
+
+- **Decision**: Decouple sound-derived CV oscilloscope history buffers from the UI render loop and replace hard monotonic clamping in the visual beat clock with frame-delta forward extrapolation:
+  - **Audio-Rate Direct History Writes (`AudioEngine.kt`)**: Eagerly cache direct `CvHistoryBuffer` references on `AudioEngine` (`ampHistory`, `bassHistory`, `midHistory`, `highHistory`, `onsetHistory`, `accentHistory`) and append historical samples directly within `processAudio()` at the audio block rate (~86–344 Hz). This bypasses the UI render loop, making audio oscilloscopes immune to UI frame drops, GC hiccups, and render-thread latency spikes.
+  - **Block Duration Timestamp Alignment**: Publish beat anchors with `currentTime + blockDurationNs` to synchronize the anchor timestamp with the end-of-block beat position (`totalBeats += deltaTimeSec * (effectiveBpm / 60.0)`).
+  - **Single-Source Appending (`CVRegistry.kt`)**: Filter out audio and trigger sources in `CVRegistry.updateAll()` (`isAudioOrTriggerSource(source.id)`) to eliminate double-sampling and redundant map queries on the render thread.
+  - **Nominal Frame-Delta Extrapolation (`CVRegistry.getSynchronizedTotalBeats()`)**: Replace the static flatline clamp (`safeBeats = current`) during backwards time jitter with forward progression based on elapsed render frame time (`current + frameDtSec * (bpm / 60.0)`). Reset `lastRenderTimeNs` on `resetBeatAnchor()` to prevent spurious phase jumps on track seeking or tempo resets.
+- **Rationale**:
+  - Eliminates periodic visual freezing and stuttering across all oscilloscopes, `beatSine`, and beat-synchronized LFO modulators.
+  - Preserves strict zero-allocation, lock-free real-time audio thread safety on JACK and Java Sound backends.
+
 ---
 
 ## Automated Continuous Beta Releases & Release Notes Generation

@@ -72,6 +72,10 @@ application {
     mainClass.set("llm.slop.liquidlsd.MainKt")
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 kotlin {
     // JDK 17 toolchain — Gradle auto-detects the provisioned JDK at ~/.gradle/jdks.
     // Produces JDK 17-compatible bytecode for cross-platform distribution.
