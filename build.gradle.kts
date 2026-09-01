@@ -63,6 +63,10 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.5.38")
 
+    // Markdown processing for website/docs generator
+    implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
+    implementation("org.yaml:snakeyaml:2.2")
+
     // Testing
     testImplementation(kotlin("test"))
     testImplementation("io.mockk:mockk:1.13.8")
@@ -412,4 +416,24 @@ val syncWeb = tasks.register<Exec>("syncWeb") {
     commandLine("python3", "scripts/sync_web.py", "--apply")
 }
 
+val buildWebsite = tasks.register<JavaExec>("buildWebsite") {
+    group = "documentation"
+    description = "Generates the static website and HTML documentation bundle into ./greenjon/ for greenjon.com FTP deployment."
+    dependsOn(tasks.named("classes"))
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.liquidlsd.tools.SiteGenerator")
+    args(
+        project.projectDir.absolutePath,
+        project.file("greenjon").absolutePath,
+        project.version.toString(),
+        "https://github.com/greenjon/liquid-lsd"
+    )
+    inputs.files(fileTree("docs"), fileTree("website"), "mkdocs.yml", "RELEASE_NOTES.md")
+    outputs.dir("greenjon")
+}
 
+val exportGreenjon = tasks.register("exportGreenjon") {
+    group = "distribution"
+    description = "Assembles and exports the complete greenjon.com website bundle into ./greenjon/."
+    dependsOn(buildWebsite)
+}

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d14"/>
+      <stop offset="100%" stop-color="#121722"/>
+    </linearGradient>
+    <linearGradient id="bar-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ff0080"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Audio Spectrum Bars Grid -->
+  <g transform="translate(60, 40)">
+    <rect width="680" height="340" rx="8" fill="#151a24" stroke="#263044"/>
+    
+    <!-- Grid Lines -->
+    <line x1="0" y1="85" x2="680" y2="85" stroke="#263044" stroke-dasharray="4"/>
+    <line x1="0" y1="170" x2="680" y2="170" stroke="#263044" stroke-dasharray="4"/>
+    <line x1="0" y1="255" x2="680" y2="255" stroke="#263044" stroke-dasharray="4"/>
+
+    <!-- FFT Spectrum Bars (Simulated Audio Bands) -->
+    <!-- Bass -->
+    <rect x="30" y="60" width="35" height="260" rx="4" fill="url(#bar-grad)"/>
+    <rect x="75" y="40" width="35" height="280" rx="4" fill="url(#bar-grad)"/>
+    <rect x="120" y="90" width="35" height="230" rx="4" fill="url(#bar-grad)"/>
+    <rect x="165" y="140" width="35" height="180" rx="4" fill="url(#bar-grad)"/>
+    <!-- Low Mids -->
+    <rect x="210" y="110" width="35" height="210" rx="4" fill="url(#bar-grad)"/>
+    <rect x="255" y="170" width="35" height="150" rx="4" fill="url(#bar-grad)"/>
+    <rect x="300" y="130" width="35" height="190" rx="4" fill="url(#bar-grad)"/>
+    <rect x="345" y="190" width="35" height="130" rx="4" fill="url(#bar-grad)"/>
+    <!-- High Mids -->
+    <rect x="390" y="160" width="35" height="160" rx="4" fill="url(#bar-grad)"/>
+    <rect x="435" y="210" width="35" height="110" rx="4" fill="url(#bar-grad)"/>
+    <rect x="480" y="180" width="35" height="140" rx="4" fill="url(#bar-grad)"/>
+    <rect x="525" y="240" width="35" height="80" rx="4" fill="url(#bar-grad)"/>
+    <!-- Treble -->
+    <rect x="570" y="220" width="35" height="100" rx="4" fill="url(#bar-grad)"/>
+    <rect x="615" y="260" width="35" height="60" rx="4" fill="url(#bar-grad)"/>
+  </g>
+
+  <!-- Overlay Banner -->
+  <rect x="20" y="440" width="760" height="40" rx="6" fill="#181f2e" opacity="0.9" stroke="#263044"/>
+  <text x="40" y="465" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="14" font-weight="bold">REAL-TIME AUDIO DSP &amp; FFT</text>
+  <text x="760" y="465" text-anchor="end" fill="#10b981" font-family="-apple-system, sans-serif" font-size="13">JACK: 48kHz &bull; 0.2ms Latency &bull; 0 Xruns</text>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d14"/>
+      <stop offset="100%" stop-color="#121722"/>
+    </linearGradient>
+    <linearGradient id="neon1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+  
+  <!-- Outer Mandala Rings -->
+  <g transform="translate(400, 250)" filter="url(#neon-glow)">
+    <circle r="180" fill="none" stroke="#263044" stroke-width="1.5" stroke-dasharray="4,8"/>
+    <circle r="140" fill="none" stroke="url(#neon1)" stroke-width="2" opacity="0.6"/>
+    <circle r="100" fill="none" stroke="#00d2ff" stroke-width="2"/>
+    <circle r="60" fill="none" stroke="#ff0080" stroke-width="2"/>
+    
+    <!-- Geometry Petals -->
+    <g stroke="url(#neon1)" stroke-width="2" fill="none">
+      <polygon points="0,-120 85,-85 120,0 85,85 0,120 -85,85 -120,0 -85,-85"/>
+      <polygon points="0,-90 64,-64 90,0 64,64 0,90 -64,64 -90,0 -64,-64" stroke="#00d2ff"/>
+    </g>
+    
+    <!-- Center Core -->
+    <circle r="15" fill="#00d2ff"/>
+  </g>
+  
+  <!-- Overlay Banner -->
+  <rect x="20" y="440" width="760" height="40" rx="6" fill="#181f2e" opacity="0.9" stroke="#263044"/>
+  <text x="40" y="465" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="14" font-weight="bold">MANDALA VISUALIZER</text>
+  <text x="760" y="465" text-anchor="end" fill="#00d2ff" font-family="-apple-system, sans-serif" font-size="13">60.0 FPS &bull; Polar Shader</text>
+</svg>

@@ -53,12 +53,12 @@ class BeatDetectorTest {
     }
 
     @Test
-    fun testLowSignalGracefulLockTo120Bpm() {
+    fun testColdStartLowSignalInitializesTo120Bpm() {
         val detector = BeatDetector()
         val sampleRate = 44100f
         val nframes = 512
 
-        // Feed silence / faint noise
+        // Feed silence / faint noise on cold start
         var bpmEstimate = 120.0f
         for (i in 0..100) {
             bpmEstimate = detector.processBlock(0.001f, 0.001f, 0.001f, 0.001f, sampleRate, nframes, 0.001f)
@@ -66,7 +66,7 @@ class BeatDetectorTest {
 
         assertTrue(!detector.isTargetLevelSufficient, "Target level should be marked insufficient for low signal")
         assertTrue(!detector.isTempoLocked, "Tempo lock should not be active during low signal")
-        assertEquals(120.0f, bpmEstimate, 0.01f, "BPM should lock to 120.0 under low signal")
+        assertEquals(120.0f, bpmEstimate, 0.01f, "BPM should remain at initial 120.0 under cold start low signal")
     }
 
     @Test
@@ -101,7 +101,7 @@ class BeatDetectorTest {
     }
 
     @Test
-    fun testSignalDropTransitionsBackTo120Bpm() {
+    fun testSignalDropRetainsLastLockedTempo() {
         val detector = BeatDetector()
         detector.applyPreset(BeatDetectionSettings.highAccuracy())
         val sampleRate = 44100f
@@ -118,7 +118,7 @@ class BeatDetectorTest {
         assertTrue(detector.isTempoLocked, "Should be locked")
         assertTrue(abs(lockedBpm - 135.0f) < 2.0f)
 
-        // Drop audio to silence for 4 seconds (~350 blocks)
+        // Drop audio to silence for 4 seconds (~350 blocks) representing a quiet breakdown
         var droppedBpm = lockedBpm
         for (i in 0..350) {
             droppedBpm = detector.processBlock(0.0001f, 0.0001f, 0.0001f, 0.0001f, sampleRate, nframes, 0.0f)
@@ -126,7 +126,7 @@ class BeatDetectorTest {
 
         assertTrue(!detector.isTargetLevelSufficient, "Target level should become insufficient")
         assertTrue(!detector.isTempoLocked, "Tempo lock should be released")
-        assertEquals(120.0f, droppedBpm, 0.5f, "BPM should gracefully return towards 120 BPM on signal loss (actual: $droppedBpm)")
+        assertEquals(lockedBpm, droppedBpm, 0.01f, "BPM should retain the last locked tempo (~135 BPM) during breakdowns (actual: $droppedBpm, locked was: $lockedBpm)")
     }
 
     @Test

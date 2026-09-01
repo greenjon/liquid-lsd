@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PAGE_TITLE}} — Liquid LSD Documentation</title>
+  <meta name="description" content="Liquid LSD documentation: {{PAGE_TITLE}}">
+  <link rel="stylesheet" href="{{ROOT_PATH}}assets/css/site.css">
+  <link rel="icon" type="image/svg+xml" href="{{ROOT_PATH}}assets/images/logo.svg">
+</head>
+<body class="theme-dark docs-layout">
+  <!-- Top Navigation Header -->
+  <header class="site-header docs-header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <button class="sidebar-toggle" aria-label="Toggle Table of Contents">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <a href="{{ROOT_PATH}}index.html" class="brand">
+          <img src="{{ROOT_PATH}}assets/images/logo.svg" alt="Liquid LSD Logo" class="brand-logo">
+          <span class="brand-text">Liquid <span class="accent-text">LSD</span> <span class="badge badge-subtle">Docs</span></span>
+        </a>
+      </div>
+
+      <nav class="nav-links">
+        <a href="{{ROOT_PATH}}index.html">Overview</a>
+        <a href="{{ROOT_PATH}}docs/index.html" class="active">Documentation</a>
+        <a href="{{ROOT_PATH}}docs.zip" download class="btn btn-sm btn-outline">Download Docs (.zip)</a>
+        <a href="{{GITHUB_URL}}" target="_blank" rel="noopener" class="nav-icon-link" title="GitHub Repository">
+          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="docs-container container">
+    <!-- Sidebar Navigation -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Documentation Menu</span>
+      </div>
+      <nav class="sidebar-nav">
+        {{SIDEBAR_NAV_HTML}}
+      </nav>
+      <div class="sidebar-footer">
+        <a href="{{ROOT_PATH}}docs.zip" download class="sidebar-download-link">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Offline Docs (.zip)
+        </a>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop"></div>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <div class="breadcrumbs">
+        <a href="{{ROOT_PATH}}index.html">Home</a> &rsaquo;
+        <a href="{{ROOT_PATH}}docs/index.html">Docs</a> &rsaquo;
+        <span>{{PAGE_TITLE}}</span>
+      </div>
+
+      <article class="markdown-body">
+        {{CONTENT_HTML}}
+      </article>
+
+      <div class="docs-footer-nav">
+        <div class="docs-edit-info">
+          <span>Source: <code>docs/{{SOURCE_MD_PATH}}</code></span>
+        </div>
+        <a href="{{GITHUB_URL}}" target="_blank" rel="noopener" class="docs-github-link">
+          View Repository &rarr;
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="{{ROOT_PATH}}assets/js/site.js"></script>
+</body>
+</html>

@@ -86,6 +86,16 @@ build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 
 Platform ZIP distribution tasks are also defined in `build.gradle.kts`.
 
+## Website & Documentation Export (greenjon.com)
+
+Generate the complete static website, responsive HTML documentation, and offline documentation ZIP bundle into `./greenjon/` ready for FTP upload:
+
+```bash
+./gradlew buildWebsite
+```
+
+This compiles all guides from `docs/` and `RELEASE_NOTES.md` into `./greenjon/docs/`, creates `greenjon/docs.zip`, renders `greenjon/index.html` with current version and release links, and bundles static assets. Upload the contents of `./greenjon/` directly to your web server.
+
 ## Project Map
 
 ```text

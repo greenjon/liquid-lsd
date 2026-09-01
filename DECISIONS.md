@@ -286,4 +286,13 @@ This document outlines the key architectural decisions made in the development o
   - Top menu bar "Audio Engine" item routes directly into the Settings modal focused on the Audio Engine tab for instant 1-click access.
   - Clean separation of concerns: `AudioEnginePanel.kt` encapsulates all zero-allocation oscilloscope rendering, primitive state arrays, and audio UI logic.
 
+---
+
+## 18. Pure JVM/Gradle Static Site & Documentation Generator (`greenjon.com`)
+- **Decision**: Implement a native Kotlin/JVM static site generator (`SiteGenerator.kt`) executed via Gradle (`./gradlew buildWebsite` / `./gradlew exportGreenjon`) to compile `docs/`, `RELEASE_NOTES.md`, and project metadata into a self-contained `./greenjon/` distribution folder ready for FTP upload.
+- **Rationale**:
+  - **Zero External Tooling**: Eliminates dependencies on external Python (`mkdocs`), Node.js, or Ruby engines for generating the product website and web documentation.
+  - **Single Source of Truth**: Project version, release URLs, and documentation are pulled directly from `build.gradle.kts` and `docs/`, ensuring the website and downloadable documentation package (`docs.zip`) remain continuously in sync with codebase releases.
+  - **Self-Contained & Relative**: All generated HTML pages, CSS stylesheets, SVGs, and scripts use relative asset paths, allowing immediate drag-and-drop deployment via FTP to `greenjon.com` or any static web host.
+
 

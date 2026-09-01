@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d14"/>
+      <stop offset="100%" stop-color="#121722"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Matrix UI Table Mockup -->
+  <g transform="translate(60, 40)">
+    <rect width="680" height="340" rx="8" fill="#151a24" stroke="#263044"/>
+
+    <!-- Table Header -->
+    <rect width="680" height="40" rx="8 8 0 0" fill="#1e2638"/>
+    <text x="30" y="25" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="13" font-weight="bold">SOURCE CV</text>
+    <text x="220" y="25" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="13" font-weight="bold">TARGET PARAMETER</text>
+    <text x="440" y="25" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="13" font-weight="bold">AMOUNT</text>
+    <text x="580" y="25" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="13" font-weight="bold">MIDI CC</text>
+
+    <!-- Row 1 -->
+    <rect y="40" width="680" height="55" fill="#182030"/>
+    <text x="30" y="73" fill="#00d2ff" font-family="monospace" font-size="13">AUDIO_BASS_RMS</text>
+    <text x="220" y="73" fill="#e2e8f0" font-family="-apple-system, sans-serif" font-size="13">Mandala: Layer 1 Radius</text>
+    <rect x="440" y="60" width="90" height="18" rx="4" fill="#00d2ff" opacity="0.8"/>
+    <text x="580" y="73" fill="#a855f7" font-family="monospace" font-size="13">CC #14 (Ch 1)</text>
+
+    <!-- Row 2 -->
+    <rect y="95" width="680" height="55" fill="#151a24"/>
+    <text x="30" y="128" fill="#00d2ff" font-family="monospace" font-size="13">AUDIO_TREBLE_PEAK</text>
+    <text x="220" y="128" fill="#e2e8f0" font-family="-apple-system, sans-serif" font-size="13">Mandala: Rotation Speed</text>
+    <rect x="440" y="115" width="65" height="18" rx="4" fill="#00d2ff" opacity="0.8"/>
+    <text x="580" y="128" fill="#a855f7" font-family="monospace" font-size="13">CC #15 (Ch 1)</text>
+
+    <!-- Row 3 -->
+    <rect y="150" width="680" height="55" fill="#182030"/>
+    <text x="30" y="183" fill="#10b981" font-family="monospace" font-size="13">LFO_SINE_SLOW</text>
+    <text x="220" y="183" fill="#e2e8f0" font-family="-apple-system, sans-serif" font-size="13">Color Hue Shift</text>
+    <rect x="440" y="170" width="110" height="18" rx="4" fill="#10b981" opacity="0.8"/>
+    <text x="580" y="183" fill="#a855f7" font-family="monospace" font-size="13">CC #16 (Ch 1)</text>
+
+    <!-- Row 4 -->
+    <rect y="205" width="680" height="55" fill="#151a24"/>
+    <text x="30" y="238" fill="#f59e0b" font-family="monospace" font-size="13">BEAT_TRIGGER</text>
+    <text x="220" y="238" fill="#e2e8f0" font-family="-apple-system, sans-serif" font-size="13">Preset Crossfade Morph</text>
+    <rect x="440" y="225" width="120" height="18" rx="4" fill="#f59e0b" opacity="0.8"/>
+    <text x="580" y="238" fill="#a855f7" font-family="monospace" font-size="13">CC #1 (ModWheel)</text>
+  </g>
+
+  <!-- Overlay Banner -->
+  <rect x="20" y="440" width="760" height="40" rx="6" fill="#181f2e" opacity="0.9" stroke="#263044"/>
+  <text x="40" y="465" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="14" font-weight="bold">MODULATION MATRIX &amp; MIDI</text>
+  <text x="760" y="465" text-anchor="end" fill="#a855f7" font-family="-apple-system, sans-serif" font-size="13">MIDI In: USB Controller &bull; 12 Active Routes</text>
+</svg>

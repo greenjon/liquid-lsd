@@ -353,12 +353,12 @@ class BeatTrackerEngine(
     private fun estimateTempo(fps: Float, dt: Float, minPeriodBlocks: Int, maxPeriodBlocks: Int): Float {
         val availableMaxDelay = (historyCount - minPeriodBlocks).coerceAtLeast(0).coerceAtMost(maxPeriodBlocks)
         if (availableMaxDelay < minPeriodBlocks) {
-            return fallbackBpm
+            return currentBpm
         }
 
         val winLenBlocks = (historyCount - availableMaxDelay).coerceAtMost((4.0f * fps).toInt())
         if (winLenBlocks <= 10) {
-            return fallbackBpm
+            return currentBpm
         }
 
         // Pre-calculate inverse length for the dynamic linear (Bartlett) window
@@ -451,7 +451,7 @@ class BeatTrackerEngine(
             calcBpm = 60.0f / (subBlockLag / fps)
         }
 
-        val clampedCalcBpm = if (calcBpm > 0.0f) calcBpm.coerceIn(bpmFloor, bpmCeiling) else fallbackBpm
+        val clampedCalcBpm = if (calcBpm > 0.0f) calcBpm.coerceIn(bpmFloor, bpmCeiling) else currentBpm
 
         // Find closest harmonic octave match to stable candidate (e.g. 70 <-> 140 BPM)
         val bpmMatch = when {
@@ -492,8 +492,6 @@ class BeatTrackerEngine(
             currentBpm = (currentBpm + deltaBpm).coerceIn(bpmFloor, bpmCeiling)
             targetBeatIntervalTau0 = fps * (60.0f / currentBpm)
         } else if (!isLocked) {
-            val slewRate = 0.05f
-            currentBpm = currentBpm * (1.0f - slewRate) + fallbackBpm * slewRate
             targetBeatIntervalTau0 = fps * (60.0f / currentBpm)
         }
 
@@ -723,8 +721,7 @@ class BeatTrackerEngine(
             isLocked = false
             stableAccumulatedSec = 0.0f
             confidence = 0.0f
-            val slewRate = 0.05f
-            currentBpm = currentBpm * (1.0f - slewRate) + fallbackBpm * slewRate
+            // Retain flywheel momentum at current tempo without drifting towards fallback 120 BPM
             targetBeatIntervalTau0 = fps * (60.0f / currentBpm)
             cumulativeScore[totalBlocksProcessed.toInt() and scoreBufferMask] = 0.0f
             updateBeatAnchors(effectiveTimestamp, fps)

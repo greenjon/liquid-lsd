@@ -123,6 +123,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
 │   └── PresetGridState.kt      — Selection state & 30-level Undo Stack
+├── tools/
+│   └── SiteGenerator.kt        — Static site, documentation HTML, and offline ZIP builder for greenjon.com
 └── utils/
     ├── TimeSource.kt           — Time virtualization provider for live and deterministic rendering
     └── TimeUtils.kt            — Timing utilities

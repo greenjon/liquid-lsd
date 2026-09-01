@@ -167,12 +167,29 @@ class BeatDetectorBenchmarkTest {
         val detector = BeatDetector()
         detector.applyPreset(BeatDetectionSettings.highAccuracy())
 
-        // Run track with a 4-beat breakdown (silence/fill)
-        val result = simulateDrumTrack(detector, 120.0f, durationSeconds = 15f, hasBreakdown = true)
-
+        // Run track with a 4-beat breakdown (silence/fill) at 120 BPM
+        val result120 = simulateDrumTrack(detector, 120.0f, durationSeconds = 15f, hasBreakdown = true)
         assertTrue(
-            abs(result.finalBpmEstimate - 120.0f) <= 2.0f,
-            "BPM estimate should remain steady during/after drum breakdown (actual: ${result.finalBpmEstimate})"
+            abs(result120.finalBpmEstimate - 120.0f) <= 2.0f,
+            "BPM estimate should remain steady during/after drum breakdown at 120 BPM (actual: ${result120.finalBpmEstimate})"
+        )
+
+        // Reset and run track with an extended breakdown at 128 BPM
+        val detector128 = BeatDetector()
+        detector128.applyPreset(BeatDetectionSettings.highAccuracy())
+        val result128 = simulateDrumTrack(detector128, 128.0f, durationSeconds = 15f, hasBreakdown = true)
+        assertTrue(
+            abs(result128.finalBpmEstimate - 128.0f) <= 2.0f,
+            "BPM estimate should remain steady during/after drum breakdown at 128 BPM (actual: ${result128.finalBpmEstimate})"
+        )
+
+        // Reset and run track with an extended breakdown at 140 BPM
+        val detector140 = BeatDetector()
+        detector140.applyPreset(BeatDetectionSettings.highAccuracy())
+        val result140 = simulateDrumTrack(detector140, 140.0f, durationSeconds = 15f, hasBreakdown = true)
+        assertTrue(
+            abs(result140.finalBpmEstimate - 140.0f) <= 2.0f,
+            "BPM estimate should remain steady during/after drum breakdown at 140 BPM (actual: ${result140.finalBpmEstimate})"
         )
     }
 }
