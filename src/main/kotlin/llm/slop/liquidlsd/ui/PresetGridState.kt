@@ -53,6 +53,15 @@ class PresetGridState {
     var activeDeckBGSubTab: String = "Mandala"
     var activeDeckPVSubTab: String = "Mandala"
 
+    fun setDeckSubTab(deckLabel: String, tab: String) {
+        when (deckLabel) {
+            "Deck A" -> activeDeckASubTab = tab
+            "Deck B" -> activeDeckBSubTab = tab
+            "Deck BG" -> activeDeckBGSubTab = tab
+            "Deck PV" -> activeDeckPVSubTab = tab
+        }
+    }
+
     fun select(cellId: PresetCellId, param: ModulatableParameter) {
         selectedCell = cellId
         selectedParam = param

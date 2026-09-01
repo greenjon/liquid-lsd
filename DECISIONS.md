@@ -2,6 +2,25 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Harmonized 5-Column CV Modulation Palette & Central Theme Unification (`CvTheme.kt`)
+
+- **Decision**: Redesign the CV modulation color scheme across `PresetGridPanel`, `CellConfigPanel`, and `AudioEnginePanel` to span 5 distinct quadrants of the color wheel with high-contrast, anti-aliased luminance calibrated for dark backgrounds:
+  - **Pruned 5-Column Distribution**:
+    - **`VAL` (Value / Base)**: Crisp Mint Cyan (`#00F2B8`, `rgb(0.00, 0.95, 0.72)`) — Ground/anchor reference.
+    - **`MIDI` (MIDI CC)**: Bright Orchid Violet (`#B873FF`, `rgb(0.72, 0.45, 1.00)`) — External controller bindings.
+    - **`LFO` (Synthetic Oscillators)**: Electric Sky Blue (`#26BFFF`, `rgb(0.15, 0.75, 1.00)`) — Flowing wave generators.
+    - **`AUD` (Audio Followers)**: Warm Amber Gold (`#FFAE1F`, `rgb(1.00, 0.68, 0.12)`) — Acoustic energy / VU meter warmth.
+    - **`TRIG` (Transient Triggers)**: Hot Coral Rose (`#FF4080`, `rgb(1.00, 0.25, 0.50)`) — Punchy onset/accent transients.
+  - **Sub-Band Family Harmonies**: Sub-signals under Audio and Trigger naturally extend their respective color families (Audio RMS Amber, Bass Deep Orange, Mid Golden Amber, High Bright Gold; Trigger Onset Coral Pink, Trigger Accent Crimson Rose).
+  - **Single Source of Truth (`CvTheme.kt`)**: Replaced duplicate, hardcoded, and out-of-sync color mappings in `PresetGridPanel.kt`, `CellConfigPanel.kt`, and `AudioEnginePanel.kt` with centralized `CvTheme.getThemeColor()` and `CvTheme.getThemeColorRGB()` calls.
+  - **Theme-Adaptive Grid Cells (`PresetGridRenderer.kt`)**: Removed per-column cell knob/needle/arc tinting in favor of inheriting the parameter's native theme text color (`ImGuiCol.Text`). This ensures consistent legibility, clean neutral cell backgrounds, and seamless adaptability across all light and dark theme palettes (Solarized, Lunarized, Neon, Boring) while keeping column headers and `CellConfigPanel` tabs vibrantly color-coded.
+- **Rationale**:
+  - The previous palette originated from a 12-column matrix where adjacent columns clustered into similar lime greens and deep purples. When pruned to 5 columns, `VAL` (mint) and `AUD` (lime) looked nearly identical, while `MIDI` and `TRIG` were dark/clashing purples.
+  - The new 5-column palette evenly distributes hues (~38° Gold, ~165° Mint, ~202° Sky Blue, ~270° Violet, ~340° Coral Rose), ensuring instantaneous visual recognition, excellent text readability, and complete thematic coherence across all modulation panels.
+  - Neutralizing per-column cell coloring prevents visual noise and low-contrast clashes against custom theme backgrounds.
+
+---
+
 ## Decoupled Audio-Rate CV Oscilloscope History & Frame-Delta Beat Extrapolation
 
 - **Decision**: Decouple sound-derived CV oscilloscope history buffers from the UI render loop and replace hard monotonic clamping in the visual beat clock with frame-delta forward extrapolation:

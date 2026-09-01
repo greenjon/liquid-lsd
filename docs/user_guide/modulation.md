@@ -20,13 +20,13 @@ The Preset Grid is located in the left panel of Performance Mode.
 - **Top Navigation Tabs**: Switch view focus between **Deck A**, **Deck B**, **Deck BG**, and **Deck PV**.
 - **Undo / Redo History**: Maintains a 30-level undo/redo stack (`Ctrl+Z` / `Ctrl+Y`) tracking all modulator edits, additions, and parameter changes.
 - **Rows**: Modulatable parameters grouped logically: Mixer, Deck Geometry, View, Color, Background, and Feedback.
-- **Columns**: Active modulation sources:
-  - **VALUE**: Base parameter controls, live evaluated output knobs, and parameter default resets.
-  - **MIDI**: Direct MIDI CC hardware assignments.
-  - **GEN 1 & GEN 2**: Configurable LFO & clock generators.
-  - **AUDIO**: Audio frequency-band envelope extractors (`AMP`, `BASS`, `MID`, `HIGH`).
-  - **TRIGGER**: Musical transient impulse detectors (`ONSET`, `ACCENT`).
-- **Grid Cells**: Intersection points linking a source to a parameter. Active cells display a animated colored dot indicating live CV signal output.
+- **Columns**: 5 distinct, color-coded modulation domains:
+  - **VAL** (`Mint Cyan`): Base parameter value, modulation range bounds, live evaluated output knobs, and default resets.
+  - **MIDI** (`Bright Orchid Violet`): Hardware MIDI CC assignments and mapping.
+  - **LFO** (`Electric Sky Blue`): Configurable primary and secondary low-frequency oscillators (`LFO 1` / `LFO 2`).
+  - **AUD** (`Warm Amber Gold`): Audio frequency-band dynamics envelope extractors (`AMP`, `BASS`, `MID`, `HIGH`).
+  - **TRIG** (`Hot Coral Rose`): Musical transient impulse detectors (`ONSET`, `ACCENT`).
+- **Grid Cells**: Intersection points linking a source to a parameter. Active cells display an animated readout knob, needle, and dial arc matching the parameter's theme text color for seamless legibility across all themes.
 
 - **Grid Knob Cell Scale & Resolution Scaling**: Grid cells and circular readout knobs automatically scale with global UI font size (`baseSize`). You can fine-tune relative knob dimensions (0.70x to 2.00x) under **Settings -> Preset Grid** via the **Grid Knob Cell Scale** slider.
 

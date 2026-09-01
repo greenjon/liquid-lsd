@@ -19,6 +19,12 @@ class PopupManager(
     private var pendingConfirmLabel: String? = null
     private var pendingConfirmCallback: (() -> Unit)? = null
 
+    private var pendingSourceDeck: Deck? = null
+    private var pendingSourceLabel: String? = null
+    private var pendingSourceOldName: String? = null
+    private var pendingSourceNewName: String? = null
+    private var pendingSourceCallback: (() -> Unit)? = null
+
     fun requestDeckConfirm(deck: Deck, label: String, onProceed: () -> Unit) {
         pendingConfirmDeck = deck
         pendingConfirmLabel = label
@@ -29,6 +35,28 @@ class PopupManager(
         pendingConfirmDeck = null
         pendingConfirmLabel = null
         pendingConfirmCallback = null
+    }
+
+    fun requestSourceChangeConfirm(
+        deck: Deck,
+        label: String,
+        oldSourceName: String,
+        newSourceName: String,
+        onProceed: () -> Unit
+    ) {
+        pendingSourceDeck = deck
+        pendingSourceLabel = label
+        pendingSourceOldName = oldSourceName
+        pendingSourceNewName = newSourceName
+        pendingSourceCallback = onProceed
+    }
+
+    fun clearSourceChangeConfirm() {
+        pendingSourceDeck = null
+        pendingSourceLabel = null
+        pendingSourceOldName = null
+        pendingSourceNewName = null
+        pendingSourceCallback = null
     }
 
     fun drawExitPopup(mixer: Mixer, displayW: Float, displayH: Float) {
@@ -124,6 +152,53 @@ class PopupManager(
             ImGui.sameLine()
             if (ImGui.button("Cancel", 80f, 0f)) {
                 clearDeckConfirm()
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
+    fun drawSourceChangeConfirmPopup(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        val deck = pendingSourceDeck ?: return
+        val label = pendingSourceLabel ?: "Deck"
+        val oldName = pendingSourceOldName ?: "Current Source"
+        val newName = pendingSourceNewName ?: "New Source"
+        val onProceed = pendingSourceCallback ?: return
+
+        val activeName = when {
+            deck === mixer.deckA -> session.presetManager.activePresetA
+            deck === mixer.deckB -> session.presetManager.activePresetB
+            deck === mixer.deckBG -> session.presetManager.activePresetBG
+            else -> session.presetManager.activePresetPV
+        }
+
+        val popupId = "Change Visual Source $label?##source_confirm"
+        ImGui.openPopup(popupId)
+
+        if (ImGui.beginPopupModal(popupId, ImGuiWindowFlags.AlwaysAutoResize)) {
+            if (!activeName.isNullOrBlank()) {
+                ImGui.textWrapped("Changing visual source for $label from '$oldName' to '$newName' will unload preset '$activeName' and discard its source parameters.")
+            } else {
+                ImGui.textWrapped("Changing visual source for $label from '$oldName' to '$newName' will reset all source parameters.")
+            }
+            ImGui.spacing()
+            ImGui.text("Are you sure you want to proceed?")
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.6f, 0.2f, 0.2f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.75f, 0.25f, 0.25f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.9f, 0.3f, 0.3f, 1f))
+            if (ImGui.button("Change Source", 120f, 0f)) {
+                onProceed()
+                clearSourceChangeConfirm()
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.popStyleColor(3)
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 80f, 0f)) {
+                clearSourceChangeConfirm()
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()

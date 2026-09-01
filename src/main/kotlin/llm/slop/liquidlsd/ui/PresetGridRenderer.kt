@@ -177,19 +177,19 @@ object PresetGridRenderer {
 
         // 1. VALUE Cell
         drawValueCell(session, dl, param, paramKey, state, gridStartX, labelColW, rowScreenY, CELL, r,
-            getColumnOffset, getCvColor, onPushUndo)
+            getColumnOffset, onPushUndo)
 
         // 2. MIDI Cell
         if (session.uiTheme.showMidiCol) {
             drawMidiCell(session, dl, param, paramKey, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
-                getColumnOffset, getCvColor, onPushUndo)
+                getColumnOffset, onPushUndo)
         }
 
         // 3. CV Cells
         val cvCols = getCvColumns()
         for (cvId in cvCols) {
             drawCvCell(session, dl, param, paramKey, cvId, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
-                getColumnOffset, getCvColor, onPushUndo)
+                getColumnOffset, onPushUndo)
         }
 
         ImGui.popID()
@@ -207,7 +207,6 @@ object PresetGridRenderer {
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
         getColumnOffset: (String) -> Float,
-        getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
         val valX = gridStartX + labelColW + getColumnOffset("value")
@@ -240,12 +239,13 @@ object PresetGridRenderer {
 
         val bgCol = when {
             isValSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-            else          -> getCvColor("value", 0.05f)
+            else          -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
         }
         val borderCol = when {
             isValSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
             else          -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
+        val cellColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
 
         drawKnobMeter(
             session = session,
@@ -255,7 +255,7 @@ object PresetGridRenderer {
             baseValue = param.baseValue,
             baseMin = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMin else null,
             baseMax = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMax else null,
-            color = getCvColor("value", 1f), bgCol = bgCol, borderCol = borderCol,
+            color = cellColor, bgCol = bgCol, borderCol = borderCol,
             isHovered = isValHovered
         )
     }
@@ -270,7 +270,6 @@ object PresetGridRenderer {
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
         getColumnOffset: (String) -> Float,
-        getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
         val midiX = gridStartX + labelColW + getColumnOffset("midi")
@@ -348,7 +347,7 @@ object PresetGridRenderer {
             isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
             isMidiSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
             hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
-            else           -> getCvColor("midi", 0.05f)
+            else           -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
         }
         val borderCol = when {
             isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
@@ -356,6 +355,7 @@ object PresetGridRenderer {
             hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
             else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
+        val cellColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
 
         if (hasMidiMod || isMidiBypassed) {
             val isBipolar = param.minClamp < 0f
@@ -372,7 +372,7 @@ object PresetGridRenderer {
                 value = displayValue, min = param.minClamp, max = param.maxClamp,
                 meterType = param.meterType,
                 baseValue = null, baseMin = null, baseMax = null,
-                color = getCvColor("midi", 1f),
+                color = cellColor,
                 bgCol = bgCol, borderCol = borderCol,
                 isBypassed = isMidiBypassed,
                 isHovered = isCellHovered
@@ -398,7 +398,6 @@ object PresetGridRenderer {
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
         getColumnOffset: (String) -> Float,
-        getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
         val cellId = PresetCellId(paramKey, cvId)
@@ -507,7 +506,7 @@ object PresetGridRenderer {
             isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
             isSelected   -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
             hasModulator -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
-            else         -> getCvColor(cvId, 0.05f)
+            else         -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
         }
         val borderCol = when {
             isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
@@ -515,6 +514,7 @@ object PresetGridRenderer {
             hasModulator -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
             else         -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
+        val cellColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
 
         if (hasModulator || isBypassed) {
             val isBipolar = param.minClamp < 0f
@@ -531,7 +531,7 @@ object PresetGridRenderer {
                 value = displayValue, min = param.minClamp, max = param.maxClamp,
                 meterType = param.meterType,
                 baseValue = null, baseMin = null, baseMax = null,
-                color = getCvColor(cvId, 1f),
+                color = cellColor,
                 bgCol = bgCol, borderCol = borderCol,
                 isBypassed = isBypassed,
                 isHovered = isCellHovered

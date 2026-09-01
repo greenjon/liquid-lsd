@@ -510,8 +510,8 @@ object Lfo1Section {
         // -- Advanced Parameters Accordion --
         val isAdvancedDirty = existing.phaseOffset != 0f || existing.morph != 0f || existing.hold != 0f || (existing.slope != 0.5f && existing.waveform != Waveform.RANDOM)
         val dirtyMarker = if (isAdvancedDirty) " •" else ""
-        val advHeader = "Advanced Parameters$dirtyMarker"
-        if (ImGui.collapsingHeader(advHeader, if (isAdvancedDirty) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0)) {
+        val advHeader = "Advanced Parameters$dirtyMarker###adv_params_header"
+        if (ImGui.collapsingHeader(advHeader, 0)) {
             // -- Phase Offset -----------------------------------------
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
                 label = if (isGen) "LFO 1 Phase" else "Phase Offset",

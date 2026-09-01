@@ -95,6 +95,13 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
   - **`AUTO_DISCARD`**: Discards modifications immediately and executes the transition without prompt.
   - **`SKIP` (Prompt)**: Dispatches a confirmation request to `PopupManager.requestDeckConfirm` to prompt the user (Save, Discard, or Cancel).
 
+### Visual Source Change Guard (`DeckPresetController.changeVisualSourceSafely`)
+- Whenever changing the visual source on a deck (`PresetGridTabs` dropdown or Launchpad):
+  - **Confirmation Dialog (`PopupManager.drawSourceChangeConfirmPopup`)**: If the deck has an active named preset or unsaved parameter edits, prompts the user before replacing the source.
+  - **Preset Unbinding**: Clears `activePreset` and `cachedDto` in `PresetManager` so subsequent saves require naming or cannot overwrite the previous preset file.
+  - **Selection Invalidation & Subtab Synchronization**: Clears `PresetGridState.selectedCell` / `selectedParam` and switches the deck subtab to the new source.
+  - **Stale Parameter Protection (`CellConfigPanel`)**: `CellConfigPanel.draw()` defensively validates `state.selectedParam` against `ParameterResolver.findParameterByPath()`. If the parameter was orphaned or detached, selection is immediately cleared.
+
 ---
 
 ## 4. Background Queue Manager (`BgQueueManager.kt`)

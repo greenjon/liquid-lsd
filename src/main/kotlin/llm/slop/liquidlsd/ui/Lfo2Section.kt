@@ -35,9 +35,9 @@ object Lfo2Section {
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val isLfo2Active = (currentMode != llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
         val dirtyMarker = if (isLfo2Active) " [ON] •" else ""
-        val lfo2Title = (if (existing.sourceId == "lfo") "LFO 2 (Modulator)" else "Oscillator 2 (Modulator)") + dirtyMarker
+        val lfo2Title = "${if (existing.sourceId == "lfo") "LFO 2 (Modulator)" else "Oscillator 2 (Modulator)"}$dirtyMarker###lfo2_header"
 
-        if (ImGui.collapsingHeader(lfo2Title, if (isLfo2Active) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0)) {
+        if (ImGui.collapsingHeader(lfo2Title, 0)) {
             ImGui.spacing()
 
             val lfo2Bypassed = (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)

@@ -410,7 +410,7 @@ object ColorTunerPanel {
             ImGui.spacing()
 
             // Swatch Bank Display
-            if (ImGui.collapsingHeader("Palette Swatches (${currentPalette.swatches.size})", imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
+            if (ImGui.collapsingHeader("Palette Swatches (${currentPalette.swatches.size})###palette_swatches_header", imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
                 val itemSpacing = 6f
                 val chipSize = 20f
                 val dl = ImGui.getWindowDrawList()

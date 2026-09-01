@@ -202,26 +202,46 @@ class DeckPresetController(
         }
     }
 
+    fun changeVisualSourceSafely(
+        mixer: Mixer,
+        deck: Deck,
+        deckLabel: String,
+        newSource: llm.slop.liquidlsd.rendering.VisualSource,
+        state: PresetGridState
+    ) {
+        val currentSource = deck.source
+        if (currentSource == newSource) return
+
+        val activeName = when {
+            deck === mixer.deckA -> session.presetManager.activePresetA
+            deck === mixer.deckB -> session.presetManager.activePresetB
+            deck === mixer.deckBG -> session.presetManager.activePresetBG
+            else -> session.presetManager.activePresetPV
+        }
+        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
+
+        val doSwitch = {
+            deck.source = newSource.clone()
+            deck.isEmpty = false
+            session.presetManager.clearDeckActivePreset(deck, mixer)
+            state.clearSelection()
+            val newSubTab = if (newSource is llm.slop.liquidlsd.rendering.Mandala) "Mandala" else newSource.displayName
+            state.setDeckSubTab(deckLabel, newSubTab)
+            PresetGridUndo.pushUndoState(state, mixer)
+        }
+
+        if (!activeName.isNullOrBlank() || isDirty) {
+            val oldName = if (currentSource is llm.slop.liquidlsd.rendering.Mandala) "Mandala" else currentSource.displayName
+            val newName = if (newSource is llm.slop.liquidlsd.rendering.Mandala) "Mandala" else newSource.displayName
+            popupManager.requestSourceChangeConfirm(deck, deckLabel, oldName, newName, doSwitch)
+        } else {
+            doSwitch()
+        }
+    }
+
     fun performEjectDeck(mixer: Mixer, deck: Deck) {
         deck.reset()
-        when {
-            deck === mixer.deckA -> {
-                session.presetManager.activePresetA = null
-                session.presetManager.cachedDtoA = null
-            }
-            deck === mixer.deckB -> {
-                session.presetManager.activePresetB = null
-                session.presetManager.cachedDtoB = null
-            }
-            deck === mixer.deckBG -> {
-                session.presetManager.activePresetBG = null
-                session.presetManager.cachedDtoBG = null
-            }
-            deck === mixer.deckPV -> {
-                session.presetManager.activePresetPV = null
-                session.presetManager.cachedDtoPV = null
-            }
-        }
+        session.presetManager.clearDeckActivePreset(deck, mixer)
     }
 
     fun generateUniqueCopyName(baseName: String): String {

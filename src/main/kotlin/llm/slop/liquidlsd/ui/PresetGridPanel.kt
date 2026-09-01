@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.models.ClipboardManager
 import llm.slop.liquidlsd.models.CellClipboardData
 import llm.slop.liquidlsd.models.RowClipboardData
@@ -70,27 +71,7 @@ object PresetGridPanel {
     }
 
     private fun getCvColor(colId: String, alpha: Float = 1f): Int {
-        return when (colId) {
-            // Special
-            "value", "final" -> ImGui.colorConvertFloat4ToU32(0.0f, 1.0f, 0.7f, alpha)
-            "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
-            "midi"           -> ImGui.colorConvertFloat4ToU32(0.7f, 0.3f, 1.0f, alpha)
-            // Synthetic / Generators
-            "lfo"            -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 1.0f, alpha)
-            "sampleAndHold"  -> ImGui.colorConvertFloat4ToU32(0.7f, 0.4f, 1.0f, alpha)
-            "beatPhase"      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 1.0f, alpha)
-            // Audio / Spectral
-            "audio"          -> ImGui.colorConvertFloat4ToU32(0.3f, 0.9f, 0.0f, alpha)
-            "amp"            -> ImGui.colorConvertFloat4ToU32(0.3f, 0.9f, 0.0f, alpha)
-            "bass"           -> ImGui.colorConvertFloat4ToU32(0.9f, 0.2f, 0.2f, alpha)
-            "mid"            -> ImGui.colorConvertFloat4ToU32(0.9f, 0.5f, 0.1f, alpha)
-            "high"           -> ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.2f, alpha)
-            // Transients / Triggers
-            "trigger"        -> ImGui.colorConvertFloat4ToU32(1.0f, 0.0f, 0.5f, alpha)
-            "onset"          -> ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, alpha)
-            "accent"         -> ImGui.colorConvertFloat4ToU32(0.9f, 0.1f, 0.9f, alpha)
-            else             -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, alpha)
-        }
+        return CvTheme.getThemeColor(colId, alpha)
     }
 
     fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState): Float {
@@ -103,13 +84,16 @@ object PresetGridPanel {
             "Deck PV" -> mixer.deckPV
             else -> null
         }
-        val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
-            PresetGridTabs.calculateSubTabsWidth(session, state, activeDeck)
+        val sourceTabW = if (activeDeck != null && !activeDeck.isEmpty) {
+            PresetGridTabs.calculateSourceTabWidth(session, state, activeDeck)
+        } else 0f
+        val sectionTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
+            PresetGridTabs.calculateSectionTabsWidth(session, state, activeDeck)
         } else 0f
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val baseLabelW = 160f * fontScale
-        val labelColW = baseLabelW
+        val labelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) 24f + sectionTabsW + 8f else 0f)
 
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f
@@ -117,7 +101,7 @@ object PresetGridPanel {
         val gridTotalW = sideTabWidth + 12f + labelColW + maxGridW + 24f
         var titleTextW = 0f
         session.uiTheme.withFont(UITheme.FontLevel.BODY) { titleTextW = ImGui.calcTextSize("Preset Grid").x }
-        val titleTotalW = titleTextW + 28f + subTabsW + 24f
+        val titleTotalW = titleTextW + 28f + sourceTabW + 24f
 
         return maxOf(gridTotalW, titleTotalW)
     }
@@ -126,7 +110,12 @@ object PresetGridPanel {
     private var rowIndex = 0
     private var lastBoxBottomY = 0f
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState) {
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        state: PresetGridState,
+        deckPresetController: DeckPresetController? = null
+    ) {
         rowIndex = 0
 
         PresetGridKeyboard.handleKeyboardShortcuts(state, mixer, { s, m -> PresetGridUndo.pushUndoState(s, m) }, { s, m -> PresetGridUndo.performUndo(s, m) })
@@ -140,7 +129,7 @@ object PresetGridPanel {
         }
         val isDeckEmpty = activeDeck?.isEmpty == true
 
-        // ── Title Bar: "Preset Grid" title with subtabs beside it in Window MenuBar ──
+        // ── Title Bar: "Preset Grid" title with Video Source tab beside it in Window MenuBar ──
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
             val btnH = (menuBarH - 8f).coerceAtLeast(20f)
@@ -154,7 +143,7 @@ object PresetGridPanel {
             if (activeDeck != null) {
                 ImGui.sameLine(0f, 24f)
                 ImGui.setCursorPosY(yOffset)
-                PresetGridTabs.drawSubTabs(session, state, mixer, btnH = btnH)
+                PresetGridTabs.drawSourceTab(session, state, mixer, btnH = btnH, deckPresetController = deckPresetController)
             }
 
             ImGui.endMenuBar()
@@ -166,13 +155,18 @@ object PresetGridPanel {
         val CELL = metrics.cell
         val CELL_PAD = metrics.cellPad
 
+        val sectionTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
+            PresetGridTabs.calculateSectionTabsWidth(session, state, activeDeck)
+        } else 0f
+
         val avail = ImGui.getContentRegionAvailX()
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val baseLabelW = 160f * fontScale
+        val idealLabelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) 24f + sectionTabsW + 8f else 0f)
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
         val maxAllowedLabelColW = (avail - sideTabWidth - maxGridW - 20f).coerceAtLeast(120f)
-        val labelColW = minOf(baseLabelW, maxAllowedLabelColW)
+        val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
 
         val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
         val containerTopY = ImGui.getCursorScreenPosY() - 2f
@@ -221,25 +215,25 @@ object PresetGridPanel {
                     }
                 } else if (state.activeTopTab == "Deck A") {
                     if (mixer.deckA.isEmpty) {
-                        drawLaunchpad(session, "Deck A", mixer.deckA, state, mixer)
+                        drawLaunchpad(session, "Deck A", mixer.deckA, state, mixer, deckPresetController)
                     } else {
                         PresetGridTabs.drawDeckGroupContent(session, "Deck A", mixer.deckA, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 } else if (state.activeTopTab == "Deck B") {
                     if (mixer.deckB.isEmpty) {
-                        drawLaunchpad(session, "Deck B", mixer.deckB, state, mixer)
+                        drawLaunchpad(session, "Deck B", mixer.deckB, state, mixer, deckPresetController)
                     } else {
                         PresetGridTabs.drawDeckGroupContent(session, "Deck B", mixer.deckB, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 } else if (state.activeTopTab == "Deck BG") {
                     if (mixer.deckBG.isEmpty) {
-                        drawLaunchpad(session, "Deck BG", mixer.deckBG, state, mixer)
+                        drawLaunchpad(session, "Deck BG", mixer.deckBG, state, mixer, deckPresetController)
                     } else {
                         PresetGridTabs.drawDeckGroupContent(session, "Deck BG", mixer.deckBG, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
                 } else if (state.activeTopTab == "Deck PV") {
                     if (mixer.deckPV.isEmpty) {
-                        drawLaunchpad(session, "Deck PV", mixer.deckPV, state, mixer)
+                        drawLaunchpad(session, "Deck PV", mixer.deckPV, state, mixer, deckPresetController)
                     } else {
                         PresetGridTabs.drawDeckGroupContent(session, "Deck PV", mixer.deckPV, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                     }
@@ -319,6 +313,20 @@ object PresetGridPanel {
         // Reserve vertical space for headers
         ImGui.dummy(10f, headerH)
         val afterHeadersY = ImGui.getCursorScreenPosY()
+
+        // Render Section Tabs (e.g. [FX], [View]) above first parameter name with 24px left indent
+        val activeDeck = when (state.activeTopTab) {
+            "Deck A" -> mixer.deckA
+            "Deck B" -> mixer.deckB
+            "Deck BG" -> mixer.deckBG
+            "Deck PV" -> mixer.deckPV
+            else -> null
+        }
+        if (activeDeck != null && !activeDeck.isEmpty) {
+            val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+            ImGui.setCursorScreenPos(startX + 24f, startY + (headerH - subTabH) * 0.5f)
+            PresetGridTabs.drawSectionTabs(session, state, mixer, btnH = subTabH)
+        }
         
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
         val bottomY = if (lastBoxBottomY > startY) lastBoxBottomY else (startY + 300f)
@@ -428,7 +436,8 @@ object PresetGridPanel {
         deckLabel: String,
         deck: Deck,
         state: PresetGridState,
-        mixer: Mixer
+        mixer: Mixer,
+        deckPresetController: DeckPresetController? = null
     ) {
         val isDeckA = deckLabel == "Deck A"
         val isDeckBG = deckLabel == "Deck BG"
@@ -488,44 +497,31 @@ object PresetGridPanel {
                 ImGui.textDisabled("Select Visual Source:")
                 ImGui.separator()
 
-                val clearPresetState = {
-                    when {
-                        deck === mixer.deckA -> {
-                            session.presetManager.activePresetA = null
-                            session.presetManager.cachedDtoA = null
-                        }
-                        deck === mixer.deckB -> {
-                            session.presetManager.activePresetB = null
-                            session.presetManager.cachedDtoB = null
-                        }
-                        deck === mixer.deckBG -> {
-                            session.presetManager.activePresetBG = null
-                            session.presetManager.cachedDtoBG = null
-                        }
-                        deck === mixer.deckPV -> {
-                            session.presetManager.activePresetPV = null
-                            session.presetManager.cachedDtoPV = null
-                        }
+                val changeSource = { newSource: VisualSource ->
+                    if (deckPresetController != null) {
+                        deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
+                    } else {
+                        deck.source = newSource.clone()
+                        deck.isEmpty = false
+                        session.presetManager.clearDeckActivePreset(deck, mixer)
+                        state.clearSelection()
+                        val newSubTab = if (newSource is Mandala) "Mandala" else newSource.displayName
+                        state.setDeckSubTab(deckLabel, newSubTab)
+                        PresetGridUndo.pushUndoState(state, mixer)
                     }
                 }
 
                 if (ImGui.menuItem("Mandala")) {
                     val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
                     if (masterMandala != null) {
-                        deck.source = masterMandala.clone()
-                        deck.isEmpty = false
-                        clearPresetState()
-                        PresetGridUndo.pushUndoState(state, mixer)
+                        changeSource(masterMandala)
                     }
                 }
 
                 for (source in VisualSourceRegistry.availableSources) {
                     if (source.id == "mandala") continue
                     if (ImGui.menuItem(source.displayName)) {
-                        deck.source = source.clone()
-                        deck.isEmpty = false
-                        clearPresetState()
-                        PresetGridUndo.pushUndoState(state, mixer)
+                        changeSource(source)
                     }
                 }
                 ImGui.endPopup()

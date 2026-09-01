@@ -32,19 +32,19 @@ object CellConfigPanel {
             for (band in AUDIO_BANDS) {
                 val exists = activeMods.any { it.sourceId == band }
                 if (!exists) {
-                    virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
+                    virtualModulators.add(CvModulator(id = "virtual_$band", sourceId = band, bypassed = true))
                 }
             }
         } else if (cvId == "trigger") {
             for (band in TRIGGER_BANDS) {
                 val exists = activeMods.any { it.sourceId == band }
                 if (!exists) {
-                    virtualModulators.add(CvModulator(sourceId = band, bypassed = true))
+                    virtualModulators.add(CvModulator(id = "virtual_$band", sourceId = band, bypassed = true))
                 }
             }
         } else {
             if (activeMods.isEmpty()) {
-                virtualModulators.add(CvModulator(sourceId = cvId, bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_$cvId", sourceId = cvId, bypassed = true))
             }
         }
     }
@@ -68,17 +68,13 @@ object CellConfigPanel {
                 if (i > 0) ImGui.sameLine()
                 val isActive = currentCvId == targetCvId || (targetCvId == "value" && currentCvId == "final")
                 if (isActive) {
-                    val activeCol = when (targetCvId) {
-                        "value", "final" -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 0.5f, 1f)
-                        "midi"    -> ImGui.colorConvertFloat4ToU32(0.5f, 0.2f, 0.8f, 1f)
-                        "lfo"     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.8f, 1f)
-                        "audio"   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.0f, 1f)
-                        "trigger" -> ImGui.colorConvertFloat4ToU32(0.8f, 0.0f, 0.4f, 1f)
-                        else      -> ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 1f)
-                    }
+                    val rgb = CvTheme.getThemeColorRGB(targetCvId)
+                    val activeCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.70f, rgb[1] * 0.70f, rgb[2] * 0.70f, 1f)
+                    val hoverCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.85f, rgb[1] * 0.85f, rgb[2] * 0.85f, 1f)
+                    val pressedCol = ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, hoverCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  pressedCol)
                 } else {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
@@ -105,6 +101,15 @@ object CellConfigPanel {
         val param = state.selectedParam
 
         if (cell == null || param == null) {
+            activeHistory = null
+            activeCellId = null
+            session.uiTheme.caption("Click a cell in the Preset Grid to configure it.")
+            return
+        }
+
+        val resolvedParam = llm.slop.liquidlsd.parameters.ParameterResolver.findParameterByPath(mixer, cell.paramKey)
+        if (resolvedParam == null || resolvedParam !== param) {
+            state.clearSelection()
             activeHistory = null
             activeCellId = null
             session.uiTheme.caption("Click a cell in the Preset Grid to configure it.")
@@ -235,9 +240,10 @@ object CellConfigPanel {
         // -- Modulators (Scrollable body below sticky header & oscilloscope) --
         val childFlags = if (CustomRangeSlider.isAnySliderHovered) imgui.flag.ImGuiWindowFlags.NoScrollWithMouse else 0
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
+        ImGui.pushID("${cell.paramKey}_${cell.cvSourceId}")
         if (ImGui.beginChild("##cell_config_mods_scroll", 0f, 0f, false, childFlags)) {
             for ((idx, existing) in modsToDraw.withIndex()) {
-                ImGui.pushID(existing.id)
+                ImGui.pushID(existing.sourceId.ifEmpty { existing.id })
                 
                 val bypassed = existing.bypassed
                 val currentThemeColor = CvTheme.getThemeColor(existing.sourceId)
@@ -258,8 +264,8 @@ object CellConfigPanel {
                     else -> "Modulator ${idx + 1}"
                 }
                 val dirtyMarker = if (isBandActive) " [ACTIVE] •" else if (!existing.bypassed) " •" else ""
-                val headerTitle = "$bandLabel$dirtyMarker"
-                val defaultOpen = if (isBandActive || (idx == 0 && activeMods.isEmpty()) || existing.sourceId == "audio_bass" || !isMultiBand) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0
+                val headerTitle = "$bandLabel$dirtyMarker###band_header"
+                val defaultOpen = 0
 
                 val isHeaderOpen = if (isMultiBand) ImGui.collapsingHeader(headerTitle, defaultOpen) else true
                 if (isHeaderOpen) {
@@ -368,11 +374,12 @@ object CellConfigPanel {
             }
             ImGui.endChild()
         }
+        ImGui.popID()
         ImGui.popStyleVar()
     }
 
     private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator, mixer: Mixer? = null) {
-        val idx = param.modulators.indexOfFirst { it.id == newMod.id }
+        val idx = param.modulators.indexOfFirst { it.id == newMod.id || (it.sourceId.isNotEmpty() && it.sourceId == newMod.sourceId) }
         val wasBypassed = if (idx >= 0) param.modulators[idx].bypassed else true
         if (idx >= 0) {
             param.modulators[idx] = newMod

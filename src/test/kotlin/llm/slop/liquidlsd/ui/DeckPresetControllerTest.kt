@@ -108,4 +108,67 @@ class DeckPresetControllerTest {
         assertFalse(actionExecuted, "SKIP must not execute transition immediately; it must prompt user first")
         verify(exactly = 1) { popupManager.requestDeckConfirm(deckA, "Deck A", any()) }
     }
+
+    @Test
+    fun testChangeVisualSourcePromptsWhenPresetActive() {
+        val state = PresetGridState()
+        state.selectedCell = PresetCellId("Deck A/Geometry/L1", "lfo")
+        state.selectedParam = mockk(relaxed = true)
+
+        val oldSource = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
+        every { oldSource.displayName } returns "OldSource"
+        every { deckA.source } returns oldSource
+
+        val newSource = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
+        val newSourceClone = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
+        every { newSource.displayName } returns "NewSource"
+        every { newSource.clone() } returns newSourceClone
+
+        PresetManager.activePresetA = "MyCoolPreset"
+        PresetManager.cachedDtoA = mockk(relaxed = true)
+
+        var confirmCallback: (() -> Unit)? = null
+        every { popupManager.requestSourceChangeConfirm(deckA, "Deck A", "OldSource", "NewSource", any()) } answers {
+            confirmCallback = lastArg()
+        }
+
+        controller.changeVisualSourceSafely(mixer, deckA, "Deck A", newSource, state)
+
+        verify(exactly = 1) { popupManager.requestSourceChangeConfirm(deckA, "Deck A", "OldSource", "NewSource", any()) }
+        
+        // Before confirm is called, deck and preset remain unchanged
+        assertEquals("MyCoolPreset", PresetManager.activePresetA)
+        assertFalse(state.selectedCell == null)
+
+        // Invoke confirmation
+        confirmCallback!!.invoke()
+
+        verify { deckA.source = newSourceClone }
+        verify { deckA.isEmpty = false }
+        assertFalse(PresetManager.activePresetA != null, "Active preset must be cleared after source switch")
+        assertTrue(state.selectedCell == null, "Selected cell must be cleared after source switch")
+        assertEquals("NewSource", state.activeDeckASubTab, "Active sub-tab must update to new source")
+    }
+
+    @Test
+    fun testChangeVisualSourceDirectWhenCleanAndNoActivePreset() {
+        val state = PresetGridState()
+        val oldSource = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
+        every { oldSource.displayName } returns "OldSource"
+        every { deckA.source } returns oldSource
+
+        val newSource = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
+        val newSourceClone = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
+        every { newSource.displayName } returns "NewSource"
+        every { newSource.clone() } returns newSourceClone
+
+        PresetManager.activePresetA = null
+        PresetManager.cachedDtoA = null
+
+        controller.changeVisualSourceSafely(mixer, deckA, "Deck A", newSource, state)
+
+        verify(exactly = 0) { popupManager.requestSourceChangeConfirm(any(), any(), any(), any(), any()) }
+        verify { deckA.source = newSourceClone }
+        assertEquals("NewSource", state.activeDeckASubTab)
+    }
 }

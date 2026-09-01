@@ -10,6 +10,12 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
  */
 interface VisualSource : ParameterOwner {
     /**
+     * Human-readable display name of this visual source.
+     */
+    val displayName: String
+        get() = "Visual Source"
+
+    /**
      * Map of parameter names to their modulatable counterparts.
      */
     val parameters: Map<String, ModulatableParameter>

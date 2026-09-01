@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
+import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.roundToInt
@@ -159,12 +160,21 @@ object PresetGridTabs {
         return if (isFirst && tab != "Empty") "$tab  ${Icons.CHEVRON_DOWN}" else tab
     }
 
-    fun calculateSubTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
+    fun calculateSourceTabWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
         val tabs = getDeckSubTabs(deck)
         if (tabs.isEmpty()) return 0f
+        val displayLabel = getSubTabDisplayLabel(tabs.first(), true)
+        var tw = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
+        return (tw + 16f).coerceAtLeast(45f)
+    }
+
+    fun calculateSectionTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
+        val tabs = getDeckSubTabs(deck)
+        if (tabs.size <= 1) return 0f
         var totalW = 0f
-        tabs.forEachIndexed { i, tab ->
-            val displayLabel = getSubTabDisplayLabel(tab, i == 0)
+        tabs.drop(1).forEachIndexed { i, tab ->
+            val displayLabel = getSubTabDisplayLabel(tab, false)
             var tw = 0f
             session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
             val btnW = (tw + 16f).coerceAtLeast(45f)
@@ -174,7 +184,40 @@ object PresetGridTabs {
         return totalW
     }
 
-    fun drawSubTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer, btnH: Float? = null) {
+    fun calculateSubTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
+        return calculateSourceTabWidth(session, state, deck) + calculateSectionTabsWidth(session, state, deck)
+    }
+
+    private fun ensureValidSubTab(state: PresetGridState, tabs: List<String>): String {
+        val activeSubTab = when (state.activeTopTab) {
+            "Deck A" -> state.activeDeckASubTab
+            "Deck B" -> state.activeDeckBSubTab
+            "Deck BG" -> state.activeDeckBGSubTab
+            "Deck PV" -> state.activeDeckPVSubTab
+            else -> state.activeDeckASubTab
+        }
+        if (activeSubTab !in tabs && tabs.isNotEmpty()) {
+            when (state.activeTopTab) {
+                "Deck A" -> state.activeDeckASubTab = tabs.first()
+                "Deck B" -> state.activeDeckBSubTab = tabs.first()
+                "Deck BG" -> state.activeDeckBGSubTab = tabs.first()
+                "Deck PV" -> state.activeDeckPVSubTab = tabs.first()
+            }
+            return tabs.first()
+        }
+        return activeSubTab
+    }
+
+    /**
+     * Renders only the Video Source dropdown tab (e.g. [Mandala ▾]) in the Preset Grid title bar.
+     */
+    fun drawSourceTab(
+        session: llm.slop.liquidlsd.SessionContext,
+        state: PresetGridState,
+        mixer: Mixer,
+        btnH: Float? = null,
+        deckPresetController: DeckPresetController? = null
+    ) {
         if (state.activeTopTab == "Mixer") return
 
         val deck = when (state.activeTopTab) {
@@ -189,37 +232,110 @@ object PresetGridTabs {
         val tabs = getDeckSubTabs(deck)
         if (tabs.isEmpty()) return
 
-        // Auto-correct stale subtab value (e.g. after deck source changes)
-        val activeSubTab = when (state.activeTopTab) {
-            "Deck A" -> state.activeDeckASubTab
-            "Deck B" -> state.activeDeckBSubTab
-            "Deck BG" -> state.activeDeckBGSubTab
-            "Deck PV" -> state.activeDeckPVSubTab
-            else -> state.activeDeckASubTab
+        val currentSubTab = ensureValidSubTab(state, tabs)
+        val sourceTab = tabs.first()
+        val displayLabel = getSubTabDisplayLabel(sourceTab, isFirst = true)
+        val isActive = currentSubTab == sourceTab
+
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
+        if (isActive) {
+            val bgCol = getSubTabColor(state, 1f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
+        } else {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
         }
-        if (activeSubTab !in tabs) {
-            when (state.activeTopTab) {
-                "Deck A" -> state.activeDeckASubTab = tabs.first()
-                "Deck B" -> state.activeDeckBSubTab = tabs.first()
-                "Deck BG" -> state.activeDeckBGSubTab = tabs.first()
-                "Deck PV" -> state.activeDeckPVSubTab = tabs.first()
+
+        var tw = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
+        val btnW = (tw + 16f).coerceAtLeast(45f)
+        val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+
+        if (ImGui.button(displayLabel, btnW, subTabH)) {
+            if (!isActive) {
+                when (state.activeTopTab) {
+                    "Deck A" -> state.activeDeckASubTab = sourceTab
+                    "Deck B" -> state.activeDeckBSubTab = sourceTab
+                    "Deck BG" -> state.activeDeckBGSubTab = sourceTab
+                    "Deck PV" -> state.activeDeckPVSubTab = sourceTab
+                }
+            } else {
+                ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
             }
         }
-        val currentSubTab = when (state.activeTopTab) {
-            "Deck A" -> state.activeDeckASubTab
-            "Deck B" -> state.activeDeckBSubTab
-            "Deck BG" -> state.activeDeckBGSubTab
-            "Deck PV" -> state.activeDeckPVSubTab
-            else -> state.activeDeckASubTab
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Click to switch to $sourceTab tab. Click again while active to change Visual Source.")
         }
+        ImGui.popStyleColor(3)
+
+        if (ImGui.beginPopup("##header_source_popup_${state.activeTopTab}")) {
+            ImGui.textDisabled("Select Visual Source:")
+            ImGui.separator()
+
+            val deckLabel = state.activeTopTab
+            val changeSource = { newSource: VisualSource ->
+                if (deckPresetController != null) {
+                    deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
+                } else {
+                    deck.source = newSource.clone()
+                    deck.isEmpty = false
+                    session.presetManager.clearDeckActivePreset(deck, mixer)
+                    state.clearSelection()
+                    val newSubTab = if (newSource is Mandala) "Mandala" else newSource.displayName
+                    state.setDeckSubTab(deckLabel, newSubTab)
+                    PresetGridUndo.pushUndoState(state, mixer)
+                }
+            }
+
+            if (ImGui.menuItem("Mandala")) {
+                val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
+                if (masterMandala != null && deck.source != masterMandala) {
+                    changeSource(masterMandala)
+                }
+            }
+
+            VisualSourceRegistry.availableSources.filter { it.id != "mandala" }.forEach { source ->
+                if (ImGui.menuItem(source.displayName)) {
+                    changeSource(source)
+                }
+            }
+            ImGui.endPopup()
+        }
+        ImGui.popStyleVar(1)
+    }
+
+    /**
+     * Renders the remaining section subtabs (e.g. [FX], [View]) above the first parameter name.
+     */
+    fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer, btnH: Float? = null) {
+        if (state.activeTopTab == "Mixer") return
+
+        val deck = when (state.activeTopTab) {
+            "Deck A" -> mixer.deckA
+            "Deck B" -> mixer.deckB
+            "Deck BG" -> mixer.deckBG
+            "Deck PV" -> mixer.deckPV
+            else -> mixer.deckA
+        }
+        if (deck.isEmpty) return
+
+        val tabs = getDeckSubTabs(deck)
+        if (tabs.size <= 1) return
+
+        val currentSubTab = ensureValidSubTab(state, tabs)
+        val sectionTabs = tabs.drop(1)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 0f)
-        tabs.forEachIndexed { i, tab ->
+
+        sectionTabs.forEachIndexed { i, tab ->
             if (i > 0) ImGui.sameLine()
-            val isSourceTab = (i == 0)
-            val displayLabel = getSubTabDisplayLabel(tab, isSourceTab)
+            val displayLabel = getSubTabDisplayLabel(tab, isFirst = false)
             val isActive = currentSubTab == tab
+
             if (isActive) {
                 val bgCol = getSubTabColor(state, 1f)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
@@ -230,54 +346,21 @@ object PresetGridTabs {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
             }
+
             var tw = 0f
             session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
             val btnW = (tw + 16f).coerceAtLeast(45f)
             val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+
             if (ImGui.button(displayLabel, btnW, subTabH)) {
-                if (isSourceTab) {
-                    if (!isActive) {
-                        when (state.activeTopTab) {
-                            "Deck A" -> state.activeDeckASubTab = tab
-                            "Deck B" -> state.activeDeckBSubTab = tab
-                            "Deck BG" -> state.activeDeckBGSubTab = tab
-                            "Deck PV" -> state.activeDeckPVSubTab = tab
-                        }
-                    } else {
-                        ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
-                    }
-                } else {
-                    when (state.activeTopTab) {
-                        "Deck A" -> state.activeDeckASubTab = tab
-                        "Deck B" -> state.activeDeckBSubTab = tab
-                        "Deck BG" -> state.activeDeckBGSubTab = tab
-                        "Deck PV" -> state.activeDeckPVSubTab = tab
-                    }
+                when (state.activeTopTab) {
+                    "Deck A" -> state.activeDeckASubTab = tab
+                    "Deck B" -> state.activeDeckBSubTab = tab
+                    "Deck BG" -> state.activeDeckBGSubTab = tab
+                    "Deck PV" -> state.activeDeckPVSubTab = tab
                 }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled && isSourceTab) {
-                ImGui.setTooltip("Click to switch to $tab tab. Click again while active to change Visual Source.")
             }
             ImGui.popStyleColor(3)
-
-            if (isSourceTab && ImGui.beginPopup("##header_source_popup_${state.activeTopTab}")) {
-                ImGui.textDisabled("Select Visual Source:")
-                ImGui.separator()
-
-                if (ImGui.menuItem("Mandala")) {
-                    val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
-                    if (masterMandala != null && deck.source != masterMandala) {
-                        deck.source = masterMandala.clone()
-                    }
-                }
-
-                VisualSourceRegistry.availableSources.filter { it.id != "mandala" }.forEach { source ->
-                    if (ImGui.menuItem(source.displayName)) {
-                        deck.source = source.clone()
-                    }
-                }
-                ImGui.endPopup()
-            }
         }
         ImGui.popStyleVar(2)
     }

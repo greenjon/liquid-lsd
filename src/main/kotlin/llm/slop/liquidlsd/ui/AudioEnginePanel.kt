@@ -49,13 +49,13 @@ object AudioEnginePanel {
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
 
     private val cvSignals = arrayOf(
-        CvSignalDef("beatSine", "Beat Sine (Oscillator)", ImGui.colorConvertFloat4ToU32(0.6f, 0.4f, 1.0f, 1.0f)), // Neon Purple
-        CvSignalDef("audio_amp", "Amplitude (RMS)", ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, 1.0f)), // Neon Cyan
-        CvSignalDef("audio_bass", "Bass Band (Low-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.6f, 1.0f)), // Neon Pink
-        CvSignalDef("audio_mid", "Mid Band (Band-pass)", ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.1f, 1.0f)), // Neon Orange
-        CvSignalDef("audio_high", "High Band (High-pass)", ImGui.colorConvertFloat4ToU32(0.1f, 0.9f, 0.8f, 1.0f)), // Neon Teal
-        CvSignalDef("trigger_onset", "Onset Signal", ImGui.colorConvertFloat4ToU32(0.9f, 0.8f, 0.1f, 1.0f)), // Neon Yellow
-        CvSignalDef("trigger_accent", "Accent Level (Decay)", ImGui.colorConvertFloat4ToU32(1.0f, 0.3f, 0.3f, 1.0f)) // Neon Red
+        CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine")),
+        CvSignalDef("audio_amp", "Amplitude (RMS)", CvTheme.getThemeColor("audio_amp")),
+        CvSignalDef("audio_bass", "Bass Band (Low-pass)", CvTheme.getThemeColor("audio_bass")),
+        CvSignalDef("audio_mid", "Mid Band (Band-pass)", CvTheme.getThemeColor("audio_mid")),
+        CvSignalDef("audio_high", "High Band (High-pass)", CvTheme.getThemeColor("audio_high")),
+        CvSignalDef("trigger_onset", "Onset Signal", CvTheme.getThemeColor("trigger_onset")),
+        CvSignalDef("trigger_accent", "Accent Level (Decay)", CvTheme.getThemeColor("trigger_accent"))
     )
 
     /**

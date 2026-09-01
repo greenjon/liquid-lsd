@@ -43,7 +43,7 @@ data class SourceMeta(
  */
 open class DynamicVisualSource(
     val id: String,
-    val displayName: String,
+    override val displayName: String,
     val shader: Shader,
     override val parameters: LinkedHashMap<String, ModulatableParameter>,
     override val globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),

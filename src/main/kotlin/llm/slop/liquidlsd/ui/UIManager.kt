@@ -340,6 +340,7 @@ class UIManager(
 
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
             popupManager.drawDeckConfirmPopups(session, mixer)
+            popupManager.drawSourceChangeConfirmPopup(session, mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
 
             NoteEditorModal.draw()
@@ -471,7 +472,7 @@ class UIManager(
             val presetGridFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
             if (ImGui.begin("Preset Grid", presetGridFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                PresetGridPanel.draw(session, currentMixer!!, presetState)
+                PresetGridPanel.draw(session, currentMixer!!, presetState, deckPresetController)
             }
             ImGui.end()
 

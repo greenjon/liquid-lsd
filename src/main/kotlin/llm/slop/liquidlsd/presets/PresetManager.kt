@@ -78,6 +78,15 @@ object PresetManager {
         return current != cached
     }
 
+    fun clearDeckActivePreset(deck: Deck, mixer: Mixer) {
+        when {
+            deck === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
+            deck === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
+            deck === mixer.deckBG -> { cachedDtoBG = null; activePresetBG = null }
+            deck === mixer.deckPV -> { cachedDtoPV = null; activePresetPV = null }
+        }
+    }
+
     fun copyDeck(mixer: Mixer, from: Deck, to: Deck) {
         if (from.isEmpty) {
             to.applyDto(emptyDeckDto(to, mixer))
