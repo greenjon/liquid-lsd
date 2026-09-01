@@ -132,6 +132,10 @@ object PresetGridPanel {
             ImGui.tableSetupColumn("##main_grid", imgui.flag.ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
 
+            val metrics = GridMetrics.compute(session)
+            val CELL = metrics.cell
+            val CELL_PAD = metrics.cellPad
+
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
@@ -141,10 +145,11 @@ object PresetGridPanel {
             }
             val isDeckEmpty = activeDeck?.isEmpty == true
             val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
+            val leftTabsTopOffset = if (!isDeckEmpty) headerH + CELL else 0f
 
             // Left column: Side tabs (MIX, A, B, BG, PV)
             ImGui.tableSetColumnIndex(0)
-            PresetGridTabs.drawLeftTabs(session, state, mixer, topOffset = headerH)
+            PresetGridTabs.drawLeftTabs(session, state, mixer, topOffset = leftTabsTopOffset)
 
             // Right column: Main Preset Grid content
             ImGui.tableSetColumnIndex(1)
@@ -155,10 +160,6 @@ object PresetGridPanel {
             val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
                 PresetGridTabs.calculateSubTabsWidth(session, state, activeDeck)
             } else 0f
-
-            val metrics = GridMetrics.compute(session)
-            val CELL = metrics.cell
-            val CELL_PAD = metrics.cellPad
 
             val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
             val baseLabelW = 160f * fontScale

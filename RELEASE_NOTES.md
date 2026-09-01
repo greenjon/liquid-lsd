@@ -18,7 +18,7 @@
   - Converted LFO 2 from an auto-hiding section into an explicit collapsible accordion (`▶ LFO 2 (Modulator)` / `▼ LFO 2`).
   - Wrapped Audio and Trigger multi-band modulators in collapsible headers (`Amplitude`, `Low / Bass`, `Mid`, `High`, `Onset`, `Accent`).
   - Grouped secondary LFO 1 parameters (`Phase Offset`, `Morph`, `Hold`, `Slew`) into an `Advanced Parameters` accordion with an illuminated dirty indicator dot (`•`) whenever any collapsed parameter differs from its default.
-- **Preset Grid Horizontal Column Headers**: Converted column titles from vertical multi-line stacks into horizontal headers (`VAL`, `MIDI`, `LFO`, `AUD`, `TRIG`) sized at `UITheme.FontLevel.BODY` to match the inline subtab font scale (`FX`, `View`, source generator names).
+- **Preset Grid Horizontal Column Headers & Side Tab Alignment**: Converted column titles from vertical multi-line stacks into horizontal headers (`VAL`, `MIDI`, `LFO`, `AUD`, `TRIG`) sized at `UITheme.FontLevel.BODY` to match the inline subtab font scale (`FX`, `View`, source generator names), and aligned the top of the left side tabs (`MIX`, `A`, `B`, `BG`, `PV`) with the second parameter row.
 - **4-Beat Phase Meter in Top Menu Bar**: Added a 4-dot quarter-note beat meter (`[ ● ○ ○ ○ ]`) immediately preceding the `BPM` display in the top Menu Bar, giving instant, zero-clutter confirmation of audio sync and downbeat alignment in sync with the Beat Tracker.
 
 #### 1. Streamlined 3-Column Layout Architecture & Spacebar Library Cycling (`UIManager.kt`, `LibraryPanel.kt`)
