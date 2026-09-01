@@ -147,7 +147,7 @@ class DeckPresetControllerTest {
         verify { deckA.isEmpty = false }
         assertFalse(PresetManager.activePresetA != null, "Active preset must be cleared after source switch")
         assertTrue(state.selectedCell == null, "Selected cell must be cleared after source switch")
-        assertEquals("NewSource", state.activeDeckASubTab, "Active sub-tab must update to new source")
+        assertEquals("SRC", state.activeDeckASubTab, "Active sub-tab must update to SRC")
     }
 
     @Test
@@ -169,6 +169,6 @@ class DeckPresetControllerTest {
 
         verify(exactly = 0) { popupManager.requestSourceChangeConfirm(any(), any(), any(), any(), any()) }
         verify { deckA.source = newSourceClone }
-        assertEquals("NewSource", state.activeDeckASubTab)
+        assertEquals("SRC", state.activeDeckASubTab)
     }
 }

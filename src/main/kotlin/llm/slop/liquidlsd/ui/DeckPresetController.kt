@@ -225,8 +225,7 @@ class DeckPresetController(
             deck.isEmpty = false
             session.presetManager.clearDeckActivePreset(deck, mixer)
             state.clearSelection()
-            val newSubTab = if (newSource is llm.slop.liquidlsd.rendering.Mandala) "Mandala" else newSource.displayName
-            state.setDeckSubTab(deckLabel, newSubTab)
+            state.setDeckSubTab(deckLabel, "SRC")
             PresetGridUndo.pushUndoState(state, mixer)
         }
 

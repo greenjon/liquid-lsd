@@ -142,28 +142,22 @@ object PresetGridTabs {
         }
         val tabs = mutableListOf<String>()
         val activeSource = deck.source
+        tabs.add("SRC")
+        tabs.add("FX")
         if (activeSource is Mandala) {
-            tabs.addAll(listOf("Mandala", "FX", "View"))
+            tabs.add("View")
         } else if (activeSource is DynamicVisualSource) {
-            tabs.add(activeSource.displayName)
-            tabs.add("FX")
             if (activeSource.parameters.keys.any { TRANSFORM_PARAM_NAMES.contains(it) }) {
                 tabs.add("View")
             }
-        } else {
-            tabs.add("FX")
         }
         return tabs.distinct()
     }
 
-    fun getSubTabDisplayLabel(tab: String, isFirst: Boolean): String {
-        return if (isFirst && tab != "Empty") "$tab  ${Icons.CHEVRON_DOWN}" else tab
-    }
-
     fun calculateSourceTabWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
-        val tabs = getDeckSubTabs(deck)
-        if (tabs.isEmpty()) return 0f
-        val displayLabel = getSubTabDisplayLabel(tabs.first(), true)
+        if (deck.isEmpty) return 0f
+        val sourceName = if (deck.source is Mandala) "Mandala" else deck.source.displayName
+        val displayLabel = "$sourceName  ${Icons.CHEVRON_DOWN}"
         var tw = 0f
         session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
         return (tw + 16f).coerceAtLeast(45f)
@@ -171,13 +165,12 @@ object PresetGridTabs {
 
     fun calculateSectionTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
         val tabs = getDeckSubTabs(deck)
-        if (tabs.size <= 1) return 0f
+        if (tabs.isEmpty() || tabs == listOf("Empty")) return 0f
         var totalW = 0f
-        tabs.drop(1).forEachIndexed { i, tab ->
-            val displayLabel = getSubTabDisplayLabel(tab, false)
+        tabs.forEachIndexed { i, tab ->
             var tw = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
-            val btnW = (tw + 16f).coerceAtLeast(45f)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(tab).x }
+            val btnW = (tw + 16f).coerceAtLeast(40f)
             totalW += btnW
             if (i > 0) totalW += 4f
         }
@@ -209,7 +202,7 @@ object PresetGridTabs {
     }
 
     /**
-     * Renders only the Video Source dropdown tab (e.g. [Mandala ▾]) in the Preset Grid title bar.
+     * Renders the Video Source dropdown selector button (e.g. [Mandala ▾]) in the Preset Grid title bar.
      */
     fun drawSourceTab(
         session: llm.slop.liquidlsd.SessionContext,
@@ -229,25 +222,13 @@ object PresetGridTabs {
         }
         if (deck.isEmpty) return
 
-        val tabs = getDeckSubTabs(deck)
-        if (tabs.isEmpty()) return
-
-        val currentSubTab = ensureValidSubTab(state, tabs)
-        val sourceTab = tabs.first()
-        val displayLabel = getSubTabDisplayLabel(sourceTab, isFirst = true)
-        val isActive = currentSubTab == sourceTab
+        val sourceName = if (deck.source is Mandala) "Mandala" else deck.source.displayName
+        val displayLabel = "$sourceName  ${Icons.CHEVRON_DOWN}"
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
-        if (isActive) {
-            val bgCol = getSubTabColor(state, 1f)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
-        } else {
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-        }
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.28f, 0.28f, 1f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1f))
 
         var tw = 0f
         session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
@@ -255,19 +236,10 @@ object PresetGridTabs {
         val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
 
         if (ImGui.button(displayLabel, btnW, subTabH)) {
-            if (!isActive) {
-                when (state.activeTopTab) {
-                    "Deck A" -> state.activeDeckASubTab = sourceTab
-                    "Deck B" -> state.activeDeckBSubTab = sourceTab
-                    "Deck BG" -> state.activeDeckBGSubTab = sourceTab
-                    "Deck PV" -> state.activeDeckPVSubTab = sourceTab
-                }
-            } else {
-                ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
-            }
+            ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Click to switch to $sourceTab tab. Click again while active to change Visual Source.")
+            ImGui.setTooltip("Click to change Visual Source for ${state.activeTopTab}.")
         }
         ImGui.popStyleColor(3)
 
@@ -284,8 +256,7 @@ object PresetGridTabs {
                     deck.isEmpty = false
                     session.presetManager.clearDeckActivePreset(deck, mixer)
                     state.clearSelection()
-                    val newSubTab = if (newSource is Mandala) "Mandala" else newSource.displayName
-                    state.setDeckSubTab(deckLabel, newSubTab)
+                    state.setDeckSubTab(deckLabel, "SRC")
                     PresetGridUndo.pushUndoState(state, mixer)
                 }
             }
@@ -308,7 +279,7 @@ object PresetGridTabs {
     }
 
     /**
-     * Renders the remaining section subtabs (e.g. [FX], [View]) above the first parameter name.
+     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View]) above the first parameter name.
      */
     fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer, btnH: Float? = null) {
         if (state.activeTopTab == "Mixer") return
@@ -323,17 +294,15 @@ object PresetGridTabs {
         if (deck.isEmpty) return
 
         val tabs = getDeckSubTabs(deck)
-        if (tabs.size <= 1) return
+        if (tabs.isEmpty() || tabs == listOf("Empty")) return
 
         val currentSubTab = ensureValidSubTab(state, tabs)
-        val sectionTabs = tabs.drop(1)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 0f)
 
-        sectionTabs.forEachIndexed { i, tab ->
+        tabs.forEachIndexed { i, tab ->
             if (i > 0) ImGui.sameLine()
-            val displayLabel = getSubTabDisplayLabel(tab, isFirst = false)
             val isActive = currentSubTab == tab
 
             if (isActive) {
@@ -348,17 +317,26 @@ object PresetGridTabs {
             }
 
             var tw = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
-            val btnW = (tw + 16f).coerceAtLeast(45f)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(tab).x }
+            val btnW = (tw + 16f).coerceAtLeast(40f)
             val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
 
-            if (ImGui.button(displayLabel, btnW, subTabH)) {
+            if (ImGui.button(tab, btnW, subTabH)) {
                 when (state.activeTopTab) {
                     "Deck A" -> state.activeDeckASubTab = tab
                     "Deck B" -> state.activeDeckBSubTab = tab
                     "Deck BG" -> state.activeDeckBGSubTab = tab
                     "Deck PV" -> state.activeDeckPVSubTab = tab
                 }
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                val tooltip = when (tab) {
+                    "SRC" -> "Source: Parameters for active visual generator (${deck.source.displayName})."
+                    "FX" -> "FX: Color, shading, and feedback loop parameters."
+                    "View" -> "View: 3D perspective, zoom, and rotation parameters."
+                    else -> "$tab parameters"
+                }
+                ImGui.setTooltip(tooltip)
             }
             ImGui.popStyleColor(3)
         }
@@ -427,8 +405,8 @@ object PresetGridTabs {
         val mandala = activeSource as? Mandala
 
         if (mandala != null) {
-            // -- Mandala -------------------------------------------------------
-            drawSubGroupContent(session, deckLabel, "Mandala", state) {
+            // -- Mandala Source Parameters ------------------------------------
+            drawSubGroupContent(session, deckLabel, "SRC", state) {
                 var row = 0
                 PresetGridRenderer.drawParamRow(session, "Lobe Count",    "$deckLabel/Geometry/Lobes",       mandala.parameters["Lobes"]!!,         state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "Recipe ID",     "$deckLabel/Geometry/Recipe",      mandala.parameters["Recipe Select"]!!,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -508,7 +486,7 @@ object PresetGridTabs {
                 else otherParams.add(entry)
             }
 
-            drawSubGroupContent(session, deckLabel, activeSource.displayName, state) {
+            drawSubGroupContent(session, deckLabel, "SRC", state) {
                 otherParams.forEachIndexed { i, (name, param) ->
                     PresetGridRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, i, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }

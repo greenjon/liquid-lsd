@@ -48,10 +48,10 @@ class PresetGridState {
     var midiLearnTarget: MidiLearnTarget? = null
 
     var activeTopTab: String = "Deck A"
-    var activeDeckASubTab: String = "Mandala"
-    var activeDeckBSubTab: String = "Mandala"
-    var activeDeckBGSubTab: String = "Mandala"
-    var activeDeckPVSubTab: String = "Mandala"
+    var activeDeckASubTab: String = "SRC"
+    var activeDeckBSubTab: String = "SRC"
+    var activeDeckBGSubTab: String = "SRC"
+    var activeDeckPVSubTab: String = "SRC"
 
     fun setDeckSubTab(deckLabel: String, tab: String) {
         when (deckLabel) {
