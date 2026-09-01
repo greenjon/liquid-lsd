@@ -245,7 +245,7 @@ object PresetGridRenderer {
             isValSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
             else          -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
-        val cellColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
+        val cellColor = CvTheme.getThemeColor("value")
 
         drawKnobMeter(
             session = session,
@@ -355,7 +355,7 @@ object PresetGridRenderer {
             hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
             else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
-        val cellColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
+        val cellColor = CvTheme.getThemeColor("midi")
 
         if (hasMidiMod || isMidiBypassed) {
             val isBipolar = param.minClamp < 0f
@@ -514,7 +514,7 @@ object PresetGridRenderer {
             hasModulator -> ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.7f, 0.8f)
             else         -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
-        val cellColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
+        val cellColor = CvTheme.getThemeColor(cvId)
 
         if (hasModulator || isBypassed) {
             val isBipolar = param.minClamp < 0f
@@ -584,12 +584,17 @@ object PresetGridRenderer {
         val baseTickOuterRadius = trackRadius + 2.5f * scaleFactor
         val baseTickStrokeWidth = (2.0f * scaleFactor).coerceIn(1.5f, 4.5f)
 
-        val trackCol = ImGui.colorConvertFloat4ToU32(0.48f, 0.48f, 0.48f, if (isBypassed) 0.35f else 0.65f)
+        val trackCol = ImGui.colorConvertFloat4ToU32(0.48f, 0.48f, 0.48f, if (isBypassed) 0.30f else 0.65f)
         val fillCol = if (isBypassed) {
             val rF = (color and 0xFF) / 255f
             val gF = ((color shr 8) and 0xFF) / 255f
             val bF = ((color shr 16) and 0xFF) / 255f
-            ImGui.colorConvertFloat4ToU32(rF, gF, bF, 0.35f)
+            val luma = 0.299f * rF + 0.587f * gF + 0.114f * bF
+            val sat = 0.30f
+            val dR = luma * (1f - sat) + rF * sat
+            val dG = luma * (1f - sat) + gF * sat
+            val dB = luma * (1f - sat) + bF * sat
+            ImGui.colorConvertFloat4ToU32(dR, dG, dB, 0.35f)
         } else color
         val baseTickCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, if (isBypassed) 0.35f else 1f)
         val rangeCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.88f, 0.2f, if (isBypassed) 0.20f else 0.4f)
