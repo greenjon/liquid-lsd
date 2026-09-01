@@ -174,7 +174,7 @@ object PresetGridTabs {
         return totalW
     }
 
-    fun drawSubTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer) {
+    fun drawSubTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer, btnH: Float? = null) {
         if (state.activeTopTab == "Mixer") return
 
         val deck = when (state.activeTopTab) {
@@ -233,7 +233,7 @@ object PresetGridTabs {
             var tw = 0f
             session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
             val btnW = (tw + 16f).coerceAtLeast(45f)
-            val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+            val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
             if (ImGui.button(displayLabel, btnW, subTabH)) {
                 if (isSourceTab) {
                     if (!isActive) {

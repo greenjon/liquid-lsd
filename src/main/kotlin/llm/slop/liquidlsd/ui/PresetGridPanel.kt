@@ -109,12 +109,17 @@ object PresetGridPanel {
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val baseLabelW = 160f * fontScale
-        val labelColW = maxOf(baseLabelW, (subTabsW - sideTabWidth + 16f).coerceAtLeast(0f))
+        val labelColW = baseLabelW
 
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f
 
-        return sideTabWidth + 12f + labelColW + maxGridW + 24f
+        val gridTotalW = sideTabWidth + 12f + labelColW + maxGridW + 24f
+        var titleTextW = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) { titleTextW = ImGui.calcTextSize("Preset Grid").x }
+        val titleTotalW = titleTextW + 28f + subTabsW + 24f
+
+        return maxOf(gridTotalW, titleTotalW)
     }
 
     private var gridStartX = 0f
@@ -126,15 +131,6 @@ object PresetGridPanel {
 
         PresetGridKeyboard.handleKeyboardShortcuts(state, mixer, { s, m -> PresetGridUndo.pushUndoState(s, m) }, { s, m -> PresetGridUndo.performUndo(s, m) })
 
-        val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session)
-        val metrics = GridMetrics.compute(session)
-        val CELL = metrics.cell
-        val CELL_PAD = metrics.cellPad
-
-        val panelStartX = ImGui.getCursorScreenPosX()
-        val headerStartY = ImGui.getCursorScreenPosY()
-        val avail = ImGui.getContentRegionAvailX()
-
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
@@ -143,40 +139,43 @@ object PresetGridPanel {
             else -> null
         }
         val isDeckEmpty = activeDeck?.isEmpty == true
-        val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
 
-        if (gridStartX == 0f) {
-            gridStartX = panelStartX + sideTabWidth + 8f
+        // ── Title Bar: "Preset Grid" title with subtabs beside it in Window MenuBar ──
+        if (ImGui.beginMenuBar()) {
+            val menuBarH = ImGui.getFrameHeight()
+            val btnH = (menuBarH - 8f).coerceAtLeast(20f)
+            val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
+
+            var txtH = 0f
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) { txtH = ImGui.getTextLineHeight() }
+            ImGui.setCursorPosY(yOffset + (btnH - txtH) * 0.5f)
+            session.uiTheme.body("Preset Grid")
+
+            if (activeDeck != null) {
+                ImGui.sameLine(0f, 24f)
+                ImGui.setCursorPosY(yOffset)
+                PresetGridTabs.drawSubTabs(session, state, mixer, btnH = btnH)
+            }
+
+            ImGui.endMenuBar()
         }
 
-        val subTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
-            PresetGridTabs.calculateSubTabsWidth(session, state, activeDeck)
-        } else 0f
+        // ── Main Preset Grid Table (Left Side Tabs + Right Grid Area) ─────────────────
+        val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session)
+        val metrics = GridMetrics.compute(session)
+        val CELL = metrics.cell
+        val CELL_PAD = metrics.cellPad
 
+        val avail = ImGui.getContentRegionAvailX()
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val baseLabelW = 160f * fontScale
-        val idealLabelColW = maxOf(baseLabelW, (subTabsW - sideTabWidth + 16f).coerceAtLeast(0f))
-
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
         val maxAllowedLabelColW = (avail - sideTabWidth - maxGridW - 20f).coerceAtLeast(120f)
-        val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
-        val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(panelStartX + avail)
+        val labelColW = minOf(baseLabelW, maxAllowedLabelColW)
 
-        val containerTopY = headerStartY - 2f
-
-        // Draw header row: Subtabs starting at panelStartX (same left-hand start as MIX/A/B...), Column Headers above grid columns
-        if (!isDeckEmpty) {
-            if (activeDeck != null && !activeDeck.isEmpty) {
-                val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
-                ImGui.setCursorScreenPos(panelStartX, headerStartY + (headerH - subTabH) * 0.5f)
-                PresetGridTabs.drawSubTabs(session, state, mixer)
-            }
-            drawColumnHeaders(session, gridStartX, labelColW, state, mixer, metrics, headerH, headerStartY)
-            ImGui.setCursorScreenPos(panelStartX, headerStartY + headerH)
-        } else {
-            ImGui.spacing()
-        }
+        val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
+        val containerTopY = ImGui.getCursorScreenPosY() - 2f
 
         if (ImGui.beginTable("##preset_grid_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)) {
             ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, sideTabWidth + 4f)
@@ -185,12 +184,20 @@ object PresetGridPanel {
 
             // Left column: Side tabs (MIX, A, B, BG, PV)
             ImGui.tableSetColumnIndex(0)
-            val leftTabsTopOffset = if (!isDeckEmpty) CELL else 0f
+            val leftTabsTopOffset = if (!isDeckEmpty) headerH + CELL else 0f
             PresetGridTabs.drawLeftTabs(session, state, mixer, topOffset = leftTabsTopOffset)
 
             // Right column: Main Preset Grid content
             ImGui.tableSetColumnIndex(1)
             gridStartX = ImGui.getCursorScreenPosX()
+            val boxMaxX = (gridStartX + labelColW + maxGridW + 6f).coerceAtMost(ImGui.getWindowPosX() + avail)
+
+            // Column Headers (VAL, MIDI, LFO, AUD, TRIG)
+            if (!isDeckEmpty) {
+                drawColumnHeaders(session, labelColW, state, mixer, metrics)
+            } else {
+                ImGui.spacing()
+            }
 
             if (ImGui.beginChild("##preset_grid_scroll", 0f, 0f, false)) {
                 if (state.activeTopTab == "Mixer") {
@@ -243,7 +250,7 @@ object PresetGridPanel {
 
             ImGui.endTable()
 
-            // Draw Connected Folder Frame around subtabs & parameters
+            // Draw Connected Folder Frame around parameters & column headers
             val dl = ImGui.getWindowDrawList()
             val accentColor = PresetGridTabs.getDeckColor(state.activeTopTab, 0.7f)
             val accentFill  = PresetGridTabs.getDeckColor(state.activeTopTab, 0.04f)
@@ -292,28 +299,32 @@ object PresetGridPanel {
 
     private fun drawColumnHeaders(
         session: llm.slop.liquidlsd.SessionContext,
-        targetGridStartX: Float,
         labelColW: Float,
         state: PresetGridState,
         mixer: Mixer,
-        metrics: GridMetrics,
-        headerH: Float,
-        startY: Float
+        metrics: GridMetrics
     ) {
         val CELL = metrics.cell
         val CELL_PAD = metrics.cellPad
 
         val dl = ImGui.getWindowDrawList()
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
         val mousePos = ImGui.getIO().mousePos
         
+        val headerH = calculateHeaderHeight(session)
         val cvCols = getCvColumns(session)
         val cvLabels = getCvLabels(session)
+        
+        // Reserve vertical space for headers
+        ImGui.dummy(10f, headerH)
+        val afterHeadersY = ImGui.getCursorScreenPosY()
         
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
         val bottomY = if (lastBoxBottomY > startY) lastBoxBottomY else (startY + 300f)
         
         // Draw VALUE header
-        val valueColX = targetGridStartX + labelColW + getColumnOffset(session, "value")
+        val valueColX = startX + labelColW + getColumnOffset(session, "value")
         dl.addLine(valueColX - CELL_PAD * 0.5f, startY, valueColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
         
         val isValueHeaderHovered = mousePos.x >= valueColX && mousePos.x <= (valueColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
@@ -341,7 +352,7 @@ object PresetGridPanel {
 
         // Draw MIDI header
         if (session.uiTheme.showMidiCol) {
-            val midiColX = targetGridStartX + labelColW + getColumnOffset(session, "midi")
+            val midiColX = startX + labelColW + getColumnOffset(session, "midi")
             dl.addLine(midiColX - CELL_PAD * 0.5f, startY, midiColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
             
             val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
@@ -371,7 +382,7 @@ object PresetGridPanel {
         // Draw each column header horizontally
         for ((idx, label) in cvLabels.withIndex()) {
             val cvId = cvCols[idx]
-            val colX = targetGridStartX + labelColW + getColumnOffset(session, cvId)
+            val colX = startX + labelColW + getColumnOffset(session, cvId)
             dl.addLine(colX - CELL_PAD * 0.5f, startY, colX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
             
             val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
@@ -405,8 +416,11 @@ object PresetGridPanel {
         
         // Draw final separator line on the right edge
         val lastColId = if (cvCols.isNotEmpty()) cvCols.last() else "midi"
-        val rightColX = targetGridStartX + labelColW + getColumnOffset(session, lastColId) + CELL + CELL_PAD * 0.5f
+        val rightColX = startX + labelColW + getColumnOffset(session, lastColId) + CELL + CELL_PAD * 0.5f
         dl.addLine(rightColX, startY, rightColX, bottomY, lineCol, 1f)
+        
+        // Restore cursor
+        ImGui.setCursorScreenPos(startX, afterHeadersY)
     }
 
     private fun drawLaunchpad(

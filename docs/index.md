@@ -32,6 +32,7 @@ In-depth technical architecture, threading boundaries, DSP algorithms, rendering
 - **[Mandala UX Roadmap](developer/mandala_future_roadmap.md)**: Future design roadmap for visual recipe vault popover, geometric tags, global recipe index, and performance quick-slots.
 - **[Unified Control Mapping Architecture](developer/unified_control_mapping.md)**: Architectural brainstorm & roadmap for Mixxx-inspired multi-modal control mapping (MIDI, Keyboard, Mouse, and CV).
 - **[Continuous Random Morphing Proposal](developer/continuous_random_morphing_proposal.md)**: Architectural proposal for continuous $0.0 \leftrightarrow 1.0$ constrained random morphing, flip-flop state latches, and modulation matrix synergies.
+- **[Unified Title Bar & Custom Window Frame (CSD) Proposal](developer/unified_titlebar_csd_proposal.md)**: Architectural proposal for cross-platform unified top header/titlebar with frameless CSD and native decoration fallback.
 
 ### ⚡ [Operations & Tuning](developer/ops_tuning.md)
 Low-latency JVM Garbage Collector tuning (ZGC), cross-platform setup, PipeWire/JACK CLI diagnostics, and troubleshooting guide.
