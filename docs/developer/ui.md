@@ -97,7 +97,12 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck 
   - **Left Column**: Backend & hardware device configuration, status readouts, reconnection triggers, tempo synchronization, manual BPM locking, Beat Tracker target band selection, detection presets (High Accuracy, Balanced, Eco), and a dual-headed interactive BPM Range (Floor/Ceiling) slider with real-time tempo indicator dot.
   - **Right Column**: Raw Audio Input controls (Input Gain, System Volume), Raw Audio Buffer oscilloscope, and all sound-derived Control Voltage (CV) oscilloscopes stacked vertically.
   - Audio Engine sliders omit redundant "Current: x" text labels and use compact numeric input boxes.
-- **Menu Bar Quick Access**: Clicking "Audio Engine" in `MenuBar.kt` opens `SettingsPanel` focused directly on the `AUDIO_ENGINE` category.
+- **Audio Engine Quick Access**: Clicking the real-time BPM or DSP latency metric in the top performance stats bar (or opening `File > Settings... > Audio Engine`) navigates directly to the `AUDIO_ENGINE` category.
+- **Title Bar & Menu Bar Architecture (`MenuBar.kt`)**: The main menu bar consolidates application actions into clean top-level menus:
+  - `File`: Preset creation (`New Preset`), `Settings...`, and `Exit`.
+  - `Output`: `Secondary Output Window`, `Record Master Output (REC)`, `Web Broadcast`, and `Export Video (Offline Studio)...`.
+  - `Help`: `Documentation` and `Show Tooltips` toggle.
+  - Contextual HUD status badges for recording (`REC mm:ss`, dropped frames counter) and Web Broadcast (`LIVE`, `CONNECTING`, `LIVE ERR`) appear dynamically on the title bar only when active.
 
 ---
 

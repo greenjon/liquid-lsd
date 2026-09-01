@@ -38,8 +38,12 @@ class MenuBar(
                         }
                         ImGui.endMenu()
                     }
-                    if (ImGui.menuItem("Export Video (Offline Studio)...")) {
-                        VideoExportModal.open()
+                    ImGui.separator()
+                    if (ImGui.menuItem("Settings...")) {
+                        onOpenSettings()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
                     }
                     ImGui.separator()
                     if (ImGui.menuItem("Exit")) {
@@ -49,8 +53,65 @@ class MenuBar(
                     ImGui.endMenu()
                 }
 
-                // ── Live Video Recording & Dropped Frames HUD ────────────────────────
+                // ── Output Menu ──────────────────────────────────────────────────────
+                val isOutOpen = isOutputWindowOpen()
                 val isRec = llm.slop.liquidlsd.export.RealtimeRecorder.isRecording
+                val broadcastState = llm.slop.liquidlsd.broadcast.BroadcastEngine.connectionState
+                val isBroadcasting = broadcastState == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED ||
+                    broadcastState == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING
+
+                if (ImGui.beginMenu("Output")) {
+                    if (ImGui.menuItem("Secondary Output Window", "", isOutOpen)) {
+                        onToggleOutputWindow()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
+                    }
+
+                    if (ImGui.menuItem("Record Master Output (REC)", "Ctrl+R", isRec)) {
+                        if (isRec) {
+                            llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
+                        } else {
+                            val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
+                            val recDir = session.uiTheme.getDefaultVideosDirectory()
+                            val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
+                            llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
+                                outputFile = outFile,
+                                width = mixer.width,
+                                height = mixer.height,
+                                fps = session.uiTheme.recordingFps,
+                                bitrateMbps = session.uiTheme.recordingBitrateMbps,
+                                includeAudio = session.uiTheme.recordingIncludeAudio
+                            )
+                        }
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        val audioTxt = if (session.uiTheme.recordingIncludeAudio) "with audio" else "video only"
+                        ImGui.setTooltip("Toggle live master output recording.\nFolder: ${session.uiTheme.getDefaultVideosDirectory().absolutePath}\nSettings: ${session.uiTheme.recordingFps} FPS @ ${session.uiTheme.recordingBitrateMbps} Mbps ($audioTxt)")
+                    }
+
+                    if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
+                        if (isBroadcasting) {
+                            llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                        } else {
+                            llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                        }
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Connect and broadcast live session state to the Web TV client.")
+                    }
+
+                    ImGui.separator()
+                    if (ImGui.menuItem("Export Video (Offline Studio)...")) {
+                        VideoExportModal.open()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Render high-quality offline video with precise per-frame timing.")
+                    }
+                    ImGui.endMenu()
+                }
+
+                // ── Live Video Recording HUD (visible only when actively recording) ──
                 if (isRec) {
                     val elapsed = llm.slop.liquidlsd.export.RealtimeRecorder.elapsedSeconds.toInt()
                     val mins = elapsed / 60
@@ -80,28 +141,9 @@ class MenuBar(
                     if (ImGui.isItemHovered()) {
                         ImGui.setTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
                     }
-                } else {
-                    if (ImGui.menuItem("REC")) {
-                        val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
-                        val recDir = session.uiTheme.getDefaultVideosDirectory()
-                        val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
-                        llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
-                            outputFile = outFile,
-                            width = mixer.width,
-                            height = mixer.height,
-                            fps = session.uiTheme.recordingFps,
-                            bitrateMbps = session.uiTheme.recordingBitrateMbps,
-                            includeAudio = session.uiTheme.recordingIncludeAudio
-                        )
-                    }
-                    if (ImGui.isItemHovered()) {
-                        val audioTxt = if (session.uiTheme.recordingIncludeAudio) "with audio" else "video only"
-                        ImGui.setTooltip("Start live master output recording (Hotkey: Ctrl+R)\nFolder: ${session.uiTheme.getDefaultVideosDirectory().absolutePath}\nSettings: ${session.uiTheme.recordingFps} FPS @ ${session.uiTheme.recordingBitrateMbps} Mbps ($audioTxt)")
-                    }
                 }
 
-                // ── Web Broadcast Status & Quick Toggle ──────────────────────────────
-                val broadcastState = llm.slop.liquidlsd.broadcast.BroadcastEngine.connectionState
+                // ── Web Broadcast Status Pill (visible only when active/connecting/error) ─
                 when (broadcastState) {
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.65f, 0.25f, 1.0f)
@@ -137,41 +179,9 @@ class MenuBar(
                         }
                     }
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
-                        if (ImGui.menuItem("Broadcast", "", false)) {
-                            llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
-                        }
-                        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                            ImGui.setTooltip("Connect and start broadcasting live state to the Web TV client.")
-                        }
+                        // Inactive: hidden from top-level bar to reduce clutter
                     }
                 }
-
-                if (session.uiTheme.randomizationEnabled) {
-                    if (ImGui.beginMenu("Randomize")) {
-                        if (ImGui.selectable("All", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.randomizeAll()
-                        }
-                        if (ImGui.selectable("Deck A", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.randomizeDeckA()
-                        }
-                        if (ImGui.selectable("Deck B", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.randomizeDeckB()
-                        }
-                        if (ImGui.selectable("Deck BG", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.randomizeDeckBG()
-                        }
-                        if (ImGui.selectable("Deck PV", false, imgui.flag.ImGuiSelectableFlags.DontClosePopups)) {
-                            PresetGridUndo.pushUndoState(presetState, mixer)
-                            mixer.randomizeDeckPV()
-                        }
-                        ImGui.endMenu()
-                    }
-                }
-
 
                 // MIDI Map toggle button
                 val isMidiLearn = presetState.isMidiLearnMode
@@ -195,28 +205,6 @@ class MenuBar(
                     ImGui.popStyleColor()
                 }
 
-                if (ImGui.menuItem("Settings")) {
-                    onOpenSettings()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
-                }
-
-                val isAudioActive = session.audioEngine.isActive()
-                if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange warning
-                }
-                val audioEngineLabel = if (!isAudioActive && session.uiTheme.audioEngineEnabled) "Audio Engine [!]" else "Audio Engine"
-                if (ImGui.menuItem(audioEngineLabel)) {
-                    onOpenAudioEngineMonitor()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("View real-time input waveforms, estimated BPM, and sound-derived modulation signals.")
-                }
-                if (!isAudioActive && session.uiTheme.audioEngineEnabled) {
-                    ImGui.popStyleColor()
-                }
-
                 if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
                     ColorTunerPanel.toggle()
                 }
@@ -224,35 +212,21 @@ class MenuBar(
                     ImGui.setTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
                 }
 
-                val isOutOpen = isOutputWindowOpen()
-                if (ImGui.menuItem("Output Window", "", isOutOpen)) {
-                    onToggleOutputWindow()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
-                }
-
                 if (ImGui.beginMenu("Help")) {
                     if (ImGui.menuItem("Documentation")) {
                         DocManager.openDocumentation()
                     }
+                    ImGui.separator()
+                    val tooltipsEnabled = session.uiTheme.tooltipsEnabled
+                    if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
+                        session.uiTheme.tooltipsEnabled = !tooltipsEnabled
+                        session.uiTheme.saveSettings()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
+                    }
                     ImGui.endMenu()
                 }
-
-                val tooltipsEnabled = session.uiTheme.tooltipsEnabled
-                if (tooltipsEnabled) {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 0.2f, 1.0f) // green
-                } else {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 0.8f, 0.2f, 0.2f, 1.0f) // red
-                }
-                if (ImGui.menuItem("Tooltips", "", tooltipsEnabled)) {
-                    session.uiTheme.tooltipsEnabled = !tooltipsEnabled
-                    session.uiTheme.saveSettings()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
-                }
-                ImGui.popStyleColor()
 
                 // ── Right-aligned performance stats ──────────────────────────────────
                 drawPerformanceStats(session)
@@ -351,6 +325,12 @@ class MenuBar(
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue
                 ImGui.text(bpmText)
                 ImGui.popStyleColor()
+                if (ImGui.isItemClicked()) {
+                    onOpenAudioEngineMonitor()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Audio Engine BPM: estimated tempo.\nClick to open Audio Engine settings.")
+                }
                 ImGui.sameLine(0f, 0f)
             }
 
@@ -363,6 +343,12 @@ class MenuBar(
                 }
                 ImGui.text(dspText)
                 ImGui.popStyleColor()
+                if (ImGui.isItemClicked()) {
+                    onOpenAudioEngineMonitor()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Audio callback DSP execution time.\nClick to open Audio Engine settings.")
+                }
                 ImGui.sameLine(0f, 0f)
             }
 
