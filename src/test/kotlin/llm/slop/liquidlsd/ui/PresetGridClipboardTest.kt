@@ -24,7 +24,8 @@ class PresetGridClipboardTest {
 
         param.modulators.addAll(listOf(lfoMod, audioAmpMod, audioBassMod, triggerOnsetMod, midiMod))
 
-        // Final / Base cell should yield empty modulators list (since it represents base value/row)
+        // Value / Final / Base cell should yield empty modulators list (since it represents base value/row)
+        assertEquals(0, PresetGridKeyboard.getModsForCell(param, "value").size)
         assertEquals(0, PresetGridKeyboard.getModsForCell(param, "final").size)
         assertEquals(0, PresetGridKeyboard.getModsForCell(param, "base").size)
 

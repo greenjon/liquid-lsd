@@ -67,20 +67,20 @@ class ScopeTimebaseTest {
     }
 
     @Test
-    fun `test decoupled per-scope timebases across LFO, Audio, and Final tabs`() {
+    fun `test decoupled per-scope timebases across LFO, Audio, and Value tabs`() {
         val param = ModulatableParameter(baseValue = 0.5f)
         param.setScopeTimebase("lfo", ScopeTimebase.TEN_SEC)
         param.setScopeTimebase("audio", ScopeTimebase.HUNDRED_SEC)
-        param.setScopeTimebase("final", ScopeTimebase.FIFTEEN_MIN)
+        param.setScopeTimebase("value", ScopeTimebase.FIFTEEN_MIN)
 
         assertEquals(ScopeTimebase.TEN_SEC, param.getScopeTimebase("lfo"))
         assertEquals(ScopeTimebase.HUNDRED_SEC, param.getScopeTimebase("audio"))
-        assertEquals(ScopeTimebase.FIFTEEN_MIN, param.getScopeTimebase("final"))
+        assertEquals(ScopeTimebase.FIFTEEN_MIN, param.getScopeTimebase("value"))
         assertEquals(ScopeTimebase.TEN_SEC, param.getScopeTimebase("trigger"))
 
         assertEquals(10.0f, param.resolveEffectiveTimebase("lfo").first)
         assertEquals(100.0f, param.resolveEffectiveTimebase("audio").first)
-        assertEquals(900.0f, param.resolveEffectiveTimebase("final").first)
+        assertEquals(900.0f, param.resolveEffectiveTimebase("value").first)
         assertEquals(10.0f, param.resolveEffectiveTimebase("trigger").first)
     }
 
@@ -114,12 +114,12 @@ class ScopeTimebaseTest {
         val param = ModulatableParameter(baseValue = 0.75f)
         param.setScopeTimebase("lfo", ScopeTimebase.HUNDRED_SEC)
         param.setScopeTimebase("audio", ScopeTimebase.FIFTEEN_MIN)
-        param.setScopeTimebase("final", ScopeTimebase.TWO_POINT_FIVE_HOURS)
+        param.setScopeTimebase("value", ScopeTimebase.TWO_POINT_FIVE_HOURS)
 
         val cloned = param.clone()
         assertEquals(ScopeTimebase.HUNDRED_SEC, cloned.getScopeTimebase("lfo"))
         assertEquals(ScopeTimebase.FIFTEEN_MIN, cloned.getScopeTimebase("audio"))
-        assertEquals(ScopeTimebase.TWO_POINT_FIVE_HOURS, cloned.getScopeTimebase("final"))
+        assertEquals(ScopeTimebase.TWO_POINT_FIVE_HOURS, cloned.getScopeTimebase("value"))
         assertEquals(ScopeTimebase.TEN_SEC, cloned.getScopeTimebase("trigger"))
     }
 

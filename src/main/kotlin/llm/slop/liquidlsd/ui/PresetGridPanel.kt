@@ -52,7 +52,7 @@ object PresetGridPanel {
     }
 
     private fun getVisibleColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
-        val visibleCols = mutableListOf("final")
+        val visibleCols = mutableListOf("value")
         if (session.uiTheme.showMidiCol) visibleCols.add("midi")
         visibleCols.addAll(getCvColumns(session))
         return visibleCols
@@ -62,7 +62,8 @@ object PresetGridPanel {
         val metrics = GridMetrics.compute(session)
         val visibleCols = getVisibleColumns(session)
         
-        val index = visibleCols.indexOf(colId)
+        val targetId = if (colId == "final") "value" else colId
+        val index = visibleCols.indexOf(targetId)
         if (index < 0) return 0f
         
         return index * (metrics.cell + metrics.cellPad)
@@ -71,7 +72,7 @@ object PresetGridPanel {
     private fun getCvColor(colId: String, alpha: Float = 1f): Int {
         return when (colId) {
             // Special
-            "final"          -> ImGui.colorConvertFloat4ToU32(0.0f, 1.0f, 0.7f, alpha)
+            "value", "final" -> ImGui.colorConvertFloat4ToU32(0.0f, 1.0f, 0.7f, alpha)
             "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
             "midi"           -> ImGui.colorConvertFloat4ToU32(0.7f, 0.3f, 1.0f, alpha)
             // Synthetic / Generators
@@ -110,7 +111,7 @@ object PresetGridPanel {
         val baseLabelW = 160f * fontScale
         val labelColW = maxOf(baseLabelW, subTabsW + 16f)
 
-        val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
+        val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f
 
         return sideTabWidth + 12f + labelColW + maxGridW + 24f
@@ -163,7 +164,7 @@ object PresetGridPanel {
             val baseLabelW = 160f * fontScale
             val idealLabelColW = maxOf(baseLabelW, subTabsW + 16f)
 
-            val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
+            val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
             val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
             val maxAllowedLabelColW = (avail - maxGridW - 20f).coerceAtLeast(120f)
             val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
@@ -240,22 +241,22 @@ object PresetGridPanel {
             val boxBottomY = childMaxY.coerceAtLeast(boxTopY + 100f)
             lastBoxBottomY = boxBottomY
 
-            // 1. Card background fill and stepped stroke outline (top of subtabs on left, step up to top of column headers at Final)
+            // 1. Card background fill and stepped stroke outline (top of subtabs on left, step up to top of column headers at Value)
             if (!isDeckEmpty) {
-                val finalColLeftX = gridStartX + labelColW + getColumnOffset(session, "final") - CELL_PAD * 0.5f
+                val valueColLeftX = gridStartX + labelColW + getColumnOffset(session, "value") - CELL_PAD * 0.5f
                 val subtabTopY = containerTopY + headerH - 26f
                 val strokeW = 1.5f
 
                 // Fill main body box (from subtabTopY down) and top-right column headers box
                 dl.addRectFilled(boxMinX, subtabTopY, boxMaxX, boxBottomY, accentFill, 4f)
-                dl.addRectFilled(finalColLeftX, boxTopY, boxMaxX, subtabTopY, accentFill, 4f)
+                dl.addRectFilled(valueColLeftX, boxTopY, boxMaxX, subtabTopY, accentFill, 4f)
 
-                // Line 1: Across top of subtab buttons from left edge to left edge of Final column
-                dl.addLine(boxMinX, subtabTopY, finalColLeftX, subtabTopY, accentColor, strokeW)
-                // Line 2: Upward at left edge of Final column to top of Final header box
-                dl.addLine(finalColLeftX, subtabTopY, finalColLeftX, boxTopY, accentColor, strokeW)
+                // Line 1: Across top of subtab buttons from left edge to left edge of Value column
+                dl.addLine(boxMinX, subtabTopY, valueColLeftX, subtabTopY, accentColor, strokeW)
+                // Line 2: Upward at left edge of Value column to top of Value header box
+                dl.addLine(valueColLeftX, subtabTopY, valueColLeftX, boxTopY, accentColor, strokeW)
                 // Line 3: Across top of column headers to right edge
-                dl.addLine(finalColLeftX, boxTopY, boxMaxX, boxTopY, accentColor, strokeW)
+                dl.addLine(valueColLeftX, boxTopY, boxMaxX, boxTopY, accentColor, strokeW)
                 // Line 4: Right edge down to bottom
                 dl.addLine(boxMaxX, boxTopY, boxMaxX, boxBottomY, accentColor, strokeW)
                 // Line 5: Bottom edge left to left edge
@@ -294,9 +295,9 @@ object PresetGridPanel {
                 val h = ImGui.calcTextSize(label).y
                 if (h > maxH) maxH = h
             }
-            val hFinal = ImGui.calcTextSize("F\nI\nN\nA\nL").y
+            val hValue = ImGui.calcTextSize("V\nA\nL").y
             val hMidi = ImGui.calcTextSize("M\nI\nD\nI").y
-            if (hFinal > maxH) maxH = hFinal
+            if (hValue > maxH) maxH = hValue
             if (hMidi > maxH) maxH = hMidi
         }
         return (maxH + 5f).coerceAtLeast(40f)
@@ -336,25 +337,25 @@ object PresetGridPanel {
         val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
         val bottomY = if (lastBoxBottomY > startY) lastBoxBottomY else (startY + 300f)
         
-        // Draw FINAL header
-        val finalColX = startX + labelColW + getColumnOffset(session, "final")
-        dl.addLine(finalColX - CELL_PAD * 0.5f, startY, finalColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
+        // Draw VALUE header
+        val valueColX = startX + labelColW + getColumnOffset(session, "value")
+        dl.addLine(valueColX - CELL_PAD * 0.5f, startY, valueColX - CELL_PAD * 0.5f, bottomY, lineCol, 1f)
         
-        val isFinalHeaderHovered = mousePos.x >= finalColX && mousePos.x <= (finalColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
-        if (isFinalHeaderHovered) {
-            dl.addRectFilled(finalColX, startY, finalColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+        val isValueHeaderHovered = mousePos.x >= valueColX && mousePos.x <= (valueColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        if (isValueHeaderHovered) {
+            dl.addRectFilled(valueColX, startY, valueColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
         }
         
-        var twFinal = 0f
-        val labelFinal = "F\nI\nN\nA\nL"
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { twFinal = ImGui.calcTextSize(labelFinal).x }
-        var offsetX = ((CELL - twFinal) * 0.5f).coerceAtLeast(0f)
-        ImGui.setCursorScreenPos(finalColX + offsetX, startY)
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("final"))
-        session.uiTheme.caption(labelFinal)
+        var twValue = 0f
+        val labelValue = "V\nA\nL"
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { twValue = ImGui.calcTextSize(labelValue).x }
+        var offsetX = ((CELL - twValue) * 0.5f).coerceAtLeast(0f)
+        ImGui.setCursorScreenPos(valueColX + offsetX, startY)
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, getCvColor("value"))
+        session.uiTheme.caption(labelValue)
         ImGui.popStyleColor()
-        if (isFinalHeaderHovered && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("FINAL: Base parameter value and modulation bounds/limits.")
+        if (isValueHeaderHovered && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("VAL: Base parameter value and modulation bounds/limits.")
         }
 
         // Draw MIDI header

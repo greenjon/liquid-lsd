@@ -37,7 +37,7 @@ object PresetGridRenderer {
         val isEven = (rowIndex % 2 == 0)
 
         val rowScreenY = ImGui.getCursorScreenPosY()
-        val lastVisibleCol = getCvColumns().lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "final"
+        val lastVisibleCol = getCvColumns().lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val rowWidth = labelColW + getColumnOffset(lastVisibleCol) + CELL + CELL_PAD * 0.5f
 
         ImGui.pushID(paramKey)
@@ -120,10 +120,10 @@ object PresetGridRenderer {
             ImGui.endTooltip()
         }
         if (ImGui.isItemClicked()) {
-            state.select(PresetCellId(paramKey, "final"), param)
+            state.select(PresetCellId(paramKey, "value"), param)
         }
         if (isLabelHovered && ImGui.isMouseReleased(2)) {
-            state.select(PresetCellId(paramKey, "final"), param)
+            state.select(PresetCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
         }
@@ -175,8 +175,8 @@ object PresetGridRenderer {
         val dl = ImGui.getWindowDrawList()
         val r = CELL * 0.5f
 
-        // 1. FINAL Cell
-        drawFinalCell(session, dl, param, paramKey, state, gridStartX, labelColW, rowScreenY, CELL, r,
+        // 1. VALUE Cell
+        drawValueCell(session, dl, param, paramKey, state, gridStartX, labelColW, rowScreenY, CELL, r,
             getColumnOffset, getCvColor, onPushUndo)
 
         // 2. MIDI Cell
@@ -198,7 +198,7 @@ object PresetGridRenderer {
 
     // ── Cell helpers ──────────────────────────────────────────────────────────
 
-    private fun drawFinalCell(
+    private fun drawValueCell(
         session: llm.slop.liquidlsd.SessionContext,
         dl: ImDrawList,
         param: llm.slop.liquidlsd.parameters.ModulatableParameter,
@@ -210,23 +210,23 @@ object PresetGridRenderer {
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
-        val finalX = gridStartX + labelColW + getColumnOffset("final")
-        val finalY = rowScreenY
-        val isFinalSelected = state.selectedCell?.paramKey == paramKey && state.selectedCell?.cvSourceId == "final"
+        val valX = gridStartX + labelColW + getColumnOffset("value")
+        val valY = rowScreenY
+        val isValSelected = state.selectedCell?.paramKey == paramKey && (state.selectedCell?.cvSourceId == "value" || state.selectedCell?.cvSourceId == "final")
 
-        ImGui.setCursorScreenPos(finalX, finalY)
+        ImGui.setCursorScreenPos(valX, valY)
         val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("##final_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
-        val isFinalHovered = ImGui.isItemHovered()
+        ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
+        val isValHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked()) {
-            state.select(PresetCellId(paramKey, "final"), param)
+            state.select(PresetCellId(paramKey, "value"), param)
         }
-        if (isFinalHovered && ImGui.isMouseReleased(2)) {
-            state.select(PresetCellId(paramKey, "final"), param)
+        if (isValHovered && ImGui.isMouseReleased(2)) {
+            state.select(PresetCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
         }
-        if (isFinalHovered && session.uiTheme.tooltipsEnabled) {
+        if (isValHovered && session.uiTheme.tooltipsEnabled) {
             val displayValue = if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
             val displayBase  = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
             if (param.modulatorFilter != null) {
@@ -239,24 +239,24 @@ object PresetGridRenderer {
         }
 
         val bgCol = when {
-            isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-            else            -> getCvColor("final", 0.05f)
+            isValSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
+            else          -> getCvColor("value", 0.05f)
         }
         val borderCol = when {
-            isFinalSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
-            else            -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
+            isValSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
+            else          -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
 
         drawKnobMeter(
             session = session,
-            dl = dl, x = finalX, y = finalY, r = r,
+            dl = dl, x = valX, y = valY, r = r,
             value = param.value, min = param.minClamp, max = param.maxClamp,
             meterType = param.meterType,
             baseValue = param.baseValue,
             baseMin = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMin else null,
             baseMax = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMax else null,
-            color = getCvColor("final", 1f), bgCol = bgCol, borderCol = borderCol,
-            isHovered = isFinalHovered
+            color = getCvColor("value", 1f), bgCol = bgCol, borderCol = borderCol,
+            isHovered = isValHovered
         )
     }
 

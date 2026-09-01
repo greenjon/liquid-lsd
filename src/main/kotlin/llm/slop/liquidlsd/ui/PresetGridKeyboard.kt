@@ -16,7 +16,7 @@ import llm.slop.liquidlsd.models.toDto
 object PresetGridKeyboard {
     fun getModsForCell(param: ModulatableParameter, cvSourceId: String): List<CvModulator> {
         return when (cvSourceId) {
-            "final", "base" -> emptyList()
+            "value", "final", "base" -> emptyList()
             "audio"   -> param.modulators.filter { isAudioSource(it.sourceId) }
             "trigger" -> param.modulators.filter { isTriggerSource(it.sourceId) }
             "midi"    -> param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
@@ -53,7 +53,7 @@ object PresetGridKeyboard {
             if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
                 if (p != null) {
-                    if (cell.cvSourceId == "final" || cell.cvSourceId == "base") {
+                    if (cell.cvSourceId == "value" || cell.cvSourceId == "final" || cell.cvSourceId == "base") {
                         ClipboardManager.rowClipboard = RowClipboardData(
                             sourceParamKey = cell.paramKey,
                             parameter = p.toDto()
@@ -88,7 +88,7 @@ object PresetGridKeyboard {
             if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
                 if (p != null) {
-                    if (cell.cvSourceId == "final" || cell.cvSourceId == "base") {
+                    if (cell.cvSourceId == "value" || cell.cvSourceId == "final" || cell.cvSourceId == "base") {
                         if (rowData != null) {
                             onPushUndo(state, mixer)
                             ClipboardManager.applyRowClipboard(p, rowData, mixer)
@@ -117,7 +117,7 @@ object PresetGridKeyboard {
             if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
                 if (p != null) {
-                    if (cell.cvSourceId == "final" || cell.cvSourceId == "base") {
+                    if (cell.cvSourceId == "value" || cell.cvSourceId == "final" || cell.cvSourceId == "base") {
                         onPushUndo(state, mixer)
                         p.reset()
                     } else {

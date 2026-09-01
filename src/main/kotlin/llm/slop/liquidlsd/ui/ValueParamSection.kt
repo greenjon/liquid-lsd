@@ -9,7 +9,7 @@ import kotlin.math.roundToInt
 
 private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
 
-object FinalParamSection {
+object ValueParamSection {
 
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
@@ -63,7 +63,7 @@ object FinalParamSection {
         ImGui.spacing()
 
         // Oscilloscope showing 100% true recorded history
-        OscilloscopeDrawer.drawFinalOscilloscope(session, param, themeColor)
+        OscilloscopeDrawer.drawValueOscilloscope(session, param, themeColor)
 
         ImGui.spacing()
         ImGui.separator()
@@ -78,7 +78,7 @@ object FinalParamSection {
         // --- SCROLLABLE BODY: INITIAL VALUE CONTROLS ---
         val childFlags = if (CustomRangeSlider.isAnySliderHovered) imgui.flag.ImGuiWindowFlags.NoScrollWithMouse else 0
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
-        if (ImGui.beginChild("##final_param_scroll", 0f, 0f, false, childFlags)) {
+        if (ImGui.beginChild("##value_param_scroll", 0f, 0f, false, childFlags)) {
             session.uiTheme.h3("Initial Value Configuration")
             ImGui.spacing()
 

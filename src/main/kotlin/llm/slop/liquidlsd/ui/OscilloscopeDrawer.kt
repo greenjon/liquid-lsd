@@ -29,11 +29,11 @@ object OscilloscopeDrawer {
     // Reusable ImInt wrapper for timebase dropdown combo to prevent per-frame allocations
     private val timebaseComboIndex = ImInt(0)
 
-    fun drawFinalOscilloscope(
+    fun drawValueOscilloscope(
         session: SessionContext,
         param: ModulatableParameter,
         themeColor: Int,
-        scopeKey: String = "final"
+        scopeKey: String = "value"
     ) {
         val history = param.history
         val minVal = param.minClamp
@@ -66,7 +66,7 @@ object OscilloscopeDrawer {
         dl.addLine(startX, startY + 6f, startX + w, startY + 6f, gridColFaint, 1f)
         dl.addLine(startX, startY + h - 6f, startX + w, startY + h - 6f, gridColFaint, 1f)
 
-        // Calculate Playhead X position (Always right-aligned for Final history view)
+        // Calculate Playhead X position (Always right-aligned for Value history view)
         val nowX = startX + w
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -146,7 +146,7 @@ object OscilloscopeDrawer {
         ImGui.setCursorScreenPos(startX + 6f, startY + h - captionH - 2f)
         session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, "${"%.1f".format(minVal * labelScale)}$suffix")
 
-        val title = "Final Parameter Value"
+        val title = "Parameter Value"
         val titleX = startX + 60f
         ImGui.setCursorScreenPos(titleX, startY + 4f)
         session.uiTheme.captionColored(0.78f, 0.82f, 0.86f, 0.90f, title)
@@ -156,6 +156,13 @@ object OscilloscopeDrawer {
 
         ImGui.setCursorScreenPos(startX, startY + h)
     }
+
+    fun drawFinalOscilloscope(
+        session: SessionContext,
+        param: ModulatableParameter,
+        themeColor: Int,
+        scopeKey: String = "value"
+    ) = drawValueOscilloscope(session, param, themeColor, scopeKey)
 
     fun drawOscilloscope(
         session: SessionContext,
@@ -382,7 +389,7 @@ object OscilloscopeDrawer {
         // 6. Watermark caption when muted
         if (isMuted) {
             ImGui.setCursorScreenPos(startX + maxLabelW + 10f, startY + 4f)
-            session.uiTheme.captionColored(1.0f, 0.82f, 0.20f, 0.90f, "[SCOPE LIVE — OUTPUT MUTED FROM FINAL]")
+            session.uiTheme.captionColored(1.0f, 0.82f, 0.20f, 0.90f, "[SCOPE LIVE — OUTPUT MUTED FROM VALUE]")
         }
 
         ImGui.setCursorScreenPos(startX + 6f, startY + 4f)
@@ -472,7 +479,7 @@ object OscilloscopeDrawer {
                 param.modulators.addAll(updated)
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip(if (isMuted) "Unmute cell modulation (Route to Final)" else "Mute cell modulation (Preview on O-scope)")
+                ImGui.setTooltip(if (isMuted) "Unmute cell modulation (Route to Value)" else "Mute cell modulation (Preview on O-scope)")
             }
             ImGui.popStyleColor(3)
         }

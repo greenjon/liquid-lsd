@@ -5,7 +5,7 @@ import imgui.ImGui
 object CvTheme {
     fun getThemeColor(cvId: String, alpha: Float = 1f): Int {
         return when (cvId) {
-            "final"          -> ImGui.colorConvertFloat4ToU32(0.0f, 1.0f, 0.7f, alpha)
+            "value", "final" -> ImGui.colorConvertFloat4ToU32(0.0f, 1.0f, 0.7f, alpha)
             "base"           -> ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, alpha)
             "midi"           -> ImGui.colorConvertFloat4ToU32(0.7f, 0.3f, 1.0f, alpha)
             "lfo"            -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 1.0f, alpha)
@@ -25,7 +25,7 @@ object CvTheme {
 
     fun getThemeColorRGB(cvId: String): FloatArray {
         return when (cvId) {
-            "final"          -> floatArrayOf(0.0f, 1.0f, 0.7f)
+            "value", "final" -> floatArrayOf(0.0f, 1.0f, 0.7f)
             "base"           -> floatArrayOf(0.8f, 0.6f, 0.2f)
             "midi"           -> floatArrayOf(0.7f, 0.3f, 1.0f)
             "lfo"            -> floatArrayOf(0.0f, 0.7f, 1.0f)

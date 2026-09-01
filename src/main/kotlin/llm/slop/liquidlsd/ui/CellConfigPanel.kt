@@ -51,7 +51,7 @@ object CellConfigPanel {
 
     private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, currentParamKey: String, currentCvId: String) {
         val availableTabs = mutableListOf<Pair<String, String>>()
-        availableTabs.add("Final" to "final")
+        availableTabs.add("Value" to "value")
         if (session.uiTheme.showMidiCol) availableTabs.add("MIDI" to "midi")
         if (session.uiTheme.showLfoCol) availableTabs.add("LFO" to "lfo")
         if (session.uiTheme.audioEngineEnabled) {
@@ -66,10 +66,10 @@ object CellConfigPanel {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             availableTabs.forEachIndexed { i, (label, targetCvId) ->
                 if (i > 0) ImGui.sameLine()
-                val isActive = currentCvId == targetCvId
+                val isActive = currentCvId == targetCvId || (targetCvId == "value" && currentCvId == "final")
                 if (isActive) {
                     val activeCol = when (targetCvId) {
-                        "final"   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 0.5f, 1f)
+                        "value", "final" -> ImGui.colorConvertFloat4ToU32(0.0f, 0.7f, 0.5f, 1f)
                         "midi"    -> ImGui.colorConvertFloat4ToU32(0.5f, 0.2f, 0.8f, 1f)
                         "lfo"     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.8f, 1f)
                         "audio"   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.0f, 1f)
@@ -151,8 +151,8 @@ object CellConfigPanel {
         val isGen = cvId == "lfo"
         val hasAdvanced = isBeat || isLfo || isSnh
 
-        if (cvId == "final") {
-            FinalParamSection.draw(session, state, param, paramKey, themeColor, mandala)
+        if (cvId == "value" || cvId == "final") {
+            ValueParamSection.draw(session, state, param, paramKey, themeColor, mandala)
             return
         }
 
