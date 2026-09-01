@@ -10,7 +10,7 @@ The Preset Grid is located in the left panel of Performance Mode.
 
 ```
 ┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
-│ Parameter       │ FINAL    │ MIDI     │ GEN 1    │ AUDIO    │ TRIGGER  │
+│ Parameter       │ VALUE    │ MIDI     │ GEN 1    │ AUDIO    │ TRIGGER  │
 ├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
 │ Deck A / Lobes  │  ● 4.0   │  [--]    │  ( 🔘 )   │  ( 🔘 )   │  [  ]    │
 │ Deck A / Zoom   │  ● 1.0   │  [--]    │  [  ]    │  ( 🔘 )   │  ( 🔘 )   │
@@ -21,7 +21,7 @@ The Preset Grid is located in the left panel of Performance Mode.
 - **Undo / Redo History**: Maintains a 30-level undo/redo stack (`Ctrl+Z` / `Ctrl+Y`) tracking all modulator edits, additions, and parameter changes.
 - **Rows**: Modulatable parameters grouped logically: Mixer, Deck Geometry, View, Color, Background, and Feedback.
 - **Columns**: Active modulation sources:
-  - **FINAL**: Base parameter controls, live evaluated output knobs, and parameter default resets.
+  - **VALUE**: Base parameter controls, live evaluated output knobs, and parameter default resets.
   - **MIDI**: Direct MIDI CC hardware assignments.
   - **GEN 1 & GEN 2**: Configurable LFO & clock generators.
   - **AUDIO**: Audio frequency-band envelope extractors (`AMP`, `BASS`, `MID`, `HIGH`).
@@ -93,15 +93,15 @@ Liquid LSD includes mouse and keyboard power shortcuts designed for live perform
   - *Unmodified*: `±0.001` fine step.
   - *`Shift` + Scroll*: `±0.01` medium step.
   - *`Ctrl` + `Shift` + Scroll*: `±0.1` coarse step.
-- **Middle-Click Reset**: Middle-click any slider track or `FINAL` knob cell to instantly reset parameter to factory default.
+- **Middle-Click Reset**: Middle-click any slider track or `VALUE` knob cell to instantly reset parameter to factory default.
 
 ### Preset Grid Shortcuts
-- **Middle-Click Cell Mute**: Middle-click any active/muted grid cell to toggle its `Muted` (preview) state on/off immediately. Muted cells display **35% arc opacity with a sans-serif 'M'** centered in the knob. While muted, modulation is blocked from `Final`, but the Oscilloscope in `CellConfig` stays 100% live for real-time waveform previewing. Middle-clicking an unmapped CV cell automatically assigns a default modulator.
-- **Middle-Click Parameter Reset**: Middle-click the row label or `FINAL` cell to reset the parameter to default.
+- **Middle-Click Cell Mute**: Middle-click any active/muted grid cell to toggle its `Muted` (preview) state on/off immediately. Muted cells display **35% arc opacity with a sans-serif 'M'** centered in the knob. While muted, modulation is blocked from `Value`, but the Oscilloscope in `CellConfig` stays 100% live for real-time waveform previewing. Middle-clicking an unmapped CV cell automatically assigns a default modulator.
+- **Middle-Click Parameter Reset**: Middle-click the row label or `VALUE` cell to reset the parameter to default.
 - **Copy / Paste (`Ctrl+C` / `Ctrl+V` or `Cmd+C` / `Cmd+V`)**:
   - Selecting a CV cell (LFO, Audio, Trigger, MIDI) and pressing `Ctrl+C` copies that cell's active modulators. Pasting onto another cell (`Ctrl+V`) routes the modulator to the new source type with automatic envelope and frequency mapping.
-  - Selecting the row label or `FINAL` cell and pressing `Ctrl+C` copies the full parameter row (base values, bounds, randomization flags, and all modulators). Pasting onto another parameter (`Ctrl+V`) scales depths and DC offsets to the destination clamp range.
-- **Clear / Reset (`Delete` or `Backspace`)**: Clears the modulators on the selected CV cell, or resets the parameter to default if the `FINAL` cell or row is selected.
+  - Selecting the row label or `VALUE` cell and pressing `Ctrl+C` copies the full parameter row (base values, bounds, randomization flags, and all modulators). Pasting onto another parameter (`Ctrl+V`) scales depths and DC offsets to the destination clamp range.
+- **Clear / Reset (`Delete` or `Backspace`)**: Clears the modulators on the selected CV cell, or resets the parameter to default if the `VALUE` cell or row is selected.
 - **Master Oscilloscope Mute Toggle**: Click the `[ LIVE ]` / `[ MUTED ]` toggle button in the top-right corner of the Cell Config Oscilloscope header to toggle cell mute status.
 - **Right-Click Row Context Menu**:
   - Copy / Paste parameter settings.

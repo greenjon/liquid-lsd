@@ -12,7 +12,7 @@ Presets store the complete state of a deck, including all visual parameters, fee
 - Presets are stored in `presets/` (and subfolders) and managed via the **Library** panel.
 
 ### Preset Clipboard (Copy & Paste)
-- **Deck Parameter Copying**: You can copy base parameter settings from one deck and paste them onto another deck using right-click context menus in the `FINAL` column or Deck Controls.
+- **Deck Parameter Copying**: You can copy base parameter settings from one deck and paste them onto another deck using right-click context menus in the `VALUE` column or Deck Controls.
 - **Modulator Copying**: Copy individual `CvModulator` configurations or full cell setups between parameters.
 
 ---
