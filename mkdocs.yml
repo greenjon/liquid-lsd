@@ -32,6 +32,8 @@ nav:
     - CV Modulation & Preset Grid: user_guide/modulation.md
     - Documentation & Notes: user_guide/notes_and_tooltips.md
     - Presets & MIDI Mapping: user_guide/midi_presets.md
+    - Recording, Presets & Export: user_guide/recording_and_export.md
+    - Web Broadcasting & Retro TV: user_guide/web_broadcast.md
     - Library & Playlists: user_guide/library.md
     - Custom Shaders & Sources: user_guide/custom_visuals.md
   - Developer Reference:
@@ -40,6 +42,8 @@ nav:
     - Beat Sync & Stability: developer/beat_sync.md
     - Modulation Engine: developer/modulation.md
     - OpenGL Rendering: developer/rendering.md
+    - Media Export & Recording Pipeline: developer/export_pipeline.md
+    - Web Subsystem & Broadcast Protocol: developer/web_subsystem.md
     - UI Architecture & ImGui: developer/ui.md
     - Preset & Queue Management: developer/preset_management.md
     - Mandala UX Roadmap: developer/mandala_future_roadmap.md

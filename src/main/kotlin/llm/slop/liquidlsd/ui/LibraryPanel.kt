@@ -171,7 +171,6 @@ object LibraryPanel {
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
         checkAutoRefresh()
         val safeW = width.coerceAtLeast(80f)
-        val colWidth = ((safeW - 24f) * 0.25f).coerceAtLeast(20f)
 
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
@@ -247,28 +246,36 @@ object LibraryPanel {
         if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 
         val contentH = (ImGui.getContentRegionAvailY() - 5f).coerceAtLeast(1f)
+        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(80f)
+        val spacingX = ImGui.getStyle().getItemSpacingX()
+        val totalSpacing = spacingX * 3f
+        val colWidth = ((availW - totalSpacing) * 0.25f).coerceAtLeast(20f)
+        val lastColWidth = (availW - colWidth * 3f - totalSpacing).coerceAtLeast(20f)
 
         // Column 1: Presets Library
         ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true)
+        ImGui.setScrollX(0f)
         PresetListPanel.draw(session, mixer, presetState)
         ImGui.endChild()
         ImGui.sameLine()
 
         // Column 2: Playlist Editor
         ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true)
+        ImGui.setScrollX(0f)
         PlaylistEditorPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
         // Column 3: Play Queue (A/B)
         ImGui.beginChild("LibraryQueue", colWidth, contentH, true)
+        ImGui.setScrollX(0f)
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
         // Column 4: Background Queue (BG)
-        val lastColWidth = (ImGui.getContentRegionAvailX() - 4f).coerceAtLeast(colWidth)
         ImGui.beginChild("LibraryBgQueue", lastColWidth, contentH, true)
+        ImGui.setScrollX(0f)
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 

@@ -343,10 +343,6 @@ object PresetGridTabs {
         ImGui.popStyleVar(2)
     }
 
-    private fun getSubTabColor(label: String, alpha: Float): Int {
-        return ImGui.colorConvertFloat4ToU32(0.25f, 0.55f, 0.85f, alpha)
-    }
-
     /**
      * Renders content only when the named section matches the deck's active sub-tab.
      * For the Mixer top-tab, always renders when Mixer is the active top-tab.

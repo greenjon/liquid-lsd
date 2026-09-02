@@ -63,7 +63,12 @@ class FontInspectorTest {
             "UNLOCK" to 0xe19f,
             "LOCK_OPEN" to 0xe110,
             "BOT" to 0xe1bb,
-            "BOT_OFF" to 0xe5e0
+            "BOT_OFF" to 0xe5e0,
+            "X" to 0xe1b2,
+            "SQUARE" to 0xe167,
+            "COPY" to 0xe09e,
+            "MAXIMIZE" to 0xe112,
+            "MINIMIZE" to 0xe11a
         )
 
         for ((name, codepoint) in codepointsToCheck) {

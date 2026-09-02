@@ -513,9 +513,9 @@ object UITheme {
     private var codeBytes: ByteArray? = null
     private var lucideBytes: ByteArray? = null
 
-    // Range for standard Lucide (E000 - E5FF covers all Lucide icons used in the app)
+    // Range for standard Lucide (E000 - E7FF covers all Lucide icons used in the app)
     // Range format is [start, end, ..., 0]
-    private val ICON_RANGE = shortArrayOf(0xe000.toShort(), 0xe5ff.toShort(), 0)
+    private val ICON_RANGE = shortArrayOf(0xe000.toShort(), 0xe7ff.toShort(), 0)
 
     // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, General Punctuation, Arrows, Math, Geometric Shapes
     private val MAIN_RANGES = shortArrayOf(

@@ -313,6 +313,7 @@ class UIManager(
         }
 
         imguiGlfw.newFrame()
+        ImGui.getIO().mouseWheelH = 0f // Horizontal scroll wheel is disabled globally across all UI panels
         ImGui.newFrame()
         UIThemeStyler.updateUiTransparency(session)
         windowFrameController.update()
@@ -505,8 +506,7 @@ class UIManager(
         // Library (Bottom or Full)
         ImGui.setNextWindowPos(0f, libraryPosH)
         ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f))
-        val flags = (if (theme.libraryMode == UITheme.LibraryMode.HIDE) noDecorate or ImGuiWindowFlags.NoScrollbar else noDecorate) or
-                ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
+        val flags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 10.5f)
         if (ImGui.begin("Library", flags)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
@@ -562,7 +562,7 @@ class UIManager(
         // Column 3: Mixer / Monitor
         ImGui.setNextWindowPos(libraryW, menuBarH)
         ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
-        val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar
+        val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoScrollbar
         if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             drawMixerMonitor(currentMixer!!)

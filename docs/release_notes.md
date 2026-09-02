@@ -11,13 +11,17 @@
 
 #### 1. Unified Title Bar & Custom Window Frame (CSD) (`WindowFrameController.kt`, `MenuBar.kt`, `UITheme.kt`, `SettingsPanel.kt`)
 
-- **Modern Frameless Window & Integrated Top Bar (Option A)**: Integrated the traditional OS title bar into a unified, vertical-space-efficient top bar (~32px) merging brand logo, compact menus (`File`, `Output`, `Help`), live recording/broadcast pills, and telemetry HUD with custom window action buttons (minimize `—`, maximize/restore `◻`/`❐`, and close `✕`).
+- **Modern Frameless Window & Integrated Top Bar (Option A)**: Integrated the traditional OS title bar into a unified, vertical-space-efficient top bar (~32px) merging brand logo, compact menus (`File`, `Output`, `Help`), live recording/broadcast pills, and telemetry HUD with custom window action buttons (minimize `${Icons.MINUS}`, maximize/restore `${Icons.SQUARE}`/`${Icons.COPY}`, and close `${Icons.X}`).
 - **Interactive Window Dragging & Double-Click Maximize**: Clicking and dragging across the middle header bar moves the application window smoothly across displays. Double-clicking any empty region of the top bar toggles between maximized and restored bounds.
 - **Perimeter Edge & Corner Resizing**: Implemented dynamic perimeter hit-testing on the 4 borders and 4 corners with GLFW standard cursor switching (`GLFW_HRESIZE_CURSOR`, `GLFW_VRESIZE_CURSOR`) and minimum bounds clamping (`800x600`), enabling fluid resizing on borderless windows.
 - **Configurable Native OS Fallback (Option B)**: Added `framelessWindow: Boolean = true` to `AppSettings` (persisted in `lsd-settings.properties`) and a toggle in `SettingsPanel` (`Window Frame & Chrome`). When disabled, Liquid LSD launches with native OS decorations (`GLFW_DECORATED = GLFW_TRUE`) for compatibility with strict tiling window managers (like i3/sway).
 
 #### 2. Performance-Driven UI & Ergonomics Enhancements (`UIManager.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`, `MenuBar.kt`, `CellConfigPanel.kt`)
 
+- **Horizontal Scroll Wheel Isolation & Layout Stabilization (`UIManager.kt`, `LibraryPanel.kt`, `PresetGridPanel.kt`)**: 
+  - Globally disabled `io.mouseWheelH` per frame to prevent unintended horizontal panning across all panels when using two-finger trackpad drag, ThinkPad TrackPoint (nipple) center-button scrolling, or horizontal scroll wheels.
+  - Sized Library columns dynamically against `getContentRegionAvailX()` and inner spacing instead of outer window width, eliminating the overflow that caused the 4 columns to shift left and right.
+  - Enforced `NoScrollbar` on outer Library and Mixer/Monitor panels and added horizontal scroll resets (`setScrollX(0f)`) across child panels to prevent parameter labels or cards from drifting off-screen.
 - **Instant Search Focus (<kbd>Ctrl+F</kbd> / <kbd>/</kbd>) & Clear (<kbd>Esc</kbd>)**: Pressing <kbd>Ctrl+F</kbd> or <kbd>/</kbd> (when not focused on a text input) automatically opens the Library (if hidden) and focuses the preset search bar with text highlighted. Pressing <kbd>Esc</kbd> while the search box is active clears the filter query and returns focus back to the preset table for seamless keyboard navigation (`1`–`4`, `Q`, `Shift+Q`, `↑`, `↓`).
 - **Dynamic HiDPI Scale Detection & Multi-Monitor Adaptation**: Separated UI scaling into dynamic system DPI auto-detection (`systemDpiScale`) and persistent user zoom preference (`guiScalePercent`). Liquid LSD now queries GLFW content scale on every startup and responds dynamically via `glfwSetWindowContentScaleCallback` when dragging windows across displays or changing OS scaling, automatically rebuilding the Dear ImGui font atlas and UI geometry.
 - **Dynamic "On-Air" Deck Illumination & Glow**: Decks A and B dynamically scale header, toolbar, and border brightness based on `Mixer.crossfade` position. Active on-air decks render at 100% full saturation with bright glowing borders, while off-air decks smoothly dim to $\sim 35\%$ opacity.
@@ -49,6 +53,7 @@
 - **Native JVM Static Site & Docs Generator**: Added `./gradlew buildWebsite` (and `./gradlew exportGreenjon`) task to compile the complete Liquid LSD product website, documentation viewer, and offline documentation archive directly into `./greenjon/` for manual FTP deployment to `greenjon.com`.
 - **Single Source of Truth**: Sourced documentation dynamically from `docs/` and `RELEASE_NOTES.md`, and version badges/release download links directly from Gradle metadata (`project.version`).
 - **Responsive Media & Showcase Layout**: Included responsive video tutorial container slots, interactive screenshot lightbox galleries, and offline ZIP package bundling (`greenjon/docs.zip`).
+- **Centralized Media Export & Web Subsystem Documentation**: Added dedicated User Guides and Developer References for disk persistence, real-time MP4 video recording, offline 4K render studio with motion blur, live WebSocket broadcasting, retro CRT TV player controls, and relay server protocols.
 
 #### 2. Standalone "Colors" Visual Source & Mandala Background Extraction (`library/sources/colors`, `Mandala.kt`, `Renderer.kt`)
 

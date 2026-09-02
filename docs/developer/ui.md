@@ -58,9 +58,9 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck 
 ## Key Core UI Orchestrators
 
 ### 1. `UIManager.kt` & Global Hotkey Routing (`Main.kt`)
-- **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`.
+- **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`. Zeroes `io.mouseWheelH` per frame to globally disable unintended horizontal scroll wheel panning from trackpads or trackpoints.
 - **Global Key Routing (`Main.kt` & `UIManager.kt`)**: Chained GLFW key callback intercepts `F` (clean mode toggle), `B` (background video toggle), and `Ctrl-`/`Ctrl=` (font scaling) whenever `!io.wantTextInput` or when clean mode is enabled. Spacebar cycles Library view (`HIDE` $\leftrightarrow$ `HALF` $\leftrightarrow$ `FULL`) when not typing.
-- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace with mathematically locked left/right ends (Preset Grid fitted to active columns, Mixer Monitor fitted to aspect preview height) and a flexible middle column (Cell Config & Library).
+- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace with mathematically locked left/right ends (Preset Grid fitted to active columns, Mixer Monitor fitted to aspect preview height) and a flexible middle column (Cell Config & Library). Outer panels strictly enforce `ImGuiWindowFlags.NoScrollbar` with exact inner column width calculation to prevent layout drifting.
 - **Title Bar Drag-to-Resize**: Supports vertical resizing of the docked Library by click-dragging empty areas of the Library menu bar.
 - **Deferred Font Atlas Rebuilding**: Changing font size sets `pendingFontSize`. Rebuilding font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.

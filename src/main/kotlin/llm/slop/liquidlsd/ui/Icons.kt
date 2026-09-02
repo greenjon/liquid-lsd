@@ -40,6 +40,11 @@ object Icons {
     const val UNLOCK          = "\ue19f" // unlock
     const val BOT             = "\ue1bb" // bot
     const val BOT_OFF         = "\ue5e0" // bot-off
+    const val X               = "\ue1b2" // x / close
+    const val SQUARE          = "\ue167" // square / box / maximize
+    const val COPY            = "\ue09e" // copy / restore
+    const val MAXIMIZE        = "\ue112" // maximize
+    const val MINIMIZE        = "\ue11a" // minimize
 
     // Wave Shapes
     const val WAVE_SINE   = "\ue38b" // spline

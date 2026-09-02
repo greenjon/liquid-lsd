@@ -410,7 +410,7 @@ class MenuBar(
                 ImGui.sameLine(0f, 8f)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     // Minimize
-                    if (ImGui.button("—##win_min", btnW, btnH)) {
+                    if (ImGui.button("${Icons.MINUS}##win_min", btnW, btnH)) {
                         windowFrameController.minimize()
                     }
                     if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -421,7 +421,7 @@ class MenuBar(
 
                     // Maximize / Restore
                     val isMax = windowFrameController.isMaximized()
-                    val maxIcon = if (isMax) "❐" else "◻"
+                    val maxIcon = if (isMax) Icons.COPY else Icons.SQUARE
                     if (ImGui.button("$maxIcon##win_max", btnW, btnH)) {
                         windowFrameController.toggleMaximize()
                     }
@@ -434,7 +434,7 @@ class MenuBar(
                     // Close
                     ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.15f, 0.15f, 1.0f)
                     ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.70f, 0.10f, 0.10f, 1.0f)
-                    if (ImGui.button("✕##win_close", btnW, btnH)) {
+                    if (ImGui.button("${Icons.X}##win_close", btnW, btnH)) {
                         onTriggerExitFlow()
                     }
                     ImGui.popStyleColor(2)
