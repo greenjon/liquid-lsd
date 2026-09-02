@@ -462,10 +462,14 @@ class UIManager(
         val libraryW = (displayWidth - rightW).coerceAtLeast(100f)
         val col2W = (libraryW - col1W).coerceAtLeast(20f)
 
+        val libTitleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            (ImGui.getTextLineHeight() + 21f + (style.getWindowBorderSize() * 2f)).coerceAtLeast(42f)
+        }
+
         val libraryH = when (theme.libraryMode) {
             UITheme.LibraryMode.FULL -> contentH
-            UITheme.LibraryMode.HIDE -> 38f.coerceAtMost(contentH)
-            UITheme.LibraryMode.HALF -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(38f.coerceAtMost(contentH), contentH)
+            UITheme.LibraryMode.HIDE -> libTitleBarH.coerceAtMost(contentH)
+            UITheme.LibraryMode.HALF -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         }
 
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
@@ -513,7 +517,7 @@ class UIManager(
             LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, presetState)
 
             if (theme.libraryMode != UITheme.LibraryMode.FULL) {
-                val titleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)
+                val titleBarH = libTitleBarH
                 splitterManager.drawHorizontalSplitter(
                     id = "##hsplit",
                     posX = 0f,
@@ -534,7 +538,7 @@ class UIManager(
                             val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
                             val targetRatio = theme.libraryRatio + deltaR
                             val targetPixelH = contentH * targetRatio
-                            if (targetPixelH < 60f || targetRatio < 0.10f) {
+                            if (targetPixelH < (libTitleBarH * 1.3f) || targetRatio < 0.10f) {
                                 theme.lastCustomLibraryRatio = theme.libraryRatio
                                 theme.libraryMode = UITheme.LibraryMode.HIDE
                                 LibraryPanel.isLibraryExpanding = true
