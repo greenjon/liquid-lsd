@@ -27,6 +27,7 @@ object PresetGridKeyboard {
     fun handleKeyboardShortcuts(
         state: PresetGridState,
         mixer: Mixer,
+        deckPresetController: DeckPresetController? = null,
         onPushUndo: (PresetGridState, Mixer) -> Unit,
         onPerformUndo: (PresetGridState, Mixer) -> Unit
     ) {
@@ -37,6 +38,21 @@ object PresetGridKeyboard {
         val isShift = io.keyShift
         val isCmd = io.keySuper
         val modActive = isCtrl || isCmd
+
+        // Save: Ctrl+S / Cmd+S, Save As: Shift+Ctrl+S / Shift+Cmd+S
+        if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.S), false)) {
+            val activeDeck = when (state.activeTopTab) {
+                "Deck A" -> mixer.deckA
+                "Deck B" -> mixer.deckB
+                "Deck BG" -> mixer.deckBG
+                "Deck PV" -> mixer.deckPV
+                else -> null
+            }
+            if (activeDeck != null && !activeDeck.isEmpty) {
+                val isDeckA = state.activeTopTab == "Deck A"
+                deckPresetController?.handleSaveDeck(mixer, activeDeck, isDeckA, isSaveAs = isShift)
+            }
+        }
         
         // Undo: Ctrl+Z / Cmd+Z
         if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Z), false)) {

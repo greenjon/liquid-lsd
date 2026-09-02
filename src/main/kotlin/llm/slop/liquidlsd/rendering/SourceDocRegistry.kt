@@ -220,6 +220,7 @@ object SourceDocRegistry {
 
         // Mixer
         "mixer/crossfade" to "Crossfade position between Deck A and Deck B.",
+        "mixer/mode" to "Deck A/B blend mode: 0 = Add, 1 = Screen, 2 = Multiply, 3 = Max, 4 = Crossfade.",
         "mixer/masterAlpha" to "Master output opacity. 0 = black; 1 = full output.",
         "mixer/bloom" to "Bloom post-effect intensity. Adds a soft glow to bright regions.",
         "mixer/xfadeSpeed" to "Auto-crossfade transition speed when queue playback is active.",

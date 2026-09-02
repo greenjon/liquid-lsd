@@ -36,7 +36,9 @@ class Mixer(
 
     // Blend parameters
     val crossfade = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR) // -1.0 = Deck A, 1.0 = Deck B
-    val mode = ModulatableParameter(4.0f) // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
+    val mode = ModulatableParameter(4.0f, minClamp = 0.0f, maxClamp = 4.0f).apply { // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
+        modulatorFilter = { false }
+    }
     val masterAlpha = ModulatableParameter(1.0f) // Master output gain
     val bloom = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val xfadeSpeed = ModulatableParameter(5.0f, minClamp = 0.1f, maxClamp = 30.0f)
@@ -124,6 +126,7 @@ class Mixer(
         val list = mutableListOf<Pair<String, ModulatableParameter>>()
         
         list.add("$prefix/crossfade" to crossfade)
+        list.add("$prefix/mode" to mode)
         list.add("$prefix/masterAlpha" to masterAlpha)
         list.add("$prefix/bloom" to bloom)
         list.add("$prefix/xfadeSpeed" to xfadeSpeed)

@@ -801,6 +801,8 @@ object SettingsPanel {
             session,
             "##grid_shortcuts",
             listOf(
+                ShortcutItem("Ctrl + S / Cmd + S", "Save Active Deck Preset", "Saves the active deck preset in Patch Grid (opens Save As if untitled; ignored on Mixer)."),
+                ShortcutItem("Shift + Ctrl + S / Shift + Cmd + S", "Save Active Deck Preset As...", "Opens the Save As modal for the active deck in Patch Grid (ignored on Mixer)."),
                 ShortcutItem("Ctrl + Z / Cmd + Z", "Undo Parameter Action", "Reverts last parameter tweak, randomize, paste, or reset."),
                 ShortcutItem("Ctrl + C / Cmd + C", "Copy Cell or Row", "Copies modulation routing (or row settings if Base/Final cell is selected)."),
                 ShortcutItem("Ctrl + V / Cmd + V", "Paste Cell or Row", "Applies copied modulators or parameter settings with an undo point."),

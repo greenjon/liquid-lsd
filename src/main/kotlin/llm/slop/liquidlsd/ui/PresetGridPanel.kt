@@ -104,7 +104,7 @@ object PresetGridPanel {
 
         val gridTotalW = sideTabWidth + BOX_PADDING_X * 2f + labelColW + maxGridW + 24f
         var titleTextW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) { titleTextW = ImGui.calcTextSize("Preset Grid").x }
+        session.uiTheme.withFont(UITheme.FontLevel.H3) { titleTextW = ImGui.calcTextSize("Preset Grid").x }
         val titleTotalW = titleTextW + TITLE_BAR_SPACING + sourceTabW + 24f
 
         return maxOf(gridTotalW, titleTotalW)
@@ -121,7 +121,7 @@ object PresetGridPanel {
     ) {
         rowIndex = 0
 
-        PresetGridKeyboard.handleKeyboardShortcuts(state, mixer, { s, m -> PresetGridUndo.pushUndoState(s, m) }, { s, m -> PresetGridUndo.performUndo(s, m) })
+        PresetGridKeyboard.handleKeyboardShortcuts(state, mixer, deckPresetController, { s, m -> PresetGridUndo.pushUndoState(s, m) }, { s, m -> PresetGridUndo.performUndo(s, m) })
 
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
@@ -135,13 +135,13 @@ object PresetGridPanel {
         // ── Title Bar: "Preset Grid" title with Video Source tab beside it in Window MenuBar ──
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
-            val btnH = (menuBarH - 8f).coerceAtLeast(20f)
+            val btnH = (menuBarH - 6f).coerceAtLeast(24f)
             val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
 
             var txtH = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) { txtH = ImGui.getTextLineHeight() }
+            session.uiTheme.withFont(UITheme.FontLevel.H3) { txtH = ImGui.getTextLineHeight() }
             ImGui.setCursorPosY(yOffset + (btnH - txtH) * 0.5f)
-            session.uiTheme.body("Preset Grid")
+            session.uiTheme.h3("Preset Grid")
 
             if (activeDeck != null) {
                 ImGui.sameLine(0f, TITLE_BAR_SPACING)
@@ -207,6 +207,7 @@ object PresetGridPanel {
                     PresetGridTabs.drawSubGroupContent(session, "Mixer", "Mixer", state) {
                         var row = 0
                         PresetGridRenderer.drawParamRow(session, "crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
+                        PresetGridRenderer.drawParamRow(session, "mix mode",   "Mixer/mode",       mixer.mode,       state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         PresetGridRenderer.drawParamRow(session, "master Alpha",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         PresetGridRenderer.drawParamRow(session, "bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
                         PresetGridRenderer.drawParamRow(session, "fade speed",  "Mixer/xfadeSpeed",  mixer.xfadeSpeed,  state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { PresetGridUndo.pushUndoState(state, mixer) }
@@ -294,9 +295,9 @@ object PresetGridPanel {
     // -- Helpers --------------------------------------------------------------
 
     fun calculateHeaderHeight(session: llm.slop.liquidlsd.SessionContext): Float {
-        val subTabH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        val subTabH = session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ImGui.getTextLineHeight() + 8f
-        }.coerceAtLeast(24f)
+        }.coerceAtLeast(26f)
         return subTabH + 4f
     }
 

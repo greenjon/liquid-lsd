@@ -39,13 +39,13 @@ object PresetGridTabs {
     fun calculateLeftTabsWidth(session: llm.slop.liquidlsd.SessionContext): Float {
         val labels = listOf("MIX", "A", "B", "BG", "PV")
         var maxW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
             labels.forEach { label ->
                 val w = ImGui.calcTextSize(label).x
                 if (w > maxW) maxW = w
             }
         }
-        return (maxW + 16f).coerceAtLeast(38f)
+        return (maxW + 18f).coerceAtLeast(42f)
     }
 
     fun drawLeftTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer? = null, topOffset: Float = 36f) {
@@ -65,7 +65,7 @@ object PresetGridTabs {
             Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV (Preview) visual source, geometry, color, and feedback parameters.")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
-        val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 12f }.coerceAtLeast(28f)
+        val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
@@ -119,7 +119,7 @@ object PresetGridTabs {
             // Draw centered text label
             var tw = 0f
             var th = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            session.uiTheme.withFont(UITheme.FontLevel.H3) {
                 val sz = ImGui.calcTextSize(shortLabel)
                 tw = sz.x
                 th = sz.y
@@ -127,7 +127,9 @@ object PresetGridTabs {
             val textX = pMinX + (buttonWidth - tw) * 0.5f
             val textY = pMinY + (buttonHeight - th) * 0.5f
             val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (isActive) 1f else 0.8f)
-            dl.addText(textX, textY, textCol, shortLabel)
+            session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                dl.addText(textX, textY, textCol, shortLabel)
+            }
 
             if (isHovered && session.uiTheme.tooltipsEnabled) {
                 ImGui.setTooltip(tooltipText)
@@ -159,20 +161,21 @@ object PresetGridTabs {
         val sourceName = if (deck.source is Mandala) "Mandala" else deck.source.displayName
         val displayLabel = "$sourceName  ${Icons.CHEVRON_DOWN}"
         var tw = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
-        return (tw + 16f).coerceAtLeast(45f)
+        session.uiTheme.withFont(UITheme.FontLevel.H3) { tw = ImGui.calcTextSize(displayLabel).x }
+        return (tw + 18f).coerceAtLeast(48f)
     }
 
     fun calculateSectionTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
         val tabs = getDeckSubTabs(deck)
         if (tabs.isEmpty() || tabs == listOf("Empty")) return 0f
         var totalW = 0f
-        tabs.forEachIndexed { i, tab ->
-            var tw = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(tab).x }
-            val btnW = (tw + 16f).coerceAtLeast(40f)
-            totalW += btnW
-            if (i > 0) totalW += 4f
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            tabs.forEachIndexed { i, tab ->
+                val tw = ImGui.calcTextSize(tab).x
+                val btnW = (tw + 18f).coerceAtLeast(44f)
+                totalW += btnW
+                if (i > 0) totalW += 4f
+            }
         }
         return totalW
     }
@@ -231,12 +234,14 @@ object PresetGridTabs {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1f))
 
         var tw = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(displayLabel).x }
-        val btnW = (tw + 16f).coerceAtLeast(45f)
-        val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
+        session.uiTheme.withFont(UITheme.FontLevel.H3) { tw = ImGui.calcTextSize(displayLabel).x }
+        val btnW = (tw + 18f).coerceAtLeast(48f)
+        val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(26f)
 
-        if (ImGui.button(displayLabel, btnW, subTabH)) {
-            ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            if (ImGui.button(displayLabel, btnW, subTabH)) {
+                ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
+            }
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Click to change Visual Source for ${state.activeTopTab}.")
@@ -301,44 +306,45 @@ object PresetGridTabs {
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 0f)
 
-        tabs.forEachIndexed { i, tab ->
-            if (i > 0) ImGui.sameLine()
-            val isActive = currentSubTab == tab
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            tabs.forEachIndexed { i, tab ->
+                if (i > 0) ImGui.sameLine()
+                val isActive = currentSubTab == tab
 
-            if (isActive) {
-                val bgCol = getSubTabColor(state, 1f)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
-            } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-            }
-
-            var tw = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) { tw = ImGui.calcTextSize(tab).x }
-            val btnW = (tw + 16f).coerceAtLeast(40f)
-            val subTabH = btnH ?: session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f }.coerceAtLeast(24f)
-
-            if (ImGui.button(tab, btnW, subTabH)) {
-                when (state.activeTopTab) {
-                    "Deck A" -> state.activeDeckASubTab = tab
-                    "Deck B" -> state.activeDeckBSubTab = tab
-                    "Deck BG" -> state.activeDeckBGSubTab = tab
-                    "Deck PV" -> state.activeDeckPVSubTab = tab
+                if (isActive) {
+                    val bgCol = getSubTabColor(state, 1f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
+                } else {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
                 }
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                val tooltip = when (tab) {
-                    "SRC" -> "Source: Parameters for active visual generator (${deck.source.displayName})."
-                    "FX" -> "FX: Color, shading, and feedback loop parameters."
-                    "View" -> "View: 3D perspective, zoom, and rotation parameters."
-                    else -> "$tab parameters"
+
+                val tw = ImGui.calcTextSize(tab).x
+                val btnW = (tw + 18f).coerceAtLeast(44f)
+                val subTabH = btnH ?: (ImGui.getTextLineHeight() + 8f).coerceAtLeast(26f)
+
+                if (ImGui.button(tab, btnW, subTabH)) {
+                    when (state.activeTopTab) {
+                        "Deck A" -> state.activeDeckASubTab = tab
+                        "Deck B" -> state.activeDeckBSubTab = tab
+                        "Deck BG" -> state.activeDeckBGSubTab = tab
+                        "Deck PV" -> state.activeDeckPVSubTab = tab
+                    }
                 }
-                ImGui.setTooltip(tooltip)
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    val tooltip = when (tab) {
+                        "SRC" -> "Source: Parameters for active visual generator (${deck.source.displayName})."
+                        "FX" -> "FX: Color, shading, and feedback loop parameters."
+                        "View" -> "View: 3D perspective, zoom, and rotation parameters."
+                        else -> "$tab parameters"
+                    }
+                    ImGui.setTooltip(tooltip)
+                }
+                ImGui.popStyleColor(3)
             }
-            ImGui.popStyleColor(3)
         }
         ImGui.popStyleVar(2)
     }

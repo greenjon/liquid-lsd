@@ -60,10 +60,10 @@ object CellConfigPanel {
         }
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(24f * fontScale)
+        val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f * fontScale, 4f * fontScale)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
             availableTabs.forEachIndexed { i, (label, targetCvId) ->
                 if (i > 0) ImGui.sameLine()
                 val isActive = currentCvId == targetCvId || (targetCvId == "value" && currentCvId == "final")

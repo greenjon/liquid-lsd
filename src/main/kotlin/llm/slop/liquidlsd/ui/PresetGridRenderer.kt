@@ -52,11 +52,15 @@ object PresetGridRenderer {
         val rowX = ImGui.getCursorPosX()
         val rowY = ImGui.getCursorPosY()
         
-        ImGui.setCursorPosY(rowY + (CELL - ImGui.getTextLineHeight()) * 0.5f)
+        var textH = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            textH = ImGui.getTextLineHeight()
+        }
+        ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
         val cursorStartX = ImGui.getCursorPosX()
         val indent = ImGui.getCursorScreenPosX() - gridStartX
         val labelBtnW = labelColW - indent - CELL_PAD
-        session.uiTheme.body(label)
+        session.uiTheme.h3(label)
         ImGui.sameLine(cursorStartX)
         val btnFlagsRow = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
         ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsRow)
@@ -752,9 +756,13 @@ object PresetGridRenderer {
             }
             ImGui.sameLine(0f, 6f)
         }
-        val textY = y + (btnHeight - ImGui.getTextLineHeight()) * 0.5f
+        var textH = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            textH = ImGui.getTextLineHeight()
+        }
+        val textY = y + (btnHeight - textH) * 0.5f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), textY)
-        session.uiTheme.body(label)
+        session.uiTheme.h3(label)
         // Advance the ImGui layout cursor past this row so the next drawParamRow
         // picks up the correct rowScreenY.  setCursorScreenPos alone does not
         // update the window-local cursor, so we convert to window-local coords.
