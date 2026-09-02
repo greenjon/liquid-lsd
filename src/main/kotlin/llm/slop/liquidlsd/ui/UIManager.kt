@@ -40,6 +40,10 @@ class UIManager(
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
 
+    // Chained GLFW mouse button callback and single-frame latch to prevent fast clicks
+    // (e.g. ThinkPad trackpoint middle hardware button tap) from being missed.
+    private val pendingMousePress = BooleanArray(5)
+    private var prevMouseButtonCallback: org.lwjgl.glfw.GLFWMouseButtonCallback? = null
 
     // Clean default style to reset size attributes before scaling
     private var defaultStyle: imgui.ImGuiStyle
@@ -126,6 +130,17 @@ class UIManager(
 
         imguiGlfw.init(windowHandle, true)
         imguiGl3.init("#version 150")
+
+        // Intercept GLFW mouse button events so short click-and-release taps
+        // (such as TrackPoint middle hardware buttons on Linux / libinput)
+        // are never swallowed if a release event arrives before the next ImGui frame.
+        prevMouseButtonCallback = org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback(windowHandle) { win, button, action, mods ->
+            if (button in 0..4 && action == org.lwjgl.glfw.GLFW.GLFW_PRESS) {
+                pendingMousePress[button] = true
+            }
+            prevMouseButtonCallback?.invoke(win, button, action, mods)
+        }
+
         // MIDI learn events arrive via MidiEngine.receivedCcEvents (a ConcurrentLinkedQueue)
         // and are processed each frame at the top of render(). No direct callback hook needed.
 
@@ -313,6 +328,12 @@ class UIManager(
         }
 
         imguiGlfw.newFrame()
+        for (i in 0..4) {
+            if (pendingMousePress[i]) {
+                ImGui.getIO().setMouseDown(i, true)
+                pendingMousePress[i] = false
+            }
+        }
         ImGui.getIO().mouseWheelH = 0f // Horizontal scroll wheel is disabled globally across all UI panels
         ImGui.newFrame()
         UIThemeStyler.updateUiTransparency(session)
@@ -583,6 +604,7 @@ class UIManager(
     }
 
     fun dispose() {
+        prevMouseButtonCallback?.free()
         windowFrameController.destroy()
         defaultStyle.destroy()
         imguiGl3.dispose()
