@@ -172,7 +172,7 @@ object Lfo2Section {
 
             // Left Button
             val isModLeft = if (isModSquareWave) existing.modSlope <= 0.1f else existing.modSlope <= 0.01f
-            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", if (isModSquareWave) WaveShape.SQUARE else WaveShape.RAMP_DOWN, isModLeft, themeColor, btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", if (isModSquareWave) WaveShape.SQUARE_10 else WaveShape.RAMP_DOWN, isModLeft, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = if (isModSquareWave) 0.1f else 0.001f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -192,7 +192,7 @@ object Lfo2Section {
             // Right Button
             ImGui.sameLine(0f, 4f * fontScale)
             val isModRight = if (isModSquareWave) existing.modSlope >= 0.9f else existing.modSlope >= 0.99f
-            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", if (isModSquareWave) WaveShape.SQUARE else WaveShape.RAMP_UP, isModRight, themeColor, btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", if (isModSquareWave) WaveShape.SQUARE_90 else WaveShape.RAMP_UP, isModRight, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = if (isModSquareWave) 0.9f else 0.999f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {

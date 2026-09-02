@@ -1,12 +1,14 @@
 package llm.slop.liquidlsd.ui
 
+import imgui.ImDrawList
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.ImColor
 import kotlin.math.sin
 
 enum class WaveShape {
-    SINE, RAMP_UP, RAMP_DOWN, TRIANGLE, SQUARE, RANDOM
+    SINE, RAMP_UP, RAMP_DOWN, TRIANGLE, SQUARE, RANDOM,
+    SQUARE_10, SQUARE_90
 }
 
 object CustomIconButton {
@@ -81,10 +83,13 @@ object CustomIconButton {
                 drawList.addLine(midX, startY, endX, endY, lineColor, thickness)
             }
             WaveShape.SQUARE -> {
-                val midX = startX + w * 0.5f
-                drawList.addLine(startX, startY, midX, startY, lineColor, thickness)
-                drawList.addLine(midX, startY, midX, endY, lineColor, thickness)
-                drawList.addLine(midX, endY, endX, endY, lineColor, thickness)
+                drawSquareWave(drawList, startX, endX, startY, endY, 0.5f, lineColor, thickness)
+            }
+            WaveShape.SQUARE_10 -> {
+                drawSquareWave(drawList, startX, endX, startY, endY, 0.1f, lineColor, thickness)
+            }
+            WaveShape.SQUARE_90 -> {
+                drawSquareWave(drawList, startX, endX, startY, endY, 0.9f, lineColor, thickness)
             }
             WaveShape.RANDOM -> {
                 // S&H style random stairs
@@ -109,5 +114,35 @@ object CustomIconButton {
         }
         
         return clicked
+    }
+
+    private fun drawSquareWave(
+        drawList: ImDrawList,
+        startX: Float,
+        endX: Float,
+        startY: Float,
+        endY: Float,
+        duty: Float,
+        lineColor: Int,
+        thickness: Float
+    ) {
+        val w = endX - startX
+        // For 10% and 90% duty, clamp visual pulse and trough widths to maintain visible clarity
+        // without vertical strokes merging on small buttons (~20px wide)
+        val pulseW = when {
+            duty <= 0.2f -> (w * 0.2f).coerceIn(3.5f, w - 3.5f)
+            duty >= 0.8f -> (w * 0.8f).coerceIn(3.5f, w - 3.5f)
+            else -> w * duty
+        }
+        val splitX = startX + pulseW
+
+        // Leading edge: vertical rise from baseline to high
+        drawList.addLine(startX, endY, startX, startY, lineColor, thickness)
+        // High pulse plateau
+        drawList.addLine(startX, startY, splitX, startY, lineColor, thickness)
+        // Trailing edge: vertical drop from high to baseline
+        drawList.addLine(splitX, startY, splitX, endY, lineColor, thickness)
+        // Low baseline plateau
+        drawList.addLine(splitX, endY, endX, endY, lineColor, thickness)
     }
 }
