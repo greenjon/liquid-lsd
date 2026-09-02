@@ -33,7 +33,7 @@
 - **Locked Aspect-Ratio End Columns**: Sized Column 1 (Preset Grid) dynamically to its active columns and Column 3 (Mixer / Monitor) strictly to its aspect-ratio preview capacity, eliminating wasted horizontal letterboxing and removing manual column splitters.
 - **Flexible Middle Column & Library Spanning**: Configured Column 2 (Cell Config) and the docked Library to flexibly absorb all remaining horizontal workspace width across all display resolutions.
 - **4-Step Spacebar Library Cycling**: Tapping <kbd>Space</kbd> (when not focused on a text input or search bar) cleanly cycles through `HIDE` $\rightarrow$ `HALF` $\rightarrow$ `FULL` $\rightarrow$ `HALF` $\rightarrow$ `HIDE`.
-- **Title Bar Drag-to-Resize**: Dragging empty space in the Library menu bar vertically resizes the Library height smoothly without interfering with toolbar buttons or filters, with double-click snapping to 50% height.
+- **Title Bar Drag-to-Resize & Standardized Window Controls (`LibraryPanel.kt`)**: Replaced the left-hand layout buttons with right-aligned window decorations matching the top title bar: `[-]` (Minimize to bottom dock / Restore) and `[□]` / `[❐]` (Maximize to Full / Restore to Half). Dragging empty space in the Library menu bar vertically resizes the Library height smoothly, with double-click snapping to 50% height.
 
 #### 2. Static Website & Documentation Export Generator (`SiteGenerator.kt`, `build.gradle.kts`, `website/`)
 

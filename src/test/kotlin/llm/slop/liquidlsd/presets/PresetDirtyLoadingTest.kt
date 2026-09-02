@@ -67,19 +67,17 @@ class PresetDirtyLoadingTest {
         
         val dynSource = mockk<DynamicVisualSource>(relaxed = true)
         val sourceParams = linkedMapOf(
-            "Morph" to morphParam,
-            "Stellation" to stellationParam,
-            "Support H" to supportHParam
+            "Petals" to morphParam
         )
-        every { dynSource.id } returns "icosa_dodeca"
+        every { dynSource.id } returns "mandala"
         every { dynSource.parameters } returns sourceParams
         every { dynSource.globalAlpha } returns globalAlphaParam
 
         every { deckA.source } returns dynSource
         every { deckA.availableSources } returns mutableListOf(dynSource)
 
-        val file = File("library/presets/icosa2.lsd")
-        assertTrue(file.exists(), "icosa2.lsd must exist")
+        val file = File("library/presets/test_preset_a.lsd")
+        assertTrue(file.exists(), "test_preset_a.lsd must exist")
         val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
 
         // Load preset through queue
@@ -87,34 +85,34 @@ class PresetDirtyLoadingTest {
         PresetManager.applyPendingPresets(mixer)
 
         // Ensure active preset and cached DTO are updated
-        assertEquals("icosa2", PresetManager.activePresetA)
-        assertFalse(PresetManager.isDeckDirty(deckA, mixer), "Deck should NOT be dirty immediately after applying icosa2 preset")
+        assertEquals("test_preset_a", PresetManager.activePresetA)
+        assertFalse(PresetManager.isDeckDirty(deckA, mixer), "Deck should NOT be dirty immediately after applying test_preset_a preset")
     }
 
     @Test
-    fun testMandelboxLoadsCleanly() {
+    fun testValidPresetLoadsCleanly() {
         val mixer = mockk<Mixer>()
         val deckA = mockk<Deck>(relaxed = true)
         every { mixer.deckA } returns deckA
 
         val dynSource = mockk<DynamicVisualSource>(relaxed = true)
         val sourceParams = linkedMapOf<String, ModulatableParameter>()
-        every { dynSource.id } returns "chladni"
+        every { dynSource.id } returns "mandala"
         every { dynSource.parameters } returns sourceParams
-        every { dynSource.globalAlpha } returns ModulatableParameter(1.0f)
+        every { dynSource.globalAlpha } returns ModulatableParameter(0.0f)
 
         every { deckA.source } returns dynSource
         every { deckA.availableSources } returns mutableListOf(dynSource)
 
-        val file = File("library/presets/mandelbox.lsd")
-        assertTrue(file.exists(), "mandelbox.lsd must exist")
+        val file = File("library/presets/test_preset_a.lsd")
+        assertTrue(file.exists(), "test_preset_a.lsd must exist")
         val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
 
         PresetManager.deckAPresetQueue.offer(PresetManager.PendingDeckLoad(presetDto, isManual = true))
         PresetManager.applyPendingPresets(mixer)
 
-        assertEquals("mandelbox", PresetManager.activePresetA)
-        assertFalse(PresetManager.isDeckDirty(deckA, mixer), "Deck should NOT be dirty immediately after applying mandelbox preset")
+        assertEquals("test_preset_a", PresetManager.activePresetA)
+        assertFalse(PresetManager.isDeckDirty(deckA, mixer), "Deck should NOT be dirty immediately after applying test_preset_a preset")
     }
 
     @Test
@@ -125,15 +123,15 @@ class PresetDirtyLoadingTest {
 
         val morphParam = ModulatableParameter(0.0f)
         val dynSource = mockk<DynamicVisualSource>(relaxed = true)
-        val sourceParams = linkedMapOf("Morph" to morphParam)
-        every { dynSource.id } returns "icosa_dodeca"
+        val sourceParams = linkedMapOf("Petals" to morphParam)
+        every { dynSource.id } returns "mandala"
         every { dynSource.parameters } returns sourceParams
-        every { dynSource.globalAlpha } returns ModulatableParameter(1.0f)
+        every { dynSource.globalAlpha } returns ModulatableParameter(0.0f)
 
         every { deckA.source } returns dynSource
         every { deckA.availableSources } returns mutableListOf(dynSource)
 
-        val file = File("library/presets/icosa2.lsd")
+        val file = File("library/presets/test_preset_a.lsd")
         val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
 
         PresetManager.deckAPresetQueue.offer(PresetManager.PendingDeckLoad(presetDto, isManual = true))
@@ -175,8 +173,9 @@ class PresetDirtyLoadingTest {
 
     @Test
     fun testSanitizePresetDtoDoesNotModifyCleanPreset() {
-        val file = File("library/presets/icosa2.lsd")
-        val cleanDto = json.decodeFromString<DeckPresetDto>(file.readText())
+        val file = File("library/presets/test_preset_a.lsd")
+        val rawDto = json.decodeFromString<DeckPresetDto>(file.readText())
+        val (cleanDto, _) = PresetManager.sanitizePresetDto(rawDto)
         val (_, wasMigrated) = PresetManager.sanitizePresetDto(cleanDto)
         assertFalse(wasMigrated, "Clean preset should not trigger migration")
     }
