@@ -62,8 +62,7 @@ object PresetGridRenderer {
         val labelBtnW = labelColW - indent - CELL_PAD
         session.uiTheme.h3(label)
         ImGui.sameLine(cursorStartX)
-        val btnFlagsRow = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlagsRow)
+        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
         val isLabelHovered = ImGui.isItemHovered()
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             // Rich tooltip: name, range, live value breakdown, description, user note
@@ -98,7 +97,10 @@ object PresetGridRenderer {
             val description = when (sourceId) {
                 "feedback" -> SourceDocRegistry.paramDescriptions["feedback/fb${paramName.replace(" ", "")}"]
                     ?: SourceDocRegistry.paramDescriptions["feedback/$paramName"] ?: ""
-                "mixer" -> SourceDocRegistry.getMixerParamDescription(paramName.lowercase())
+                "mixer" -> {
+                    val mixerKey = if (keyParts.size >= 2) keyParts[1] else paramName
+                    SourceDocRegistry.getMixerParamDescription(mixerKey)
+                }
                 else -> SourceDocRegistry.getParamDescription(sourceId, paramName)
             }
             val userNote = NotesManager.getParamNote(deckLabel, paramKey)
@@ -107,10 +109,13 @@ object PresetGridRenderer {
             ImGui.text(label)
             ImGui.separator()
             ImGui.textDisabled("Range: ${fmtAbs(minVal)} – ${fmtAbs(maxVal)}   Default: ${fmtAbs(param.defaultValue)}")
-            ImGui.spacing()
-            // Live value line with base + mod breakdown
+            val isMixerMode = paramKey == "Mixer/mode"
             val modSign = if (modDelta >= 0f) "+" else ""
-            ImGui.text("Live: ${fmtAbs(liveVal)}  (base ${fmtAbs(baseVal)} $modSign${"%.3f".format(modDelta)}${if (param.isAngle) "°" else ""})") 
+            if (isMixerMode) {
+                ImGui.text("Live: ${getMixModeLabel(liveVal)}  (base ${getMixModeLabel(baseVal)})")
+            } else {
+                ImGui.text("Live: ${fmtAbs(liveVal)}  (base ${fmtAbs(baseVal)} $modSign${"%.3f".format(modDelta)}${if (param.isAngle) "°" else ""})")
+            }
             if (description.isNotEmpty()) {
                 ImGui.separator()
                 ImGui.textWrapped(description)
@@ -123,10 +128,10 @@ object PresetGridRenderer {
             }
             ImGui.endTooltip()
         }
-        if (ImGui.isItemClicked()) {
+        if (ImGui.isItemClicked(0)) {
             state.select(PresetCellId(paramKey, "value"), param)
         }
-        if (isLabelHovered && ImGui.isMouseReleased(2)) {
+        if (ImGui.isItemClicked(2)) {
             state.select(PresetCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
@@ -218,21 +223,25 @@ object PresetGridRenderer {
         val isValSelected = state.selectedCell?.paramKey == paramKey && (state.selectedCell?.cvSourceId == "value" || state.selectedCell?.cvSourceId == "final")
 
         ImGui.setCursorScreenPos(valX, valY)
-        val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
+        ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
         val isValHovered = ImGui.isItemHovered()
-        if (ImGui.isItemClicked()) {
+        if (ImGui.isItemClicked(0)) {
             state.select(PresetCellId(paramKey, "value"), param)
         }
-        if (isValHovered && ImGui.isMouseReleased(2)) {
+        if (ImGui.isItemClicked(2)) {
             state.select(PresetCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
         }
         if (isValHovered && session.uiTheme.tooltipsEnabled) {
-            val displayValue = if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
-            val displayBase  = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
-            if (param.modulatorFilter != null) {
+            val isMixerMode = paramKey == "Mixer/mode"
+            val displayValue = if (isMixerMode) getMixModeLabel(param.value) else if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
+            val displayBase  = if (isMixerMode) getMixModeLabel(param.baseValue) else if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
+            if (isMixerMode || paramKey.endsWith("/Max Points")) {
+                ImGui.beginTooltip()
+                ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure in VAL panel. Middle-click to reset.\n\nNote: This parameter is non-modulatable.")
+                ImGui.endTooltip()
+            } else if (param.modulatorFilter != null) {
                 ImGui.beginTooltip()
                 ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
                 ImGui.endTooltip()
@@ -295,8 +304,7 @@ object PresetGridRenderer {
         } ?: false
 
         ImGui.setCursorScreenPos(midiX, midiY)
-        val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("##midi_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
+        ImGui.invisibleButton("##midi_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
         val isCellHovered = ImGui.isItemHovered()
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {
             val details = if (hasMidiMod || isMidiBypassed) {
@@ -309,14 +317,14 @@ object PresetGridRenderer {
             }
             ImGui.setTooltip(details)
         }
-        if (ImGui.isItemClicked()) {
+        if (ImGui.isItemClicked(0)) {
             if (state.isMidiLearnMode) {
                 state.midiLearnTarget = MidiLearnTarget.GridCell(midiCellId, param)
             } else {
                 state.select(midiCellId, param)
             }
         }
-        if (isCellHovered && ImGui.isMouseReleased(2)) {
+        if (ImGui.isItemClicked(2)) {
             state.select(midiCellId, param)
             if (midiMods.isNotEmpty()) {
                 onPushUndo()
@@ -427,8 +435,7 @@ object PresetGridRenderer {
         } ?: false
 
         ImGui.setCursorScreenPos(x, y)
-        val btnFlags = imgui.flag.ImGuiButtonFlags.MouseButtonLeft or imgui.flag.ImGuiButtonFlags.MouseButtonMiddle
-        ImGui.invisibleButton("##cell_$cvId", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f), btnFlags)
+        ImGui.invisibleButton("##cell_$cvId", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
         val isCellHovered = ImGui.isItemHovered()
 
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {
@@ -447,14 +454,14 @@ object PresetGridRenderer {
             }
             ImGui.setTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig.")
         }
-        if (ImGui.isItemClicked()) {
+        if (ImGui.isItemClicked(0)) {
             if (state.isMidiLearnMode) {
                 state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
             } else {
                 state.select(cellId, param)
             }
         }
-        if (isCellHovered && ImGui.isMouseReleased(2)) {
+        if (ImGui.isItemClicked(2)) {
             state.select(cellId, param)
             if (activeMods.isNotEmpty()) {
                 onPushUndo()

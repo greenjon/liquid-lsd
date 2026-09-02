@@ -29,6 +29,7 @@ object TriggerModulatorSection {
             currentMax = existing.dcOffsetMax,
             minLimit = -1f,
             maxLimit = 1f,
+            defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
@@ -87,6 +88,7 @@ object TriggerModulatorSection {
             currentMax = existing.depthMax,
             minLimit = 0f,
             maxLimit = 1f,
+            defaultValue = 1f,
             isRandomizable = existing.randomizeDepth,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->

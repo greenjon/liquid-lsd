@@ -71,9 +71,15 @@ Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck 
 - **`ColorTunerPanel.kt`**: Interactive developer tool window accessible via the "Color" top menu item. Provides real-time swatch assignment to all 17 themed ImGui elements without background dimming, enabling live dial-in across all palettes with instant clipboard Kotlin code generation.
 - **`SplitterManager.kt`**: Manages mouse hit-testing, resize cursors (`ResizeEW` / `ResizeNS`), double-click reset positions, and draw-list divider rendering for vertical and horizontal layout splitters.
 
-### 3. `DeckPresetController.kt`
-- **Role**: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.
+### 3. `DeckPresetController.kt` & `PresetGridKeyboard.kt`
+- **`DeckPresetController.kt` Role**: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.
 - **Deck Actions**: Coordinates move/copy/swap deck utilities with dirty-state checks, quick save vs "Save As" flow (`SavePresetModal`), duplicate copy naming (`_copy`), and ejecting with Auto-VJ dirty behavior resolution.
+- **`PresetGridKeyboard.kt` Keyboard Shortcuts**: Intercepts keyboard navigation and editing commands within the Preset Grid:
+  - `Ctrl+S` / `Cmd+S`: Saves the active deck preset directly if named, or opens the Save As modal if untitled. Ignored when focused on the Mixer or an empty deck.
+  - `Shift+Ctrl+S` / `Shift+Cmd+S`: Opens the Save Preset As dialog for the active deck with auto-populated tags and duplicate name recommendation (`_copy`). Ignored when focused on the Mixer or an empty deck.
+  - `Ctrl+Z` / `Cmd+Z`: Parameter and modulator undo.
+  - `Ctrl+C` / `Ctrl+V`: Copy and paste of cell modulators or entire parameter rows.
+  - `Delete` / `Backspace`: Resets active parameter or removes cell modulators.
 - **Safe Visual Source Switching (`changeVisualSourceSafely`)**: Prompts user confirmation if changing visual sources when an active preset is loaded or dirty, resets active preset and cached DTO associations, clears stale selections in `PresetGridState`, updates sub-tabs, and pushes an undo snapshot.
 - **ImGui File Browsers**: Manages independent `ImGuiFileBrowser` dialogs for Deck A and Deck B and executes asynchronous disk I/O via `PresetManager`.
 

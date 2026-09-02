@@ -114,7 +114,7 @@ object CustomRangeSlider {
                 onChanged(nextVal)
                 io.mouseWheel = 0f
             }
-            if (ImGui.isMouseClicked(2)) { // Middle click reset
+            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle click reset
                 val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
                 onChanged(resetTarget)
             }
@@ -333,6 +333,23 @@ object CustomRangeSlider {
         
         // --- ROW 2: Widgets ---
         
+        val labelW = if (effectiveShowControls) (labelColW - buttonSize - 4f).coerceAtLeast(10f) else labelColW
+        ImGui.setCursorScreenPos(startX, row2Y)
+        ImGui.invisibleButton("##label_btn_${idPrefix}_$label", labelW, buttonSize)
+        val isLabelHovered = ImGui.isItemHovered()
+        if (ImGui.isItemClicked(2)) {
+            val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
+            if (effectiveIsRandomizable) {
+                onRangeChanged(resetTarget, resetTarget)
+            } else {
+                onValueChanged(resetTarget)
+            }
+        }
+        if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
+            val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
+            ImGui.setTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
+        }
+
         // Render name of variable beside the die, to its left, sharing vertical center
         val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
         val textY = row2Y + (buttonSize - textHeight) / 2f
@@ -427,6 +444,7 @@ object CustomRangeSlider {
         val isTrackHovered = ImGui.isItemHovered()
         val isTrackItemActive = ImGui.isItemActive()
         val isTrackActivated = ImGui.isItemActivated()
+        val isTrackMiddleClicked = ImGui.isItemClicked(2)
 
         val mousePressed = isTrackActivated || (isTrackHovered && ImGui.isMouseClicked(0))
         val mouseDown = isTrackItemActive
@@ -588,7 +606,7 @@ object CustomRangeSlider {
                 }
                 io.mouseWheel = 0f // Consume mouse wheel event so parent panel does not scroll
             }
-            if (ImGui.isMouseClicked(2)) { // Middle click reset
+            if (ImGui.isMouseClicked(2) || isTrackMiddleClicked) { // Middle click reset
                 val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
                 if (effectiveIsRandomizable) {
                     onRangeChanged(resetTarget, resetTarget)

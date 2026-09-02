@@ -96,6 +96,8 @@ Liquid LSD includes mouse and keyboard power shortcuts designed for live perform
 - **Middle-Click Reset**: Middle-click any slider track or `VALUE` knob cell to instantly reset parameter to factory default.
 
 ### Preset Grid Shortcuts
+- **Save Active Preset (`Ctrl+S` / `Cmd+S`)**: Saves whatever preset is active in the Patch Grid (Deck A, B, BG, or PV). If the deck has no active preset name yet, automatically opens the **Save Preset As** modal. Ignored if the Preset Grid is currently focused on the Mixer or an empty deck.
+- **Save Preset As (`Shift+Ctrl+S` / `Shift+Cmd+S`)**: Opens the **Save Preset As** modal for the active deck with auto-populated tags and duplicate naming (`_copy`). Ignored if focused on the Mixer or an empty deck.
 - **Middle-Click Cell Mute**: Middle-click any active/muted grid cell to toggle its `Muted` (preview) state on/off immediately. Muted cells display **35% arc opacity with a sans-serif 'M'** centered in the knob. While muted, modulation is blocked from `Value`, but the Oscilloscope in `CellConfig` stays 100% live for real-time waveform previewing. Middle-clicking an unmapped CV cell automatically assigns a default modulator.
 - **Middle-Click Parameter Reset**: Middle-click the row label or `VALUE` cell to reset the parameter to default.
 - **Copy / Paste (`Ctrl+C` / `Ctrl+V` or `Cmd+C` / `Cmd+V`)**:

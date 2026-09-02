@@ -82,6 +82,7 @@ object AudioModulatorSection {
                 currentMax = existing.attackMsMax,
                 minLimit = 0f,
                 maxLimit = 500f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizeAttackMs,
                 formatValue = { "${it.toInt()}ms" },
                 onRandomizableChanged = { checked ->
@@ -140,6 +141,7 @@ object AudioModulatorSection {
                 currentMax = existing.decayMsMax,
                 minLimit = 10f,
                 maxLimit = 3000f,
+                defaultValue = 100f,
                 isRandomizable = existing.randomizeDecayMs,
                 formatValue = { "${it.toInt()}ms" },
                 onRandomizableChanged = { checked ->
@@ -199,6 +201,7 @@ object AudioModulatorSection {
             currentMax = existing.dcOffsetMax,
             minLimit = -1f,
             maxLimit = 1f,
+            defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
@@ -257,6 +260,7 @@ object AudioModulatorSection {
             currentMax = existing.depthMax,
             minLimit = 0f,
             maxLimit = 1f,
+            defaultValue = 0.5f,
             isRandomizable = existing.randomizeDepth,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->

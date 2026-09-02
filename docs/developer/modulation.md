@@ -289,7 +289,7 @@ The full parameter list covers (per deck A/B/C):
 - Color: Thickness, HueOffset, HueSweep, Depth, Gain
 - Background: Style, Feedback, Hue, Sat, Val, Sweep, Speed, Zoom
 - Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Source
-- Mixer: crossfade, masterAlpha, bloom, xfadeSpeed, queuePrev, queueNext
+- Mixer: crossfade, mode, masterAlpha, bloom, xfadeSpeed, queuePrev, queueNext, bgQueuePrev, bgQueueNext, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll
 
 Dynamic visual sources (`DynamicVisualSource`, `DynamicSpiral`) expose their own parameter maps and are
 resolved generically via the source's `parameters` map + `globalAlpha`.

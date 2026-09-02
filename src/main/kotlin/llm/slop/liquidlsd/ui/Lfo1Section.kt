@@ -184,6 +184,7 @@ object Lfo1Section {
             currentMax = existing.dcOffsetMax,
             minLimit = -1f,
             maxLimit = 1f,
+            defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
@@ -240,6 +241,7 @@ object Lfo1Section {
             currentMax = existing.depthMax,
             minLimit = 0f,
             maxLimit = 1f,
+            defaultValue = 0.5f,
             isRandomizable = existing.randomizeDepth,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
@@ -307,6 +309,7 @@ object Lfo1Section {
                 currentMax = currentMaxIdx.toFloat(),
                 minLimit = 0f,
                 maxLimit = (subdivisionOptions.size - 1).toFloat(),
+                defaultValue = subdivisionOptions.indexOfFirst { it == 1.0f }.coerceAtLeast(0).toFloat(),
                 isRandomizable = existing.randomizeSubdivision,
                 formatValue = { idx -> subdivisionLabels[idx.toInt().coerceIn(0, subdivisionOptions.size - 1)] },
                 onRandomizableChanged = { checked ->
@@ -374,6 +377,7 @@ object Lfo1Section {
                 currentMax = existing.subdivisionMax,
                 minLimit = 0.01f,
                 maxLimit = 86400f,
+                defaultValue = 1.0f,
                 isRandomizable = existing.randomizeSubdivision,
                 formatValue = formatFunc,
                 isLogarithmic = true,
@@ -451,6 +455,7 @@ object Lfo1Section {
                 currentMax = existing.subdivisionMax.toInt().coerceIn(1, 10000).toFloat(),
                 minLimit = 1f,
                 maxLimit = 10000f,
+                defaultValue = 1f,
                 isRandomizable = existing.randomizeSubdivision,
                 formatValue = formatFunc,
                 formatLabel = formatLabelFunc,
@@ -521,6 +526,7 @@ object Lfo1Section {
                 currentMax = existing.phaseOffsetMax,
                 minLimit = 0f,
                 maxLimit = 1f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizePhaseOffset,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -577,6 +583,7 @@ object Lfo1Section {
                 currentMax = existing.morphMax,
                 minLimit = 0f,
                 maxLimit = 1f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizeMorph,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -633,6 +640,7 @@ object Lfo1Section {
                 currentMax = existing.holdMax,
                 minLimit = 0f,
                 maxLimit = 0.99f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizeHold,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -690,6 +698,7 @@ object Lfo1Section {
                     currentMax = existing.slopeMax,
                     minLimit = 0.001f,
                     maxLimit = 0.999f,
+                    defaultValue = 0.5f,
                     isRandomizable = existing.randomizeSlope,
                     formatValue = { "%.3f".format(it) },
                     onRandomizableChanged = { checked ->

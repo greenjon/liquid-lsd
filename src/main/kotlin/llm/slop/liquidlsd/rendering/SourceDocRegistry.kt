@@ -250,5 +250,8 @@ object SourceDocRegistry {
 
     /** Returns a mixer-level parameter description. */
     fun getMixerParamDescription(paramKey: String): String =
-        paramDescriptions["mixer/$paramKey"] ?: ""
+        paramDescriptions["mixer/$paramKey"]
+            ?: paramDescriptions["mixer/${paramKey.lowercase()}"]
+            ?: paramDescriptions["mixer/${paramKey.replace(" ", "")}"]
+            ?: ""
 }

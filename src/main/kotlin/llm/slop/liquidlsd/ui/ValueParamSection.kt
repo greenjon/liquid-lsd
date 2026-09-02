@@ -8,6 +8,25 @@ import llm.slop.liquidlsd.rendering.MandalaLibrary
 import kotlin.math.roundToInt
 
 private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
+val MIX_MODE_LABELS = arrayOf(
+    "0: Add (ADD)",
+    "1: Screen (SCREEN)",
+    "2: Multiply (MULT)",
+    "3: Max (MAX)",
+    "4: Crossfade (XFADE)"
+)
+
+fun getMixModeLabel(mode: Float): String {
+    val idx = mode.roundToInt().coerceIn(0, 4)
+    return when (idx) {
+        0 -> "Add (ADD)"
+        1 -> "Screen (SCREEN)"
+        2 -> "Multiply (MULT)"
+        3 -> "Max (MAX)"
+        4 -> "Crossfade (XFADE)"
+        else -> "Crossfade (XFADE)"
+    }
+}
 
 object ValueParamSection {
 
@@ -24,6 +43,7 @@ object ValueParamSection {
         ImGui.spacing()
 
         // Live value text readout
+        val isMixerMode = paramKey == "Mixer/mode"
         val isBgStyle = paramKey.endsWith("/Background/Style")
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
         val isLobes = paramKey.endsWith("/Geometry/Lobes")
@@ -31,6 +51,7 @@ object ValueParamSection {
         val isMaxPoints = paramKey.endsWith("/Max Points")
         val liveVal = param.value
         val liveLabel = when {
+            isMixerMode -> getMixModeLabel(liveVal)
             isMaxPoints -> "${liveVal.roundToInt()} points"
             isHueSweep && mandala != null -> {
                 val petals = mandala.recipe.petals
@@ -122,6 +143,7 @@ object ValueParamSection {
                 currentMax = param.baseMax,
                 minLimit = 0f,
                 maxLimit = 1f,
+                defaultValue = param.defaultValue,
                 isRandomizable = param.randomizeBase,
                 showControls = false,
                 formatValue = {
@@ -313,6 +335,28 @@ object ValueParamSection {
                 ImGui.spacing()
                 ImGui.separator()
                 ImGui.spacing()
+            } else if (isMixerMode) {
+                session.uiTheme.caption("Deck A/B Mix Mode:")
+                val currentIdx = param.baseValue.roundToInt().coerceIn(0, MIX_MODE_LABELS.size - 1)
+                val selectedOpt = ImInt(currentIdx)
+                ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
+                if (ImGui.combo("##mixer_mode_combo", selectedOpt, MIX_MODE_LABELS)) {
+                    val nextIdx = selectedOpt.get().coerceIn(0, MIX_MODE_LABELS.size - 1)
+                    val newVal = nextIdx.toFloat()
+                    param.baseValue = newVal
+                    param.baseMin = newVal
+                    param.baseMax = newVal
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Select blending mode between Deck A and Deck B.\n0: ADD — additive blend\n1: SCREEN — screen blend\n2: MULT — multiply blend\n3: MAX — maximum pixel brightness\n4: XFADE — 4th-order polynomial crossfade")
+                }
+                ImGui.popItemWidth()
+
+                ImGui.spacing()
+                session.uiTheme.caption("${Icons.ALERT} Not CV-modulatable — sets static deck compositing formula.")
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
             }
 
             val scale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
@@ -324,10 +368,12 @@ object ValueParamSection {
                 currentMax = param.baseMax * scale,
                 minLimit = param.minClamp * scale,
                 maxLimit = param.maxClamp * scale,
+                defaultValue = param.defaultValue * scale,
                 isRandomizable = param.randomizeBase,
                 showControls = true,
                 formatValue = {
                     when {
+                        isMixerMode -> getMixModeLabel(it)
                         isMaxPoints -> "${it.roundToInt()} pts"
                         isBgStyle -> {
                             when (it.roundToInt()) {
@@ -410,7 +456,9 @@ object ValueParamSection {
 
 
         ImGui.spacing()
-        if (isMaxPoints) {
+        if (isMixerMode) {
+            session.uiTheme.caption("Static Initial Value: ${getMixModeLabel(param.baseValue)}")
+        } else if (isMaxPoints) {
             session.uiTheme.caption("Static Initial Value: ${param.baseValue.roundToInt()} pts")
         } else if (isHueSweep && mandala != null) {
             val petals = mandala.recipe.petals
@@ -434,7 +482,8 @@ object ValueParamSection {
         val cx = ImGui.getCursorScreenPosX()
         val cy = ImGui.getCursorScreenPosY()
         baseDl.addRectFilled(cx, cy, cx + baseBarW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-        baseDl.addRectFilled(cx, cy, cx + baseBarW * param.baseValue, cy + 10f, CvTheme.getThemeColor("base"))
+        val normBase = if (param.maxClamp > param.minClamp) ((param.baseValue - param.minClamp) / (param.maxClamp - param.minClamp)).coerceIn(0f, 1f) else param.baseValue.coerceIn(0f, 1f)
+        baseDl.addRectFilled(cx, cy, cx + baseBarW * normBase, cy + 10f, CvTheme.getThemeColor("base"))
         ImGui.dummy(baseBarW, 10f)
 
             ImGui.endChild()

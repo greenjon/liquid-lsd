@@ -265,6 +265,7 @@ object Lfo2Section {
                 currentMax = existing.generatorModDepthMax,
                 minLimit = 0f,
                 maxLimit = 1f,
+                defaultValue = 0.5f,
                 isRandomizable = existing.randomizeGeneratorModDepth,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -329,6 +330,7 @@ object Lfo2Section {
                     currentMax = currentMaxIdx.toFloat(),
                     minLimit = 0f,
                     maxLimit = (subdivisionOptions.size - 1).toFloat(),
+                    defaultValue = subdivisionOptions.indexOfFirst { it == 1.0f }.coerceAtLeast(0).toFloat(),
                     isRandomizable = existing.randomizeModSubdivision,
                     formatValue = { idx -> subdivisionLabels[idx.toInt().coerceIn(0, subdivisionOptions.size - 1)] },
                     onRandomizableChanged = { checked ->
@@ -403,6 +405,7 @@ object Lfo2Section {
                     currentMax = existing.modSubdivisionMax.toInt().coerceIn(1, 10000).toFloat(),
                     minLimit = 1f,
                     maxLimit = 10000f,
+                    defaultValue = 1f,
                     isRandomizable = existing.randomizeModSubdivision,
                     formatValue = formatFunc,
                     formatLabel = formatLabelFunc,
@@ -469,6 +472,7 @@ object Lfo2Section {
                     currentMax = existing.modSubdivisionMax,
                     minLimit = 0.01f,
                     maxLimit = 86400f,
+                    defaultValue = 1.0f,
                     isRandomizable = existing.randomizeModSubdivision,
                     formatValue = formatFunc,
                     isLogarithmic = true,
@@ -528,6 +532,7 @@ object Lfo2Section {
                 currentMax = existing.modPhaseOffsetMax,
                 minLimit = 0f,
                 maxLimit = 1f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizeModPhaseOffset,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -584,6 +589,7 @@ object Lfo2Section {
                 currentMax = existing.modMorphMax,
                 minLimit = 0f,
                 maxLimit = 1f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizeModMorph,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -640,6 +646,7 @@ object Lfo2Section {
                 currentMax = existing.modHoldMax,
                 minLimit = 0f,
                 maxLimit = 0.99f,
+                defaultValue = 0f,
                 isRandomizable = existing.randomizeModHold,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
@@ -697,6 +704,7 @@ object Lfo2Section {
                     currentMax = existing.modSlopeMax,
                     minLimit = 0.001f,
                     maxLimit = 0.999f,
+                    defaultValue = 0.5f,
                     isRandomizable = existing.randomizeModSlope,
                     formatValue = { "%.3f".format(it) },
                     onRandomizableChanged = { checked ->

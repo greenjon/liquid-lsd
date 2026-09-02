@@ -118,6 +118,8 @@ The central Mixer blends the outputs of Deck A and Deck B to form the master vid
 - **`MAX`** (Lighten): Compares A and B per-pixel and selects the brightest color.
 - **`XFADE`** (Crossfade): Standard linear interpolation between Deck A and Deck B.
 
+Mix modes can be configured directly in the **Preset Grid (MIX tab)** by selecting the **VAL** cell on the **mix mode** row and choosing from the dropdown combo. Mix mode is non-modulatable to provide a solid compositing baseline for crossfade operations.
+
 ### Crossfader Modulation & Manual Takeover
 The `crossfade` slider interpolates between Deck A (-1.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.
 

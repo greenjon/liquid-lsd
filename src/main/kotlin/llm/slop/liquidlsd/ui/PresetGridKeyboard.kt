@@ -13,6 +13,8 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.models.toDto
 
+import org.lwjgl.glfw.GLFW.GLFW_KEY_S
+
 object PresetGridKeyboard {
     fun getModsForCell(param: ModulatableParameter, cvSourceId: String): List<CvModulator> {
         return when (cvSourceId) {
@@ -40,7 +42,7 @@ object PresetGridKeyboard {
         val modActive = isCtrl || isCmd
 
         // Save: Ctrl+S / Cmd+S, Save As: Shift+Ctrl+S / Shift+Cmd+S
-        if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.S), false)) {
+        if (modActive && ImGui.isKeyPressed(GLFW_KEY_S, false)) {
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
