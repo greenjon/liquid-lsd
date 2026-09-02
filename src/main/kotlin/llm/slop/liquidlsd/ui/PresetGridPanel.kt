@@ -80,7 +80,7 @@ object PresetGridPanel {
 
     fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState): Float {
         val metrics = GridMetrics.compute(session)
-        val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session) + 4f
+        val sideTabWidth = PresetGridTabs.calculateLeftTabsWidth(session)
         val activeDeck = when (state.activeTopTab) {
             "Deck A" -> mixer.deckA
             "Deck B" -> mixer.deckB
@@ -102,7 +102,7 @@ object PresetGridPanel {
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
         val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f
 
-        val gridTotalW = sideTabWidth + 12f + labelColW + maxGridW + 24f
+        val gridTotalW = sideTabWidth + BOX_PADDING_X * 2f + labelColW + maxGridW + 24f
         var titleTextW = 0f
         session.uiTheme.withFont(UITheme.FontLevel.BODY) { titleTextW = ImGui.calcTextSize("Preset Grid").x }
         val titleTotalW = titleTextW + TITLE_BAR_SPACING + sourceTabW + 24f
@@ -174,8 +174,11 @@ object PresetGridPanel {
         val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
         var containerTopY = 0f
 
-        if (ImGui.beginTable("##preset_grid_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)) {
-            ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, sideTabWidth + 4f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.CellPadding, 0f, 0f)
+        val tableOpened = ImGui.beginTable("##preset_grid_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)
+        ImGui.popStyleVar()
+        if (tableOpened) {
+            ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, sideTabWidth)
             ImGui.tableSetupColumn("##main_grid", imgui.flag.ImGuiTableColumnFlags.WidthStretch)
             ImGui.tableNextRow()
 
@@ -186,8 +189,9 @@ object PresetGridPanel {
 
             // Right column: Main Preset Grid content
             ImGui.tableSetColumnIndex(1)
-            gridStartX = ImGui.getCursorScreenPosX()
             containerTopY = ImGui.getCursorScreenPosY()
+            ImGui.setCursorPosX(ImGui.getCursorPosX() + BOX_PADDING_X)
+            gridStartX = ImGui.getCursorScreenPosX()
             val boxMaxX = (gridStartX + labelColW + maxGridW + BOX_PADDING_X).coerceAtMost(ImGui.getWindowPosX() + avail)
 
             // Column Headers (VAL, MIDI, LFO, AUD, TRIG)
