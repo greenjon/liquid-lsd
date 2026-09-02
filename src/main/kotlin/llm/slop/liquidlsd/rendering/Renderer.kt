@@ -196,11 +196,17 @@ class Renderer {
 
         mandalaShader.bind()
 
-        // Set arm length parameters (L1 to L4)
-        mandalaShader.setUniform("uL1", p["L1"]?.value ?: 0f)
-        mandalaShader.setUniform("uL2", p["L2"]?.value ?: 0f)
-        mandalaShader.setUniform("uL3", p["L3"]?.value ?: 0f)
-        mandalaShader.setUniform("uL4", p["L4"]?.value ?: 0f)
+        // Set normalized arm length parameters (L1 to L4) using sum-of-lengths normalization
+        val normArms = Mandala.computeNormalizedArmLengths(
+            p["L1"]?.value ?: 0f,
+            p["L2"]?.value ?: 0f,
+            p["L3"]?.value ?: 0f,
+            p["L4"]?.value ?: 0f
+        )
+        mandalaShader.setUniform("uL1", normArms[0])
+        mandalaShader.setUniform("uL2", normArms[1])
+        mandalaShader.setUniform("uL3", normArms[2])
+        mandalaShader.setUniform("uL4", normArms[3])
 
         // Set arm frequency parameters (a to d) with modulation and optional quantization
         val freqOffset = p["Freq Offset"]?.value ?: 0f

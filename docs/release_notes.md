@@ -9,6 +9,11 @@
 
 ### Key Highlights
 
+#### 0. Mandala Analytical Size Normalization (`Mandala.kt`, `Renderer.kt`, `web/renderer.js`)
+- **Sum-of-Lengths Normalization ($R_{\text{target}} = 1.0$)**: Implemented fast, analytical size normalization for the Mandala visual source. Scales arm lengths $L_1 \dots L_4$ by $\text{scale} = R_{\text{target}} / \sum |L_i|$ (with zero-protection for $\sum |L_i| \le 10^{-5}$), guaranteeing that the theoretical maximum reach of the pen exactly touches $R_{\text{target}}$.
+- **Morphing vs. Breathing**: Prevents visual clipping and extreme shrinkage when arm lengths vary or are modulated by LFOs, shifting dynamics to harmonic petal balance morphing while anchoring the outer bounding circle.
+- **Desktop & WebGL2 Parity**: Uniformly applied in desktop OpenGL (`Renderer.kt`) and browser WebGL2 (`web/renderer.js`) pipelines, ensuring identical visual scaling and radial depth shading across platforms.
+
 #### 1. Unified Title Bar & Custom Window Frame (CSD) (`WindowFrameController.kt`, `MenuBar.kt`, `UITheme.kt`, `SettingsPanel.kt`)
 
 - **Modern Frameless Window & Integrated Top Bar (Option A)**: Integrated the traditional OS title bar into a unified, vertical-space-efficient top bar (~32px) merging brand logo, compact menus (`File`, `Output`, `Help`), live recording/broadcast pills, and telemetry HUD with custom window action buttons (minimize `${Icons.MINUS}`, maximize/restore `${Icons.SQUARE}`/`${Icons.COPY}`, and close `${Icons.X}`).

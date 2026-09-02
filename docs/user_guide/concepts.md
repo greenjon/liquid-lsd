@@ -41,6 +41,7 @@ Every deck runs a pluggable **Visual Source** that generates procedural geometry
 The core procedural geometry generator:
 - **Lobe Count (Petals)**: Controls rotational symmetry (how many repeating arms are generated).
 - **Mandala Ratios**: Accesses a curated library of ~300 ratio presets determining mathematical harmonic intersections.
+- **Analytical Size Normalization**: Automatically normalizes 4 arm lengths ($L_1 \dots L_4$) using sum-of-lengths scaling ($\text{scale} = R_{\text{target}} / \sum |L_i|$ where $R_{\text{target}} = 1.0$), keeping outer boundary scale stable across all slider configurations and dynamic LFO modulations.
 - **3D Projections**:
   - *Spherical Mapping*: Extrudes 2D curves onto a 3D sphere via longitude/latitude angles.
   - *Polyhedral Reflections*: Replicates curves across Cubic/Octahedral (8 instances) or Tetrahedral (4 instances) reflection groups.

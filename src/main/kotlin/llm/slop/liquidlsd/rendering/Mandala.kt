@@ -133,13 +133,14 @@ class Mandala(
             }
         }
 
-        // Calculate max possible reach of the arms to normalize distance in the shader
+        // With sum-of-lengths normalization, the max possible reach is TARGET_RADIUS
         val l1 = abs(parameters["L1"]?.value ?: 0f)
         val l2 = abs(parameters["L2"]?.value ?: 0f)
         val l3 = abs(parameters["L3"]?.value ?: 0f)
         val l4 = abs(parameters["L4"]?.value ?: 0f)
+        val sumL = l1 + l2 + l3 + l4
 
-        maxR = max(0.001f, l1 + l2 + l3 + l4)
+        maxR = if (sumL > 1e-5f) TARGET_RADIUS else 0.001f
         minR = 0f // Stable base for depth/brightness effect
     }
 
@@ -216,6 +217,25 @@ class Mandala(
     companion object {
         private val symmetricHueCyclesCache = java.util.concurrent.ConcurrentHashMap<Int, List<Int>>()
         const val POINTS = 2048
+        const val TARGET_RADIUS = 1.0f
+
+        /**
+         * Normalizes 4 arm lengths using Sum-of-Lengths (Option 1):
+         * scale = targetRadius / sum(|Li|)
+         * Guarantees that the theoretical maximum reach of the pen exactly touches targetRadius.
+         * If sum is <= 1e-5, returns all zeros to avoid division by zero or amplifying noise.
+         */
+        fun computeNormalizedArmLengths(
+            l1: Float,
+            l2: Float,
+            l3: Float,
+            l4: Float,
+            targetRadius: Float = TARGET_RADIUS
+        ): FloatArray {
+            val sumL = abs(l1) + abs(l2) + abs(l3) + abs(l4)
+            val scale = if (sumL > 1e-5f) targetRadius / sumL else 0.0f
+            return floatArrayOf(l1 * scale, l2 * scale, l3 * scale, l4 * scale)
+        }
 
         /**
          * Static buffer for GPU expansion containing [Phase, Side] pairs.

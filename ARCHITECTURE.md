@@ -86,7 +86,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── PboReadbackPipeline.kt  — High-speed DMA GPU-to-CPU framebuffer readback
 │   └── RealtimeRecorder.kt     — Live session video & audio capture and muxing
 ├── rendering/
-│   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource)
+│   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params (Deck A, B & BG -> live; Deck PV -> preview)
 │   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO (Deck PV excluded)
@@ -214,7 +214,7 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
 - **Audio-Reactive Uniforms**: Per-frame uniform modulation dynamically blending baseline preset parameters with live CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `beatPhase`, `beatSine`, `trigger_onset`).
 - **Ping-Pong Feedback FBOs**: Supports `RGBA16F` HDR render targets via `EXT_color_buffer_float` with fallback to `RGBA8`.
 - **Render Passes**:
-  1. `deckA.cleanFBO`: Generates Mandala ribbon source geometry (4096 vertices).
+  1. `deckA.cleanFBO`: Generates Mandala ribbon source geometry (4096 vertices) with sum-of-lengths analytical size normalization.
   2. `deckA.writeFBO`: Applies zoom/rotate/decay feedback blending with `deckA.readTex`.
   3. `deckB.cleanFBO`: Generates Dynamic Spiral with internal trail history (`src` sampler).
   4. `deckB.writeFBO`: Applies outer feedback transformation on Deck B.

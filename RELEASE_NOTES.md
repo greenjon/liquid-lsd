@@ -14,6 +14,11 @@
 - **Flip-Flop Boundary State Machine**: Implemented latching hysteresis (`READY_FOR_ONE` / `READY_FOR_ZERO`) at the $0.01$ and $0.99$ boundaries. Crossing a boundary re-rolls the opposite state, enabling non-repeating generative visual journeys.
 - **Zero-Allocation In-Place Lerp & Shortest-Path Angles**: Pre-allocated snapshot buffers and converted runtime modulator fields to mutable vars to eliminate GC allocations during per-frame lerping, with shortest-path modular interpolation for angles and hue rotations.
 
+#### 0.1. Mandala Analytical Size Normalization (`Mandala.kt`, `Renderer.kt`, `web/renderer.js`)
+- **Sum-of-Lengths Normalization ($R_{\text{target}} = 1.0$)**: Implemented fast, analytical size normalization for the Mandala visual source. Scales arm lengths $L_1 \dots L_4$ by $\text{scale} = R_{\text{target}} / \sum |L_i|$ (with zero-protection for $\sum |L_i| \le 10^{-5}$), guaranteeing that the theoretical maximum reach of the pen exactly touches $R_{\text{target}}$.
+- **Morphing vs. Breathing**: Prevents visual clipping and extreme shrinkage when arm lengths vary or are modulated by LFOs, shifting dynamics to harmonic petal balance morphing while anchoring the outer bounding circle.
+- **Desktop & WebGL2 Parity**: Uniformly applied in desktop OpenGL (`Renderer.kt`) and browser WebGL2 (`web/renderer.js`) pipelines, ensuring identical visual scaling and radial depth shading across platforms.
+
 #### 1. Performance-Driven UI & Ergonomics Enhancements (`UIManager.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`, `MenuBar.kt`, `CellConfigPanel.kt`)
 
 - **Horizontal Scroll Wheel Isolation & Layout Stabilization (`UIManager.kt`, `LibraryPanel.kt`, `PresetGridPanel.kt`)**: 

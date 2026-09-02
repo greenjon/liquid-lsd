@@ -400,10 +400,18 @@ async function init() {
 
     if (srcType === 'mandala') {
       gl.bindVertexArray(mandalaVAO);
-      gl.uniform1f(locs.uL1, evalP(deckData.L1 || deckData.l1, 0.4));
-      gl.uniform1f(locs.uL2, evalP(deckData.L2 || deckData.l2, 0.3));
-      gl.uniform1f(locs.uL3, evalP(deckData.L3 || deckData.l3, 0.2));
-      gl.uniform1f(locs.uL4, evalP(deckData.L4 || deckData.l4, 0.1));
+      const rawL1 = evalP(deckData.L1 || deckData.l1, 0.4);
+      const rawL2 = evalP(deckData.L2 || deckData.l2, 0.3);
+      const rawL3 = evalP(deckData.L3 || deckData.l3, 0.2);
+      const rawL4 = evalP(deckData.L4 || deckData.l4, 0.1);
+      const sumL = Math.abs(rawL1) + Math.abs(rawL2) + Math.abs(rawL3) + Math.abs(rawL4);
+      const targetRadius = 1.0;
+      const normScale = sumL > 1e-5 ? (targetRadius / sumL) : 0.0;
+
+      gl.uniform1f(locs.uL1, rawL1 * normScale);
+      gl.uniform1f(locs.uL2, rawL2 * normScale);
+      gl.uniform1f(locs.uL3, rawL3 * normScale);
+      gl.uniform1f(locs.uL4, rawL4 * normScale);
       gl.uniform1f(locs.uA,  evalP(deckData.A || deckData.a || deckData.recipe?.a, 3.0));
       gl.uniform1f(locs.uB,  evalP(deckData.B || deckData.b || deckData.recipe?.b, 4.0));
       gl.uniform1f(locs.uC,  evalP(deckData.C || deckData.c || deckData.recipe?.c, 5.0));
@@ -416,7 +424,7 @@ async function init() {
       gl.uniform1f(locs.uPermuteXY,   evalP(deckData['Permute XY'] || deckData.permuteXY, 1.0));
       gl.uniform1f(locs.uPermuteYZ,   evalP(deckData['Permute YZ'] || deckData.permuteYZ, 1.0));
       gl.uniform1f(locs.uPermuteZX,   evalP(deckData['Permute ZX'] || deckData.permuteZX, 1.0));
-      gl.uniform1f(locs.uMaxR,         evalP(deckData['Max R'] || deckData.maxR, 0.85));
+      gl.uniform1f(locs.uMaxR,         sumL > 1e-5 ? targetRadius : 0.001);
       gl.uniform1f(locs.uYaw,          evalP(deckData.Yaw || deckData.yaw, 0.0));
       gl.uniform1f(locs.uPitch,        evalP(deckData.Pitch || deckData.pitch, 0.0));
       gl.uniform1f(locs.uPersp,        evalP(deckData['3D Persp'] || deckData.persp, 0.5));
