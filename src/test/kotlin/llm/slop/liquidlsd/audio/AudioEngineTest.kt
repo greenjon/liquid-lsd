@@ -31,6 +31,24 @@ class AudioEngineTest {
     }
 
     @Test
+    fun testAutomaticReconnectDisabledOnStartupFailure() {
+        AudioEngine.selectDevice(null, AudioEngine.AudioBackendMode.JACK_ONLY)
+        // In headless test environments without JACK running, automatic reconnect should be disabled
+        if (!AudioEngine.isJackConnected()) {
+            assertFalse(AudioEngine.automaticReconnectEnabled, "Automatic reconnect should be disabled after startup failure")
+
+            // Watchdog tryReconnect without force must not re-attempt
+            AudioEngine.tryReconnect(force = false)
+            assertFalse(AudioEngine.automaticReconnectEnabled)
+
+            // Force reconnect re-enables automatic reconnect attempt
+            AudioEngine.tryReconnect(force = true)
+            // After attempting startClient again without JACK running, it will disable again
+            assertFalse(AudioEngine.automaticReconnectEnabled)
+        }
+    }
+
+    @Test
     fun testAudioDeviceCaching() {
         val devices1 = AudioEngine.getAvailableInputDevices()
         val devices2 = AudioEngine.getAvailableInputDevices()

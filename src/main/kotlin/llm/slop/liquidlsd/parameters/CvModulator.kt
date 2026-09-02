@@ -7,13 +7,13 @@ import java.util.UUID
 data class CvModulator(
     val sourceId: String,
     val operator: ModulationOperator = ModulationOperator.ADD,
-    val depth: Float = 0.0f,
+    var depth: Float = 0.0f,
     val bypassed: Boolean = false,
     // Beat synchronization/shape settings
     val waveform: Waveform = Waveform.SINE,
-    val subdivision: Float = 1.0f,
-    val phaseOffset: Float = 0.0f,
-    val slope: Float = 0.5f,
+    var subdivision: Float = 1.0f,
+    var phaseOffset: Float = 0.0f,
+    var slope: Float = 0.5f,
     // LFO speed bounds setting
     val lfoSpeedMode: LfoSpeedMode = LfoSpeedMode.FAST,
     val genUnit: GenUnit = GenUnit.TIME,
@@ -34,30 +34,30 @@ data class CvModulator(
     val randomizeSlope: Boolean = false,
 
     // Advanced LFO fields
-    val morph: Float = 0.0f,
+    var morph: Float = 0.0f,
     val morphMin: Float = morph,
     val morphMax: Float = morph,
     val randomizeMorph: Boolean = false,
 
-    val hold: Float = 0.0f,
+    var hold: Float = 0.0f,
     val holdMin: Float = hold,
     val holdMax: Float = hold,
     val randomizeHold: Boolean = false,
 
     // DC Offset fields
-    val dcOffset: Float = 0.0f,
+    var dcOffset: Float = 0.0f,
     val dcOffsetMin: Float = dcOffset,
     val dcOffsetMax: Float = dcOffset,
     val randomizeDcOffset: Boolean = false,
 
     // Modulator LFO (LFO 2) fields for Gen 1/Gen 2
     val modWaveform: Waveform = Waveform.SINE,
-    val modSubdivision: Float = 1.0f,
-    val modPhaseOffset: Float = 0.0f,
-    val modSlope: Float = 0.5f,
+    var modSubdivision: Float = 1.0f,
+    var modPhaseOffset: Float = 0.0f,
+    var modSlope: Float = 0.5f,
     val modGenUnit: GenUnit = GenUnit.TIME,
     val generatorModMode: GeneratorModMode = GeneratorModMode.NONE,
-    val generatorModDepth: Float = 0.0f,
+    var generatorModDepth: Float = 0.0f,
 
     val modSubdivisionMin: Float = modSubdivision,
     val modSubdivisionMax: Float = modSubdivision,
@@ -71,12 +71,12 @@ data class CvModulator(
     val randomizeModSlope: Boolean = false,
 
     // Modulator LFO (LFO 2) Advanced fields
-    val modMorph: Float = 0.0f,
+    var modMorph: Float = 0.0f,
     val modMorphMin: Float = modMorph,
     val modMorphMax: Float = modMorph,
     val randomizeModMorph: Boolean = false,
 
-    val modHold: Float = 0.0f,
+    var modHold: Float = 0.0f,
     val modHoldMin: Float = modHold,
     val modHoldMax: Float = modHold,
     val randomizeModHold: Boolean = false,
@@ -87,8 +87,8 @@ data class CvModulator(
 
     // Audio envelope follower fields
     val followerMode: AudioFollowerMode = AudioFollowerMode.RAW,
-    val attackMs: Float = 0.0f,
-    val decayMs: Float = 0.0f,
+    var attackMs: Float = 0.0f,
+    var decayMs: Float = 0.0f,
     val attackMsMin: Float = attackMs,
     val attackMsMax: Float = attackMs,
     val decayMsMin: Float = decayMs,

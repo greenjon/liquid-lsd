@@ -9,6 +9,11 @@
 
 ### Key Highlights
 
+#### 0. Continuous Constrained Random Morphing (`MorphState.kt`, `Deck.kt`, `Mixer.kt`, `MixerMonitorPanel.kt`)
+- **Continuous $0.0 \leftrightarrow 1.0$ Generative Morphing**: Transformed discrete 1-shot randomization triggers (`randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, `randAll`) into continuous morphing controllers. Assigning an LFO or CV source smoothly morphs base values and active modulator properties between two randomized states with zero UI explosion.
+- **Flip-Flop Boundary State Machine**: Implemented latching hysteresis (`READY_FOR_ONE` / `READY_FOR_ZERO`) at the $0.01$ and $0.99$ boundaries. Crossing a boundary re-rolls the opposite state, enabling non-repeating generative visual journeys.
+- **Zero-Allocation In-Place Lerp & Shortest-Path Angles**: Pre-allocated snapshot buffers and converted runtime modulator fields to mutable vars to eliminate GC allocations during per-frame lerping, with shortest-path modular interpolation for angles and hue rotations.
+
 #### 1. Performance-Driven UI & Ergonomics Enhancements (`UIManager.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`, `MenuBar.kt`, `CellConfigPanel.kt`)
 
 - **Horizontal Scroll Wheel Isolation & Layout Stabilization (`UIManager.kt`, `LibraryPanel.kt`, `PresetGridPanel.kt`)**: 

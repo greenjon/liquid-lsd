@@ -107,6 +107,7 @@
 - **Zero-Lag Oscilloscope Slicing**: Fixed `CvHistoryBuffer.copyTo()` to display the true latest chronological window without latency delay, and expanded the trace buffer to 400 samples.
 - **Hardware Device Caching**: Cached ALSA/JavaSound device introspection in `AudioEngine.kt` to prevent per-frame querying handle leaks and out-of-memory crashes.
 - **Full Audio Engine Settings Persistence**: All Audio Engine configurations—including audio backend selection (`AUTO`, `JACK_ONLY`, `JAVASOUND_ONLY`), hardware input device selection, manual BPM lock toggle, manual BPM slider, onset target frequency band (`LOW`, `MID`, `HIGH`, `UNFILTERED`), beat tracker presets, and BPM search range floor/ceiling—are now serialized to `lsd-settings.properties` and restored on startup.
+- **Suppressed Watchdog Loop on Startup Failure**: When JACK is unavailable or fails to start at launch, automatic watchdog reconnect attempts are now cleanly suppressed to prevent log noise on systems without an active JACK daemon, while retaining manual reconnection on demand in the Audio Engine panel.
 - **Theme High-Contrast Palette**: Refined frame borders and contrast across Boring, Solarized, Lunarized, and Neon themes.
 - **Deck PV Standardization**: Replaced all remaining legacy "Deck C" references across codebase, UI, and documentation with "Deck PV" (Preview).
 

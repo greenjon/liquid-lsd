@@ -26,6 +26,7 @@ Liquid LSD supports two complementary audio client implementations managed by [`
 - Uses JNAJack native C bindings to interface directly with the JACK or PipeWire-JACK server.
 - Registers client input ports (`lsd:input_1`, `lsd:input_2`).
 - Operates inside an OS real-time thread callback (`process(client, nframes)`). Strict OS priority rules apply: any heap allocation or blocking call triggers immediate xruns (audio dropouts) or server disconnection.
+- **Watchdog & Failure Handling**: If JACK startup fails on launch (native library missing or server connection unavailable), automatic background reconnect attempts are suppressed to prevent watchdog log spam on systems where JACK is not running. Manual reconnection remains available on demand from the Audio Engine panel (`tryReconnect(force = true)`).
 
 ### 2. `JavaSoundClient.kt` (macOS, Windows, Standalone Linux)
 - Uses Java Sound `TargetDataLine` to capture system input audio (PCM 16-bit signed, mono/stereo 44.1kHz/48kHz).

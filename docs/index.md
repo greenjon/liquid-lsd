@@ -37,6 +37,7 @@ In-depth technical architecture, threading boundaries, DSP algorithms, rendering
 - **[Unified Control Mapping Architecture](developer/unified_control_mapping.md)**: Architectural brainstorm & roadmap for Mixxx-inspired multi-modal control mapping (MIDI, Keyboard, Mouse, and CV).
 - **[Continuous Random Morphing Proposal](developer/continuous_random_morphing_proposal.md)**: Architectural proposal for continuous $0.0 \leftrightarrow 1.0$ constrained random morphing, flip-flop state latches, and modulation matrix synergies.
 - **[Unified Title Bar & Custom Window Frame (CSD) Proposal](developer/unified_titlebar_csd_proposal.md)**: Architectural proposal for cross-platform unified top header/titlebar with frameless CSD and native decoration fallback.
+- **[Automated Screen Capture & UI Testing Proposal](developer/screen_capture_and_ui_iteration_proposal.md)**: Proposal for headless CLI screenshot capture, responsive UI regression testing, and isolated UI component lab.
 
 ### ⚡ [Operations & Tuning](developer/ops_tuning.md)
 Low-latency JVM Garbage Collector tuning (ZGC), cross-platform setup, PipeWire/JACK CLI diagnostics, and troubleshooting guide.

@@ -2,6 +2,22 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Continuous Constrained Random Morphing & Flip-Flop State Latches (`MorphState.kt`, `Deck.kt`, `Mixer.kt`)
+
+- **Decision**: Transform discrete one-shot randomization triggers (`Mixer/randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, `randAll`) into continuous $0.0 \leftrightarrow 1.0$ morphing controllers:
+  - **Two-State Snapshot Model ($S_0 \leftrightarrow S_1$)**: Each deck and mixer maintains two state snapshots (`state0` and `state1`) storing base values and all active modulator parameters (`depth`, `subdivision`, `phaseOffset`, `slope`, `morph`, `hold`, `dcOffset`, etc.).
+  - **In-Place Zero-Allocation Lerp**: Converted mutable runtime modulator fields from `val` to `var` in `CvModulator.kt`, allowing per-frame interpolation without allocating objects on the render thread or churning `CopyOnWriteArrayList`.
+  - **Flip-Flop Boundary State Machine with Hysteresis**:
+    - Ascending towards $1.0$ ($V \ge 0.99$): Latch transitions to `READY_FOR_ZERO` and re-rolls $S_0$ as the new target. Visuals remain static while held at $1.0$.
+    - Descending towards $0.0$ ($V \le 0.01$): Latch transitions to `READY_FOR_ONE` and re-rolls $S_1$ as the new target. Visuals remain static while held at $0.0$.
+    - Boundary hysteresis guarantees that noisy analog CV or LFO signals wobbling near extremes do not trigger duplicate rolls.
+  - **Shortest-Path Angle & Hue Interpolation**: Angular parameters (`isAngle`) and circular meters (`MeterType.ENDLESS`) use shortest-path wrapping modular arithmetic to prevent unwinding artifacts across periodic boundaries.
+- **Rationale**:
+  - Eliminates UI explosion: reuses existing `randDeckX` parameters directly without adding new interval/hold/target sliders.
+  - Generative synergy: combining `randDeckA` with LFO waveforms featuring `Hold` (`RANDOM` / `TRIANGLE` with `hold > 0`) automatically delivers customizable morph-then-hold generative evolutions synchronized to beat clock or time.
+
+---
+
 ## Unified Title Bar & Custom Window Frame (CSD) (`WindowFrameController.kt`, `MenuBar.kt`)
 
 - **Decision**: Replace the traditional OS title bar with a modern integrated Unified Header & Title Bar (Client-Side Decorations / CSD) combining cross-platform borderless window management with an optional native OS decoration fallback:

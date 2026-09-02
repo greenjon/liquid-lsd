@@ -2,7 +2,9 @@
 .gradle/
 .gradle-home/
 .gradle-user-home/
+.kotlin/
 build/
+bin/
 !gradle-wrapper.jar
 
 # IntelliJ IDEA

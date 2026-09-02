@@ -313,7 +313,19 @@ The master crossfader (`Mixer/crossfade`) implements a performance takeover work
    - Disarms Auto-VJ (`PlayQueueManager.isAutoVJEnabled = false`).
    - Halts any active automated fade (`Mixer.isAutoFading = false`).
    - Mutes all non-MIDI modulators on the crossfader (`mod.bypassed = true`), ensuring immediate 1:1 manual authority.
-2. **Auto-Centering on Unmute (`Mixer.onCrossfadeCvUnmuted()`)**: Triggered when any CV modulator on `Mixer/crossfade` is unmuted or assigned.
+2. **Auto-Centering on Unmute (`Mixer.onCrossfadeCvUnmuted()`)**: Triggered when any CV modulator on `Mixer/crossfade` is unmuted or assigned. Snaps `baseValue` to `0.0f` to ensure modulation oscillates symmetrically between decks.
    - Resets `crossfade.baseValue = 0.0f` (and baseMin/baseMax if non-randomized).
    - Guarantees immediate full-range, unbiased $[-1.0, +1.0]$ oscillation without waveform clipping against previous manual hold positions. Modulator `dcOffset` provides optional deck bias.
+
+---
+
+## Continuous Constrained Random Morphing
+
+**Files**: `rendering/MorphState.kt`, `rendering/Deck.kt`, `rendering/Mixer.kt`
+
+The randomization parameters (`Mixer/randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, `randAll`) operate as continuous morphing controllers:
+* **Two-State Snapshot Model**: Each `DeckMorphController` maintains two state snapshots (`state0` and `state1`) storing base values and all active modulator parameters.
+* **In-Place Zero-Allocation Lerping**: Per-frame interpolation mutates runtime fields directly on `CvModulator` and `ModulatableParameter` without creating garbage collection pressure on the render thread.
+* **Boundary Hysteresis**: Re-rolls opposite state targets at the $0.01$ and $0.99$ normalized thresholds via a flip-flop state machine (`READY_FOR_ONE` / `READY_FOR_ZERO`).
+* **Shortest-Path Angle/Hue Wrapping**: Uses modular circular arithmetic on angle and hue parameters to prevent unwanted unwinding spins.
 

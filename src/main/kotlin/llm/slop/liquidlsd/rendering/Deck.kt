@@ -105,7 +105,29 @@ class Deck(
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
+        morphController.initFromCurrentState()
     }
+
+    /**
+     * Retrieves all randomizable parameters across the visual source and feedback system.
+     */
+    fun getAllRandomizableParameters(): List<ModulatableParameter> {
+        val allParams = mutableListOf<ModulatableParameter>()
+        allParams.addAll(this.source.parameters.values)
+        allParams.add(this.source.globalAlpha)
+        allParams.add(this.fbDecay)
+        allParams.add(this.fbGain)
+        allParams.add(this.fbZoom)
+        allParams.add(this.fbRotate)
+        allParams.add(this.fbHueShift)
+        allParams.add(this.fbBlur)
+        allParams.add(this.fbChroma)
+        allParams.add(this.fbMode)
+        allParams.add(this.fbKaleido)
+        return allParams
+    }
+
+    val morphController = DeckMorphController(::getAllRandomizableParameters)
 
     /**
      * Retrieves the current history FBO (from the last frame).
@@ -149,24 +171,7 @@ class Deck(
      * Re-randomizes modulators and base values for all randomizable parameters in this Deck.
      */
     fun randomizeModulators() {
-        val allParams = mutableListOf<ModulatableParameter>()
-        allParams.addAll(this.source.parameters.values)
-        allParams.add(this.source.globalAlpha)
-        allParams.add(this.fbDecay)
-        allParams.add(this.fbGain)
-        allParams.add(this.fbZoom)
-        allParams.add(this.fbRotate)
-        allParams.add(this.fbHueShift)
-        allParams.add(this.fbBlur)
-        allParams.add(this.fbChroma)
-        allParams.add(this.fbMode)
-
-        for (param in allParams) {
-            val randomized = param.modulators.map { it.randomizeActiveValues() }
-            param.modulators.clear()
-            param.modulators.addAll(randomized)
-            param.randomizeBaseValue()
-        }
+        morphController.forceRandomize()
     }
 
     /**

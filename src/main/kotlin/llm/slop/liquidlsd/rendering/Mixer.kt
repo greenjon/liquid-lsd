@@ -115,12 +115,20 @@ class Mixer(
     private var prevQueueNextVal = 0.0f
     private var prevBgQueuePrevVal = 0.0f
     private var prevBgQueueNextVal = 0.0f
-    private var prevRandDeckAVal = 0.0f
-    private var prevRandDeckBVal = 0.0f
-    private var prevRandDeckBGVal = 0.0f
-    private var prevRandDeckPVVal = 0.0f
-    private var prevRandAllVal = 0.0f
     private var lastUpdateTimeNs: Long = System.nanoTime()
+
+    fun getAllMixerRandomizableParameters(): List<ModulatableParameter> {
+        val list = mutableListOf<ModulatableParameter>()
+        list.addAll(deckA.getAllRandomizableParameters())
+        list.addAll(deckB.getAllRandomizableParameters())
+        list.addAll(deckBG.getAllRandomizableParameters())
+        list.addAll(deckPV.getAllRandomizableParameters())
+        list.add(crossfade)
+        list.add(masterAlpha)
+        return list
+    }
+
+    val morphControllerAll = DeckMorphController(::getAllMixerRandomizableParameters)
 
     override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
         val list = mutableListOf<Pair<String, ModulatableParameter>>()
@@ -175,6 +183,7 @@ class Mixer(
             param.modulators.addAll(randomized)
             param.randomizeBaseValue()
         }
+        morphControllerAll.forceRandomize()
     }
 
     /**
@@ -224,35 +233,27 @@ class Mixer(
         randDeckPV.evaluate()
         randAll.evaluate()
 
-        val valA = randDeckA.value
-        if (prevRandDeckAVal < 0.5f && valA >= 0.5f) {
-            randomizeDeckA()
+        // Continuous random morphing evaluation
+        val isModA = randDeckA.modulators.any { !it.bypassed } || randDeckA.value > 0.0001f
+        if (isModA) {
+            deckA.morphController.update(randDeckA.value)
         }
-        prevRandDeckAVal = valA
-
-        val valB = randDeckB.value
-        if (prevRandDeckBVal < 0.5f && valB >= 0.5f) {
-            randomizeDeckB()
+        val isModB = randDeckB.modulators.any { !it.bypassed } || randDeckB.value > 0.0001f
+        if (isModB) {
+            deckB.morphController.update(randDeckB.value)
         }
-        prevRandDeckBVal = valB
-
-        val valBG = randDeckBG.value
-        if (prevRandDeckBGVal < 0.5f && valBG >= 0.5f) {
-            randomizeDeckBG()
+        val isModBG = randDeckBG.modulators.any { !it.bypassed } || randDeckBG.value > 0.0001f
+        if (isModBG) {
+            deckBG.morphController.update(randDeckBG.value)
         }
-        prevRandDeckBGVal = valBG
-
-        val valPV = randDeckPV.value
-        if (prevRandDeckPVVal < 0.5f && valPV >= 0.5f) {
-            randomizeDeckPV()
+        val isModPV = randDeckPV.modulators.any { !it.bypassed } || randDeckPV.value > 0.0001f
+        if (isModPV) {
+            deckPV.morphController.update(randDeckPV.value)
         }
-        prevRandDeckPVVal = valPV
-
-        val valAll = randAll.value
-        if (prevRandAllVal < 0.5f && valAll >= 0.5f) {
-            randomizeAll()
+        val isModAll = randAll.modulators.any { !it.bypassed } || randAll.value > 0.0001f
+        if (isModAll) {
+            morphControllerAll.update(randAll.value)
         }
-        prevRandAllVal = valAll
     }
 
     /**

@@ -112,7 +112,8 @@ object AudioEngine {
     private var jackClient: JackClient? = null
     private var javaSoundClient: JavaSoundClient? = null
     @Volatile
-    private var automaticReconnectEnabled = true
+    var automaticReconnectEnabled = true
+        private set
     @Volatile
     var lastJackFailure: JackStartFailure? = null
         private set
@@ -181,6 +182,7 @@ object AudioEngine {
 
     fun getEstimatedBpm(): Float = estimatedBpm
     fun isActive(): Boolean = (jackClient?.isConnected == true) || (javaSoundClient?.isConnected == true)
+    fun isJackConnected(): Boolean = jackClient?.isConnected == true
 
     fun getActiveBackendName(): String = when {
         jackClient?.isConnected == true -> "JACK"
@@ -275,11 +277,15 @@ object AudioEngine {
             if (jackStarted) {
                 logger.info { "Successfully started JACK audio client." }
             } else {
-                if (lastJackFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) {
-                    automaticReconnectEnabled = false
-                    logger.warn { "Automatic JACK reconnect disabled until manual retry; native library is missing." }
-                }
+                jackClient?.stop()
                 jackClient = null
+                automaticReconnectEnabled = false
+                val reason = when (lastJackFailure) {
+                    JackStartFailure.NATIVE_LIBRARY_MISSING -> "native library is missing"
+                    JackStartFailure.CONNECTION_FAILED -> "server connection failed"
+                    null -> "startup failed"
+                }
+                logger.warn { "Automatic JACK reconnect disabled until manual retry; $reason." }
             }
         }
 

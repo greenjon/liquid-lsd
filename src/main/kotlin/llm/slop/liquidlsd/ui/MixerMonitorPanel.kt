@@ -124,7 +124,7 @@ class MixerMonitorPanel(
                 mixer.randomizeDeckA()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck A modulators & base values (Mixer/randDeckA).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize Deck A modulators & base values (Mixer/randDeckA).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
             }
             ImGui.popStyleColor(3)
 
@@ -139,7 +139,7 @@ class MixerMonitorPanel(
                 mixer.randomizeDeckB()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck B modulators & base values (Mixer/randDeckB).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize Deck B modulators & base values (Mixer/randDeckB).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
             }
             ImGui.popStyleColor(3)
 
@@ -154,7 +154,7 @@ class MixerMonitorPanel(
                 mixer.randomizeDeckBG()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck BG modulators & base values (Mixer/randDeckBG).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize Deck BG modulators & base values (Mixer/randDeckBG).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
             }
             ImGui.popStyleColor(3)
 
@@ -169,7 +169,7 @@ class MixerMonitorPanel(
                 mixer.randomizeDeckPV()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck PV modulators & base values (Mixer/randDeckPV).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize Deck PV modulators & base values (Mixer/randDeckPV).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
             }
             ImGui.popStyleColor(3)
 
@@ -184,7 +184,7 @@ class MixerMonitorPanel(
                 mixer.randomizeAll()
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
+                ImGui.setTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
             }
             ImGui.popStyleColor(3)
         }
