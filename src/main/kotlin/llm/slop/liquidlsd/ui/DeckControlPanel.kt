@@ -301,10 +301,10 @@ fun drawDeckMonitorToolbar(
     dl.addRect(barX, startY, barX + barW, bottomY, borderCol, 3f)
 
     val labelText = if (activePreset == null) {
-        "Preset: None"
+        "None"
     } else {
         val dirtyMarker = if (isDirty) " *" else ""
-        "Preset: $activePreset$dirtyMarker"
+        "$activePreset$dirtyMarker"
     }
 
     val textY = startY + (rowH - textH) * 0.5f
