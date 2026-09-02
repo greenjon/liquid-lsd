@@ -174,59 +174,16 @@ object LibraryPanel {
 
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
+            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+            val btnW = (24f * fontScale).coerceIn(24f, 40f)
             val btnH = (menuBarH - 8f).coerceAtLeast(20f)
             val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
 
-            UITheme.LibraryMode.entries.forEachIndexed { index, mode ->
-                val active = session.uiTheme.libraryMode == mode
-                val icon = when (mode) {
-                    UITheme.LibraryMode.FULL -> Icons.LAYOUT_FULL
-                    UITheme.LibraryMode.HALF -> Icons.LAYOUT_HALF
-                    UITheme.LibraryMode.HIDE -> Icons.LAYOUT_HIDE
-                }
-
-                if (index > 0) {
-                    ImGui.sameLine(0f, 6f)
-                }
-                ImGui.setCursorPosY(yOffset)
-
-                // Transparent button background style
-                ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
-
-                // Text color: bright white for active, dimmed for inactive
-                if (active) {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 1f, 1f, 1f, 1.0f)
-                } else {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1.0f)
-                }
-
-                if (ImGui.button("$icon##mode_${mode.name}", 0f, btnH)) {
-                    session.uiTheme.libraryMode = mode
-                    when (mode) {
-                        UITheme.LibraryMode.FULL -> isLibraryExpanding = false
-                        UITheme.LibraryMode.HIDE -> isLibraryExpanding = true
-                        UITheme.LibraryMode.HALF -> {}
-                    }
-                    session.uiTheme.saveSettings()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    val modeDesc = when (mode) {
-                        UITheme.LibraryMode.FULL -> "Switch library height to Full size."
-                        UITheme.LibraryMode.HALF -> "Switch library height to Half size."
-                        UITheme.LibraryMode.HIDE -> "Hide the library."
-                    }
-                    ImGui.setTooltip(modeDesc)
-                }
-                ImGui.popStyleColor(4)
-            }
-
-            // Calculate centering for Action Toolbar
+            // Centered Action Toolbar
             val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.TOOLBAR_WIDTH
-            val currentX = ImGui.getCursorPosX()
-            val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceAtLeast(currentX + 16f)
-            ImGui.sameLine(0f, 0f)
+            val windowBtnsW = (btnW * 2f) + 4f
+            val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceIn(8f, (safeW - totalToolbarW - windowBtnsW - 8f).coerceAtLeast(8f))
+
             ImGui.setCursorPosX(targetCenterX)
             ImGui.setCursorPosY(yOffset)
 
@@ -239,6 +196,53 @@ object LibraryPanel {
                 source = activeSelectionSource,
                 btnHeight = btnH
             )
+
+            // Right-aligned Window Control Buttons (Minimize, Maximize / Restore)
+            val rightX = (safeW - windowBtnsW - 8f).coerceAtLeast(ImGui.getCursorPosX() + 8f)
+            ImGui.sameLine(0f, 0f)
+            ImGui.setCursorPosX(rightX)
+            ImGui.setCursorPosY(yOffset)
+
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                // Minimize [-]
+                val isHidden = session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE
+                if (ImGui.button("${Icons.MINUS}##lib_min", btnW, btnH)) {
+                    if (isHidden) {
+                        session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
+                        isLibraryExpanding = true
+                        session.uiTheme.libraryRatio = session.uiTheme.lastCustomLibraryRatio.coerceIn(0.15f, 0.85f)
+                    } else {
+                        session.uiTheme.lastCustomLibraryRatio = session.uiTheme.libraryRatio
+                        session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
+                        isLibraryExpanding = true
+                    }
+                    session.uiTheme.saveSettings()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip(if (isHidden) "Restore Library" else "Minimize Library to bottom bar")
+                }
+
+                ImGui.sameLine(0f, 2f)
+
+                // Maximize / Restore [□] / [❐]
+                val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
+                val maxIcon = if (isFull) Icons.COPY else Icons.SQUARE
+                if (ImGui.button("$maxIcon##lib_max", btnW, btnH)) {
+                    if (isFull) {
+                        session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
+                        isLibraryExpanding = false
+                        session.uiTheme.libraryRatio = session.uiTheme.lastCustomLibraryRatio.coerceIn(0.15f, 0.85f)
+                    } else {
+                        session.uiTheme.lastCustomLibraryRatio = session.uiTheme.libraryRatio
+                        session.uiTheme.libraryMode = UITheme.LibraryMode.FULL
+                        isLibraryExpanding = false
+                    }
+                    session.uiTheme.saveSettings()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip(if (isFull) "Restore Library (Half size)" else "Maximize Library (Full size)")
+                }
+            }
 
             ImGui.endMenuBar()
         }
