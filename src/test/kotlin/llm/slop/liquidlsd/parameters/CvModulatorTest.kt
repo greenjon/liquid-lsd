@@ -422,5 +422,92 @@ class CvModulatorTest {
         val combined = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(targetMods, isBipolar = false, includeBypassed = true)
         assertEquals(0.5f, combined, 0.001f, "Muted bass band should not bleed into active amp modulation sum")
     }
+
+    @Test
+    fun testSquareWaveDutyCycle50Percent() {
+        CVRegistry.setTargetFps(60f)
+        CVRegistry.setRenderFrameCount(0L)
+        val mod = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 100f,
+            waveform = Waveform.SQUARE,
+            slope = 0.5f,
+            hold = 0.999f,
+            morph = 1.0f,
+            bypassed = false
+        )
+
+        // Frame 10 (phase 0.10) should be HIGH (+1.0)
+        CVRegistry.setRenderFrameCount(10L)
+        val v10 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(1.0f, v10, 0.01f)
+
+        // Frame 40 (phase 0.40) should be HIGH (+1.0)
+        CVRegistry.setRenderFrameCount(40L)
+        val v40 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(1.0f, v40, 0.01f)
+
+        // Frame 60 (phase 0.60) should be LOW (-1.0)
+        CVRegistry.setRenderFrameCount(60L)
+        val v60 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(-1.0f, v60, 0.01f)
+
+        // Frame 90 (phase 0.90) should be LOW (-1.0)
+        CVRegistry.setRenderFrameCount(90L)
+        val v90 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
+        assertEquals(-1.0f, v90, 0.01f)
+    }
+
+    @Test
+    fun testSquareWaveDutyCycleVariable() {
+        CVRegistry.setTargetFps(60f)
+        // 20% Duty Cycle (slope = 0.2f)
+        val mod20 = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 100f,
+            waveform = Waveform.SQUARE,
+            slope = 0.2f,
+            hold = 0.999f,
+            morph = 1.0f,
+            bypassed = false
+        )
+        // Frame 10 (phase 0.10 < 0.20) -> +1.0
+        CVRegistry.setRenderFrameCount(10L)
+        assertEquals(1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod20), 0.01f)
+        // Frame 30 (phase 0.30 > 0.20) -> -1.0
+        CVRegistry.setRenderFrameCount(30L)
+        assertEquals(-1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod20), 0.01f)
+
+        // 80% Duty Cycle (slope = 0.8f)
+        val mod80 = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 100f,
+            waveform = Waveform.SQUARE,
+            slope = 0.8f,
+            hold = 0.999f,
+            morph = 1.0f,
+            bypassed = false
+        )
+        // Frame 70 (phase 0.70 < 0.80) -> +1.0
+        CVRegistry.setRenderFrameCount(70L)
+        assertEquals(1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod80), 0.01f)
+        // Frame 90 (phase 0.90 > 0.80) -> -1.0
+        CVRegistry.setRenderFrameCount(90L)
+        assertEquals(-1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod80), 0.01f)
+    }
+
+    @Test
+    fun testHoldMaximumNoNaN() {
+        val squareVal = calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.999f, slope = 0.5f, waveform = Waveform.SQUARE)
+        assertFalse(squareVal.isNaN(), "Square with hold=0.999f must not be NaN")
+        assertFalse(squareVal.isInfinite(), "Square with hold=0.999f must not be Infinite")
+
+        val triVal = calculateAdvancedLFO(0.5, morph = 1.0f, hold = 1.0f, slope = 0.5f, waveform = Waveform.TRIANGLE)
+        assertFalse(triVal.isNaN(), "Hold clamped at 1.0f must not produce NaN")
+        assertFalse(triVal.isInfinite(), "Hold clamped at 1.0f must not produce Infinite")
+    }
 }
 

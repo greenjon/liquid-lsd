@@ -213,18 +213,26 @@ when the user adjusts `subdivision` in time mode. Does not affect evaluation.
 
 **File**: `parameters/WaveformMath.kt`
 
-### `calculateAdvancedLFO(phase, morph, hold, slope)` — used by `lfo`, `beatPhase`, `sampleAndHold`
+### `calculateAdvancedLFO(phase, morph, hold, slope, waveform)` — used by `lfo`, `beatPhase`, `sampleAndHold`
 
 ```
-1. Compute raw triangle: ramp up to 1 from [0, slope), ramp down to 0 from [slope, 1)
-2. Stretch by hold: plateau the peak by compressing the transition into (1 - hold) of the cycle
-3. Apply morph via log-cosh waveshaper:
-       k = lerp(1.5, 15.0, morph)         (higher k = sharper, more sine-like)
+1. If waveform == SQUARE:
+   - slope functions as Duty Cycle D in [0.001, 0.999] (PWM)
+   - Threshold voltage: V_th = 1.0 - 2.0 * D
+   - Slices symmetric triangle through threshold V_th with rising edge aligned to phase 0.0
+   - Scales by 1.0 / (1.0 - safeHold) and clamps to [-1, 1]
+   - Applies morph log-cosh waveshaping
+2. If non-square (SINE, TRIANGLE):
+   - Compute raw triangle: ramp up to 1 from [0, slope), ramp down to 0 from [slope, 1)
+   - Stretch by hold: plateau the peak by compressing transition into (1 - safeHold) of the cycle
+   - safeHold is clamped to [0.0, 0.999] to prevent division by zero while enabling steep vertical edges
+   - Apply morph via log-cosh waveshaper:
+       k = lerp(1.5, 15.0, morph)         (higher k = sharper, more triangle/square-like; lower k = rounded sine)
        shaped = log(cosh(k * tri)) / (k * maxVal)
-4. Output in [-1, 1]
+3. Output in [-1, 1]
 ```
 
-`morph = 0` → sharp triangle. `morph = 1` → smooth near-sine via the log-cosh approximation.
+`morph = 0` → rounded sine-like corners. `morph = 1` → sharp transitions. Hold defaults to `0.999` for square waves.
 
 ### `RANDOM` waveform
 

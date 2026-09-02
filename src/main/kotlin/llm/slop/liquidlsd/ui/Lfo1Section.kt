@@ -62,12 +62,12 @@ object Lfo1Section {
 
             // Square Button
             ImGui.sameLine(0f, 4f * fontScale)
-            val isSquare = existing.waveform == Waveform.SQUARE && existing.morph == 1.0f && existing.hold == 0.5f
+            val isSquare = existing.waveform == Waveform.SQUARE && existing.morph == 1.0f && existing.hold >= 0.99f
             if (CustomIconButton.drawWaveformButton("lfo1_square", WaveShape.SQUARE, isSquare, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(
                     waveform = Waveform.SQUARE,
                     morph = 1.0f,
-                    hold = 0.5f
+                    hold = 0.999f
                 ))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -86,38 +86,39 @@ object Lfo1Section {
                 ImGui.setTooltip("Load step or smooth Random noise LFO.")
             }
 
-            // 2. Slew Preset buttons (only if not Random)
+            // 2. Slew / Duty Preset buttons (only if not Random)
             if (existing.waveform != Waveform.RANDOM) {
-                session.uiTheme.body("Asymmetry:")
+                val isSquareWave = existing.waveform == Waveform.SQUARE
+                session.uiTheme.body(if (isSquareWave) "Duty Preset:" else "Asymmetry:")
                 ImGui.sameLine(0f, 10f * fontScale)
 
                 // Left Button
-                val isLeft = existing.slope <= 0.01f
-                if (CustomIconButton.drawWaveformButton("lfo1_left", WaveShape.RAMP_DOWN, isLeft, themeColor, btnW, btnH)) {
-                    onReplace(existing.copy(slope = 0.001f))
+                val isLeft = if (isSquareWave) existing.slope <= 0.1f else existing.slope <= 0.01f
+                if (CustomIconButton.drawWaveformButton("lfo1_left", if (isSquareWave) WaveShape.SQUARE else WaveShape.RAMP_DOWN, isLeft, themeColor, btnW, btnH)) {
+                    onReplace(existing.copy(slope = if (isSquareWave) 0.1f else 0.001f))
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Set LFO asymmetry fully Left (sawtooth falling / ramp down).")
+                    ImGui.setTooltip(if (isSquareWave) "Set Square duty cycle to 10% (narrow pulse)." else "Set LFO asymmetry fully Left (sawtooth falling / ramp down).")
                 }
 
                 // Center Button
                 ImGui.sameLine(0f, 4f * fontScale)
                 val isCenter = existing.slope >= 0.49f && existing.slope <= 0.51f
-                if (CustomIconButton.drawWaveformButton("lfo1_center", WaveShape.TRIANGLE, isCenter, themeColor, btnW, btnH)) {
+                if (CustomIconButton.drawWaveformButton("lfo1_center", if (isSquareWave) WaveShape.SQUARE else WaveShape.TRIANGLE, isCenter, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = 0.5f))
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Set LFO asymmetry to Center (perfectly symmetrical).")
+                    ImGui.setTooltip(if (isSquareWave) "Set Square duty cycle to 50% (balanced square wave)." else "Set LFO asymmetry to Center (perfectly symmetrical).")
                 }
 
                 // Right Button
                 ImGui.sameLine(0f, 4f * fontScale)
-                val isRight = existing.slope >= 0.99f
-                if (CustomIconButton.drawWaveformButton("lfo1_right", WaveShape.RAMP_UP, isRight, themeColor, btnW, btnH)) {
-                    onReplace(existing.copy(slope = 0.999f))
+                val isRight = if (isSquareWave) existing.slope >= 0.9f else existing.slope >= 0.99f
+                if (CustomIconButton.drawWaveformButton("lfo1_right", if (isSquareWave) WaveShape.SQUARE else WaveShape.RAMP_UP, isRight, themeColor, btnW, btnH)) {
+                    onReplace(existing.copy(slope = if (isSquareWave) 0.9f else 0.999f))
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Set LFO asymmetry fully Right (sawtooth rising / ramp up).")
+                    ImGui.setTooltip(if (isSquareWave) "Set Square duty cycle to 90% (wide pulse)." else "Set LFO asymmetry fully Right (sawtooth rising / ramp up).")
                 }
             }
 
@@ -639,7 +640,7 @@ object Lfo1Section {
                 currentMin = existing.holdMin,
                 currentMax = existing.holdMax,
                 minLimit = 0f,
-                maxLimit = 0.99f,
+                maxLimit = 0.999f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeHold,
                 formatValue = { "%.3f".format(it) },
@@ -648,7 +649,7 @@ object Lfo1Section {
                         val rMin = existing.holdMin
                         val rMax = existing.holdMax
                         val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.99f))
+                            Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.999f))
                         } else {
                             Pair(rMin, rMax)
                         }
@@ -688,10 +689,16 @@ object Lfo1Section {
             )
             ImGui.spacing()
 
-            // -- Slew / Slope Slider (only if not Random) --
+            // -- Slew / Duty Cycle Slider (only if not Random) --
             if (existing.waveform != Waveform.RANDOM) {
+                val isSquare = existing.waveform == Waveform.SQUARE
+                val label = if (isSquare) {
+                    if (isGen) "LFO 1 Duty Cycle" else "Duty Cycle"
+                } else {
+                    if (isGen) "LFO 1 Slew" else "Slew"
+                }
                 CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
-                    label = if (isGen) "LFO 1 Slew" else "Slew",
+                    label = label,
                     themeColor = themeColor,
                     currentValue = existing.slope,
                     currentMin = existing.slopeMin,

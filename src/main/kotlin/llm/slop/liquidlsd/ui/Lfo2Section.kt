@@ -140,12 +140,12 @@ object Lfo2Section {
 
         // Square Button
         ImGui.sameLine(0f, 4f * fontScale)
-        val isModSquare = existing.modWaveform == Waveform.SQUARE && existing.modMorph == 1.0f && existing.modHold == 0.5f
+        val isModSquare = existing.modWaveform == Waveform.SQUARE && existing.modMorph == 1.0f && existing.modHold >= 0.99f
         if (CustomIconButton.drawWaveformButton("lfo2_square_$idx", WaveShape.SQUARE, isModSquare, themeColor, btnW, btnH)) {
             onReplace(existing.copy(
                 modWaveform = Waveform.SQUARE,
                 modMorph = 1.0f,
-                modHold = 0.5f
+                modHold = 0.999f
             ))
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
@@ -164,38 +164,39 @@ object Lfo2Section {
             ImGui.setTooltip("Load step or smooth Random noise for LFO 2.")
         }
 
-        // 3. LFO 2 Slew Preset buttons (only if not Random)
+        // 3. LFO 2 Slew / Duty Preset buttons (only if not Random)
         if (existing.modWaveform != Waveform.RANDOM) {
-            session.uiTheme.body("Asymmetry:")
+            val isModSquareWave = existing.modWaveform == Waveform.SQUARE
+            session.uiTheme.body(if (isModSquareWave) "Duty Preset:" else "Asymmetry:")
             ImGui.sameLine(0f, 10f * fontScale)
 
             // Left Button
-            val isModLeft = existing.modSlope <= 0.01f
-            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", WaveShape.RAMP_DOWN, isModLeft, themeColor, btnW, btnH)) {
-                onReplace(existing.copy(modSlope = 0.001f))
+            val isModLeft = if (isModSquareWave) existing.modSlope <= 0.1f else existing.modSlope <= 0.01f
+            if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", if (isModSquareWave) WaveShape.SQUARE else WaveShape.RAMP_DOWN, isModLeft, themeColor, btnW, btnH)) {
+                onReplace(existing.copy(modSlope = if (isModSquareWave) 0.1f else 0.001f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Set LFO 2 asymmetry fully Left.")
+                ImGui.setTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 10% (narrow pulse)." else "Set LFO 2 asymmetry fully Left.")
             }
 
             // Center Button
             ImGui.sameLine(0f, 4f * fontScale)
             val isModCenter = existing.modSlope >= 0.49f && existing.modSlope <= 0.51f
-            if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", WaveShape.TRIANGLE, isModCenter, themeColor, btnW, btnH)) {
+            if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", if (isModSquareWave) WaveShape.SQUARE else WaveShape.TRIANGLE, isModCenter, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = 0.5f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Set LFO 2 asymmetry to Center.")
+                ImGui.setTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 50% (balanced square wave)." else "Set LFO 2 asymmetry to Center.")
             }
 
             // Right Button
             ImGui.sameLine(0f, 4f * fontScale)
-            val isModRight = existing.modSlope >= 0.99f
-            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", WaveShape.RAMP_UP, isModRight, themeColor, btnW, btnH)) {
-                onReplace(existing.copy(modSlope = 0.999f))
+            val isModRight = if (isModSquareWave) existing.modSlope >= 0.9f else existing.modSlope >= 0.99f
+            if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", if (isModSquareWave) WaveShape.SQUARE else WaveShape.RAMP_UP, isModRight, themeColor, btnW, btnH)) {
+                onReplace(existing.copy(modSlope = if (isModSquareWave) 0.9f else 0.999f))
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Set LFO 2 asymmetry fully Right.")
+                ImGui.setTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 90% (wide pulse)." else "Set LFO 2 asymmetry fully Right.")
             }
         }
 
@@ -645,7 +646,7 @@ object Lfo2Section {
                 currentMin = existing.modHoldMin,
                 currentMax = existing.modHoldMax,
                 minLimit = 0f,
-                maxLimit = 0.99f,
+                maxLimit = 0.999f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeModHold,
                 formatValue = { "%.3f".format(it) },
@@ -654,7 +655,7 @@ object Lfo2Section {
                         val rMin = existing.modHoldMin
                         val rMax = existing.modHoldMax
                         val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.modHold - 0.1f).coerceAtLeast(0f), (existing.modHold + 0.1f).coerceAtMost(0.99f))
+                            Pair((existing.modHold - 0.1f).coerceAtLeast(0f), (existing.modHold + 0.1f).coerceAtMost(0.999f))
                         } else {
                             Pair(rMin, rMax)
                         }
@@ -694,10 +695,11 @@ object Lfo2Section {
             )
             ImGui.spacing()
 
-            // LFO 2 Slew (mod slope, if not random)
+            // LFO 2 Slew / Duty Cycle (mod slope, if not random)
             if (existing.modWaveform != Waveform.RANDOM) {
+                val isModSquareWave = existing.modWaveform == Waveform.SQUARE
                 CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_slope",
-                    label = "LFO 2 Slew",
+                    label = if (isModSquareWave) "LFO 2 Duty Cycle" else "LFO 2 Slew",
                     themeColor = themeColor,
                     currentValue = existing.modSlope,
                     currentMin = existing.modSlopeMin,

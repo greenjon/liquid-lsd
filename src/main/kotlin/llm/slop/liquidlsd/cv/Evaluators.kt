@@ -25,7 +25,7 @@ private fun calculateRandomWaveform(
     previousValue: Float,
     currentValue: Float
 ): Float {
-    val safeHold = hold.coerceIn(0.0f, 0.99f)
+    val safeHold = hold.coerceIn(0.0f, 0.999f)
     val slideDuration = 1.0f - safeHold
     val tSlide = if (positivePhase < slideDuration) {
         (positivePhase / slideDuration).toFloat().coerceIn(0f, 1f)
@@ -66,7 +66,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                 val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
                 calculateRandomWaveform(positivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
             } else {
-                calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope)
+                calculateAdvancedLFO(positivePhase, modulator.morph, modulator.hold, modulator.slope, modulator.waveform)
             }
         }
         "sampleAndHold" -> {
@@ -124,7 +124,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                     val previousValue = randomFloatFromSeed((previousCycle + seed).toLong())
                     calculateRandomWaveform(positivePhase, modulator.modMorph, modulator.modHold, previousValue, currentValue)
                 } else {
-                    calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope)
+                    calculateAdvancedLFO(positivePhase, modulator.modMorph, modulator.modHold, modulator.modSlope, modulator.modWaveform)
                 }
             } else 0f
 
@@ -166,7 +166,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                 val previousValue = randomFloatFromSeed((previousCycle + carrierSeed).toLong())
                 calculateRandomWaveform(carrierPositivePhase, modulator.morph, modulator.hold, previousValue, currentValue)
             } else {
-                calculateAdvancedLFO(carrierPositivePhase, modulator.morph, modulator.hold, modulator.slope)
+                calculateAdvancedLFO(carrierPositivePhase, modulator.morph, modulator.hold, modulator.slope, modulator.waveform)
             }
 
             // Apply final modulation operator (AM, ADD, or NONE/PM)
