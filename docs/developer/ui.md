@@ -15,6 +15,7 @@ graph TD
     PresetGridState[PresetGridState.kt - Selection & 30-level Undo Stack]
     PopupManager[PopupManager.kt - Modal Dialog Management]
     DeckPresetController[DeckPresetController.kt - Deck Presets & File Dialogs]
+    WindowFrameController[WindowFrameController.kt - CSD Dragging & Edge Resizing]
     NoteEditorModal[NoteEditorModal.kt - Note Editor Modal]
     
     UIManager --> SessionContext
@@ -22,6 +23,7 @@ graph TD
     UIManager --> PresetGridState
     UIManager --> PopupManager
     UIManager --> DeckPresetController
+    UIManager --> WindowFrameController
     UIManager --> NoteEditorModal
     
     UIManager --> MenuBar[MenuBar.kt]

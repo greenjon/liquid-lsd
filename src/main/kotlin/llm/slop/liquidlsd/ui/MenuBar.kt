@@ -15,13 +15,20 @@ class MenuBar(
     private val onOpenSettings: () -> Unit,
     private val onOpenAudioEngineMonitor: () -> Unit,
     private val onToggleOutputWindow: () -> Unit = {},
-    private val isOutputWindowOpen: () -> Boolean = { false }
+    private val isOutputWindowOpen: () -> Boolean = { false },
+    private val windowFrameController: WindowFrameController? = null
 ) {
     private val logger = KotlinLogging.logger {}
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.beginMainMenuBar()) {
+                // ── App Brand / Logo ─────────────────────────────────────────────────
+                session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                    ImGui.textColored(0.2f, 0.8f, 1.0f, 1.0f, "${Icons.ACTIVITY} Liquid LSD")
+                }
+                ImGui.sameLine(0f, 10f)
+
                 if (ImGui.beginMenu("File")) {
                     if (ImGui.beginMenu("New Preset")) {
                         if (ImGui.menuItem("To Deck A")) {
@@ -228,8 +235,8 @@ class MenuBar(
                     ImGui.endMenu()
                 }
 
-                // ── Right-aligned performance stats ──────────────────────────────────
-                drawPerformanceStats(session)
+                // ── Right-aligned performance stats & window controls ────────────────
+                drawPerformanceStatsAndControls(session)
 
                 ImGui.endMainMenuBar()
             }
@@ -237,11 +244,10 @@ class MenuBar(
     }
 
     /**
-     * Renders FPS, frame time, CPU%, and BPM right-aligned inside the main menu bar.
-     * Each metric is colourised: green = healthy, yellow = marginal, red = problematic.
-     * Zero allocations per frame (all formatting is done with pre-allocated StringBuilder).
+     * Renders empty drag zone, telemetry stats (FPS, frame time, CPU%, BPM, DSP), and
+     * custom window control buttons (Minimize, Maximize/Restore, Close) when running in frameless mode.
      */
-    private fun drawPerformanceStats(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawPerformanceStatsAndControls(session: llm.slop.liquidlsd.SessionContext) {
         val fps        = PerformanceStats.fps
         val ftMs       = PerformanceStats.frameTimeMs
         val cpuFrac    = PerformanceStats.processCpuFraction   // -1 if unavailable
@@ -263,10 +269,27 @@ class MenuBar(
         val ftText  = "%3.0f ms  ".format(ftMs)
         val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
 
+        val isFrameless = session.uiTheme.framelessWindow && windowFrameController != null
+        val btnW = (24f * fontScale).coerceIn(24f, 40f)
+        val btnH = ImGui.getFrameHeight()
+        val windowBtnsW = if (isFrameless) (btnW * 3f) + (4f * 2f) + 12f else 0f
+
         session.uiTheme.withFont(UITheme.FontLevel.CODE) {
             val barWidth  = ImGui.getContentRegionAvailX()
             val textWidth = ImGui.calcTextSize(fullLabel).x
-            val startX    = ImGui.getCursorPosX() + barWidth - textWidth - dotsTotalW
+            val totalRightW = textWidth + dotsTotalW + windowBtnsW
+            val startX    = ImGui.getCursorPosX() + barWidth - totalRightW
+
+            // ── Top Bar Center Drag Region ───────────────────────────────────────────
+            val currentX = ImGui.getCursorPosX()
+            val dragWidth = (startX - currentX - 8f).coerceAtLeast(0f)
+            if (dragWidth > 5f) {
+                ImGui.invisibleButton("##header_drag_region", dragWidth, btnH)
+                val isHovered = ImGui.isItemHovered()
+                val isDoubleClicked = ImGui.isMouseDoubleClicked(0) && isHovered
+                windowFrameController?.onTopBarInteraction(isHovered, isDoubleClicked)
+                ImGui.sameLine(0f, 8f)
+            }
 
             if (startX > ImGui.getCursorPosX()) {
                 ImGui.setCursorPosX(startX)
@@ -381,6 +404,45 @@ class MenuBar(
             }
             ImGui.text(ftText)
             ImGui.popStyleColor()
+
+            // ── Custom Window Controls (Frameless CSD Mode) ──────────────────────────
+            if (windowFrameController != null && session.uiTheme.framelessWindow) {
+                ImGui.sameLine(0f, 8f)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    // Minimize
+                    if (ImGui.button("—##win_min", btnW, btnH)) {
+                        windowFrameController.minimize()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Minimize")
+                    }
+
+                    ImGui.sameLine(0f, 2f)
+
+                    // Maximize / Restore
+                    val isMax = windowFrameController.isMaximized()
+                    val maxIcon = if (isMax) "❐" else "◻"
+                    if (ImGui.button("$maxIcon##win_max", btnW, btnH)) {
+                        windowFrameController.toggleMaximize()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip(if (isMax) "Restore" else "Maximize")
+                    }
+
+                    ImGui.sameLine(0f, 2f)
+
+                    // Close
+                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.15f, 0.15f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.70f, 0.10f, 0.10f, 1.0f)
+                    if (ImGui.button("✕##win_close", btnW, btnH)) {
+                        onTriggerExitFlow()
+                    }
+                    ImGui.popStyleColor(2)
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Close Liquid LSD")
+                    }
+                }
+            }
         }
     }
 }

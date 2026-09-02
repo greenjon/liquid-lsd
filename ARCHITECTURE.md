@@ -107,6 +107,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── ViewportHelper.kt       — Output scaling modes
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
+│   ├── MenuBar.kt              — Unified header bar, navigation menus, telemetry HUD & window controls
+│   ├── WindowFrameController.kt— Client-Side Decorations (CSD), window dragging & perimeter edge resizing
 │   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager

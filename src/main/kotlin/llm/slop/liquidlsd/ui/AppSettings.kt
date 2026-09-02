@@ -45,5 +45,6 @@ data class AppSettings(
     val recordingBitrateMbps: Int = 12,
     val recordingFps: Int = 60,
     val settingsWidth: Float = 640f,
-    val settingsHeight: Float = 520f
+    val settingsHeight: Float = 520f,
+    val framelessWindow: Boolean = true
 )

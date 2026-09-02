@@ -217,6 +217,10 @@ object UITheme {
         get() = settings.settingsHeight
         set(value) { settings = settings.copy(settingsHeight = value.coerceIn(300f, 2160f)) }
 
+    var framelessWindow: Boolean
+        get() = settings.framelessWindow
+        set(value) { settings = settings.copy(framelessWindow = value) }
+
     fun getDefaultVideosDirectory(): File {
         val configured = settings.recordingDirectory.trim()
         if (configured.isNotBlank()) {
@@ -411,8 +415,9 @@ object UITheme {
                 props.getProperty("recordingFps")?.toIntOrNull()?.let { recordingFps = it }
                 props.getProperty("settingsWidth")?.toFloatOrNull()?.let { settingsWidth = it.coerceIn(400f, 3840f) }
                 props.getProperty("settingsHeight")?.toFloatOrNull()?.let { settingsHeight = it.coerceIn(300f, 2160f) }
+                props.getBoolean("framelessWindow")?.let { framelessWindow = it }
             } else {
-                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps" }
+                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
             }
         } catch (e: Exception) {
             logger.warn(e) { "Failed to load settings, using defaults" }
@@ -468,6 +473,7 @@ object UITheme {
             props.setProperty("recordingFps", recordingFps.toString())
             props.setProperty("settingsWidth", settingsWidth.toString())
             props.setProperty("settingsHeight", settingsHeight.toString())
+            props.setProperty("framelessWindow", framelessWindow.toString())
             val tmpFile = File("${settingsFile.absolutePath}.tmp")
             tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             java.nio.file.Files.move(
@@ -518,7 +524,8 @@ object UITheme {
         0x2000.toShort(), 0x206F.toShort(), // General Punctuation (dashes, quotes, bullets, ellipses)
         0x2190.toShort(), 0x21FF.toShort(), // Arrows (←, ↑, →, ↓)
         0x2200.toShort(), 0x22FF.toShort(), // Mathematical Operators (±, −, ×, etc.)
-        0x25A0.toShort(), 0x25FF.toShort(), // Geometric Shapes (▶, ▼, ●, ○)
+        0x25A0.toShort(), 0x25FF.toShort(), // Geometric Shapes (▶, ▼, ●, ○, ◻, ❐)
+        0x2700.toShort(), 0x27BF.toShort(), // Dingbats (✕, ✔, etc.)
         0
     )
 

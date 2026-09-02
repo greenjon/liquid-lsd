@@ -64,6 +64,8 @@ class UIManager(
 
     val deckPresetController = DeckPresetController(session, popupManager)
 
+    val windowFrameController = WindowFrameController(windowHandle)
+
     private val menuBar = MenuBar(
         popupManager = popupManager,
         presetState = presetState,
@@ -77,7 +79,8 @@ class UIManager(
             pendingOpenSettingsCategory = SettingsPanel.Category.AUDIO_ENGINE
         },
         onToggleOutputWindow = onToggleOutputWindow,
-        isOutputWindowOpen = isOutputWindowOpen
+        isOutputWindowOpen = isOutputWindowOpen,
+        windowFrameController = windowFrameController
     )
 
     private val missingItemsPanel = MissingItemsPanel()
@@ -312,6 +315,7 @@ class UIManager(
         imguiGlfw.newFrame()
         ImGui.newFrame()
         UIThemeStyler.updateUiTransparency(session)
+        windowFrameController.update()
 
         if (!session.uiTheme.cleanModeEnabled) {
             menuBar.draw(session, mixer)
@@ -575,6 +579,7 @@ class UIManager(
     }
 
     fun dispose() {
+        windowFrameController.destroy()
         defaultStyle.destroy()
         imguiGl3.dispose()
         imguiGlfw.dispose()

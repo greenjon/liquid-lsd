@@ -52,6 +52,10 @@ fun main() {
     glfwWindowHintString(GLFW_X11_CLASS_NAME, "Liquid LSD")
     glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "liquid-lsd")
 
+    // Configure window decorations based on user setting (Frameless CSD vs Native)
+    val isFrameless = UITheme.framelessWindow
+    glfwWindowHint(GLFW_DECORATED, if (isFrameless) GLFW_FALSE else GLFW_TRUE)
+
     // Create window
     val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
         ?: throw RuntimeException("Failed to create GLFW window")

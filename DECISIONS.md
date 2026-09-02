@@ -2,6 +2,17 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Unified Title Bar & Custom Window Frame (CSD) (`WindowFrameController.kt`, `MenuBar.kt`)
+
+- **Decision**: Replace the traditional OS title bar with a modern integrated Unified Header & Title Bar (Client-Side Decorations / CSD) combining cross-platform borderless window management with an optional native OS decoration fallback:
+  - **Option A (Pure Cross-Platform GLFW / ImGui CSD)**: Implemented `WindowFrameController` to handle window dragging via empty header bar space, double-click maximize/restore toggling, custom window controls (minimize `—`, maximize/restore `◻`/`❐`, close `✕`), and 4-border/4-corner perimeter hit-testing with dynamic cursor switching (`GLFW_HRESIZE_CURSOR`, `GLFW_VRESIZE_CURSOR`) and minimum bounds clamping (`800x600`).
+  - **Option B (Configurable Native Fallback)**: Added `framelessWindow: Boolean = true` to `AppSettings` (persisted in `lsd-settings.properties`) and a toggle in `SettingsPanel` (`Window Frame & Chrome`). When disabled, `Main.kt` passes `GLFW_DECORATED = GLFW_TRUE`, allowing users on tiling window managers (like i3/sway) to use standard OS decorations while hiding the custom window action buttons in `MenuBar`.
+- **Rationale**:
+  - Reclaims 30–40px of precious vertical screen space on desktop screens, merging menus, telemetry HUD, recording/broadcast controls, and window actions into a single cohesive ~32px top bar.
+  - Pure GLFW/ImGui implementation avoids fragile platform-specific native JNI bindings or OS hook complexity while maintaining 100% portability across Linux (X11/Wayland), macOS, and Windows.
+
+---
+
 ## Harmonized 5-Column CV Modulation Palette & Central Theme Unification (`CvTheme.kt`)
 
 - **Decision**: Redesign the CV modulation color scheme across `PresetGridPanel`, `CellConfigPanel`, and `AudioEnginePanel` to span 5 distinct quadrants of the color wheel with high-contrast, anti-aliased luminance calibrated for dark backgrounds:

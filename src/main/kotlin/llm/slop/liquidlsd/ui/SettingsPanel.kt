@@ -569,6 +569,23 @@ object SettingsPanel {
             session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
             session.uiTheme.saveSettings()
         }
+
+        ImGui.spacing()
+        session.uiTheme.h2("Window Frame & Chrome")
+        ImGui.separator()
+        ImGui.spacing()
+
+        val framelessEnabled = ImBoolean(session.uiTheme.framelessWindow)
+        if (ImGui.checkbox("Frameless Window (Custom Title Bar) [Requires restart]", framelessEnabled)) {
+            val nextVal = framelessEnabled.get()
+            if (nextVal != session.uiTheme.framelessWindow) {
+                session.uiTheme.framelessWindow = nextVal
+                session.uiTheme.saveSettings()
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
+        }
     }
 
     private val serverUrlBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl, 256)
