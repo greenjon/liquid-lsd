@@ -417,14 +417,7 @@ async function init() {
       gl.uniform1f(locs.uD,  evalP(deckData.D || deckData.d || deckData.recipe?.d, 7.0));
 
       gl.uniform1f(locs.uMaxR, sumL > 1e-5 ? targetRadius : 0.001);
-      // TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
-      gl.uniform1f(locs.uYaw,   evalP(deckData.Yaw || deckData.yaw, 0.0));
-      gl.uniform1f(locs.uPitch, evalP(deckData.Pitch || deckData.pitch, 0.0));
-      gl.uniform1f(locs.uPersp, evalP(deckData['3D Persp'] || deckData.persp, 0.5));
-
       gl.uniform1f(locs.uThickness,      evalP(deckData.Thickness || deckData.thickness, 0.012));
-      gl.uniform1f(locs.uGlobalScale,    evalP(deckData.Zoom || deckData.zoom || deckData.globalScale, 0.8));
-      gl.uniform1f(locs.uGlobalRotation, evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
       gl.uniform1f(locs.uAspectRatio,    curWidth / curHeight);
       gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
       gl.uniform1f(locs.uHueSweep,       evalP(deckData['Hue Sweep'] || deckData.hueSweep, 0.3));

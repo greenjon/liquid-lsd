@@ -89,46 +89,6 @@
       "type": "MONOPOLAR",
       "defaultMin": 0.2,
       "defaultMax": 0.6
-    },
-    {
-      "name": "Zoom",
-      "default": 0.125,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR"
-    },
-    {
-      "name": "Rotate Z",
-      "default": 0.0,
-      "min": -3.14,
-      "max": 3.14,
-      "type": "ENDLESS",
-      "isAngle": true
-    },
-    {
-      "name": "Rotate Y",
-      "default": 0.0,
-      "min": -3.14,
-      "max": 3.14,
-      "type": "ENDLESS",
-      "isAngle": true
-    },
-    {
-      "name": "Rotate X",
-      "default": 0.0,
-      "min": -3.14,
-      "max": 3.14,
-      "type": "ENDLESS",
-      "isAngle": true
-    },
-    {
-      "name": "3D Persp",
-      "default": 0.5,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.3,
-      "defaultMax": 0.7
     }
   ]
 }

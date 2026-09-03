@@ -11,15 +11,7 @@ uniform float uB;
 uniform float uC;
 uniform float uD;
 
-// 3D rotations & perspective
-// TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
-uniform float uYaw;
-uniform float uPitch;
-uniform float uPersp;
-
 uniform float uThickness;
-uniform float uGlobalScale;
-uniform float uGlobalRotation;
 uniform float uAspectRatio;
 
 out float vPhase;
@@ -57,45 +49,11 @@ void main() {
         y + normal.y * (side * uThickness * 0.5)
     );
 
-    // 3. 2D Position
-    vec3 pos = vec3(localP, 0.0);
+    // 3. 2D Position scaled to normalized device coordinates
+    vec2 finalPos = localP * 0.5;
 
-    // 4. Apply Roll (rotate around local Z-axis by uGlobalRotation)
-    float cosRoll = cos(uGlobalRotation);
-    float sinRoll = sin(uGlobalRotation);
-    vec3 rPos = vec3(
-        pos.x * cosRoll - pos.y * sinRoll,
-        pos.x * sinRoll + pos.y * cosRoll,
-        pos.z
-    );
-
-    // TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
-    // 5. Apply Pitch (rotate around X-axis by uPitch * PI)
-    float cosPitch = cos(uPitch * PI);
-    float sinPitch = sin(uPitch * PI);
-    rPos = vec3(
-        rPos.x,
-        rPos.y * cosPitch - rPos.z * sinPitch,
-        rPos.y * sinPitch + rPos.z * cosPitch
-    );
-
-    // 6. Apply Yaw (rotate around Y-axis by uYaw * PI)
-    float cosYaw = cos(uYaw * PI);
-    float sinYaw = sin(uYaw * PI);
-    rPos = vec3(
-        rPos.x * cosYaw + rPos.z * sinYaw,
-        rPos.y,
-        -rPos.x * sinYaw + rPos.z * cosYaw
-    );
-
-    // 7. Apply Perspective Projection
-    // Interpolate between flat/orthographic (uPersp = 0.0) and full perspective (uPersp = 1.0)
-    float cameraDistance = 2.0;
-    float perspScale = 1.0 / (cameraDistance - rPos.z * uPersp);
-    vec2 finalPos = rPos.xy * (perspScale * uGlobalScale);
-
-    // 8. Aspect ratio correction
+    // 4. Aspect ratio correction
     finalPos.x /= uAspectRatio;
 
-    gl_Position = vec4(finalPos, rPos.z * 0.1, 1.0);
+    gl_Position = vec4(finalPos, 0.0, 1.0);
 }

@@ -53,18 +53,12 @@ object SourceDocRegistry {
         "mandala/L2" to "Length of arm 2 (second harmonic). Interacts with L1 to shape petal edges.",
         "mandala/L3" to "Length of arm 3 (third harmonic). Adds finer curvature to the figure.",
         "mandala/L4" to "Length of arm 4 (fourth harmonic). Controls innermost detail loops.",
-        "mandala/Zoom" to "Camera zoom. Lower values zoom in; higher values pull back.",
-        "mandala/Rotate Z" to "Rotates the mandala around its central axis. Drive with a slow LFO for a spin effect.",
         "mandala/Thickness" to "Stroke thickness of the curve. Higher = bolder, more filled shapes.",
         "mandala/Hue Offset" to "Shifts the overall hue of the colour palette.",
         "mandala/Hue Sweep" to "Width of the hue gradient swept across the figure. 0 = solid colour; 1 = full rainbow.",
         "mandala/Depth" to "Controls radial depth shading (outer reach vs center).",
         "mandala/Lobes" to "Selects the petal-count group. Each value corresponds to a curated set of recipes.",
         "mandala/Recipe Select" to "Picks a specific recipe within the current Lobes group. Scrub to browse shapes.",
-        // TODO: Rotate Y, Rotate X, and 3D Persp are slated for removal (held off for now)
-        "mandala/Rotate Y" to "3D Y-axis rotation (yaw). Pivots the figure left/right.",
-        "mandala/Rotate X" to "3D X-axis rotation (pitch). Pivots the figure up/down.",
-        "mandala/3D Persp" to "Perspective strength. Higher = stronger depth distortion.",
 
         // Dynamic Spiral
         "dynamic_spiral/Max Points" to "Number of particles in the trail system. Higher = denser but costs more GPU.",

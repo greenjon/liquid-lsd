@@ -195,12 +195,6 @@ class Mandala(
         shader.setUniform("uC", recipe.c.toFloat())
         shader.setUniform("uD", recipe.d.toFloat())
 
-        shader.setUniform("uYaw",   p["Rotate Y"]?.value ?: 0f)
-        shader.setUniform("uPitch", p["Rotate X"]?.value ?: 0f)
-        shader.setUniform("uPersp", p["3D Persp"]?.value ?: 0.5f)
-
-        shader.setUniform("uGlobalScale",    (p["Zoom"]?.value      ?: 0.125f) * 8.0f)
-        shader.setUniform("uGlobalRotation", (p["Rotate Z"]?.value  ?: 0f)    * 2f * Math.PI.toFloat())
         shader.setUniform("uThickness",      (p["Thickness"]?.value ?: 0.5f)  * 0.035f)
 
         val options  = getSymmetricHueCycles(recipe.petals)

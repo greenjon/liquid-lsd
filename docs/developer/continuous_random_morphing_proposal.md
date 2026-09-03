@@ -115,6 +115,7 @@ Because Liquid LSD's modulation engine already provides rich waveforms with `sub
 | **Endless Parameters (Angles & Hues)** | Linear interpolation of angles ($-\pi \to \pi$) or hues ($0 \to 1$) could spin the long way around. | Use shortest-path modular interpolation for `MeterType.ENDLESS` and `explicitIsAngle` parameters. |
 | **Manual UI Button Press** | User clicks `[Rand A]` button in UI. | Instantly generate a new $S_0$ / $S_1$ target pair and trigger an immediate refresh or cycle step. |
 | **Physical MIDI Fader Mapping** | DJ assigns MIDI CC fader to `Mixer/randDeckA`. | Pushing the fader up morphs to state $S_1$; pulling it down morphs to a brand new state $S_2$. Gives infinite manual tactile morphing. |
+| **Toggling Randomization Off Mid-Morph** | User unchecks parameter or modulator randomize flag while `randDeckA` is active. | `DeckMorphController` strictly gates interpolation on `randomize*` flags. Non-randomized fields freeze immediately, snapshot buffers sync to the active values, and subsequent user slider changes are preserved without being overwritten. |
 
 ---
 

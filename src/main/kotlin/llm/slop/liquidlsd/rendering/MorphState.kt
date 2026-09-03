@@ -203,40 +203,158 @@ class DeckMorphController(
         // Apply interpolation
         val params = paramsProvider()
         for (param in params) {
-            val snap0 = state0.parameters[param] ?: continue
-            val snap1 = state1.parameters[param] ?: continue
-
-            // 1. Interpolate base value
-            val lerpedBase = when {
-                param.isAngle -> MorphMath.shortestPathLerpAngle(snap0.baseValue, snap1.baseValue, v)
-                param.meterType == MeterType.ENDLESS -> MorphMath.shortestPathLerpHue(snap0.baseValue, snap1.baseValue, v)
-                else -> MorphMath.lerp(snap0.baseValue, snap1.baseValue, v)
+            var snap0 = state0.parameters[param]
+            if (snap0 == null) {
+                snap0 = ParameterSnapshot(param.baseValue)
+                state0.parameters[param] = snap0
             }
-            param.baseValue = lerpedBase
+            var snap1 = state1.parameters[param]
+            if (snap1 == null) {
+                snap1 = ParameterSnapshot(param.baseValue)
+                state1.parameters[param] = snap1
+            }
 
-            // 2. Interpolate modulator fields in-place
+            // 1. Interpolate base value if enabled
+            if (param.randomizeBase) {
+                val lerpedBase = when {
+                    param.isAngle -> MorphMath.shortestPathLerpAngle(snap0.baseValue, snap1.baseValue, v)
+                    param.meterType == MeterType.ENDLESS -> MorphMath.shortestPathLerpHue(snap0.baseValue, snap1.baseValue, v)
+                    else -> MorphMath.lerp(snap0.baseValue, snap1.baseValue, v)
+                }
+                param.baseValue = lerpedBase
+            } else {
+                // Keep snapshots synchronized with current base value when randomization is disabled
+                snap0.baseValue = param.baseValue
+                snap1.baseValue = param.baseValue
+            }
+
+            // Ensure snapshot modulator lists match current modulators
             val modCount = param.modulators.size
-            val minSnapCount = minOf(snap0.modulators.size, snap1.modulators.size, modCount)
-            for (i in 0 until minSnapCount) {
+            while (snap0.modulators.size < modCount) {
+                val idx = snap0.modulators.size
+                snap0.modulators.add(ModulatorSnapshot().apply { copyFrom(param.modulators[idx]) })
+            }
+            while (snap1.modulators.size < modCount) {
+                val idx = snap1.modulators.size
+                snap1.modulators.add(ModulatorSnapshot().apply { copyFrom(param.modulators[idx]) })
+            }
+            while (snap0.modulators.size > modCount) {
+                snap0.modulators.removeAt(snap0.modulators.size - 1)
+            }
+            while (snap1.modulators.size > modCount) {
+                snap1.modulators.removeAt(snap1.modulators.size - 1)
+            }
+
+            // 2. Interpolate modulator fields in-place for active randomized fields only
+            for (i in 0 until modCount) {
                 val mod = param.modulators[i]
                 val m0 = snap0.modulators[i]
                 val m1 = snap1.modulators[i]
 
-                mod.depth = MorphMath.lerp(m0.depth, m1.depth, v)
-                mod.subdivision = MorphMath.lerp(m0.subdivision, m1.subdivision, v)
-                mod.phaseOffset = MorphMath.lerp(m0.phaseOffset, m1.phaseOffset, v)
-                mod.slope = MorphMath.lerp(m0.slope, m1.slope, v)
-                mod.morph = MorphMath.lerp(m0.morph, m1.morph, v)
-                mod.hold = MorphMath.lerp(m0.hold, m1.hold, v)
-                mod.dcOffset = MorphMath.lerp(m0.dcOffset, m1.dcOffset, v)
-                mod.modSubdivision = MorphMath.lerp(m0.modSubdivision, m1.modSubdivision, v)
-                mod.modPhaseOffset = MorphMath.lerp(m0.modPhaseOffset, m1.modPhaseOffset, v)
-                mod.modSlope = MorphMath.lerp(m0.modSlope, m1.modSlope, v)
-                mod.modMorph = MorphMath.lerp(m0.modMorph, m1.modMorph, v)
-                mod.modHold = MorphMath.lerp(m0.modHold, m1.modHold, v)
-                mod.generatorModDepth = MorphMath.lerp(m0.generatorModDepth, m1.generatorModDepth, v)
-                mod.attackMs = MorphMath.lerp(m0.attackMs, m1.attackMs, v)
-                mod.decayMs = MorphMath.lerp(m0.decayMs, m1.decayMs, v)
+                if (mod.randomizeDepth) {
+                    mod.depth = MorphMath.lerp(m0.depth, m1.depth, v)
+                } else {
+                    m0.depth = mod.depth
+                    m1.depth = mod.depth
+                }
+
+                if (mod.randomizeSubdivision) {
+                    mod.subdivision = MorphMath.lerp(m0.subdivision, m1.subdivision, v)
+                } else {
+                    m0.subdivision = mod.subdivision
+                    m1.subdivision = mod.subdivision
+                }
+
+                if (mod.randomizePhaseOffset) {
+                    mod.phaseOffset = MorphMath.lerp(m0.phaseOffset, m1.phaseOffset, v)
+                } else {
+                    m0.phaseOffset = mod.phaseOffset
+                    m1.phaseOffset = mod.phaseOffset
+                }
+
+                if (mod.randomizeSlope) {
+                    mod.slope = MorphMath.lerp(m0.slope, m1.slope, v)
+                } else {
+                    m0.slope = mod.slope
+                    m1.slope = mod.slope
+                }
+
+                if (mod.randomizeMorph) {
+                    mod.morph = MorphMath.lerp(m0.morph, m1.morph, v)
+                } else {
+                    m0.morph = mod.morph
+                    m1.morph = mod.morph
+                }
+
+                if (mod.randomizeHold) {
+                    mod.hold = MorphMath.lerp(m0.hold, m1.hold, v)
+                } else {
+                    m0.hold = mod.hold
+                    m1.hold = mod.hold
+                }
+
+                if (mod.randomizeDcOffset) {
+                    mod.dcOffset = MorphMath.lerp(m0.dcOffset, m1.dcOffset, v)
+                } else {
+                    m0.dcOffset = mod.dcOffset
+                    m1.dcOffset = mod.dcOffset
+                }
+
+                if (mod.randomizeModSubdivision) {
+                    mod.modSubdivision = MorphMath.lerp(m0.modSubdivision, m1.modSubdivision, v)
+                } else {
+                    m0.modSubdivision = mod.modSubdivision
+                    m1.modSubdivision = mod.modSubdivision
+                }
+
+                if (mod.randomizeModPhaseOffset) {
+                    mod.modPhaseOffset = MorphMath.lerp(m0.modPhaseOffset, m1.modPhaseOffset, v)
+                } else {
+                    m0.modPhaseOffset = mod.modPhaseOffset
+                    m1.modPhaseOffset = mod.modPhaseOffset
+                }
+
+                if (mod.randomizeModSlope) {
+                    mod.modSlope = MorphMath.lerp(m0.modSlope, m1.modSlope, v)
+                } else {
+                    m0.modSlope = mod.modSlope
+                    m1.modSlope = mod.modSlope
+                }
+
+                if (mod.randomizeModMorph) {
+                    mod.modMorph = MorphMath.lerp(m0.modMorph, m1.modMorph, v)
+                } else {
+                    m0.modMorph = mod.modMorph
+                    m1.modMorph = mod.modMorph
+                }
+
+                if (mod.randomizeModHold) {
+                    mod.modHold = MorphMath.lerp(m0.modHold, m1.modHold, v)
+                } else {
+                    m0.modHold = mod.modHold
+                    m1.modHold = mod.modHold
+                }
+
+                if (mod.randomizeGeneratorModDepth) {
+                    mod.generatorModDepth = MorphMath.lerp(m0.generatorModDepth, m1.generatorModDepth, v)
+                } else {
+                    m0.generatorModDepth = mod.generatorModDepth
+                    m1.generatorModDepth = mod.generatorModDepth
+                }
+
+                if (mod.randomizeAttackMs) {
+                    mod.attackMs = MorphMath.lerp(m0.attackMs, m1.attackMs, v)
+                } else {
+                    m0.attackMs = mod.attackMs
+                    m1.attackMs = mod.attackMs
+                }
+
+                if (mod.randomizeDecayMs) {
+                    mod.decayMs = MorphMath.lerp(m0.decayMs, m1.decayMs, v)
+                } else {
+                    m0.decayMs = mod.decayMs
+                    m1.decayMs = mod.decayMs
+                }
             }
         }
     }
@@ -252,26 +370,34 @@ class DeckMorphController(
         val params = paramsProvider()
         for (param in params) {
             val snap0 = state0.parameters[param] ?: continue
-            param.baseValue = snap0.baseValue
+            val snap1 = state1.parameters[param]
+            if (param.randomizeBase) {
+                param.baseValue = snap0.baseValue
+            } else {
+                snap0.baseValue = param.baseValue
+                snap1?.baseValue = param.baseValue
+            }
             val minModCount = minOf(snap0.modulators.size, param.modulators.size)
             for (i in 0 until minModCount) {
                 val mod = param.modulators[i]
                 val m0 = snap0.modulators[i]
-                mod.depth = m0.depth
-                mod.subdivision = m0.subdivision
-                mod.phaseOffset = m0.phaseOffset
-                mod.slope = m0.slope
-                mod.morph = m0.morph
-                mod.hold = m0.hold
-                mod.dcOffset = m0.dcOffset
-                mod.modSubdivision = m0.modSubdivision
-                mod.modPhaseOffset = m0.modPhaseOffset
-                mod.modSlope = m0.modSlope
-                mod.modMorph = m0.modMorph
-                mod.modHold = m0.modHold
-                mod.generatorModDepth = m0.generatorModDepth
-                mod.attackMs = m0.attackMs
-                mod.decayMs = m0.decayMs
+                val m1 = snap1?.modulators?.getOrNull(i)
+
+                if (mod.randomizeDepth) mod.depth = m0.depth else { m0.depth = mod.depth; m1?.depth = mod.depth }
+                if (mod.randomizeSubdivision) mod.subdivision = m0.subdivision else { m0.subdivision = mod.subdivision; m1?.subdivision = mod.subdivision }
+                if (mod.randomizePhaseOffset) mod.phaseOffset = m0.phaseOffset else { m0.phaseOffset = mod.phaseOffset; m1?.phaseOffset = mod.phaseOffset }
+                if (mod.randomizeSlope) mod.slope = m0.slope else { m0.slope = mod.slope; m1?.slope = mod.slope }
+                if (mod.randomizeMorph) mod.morph = m0.morph else { m0.morph = mod.morph; m1?.morph = mod.morph }
+                if (mod.randomizeHold) mod.hold = m0.hold else { m0.hold = mod.hold; m1?.hold = mod.hold }
+                if (mod.randomizeDcOffset) mod.dcOffset = m0.dcOffset else { m0.dcOffset = mod.dcOffset; m1?.dcOffset = mod.dcOffset }
+                if (mod.randomizeModSubdivision) mod.modSubdivision = m0.modSubdivision else { m0.modSubdivision = mod.modSubdivision; m1?.modSubdivision = mod.modSubdivision }
+                if (mod.randomizeModPhaseOffset) mod.modPhaseOffset = m0.modPhaseOffset else { m0.modPhaseOffset = mod.modPhaseOffset; m1?.modPhaseOffset = mod.modPhaseOffset }
+                if (mod.randomizeModSlope) mod.modSlope = m0.modSlope else { m0.modSlope = mod.modSlope; m1?.modSlope = mod.modSlope }
+                if (mod.randomizeModMorph) mod.modMorph = m0.modMorph else { m0.modMorph = mod.modMorph; m1?.modMorph = mod.modMorph }
+                if (mod.randomizeModHold) mod.modHold = m0.modHold else { m0.modHold = mod.modHold; m1?.modHold = mod.modHold }
+                if (mod.randomizeGeneratorModDepth) mod.generatorModDepth = m0.generatorModDepth else { m0.generatorModDepth = mod.generatorModDepth; m1?.generatorModDepth = mod.generatorModDepth }
+                if (mod.randomizeAttackMs) mod.attackMs = m0.attackMs else { m0.attackMs = mod.attackMs; m1?.attackMs = mod.attackMs }
+                if (mod.randomizeDecayMs) mod.decayMs = m0.decayMs else { m0.decayMs = mod.decayMs; m1?.decayMs = mod.decayMs }
             }
         }
     }
