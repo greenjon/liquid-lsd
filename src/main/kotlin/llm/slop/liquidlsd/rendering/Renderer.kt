@@ -15,6 +15,7 @@ class Renderer {
     private val mixerShader: Shader
     val blitShader: Shader
     private val triPlanarShader: Shader
+    private val view2DShader: Shader
 
     private var isDisposed = false
 
@@ -24,6 +25,7 @@ class Renderer {
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
         triPlanarShader = Shader.fromResources("shaders/tri_planar.vert", "shaders/tri_planar.frag")
+        view2DShader = Shader.fromResources("shaders/blit.vert", "shaders/view2d.frag")
     }
 
     fun render(source: VisualSource, targetFBO: FBO) {
@@ -109,7 +111,32 @@ class Renderer {
         // 1. Render clean source image
         val is3D = deck.view3DMode.value >= 0.5f
         if (!is3D) {
-            render(deck.source, deck.cleanFBO)
+            // Render 2D source into rawSource2DFBO (widescreen native resolution)
+            render(deck.source, deck.rawSource2DFBO)
+
+            // Render 2D transformed view (Zoom, Rotate Z) onto cleanFBO
+            deck.cleanFBO.bind()
+            glClearColor(0f, 0f, 0f, 0f)
+            glClear(GL_COLOR_BUFFER_BIT)
+
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+            view2DShader.bind()
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, deck.rawSource2DFBO.texture)
+            view2DShader.setUniform("uTexture", 0)
+
+            view2DShader.setUniform("uZoom", deck.viewZoom.value)
+            view2DShader.setUniform("uRotateZ", deck.viewRotateZ.value)
+            val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
+            view2DShader.setUniform("uAspectRatio", aspect)
+
+            Geometry.drawFullscreenQuad()
+
+            view2DShader.unbind()
+            deck.cleanFBO.unbind()
+            glActiveTexture(GL_TEXTURE0)
         } else {
             // Render 2D source into rawSourceFBO
             render(deck.source, deck.rawSourceFBO)
@@ -259,6 +286,7 @@ class Renderer {
             mixerShader.dispose()
             blitShader.dispose()
             triPlanarShader.dispose()
+            view2DShader.dispose()
             isDisposed = true
         }
     }
