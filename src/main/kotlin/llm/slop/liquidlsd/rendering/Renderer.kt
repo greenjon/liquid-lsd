@@ -210,47 +210,14 @@ class Renderer {
         mandalaShader.setUniform("uL3", normArms[2])
         mandalaShader.setUniform("uL4", normArms[3])
 
-        // Set arm frequency parameters (a to d) with modulation and optional quantization
-        val freqOffset = p["Freq Offset"]?.value ?: 0f
-        val hLock = p["Harmonic Lock"]?.value ?: 1f
-        val maxBound = 12f
-
-        var aVal = mandala.recipe.a.toFloat()
-        var bVal = mandala.recipe.b.toFloat()
-        var cVal = mandala.recipe.c.toFloat()
-        var dVal = mandala.recipe.d.toFloat()
-
-        if (freqOffset > 0.0f) {
-            aVal += freqOffset * maxBound
-            bVal += freqOffset * maxBound * 1.5f
-            cVal += freqOffset * maxBound * 2.0f
-            dVal += freqOffset * maxBound * 2.5f
-        }
-
-        if (hLock > 0.5f) {
-            aVal = kotlin.math.floor(aVal)
-            bVal = kotlin.math.floor(bVal)
-            cVal = kotlin.math.floor(cVal)
-            dVal = kotlin.math.floor(dVal)
-        }
-
-        mandalaShader.setUniform("uA", aVal)
-        mandalaShader.setUniform("uB", bVal)
-        mandalaShader.setUniform("uC", cVal)
-        mandalaShader.setUniform("uD", dVal)
-
-        // Set 3D Mode & Symmetrical Projection parameters
-        val modeVal = p["3D Mode"]?.value ?: 0f
-        val mode = modeVal.roundToInt().coerceIn(0, 4)
-        mandalaShader.setUniform("u3DMode", mode.toFloat())
-        mandalaShader.setUniform("uSphereWrapX", p["Sphere Wrap X"]?.value ?: 1f)
-        mandalaShader.setUniform("uSphereWrapY", p["Sphere Wrap Y"]?.value ?: 1f)
-        mandalaShader.setUniform("uMirrorGroup", p["Mirror Group"]?.value ?: 0f)
-        mandalaShader.setUniform("uPermuteXY", p["Permute XY"]?.value ?: 1f)
-        mandalaShader.setUniform("uPermuteYZ", p["Permute YZ"]?.value ?: 1f)
-        mandalaShader.setUniform("uPermuteZX", p["Permute ZX"]?.value ?: 1f)
+        // Set arm frequency parameters (a to d) directly from recipe
+        mandalaShader.setUniform("uA", mandala.recipe.a.toFloat())
+        mandalaShader.setUniform("uB", mandala.recipe.b.toFloat())
+        mandalaShader.setUniform("uC", mandala.recipe.c.toFloat())
+        mandalaShader.setUniform("uD", mandala.recipe.d.toFloat())
 
         // Set 3D rotations & perspective projection
+        // TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
         mandalaShader.setUniform("uYaw", p["Rotate Y"]?.value ?: 0f)
         mandalaShader.setUniform("uPitch", p["Rotate X"]?.value ?: 0f)
         mandalaShader.setUniform("uPersp", p["3D Persp"]?.value ?: 0.5f)
@@ -287,31 +254,7 @@ class Renderer {
 
         // Render the mandala ribbon
         glBindVertexArray(mandalaVAO)
-        val numInstances = when (mode) {
-            0 -> 1 // 2D
-            1 -> 1 // Spherical
-            2 -> {
-                // Polyhedral/Mirror
-                val mirrorGroup = (p["Mirror Group"]?.value ?: 0f).roundToInt().coerceIn(0, 2)
-                if (mirrorGroup < 2) 8 else 4 // 8 for Cubic (0 or 1), 4 for Tetrahedral (2)
-            }
-            3 -> 3 // Coordinate Permutation
-            4 -> {
-                val mirrorGroup = (p["Mirror Group"]?.value ?: 0f).roundToInt().coerceIn(0, 2)
-                when (mirrorGroup) {
-                    0 -> 1 // No mirror
-                    1 -> 8 // Cubic mirror
-                    2 -> 4 // Tetrahedral mirror
-                    else -> 1
-                }
-            }
-            else -> 1
-        }
-        if (numInstances > 1) {
-            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2, numInstances)
-        } else {
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2)
-        }
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2)
 
         glBindVertexArray(0)
         mandalaShader.unbind()

@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
@@ -45,7 +44,7 @@ object PresetGridTabs {
                 if (w > maxW) maxW = w
             }
         }
-        return (maxW + 18f).coerceAtLeast(42f)
+        return (maxW + 28f).coerceAtLeast(60f)
     }
 
     fun drawLeftTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer? = null, topOffset: Float = 36f) {
@@ -151,7 +150,7 @@ object PresetGridTabs {
 
     fun calculateSourceTabWidth(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, deck: Deck): Float {
         if (deck.isEmpty) return 0f
-        val sourceName = if (deck.source is Mandala) "Mandala" else deck.source.displayName
+        val sourceName = deck.source.displayName
         val displayLabel = "$sourceName  ${Icons.CHEVRON_DOWN}"
         var tw = 0f
         session.uiTheme.withFont(UITheme.FontLevel.H3) { tw = ImGui.calcTextSize(displayLabel).x }
@@ -218,7 +217,7 @@ object PresetGridTabs {
         }
         if (deck.isEmpty) return
 
-        val sourceName = if (deck.source is Mandala) "Mandala" else deck.source.displayName
+        val sourceName = deck.source.displayName
         val displayLabel = "$sourceName  ${Icons.CHEVRON_DOWN}"
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
@@ -259,16 +258,11 @@ object PresetGridTabs {
                 }
             }
 
-            if (ImGui.menuItem("Mandala")) {
-                val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
-                if (masterMandala != null && deck.source != masterMandala) {
-                    changeSource(masterMandala)
-                }
-            }
-
-            VisualSourceRegistry.availableSources.filter { it.id != "mandala" }.forEach { source ->
+            VisualSourceRegistry.availableSources.forEach { source ->
                 if (ImGui.menuItem(source.displayName)) {
-                    changeSource(source)
+                    if (deck.source != source) {
+                        changeSource(source)
+                    }
                 }
             }
             ImGui.endPopup()
@@ -397,82 +391,8 @@ object PresetGridTabs {
         onPushUndo: () -> Unit
     ) {
         val activeSource = deck.source
-        val mandala = activeSource as? Mandala
 
-        if (mandala != null) {
-            // -- Mandala Source Parameters ------------------------------------
-            drawSubGroupContent(session, deckLabel, "SRC", state) {
-                var row = 0
-                PresetGridRenderer.drawParamRow(session, "Lobe Count",    "$deckLabel/Geometry/Lobes",       mandala.parameters["Lobes"]!!,         state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Recipe ID",     "$deckLabel/Geometry/Recipe",      mandala.parameters["Recipe Select"]!!,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "L1",            "$deckLabel/Geometry/L1",          mandala.parameters["L1"]!!,             state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "L2",            "$deckLabel/Geometry/L2",          mandala.parameters["L2"]!!,             state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "L3",            "$deckLabel/Geometry/L3",          mandala.parameters["L3"]!!,             state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "L4",            "$deckLabel/Geometry/L4",          mandala.parameters["L4"]!!,             state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Freq Offset",   "$deckLabel/Geometry/FreqOffset",  mandala.parameters["Freq Offset"]!!,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Harmonic Lock", "$deckLabel/Geometry/HarmonicLock",mandala.parameters["Harmonic Lock"]!!,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "3D Mode",       "$deckLabel/Geometry/3DMode",      mandala.parameters["3D Mode"]!!,        state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                val modeVal = mandala.parameters["3D Mode"]?.value ?: 0f
-                val mode    = modeVal.roundToInt().coerceIn(0, 4)
-                when (mode) {
-                    1 -> {
-                        PresetGridRenderer.drawParamRow(session, "Sphere Wrap X", "$deckLabel/Geometry/SphereWrapX", mandala.parameters["Sphere Wrap X"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        PresetGridRenderer.drawParamRow(session, "Sphere Wrap Y", "$deckLabel/Geometry/SphereWrapY", mandala.parameters["Sphere Wrap Y"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                    2 -> {
-                        PresetGridRenderer.drawParamRow(session, "Mirror Group",  "$deckLabel/Geometry/MirrorGroup",  mandala.parameters["Mirror Group"]!!,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        PresetGridRenderer.drawParamRow(session, "Sphere Wrap X", "$deckLabel/Geometry/SphereWrapX",  mandala.parameters["Sphere Wrap X"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        PresetGridRenderer.drawParamRow(session, "Sphere Wrap Y", "$deckLabel/Geometry/SphereWrapY",  mandala.parameters["Sphere Wrap Y"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                    3 -> {
-                        PresetGridRenderer.drawParamRow(session, "Permute XY", "$deckLabel/Geometry/PermuteXY", mandala.parameters["Permute XY"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        PresetGridRenderer.drawParamRow(session, "Permute YZ", "$deckLabel/Geometry/PermuteYZ", mandala.parameters["Permute YZ"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        PresetGridRenderer.drawParamRow(session, "Permute ZX", "$deckLabel/Geometry/PermuteZX", mandala.parameters["Permute ZX"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                    4 -> {
-                        PresetGridRenderer.drawParamRow(session, "Mirror Group", "$deckLabel/Geometry/MirrorGroup", mandala.parameters["Mirror Group"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                }
-            }
-
-            // -- FX ------------------------------------------------------------
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                var row = 0
-                // Color / Shading
-                PresetGridRenderer.drawParamRow(session, "Thickness",  "$deckLabel/Color/Thickness",  mandala.parameters["Thickness"]!!,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Hue Offset", "$deckLabel/Color/HueOffset",  mandala.parameters["Hue Offset"]!!, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Hue Sweep",  "$deckLabel/Color/HueSweep",   mandala.parameters["Hue Sweep"]!!,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Depth",      "$deckLabel/Color/Depth",      mandala.parameters["Depth"]!!,      state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Gain",       "$deckLabel/Color/Gain",       mandala.globalAlpha,                state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                // Feedback Loop
-                PresetGridRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Rotate",    "$deckLabel/FB/Rotate",   deck.fbRotate,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Hue Shift", "$deckLabel/FB/HueShift", deck.fbHueShift, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Blur",      "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-
-            // -- View ----------------------------------------------------------
-            drawSubGroupContent(session, deckLabel, "View", state) {
-                PresetGridRenderer.drawParamRow(session, "Zoom",     "$deckLabel/View/Zoom",   mandala.parameters["Zoom"]!!,     state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", mandala.parameters["Rotate Z"]!!, state, labelColW, mixer, gridStartX, 1, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", mandala.parameters["Rotate X"]!!, state, labelColW, mixer, gridStartX, 2, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", mandala.parameters["Rotate Y"]!!, state, labelColW, mixer, gridStartX, 3, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                val modeVal = mandala.parameters["3D Mode"]?.value ?: 0f
-                val mode    = modeVal.roundToInt().coerceIn(0, 4)
-                if (mode > 0) {
-                    PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp",   mandala.parameters["3D Persp"]!!, state, labelColW, mixer, gridStartX, 4, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                }
-            }
-
-        } else if (activeSource is DynamicVisualSource) {
+        if (activeSource is DynamicVisualSource) {
             val transformParams = mutableListOf<Map.Entry<String, ModulatableParameter>>()
             val otherParams     = mutableListOf<Map.Entry<String, ModulatableParameter>>()
 

@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.type.ImInt
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.MandalaLibrary
 import kotlin.math.roundToInt
@@ -36,8 +37,9 @@ object ValueParamSection {
         param: ModulatableParameter,
         paramKey: String,
         themeColor: Int,
-        mandala: Mandala?
+        source: DynamicVisualSource?
     ) {
+        val mandala = source as? Mandala
         session.uiTheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey.replace("/", " | "))
         ImGui.separator()
         ImGui.spacing()
@@ -45,9 +47,9 @@ object ValueParamSection {
         // Live value text readout
         val isMixerMode = paramKey == "Mixer/mode"
         val isBgStyle = paramKey.endsWith("/Background/Style")
-        val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep")
-        val isLobes = paramKey.endsWith("/Geometry/Lobes")
-        val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe")
+        val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep") || paramKey.endsWith("/Hue Sweep")
+        val isLobes = paramKey.endsWith("/Geometry/Lobes") || paramKey.endsWith("/Lobes")
+        val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe") || paramKey.endsWith("/Recipe Select") || paramKey.endsWith("/Recipe")
         val isMaxPoints = paramKey.endsWith("/Max Points")
         val liveVal = param.value
         val liveLabel = when {

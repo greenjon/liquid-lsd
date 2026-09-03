@@ -37,53 +37,23 @@ object WebPresetSerializer {
         val fb = serializeFeedback(deck)
 
         return buildJsonObject {
-            if (src is Mandala) {
-                put("source", JsonPrimitive("mandala"))
-                put("L1", JsonPrimitive(round4(src.parameters["L1"]?.value ?: 0.4f)))
-                put("L2", JsonPrimitive(round4(src.parameters["L2"]?.value ?: 0.3f)))
-                put("L3", JsonPrimitive(round4(src.parameters["L3"]?.value ?: 0.2f)))
-                put("L4", JsonPrimitive(round4(src.parameters["L4"]?.value ?: 0.1f)))
-                put("A", JsonPrimitive(src.recipe.a))
-                put("B", JsonPrimitive(src.recipe.b))
-                put("C", JsonPrimitive(src.recipe.c))
-                put("D", JsonPrimitive(src.recipe.d))
-                put("thickness", JsonPrimitive(round4(src.parameters["Thickness"]?.value ?: 0.012f)))
-                put("zoom", JsonPrimitive(round4(src.parameters["Zoom"]?.value ?: 0.8f)))
-                put("rotateZ", JsonPrimitive(round4(src.parameters["Rotate Z"]?.value ?: 0.0f)))
-                put("hueOffset", JsonPrimitive(round4(src.parameters["Hue Offset"]?.value ?: 0.0f)))
-                put("hueSweep", JsonPrimitive(round4(src.parameters["Hue Sweep"]?.value ?: 0.3f)))
-                put("depth", JsonPrimitive(round4(src.parameters["Depth"]?.value ?: 0.35f)))
-                put("maxR", JsonPrimitive(round4(src.parameters["Max R"]?.value ?: 0.85f)))
-                put("feedback", fb)
-            } else if (src is DynamicSpiral || (src is DynamicVisualSource && src.id == "dynamic_spiral")) {
-                put("source", JsonPrimitive("dynamic_spiral"))
-                put("maxPoints", JsonPrimitive(round4(src.parameters["Max Points"]?.value ?: 500f)))
-                put("scale", JsonPrimitive(round4(src.parameters["Scale"]?.value ?: 0.5f)))
-                put("damping", JsonPrimitive(round4(src.parameters["Damping"]?.value ?: 100.0f)))
-                put("waveFreq", JsonPrimitive(round4(src.parameters["Wave Freq"]?.value ?: 0.2f)))
-                put("waveAmp", JsonPrimitive(round4(src.parameters["Wave Amp"]?.value ?: 0.0f)))
-                put("shear", JsonPrimitive(round4(src.parameters["Shear"]?.value ?: 0.1f)))
-                put("speed", JsonPrimitive(round4(src.parameters["Speed"]?.value ?: 0.5f)))
-                put("dotSize", JsonPrimitive(round4(src.parameters["Dot Size"]?.value ?: 0.01f)))
-                put("glow", JsonPrimitive(round4(src.parameters["Glow"]?.value ?: 1.5f)))
-                put("hueOffset", JsonPrimitive(round4(src.parameters["Hue Offset"]?.value ?: 0.33f)))
-                put("hueSweep", JsonPrimitive(round4(src.parameters["Hue Sweep"]?.value ?: 0.01f)))
-                put("trailDecay", JsonPrimitive(round4(src.parameters["Trail Decay"]?.value ?: 0.85f)))
-                if (src is DynamicSpiral) {
-                    put("integratedTime", JsonPrimitive(round4(src.integratedTime)))
-                    put("integratedShear", JsonPrimitive(round4(src.integratedShear)))
-                }
-                put("feedback", fb)
-            } else {
-                val sourceId = if (src is DynamicVisualSource) src.id else "unknown_source"
-                put("source", JsonPrimitive(sourceId))
-                for ((key, param) in src.parameters) {
-                    val cleanKey = key.replace(" ", "")
-                    val camelKey = cleanKey.replaceFirstChar { it.lowercase() }
-                    put(camelKey, JsonPrimitive(round4(param.value)))
-                }
-                put("feedback", fb)
+            val sourceId = if (src is DynamicVisualSource) src.id else "unknown_source"
+            put("source", JsonPrimitive(sourceId))
+            for ((key, param) in src.parameters) {
+                val cleanKey = key.replace(" ", "")
+                val camelKey = cleanKey.replaceFirstChar { it.lowercase() }
+                put(camelKey, JsonPrimitive(round4(param.value)))
             }
+            if (src is Mandala) {
+                put("a", JsonPrimitive(src.recipe.a))
+                put("b", JsonPrimitive(src.recipe.b))
+                put("c", JsonPrimitive(src.recipe.c))
+                put("d", JsonPrimitive(src.recipe.d))
+            } else if (src is DynamicSpiral) {
+                put("integratedTime", JsonPrimitive(round4(src.integratedTime)))
+                put("integratedShear", JsonPrimitive(round4(src.integratedShear)))
+            }
+            put("feedback", fb)
         }
     }
 

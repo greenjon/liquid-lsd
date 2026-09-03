@@ -19,8 +19,8 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
-    // FBO for capturing raw 2D source output before 3D view transformation
-    var rawSourceFBO = FBO(width, height)
+    // FBO for capturing raw 2D source output before 3D view transformation (square 1:1 aspect for orthogonal planes)
+    var rawSourceFBO = FBO(height, height)
 
     // Ping-pong feedback FBOs
     var fb1 = FBO(width, height)
@@ -36,7 +36,7 @@ class Deck(
         fb1.dispose()
         fb2.dispose()
         cleanFBO = FBO(width, height)
-        rawSourceFBO = FBO(width, height)
+        rawSourceFBO = FBO(height, height)
         fb1 = FBO(width, height)
         fb2 = FBO(width, height)
         fb1.clear(0f, 0f, 0f, 0f)

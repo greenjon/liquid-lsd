@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.GenUnit
 import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.rendering.Mandala
+import llm.slop.liquidlsd.rendering.DynamicVisualSource
 
 private val AUDIO_BANDS = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
 private val TRIGGER_BANDS = listOf("trigger_onset", "trigger_accent")
@@ -138,7 +138,7 @@ object CellConfigPanel {
             session.uiTheme.caption("Deck is empty. Add a source or load a preset to configure cell modulation.")
             return
         }
-        val mandala = deck?.source as? Mandala
+        val dynamicSource = deck?.source as? DynamicVisualSource
 
         val activeMods = if (cvId == "midi") {
             param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
@@ -157,7 +157,7 @@ object CellConfigPanel {
         val hasAdvanced = isBeat || isLfo || isSnh
 
         if (cvId == "value" || cvId == "final") {
-            ValueParamSection.draw(session, state, param, paramKey, themeColor, mandala)
+            ValueParamSection.draw(session, state, param, paramKey, themeColor, dynamicSource)
             return
         }
 

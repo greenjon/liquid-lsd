@@ -213,8 +213,7 @@ async function init() {
       prog: mandalaProgram,
       locs: getUniformLocations(gl, mandalaProgram, [
         'uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
-        'u3DMode', 'uSphereWrapX', 'uSphereWrapY', 'uMirrorGroup',
-        'uPermuteXY', 'uPermuteYZ', 'uPermuteZX', 'uMaxR',
+        'uMaxR',
         'uYaw', 'uPitch', 'uPersp',
         'uThickness', 'uGlobalScale', 'uGlobalRotation', 'uAspectRatio',
         'uHueOffset', 'uHueSweep', 'uAlpha', 'uDepth'
@@ -417,17 +416,11 @@ async function init() {
       gl.uniform1f(locs.uC,  evalP(deckData.C || deckData.c || deckData.recipe?.c, 5.0));
       gl.uniform1f(locs.uD,  evalP(deckData.D || deckData.d || deckData.recipe?.d, 7.0));
 
-      gl.uniform1f(locs.u3DMode,      evalP(deckData['3D Mode'] || deckData.mode3D, 0.0));
-      gl.uniform1f(locs.uSphereWrapX, evalP(deckData['Sphere Wrap X'] || deckData.sphereWrapX, 1.0));
-      gl.uniform1f(locs.uSphereWrapY, evalP(deckData['Sphere Wrap Y'] || deckData.sphereWrapY, 1.0));
-      gl.uniform1f(locs.uMirrorGroup, evalP(deckData['Mirror Group'] || deckData.mirrorGroup, 0.0));
-      gl.uniform1f(locs.uPermuteXY,   evalP(deckData['Permute XY'] || deckData.permuteXY, 1.0));
-      gl.uniform1f(locs.uPermuteYZ,   evalP(deckData['Permute YZ'] || deckData.permuteYZ, 1.0));
-      gl.uniform1f(locs.uPermuteZX,   evalP(deckData['Permute ZX'] || deckData.permuteZX, 1.0));
-      gl.uniform1f(locs.uMaxR,         sumL > 1e-5 ? targetRadius : 0.001);
-      gl.uniform1f(locs.uYaw,          evalP(deckData.Yaw || deckData.yaw, 0.0));
-      gl.uniform1f(locs.uPitch,        evalP(deckData.Pitch || deckData.pitch, 0.0));
-      gl.uniform1f(locs.uPersp,        evalP(deckData['3D Persp'] || deckData.persp, 0.5));
+      gl.uniform1f(locs.uMaxR, sumL > 1e-5 ? targetRadius : 0.001);
+      // TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
+      gl.uniform1f(locs.uYaw,   evalP(deckData.Yaw || deckData.yaw, 0.0));
+      gl.uniform1f(locs.uPitch, evalP(deckData.Pitch || deckData.pitch, 0.0));
+      gl.uniform1f(locs.uPersp, evalP(deckData['3D Persp'] || deckData.persp, 0.5));
 
       gl.uniform1f(locs.uThickness,      evalP(deckData.Thickness || deckData.thickness, 0.012));
       gl.uniform1f(locs.uGlobalScale,    evalP(deckData.Zoom || deckData.zoom || deckData.globalScale, 0.8));

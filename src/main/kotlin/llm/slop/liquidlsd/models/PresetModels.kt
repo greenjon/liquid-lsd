@@ -201,7 +201,6 @@ data class DeckPresetDto(
     val name: String,
     val tags: List<String> = emptyList(),
     val visualSourceType: String, // e.g., "Mandala" or "Mandelbulb"
-    val recipe: MandalaRecipeDto? = null, // For restoring recipe structure (Mandala-only)
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
@@ -209,15 +208,6 @@ data class DeckPresetDto(
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
-)
-
-@Serializable
-data class MandalaRecipeDto(
-    val a: Int,
-    val b: Int,
-    val c: Int,
-    val d: Int,
-    val id: String? = null
 )
 
 @Serializable
@@ -381,11 +371,8 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
     this.value = dto.baseValue
 }
 
-fun MandalaRatio.toDto(): MandalaRecipeDto = MandalaRecipeDto(a, b, c, d, id)
-
 fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
-    val sourceName = if (source is llm.slop.liquidlsd.rendering.DynamicVisualSource) (source as llm.slop.liquidlsd.rendering.DynamicVisualSource).id else "mandala"
-    val recipeDto = if (source is Mandala) (source as Mandala).recipe.toDto() else null
+    val sourceName = (source as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id ?: "mandala"
     
     val paramsMap = source.parameters.mapValues { it.value.toDto() }
     
@@ -417,7 +404,6 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         name = name,
         tags = tags,
         visualSourceType = sourceName,
-        recipe = recipeDto,
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
@@ -443,32 +429,13 @@ fun Deck.applyDto(dto: DeckPresetDto) {
         source = matchedSource
     }
     
-    if (source is Mandala) {
-        val mandalaObj = source as Mandala
-        mandalaObj.parameters.values.forEach { it.reset() }
-        val recipeDto = dto.recipe ?: MandalaRecipeDto(3, 3, 3, 3)
-        // Recreate or lookup recipe
-        val recipe = dto.recipe?.id?.let { savedId ->
-            MandalaLibrary.MandalaRatios.firstOrNull { it.id == savedId }
-        } ?: MandalaLibrary.MandalaRatios.firstOrNull {
-            it.a == recipeDto.a && it.b == recipeDto.b &&
-            it.c == recipeDto.c && it.d == recipeDto.d
-        } ?: MandalaRatio(
-            id = "custom_${recipeDto.a}_${recipeDto.b}_${recipeDto.c}_${recipeDto.d}",
-            a = recipeDto.a, b = recipeDto.b, c = recipeDto.c, d = recipeDto.d
-        )
-        mandalaObj.recipe = recipe
-        
-        // Apply visual source parameters directly
-        for ((key, paramDto) in dto.parameters) {
-            mandalaObj.parameters[key]?.applyDto(paramDto)
-        }
-    } else if (source is llm.slop.liquidlsd.rendering.DynamicVisualSource) {
-        val dynObj = source as llm.slop.liquidlsd.rendering.DynamicVisualSource
+    val dynObj = source as? llm.slop.liquidlsd.rendering.DynamicVisualSource
+    if (dynObj != null) {
         dynObj.parameters.values.forEach { it.reset() }
         for ((key, paramDto) in dto.parameters) {
             dynObj.parameters[key]?.applyDto(paramDto)
         }
+        dynObj.update()
     }
 
     // Reset view parameters to baseline defaults before applying

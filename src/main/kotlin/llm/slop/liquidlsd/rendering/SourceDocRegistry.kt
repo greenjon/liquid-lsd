@@ -13,7 +13,7 @@ object SourceDocRegistry {
     /** One-line description of each visual source engine, keyed by source ID. */
     val sourceDescriptions: Map<String, String> = mapOf(
         "mandala" to "Parametric 4-arm Lissajous mandala. Arm lengths and frequency ratios" +
-                " are set by the recipe; hue, depth, and 3D mode shape the final image.",
+                " are set by the recipe; hue, depth, and zoom shape the final image.",
         "dynamic_spiral" to "Particle trail system where points spiral outward under wave," +
                 " shear, and damping forces. High Trail Decay creates luminous streak patterns.",
         "gyroid" to "Triply-periodic minimal surface (Schoen gyroid) rendered by ray-marching." +
@@ -58,21 +58,13 @@ object SourceDocRegistry {
         "mandala/Thickness" to "Stroke thickness of the curve. Higher = bolder, more filled shapes.",
         "mandala/Hue Offset" to "Shifts the overall hue of the colour palette.",
         "mandala/Hue Sweep" to "Width of the hue gradient swept across the figure. 0 = solid colour; 1 = full rainbow.",
-        "mandala/Depth" to "Controls z-depth layering for 3D mode extrusion.",
+        "mandala/Depth" to "Controls radial depth shading (outer reach vs center).",
         "mandala/Lobes" to "Selects the petal-count group. Each value corresponds to a curated set of recipes.",
         "mandala/Recipe Select" to "Picks a specific recipe within the current Lobes group. Scrub to browse shapes.",
-        "mandala/3D Mode" to "3D projection mode: 0 = flat, 1–4 = various sphere/tube wrap modes.",
-        "mandala/Sphere Wrap X" to "Horizontal stretch of the sphere-wrap UV mapping.",
-        "mandala/Sphere Wrap Y" to "Vertical stretch of the sphere-wrap UV mapping.",
-        "mandala/Mirror Group" to "Symmetry group: 0 = none, 1 = 2-fold, 2 = 4-fold.",
-        "mandala/Permute XY" to "Enables XY axis permutation in 3D mode.",
-        "mandala/Permute YZ" to "Enables YZ axis permutation in 3D mode.",
-        "mandala/Permute ZX" to "Enables ZX axis permutation in 3D mode.",
-        "mandala/Rotate Y" to "3D Y-axis rotation (yaw). Pivots the sphere-wrapped figure left/right.",
+        // TODO: Rotate Y, Rotate X, and 3D Persp are slated for removal (held off for now)
+        "mandala/Rotate Y" to "3D Y-axis rotation (yaw). Pivots the figure left/right.",
         "mandala/Rotate X" to "3D X-axis rotation (pitch). Pivots the figure up/down.",
-        "mandala/3D Persp" to "Perspective strength for 3D mode. Higher = stronger depth distortion.",
-        "mandala/Harmonic Lock" to "When 1.0, locks Hue Sweep to the recipe's petal count for perceptually correct colours.",
-        "mandala/Freq Offset" to "Offsets all four arm frequencies by a fractional amount, morphing the figure.",
+        "mandala/3D Persp" to "Perspective strength. Higher = stronger depth distortion.",
 
         // Dynamic Spiral
         "dynamic_spiral/Max Points" to "Number of particles in the trail system. Higher = denser but costs more GPU.",

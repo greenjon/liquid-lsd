@@ -2,6 +2,20 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Mandala Architecture Unification as DynamicVisualSource (`Mandala.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `WebPresetSerializer.kt`)
+
+- **Decision**: Completely unify `Mandala` into the generic `DynamicVisualSource` framework, removing hardcoded `if (source is Mandala)` / `if (mandala != null)` special cases across the serialization, UI, and preset model layers:
+  - **Single Generic Presets Path (`Deck.applyDto`)**: Presets serialize and deserialize `Mandala` strictly using the standard `ModulatableParameter` map (`Lobes`, `Recipe Select`, `L1`–`L4`, etc.). Removed `MandalaRecipeDto` and the redundant `recipe` field on `DeckPresetDto`. When a preset loads, `Mandala.update()` evaluates `Lobes` and `Recipe Select` and restores the matching Fourier ratio automatically.
+  - **Dynamic Parameter & Tab Decomposition (`meta.json`, `PresetGridTabs.kt`)**: Reordered `library/sources/mandala/meta.json` so generator parameters appear in natural logical order (`Lobes`, `Recipe Select`, `L1`–`L4`, `Thickness`, `Hue Offset`, `Hue Sweep`, `Depth`). Spatial transform parameters (`Zoom`, `Rotate Z`, `Rotate Y`, `Rotate X`) automatically route to the generic `View` subtab via `TRANSFORM_PARAM_NAMES`.
+  - **Universal MIDI & Parameter Addressing**: Removed the legacy custom `Mandala.getParameterPaths()` override (which produced non-standard group paths like `Deck A/Geometry/L1`); all Mandala controls now follow the canonical format (`Deck A/Mandala/L1`, `Deck A/Mandala/Gain`).
+  - **Lightweight Web Broadcast Serialization (`WebPresetSerializer.kt`)**: Replaced the 3-way branching `serializeDeck` with a single generic loop over `src.parameters`, accompanied by a 4-line extension emitting Mandala recipe frequencies (`a`, `b`, `c`, `d`) to preserve full WebGL2 client compatibility.
+- **Rationale**:
+  - Treats Mandala as a first-class `DynamicVisualSource`, reducing technical debt, code duplication, and UI fragility.
+  - Eliminates hardcoded visual source branching in `PresetGridTabs.kt` and `PresetGridPanel.kt`.
+  - Preserves 100% backward compatibility for existing `.lsd` files (ignoring legacy `recipe` fields gracefully) and WebGL2 TV clients.
+
+---
+
 ## Continuous Constrained Random Morphing & Flip-Flop State Latches (`MorphState.kt`, `Deck.kt`, `Mixer.kt`)
 
 - **Decision**: Transform discrete one-shot randomization triggers (`Mixer/randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, `randAll`) into continuous $0.0 \leftrightarrow 1.0$ morphing controllers:

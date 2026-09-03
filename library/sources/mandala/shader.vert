@@ -11,17 +11,8 @@ uniform float uB;
 uniform float uC;
 uniform float uD;
 
-// 3D mode & projection uniforms
-uniform float u3DMode;
-uniform float uSphereWrapX;
-uniform float uSphereWrapY;
-uniform float uMirrorGroup;
-uniform float uPermuteXY;
-uniform float uPermuteYZ;
-uniform float uPermuteZX;
-uniform float uMaxR;
-
 // 3D rotations & perspective
+// TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
 uniform float uYaw;
 uniform float uPitch;
 uniform float uPersp;
@@ -35,55 +26,6 @@ out float vPhase;
 out vec2 vCurvePos;
 
 const float PI = 3.14159265359;
-
-mat3 rotationMatrixX(float angle) {
-    float c = cos(angle);
-    float s = sin(angle);
-    return mat3(
-        1.0, 0.0, 0.0,
-        0.0, c,   s,
-        0.0, -s,  c
-    );
-}
-
-mat3 rotationMatrixY(float angle) {
-    float c = cos(angle);
-    float s = sin(angle);
-    return mat3(
-        c,   0.0, -s,
-        0.0, 1.0, 0.0,
-        s,   0.0, c
-    );
-}
-
-mat3 rotationMatrixZ(float angle) {
-    float c = cos(angle);
-    float s = sin(angle);
-    return mat3(
-        c,   s,   0.0,
-        -s,  c,   0.0,
-        0.0, 0.0, 1.0
-    );
-}
-
-vec3 calculateChain(float timeParam) {
-    vec3 f1 = vec3(uA, uB, 0.0);
-    vec3 f2 = vec3(0.0, uC, uD);
-    vec3 f3 = vec3(uD, 0.0, uA);
-    vec3 f4 = vec3(uB, uC, uD);
-
-    mat3 rot1 = rotationMatrixX(f1.x * timeParam) * rotationMatrixY(f1.y * timeParam) * rotationMatrixZ(f1.z * timeParam);
-    mat3 rot2 = rotationMatrixX(f2.x * timeParam) * rotationMatrixY(f2.y * timeParam) * rotationMatrixZ(f2.z * timeParam);
-    mat3 rot3 = rotationMatrixX(f3.x * timeParam) * rotationMatrixY(f3.y * timeParam) * rotationMatrixZ(f3.z * timeParam);
-    mat3 rot4 = rotationMatrixX(f4.x * timeParam) * rotationMatrixY(f4.y * timeParam) * rotationMatrixZ(f4.z * timeParam);
-
-    vec3 arm1 = rot1 * vec3(uL1, 0.0, 0.0);
-    vec3 arm2 = rot1 * (rot2 * vec3(uL2, 0.0, 0.0));
-    vec3 arm3 = rot1 * (rot2 * (rot3 * vec3(uL3, 0.0, 0.0)));
-    vec3 arm4 = rot1 * (rot2 * (rot3 * (rot4 * vec3(uL4, 0.0, 0.0))));
-
-    return arm1 + arm2 + arm3 + arm4;
-}
 
 void main() {
     float phase = aPhaseSide.x;
@@ -115,106 +57,8 @@ void main() {
         y + normal.y * (side * uThickness * 0.5)
     );
 
-    // 3. Compute 3D position based on active mode
-    vec3 pos;
-    if (u3DMode < 0.5) {
-        // Mode 0: 2D
-        pos = vec3(localP, 0.0);
-    } else if (u3DMode < 1.5) {
-        // Mode 1: Spherical Mapping
-        vec2 pNorm = localP / max(0.001, uMaxR);
-        float theta = (pNorm.y + 1.0) * 0.5 * PI * uSphereWrapY;
-        float phi = pNorm.x * PI * uSphereWrapX;
-        pos = vec3(
-            sin(theta) * cos(phi),
-            sin(theta) * sin(phi),
-            cos(theta)
-        ) * uMaxR;
-    } else if (u3DMode < 2.5) {
-        // Mode 2: Polyhedral Reflections (Cubic / Tetrahedral)
-        vec2 pNorm = localP / max(0.001, uMaxR);
-        float theta = (pNorm.y + 1.0) * 0.5 * PI * uSphereWrapY;
-        float phi = pNorm.x * PI * uSphereWrapX;
-        vec3 base3D = vec3(
-            sin(theta) * cos(phi),
-            sin(theta) * sin(phi),
-            cos(theta)
-        ) * uMaxR;
-
-        float sx = 1.0;
-        float sy = 1.0;
-        float sz = 1.0;
-        if (uMirrorGroup < 0.5) {
-            // Cubic mirror: 8 instances (gl_InstanceID: 0..7)
-            sx = ((gl_InstanceID & 1) != 0) ? -1.0 : 1.0;
-            sy = ((gl_InstanceID & 2) != 0) ? -1.0 : 1.0;
-            sz = ((gl_InstanceID & 4) != 0) ? -1.0 : 1.0;
-        } else {
-            // Tetrahedral: 4 instances (gl_InstanceID: 0..3)
-            if (gl_InstanceID == 1) {
-                sx = -1.0; sy = -1.0; sz = 1.0;
-            } else if (gl_InstanceID == 2) {
-                sx = 1.0; sy = -1.0; sz = -1.0;
-            } else if (gl_InstanceID == 3) {
-                sx = -1.0; sy = 1.0; sz = -1.0;
-            }
-        }
-        pos = base3D * vec3(sx, sy, sz);
-    } else if (u3DMode < 3.5) {
-        // Mode 3: Coordinate Permutation (3 instances)
-        if (gl_InstanceID == 0) {
-            pos = vec3(localP.x, localP.y, 0.0) * uPermuteXY;
-        } else if (gl_InstanceID == 1) {
-            pos = vec3(0.0, localP.x, localP.y) * uPermuteYZ;
-        } else {
-            pos = vec3(localP.y, 0.0, localP.x) * uPermuteZX;
-        }
-    } else {
-        // Mode 4: 3D Kinematic Chain
-        vec3 centerPos = calculateChain(t);
-        vec3 centerPosNext = calculateChain(t + 0.001);
-
-        // Resolve mirroring reflections based on uMirrorGroup
-        float sx = 1.0;
-        float sy = 1.0;
-        float sz = 1.0;
-
-        if (uMirrorGroup > 0.5 && uMirrorGroup < 1.5) {
-            // Cubic mirroring (8 instances: gl_InstanceID: 0..7)
-            sx = ((gl_InstanceID & 1) != 0) ? -1.0 : 1.0;
-            sy = ((gl_InstanceID & 2) != 0) ? -1.0 : 1.0;
-            sz = ((gl_InstanceID & 4) != 0) ? -1.0 : 1.0;
-        } else if (uMirrorGroup >= 1.5) {
-            // Tetrahedral mirroring (4 instances: gl_InstanceID: 0..3)
-            if (gl_InstanceID == 1) {
-                sx = -1.0; sy = -1.0; sz = 1.0;
-            } else if (gl_InstanceID == 2) {
-                sx = 1.0; sy = -1.0; sz = -1.0;
-            } else if (gl_InstanceID == 3) {
-                sx = -1.0; sy = 1.0; sz = -1.0;
-            }
-        }
-
-        centerPos = centerPos * vec3(sx, sy, sz);
-        centerPosNext = centerPosNext * vec3(sx, sy, sz);
-
-        vec3 tangent3D = centerPosNext - centerPos;
-        if (length(tangent3D) > 0.0001) {
-            tangent3D = normalize(tangent3D);
-        } else {
-            tangent3D = vec3(0.0);
-        }
-
-        vec3 normal3D = cross(tangent3D, vec3(0.0, 0.0, 1.0));
-        if (length(normal3D) > 0.0001) {
-            normal3D = normalize(normal3D);
-        } else {
-            normal3D = vec3(1.0, 0.0, 0.0);
-        }
-
-        pos = centerPos + normal3D * (side * uThickness * 0.5);
-        vCurvePos = centerPos.xy; // Override for fragment shader radial depth coloring
-    }
+    // 3. 2D Position
+    vec3 pos = vec3(localP, 0.0);
 
     // 4. Apply Roll (rotate around local Z-axis by uGlobalRotation)
     float cosRoll = cos(uGlobalRotation);
@@ -225,6 +69,7 @@ void main() {
         pos.z
     );
 
+    // TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
     // 5. Apply Pitch (rotate around X-axis by uPitch * PI)
     float cosPitch = cos(uPitch * PI);
     float sinPitch = sin(uPitch * PI);

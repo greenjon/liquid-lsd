@@ -173,47 +173,6 @@ class Mandala(
         return copy
     }
 
-    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
-        val list = mutableListOf<Pair<String, ModulatableParameter>>()
-        
-        fun addParam(group: String, nameInList: String, nameInMap: String) {
-            parameters[nameInMap]?.let { list.add("$prefix/$group/$nameInList" to it) }
-        }
-
-        // Geometry
-        addParam("Geometry", "Lobes", "Lobes")
-        addParam("Geometry", "Recipe", "Recipe Select")
-        addParam("Geometry", "L1", "L1")
-        addParam("Geometry", "L2", "L2")
-        addParam("Geometry", "L3", "L3")
-        addParam("Geometry", "L4", "L4")
-        addParam("Geometry", "FreqOffset", "Freq Offset")
-        addParam("Geometry", "HarmonicLock", "Harmonic Lock")
-        addParam("Geometry", "3DMode", "3D Mode")
-        addParam("Geometry", "SphereWrapX", "Sphere Wrap X")
-        addParam("Geometry", "SphereWrapY", "Sphere Wrap Y")
-        addParam("Geometry", "MirrorGroup", "Mirror Group")
-        addParam("Geometry", "PermuteXY", "Permute XY")
-        addParam("Geometry", "PermuteYZ", "Permute YZ")
-        addParam("Geometry", "PermuteZX", "Permute ZX")
-
-        // View
-        addParam("View", "Zoom", "Zoom")
-        addParam("View", "RotateZ", "Rotate Z")
-        addParam("View", "RotateX", "Rotate X")
-        addParam("View", "RotateY", "Rotate Y")
-        addParam("View", "Persp", "3D Persp")
-
-        // Color
-        addParam("Color", "Thickness", "Thickness")
-        addParam("Color", "HueOffset", "Hue Offset")
-        addParam("Color", "HueSweep", "Hue Sweep")
-        addParam("Color", "Depth", "Depth")
-        list.add("$prefix/Color/Gain" to globalAlpha)
-
-        return list
-    }
-
     companion object {
         private val symmetricHueCyclesCache = java.util.concurrent.ConcurrentHashMap<Int, List<Int>>()
         const val POINTS = 2048

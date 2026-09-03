@@ -10,7 +10,6 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
-import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.models.ClipboardManager
@@ -22,7 +21,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.roundToInt
 
-import llm.slop.liquidlsd.rendering.MandalaLibrary
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import java.io.File
 
@@ -542,15 +540,7 @@ object PresetGridPanel {
                     }
                 }
 
-                if (ImGui.menuItem("Mandala")) {
-                    val masterMandala = VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
-                    if (masterMandala != null) {
-                        changeSource(masterMandala)
-                    }
-                }
-
                 for (source in VisualSourceRegistry.availableSources) {
-                    if (source.id == "mandala") continue
                     if (ImGui.menuItem(source.displayName)) {
                         changeSource(source)
                     }

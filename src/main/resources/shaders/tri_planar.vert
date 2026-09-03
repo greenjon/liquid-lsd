@@ -78,14 +78,15 @@ void main() {
     vec3 rPos = rot * localPos;
 
     // Perspective Projection
-    // Virtual camera is situated at (0, 0, 2.5) looking down -Z
+    // Camera is situated at (0, 0, 2.5) looking towards origin
     float cameraDistance = 2.5;
-    float denom = cameraDistance - rPos.z * uPersp;
-    float perspScale = 1.0 / max(0.05, denom);
-    vec2 finalPos = rPos.xy * (perspScale * uZoom * 1.5);
+    float w = max(0.05, cameraDistance - rPos.z * uPersp);
 
-    finalPos.x /= uAspectRatio;
+    // Apply zoom and aspect ratio to clip coordinates so hardware division by w yields perspective-correct interpolation
+    float clipX = (rPos.x * uZoom * 1.5) / uAspectRatio;
+    float clipY = rPos.y * uZoom * 1.5;
+    float clipZ = rPos.z * 0.1;
 
     vCameraDepth = rPos.z;
-    gl_Position = vec4(finalPos, rPos.z * 0.1, 1.0);
+    gl_Position = vec4(clipX, clipY, clipZ, w);
 }

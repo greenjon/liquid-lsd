@@ -288,19 +288,15 @@ Do not rename `CvModulator` fields without adding a corresponding `@SerialName` 
 **File**: `parameters/ParameterResolver.kt`
 
 `getAllParameterPaths(mixer)` returns every `(path, ModulatableParameter)` pair in the mixer,
-using the same `"Deck A/Geometry/Lobes"` path format used by `ClipboardManager` and MIDI
-mapping. Used for undo snapshots and MIDI learn target resolution.
+using the standard hierarchical path format (e.g. `"Deck A/Mandala/Lobes"`, `"Deck A/View/Zoom"`, `"Deck A/FB/Decay"`). Used for undo snapshots and MIDI learn target resolution.
 
-The full parameter list covers (per deck A/B/C):
-- Geometry: Lobes, Recipe, L1–L4, FreqOffset, HarmonicLock, 3DMode, SphereWrap, Mirror, Permute
-- View: Zoom, RotateX/Y/Z, 3DPersp
-- Color: Thickness, HueOffset, HueSweep, Depth, Gain
-- Background: Style, Feedback, Hue, Sat, Val, Sweep, Speed, Zoom
-- Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Source
+All dynamic visual sources (including `Mandala`, `DynamicSpiral`, `Icosahedron`, etc.) inherit from `DynamicVisualSource`, exposing their parameter map generically as `"Deck <X>/<DisplayName>/<Param>"` plus `"Deck <X>/<DisplayName>/Gain"`.
+
+The overall parameter categories cover:
+- Deck Visual Source: mapped dynamically from `source.parameters` (e.g. Lobes, Recipe Select, L1–L4, Thickness, Hue Offset, Hue Sweep, Depth, etc.) + `Gain`
+- Deck View: 3DMode, Zoom, RotateX, RotateY, RotateZ, Persp, DepthDim, Separation, BlendMode
+- Deck Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Kaleido
 - Mixer: crossfade, mode, masterAlpha, bloom, xfadeSpeed, queuePrev, queueNext, bgQueuePrev, bgQueueNext, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll
-
-Dynamic visual sources (`DynamicVisualSource`, `DynamicSpiral`) expose their own parameter maps and are
-resolved generically via the source's `parameters` map + `globalAlpha`.
 
 ---
 

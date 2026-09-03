@@ -3,6 +3,24 @@
   "name": "Mandala",
   "parameters": [
     {
+      "name": "Lobes",
+      "default": 4.0,
+      "min": 3.0,
+      "max": 26.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 3.0,
+      "defaultMax": 26.0
+    },
+    {
+      "name": "Recipe Select",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 1.0,
+      "type": "MONOPOLAR",
+      "defaultMin": 0.0,
+      "defaultMax": 1.0
+    },
+    {
       "name": "L1",
       "default": 0.4,
       "min": 0.0,
@@ -39,21 +57,6 @@
       "defaultMax": 0.3
     },
     {
-      "name": "Zoom",
-      "default": 0.125,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR"
-    },
-    {
-      "name": "Rotate Z",
-      "default": 0.0,
-      "min": -3.14,
-      "max": 3.14,
-      "type": "ENDLESS",
-      "isAngle": true
-    },
-    {
       "name": "Thickness",
       "default": 0.5,
       "min": 0.0,
@@ -88,83 +91,19 @@
       "defaultMax": 0.6
     },
     {
-      "name": "Lobes",
-      "default": 4.0,
-      "min": 3.0,
-      "max": 26.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 3.0,
-      "defaultMax": 26.0
-    },
-    {
-      "name": "Recipe Select",
-      "default": 0.0,
+      "name": "Zoom",
+      "default": 0.125,
       "min": 0.0,
       "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 1.0
-    },
-    {
-      "name": "3D Mode",
-      "default": 0.0,
-      "min": 0.0,
-      "max": 4.0,
       "type": "MONOPOLAR"
     },
     {
-      "name": "Sphere Wrap X",
-      "default": 1.0,
-      "min": 0.1,
-      "max": 4.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.5,
-      "defaultMax": 2.0
-    },
-    {
-      "name": "Sphere Wrap Y",
-      "default": 1.0,
-      "min": 0.1,
-      "max": 4.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.5,
-      "defaultMax": 2.0
-    },
-    {
-      "name": "Mirror Group",
+      "name": "Rotate Z",
       "default": 0.0,
-      "min": 0.0,
-      "max": 2.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 2.0
-    },
-    {
-      "name": "Permute XY",
-      "default": 1.0,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 1.0
-    },
-    {
-      "name": "Permute YZ",
-      "default": 1.0,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 1.0
-    },
-    {
-      "name": "Permute ZX",
-      "default": 1.0,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 1.0
+      "min": -3.14,
+      "max": 3.14,
+      "type": "ENDLESS",
+      "isAngle": true
     },
     {
       "name": "Rotate Y",
@@ -190,22 +129,6 @@
       "type": "MONOPOLAR",
       "defaultMin": 0.3,
       "defaultMax": 0.7
-    },
-    {
-      "name": "Harmonic Lock",
-      "default": 1.0,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR",
-      "defaultMin": 0.0,
-      "defaultMax": 1.0
-    },
-    {
-      "name": "Freq Offset",
-      "default": 0.0,
-      "min": 0.0,
-      "max": 1.0,
-      "type": "MONOPOLAR"
     }
   ]
 }
