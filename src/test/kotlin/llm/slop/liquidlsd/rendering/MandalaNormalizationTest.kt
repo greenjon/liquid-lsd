@@ -9,35 +9,35 @@ class MandalaNormalizationTest {
 
     @Test
     fun testDefaultArmLengthsNormalization() {
-        // Default arm lengths: 0.4, 0.3, 0.2, 0.1 (sum = 1.0)
+        // Default arm lengths: 0.4, 0.3, 0.2, 0.1 (sum = 1.0, scaled to TARGET_RADIUS = 2.0)
         val normalized = Mandala.computeNormalizedArmLengths(0.4f, 0.3f, 0.2f, 0.1f)
-        assertEquals(0.4f, normalized[0], 1e-5f)
-        assertEquals(0.3f, normalized[1], 1e-5f)
-        assertEquals(0.2f, normalized[2], 1e-5f)
-        assertEquals(0.1f, normalized[3], 1e-5f)
+        assertEquals(0.8f, normalized[0], 1e-5f)
+        assertEquals(0.6f, normalized[1], 1e-5f)
+        assertEquals(0.4f, normalized[2], 1e-5f)
+        assertEquals(0.2f, normalized[3], 1e-5f)
         val sum = normalized.sumOf { abs(it.toDouble()) }.toFloat()
         assertEquals(Mandala.TARGET_RADIUS, sum, 1e-5f)
     }
 
     @Test
     fun testScaledUpArmLengthsNormalization() {
-        // All arms near maximum (1.0, 1.0, 1.0, 1.0 -> sum = 4.0)
+        // All arms near maximum (1.0, 1.0, 1.0, 1.0 -> sum = 4.0, scaled to TARGET_RADIUS = 2.0)
         val normalized = Mandala.computeNormalizedArmLengths(1.0f, 1.0f, 1.0f, 1.0f)
-        assertEquals(0.25f, normalized[0], 1e-5f)
-        assertEquals(0.25f, normalized[1], 1e-5f)
-        assertEquals(0.25f, normalized[2], 1e-5f)
-        assertEquals(0.25f, normalized[3], 1e-5f)
+        assertEquals(0.5f, normalized[0], 1e-5f)
+        assertEquals(0.5f, normalized[1], 1e-5f)
+        assertEquals(0.5f, normalized[2], 1e-5f)
+        assertEquals(0.5f, normalized[3], 1e-5f)
         val sum = normalized.sumOf { abs(it.toDouble()) }.toFloat()
         assertEquals(Mandala.TARGET_RADIUS, sum, 1e-5f)
     }
 
     @Test
     fun testSmallArmLengthsNormalization() {
-        // Multiple arms set low (sum = 0.2)
+        // Multiple arms set low (sum = 0.2, scaled to TARGET_RADIUS = 2.0)
         val normalized = Mandala.computeNormalizedArmLengths(0.1f, 0.05f, 0.05f, 0.0f)
-        assertEquals(0.5f, normalized[0], 1e-5f)
-        assertEquals(0.25f, normalized[1], 1e-5f)
-        assertEquals(0.25f, normalized[2], 1e-5f)
+        assertEquals(1.0f, normalized[0], 1e-5f)
+        assertEquals(0.5f, normalized[1], 1e-5f)
+        assertEquals(0.5f, normalized[2], 1e-5f)
         assertEquals(0.0f, normalized[3], 1e-5f)
         val sum = normalized.sumOf { abs(it.toDouble()) }.toFloat()
         assertEquals(Mandala.TARGET_RADIUS, sum, 1e-5f)
@@ -62,12 +62,12 @@ class MandalaNormalizationTest {
 
     @Test
     fun testBipolarModulatedArmLengths() {
-        // Modulators can produce negative values; signs must be preserved while sum of abs equals 1.0
+        // Modulators can produce negative values; signs must be preserved while sum of abs equals TARGET_RADIUS
         val normalized = Mandala.computeNormalizedArmLengths(-0.3f, 0.3f, -0.2f, 0.2f)
-        assertEquals(-0.3f, normalized[0], 1e-5f)
-        assertEquals(0.3f, normalized[1], 1e-5f)
-        assertEquals(-0.2f, normalized[2], 1e-5f)
-        assertEquals(0.2f, normalized[3], 1e-5f)
+        assertEquals(-0.6f, normalized[0], 1e-5f)
+        assertEquals(0.6f, normalized[1], 1e-5f)
+        assertEquals(-0.4f, normalized[2], 1e-5f)
+        assertEquals(0.4f, normalized[3], 1e-5f)
         val sum = normalized.sumOf { abs(it.toDouble()) }.toFloat()
         assertEquals(Mandala.TARGET_RADIUS, sum, 1e-5f)
     }

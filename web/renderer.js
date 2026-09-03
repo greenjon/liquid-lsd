@@ -404,7 +404,7 @@ async function init() {
       const rawL3 = evalP(deckData.L3 || deckData.l3, 0.2);
       const rawL4 = evalP(deckData.L4 || deckData.l4, 0.1);
       const sumL = Math.abs(rawL1) + Math.abs(rawL2) + Math.abs(rawL3) + Math.abs(rawL4);
-      const targetRadius = 1.0;
+      const targetRadius = 2.0;
       const normScale = sumL > 1e-5 ? (targetRadius / sumL) : 0.0;
 
       gl.uniform1f(locs.uL1, rawL1 * normScale);

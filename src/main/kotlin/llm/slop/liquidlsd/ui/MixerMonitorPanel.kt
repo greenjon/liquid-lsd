@@ -44,6 +44,15 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.image(mixer.masterFBO.texture, availW, masterH, 0f, 1f, 1f, 0f)
 
+        ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
+        ImGui.invisibleButton("##main_output_monitor", availW.coerceAtLeast(1f), masterH.coerceAtLeast(1f))
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Main output monitor. Click to focus Preset Grid Mix tab.")
+        }
+        if (ImGui.isItemClicked(0)) {
+            presetState.activeTopTab = "Mixer"
+        }
+
         // Live recording tally badge overlay
         if (llm.slop.liquidlsd.export.RealtimeRecorder.isRecording) {
             val elapsed = llm.slop.liquidlsd.export.RealtimeRecorder.elapsedSeconds.toInt()

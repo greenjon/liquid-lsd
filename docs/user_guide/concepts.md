@@ -41,7 +41,7 @@ Every deck runs a pluggable **Visual Source** that generates procedural geometry
 The core procedural geometry generator:
 - **Lobe Count (Petals)**: Controls rotational symmetry (how many repeating arms are generated).
 - **Mandala Ratios**: Accesses a curated library of ~300 ratio presets determining mathematical harmonic intersections.
-- **Analytical Size Normalization**: Automatically normalizes 4 arm lengths ($L_1 \dots L_4$) using sum-of-lengths scaling ($\text{scale} = R_{\text{target}} / \sum |L_i|$ where $R_{\text{target}} = 1.0$), keeping outer boundary scale stable across all slider configurations and dynamic LFO modulations.
+- **Analytical Size Normalization**: Automatically normalizes 4 arm lengths ($L_1 \dots L_4$) using sum-of-lengths scaling ($\text{scale} = R_{\text{target}} / \sum |L_i|$ where $R_{\text{target}} = 2.0$), keeping outer boundary scale stable and filling the screen height comfortably across all slider configurations and dynamic LFO modulations.
 - **3D Projections**:
   - *Spherical Mapping*: Extrudes 2D curves onto a 3D sphere via longitude/latitude angles.
   - *Polyhedral Reflections*: Replicates curves across Cubic/Octahedral (8 instances) or Tetrahedral (4 instances) reflection groups.
@@ -137,7 +137,7 @@ The central Mixer blends the outputs of Deck A and Deck B to form the master vid
 - **`MAX`** (Lighten): Compares A and B per-pixel and selects the brightest color.
 - **`XFADE`** (Crossfade): Standard linear interpolation between Deck A and Deck B.
 
-Mix modes can be configured directly in the **Preset Grid (MIX tab)** by selecting the **VAL** cell on the **mix mode** row and choosing from the dropdown combo. Mix mode is non-modulatable to provide a solid compositing baseline for crossfade operations.
+Mix modes can be configured directly in the **Preset Grid (MIX tab)** by selecting the **VAL** cell on the **mix mode** row and choosing from the dropdown combo. Mix mode is non-modulatable to provide a solid compositing baseline for crossfade operations. Left-clicking the main output monitor in the Mixer Monitor panel instantly opens the **MIX** tab, mirroring the deck preview monitor click shortcuts (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`).
 
 ### Crossfader Modulation & Manual Takeover
 The `crossfade` slider interpolates between Deck A (-1.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.

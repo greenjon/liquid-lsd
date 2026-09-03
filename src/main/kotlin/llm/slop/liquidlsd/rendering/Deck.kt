@@ -22,6 +22,9 @@ class Deck(
     // FBO for capturing raw 2D source output before 3D view transformation (square 1:1 aspect for orthogonal planes)
     var rawSourceFBO = FBO(height, height)
 
+    // FBO for capturing raw 2D source output before 2D view transformation (Zoom, Rotate Z)
+    var rawSource2DFBO = FBO(width, height)
+
     // Ping-pong feedback FBOs
     var fb1 = FBO(width, height)
     var fb2 = FBO(width, height)
@@ -33,16 +36,19 @@ class Deck(
         height = newHeight
         cleanFBO.dispose()
         rawSourceFBO.dispose()
+        rawSource2DFBO.dispose()
         fb1.dispose()
         fb2.dispose()
         cleanFBO = FBO(width, height)
         rawSourceFBO = FBO(height, height)
+        rawSource2DFBO = FBO(width, height)
         fb1 = FBO(width, height)
         fb2 = FBO(width, height)
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         rawSourceFBO.clear(0f, 0f, 0f, 0f)
+        rawSource2DFBO.clear(0f, 0f, 0f, 0f)
         fbIndex = 0
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
@@ -90,6 +96,7 @@ class Deck(
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         rawSourceFBO.clear(0f, 0f, 0f, 0f)
+        rawSource2DFBO.clear(0f, 0f, 0f, 0f)
         
         val initialId = (source as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
@@ -134,6 +141,7 @@ class Deck(
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         rawSourceFBO.clear(0f, 0f, 0f, 0f)
+        rawSource2DFBO.clear(0f, 0f, 0f, 0f)
         morphController.initFromCurrentState()
     }
 
@@ -228,6 +236,7 @@ class Deck(
     fun dispose() {
         cleanFBO.dispose()
         rawSourceFBO.dispose()
+        rawSource2DFBO.dispose()
         fb1.dispose()
         fb2.dispose()
         // Note: `source` is always one of the entries in `availableSources`, so the

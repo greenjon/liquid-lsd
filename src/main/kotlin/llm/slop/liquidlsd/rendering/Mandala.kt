@@ -251,7 +251,7 @@ class Mandala(
     companion object {
         private val symmetricHueCyclesCache = java.util.concurrent.ConcurrentHashMap<Int, List<Int>>()
         const val POINTS = 2048
-        const val TARGET_RADIUS = 1.0f
+        const val TARGET_RADIUS = 2.0f
 
         /**
          * Normalizes 4 arm lengths using Sum-of-Lengths (Option 1):
