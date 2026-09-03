@@ -67,13 +67,37 @@ data class ModulatorSnapshot(
 data class ParameterSnapshot(
     var baseValue: Float = 0f,
     val modulators: MutableList<ModulatorSnapshot> = mutableListOf()
-)
+) {
+    fun copyFrom(other: ParameterSnapshot) {
+        baseValue = other.baseValue
+        while (modulators.size < other.modulators.size) {
+            modulators.add(ModulatorSnapshot())
+        }
+        while (modulators.size > other.modulators.size) {
+            modulators.removeAt(modulators.size - 1)
+        }
+        for (i in 0 until other.modulators.size) {
+            modulators[i].copyFrom(other.modulators[i])
+        }
+    }
+}
 
 class DeckMorphSnapshot {
     val parameters = mutableMapOf<ModulatableParameter, ParameterSnapshot>()
 
     fun clear() {
         parameters.clear()
+    }
+
+    fun copyFrom(other: DeckMorphSnapshot) {
+        for ((param, otherSnap) in other.parameters) {
+            var mySnap = parameters[param]
+            if (mySnap == null) {
+                mySnap = ParameterSnapshot()
+                parameters[param] = mySnap
+            }
+            mySnap.copyFrom(otherSnap)
+        }
     }
 }
 
@@ -117,6 +141,19 @@ class DeckMorphController(
     var isInitialized: Boolean = false
         private set
 
+    var hasPrevV: Boolean = false
+        private set
+    var prevV: Float = 0.5f
+        private set
+
+    /**
+     * Resets previous tracking state (e.g. on full re-init or forceRandomize).
+     */
+    fun resetTracking() {
+        hasPrevV = false
+        prevV = 0.5f
+    }
+
     /**
      * Initializes state0 and state1 from current parameter values.
      */
@@ -138,6 +175,7 @@ class DeckMorphController(
         }
         latchTarget = BoundaryTarget.READY_FOR_ONE
         isInitialized = true
+        resetTracking()
     }
 
     /**
@@ -181,7 +219,7 @@ class DeckMorphController(
 
     /**
      * Applies continuous morphing based on normalized parameter value [v] in [0.0, 1.0].
-     * Handles boundary crossing latch updates and in-place interpolation.
+     * Handles boundary crossing latch updates, unidirectional wrap-around rotation, and in-place interpolation.
      */
     fun update(vRaw: Float) {
         val v = vRaw.coerceIn(0f, 1f)
@@ -189,16 +227,49 @@ class DeckMorphController(
         if (!isInitialized) {
             initFromCurrentState()
             sampleNewState(state1)
+            prevV = v
+            hasPrevV = true
         }
 
-        // Boundary crossing state machine
-        if (latchTarget == BoundaryTarget.READY_FOR_ONE && v >= 0.99f) {
-            latchTarget = BoundaryTarget.READY_FOR_ZERO
-            sampleNewState(state0)
-        } else if (latchTarget == BoundaryTarget.READY_FOR_ZERO && v <= 0.01f) {
-            latchTarget = BoundaryTarget.READY_FOR_ONE
-            sampleNewState(state1)
+        // Check for unidirectional wrap-around (e.g. Sawtooth ramp or beatPhase)
+        if (hasPrevV) {
+            val delta = v - prevV
+            if (prevV >= 0.7f && v <= 0.3f && delta < -0.4f) {
+                // Forward ramp wrap-around (e.g. 1.0 -> 0.0):
+                // We reached state1 at the top of the ramp.
+                // Promote state1 to become state0, and sample fresh target into state1.
+                state0.copyFrom(state1)
+                sampleNewState(state1)
+                latchTarget = BoundaryTarget.READY_FOR_ONE
+            } else if (prevV <= 0.3f && v >= 0.7f && delta > 0.4f) {
+                // Reverse ramp wrap-around (e.g. 0.0 -> 1.0):
+                // We reached state0 at the bottom of the ramp.
+                // Promote state0 to become state1, and sample fresh target into state0.
+                state1.copyFrom(state0)
+                sampleNewState(state0)
+                latchTarget = BoundaryTarget.READY_FOR_ZERO
+            } else {
+                // Standard bidirectional ping-pong boundary crossing state machine
+                if (latchTarget == BoundaryTarget.READY_FOR_ONE && v >= 0.99f) {
+                    latchTarget = BoundaryTarget.READY_FOR_ZERO
+                    sampleNewState(state0)
+                } else if (latchTarget == BoundaryTarget.READY_FOR_ZERO && v <= 0.01f) {
+                    latchTarget = BoundaryTarget.READY_FOR_ONE
+                    sampleNewState(state1)
+                }
+            }
+        } else {
+            if (latchTarget == BoundaryTarget.READY_FOR_ONE && v >= 0.99f) {
+                latchTarget = BoundaryTarget.READY_FOR_ZERO
+                sampleNewState(state0)
+            } else if (latchTarget == BoundaryTarget.READY_FOR_ZERO && v <= 0.01f) {
+                latchTarget = BoundaryTarget.READY_FOR_ONE
+                sampleNewState(state1)
+            }
         }
+
+        prevV = v
+        hasPrevV = true
 
         // Apply interpolation
         val params = paramsProvider()
@@ -367,6 +438,7 @@ class DeckMorphController(
         sampleNewState(state1, random)
         latchTarget = BoundaryTarget.READY_FOR_ONE
         isInitialized = true
+        resetTracking()
         val params = paramsProvider()
         for (param in params) {
             val snap0 = state0.parameters[param] ?: continue

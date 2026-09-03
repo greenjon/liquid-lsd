@@ -220,4 +220,82 @@ class MorphStateTest {
         assertEquals(0.5f, s0.slope, 0.0001f)
         assertEquals(0.5f, s1.slope, 0.0001f)
     }
+
+    @Test
+    fun testDeckMorphControllerUnidirectionalRampWrapAround() {
+        val param = ModulatableParameter(baseValue = 0.2f, minClamp = 0f, maxClamp = 1f, randomizeBase = true).apply {
+            baseMin = 0.0f
+            baseMax = 1.0f
+        }
+        val controller = DeckMorphController { listOf(param) }
+        controller.initFromCurrentState()
+
+        val s0 = controller.state0.parameters[param]!!
+        val s1 = controller.state1.parameters[param]!!
+        s0.baseValue = 0.2f
+        s1.baseValue = 0.8f
+
+        // Ramp ascends: 0.0 -> 0.5 -> 0.99 -> 1.0
+        controller.update(0.0f)
+        assertEquals(0.2f, param.baseValue, 0.0001f)
+
+        controller.update(0.5f)
+        assertEquals(0.5f, param.baseValue, 0.0001f)
+
+        controller.update(1.0f)
+        assertEquals(0.8f, param.baseValue, 0.0001f)
+
+        // Sawtooth drop from 1.0 to 0.0:
+        // Must rotate state1 into state0, roll new state1, and evaluate at v = 0.0 to 0.8f (ZERO JUMP!)
+        controller.update(0.0f)
+
+        assertEquals(0.8f, controller.state0.parameters[param]!!.baseValue, 0.0001f)
+        assertEquals(0.8f, param.baseValue, 0.0001f, "Expected seamless continuity at ramp reset without jump cut")
+
+        // New target state1 has been sampled
+        val nextTarget = controller.state1.parameters[param]!!.baseValue
+
+        // Ramp climbs again towards the new target
+        controller.update(0.5f)
+        val expectedMid = 0.8f + (nextTarget - 0.8f) * 0.5f
+        assertEquals(expectedMid, param.baseValue, 0.0001f)
+
+        controller.update(1.0f)
+        assertEquals(nextTarget, param.baseValue, 0.0001f)
+    }
+
+    @Test
+    fun testDeckMorphControllerUnidirectionalRampDownWrapAround() {
+        val param = ModulatableParameter(baseValue = 0.8f, minClamp = 0f, maxClamp = 1f, randomizeBase = true).apply {
+            baseMin = 0.0f
+            baseMax = 1.0f
+        }
+        val controller = DeckMorphController { listOf(param) }
+        controller.initFromCurrentState()
+
+        // Initialize and reach 1.0 so latchTarget is READY_FOR_ZERO for descent
+        controller.update(1.0f)
+
+        val s0 = controller.state0.parameters[param]!!
+        val s1 = controller.state1.parameters[param]!!
+        s0.baseValue = 0.2f
+        s1.baseValue = 0.8f
+
+        // Inverted ramp descends: 0.98 -> 0.5 -> 0.0
+        controller.update(0.98f)
+        assertEquals(0.8f * 0.98f + 0.2f * 0.02f, param.baseValue, 0.001f)
+
+        controller.update(0.5f)
+        assertEquals(0.5f, param.baseValue, 0.0001f)
+
+        controller.update(0.0f)
+        assertEquals(0.2f, param.baseValue, 0.0001f)
+
+        // Ramp down wraps from 0.0 to 1.0:
+        // Must rotate state0 into state1, roll new state0, and evaluate at v = 1.0 to 0.2f (ZERO JUMP!)
+        controller.update(1.0f)
+
+        assertEquals(0.2f, controller.state1.parameters[param]!!.baseValue, 0.0001f)
+        assertEquals(0.2f, param.baseValue, 0.0001f, "Expected seamless continuity at reverse ramp reset without jump cut")
+    }
 }

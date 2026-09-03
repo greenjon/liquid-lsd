@@ -116,6 +116,7 @@ Because Liquid LSD's modulation engine already provides rich waveforms with `sub
 | **Manual UI Button Press** | User clicks `[Rand A]` button in UI. | Instantly generate a new $S_0$ / $S_1$ target pair and trigger an immediate refresh or cycle step. |
 | **Physical MIDI Fader Mapping** | DJ assigns MIDI CC fader to `Mixer/randDeckA`. | Pushing the fader up morphs to state $S_1$; pulling it down morphs to a brand new state $S_2$. Gives infinite manual tactile morphing. |
 | **Toggling Randomization Off Mid-Morph** | User unchecks parameter or modulator randomize flag while `randDeckA` is active. | `DeckMorphController` strictly gates interpolation on `randomize*` flags. Non-randomized fields freeze immediately, snapshot buffers sync to the active values, and subsequent user slider changes are preserved without being overwritten. |
+| **Sawtooth Ramp / BeatPhase Wrap ($1.0 \to 0.0$)** | Monotonic ramps reset instantly from 1.0 to 0.0, which would cause an abrupt jump back to 0. | **Unidirectional State Promotion**: Detecting ramp wrap ($V_{\text{prev}} \ge 0.7 \to V \le 0.3$) shifts $S_0 \leftarrow S_1$ and samples fresh $S_2$ into $S_1$. At $V = 0.0$, $\text{lerp}(S_0, S_1, 0.0) = S_0 = S_1$, delivering a continuous forward flow with zero pause, zero deceleration, and zero jump cut. |
 
 ---
 

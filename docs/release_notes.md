@@ -9,7 +9,14 @@
 
 ### Key Highlights
 
-#### 0. Mandala Analytical Size Normalization (`Mandala.kt`, `Renderer.kt`, `web/renderer.js`)
+#### 0. Continuous Constrained Random Morphing (`MorphState.kt`, `Deck.kt`, `Mixer.kt`, `MixerMonitorPanel.kt`)
+- **Continuous $0.0 \leftrightarrow 1.0$ Generative Morphing**: Transformed discrete 1-shot randomization triggers (`randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, `randAll`) into continuous morphing controllers. Assigning an LFO or CV source smoothly morphs base values and active modulator properties between two randomized states with zero UI explosion.
+- **Selective Randomization Deactivation Gating (`MorphState.kt`)**: Fixed an issue where toggling off randomization on a parameter (`param.randomizeBase = false`) or modulator property while continuous morphing was active (`randDeckA`, `randDeckB`, etc.) failed to stop randomization. `DeckMorphController` now strictly gates base value and modulator field interpolation on their respective `randomize*` flags, immediately freezing non-randomized parameters, syncing state snapshots to active values, and preventing user slider edits from being clobbered during morph cycles.
+- **Unidirectional Wrap-Around Morphing (`MorphState.kt`)**: Added seamless support for non-stop, unidirectional forward flow when morph targets are modulated by Sawtooth ramps, `beatPhase`, or phase modulators ($0.0 \to 1.0$). Automatically detects ramp wraps ($1.0 \to 0.0$) and promotes the arrived state ($S_1 \to S_0$) while sampling a fresh destination target into $S_1$, ensuring the value at $v = 0.0$ matches the prior frame with zero jump cut, zero turnaround, and zero pause.
+- **Flip-Flop Boundary State Machine**: Implemented latching hysteresis (`READY_FOR_ONE` / `READY_FOR_ZERO`) at the $0.01$ and $0.99$ boundaries. Crossing a boundary re-rolls the opposite state, enabling non-repeating generative visual journeys.
+- **Zero-Allocation In-Place Lerp & Shortest-Path Angles**: Pre-allocated snapshot buffers and converted runtime modulator fields to mutable vars to eliminate GC allocations during per-frame lerping, with shortest-path modular interpolation for angles and hue rotations.
+
+#### 0.1. Mandala Analytical Size Normalization (`Mandala.kt`, `Renderer.kt`, `web/renderer.js`)
 - **Sum-of-Lengths Normalization ($R_{\text{target}} = 1.0$)**: Implemented fast, analytical size normalization for the Mandala visual source. Scales arm lengths $L_1 \dots L_4$ by $\text{scale} = R_{\text{target}} / \sum |L_i|$ (with zero-protection for $\sum |L_i| \le 10^{-5}$), guaranteeing that the theoretical maximum reach of the pen exactly touches $R_{\text{target}}$.
 - **Morphing vs. Breathing**: Prevents visual clipping and extreme shrinkage when arm lengths vary or are modulated by LFOs, shifting dynamics to harmonic petal balance morphing while anchoring the outer bounding circle.
 - **Desktop & WebGL2 Parity**: Uniformly applied in desktop OpenGL (`Renderer.kt`) and browser WebGL2 (`web/renderer.js`) pipelines, ensuring identical visual scaling and radial depth shading across platforms.
