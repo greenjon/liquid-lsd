@@ -14,6 +14,12 @@
 - **Morphing vs. Breathing**: Prevents visual clipping and extreme shrinkage when arm lengths vary or are modulated by LFOs, shifting dynamics to harmonic petal balance morphing while anchoring the outer bounding circle.
 - **Desktop & WebGL2 Parity**: Uniformly applied in desktop OpenGL (`Renderer.kt`) and browser WebGL2 (`web/renderer.js`) pipelines, ensuring identical visual scaling and radial depth shading across platforms.
 
+#### 0.1. Universal 3D Tri-Axial Display Mode (`Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `tri_planar.vert`, `tri_planar.frag`)
+- **Universal 3D Orthogonal Transformation**: Elevates any 2D visual source (Chladni, Dynamic Spiral, Attractor, Video, etc.) into a 3D rotating structure across intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a holographic gyroscope / celestial sphere, or a 6-sided Cube Cage.
+- **Camera Proximity Headlight (`Depth Dim`)**: Applies virtual camera-aligned point lighting with inverse-square falloff in view space. Elements closest to the camera stay crisp and brilliant, while elements sweeping into the distance dim smoothly into atmospheric haze.
+- **Universal `View` Subtab & Controls**: Added universal `View` tab controls to all decks: `3D Mode`, `Zoom`, `Rotate X` (Pitch), `Rotate Y` (Yaw), `Rotate Z` (Roll), `3D Persp`, `Depth Dim`, `Separation` (axial breathing), and `Blend Mode` (additive luminous vs. alpha transparency).
+- **Preset Serialization & Backward Compatibility**: Fully serialized under `viewParameters` in `.lsd` preset files with default fallback to ensure all legacy presets load without interruption.
+
 #### 1. Unified Title Bar & Custom Window Frame (CSD) (`WindowFrameController.kt`, `MenuBar.kt`, `UITheme.kt`, `SettingsPanel.kt`)
 
 - **Modern Frameless Window & Integrated Top Bar (Option A)**: Integrated the traditional OS title bar into a unified, vertical-space-efficient top bar (~32px) merging brand logo, compact menus (`File`, `Output`, `Help`), live recording/broadcast pills, and telemetry HUD with custom window action buttons (minimize `${Icons.MINUS}`, maximize/restore `${Icons.SQUARE}`/`${Icons.COPY}`, and close `${Icons.X}`).

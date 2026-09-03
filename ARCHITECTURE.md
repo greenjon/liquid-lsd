@@ -88,9 +88,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
-│   ├── Deck.kt                 — VisualSource + ping-pong FBOs + FB params (Deck A, B & BG -> live; Deck PV -> preview)
+│   ├── Deck.kt                 — VisualSource + rawSourceFBO + cleanFBO + ping-pong FBOs + 3D View params + FB params
 │   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO (Deck PV excluded)
-│   ├── Renderer.kt             — Per-frame: source -> feedback -> mix -> blit
+│   ├── Renderer.kt             — Per-frame: source -> 3D tri-planar projection (optional) -> feedback -> mix -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders

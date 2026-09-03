@@ -19,6 +19,9 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
+    // FBO for capturing raw 2D source output before 3D view transformation
+    var rawSourceFBO = FBO(width, height)
+
     // Ping-pong feedback FBOs
     var fb1 = FBO(width, height)
     var fb2 = FBO(width, height)
@@ -29,14 +32,17 @@ class Deck(
         width = newWidth
         height = newHeight
         cleanFBO.dispose()
+        rawSourceFBO.dispose()
         fb1.dispose()
         fb2.dispose()
         cleanFBO = FBO(width, height)
+        rawSourceFBO = FBO(width, height)
         fb1 = FBO(width, height)
         fb2 = FBO(width, height)
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
+        rawSourceFBO.clear(0f, 0f, 0f, 0f)
         fbIndex = 0
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
@@ -51,6 +57,17 @@ class Deck(
 
     // Keep instances of all visual sources
     val availableSources = mutableListOf<VisualSource>()
+
+    // 3D View parameters (universal for 2D visual sources)
+    val view3DMode = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 2f) // 0 = 2D Flat, 1 = Tri-Axial, 2 = Cube Cage
+    val viewZoom = ModulatableParameter(1.0f, minClamp = 0.1f, maxClamp = 5.0f)
+    val viewRotateX = ModulatableParameter(0.0f, minClamp = -3.14159f, maxClamp = 3.14159f, meterType = llm.slop.liquidlsd.parameters.MeterType.ENDLESS, explicitIsAngle = true)
+    val viewRotateY = ModulatableParameter(0.0f, minClamp = -3.14159f, maxClamp = 3.14159f, meterType = llm.slop.liquidlsd.parameters.MeterType.ENDLESS, explicitIsAngle = true)
+    val viewRotateZ = ModulatableParameter(0.0f, minClamp = -3.14159f, maxClamp = 3.14159f, meterType = llm.slop.liquidlsd.parameters.MeterType.ENDLESS, explicitIsAngle = true)
+    val viewPersp = ModulatableParameter(0.5f, minClamp = 0.0f, maxClamp = 1.0f)
+    val viewDepthDim = ModulatableParameter(0.5f, minClamp = 0.0f, maxClamp = 1.0f)
+    val viewSeparation = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    val viewBlendMode = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f) // 1.0 = Additive, 0.0 = Alpha
 
     // Feedback parameters with custom clamp ranges
     val fbDecay = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
@@ -72,6 +89,7 @@ class Deck(
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
+        rawSourceFBO.clear(0f, 0f, 0f, 0f)
         
         val initialId = (source as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
@@ -90,6 +108,16 @@ class Deck(
             src.globalAlpha.reset()
             src.clear()
         }
+        view3DMode.reset()
+        viewZoom.reset()
+        viewRotateX.reset()
+        viewRotateY.reset()
+        viewRotateZ.reset()
+        viewPersp.reset()
+        viewDepthDim.reset()
+        viewSeparation.reset()
+        viewBlendMode.reset()
+
         fbDecay.reset()
         fbGain.reset()
         fbZoom.reset()
@@ -105,16 +133,26 @@ class Deck(
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
+        rawSourceFBO.clear(0f, 0f, 0f, 0f)
         morphController.initFromCurrentState()
     }
 
     /**
-     * Retrieves all randomizable parameters across the visual source and feedback system.
+     * Retrieves all randomizable parameters across the visual source, 3D view, and feedback system.
      */
     fun getAllRandomizableParameters(): List<ModulatableParameter> {
         val allParams = mutableListOf<ModulatableParameter>()
         allParams.addAll(this.source.parameters.values)
         allParams.add(this.source.globalAlpha)
+        allParams.add(this.view3DMode)
+        allParams.add(this.viewZoom)
+        allParams.add(this.viewRotateX)
+        allParams.add(this.viewRotateY)
+        allParams.add(this.viewRotateZ)
+        allParams.add(this.viewPersp)
+        allParams.add(this.viewDepthDim)
+        allParams.add(this.viewSeparation)
+        allParams.add(this.viewBlendMode)
         allParams.add(this.fbDecay)
         allParams.add(this.fbGain)
         allParams.add(this.fbZoom)
@@ -152,10 +190,20 @@ class Deck(
     }
 
     /**
-     * Updates the underlying visual source and evaluates feedback parameters.
+     * Updates the underlying visual source and evaluates view and feedback parameters.
      */
     fun update() {
         source.update()
+        view3DMode.evaluate()
+        viewZoom.evaluate()
+        viewRotateX.evaluate()
+        viewRotateY.evaluate()
+        viewRotateZ.evaluate()
+        viewPersp.evaluate()
+        viewDepthDim.evaluate()
+        viewSeparation.evaluate()
+        viewBlendMode.evaluate()
+
         fbDecay.evaluate()
         fbGain.evaluate()
         fbZoom.evaluate()
@@ -179,6 +227,7 @@ class Deck(
      */
     fun dispose() {
         cleanFBO.dispose()
+        rawSourceFBO.dispose()
         fb1.dispose()
         fb2.dispose()
         // Note: `source` is always one of the entries in `availableSources`, so the
@@ -192,6 +241,17 @@ class Deck(
         
         // Add all source parameters first (Mandala or DynamicVisualSource)
         list.addAll(source.getParameterPaths(prefix))
+
+        // Add Deck's View parameters
+        list.add("$prefix/View/3DMode" to view3DMode)
+        list.add("$prefix/View/Zoom" to viewZoom)
+        list.add("$prefix/View/RotateX" to viewRotateX)
+        list.add("$prefix/View/RotateY" to viewRotateY)
+        list.add("$prefix/View/RotateZ" to viewRotateZ)
+        list.add("$prefix/View/Persp" to viewPersp)
+        list.add("$prefix/View/DepthDim" to viewDepthDim)
+        list.add("$prefix/View/Separation" to viewSeparation)
+        list.add("$prefix/View/BlendMode" to viewBlendMode)
 
         // Add Deck's own feedback parameters
         list.add("$prefix/FB/Decay" to fbDecay)

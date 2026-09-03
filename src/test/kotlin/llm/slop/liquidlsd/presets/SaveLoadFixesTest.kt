@@ -89,4 +89,22 @@ class SaveLoadFixesTest {
         assertEquals(0, bgDelta, "pollBgQueueAdvance must return 0 after syncQueueTriggerPrevValues on session load")
         assertEquals(0f, mixer.bgQueueNext.baseValue, "baseValue should be reset to 0f after polling")
     }
+
+    @Test
+    fun testViewParametersSerializationBackwardCompatibility() {
+        // Test that an older preset DTO without viewParameters defaults to emptyMap and deserializes cleanly
+        val jsonStr = """
+            {
+                "version": 1,
+                "name": "Legacy Preset",
+                "visualSourceType": "chladni",
+                "parameters": {},
+                "feedbackParameters": {}
+            }
+        """.trimIndent()
+
+        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+        val dto = json.decodeFromString<DeckPresetDto>(jsonStr)
+        assertEquals(0, dto.viewParameters.size, "viewParameters must default to emptyMap when not present in JSON")
+    }
 }

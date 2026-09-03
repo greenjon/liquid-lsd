@@ -15,6 +15,7 @@ class Renderer {
     private val feedbackShader: Shader
     private val mixerShader: Shader
     val blitShader: Shader
+    private val triPlanarShader: Shader
 
     private var mandalaVAO: Int = 0
     private var mandalaVBO: Int = 0
@@ -25,6 +26,7 @@ class Renderer {
         feedbackShader = Shader.fromResources("shaders/blit.vert", "shaders/feedback.frag")
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
+        triPlanarShader = Shader.fromResources("shaders/tri_planar.vert", "shaders/tri_planar.frag")
 
         // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
         val expansionBuffer = Mandala.expansionBuffer
@@ -326,7 +328,54 @@ class Renderer {
             return
         }
         // 1. Render clean source image
-        render(deck.source, deck.cleanFBO)
+        val is3D = deck.view3DMode.value >= 0.5f
+        if (!is3D) {
+            render(deck.source, deck.cleanFBO)
+        } else {
+            // Render 2D source into rawSourceFBO
+            render(deck.source, deck.rawSourceFBO)
+
+            // Render 3D Tri-Planar projection onto cleanFBO
+            deck.cleanFBO.bind()
+            glClearColor(0f, 0f, 0f, 0f)
+            glClear(GL_COLOR_BUFFER_BIT)
+
+            val isAdditive = deck.viewBlendMode.value >= 0.5f
+            glEnable(GL_BLEND)
+            if (isAdditive) {
+                glBlendFunc(GL_ONE, GL_ONE)
+            } else {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            }
+
+            triPlanarShader.bind()
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, deck.rawSourceFBO.texture)
+            triPlanarShader.setUniform("uTexture", 0)
+
+            triPlanarShader.setUniform("uPitch", deck.viewRotateX.value)
+            triPlanarShader.setUniform("uYaw", deck.viewRotateY.value)
+            triPlanarShader.setUniform("uRoll", deck.viewRotateZ.value)
+            triPlanarShader.setUniform("uZoom", deck.viewZoom.value)
+            triPlanarShader.setUniform("uPersp", deck.viewPersp.value)
+            triPlanarShader.setUniform("uSeparation", deck.viewSeparation.value)
+            triPlanarShader.setUniform("uDepthDim", deck.viewDepthDim.value)
+            triPlanarShader.setUniform("uAlpha", deck.source.globalAlpha.value)
+            triPlanarShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
+            val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
+            triPlanarShader.setUniform("uAspectRatio", aspect)
+
+            val modeVal = deck.view3DMode.value.roundToInt()
+            val numInstances = if (modeVal >= 2) 6 else 3
+
+            glBindVertexArray(Geometry.getFullscreenQuad())
+            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, numInstances)
+            glBindVertexArray(0)
+
+            triPlanarShader.unbind()
+            deck.cleanFBO.unbind()
+            glActiveTexture(GL_TEXTURE0)
+        }
 
         // 2. Blend clean image and current history into next history FBO
         val nextHistoryFBO = deck.getNextHistoryFBO()
@@ -433,6 +482,7 @@ class Renderer {
             feedbackShader.dispose()
             mixerShader.dispose()
             blitShader.dispose()
+            triPlanarShader.dispose()
             isDisposed = true
         }
     }

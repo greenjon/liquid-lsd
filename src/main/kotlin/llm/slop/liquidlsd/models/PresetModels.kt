@@ -204,6 +204,7 @@ data class DeckPresetDto(
     val recipe: MandalaRecipeDto? = null, // For restoring recipe structure (Mandala-only)
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
+    val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
@@ -399,6 +400,18 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         "fbMode" to fbMode.toDto(),
         "fbKaleido" to fbKaleido.toDto()
     )
+
+    val viewParamsMap = mapOf(
+        "view3DMode" to view3DMode.toDto(),
+        "viewZoom" to viewZoom.toDto(),
+        "viewRotateX" to viewRotateX.toDto(),
+        "viewRotateY" to viewRotateY.toDto(),
+        "viewRotateZ" to viewRotateZ.toDto(),
+        "viewPersp" to viewPersp.toDto(),
+        "viewDepthDim" to viewDepthDim.toDto(),
+        "viewSeparation" to viewSeparation.toDto(),
+        "viewBlendMode" to viewBlendMode.toDto()
+    )
     
     return DeckPresetDto(
         name = name,
@@ -407,6 +420,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         recipe = recipeDto,
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
+        viewParameters = viewParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty
     )
@@ -456,6 +470,28 @@ fun Deck.applyDto(dto: DeckPresetDto) {
             dynObj.parameters[key]?.applyDto(paramDto)
         }
     }
+
+    // Reset view parameters to baseline defaults before applying
+    view3DMode.reset()
+    viewZoom.reset()
+    viewRotateX.reset()
+    viewRotateY.reset()
+    viewRotateZ.reset()
+    viewPersp.reset()
+    viewDepthDim.reset()
+    viewSeparation.reset()
+    viewBlendMode.reset()
+
+    // Apply view parameters (if present in preset)
+    dto.viewParameters["view3DMode"]?.let { view3DMode.applyDto(it) }
+    dto.viewParameters["viewZoom"]?.let { viewZoom.applyDto(it) }
+    dto.viewParameters["viewRotateX"]?.let { viewRotateX.applyDto(it) }
+    dto.viewParameters["viewRotateY"]?.let { viewRotateY.applyDto(it) }
+    dto.viewParameters["viewRotateZ"]?.let { viewRotateZ.applyDto(it) }
+    dto.viewParameters["viewPersp"]?.let { viewPersp.applyDto(it) }
+    dto.viewParameters["viewDepthDim"]?.let { viewDepthDim.applyDto(it) }
+    dto.viewParameters["viewSeparation"]?.let { viewSeparation.applyDto(it) }
+    dto.viewParameters["viewBlendMode"]?.let { viewBlendMode.applyDto(it) }
     
     // Reset feedback parameters to baseline defaults before applying
     fbDecay.reset()

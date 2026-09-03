@@ -143,16 +143,9 @@ object PresetGridTabs {
             return listOf("Empty")
         }
         val tabs = mutableListOf<String>()
-        val activeSource = deck.source
         tabs.add("SRC")
         tabs.add("FX")
-        if (activeSource is Mandala) {
-            tabs.add("View")
-        } else if (activeSource is DynamicVisualSource) {
-            if (activeSource.parameters.keys.any { TRANSFORM_PARAM_NAMES.contains(it) }) {
-                tabs.add("View")
-            }
-        }
+        tabs.add("View")
         return tabs.distinct()
     }
 
@@ -508,11 +501,24 @@ object PresetGridTabs {
                 PresetGridRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
-            if (transformParams.isNotEmpty()) {
-                drawSubGroupContent(session, deckLabel, "View", state) {
-                    transformParams.forEachIndexed { i, (name, param) ->
-                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/View/$name", param, state, labelColW, mixer, gridStartX, i, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
+            drawSubGroupContent(session, deckLabel, "View", state) {
+                var row = 0
+                PresetGridRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+                val modeVal = deck.view3DMode.value
+                if (modeVal >= 0.5f) {
+                    PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                }
+
+                transformParams.forEach { (name, param) ->
+                    PresetGridRenderer.drawParamRow(session, name, "$deckLabel/View/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
         } else {
@@ -527,6 +533,23 @@ object PresetGridTabs {
                 PresetGridRenderer.drawParamRow(session, "FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            }
+
+            drawSubGroupContent(session, deckLabel, "View", state) {
+                var row = 0
+                PresetGridRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+                val modeVal = deck.view3DMode.value
+                if (modeVal >= 0.5f) {
+                    PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                }
             }
         }
     }

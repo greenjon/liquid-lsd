@@ -81,10 +81,28 @@ The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean 
 
 ---
 
+## Universal 3D View & Tri-Axial Display Mode
+
+Every Deck includes a universal **`View`** stage that can transform any 2D visual source (Chladni, Dynamic Spiral, Attractor, Video, etc.) into a 3D rotating structure before entering the feedback chain:
+
+1. **3D Modes**:
+   - `0.0`: **2D Flat / Bypass** — Standard flat 2D output with zero overhead.
+   - `1.0`: **Tri-Axial Orthogonal Planes** — Replicates the 2D source across three intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a 3D holographic gyroscope / celestial sphere.
+   - `2.0`: **Cube Cage** — Extrudes the source across 6 orthogonal faces ($\pm XY, \pm YZ, \pm ZX$).
+2. **Camera Headlight & Proximity Dimming (`Depth Dim`)**:
+   - Implements virtual camera-aligned point lighting. Portions of the rotating structure closer to the screen stay crisp, bright, and vibrant, while receding portions dissolve smoothly into atmospheric haze.
+3. **Perspective & Spatial Transformations**:
+   - **`Rotate X` (Pitch), `Rotate Y` (Yaw), `Rotate Z` (Roll)**: Full 3D tumbling controlled manually or driven by LFOs/CV/Audio.
+   - **`3D Persp`**: Continuous transition from orthographic projection to deep wide-angle perspective.
+   - **`Separation`**: Pushes the intersecting planes outward along their normal axes, transforming the cross into an open geometric cage.
+   - **`Blend Mode`**: Toggles between additive luminous blending (for glowing neon intersections) and transparent alpha blending.
+
+---
+
 ## Framebuffer Feedback Loops (Ping-Pong FBOs)
 
 Each deck incorporates an independent dual Framebuffer Object (FBO) feedback loop:
-1. The raw visual source renders into `cleanFBO`.
+1. The visual source (and optional 3D View pass) renders into `cleanFBO`.
 2. The previous frame's feedback texture is combined with `cleanFBO` inside `feedback.frag`.
 3. Feedback transformation uniforms (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**) shift and decay the image continuously.
 4. Read and write feedback buffers swap (ping-pong) each frame, creating fluid liquid trails, organic motion, and video-feedback zoom effects.
