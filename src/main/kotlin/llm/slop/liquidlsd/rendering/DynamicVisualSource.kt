@@ -72,6 +72,15 @@ open class DynamicVisualSource(
         }
     }
 
+    /**
+     * Executes the draw call(s) for this source's geometry.
+     * The shader is already bound and uniforms are already set when this is called.
+     * The default implementation draws a fullscreen quad.
+     */
+    open fun drawTopology() {
+        Geometry.drawFullscreenQuad()
+    }
+
     override fun dispose() {
         fb1?.dispose()
         fb2?.dispose()

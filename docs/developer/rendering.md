@@ -65,6 +65,10 @@ Beyond hardcoded generators, the engine loads dynamic shaders from `library/sour
 
 - **`VisualSourceRegistry`**: Scans subfolders on startup, parses `meta.json`, compiles `shader.frag` against standard vertex shaders (`blit.vert`), and builds `DynamicVisualSource` templates.
 - **Shader Ownership**: The master template in `VisualSourceRegistry` owns the OpenGL shader program (`ownsShader = true`). Deck clones share shader program handles safely (`ownsShader = false`) to eliminate duplicate compilation overhead.
+- **Polymorphic Draw Topology**: Visual source rendering in `Renderer.render()` is fully polymorphic with zero source-type checks (`is Mandala`, `is HyperMesh`). Each visual generator overrides `DynamicVisualSource.drawTopology()`:
+  - Default: Renders a fullscreen quad via `Geometry.drawFullscreenQuad()`.
+  - `Mandala`: Binds ribbon VAO and draws triangle strips via `glDrawArrays(GL_TRIANGLE_STRIP, 0, (POINTS + 1) * 2)`.
+  - `HyperMesh`: Binds 4D polychoron strut and node VAOs and renders indexed triangles via `glDrawElements(GL_TRIANGLES, ...)`.
 - **Error Fallbacks**: If custom GLSL fails compilation, a fallback checkerboard shader is bound so the application avoids crashing.
 
 ---

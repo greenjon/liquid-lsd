@@ -341,6 +341,28 @@ class HyperMesh(
         }
     }
 
+    override fun drawTopology() {
+        val is120     = (parameters["Polytope"]?.value ?: 0f) >= 0.5f
+        val edgeVao   = if (is120) edgeVao120   else edgeVao600
+        val edgeCount = if (is120) edgeCount120 else edgeCount600
+        val nodeVao   = if (is120) nodeVao120   else nodeVao600
+        val vertCount = if (is120) vertexCount120 else vertexCount600
+        val nodeSize  = parameters["Node Size"]?.value ?: 0f
+
+        if (edgeVao != 0 && edgeCount > 0) {
+            shader.setUniform("uPassType", 0)
+            glBindVertexArray(edgeVao)
+            glDrawElements(GL_TRIANGLES, edgeCount * 6, GL_UNSIGNED_INT, 0)
+            glBindVertexArray(0)
+        }
+        if (nodeSize > 0.0001f && nodeVao != 0 && vertCount > 0) {
+            shader.setUniform("uPassType", 1)
+            glBindVertexArray(nodeVao)
+            glDrawElements(GL_TRIANGLES, vertCount * 6, GL_UNSIGNED_INT, 0)
+            glBindVertexArray(0)
+        }
+    }
+
     override fun dispose() {
         super.dispose()
         if (edgeVao600 != 0) {

@@ -34,6 +34,16 @@
 - **Hierarchical Parameter Paths**: Removed the legacy custom `Mandala.getParameterPaths()` override; Mandala parameters now follow the universal hierarchical pattern (`Deck A/Mandala/<param>`) alongside all other visual sources.
 - **Web TV Broadcast Parity**: Simplified `WebPresetSerializer.serializeDeck` to a single generic loop with a concise extension for Mandala Fourier frequencies (`a`, `b`, `c`, `d`), maintaining 100% backward compatibility with WebGL2 TV clients.
 
+#### 0.4. Renderer Polymorphism & Draw Topology Dispatch (`DynamicVisualSource.kt`, `Mandala.kt`, `HyperMesh.kt`, `Renderer.kt`)
+- **Zero Source-Type Knowledge in Renderer**: Completely eliminated `is Mandala` and `is HyperMesh` branching and private helper methods (`renderMandala()`, `renderHyperMesh()`) from `Renderer.kt`. The main rendering pipeline now collapses into a single, unified execution path.
+- **Polymorphic `drawTopology()` Dispatch**: Introduced `open fun drawTopology()` on `DynamicVisualSource`, delegating vertex attribute binding and geometry draw calls to each visual source:
+  - Default: Renders a fullscreen quad via `Geometry.drawFullscreenQuad()`.
+  - `Mandala`: Binds ribbon VAO and draws triangle strips via `glDrawArrays(GL_TRIANGLE_STRIP, 0, (POINTS + 1) * 2)`.
+  - `HyperMesh`: Binds 4D polychoron strut and node VAOs and renders indexed triangles via `glDrawElements(GL_TRIANGLES, ...)`.
+- **Encapsulated GPU Geometries & Clean Lifecycle**: Moved ribbon VAO/VBO creation and disposal directly into `Mandala.kt` (`initGeometry()`, `dispose()`, and shallow handle sharing in `clone()`), ensuring leak-free and double-free-safe lifecycle tracking.
+- **Unified Common Uniforms**: Common frame uniforms (`uAlpha`, `uResolution`, `uTime`, `uAspectRatio`) are now set in a single location for all dynamic sources inside `Renderer.render()`.
+
+
 #### 1. Performance-Driven UI & Ergonomics Enhancements (`UIManager.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`, `MenuBar.kt`, `CellConfigPanel.kt`)
 
 - **Horizontal Scroll Wheel Isolation & Layout Stabilization (`UIManager.kt`, `LibraryPanel.kt`, `PresetGridPanel.kt`)**: 

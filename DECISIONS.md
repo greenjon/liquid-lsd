@@ -336,4 +336,14 @@ This document outlines the key architectural decisions made in the development o
   - **Single Source of Truth**: Project version, release URLs, and documentation are pulled directly from `build.gradle.kts` and `docs/`, ensuring the website and downloadable documentation package (`docs.zip`) remain continuously in sync with codebase releases.
   - **Self-Contained & Relative**: All generated HTML pages, CSS stylesheets, SVGs, and scripts use relative asset paths, allowing immediate drag-and-drop deployment via FTP to `greenjon.com` or any static web host.
 
+---
+
+## 19. Renderer Polymorphic Draw Topology (`drawTopology()`)
+- **Decision**: Eliminate source-type branching (`is Mandala`, `is HyperMesh`) from `Renderer.kt` by introducing an open `drawTopology()` method on `DynamicVisualSource`, delegating vertex attribute binding and primitive drawing to each individual visual generator.
+- **Rationale**:
+  - **Zero Source Knowledge in Renderer**: `Renderer.render()` is collapsed into a single, unified render path that only binds framebuffers, evaluates common uniforms (`uAlpha`, `uResolution`, `uTime`, `uAspectRatio`), calls `source.drawTopology()`, and performs feedback ping-pong / blitting.
+  - **Encapsulated GPU Geometries**: `Mandala` encapsulates its own triangle-strip ribbon VAO/VBO lifecycle (`initGeometry()`, `dispose()`, and handle sharing on `clone()`), and `HyperMesh` encapsulates its dual 600-cell and 120-cell strut/node draw calls.
+  - **Zero Regression**: Preserves 100% visual and mathematical equivalence across all generators while making future custom mesh or geometry-based visual sources cleanly pluggable without modifying `Renderer.kt`.
+
+
 

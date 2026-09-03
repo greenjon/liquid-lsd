@@ -1,6 +1,8 @@
 package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import org.lwjgl.opengl.GL33.*
+import org.lwjgl.system.MemoryUtil
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -75,12 +77,38 @@ class Mandala(
             }
         }
 
+    var vao: Int = 0
+        private set
+    var vbo: Int = 0
+        private set
+
     init {
         val initialList = MandalaLibrary.recipesByPetals[recipe.petals] ?: emptyList()
         val initialIdx = initialList.indexOfFirst { it.a == recipe.a && it.b == recipe.b && it.c == recipe.c && it.d == recipe.d }.coerceAtLeast(0)
         val initialPct = if (initialList.size > 1) initialIdx.toFloat() / (initialList.size - 1).toFloat() else 0.0f
         parameters["Recipe Select"]?.set(initialPct)
         updateDefaultHueSweep()
+        if (ownsShader) {
+            initGeometry()
+        }
+    }
+
+    private fun initGeometry() {
+        val buf = MemoryUtil.memAllocFloat(expansionBuffer.size)
+        buf.put(expansionBuffer).flip()
+        try {
+            vao = glGenVertexArrays()
+            vbo = glGenBuffers()
+            glBindVertexArray(vao)
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            glBufferData(GL_ARRAY_BUFFER, buf, GL_STATIC_DRAW)
+            glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.SIZE_BYTES, 0)
+            glEnableVertexAttribArray(0)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+            glBindVertexArray(0)
+        } finally {
+            MemoryUtil.memFree(buf)
+        }
     }
 
     private fun updateDefaultHueSweep() {
@@ -150,6 +178,47 @@ class Mandala(
         return keys.minByOrNull { abs(it - target) } ?: 3
     }
 
+    override fun setupUniforms(shader: Shader) {
+        val p = parameters
+
+        val normArms = computeNormalizedArmLengths(
+            p["L1"]?.value ?: 0f, p["L2"]?.value ?: 0f,
+            p["L3"]?.value ?: 0f, p["L4"]?.value ?: 0f
+        )
+        shader.setUniform("uL1", normArms[0])
+        shader.setUniform("uL2", normArms[1])
+        shader.setUniform("uL3", normArms[2])
+        shader.setUniform("uL4", normArms[3])
+
+        shader.setUniform("uA", recipe.a.toFloat())
+        shader.setUniform("uB", recipe.b.toFloat())
+        shader.setUniform("uC", recipe.c.toFloat())
+        shader.setUniform("uD", recipe.d.toFloat())
+
+        shader.setUniform("uYaw",   p["Rotate Y"]?.value ?: 0f)
+        shader.setUniform("uPitch", p["Rotate X"]?.value ?: 0f)
+        shader.setUniform("uPersp", p["3D Persp"]?.value ?: 0.5f)
+
+        shader.setUniform("uGlobalScale",    (p["Zoom"]?.value      ?: 0.125f) * 8.0f)
+        shader.setUniform("uGlobalRotation", (p["Rotate Z"]?.value  ?: 0f)    * 2f * Math.PI.toFloat())
+        shader.setUniform("uThickness",      (p["Thickness"]?.value ?: 0.5f)  * 0.035f)
+
+        val options  = getSymmetricHueCycles(recipe.petals)
+        val rawSweep = p["Hue Sweep"]?.value ?: 0f
+        val sweepIdx = if (options.size > 1)
+            (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+        shader.setUniform("uHueOffset", p["Hue Offset"]?.value ?: 0f)
+        shader.setUniform("uHueSweep",  options[sweepIdx].toFloat())
+        shader.setUniform("uDepth",     p["Depth"]?.value ?: 0.35f)
+        shader.setUniform("uMaxR",      maxR)
+    }
+
+    override fun drawTopology() {
+        glBindVertexArray(vao)
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, (POINTS + 1) * 2)
+        glBindVertexArray(0)
+    }
+
     override fun clone(): Mandala {
         val clonedParams = LinkedHashMap<String, ModulatableParameter>()
         this.parameters.forEach { (name, param) ->
@@ -164,6 +233,8 @@ class Mandala(
             ownsShader = false,
             recipe = this.recipe
         )
+        copy.vao = this.vao
+        copy.vbo = this.vbo
         copy.globalAlpha.set(this.globalAlpha.baseValue)
         copy.globalAlpha.randomizeBase = this.globalAlpha.randomizeBase
         copy.globalAlpha.baseMin = this.globalAlpha.baseMin
@@ -171,6 +242,16 @@ class Mandala(
         copy.globalAlpha.modulators.clear()
         copy.globalAlpha.modulators.addAll(this.globalAlpha.modulators)
         return copy
+    }
+
+    override fun dispose() {
+        super.dispose()
+        if (ownsShader && vao != 0) {
+            glDeleteBuffers(vbo)
+            glDeleteVertexArrays(vao)
+            vao = 0
+            vbo = 0
+        }
     }
 
     companion object {

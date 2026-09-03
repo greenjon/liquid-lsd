@@ -1,13 +1,12 @@
 package llm.slop.liquidlsd.rendering
 
+import llm.slop.liquidlsd.utils.TimeSource
 import org.lwjgl.opengl.GL33.*
-import org.lwjgl.system.MemoryUtil
-import java.nio.FloatBuffer
 import kotlin.math.roundToInt
 
 /**
  * Main OpenGL renderer class.
- * Handles loading of shaders (mandala, feedback, mixer), VAO/VBO initialization,
+ * Handles loading of shaders (feedback, mixer, blit, tri-planar),
  * and orchestrates Deck rendering and Mixer compositing.
  */
 class Renderer {
@@ -17,8 +16,6 @@ class Renderer {
     val blitShader: Shader
     private val triPlanarShader: Shader
 
-    private var mandalaVAO: Int = 0
-    private var mandalaVBO: Int = 0
     private var isDisposed = false
 
     init {
@@ -27,238 +24,77 @@ class Renderer {
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
         triPlanarShader = Shader.fromResources("shaders/tri_planar.vert", "shaders/tri_planar.frag")
-
-        // Initialize VAO and VBO for Mandala geometry (ribbon coordinates)
-        val expansionBuffer = Mandala.expansionBuffer
-        val buffer: FloatBuffer = MemoryUtil.memAllocFloat(expansionBuffer.size)
-        buffer.put(expansionBuffer).flip()
-
-        try {
-            mandalaVAO = glGenVertexArrays()
-            mandalaVBO = glGenBuffers()
-
-            glBindVertexArray(mandalaVAO)
-            glBindBuffer(GL_ARRAY_BUFFER, mandalaVBO)
-            glBufferData(GL_ARRAY_BUFFER, buffer, GL_STATIC_DRAW)
-
-            // Location 0: vec2 [phase, side]
-            glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.SIZE_BYTES, 0)
-            glEnableVertexAttribArray(0)
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
-            glBindVertexArray(0)
-        } finally {
-            MemoryUtil.memFree(buffer)
-        }
     }
 
     fun render(source: VisualSource, targetFBO: FBO) {
-        if (source is Mandala) {
-            renderMandala(source, targetFBO)
-        } else if (source is HyperMesh) {
-            renderHyperMesh(source, targetFBO)
-        } else if (source is DynamicVisualSource) {
-            val hasFb = source.hasFeedback
-            val renderTarget = if (hasFb) {
-                // Lazily initialize feedback FBOs
-                if (source.fb1 == null || source.fb1!!.width != targetFBO.width || source.fb1!!.height != targetFBO.height) {
-                    source.fb1?.dispose()
-                    source.fb2?.dispose()
-                    source.fb1 = FBO(targetFBO.width, targetFBO.height)
-                    source.fb2 = FBO(targetFBO.width, targetFBO.height)
-                    source.fb1!!.clear(0f, 0f, 0f, 0f)
-                    source.fb2!!.clear(0f, 0f, 0f, 0f)
-                    source.fbIndex = 0
-                }
-                source.getNextHistoryFBO()!!
-            } else {
-                targetFBO
-            }
+        if (source !is DynamicVisualSource) return
 
-            renderTarget.bind()
+        val hasFb = source.hasFeedback
+        val renderTarget = if (hasFb) {
+            if (source.fb1 == null ||
+                source.fb1!!.width  != targetFBO.width ||
+                source.fb1!!.height != targetFBO.height
+            ) {
+                source.fb1?.dispose()
+                source.fb2?.dispose()
+                source.fb1 = FBO(targetFBO.width, targetFBO.height)
+                source.fb2 = FBO(targetFBO.width, targetFBO.height)
+                source.fb1!!.clear(0f, 0f, 0f, 0f)
+                source.fb2!!.clear(0f, 0f, 0f, 0f)
+                source.fbIndex = 0
+            }
+            source.getNextHistoryFBO()!!
+        } else {
+            targetFBO
+        }
+
+        renderTarget.bind()
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        if (hasFb) {
+            glDisable(GL_BLEND)
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, source.getCurrentHistoryFBO()!!.texture)
+        } else {
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        }
+
+        source.shader.bind()
+        source.setupUniforms(source.shader)
+
+        // Common uniforms for all sources
+        source.shader.setUniform("uAlpha",       source.globalAlpha.value)
+        source.shader.setUniform("uResolution",  targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        source.shader.setUniform("uTime",        TimeSource.getTimeSec().toFloat())
+        source.shader.setUniform("uAspectRatio", targetFBO.width.toFloat() / targetFBO.height.toFloat())
+        if (hasFb) {
+            source.shader.setUniform("src", 0)
+        }
+
+        source.drawTopology()
+
+        source.shader.unbind()
+        renderTarget.unbind()
+
+        if (hasFb) {
+            source.swapFeedbackBuffers()
+            // blit new history → targetFBO
+            targetFBO.bind()
             glClearColor(0f, 0f, 0f, 0f)
             glClear(GL_COLOR_BUFFER_BIT)
-
-            if (hasFb) {
-                glDisable(GL_BLEND)
-                // Bind current history texture as unit 0
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, source.getCurrentHistoryFBO()!!.texture)
-            } else {
-                glEnable(GL_BLEND)
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            }
-
-            source.shader.bind()
-
-            source.setupUniforms(source.shader)
-
-            source.shader.setUniform("uAlpha", source.globalAlpha.value)
-            source.shader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-            source.shader.setUniform("uTime", llm.slop.liquidlsd.utils.TimeSource.getTimeSec().toFloat())
-            if (hasFb) {
-                source.shader.setUniform("src", 0)
-            }
-
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            blitShader.bind()
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, source.getCurrentHistoryFBO()!!.texture)
+            blitShader.setUniform("uTexture", 0)
             Geometry.drawFullscreenQuad()
-
-            source.shader.unbind()
-            renderTarget.unbind()
-
-            if (hasFb) {
-                source.swapFeedbackBuffers()
-
-                // Blit the new history texture (containing the frame we just rendered) onto the targetFBO
-                targetFBO.bind()
-                glClearColor(0f, 0f, 0f, 0f)
-                glClear(GL_COLOR_BUFFER_BIT)
-                glEnable(GL_BLEND)
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-                blitShader.bind()
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, source.getCurrentHistoryFBO()!!.texture)
-                blitShader.setUniform("uTexture", 0)
-
-                Geometry.drawFullscreenQuad()
-
-                blitShader.unbind()
-                targetFBO.unbind()
-
-                // Reset active texture to unit 0
-                glActiveTexture(GL_TEXTURE0)
-            }
+            blitShader.unbind()
+            targetFBO.unbind()
+            glActiveTexture(GL_TEXTURE0)
         }
-    }
-
-    /**
-     * Renders a 4D HyperMesh (600-cell or 120-cell) with instanced/indexed strut and node geometry.
-     */
-    private fun renderHyperMesh(hyperMesh: HyperMesh, targetFBO: FBO) {
-        targetFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        hyperMesh.shader.bind()
-        hyperMesh.setupUniforms(hyperMesh.shader)
-
-        hyperMesh.shader.setUniform("uAlpha", hyperMesh.globalAlpha.value)
-        hyperMesh.shader.setUniform("uResolution", targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        hyperMesh.shader.setUniform("uTime", llm.slop.liquidlsd.utils.TimeSource.getTimeSec().toFloat())
-
-        val p = hyperMesh.parameters
-        val polytope = p["Polytope"]?.value ?: 0f
-        val is120 = polytope >= 0.5f
-
-        val edgeVao = if (is120) hyperMesh.edgeVao120 else hyperMesh.edgeVao600
-        val edgeCount = if (is120) hyperMesh.edgeCount120 else hyperMesh.edgeCount600
-        val nodeVao = if (is120) hyperMesh.nodeVao120 else hyperMesh.nodeVao600
-        val vertexCount = if (is120) hyperMesh.vertexCount120 else hyperMesh.vertexCount600
-
-        // 1. Draw strut edges
-        if (edgeVao != 0 && edgeCount > 0) {
-            hyperMesh.shader.setUniform("uPassType", 0)
-            glBindVertexArray(edgeVao)
-            glDrawElements(GL_TRIANGLES, edgeCount * 6, GL_UNSIGNED_INT, 0)
-            glBindVertexArray(0)
-        }
-
-        // 2. Draw node joints (if node size > 0.0)
-        val nodeSize = p["Node Size"]?.value ?: 0f
-        if (nodeSize > 0.0001f && nodeVao != 0 && vertexCount > 0) {
-            hyperMesh.shader.setUniform("uPassType", 1)
-            glBindVertexArray(nodeVao)
-            glDrawElements(GL_TRIANGLES, vertexCount * 6, GL_UNSIGNED_INT, 0)
-            glBindVertexArray(0)
-        }
-
-        hyperMesh.shader.unbind()
-        targetFBO.unbind()
-    }
-
-    /**
-     * Renders a Mandala to the specified FBO.
-     */
-    private fun renderMandala(mandala: Mandala, targetFBO: FBO) {
-        val mandalaShader = mandala.shader
-        targetFBO.bind()
-
-        // Clear the framebuffer's color buffer (fully transparent black background)
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        val p = mandala.parameters
-
-        mandalaShader.bind()
-
-        // Set normalized arm length parameters (L1 to L4) using sum-of-lengths normalization
-        val normArms = Mandala.computeNormalizedArmLengths(
-            p["L1"]?.value ?: 0f,
-            p["L2"]?.value ?: 0f,
-            p["L3"]?.value ?: 0f,
-            p["L4"]?.value ?: 0f
-        )
-        mandalaShader.setUniform("uL1", normArms[0])
-        mandalaShader.setUniform("uL2", normArms[1])
-        mandalaShader.setUniform("uL3", normArms[2])
-        mandalaShader.setUniform("uL4", normArms[3])
-
-        // Set arm frequency parameters (a to d) directly from recipe
-        mandalaShader.setUniform("uA", mandala.recipe.a.toFloat())
-        mandalaShader.setUniform("uB", mandala.recipe.b.toFloat())
-        mandalaShader.setUniform("uC", mandala.recipe.c.toFloat())
-        mandalaShader.setUniform("uD", mandala.recipe.d.toFloat())
-
-        // Set 3D rotations & perspective projection
-        // TODO: Remove 3D Persp and Rotate X/Y (Pitch/Yaw) controls (held off for now)
-        mandalaShader.setUniform("uYaw", p["Rotate Y"]?.value ?: 0f)
-        mandalaShader.setUniform("uPitch", p["Rotate X"]?.value ?: 0f)
-        mandalaShader.setUniform("uPersp", p["3D Persp"]?.value ?: 0.5f)
-
-        // Calculate and set global transformation uniforms
-        val scale = (p["Zoom"]?.value ?: 0.125f) * 8.0f
-        val rotation = (p["Rotate Z"]?.value ?: 0f) * 2.0f * Math.PI.toFloat()
-        val thickness = (p["Thickness"]?.value ?: 0.5f) * 0.035f
-        val aspect = targetFBO.width.toFloat() / targetFBO.height.toFloat()
-
-        mandalaShader.setUniform("uGlobalScale", scale)
-        mandalaShader.setUniform("uGlobalRotation", rotation)
-        mandalaShader.setUniform("uThickness", thickness)
-        mandalaShader.setUniform("uAspectRatio", aspect)
-
-        // Set color-related uniforms
-        val hueOffset = p["Hue Offset"]?.value ?: 0f
-        val petals = mandala.recipe.petals
-        val options = mandala.getSymmetricHueCycles(petals)
-        val rawSweep = p["Hue Sweep"]?.value ?: 0f
-        val index = if (options.size > 1) {
-            (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1)
-        } else {
-            0
-        }
-        val hueSweep = options[index].toFloat()
-        val depth = p["Depth"]?.value ?: 0.35f
-
-        mandalaShader.setUniform("uHueOffset", hueOffset)
-        mandalaShader.setUniform("uHueSweep", hueSweep)
-        mandalaShader.setUniform("uDepth", depth)
-        mandalaShader.setUniform("uMaxR", mandala.maxR)
-        mandalaShader.setUniform("uAlpha", mandala.globalAlpha.value)
-
-        // Render the mandala ribbon
-        glBindVertexArray(mandalaVAO)
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, (Mandala.POINTS + 1) * 2)
-
-        glBindVertexArray(0)
-        mandalaShader.unbind()
-        targetFBO.unbind()
     }
 
 
@@ -419,9 +255,6 @@ class Renderer {
      */
     fun dispose() {
         if (!isDisposed) {
-            glDeleteBuffers(mandalaVBO)
-            glDeleteVertexArrays(mandalaVAO)
-
             feedbackShader.dispose()
             mixerShader.dispose()
             blitShader.dispose()
