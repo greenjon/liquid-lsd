@@ -54,6 +54,7 @@ object CellConfigPanel {
         availableTabs.add("Value" to "value")
         if (session.uiTheme.showMidiCol) availableTabs.add("MIDI" to "midi")
         if (session.uiTheme.showLfoCol) availableTabs.add("LFO" to "lfo")
+        if (session.uiTheme.showSeqCol) availableTabs.add("SEQ" to "seq")
         if (session.uiTheme.audioEngineEnabled) {
             if (session.uiTheme.showAudioCol) availableTabs.add("Audio" to "audio")
             if (session.uiTheme.showTriggerCol) availableTabs.add("Trigger" to "trigger")
@@ -318,6 +319,16 @@ object CellConfigPanel {
                         existing.sourceId.startsWith("midi_cc_") -> {
                             // Draw dedicated MIDI CC controller controls
                             MidiModulatorSection.draw(
+                                session = session,
+                                param = param,
+                                existing = existing,
+                                themeColor = currentThemeColor,
+                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                            )
+                        }
+                        existing.sourceId == "seq" -> {
+                            // Draw Step Sequencer controls
+                            SeqSection.draw(
                                 session = session,
                                 param = param,
                                 existing = existing,

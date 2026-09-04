@@ -9,21 +9,22 @@ The Control Voltage (CV) modulation matrix is the nerve center of Liquid LSD. It
 The Preset Grid is located in the left panel of Performance Mode.
 
 ```
-┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
-│ Parameter       │ VALUE    │ MIDI     │ GEN 1    │ AUDIO    │ TRIGGER  │
-├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
-│ Deck A / Lobes  │  ● 4.0   │  [--]    │  ( 🔘 )   │  ( 🔘 )   │  [  ]    │
-│ Deck A / Zoom   │  ● 1.0   │  [--]    │  [  ]    │  ( 🔘 )   │  ( 🔘 )   │
-└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│ Parameter       │ VALUE    │ MIDI     │ LFO      │ SEQ      │ AUDIO    │ TRIGGER  │
+├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+│ Deck A / Lobes  │  ● 4.0   │  [--]    │  ( 🔘 )   │  ( 🔘 )   │  ( 🔘 )   │  [  ]    │
+│ Deck A / Zoom   │  ● 1.0   │  [--]    │  [  ]    │  ( 🔘 )   │  ( 🔘 )   │  ( 🔘 )   │
+└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
 ```
 
 - **Top Navigation Tabs**: Switch view focus between **Deck A**, **Deck B**, **Deck BG**, and **Deck PV**.
 - **Undo / Redo History**: Maintains a 30-level undo/redo stack (`Ctrl+Z` / `Ctrl+Y`) tracking all modulator edits, additions, and parameter changes.
 - **Rows**: Modulatable parameters grouped logically: Mixer, Deck Geometry, View, Color, Background, and Feedback.
-- **Columns**: 5 distinct, color-coded modulation domains:
+- **Columns**: 6 distinct, color-coded modulation domains:
   - **VAL** (`Mint Cyan`): Base parameter value, modulation range bounds, live evaluated output knobs, and default resets.
   - **MIDI** (`Bright Orchid Violet`): Hardware MIDI CC assignments and mapping.
   - **LFO** (`Electric Sky Blue`): Configurable primary and secondary low-frequency oscillators (`LFO 1` / `LFO 2`).
+  - **SEQ** (`Electric Lime Green`): Pattern-based Step Sequencer with configurable lengths (8, 16, 32 steps), hold/glide dynamics, and live playhead tracking.
   - **AUD** (`Warm Amber Gold`): Audio frequency-band dynamics envelope extractors (`AMP`, `BASS`, `MID`, `HIGH`).
   - **TRIG** (`Hot Coral Rose`): Musical transient impulse detectors (`ONSET`, `ACCENT`).
 - **Grid Cells**: Intersection points linking a source to a parameter. Active cells display an animated readout knob, needle, and dial arc matching the parameter's theme text color for seamless legibility across all themes.
@@ -51,6 +52,40 @@ LFO 2 is a second internal oscillator that modulates LFO 1:
 - **`AM`** (Amplitude Modulation): LFO 2 scales LFO 1's depth (`carrier * (1 + lfo2 * depth)`).
 - **`PM`** (Phase Modulation): LFO 2 dynamically shifts LFO 1's phase offset.
 - **`ADD`** (Additive): Combines LFO 2 directly with LFO 1.
+
+---
+
+## Step Sequencer (SEQ)
+
+The **Step Sequencer** (`seq`) outputs a deterministic, tempo-synchronized or time-based stepped voltage pattern. It provides rhythmically synchronized geometric shifts, color steps, rotational patterns, and stutter effects.
+
+### Step Grid & Interaction
+- **Grid Layout**: 8 columns wide, arranged in 1 row (8 steps), 2 rows (16 steps), or 4 rows (32 steps).
+- **Live Playhead Highlight**: A glowing Electric Lime border highlights the currently active step in real time.
+- **Precision Value Dial-in**:
+  - Click any box to type a numeric value directly (`0.0` to `1.0` for unipolar parameters; `-1.0` to `1.0` for bipolar parameters).
+  - Use `Up` / `Down` arrow keys (`±0.001`), `Shift` + `Up` / `Down` (`±0.01`), or `Ctrl` + `Shift` + `Up` / `Down` (`±0.1`).
+  - Hover and scroll the mouse wheel with identical keyboard modifiers.
+  - Middle-click to reset any step to `0.0`.
+  - Press `Tab` / `Shift+Tab` to advance or retreat keyboard focus across sequence steps.
+- **Pattern Utilities**:
+  - Quick length selector: `8 Steps`, `16 Steps`, or `32 Steps`.
+  - `Clear (All 0)`: Instantly sets all steps to zero.
+  - `Reset to Step 0`: Realigns sequence phase to Step 0 at the current moment.
+
+### Dynamics (Hold & Slew)
+- **Step Hold Slider**:
+  - **100% (Instant Step)**: Sharp discrete jumps with no glide; value holds flat for the entire step duration.
+  - **0% (Continuous Glide)**: Glides smoothly from the current step's value to the next over the full step duration.
+  - **50% (Glide & Hold)**: Holds current step value for 50% of the duration, then glides towards the next step over the remaining 50%.
+- **Glide Curve**:
+  - **`Linear`**: Straight-line ramp between step values.
+  - **`Smooth`**: Cosine / S-curve easing ($0.5 - 0.5 \cos(\pi t)$) for zero-velocity acceleration and deceleration.
+
+### Timing & Clock Units
+- **`BEAT`**: Musical clock synchronization. Includes quick subdivision buttons (`1/16`, `1/8`, `1/4`, `1/2`, `1`, `2`, `4` beats) and fine continuous interval adjustment.
+- **`TIME`**: Wall-clock seconds per step ($0.01\text{s}$ to $5.0\text{s}$).
+- **`FRAME`**: Synchronized to render frame count ($1$ to $120$ frames per step).
 
 ---
 

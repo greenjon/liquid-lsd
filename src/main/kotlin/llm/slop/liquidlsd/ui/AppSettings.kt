@@ -29,6 +29,7 @@ data class AppSettings(
     val theme: UITheme.Theme = UITheme.Theme.BORING,
     val showMidiCol: Boolean = true,
     val showLfoCol: Boolean = true,
+    val showSeqCol: Boolean = true,
     val showAudioCol: Boolean = true,
     val showTriggerCol: Boolean = true,
     val col1Ratio: Float = 0.30f,

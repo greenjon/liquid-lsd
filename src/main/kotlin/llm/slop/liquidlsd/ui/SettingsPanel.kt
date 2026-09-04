@@ -284,6 +284,15 @@ object SettingsPanel {
             ImGui.setTooltip("Display LFO / Oscillator modulation column in Preset Grid")
         }
 
+        val seqVal = ImBoolean(session.uiTheme.showSeqCol)
+        if (ImGui.checkbox("Show SEQ Column", seqVal)) {
+            session.uiTheme.showSeqCol = seqVal.get()
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Display Step Sequencer modulation column in Preset Grid")
+        }
+
         val audioVal = ImBoolean(session.uiTheme.showAudioCol)
         if (ImGui.checkbox("Show Audio Column", audioVal)) {
             session.uiTheme.showAudioCol = audioVal.get()

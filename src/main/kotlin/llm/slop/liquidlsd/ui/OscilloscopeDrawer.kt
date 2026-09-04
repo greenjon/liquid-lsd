@@ -179,8 +179,8 @@ object OscilloscopeDrawer {
         val isMuted = activeMods.isNotEmpty() && activeMods.all { it.bypassed }
         val strokeColor = if (isMuted) ImGui.colorConvertFloat4ToU32(1.0f, 0.82f, 0.20f, 0.95f) else themeColor
 
-        val hasLfo = activeMods.any { isCvSourceBipolar(it.sourceId) }
-        val lfoMods = if (hasLfo) activeMods.filter { isCvSourceBipolar(it.sourceId) } else emptyList()
+        val hasLfo = activeMods.any { isCvSourceBipolar(it.sourceId) || it.sourceId == "seq" }
+        val lfoMods = if (hasLfo) activeMods.filter { isCvSourceBipolar(it.sourceId) || it.sourceId == "seq" } else emptyList()
 
         val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
 

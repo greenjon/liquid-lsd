@@ -9,7 +9,15 @@
 
 ### Key Highlights
 
-#### 0. Continuous Constrained Random Morphing (`MorphState.kt`, `Deck.kt`, `Mixer.kt`, `MixerMonitorPanel.kt`)
+#### 0. Step Sequencer (SEQ) CV Modulation Source (`SeqSection.kt`, `CvModulator.kt`, `Evaluators.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `OscilloscopeDrawer.kt`, `CvTheme.kt`, `web/evaluator.js`)
+- **Deterministic Step Sequencer CV (`seq`)**: Introduced a dedicated step sequencer modulation domain with an Electric Lime theme (`#33F24D`), inserted between LFO and AUDIO across the Preset Grid and Cell Config tabs.
+- **8-Wide Precision Step Grid**: Supports configurable pattern lengths of 8 ($1 \times 8$), 16 ($2 \times 8$), and 32 ($4 \times 8$) steps. Features real-time illuminated playhead border tracking, direct numeric typing, and power dial-in via Up/Down arrows (`±0.001`), `Shift` (`±0.01`), `Ctrl+Shift` (`±0.1`), and mouse wheel hover scrubbing.
+- **Dynamics & Easing Curves**: Configurable `Step Hold` slider ($0\% \dots 100\%$) for instant stair-step transitions, continuous glide, or glide-and-hold portamento, with selectable `Linear` and `Smooth` cosine S-curve easing ($0.5 - 0.5 \cos(\pi t)$).
+- **Multi-Clock Synchronization**: Full timing support for `BEAT` subdivisions (with quick 1-click presets: 1/16, 1/8, 1/4, 1/2, 1, 2, 4 beats), wall-clock `TIME` (seconds), and `FRAME` counts, alongside an instant `Reset to Step 0` realign button.
+- **Zero-Allocation Lookahead Oscilloscope**: Seamlessly integrated into `OscilloscopeDrawer` with center-playhead lookahead/lookback waveform display and sub-pixel anti-aliasing.
+- **Web Parity & Backward Compatibility**: Fully mirrored in WebGL2 `web/evaluator.js` with synchronized SHA-256 manifest tracking and default-populated domain converters for legacy presets.
+
+#### 0.1. Continuous Constrained Random Morphing (`MorphState.kt`, `Deck.kt`, `Mixer.kt`, `MixerMonitorPanel.kt`)
 - **Continuous $0.0 \leftrightarrow 1.0$ Generative Morphing**: Transformed discrete 1-shot randomization triggers (`randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, `randAll`) into continuous morphing controllers. Assigning an LFO or CV source smoothly morphs base values and active modulator properties between two randomized states with zero UI explosion.
 - **Selective Randomization Deactivation Gating (`MorphState.kt`)**: Fixed an issue where toggling off randomization on a parameter (`param.randomizeBase = false`) or modulator property while continuous morphing was active (`randDeckA`, `randDeckB`, etc.) failed to stop randomization. `DeckMorphController` now strictly gates base value and modulator field interpolation on their respective `randomize*` flags, immediately freezing non-randomized parameters, syncing state snapshots to active values, and preventing user slider edits from being clobbered during morph cycles.
 - **Unidirectional Wrap-Around Morphing (`MorphState.kt`)**: Added seamless support for non-stop, unidirectional forward flow when morph targets are modulated by Sawtooth ramps, `beatPhase`, or phase modulators ($0.0 \to 1.0$). Automatically detects ramp wraps ($1.0 \to 0.0$) and promotes the arrived state ($S_1 \to S_0$) while sampling a fresh destination target into $S_1$, ensuring the value at $v = 0.0$ matches the prior frame with zero jump cut, zero turnaround, and zero pause.

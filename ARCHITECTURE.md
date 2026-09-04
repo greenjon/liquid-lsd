@@ -174,7 +174,7 @@ value = result.coerceIn(0f, 1f)
 ```
 
 Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
-Preset Grid columns: LFO | AUDIO | TRIG
+Preset Grid columns: VALUE | MIDI | LFO | SEQ | AUDIO | TRIG
 
 ## Design Principles
 - **Zero-allocation audio loops** — pre-allocated buffers, no object creation in JACK callback or Java Sound conversion loop

@@ -81,6 +81,35 @@ export function evaluateModulator(mod, elapsedTime, totalBeats, frameCount) {
     rawSignal = cvState.beatSine;
   } else if (mod.sourceId === 'beatPhase') {
     rawSignal = cvState.beatPhase;
+  } else if (mod.sourceId === 'seq') {
+    const stepCount = Math.max(1, Math.min(32, mod.seqStepCount ?? 16));
+    const steps = mod.seqSteps ?? [];
+    const subdiv = Math.max(0.0001, mod.subdivision ?? 1.0);
+    const unit = mod.genUnit ?? 'BEAT';
+    let cyclePos = 0.0;
+    if (unit === 'BEAT' || unit === 'beat') {
+      cyclePos = (totalBeats / subdiv) + (mod.phaseOffset ?? 0.0);
+    } else if (unit === 'FRAME' || unit === 'frame') {
+      cyclePos = (frameCount / subdiv) + (mod.phaseOffset ?? 0.0);
+    } else {
+      cyclePos = (elapsedTime / subdiv) + (mod.phaseOffset ?? 0.0);
+    }
+    const stepIndexRaw = Math.floor(cyclePos);
+    const curStep = ((stepIndexRaw % stepCount) + stepCount) % stepCount;
+    const nextStep = (curStep + 1) % stepCount;
+    const curVal = curStep < steps.length ? steps[curStep] : 0.0;
+    const nextVal = nextStep < steps.length ? steps[nextStep] : 0.0;
+
+    const stepFrac = cyclePos - Math.floor(cyclePos);
+    const hold = Math.max(0.0, Math.min(1.0, mod.seqHold ?? 1.0));
+    if (hold >= 0.999 || stepFrac < hold) {
+      rawSignal = curVal;
+    } else {
+      const glideDuration = 1.0 - hold;
+      const t = Math.max(0.0, Math.min(1.0, (stepFrac - hold) / glideDuration));
+      const u = mod.seqCurveSmooth ? (0.5 - 0.5 * Math.cos(t * Math.PI)) : t;
+      rawSignal = curVal + (nextVal - curVal) * u;
+    }
   } else {
     // LFO / Periodic Generator
     let phase = 0.0;

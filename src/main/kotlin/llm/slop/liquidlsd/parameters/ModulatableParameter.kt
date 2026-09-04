@@ -162,7 +162,9 @@ class ModulatableParameter(
             }
             val finalCv = evaluateModulator(mod)
             val isSourceBipolar = llm.slop.liquidlsd.cv.isCvSourceBipolar(mod.sourceId)
-            val rawModAmount = if (isSourceBipolar) {
+            val rawModAmount = if (mod.sourceId == "seq") {
+                finalCv * mod.depth + mod.dcOffset
+            } else if (isSourceBipolar) {
                 if (isBipolar) {
                     finalCv * mod.depth + mod.dcOffset
                 } else {

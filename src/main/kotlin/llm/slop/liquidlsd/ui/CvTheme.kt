@@ -22,6 +22,9 @@ object CvTheme {
             "sampleAndHold"          -> floatArrayOf(0.30f, 0.65f, 1.00f) // Periwinkle Blue
             "beatPhase", "beatSine"  -> floatArrayOf(0.40f, 0.60f, 1.00f) // Deep Sky Blue
 
+            // Step Sequencer (Electric Lime / Acid Green)
+            "seq"                    -> floatArrayOf(0.20f, 0.95f, 0.30f) // Electric Lime Green
+
             // Audio Spectrum Followers (Warm Amber / Gold)
             "audio"                  -> floatArrayOf(1.00f, 0.68f, 0.12f) // Warm Amber Gold
             "amp", "audio_amp"       -> floatArrayOf(1.00f, 0.75f, 0.20f) // Bright Amber

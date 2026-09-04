@@ -182,6 +182,52 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
                 }
             }
         }
+        "seq" -> {
+            val stepCount = modulator.seqStepCount.coerceIn(1, 32)
+            val steps = modulator.seqSteps
+            val cyclePosition: Double = when (modulator.genUnit) {
+                GenUnit.TIME -> {
+                    val seconds = CVRegistry.getElapsedRealtimeSec() + timeOffsetSec
+                    val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
+                    (seconds / period) + modulator.phaseOffset
+                }
+                GenUnit.BEAT -> {
+                    val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
+                    val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
+                    val stepDiv = modulator.subdivision.toDouble().coerceAtLeast(0.001)
+                    (beats / stepDiv) + modulator.phaseOffset
+                }
+                GenUnit.FRAME -> {
+                    val fps = CVRegistry.getTargetFps().toDouble()
+                    val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * fps
+                    val framePeriod = modulator.subdivision.toDouble().coerceAtLeast(1.0)
+                    (frameCount / framePeriod) + modulator.phaseOffset
+                }
+            }
+
+            val stepIndexRaw = kotlin.math.floor(cyclePosition).toLong()
+            val curStep = Math.floorMod(stepIndexRaw, stepCount.toLong()).toInt()
+            val nextStep = (curStep + 1) % stepCount
+
+            val curVal = if (curStep < steps.size) steps[curStep] else 0f
+            val nextVal = if (nextStep < steps.size) steps[nextStep] else 0f
+
+            val stepFrac = (cyclePosition - kotlin.math.floor(cyclePosition)).toFloat().coerceIn(0f, 1f)
+            val hold = modulator.seqHold.coerceIn(0f, 1f)
+
+            if (hold >= 0.999f || stepFrac < hold) {
+                curVal
+            } else {
+                val glideDuration = 1.0f - hold
+                val t = ((stepFrac - hold) / glideDuration).coerceIn(0f, 1f)
+                val u = if (modulator.seqCurveSmooth) {
+                    0.5f - 0.5f * kotlin.math.cos(t * Math.PI.toFloat())
+                } else {
+                    t
+                }
+                curVal + (nextVal - curVal) * u
+            }
+        }
         else -> {
             val rawVal = CVRegistry.get(modulator.sourceId)
             if (isAudioSource(modulator.sourceId)) {
@@ -283,7 +329,9 @@ fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolea
         if (mod.bypassed && !includeBypassed) continue
         val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
         val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
-        val modAmount = if (isSourceBipolar) {
+        val modAmount = if (mod.sourceId == "seq") {
+            cv * mod.depth + mod.dcOffset
+        } else if (isSourceBipolar) {
             if (isBipolar) {
                 cv * mod.depth + mod.dcOffset
             } else {

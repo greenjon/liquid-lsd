@@ -149,6 +149,10 @@ object UITheme {
         get() = settings.showLfoCol
         set(value) { settings = settings.copy(showLfoCol = value) }
 
+    var showSeqCol: Boolean
+        get() = settings.showSeqCol
+        set(value) { settings = settings.copy(showSeqCol = value) }
+
     var showAudioCol: Boolean
         get() = settings.showAudioCol
         set(value) { settings = settings.copy(showAudioCol = value) }
@@ -394,6 +398,7 @@ object UITheme {
                 }
                 props.getBoolean("showMidiCol")?.let { showMidiCol = it }
                 props.getBoolean("showLfoCol")?.let { showLfoCol = it }
+                props.getBoolean("showSeqCol")?.let { showSeqCol = it }
                 props.getBoolean("showAudioCol")?.let { showAudioCol = it }
                 props.getBoolean("showTriggerCol")?.let { showTriggerCol = it }
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { col1Ratio = it.coerceIn(0.10f, 0.70f) }
@@ -456,6 +461,7 @@ object UITheme {
             props.setProperty("theme", theme.name)
             props.setProperty("showMidiCol", showMidiCol.toString())
             props.setProperty("showLfoCol", showLfoCol.toString())
+            props.setProperty("showSeqCol", showSeqCol.toString())
             props.setProperty("showAudioCol", showAudioCol.toString())
             props.setProperty("showTriggerCol", showTriggerCol.toString())
             props.setProperty("col1Ratio", col1Ratio.toString())

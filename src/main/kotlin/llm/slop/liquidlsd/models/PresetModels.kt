@@ -19,14 +19,14 @@ data class ModulatorDto(
     val modGenUnit: String = "TIME",
     
     // Randomization bounds
-    val depthMin: Float,
-    val depthMax: Float,
-    val subdivisionMin: Float,
-    val subdivisionMax: Float,
-    val phaseOffsetMin: Float,
-    val phaseOffsetMax: Float,
-    val slopeMin: Float,
-    val slopeMax: Float,
+    val depthMin: Float = depth,
+    val depthMax: Float = depth,
+    val subdivisionMin: Float = subdivision,
+    val subdivisionMax: Float = subdivision,
+    val phaseOffsetMin: Float = phaseOffset,
+    val phaseOffsetMax: Float = phaseOffset,
+    val slopeMin: Float = slope,
+    val slopeMax: Float = slope,
     val randomizeDepth: Boolean = false,
     val randomizeSubdivision: Boolean = false,
     val randomizePhaseOffset: Boolean = false,
@@ -58,6 +58,15 @@ data class ModulatorDto(
     val decayMsMax: Float = 0.0f,
     val randomizeAttackMs: Boolean = false,
     val randomizeDecayMs: Boolean = false,
+
+    // Step Sequencer fields
+    val seqSteps: List<Float> = emptyList(),
+    val seqStepCount: Int = 16,
+    val seqHold: Float = 1.0f,
+    val seqHoldMin: Float = 1.0f,
+    val seqHoldMax: Float = 1.0f,
+    val randomizeSeqHold: Boolean = false,
+    val seqCurveSmooth: Boolean = false,
 
     val id: String? = null
 ) {
@@ -104,6 +113,15 @@ data class ModulatorDto(
         val isDcRandom = (randomizeDcOffset && dcOffsetMin != dcOffsetMax) || dcOffsetMin != other.dcOffsetMin || dcOffsetMax != other.dcOffsetMax
         if (!isDcRandom && dcOffset != other.dcOffset) return false
 
+        if (seqSteps != other.seqSteps) return false
+        if (seqStepCount != other.seqStepCount) return false
+        if (seqHoldMin != other.seqHoldMin) return false
+        if (seqHoldMax != other.seqHoldMax) return false
+        if (randomizeSeqHold != other.randomizeSeqHold) return false
+        if (seqCurveSmooth != other.seqCurveSmooth) return false
+        val isSeqHoldRandom = (randomizeSeqHold && seqHoldMin != seqHoldMax) || seqHoldMin != other.seqHoldMin || seqHoldMax != other.seqHoldMax
+        if (!isSeqHoldRandom && seqHold != other.seqHold) return false
+
         return true
     }
 
@@ -145,6 +163,15 @@ data class ModulatorDto(
         
         val isDcRandom = randomizeDcOffset && dcOffsetMin != dcOffsetMax
         if (!isDcRandom) result = 31 * result + dcOffset.hashCode()
+
+        result = 31 * result + seqSteps.hashCode()
+        result = 31 * result + seqStepCount.hashCode()
+        result = 31 * result + seqHoldMin.hashCode()
+        result = 31 * result + seqHoldMax.hashCode()
+        result = 31 * result + randomizeSeqHold.hashCode()
+        result = 31 * result + seqCurveSmooth.hashCode()
+        val isSeqHoldRandom = randomizeSeqHold && seqHoldMin != seqHoldMax
+        if (!isSeqHoldRandom) result = 31 * result + seqHold.hashCode()
         
         return result
     }
@@ -292,6 +319,13 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     decayMsMax = decayMsMax,
     randomizeAttackMs = randomizeAttackMs,
     randomizeDecayMs = randomizeDecayMs,
+    seqSteps = seqSteps,
+    seqStepCount = seqStepCount,
+    seqHold = seqHold,
+    seqHoldMin = seqHoldMin,
+    seqHoldMax = seqHoldMax,
+    randomizeSeqHold = randomizeSeqHold,
+    seqCurveSmooth = seqCurveSmooth,
     id = id
 )
 
@@ -340,6 +374,13 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     decayMsMax = decayMsMax,
     randomizeAttackMs = randomizeAttackMs,
     randomizeDecayMs = randomizeDecayMs,
+    seqSteps = if (seqSteps.isEmpty()) List(32) { 0.0f } else seqSteps,
+    seqStepCount = seqStepCount,
+    seqHold = seqHold,
+    seqHoldMin = seqHoldMin,
+    seqHoldMax = seqHoldMax,
+    randomizeSeqHold = randomizeSeqHold,
+    seqCurveSmooth = seqCurveSmooth,
     id = id ?: java.util.UUID.randomUUID().toString()
 )
 

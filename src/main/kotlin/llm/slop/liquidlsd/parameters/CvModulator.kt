@@ -96,6 +96,15 @@ data class CvModulator(
     val randomizeAttackMs: Boolean = false,
     val randomizeDecayMs: Boolean = false,
 
+    // Step Sequencer fields
+    val seqSteps: List<Float> = List(32) { 0.0f },
+    val seqStepCount: Int = 16,
+    var seqHold: Float = 1.0f,
+    val seqHoldMin: Float = seqHold,
+    val seqHoldMax: Float = seqHold,
+    val randomizeSeqHold: Boolean = false,
+    val seqCurveSmooth: Boolean = false,
+
     val id: String = UUID.randomUUID().toString()
 ) {
     private fun isDiscreteSubdivision(): Boolean {
@@ -193,6 +202,10 @@ data class CvModulator(
             if (decayMsMin == decayMsMax) decayMsMin else random.nextFloat() * (decayMsMax - decayMsMin) + decayMsMin
         } else decayMs
 
+        val newSeqHold = if (randomizeSeqHold) {
+            if (seqHoldMin == seqHoldMax) seqHoldMin else random.nextFloat() * (seqHoldMax - seqHoldMin) + seqHoldMin
+        } else seqHold
+
         return this.copy(
             depth = newDepth,
             dcOffset = newDcOffset,
@@ -208,7 +221,8 @@ data class CvModulator(
             modSubdivision = newModSubdiv,
             generatorModDepth = newModDepth,
             attackMs = newAttackMs,
-            decayMs = newDecayMs
+            decayMs = newDecayMs,
+            seqHold = newSeqHold
         )
     }
 

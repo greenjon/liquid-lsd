@@ -27,6 +27,9 @@ object CVRegistry {
         // LFO: unified generator — evaluates time-based or beat-based waveforms per CvModulator
         register(GenCVSource("lfo"))
 
+        // SEQ: step sequencer — evaluates step pattern with hold/glide per CvModulator
+        register(GenCVSource("seq"))
+
         register(MutableCVSource("audio_amp"))
         register(MutableCVSource("audio_bass"))
         register(MutableCVSource("audio_mid"))

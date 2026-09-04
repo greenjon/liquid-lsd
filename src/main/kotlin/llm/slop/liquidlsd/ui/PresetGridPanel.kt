@@ -33,6 +33,7 @@ object PresetGridPanel {
     private fun getCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val cols = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) cols.add("lfo")
+        if (session.uiTheme.showSeqCol) cols.add("seq")
         if (session.uiTheme.audioEngineEnabled) {
             if (session.uiTheme.showAudioCol) cols.add("audio")
             if (session.uiTheme.showTriggerCol) cols.add("trigger")
@@ -43,6 +44,7 @@ object PresetGridPanel {
     private fun getCvLabels(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val labels = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) labels.add("LFO")
+        if (session.uiTheme.showSeqCol) labels.add("SEQ")
         if (session.uiTheme.audioEngineEnabled) {
             if (session.uiTheme.showAudioCol) labels.add("AUD")
             if (session.uiTheme.showTriggerCol) labels.add("TRIG")
