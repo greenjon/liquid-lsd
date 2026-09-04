@@ -13,9 +13,30 @@ out vec4 fragColor;
 void main() {
     vec4 texColor = texture(uTexture, vTexCoord);
 
+    // Luminance-derived transparency:
+    // In visual synthesizers, 2D shader sources render on black backgrounds (RGB=0, A=1).
+    // Empty background space must be 100% transparent so intersecting 3D planes do not
+    // cast semitransparent gray shadows over the background deck.
+    float lum = max(texColor.r, max(texColor.g, texColor.b));
+
+    // Threshold noise floor: drop residual feedback trails and black pedestals (< 1.5% brightness) to true zero
+    float lumFactor = smoothstep(0.015, 0.08, lum);
+    float alphaFromLum = lumFactor * clamp(lum * 1.5, 0.0, 1.0);
+
+    // If source texture already has its own transparency (e.g. Mandala with a < 1.0), respect it;
+    // otherwise derive opacity strictly from luminance.
+    float baseAlpha = (texColor.a < 0.999) ? min(texColor.a, alphaFromLum) : alphaFromLum;
+
     // Subtle edge border softening to prevent harsh quad rectangular seams in 3D
     vec2 edgeDist = min(vTexCoord, 1.0 - vTexCoord);
     float borderFade = smoothstep(0.0, 0.015, min(edgeDist.x, edgeDist.y));
+
+    float effectiveAlpha = baseAlpha * uAlpha * borderFade;
+
+    // Discard any fragment that has no visible light or opacity
+    if (effectiveAlpha < 0.002 || lum < 0.01) {
+        discard;
+    }
 
     // Depth cueing / headlight falloff:
     // vCameraDepth (rPos.z) ranges roughly from -1.5 to +1.5.
@@ -25,16 +46,10 @@ void main() {
     float minDim = max(0.02, 1.0 - uDepthDim);
     float atten = clamp(depthFactor, minDim, 1.0 + uDepthDim * 0.5);
 
-    vec3 rgb = texColor.rgb * atten * borderFade;
+    vec3 rgb = texColor.rgb * atten * borderFade * lumFactor;
 
-    // Luminance-derived transparency:
-    // In visual synthesizers, black background pixels on a 2D source should act as transparent
-    // so intersecting 3D planes do not occlude each other with black boxes.
-    float lum = max(texColor.r, max(texColor.g, texColor.b));
-    float effectiveAlpha = mix(texColor.a, lum * texColor.a, 0.9) * uAlpha * borderFade;
-
-    if (effectiveAlpha < 0.002) {
-        discard;
+    if (uBlendAdditive > 0.5) {
+        rgb *= (1.0 + lum * 0.2);
     }
 
     fragColor = vec4(rgb, effectiveAlpha);
