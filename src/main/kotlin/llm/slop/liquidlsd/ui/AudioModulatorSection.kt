@@ -84,6 +84,8 @@ object AudioModulatorSection {
                 maxLimit = 500f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeAttackMs,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "${it.toInt()}ms" },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -143,6 +145,8 @@ object AudioModulatorSection {
                 maxLimit = 3000f,
                 defaultValue = 100f,
                 isRandomizable = existing.randomizeDecayMs,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "${it.toInt()}ms" },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -203,6 +207,8 @@ object AudioModulatorSection {
             maxLimit = 1f,
             defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
+            isRandomizeDisabled = param.isRandomizeDisabled,
+            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {
@@ -262,6 +268,8 @@ object AudioModulatorSection {
             maxLimit = 1f,
             defaultValue = 0.5f,
             isRandomizable = existing.randomizeDepth,
+            isRandomizeDisabled = param.isRandomizeDisabled,
+            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {

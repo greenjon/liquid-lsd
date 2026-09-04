@@ -63,18 +63,27 @@ object Lfo2Section {
         // 2. Dice button for LFO 2
         if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, 10f * fontScale)
-            if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
-                val randomized = existing
-                    .randomizeGeneratorModDepth()
-                    .randomizeModSubdivision()
-                    .randomizeModPhaseOffset()
-                    .randomizeModSlope()
-                    .randomizeModMorph()
-                    .randomizeModHold()
-                onReplace(randomized)
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize LFO 2 values")
+            if (param.isRandomizeDisabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
+                ImGui.popStyleColor()
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+                }
+            } else {
+                if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
+                    val randomized = existing
+                        .randomizeGeneratorModDepth()
+                        .randomizeModSubdivision()
+                        .randomizeModPhaseOffset()
+                        .randomizeModSlope()
+                        .randomizeModMorph()
+                        .randomizeModHold()
+                    onReplace(randomized)
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Randomize LFO 2 values")
+                }
             }
         }
 
@@ -268,6 +277,8 @@ object Lfo2Section {
                 maxLimit = 1f,
                 defaultValue = 0.5f,
                 isRandomizable = existing.randomizeGeneratorModDepth,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -333,6 +344,8 @@ object Lfo2Section {
                     maxLimit = (subdivisionOptions.size - 1).toFloat(),
                     defaultValue = subdivisionOptions.indexOfFirst { it == 1.0f }.coerceAtLeast(0).toFloat(),
                     isRandomizable = existing.randomizeModSubdivision,
+                    isRandomizeDisabled = param.isRandomizeDisabled,
+                    randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = { idx -> subdivisionLabels[idx.toInt().coerceIn(0, subdivisionOptions.size - 1)] },
                     onRandomizableChanged = { checked ->
                         if (checked) {
@@ -408,6 +421,8 @@ object Lfo2Section {
                     maxLimit = 10000f,
                     defaultValue = 1f,
                     isRandomizable = existing.randomizeModSubdivision,
+                    isRandomizeDisabled = param.isRandomizeDisabled,
+                    randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = formatFunc,
                     formatLabel = formatLabelFunc,
                     isLogarithmic = true,
@@ -475,6 +490,8 @@ object Lfo2Section {
                     maxLimit = 86400f,
                     defaultValue = 1.0f,
                     isRandomizable = existing.randomizeModSubdivision,
+                    isRandomizeDisabled = param.isRandomizeDisabled,
+                    randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = formatFunc,
                     isLogarithmic = true,
                     parseValue = parseFunc,
@@ -535,6 +552,8 @@ object Lfo2Section {
                 maxLimit = 1f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeModPhaseOffset,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -592,6 +611,8 @@ object Lfo2Section {
                 maxLimit = 1f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeModMorph,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -649,6 +670,8 @@ object Lfo2Section {
                 maxLimit = 0.999f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeModHold,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -708,6 +731,8 @@ object Lfo2Section {
                     maxLimit = 0.999f,
                     defaultValue = 0.5f,
                     isRandomizable = existing.randomizeModSlope,
+                    isRandomizeDisabled = param.isRandomizeDisabled,
+                    randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = { "%.3f".format(it) },
                     onRandomizableChanged = { checked ->
                         if (checked) {

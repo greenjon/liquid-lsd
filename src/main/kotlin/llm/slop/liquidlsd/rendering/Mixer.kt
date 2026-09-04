@@ -105,11 +105,24 @@ class Mixer(
         }
     }
 
-    val randDeckA = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val randDeckB = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val randDeckBG = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val randDeckPV = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
-    val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+    val randDeckA = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
+    val randDeckB = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
+    val randDeckBG = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
+    val randDeckPV = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
+    val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
+
+    companion object {
+        const val FORBIDDEN_RANDOMIZE_TOOLTIP = "It is forbidden to randomize the randomizer. Chaos would ensue."
+        val RANDOMIZER_PARAM_KEYS = setOf(
+            "Mixer/randDeckA",
+            "Mixer/randDeckB",
+            "Mixer/randDeckBG",
+            "Mixer/randDeckPV",
+            "Mixer/randAll"
+        )
+
+        fun isRandomizerParameter(paramKey: String): Boolean = paramKey in RANDOMIZER_PARAM_KEYS
+    }
 
     private var prevQueuePrevVal = 0.0f
     private var prevQueueNextVal = 0.0f

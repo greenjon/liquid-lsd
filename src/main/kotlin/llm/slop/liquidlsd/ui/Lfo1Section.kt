@@ -187,6 +187,8 @@ object Lfo1Section {
             maxLimit = 1f,
             defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
+            isRandomizeDisabled = param.isRandomizeDisabled,
+            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {
@@ -244,6 +246,8 @@ object Lfo1Section {
             maxLimit = 1f,
             defaultValue = 0.5f,
             isRandomizable = existing.randomizeDepth,
+            isRandomizeDisabled = param.isRandomizeDisabled,
+            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {
@@ -312,6 +316,8 @@ object Lfo1Section {
                 maxLimit = (subdivisionOptions.size - 1).toFloat(),
                 defaultValue = subdivisionOptions.indexOfFirst { it == 1.0f }.coerceAtLeast(0).toFloat(),
                 isRandomizable = existing.randomizeSubdivision,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { idx -> subdivisionLabels[idx.toInt().coerceIn(0, subdivisionOptions.size - 1)] },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -380,6 +386,8 @@ object Lfo1Section {
                 maxLimit = 86400f,
                 defaultValue = 1.0f,
                 isRandomizable = existing.randomizeSubdivision,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = formatFunc,
                 isLogarithmic = true,
                 parseValue = parseFunc,
@@ -458,6 +466,8 @@ object Lfo1Section {
                 maxLimit = 10000f,
                 defaultValue = 1f,
                 isRandomizable = existing.randomizeSubdivision,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = formatFunc,
                 formatLabel = formatLabelFunc,
                 isLogarithmic = true,
@@ -529,6 +539,8 @@ object Lfo1Section {
                 maxLimit = 1f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizePhaseOffset,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -586,6 +598,8 @@ object Lfo1Section {
                 maxLimit = 1f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeMorph,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -643,6 +657,8 @@ object Lfo1Section {
                 maxLimit = 0.999f,
                 defaultValue = 0f,
                 isRandomizable = existing.randomizeHold,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
                 onRandomizableChanged = { checked ->
                     if (checked) {
@@ -707,6 +723,8 @@ object Lfo1Section {
                     maxLimit = 0.999f,
                     defaultValue = 0.5f,
                     isRandomizable = existing.randomizeSlope,
+                    isRandomizeDisabled = param.isRandomizeDisabled,
+                    randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = { "%.3f".format(it) },
                     onRandomizableChanged = { checked ->
                         if (checked) {

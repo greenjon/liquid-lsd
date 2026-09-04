@@ -138,12 +138,21 @@ object PresetGridRenderer {
         }
         if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
             if (session.uiTheme.randomizationEnabled) {
-                if (ImGui.menuItem("Randomize row")) {
-                    onPushUndo()
-                    val randomized = param.modulators.map { it.randomizeActiveValues() }
-                    param.modulators.clear()
-                    param.modulators.addAll(randomized)
-                    param.randomizeBaseValue()
+                if (param.isRandomizeDisabled) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
+                    ImGui.menuItem("Randomize row (Disabled)")
+                    ImGui.popStyleColor()
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+                    }
+                } else {
+                    if (ImGui.menuItem("Randomize row")) {
+                        onPushUndo()
+                        val randomized = param.modulators.map { it.randomizeActiveValues() }
+                        param.modulators.clear()
+                        param.modulators.addAll(randomized)
+                        param.randomizeBaseValue()
+                    }
                 }
                 ImGui.separator()
             }

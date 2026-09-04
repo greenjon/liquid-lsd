@@ -373,6 +373,8 @@ object ValueParamSection {
                 defaultValue = param.defaultValue * scale,
                 isRandomizable = param.randomizeBase,
                 showControls = true,
+                isRandomizeDisabled = param.isRandomizeDisabled,
+                randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = {
                     when {
                         isMixerMode -> getMixModeLabel(it)
@@ -444,15 +446,24 @@ object ValueParamSection {
             ImGui.spacing()
             val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
             val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(28f * fontScale)
-            val randomizeBaseActive = param.randomizeBase
-            if (!randomizeBaseActive) {
-                ImGui.beginDisabled()
-            }
-            if (ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)) {
-                param.randomizeBaseValue()
-            }
-            if (!randomizeBaseActive) {
-                ImGui.endDisabled()
+            val randomizeBaseActive = param.randomizeBase && !param.isRandomizeDisabled
+            if (param.isRandomizeDisabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)
+                ImGui.popStyleColor()
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+                }
+            } else {
+                if (!randomizeBaseActive) {
+                    ImGui.beginDisabled()
+                }
+                if (ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)) {
+                    param.randomizeBaseValue()
+                }
+                if (!randomizeBaseActive) {
+                    ImGui.endDisabled()
+                }
             }
         }
 

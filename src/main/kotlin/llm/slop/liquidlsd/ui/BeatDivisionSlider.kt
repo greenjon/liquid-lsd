@@ -63,9 +63,11 @@ object BeatDivisionSlider {
         onRangeChanged: (Float, Float) -> Unit = { _, _ -> },
         onValueChanged: (Float) -> Unit = {},
         idPrefix: String = "",
-        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
+        isRandomizeDisabled: Boolean = false,
+        randomizeDisabledTooltip: String? = null
     ) {
-        val effectiveIsRandomizable = isRandomizable && session.uiTheme.randomizationEnabled
+        val effectiveIsRandomizable = if (isRandomizeDisabled) false else (isRandomizable && session.uiTheme.randomizationEnabled)
         val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
 
         val rowStartX = ImGui.getCursorScreenPosX()
@@ -165,25 +167,35 @@ object BeatDivisionSlider {
             val randBtnX = startX + labelColW - buttonSize
             ImGui.setCursorScreenPos(randBtnX, row2Y)
             
-            if (!effectiveIsRandomizable) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
-            }
-            if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
-                onRandomizableChanged(!effectiveIsRandomizable)
-            }
-            if (!effectiveIsRandomizable) {
+            if (isRandomizeDisabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
                 ImGui.popStyleColor()
-            }
-            
-            if (ImGui.isItemClicked(1)) { // Right click
-                if (!effectiveIsRandomizable) {
-                    onRandomizableChanged(true)
+                val hovered = ImGui.isItemHovered()
+                if (hovered && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
                 }
-                onRandomizeNow()
-            }
-            val hovered = ImGui.isItemHovered()
-            if (hovered && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
+            } else {
+                if (!effectiveIsRandomizable) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
+                }
+                if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
+                    onRandomizableChanged(!effectiveIsRandomizable)
+                }
+                if (!effectiveIsRandomizable) {
+                    ImGui.popStyleColor()
+                }
+                
+                if (ImGui.isItemClicked(1)) { // Right click
+                    if (!effectiveIsRandomizable) {
+                        onRandomizableChanged(true)
+                    }
+                    onRandomizeNow()
+                }
+                val hovered = ImGui.isItemHovered()
+                if (hovered && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
+                }
             }
         }
 

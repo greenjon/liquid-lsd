@@ -43,6 +43,8 @@ object MidiModulatorSection {
             maxLimit = 1f,
             defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
+            isRandomizeDisabled = param.isRandomizeDisabled,
+            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {
@@ -102,6 +104,8 @@ object MidiModulatorSection {
             maxLimit = 1f,
             defaultValue = 1f,
             isRandomizable = existing.randomizeDepth,
+            isRandomizeDisabled = param.isRandomizeDisabled,
+            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
             onRandomizableChanged = { checked ->
                 if (checked) {

@@ -18,10 +18,14 @@ class ModulatableParameter(
     val historySize: Int = 600,
     val minClamp: Float = 0.0f,
     val maxClamp: Float = 1.0f,
-    var randomizeBase: Boolean = false,
+    randomizeBase: Boolean = false,
     val meterType: MeterType = if (minClamp < 0f) MeterType.BIPOLAR else MeterType.MONOPOLAR,
-    val explicitIsAngle: Boolean = false
+    val explicitIsAngle: Boolean = false,
+    val isRandomizeDisabled: Boolean = false
 ) {
+    var randomizeBase: Boolean = if (isRandomizeDisabled) false else randomizeBase
+        get() = if (isRandomizeDisabled) false else field
+        set(value) { field = if (isRandomizeDisabled) false else value }
     val isAngle: Boolean
         get() = explicitIsAngle || (minClamp in -3.15f..-3.13f && maxClamp in 3.13f..3.15f)
     val modulators = CopyOnWriteArrayList<CvModulator>()
@@ -119,7 +123,7 @@ class ModulatableParameter(
      * Randomizes the static baseValue within the [baseMin, baseMax] range.
      */
     fun randomizeBaseValue(random: kotlin.random.Random = kotlin.random.Random.Default) {
-        if (!randomizeBase) return
+        if (isRandomizeDisabled || !randomizeBase) return
         baseValue = if (baseMin == baseMax) baseMin else random.nextFloat() * (baseMax - baseMin) + baseMin
     }
 

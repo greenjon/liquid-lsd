@@ -222,6 +222,8 @@ object PlaylistEditorPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1f, 0.3f, 0.3f, 1f)
             }
 
+            val popupId = "playlist_item_menu_$index"
+
             if (isSelected && LibraryPanel.shouldReclaimFocus) {
                 ImGui.setKeyboardFocusHere()
             }
@@ -232,6 +234,10 @@ object PlaylistEditorPanel {
             if (ImGui.selectable(label, isSelected)) {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }
+            val isRowHovered = ImGui.isItemHovered()
+            if (ImGui.isItemClicked(1)) {
+                ImGui.openPopup(popupId)
+            }
 
             val io = ImGui.getIO()
             if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
@@ -239,7 +245,7 @@ object PlaylistEditorPanel {
             }
 
             // Double click loads to standby deck
-            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && exists) {
+            if (isRowHovered && ImGui.isMouseDoubleClicked(0) && exists) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
                 UIManager.loadDeckPresetSafely(mixer, targetDeck, resolvedFile)
@@ -291,8 +297,10 @@ object PlaylistEditorPanel {
             }
             ImGui.popStyleColor()
 
-            // Right-click menu
-            if (ImGui.beginPopupContextItem("playlist_item_menu")) {
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "pl_item_$index")
+
+            // Context menu (triggered by right-click or more button)
+            if (ImGui.beginPopup(popupId)) {
                 if (exists) {
                     if (ImGui.menuItem("Load to Deck A")) {
                         session.presetManager.loadDeckPresetAsync(resolvedFile, isDeckA = true)

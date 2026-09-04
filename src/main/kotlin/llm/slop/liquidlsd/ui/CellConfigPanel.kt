@@ -277,6 +277,8 @@ object CellConfigPanel {
                         isVirtual = isVirtual,
                         isLfo = isLfo,
                         hasAdvanced = hasAdvanced,
+                        isRandomizeDisabled = param.isRandomizeDisabled,
+                        randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                         onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
                         onReset = {
                             val toRemove = activeMods.toList()

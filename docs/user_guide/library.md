@@ -74,13 +74,14 @@ The Left column displays the complete pool of all available presets discovered a
   - `Q`: Append selected preset to **A/B Play Queue**.
   - `Shift + Q`: Append selected preset to **Background Queue (BG)**.
   - `Delete` / `Backspace`: Delete selected preset from your library (with permanent deletion confirmation).
-- **Context Menu Actions (Right-Click)**:
-  - **Load to Deck A / B / BG / PV**: Instant deck routing.
-  - **Add to A/B Queue / Background Queue**: Fast queue assignment.
-  - **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
-  - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit filename and tags.
-  - **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy`.
-  - **Delete**: Permanently deletes the preset from disk with a confirmation modal.
+- **Context Menu Actions (Right-Click & Vertical Kebab `⋮` Button)**:
+  - **Quick Affordance**: Hovering over any preset row, selecting it with arrow keys, or having its menu open displays a vertical kebab button (`⋮`) on the right edge of the row. Left-clicking `⋮` or right-clicking anywhere on the row brings up the context actions menu:
+    - **Load to Deck A / B / BG / PV**: Instant deck routing.
+    - **Add to A/B Queue / Background Queue**: Fast queue assignment.
+    - **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
+    - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit filename and tags.
+    - **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy`.
+    - **Delete**: Permanently deletes the preset from disk with a confirmation modal.
 
 ---
 
@@ -124,7 +125,7 @@ The 3rd column displays the live sequence of presets for main A/B deck Auto-VJ a
 - **Auto-VJ (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automated cycling through queue presets at configured crossfade intervals.
 - **Repeat & Shuffle**: Controls queue cycle loop and randomization.
 - **Export Button**: Exports the current live A/B queue as a new `.lsdset` playlist file.
-- **Item Context Menu (Right-Click)**:
+- **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
   - **Load to Deck A / B / BG / PV**: Instantly loads the queued preset to any deck.
   - **Add to Background Queue**: Routes the queued preset over to the Background queue.
   - **Remove from queue**: Removes the preset from the active queue.
@@ -142,7 +143,7 @@ The 4th column manages automated cycling and sequential playback for the dedicat
 - **Repeat & Shuffle**: Continuous loop and shuffle for background visuals.
 - **Export Button**: Exports the current background queue as a new `.lsdset` playlist file.
 - **Double-Click & Right-Click Play**: Trigger instant cuts or dip-to-black transitions on demand.
-- **Item Context Menu (Right-Click)**:
+- **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
   - **Play (Dip to Black) / Play (Instant Cut)**: Triggers playback with or without dip-to-black fade.
   - **Load to Deck A / B / PV**: Routes the background preset to other decks.
   - **Add to A/B Queue**: Routes the background preset over to the live A/B play queue.

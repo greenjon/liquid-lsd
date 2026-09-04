@@ -18,6 +18,8 @@ object ModulatorHeaderRow {
         isVirtual: Boolean,
         isLfo: Boolean,
         hasAdvanced: Boolean,
+        isRandomizeDisabled: Boolean = false,
+        randomizeDisabledTooltip: String? = null,
         onReplace: (CvModulator) -> Unit,
         onReset: () -> Unit
     ) {
@@ -108,17 +110,26 @@ object ModulatorHeaderRow {
         // 2. Dice icon (Randomize button)
         if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, 10f * fontScale)
-            if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
-                val randomized = existing
-                    .randomizeDepth()
-                    .randomizeDcOffset()
-                    .randomizeSubdivision()
-                    .randomizePhaseOffset()
-                    .randomizeSlope()
-                onReplace(randomized)
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize primary LFO / modulator values")
+            if (isRandomizeDisabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
+                ImGui.popStyleColor()
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+                }
+            } else {
+                if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
+                    val randomized = existing
+                        .randomizeDepth()
+                        .randomizeDcOffset()
+                        .randomizeSubdivision()
+                        .randomizePhaseOffset()
+                        .randomizeSlope()
+                    onReplace(randomized)
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Randomize primary LFO / modulator values")
+                }
             }
         }
 

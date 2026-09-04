@@ -153,6 +153,8 @@ object QueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
             }
 
+            val popupId = "queue_item_menu_$index"
+
             if (isSelected && LibraryPanel.shouldReclaimFocus) {
                 ImGui.setKeyboardFocusHere()
             }
@@ -163,6 +165,10 @@ object QueueActionsPanel {
             if (ImGui.selectable("$label##queue_$index", isSelected)) {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }
+            val isRowHovered = ImGui.isItemHovered()
+            if (ImGui.isItemClicked(1)) {
+                ImGui.openPopup(popupId)
+            }
 
             val io = ImGui.getIO()
             if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
@@ -170,7 +176,7 @@ object QueueActionsPanel {
             }
 
             // Double-click to load to standby deck and auto-fade
-            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
+            if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                 session.playQueueManager.playIndex(index, mixer)
             }
 
@@ -227,8 +233,10 @@ object QueueActionsPanel {
             }
             ImGui.popStyleColor()
 
-            // Right-click menu
-            if (ImGui.beginPopupContextItem("queue_item_menu_$index")) {
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "queue_$index")
+
+            // Context menu (triggered by right-click or more button)
+            if (ImGui.beginPopup(popupId)) {
                 if (ImGui.menuItem("Load to Deck A")) {
                     session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
                 }

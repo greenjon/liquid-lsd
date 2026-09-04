@@ -2,6 +2,42 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Explicit Randomization Disabling for Mixer Randomizer Parameters (`ModulatableParameter.kt`, `Mixer.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `ValueParamSection.kt`, `ModulatorHeaderRow.kt`, `PresetGridRenderer.kt`)
+
+- **Decision**: Explicitly prohibit parameter and modulator randomization on the five Mixer randomization controllers (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckBG`, `Mixer/randDeckPV`, and `Mixer/randAll`):
+  - **Engine Level Gating (`ModulatableParameter.kt`)**: Added `isRandomizeDisabled: Boolean = false` to `ModulatableParameter`. When true, `randomizeBase` is strictly gated to `false`, and `randomizeBaseValue()` is a no-op.
+  - **Mixer Parameter Declarations (`Mixer.kt`)**: Declared `randDeckA`, `randDeckB`, `randDeckBG`, `randDeckPV`, and `randAll` with `isRandomizeDisabled = true`.
+  - **UI Controls & Tooltip Feedback (`CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `ValueParamSection.kt`, `ModulatorHeaderRow.kt`, `PresetGridRenderer.kt`)**:
+    - Dimmed dice toggle buttons (0.25f text alpha) for initial value ranges and modulators driving randomizer parameters.
+    - Ignored click and right-click toggle actions on disabled dice.
+    - Disabled `"Randomize row"` in the Preset Grid context menu for these parameters.
+    - Added contextual tooltip: `"It is forbidden to randomize the randomizer. Chaos would ensue."`
+- **Rationale**:
+  - **Prevents Destabilizing Control Feedback Loops**: If a modulator (such as an LFO driving continuous morphing on `randDeckA`) could have its own variables randomized during the morph cycle, each boundary crossing would re-seed its own clock/waveform, creating an unrecoverable recursive feedback loop that causes tempo jitter, audio-rate state thrashing, or complete lockups.
+  - **Eliminates Dead & Misleading UI**: Previously, these parameters were omitted from `getAllRandomizableParameters()` under the hood, but the UI still permitted toggling random ranges on them, leading to user confusion when the ranges were ignored.
+  - **Clear Communicative UX**: The distinct tooltip clearly explains *why* the dice buttons are disabled rather than leaving users wondering if the interface is unresponsive.
+
+## Universal 2D/3D View Pipeline & Contextual Parameter Visibility (`Renderer.kt`, `Deck.kt`, `view2d.frag`, `PresetGridTabs.kt`)
+
+- **Decision**: Establish a clean separation between universal 2D/3D spatial parameters (`Zoom`, `Rotate Z`) and 3D-projection-specific parameters (`Rotate X`, `Rotate Y`, `3D Persp`, `Depth Dim`, `Separation`, `Blend Mode`):
+  - **Universal 2D View Pass (`view2d.frag`, `rawSource2DFBO`)**:
+    - When `3D Mode < 0.5`, the active visual source renders directly into `rawSource2DFBO` at full native widescreen resolution (`width x height`).
+    - A dedicated 2D view transformation shader (`view2d.frag`) executes over a fullscreen quad, mapping coordinates centered at `(0.5, 0.5)`, applying aspect-ratio-corrected isotropic rotation along the Z axis (`uRotateZ` / Roll), dividing by `uZoom` for continuous scaling ($0.1\times$ to $5.0\times$, with $1.0$ being pixel-identical 1:1 scale), and outputting transparent black (`vec4(0.0)`) for coordinates sampled outside the $[0, 1]$ canvas bounds.
+    - Blends the transformed source into `cleanFBO` before entering the feedback loop.
+  - **3D Mode Preservation (`tri_planar.vert`, `rawSourceFBO`)**:
+    - When `3D Mode >= 0.5`, sources render into square 1:1 `rawSourceFBO` (`height x height`) and project onto 3 or 6 orthogonal planes via `tri_planar.vert` & `tri_planar.frag`.
+  - **Contextual UI Visibility & Ordering (`PresetGridTabs.kt`)**:
+    - `Zoom` and `Rotate Z` are always visible at the top of the `View` subgroup, followed by `3D Mode`.
+    - `Rotate X` (Pitch) and `Rotate Y` (Yaw) are hidden when `3D Mode < 0.5`, grouped with the other 3D parameters (`3D Persp`, `Depth Dim`, `Separation`, `Blend Mode`).
+    - Full parameter registration in `Deck.getParameterPaths()` is retained so preset loading and modulation routings for `Rotate X` and `Rotate Y` persist across modes.
+- **Rationale**:
+  - Eliminates misleading "dead" UI controls: `Rotate X` and `Rotate Y` have no geometric meaning in a flat 2D projection.
+  - Restores essential 2D rotation and zoom capabilities to flat generators (Mandala, Lissajous, shaders) without reintroducing source-specific duplicate parameters.
+  - Aspect-ratio correction prevents non-square circular distortion during 2D rotation.
+  - Full native-resolution `rawSource2DFBO` avoids the horizontal downsampling that would occur if using the square 1:1 `rawSourceFBO` in 2D mode.
+
+---
+
 ## Mandala Architecture Unification as DynamicVisualSource (`Mandala.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `WebPresetSerializer.kt`)
 
 - **Decision**: Completely unify `Mandala` into the generic `DynamicVisualSource` framework, removing hardcoded `if (source is Mandala)` / `if (mandala != null)` special cases across the serialization, UI, and preset model layers:

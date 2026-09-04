@@ -148,6 +148,8 @@ object BgQueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.9f, 0.35f, 0.65f, 1.0f)
             }
 
+            val popupId = "bg_queue_item_menu_$index"
+
             if (isSelected && LibraryPanel.shouldReclaimFocus) {
                 ImGui.setKeyboardFocusHere()
             }
@@ -158,6 +160,10 @@ object BgQueueActionsPanel {
             if (ImGui.selectable("$label##bg_queue_$index", isSelected)) {
                 LibraryPanel.selectQueueBg(index, session, mixer)
             }
+            val isRowHovered = ImGui.isItemHovered()
+            if (ImGui.isItemClicked(1)) {
+                ImGui.openPopup(popupId)
+            }
 
             val io = ImGui.getIO()
             if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
@@ -165,7 +171,7 @@ object BgQueueActionsPanel {
             }
 
             // Double-click to trigger dip-to-black play
-            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
+            if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                 BgQueueManager.playIndex(index, mixer, withDipToBlack = true)
             }
 
@@ -215,8 +221,10 @@ object BgQueueActionsPanel {
             }
             ImGui.popStyleColor()
 
-            // Right-click menu
-            if (ImGui.beginPopupContextItem("bg_queue_item_menu_$index")) {
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "bg_queue_$index")
+
+            // Context menu (triggered by right-click or more button)
+            if (ImGui.beginPopup(popupId)) {
                 if (ImGui.menuItem("Play (Dip to Black)")) {
                     BgQueueManager.playIndex(index, mixer, withDipToBlack = true)
                 }

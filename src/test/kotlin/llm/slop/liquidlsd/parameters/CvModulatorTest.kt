@@ -509,5 +509,32 @@ class CvModulatorTest {
         assertFalse(triVal.isNaN(), "Hold clamped at 1.0f must not produce NaN")
         assertFalse(triVal.isInfinite(), "Hold clamped at 1.0f must not produce Infinite")
     }
+
+    @Test
+    fun testForbiddenRandomizeRandomizer() {
+        val disabledParam = ModulatableParameter(baseValue = 0.5f, isRandomizeDisabled = true)
+        assertTrue(disabledParam.isRandomizeDisabled)
+        assertFalse(disabledParam.randomizeBase)
+
+        // Attempting to set randomizeBase to true should be blocked
+        disabledParam.randomizeBase = true
+        assertFalse(disabledParam.randomizeBase)
+
+        // Setting bounds and trying randomizeBaseValue should be a no-op
+        disabledParam.baseMin = 0.1f
+        disabledParam.baseMax = 0.9f
+        disabledParam.randomizeBaseValue(Random(42))
+        assertEquals(0.5f, disabledParam.baseValue)
+
+        // Verify Mixer companion constants and helper
+        assertEquals("It is forbidden to randomize the randomizer. Chaos would ensue.", Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckA"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckB"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckBG"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckPV"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randAll"))
+        assertFalse(Mixer.isRandomizerParameter("Mixer/crossfade"))
+        assertFalse(Mixer.isRandomizerParameter("Deck A/Mandala/Petals"))
+    }
 }
 

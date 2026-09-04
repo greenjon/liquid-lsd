@@ -11,8 +11,20 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 ```
 [VisualSource (Mandala / GLSL Shader)]
                  │
+                 ├── (3D Mode < 0.5: 2D View Pass)
+                 │   ▼
+                 │   [rawSource2DFBO] (Native widescreen 16:9)
+                 │   ▼
+                 │   [view2d.frag] (Zoom, Rotate Z with aspect correction)
+                 │
+                 └── (3D Mode >= 0.5: 3D Tri-Planar Pass)
+                     ▼
+                     [rawSourceFBO] (Square 1:1 orthogonal aspect)
+                     ▼
+                     [tri_planar.vert / frag] (Pitch, Yaw, Roll, Zoom, Persp)
+                 │
                  ▼
-            [cleanFBO]  (Renders raw source geometry/pixels)
+            [cleanFBO]  (Composited clean source frame)
                  │
                  ▼
         [feedback.frag] ◄── [Previous Frame Feedback Texture]
@@ -28,7 +40,9 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 ```
 
 ### Execution Steps
-1. **Source Render**: The active `VisualSource` renders clean geometry or raymarched shader pixels to `cleanFBO`.
+1. **Source Render & View Stage**:
+   - **2D Mode (`3D Mode < 0.5`)**: The active `VisualSource` renders clean geometry or raymarched shader pixels to `rawSource2DFBO` (`width x height`). `view2d.frag` executes a fullscreen blit pass onto `cleanFBO`, applying isotropic aspect-ratio-corrected rotation (`Rotate Z` / Roll) and scaling (`Zoom`) with out-of-bounds border blanking.
+   - **3D Mode (`3D Mode >= 0.5`)**: The active `VisualSource` renders into square `rawSourceFBO` (`height x height`). `tri_planar.vert` and `tri_planar.frag` project 3 or 6 orthogonal planes (`Rotate X`, `Rotate Y`, `Rotate Z`, `Zoom`, `3D Persp`, `Separation`, `Depth Dim`) onto `cleanFBO`.
 2. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, `cleanFBO` texture, and evaluated feedback parameters (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
 3. **Buffer Swap**: Swaps the read and write feedback FBO references.
 4. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.

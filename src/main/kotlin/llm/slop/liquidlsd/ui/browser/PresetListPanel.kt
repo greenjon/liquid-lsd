@@ -118,6 +118,8 @@ object PresetListPanel {
             val label = asset.displayName
             val isSelected = selectedAsset?.path == asset.path
 
+            val popupId = "preset_context_menu_$index"
+
             if (isSelected && LibraryPanel.shouldReclaimFocus) {
                 ImGui.setKeyboardFocusHere()
             }
@@ -128,6 +130,10 @@ object PresetListPanel {
             if (ImGui.selectable(label, isSelected)) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
+            val isRowHovered = ImGui.isItemHovered()
+            if (ImGui.isItemClicked(1)) {
+                ImGui.openPopup(popupId)
+            }
 
             val io = ImGui.getIO()
             if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
@@ -135,7 +141,7 @@ object PresetListPanel {
             }
 
             // Double-click: Load the preset to the inactive deck (>0% crossfader).
-            if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
+            if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
                 logger.info { "Loading preset ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
@@ -149,8 +155,10 @@ object PresetListPanel {
                 ImGui.endDragDropSource()
             }
 
-            // Right-click context menu
-            if (ImGui.beginPopupContextItem("preset_context_menu_$index")) {
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "preset_$index")
+
+            // Context menu (triggered by right-click or more button)
+            if (ImGui.beginPopup(popupId)) {
                 if (ImGui.menuItem("Load to Deck A")) {
                     session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = true)
                 }
