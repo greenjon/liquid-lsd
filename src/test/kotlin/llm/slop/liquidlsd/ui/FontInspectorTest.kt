@@ -68,7 +68,9 @@ class FontInspectorTest {
             "SQUARE" to 0xe167,
             "COPY" to 0xe09e,
             "MAXIMIZE" to 0xe112,
-            "MINIMIZE" to 0xe11a
+            "MINIMIZE" to 0xe11a,
+            "MORE_HORIZONTAL" to 0xe0b6,
+            "MORE_VERTICAL" to 0xe0b7
         )
 
         for ((name, codepoint) in codepointsToCheck) {

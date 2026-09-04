@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.models.ClipboardManager
 import llm.slop.liquidlsd.models.CellClipboardData
 import llm.slop.liquidlsd.models.RowClipboardData
 import llm.slop.liquidlsd.models.toDto
+import llm.slop.liquidlsd.ui.browser.BrowserRowMoreButton
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -56,14 +57,37 @@ object PresetGridRenderer {
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             textH = ImGui.getTextLineHeight()
         }
-        ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
         val cursorStartX = ImGui.getCursorPosX()
         val indent = ImGui.getCursorScreenPosX() - gridStartX
         val labelBtnW = labelColW - indent - CELL_PAD
-        session.uiTheme.h3(label)
-        ImGui.sameLine(cursorStartX)
-        ImGui.invisibleButton("row_label_btn_$paramKey", labelBtnW.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
+        val kebabW = 28f
+        val textBtnW = (labelBtnW - kebabW).coerceAtLeast(1f)
+
+        ImGui.setCursorPosY(rowY)
+        ImGui.invisibleButton("row_label_btn_$paramKey", textBtnW, CELL.coerceAtLeast(1f))
         val isLabelHovered = ImGui.isItemHovered()
+
+        val popupId = "row_menu_$paramKey"
+        if (ImGui.isItemClicked(1)) {
+            ImGui.openPopup(popupId)
+        }
+
+        ImGui.sameLine(0f, 0f)
+        ImGui.setCursorPosY(rowY)
+        val isRowSelected = state.selectedCell?.paramKey == paramKey
+        BrowserRowMoreButton.draw(
+            popupId = popupId,
+            isRowHovered = isLabelHovered,
+            isSelected = isRowSelected,
+            idSuffix = "grid_$paramKey",
+            btnWidth = kebabW,
+            btnHeight = CELL,
+            tooltip = "Row options (Randomize, Copy/Paste, Reset, Notes)"
+        )
+
+        ImGui.sameLine(cursorStartX)
+        ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
+        session.uiTheme.h3(label)
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             // Rich tooltip: name, range, live value breakdown, description, user note
             val liveVal = param.value
@@ -136,7 +160,7 @@ object PresetGridRenderer {
             onPushUndo()
             param.reset()
         }
-        if (ImGui.beginPopupContextItem("row_menu_$paramKey")) {
+        if (ImGui.beginPopup(popupId)) {
             if (session.uiTheme.randomizationEnabled) {
                 if (param.isRandomizeDisabled) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)

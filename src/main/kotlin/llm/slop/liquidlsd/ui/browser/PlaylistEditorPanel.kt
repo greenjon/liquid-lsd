@@ -231,7 +231,11 @@ object PlaylistEditorPanel {
                 ImGui.setScrollHereY(0.5f)
             }
 
-            if (ImGui.selectable(label, isSelected)) {
+            val btnW = 28f
+            val availW = ImGui.getContentRegionAvailX()
+            val itemW = (availW - btnW).coerceAtLeast(10f)
+
+            if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()
@@ -297,7 +301,8 @@ object PlaylistEditorPanel {
             }
             ImGui.popStyleColor()
 
-            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "pl_item_$index")
+            ImGui.sameLine(0f, 0f)
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "pl_item_$index", btnW)
 
             // Context menu (triggered by right-click or more button)
             if (ImGui.beginPopup(popupId)) {

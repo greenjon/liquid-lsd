@@ -33,8 +33,8 @@ object Icons {
     const val PANEL_LEFT_OPEN = "\ue21d" // panel-left-open
     const val REPEAT      = "\ue146" // repeat
     const val SHUFFLE     = "\ue15e" // shuffle
-    const val MORE_HORIZONTAL = "\ue11f" // more-horizontal
-    const val MORE_VERTICAL   = "\ue120" // more-vertical
+    const val MORE_HORIZONTAL = "\ue0b6" // ellipsis
+    const val MORE_VERTICAL   = "\ue0b7" // ellipsis-vertical
     const val NOTE            = "\ue132" // pencil
     const val LOCK            = "\ue111" // lock
     const val UNLOCK          = "\ue19f" // unlock

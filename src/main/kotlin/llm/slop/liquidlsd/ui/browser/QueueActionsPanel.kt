@@ -162,7 +162,11 @@ object QueueActionsPanel {
                 ImGui.setScrollHereY(0.5f)
             }
 
-            if (ImGui.selectable("$label##queue_$index", isSelected)) {
+            val btnW = 28f
+            val availW = ImGui.getContentRegionAvailX()
+            val itemW = (availW - btnW).coerceAtLeast(10f)
+
+            if (ImGui.selectable("$label##queue_$index", isSelected, 0, itemW, 0f)) {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()
@@ -233,7 +237,8 @@ object QueueActionsPanel {
             }
             ImGui.popStyleColor()
 
-            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "queue_$index")
+            ImGui.sameLine(0f, 0f)
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "queue_$index", btnW)
 
             // Context menu (triggered by right-click or more button)
             if (ImGui.beginPopup(popupId)) {

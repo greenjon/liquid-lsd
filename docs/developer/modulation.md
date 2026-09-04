@@ -223,16 +223,20 @@ when the user adjusts `subdivision` in time mode. Does not affect evaluation.
    - Scales by 1.0 / (1.0 - safeHold) and clamps to [-1, 1]
    - Applies morph log-cosh waveshaping
 2. If non-square (SINE, TRIANGLE):
-   - Compute raw triangle: ramp up to 1 from [0, slope), ramp down to 0 from [slope, 1)
+   - Extreme slope boundary:
+     - `slope >= 0.999f`: evaluated as a pure unidirectional rising sawtooth ramp (`phase.toFloat()`, 0 to 1) with instantaneous wrap to 0 at the period boundary (no reverse fall slope).
+     - `slope <= 0.001f`: evaluated as a pure unidirectional falling sawtooth ramp (`(1.0 - phase).toFloat()`, 1 to 0) with instantaneous wrap to 1 at the period boundary.
+     - `0.001f < slope < 0.999f`: computes raw asymmetric triangle (ramp up to 1 from [0, slope), ramp down to 0 from [slope, 1)).
    - Stretch by hold: plateau the peak by compressing transition into (1 - safeHold) of the cycle
    - safeHold is clamped to [0.0, 0.999] to prevent division by zero while enabling steep vertical edges
-   - Apply morph via log-cosh waveshaper:
+   - If `morph >= 0.999f`: bypasses waveshaper entirely and returns `shaped` directly (zero rounding, zero peak deceleration, exact linear segments).
+   - Otherwise, apply morph via log-cosh waveshaper:
        k = lerp(1.5, 15.0, morph)         (higher k = sharper, more triangle/square-like; lower k = rounded sine)
        shaped = log(cosh(k * tri)) / (k * maxVal)
 3. Output in [-1, 1]
 ```
 
-`morph = 0` → rounded sine-like corners. `morph = 1` → sharp transitions. Hold defaults to `0.999` for square waves.
+`morph = 0` → rounded sine-like corners. `morph = 1` → pure linear sharp transitions with zero apex rounding. Hold defaults to `0.999` for square waves.
 
 ### `RANDOM` waveform
 

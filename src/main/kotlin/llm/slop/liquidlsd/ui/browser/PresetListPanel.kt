@@ -127,7 +127,11 @@ object PresetListPanel {
                 ImGui.setScrollHereY(0.5f)
             }
 
-            if (ImGui.selectable(label, isSelected)) {
+            val btnW = 28f
+            val availW = ImGui.getContentRegionAvailX()
+            val itemW = (availW - btnW).coerceAtLeast(10f)
+
+            if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()
@@ -155,7 +159,8 @@ object PresetListPanel {
                 ImGui.endDragDropSource()
             }
 
-            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "preset_$index")
+            ImGui.sameLine(0f, 0f)
+            BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "preset_$index", btnW)
 
             // Context menu (triggered by right-click or more button)
             if (ImGui.beginPopup(popupId)) {

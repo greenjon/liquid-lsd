@@ -4,11 +4,13 @@ fun calculateWaveform(waveform: Waveform, phase: Double, slope: Float): Float {
     return when (waveform) {
         Waveform.SINE -> kotlin.math.sin(phase * 2.0 * Math.PI).toFloat()
         Waveform.TRIANGLE -> {
-            val s = slope.toDouble()
-            val raw = if (s <= 0.001) (1.0 - phase).toFloat()
-            else if (s >= 0.999) phase.toFloat()
-            else if (phase < s) (phase / s).toFloat()
-            else ((1.0 - phase) / (1.0 - s)).toFloat()
+            val raw = if (slope <= 0.001f) (1.0 - phase).toFloat()
+            else if (slope >= 0.999f) phase.toFloat()
+            else {
+                val s = slope.toDouble()
+                if (phase < s) (phase / s).toFloat()
+                else ((1.0 - phase) / (1.0 - s)).toFloat()
+            }
             raw * 2.0f - 1.0f
         }
         Waveform.SQUARE -> if (phase < slope) 1.0f else -1.0f
@@ -40,14 +42,24 @@ fun calculateAdvancedLFO(
         val tri = triRaw * 2.0f - 1.0f
         ((tri - vTh) / divisor).coerceIn(-1.0f, 1.0f)
     } else {
-        val s = slope.coerceIn(0.0001f, 0.9999f)
-        val triRaw = if (phase < s) {
-            (phase / s).toFloat()
+        val triRaw = if (slope <= 0.001f) {
+            (1.0 - phase).toFloat().coerceIn(0f, 1f)
+        } else if (slope >= 0.999f) {
+            phase.toFloat().coerceIn(0f, 1f)
         } else {
-            ((1.0 - phase) / (1.0 - s)).toFloat()
+            val s = slope.toDouble()
+            if (phase < s) {
+                (phase / s).toFloat()
+            } else {
+                ((1.0 - phase) / (1.0 - s)).toFloat()
+            }
         }
         val tri = triRaw * 2.0f - 1.0f
         (tri / divisor).coerceIn(-1.0f, 1.0f)
+    }
+
+    if (morph >= 0.999f) {
+        return shaped
     }
 
     val k = 1.5f + (15.0f - 1.5f) * morph

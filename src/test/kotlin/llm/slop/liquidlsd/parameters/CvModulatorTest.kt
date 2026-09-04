@@ -536,5 +536,53 @@ class CvModulatorTest {
         assertFalse(Mixer.isRandomizerParameter("Mixer/crossfade"))
         assertFalse(Mixer.isRandomizerParameter("Deck A/Mandala/Petals"))
     }
+
+    @Test
+    fun testSawtoothRampUpExtremeSlopeMonotonic() {
+        // At slope = 0.999f and morph = 1.0f, the wave is a pure rising sawtooth ramp (-1.0 to +1.0)
+        // without reverse fall time or peak rounding.
+        assertEquals(-1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.998f, calculateAdvancedLFO(0.999, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.001f)
+        assertEquals(0.9998f, calculateAdvancedLFO(0.9999, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.001f)
+        assertEquals(1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
+
+        // Verify strict monotonicity across 1000 steps — zero backward turnaround!
+        var prev = -2.0f
+        for (i in 0..1000) {
+            val phase = i / 1000.0
+            val current = calculateAdvancedLFO(phase, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE)
+            assertTrue(current >= prev, "Step $i (phase $phase): current $current must be >= prev $prev (no backward fall)")
+            prev = current
+        }
+    }
+
+    @Test
+    fun testSawtoothRampDownExtremeSlopeMonotonic() {
+        // At slope = 0.001f and morph = 1.0f, the wave is a pure falling sawtooth ramp (+1.0 to -1.0)
+        assertEquals(1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(-0.998f, calculateAdvancedLFO(0.999, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.001f)
+        assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
+
+        // Verify strict descending monotonicity across 1000 steps — zero forward turnaround!
+        var prev = 2.0f
+        for (i in 0..1000) {
+            val phase = i / 1000.0
+            val current = calculateAdvancedLFO(phase, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE)
+            assertTrue(current <= prev, "Step $i (phase $phase): current $current must be <= prev $prev (no forward rise)")
+            prev = current
+        }
+    }
+
+    @Test
+    fun testLinearTriangleZeroPeakRoundingAtMorphOne() {
+        // At morph = 1.0f and slope = 0.5f, the triangle wave has zero log-cosh curvature and exact linear segments
+        assertEquals(-1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.25, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(1.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.75, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+    }
 }
 

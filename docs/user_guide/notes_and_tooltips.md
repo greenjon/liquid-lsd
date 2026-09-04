@@ -46,7 +46,7 @@ Liquid LSD provides three distinct scopes for notes:
 ## Creating & Editing Notes
 
 ### 1. Parameter Notes
-- **How to edit**: Right-click any parameter row in the Preset Grid to open the row context menu, then select **📝 Add/Edit Parameter Note…**.
+- **How to edit**: Hover over any parameter row in the Preset Grid and click the **⋮** button (or right-click the parameter name) to open the row context menu, then select **Add/Edit Parameter Note…**.
 - **Display**: Appears inside the hover tooltip for that parameter whenever the preset is loaded.
 - **Persistence**: Saved directly inside the `.lsd` file.
 
