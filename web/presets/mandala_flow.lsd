@@ -1,0 +1,32 @@
+{
+  "name": "mandala_flow",
+  "visualSourceType": "mandala",
+  "parameters": {
+    "L1": 0.4,
+    "L2": 0.3,
+    "L3": 0.2,
+    "L4": 0.1,
+    "a": 3,
+    "b": 4,
+    "c": 5,
+    "d": 7,
+    "Thickness": 0.012,
+    "Zoom": 0.8,
+    "Rotate Z": 0.0,
+    "Hue Offset": 0.0,
+    "Hue Sweep": 0.3,
+    "Depth": 0.35,
+    "Max R": 0.85
+  },
+  "feedbackParameters": {
+    "decay": 0.04,
+    "gain": 0.96,
+    "zoom": 0.005,
+    "rotate": 0.008,
+    "hueShift": 0.001,
+    "blur": 0.0,
+    "chroma": 0.0,
+    "mode": 0.0,
+    "kaleido": 1.0
+  }
+}

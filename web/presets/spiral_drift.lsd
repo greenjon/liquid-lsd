@@ -1,0 +1,29 @@
+{
+  "name": "spiral_drift",
+  "visualSourceType": "dynamic_spiral",
+  "parameters": {
+    "Max Points": 500,
+    "Scale": 0.5,
+    "Damping": 100.0,
+    "Wave Freq": 0.2,
+    "Wave Amp": 0.0,
+    "Shear": 0.1,
+    "Speed": 0.5,
+    "Dot Size": 0.01,
+    "Glow": 1.5,
+    "Hue Offset": 0.33,
+    "Hue Sweep": 0.01,
+    "Trail Decay": 0.85
+  },
+  "feedbackParameters": {
+    "decay": 0.03,
+    "gain": 0.97,
+    "zoom": 0.003,
+    "rotate": -0.005,
+    "hueShift": 0.0,
+    "blur": 0.0,
+    "chroma": 0.0,
+    "mode": 0.0,
+    "kaleido": 1.0
+  }
+}

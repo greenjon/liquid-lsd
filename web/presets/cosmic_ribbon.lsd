@@ -1,0 +1,32 @@
+{
+  "name": "cosmic_ribbon",
+  "visualSourceType": "mandala",
+  "parameters": {
+    "L1": 0.45,
+    "L2": 0.25,
+    "L3": 0.2,
+    "L4": 0.1,
+    "a": 7,
+    "b": 11,
+    "c": 13,
+    "d": 5,
+    "Thickness": 0.014,
+    "Zoom": 0.65,
+    "Rotate Z": 0.0,
+    "Hue Offset": 0.15,
+    "Hue Sweep": 0.7,
+    "Depth": 0.5,
+    "Max R": 1.0
+  },
+  "feedbackParameters": {
+    "decay": 0.05,
+    "gain": 0.95,
+    "zoom": 0.003,
+    "rotate": 0.015,
+    "hueShift": 0.003,
+    "blur": 0.2,
+    "chroma": 0.0,
+    "mode": 0.0,
+    "kaleido": 4.0
+  }
+}

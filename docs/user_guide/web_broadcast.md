@@ -111,7 +111,9 @@ When powered on, the browser connects to the live Icecast audio stream (`https:/
 
 ### 24/7 Autopilot Scheduler (`autopilot.js`)
 When no live broadcaster is connected, the web visualizer automatically operates in **Autopilot Mode**:
-- Sequentially cycles through curated visual presets defined in `web/autopilot.json`.
-- Executes smooth fade-through-black master alpha transitions between presets every 30–60 seconds.
+- **Independent Web Curation (`web/presets/`, `web/playlists/`)**: Web TV maintains its own self-contained preset and playlist collections decoupled from the desktop application package.
+  - Curated Foreground Playlist: `web/playlists/default.lsdset` cycles through distinct visual engines (`mandala_flow`, `spiral_drift`, `cosmic_ribbon`, `hyperspace_slice`, `attractor_flow`).
+  - Curated Background Playlist: `web/playlists/default_bg.lsdset` cycles ambient background textures (`ambient_bg`, `dark_spiral`).
+- Executes smooth Hermite crossfades between foreground decks (A/B) and dip-to-black fades for background presets based on timings defined in `web/settings.json`.
 - Modulates all parameters against the live Icecast audio stream so visuals remain dynamically audio-reactive 24/7.
 - Smoothly yields control and transitions to live visual parameters the second a broadcaster connects.

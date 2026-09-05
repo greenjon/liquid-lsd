@@ -1,0 +1,29 @@
+{
+  "name": "dark_spiral",
+  "visualSourceType": "dynamic_spiral",
+  "parameters": {
+    "Max Points": 300,
+    "Scale": 0.35,
+    "Damping": 180.0,
+    "Wave Freq": 0.1,
+    "Wave Amp": 0.001,
+    "Shear": 0.05,
+    "Speed": 0.3,
+    "Dot Size": 0.006,
+    "Glow": 0.8,
+    "Hue Offset": 0.05,
+    "Hue Sweep": 0.01,
+    "Trail Decay": 0.75
+  },
+  "feedbackParameters": {
+    "decay": 0.05,
+    "gain": 0.94,
+    "zoom": 0.002,
+    "rotate": -0.003,
+    "hueShift": 0.0,
+    "blur": 0.2,
+    "chroma": 0.0,
+    "mode": 0.0,
+    "kaleido": 1.0
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "hyperspace_slice",
+  "visualSourceType": "hyper_slice",
+  "parameters": {
+    "Slice W": 0.0,
+    "Rot XW": 0.5,
+    "Rot YW": 0.3,
+    "Rot ZW": 0.2,
+    "Zoom": 1.0,
+    "Hue Offset": 0.55,
+    "Hue Sweep": 0.4,
+    "Density": 1.2
+  },
+  "feedbackParameters": {
+    "decay": 0.03,
+    "gain": 0.97,
+    "zoom": 0.006,
+    "rotate": 0.004,
+    "hueShift": 0.002,
+    "blur": 0.0,
+    "chroma": 0.3,
+    "mode": 0.0,
+    "kaleido": 1.0
+  }
+}

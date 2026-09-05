@@ -1,0 +1,23 @@
+{
+  "name": "ambient_bg",
+  "visualSourceType": "chladni",
+  "parameters": {
+    "M": 3.0,
+    "N": 5.0,
+    "Speed": 0.2,
+    "Zoom": 0.9,
+    "Hue Offset": 0.6,
+    "Hue Sweep": 0.15
+  },
+  "feedbackParameters": {
+    "decay": 0.06,
+    "gain": 0.93,
+    "zoom": 0.001,
+    "rotate": 0.002,
+    "hueShift": 0.0,
+    "blur": 0.3,
+    "chroma": 0.0,
+    "mode": 0.0,
+    "kaleido": 1.0
+  }
+}

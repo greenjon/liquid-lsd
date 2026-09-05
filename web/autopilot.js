@@ -57,7 +57,7 @@ const presetCache = new Map();
 async function fetchPreset(nameOrPath) {
   let path = nameOrPath.trim();
   if (!path.startsWith('/') && !path.startsWith('http') && !path.startsWith('library/') && !path.startsWith('presets/')) {
-    path = `library/presets/${path}`;
+    path = `presets/${path}`;
   }
   if (!path.endsWith('.lsd') && !path.endsWith('.json')) {
     path = `${path}.lsd`;
@@ -80,7 +80,7 @@ async function fetchPreset(nameOrPath) {
 async function loadPlaylistFile(filename) {
   let path = filename.trim();
   if (!path.startsWith('/') && !path.startsWith('http') && !path.startsWith('library/') && !path.startsWith('playlists/')) {
-    path = `library/playlists/${path}`;
+    path = `playlists/${path}`;
   }
   if (!path.endsWith('.lsdset') && !path.endsWith('.json')) {
     path = `${path}.lsdset`;

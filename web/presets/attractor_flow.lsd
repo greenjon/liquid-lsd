@@ -1,0 +1,25 @@
+{
+  "name": "attractor_flow",
+  "visualSourceType": "attractor_feedback",
+  "parameters": {
+    "Param A": 1.7,
+    "Param B": 1.5,
+    "Param C": 1.9,
+    "Param D": 0.7,
+    "Speed": 0.4,
+    "Zoom": 0.85,
+    "Hue Offset": 0.7,
+    "Hue Sweep": 0.5
+  },
+  "feedbackParameters": {
+    "decay": 0.025,
+    "gain": 0.975,
+    "zoom": 0.004,
+    "rotate": -0.006,
+    "hueShift": 0.001,
+    "blur": 0.1,
+    "chroma": 0.2,
+    "mode": 0.0,
+    "kaleido": 2.0
+  }
+}
