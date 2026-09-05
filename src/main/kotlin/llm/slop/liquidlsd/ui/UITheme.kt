@@ -81,15 +81,12 @@ object UITheme {
 
     const val BASE_FONT_PX = 15f
 
-    @Volatile
-    var systemDpiScale: Float = 1.0f
-
     var guiScalePercent: Int
         get() = settings.guiScalePercent
         set(value) { settings = settings.copy(guiScalePercent = value.coerceIn(75, 200)) }
 
     val baseSize: Float
-        get() = BASE_FONT_PX * (guiScalePercent / 100f) * systemDpiScale
+        get() = BASE_FONT_PX * (guiScalePercent / 100f)
 
     var audioEngineEnabled: Boolean
         get() = settings.audioEngineEnabled

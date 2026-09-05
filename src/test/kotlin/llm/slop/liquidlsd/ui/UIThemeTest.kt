@@ -22,8 +22,6 @@ class UIThemeTest {
         }
 
         try {
-            // Modify settings in memory
-            UITheme.systemDpiScale = 1.0f
             UITheme.guiScalePercent = 160
             UITheme.showMidiCol = false
             UITheme.showLfoCol = true
@@ -216,7 +214,6 @@ class UIThemeTest {
     @Test
     fun testFontSizeBoundaries() {
         // Scale range: 75 %–200 % of BASE_PX=15f
-        UITheme.systemDpiScale = 1.0f
         UITheme.guiScalePercent = 50 // below min
         assertEquals(75, UITheme.guiScalePercent)
         assertEquals(11.25f, UITheme.baseSize)
@@ -225,24 +222,19 @@ class UIThemeTest {
         assertEquals(200, UITheme.guiScalePercent)
         assertEquals(30.0f, UITheme.baseSize)
 
-        // 100 % at 1.0x DPI = 15 px (default baseline)
+        // 100 % = 15 px (default baseline)
         UITheme.guiScalePercent = 100
         assertEquals(15f, UITheme.baseSize)
 
-        // 100 % at 1.5x DPI (1920x1200 / 150% scaling) = 22.5 px
-        UITheme.systemDpiScale = 1.5f
-        assertEquals(22.5f, UITheme.baseSize)
-
-        // 150 % user scale at 1.5x DPI = 33.75 px
+        // 150 % user scale = 22.5 px
         UITheme.guiScalePercent = 150
-        assertEquals(33.75f, UITheme.baseSize)
+        assertEquals(22.5f, UITheme.baseSize)
 
         // 75 % and 200 % round-trip through pctToPx
         assertEquals(11.25f, SettingsPanel.pctToPx(75))
         assertEquals(30f,    SettingsPanel.pctToPx(200))
 
         // Reset to default
-        UITheme.systemDpiScale = 1.0f
         UITheme.guiScalePercent = 100
     }
 

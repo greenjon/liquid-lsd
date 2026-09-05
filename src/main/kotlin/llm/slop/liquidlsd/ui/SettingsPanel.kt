@@ -193,20 +193,19 @@ object SettingsPanel {
         val committedPct = session.uiTheme.guiScalePercent
         val currentPct = pendingGuiScale ?: committedPct
         val t = UITheme
-        val basePx = 15.0f * (currentPct / 100f) * session.uiTheme.systemDpiScale
-        val dpiPct = (session.uiTheme.systemDpiScale * 100f).toInt()
+        val basePx = 15.0f * (currentPct / 100f)
         session.uiTheme.caption(
             "Cap ${(basePx * t.multCaption).toInt()}  " +
             "Body ${(basePx * t.multBody).toInt()}  " +
             "H3 ${(basePx * t.multH3).toInt()}  " +
             "H2 ${(basePx * t.multH2).toInt()}  " +
-            "H1 ${(basePx * t.multH1).toInt()} px  |  Display Scale: ${dpiPct}% (${session.uiTheme.systemDpiScale}x)"
+            "H1 ${(basePx * t.multH1).toInt()} px"
         )
         ImGui.spacing()
 
         CustomRangeSlider.drawCompactSlider(
             session = session,
-            label = "GUI Scale",
+            label = "UI Scale",
             currentValue = currentPct.toFloat(),
             minLimit = MIN_PCT.toFloat(),
             maxLimit = MAX_PCT.toFloat(),
@@ -223,10 +222,10 @@ object SettingsPanel {
         )
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip(
-                "Scale the entire GUI (fonts, padding, widgets) from $MIN_PCT% to $MAX_PCT%.\n" +
+                "Scale the entire UI (fonts, padding, widgets) from $MIN_PCT% to $MAX_PCT%.\n" +
                 "Drag smoothly and release mouse to apply.\n" +
                 "Ctrl+- and Ctrl+= adjust by 5% steps.\n" +
-                "System display DPI scaling (${dpiPct}%) is automatically applied."
+                "HiDPI display scaling is handled automatically."
             )
         }
         ImGui.spacing()

@@ -7,6 +7,10 @@
 - **Automated Smoke-Test Verification**: All 4 target platform distributions are verified natively on GitHub Actions runners before release, ensuring only verified, functional binaries are published.
 - **Fixed Release Notes Accumulation**: Resolved an issue where GitHub Releases accumulated and reprinted historical release notes from all previous versions.
 
+### UI Sizing & HiDPI Double-Scale Fix
+- **HiDPI Double-Scaling Resolution (`UITheme.kt`, `SettingsPanel.kt`, `UIManager.kt`, `Main.kt`)**: Removed redundant manual `systemDpiScale` calculation from UI sizing formulas. With `imgui-java` 1.86.12+, the ImGui GLFW/GL3 backends handle OS display content scaling automatically in logical pixels. Base UI font size is now directly calculated as `15.0px * (guiScalePercent / 100)`.
+- **Streamlined UI Scale Controls**: Simplified Settings panel sizing controls to a single "UI Scale" slider (75%–200%, 5% steps) with updated tooltip clarifying that OS HiDPI scaling is handled automatically.
+
 ---
 
 ## Version 1.0.0-beta.40

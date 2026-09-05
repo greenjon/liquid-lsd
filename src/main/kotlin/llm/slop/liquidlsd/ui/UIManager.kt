@@ -328,7 +328,7 @@ class UIManager(
             session.uiTheme.rebuildFonts(ImGui.getIO())
             imguiGl3.updateFontsTexture()
             UIThemeStyler.scaleStyleFromDefault(defaultStyle, currentBaseSize)
-            logger.info { "Font size applied: ${currentBaseSize}px (guiScale=${session.uiTheme.guiScalePercent}%, dpiScale=${session.uiTheme.systemDpiScale}x)" }
+            logger.info { "Font size applied: ${currentBaseSize}px (guiScale=${session.uiTheme.guiScalePercent}%)" }
         }
 
         imguiGlfw.newFrame()
@@ -389,11 +389,7 @@ class UIManager(
 
     fun onContentScaleChanged(newScale: Float) {
         val clamped = newScale.coerceAtLeast(1.0f)
-        if (session.uiTheme.systemDpiScale != clamped) {
-            session.uiTheme.systemDpiScale = clamped
-            pendingFontRebuild = true
-            logger.info { "System DPI scale changed to: ${clamped}x, scheduling font rebuild (effective baseSize=${session.uiTheme.baseSize}px)" }
-        }
+        logger.info { "Window content scale changed: ${clamped}x" }
     }
 
     fun applyGuiScalePercent(newPct: Int) {

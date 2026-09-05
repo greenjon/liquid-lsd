@@ -169,7 +169,7 @@ class WindowFrameController(
         val (winX, winY) = getWindowPos()
         val (curX, curY) = getCursorPos()
 
-        val margin = (6.0 * UITheme.systemDpiScale).coerceIn(4.0, 10.0)
+        val margin = 6.0
 
         val insideWindow = curX >= 0.0 && curX <= winW.toDouble() && curY >= 0.0 && curY <= winH.toDouble()
 

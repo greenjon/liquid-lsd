@@ -183,14 +183,13 @@ fun main(args: Array<String>) {
     // Enforce minimum window size to prevent desktop layout compression
     glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE)
 
-    // Query OS DPI / HiDPI content scale so controls are legible on HiDPI and 4K screens.
-    // On standard 1080p monitors xScale ≈ 1.0; on 4K HiDPI monitors it can be 1.5–2.0+.
+    // Log detected OS display content scale for diagnostics.
+    // With imgui-java 1.86.12+, the ImGui GLFW/GL3 backends handle framebuffer content scaling automatically.
     val xScaleBuf = FloatArray(1)
     val yScaleBuf = FloatArray(1)
     glfwGetWindowContentScale(window, xScaleBuf, yScaleBuf)
-    val startupDpi = xScaleBuf[0].coerceAtLeast(1.0f)
-    UITheme.systemDpiScale = startupDpi
-    logger.info { "Display DPI scale detected: ${startupDpi}x → Base UI font size ${UITheme.baseSize}px (userScale=${UITheme.guiScalePercent}%)" }
+    val startupScale = xScaleBuf[0].coerceAtLeast(1.0f)
+    logger.info { "Display content scale detected: ${startupScale}x → Base UI font size ${UITheme.baseSize}px (userScale=${UITheme.guiScalePercent}%)" }
 
     glfwMakeContextCurrent(window)
     glfwSwapInterval(1) // Enable vsync

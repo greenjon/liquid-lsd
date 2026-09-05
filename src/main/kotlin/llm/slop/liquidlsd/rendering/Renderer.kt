@@ -15,6 +15,7 @@ class Renderer {
     private val mixerShader: Shader
     val blitShader: Shader
     private val triPlanarShader: Shader
+    private val tetraKaleidoShader: Shader
     private val view2DShader: Shader
 
     private var isDisposed = false
@@ -25,6 +26,7 @@ class Renderer {
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
         triPlanarShader = Shader.fromResources("shaders/tri_planar.vert", "shaders/tri_planar.frag")
+        tetraKaleidoShader = Shader.fromResources("shaders/tetra_kaleido.vert", "shaders/tetra_kaleido.frag")
         view2DShader = Shader.fromResources("shaders/blit.vert", "shaders/view2d.frag")
     }
 
@@ -154,33 +156,61 @@ class Renderer {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
             }
 
-            triPlanarShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, deck.rawSourceFBO.texture)
-            triPlanarShader.setUniform("uTexture", 0)
-
-            triPlanarShader.setUniform("uPitch", deck.viewRotateX.value)
-            triPlanarShader.setUniform("uYaw", deck.viewRotateY.value)
-            triPlanarShader.setUniform("uRoll", deck.viewRotateZ.value)
-            triPlanarShader.setUniform("uZoom", deck.viewZoom.value)
-            triPlanarShader.setUniform("uPersp", deck.viewPersp.value)
-            triPlanarShader.setUniform("uSeparation", deck.viewSeparation.value)
-            triPlanarShader.setUniform("uDepthDim", deck.viewDepthDim.value)
-            triPlanarShader.setUniform("uAlpha", deck.source.globalAlpha.value)
-            triPlanarShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
-            val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
-            triPlanarShader.setUniform("uAspectRatio", aspect)
-
             val modeVal = deck.view3DMode.value.roundToInt()
-            val numInstances = if (modeVal >= 2) 6 else 3
+            val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
 
-            glBindVertexArray(Geometry.getFullscreenQuad())
-            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, numInstances)
-            glBindVertexArray(0)
+            if (modeVal == 4) {
+                // Mode 4: Tetrahedral Kaleidoscope (24-Chamber Space Folding)
+                tetraKaleidoShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, deck.rawSourceFBO.texture)
+                tetraKaleidoShader.setUniform("uTexture", 0)
 
-            triPlanarShader.unbind()
-            deck.cleanFBO.unbind()
-            glActiveTexture(GL_TEXTURE0)
+                tetraKaleidoShader.setUniform("uPitch", deck.viewRotateX.value)
+                tetraKaleidoShader.setUniform("uYaw", deck.viewRotateY.value)
+                tetraKaleidoShader.setUniform("uRoll", deck.viewRotateZ.value)
+                tetraKaleidoShader.setUniform("uZoom", deck.viewZoom.value)
+                tetraKaleidoShader.setUniform("uPersp", deck.viewPersp.value)
+                tetraKaleidoShader.setUniform("uSeparation", deck.viewSeparation.value)
+                tetraKaleidoShader.setUniform("uDepthDim", deck.viewDepthDim.value)
+                tetraKaleidoShader.setUniform("uAlpha", deck.source.globalAlpha.value)
+                tetraKaleidoShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
+                tetraKaleidoShader.setUniform("uAspectRatio", aspect)
+
+                Geometry.drawFullscreenQuad()
+
+                tetraKaleidoShader.unbind()
+                deck.cleanFBO.unbind()
+                glActiveTexture(GL_TEXTURE0)
+            } else {
+                // Modes 1..3: Tri-Planar / Cube Cage / Hex-Planar instanced planes
+                triPlanarShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, deck.rawSourceFBO.texture)
+                triPlanarShader.setUniform("uTexture", 0)
+
+                triPlanarShader.setUniform("uPitch", deck.viewRotateX.value)
+                triPlanarShader.setUniform("uYaw", deck.viewRotateY.value)
+                triPlanarShader.setUniform("uRoll", deck.viewRotateZ.value)
+                triPlanarShader.setUniform("uZoom", deck.viewZoom.value)
+                triPlanarShader.setUniform("uPersp", deck.viewPersp.value)
+                triPlanarShader.setUniform("uSeparation", deck.viewSeparation.value)
+                triPlanarShader.setUniform("uDepthDim", deck.viewDepthDim.value)
+                triPlanarShader.setUniform("uAlpha", deck.source.globalAlpha.value)
+                triPlanarShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
+                triPlanarShader.setUniform("uAspectRatio", aspect)
+                triPlanarShader.setUniform("u3DMode", modeVal)
+
+                val numInstances = if (modeVal == 3 || modeVal == 2) 6 else 3
+
+                glBindVertexArray(Geometry.getFullscreenQuad())
+                glDrawArraysInstanced(GL_TRIANGLES, 0, 6, numInstances)
+                glBindVertexArray(0)
+
+                triPlanarShader.unbind()
+                deck.cleanFBO.unbind()
+                glActiveTexture(GL_TEXTURE0)
+            }
         }
 
         // 2. Blend clean image and current history into next history FBO

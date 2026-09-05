@@ -287,14 +287,13 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## GUI Scale: Dynamic System DPI Detection & User Zoom Factor Separation
+## GUI Scale: Native HiDPI Handling and Single User UI Scale Knob
 
-- **Decision**: Separate GUI scaling into dynamic runtime OS DPI detection (`systemDpiScale`, via `glfwGetWindowContentScale` and `glfwSetWindowContentScaleCallback`) and persistent user zoom preference (`guiScalePercent`, 75%–200%, 5% steps). The effective base font size is dynamically computed as:
-  $$\text{Effective Base Size (px)} = 15.0\text{px} \times \left(\frac{\text{guiScalePercent}}{100}\right) \times \text{systemDpiScale}$$
+- **Decision**: UI sizing is governed solely by the baseline font size and persistent user zoom preference (`guiScalePercent`, 75%–200%, 5% steps). Manual `systemDpiScale` factoring was removed:
+  $$\text{Effective Base Size (px)} = 15.0\text{px} \times \left(\frac{\text{guiScalePercent}}{100}\right)$$
 - **Rationale**:
-  - **Dynamic Multi-Monitor & DPI Adaptation**: Users frequently connect laptops to external 4K / 150% / 200% displays or switch display resolutions. Detecting `systemDpiScale` on every launch and tracking window movement across monitors via `glfwSetWindowContentScaleCallback` prevents UI elements from shrinking or blowing up.
-  - **Separation of Preferences**: The persistent settings file stores the user's relative scaling preference (`guiScalePercent`, default 100%) rather than an absolute pixel size baked on one specific monitor.
-  - **Automatic Font Atlas Rebuild**: When DPI changes, the ImGui font atlas is dynamically rebuilt and uploaded to the GPU, keeping typography sharp and correctly proportioned across varying pixel densities.
+  - **Elimination of Double-Scaling**: Starting with `imgui-java` 1.86.12, the ImGui GLFW and GL3 backends automatically detect and scale the display for OS window content scale (`glfwGetWindowContentScale`). Retaining manual `systemDpiScale` multiplication in `baseSize` resulted in UI elements scaling twice (e.g. 4× on 2× HiDPI displays).
+  - **Clean Single-Knob Model**: Modern desktop applications maintain logical pixels in application code while delegating display scaling to the backend/compositor. The user setting (`guiScalePercent`, default 100%) acts as a clean relative zoom factor.
   - **Discrete Steps**: 5% steps keep the slider tactile and prevent blurry fractional font rasterization in the Dear ImGui atlas.
 
 ---
