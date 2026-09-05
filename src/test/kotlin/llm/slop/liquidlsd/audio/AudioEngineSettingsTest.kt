@@ -93,4 +93,37 @@ class AudioEngineSettingsTest {
         assertTrue(savedContent.contains("broadcastAutoConnect=true"), "Existing broadcast auto-connect should be preserved")
         assertTrue(savedContent.contains("audioBackend="), "New audio properties should be appended")
     }
+
+    @Test
+    fun testManualBpmWhenAudioEngineDisabled() {
+        UITheme.audioEngineEnabled = false
+        AudioEngine.stop()
+
+        val initialBeats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
+        AudioEngine.manualBpm = 135.0f
+        AudioEngine.setBpmDirectly(135.0f)
+
+        assertEquals(135.0f, AudioEngine.getEstimatedBpm())
+        assertEquals(135.0f, llm.slop.liquidlsd.cv.CVRegistry.get("bpm"))
+        assertEquals(135.0f, llm.slop.liquidlsd.ui.PerformanceStats.bpm)
+
+        // Beat count must maintain monotonic forward continuity across manual BPM changes
+        val afterBeats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
+        assertTrue(afterBeats >= initialBeats, "Beat count should advance monotonically after manual BPM change")
+
+        UITheme.saveSettings()
+
+        // Reset
+        AudioEngine.manualBpm = 120.0f
+        AudioEngine.setBpmDirectly(120.0f)
+
+        val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
+        loadMethod.isAccessible = true
+        loadMethod.invoke(UITheme)
+
+        assertEquals(false, UITheme.audioEngineEnabled)
+        assertEquals(135.0f, AudioEngine.manualBpm, 0.001f)
+        assertEquals(135.0f, AudioEngine.getEstimatedBpm())
+    }
 }
+

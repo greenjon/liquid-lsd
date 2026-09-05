@@ -26,6 +26,12 @@ The Preset Grid is located in the left panel of Performance Mode.
   - **LFO** (`Electric Sky Blue`): Configurable primary and secondary low-frequency oscillators (`LFO 1` / `LFO 2`).
   - **SEQ** (`Electric Lime Green`): Pattern-based Step Sequencer with configurable lengths (8, 16, 32 steps), hold/glide dynamics, and live playhead tracking.
   - **AUD** (`Warm Amber Gold`): Audio modulation supporting dual modular slots (`Audio 1` & `Audio 2`) with Continuous (RMS) energy envelopes or Transient (Spectral Flux) onset detection across 4 frequency bands (`AMP`, `BASS`, `MID`, `HIGH`).
+- **Column Visibility Kebab Menu (`⋮`)**:
+  - Located directly to the right of the column headers.
+  - Allows quick toggling of visible CV columns (`MIDI`, `LFO`, `SEQ`, `AUD`) without opening Settings.
+  - Displays real-time status indicators next to each column: `(! Needed by patch)`, `(! Audio Engine Off)`, `(! MIDI Disabled)`, `(! Sequencer Disabled)`.
+  - Displays a red `[!]` badge over the kebab button whenever the loaded patch utilizes modulators that are hidden or offline.
+  - Includes one-click quick actions: `[ Turn On Needed Columns ]` (reveals all hidden columns and turns on required subsystems) and `[ Enable Audio Engine ]` (starts audio capture immediately).
 - **Grid Cells**: Intersection points linking a source to a parameter. Active cells display an animated readout knob, needle, and dial arc matching the parameter's theme text color for seamless legibility across all themes.
 
 - **Grid Knob Cell Scale & Resolution Scaling**: Grid cells and circular readout knobs automatically scale with global UI font size (`baseSize`). You can fine-tune relative knob dimensions (0.70x to 2.00x) under **Settings -> Preset Grid** via the **Grid Knob Cell Scale** slider.

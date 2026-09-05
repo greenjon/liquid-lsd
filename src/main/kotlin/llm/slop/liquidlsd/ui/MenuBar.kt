@@ -259,16 +259,17 @@ class MenuBar(
         val bpm        = PerformanceStats.bpm
         val audioActive = session.audioEngine.isActive()
         val audioLatency = PerformanceStats.audioCallbackMs
+        val isAudioDisabled = !session.uiTheme.audioEngineEnabled
         val showAudio = audioActive && session.uiTheme.audioEngineEnabled && audioLatency > 0.0f
-        val showBeatDots = audioActive && session.uiTheme.audioEngineEnabled
+        val showBeatDots = true
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val dotR = 3.5f * fontScale
         val dotGap = 7f * fontScale
-        val dotsTotalW = if (showBeatDots) (dotR * 2f * 4f) + (dotGap * 3f) + (10f * fontScale) else 0f
+        val dotsTotalW = (dotR * 2f * 4f) + (dotGap * 3f) + (10f * fontScale)
 
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
-        val bpmText = if (audioActive && session.uiTheme.audioEngineEnabled) "BPM: %3.0f  ".format(bpm) else ""
+        val bpmText = "BPM: %3.0f  ".format(bpm)
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else ""
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%3.0f ms  ".format(ftMs)
@@ -342,25 +343,40 @@ class MenuBar(
                 }
 
                 ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - (4f * fontScale), textH)
+                if (ImGui.isItemClicked()) {
+                    onOpenAudioEngineMonitor()
+                }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4")
+                    if (isAudioDisabled) {
+                        ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nAudio engine is disabled (manual BPM: %.0f).\nClick to open Audio Engine settings.".format(bpm))
+                    } else {
+                        ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nClick to open Audio Engine settings.")
+                    }
                 }
                 ImGui.sameLine(0f, 4f * fontScale)
             }
 
             // ── BPM ───────────────────────────────────────────────────────────────
-            if (audioActive && session.uiTheme.audioEngineEnabled) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue
-                ImGui.text(bpmText)
-                ImGui.popStyleColor()
-                if (ImGui.isItemClicked()) {
-                    onOpenAudioEngineMonitor()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Audio Engine BPM: estimated tempo.\nClick to open Audio Engine settings.")
-                }
-                ImGui.sameLine(0f, 0f)
+            if (isAudioDisabled) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.95f, 0.80f, 0.40f, 1.0f) // warm amber tone for manual tempo
+            } else {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue for live audio engine
             }
+            ImGui.text(bpmText)
+            ImGui.popStyleColor()
+            if (ImGui.isItemClicked()) {
+                onOpenAudioEngineMonitor()
+            }
+            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                if (isAudioDisabled) {
+                    ImGui.setTooltip("Manual BPM: %.0f (Audio engine disabled, tempo is fixed).\nClick to open Audio Engine settings to adjust tempo.".format(bpm))
+                } else if (audioActive) {
+                    ImGui.setTooltip("Audio Engine BPM: estimated tempo.\nClick to open Audio Engine settings.")
+                } else {
+                    ImGui.setTooltip("Audio Engine BPM (Engine inactive).\nClick to open Audio Engine settings.")
+                }
+            }
+            ImGui.sameLine(0f, 0f)
 
             // ── DSP Latency ───────────────────────────────────────────────────────
             if (showAudio) {

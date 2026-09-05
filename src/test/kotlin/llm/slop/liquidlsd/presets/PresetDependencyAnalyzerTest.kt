@@ -207,4 +207,48 @@ class PresetDependencyAnalyzerTest {
         assertEquals(1, issues.size)
         assertEquals("Randomization Disabled", issues[0].title)
     }
+
+    @Test
+    fun testAnalyzeDtoWithFluxTransientAudioSourcesOnly() {
+        val dto = DeckPresetDto(
+            name = "FluxOnly",
+            visualSourceType = "mandala",
+            parameters = mapOf(
+                "bass" to ParameterDto(
+                    baseValue = 1f, baseMin = 1f, baseMax = 1f, randomizeBase = false,
+                    modulators = listOf(
+                        ModulatorDto(sourceId = "audio_flux_bass", operator = "ADD", depth = 0.8f)
+                    )
+                )
+            ),
+            feedbackParameters = emptyMap()
+        )
+
+        val deps = dto.analyzeDependencies()
+        assertTrue(deps.usesAudio, "Spectral flux transient modulator should be recognized as usesAudio")
+    }
+
+    @Test
+    fun testGetIssuesWhenMidiAndSequencerSubsystemsDisabled() {
+        val session = createSession(midiEnabled = false, sequencerEnabled = false)
+        val deps = PresetDependencies(usesMidi = true, usesSeq = true)
+
+        val issues = deps.getIssues(session)
+        assertEquals(2, issues.size)
+        assertTrue(issues.any { it.title == "MIDI Disabled" })
+        assertTrue(issues.any { it.title == "Sequencer Disabled" })
+    }
+
+    @Test
+    fun testGetIssuesZeroAllocationCaching() {
+        PresetDependencyAnalyzer.clearCache()
+        val session = createSession(audioEngineEnabled = false)
+        val deps = PresetDependencies(usesAudio = true)
+
+        val firstCall = deps.getIssues(session)
+        val secondCall = deps.getIssues(session)
+
+        // Verify referential identity (cached immutable instance reused)
+        kotlin.test.assertSame(firstCall, secondCall, "getIssues must return cached instance to prevent GC allocations")
+    }
 }

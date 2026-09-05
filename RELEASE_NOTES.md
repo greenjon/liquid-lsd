@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Manual BPM Configuration & Persistent Title Bar Display when Audio Engine is Disabled
+- **Manual BPM Setting When Audio Engine Disabled (`AudioEnginePanel.kt`, `AudioEngine.kt`)**: When the Audio Engine is disabled via Settings, the panel now displays the Beat Sync & Manual Tempo section with a compact manual BPM slider (40.0–200.0 BPM, default 120.0 BPM), a real-time BPM readout with an internal beat phase flashing dot, and a one-click "Reset to 120.0 BPM" button. Users can freely configure tempos offline without needing live audio hardware.
+- **Phase-Continuous Offline Clock Re-Anchoring (`AudioEngine.kt`)**: When adjusting manual BPM while the audio engine is disabled or inactive, `setBpmDirectly` captures the running beat count from `CVRegistry.getSynchronizedTotalBeats()` to re-anchor the beat clock, preventing backward beat counter jumps and maintaining seamless phase continuity across BEAT LFOs and step sequencers.
+- **Persistent Title Bar BPM & 4-Beat Meter (`MenuBar.kt`)**: The top title bar now persistently displays both the BPM readout and the 4-beat phase meter dots even when the Audio Engine is disabled or inactive. In manual mode, BPM text is rendered in warm amber with contextual hover tooltips explaining that the audio engine is disabled and the tempo is fixed. Clicking either the BPM readout or the 4-beat meter directly opens the Audio Engine settings panel.
+
+### Hex-Planar (60°) & Tetrahedral 24-Chamber Kaleidoscope 3D Modes
+- **Hex-Planar Display Mode (6 Planes @ 60°)**: Added Mode 3 to the universal `View` pipeline, replicating any 2D visual source across the 6 symmetry planes of the tetrahedral Coxeter group ($A_3$: $x = \pm y, y = \pm z, z = \pm x$). All 6 planes pass through $(0, 0, 0)$ at $60^\circ$ angles, sharing the exact same origin and expanding along their normals into a 12-faced rhombic dodecahedral cage when `Separation` is increased.
+- **Tetrahedral Kaleidoscope Mode (24-Chamber Space Folding)**: Added Mode 4 to the universal `View` pipeline (`tetra_kaleido.vert`, `tetra_kaleido.frag`), implementing iterative Coxeter reflection folding across simple roots. Virtual camera rays fold 24 times into the tetrahedral fundamental domain, producing seamless mirror reflections across all sector boundaries.
+- **Background Transparency & Discard Precision**: Non-luminous background fragments are cleanly discarded, ensuring both modes float transparently over the background deck with zero gray shadow artifacts.
+
 ### Unified Audio & Transient Modulator System
 - **Consolidated Audio Matrix Column**: Merged the separate `AUD` and `TRIG` columns in the Preset Grid into a single, unified `AUD` column (`VAL`, `MIDI`, `LFO`, `SEQ`, `AUD`).
 - **Dual Modular Audio Slots**: Each modulatable parameter now supports up to 2 independent audio slots (`Audio 1` and `Audio 2`). Slot 2 stays cleanly collapsed behind an `[ + Enable Audio Slot 2 ]` button until activated.
@@ -18,6 +28,12 @@
 ### UI Sizing & HiDPI Double-Scale Fix
 - **HiDPI Double-Scaling Resolution (`UITheme.kt`, `SettingsPanel.kt`, `UIManager.kt`, `Main.kt`)**: Removed redundant manual `systemDpiScale` calculation from UI sizing formulas. With `imgui-java` 1.86.12+, the ImGui GLFW/GL3 backends handle OS display content scaling automatically in logical pixels. Base UI font size is now directly calculated as `15.0px * (guiScalePercent / 100)`.
 - **Streamlined UI Scale Controls**: Simplified Settings panel sizing controls to a single "UI Scale" slider (75%–200%, 5% steps) with updated tooltip clarifying that OS HiDPI scaling is handled automatically.
+
+### Preset Dependency Inspection & Column Kebab Menu
+- **Proactive Dependency Analysis (`PresetDependencyAnalyzer.kt`)**: Automatically inspects visual presets and live decks for reliance on disabled subsystems (`MIDI`, `Step Sequencer`, `Randomization`), offline engines (`Audio Engine`), or hidden columns in the Preset Grid.
+- **Non-Destructive Alert Badges**: Displays a red `[!]` indicator alongside affected presets in the Library list and active deck monitor headers with rich, explanatory hover tooltips—never hiding presets or blocking playback.
+- **Zero-Allocation Issue Evaluation**: Memoizes issue evaluation through an internal 13-bit state cache, preventing garbage collection pause jitter across 60 FPS list rendering.
+- **Preset Grid Header Column Kebab (`⋮`)**: Added an inline column configuration menu to the right of the grid headers (`VAL`, `MIDI`, `LFO`, `SEQ`, `AUD`) with live status indicators, instant column visibility toggles, and one-click `[ Turn On Needed Columns ]` / `[ Enable Audio Engine ]` quick actions.
 
 ---
 

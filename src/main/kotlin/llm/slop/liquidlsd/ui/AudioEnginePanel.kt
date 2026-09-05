@@ -96,7 +96,95 @@ object AudioEnginePanel {
 
         if (!theme.audioEngineEnabled) {
             ImGui.spacing()
-            theme.caption("Audio engine is currently disabled. Enable it above to process live audio and CV signals.")
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.95f, 0.75f, 0.35f, 1.0f)
+            ImGui.textWrapped("${Icons.ALERT} Audio engine is disabled. Live audio input and audio-reactive CV signals (Amp, Bass, Mid, High, Flux) are inactive.")
+            ImGui.popStyleColor()
+            ImGui.spacing()
+            theme.caption("Beat synchronization runs on the internal manual tempo clock below.")
+
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            theme.h2("${Icons.SETTINGS} Beat Sync & Manual Tempo")
+            ImGui.separator()
+            ImGui.spacing()
+
+            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+            val sliderBoxW = 52f * fontScale
+
+            val bpm = audioEngine.getEstimatedBpm()
+            val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
+            val beatPhase = totalBeats % 1.0
+            val flashIntensity = if (beatPhase < 0.25) {
+                (1.0 - (beatPhase / 0.25)).toFloat()
+            } else {
+                0.0f
+            }
+
+            ImGui.alignTextToFramePadding()
+            theme.h3("BPM: ")
+            ImGui.sameLine()
+
+            val r = 1.0f
+            val g = 0.8f + 0.2f * (1.0f - flashIntensity)
+            val b = 0.2f + 0.8f * (1.0f - flashIntensity)
+            theme.h3Colored(r, g, b, 1.0f, "%.1f".format(bpm))
+
+            ImGui.sameLine(0f, 12f)
+
+            // Beat flashing dot
+            val indicatorSize = 14f
+            val curX = ImGui.getCursorScreenPosX()
+            val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
+            ImGui.dummy(indicatorSize, indicatorSize)
+            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+                ImGui.setTooltip("Manual tempo clock. Flashes on internal beat phase.")
+            }
+            val dl = ImGui.getWindowDrawList()
+            val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.5f)
+            dl.addCircleFilled(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, indicatorCol)
+            dl.addCircle(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, borderCol, 16, 1.0f)
+
+            ImGui.sameLine(0f, 20f)
+            theme.captionColored(0.85f, 0.75f, 0.35f, 1.0f, "Manual Fixed Clock")
+
+            ImGui.spacing()
+
+            // Manual BPM Slider
+            CustomRangeSlider.drawCompactSlider(
+                session = session,
+                label = "Manual BPM",
+                currentValue = audioEngine.manualBpm,
+                minLimit = 40f,
+                maxLimit = 200f,
+                defaultValue = 120f,
+                formatValue = { "%.1f".format(it) },
+                idPrefix = "audio_engine_manual_bpm_disabled",
+                themeColor = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f),
+                showCurrentLabel = false,
+                customBoxWidth = sliderBoxW,
+                onValueChanged = { newVal ->
+                    audioEngine.manualBpm = newVal
+                    audioEngine.setBpmDirectly(newVal)
+                    theme.saveSettings()
+                }
+            )
+
+            ImGui.spacing()
+
+            if (ImGui.button("${Icons.REFRESH} Reset to 120.0 BPM", 180f, 26f)) {
+                audioEngine.manualBpm = 120.0f
+                audioEngine.setBpmDirectly(120.0f)
+                theme.saveSettings()
+            }
+            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
+                ImGui.setTooltip("Resets the manual tempo clock to standard 120.0 BPM.")
+            }
+
+            ImGui.spacing()
+            theme.caption("Note: BEAT-synced LFOs, Sequencers, and the title bar 4-beat meter track this manual BPM clock.")
             return
         }
 

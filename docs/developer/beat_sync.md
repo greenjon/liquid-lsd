@@ -96,7 +96,12 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 - **Flywheel Tempo Retention ("Dead Reckoning")**: Autocorrelation on spectral noise is bypassed, and `currentBpm` retains the last confirmed track tempo without decaying or drifting towards 120 BPM. This ensures visualizers, LFOs, and phase modulators maintain musical meter throughout 16–64 bar breakdowns.
 - **Phase Nudge Suppression**: Phase realignment nudges are suppressed (`pendingPhaseNudge = -1.0`), preventing background noise from perturbing the phase accumulator.
 - **Continuous Flywheel Coasting**: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing or changing frequency.
-- **Instant Drop Re-acquisition & Stability Gating**: When rhythmic energy returns (e.g. kick drum on the drop), the engine is already running at the track's tempo, allowing the causal dynamic programming tracker to re-anchor phase without needing to ramp tempo up/down. Stable candidate tempo estimates ($\Delta \text{BPM} \le 4.0$ BPM, with harmonic octave awareness) accumulate stability time up to a capped maximum (`min(stabilityLockDurationSec * 1.5f, stableAccumulatedSec + dt)`) with smooth exponential weighting ($0.95 / 0.05$). Outlier frames decay accumulated stability gracefully via a leaky decay rate (`dt * 2.0f`) instead of a hard reset to zero, acting as a shock absorber against transient noise/hiccups while dropping lock swiftly within $\sim 300\text{ ms}$ on genuine tempo shifts.
+### 4. Audio Engine Disabled / Internal Manual Clock Mode
+When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
+- **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_*`) are stopped to conserve CPU cycles.
+- **Internal Manual Tempo Clock**: Beat synchronization does not halt; instead, it runs continuously on the internal clock driven by `AudioEngine.manualBpm` (configurable between 40.0 and 200.0 BPM, default 120.0 BPM).
+- **Smooth Beat Continuity Across Adjustments**: When changing manual BPM while the engine is disabled, `AudioEngine.setBpmDirectly` captures `CVRegistry.getSynchronizedTotalBeats()` and re-anchors `CVRegistry.updateBeatAnchor` to prevent phase jumps or beat counter regressions.
+- **Persistent Title Bar Telemetry**: Both the BPM readout (rendered in warm amber to distinguish manual fixed clock mode) and the 4-beat phase meter remain visible in the top title bar, with hover tooltips clarifying that the audio engine is disabled and clicking opening Settings.
 
 ---
 

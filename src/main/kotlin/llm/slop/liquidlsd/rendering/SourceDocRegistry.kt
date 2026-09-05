@@ -195,8 +195,27 @@ object SourceDocRegistry {
         "hyper_slice/Glow" to "Proximity halo and volumetric bloom.",
 
         // Feedback chain (shared across all decks)
-        "feedback/fbDecay" to "How much of the previous frame persists each step. 0 = no trail; 1 = infinite persistence.",
-        "feedback/fbGain" to "Brightness gain applied to the feedback signal before blending.",
+        // View (3D display and transform)
+        "view/3D Mode" to "3D display mode: 0 = 2D Flat, 1 = Tri-Axial (3P @ 90°), 2 = Cube Cage (6P), 3 = Hex-Planar (6P @ 60°), 4 = Tetrahedral Kaleidoscope (24-Chamber).",
+        "view/3DMode" to "3D display mode: 0 = 2D Flat, 1 = Tri-Axial (3P @ 90°), 2 = Cube Cage (6P), 3 = Hex-Planar (6P @ 60°), 4 = Tetrahedral Kaleidoscope (24-Chamber).",
+        "view/Rotate X" to "3D Pitch rotation (elevation angle).",
+        "view/RotateX" to "3D Pitch rotation (elevation angle).",
+        "view/Rotate Y" to "3D Yaw rotation (azimuth angle).",
+        "view/RotateY" to "3D Yaw rotation (azimuth angle).",
+        "view/Rotate Z" to "2D/3D Roll rotation.",
+        "view/RotateZ" to "2D/3D Roll rotation.",
+        "view/Zoom" to "Camera zoom / field of view scaling.",
+        "view/3D Persp" to "Perspective strength: 0 = orthographic, 1 = deep perspective camera.",
+        "view/Persp" to "Perspective strength: 0 = orthographic, 1 = deep perspective camera.",
+        "view/Depth Dim" to "Headlight proximity falloff: dims receding geometric elements into atmospheric depth.",
+        "view/DepthDim" to "Headlight proximity falloff: dims receding geometric elements into atmospheric depth.",
+        "view/Separation" to "Axial separation offset: pushes intersecting planes outward along their normal axes.",
+        "view/Blend Mode" to "3D intersection blending: 0 = alpha transparency, 1 = additive luminous glow.",
+        "view/BlendMode" to "3D intersection blending: 0 = alpha transparency, 1 = additive luminous glow.",
+
+        // Feedback
+        "feedback/Decay" to "Feedback trail persistence: 0 = no feedback, 1 = maximum trail retention.",
+        "feedback/fbDecay" to "Feedback trail persistence: 0 = no feedback, 1 = maximum trail retention.",
         "feedback/fbZoom" to "Zoom applied to the feedback buffer each frame — creates an infinite-zoom tunnel effect.",
         "feedback/fbRotate" to "Rotation applied to the feedback buffer each frame. Drive with a slow LFO to spiral.",
         "feedback/fbHueShift" to "Hue rotation applied to the feedback signal each frame. Accumulates over time.",
@@ -232,6 +251,7 @@ object SourceDocRegistry {
     fun getParamDescription(sourceId: String, paramName: String): String =
         paramDescriptions["$sourceId/$paramName"]
             ?: paramDescriptions["feedback/$paramName"]
+            ?: paramDescriptions["view/$paramName"]
             ?: ""
 
     /** Returns a mixer-level parameter description. */

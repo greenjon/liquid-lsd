@@ -73,6 +73,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── WaveformMath.kt         — Math utils
 ├── presets/
 │   ├── PresetManager.kt        — Save/load presets, state management
+│   ├── PresetDependencyAnalyzer.kt — Dependency analysis, disabled/offline feature inspection, zero-alloc memoization
 │   ├── PlayQueueManager.kt     — Manages A/B playback queues
 │   ├── BgQueueManager.kt       — Manages background deck queue
 │   ├── PlaylistParser.kt       — Parses playlist files
@@ -90,7 +91,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + ping-pong FBOs + 2D/3D View params + FB params
 │   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO (Deck PV excluded)
-│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D tri-planar projection -> feedback -> mix -> blit
+│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope -> feedback -> mix -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders

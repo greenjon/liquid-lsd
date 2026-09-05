@@ -2,6 +2,21 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Non-Destructive Preset Dependency Inspection and Preset Grid Column Kebab Menu (`PresetDependencyAnalyzer.kt`, `FileSystemManager.kt`, `PresetGridPanel.kt`, `PresetListPanel.kt`, `DeckControlPanel.kt`)
+
+- **Decision**: Introduce a proactive, non-destructive dependency inspection system and a Preset Grid header column kebab (`⋮`) to handle patches relying on disabled subsystems, offline engines, or hidden columns:
+  - **Zero-Hiding Policy**: Never hide presets from the Library or block them from loading. When a preset uses features currently disabled or offline, display a single red `[!]` alert indicator alongside the preset name in the Library list and Deck monitor headers.
+  - **Zero-Allocation Memoized Issue Evaluation**: `PresetDependencies.getIssues(session)` memoizes issues using an internal 13-bit state cache (5 dependency bits and 8 session settings bits), guaranteeing zero object allocations per frame across hundreds of presets rendered at 60 FPS.
+  - **Rich Context Tooltips**: Hovering the `[!]` badge in either the Library or Deck monitor displays bulleted issue summaries detailing inactive engines (`Audio Engine Disabled`), disabled subsystems (`MIDI Disabled`, `Sequencer Disabled`, `Randomization Disabled`), or hidden columns (`Audio Column Hidden`, `MIDI Column Hidden`, etc.).
+  - **Preset Grid Header Column Kebab (`⋮`)**: Added a column visibility kebab menu directly to the right of the Preset Grid column headers (`VAL`, `MIDI`, `LFO`, `SEQ`, `AUD`):
+    - Displays each CV column with real-time status badges: `(! Needed by patch)`, `(! Audio Engine Off)`, `(! MIDI Disabled)`, `(! Sequencer Disabled)`.
+    - Allows instant toggling of column visibility without navigating deep into Settings.
+    - Displays a red `[!]` badge over the kebab when the active deck utilizes columns or engines that are hidden or offline.
+    - **One-Click Quick Actions**: Provides a prominent `[ Turn On Needed Columns ]` action button that reveals all hidden columns needed by the active patch and turns on required subsystems (`midiEnabled`, `sequencerEnabled`, `randomizationEnabled`, `audioEngineEnabled`), as well as an explicit `[ Enable Audio Engine ]` action button when audio capture is offline.
+- **Rationale**:
+  - Eliminates "silent failures" where users loaded audio-reactive or sequenced presets and wondered why they appeared static or unresponsive.
+  - Preserves user layout choices by never force-unhiding columns without explicit user action, while providing a frictionless one-click affordance to restore full visual expressiveness directly from the performance view.
+
 ## Unification of Audio & Trigger Modulation into 2 Modular Audio Slots (`AudioModulatorSection.kt`, `CVRegistry.kt`, `AudioEngine.kt`, `PresetGridPanel.kt`, `PresetGridRenderer.kt`, `CellConfigPanel.kt`, `Enums.kt`, `Evaluators.kt`)
 
 - **Decision**: Consolidate the separate `AUDIO` and `TRIGGER` modulation domains into a single unified `AUDIO` column (`AUD`) featuring **2 independent modular Audio Slots** per parameter:

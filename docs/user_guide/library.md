@@ -62,6 +62,7 @@ The Left column displays the complete pool of all available presets discovered a
 ### Features & Navigation
 - **Search & Tag Filter**: Type into the top search bar to filter presets in real-time by preset name or assigned tags.
 - **Clean List View**: Preset rows display clean typography without cluttered inline buttons.
+- **Offline & Dependency Alert Badges (`[!]`)**: Presets that rely on modulators or features currently offline (e.g., Audio Engine disabled), inactive (e.g., MIDI or Sequencer disabled), or hidden in the Preset Grid display a prominent red `[!]` prefix badge. Hovering the preset row displays a detailed tooltip listing all affected subsystems and hidden columns. Presets are never hidden from the library or blocked from loading.
 - **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
 - **Keyboard Shortcuts**:
   - `Ctrl + F` / `/`: Focus Preset Search filter bar (automatically opens Library if hidden).

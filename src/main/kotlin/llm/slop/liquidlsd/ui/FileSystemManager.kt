@@ -207,10 +207,12 @@ object FileSystemManager {
                     items.add(AssetItem(path = file.absolutePath, name = file.name, type = AssetType.FOLDER))
                 }
                 ext == "lsd" || ext == "patch" || ext == "json" -> {
+                    val (tags, deps) = getPresetMeta(file)
                     items.add(AssetItem(
                         path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PRESET,
                         isValid = true, // Assume valid for fast scan
-                        tags = getPresetTags(file)
+                        tags = tags,
+                        dependencies = deps
                     ))
                 }
                 ext == "lsdset" -> {
@@ -245,12 +247,14 @@ object FileSystemManager {
                             ))
                         }
                         ext == "lsd" || ext == "patch" || ext == "json" -> {
+                            val (tags, deps) = getPresetMeta(file)
                             items.add(AssetItem(
                                 path = file.absolutePath,
                                 name = file.nameWithoutExtension,
                                 type = AssetType.PRESET,
                                 isValid = validatePresetFile(file),
-                                tags = getPresetTags(file)
+                                tags = tags,
+                                dependencies = deps
                             ))
                         }
                         ext == "lsdset" -> {

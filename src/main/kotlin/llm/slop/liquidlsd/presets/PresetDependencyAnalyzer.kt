@@ -34,11 +34,14 @@ data class DependencyIssue(
 
 object PresetDependencyAnalyzer {
 
-    private val AUDIO_SOURCES = setOf(
-        "audio_amp", "audio_bass", "audio_mid", "audio_high",
-        "trigger_onset", "trigger_accent"
-    )
     private val LFO_SOURCES = setOf("lfo", "beatPhase", "sampleAndHold")
+
+    private fun isAudioSource(sourceId: String): Boolean {
+        return sourceId.startsWith("audio_") || sourceId.startsWith("trigger_")
+    }
+
+    // Zero-allocation issue cache: 13-bit key space (5 deps bits + 8 settings bits = 8192 slots)
+    private val issueCache = arrayOfNulls<List<DependencyIssue>>(8192)
 
     /**
      * Inspects a [DeckPresetDto] and summarizes all modulator types and features it utilizes.
@@ -63,7 +66,7 @@ object PresetDependencyAnalyzer {
 
                 val src = mod.sourceId
                 when {
-                    src in AUDIO_SOURCES -> usesAudio = true
+                    isAudioSource(src) -> usesAudio = true
                     src.startsWith("midi_cc_") -> usesMidi = true
                     src in LFO_SOURCES -> usesLfo = true
                     src == "seq" -> usesSeq = true
@@ -115,7 +118,7 @@ object PresetDependencyAnalyzer {
 
                 val src = mod.sourceId
                 when {
-                    src in AUDIO_SOURCES -> usesAudio = true
+                    isAudioSource(src) -> usesAudio = true
                     src.startsWith("midi_cc_") -> usesMidi = true
                     src in LFO_SOURCES -> usesLfo = true
                     src == "seq" -> usesSeq = true
@@ -167,24 +170,47 @@ object PresetDependencyAnalyzer {
     /**
      * Compares the dependencies required by a preset against the active [SessionContext]
      * and returns any inactive engines or hidden columns affecting it.
+     *
+     * Results are memoized in an internal zero-allocation lookup table across frames.
      */
     fun getIssues(deps: PresetDependencies, session: SessionContext): List<DependencyIssue> {
+        val theme = session.uiTheme
+        val depsKey = (if (deps.usesAudio) 1 else 0) or
+            (if (deps.usesMidi) 2 else 0) or
+            (if (deps.usesLfo) 4 else 0) or
+            (if (deps.usesSeq) 8 else 0) or
+            (if (deps.usesRandomization) 16 else 0)
+
+        val settingsKey = (if (theme.audioEngineEnabled) 1 else 0) or
+            (if (theme.midiEnabled) 2 else 0) or
+            (if (theme.sequencerEnabled) 4 else 0) or
+            (if (theme.randomizationEnabled) 8 else 0) or
+            (if (theme.showMidiCol) 16 else 0) or
+            (if (theme.showLfoCol) 32 else 0) or
+            (if (theme.showSeqCol) 64 else 0) or
+            (if (theme.showAudioCol) 128 else 0)
+
+        val cacheIndex = depsKey or (settingsKey shl 5)
+        val cached = issueCache[cacheIndex]
+        if (cached != null) return cached
+
         val issues = mutableListOf<DependencyIssue>()
 
         // 1. Audio Engine disabled check
-        if (deps.usesAudio && !session.uiTheme.audioEngineEnabled) {
+        if (deps.usesAudio && !theme.audioEngineEnabled) {
             issues.add(
                 DependencyIssue(
                     title = "Audio Engine Disabled",
-                    description = "Audio & Trigger modulators are inactive (0.0). Enable in Settings > Audio Engine.",
+                    description = "Audio modulators are inactive (0.0). Enable in Settings > Audio Engine.",
                     severity = DependencySeverity.WARNING,
+                    affectedColumn = "audio",
                     isAudioEngineIssue = true
                 )
             )
         }
 
         // 2. MIDI disabled check
-        if (deps.usesMidi && !session.uiTheme.midiEnabled) {
+        if (deps.usesMidi && !theme.midiEnabled) {
             issues.add(
                 DependencyIssue(
                     title = "MIDI Disabled",
@@ -196,7 +222,7 @@ object PresetDependencyAnalyzer {
         }
 
         // 3. Sequencer disabled check
-        if (deps.usesSeq && !session.uiTheme.sequencerEnabled) {
+        if (deps.usesSeq && !theme.sequencerEnabled) {
             issues.add(
                 DependencyIssue(
                     title = "Sequencer Disabled",
@@ -208,7 +234,7 @@ object PresetDependencyAnalyzer {
         }
 
         // 4. Hidden columns in Preset Grid
-        if (deps.usesMidi && session.uiTheme.midiEnabled && !session.uiTheme.showMidiCol) {
+        if (deps.usesMidi && theme.midiEnabled && !theme.showMidiCol) {
             issues.add(
                 DependencyIssue(
                     title = "MIDI Column Hidden",
@@ -218,7 +244,7 @@ object PresetDependencyAnalyzer {
                 )
             )
         }
-        if (deps.usesLfo && !session.uiTheme.showLfoCol) {
+        if (deps.usesLfo && !theme.showLfoCol) {
             issues.add(
                 DependencyIssue(
                     title = "LFO Column Hidden",
@@ -228,7 +254,7 @@ object PresetDependencyAnalyzer {
                 )
             )
         }
-        if (deps.usesSeq && session.uiTheme.sequencerEnabled && !session.uiTheme.showSeqCol) {
+        if (deps.usesSeq && theme.sequencerEnabled && !theme.showSeqCol) {
             issues.add(
                 DependencyIssue(
                     title = "SEQ Column Hidden",
@@ -238,7 +264,7 @@ object PresetDependencyAnalyzer {
                 )
             )
         }
-        if (deps.usesAudio && session.uiTheme.audioEngineEnabled && !session.uiTheme.showAudioCol) {
+        if (deps.usesAudio && theme.audioEngineEnabled && !theme.showAudioCol) {
             issues.add(
                 DependencyIssue(
                     title = "Audio Column Hidden",
@@ -250,7 +276,7 @@ object PresetDependencyAnalyzer {
         }
 
         // 5. Randomization disabled
-        if (deps.usesRandomization && !session.uiTheme.randomizationEnabled) {
+        if (deps.usesRandomization && !theme.randomizationEnabled) {
             issues.add(
                 DependencyIssue(
                     title = "Randomization Disabled",
@@ -260,6 +286,22 @@ object PresetDependencyAnalyzer {
             )
         }
 
-        return issues
+        val result = if (issues.isEmpty()) emptyList() else java.util.Collections.unmodifiableList(issues)
+        issueCache[cacheIndex] = result
+        return result
+    }
+
+    /** Clears the memoized issue cache. */
+    fun clearCache() {
+        issueCache.fill(null)
     }
 }
+
+/** Extension function to analyze dependencies of a [DeckPresetDto]. */
+fun DeckPresetDto.analyzeDependencies(): PresetDependencies = PresetDependencyAnalyzer.analyze(this)
+
+/** Extension function to analyze active dependencies of a [Deck]. */
+fun Deck.analyzeDependencies(): PresetDependencies = PresetDependencyAnalyzer.analyze(this)
+
+/** Extension function to resolve active dependency issues against a [SessionContext]. */
+fun PresetDependencies.getIssues(session: SessionContext): List<DependencyIssue> = PresetDependencyAnalyzer.getIssues(this, session)

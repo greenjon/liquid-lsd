@@ -5,6 +5,7 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.presets.getIssues
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
@@ -116,7 +117,7 @@ object PresetListPanel {
             ImGui.pushID(index)
 
             val deps = asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path))
-            val issues = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.getIssues(deps, session)
+            val issues = deps.getIssues(session)
             val hasIssues = issues.isNotEmpty()
 
             val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else asset.displayName

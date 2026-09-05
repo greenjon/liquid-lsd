@@ -193,7 +193,11 @@ object AudioEngine {
 
     fun setBpmDirectly(bpm: Float) {
         estimatedBpm = bpm
-        CVRegistry.updateBeatAnchor(totalBeats, bpm, System.nanoTime())
+        val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
+        if (!isActive()) {
+            totalBeats = currentBeats
+        }
+        CVRegistry.updateBeatAnchor(currentBeats, bpm, System.nanoTime())
     }
 
     /**
@@ -476,5 +480,6 @@ object AudioEngine {
         jackClient = null
         javaSoundClient?.stop()
         javaSoundClient = null
+        CVRegistry.updateBeatAnchor(totalBeats, estimatedBpm, System.nanoTime())
     }
 }

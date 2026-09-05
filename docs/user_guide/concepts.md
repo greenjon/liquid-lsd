@@ -92,6 +92,8 @@ Every Deck includes a universal **`View`** stage that applies spatial framing, c
    - `0.0`: **2D Flat** — Native widescreen 2D mode with full resolution via `rawSource2DFBO`. 3D-only parameters are hidden to keep the UI clean.
    - `1.0`: **Tri-Axial Orthogonal Planes** — Replicates the 2D source across three intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a 3D holographic gyroscope / celestial sphere.
    - `2.0`: **Cube Cage** — Extrudes the source across 6 orthogonal faces ($\pm XY, \pm YZ, \pm ZX$).
+   - `3.0`: **Hex-Planar ($60^\circ$ Tetrahedral Planes)** — Replicates the source across the 6 reflection planes of the tetrahedral symmetry group ($A_3$), intersecting at $60^\circ$ and $90^\circ$ angles through $(0, 0, 0)$. Expanding `Separation` pushes the planes outward into a 12-faced rhombic dodecahedral cage.
+   - `4.0`: **Tetrahedral Kaleidoscope (24-Chamber Space Folding)** — Continuous Coxeter $A_3$ space-folding kaleidoscope that reflects 3D camera rays into the 24 fundamental tetrahedral chambers, producing seamless continuous mirrors across all sector boundaries.
 3. **Contextual 3D Parameters (Active when `3D Mode >= 0.5`)**:
    - **`Rotate X` (Pitch), `Rotate Y` (Yaw)**: 3D rotational tumbling controlled manually or driven by LFOs/CV/Audio.
    - **`3D Persp`**: Continuous transition from orthographic projection to deep wide-angle perspective.

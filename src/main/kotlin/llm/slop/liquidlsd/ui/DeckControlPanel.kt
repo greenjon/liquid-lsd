@@ -7,6 +7,8 @@ import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.presets.PresetIOState
+import llm.slop.liquidlsd.presets.analyzeDependencies
+import llm.slop.liquidlsd.presets.getIssues
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mandala
@@ -307,8 +309,8 @@ fun drawDeckMonitorToolbar(
         "$activePreset$dirtyMarker"
     }
 
-    val deckDeps = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.analyze(deck)
-    val deckIssues = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.getIssues(deckDeps, session)
+    val deckDeps = deck.analyzeDependencies()
+    val deckIssues = deckDeps.getIssues(session)
     val hasDeckIssues = deckIssues.isNotEmpty() && !deck.isEmpty
 
     val textY = startY + (rowH - textH) * 0.5f

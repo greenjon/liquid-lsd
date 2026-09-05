@@ -316,6 +316,7 @@ class Renderer {
             mixerShader.dispose()
             blitShader.dispose()
             triPlanarShader.dispose()
+            tetraKaleidoShader.dispose()
             view2DShader.dispose()
             isDisposed = true
         }
