@@ -206,7 +206,7 @@ jobs:
             launcher: ./run-mac-arm.command
 
           - platform: macos-x64
-            os: macos-13
+            os: macos-15-intel
             zip: liquid-lsd-macos-x64.zip
             dir: liquid-lsd-macos-x64
             launcher: ./run-mac-intel.command
