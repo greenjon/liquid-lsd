@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Standardized Title Bar to Workspace Panel Gap (`UIManager.kt`, `WindowLayoutSafetyTest.kt`)
+- **Resolved Variable Black Gap**: Identified and eliminated an unintended black gap between the top title/menu bar and the primary workspace panels caused by a legacy minimum height clamp (`.coerceAtLeast(32f)`). Following recent Dear ImGui font metric updates, `ImGui.getFrameHeight()` evaluated below 32px at default scaling, displacing panels downward while the menu bar window remained at frame height.
+- **Explicit 1 px Spacing Constant**: Replaced the magic number clamp with a named constant `UIManager.TITLE_BAR_PANEL_GAP = 1.0f`. The layout now cleanly calculates panel starting offset as `titleBarH + TITLE_BAR_PANEL_GAP`, maintaining an exact 1 px visual divider across all display sizes and UI scaling presets without disappearing during font zoom.
+
+### Fix Dear ImGui IDStack Assertion in Cell Config Panel (`CellConfigPanel.kt`, `ValueParamSection.kt`, `ModulatorHeaderRow.kt`)
+- **Unconditional `ImGui.endChild()` Invocations**: Moved `ImGui.endChild()` outside `if (ImGui.beginChild(...))` blocks in both `CellConfigPanel.kt` and `ValueParamSection.kt`. Under Dear ImGui contract, `EndChild()` must be called unconditionally for every `BeginChild()` regardless of whether the child is clipped or collapsed. This fixes a crash (`Dear ImGui Assertion Failed: window->IDStack.Size > 1 at popID`) when layout constraints clip or resize the Cell Config scroll area.
+- **Symmetric Header Indentation**: Relocated `ImGui.indent(10f)` inside `CellConfigPanel.kt` to mirror `ImGui.unindent(10f)`, removing mismatched indent/unindent calls from `ModulatorHeaderRow.kt` to guarantee proper indent stack balance even upon early return from reset button actions.
+
 ### Unified Modulator Engine & Preset Grid Column Visibility (`UITheme.kt`, `SettingsPanel.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `PresetDependencyAnalyzer.kt`)
 - **Single Source of Truth**: Unified engine subsystems (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) with Preset Grid column visibility. A column is visible if and only if its underlying subsystem is active, eliminating contradictory states where a disabled engine's column could be shown or an active engine's column hidden.
 - **Preset Grid Kebab as Quick Switchboard (`PresetGridPanel.kt`)**: The header kebab menu (`⋮`) now directly toggles the underlying subsystems (starting/stopping `AudioEngine`, scanning/closing `MidiEngine`, running/halting step sequencer clock) alongside their columns in one click, without opening Settings.

@@ -498,9 +498,8 @@ object ValueParamSection {
         val normBase = if (param.maxClamp > param.minClamp) ((param.baseValue - param.minClamp) / (param.maxClamp - param.minClamp)).coerceIn(0f, 1f) else param.baseValue.coerceIn(0f, 1f)
         baseDl.addRectFilled(cx, cy, cx + baseBarW * normBase, cy + 10f, CvTheme.getThemeColor("base"))
         ImGui.dummy(baseBarW, 10f)
-
-            ImGui.endChild()
         }
+        ImGui.endChild()
         ImGui.popStyleVar()
     }
 }

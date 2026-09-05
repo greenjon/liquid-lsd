@@ -2,6 +2,15 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Title Bar to Panel Layout Spacing & Gap Standardization (`UIManager.kt`, `WindowLayoutSafetyTest.kt`)
+
+- **Decision**: Replace legacy magic clamp (`.coerceAtLeast(32f)`) on menu bar height with an explicit, named constant `TITLE_BAR_PANEL_GAP = 1.0f`:
+  - **Identified Root Cause**: In `UIManager.drawLayout()`, panel placement was originally computed using `session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)`. Because Dear ImGui's `beginMainMenuBar()` sets window height strictly to `getFrameHeight()`, whenever `getFrameHeight()` was below 32px (e.g. at default UI scaling after font metric updates in imgui-java 1.86.12), the workspace panels were shifted down to Y = 32px, creating an accidental black gap of `32px - getFrameHeight()`. Increasing UI scale caused `getFrameHeight()` to approach 32px, making the gap shrink and vanish.
+  - **Explicit 1 px Gap Constant**: Introduced `UIManager.TITLE_BAR_PANEL_GAP = 1.0f` to specify the vertical gap between the top title/menu bar and the workspace panels (Preset Grid, Cell Config, Mixer/Monitor). The panel starting Y position is now calculated directly as `titleBarH + TITLE_BAR_PANEL_GAP`.
+- **Rationale**:
+  - Eliminates hardcoded magic numbers and ensures layout intent is cleanly named and configurable.
+  - Guarantees a consistent, intentional 1 px visual separation across all display resolutions and font scales without disappearing or expanding unpredictably during zoom.
+
 ## Unification of Modulator Engine States and Preset Grid Column Visibility (`UITheme.kt`, `SettingsPanel.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `PresetDependencyAnalyzer.kt`)
 
 - **Decision**: Unify modulation subsystem states (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) with their corresponding Preset Grid column visibility, and eliminate the redundant `Settings > Preset Grid` category:

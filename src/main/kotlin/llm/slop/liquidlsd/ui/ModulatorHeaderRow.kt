@@ -44,8 +44,6 @@ object ModulatorHeaderRow {
         val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else if (existing.sourceId.startsWith("audio_")) "Audio" else "Modulator"
         val titleText = if (modsToDraw.size > 1) "Audio ${idx + 1}: ${bandLabel ?: typeLabel}" else (bandLabel ?: typeLabel)
 
-        ImGui.indent(10f) // Indent controls slightly
-
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val btnHeight = ImGui.getFrameHeight()
         val btnWidth = 50f * fontScale
@@ -77,7 +75,6 @@ object ModulatorHeaderRow {
                 if (isVirtual) {
                     ImGui.endDisabled()
                 }
-                ImGui.unindent(10f)
                 return
             }
             if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {

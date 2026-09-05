@@ -279,6 +279,7 @@ object CellConfigPanel {
 
                 val isHeaderOpen = if (isMultiBand) ImGui.collapsingHeader(headerTitle, defaultOpen) else true
                 if (isHeaderOpen) {
+                    ImGui.indent(10f)
                     ModulatorHeaderRow.draw(
                         session = session,
                         existing = existing,
@@ -388,8 +389,8 @@ object CellConfigPanel {
                     ImGui.spacing()
                 }
             }
-            ImGui.endChild()
         }
+        ImGui.endChild()
         ImGui.popID()
         ImGui.popStyleVar()
     }

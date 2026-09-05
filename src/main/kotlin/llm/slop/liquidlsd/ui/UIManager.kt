@@ -417,6 +417,13 @@ class UIManager(
     companion object {
         private var instance: UIManager? = null
 
+        /**
+         * Vertical gap in pixels between the bottom edge of the top title/menu bar
+         * and the top edge of the workspace panels (Preset Grid, Cell Config, Mixer/Monitor).
+         * Provides a subtle visual separator between the application header and performance panels.
+         */
+        const val TITLE_BAR_PANEL_GAP = 1.0f
+
         fun triggerDeckDragDrop(file: File, deck: Deck, isDeckA: Boolean, mixer: Mixer) {
             val ui = instance ?: return
             ui.deckPresetController.loadDeckPresetSafely(mixer, deck, file)
@@ -442,7 +449,8 @@ class UIManager(
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
         val safeW = displayWidth.coerceAtLeast(100f)
         val safeH = displayHeight.coerceAtLeast(100f)
-        val menuBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)
+        val titleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }
+        val menuBarH = titleBarH + TITLE_BAR_PANEL_GAP
         val contentH = (safeH - menuBarH).coerceAtLeast(50f)
         val noDecorate = ImGuiWindowFlags.NoResize or
                          ImGuiWindowFlags.NoMove or
