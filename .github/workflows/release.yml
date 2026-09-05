@@ -106,18 +106,13 @@ jobs:
                       content = f.read()
 
                   # 2a. Match exact version heading (e.g. ## Version 1.0.0-beta.38)
-                  pattern_version = rf"(##\s+Version\s+{re.escape(v_num)}.*?)(?=\n---\s*\n##\s+Version|\Z)"
+                  pattern_version = rf"(##\s+Version\s+{re.escape(v_num)}.*?)(?=\n---\s*\n##|\n##\s+Version|\Z)"
                   match = re.search(pattern_version, content, re.DOTALL | re.IGNORECASE)
 
                   # 2b. If no exact match, look for an Unreleased heading
                   if not match:
-                      pattern_unreleased = r"(##\s+\[?Unreleased\]?.*?)(?=\n---\s*\n##\s+|\Z)"
+                      pattern_unreleased = r"(##\s+\[?Unreleased\]?.*?)(?=\n---\s*\n##|\n##\s+Version|\Z)"
                       match = re.search(pattern_unreleased, content, re.DOTALL | re.IGNORECASE)
-
-                  # 2c. Fallback: extract the topmost '## Version ...' section from the file
-                  if not match:
-                      pattern_top = r"(##\s+Version\s+[^\n]+.*?)(?=\n---\s*\n##\s+Version|\Z)"
-                      match = re.search(pattern_top, content, re.DOTALL | re.IGNORECASE)
 
                   if match:
                       extracted = match.group(1).strip()
@@ -128,6 +123,8 @@ jobs:
           body = f"## Version {v_num}\n\n"
           if human_notes_body:
               body += f"{human_notes_body}\n\n---\n\n"
+          else:
+              body += f"*Automated release build for `{tag_name}` containing the latest commits and multi-platform smoke test verifications.*\n\n---\n\n"
 
           body += f"### 📦 Commits in {tag_name}\n\n"
           if prev_tag:
@@ -191,12 +188,6 @@ jobs:
             os: ubuntu-latest
             zip: liquid-lsd-linux-x64.zip
             dir: liquid-lsd-linux-x64
-            launcher: ./run-linux.sh
-
-          - platform: linux-arm64
-            os: ubuntu-24.04-arm
-            zip: liquid-lsd-linux-arm64.zip
-            dir: liquid-lsd-linux-arm64
             launcher: ./run-linux.sh
 
           - platform: macos-arm64
@@ -308,5 +299,4 @@ jobs:
           draft: false
           prerelease: false
           make_latest: "true"
-          generate_release_notes: true
           files: release-files/*.zip

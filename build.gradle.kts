@@ -22,8 +22,8 @@ repositories {
 }
 
 val lwjglVersion = "3.3.3"
-// imgui-java: current is 1.86.11, latest is 1.92.0. Flag for dedicated smoke-test upgrade.
-val imguiVersion = "1.86.11"
+// imgui-java: current is 1.86.12 (universal macOS arm64/x64). Roadmap target: 1.92.7.1 (see docs/developer/imgui_upgrade_guide.md).
+val imguiVersion = "1.86.12"
 
 dependencies {
     // Kotlin
@@ -154,7 +154,6 @@ tasks.processResources {
         val jreChecksums = mapOf(
             "windows-x64.zip" to "EXPECTED_SHA256_HERE",
             "linux-x64.tar.gz" to "EXPECTED_SHA256_HERE",
-            "linux-aarch64.tar.gz" to "EXPECTED_SHA256_HERE",
             "macos-x64.tar.gz" to "EXPECTED_SHA256_HERE",
             "macos-aarch64.tar.gz" to "EXPECTED_SHA256_HERE"
         )
@@ -199,7 +198,6 @@ tasks.processResources {
             val platforms = listOf(
                 Triple("windows-x64", "https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse", "zip"),
                 Triple("linux-x64", "https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jre/hotspot/normal/eclipse", "tar.gz"),
-                Triple("linux-aarch64", "https://api.adoptium.net/v3/binary/latest/17/ga/linux/aarch64/jre/hotspot/normal/eclipse", "tar.gz"),
                 Triple("macos-x64", "https://api.adoptium.net/v3/binary/latest/17/ga/mac/x64/jre/hotspot/normal/eclipse", "tar.gz"),
                 Triple("macos-aarch64", "https://api.adoptium.net/v3/binary/latest/17/ga/mac/aarch64/jre/hotspot/normal/eclipse", "tar.gz")
             )
@@ -280,20 +278,10 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
-            
-            ARCH="${'$'}(uname -m)"
-            if [ "${'$'}ARCH" = "x86_64" ]; then
-                JRE_DIR="jre/linux-x64"
-            elif [ "${'$'}ARCH" = "aarch64" ] || [ "${'$'}ARCH" = "arm64" ]; then
-                JRE_DIR="jre/linux-aarch64"
-            else
-                echo "Unsupported architecture: ${'$'}ARCH. Trying system java..."
-                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
-            fi
 
-            if [ -f "${'$'}JRE_DIR/bin/java" ]; then
-                chmod +x "${'$'}JRE_DIR/bin/java"
-                exec "./${'$'}JRE_DIR/bin/java" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
+            if [ -f "jre/linux-x64/bin/java" ]; then
+                chmod +x "jre/linux-x64/bin/java"
+                exec "./jre/linux-x64/bin/java" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             else
                 echo "Bundled JRE not found. Trying system java..."
                 exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
@@ -388,24 +376,6 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
     }
 }
 
-val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
-    dependsOn(packageThumbDrive)
-    archiveFileName.set("liquid-lsd-linux-arm64.zip")
-    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    into("liquid-lsd-linux-arm64")
-    from("build/dist") {
-        include("run-linux.sh")
-        include("lsd-all.jar")
-        include("jre/linux-aarch64/**")
-        include("library/**")
-    }
-    eachFile {
-        if (name.endsWith(".sh") || name.endsWith(".command") || name == "java" || name == "jspawnhelper" || path.contains("/bin/")) {
-            permissions { unix("755") }
-        }
-    }
-}
-
 val zipMacArm = tasks.register<Zip>("zipMacArm") {
     dependsOn(packageThumbDrive)
     archiveFileName.set("liquid-lsd-macos-arm64.zip")
@@ -446,7 +416,7 @@ val zipMacIntel = tasks.register<Zip>("zipMacIntel") {
 val packageZips = tasks.register("packageZips") {
     group = "distribution"
     description = "Assembles all platform-specific distribution ZIP archives."
-    dependsOn(zipWindows, zipLinux, zipLinuxArm, zipMacArm, zipMacIntel)
+    dependsOn(zipWindows, zipLinux, zipMacArm, zipMacIntel)
 }
 
 val checkWebSync = tasks.register<Exec>("checkWebSync") {

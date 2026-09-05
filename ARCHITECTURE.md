@@ -242,15 +242,15 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
 ./gradlew test             # run test suite (includes WebSyncTest)
 ./gradlew checkWebSync     # verify desktop ↔ web asset synchronization
 ./gradlew syncWeb          # auto-transpile desktop shaders into web/
-./gradlew packageThumbDrive  # bundle fat JAR + JREs + library for all 5 platforms
-./gradlew packageZips        # assemble platform distribution ZIPs (Windows, Linux x64/arm64, macOS x64/arm64)
+./gradlew packageThumbDrive  # bundle fat JAR + JREs + library for all 4 platforms
+./gradlew packageZips        # assemble platform distribution ZIPs (Windows x64, Linux x64, macOS arm64/x64)
 ./gradlew run --args="--smoke-test"  # run headless binary self-diagnostic smoke test
 ./gradlew run --args="--version"     # print version, architecture, and JVM runtime details
 ```
 Custom visual shaders and presets are loaded from `library/sources/` and `library/presets/`. Distribution ZIPs package the complete `library/` folder with executable (`755`) permissions on launcher scripts (`.sh`, `.command`) and bundled JRE binaries. Launcher scripts forward all CLI arguments (`"$@"` / `%*`) directly to the bundled JVM. 
 
 ### Multi-Platform Verification Matrix (GitHub Actions)
-All five target platform distributions are pre-tested natively on GitHub-hosted runners (`ubuntu-latest`, `ubuntu-24.04-arm`, `macos-latest`, `macos-13`, `windows-latest`) via `.github/workflows/smoke-test.yml` (on PRs) and `.github/workflows/release.yml` (prior to release publishing). The release workflow employs selective gating: only distributions that pass automated smoke testing are published as release assets.
+All four target platform distributions are pre-tested natively on GitHub-hosted runners (`ubuntu-latest`, `macos-latest`, `macos-15-intel`, `windows-latest`) via `.github/workflows/smoke-test.yml` (on PRs) and `.github/workflows/release.yml` (prior to release publishing). The release workflow employs selective gating: only distributions that pass automated smoke testing are published as release assets.
 
 For deeper notes see `docs/developer/`, `DECISIONS.md`, and `.agents/PROJECT.md`.
 

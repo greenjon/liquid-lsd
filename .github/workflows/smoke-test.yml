@@ -55,12 +55,6 @@ jobs:
             dir: liquid-lsd-linux-x64
             launcher: ./run-linux.sh
 
-          - platform: linux-arm64
-            os: ubuntu-24.04-arm
-            zip: liquid-lsd-linux-arm64.zip
-            dir: liquid-lsd-linux-arm64
-            launcher: ./run-linux.sh
-
           - platform: macos-arm64
             os: macos-latest
             zip: liquid-lsd-macos-arm64.zip

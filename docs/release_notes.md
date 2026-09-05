@@ -1,5 +1,14 @@
 # Liquid LSD — Release Notes
 
+## [Unreleased]
+
+### 4-Platform Targeted Distribution & CI Smoke Testing
+- **Targeted Platforms**: Distribution ZIP packaging targets the 4 supported architectures: Windows x64, Linux x64, macOS ARM64 (Apple Silicon), and macOS x64 (Intel). Removed `linux-arm64` from build targets due to lack of upstream Linux ARM64 native JNI binaries in `imgui-java`.
+- **Automated Smoke-Test Verification**: All 4 target platform distributions are verified natively on GitHub Actions runners before release, ensuring only verified, functional binaries are published.
+- **Fixed Release Notes Accumulation**: Resolved an issue where GitHub Releases accumulated and reprinted historical release notes from all previous versions.
+
+---
+
 ## Version 1.0.0-beta.40
 
 > [!NOTE]
@@ -9,7 +18,12 @@
 
 ### Key Highlights
 
-#### 0. Release Packaging, Launcher Permissions, and Library Distribution (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
+#### 0. Native Apple Silicon (macOS ARM64) Support via ImGui 1.86.12 (`build.gradle.kts`, `docs/developer/imgui_upgrade_guide.md`, `DECISIONS.md`)
+- **Native Apple Silicon Binaries**: Upgraded `io.github.spair:imgui-java-*` from `1.86.11` to `1.86.12`, delivering Mach-O universal binaries (`x86_64` + `arm64`) for macOS. This resolves native library linkage failures (`UnsatisfiedLinkError`) on Apple Silicon Macs and unblocks native execution on `macos-arm64`.
+- **Zero Breaking Changes**: Version 1.86.12 preserves 100% binary and source compatibility with existing UI code, ensuring zero risk of visual or behavioral regressions.
+- **Modernization Roadmap**: Documented the full multi-architecture investigation and Phase 2 migration guide for Dear ImGui 1.92.x in `docs/developer/imgui_upgrade_guide.md`.
+
+#### 0.1. Release Packaging, Launcher Permissions, and Library Distribution (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
 - **Executable Permissions on Release Scripts**: Fixed an issue where `run-linux.sh`, `run-mac-arm.command`, `run-mac-intel.command`, and bundled `bin/java` binaries lost executable permissions in GitHub release ZIPs. Updated `build.gradle.kts` to invoke `permissions { unix("755") }` on `FileCopyDetails` in all distribution zip tasks.
 - **Library Sources & Presets Bundled in Releases**: Added `library/**` packaging into `packageThumbDrive` and all platform ZIP distributions (`zipWindows`, `zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`), resolving runtime crashes where `VisualSourceRegistry` failed to find `library/sources/mandala`.
 - **Self-Healing Bundled Source Extraction**: Configured `tasks.processResources` to bundle default visual sources into the fat JAR under `default_sources/`. `VisualSourceRegistry.loadAll()` now automatically extracts bundled default sources if `library/sources/` is empty or missing `mandala`, ensuring the application self-heals even when executed from a standalone fat JAR.

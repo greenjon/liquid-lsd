@@ -1,5 +1,14 @@
 # Liquid LSD — Release Notes
 
+## [Unreleased]
+
+### 4-Platform Targeted Distribution & CI Smoke Testing
+- **Targeted Platforms**: Distribution ZIP packaging targets the 4 supported architectures: Windows x64, Linux x64, macOS ARM64 (Apple Silicon), and macOS x64 (Intel). Removed `linux-arm64` from build targets due to lack of upstream Linux ARM64 native JNI binaries in `imgui-java`.
+- **Automated Smoke-Test Verification**: All 4 target platform distributions are verified natively on GitHub Actions runners before release, ensuring only verified, functional binaries are published.
+- **Fixed Release Notes Accumulation**: Resolved an issue where GitHub Releases accumulated and reprinted historical release notes from all previous versions.
+
+---
+
 ## Version 1.0.0-beta.40
 
 > [!NOTE]
@@ -9,7 +18,12 @@
 
 ### Key Highlights
 
-#### 0. Automated 5-Platform Binary Smoke Testing & Selective Release Gating (`Main.kt`, `build.gradle.kts`, `.github/workflows/smoke-test.yml`, `.github/workflows/release.yml`)
+#### 0. Native Apple Silicon (macOS ARM64) Support via ImGui 1.86.12 (`build.gradle.kts`, `docs/developer/imgui_upgrade_guide.md`, `DECISIONS.md`)
+- **Native Apple Silicon Binaries**: Upgraded `io.github.spair:imgui-java-*` from `1.86.11` to `1.86.12`, delivering Mach-O universal binaries (`x86_64` + `arm64`) for macOS. This resolves native library linkage failures (`UnsatisfiedLinkError`) on Apple Silicon Macs and unblocks native execution on `macos-arm64`.
+- **Zero Breaking Changes**: Version 1.86.12 preserves 100% binary and source compatibility with existing UI code, ensuring zero risk of visual or behavioral regressions.
+- **Modernization Roadmap**: Documented the full multi-architecture investigation and Phase 2 migration guide for Dear ImGui 1.92.x in `docs/developer/imgui_upgrade_guide.md`.
+
+#### 0.1. Automated 5-Platform Binary Smoke Testing & Selective Release Gating (`Main.kt`, `build.gradle.kts`, `.github/workflows/smoke-test.yml`, `.github/workflows/release.yml`)
 - **Headless Diagnostic Smoke Test (`--smoke-test`)**: Added a fast, 5-stage headless self-diagnostic test to the application entry point. Verifies JVM runtime/architecture, tests LWJGL native library linkage, tests Dear ImGui native bindings and context creation/destruction (`ImGui.createContext()`), verifies classpath resource packaging (core shaders and presets), and verifies AudioEngine fallback initialization without requiring a physical monitor or GPU.
 - **CLI Flags & Info Dispatch (`Main.kt`)**: Added `--version` / `-v` (prints version, OS, architecture, and JVM runtime details) and `--help` / `-h`.
 - **Launcher CLI Argument Forwarding (`build.gradle.kts`)**: Updated generated desktop launchers (`run-linux.sh`, `run-windows.bat`, `run-mac-arm.command`, `run-mac-intel.command`) to forward all command-line arguments directly to the application JAR (`"$@"` on Unix and `%*` on Windows).

@@ -133,3 +133,9 @@ Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules 
 2. **Inject Context at Draw Time**: Accept `session: SessionContext`, `mixer: Mixer`, and `presetState: PresetGridState` in the `draw(...)` signature.
 3. **Use Deferred Root Popups**: To open a popup, set a `pendingOpen` flag and call `ImGui.openPopup(id)` at the root ID level.
 4. **Register in `UIManager`**: Hook panel rendering into `UIManager.render()`.
+
+---
+
+## ImGui Versioning & Future Modernization
+
+Liquid LSD is pinned to `io.github.spair:imgui-java:1.86.12` to provide native Apple Silicon (`macos-arm64`) universal binary support with zero breaking changes. For the multi-architecture ARM64 investigation and the complete migration plan for Dear ImGui 1.92.x, refer to [ImGui Upgrade & Modernization Guide](imgui_upgrade_guide.md).

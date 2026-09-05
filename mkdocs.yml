@@ -45,6 +45,7 @@ nav:
     - Media Export & Recording Pipeline: developer/export_pipeline.md
     - Web Subsystem & Broadcast Protocol: developer/web_subsystem.md
     - UI Architecture & ImGui: developer/ui.md
+    - ImGui Upgrade & Modernization: developer/imgui_upgrade_guide.md
     - Preset & Queue Management: developer/preset_management.md
     - Mandala UX Roadmap: developer/mandala_future_roadmap.md
   - Operations & Tuning: developer/ops_tuning.md
