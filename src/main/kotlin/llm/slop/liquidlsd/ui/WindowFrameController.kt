@@ -226,8 +226,8 @@ class WindowFrameController(
                 var newW = resizeStartWinW
                 var newH = resizeStartWinH
 
-                val minW = 800
-                val minH = 600
+                val minW = 1280
+                val minH = 720
 
                 when (activeResizeEdge) {
                     ResizeEdge.RIGHT -> {

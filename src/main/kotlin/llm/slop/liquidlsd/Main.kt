@@ -181,7 +181,7 @@ fun main(args: Array<String>) {
         ?: throw RuntimeException("Failed to create GLFW window")
 
     // Enforce minimum window size to prevent desktop layout compression
-    glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE)
+    glfwSetWindowSizeLimits(window, 1280, 720, GLFW_DONT_CARE, GLFW_DONT_CARE)
 
     // Log detected OS display content scale for diagnostics.
     // With imgui-java 1.86.12+, the ImGui GLFW/GL3 backends handle framebuffer content scaling automatically.

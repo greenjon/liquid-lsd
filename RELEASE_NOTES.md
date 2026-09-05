@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Minimum Window Dimensions Raised to 1280 x 720 (`Main.kt`, `WindowFrameController.kt`)
+- **Updated Minimum Bounds**: Raised the desktop minimum window dimensions from 800 × 600 (SVGA 4:3) to 1280 × 720 (720p HD 16:9).
+- **Layout & Multi-Deck Preservation**: Prevents severe horizontal layout compression and UI clipping across the top title bar controls, preset grid, and audio modulation matrix on compact or resized windows, aligning standard desktop bounds with modern HD DJ/VJ workflows.
+
 ### Standardized Title Bar to Workspace Panel Gap (`UIManager.kt`, `WindowLayoutSafetyTest.kt`)
 - **Resolved Variable Black Gap**: Identified and eliminated an unintended black gap between the top title/menu bar and the primary workspace panels caused by a legacy minimum height clamp (`.coerceAtLeast(32f)`). Following recent Dear ImGui font metric updates, `ImGui.getFrameHeight()` evaluated below 32px at default scaling, displacing panels downward while the menu bar window remained at frame height.
 - **Explicit 1 px Spacing Constant**: Replaced the magic number clamp with a named constant `UIManager.TITLE_BAR_PANEL_GAP = 1.0f`. The layout now cleanly calculates panel starting offset as `titleBarH + TITLE_BAR_PANEL_GAP`, maintaining an exact 1 px visual divider across all display sizes and UI scaling presets without disappearing during font zoom.

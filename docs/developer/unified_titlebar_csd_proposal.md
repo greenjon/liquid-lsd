@@ -53,7 +53,7 @@ The architecture combines a cross-platform custom window implementation with a p
 - **Perimeter Edge Resizing**:
   - ~5px perimeter zone around the window border when unmaximized.
   - Updates cursor (`GLFW_HRESIZE_CURSOR`, `GLFW_VRESIZE_CURSOR`, etc.).
-  - Resizes window via `glfwSetWindowSize` / `glfwSetWindowPos`, respecting `800x600` limits.
+  - Resizes window via `glfwSetWindowSize` / `glfwSetWindowPos`, respecting `1280x720` limits.
 
 ### 4. Unified Header Bar (`MenuBar.kt`)
 - Render app branding / logo on the far left.
@@ -65,12 +65,10 @@ The architecture combines a cross-platform custom window implementation with a p
   - **Maximize / Restore** (`◻` / `❐`): `glfwMaximizeWindow` / `glfwRestoreWindow` based on `glfwGetWindowAttrib(windowHandle, GLFW_MAXIMIZED)`
   - **Close** (`✕`): `uiManager.triggerExitFlow()` (triggers unsaved changes prompt if dirty).
 
----
+## Verification Checklist
 
-## Verification & Test Plan
-
-1. **Window Dragging**: Click and drag empty space in the top bar; verify smooth repositioning without lag.
-2. **Maximize / Restore**: Double-click top bar or click `◻` button; verify maximize and restore bounds transition cleanly.
-3. **Window Controls**: Verify minimize iconifies to taskbar; verify close triggers the unsaved changes modal.
-4. **Edge Resizing**: Hover over window borders; verify resize cursors appear and dragging resizes the window while adhering to minimum 800x600 limits.
+1. **Window Dragging**: Click and drag any empty space in the titlebar; verify the window moves smoothly.
+2. **Maximize / Restore**: Click the maximize button (or double-click titlebar); verify window toggles between maximized and restored state.
+3. **Minimize / Close**: Verify minimize icon minimizes window to taskbar; verify close icon triggers clean application exit.
+4. **Edge Resizing**: Hover over window borders; verify resize cursors appear and dragging resizes the window while adhering to minimum 1280x720 limits.
 5. **Fallback Toggle**: Disable frameless mode in Settings, restart app, and verify native OS title bar renders correctly with window buttons hidden in the menu bar.
