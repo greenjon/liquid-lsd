@@ -77,7 +77,7 @@ jobs:
             os: windows-latest
             zip: liquid-lsd-windows-x64.zip
             dir: liquid-lsd-windows-x64
-            launcher: .\run-windows.bat
+            launcher: ./run-windows.bat
 
     runs-on: ${{ matrix.os }}
     steps:
