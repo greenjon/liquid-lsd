@@ -2,6 +2,19 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## 5-Platform Automated Binary Smoke Testing and Selective Release Gating (`Main.kt`, `build.gradle.kts`, `smoke-test.yml`, `release.yml`)
+
+- **Decision**: Introduce headless multi-component binary smoke testing and multi-platform CI verification across all five target architectures (`linux-x64`, `linux-arm64`, `macos-arm64`, `macos-x64`, `windows-x64`), with selective release publishing:
+  - **CLI Diagnostics & Argument Dispatch (`Main.kt`)**: Added CLI arguments to the entry point: `--version` / `-v` (prints version, OS, architecture, and JVM information), `--help` / `-h`, and `--smoke-test`. The smoke-test mode performs a rapid, headless 5-step self-test without requiring a physical display or GPU: verifies JVM environment, tests LWJGL native library linkage, tests Dear ImGui native bindings and context creation/destruction (`ImGui.createContext()`), verifies classpath resource packaging (core shaders and default presets), and verifies AudioEngine fallback backend initialization, exiting 0 on success.
+  - **Launcher Argument Forwarding (`build.gradle.kts`)**: Updated desktop distribution launcher generation in `packageThumbDrive` to forward all command-line arguments to the application JAR (`"$@"` in Unix shell/command scripts and `%*` in Windows batch scripts).
+  - **Standalone CI Matrix Workflow (`.github/workflows/smoke-test.yml`)**: A dedicated workflow that builds the platform distributions and runs a parallel smoke-test matrix on GitHub-hosted native runners (`ubuntu-latest`, `ubuntu-24.04-arm`, `macos-latest`, `macos-13`, `windows-latest`) on pull requests and manual workflow dispatches.
+  - **Selective Release Gating (`.github/workflows/release.yml`)**: Integrated the 5-platform smoke-test matrix between packaging and publishing. Individual platform matrix jobs execute with `continue-on-error: true`. Jobs that pass upload a verified asset artifact (`verified-<platform>`). The release publishing job gathers only the verified ZIP distributions, ensures at least one platform passed, appends an automated multi-platform verification badge summary to the release notes, and publishes exclusively verified binaries.
+- **Rationale**:
+  - **Catches Native JNI Incompatibilities Early**: Cross-platform JVM packaging frequently suffers from platform-specific dynamic library linkage errors (such as missing architecture binaries in native JNI jars). Headless smoke testing detects these failures before users download broken releases.
+  - **Graceful Partial Releases**: An OS-specific regression or upstream runner glitch on one platform does not block releasing functioning builds on the other four platforms, while guaranteeing broken distributions are never published.
+  - **Zero Display Server Requirement for CI**: Standardizing on headless diagnostics allows fast verification across disparate runner environments without requiring physical GPU hardware.
+
+
 ## Distribution Packaging, Zip Permissions, and Self-Healing Source Extraction (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
 
 - **Decision**: Package the complete `library/` folder into all release ZIP archives and thumb drive bundles, enforce POSIX `755` executable permissions across all Unix shell scripts and JRE binaries via Gradle `FileCopyDetails.permissions`, and bundle default visual sources into the fat JAR classpath (`default_sources/`) for automatic runtime self-healing:

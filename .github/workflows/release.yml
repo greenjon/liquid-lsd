@@ -16,8 +16,12 @@ permissions:
   contents: write # Needed to create tags, releases, and upload assets
 
 jobs:
-  build-and-release:
+  build-and-package:
+    name: Build & Package Distributions
     runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.version.outputs.tag_name }}
+      v_num: ${{ steps.version.outputs.v_num }}
 
     steps:
       - name: Checkout Code
@@ -159,27 +163,150 @@ jobs:
           pipx inject mkdocs mkdocs-material
 
       - name: Build and Package ZIPs
-        run: ./gradlew packageZips
+        run: ./gradlew packageZips --no-daemon
 
-      - name: Upload Build Artifacts
+      - name: Upload Platform Distributions Artifact
         uses: actions/upload-artifact@v4
         with:
           name: platform-distributions
           path: build/distributions/*.zip
+          retention-days: 2
+
+      - name: Upload Release Notes Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release_notes.md
+          retention-days: 2
+
+  smoke-test-matrix:
+    name: Smoke Test (${{ matrix.platform }})
+    needs: build-and-package
+    continue-on-error: true # Allow releasing passing platforms if a subset fails
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            os: ubuntu-latest
+            zip: liquid-lsd-linux-x64.zip
+            dir: liquid-lsd-linux-x64
+            launcher: ./run-linux.sh
+
+          - platform: linux-arm64
+            os: ubuntu-24.04-arm
+            zip: liquid-lsd-linux-arm64.zip
+            dir: liquid-lsd-linux-arm64
+            launcher: ./run-linux.sh
+
+          - platform: macos-arm64
+            os: macos-latest
+            zip: liquid-lsd-macos-arm64.zip
+            dir: liquid-lsd-macos-arm64
+            launcher: ./run-mac-arm.command
+
+          - platform: macos-x64
+            os: macos-13
+            zip: liquid-lsd-macos-x64.zip
+            dir: liquid-lsd-macos-x64
+            launcher: ./run-mac-intel.command
+
+          - platform: windows-x64
+            os: windows-latest
+            zip: liquid-lsd-windows-x64.zip
+            dir: liquid-lsd-windows-x64
+            launcher: .\run-windows.bat
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download Platform Distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: platform-distributions
+          path: dist
+
+      - name: Extract Distribution ZIP
+        shell: bash
+        run: |
+          mkdir -p test-run
+          unzip -q dist/${{ matrix.zip }} -d test-run/
+          find test-run -type f \( -name "*.sh" -o -name "*.command" -o -name "java" -o -name "jspawnhelper" \) -exec chmod +x {} + 2>/dev/null || true
+
+      - name: Run Smoke Test (--version & --smoke-test)
+        shell: bash
+        working-directory: test-run/${{ matrix.dir }}
+        run: |
+          echo "=== Testing --version ==="
+          ${{ matrix.launcher }} --version
+          echo ""
+          echo "=== Testing --smoke-test ==="
+          ${{ matrix.launcher }} --smoke-test
+
+      - name: Stage Verified Asset
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p verified-assets
+          cp dist/${{ matrix.zip }} verified-assets/
+
+      - name: Upload Verified Asset Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-${{ matrix.platform }}
+          path: verified-assets/${{ matrix.zip }}
+          retention-days: 1
+
+  publish-release:
+    name: Publish Verified Release
+    needs: [build-and-package, smoke-test-matrix]
+    if: always() && !cancelled() && needs.build-and-package.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Release Notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: .
+
+      - name: Download All Verified Assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: verified-*
+          path: verified-downloads
+          merge-multiple: true
+
+      - name: Inspect Verified Assets
+        id: verify-summary
+        run: |
+          mkdir -p release-files
+          cp verified-downloads/*.zip release-files/ 2>/dev/null || true
+          COUNT=$(ls -1 release-files/*.zip 2>/dev/null | wc -l)
+          echo "Verified distributions count: $COUNT"
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: Zero platform distributions passed smoke testing. Aborting release!" >&2
+            exit 1
+          fi
+
+          echo "Verified distributions ready for release:"
+          ls -lh release-files/
+
+          # Append verification summary to release notes
+          echo -e "\n\n---\n### 🛡️ Automated Multi-Platform Verification\n" >> release_notes.md
+          echo "The following platform binaries passed automated smoke testing on GitHub-hosted runners:" >> release_notes.md
+          for f in release-files/*.zip; do
+            [ -e "$f" ] || continue
+            echo "- ✅ \`$(basename "$f")\`" >> release_notes.md
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag_name || env.RELEASE_TAG }}
-          name: ${{ steps.version.outputs.tag_name || env.RELEASE_TAG }}
+          tag_name: ${{ needs.build-and-package.outputs.tag_name }}
+          name: ${{ needs.build-and-package.outputs.tag_name }}
           body_path: release_notes.md
           draft: false
           prerelease: false
           make_latest: "true"
           generate_release_notes: true
-          files: |
-            build/distributions/liquid-lsd-windows-x64.zip
-            build/distributions/liquid-lsd-linux-x64.zip
-            build/distributions/liquid-lsd-linux-arm64.zip
-            build/distributions/liquid-lsd-macos-arm64.zip
-            build/distributions/liquid-lsd-macos-x64.zip
+          files: release-files/*.zip

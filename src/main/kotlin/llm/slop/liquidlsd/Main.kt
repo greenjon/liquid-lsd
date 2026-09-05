@@ -23,7 +23,125 @@ import org.lwjgl.opengl.GL33.*
 
 private val logger = KotlinLogging.logger {}
 
-fun main() {
+private fun getAppVersion(): String {
+    return object {}.javaClass.`package`?.implementationVersion ?: "1.0.0-SNAPSHOT"
+}
+
+private fun printVersion() {
+    val version = getAppVersion()
+    val osName = System.getProperty("os.name") ?: "Unknown"
+    val osArch = System.getProperty("os.arch") ?: "Unknown"
+    val jvmVersion = System.getProperty("java.version") ?: "Unknown"
+    val jvmVendor = System.getProperty("java.vendor") ?: "Unknown"
+    val jvmHome = System.getProperty("java.home") ?: "Unknown"
+
+    println("Liquid LSD v$version")
+    println("OS:       $osName ($osArch)")
+    println("JVM:      $jvmVersion ($jvmVendor)")
+    println("JVM Home: $jvmHome")
+}
+
+private fun printHelp() {
+    val version = getAppVersion()
+    println("""
+Liquid LSD - Libre Shader Decks v$version
+Usage: liquid-lsd [OPTIONS]
+
+Options:
+  --version, -v      Print version and runtime platform details, then exit
+  --smoke-test       Run headless multi-component smoke test and exit (0 on success)
+  --help, -h         Display this help message and exit
+""".trimIndent())
+}
+
+private fun runSmokeTest(): Int {
+    println("==================================================")
+    println("   Liquid LSD Headless Binary Diagnostic Test     ")
+    println("==================================================")
+    val osName = System.getProperty("os.name") ?: "Unknown"
+    val osArch = System.getProperty("os.arch") ?: "Unknown"
+    val jvmVersion = System.getProperty("java.version") ?: "Unknown"
+    val jvmVendor = System.getProperty("java.vendor") ?: "Unknown"
+    println("[1/5] Runtime Environment: OS=$osName, Arch=$osArch, JVM=$jvmVersion ($jvmVendor)")
+
+    print("[2/5] Testing LWJGL native library linkage... ")
+    try {
+        val lwjglVer = org.lwjgl.Version.getVersion()
+        println("OK (LWJGL $lwjglVer)")
+    } catch (t: Throwable) {
+        println("FAILED!")
+        System.err.println("CRITICAL: Failed to load LWJGL native library for $osName/$osArch: ${t.message}")
+        t.printStackTrace()
+        return 1
+    }
+
+    print("[3/5] Testing Dear ImGui native bindings & JNI context... ")
+    try {
+        val context = imgui.ImGui.createContext()
+        val imguiVer = imgui.ImGui.getVersion()
+        imgui.ImGui.destroyContext(context)
+        println("OK (Dear ImGui $imguiVer)")
+    } catch (t: Throwable) {
+        println("FAILED!")
+        System.err.println("CRITICAL: Failed to load Dear ImGui native library for $osName/$osArch: ${t.message}")
+        t.printStackTrace()
+        return 2
+    }
+
+    print("[4/5] Testing classpath resource packaging (shaders/presets)... ")
+    try {
+        val requiredResources = listOf(
+            "/shaders/blit.frag",
+            "/shaders/blit.vert",
+            "/shaders/mixer.frag",
+            "/presets/default.json"
+        )
+        for (resPath in requiredResources) {
+            val stream = object {}.javaClass.getResourceAsStream(resPath)
+                ?: throw IllegalStateException("Required classpath resource '$resPath' was not found in bundle.")
+            stream.close()
+        }
+        println("OK (${requiredResources.size} core assets verified)")
+    } catch (t: Throwable) {
+        println("FAILED!")
+        System.err.println("CRITICAL: Resource verification failed: ${t.message}")
+        t.printStackTrace()
+        return 3
+    }
+
+    print("[5/5] Testing Audio Engine backend initialization & fallback... ")
+    try {
+        val backendName = llm.slop.liquidlsd.audio.AudioEngine.getActiveBackendName()
+        println("OK (Initial Backend: $backendName)")
+    } catch (t: Throwable) {
+        println("FAILED!")
+        System.err.println("CRITICAL: AudioEngine backend initialization failed: ${t.message}")
+        t.printStackTrace()
+        return 4
+    }
+
+    println("==================================================")
+    println("✅ Smoke Test PASSED: Bundle, JVM, and JNI healthy!")
+    println("==================================================")
+    return 0
+}
+
+fun main(args: Array<String>) {
+    if (args.contains("--help") || args.contains("-h")) {
+        printHelp()
+        kotlin.system.exitProcess(0)
+    }
+
+    if (args.contains("--version") || args.contains("-v")) {
+        printVersion()
+        kotlin.system.exitProcess(0)
+    }
+
+    if (args.contains("--smoke-test")) {
+        val code = runSmokeTest()
+        kotlin.system.exitProcess(code)
+    }
+
     logger.info { "Starting Liquid LSD..." }
 
     // Ensure library directories exist

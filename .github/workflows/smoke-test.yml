@@ -1,0 +1,106 @@
+name: 5-Platform Binary Smoke Test
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'build.gradle.kts'
+      - 'gradle/**'
+      - '.github/workflows/smoke-test.yml'
+  workflow_dispatch:
+
+jobs:
+  build-distributions:
+    name: Build All Distribution ZIPs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew
+
+      - name: Install MkDocs and Material Theme
+        run: |
+          pipx install mkdocs
+          pipx inject mkdocs mkdocs-material
+
+      - name: Build All Platform Distribution ZIPs
+        run: ./gradlew packageZips --no-daemon
+
+      - name: Upload Platform Distributions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-distributions
+          path: build/distributions/*.zip
+          retention-days: 2
+
+  smoke-test-matrix:
+    name: Smoke Test (${{ matrix.platform }})
+    needs: build-distributions
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            os: ubuntu-latest
+            zip: liquid-lsd-linux-x64.zip
+            dir: liquid-lsd-linux-x64
+            launcher: ./run-linux.sh
+
+          - platform: linux-arm64
+            os: ubuntu-24.04-arm
+            zip: liquid-lsd-linux-arm64.zip
+            dir: liquid-lsd-linux-arm64
+            launcher: ./run-linux.sh
+
+          - platform: macos-arm64
+            os: macos-latest
+            zip: liquid-lsd-macos-arm64.zip
+            dir: liquid-lsd-macos-arm64
+            launcher: ./run-mac-arm.command
+
+          - platform: macos-x64
+            os: macos-13
+            zip: liquid-lsd-macos-x64.zip
+            dir: liquid-lsd-macos-x64
+            launcher: ./run-mac-intel.command
+
+          - platform: windows-x64
+            os: windows-latest
+            zip: liquid-lsd-windows-x64.zip
+            dir: liquid-lsd-windows-x64
+            launcher: .\run-windows.bat
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download Platform Distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: platform-distributions
+          path: dist
+
+      - name: Extract Distribution ZIP
+        shell: bash
+        run: |
+          mkdir -p test-run
+          unzip -q dist/${{ matrix.zip }} -d test-run/
+          # Ensure execution bits are preserved across shell scripts and bundled JRE executables
+          find test-run -type f \( -name "*.sh" -o -name "*.command" -o -name "java" -o -name "jspawnhelper" \) -exec chmod +x {} + 2>/dev/null || true
+
+      - name: Run Smoke Test (--version & --smoke-test)
+        shell: bash
+        working-directory: test-run/${{ matrix.dir }}
+        run: |
+          echo "=== Testing --version ==="
+          ${{ matrix.launcher }} --version
+          echo ""
+          echo "=== Testing --smoke-test ==="
+          ${{ matrix.launcher }} --smoke-test

@@ -9,7 +9,14 @@
 
 ### Key Highlights
 
-#### 0. Release Packaging, Launcher Permissions, and Library Distribution (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
+#### 0. Automated 5-Platform Binary Smoke Testing & Selective Release Gating (`Main.kt`, `build.gradle.kts`, `.github/workflows/smoke-test.yml`, `.github/workflows/release.yml`)
+- **Headless Diagnostic Smoke Test (`--smoke-test`)**: Added a fast, 5-stage headless self-diagnostic test to the application entry point. Verifies JVM runtime/architecture, tests LWJGL native library linkage, tests Dear ImGui native bindings and context creation/destruction (`ImGui.createContext()`), verifies classpath resource packaging (core shaders and presets), and verifies AudioEngine fallback initialization without requiring a physical monitor or GPU.
+- **CLI Flags & Info Dispatch (`Main.kt`)**: Added `--version` / `-v` (prints version, OS, architecture, and JVM runtime details) and `--help` / `-h`.
+- **Launcher CLI Argument Forwarding (`build.gradle.kts`)**: Updated generated desktop launchers (`run-linux.sh`, `run-windows.bat`, `run-mac-arm.command`, `run-mac-intel.command`) to forward all command-line arguments directly to the application JAR (`"$@"` on Unix and `%*` on Windows).
+- **Parallel 5-Platform CI Matrix (`.github/workflows/smoke-test.yml`)**: Automated native smoke testing on GitHub-hosted runners (`ubuntu-latest`, `ubuntu-24.04-arm`, `macos-latest`, `macos-13`, and `windows-latest`) on pull requests and workflow dispatch.
+- **Selective Release Gating (`.github/workflows/release.yml`)**: Release builds run the 5-platform matrix before publishing. Only platform distribution ZIPs that pass automated smoke testing are published to GitHub Releases, preventing broken builds from reaching users while permitting functioning platforms to release even if a single platform experiences a regression.
+
+#### 0.1. Release Packaging, Launcher Permissions, and Library Distribution (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
 - **Executable Permissions on Release Scripts**: Fixed an issue where `run-linux.sh`, `run-mac-arm.command`, `run-mac-intel.command`, and bundled `bin/java` binaries lost executable permissions in GitHub release ZIPs. Updated `build.gradle.kts` to invoke `permissions { unix("755") }` on `FileCopyDetails` in all distribution zip tasks.
 - **Library Sources & Presets Bundled in Releases**: Added `library/**` packaging into `packageThumbDrive` and all platform ZIP distributions (`zipWindows`, `zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`), resolving runtime crashes where `VisualSourceRegistry` failed to find `library/sources/mandala`.
 - **Self-Healing Bundled Source Extraction**: Configured `tasks.processResources` to bundle default visual sources into the fat JAR under `default_sources/`. `VisualSourceRegistry.loadAll()` now automatically extracts bundled default sources if `library/sources/` is empty or missing `mandala`, ensuring the application self-heals even when executed from a standalone fat JAR.

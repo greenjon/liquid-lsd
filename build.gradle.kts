@@ -144,6 +144,7 @@ tasks.processResources {
         group = "distribution"
         description = "Downloads platform JREs and packages the application for a thumb drive."
         dependsOn("shadowJar")
+        notCompatibleWithConfigurationCache("Downloads platform JREs and unpacks dynamically")
 
         val distDir = file("build/dist")
         val jreCacheDir = file("build/jre-cache")
@@ -266,10 +267,10 @@ tasks.processResources {
             setlocal
             cd /d "%~dp0"
             if exist "jre\windows-x64\bin\java.exe" (
-                "jre\windows-x64\bin\java.exe" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                "jre\windows-x64\bin\java.exe" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar %*
             ) else (
                 echo Bundled JRE not found. Trying system java...
-                java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar %*
             )
             endlocal
         """.trimIndent().replace("\n", "\r\n")) // Windows CRLF
@@ -287,15 +288,15 @@ tasks.processResources {
                 JRE_DIR="jre/linux-aarch64"
             else
                 echo "Unsupported architecture: ${'$'}ARCH. Trying system java..."
-                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             fi
 
             if [ -f "${'$'}JRE_DIR/bin/java" ]; then
                 chmod +x "${'$'}JRE_DIR/bin/java"
-                exec "./${'$'}JRE_DIR/bin/java" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec "./${'$'}JRE_DIR/bin/java" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             else
                 echo "Bundled JRE not found. Trying system java..."
-                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             fi
         """.trimIndent())
         runLinux.setExecutable(true)
@@ -318,10 +319,10 @@ tasks.processResources {
 
             if [ -n "${'$'}JAVA_BIN" ]; then
                 chmod +x "${'$'}JAVA_BIN"
-                exec "./${'$'}JAVA_BIN" -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec "./${'$'}JAVA_BIN" -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             else
                 echo "Bundled JRE not found. Trying system java..."
-                exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             fi
         """.trimIndent())
         runMacArm.setExecutable(true)
@@ -344,10 +345,10 @@ tasks.processResources {
 
             if [ -n "${'$'}JAVA_BIN" ]; then
                 chmod +x "${'$'}JAVA_BIN"
-                exec "./${'$'}JAVA_BIN" -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec "./${'$'}JAVA_BIN" -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             else
                 echo "Bundled JRE not found. Trying system java..."
-                exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar "${'$'}@"
             fi
         """.trimIndent())
         runMacIntel.setExecutable(true)
