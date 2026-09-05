@@ -123,7 +123,11 @@ object CVRegistry {
      * Retrieves the current value of the specified CV signal.
      */
     fun get(id: String): Float {
+        if (id == "seq" && !llm.slop.liquidlsd.ui.UITheme.sequencerEnabled) {
+            return 0f
+        }
         if (id.startsWith("midi_cc_")) {
+            if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0f
             val parts = id.substring("midi_cc_".length).split('_')
             if (parts.size >= 2) {
                 val channel = parts[0].toIntOrNull() ?: 0

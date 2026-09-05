@@ -1,10 +1,11 @@
 // ui.js
-import { startAudio, setVolume } from './dsp.js';
+import { startAudio, stopAudio, setVolume } from './dsp.js';
 
 // Power state — imported by renderer.js each frame
 export const powerState = {
-  on: false,          // is the TV powered on?
-  warmupProgress: 0,  // 0..1, advanced by renderer.js each frame
+  on: false,              // is the TV powered on?
+  warmupProgress: 0,      // 0..1, advanced by renderer.js when turning on
+  shutdownProgress: 1.0,  // 0..1, advanced by renderer.js when turning off (starts at 1.0 = off)
 };
 
 // -------------------------------------------------------
@@ -15,18 +16,26 @@ export function initUI() {
   const tvBody = document.getElementById('tv-body');
   const canvas = document.getElementById('glCanvas');
 
-  let audioStarted = false;
-
   powerSwitch.addEventListener('click', async () => {
-    if (powerState.on) return; // Phase 3: one-way switch (no power-off)
-
-    powerState.on = true;
-    powerState.warmupProgress = 0;  // renderer will advance this
-    tvBody.classList.add('powered-on');
-    powerSwitch.classList.add('active');
-
-    if (!audioStarted) {
-      audioStarted = true;
+    if (powerState.on) {
+      powerState.on = false;
+      powerState.warmupProgress = 0;
+      powerState.shutdownProgress = 0;
+      tvBody.classList.remove('powered-on');
+      tvBody.classList.add('shutting-down');
+      powerSwitch.classList.remove('active');
+      try {
+        await stopAudio();
+      } catch (err) {
+        console.error('Audio stop failed:', err);
+      }
+    } else {
+      powerState.on = true;
+      powerState.warmupProgress = 0;  // renderer will advance this
+      powerState.shutdownProgress = 0;
+      tvBody.classList.remove('shutting-down');
+      tvBody.classList.add('powered-on');
+      powerSwitch.classList.add('active');
       try {
         await startAudio();
       } catch (err) {

@@ -6,6 +6,7 @@ import llm.slop.liquidlsd.parameters.calculateWaveform
 import llm.slop.liquidlsd.parameters.calculateAdvancedLFO
 import llm.slop.liquidlsd.parameters.GenUnit
 import llm.slop.liquidlsd.parameters.Waveform
+import llm.slop.liquidlsd.ui.UITheme
 
 private fun randomFloatFromSeed(seed: Long): Float {
     var x = seed
@@ -183,6 +184,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
             }
         }
         "seq" -> {
+            if (!UITheme.sequencerEnabled) return 0.0f
             val stepCount = modulator.seqStepCount.coerceIn(1, 32)
             val steps = modulator.seqSteps
             val cyclePosition: Double = when (modulator.genUnit) {

@@ -96,8 +96,9 @@ body {
   z-index: 2;
 }
 
-/* When powered on, fade out the black overlay to reveal canvas */
-#tv-body.powered-on #screen-off-overlay {
+/* When powered on or shutting down, fade out the black overlay to reveal canvas */
+#tv-body.powered-on #screen-off-overlay,
+#tv-body.shutting-down #screen-off-overlay {
   opacity: 0;
 }
 

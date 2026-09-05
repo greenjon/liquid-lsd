@@ -130,6 +130,8 @@ export function tick(dt) {
   updateBeat(dt);
 }
 
+let currentVolumeRatio = 0.8;
+
 // User-gesture startup sequence
 export async function startAudio() {
   const audioEl = document.getElementById('lsdAudio');
@@ -142,65 +144,67 @@ export async function startAudio() {
   // Set stream src on user gesture
   audioEl.src = 'https://radio.spaz.org:8060/radio.ogg';
 
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  audioCtx = new AudioContextClass();
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
 
-  const source = audioCtx.createMediaElementSource(audioEl);
+    const source = audioCtx.createMediaElementSource(audioEl);
 
-  // Broadband Analyser
-  broadbandAnalyser = audioCtx.createAnalyser();
-  broadbandAnalyser.fftSize = 2048;
-  broadbandAnalyser.smoothingTimeConstant = 0.8;
+    // Broadband Analyser
+    broadbandAnalyser = audioCtx.createAnalyser();
+    broadbandAnalyser.fftSize = 2048;
+    broadbandAnalyser.smoothingTimeConstant = 0.8;
 
-  // Bass Filter & Analyser
-  const bassFilter = audioCtx.createBiquadFilter();
-  bassFilter.type = 'lowpass';
-  bassFilter.frequency.value = 180;
-  bassFilter.Q.value = 0.7;
+    // Bass Filter & Analyser
+    const bassFilter = audioCtx.createBiquadFilter();
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.value = 180;
+    bassFilter.Q.value = 0.7;
 
-  bassAnalyser = audioCtx.createAnalyser();
-  bassAnalyser.fftSize = 256;
-  bassAnalyser.smoothingTimeConstant = 0.85;
+    bassAnalyser = audioCtx.createAnalyser();
+    bassAnalyser.fftSize = 256;
+    bassAnalyser.smoothingTimeConstant = 0.85;
 
-  // Mid Filter & Analyser
-  const midFilter = audioCtx.createBiquadFilter();
-  midFilter.type = 'bandpass';
-  midFilter.frequency.value = 1000;
-  midFilter.Q.value = 1.0;
+    // Mid Filter & Analyser
+    const midFilter = audioCtx.createBiquadFilter();
+    midFilter.type = 'bandpass';
+    midFilter.frequency.value = 1000;
+    midFilter.Q.value = 1.0;
 
-  midAnalyser = audioCtx.createAnalyser();
-  midAnalyser.fftSize = 256;
-  midAnalyser.smoothingTimeConstant = 0.85;
+    midAnalyser = audioCtx.createAnalyser();
+    midAnalyser.fftSize = 256;
+    midAnalyser.smoothingTimeConstant = 0.85;
 
-  // High Filter & Analyser
-  const highFilter = audioCtx.createBiquadFilter();
-  highFilter.type = 'highpass';
-  highFilter.frequency.value = 5000;
-  highFilter.Q.value = 0.7;
+    // High Filter & Analyser
+    const highFilter = audioCtx.createBiquadFilter();
+    highFilter.type = 'highpass';
+    highFilter.frequency.value = 5000;
+    highFilter.Q.value = 0.7;
 
-  highAnalyser = audioCtx.createAnalyser();
-  highAnalyser.fftSize = 256;
-  highAnalyser.smoothingTimeConstant = 0.85;
+    highAnalyser = audioCtx.createAnalyser();
+    highAnalyser.fftSize = 256;
+    highAnalyser.smoothingTimeConstant = 0.85;
 
-  gainNode = audioCtx.createGain();
-  gainNode.gain.value = 1.0;
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = currentVolumeRatio * currentVolumeRatio;
 
-  // Wire graph
-  source.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  source.connect(broadbandAnalyser);
-  source.connect(bassFilter);
-  bassFilter.connect(bassAnalyser);
-  source.connect(midFilter);
-  midFilter.connect(midAnalyser);
-  source.connect(highFilter);
-  highFilter.connect(highAnalyser);
+    // Wire graph
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    source.connect(broadbandAnalyser);
+    source.connect(bassFilter);
+    bassFilter.connect(bassAnalyser);
+    source.connect(midFilter);
+    midFilter.connect(midAnalyser);
+    source.connect(highFilter);
+    highFilter.connect(highAnalyser);
 
-  // Pre-allocate analysis buffers
-  broadBuf = new Float32Array(broadbandAnalyser.fftSize);
-  bassBuf  = new Float32Array(bassAnalyser.fftSize);
-  midBuf   = new Float32Array(midAnalyser.fftSize);
-  highBuf  = new Float32Array(highAnalyser.fftSize);
+    // Pre-allocate analysis buffers
+    broadBuf = new Float32Array(broadbandAnalyser.fftSize);
+    bassBuf  = new Float32Array(bassAnalyser.fftSize);
+    midBuf   = new Float32Array(midAnalyser.fftSize);
+    highBuf  = new Float32Array(highAnalyser.fftSize);
+  }
 
   if (audioCtx.state === 'suspended') {
     await audioCtx.resume();
@@ -212,8 +216,31 @@ export async function startAudio() {
   analysisReady = true;
 }
 
+// Stop audio stream and pause analysis on power off
+export async function stopAudio() {
+  const audioEl = document.getElementById('lsdAudio');
+  if (audioEl) {
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    audioEl.load();
+  }
+
+  if (audioCtx && audioCtx.state === 'running') {
+    await audioCtx.suspend();
+  }
+
+  cvState.isLive = false;
+  analysisReady = false;
+  cvState.audio_amp = 0.0;
+  cvState.audio_bass = 0.0;
+  cvState.audio_mid = 0.0;
+  cvState.audio_high = 0.0;
+  cvState.trigger_onset = 0.0;
+}
+
 // volume: 0.0 (muted) to 1.0 (full) — uses squared curve for perceptual linearity
 export function setVolume(volume) {
+  currentVolumeRatio = volume;
   if (gainNode && audioCtx) {
     gainNode.gain.setTargetAtTime(volume * volume, audioCtx.currentTime, 0.05);
   }

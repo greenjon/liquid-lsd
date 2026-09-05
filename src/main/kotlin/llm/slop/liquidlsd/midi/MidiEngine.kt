@@ -24,7 +24,9 @@ object MidiEngine {
 
     init {
         try {
-            initialize()
+            if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
+                initialize()
+            }
         } catch (e: Exception) {
             logger.error(e) { "Failed to initialize MidiEngine" }
         }
@@ -58,6 +60,7 @@ object MidiEngine {
      * 2. Probe for newly plugged-in MIDI controllers and open them
      */
     fun scanForNewDevices() {
+        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return
         synchronized(openDevices) {
             // 1. Clean up dead or closed devices
             val iterator = openDevices.iterator()
@@ -104,12 +107,14 @@ object MidiEngine {
     }
 
     fun getActiveDeviceCount(): Int {
+        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0
         return synchronized(openDevices) {
             openDevices.size
         }
     }
 
     fun getCcValue(channel: Int, cc: Int): Float {
+        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
         val idx = (channel.coerceIn(0, 15) * 128) + cc.coerceIn(0, 127)
         return Float.fromBits(ccValues.get(idx))
     }
@@ -128,6 +133,7 @@ object MidiEngine {
             }
             openDevices.clear()
         }
+        receivedCcEvents.clear()
     }
 
     private class MidiInputReceiver : Receiver {

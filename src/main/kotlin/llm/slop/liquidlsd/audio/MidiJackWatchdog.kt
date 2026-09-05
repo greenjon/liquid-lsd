@@ -30,7 +30,7 @@ object MidiJackWatchdog {
             while (running) {
                 try {
                     // 1. Scan/Manage MIDI hardware
-                    if (isMidiScanActive) {
+                    if (isMidiScanActive && UITheme.midiEnabled) {
                         MidiEngine.scanForNewDevices()
                     }
 

@@ -9,7 +9,19 @@
 
 ### Key Highlights
 
-#### 0. Step Sequencer (SEQ) CV Modulation Source (`SeqSection.kt`, `CvModulator.kt`, `Evaluators.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `OscilloscopeDrawer.kt`, `CvTheme.kt`, `web/evaluator.js`)
+#### 0. Release Packaging, Launcher Permissions, and Library Distribution (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
+- **Executable Permissions on Release Scripts**: Fixed an issue where `run-linux.sh`, `run-mac-arm.command`, `run-mac-intel.command`, and bundled `bin/java` binaries lost executable permissions in GitHub release ZIPs. Updated `build.gradle.kts` to invoke `permissions { unix("755") }` on `FileCopyDetails` in all distribution zip tasks.
+- **Library Sources & Presets Bundled in Releases**: Added `library/**` packaging into `packageThumbDrive` and all platform ZIP distributions (`zipWindows`, `zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`), resolving runtime crashes where `VisualSourceRegistry` failed to find `library/sources/mandala`.
+- **Self-Healing Bundled Source Extraction**: Configured `tasks.processResources` to bundle default visual sources into the fat JAR under `default_sources/`. `VisualSourceRegistry.loadAll()` now automatically extracts bundled default sources if `library/sources/` is empty or missing `mandala`, ensuring the application self-heals even when executed from a standalone fat JAR.
+- **Accurate Error Messaging**: Corrected the startup failure exception message from `presets/sources/mandala` to `library/sources/mandala`.
+
+#### 0.1. Sequencer, Randomization, and MIDI Settings Toggles & Defaults (`AppSettings.kt`, `SettingsPanel.kt`, `UITheme.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `MenuBar.kt`, `ModulatableParameter.kt`, `Evaluators.kt`, `CVRegistry.kt`, `MidiEngine.kt`, `MidiJackWatchdog.kt`, `Main.kt`, `UIManager.kt`)
+- **Step Sequencer Toggle in Settings**: Added an "Enable Step Sequencer" master toggle under Settings (`General` and `Preset Grid`), allowing users to enable or disable step sequencer execution and grid/cell visibility.
+- **Default Disabled Behavior**: The Step Sequencer (`sequencerEnabled`), parameter/modulator randomization (`randomizationEnabled`), and MIDI input/mapping (`midiEnabled`) now default to disabled (`false`) for clean, deterministic, and distraction-free startup.
+- **MIDI Master Toggle in Settings**: Added an "Enable MIDI" toggle under Settings (`MIDI & Controls`), safely closing hardware devices when disabled and rescanning devices upon activation. "MIDI Map" in the menu bar and grid columns are gated cleanly.
+- **Modulation Bypassing**: When disabled, step sequencer and MIDI modulators are safely bypassed during parameter evaluation, and CVRegistry returns neutral 0.0 values.
+
+#### 0.1. Step Sequencer (SEQ) CV Modulation Source (`SeqSection.kt`, `CvModulator.kt`, `Evaluators.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `OscilloscopeDrawer.kt`, `CvTheme.kt`, `web/evaluator.js`)
 - **Deterministic Step Sequencer CV (`seq`)**: Introduced a dedicated step sequencer modulation domain with an Electric Lime theme (`#33F24D`), inserted between LFO and AUDIO across the Preset Grid and Cell Config tabs.
 - **8-Wide Precision Step Grid**: Supports configurable pattern lengths of 8 ($1 \times 8$), 16 ($2 \times 8$), and 32 ($4 \times 8$) steps. Features real-time illuminated playhead border tracking, direct numeric typing, and power dial-in via Up/Down arrows (`±0.001`), `Shift` (`±0.01`), `Ctrl+Shift` (`±0.1`), and mouse wheel hover scrubbing.
 - **Dynamics & Easing Curves**: Configurable `Step Hold` slider ($0\% \dots 100\%$) for instant stair-step transitions, continuous glide, or glide-and-hold portamento, with selectable `Linear` and `Smooth` cosine S-curve easing ($0.5 - 0.5 \cos(\pi t)$).
@@ -46,6 +58,12 @@
 - **Preset Model Simplification & Dynamic Recipe Restoration**: Eliminated `MandalaRecipeDto` and the redundant `recipe` field in `DeckPresetDto`. Presets now serialize and restore `Lobes` and `Recipe Select` as standard modulatable parameters; upon loading, `Mandala.update()` evaluates those parameters and restores the matching Fourier ratio automatically.
 - **Hierarchical Parameter Paths**: Removed the legacy custom `Mandala.getParameterPaths()` override; Mandala parameters now follow the universal hierarchical pattern (`Deck A/Mandala/<param>`) alongside all other visual sources.
 - **Web TV Broadcast Parity**: Simplified `WebPresetSerializer.serializeDeck` to a single generic loop with a concise extension for Mandala Fourier frequencies (`a`, `b`, `c`, `d`), maintaining 100% backward compatibility with WebGL2 TV clients.
+- **Web TV Power Off Switch & Retro CRT Collapse Animation (`web/ui.js`, `web/dsp.js`, `web/renderer.js`, `web/shaders/crt_post.frag`)**: Fixed a bug where the Web TV power switch was a one-way toggle that could not turn the TV off once powered on, and added an authentic 3-phase **CRT Electron Beam Collapse** shutdown animation. Powering down now:
+  1. *Vertical Collapse*: Compresses the active visualizer vertically into an intensely bright, overdriven phosphor line across the center.
+  2. *Horizontal Shrink*: Pulls the line horizontally inward from both edges, shrinking it into a brilliant pinpoint dot at the center of the tube.
+  3. *Phosphor Decay*: Decays the central dot with natural phosphor persistence until it gently fades into total darkness.
+  4. Audio & Indicators: Suspends the Web Audio context, cuts the live Icecast stream, flips the physical switch knob up, and dims the station LED.
+- **Pristine Web TV Display Presentation (`web/shaders/crt_post.frag`, `web/renderer.js`)**: Streamlined the Web TV post-processing pass to display the live visualizer with maximum fidelity when powered on. Stripped out steady-state distortion artifacts (corner dimming/vignette, interlacing/scanlines, RGB shadow mask grating, chromatic aberration, and barrel warp) while fully preserving the 1.5s CRT warmup expansion and the 3-phase beam collapse shutdown sequence.
 
 #### 0.4. Renderer Polymorphism & Draw Topology Dispatch (`DynamicVisualSource.kt`, `Mandala.kt`, `HyperMesh.kt`, `Renderer.kt`)
 - **Zero Source-Type Knowledge in Renderer**: Completely eliminated `is Mandala` and `is HyperMesh` branching and private helper methods (`renderMandala()`, `renderHyperMesh()`) from `Renderer.kt`. The main rendering pipeline now collapses into a single, unified execution path.
@@ -56,6 +74,12 @@
 - **Encapsulated GPU Geometries & Clean Lifecycle**: Moved ribbon VAO/VBO creation and disposal directly into `Mandala.kt` (`initGeometry()`, `dispose()`, and shallow handle sharing in `clone()`), ensuring leak-free and double-free-safe lifecycle tracking.
 - **Unified Common Uniforms**: Common frame uniforms (`uAlpha`, `uResolution`, `uTime`, `uAspectRatio`) are now set in a single location for all dynamic sources inside `Renderer.render()`.
 
+#### 0.5. macOS Apple Silicon & Intel Packaging & Launch Reliability (`build.gradle.kts`, `run-mac-arm.command`, `run-mac-intel.command`)
+- **Resolved macOS Bundled JRE Resolution**: Fixed an issue where macOS distribution launcher scripts reported *"Bundled JRE not found. Trying system java..."*. Adoptium macOS `.tar.gz` distributions extract using standard Apple bundle hierarchy (`Contents/Home/bin/java`). Launchers (`run-mac-arm.command` and `run-mac-intel.command`) now probe both `jre/macos-<arch>/Contents/Home/bin/java` and flat `jre/macos-<arch>/bin/java` before falling back to system Java.
+- **Main OS Thread Execution (`-XstartOnFirstThread`)**: Fixed fatal startup crash (`IllegalStateException: GLFW may only be used on the main thread and that thread must be the first thread in the process`) on macOS Apple Silicon and Intel. Both bundled JRE and system fallback paths in the `.command` scripts, as well as Gradle `JavaExec` tasks when running on macOS, now strictly pass `-XstartOnFirstThread`.
+- **JDK 21+ Native Access Warning Suppression**: Added `--enable-native-access=ALL-UNNAMED` to all launchers (Windows, Linux, macOS) and `JavaExec` to eliminate restricted method warnings for LWJGL/Unsafe native callers when running on modern JVMs.
+- **macOS Gatekeeper Quarantine Stripping**: Added `xattr -dr com.apple.quarantine jre 2>/dev/null || true` in macOS launcher scripts to ensure bundled JREs downloaded via GitHub zip archives are not blocked by Gatekeeper.
+- **Zip Executable Permissions**: Configured Gradle distribution packaging (`zipMacArm`, `zipMacIntel`) to enforce `755` permissions across all binaries in `bin/`, `jspawnhelper`, and `.command` scripts.
 
 #### 1. Unified Title Bar & Custom Window Frame (CSD) (`WindowFrameController.kt`, `MenuBar.kt`, `UITheme.kt`, `SettingsPanel.kt`)
 

@@ -9,12 +9,18 @@ This guide covers JVM Garbage Collector tuning, real-time audio configuration ac
 To maintain 60+ FPS visual rendering and sub-millisecond audio analysis without frame stuttering or audio dropouts (xruns), Liquid LSD should be launched with the Z Garbage Collector (ZGC):
 
 ```bash
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+# Linux / Windows:
+java -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+
+# macOS (requires -XstartOnFirstThread):
+java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 ```
 
 ### Key Flags Explained
 - `-XX:+UseZGC`: Enables the Z Garbage Collector, designed for concurrent execution with pause times typically below $1\text{ ms}$.
 - `-XX:MaxGCPauseMillis=2`: Advises the JVM GC scheduler to keep pause times under 2 milliseconds, well within 60 FPS frame boundaries ($16.6\text{ ms}$).
+- `-XstartOnFirstThread` (macOS only): Forces the JVM to spawn the application on the initial OS process thread (Thread 0), which is mandatory for Cocoa event polling and GLFW initialization.
+- `--enable-native-access=ALL-UNNAMED`: Authorizes LWJGL/Unsafe native method access without JVM restricted method warnings on JDK 21+.
 
 ---
 
@@ -30,7 +36,8 @@ java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-S
 
 ### macOS (Intel & Apple Silicon)
 - **Audio Engine**: Runs out-of-the-box using `JavaSoundClient.kt` capturing from standard input devices (microphone, line-in, or virtual audio cables like BlackHole/Loopback). Also supports optional JACK2 for macOS.
-- **Apple Silicon Native**: Always run native ARM64 JVM builds (`zulu17-ca-jdk17.x`) to prevent Rosetta 2 translation overhead.
+- **Apple Silicon Native**: Always run native ARM64 JVM builds (`zulu17-ca-jdk17.x` or bundled Adoptium ARM64) to prevent Rosetta 2 translation overhead.
+- **Main Thread Event Loop**: GLFW and Cocoa windowing require `-XstartOnFirstThread`. Launching via the provided `run-mac-arm.command` or `run-mac-intel.command` script sets this automatically and detects the bundled JRE in `jre/macos-<arch>/Contents/Home/bin/java`.
 
 ### Windows (x64)
 - **Audio Engine**: Runs out-of-the-box via `JavaSoundClient.kt` system audio capture. Supports optional JACK2 for Windows with ASIO drivers.

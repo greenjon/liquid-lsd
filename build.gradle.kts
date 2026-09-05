@@ -97,8 +97,12 @@ tasks.withType<JavaExec> {
         "-XX:+UseZGC",
         "-XX:MaxGCPauseMillis=2",
         "-Xms512m",
-        "-Xmx2g"
+        "-Xmx2g",
+        "--enable-native-access=ALL-UNNAMED"
     )
+    if (System.getProperty("os.name").lowercase().contains("mac")) {
+        jvmArgs("-XstartOnFirstThread")
+    }
 }
 
 val generateDocs = tasks.register("generateDocs") {
@@ -131,6 +135,9 @@ val generateDocs = tasks.register("generateDocs") {
 
 tasks.processResources {
     dependsOn(generateDocs)
+    from("library/sources") {
+        into("default_sources")
+    }
 }
 
     val packageThumbDrive = tasks.register("packageThumbDrive") {
@@ -165,6 +172,7 @@ tasks.processResources {
         }
 
         inputs.file(tasks.named("shadowJar").map { it.outputs.files.singleFile })
+        inputs.dir("library")
         outputs.dir(distDir)
 
         doLast {
@@ -177,6 +185,14 @@ tasks.processResources {
             val destJar = file("$distDir/lsd-all.jar")
             jarFile.copyTo(destJar, overwrite = true)
             println("Copied shadowJar to ${destJar.absolutePath}")
+
+            // Copy library directory (visual sources, presets, midi profiles, playlists)
+            val libraryDir = file("library")
+            if (libraryDir.exists()) {
+                val destLib = file("$distDir/library")
+                libraryDir.copyRecursively(destLib, overwrite = true)
+                println("Copied library to ${destLib.absolutePath}")
+            }
 
             // 2. Define platforms, their URLs, extension, and JRE folder
             val platforms = listOf(
@@ -250,10 +266,10 @@ tasks.processResources {
             setlocal
             cd /d "%~dp0"
             if exist "jre\windows-x64\bin\java.exe" (
-                "jre\windows-x64\bin\java.exe" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                "jre\windows-x64\bin\java.exe" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             ) else (
                 echo Bundled JRE not found. Trying system java...
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             )
             endlocal
         """.trimIndent().replace("\n", "\r\n")) // Windows CRLF
@@ -271,15 +287,15 @@ tasks.processResources {
                 JRE_DIR="jre/linux-aarch64"
             else
                 echo "Unsupported architecture: ${'$'}ARCH. Trying system java..."
-                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
 
             if [ -f "${'$'}JRE_DIR/bin/java" ]; then
                 chmod +x "${'$'}JRE_DIR/bin/java"
-                exec "./${'$'}JRE_DIR/bin/java" -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec "./${'$'}JRE_DIR/bin/java" --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             else
                 echo "Bundled JRE not found. Trying system java..."
-                exec java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
         """.trimIndent())
         runLinux.setExecutable(true)
@@ -289,12 +305,23 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
-            if [ -f "jre/macos-aarch64/bin/java" ]; then
-                chmod +x jre/macos-aarch64/bin/java
-                ./jre/macos-aarch64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+
+            # Remove quarantine attribute from bundled JRE if present (macOS Gatekeeper)
+            xattr -dr com.apple.quarantine jre 2>/dev/null || true
+
+            JAVA_BIN=""
+            if [ -f "jre/macos-aarch64/Contents/Home/bin/java" ]; then
+                JAVA_BIN="jre/macos-aarch64/Contents/Home/bin/java"
+            elif [ -f "jre/macos-aarch64/bin/java" ]; then
+                JAVA_BIN="jre/macos-aarch64/bin/java"
+            fi
+
+            if [ -n "${'$'}JAVA_BIN" ]; then
+                chmod +x "${'$'}JAVA_BIN"
+                exec "./${'$'}JAVA_BIN" -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             else
                 echo "Bundled JRE not found. Trying system java..."
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
         """.trimIndent())
         runMacArm.setExecutable(true)
@@ -304,12 +331,23 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
-            if [ -f "jre/macos-x64/bin/java" ]; then
-                chmod +x jre/macos-x64/bin/java
-                ./jre/macos-x64/bin/java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+
+            # Remove quarantine attribute from bundled JRE if present (macOS Gatekeeper)
+            xattr -dr com.apple.quarantine jre 2>/dev/null || true
+
+            JAVA_BIN=""
+            if [ -f "jre/macos-x64/Contents/Home/bin/java" ]; then
+                JAVA_BIN="jre/macos-x64/Contents/Home/bin/java"
+            elif [ -f "jre/macos-x64/bin/java" ]; then
+                JAVA_BIN="jre/macos-x64/bin/java"
+            fi
+
+            if [ -n "${'$'}JAVA_BIN" ]; then
+                chmod +x "${'$'}JAVA_BIN"
+                exec "./${'$'}JAVA_BIN" -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             else
                 echo "Bundled JRE not found. Trying system java..."
-                java -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
+                exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g -jar lsd-all.jar
             fi
         """.trimIndent())
         runMacIntel.setExecutable(true)
@@ -327,6 +365,7 @@ val zipWindows = tasks.register<Zip>("zipWindows") {
         include("run-windows.bat")
         include("lsd-all.jar")
         include("jre/windows-x64/**")
+        include("library/**")
     }
 }
 
@@ -339,10 +378,11 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
         include("run-linux.sh")
         include("lsd-all.jar")
         include("jre/linux-x64/**")
+        include("library/**")
     }
     eachFile {
-        if (name == "run-linux.sh" || path.endsWith("/bin/java")) {
-            filePermissions { unix("755") } // Gradle 9: mode replaced by filePermissions
+        if (name.endsWith(".sh") || name.endsWith(".command") || name == "java" || name == "jspawnhelper" || path.contains("/bin/")) {
+            permissions { unix("755") }
         }
     }
 }
@@ -356,10 +396,11 @@ val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
         include("run-linux.sh")
         include("lsd-all.jar")
         include("jre/linux-aarch64/**")
+        include("library/**")
     }
     eachFile {
-        if (name == "run-linux.sh" || path.endsWith("/bin/java")) {
-            filePermissions { unix("755") }
+        if (name.endsWith(".sh") || name.endsWith(".command") || name == "java" || name == "jspawnhelper" || path.contains("/bin/")) {
+            permissions { unix("755") }
         }
     }
 }
@@ -373,10 +414,11 @@ val zipMacArm = tasks.register<Zip>("zipMacArm") {
         include("run-mac-arm.command")
         include("lsd-all.jar")
         include("jre/macos-aarch64/**")
+        include("library/**")
     }
     eachFile {
-        if (name == "run-mac-arm.command" || path.endsWith("/bin/java")) {
-            filePermissions { unix("755") }
+        if (name.endsWith(".sh") || name.endsWith(".command") || name == "java" || name == "jspawnhelper" || path.contains("/bin/")) {
+            permissions { unix("755") }
         }
     }
 }
@@ -390,13 +432,15 @@ val zipMacIntel = tasks.register<Zip>("zipMacIntel") {
         include("run-mac-intel.command")
         include("lsd-all.jar")
         include("jre/macos-x64/**")
+        include("library/**")
     }
     eachFile {
-        if (name == "run-mac-intel.command" || path.endsWith("/bin/java")) {
-            filePermissions { unix("755") }
+        if (name.endsWith(".sh") || name.endsWith(".command") || name == "java" || name == "jspawnhelper" || path.contains("/bin/")) {
+            permissions { unix("755") }
         }
     }
 }
+
 
 val packageZips = tasks.register("packageZips") {
     group = "distribution"

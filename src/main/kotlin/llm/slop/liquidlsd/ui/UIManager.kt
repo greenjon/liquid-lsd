@@ -193,73 +193,77 @@ class UIManager(
         // Drain all MIDI events queued by the MIDI receiver thread.
         var midiCcDelta = 0
         var bgMidiCcDelta = 0
-        while (true) {
-            val event = llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.poll() ?: break
-            val (channel, cc) = event
-            val target = presetState.midiLearnTarget
-            if (target != null) {
-                val midiId = "midi_cc_${channel}_${cc}"
-                when (target) {
-                    is MidiLearnTarget.BaseValueSlider -> {
-                        session.midiMappingManager.addMapping(target.paramKey, cc, channel, target.min, target.max)
-                        session.midiMappingManager.saveActiveProfile()
-                    }
-                    is MidiLearnTarget.GridCell -> {
-                        val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
-                        target.param.modulators.removeAll(existingMods)
-                        val exists = target.param.modulators.any { it.sourceId == midiId }
-                        if (!exists) {
-                            target.param.modulators.add(
-                                llm.slop.liquidlsd.parameters.CvModulator(
-                                    sourceId = midiId,
-                                    depth = 1.0f,
-                                    operator = llm.slop.liquidlsd.parameters.ModulationOperator.ADD
+        if (!session.uiTheme.midiEnabled) {
+            llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.clear()
+        } else {
+            while (true) {
+                val event = llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.poll() ?: break
+                val (channel, cc) = event
+                val target = presetState.midiLearnTarget
+                if (target != null) {
+                    val midiId = "midi_cc_${channel}_${cc}"
+                    when (target) {
+                        is MidiLearnTarget.BaseValueSlider -> {
+                            session.midiMappingManager.addMapping(target.paramKey, cc, channel, target.min, target.max)
+                            session.midiMappingManager.saveActiveProfile()
+                        }
+                        is MidiLearnTarget.GridCell -> {
+                            val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+                            target.param.modulators.removeAll(existingMods)
+                            val exists = target.param.modulators.any { it.sourceId == midiId }
+                            if (!exists) {
+                                target.param.modulators.add(
+                                    llm.slop.liquidlsd.parameters.CvModulator(
+                                        sourceId = midiId,
+                                        depth = 1.0f,
+                                        operator = llm.slop.liquidlsd.parameters.ModulationOperator.ADD
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
-                }
-                presetState.midiLearnTarget = null
-            } else {
-                val nextCc = session.midiMappingManager.getCcForSpecial("Global/queueNext")
-                val nextCh = session.midiMappingManager.getChannelForSpecial("Global/queueNext")
-                if (nextCc != -1 && cc == nextCc && channel == nextCh) {
-                    val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                    val isHigh = valNow > 0.5f
-                    if (isHigh && !lastNextMidiCcHigh) {
-                        midiCcDelta += 1
+                    presetState.midiLearnTarget = null
+                } else {
+                    val nextCc = session.midiMappingManager.getCcForSpecial("Global/queueNext")
+                    val nextCh = session.midiMappingManager.getChannelForSpecial("Global/queueNext")
+                    if (nextCc != -1 && cc == nextCc && channel == nextCh) {
+                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                        val isHigh = valNow > 0.5f
+                        if (isHigh && !lastNextMidiCcHigh) {
+                            midiCcDelta += 1
+                        }
+                        lastNextMidiCcHigh = isHigh
                     }
-                    lastNextMidiCcHigh = isHigh
-                }
-                val prevCc = session.midiMappingManager.getCcForSpecial("Global/queuePrev")
-                val prevCh = session.midiMappingManager.getChannelForSpecial("Global/queuePrev")
-                if (prevCc != -1 && cc == prevCc && channel == prevCh) {
-                    val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                    val isHigh = valNow > 0.5f
-                    if (isHigh && !lastPrevMidiCcHigh) {
-                        midiCcDelta -= 1
+                    val prevCc = session.midiMappingManager.getCcForSpecial("Global/queuePrev")
+                    val prevCh = session.midiMappingManager.getChannelForSpecial("Global/queuePrev")
+                    if (prevCc != -1 && cc == prevCc && channel == prevCh) {
+                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                        val isHigh = valNow > 0.5f
+                        if (isHigh && !lastPrevMidiCcHigh) {
+                            midiCcDelta -= 1
+                        }
+                        lastPrevMidiCcHigh = isHigh
                     }
-                    lastPrevMidiCcHigh = isHigh
-                }
-                val bgNextCc = session.midiMappingManager.getCcForSpecial("Global/bgQueueNext")
-                val bgNextCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueueNext")
-                if (bgNextCc != -1 && cc == bgNextCc && channel == bgNextCh) {
-                    val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                    val isHigh = valNow > 0.5f
-                    if (isHigh && !lastBgNextMidiCcHigh) {
-                        bgMidiCcDelta += 1
+                    val bgNextCc = session.midiMappingManager.getCcForSpecial("Global/bgQueueNext")
+                    val bgNextCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueueNext")
+                    if (bgNextCc != -1 && cc == bgNextCc && channel == bgNextCh) {
+                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                        val isHigh = valNow > 0.5f
+                        if (isHigh && !lastBgNextMidiCcHigh) {
+                            bgMidiCcDelta += 1
+                        }
+                        lastBgNextMidiCcHigh = isHigh
                     }
-                    lastBgNextMidiCcHigh = isHigh
-                }
-                val bgPrevCc = session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev")
-                val bgPrevCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueuePrev")
-                if (bgPrevCc != -1 && cc == bgPrevCc && channel == bgPrevCh) {
-                    val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                    val isHigh = valNow > 0.5f
-                    if (isHigh && !lastBgPrevMidiCcHigh) {
-                        bgMidiCcDelta -= 1
+                    val bgPrevCc = session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev")
+                    val bgPrevCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueuePrev")
+                    if (bgPrevCc != -1 && cc == bgPrevCc && channel == bgPrevCh) {
+                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                        val isHigh = valNow > 0.5f
+                        if (isHigh && !lastBgPrevMidiCcHigh) {
+                            bgMidiCcDelta -= 1
+                        }
+                        lastBgPrevMidiCcHigh = isHigh
                     }
-                    lastBgPrevMidiCcHigh = isHigh
                 }
             }
         }

@@ -311,9 +311,7 @@ async function init() {
 
   const crtUniforms = getUniformLocations(gl, crtProgram, [
     'uTexture', 'uResolution', 'uTime',
-    'uPowerOn', 'uWarmupProgress',
-    'uBarrelStrength', 'uScanlineStrength', 'uShadowMaskStrength',
-    'uVignetteStrength', 'uChromaticAberration'
+    'uPowerOn', 'uWarmupProgress', 'uShutdownProgress'
   ]);
 
   // Fullscreen quad VAO
@@ -638,8 +636,20 @@ async function init() {
     tick(dt);
     tickAutopilot(dt);
 
-    if (powerState.on && powerState.warmupProgress < 1.0) {
-      powerState.warmupProgress = Math.min(1.0, powerState.warmupProgress + dt / 1.5);
+    if (powerState.on) {
+      if (powerState.warmupProgress < 1.0) {
+        powerState.warmupProgress = Math.min(1.0, powerState.warmupProgress + dt / 1.5);
+      }
+    } else {
+      if (powerState.shutdownProgress < 1.0) {
+        powerState.shutdownProgress = Math.min(1.0, powerState.shutdownProgress + dt / 0.85);
+        if (powerState.shutdownProgress >= 1.0) {
+          const tvBody = document.getElementById('tv-body');
+          if (tvBody) {
+            tvBody.classList.remove('shutting-down');
+          }
+        }
+      }
     }
 
     const displayW = canvas.clientWidth  || window.innerWidth;
@@ -678,7 +688,7 @@ async function init() {
     gl.disable(gl.BLEND);
     gl.disable(gl.DEPTH_TEST);
 
-    if (powerState.on || powerState.warmupProgress > 0) {
+    if (powerState.on || powerState.warmupProgress > 0 || (powerState.shutdownProgress > 0.0 && powerState.shutdownProgress < 0.42)) {
       // 1. Render Deck A
       if (autopilotState.deckA) {
         renderVisualSource(autopilotState.deckA, deckA.cleanFBO, deckA.readTex);
@@ -745,11 +755,7 @@ async function init() {
     gl.uniform1f(crtUniforms.uTime,                elapsedTime);
     gl.uniform1f(crtUniforms.uPowerOn,             powerState.on ? 1.0 : 0.0);
     gl.uniform1f(crtUniforms.uWarmupProgress,      powerState.warmupProgress);
-    gl.uniform1f(crtUniforms.uBarrelStrength,      0.12);
-    gl.uniform1f(crtUniforms.uScanlineStrength,    0.25);
-    gl.uniform1f(crtUniforms.uShadowMaskStrength,  0.25);
-    gl.uniform1f(crtUniforms.uVignetteStrength,    0.7);
-    gl.uniform1f(crtUniforms.uChromaticAberration, 0.003);
+    gl.uniform1f(crtUniforms.uShutdownProgress,    powerState.shutdownProgress);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 

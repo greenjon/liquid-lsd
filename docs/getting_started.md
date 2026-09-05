@@ -49,7 +49,11 @@ build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 
 Launch the packaged JAR with low-latency ZGC flags:
 ```bash
+# Linux / Windows:
 java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+
+# macOS (requires -XstartOnFirstThread for GLFW Cocoa main thread event loop):
+java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 ```
 
 ---

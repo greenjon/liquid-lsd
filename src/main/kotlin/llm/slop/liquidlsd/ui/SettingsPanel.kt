@@ -263,6 +263,19 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
+        val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
+        if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
+            val nextVal = seqEnabled.get()
+            if (nextVal != session.uiTheme.sequencerEnabled) {
+                session.uiTheme.sequencerEnabled = nextVal
+                session.uiTheme.saveSettings()
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Enable or disable the step sequencer modulation engine.")
+        }
+        ImGui.spacing()
+
         session.uiTheme.caption("Toggle which CV source columns appear in the Preset Grid:")
         ImGui.spacing()
 
@@ -480,6 +493,41 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
+        val midiEnabled = ImBoolean(session.uiTheme.midiEnabled)
+        if (ImGui.checkbox("Enable MIDI", midiEnabled)) {
+            val nextVal = midiEnabled.get()
+            if (nextVal != session.uiTheme.midiEnabled) {
+                session.uiTheme.midiEnabled = nextVal
+                session.uiTheme.saveSettings()
+                if (nextVal) {
+                    llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
+                } else {
+                    llm.slop.liquidlsd.midi.MidiEngine.close()
+                }
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Toggle MIDI controller input and CC mapping.")
+        }
+
+        if (!session.uiTheme.midiEnabled) {
+            ImGui.spacing()
+            session.uiTheme.caption("MIDI is currently disabled. Enable it above to use MIDI hardware controllers and CC mapping.")
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+            session.uiTheme.h2("Keyboard Shortcuts")
+            ImGui.spacing()
+            val triggers = UITheme.QueueKeyTrigger.values()
+            val triggerNames = triggers.map { it.name }.toTypedArray()
+            val currentTriggerIdx = imgui.type.ImInt(session.uiTheme.queueKeyTrigger.ordinal)
+            if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
+                session.uiTheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
+                session.uiTheme.saveSettings()
+            }
+            return
+        }
+
         val midiDir = java.io.File("library/midi")
         val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
             .map { it.nameWithoutExtension }
@@ -555,6 +603,18 @@ object SettingsPanel {
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Toggle parameter and modulator randomization controls.")
+        }
+
+        val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
+        if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
+            val nextVal = seqEnabled.get()
+            if (nextVal != session.uiTheme.sequencerEnabled) {
+                session.uiTheme.sequencerEnabled = nextVal
+                session.uiTheme.saveSettings()
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Enable or disable the step sequencer modulation engine across presets and cell configuration.")
         }
 
         ImGui.spacing()

@@ -82,9 +82,14 @@ The standalone web client (`web/index.html`) encapsulates the visualizer in an a
 
 ### TV Shell Interactive Controls
 
-- **Power Switch (`ui.js`)**:
-  - Clicking the physical power toggle satisfies modern browser autoplay policies for Web Audio.
-  - Ignites a realistic **1.5s CRT warmup animation**: a thin horizontal raster line with intense phosphor glow expands vertically until the full scanline image fills the screen.
+- **Power Switch (`ui.js`, `crt_post.frag`)**:
+  - Clicking the physical power toggle satisfies modern browser autoplay policies for Web Audio when turning on, and cleanly pauses the live audio stream, suspends the `AudioContext`, and blanks the screen when turning off.
+  - **Warmup Animation**: Turning on ignites a realistic **1.5s CRT warmup animation** where a thin horizontal raster line with intense phosphor glow expands vertically until the full scanline image fills the screen.
+  - **Shutdown Beam Collapse**: Turning off plays a vintage **0.85s CRT electron beam collapse animation** across 3 physical phases:
+    1. *Vertical Collapse*: The visualizer rapidly squashes vertically into an overdriven, intensely bright horizontal line across the screen center.
+    2. *Horizontal Shrink*: The bright horizontal line pulls inward from both edges and shrinks into a pinpoint glowing white-hot phosphor dot in the center of the tube.
+    3. *Phosphor Decay*: The central dot slowly dims with authentic phosphor persistence and fades to complete darkness.
+  - **Clean Presentation When Powered On**: While running, the visualizer renders edge-to-edge with crystal clarity, without corner vignetting, interlacing/scanlines, chromatic aberration, or barrel distortion.
 - **Rotary Volume Dial (`ui.js`, `dsp.js`)**:
   - Dragging the physical dial up or down (or touching and dragging on mobile) rotates the dial between `-150°` and `+150°`.
   - Adjusts Web Audio volume smoothly using a squared attenuation curve ($V^2$) via `GainNode.setTargetAtTime`, ensuring natural, perceptually linear acoustic volume.

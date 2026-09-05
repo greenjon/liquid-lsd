@@ -21,6 +21,9 @@ Presets store the complete state of a deck, including all visual parameters, fee
 
 Liquid LSD cleanly separates physical hardware controller maps from visual performance presets.
 
+> [!NOTE]
+> MIDI input is **disabled by default**. You can enable or disable MIDI controller input and CC assignment at any time in **Settings** $\to$ **MIDI & Controls** via the **Enable MIDI** toggle. When disabled, hardware MIDI devices are safely closed, the **MIDI Map** menu item is deactivated, and MIDI CV modulators are bypassed.
+
 ### Hardware MIDI Profiles vs. Per-Preset MIDI Modulators
 
 | Feature Scope | Storage Location | Purpose | Portability |

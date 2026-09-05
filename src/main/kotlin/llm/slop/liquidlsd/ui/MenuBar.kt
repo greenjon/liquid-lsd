@@ -192,10 +192,11 @@ class MenuBar(
 
                 // MIDI Map toggle button
                 val isMidiLearn = presetState.isMidiLearnMode
+                val midiEnabled = session.uiTheme.midiEnabled
                 if (isMidiLearn) {
                     ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
                 }
-                if (ImGui.menuItem("MIDI Map", "", isMidiLearn)) {
+                if (ImGui.menuItem("MIDI Map", "", isMidiLearn, midiEnabled)) {
                     presetState.isMidiLearnMode = !isMidiLearn
                     if (!presetState.isMidiLearnMode) {
                         presetState.midiLearnTarget = null
@@ -206,7 +207,11 @@ class MenuBar(
                     }
                 }
                 if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
+                    if (midiEnabled) {
+                        ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
+                    } else {
+                        ImGui.setTooltip("MIDI is disabled in Settings. Enable MIDI in Settings -> MIDI & Controls to use MIDI Learn.")
+                    }
                 }
                 if (isMidiLearn) {
                     ImGui.popStyleColor()

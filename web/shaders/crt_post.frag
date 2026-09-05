@@ -9,11 +9,7 @@ uniform vec2      uResolution;
 uniform float     uTime;
 uniform float     uPowerOn;
 uniform float     uWarmupProgress;
-uniform float     uBarrelStrength;
-uniform float     uScanlineStrength;
-uniform float     uShadowMaskStrength;
-uniform float     uVignetteStrength;
-uniform float     uChromaticAberration;
+uniform float     uShutdownProgress;
 
 // --- Helpers ---
 
@@ -22,32 +18,79 @@ float rand(vec2 co) {
     return fract(sin(dot(co, vec2(12.9898, 78.233 + uTime * 0.1))) * 43758.5453);
 }
 
-// Barrel distortion — bends UV toward screen edges like curved glass
-vec2 barrel(vec2 uv) {
-    vec2 cc = uv - 0.5;
-    float dist = dot(cc, cc);
-    return uv + cc * dist * uBarrelStrength * 2.5;
-}
-
-// Vignette factor — darkens corners
-float vignette(vec2 uv) {
-    vec2 vc = uv - 0.5;
-    return clamp(1.0 - dot(vc, vc) * uVignetteStrength * 3.5, 0.0, 1.0);
-}
-
 void main() {
 
     // -------------------------------------------------------
-    // STATE: POWER OFF — animated static snow
+    // STATE: POWERING DOWN — CRT Electron Beam Collapse
+    // 1. Collapse vertically into bright horizontal line across middle (0.0 -> 0.42)
+    // 2. Shrink horizontally into glowing pinpoint central dot (0.42 -> 0.75)
+    // 3. Central dot phosphor decay & fade out to black (0.75 -> 1.0)
     // -------------------------------------------------------
-    if (uPowerOn < 0.01 && uWarmupProgress < 0.01) {
-        float n1 = rand(vTexCoord);
-        float n2 = rand(vTexCoord + vec2(0.1, 0.3));
-        // Mix fine and coarse grain for texture variety
-        float snow = n1 * 0.7 + n2 * 0.3;
-        // Subtle horizontal scan lines in the static
-        float scan = 0.85 + 0.15 * sin(vTexCoord.y * uResolution.y * 3.14159);
-        fragColor = vec4(vec3(snow * scan), 1.0);
+    if (uShutdownProgress > 0.001 && uShutdownProgress < 1.0) {
+        vec2 uv = vTexCoord;
+        float s = uShutdownProgress;
+
+        if (s <= 0.42) {
+            // Phase 1: Vertical collapse into intense bright center line
+            float p1 = s / 0.42;
+            float vScale = max(0.0035, pow(1.0 - p1, 2.5) * 0.5);
+            float distY = abs(uv.y - 0.5);
+
+            if (distY < vScale) {
+                // Inside squashed raster beam
+                vec2 squashedUV = vec2(uv.x, 0.5 + (uv.y - 0.5) * (0.5 / max(vScale, 0.001)));
+                vec3 col = texture(uTexture, squashedUV).rgb;
+                float boost = 1.0 + p1 * 3.5;
+                float core = exp(-distY * (350.0 / max(vScale * 2.0, 0.01))) * p1;
+                col = col * boost + vec3(core * 1.5, core * 1.7, core * 1.6);
+                fragColor = vec4(col, 1.0);
+            } else {
+                // Phosphor bloom glow outside compressed raster
+                float glow = exp(-(distY - vScale) * 120.0) * p1 * 0.9;
+                vec3 col = vec3(glow * 0.92, glow, glow * 0.95);
+                fragColor = vec4(col, 1.0);
+            }
+            return;
+        } else if (s <= 0.75) {
+            // Phase 2: Horizontal collapse into dot
+            float p2 = (s - 0.42) / 0.33;
+            float hScale = max(0.005, pow(1.0 - p2, 2.2) * 0.5);
+            float distX = abs(uv.x - 0.5);
+            float distY = abs(uv.y - 0.5);
+
+            float lineCore = exp(-distY * 500.0);
+            float lineGlow = exp(-distY * 100.0) * 0.4;
+            float edgeTaper = smoothstep(hScale + 0.01, max(0.0, hScale - 0.02), distX);
+            float flareX = exp(-max(0.0, distX - hScale) * 150.0);
+
+            float intensity = 2.5 + (1.0 - hScale / 0.5) * 2.5;
+            float beam = (lineCore + lineGlow) * edgeTaper * intensity + lineCore * flareX * 0.7;
+
+            vec3 col = vec3(beam * 0.95, beam * 1.0, beam * 0.92);
+            fragColor = vec4(col, 1.0);
+            return;
+        } else {
+            // Phase 3: Central dot phosphor decay & fade out
+            float p3 = (s - 0.75) / 0.25;
+            vec2 delta = (uv - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
+            float r = length(delta);
+
+            float dotCore = exp(-r * r * 45000.0);
+            float dotHalo = exp(-r * 80.0) * 0.6;
+            float decay = pow(1.0 - p3, 2.2);
+            float brightness = (dotCore + dotHalo) * decay * 4.0;
+
+            vec3 col = vec3(brightness * 0.95, brightness * 1.0, brightness * 0.90);
+            fragColor = vec4(col, 1.0);
+            return;
+        }
+    }
+
+    // -------------------------------------------------------
+    // STATE: FULLY OFF
+    // -------------------------------------------------------
+    if (uPowerOn < 0.01 || uShutdownProgress >= 1.0) {
+        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
         return;
     }
 
@@ -93,49 +136,7 @@ void main() {
     }
 
     // -------------------------------------------------------
-    // STATE: FULLY ON — CRT post-processing
+    // STATE: FULLY ON — Clean Direct Presentation
     // -------------------------------------------------------
-
-    // 1. Barrel distortion
-    vec2 uv = barrel(vTexCoord);
-
-    // 2. Out-of-bounds → black (curved screen shows bezel behind)
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        return;
-    }
-
-    // 3. Chromatic aberration — RGB channels slightly split toward edges
-    vec2 caVec = (uv - 0.5) * uChromaticAberration;
-    float r = texture(uTexture, uv + caVec).r;
-    float g = texture(uTexture, uv).g;
-    float b = texture(uTexture, uv - caVec).b;
-    vec3 color = vec3(r, g, b);
-
-    // 4. Scanlines — horizontal dark lines at pixel frequency
-    //    Use uv.y * resolution for screen-space frequency
-    float scanPhase = uv.y * uResolution.y;
-    float scanline = 0.5 + 0.5 * sin(scanPhase * 3.14159);
-    scanline = pow(scanline, 0.7);   // slightly sharpen the lines
-    color *= mix(1.0, scanline, uScanlineStrength);
-
-    // 5. RGB shadow mask — phosphor dot triad pattern
-    //    3-pixel repeating pattern: R | G | B
-    float maskPx = mod(uv.x * uResolution.x, 3.0);
-    vec3 mask;
-    mask.r = smoothstep(0.0, 0.5, maskPx) * (1.0 - smoothstep(0.5, 1.5, maskPx));
-    mask.g = smoothstep(1.0, 1.5, maskPx) * (1.0 - smoothstep(1.5, 2.5, maskPx));
-    mask.b = smoothstep(2.0, 2.5, maskPx) * (1.0 - smoothstep(2.5, 3.5, maskPx));
-    // Bias toward white (full) so the mask is subtle rather than dark
-    vec3 phosphorMask = vec3(0.65) + mask * 0.35;
-    color *= mix(vec3(1.0), phosphorMask, uShadowMaskStrength);
-
-    // 6. Vignette
-    color *= vignette(uv);
-
-    // 7. Subtle phosphor glow / ambient — tiny additive green tint at low levels
-    //    Gives the impression of CRT phosphor persistence at dark areas
-    color += vec3(0.0, 0.008, 0.004) * (1.0 - dot(color, vec3(0.299, 0.587, 0.114)));
-
-    fragColor = vec4(color, 1.0);
+    fragColor = texture(uTexture, vTexCoord);
 }

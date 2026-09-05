@@ -174,7 +174,8 @@ value = result.coerceIn(0f, 1f)
 ```
 
 Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
-Preset Grid columns: VALUE | MIDI | LFO | SEQ | AUDIO | TRIG
+Preset Grid columns: VALUE | MIDI | LFO | SEQ | AUDIO | TRIG  
+*(Note: Step Sequencer, Parameter Randomization, and MIDI are disabled by default in Settings and can be toggled in runtime configuration; grid columns and editor tabs dynamically synchronize with their enabled states).*
 
 ## Design Principles
 - **Zero-allocation audio loops** — pre-allocated buffers, no object creation in JACK callback or Java Sound conversion loop
@@ -241,8 +242,9 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
 ./gradlew test             # run test suite (includes WebSyncTest)
 ./gradlew checkWebSync     # verify desktop ↔ web asset synchronization
 ./gradlew syncWeb          # auto-transpile desktop shaders into web/
-./gradlew packageThumbDrive  # bundle fat JAR + JREs for all 5 platforms
+./gradlew packageThumbDrive  # bundle fat JAR + JREs + library for all 5 platforms
+./gradlew packageZips        # assemble platform distribution ZIPs (Windows, Linux x64/arm64, macOS x64/arm64)
 ```
-Custom visual shaders are loaded from `library/sources/`.
+Custom visual shaders and presets are loaded from `library/sources/` and `library/presets/`. Distribution ZIPs package the complete `library/` folder with executable (`755`) permissions on launcher scripts (`.sh`, `.command`) and bundled JRE binaries. Additionally, the fat JAR bundles default visual sources under `default_sources/`, which are automatically extracted by `VisualSourceRegistry` at startup if missing on disk.
 For deeper notes see `docs/developer/` and `.agents/PROJECT.md`.
 

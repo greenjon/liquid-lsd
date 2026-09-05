@@ -247,7 +247,24 @@ class VisualSourceManifestTest {
             assertTrue(!paramNames.contains(bgParam), "Mandala should not contain legacy background parameter: $bgParam")
         }
     }
+
+    @Test
+    fun testEnsureDefaultSourcesExtractsBundledDefaults() {
+        val tempDir = java.nio.file.Files.createTempDirectory("test_sources").toFile()
+        try {
+            VisualSourceRegistry.ensureDefaultSources(tempDir)
+            val mandalaMeta = File(tempDir, "mandala/meta.json")
+            val mandalaFrag = File(tempDir, "mandala/shader.frag")
+            assertTrue(mandalaMeta.exists(), "ensureDefaultSources should extract mandala/meta.json")
+            assertTrue(mandalaFrag.exists(), "ensureDefaultSources should extract mandala/shader.frag")
+            assertTrue(mandalaMeta.length() > 0, "Extracted meta.json should not be empty")
+            assertTrue(mandalaFrag.length() > 0, "Extracted shader.frag should not be empty")
+        } finally {
+            tempDir.deleteRecursively()
+        }
+    }
 }
+
 
 
 

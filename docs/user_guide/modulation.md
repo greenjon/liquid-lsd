@@ -59,6 +59,9 @@ LFO 2 is a second internal oscillator that modulates LFO 1:
 
 The **Step Sequencer** (`seq`) outputs a deterministic, tempo-synchronized or time-based stepped voltage pattern. It provides rhythmically synchronized geometric shifts, color steps, rotational patterns, and stutter effects.
 
+> [!NOTE]
+> The Step Sequencer is **disabled by default** to ensure clean, deterministic performance startup. You can enable or disable the Step Sequencer at any time in **Settings** $\to$ **General** or **Settings** $\to$ **Preset Grid**. When disabled, sequencer modulation is bypassed and its columns/tabs are hidden.
+
 ### Step Grid & Interaction
 - **Grid Layout**: 8 columns wide, arranged in 1 row (8 steps), 2 rows (16 steps), or 4 rows (32 steps).
 - **Live Playhead Highlight**: A glowing Electric Lime border highlights the currently active step in real time.

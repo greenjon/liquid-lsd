@@ -107,6 +107,14 @@ object UITheme {
         get() = settings.randomizationEnabled
         set(value) { settings = settings.copy(randomizationEnabled = value) }
 
+    var sequencerEnabled: Boolean
+        get() = settings.sequencerEnabled
+        set(value) { settings = settings.copy(sequencerEnabled = value) }
+
+    var midiEnabled: Boolean
+        get() = settings.midiEnabled
+        set(value) { settings = settings.copy(midiEnabled = value) }
+
     enum class QueueKeyTrigger { NONE, ARROWS, PAGE_UP_DOWN, SPACE_BACKSPACE }
 
     var autoVjDirtyBehavior: AutoVjDirtyBehavior
@@ -351,6 +359,18 @@ object UITheme {
                     logger.info { "Loaded randomizationEnabled from settings file: $randomizationEnabled" }
                 }
 
+                val savedSequencer = props.getBoolean("sequencerEnabled")
+                if (savedSequencer != null) {
+                    sequencerEnabled = savedSequencer
+                    logger.info { "Loaded sequencerEnabled from settings file: $sequencerEnabled" }
+                }
+
+                val savedMidi = props.getBoolean("midiEnabled")
+                if (savedMidi != null) {
+                    midiEnabled = savedMidi
+                    logger.info { "Loaded midiEnabled from settings file: $midiEnabled" }
+                }
+
 
                 val savedTooltips = props.getBoolean("tooltipsEnabled")
                 if (savedTooltips != null) {
@@ -451,6 +471,8 @@ object UITheme {
             props.setProperty("backgroundVideoEnabled", backgroundVideoEnabled.toString())
             props.setProperty("cleanModeEnabled", cleanModeEnabled.toString())
             props.setProperty("randomizationEnabled", randomizationEnabled.toString())
+            props.setProperty("sequencerEnabled", sequencerEnabled.toString())
+            props.setProperty("midiEnabled", midiEnabled.toString())
             props.setProperty("tooltipsEnabled", tooltipsEnabled.toString())
             props.setProperty("maxFps", maxFps.toString())
             props.setProperty("libraryMode", libraryMode.name)

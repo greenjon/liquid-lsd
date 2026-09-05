@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.parameters
 import llm.slop.liquidlsd.cv.CvHistoryBuffer
 import llm.slop.liquidlsd.cv.evaluateModulator
 import llm.slop.liquidlsd.cv.CVRegistry
+import llm.slop.liquidlsd.ui.UITheme
 import java.util.concurrent.CopyOnWriteArrayList
 
 enum class MeterType {
@@ -158,6 +159,12 @@ class ModulatableParameter(
             val mod = modulators[i]
             val isAllowed = modulatorFilter?.invoke(mod) ?: true
             if (!isAllowed || mod.bypassed || !(CVRegistry.exists(mod.sourceId) || mod.sourceId.startsWith("midi_cc_"))) {
+                continue
+            }
+            if (mod.sourceId == "seq" && !UITheme.sequencerEnabled) {
+                continue
+            }
+            if (mod.sourceId.startsWith("midi_cc_") && !UITheme.midiEnabled) {
                 continue
             }
             val finalCv = evaluateModulator(mod)

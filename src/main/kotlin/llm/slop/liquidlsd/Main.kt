@@ -34,7 +34,9 @@ fun main() {
 
 
     // Load active MIDI mapping profile
-    llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
+    if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
+        llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
+    }
 
     // Initialize GLFW
     if (!glfwInit()) {
@@ -125,7 +127,7 @@ fun main() {
     val renderer = Renderer()
 
     val masterMandala = llm.slop.liquidlsd.rendering.VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
-        ?: throw RuntimeException("Mandala source not loaded from presets/sources/mandala")
+        ?: throw RuntimeException("Mandala source not loaded from library/sources/mandala")
 
     // Create Deck A with a 4-petal recipe (yellow-ish theme default)
     val recipeA = MandalaRatio(
@@ -324,7 +326,9 @@ fun main() {
             CVRegistry.updateAll()
 
             // 0. Update MIDI mappings
-            llm.slop.liquidlsd.midi.MidiMappingManager.update(mixer)
+            if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
+                llm.slop.liquidlsd.midi.MidiMappingManager.update(mixer)
+            }
 
             // 1. Update and Render Deck A (renders source + applies feedback loop)
             deckA.update()

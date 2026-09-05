@@ -6,6 +6,8 @@ import llm.slop.liquidlsd.cv.evaluateModulatorAtOffset
 import llm.slop.liquidlsd.models.ModulatorDto
 import llm.slop.liquidlsd.models.toDomain
 import llm.slop.liquidlsd.models.toDto
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterEach
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,6 +17,42 @@ class StepSequencerEvaluatorTest {
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
+    }
+
+    @BeforeEach
+    fun setUp() {
+        llm.slop.liquidlsd.ui.UITheme.sequencerEnabled = true
+    }
+
+    @AfterEach
+    fun tearDown() {
+        llm.slop.liquidlsd.ui.UITheme.sequencerEnabled = false
+    }
+
+    @Test
+    fun testSequencerDisabledReturnsZero() {
+        llm.slop.liquidlsd.ui.UITheme.sequencerEnabled = false
+        val mod = CvModulator(
+            sourceId = "seq",
+            seqSteps = listOf(0.8f, 0.9f),
+            depth = 1.0f
+        )
+        assertEquals(0.0f, evaluateModulatorAtOffset(mod, 0.0), 0.001f)
+        assertEquals(0.0f, CVRegistry.get("seq"), 0.001f)
+    }
+
+    @Test
+    fun testSequencerDisabledSkipsEvaluationInModulatableParameter() {
+        llm.slop.liquidlsd.ui.UITheme.sequencerEnabled = false
+        val param = ModulatableParameter(baseValue = 0.5f, minClamp = 0.0f, maxClamp = 1.0f)
+        val mod = CvModulator(
+            sourceId = "seq",
+            seqSteps = listOf(0.4f),
+            depth = 1.0f,
+            operator = ModulationOperator.ADD
+        )
+        param.modulators.add(mod)
+        assertEquals(0.5f, param.evaluate(), 0.001f)
     }
 
     @Test

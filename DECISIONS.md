@@ -2,6 +2,43 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Distribution Packaging, Zip Permissions, and Self-Healing Source Extraction (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
+
+- **Decision**: Package the complete `library/` folder into all release ZIP archives and thumb drive bundles, enforce POSIX `755` executable permissions across all Unix shell scripts and JRE binaries via Gradle `FileCopyDetails.permissions`, and bundle default visual sources into the fat JAR classpath (`default_sources/`) for automatic runtime self-healing:
+  - **Gradle 9 File Permissions Fix (`build.gradle.kts`)**: In Gradle 9, calling `filePermissions { unix("755") }` within an `eachFile { ... }` block resolves to the outer `Zip` task rather than mutating the individual `FileCopyDetails` instance. Replaced with `permissions { unix("755") }` on `FileCopyDetails` for all `.sh`, `.command`, and `bin/` executables (`java`, `jspawnhelper`).
+  - **Distribution Packaging (`build.gradle.kts`)**: Updated `packageThumbDrive` and all platform distribution tasks (`zipWindows`, `zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`) to copy and include `library/**` (sources, presets, playlists, and MIDI profiles).
+  - **Classpath Bundling & Self-Healing Extraction (`VisualSourceRegistry.kt`, `processResources`)**: Configured `tasks.processResources` to package `library/sources` into the JAR under `default_sources/`. If `library/sources/mandala` or default sources are missing on disk at startup (e.g. running standalone fat JAR or unbundled executions), `VisualSourceRegistry.ensureDefaultSources` extracts the bundled default sources automatically into `library/sources/`.
+  - **Clear Error Messaging (`Main.kt`)**: Updated the startup failure exception message from `presets/sources/mandala` to `library/sources/mandala`.
+- **Rationale**:
+  - Eliminates the need for users to manually run `chmod +x run-linux.sh` or `chmod +x run-mac-*.command` after extracting release zip archives.
+  - Fixes startup crashes caused by missing visual source definitions (e.g., `RuntimeException: Mandala source not loaded...`).
+  - Provides multi-layered defense-in-depth: the pre-built distribution contains user-editable sources out-of-the-box, and standalone JAR executions self-heal automatically without crashing.
+
+## Default-Disabled Policy for Sequencer, Randomization, and MIDI Subsystems (`AppSettings.kt`, `SettingsPanel.kt`, `UITheme.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `MidiEngine.kt`)
+
+- **Decision**: Configure the Step Sequencer, Parameter Randomization, and MIDI hardware/mapping subsystems to be disabled by default (`sequencerEnabled = false`, `randomizationEnabled = false`, `midiEnabled = false`), and provide explicit master toggles in Settings:
+  - **Sequencer Master Toggle**: Added `sequencerEnabled` in `AppSettings` / `UITheme`, exposed in **Settings** $\to$ **General** and **Settings** $\to$ **Preset Grid**. When disabled, parameter evaluation skips sequencer modulators, `CVRegistry.get("seq")` returns 0.0f, and sequencer columns/tabs are hidden.
+  - **Randomization Default**: Changed default `randomizationEnabled` from `true` to `false` in `AppSettings`.
+  - **MIDI Master Toggle**: Added `midiEnabled` in `AppSettings` / `UITheme`, exposed in **Settings** $\to$ **MIDI & Controls**. When disabled, device enumeration and watchdog polling are suppressed, open MIDI devices are closed, incoming CC queues are cleared, the "MIDI Map" menu action is disabled, and MIDI modulators evaluate as neutral.
+- **Rationale**:
+  - **Deterministic Initial State**: Users launching the application for the first time or starting a new session are not confronted with unpredictable randomized parameter drift, unexpected MIDI input intercepting desktop controls, or complex sequencing dynamics running before they have intentionally configured them.
+  - **Reduced Resource Consumption**: Suppressing background MIDI device polling, queue draining, and sequencer evaluation until enabled saves unnecessary background thread cycles and USB bus probes on systems without MIDI hardware.
+  - **Consistent Subsystem Symmetry**: Brings Step Sequencer and MIDI subsystems into architectural symmetry with `audioEngineEnabled`, where subsystems default to safe states and expose clear master enable toggles with automatic UI column/tab synchronization.
+
+## macOS JRE Bundle Hierarchy & GLFW Main Thread Dispatch (`build.gradle.kts`, `run-mac-arm.command`, `run-mac-intel.command`)
+
+- **Decision**: Accommodate macOS-specific JRE bundle layouts and Cocoa runtime threading constraints in desktop launcher generation and Gradle tasks:
+  - **macOS Bundle Directory Structure Resolution**: Adoptium `.tar.gz` distributions for macOS package JRE binaries inside a standard macOS bundle structure (`Contents/Home/bin/java`). The launcher generation scripts (`run-mac-arm.command` and `run-mac-intel.command`) now probe both `jre/macos-<arch>/Contents/Home/bin/java` and flat `jre/macos-<arch>/bin/java` paths before attempting system Java fallback.
+  - **Thread 0 JVM Dispatch (`-XstartOnFirstThread`)**: macOS Cocoa requires that GLFW event loop initialization and window message polling execute strictly on the primary OS thread (Thread 0). Both the bundled JRE execution paths and system Java fallback in `run-mac-*.command`, as well as Gradle `JavaExec` tasks when `os.name` contains `mac`, now pass `-XstartOnFirstThread`.
+  - **Native Access Warning Suppression (`--enable-native-access=ALL-UNNAMED`)**: Passed to all launcher scripts and `JavaExec` tasks to ensure clean JVM startup without JNI/Unsafe deprecation warnings under modern JDKs (JDK 21+).
+  - **Gatekeeper Quarantine Stripping**: Automatically executes `xattr -dr com.apple.quarantine jre 2>/dev/null || true` inside the `.command` launcher scripts to prevent macOS Gatekeeper from blocking execution of bundled JRE binaries extracted from downloaded zip archives.
+  - **Zip Permissions Preservation**: Configured `zipMacArm` and `zipMacIntel` Gradle tasks to set `755` permissions across all binaries in `bin/`, `jspawnhelper`, and `.command` launchers.
+- **Rationale**:
+  - Eliminates the `IllegalStateException: GLFW may only be used on the main thread` crash when launching on macOS Apple Silicon or Intel.
+  - Fixes false-positive "Bundled JRE not found" errors that caused the app to fall back to whatever system Java was installed on the user's Mac.
+  - Provides a frictionless double-click launch experience on macOS Finder without Gatekeeper quarantine roadblocks.
+
+
 ## Explicit Randomization Disabling for Mixer Randomizer Parameters (`ModulatableParameter.kt`, `Mixer.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `ValueParamSection.kt`, `ModulatorHeaderRow.kt`, `PresetGridRenderer.kt`)
 
 - **Decision**: Explicitly prohibit parameter and modulator randomization on the five Mixer randomization controllers (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckBG`, `Mixer/randDeckPV`, and `Mixer/randAll`):

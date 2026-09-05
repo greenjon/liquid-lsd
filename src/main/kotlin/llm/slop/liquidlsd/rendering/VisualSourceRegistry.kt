@@ -48,6 +48,54 @@ object VisualSourceRegistry {
         availableSources.clear()
     }
 
+    private val DEFAULT_SOURCE_IDS = listOf(
+        "attractor_feedback",
+        "chladni",
+        "colors",
+        "dynamic_spiral",
+        "gyroid",
+        "hyper_mesh",
+        "hyper_slice",
+        "icosa-v3",
+        "icosa_dodeca",
+        "icosahedron",
+        "mandala"
+    )
+
+    internal fun ensureDefaultSources(sourcesDir: File) {
+        val mandalaFolder = File(sourcesDir, "mandala")
+        val mandalaMeta = File(mandalaFolder, "meta.json")
+        val mandalaFrag = File(mandalaFolder, "shader.frag")
+        if (mandalaMeta.exists() && mandalaFrag.exists()) {
+            return
+        }
+
+        logger.info { "Default sources missing or incomplete in ${sourcesDir.path}; extracting bundled defaults..." }
+        val sourceFiles = listOf("meta.json", "shader.frag", "shader.vert")
+        for (sourceId in DEFAULT_SOURCE_IDS) {
+            val targetFolder = File(sourcesDir, sourceId)
+            var extractedAny = false
+            for (filename in sourceFiles) {
+                val resourcePath = "default_sources/$sourceId/$filename"
+                val stream = VisualSourceRegistry::class.java.classLoader.getResourceAsStream(resourcePath)
+                    ?: continue
+                if (!targetFolder.exists()) {
+                    targetFolder.mkdirs()
+                }
+                val targetFile = File(targetFolder, filename)
+                stream.use { input ->
+                    targetFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                extractedAny = true
+            }
+            if (extractedAny) {
+                logger.info { "Extracted bundled visual source: $sourceId" }
+            }
+        }
+    }
+
     fun loadAll() {
         disposeAll()
         
@@ -55,6 +103,8 @@ object VisualSourceRegistry {
         if (!sourcesDir.exists()) {
             sourcesDir.mkdirs()
         }
+
+        ensureDefaultSources(sourcesDir)
 
         val folders = sourcesDir.listFiles { file -> file.isDirectory } ?: emptyArray()
         
