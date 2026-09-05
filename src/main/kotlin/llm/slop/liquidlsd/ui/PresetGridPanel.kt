@@ -34,22 +34,22 @@ object PresetGridPanel {
     private fun getCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val cols = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) cols.add("lfo")
-        if (session.uiTheme.sequencerEnabled && session.uiTheme.showSeqCol) cols.add("seq")
-        if (session.uiTheme.audioEngineEnabled && session.uiTheme.showAudioCol) cols.add("audio")
+        if (session.uiTheme.sequencerEnabled) cols.add("seq")
+        if (session.uiTheme.audioEngineEnabled) cols.add("audio")
         return cols
     }
 
     private fun getCvLabels(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val labels = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) labels.add("LFO")
-        if (session.uiTheme.sequencerEnabled && session.uiTheme.showSeqCol) labels.add("SEQ")
-        if (session.uiTheme.audioEngineEnabled && session.uiTheme.showAudioCol) labels.add("AUD")
+        if (session.uiTheme.sequencerEnabled) labels.add("SEQ")
+        if (session.uiTheme.audioEngineEnabled) labels.add("AUD")
         return labels
     }
 
     private fun getVisibleColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val visibleCols = mutableListOf("value")
-        if (session.uiTheme.midiEnabled && session.uiTheme.showMidiCol) visibleCols.add("midi")
+        if (session.uiTheme.midiEnabled) visibleCols.add("midi")
         visibleCols.addAll(getCvColumns(session))
         return visibleCols
     }
@@ -398,7 +398,7 @@ object PresetGridPanel {
         }
 
         // Draw MIDI header
-        if (session.uiTheme.midiEnabled && session.uiTheme.showMidiCol) {
+        if (session.uiTheme.midiEnabled) {
             val midiColX = startX + labelColW + getColumnOffset(session, "midi")
             val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
             if (isMidiHeaderHovered) {
@@ -460,17 +460,14 @@ object PresetGridPanel {
         val deckDeps = activeDeck?.analyzeDependencies()
             ?: llm.slop.liquidlsd.presets.PresetDependencies()
 
-        val midiColHidden = deckDeps.usesMidi && !session.uiTheme.showMidiCol
-        val midiEngineOff = deckDeps.usesMidi && !session.uiTheme.midiEnabled
+        val midiMissing = deckDeps.usesMidi && !session.uiTheme.midiEnabled
         val lfoMissing = deckDeps.usesLfo && !session.uiTheme.showLfoCol
-        val seqColHidden = deckDeps.usesSeq && !session.uiTheme.showSeqCol
-        val seqEngineOff = deckDeps.usesSeq && !session.uiTheme.sequencerEnabled
-        val audioColHidden = deckDeps.usesAudio && !session.uiTheme.showAudioCol
-        val audioEngineOff = deckDeps.usesAudio && !session.uiTheme.audioEngineEnabled
+        val seqMissing = deckDeps.usesSeq && !session.uiTheme.sequencerEnabled
+        val audioMissing = deckDeps.usesAudio && !session.uiTheme.audioEngineEnabled
 
-        val anyMissing = midiColHidden || midiEngineOff || lfoMissing || seqColHidden || seqEngineOff || audioColHidden || audioEngineOff
+        val anyMissing = midiMissing || lfoMissing || seqMissing || audioMissing
 
-        val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
+        val isMidiVisible = session.uiTheme.midiEnabled
         val lastColId = if (cvCols.isNotEmpty()) cvCols.last() else if (isMidiVisible) "midi" else "value"
         val lastColRightX = startX + labelColW + getColumnOffset(session, lastColId) + CELL
         val kebabX = lastColRightX + CELL_PAD * 0.5f + 2f
@@ -502,7 +499,7 @@ object PresetGridPanel {
         dl.addCircleFilled(cx, cy, r, dotCol)
         dl.addCircleFilled(cx, cy + dotSpacing, r, dotCol)
 
-        // If any column needed by the patch is missing or audio engine is off, draw red [!] badge
+        // If any column needed by the patch is missing or engine is off, draw red [!] badge
         if (anyMissing) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 val badgeX = cx + 7f
@@ -519,39 +516,40 @@ object PresetGridPanel {
             if (anyMissing) {
                 ImGui.beginTooltip()
                 ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset Grid Columns:")
-                ImGui.text("Active patch uses modulators that are hidden or offline:")
-                if (midiEngineOff) ImGui.bulletText("MIDI is disabled in Settings")
-                else if (midiColHidden) ImGui.bulletText("MIDI column is hidden")
+                ImGui.text("Active patch uses modulators that are disabled:")
+                if (midiMissing) ImGui.bulletText("MIDI is disabled")
                 if (lfoMissing) ImGui.bulletText("LFO column is hidden")
-                if (seqEngineOff) ImGui.bulletText("Step Sequencer is disabled in Settings")
-                else if (seqColHidden) ImGui.bulletText("SEQ column is hidden")
-                if (audioEngineOff) ImGui.bulletText("Audio Engine is disabled")
-                if (audioColHidden) ImGui.bulletText("Audio (AUD) column is hidden")
+                if (seqMissing) ImGui.bulletText("Step Sequencer is disabled")
+                if (audioMissing) ImGui.bulletText("Audio Engine is disabled")
                 ImGui.spacing()
-                ImGui.textDisabled("Click to toggle columns or enable missing features.")
+                ImGui.textDisabled("Click to toggle modulators or enable missing features.")
                 ImGui.endTooltip()
             } else {
-                ImGui.setTooltip("Configure visible CV columns in Preset Grid.")
+                ImGui.setTooltip("Configure visible CV columns and modulator engines.")
             }
         }
 
         // Kebab popup menu
         if (ImGui.beginPopup(popupId)) {
-            session.uiTheme.h3("Preset Grid Columns")
+            session.uiTheme.h3("Preset Grid Modulators")
             ImGui.separator()
             ImGui.spacing()
 
             // 1. MIDI
-            val midiVal = imgui.type.ImBoolean(session.uiTheme.showMidiCol)
-            if (ImGui.checkbox("Show MIDI Column##grid_col_kebab", midiVal)) {
-                session.uiTheme.showMidiCol = midiVal.get()
+            val midiVal = imgui.type.ImBoolean(session.uiTheme.midiEnabled)
+            if (ImGui.checkbox("MIDI Column##grid_col_kebab", midiVal)) {
+                val nextVal = midiVal.get()
+                session.uiTheme.midiEnabled = nextVal
                 session.uiTheme.saveSettings()
+                if (nextVal) {
+                    llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
+                } else {
+                    llm.slop.liquidlsd.midi.MidiEngine.close()
+                }
             }
-            if (deckDeps.usesMidi || !session.uiTheme.midiEnabled) {
+            if (deckDeps.usesMidi) {
                 ImGui.sameLine()
                 if (!session.uiTheme.midiEnabled) {
-                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] MIDI Disabled")
-                } else if (!session.uiTheme.showMidiCol) {
                     ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
                 } else {
                     ImGui.textDisabled(" (used)")
@@ -560,7 +558,7 @@ object PresetGridPanel {
 
             // 2. LFO
             val lfoVal = imgui.type.ImBoolean(session.uiTheme.showLfoCol)
-            if (ImGui.checkbox("Show LFO Column##grid_col_kebab", lfoVal)) {
+            if (ImGui.checkbox("LFO Column##grid_col_kebab", lfoVal)) {
                 session.uiTheme.showLfoCol = lfoVal.get()
                 session.uiTheme.saveSettings()
             }
@@ -574,16 +572,14 @@ object PresetGridPanel {
             }
 
             // 3. SEQ
-            val seqVal = imgui.type.ImBoolean(session.uiTheme.showSeqCol)
-            if (ImGui.checkbox("Show SEQ Column##grid_col_kebab", seqVal)) {
-                session.uiTheme.showSeqCol = seqVal.get()
+            val seqVal = imgui.type.ImBoolean(session.uiTheme.sequencerEnabled)
+            if (ImGui.checkbox("Step Sequencer (SEQ)##grid_col_kebab", seqVal)) {
+                session.uiTheme.sequencerEnabled = seqVal.get()
                 session.uiTheme.saveSettings()
             }
-            if (deckDeps.usesSeq || !session.uiTheme.sequencerEnabled) {
+            if (deckDeps.usesSeq) {
                 ImGui.sameLine()
                 if (!session.uiTheme.sequencerEnabled) {
-                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Sequencer Disabled")
-                } else if (!session.uiTheme.showSeqCol) {
                     ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
                 } else {
                     ImGui.textDisabled(" (used)")
@@ -591,16 +587,20 @@ object PresetGridPanel {
             }
 
             // 4. AUD
-            val audioVal = imgui.type.ImBoolean(session.uiTheme.showAudioCol)
-            if (ImGui.checkbox("Show Audio Column (AUD)##grid_col_kebab", audioVal)) {
-                session.uiTheme.showAudioCol = audioVal.get()
+            val audioVal = imgui.type.ImBoolean(session.uiTheme.audioEngineEnabled)
+            if (ImGui.checkbox("Audio Engine (AUD)##grid_col_kebab", audioVal)) {
+                val nextVal = audioVal.get()
+                session.uiTheme.audioEngineEnabled = nextVal
                 session.uiTheme.saveSettings()
+                if (nextVal) {
+                    session.audioEngine.start()
+                } else {
+                    session.audioEngine.stop()
+                }
             }
-            if (deckDeps.usesAudio || !session.uiTheme.audioEngineEnabled) {
+            if (deckDeps.usesAudio) {
                 ImGui.sameLine()
                 if (!session.uiTheme.audioEngineEnabled) {
-                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Audio Engine Off")
-                } else if (!session.uiTheme.showAudioCol) {
                     ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
                 } else {
                     ImGui.textDisabled(" (used)")
@@ -613,38 +613,23 @@ object PresetGridPanel {
                 ImGui.separator()
                 ImGui.spacing()
                 if (ImGui.button("Turn On Needed Columns", -1f, 28f)) {
-                    if (deckDeps.usesMidi) {
+                    if (deckDeps.usesMidi && !session.uiTheme.midiEnabled) {
                         session.uiTheme.midiEnabled = true
-                        session.uiTheme.showMidiCol = true
+                        llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
                     }
-                    if (deckDeps.usesLfo) session.uiTheme.showLfoCol = true
+                    if (deckDeps.usesLfo) {
+                        session.uiTheme.showLfoCol = true
+                    }
                     if (deckDeps.usesSeq) {
                         session.uiTheme.sequencerEnabled = true
-                        session.uiTheme.showSeqCol = true
                     }
-                    if (deckDeps.usesAudio) {
-                        session.uiTheme.showAudioCol = true
-                        if (!session.uiTheme.audioEngineEnabled) {
-                            session.uiTheme.audioEngineEnabled = true
-                            session.audioEngine.start()
-                        }
+                    if (deckDeps.usesAudio && !session.uiTheme.audioEngineEnabled) {
+                        session.uiTheme.audioEngineEnabled = true
+                        session.audioEngine.start()
                     }
                     if (deckDeps.usesRandomization) {
                         session.uiTheme.randomizationEnabled = true
                     }
-                    session.uiTheme.saveSettings()
-                }
-            }
-
-            if (!session.uiTheme.audioEngineEnabled) {
-                if (!anyMissing) {
-                    ImGui.spacing()
-                    ImGui.separator()
-                    ImGui.spacing()
-                }
-                if (ImGui.button("Enable Audio Engine", -1f, 28f)) {
-                    session.uiTheme.audioEngineEnabled = true
-                    session.audioEngine.start()
                     session.uiTheme.saveSettings()
                 }
             }

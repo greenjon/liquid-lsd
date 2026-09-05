@@ -21,19 +21,13 @@ class PresetDependencyAnalyzerTest {
         randomizationEnabled: Boolean = true,
         midiEnabled: Boolean = true,
         sequencerEnabled: Boolean = true,
-        showMidiCol: Boolean = true,
-        showLfoCol: Boolean = true,
-        showSeqCol: Boolean = true,
-        showAudioCol: Boolean = true
+        showLfoCol: Boolean = true
     ): SessionContext {
         UITheme.audioEngineEnabled = audioEngineEnabled
         UITheme.randomizationEnabled = randomizationEnabled
         UITheme.midiEnabled = midiEnabled
         UITheme.sequencerEnabled = sequencerEnabled
-        UITheme.showMidiCol = showMidiCol
         UITheme.showLfoCol = showLfoCol
-        UITheme.showSeqCol = showSeqCol
-        UITheme.showAudioCol = showAudioCol
         return SessionContext()
     }
 
@@ -183,19 +177,14 @@ class PresetDependencyAnalyzerTest {
     }
 
     @Test
-    fun testGetIssuesWhenColumnsHidden() {
-        val session = createSession(
-            showAudioCol = false,
-            showMidiCol = false,
-            showSeqCol = false
-        )
-        val deps = PresetDependencies(usesAudio = true, usesMidi = true, usesSeq = true)
+    fun testGetIssuesWhenLfoColumnHidden() {
+        val session = createSession(showLfoCol = false)
+        val deps = PresetDependencies(usesLfo = true)
 
         val issues = PresetDependencyAnalyzer.getIssues(deps, session)
-        assertEquals(3, issues.size)
-        assertTrue(issues.any { it.affectedColumn == "audio" })
-        assertTrue(issues.any { it.affectedColumn == "midi" })
-        assertTrue(issues.any { it.affectedColumn == "seq" })
+        assertEquals(1, issues.size)
+        assertEquals("LFO Column Hidden", issues[0].title)
+        assertEquals("lfo", issues[0].affectedColumn)
     }
 
     @Test

@@ -45,10 +45,10 @@ object CellConfigPanel {
     private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, currentParamKey: String, currentCvId: String) {
         val availableTabs = mutableListOf<Pair<String, String>>()
         availableTabs.add("Value" to "value")
-        if (session.uiTheme.midiEnabled && session.uiTheme.showMidiCol) availableTabs.add("MIDI" to "midi")
+        if (session.uiTheme.midiEnabled) availableTabs.add("MIDI" to "midi")
         if (session.uiTheme.showLfoCol) availableTabs.add("LFO" to "lfo")
-        if (session.uiTheme.sequencerEnabled && session.uiTheme.showSeqCol) availableTabs.add("SEQ" to "seq")
-        if (session.uiTheme.audioEngineEnabled && session.uiTheme.showAudioCol) {
+        if (session.uiTheme.sequencerEnabled) availableTabs.add("SEQ" to "seq")
+        if (session.uiTheme.audioEngineEnabled) {
             availableTabs.add("Audio" to "audio")
         }
 

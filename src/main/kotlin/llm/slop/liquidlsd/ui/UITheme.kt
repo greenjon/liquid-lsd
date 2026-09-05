@@ -147,20 +147,20 @@ object UITheme {
         set(value) { settings = settings.copy(libraryMode = value) }
 
     var showMidiCol: Boolean
-        get() = settings.showMidiCol
-        set(value) { settings = settings.copy(showMidiCol = value) }
+        get() = settings.midiEnabled
+        set(value) { settings = settings.copy(midiEnabled = value, showMidiCol = value) }
 
     var showLfoCol: Boolean
         get() = settings.showLfoCol
         set(value) { settings = settings.copy(showLfoCol = value) }
 
     var showSeqCol: Boolean
-        get() = settings.showSeqCol
-        set(value) { settings = settings.copy(showSeqCol = value) }
+        get() = settings.sequencerEnabled
+        set(value) { settings = settings.copy(sequencerEnabled = value, showSeqCol = value) }
 
     var showAudioCol: Boolean
-        get() = settings.showAudioCol
-        set(value) { settings = settings.copy(showAudioCol = value) }
+        get() = settings.audioEngineEnabled
+        set(value) { settings = settings.copy(audioEngineEnabled = value, showAudioCol = value) }
 
     var col1Ratio: Float
         get() = settings.col1Ratio
@@ -409,10 +409,10 @@ object UITheme {
                     theme = try { Theme.valueOf(savedTheme) } catch (e: Exception) { Theme.BORING }
                     logger.info { "Loaded theme from settings file: $theme" }
                 }
-                props.getBoolean("showMidiCol")?.let { showMidiCol = it }
+                props.getBoolean("showMidiCol")?.let { if (savedMidi == null) midiEnabled = it }
                 props.getBoolean("showLfoCol")?.let { showLfoCol = it }
-                props.getBoolean("showSeqCol")?.let { showSeqCol = it }
-                props.getBoolean("showAudioCol")?.let { showAudioCol = it }
+                props.getBoolean("showSeqCol")?.let { if (savedSequencer == null) sequencerEnabled = it }
+                props.getBoolean("showAudioCol")?.let { if (savedAudio == null) audioEngineEnabled = it }
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { col1Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { col2Ratio = it.coerceIn(0.10f, 0.70f) }
                 (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { libraryRatio = it.coerceIn(0.10f, 0.90f) }

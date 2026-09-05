@@ -37,7 +37,6 @@ object SettingsPanel {
 
     enum class Category(val label: String) {
         APPEARANCE("Appearance"),
-        PRESET_GRID("Preset Grid"),
         VIDEO_DISPLAY("Video & Display"),
         AUDIO_ENGINE("Audio Engine"),
         BROADCAST("Web Broadcast"),
@@ -135,7 +134,6 @@ object SettingsPanel {
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
                 Category.APPEARANCE    -> drawAppearance(session, currentSize, onScaleChanged)
-                Category.PRESET_GRID   -> drawPresetGridSettings(session)
                 Category.VIDEO_DISPLAY -> drawVideoDisplaySettings(session)
                 Category.AUDIO_ENGINE  -> drawAudioEngineSettings(session)
                 Category.BROADCAST     -> drawBroadcastSettings(session, mixer)
@@ -255,63 +253,32 @@ object SettingsPanel {
                 onScaleChanged(target)
             }
         }
-    }
 
-    private fun drawPresetGridSettings(session: llm.slop.liquidlsd.SessionContext) {
-        session.uiTheme.h2("Preset Grid CV Columns")
+        ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
-        val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
-        if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
-            val nextVal = seqEnabled.get()
-            if (nextVal != session.uiTheme.sequencerEnabled) {
-                session.uiTheme.sequencerEnabled = nextVal
+        // Preset Grid Cell Scaling
+        session.uiTheme.caption("Preset Grid Knob Scale:")
+        CustomRangeSlider.drawCompactSlider(
+            session = session,
+            label = "Grid Knob Scale",
+            currentValue = session.uiTheme.gridCellRatio,
+            minLimit = 0.70f,
+            maxLimit = 2.00f,
+            defaultValue = 1.0f,
+            formatValue = { "%.2fx".format(it) },
+            idPrefix = "settings_grid_cell_ratio",
+            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+            showCurrentLabel = false,
+            customBoxWidth = sliderBoxW,
+            onValueChanged = { newVal ->
+                session.uiTheme.gridCellRatio = newVal.coerceIn(0.70f, 2.00f)
                 session.uiTheme.saveSettings()
             }
-        }
+        )
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Enable or disable the step sequencer modulation engine.")
-        }
-        ImGui.spacing()
-
-        session.uiTheme.caption("Toggle which CV source columns appear in the Preset Grid:")
-        ImGui.spacing()
-
-        val midiVal = ImBoolean(session.uiTheme.showMidiCol)
-        if (ImGui.checkbox("Show MIDI Column", midiVal)) {
-            session.uiTheme.showMidiCol = midiVal.get()
-            session.uiTheme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display MIDI CC modulation column in Preset Grid")
-        }
-
-        val lfoVal = ImBoolean(session.uiTheme.showLfoCol)
-        if (ImGui.checkbox("Show LFO Column", lfoVal)) {
-            session.uiTheme.showLfoCol = lfoVal.get()
-            session.uiTheme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display LFO / Oscillator modulation column in Preset Grid")
-        }
-
-        val seqVal = ImBoolean(session.uiTheme.showSeqCol)
-        if (ImGui.checkbox("Show SEQ Column", seqVal)) {
-            session.uiTheme.showSeqCol = seqVal.get()
-            session.uiTheme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display Step Sequencer modulation column in Preset Grid")
-        }
-
-        val audioVal = ImBoolean(session.uiTheme.showAudioCol)
-        if (ImGui.checkbox("Show Audio Column", audioVal)) {
-            session.uiTheme.showAudioCol = audioVal.get()
-            session.uiTheme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display Audio-reactive modulation column in Preset Grid")
+            ImGui.setTooltip("Scale Preset Grid knob cell size and padding relative to default (0.70x to 2.00x).")
         }
     }
 

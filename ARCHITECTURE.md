@@ -178,8 +178,8 @@ value = result.coerceIn(0f, 1f)
 ```
 
 Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
-Preset Grid columns: VALUE | MIDI | LFO | SEQ | AUDIO | TRIG  
-*(Note: Step Sequencer, Parameter Randomization, and MIDI are disabled by default in Settings and can be toggled in runtime configuration; grid columns and editor tabs dynamically synchronize with their enabled states).*
+Preset Grid columns: VAL | MIDI | LFO | SEQ | AUD  
+*(Note: Engine subsystems `midiEnabled`, `sequencerEnabled`, and `audioEngineEnabled` serve as the single source of truth for Preset Grid and Cell Config column visibility; the header kebab menu `⋮` allows immediate toggling of these engines and columns).*
 
 ## Design Principles
 - **Zero-allocation audio loops** — pre-allocated buffers, no object creation in JACK callback or Java Sound conversion loop

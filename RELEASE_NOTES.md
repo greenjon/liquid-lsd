@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Unified Modulator Engine & Preset Grid Column Visibility (`UITheme.kt`, `SettingsPanel.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `PresetDependencyAnalyzer.kt`)
+- **Single Source of Truth**: Unified engine subsystems (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) with Preset Grid column visibility. A column is visible if and only if its underlying subsystem is active, eliminating contradictory states where a disabled engine's column could be shown or an active engine's column hidden.
+- **Preset Grid Kebab as Quick Switchboard (`PresetGridPanel.kt`)**: The header kebab menu (`⋮`) now directly toggles the underlying subsystems (starting/stopping `AudioEngine`, scanning/closing `MidiEngine`, running/halting step sequencer clock) alongside their columns in one click, without opening Settings.
+- **Streamlined Settings Categories (`SettingsPanel.kt`)**: Removed the redundant `Settings > Preset Grid` category. Relocated the `Grid Knob Cell Scale` (`gridCellRatio`) slider to `Settings > Appearance` under "Fonts & Sizing".
+- **Optimized 10-Bit Dependency Issue Cache (`PresetDependencyAnalyzer.kt`)**: Reduced memoization state space from 8192 to 1024 slots with zero runtime GC allocations per frame.
+
 ### Manual BPM Configuration & Persistent Title Bar Display when Audio Engine is Disabled
 - **Manual BPM Setting When Audio Engine Disabled (`AudioEnginePanel.kt`, `AudioEngine.kt`)**: When the Audio Engine is disabled via Settings, the panel now displays the Beat Sync & Manual Tempo section with a compact manual BPM slider (40.0–200.0 BPM, default 120.0 BPM), a real-time BPM readout with an internal beat phase flashing dot, and a one-click "Reset to 120.0 BPM" button. Users can freely configure tempos offline without needing live audio hardware.
 - **Phase-Continuous Offline Clock Re-Anchoring (`AudioEngine.kt`)**: When adjusting manual BPM while the audio engine is disabled or inactive, `setBpmDirectly` captures the running beat count from `CVRegistry.getSynchronizedTotalBeats()` to re-anchor the beat clock, preventing backward beat counter jumps and maintaining seamless phase continuity across BEAT LFOs and step sequencers.

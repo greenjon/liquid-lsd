@@ -40,8 +40,8 @@ object PresetDependencyAnalyzer {
         return sourceId.startsWith("audio_") || sourceId.startsWith("trigger_")
     }
 
-    // Zero-allocation issue cache: 13-bit key space (5 deps bits + 8 settings bits = 8192 slots)
-    private val issueCache = arrayOfNulls<List<DependencyIssue>>(8192)
+    // Zero-allocation issue cache: 10-bit key space (5 deps bits + 5 settings bits = 1024 slots)
+    private val issueCache = arrayOfNulls<List<DependencyIssue>>(1024)
 
     /**
      * Inspects a [DeckPresetDto] and summarizes all modulator types and features it utilizes.
@@ -184,11 +184,8 @@ object PresetDependencyAnalyzer {
         val settingsKey = (if (theme.audioEngineEnabled) 1 else 0) or
             (if (theme.midiEnabled) 2 else 0) or
             (if (theme.sequencerEnabled) 4 else 0) or
-            (if (theme.randomizationEnabled) 8 else 0) or
-            (if (theme.showMidiCol) 16 else 0) or
-            (if (theme.showLfoCol) 32 else 0) or
-            (if (theme.showSeqCol) 64 else 0) or
-            (if (theme.showAudioCol) 128 else 0)
+            (if (theme.showLfoCol) 8 else 0) or
+            (if (theme.randomizationEnabled) 16 else 0)
 
         val cacheIndex = depsKey or (settingsKey shl 5)
         val cached = issueCache[cacheIndex]
@@ -233,17 +230,7 @@ object PresetDependencyAnalyzer {
             )
         }
 
-        // 4. Hidden columns in Preset Grid
-        if (deps.usesMidi && theme.midiEnabled && !theme.showMidiCol) {
-            issues.add(
-                DependencyIssue(
-                    title = "MIDI Column Hidden",
-                    description = "Preset uses MIDI CC modulation, but MIDI column is hidden in Preset Grid.",
-                    severity = DependencySeverity.INFO,
-                    affectedColumn = "midi"
-                )
-            )
-        }
+        // 4. LFO column hidden check
         if (deps.usesLfo && !theme.showLfoCol) {
             issues.add(
                 DependencyIssue(
@@ -251,26 +238,6 @@ object PresetDependencyAnalyzer {
                     description = "Preset uses LFO modulation, but LFO column is hidden in Preset Grid.",
                     severity = DependencySeverity.INFO,
                     affectedColumn = "lfo"
-                )
-            )
-        }
-        if (deps.usesSeq && theme.sequencerEnabled && !theme.showSeqCol) {
-            issues.add(
-                DependencyIssue(
-                    title = "SEQ Column Hidden",
-                    description = "Preset uses Step Sequencer modulation, but SEQ column is hidden in Preset Grid.",
-                    severity = DependencySeverity.INFO,
-                    affectedColumn = "seq"
-                )
-            )
-        }
-        if (deps.usesAudio && theme.audioEngineEnabled && !theme.showAudioCol) {
-            issues.add(
-                DependencyIssue(
-                    title = "Audio Column Hidden",
-                    description = "Preset uses Audio modulation, but AUD column is hidden in Preset Grid.",
-                    severity = DependencySeverity.INFO,
-                    affectedColumn = "audio"
                 )
             )
         }
