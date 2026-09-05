@@ -14,6 +14,16 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
  */
 object AudioModulatorSection {
 
+    private val BAND_LABELS = arrayOf(
+        "Full Mix (Amp)",
+        "Low / Bass (Kick)",
+        "Mid (Snare)",
+        "High (Hi-Hat)"
+    )
+
+    private val RMS_SOURCES = arrayOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
+    private val FLUX_SOURCES = arrayOf("audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high")
+
     fun draw(
         session: SessionContext,
         param: ModulatableParameter,
@@ -24,21 +34,102 @@ object AudioModulatorSection {
         val bypassed = existing.bypassed
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
 
-        // 1. Envelope Follower Preset Dropdown
-        session.uiTheme.body("Envelope Follower:")
-        ImGui.sameLine(0f, 10f * fontScale)
+        val isTransient = existing.sourceId.startsWith("audio_flux_")
+        val currentBandIdx = when (existing.sourceId) {
+            "audio_amp", "audio_flux_amp"   -> 0
+            "audio_bass", "audio_flux_bass" -> 1
+            "audio_mid", "audio_flux_mid"   -> 2
+            "audio_high", "audio_flux_high" -> 3
+            else                            -> 0
+        }
+
+        if (bypassed) ImGui.popStyleVar()
+
+        // 1. Detection Mode (Continuous vs Transient)
+        session.uiTheme.body("Detection Mode:")
+        ImGui.sameLine(0f, 8f * fontScale)
+
+        val btnW = 125f * fontScale
+        val btnH = ImGui.getFrameHeight()
+
+        // Continuous Button
+        val isContActive = !isTransient
+        if (isContActive) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
+        } else {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+        }
+        if (ImGui.button("Continuous (RMS)##mode_cont_${existing.id}", btnW, btnH)) {
+            if (isTransient) {
+                val newSource = RMS_SOURCES[currentBandIdx]
+                onReplace(existing.copy(sourceId = newSource))
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Continuous Envelope: Tracks continuous volume and sustained body of audio frequencies.")
+        }
+        ImGui.popStyleColor(3)
+
+        ImGui.sameLine(0f, 4f * fontScale)
+
+        // Transient Button
+        val isFluxActive = isTransient
+        if (isFluxActive) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
+        } else {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+        }
+        if (ImGui.button("Transient (Flux)##mode_flux_${existing.id}", btnW, btnH)) {
+            if (!isTransient) {
+                val newSource = FLUX_SOURCES[currentBandIdx]
+                onReplace(existing.copy(sourceId = newSource))
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Transient Trigger: Tracks sudden onsets, drum strikes, and energy growth (Spectral Flux).")
+        }
+        ImGui.popStyleColor(3)
+
+        ImGui.spacing()
+
+        // 2. Frequency Band Selector
+        session.uiTheme.body("Frequency Band:")
+        ImGui.sameLine(0f, 8f * fontScale)
+        ImGui.pushItemWidth(180f * fontScale)
+        val bandIdxWrapper = ImInt(currentBandIdx)
+        if (ImGui.combo("##band_${existing.id}", bandIdxWrapper, BAND_LABELS)) {
+            val selectedIdx = bandIdxWrapper.get().coerceIn(0, 3)
+            val newSource = if (isTransient) FLUX_SOURCES[selectedIdx] else RMS_SOURCES[selectedIdx]
+            onReplace(existing.copy(sourceId = newSource))
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Frequency Band:\nFull Mix: Entire frequency spectrum\nLow / Bass: Sub and kick frequencies (< 150Hz)\nMid: Vocals, synths, and snares (150Hz - 2.5kHz)\nHigh: Cymbals, hi-hats, and air (> 2.5kHz)")
+        }
+        ImGui.popItemWidth()
+
+        ImGui.spacing()
+
+        // 3. Envelope / Response Preset Dropdown
+        session.uiTheme.body("Response Profile:")
+        ImGui.sameLine(0f, 8f * fontScale)
 
         val modes = AudioFollowerMode.values()
         val modeLabels = modes.map { it.label }.toTypedArray()
         val currentModeIdx = modes.indexOf(existing.followerMode).coerceAtLeast(0)
         val modeIdxWrapper = ImInt(currentModeIdx)
 
-        if (bypassed) ImGui.popStyleVar()
         ImGui.pushItemWidth(180f * fontScale)
         if (ImGui.combo("##follower_mode_${existing.id}", modeIdxWrapper, modeLabels)) {
             val selectedMode = modes[modeIdxWrapper.get()]
             if (selectedMode == AudioFollowerMode.CUSTOM) {
-                // Retain current values or populate from previous preset defaults
                 val curAtt = if (existing.attackMs > 0f || existing.decayMs > 0f) existing.attackMs else existing.followerMode.defaultAttackMs
                 val curDec = if (existing.attackMs > 0f || existing.decayMs > 0f) existing.decayMs else existing.followerMode.defaultDecayMs
                 onReplace(existing.copy(
@@ -63,7 +154,7 @@ object AudioModulatorSection {
             }
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Audio Dynamics / Smoothing:\nRaw: Instant amplitude jitter (bypassed follower)\nPresets: Musically tuned attack and decay envelopes\nCustom: Freely adjust Attack and Decay sliders")
+            ImGui.setTooltip("Dynamics / Smoothing:\nInstant: 1-frame strobe or raw amplitude flutter\nStrobe / Snap: 0ms attack, 35ms decay snap\nPunchy (Accent): 5ms attack, 150ms decay\nSmooth Swell: 40ms attack, 400ms decay\nSlow Bloom: 100ms attack, 900ms decay\nAmbient Drift: 250ms attack, 1800ms decay\nCustom…: Freely adjust Attack and Decay sliders")
         }
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)

@@ -115,7 +115,11 @@ object PresetListPanel {
         filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
-            val label = asset.displayName
+            val deps = asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path))
+            val issues = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.getIssues(deps, session)
+            val hasIssues = issues.isNotEmpty()
+
+            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else asset.displayName
             val isSelected = selectedAsset?.path == asset.path
 
             val popupId = "preset_context_menu_$index"
@@ -131,8 +135,14 @@ object PresetListPanel {
             val availW = ImGui.getContentRegionAvailX()
             val itemW = (availW - btnW).coerceAtLeast(10f)
 
+            if (hasIssues && !isSelected) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.95f, 0.40f, 0.40f, 1f)
+            }
             if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
                 LibraryPanel.selectPreset(asset, session, mixer)
+            }
+            if (hasIssues && !isSelected) {
+                ImGui.popStyleColor()
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
@@ -142,6 +152,29 @@ object PresetListPanel {
             val io = ImGui.getIO()
             if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
                 LibraryPanel.selectPreset(asset, session, mixer)
+            }
+
+            if (isRowHovered && session.uiTheme.tooltipsEnabled) {
+                if (hasIssues) {
+                    ImGui.beginTooltip()
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset has inactive or hidden modulators:")
+                    ImGui.spacing()
+                    for (issue in issues) {
+                        ImGui.bullet()
+                        ImGui.text("${issue.title}: ${issue.description}")
+                    }
+                    if (asset.tags.isNotEmpty()) {
+                        ImGui.spacing()
+                        ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
+                    }
+                    ImGui.endTooltip()
+                } else if (asset.tags.isNotEmpty()) {
+                    ImGui.beginTooltip()
+                    ImGui.text(asset.name)
+                    ImGui.separator()
+                    ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
+                    ImGui.endTooltip()
+                }
             }
 
             // Double-click: Load the preset to the inactive deck (>0% crossfader).

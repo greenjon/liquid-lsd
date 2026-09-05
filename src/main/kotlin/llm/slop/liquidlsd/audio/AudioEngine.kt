@@ -145,12 +145,14 @@ object AudioEngine {
     val rawHistory = CvHistoryBuffer(1024)
 
     // Direct pre-cached buffer references for zero-overhead, lock-free audio thread pushes
-    private val ampHistory    = CVRegistry.getHistory("audio_amp")
-    private val bassHistory   = CVRegistry.getHistory("audio_bass")
-    private val midHistory    = CVRegistry.getHistory("audio_mid")
-    private val highHistory   = CVRegistry.getHistory("audio_high")
-    private val onsetHistory  = CVRegistry.getHistory("trigger_onset")
-    private val accentHistory = CVRegistry.getHistory("trigger_accent")
+    private val ampHistory      = CVRegistry.getHistory("audio_amp")
+    private val bassHistory     = CVRegistry.getHistory("audio_bass")
+    private val midHistory      = CVRegistry.getHistory("audio_mid")
+    private val highHistory     = CVRegistry.getHistory("audio_high")
+    private val fluxAmpHistory  = CVRegistry.getHistory("audio_flux_amp")
+    private val fluxBassHistory = CVRegistry.getHistory("audio_flux_bass")
+    private val fluxMidHistory  = CVRegistry.getHistory("audio_flux_mid")
+    private val fluxHighHistory = CVRegistry.getHistory("audio_flux_high")
 
     // Temporary processing buffers — sized to standard maximum JACK limits to guarantee no allocations.
     private val lowBuffer  = FloatArray(16384)
@@ -173,11 +175,10 @@ object AudioEngine {
     @Volatile var currentState = SignalState.SILENT
     private var lastSignalTime = System.nanoTime()
 
-    // ── Onset-strength tracking ──────────────────────────────────────────────
+    // ── Onset/Flux tracking ──────────────────────────────────────────────────
     private var prevBass = 0f
     private var prevMid  = 0f
     private var prevHigh = 0f
-    private var accentLevel  = 0f
     private var localOnsetMean = 0f // fast adaptive mean for onset threshold
 
     fun getEstimatedBpm(): Float = estimatedBpm
@@ -258,11 +259,10 @@ object AudioEngine {
         // Reset CV anchor
         CVRegistry.resetBeatAnchor(0.0, estimatedBpm, lastSignalTime)
 
-        // Reset onset trackers
+        // Reset onset/flux trackers
         prevBass = 0f
         prevMid  = 0f
         prevHigh = 0f
-        accentLevel = 0f
         localOnsetMean = 0f
 
         var jackStarted = false
@@ -374,8 +374,7 @@ object AudioEngine {
         val mid  = extractor.calculateRms(midBuffer,  safeFrames)
         val high = extractor.calculateRms(highBuffer, safeFrames)
 
-        // 5. Onset-strength function: half-wave rectified multi-band spectral flux
-        //    Weights favour bass/kick (×2) over mid (×0.8) and high (×0.3)
+        // 5. Onset/Flux calculation: half-wave rectified multi-band spectral flux
         val bassFlux = max(0f, bass - prevBass)
         val midFlux  = max(0f, mid  - prevMid)
         val highFlux = max(0f, high - prevHigh)
@@ -389,16 +388,6 @@ object AudioEngine {
 
         // Fast adaptive local mean (τ ≈ 20 callbacks ≈ ~0.5 s) for onset thresholding
         localOnsetMean = localOnsetMean * 0.95f + onsetStrength * 0.05f
-
-        // Accent envelope (peak-hold + decay) — published as CV
-        if (onsetStrength > accentLevel) {
-            accentLevel = onsetStrength
-        } else {
-            accentLevel *= 0.88f
-        }
-
-        // Normalized onset for CV output (0–1 range)
-        val onsetNormalized = (onsetStrength / 0.1f).coerceIn(0f, 1f)
 
         // 6. Silence gate
         val currentRmsDb = 20f * log10(amp + 1e-6f)
@@ -446,26 +435,34 @@ object AudioEngine {
         val blockDurationNs = (deltaTimeSec * 1_000_000_000.0).toLong()
         CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
 
-        val ampNorm    = (amp  / 0.25f).coerceIn(0f, 1f)
-        val bassNorm   = (bass / 0.25f).coerceIn(0f, 1f)
-        val midNorm    = (mid  / 0.25f).coerceIn(0f, 1f)
-        val highNorm   = (high / 0.25f).coerceIn(0f, 1f)
-        val accentNorm = accentLevel.coerceIn(0f, 1f)
+        val ampNorm      = (amp  / 0.25f).coerceIn(0f, 1f)
+        val bassNorm     = (bass / 0.25f).coerceIn(0f, 1f)
+        val midNorm      = (mid  / 0.25f).coerceIn(0f, 1f)
+        val highNorm     = (high / 0.25f).coerceIn(0f, 1f)
 
-        CVRegistry.updatePushedValue("amp",    ampNorm)
-        CVRegistry.updatePushedValue("bass",   bassNorm)
-        CVRegistry.updatePushedValue("mid",    midNorm)
-        CVRegistry.updatePushedValue("high",   highNorm)
-        CVRegistry.updatePushedValue("onset",  onsetNormalized)
-        CVRegistry.updatePushedValue("accent", accentNorm)
+        val fluxAmpNorm  = (onsetStrength / 0.1f).coerceIn(0f, 1f)
+        val fluxBassNorm = (bassFlux / 0.05f).coerceIn(0f, 1f)
+        val fluxMidNorm  = (midFlux  / 0.05f).coerceIn(0f, 1f)
+        val fluxHighNorm = (highFlux / 0.05f).coerceIn(0f, 1f)
+
+        CVRegistry.updatePushedValue("amp",       ampNorm)
+        CVRegistry.updatePushedValue("bass",      bassNorm)
+        CVRegistry.updatePushedValue("mid",       midNorm)
+        CVRegistry.updatePushedValue("high",      highNorm)
+        CVRegistry.updatePushedValue("flux_amp",  fluxAmpNorm)
+        CVRegistry.updatePushedValue("flux_bass", fluxBassNorm)
+        CVRegistry.updatePushedValue("flux_mid",  fluxMidNorm)
+        CVRegistry.updatePushedValue("flux_high", fluxHighNorm)
 
         // Direct O(1) primitive array ring buffer writes
         ampHistory?.add(ampNorm)
         bassHistory?.add(bassNorm)
         midHistory?.add(midNorm)
         highHistory?.add(highNorm)
-        onsetHistory?.add(onsetNormalized)
-        accentHistory?.add(accentNorm)
+        fluxAmpHistory?.add(fluxAmpNorm)
+        fluxBassHistory?.add(fluxBassNorm)
+        fluxMidHistory?.add(fluxMidNorm)
+        fluxHighHistory?.add(fluxHighNorm)
 
         val callbackNanos = System.nanoTime() - currentTime
         callbackLatencyNanos.set(callbackNanos)

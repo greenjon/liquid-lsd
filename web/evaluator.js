@@ -75,8 +75,14 @@ export function evaluateModulator(mod, elapsedTime, totalBeats, frameCount) {
     rawSignal = cvState.audio_mid;
   } else if (mod.sourceId === 'audio_high' || mod.sourceId === 'high') {
     rawSignal = cvState.audio_high;
-  } else if (mod.sourceId === 'trigger_onset' || mod.sourceId === 'onset') {
-    rawSignal = cvState.trigger_onset;
+  } else if (mod.sourceId === 'audio_flux_amp' || mod.sourceId === 'flux_amp' || mod.sourceId === 'trigger_onset' || mod.sourceId === 'onset') {
+    rawSignal = cvState.audio_flux_amp ?? cvState.trigger_onset;
+  } else if (mod.sourceId === 'audio_flux_bass' || mod.sourceId === 'flux_bass') {
+    rawSignal = cvState.audio_flux_bass ?? cvState.trigger_onset;
+  } else if (mod.sourceId === 'audio_flux_mid' || mod.sourceId === 'flux_mid') {
+    rawSignal = cvState.audio_flux_mid ?? cvState.trigger_onset;
+  } else if (mod.sourceId === 'audio_flux_high' || mod.sourceId === 'flux_high') {
+    rawSignal = cvState.audio_flux_high ?? cvState.trigger_onset;
   } else if (mod.sourceId === 'beatSine') {
     rawSignal = cvState.beatSine;
   } else if (mod.sourceId === 'beatPhase') {

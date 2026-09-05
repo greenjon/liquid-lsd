@@ -9,24 +9,23 @@ The Control Voltage (CV) modulation matrix is the nerve center of Liquid LSD. It
 The Preset Grid is located in the left panel of Performance Mode.
 
 ```
-┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
-│ Parameter       │ VALUE    │ MIDI     │ LFO      │ SEQ      │ AUDIO    │ TRIGGER  │
-├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
-│ Deck A / Lobes  │  ● 4.0   │  [--]    │  ( 🔘 )   │  ( 🔘 )   │  ( 🔘 )   │  [  ]    │
-│ Deck A / Zoom   │  ● 1.0   │  [--]    │  [  ]    │  ( 🔘 )   │  ( 🔘 )   │  ( 🔘 )   │
-└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│ Parameter       │ VALUE    │ MIDI     │ LFO      │ SEQ      │ AUDIO    │
+├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+│ Deck A / Lobes  │  ● 4.0   │  [--]    │  ( 🔘 )   │  ( 🔘 )   │  ( 🔘 )   │
+│ Deck A / Zoom   │  ● 1.0   │  [--]    │  [  ]    │  ( 🔘 )   │  ( 🔘 )   │
+└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
 ```
 
 - **Top Navigation Tabs**: Switch view focus between **Deck A**, **Deck B**, **Deck BG**, and **Deck PV**.
 - **Undo / Redo History**: Maintains a 30-level undo/redo stack (`Ctrl+Z` / `Ctrl+Y`) tracking all modulator edits, additions, and parameter changes.
 - **Rows**: Modulatable parameters grouped logically: Mixer, Deck Geometry, View, Color, Background, and Feedback.
-- **Columns**: 6 distinct, color-coded modulation domains:
+- **Columns**: 5 distinct, color-coded modulation domains:
   - **VAL** (`Mint Cyan`): Base parameter value, modulation range bounds, live evaluated output knobs, and default resets.
   - **MIDI** (`Bright Orchid Violet`): Hardware MIDI CC assignments and mapping.
   - **LFO** (`Electric Sky Blue`): Configurable primary and secondary low-frequency oscillators (`LFO 1` / `LFO 2`).
   - **SEQ** (`Electric Lime Green`): Pattern-based Step Sequencer with configurable lengths (8, 16, 32 steps), hold/glide dynamics, and live playhead tracking.
-  - **AUD** (`Warm Amber Gold`): Audio frequency-band dynamics envelope extractors (`AMP`, `BASS`, `MID`, `HIGH`).
-  - **TRIG** (`Hot Coral Rose`): Musical transient impulse detectors (`ONSET`, `ACCENT`).
+  - **AUD** (`Warm Amber Gold`): Audio modulation supporting dual modular slots (`Audio 1` & `Audio 2`) with Continuous (RMS) energy envelopes or Transient (Spectral Flux) onset detection across 4 frequency bands (`AMP`, `BASS`, `MID`, `HIGH`).
 - **Grid Cells**: Intersection points linking a source to a parameter. Active cells display an animated readout knob, needle, and dial arc matching the parameter's theme text color for seamless legibility across all themes.
 
 - **Grid Knob Cell Scale & Resolution Scaling**: Grid cells and circular readout knobs automatically scale with global UI font size (`baseSize`). You can fine-tune relative knob dimensions (0.70x to 2.00x) under **Settings -> Preset Grid** via the **Grid Knob Cell Scale** slider.
@@ -92,18 +91,31 @@ The **Step Sequencer** (`seq`) outputs a deterministic, tempo-synchronized or ti
 
 ---
 
-## Audio Envelope Followers & Dynamics
+## Audio Modulators & Dynamic Profiles
 
-When configuring an **AUDIO** modulation cell (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), each frequency band has its own independent dynamics follower:
+Selecting an **AUDIO** modulation cell opens the unified Audio Modulator section. Each parameter supports **2 independent modular Audio Slots** (`Audio 1` and `Audio 2`).
 
-- **Follower Preset Dropdown**:
-  - **`Raw (Instant Jitter)`**: Bypasses the envelope follower. Modulation tracks instantaneous block RMS directly for maximum high-frequency visual flutter.
-  - **`Punchy (Fast)`**: $5\text{ ms}$ attack, $150\text{ ms}$ decay. Captures drum transients instantly and drops cleanly between beats.
-  - **`Smooth Swell`**: $40\text{ ms}$ attack, $400\text{ ms}$ decay. Turns sharp beats into smooth, breathing pulses.
-  - **`Slow Pulse`**: $100\text{ ms}$ attack, $800\text{ ms}$ decay. Gradual swell with a lingering release tail.
-  - **`Ambient Drift`**: $250\text{ ms}$ attack, $1500\text{ ms}$ decay. Slow energy swells ideal for ambient drifting.
-  - **`Custom`**: Exposes fine-grained **Attack** ($0\text{ ms} \dots 500\text{ ms}$) and **Decay** ($10\text{ ms} \dots 3000\text{ ms}$) sliders. Selecting `Custom` automatically inherits the exact attack/decay timings from the previously active preset.
-- **Dual-Trace Oscilloscope**: The oscilloscope plots the raw audio energy in a faint ghost trace ($35\%$ opacity) beneath the solid smoothed follower curve, allowing you to visually see how the Attack catches transients and how the Decay tail descends.
+### Detection Modes
+- **Continuous (RMS Energy)**: Tracks continuous block RMS energy across the selected frequency band, ideal for sustained swells, ambient movement, and amplitude-following dynamics (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`).
+- **Transient (Spectral Flux)**: Measures positive frame-to-frame energy growth across the selected band ($[E(t) - E(t-1)]^+$), firing sharp impulse hits on musical attacks, drum strikes, and accent hits (`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`).
+
+### Frequency Bands
+- **Full Mix (`AMP`)**: Broad full-spectrum audio energy.
+- **Bass (`BASS`)**: Low-pass filter ($\le 150\text{ Hz}$) targeting kick drums and sub-bass lines.
+- **Mid (`MID`)**: Band-pass filter ($\sim 1000\text{ Hz}$) targeting vocals, snares, and lead synths.
+- **High (`HIGH`)**: High-pass filter ($\ge 5000\text{ Hz}$) targeting hi-hats, cymbals, and top-end texture.
+
+### Response Profiles (Dynamics Presets)
+- **`Instant (Raw Jitter)`**: $0\text{ ms}$ attack, $0\text{ ms}$ decay. Bypasses the envelope follower to track instantaneous raw buffer audio energy directly.
+- **`Snap`**: $0\text{ ms}$ attack, $35\text{ ms}$ decay. Razor-sharp transient response that recovers instantly for fast percussive tracks.
+- **`Punchy`**: $5\text{ ms}$ attack, $150\text{ ms}$ decay. Captures punchy rhythm hits cleanly with a musical release tail.
+- **`Smooth Swell`**: $40\text{ ms}$ attack, $400\text{ ms}$ decay. Turns sharp peaks into smooth, breathing visual pulses.
+- **`Slow Pulse`**: $100\text{ ms}$ attack, $900\text{ ms}$ decay. Gradual rise and lingering release tail.
+- **`Ambient Drift`**: $250\text{ ms}$ attack, $1800\text{ ms}$ decay. Long, fluid energy swells ideal for ambient soundscapes.
+- **`Custom`**: Exposes fine-grained **Attack** ($0\text{ ms} \dots 500\text{ ms}$) and **Decay** ($10\text{ ms} \dots 3000\text{ ms}$) sliders. Selecting `Custom` automatically inherits the timings from the previously active preset.
+
+### Dual-Trace Oscilloscope
+The oscilloscope plots the raw audio energy in a faint ghost trace ($35\%$ opacity) beneath the solid smoothed follower curve, allowing you to visually see how the Attack catches transients and how the Decay tail descends.
 
 ---
 

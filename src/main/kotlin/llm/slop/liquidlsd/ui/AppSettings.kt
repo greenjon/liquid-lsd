@@ -33,7 +33,6 @@ data class AppSettings(
     val showLfoCol: Boolean = true,
     val showSeqCol: Boolean = true,
     val showAudioCol: Boolean = true,
-    val showTriggerCol: Boolean = true,
     val col1Ratio: Float = 0.30f,
     val col2Ratio: Float = 0.40f,
     val libraryRatio: Float = 0.50f,

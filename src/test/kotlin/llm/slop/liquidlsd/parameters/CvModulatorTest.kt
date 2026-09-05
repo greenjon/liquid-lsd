@@ -333,6 +333,9 @@ class CvModulatorTest {
         assertEquals(0f, AudioFollowerMode.RAW.defaultAttackMs)
         assertEquals(0f, AudioFollowerMode.RAW.defaultDecayMs)
 
+        assertEquals(0f, AudioFollowerMode.SNAP.defaultAttackMs)
+        assertEquals(35f, AudioFollowerMode.SNAP.defaultDecayMs)
+
         assertEquals(5f, AudioFollowerMode.PUNCHY.defaultAttackMs)
         assertEquals(150f, AudioFollowerMode.PUNCHY.defaultDecayMs)
 
@@ -340,10 +343,10 @@ class CvModulatorTest {
         assertEquals(400f, AudioFollowerMode.SMOOTH.defaultDecayMs)
 
         assertEquals(100f, AudioFollowerMode.SLOW.defaultAttackMs)
-        assertEquals(800f, AudioFollowerMode.SLOW.defaultDecayMs)
+        assertEquals(900f, AudioFollowerMode.SLOW.defaultDecayMs)
 
         assertEquals(250f, AudioFollowerMode.AMBIENT.defaultAttackMs)
-        assertEquals(1500f, AudioFollowerMode.AMBIENT.defaultDecayMs)
+        assertEquals(1800f, AudioFollowerMode.AMBIENT.defaultDecayMs)
     }
 
     @Test

@@ -73,25 +73,29 @@ Calculates Root Mean Square (RMS) energy over each block:
 $$\text{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^N x_i^2}$$
 
 RMS values are normalized and published to `CVRegistry`:
-- `amp`: Full-band input RMS.
-- `bass`, `mid`, `high`: Per-band filter RMS values.
+- `audio_amp`: Full-band input RMS.
+- `audio_bass`, `audio_mid`, `audio_high`: Per-band filter RMS values.
 
 ---
 
-## Transient & Onset Detection
+## Transient & Spectral Flux Detection
 
-Musical transients drive `trigger_onset` and `trigger_accent` CV signals.
+Musical transients drive per-band Spectral Flux CV signals (`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`).
 
 ### Spectral Flux Calculation
 Spectral flux measures positive frame-to-frame energy growth across frequency bands (half-wave rectified):
 
 $$\text{Flux}_{band} = \max(0,\ \text{RMS}_{band}(t) - \text{RMS}_{band}(t-1))$$
 
-Weighted band sum favors low-frequency kick transients:
-$$\text{OnsetStrength} = \text{Flux}_{bass} \times 2.0 + \text{Flux}_{mid} \times 0.8 + \text{Flux}_{high} \times 0.3$$
+- `audio_flux_amp`: Instantaneous energy growth on the full-mix signal.
+- `audio_flux_bass`: Low-frequency energy growth (kick transients and bass hits).
+- `audio_flux_mid`: Mid-frequency energy growth (vocal and snare attacks).
+- `audio_flux_high`: High-frequency energy growth (hi-hat and cymbal strikes).
+
+Both RMS and Flux signals are tracked in pre-cached ring buffer histories and modulated with customizable envelope follower dynamics (Attack and Decay) per audio slot.
 
 ### Silence Gate
-When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500 ms, `SignalState` switches to `SILENT`, suppressing accidental trigger firing during quiet sections.
+When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500 ms, `SignalState` switches to `SILENT`, suppressing accidental transient firing during quiet sections.
 
 ---
 

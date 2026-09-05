@@ -137,14 +137,17 @@ src/main/kotlin/llm/slop/liquidlsd/
 | ID | Type | Description |
 |----|------|-------------|
 | `bpm` | Audio | Detected tempo |
-| `audio_amp` | Audio | Overall RMS amplitude |
-| `audio_bass` | Audio | Low-frequency RMS |
-| `audio_mid` | Audio | Mid-frequency RMS |
-| `audio_high` | Audio | High-frequency RMS |
-| `trigger_onset` | Audio | Transient/onset pulse |
-| `trigger_accent` | Audio | Strong beat accent |
+| `audio_amp` | Audio | Overall full-mix RMS amplitude |
+| `audio_bass` | Audio | Low-frequency RMS amplitude |
+| `audio_mid` | Audio | Mid-frequency RMS amplitude |
+| `audio_high` | Audio | High-frequency RMS amplitude |
+| `audio_flux_amp` | Audio | Overall full-mix spectral flux (transient onset) |
+| `audio_flux_bass` | Audio | Low-frequency spectral flux (bass/kick transient) |
+| `audio_flux_mid` | Audio | Mid-frequency spectral flux (snare/vocal attack) |
+| `audio_flux_high` | Audio | High-frequency spectral flux (hi-hat/treble strike) |
 | `lfo` | Generator | Time-based or beat-based waveform; evaluated inline per `CvModulator` |
 | `BeatSine` | Generator | Sine wave locked to beat phase |
+| `seq` | Sequencer | Step Sequencer pattern modulation |
 
 ## Modulation Math
 

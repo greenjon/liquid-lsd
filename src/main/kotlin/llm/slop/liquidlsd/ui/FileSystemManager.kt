@@ -32,7 +32,12 @@ object FileSystemManager {
     )
 
     private val scanCache = ConcurrentHashMap<String, ScanCacheEntry>()
-    private val tagCache = ConcurrentHashMap<String, Pair<Long, List<String>>>()
+    private data class PresetMeta(
+        val lastMod: Long,
+        val tags: List<String>,
+        val dependencies: llm.slop.liquidlsd.presets.PresetDependencies
+    )
+    private val presetMetaCache = ConcurrentHashMap<String, PresetMeta>()
     
     private val executor = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "FileSystemScanner").apply { isDaemon = true }
@@ -41,26 +46,30 @@ object FileSystemManager {
 
     internal fun clearScanCache() {
         scanCache.clear()
-        tagCache.clear()
+        presetMetaCache.clear()
     }
 
-    internal fun getPresetTags(file: File): List<String> {
-        if (!file.exists() || !file.isFile) return emptyList()
+    internal fun getPresetMeta(file: File): Pair<List<String>, llm.slop.liquidlsd.presets.PresetDependencies> {
+        if (!file.exists() || !file.isFile) return emptyList<String>() to llm.slop.liquidlsd.presets.PresetDependencies()
         val lastMod = file.lastModified()
         val path = file.canonicalPath
-        val cached = tagCache[path]
-        if (cached != null && cached.first == lastMod) {
-            return cached.second
+        val cached = presetMetaCache[path]
+        if (cached != null && cached.lastMod == lastMod) {
+            return cached.tags to cached.dependencies
         }
-        val tags = try {
+        val (tags, deps) = try {
             val dto = json.decodeFromString<DeckPresetDto>(file.readText())
-            dto.tags
+            val d = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.analyze(dto)
+            dto.tags to d
         } catch (e: Exception) {
-            emptyList()
+            emptyList<String>() to llm.slop.liquidlsd.presets.PresetDependencies()
         }
-        tagCache[path] = lastMod to tags
-        return tags
+        presetMetaCache[path] = PresetMeta(lastMod, tags, deps)
+        return tags to deps
     }
+
+    internal fun getPresetTags(file: File): List<String> = getPresetMeta(file).first
+    internal fun getPresetDependencies(file: File): llm.slop.liquidlsd.presets.PresetDependencies = getPresetMeta(file).second
 
     internal fun getDirectorySignature(directory: File): String {
         if (!directory.exists() || !directory.isDirectory) return ""
@@ -117,13 +126,14 @@ object FileSystemManager {
                 ext == "lsd" || ext == "patch" || ext == "json"
             }
             .map { file ->
-                val tags = getPresetTags(file)
+                val (tags, deps) = getPresetMeta(file)
                 AssetItem(
                     path = file.absolutePath,
                     name = file.nameWithoutExtension,
                     type = AssetType.PRESET,
                     isValid = validatePresetFile(file),
-                    tags = tags
+                    tags = tags,
+                    dependencies = deps
                 )
             }
             .sortedBy { it.name.lowercase() }

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Unified Audio & Transient Modulator System
+- **Consolidated Audio Matrix Column**: Merged the separate `AUD` and `TRIG` columns in the Preset Grid into a single, unified `AUD` column (`VAL`, `MIDI`, `LFO`, `SEQ`, `AUD`).
+- **Dual Modular Audio Slots**: Each modulatable parameter now supports up to 2 independent audio slots (`Audio 1` and `Audio 2`). Slot 2 stays cleanly collapsed behind an `[ + Enable Audio Slot 2 ]` button until activated.
+- **Continuous (RMS) vs Transient (Spectral Flux) Modes**: Modulators seamlessly toggle between continuous amplitude tracking (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`) and spectral flux transient detection (`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`).
+- **4 Selectable Frequency Bands**: Both modes operate over `Full Mix (AMP)`, `Bass (BASS)`, `Mid (MID)`, and `High (HIGH)`.
+- **Response Profiles**: Added curated dynamics presets (`Instant / Raw`, `Snap`, `Punchy`, `Smooth Swell`, `Slow Pulse`, `Ambient Drift`, `Custom`) with full Attack/Decay envelope control.
+- **Zero-Allocation DSP**: Computed inside the real-time audio callback loop without memory allocations and displayed via zero-latency oscilloscopes in the UI.
+
 ### 4-Platform Targeted Distribution & CI Smoke Testing
 - **Targeted Platforms**: Distribution ZIP packaging targets the 4 supported architectures: Windows x64, Linux x64, macOS ARM64 (Apple Silicon), and macOS x64 (Intel). Removed `linux-arm64` from build targets due to lack of upstream Linux ARM64 native JNI binaries in `imgui-java`.
 - **Automated Smoke-Test Verification**: All 4 target platform distributions are verified natively on GitHub Actions runners before release, ensuring only verified, functional binaries are published.

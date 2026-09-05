@@ -19,10 +19,10 @@ class PresetGridClipboardTest {
         val lfoMod = CvModulator(sourceId = "lfo", depth = 0.4f)
         val audioAmpMod = CvModulator(sourceId = "audio_amp", depth = 0.7f)
         val audioBassMod = CvModulator(sourceId = "audio_bass", depth = 0.3f)
-        val triggerOnsetMod = CvModulator(sourceId = "trigger_onset", depth = 0.9f)
+        val audioFluxMod = CvModulator(sourceId = "audio_flux_bass", depth = 0.9f)
         val midiMod = CvModulator(sourceId = "midi_cc_7", depth = 0.5f)
 
-        param.modulators.addAll(listOf(lfoMod, audioAmpMod, audioBassMod, triggerOnsetMod, midiMod))
+        param.modulators.addAll(listOf(lfoMod, audioAmpMod, audioBassMod, audioFluxMod, midiMod))
 
         // Value / Final / Base cell should yield empty modulators list (since it represents base value/row)
         assertEquals(0, PresetGridKeyboard.getModsForCell(param, "value").size)
@@ -34,16 +34,12 @@ class PresetGridClipboardTest {
         assertEquals(1, lfoExtracted.size)
         assertEquals("lfo", lfoExtracted[0].sourceId)
 
-        // Audio cell should extract all audio sources
+        // Audio cell should extract all audio sources (both RMS and Flux)
         val audioExtracted = PresetGridKeyboard.getModsForCell(param, "audio")
-        assertEquals(2, audioExtracted.size)
+        assertEquals(3, audioExtracted.size)
         assertTrue(audioExtracted.any { it.sourceId == "audio_amp" })
         assertTrue(audioExtracted.any { it.sourceId == "audio_bass" })
-
-        // Trigger cell should extract all trigger sources
-        val triggerExtracted = PresetGridKeyboard.getModsForCell(param, "trigger")
-        assertEquals(1, triggerExtracted.size)
-        assertEquals("trigger_onset", triggerExtracted[0].sourceId)
+        assertTrue(audioExtracted.any { it.sourceId == "audio_flux_bass" })
 
         // MIDI cell should extract midi CC sources
         val midiExtracted = PresetGridKeyboard.getModsForCell(param, "midi")

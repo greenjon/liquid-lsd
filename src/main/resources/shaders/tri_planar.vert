@@ -10,6 +10,7 @@ uniform float uZoom;
 uniform float uPersp;
 uniform float uSeparation;
 uniform float uAspectRatio;
+uniform int u3DMode; // 1 = Tri-Axial (3P @ 90°), 2 = Cube Cage (6P), 3 = Hex-Planar (6P @ 60°)
 
 out vec2 vTexCoord;
 out float vCameraDepth;
@@ -47,27 +48,58 @@ mat3 rotationMatrixZ(float angle) {
 void main() {
     vTexCoord = aTexCoord;
 
-    // Determine plane orientation based on gl_InstanceID
-    // Instances 0..2: 3 Orthogonal Planes (XY, YZ, ZX)
-    // Instances 3..5: Negative counterparts for Cube Cage mode (-XY, -YZ, -ZX)
     vec3 localPos;
     vec3 normal;
 
-    int inst = gl_InstanceID % 3;
-    float signVal = (gl_InstanceID >= 3) ? -1.0 : 1.0;
+    if (u3DMode == 3) {
+        // Hex-Planar: 6 reflection planes of the tetrahedral group A3 (intersecting at 60°)
+        const float invSqrt2 = 0.70710678;
+        int inst = gl_InstanceID % 6;
 
-    if (inst == 0) {
-        // XY plane (normal along Z)
-        localPos = vec3(aPosition.x, aPosition.y, 0.0);
-        normal = vec3(0.0, 0.0, 1.0) * signVal;
-    } else if (inst == 1) {
-        // YZ plane (normal along X)
-        localPos = vec3(0.0, aPosition.x, aPosition.y);
-        normal = vec3(1.0, 0.0, 0.0) * signVal;
+        if (inst == 0) {
+            // Plane X - Y = 0 (Normal: (1, -1, 0) / sqrt(2))
+            localPos = (aPosition.x * invSqrt2) * vec3(1.0, 1.0, 0.0) + aPosition.y * vec3(0.0, 0.0, 1.0);
+            normal = vec3(1.0, -1.0, 0.0) * invSqrt2;
+        } else if (inst == 1) {
+            // Plane X + Y = 0 (Normal: (1, 1, 0) / sqrt(2))
+            localPos = (aPosition.x * invSqrt2) * vec3(-1.0, 1.0, 0.0) + aPosition.y * vec3(0.0, 0.0, 1.0);
+            normal = vec3(1.0, 1.0, 0.0) * invSqrt2;
+        } else if (inst == 2) {
+            // Plane Y - Z = 0 (Normal: (0, 1, -1) / sqrt(2))
+            localPos = (aPosition.x * invSqrt2) * vec3(0.0, 1.0, 1.0) + aPosition.y * vec3(1.0, 0.0, 0.0);
+            normal = vec3(0.0, 1.0, -1.0) * invSqrt2;
+        } else if (inst == 3) {
+            // Plane Y + Z = 0 (Normal: (0, 1, 1) / sqrt(2))
+            localPos = (aPosition.x * invSqrt2) * vec3(0.0, -1.0, 1.0) + aPosition.y * vec3(1.0, 0.0, 0.0);
+            normal = vec3(0.0, 1.0, 1.0) * invSqrt2;
+        } else if (inst == 4) {
+            // Plane Z - X = 0 (Normal: (-1, 0, 1) / sqrt(2))
+            localPos = (aPosition.x * invSqrt2) * vec3(1.0, 0.0, 1.0) + aPosition.y * vec3(0.0, 1.0, 0.0);
+            normal = vec3(-1.0, 0.0, 1.0) * invSqrt2;
+        } else {
+            // Plane Z + X = 0 (Normal: (1, 0, 1) / sqrt(2))
+            localPos = (aPosition.x * invSqrt2) * vec3(1.0, 0.0, -1.0) + aPosition.y * vec3(0.0, 1.0, 0.0);
+            normal = vec3(1.0, 0.0, 1.0) * invSqrt2;
+        }
     } else {
-        // ZX plane (normal along Y)
-        localPos = vec3(aPosition.y, 0.0, aPosition.x);
-        normal = vec3(0.0, 1.0, 0.0) * signVal;
+        // Instances 0..2: 3 Orthogonal Planes (XY, YZ, ZX)
+        // Instances 3..5: Negative counterparts for Cube Cage mode (-XY, -YZ, -ZX)
+        int inst = gl_InstanceID % 3;
+        float signVal = (gl_InstanceID >= 3) ? -1.0 : 1.0;
+
+        if (inst == 0) {
+            // XY plane (normal along Z)
+            localPos = vec3(aPosition.x, aPosition.y, 0.0);
+            normal = vec3(0.0, 0.0, 1.0) * signVal;
+        } else if (inst == 1) {
+            // YZ plane (normal along X)
+            localPos = vec3(0.0, aPosition.x, aPosition.y);
+            normal = vec3(1.0, 0.0, 0.0) * signVal;
+        } else {
+            // ZX plane (normal along Y)
+            localPos = vec3(aPosition.y, 0.0, aPosition.x);
+            normal = vec3(0.0, 1.0, 0.0) * signVal;
+        }
     }
 
     // Offset plane along its normal by separation

@@ -28,7 +28,6 @@ class UIThemeTest {
             UITheme.showMidiCol = false
             UITheme.showLfoCol = true
             UITheme.showAudioCol = false
-            UITheme.showTriggerCol = true
             UITheme.cleanModeEnabled = true
             UITheme.backgroundVideoEnabled = true
             UITheme.tooltipsEnabled = false
@@ -49,7 +48,6 @@ class UIThemeTest {
             UITheme.showMidiCol = true
             UITheme.showLfoCol = false
             UITheme.showAudioCol = true
-            UITheme.showTriggerCol = false
             UITheme.cleanModeEnabled = false
             UITheme.backgroundVideoEnabled = false
             UITheme.tooltipsEnabled = true
@@ -72,7 +70,6 @@ class UIThemeTest {
             assertFalse(UITheme.showMidiCol)
             assertTrue(UITheme.showLfoCol)
             assertFalse(UITheme.showAudioCol)
-            assertTrue(UITheme.showTriggerCol)
             assertTrue(UITheme.cleanModeEnabled)
             assertTrue(UITheme.backgroundVideoEnabled)
             assertFalse(UITheme.tooltipsEnabled)

@@ -165,10 +165,6 @@ object UITheme {
         get() = settings.showAudioCol
         set(value) { settings = settings.copy(showAudioCol = value) }
 
-    var showTriggerCol: Boolean
-        get() = settings.showTriggerCol
-        set(value) { settings = settings.copy(showTriggerCol = value) }
-
     var col1Ratio: Float
         get() = settings.col1Ratio
         set(value) { settings = settings.copy(col1Ratio = value) }
@@ -420,7 +416,6 @@ object UITheme {
                 props.getBoolean("showLfoCol")?.let { showLfoCol = it }
                 props.getBoolean("showSeqCol")?.let { showSeqCol = it }
                 props.getBoolean("showAudioCol")?.let { showAudioCol = it }
-                props.getBoolean("showTriggerCol")?.let { showTriggerCol = it }
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { col1Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { col2Ratio = it.coerceIn(0.10f, 0.70f) }
                 (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { libraryRatio = it.coerceIn(0.10f, 0.90f) }
@@ -485,7 +480,6 @@ object UITheme {
             props.setProperty("showLfoCol", showLfoCol.toString())
             props.setProperty("showSeqCol", showSeqCol.toString())
             props.setProperty("showAudioCol", showAudioCol.toString())
-            props.setProperty("showTriggerCol", showTriggerCol.toString())
             props.setProperty("col1Ratio", col1Ratio.toString())
             props.setProperty("col2Ratio", col2Ratio.toString())
             props.setProperty("libraryRatio", libraryRatio.toString())

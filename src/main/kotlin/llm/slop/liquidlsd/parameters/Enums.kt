@@ -73,11 +73,12 @@ enum class AudioFollowerMode(
     val defaultAttackMs: Float,
     val defaultDecayMs: Float
 ) {
-    RAW("Raw (Instant Jitter)", 0f, 0f),
-    PUNCHY("Punchy (Fast)", 5f, 150f),
+    RAW("Instant (Raw / 1-Frame)", 0f, 0f),
+    SNAP("Strobe / Snap", 0f, 35f),
+    PUNCHY("Punchy (Accent)", 5f, 150f),
     SMOOTH("Smooth Swell", 40f, 400f),
-    SLOW("Slow Pulse", 100f, 800f),
-    AMBIENT("Ambient Drift", 250f, 1500f),
-    CUSTOM("Custom", 0f, 100f);
+    SLOW("Slow Bloom", 100f, 900f),
+    AMBIENT("Ambient Drift", 250f, 1800f),
+    CUSTOM("Custom…", 0f, 150f);
 }
 

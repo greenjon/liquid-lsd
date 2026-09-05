@@ -307,6 +307,10 @@ fun drawDeckMonitorToolbar(
         "$activePreset$dirtyMarker"
     }
 
+    val deckDeps = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.analyze(deck)
+    val deckIssues = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.getIssues(deckDeps, session)
+    val hasDeckIssues = deckIssues.isNotEmpty() && !deck.isEmpty
+
     val textY = startY + (rowH - textH) * 0.5f
     val textPaddingX = 8f
     session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -316,6 +320,14 @@ fun drawDeckMonitorToolbar(
             ImGui.colorConvertFloat4ToU32(0.85f, 0.90f, 1.0f, 1.0f)
         }
         dl.addText(barX + textPaddingX, textY, textCol, labelText)
+
+        if (hasDeckIssues) {
+            val alertText = "[!]"
+            val alertCol = ImGui.colorConvertFloat4ToU32(0.95f, 0.35f, 0.35f, 1.0f)
+            val alertW = ImGui.calcTextSize(alertText).x
+            val alertX = (barX + barW - alertW - 8f).coerceAtLeast(barX + textPaddingX + 10f)
+            dl.addText(alertX, textY, alertCol, alertText)
+        }
     }
 
     ImGui.setCursorScreenPos(barX, startY)
@@ -329,6 +341,14 @@ fun drawDeckMonitorToolbar(
 
         ImGui.beginTooltip()
         ImGui.text(activePreset ?: "None")
+        if (hasDeckIssues) {
+            ImGui.spacing()
+            ImGui.textColored(0.95f, 0.45f, 0.45f, 1f, "[!] Inactive or hidden modulators:")
+            for (issue in deckIssues) {
+                ImGui.bullet()
+                ImGui.text("${issue.title}: ${issue.description}")
+            }
+        }
         ImGui.separator()
         ImGui.textDisabled("Last saved: $mtimeStr   v$dtoVersion")
         if (presetNote.isNotEmpty()) {

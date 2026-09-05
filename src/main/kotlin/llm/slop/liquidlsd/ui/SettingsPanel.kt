@@ -312,16 +312,7 @@ object SettingsPanel {
             session.uiTheme.saveSettings()
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display Audio spectral analysis modulation column in Preset Grid")
-        }
-
-        val trigVal = ImBoolean(session.uiTheme.showTriggerCol)
-        if (ImGui.checkbox("Show Trigger Column", trigVal)) {
-            session.uiTheme.showTriggerCol = trigVal.get()
-            session.uiTheme.saveSettings()
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Display Audio transient / trigger modulation column in Preset Grid")
+            ImGui.setTooltip("Display Audio-reactive modulation column in Preset Grid")
         }
     }
 

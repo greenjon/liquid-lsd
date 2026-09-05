@@ -32,10 +32,11 @@ object CvTheme {
             "mid", "audio_mid"       -> floatArrayOf(1.00f, 0.68f, 0.12f) // Golden Amber
             "high", "audio_high"     -> floatArrayOf(0.95f, 0.88f, 0.25f) // Bright Gold
 
-            // Transient Triggers (Hot Coral Rose)
-            "trigger"                -> floatArrayOf(1.00f, 0.25f, 0.50f) // Hot Coral Rose
-            "onset", "trigger_onset" -> floatArrayOf(1.00f, 0.35f, 0.55f) // Coral Pink
-            "accent", "trigger_accent"->floatArrayOf(1.00f, 0.20f, 0.40f) // Crimson Rose
+            // Audio Transient Flux Triggers (Hot Coral / Crimson)
+            "audio_flux_amp"         -> floatArrayOf(1.00f, 0.35f, 0.55f) // Coral Pink
+            "audio_flux_bass"        -> floatArrayOf(1.00f, 0.20f, 0.35f) // Crimson Kick
+            "audio_flux_mid"         -> floatArrayOf(1.00f, 0.45f, 0.25f) // Flame Snare
+            "audio_flux_high"        -> floatArrayOf(1.00f, 0.70f, 0.30f) // Neon Gold Hat
 
             else                     -> floatArrayOf(0.60f, 0.60f, 0.60f)
         }

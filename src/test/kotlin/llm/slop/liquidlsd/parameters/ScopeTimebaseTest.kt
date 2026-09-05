@@ -120,22 +120,20 @@ class ScopeTimebaseTest {
         assertEquals(ScopeTimebase.HUNDRED_SEC, cloned.getScopeTimebase("lfo"))
         assertEquals(ScopeTimebase.FIFTEEN_MIN, cloned.getScopeTimebase("audio"))
         assertEquals(ScopeTimebase.TWO_POINT_FIVE_HOURS, cloned.getScopeTimebase("value"))
-        assertEquals(ScopeTimebase.TEN_SEC, cloned.getScopeTimebase("trigger"))
     }
 
     @Test
-    fun `test source classification helpers isAudioSource and isTriggerSource`() {
+    fun `test source classification helper isAudioSource`() {
         assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_amp"))
         assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_bass"))
         assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_mid"))
         assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_high"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_flux_amp"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_flux_bass"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_flux_mid"))
+        assertTrue(llm.slop.liquidlsd.cv.isAudioSource("audio_flux_high"))
         assertTrue(!llm.slop.liquidlsd.cv.isAudioSource("lfo"))
-        assertTrue(!llm.slop.liquidlsd.cv.isAudioSource("trigger_onset"))
-
-        assertTrue(llm.slop.liquidlsd.cv.isTriggerSource("trigger_onset"))
-        assertTrue(llm.slop.liquidlsd.cv.isTriggerSource("trigger_accent"))
-        assertTrue(!llm.slop.liquidlsd.cv.isTriggerSource("audio_amp"))
-        assertTrue(!llm.slop.liquidlsd.cv.isTriggerSource("lfo"))
+        assertTrue(!llm.slop.liquidlsd.cv.isAudioSource("seq"))
     }
 
     @Test

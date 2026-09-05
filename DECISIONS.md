@@ -2,6 +2,20 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Unification of Audio & Trigger Modulation into 2 Modular Audio Slots (`AudioModulatorSection.kt`, `CVRegistry.kt`, `AudioEngine.kt`, `PresetGridPanel.kt`, `PresetGridRenderer.kt`, `CellConfigPanel.kt`, `Enums.kt`, `Evaluators.kt`)
+
+- **Decision**: Consolidate the separate `AUDIO` and `TRIGGER` modulation domains into a single unified `AUDIO` column (`AUD`) featuring **2 independent modular Audio Slots** per parameter:
+  - **Single Grid Column**: Replaced the separate `AUD` and `TRIG` columns in the Preset Grid with a single `AUD` column. The Preset Grid now features 5 streamlined columns: `VAL`, `MIDI`, `LFO`, `SEQ`, `AUD`.
+  - **2 Modular Audio Slots per Parameter**: Each modulatable parameter supports up to 2 independent audio modulators (`Audio 1` and `Audio 2`). In `CellConfigPanel`, Slot 1 is always accessible, and Slot 2 can be added via a clean `[ + Enable Audio Slot 2 ]` action button, collapsing automatically when inactive.
+  - **Continuous (RMS) vs Transient (Spectral Flux)**: Audio slots allow instant toggling between Continuous energy tracking (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`) and Transient onset detection (`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`).
+  - **4-Band Frequency Selection**: Both Continuous and Transient modes operate over 4 selectable bands: `Full Mix (AMP)`, `Bass (BASS)`, `Mid (MID)`, and `High (HIGH)`.
+  - **Musical Response Presets & Dynamics**: Upgraded envelope follower presets with `Instant (Raw Jitter)`, `Snap` (0ms/35ms), `Punchy` (5ms/150ms), `Smooth Swell` (40ms/400ms), `Slow Pulse` (100ms/900ms), `Ambient Drift` (250ms/1800ms), and `Custom` (user-controlled Attack $0\dots500\text{ ms}$ / Decay $10\dots3000\text{ ms}$).
+  - **Zero-Allocation Real-Time Audio DSP**: Spectral flux calculations and multi-band RMS are computed directly within the real-time processing loop without heap allocations, and cached in ring buffers for instantaneous UI oscilloscope rendering.
+- **Rationale**:
+  - **Eliminates UI Redundancy & Fragmentation**: Previously, audio envelope and trigger/transient modulations were split across two separate grid columns and config sections with overlapping concepts. Unifying them into one modular section simplifies the matrix interface while expanding creative flexibility.
+  - **Dual-Slot Expressiveness**: Musicians and visual artists can now bind both a slow ambient swell (Continuous RMS on Mid) and a snappy kick pulse (Transient Flux on Bass) to the same parameter within a single unified cell.
+  - **Clean Code Architecture**: Removed legacy trigger shims and dedicated trigger UI classes, reducing architectural complexity.
+
 ## ImGui Upgrade Strategy: 1.86.12 Adoption for Apple Silicon ARM64 and 1.92.x Modernization Roadmap (`build.gradle.kts`, `docs/developer/imgui_upgrade_guide.md`, `DECISIONS.md`)
 
 - **Decision**: Update `io.github.spair:imgui-java-*` dependencies from `1.86.11` to `1.86.12` as Phase 1 of our ImGui modernization strategy, while scheduling Dear ImGui 1.92.x as Phase 2:

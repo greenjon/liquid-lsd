@@ -14,20 +14,17 @@ object ClipboardManager {
         val mappedSourceId = when (destCvId) {
             "audio" -> {
                 when (dto.sourceId) {
-                    "audio_amp", "audio_bass", "audio_mid", "audio_high" -> dto.sourceId
+                    "audio_amp", "audio_bass", "audio_mid", "audio_high",
+                    "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high" -> dto.sourceId
                     "amp" -> "audio_amp"
                     "bass" -> "audio_bass"
                     "mid" -> "audio_mid"
                     "high" -> "audio_high"
+                    "flux_amp" -> "audio_flux_amp"
+                    "flux_bass" -> "audio_flux_bass"
+                    "flux_mid" -> "audio_flux_mid"
+                    "flux_high" -> "audio_flux_high"
                     else -> "audio_amp"
-                }
-            }
-            "trigger" -> {
-                when (dto.sourceId) {
-                    "trigger_onset", "trigger_accent" -> dto.sourceId
-                    "onset" -> "trigger_onset"
-                    "accent" -> "trigger_accent"
-                    else -> "trigger_onset"
                 }
             }
             "midi" -> {
@@ -67,8 +64,6 @@ object ClipboardManager {
         // Remove existing modulators for this CV ID and append the new ones
         if (destCvId == "audio") {
             param.modulators.removeIf { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
-        } else if (destCvId == "trigger") {
-            param.modulators.removeIf { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
         } else if (destCvId == "midi") {
             param.modulators.removeIf { it.sourceId.startsWith("midi_cc_") }
         } else {

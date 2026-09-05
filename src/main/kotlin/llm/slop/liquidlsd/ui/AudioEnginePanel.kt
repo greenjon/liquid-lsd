@@ -50,12 +50,14 @@ object AudioEnginePanel {
 
     private val cvSignals = arrayOf(
         CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine")),
-        CvSignalDef("audio_amp", "Amplitude (RMS)", CvTheme.getThemeColor("audio_amp")),
-        CvSignalDef("audio_bass", "Bass Band (Low-pass)", CvTheme.getThemeColor("audio_bass")),
-        CvSignalDef("audio_mid", "Mid Band (Band-pass)", CvTheme.getThemeColor("audio_mid")),
-        CvSignalDef("audio_high", "High Band (High-pass)", CvTheme.getThemeColor("audio_high")),
-        CvSignalDef("trigger_onset", "Onset Signal", CvTheme.getThemeColor("trigger_onset")),
-        CvSignalDef("trigger_accent", "Accent Level (Decay)", CvTheme.getThemeColor("trigger_accent"))
+        CvSignalDef("audio_amp", "Full Mix (RMS)", CvTheme.getThemeColor("audio_amp")),
+        CvSignalDef("audio_bass", "Bass Band (RMS)", CvTheme.getThemeColor("audio_bass")),
+        CvSignalDef("audio_mid", "Mid Band (RMS)", CvTheme.getThemeColor("audio_mid")),
+        CvSignalDef("audio_high", "High Band (RMS)", CvTheme.getThemeColor("audio_high")),
+        CvSignalDef("audio_flux_amp", "Full Mix Transient (Flux)", CvTheme.getThemeColor("audio_flux_amp")),
+        CvSignalDef("audio_flux_bass", "Kick Transient (Flux)", CvTheme.getThemeColor("audio_flux_bass")),
+        CvSignalDef("audio_flux_mid", "Snare Transient (Flux)", CvTheme.getThemeColor("audio_flux_mid")),
+        CvSignalDef("audio_flux_high", "Hat Transient (Flux)", CvTheme.getThemeColor("audio_flux_high"))
     )
 
     /**

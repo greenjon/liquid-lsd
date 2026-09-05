@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiKey
 import llm.slop.liquidlsd.cv.isAudioSource
-import llm.slop.liquidlsd.cv.isTriggerSource
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.models.ClipboardManager
 import llm.slop.liquidlsd.models.CellClipboardData
@@ -20,7 +19,6 @@ object PresetGridKeyboard {
         return when (cvSourceId) {
             "value", "final", "base" -> emptyList()
             "audio"   -> param.modulators.filter { isAudioSource(it.sourceId) }
-            "trigger" -> param.modulators.filter { isTriggerSource(it.sourceId) }
             "midi"    -> param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
             else      -> param.modulators.filter { it.sourceId == cvSourceId }
         }

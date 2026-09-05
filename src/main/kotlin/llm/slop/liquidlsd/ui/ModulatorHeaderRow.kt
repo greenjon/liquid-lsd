@@ -31,16 +31,18 @@ object ModulatorHeaderRow {
         }
         
         val bandLabel = when (existing.sourceId) {
-            "audio_amp" -> "Amplitude"
-            "audio_bass" -> "Low"
-            "audio_mid" -> "Mid"
-            "audio_high" -> "High"
-            "trigger_onset" -> "Onset / Transient"
-            "trigger_accent" -> "Accent / Peak"
+            "audio_amp" -> "Full Mix (RMS)"
+            "audio_bass" -> "Low / Bass (RMS)"
+            "audio_mid" -> "Mid (RMS)"
+            "audio_high" -> "High (RMS)"
+            "audio_flux_amp" -> "Full Mix (Flux)"
+            "audio_flux_bass" -> "Low / Kick (Flux)"
+            "audio_flux_mid" -> "Mid / Snare (Flux)"
+            "audio_flux_high" -> "High / Hat (Flux)"
             else -> null
         }
-        val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else "Modulator"
-        val titleText = bandLabel ?: if (modsToDraw.size > 1) "$typeLabel ${idx + 1}" else typeLabel
+        val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else if (existing.sourceId.startsWith("audio_")) "Audio" else "Modulator"
+        val titleText = if (modsToDraw.size > 1) "Audio ${idx + 1}: ${bandLabel ?: typeLabel}" else (bandLabel ?: typeLabel)
 
         ImGui.indent(10f) // Indent controls slightly
 

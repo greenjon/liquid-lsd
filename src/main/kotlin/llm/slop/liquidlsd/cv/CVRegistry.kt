@@ -35,8 +35,10 @@ object CVRegistry {
         register(MutableCVSource("audio_mid"))
         register(MutableCVSource("audio_high"))
 
-        register(MutableCVSource("trigger_onset"))
-        register(MutableCVSource("trigger_accent"))
+        register(MutableCVSource("audio_flux_amp"))
+        register(MutableCVSource("audio_flux_bass"))
+        register(MutableCVSource("audio_flux_mid"))
+        register(MutableCVSource("audio_flux_high"))
     }
 
     /**
@@ -110,12 +112,14 @@ object CVRegistry {
             src.value = value
         }
         when (id) {
-            "amp"    -> updatePushedValue("audio_amp",      value)
-            "bass"   -> updatePushedValue("audio_bass",     value)
-            "mid"    -> updatePushedValue("audio_mid",      value)
-            "high"   -> updatePushedValue("audio_high",     value)
-            "onset"  -> updatePushedValue("trigger_onset",  value)
-            "accent" -> updatePushedValue("trigger_accent", value)
+            "amp"        -> updatePushedValue("audio_amp",       value)
+            "bass"       -> updatePushedValue("audio_bass",      value)
+            "mid"        -> updatePushedValue("audio_mid",       value)
+            "high"       -> updatePushedValue("audio_high",      value)
+            "flux_amp"   -> updatePushedValue("audio_flux_amp",  value)
+            "flux_bass"  -> updatePushedValue("audio_flux_bass", value)
+            "flux_mid"   -> updatePushedValue("audio_flux_mid",  value)
+            "flux_high"  -> updatePushedValue("audio_flux_high", value)
         }
     }
 
@@ -185,14 +189,15 @@ object CVRegistry {
         val elapsedSeconds = getElapsedRealtimeSec()
 
         for (source in sources.values) {
-            if (isAudioOrTriggerSource(source.id)) continue
+            if (isAudioSource(source.id)) continue
             source.update(totalBeats, elapsedSeconds)
             histories[source.id]?.add(source.value)
         }
     }
 
-    private fun isAudioOrTriggerSource(id: String): Boolean = when (id) {
-        "audio_amp", "audio_bass", "audio_mid", "audio_high", "trigger_onset", "trigger_accent" -> true
+    private fun isAudioSource(id: String): Boolean = when (id) {
+        "audio_amp", "audio_bass", "audio_mid", "audio_high",
+        "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high" -> true
         else -> false
     }
 }

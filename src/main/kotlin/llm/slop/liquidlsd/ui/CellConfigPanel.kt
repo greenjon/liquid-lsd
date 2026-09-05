@@ -11,8 +11,7 @@ import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 
-private val AUDIO_BANDS = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
-private val TRIGGER_BANDS = listOf("trigger_onset", "trigger_accent")
+private val AUDIO_RMS_BANDS = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
 
 /**
  * Draws the Cell Config panel contents.
@@ -29,18 +28,12 @@ object CellConfigPanel {
     private fun initializeVirtualModulators(cvId: String, activeMods: List<CvModulator>, hasAdvanced: Boolean) {
         virtualModulators.clear()
         if (cvId == "audio") {
-            for (band in AUDIO_BANDS) {
-                val exists = activeMods.any { it.sourceId == band }
-                if (!exists) {
-                    virtualModulators.add(CvModulator(id = "virtual_$band", sourceId = band, bypassed = true))
-                }
-            }
-        } else if (cvId == "trigger") {
-            for (band in TRIGGER_BANDS) {
-                val exists = activeMods.any { it.sourceId == band }
-                if (!exists) {
-                    virtualModulators.add(CvModulator(id = "virtual_$band", sourceId = band, bypassed = true))
-                }
+            if (activeMods.isEmpty()) {
+                virtualModulators.add(CvModulator(id = "virtual_audio_1", sourceId = "audio_amp", bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = "audio_flux_bass", bypassed = true))
+            } else if (activeMods.size == 1) {
+                val fallbackSource = if (activeMods[0].sourceId.startsWith("audio_flux_")) "audio_amp" else "audio_flux_bass"
+                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = fallbackSource, bypassed = true))
             }
         } else {
             if (activeMods.isEmpty()) {
@@ -55,9 +48,8 @@ object CellConfigPanel {
         if (session.uiTheme.midiEnabled && session.uiTheme.showMidiCol) availableTabs.add("MIDI" to "midi")
         if (session.uiTheme.showLfoCol) availableTabs.add("LFO" to "lfo")
         if (session.uiTheme.sequencerEnabled && session.uiTheme.showSeqCol) availableTabs.add("SEQ" to "seq")
-        if (session.uiTheme.audioEngineEnabled) {
-            if (session.uiTheme.showAudioCol) availableTabs.add("Audio" to "audio")
-            if (session.uiTheme.showTriggerCol) availableTabs.add("Trigger" to "trigger")
+        if (session.uiTheme.audioEngineEnabled && session.uiTheme.showAudioCol) {
+            availableTabs.add("Audio" to "audio")
         }
 
         val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
@@ -145,8 +137,6 @@ object CellConfigPanel {
             param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
         } else if (cvId == "audio") {
             param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
-        } else if (cvId == "trigger") {
-            param.modulators.filter { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
         } else {
             param.modulators.filter { it.sourceId == cvId }
         }
@@ -191,9 +181,7 @@ object CellConfigPanel {
 
         var modsToDraw = activeMods + virtualModulators.filter { vm -> activeMods.none { am -> am.id == vm.id } }
         if (cvId == "audio") {
-            modsToDraw = modsToDraw.sortedBy { AUDIO_BANDS.indexOf(it.sourceId) }
-        } else if (cvId == "trigger") {
-            modsToDraw = modsToDraw.sortedBy { TRIGGER_BANDS.indexOf(it.sourceId) }
+            modsToDraw = modsToDraw.take(2)
         }
         val isBipolar = param.minClamp < 0f
         val hasAnyUnbypassed = activeMods.any { !it.bypassed }
@@ -253,19 +241,40 @@ object CellConfigPanel {
                 val panelStartY = ImGui.getCursorScreenPosY()
                 val dl = ImGui.getWindowDrawList()
                 
-                val isMultiBand = modsToDraw.size > 1
+                // For Audio Slot 2 when inactive/virtual: render a clean collapsed enable bar
+                if (cvId == "audio" && idx == 1 && idx >= activeMods.size) {
+                    val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+                    val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.28f, 0.28f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
+                    if (ImGui.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
+                        val newMod = existing.copy(id = java.util.UUID.randomUUID().toString(), bypassed = false, depth = 0.5f)
+                        replaceModulator(state, param, newMod, mixer)
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")
+                    }
+                    ImGui.popStyleColor(3)
+                    ImGui.popID()
+                    continue
+                }
+
+                val isMultiBand = if (cvId == "audio") activeMods.size > 1 else modsToDraw.size > 1
                 val isBandActive = !existing.bypassed && existing.depth != 0.0f
                 val bandLabel = when (existing.sourceId) {
-                    "audio_amp" -> "Amplitude / Master"
-                    "audio_bass" -> "Low / Bass"
-                    "audio_mid" -> "Mid"
-                    "audio_high" -> "High"
-                    "trigger_onset" -> "Onset / Beat"
-                    "trigger_accent" -> "Accent / Peak"
+                    "audio_amp" -> "Full Mix (RMS)"
+                    "audio_bass" -> "Low / Bass (RMS)"
+                    "audio_mid" -> "Mid (RMS)"
+                    "audio_high" -> "High (RMS)"
+                    "audio_flux_amp" -> "Full Mix (Flux)"
+                    "audio_flux_bass" -> "Low / Kick (Flux)"
+                    "audio_flux_mid" -> "Mid / Snare (Flux)"
+                    "audio_flux_high" -> "High / Hat (Flux)"
                     else -> "Modulator ${idx + 1}"
                 }
                 val dirtyMarker = if (isBandActive) " [ACTIVE] •" else if (!existing.bypassed) " •" else ""
-                val headerTitle = "$bandLabel$dirtyMarker###band_header"
+                val headerTitle = if (cvId == "audio") "Audio ${idx + 1}: $bandLabel$dirtyMarker###audio_slot_${idx + 1}" else "$bandLabel$dirtyMarker###band_header"
                 val defaultOpen = 0
 
                 val isHeaderOpen = if (isMultiBand) ImGui.collapsingHeader(headerTitle, defaultOpen) else true
@@ -282,9 +291,13 @@ object CellConfigPanel {
                         randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                         onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
                         onReset = {
-                            val toRemove = activeMods.toList()
-                            for (mod in toRemove) {
-                                param.modulators.remove(mod)
+                            if (cvId == "audio") {
+                                param.modulators.remove(existing)
+                            } else {
+                                val toRemove = activeMods.toList()
+                                for (mod in toRemove) {
+                                    param.modulators.remove(mod)
+                                }
                             }
                         }
                     )
@@ -299,16 +312,6 @@ object CellConfigPanel {
                         llm.slop.liquidlsd.cv.isAudioSource(existing.sourceId) -> {
                             // Draw dedicated Audio Envelope Follower + dynamics controls
                             AudioModulatorSection.draw(
-                                session = session,
-                                param = param,
-                                existing = existing,
-                                themeColor = currentThemeColor,
-                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
-                            )
-                        }
-                        llm.slop.liquidlsd.cv.isTriggerSource(existing.sourceId) -> {
-                            // Draw dedicated Trigger transient impulse controls
-                            TriggerModulatorSection.draw(
                                 session = session,
                                 param = param,
                                 existing = existing,

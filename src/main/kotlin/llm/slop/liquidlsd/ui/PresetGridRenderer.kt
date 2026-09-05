@@ -449,7 +449,6 @@ object PresetGridRenderer {
         val isSelected = state.selectedCell == cellId
         val activeMods = when (cvId) {
             "audio"   -> param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
-            "trigger" -> param.modulators.filter { llm.slop.liquidlsd.cv.isTriggerSource(it.sourceId) }
             else      -> param.modulators.filter { it.sourceId == cvId }
         }
         val hasModulator = activeMods.any { mod ->
@@ -481,8 +480,8 @@ object PresetGridRenderer {
             }
             val modSource = when (cvId) {
                 "lfo"     -> "LFO / Oscillator"
-                "audio"   -> "Audio Envelope Follower"
-                "trigger" -> "Transient Trigger"
+                "seq"     -> "Step Sequencer"
+                "audio"   -> "Audio-Reactive Modulator"
                 else      -> cvId
             }
             ImGui.setTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig.")
@@ -510,7 +509,6 @@ object PresetGridRenderer {
                 onPushUndo()
                 val defaultSource = when (cvId) {
                     "audio"   -> "audio_amp"
-                    "trigger" -> "trigger_onset"
                     else      -> cvId
                 }
                 param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = 0.5f, bypassed = false))

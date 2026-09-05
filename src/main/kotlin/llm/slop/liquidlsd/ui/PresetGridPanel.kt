@@ -34,10 +34,7 @@ object PresetGridPanel {
         val cols = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) cols.add("lfo")
         if (session.uiTheme.sequencerEnabled && session.uiTheme.showSeqCol) cols.add("seq")
-        if (session.uiTheme.audioEngineEnabled) {
-            if (session.uiTheme.showAudioCol) cols.add("audio")
-            if (session.uiTheme.showTriggerCol) cols.add("trigger")
-        }
+        if (session.uiTheme.audioEngineEnabled && session.uiTheme.showAudioCol) cols.add("audio")
         return cols
     }
 
@@ -45,10 +42,7 @@ object PresetGridPanel {
         val labels = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) labels.add("LFO")
         if (session.uiTheme.sequencerEnabled && session.uiTheme.showSeqCol) labels.add("SEQ")
-        if (session.uiTheme.audioEngineEnabled) {
-            if (session.uiTheme.showAudioCol) labels.add("AUD")
-            if (session.uiTheme.showTriggerCol) labels.add("TRIG")
-        }
+        if (session.uiTheme.audioEngineEnabled && session.uiTheme.showAudioCol) labels.add("AUD")
         return labels
     }
 
@@ -100,7 +94,7 @@ object PresetGridPanel {
         val labelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
 
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f
+        val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f + 32f
 
         val gridTotalW = sideTabWidth + BOX_PADDING_X * 2f + labelColW + maxGridW + 24f
         var titleTextW = 0f
@@ -167,7 +161,7 @@ object PresetGridPanel {
         val baseLabelW = 160f * fontScale
         val idealLabelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (session.uiTheme.showMidiCol) "midi" else "value"
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f
+        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f + 32f
         val maxAllowedLabelColW = (avail - sideTabWidth - maxGridW - 20f).coerceAtLeast(120f)
         val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
 
@@ -194,7 +188,7 @@ object PresetGridPanel {
             gridStartX = ImGui.getCursorScreenPosX()
             val boxMaxX = (gridStartX + labelColW + maxGridW + BOX_PADDING_X).coerceAtMost(ImGui.getWindowPosX() + avail)
 
-            // Column Headers (VAL, MIDI, LFO, AUD, TRIG)
+            // Column Headers (VAL, MIDI, LFO, SEQ, AUD)
             if (!isDeckEmpty) {
                 drawColumnHeaders(session, labelColW, state, mixer, metrics, headerH)
             } else {
@@ -451,12 +445,187 @@ object PresetGridPanel {
             if (isCvHeaderHovered && session.uiTheme.tooltipsEnabled) {
                 val cvDesc = when (cvId) {
                     "lfo" -> "LFO: Synthetic low-frequency oscillator waveforms (Sine, Triangle, Square, Random)."
-                    "audio" -> "AUD: Modulator envelopes tracked from input audio frequency bands (Bass, Mid, High, Amplitude)."
-                    "trigger" -> "TRIG: Modulator envelopes tracked from transient onsets or peak accents."
+                    "audio" -> "AUD: Audio-reactive modulators (Continuous RMS envelopes & Transient triggers across 4 frequency bands)."
                     else -> "CV Modulator source."
                 }
                 ImGui.setTooltip(cvDesc)
             }
+        }
+
+        // ── Draw Column Settings Kebab (⋮) ──────────────────────────────────
+        val deckDeps = activeDeck?.let { llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.analyze(it) }
+            ?: llm.slop.liquidlsd.presets.PresetDependencies()
+
+        val midiMissing = deckDeps.usesMidi && !session.uiTheme.showMidiCol
+        val lfoMissing = deckDeps.usesLfo && !session.uiTheme.showLfoCol
+        val seqMissing = deckDeps.usesSeq && !session.uiTheme.showSeqCol
+        val audioColHidden = deckDeps.usesAudio && !session.uiTheme.showAudioCol
+        val audioEngineOff = deckDeps.usesAudio && !session.uiTheme.audioEngineEnabled
+
+        val anyMissing = midiMissing || lfoMissing || seqMissing || audioColHidden || audioEngineOff
+
+        val lastColId = if (cvCols.isNotEmpty()) cvCols.last() else if (session.uiTheme.showMidiCol) "midi" else "value"
+        val lastColRightX = startX + labelColW + getColumnOffset(session, lastColId) + CELL
+        val kebabX = lastColRightX + CELL_PAD * 0.5f + 2f
+        val kebabW = 26f
+        val isKebabHovered = mousePos.x >= kebabX && mousePos.x <= (kebabX + kebabW) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
+        val popupId = "preset_grid_columns_popup"
+        val isPopupOpen = ImGui.isPopupOpen(popupId)
+
+        if (isKebabHovered || isPopupOpen) {
+            dl.addRectFilled(kebabX, startY, kebabX + kebabW, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+        }
+
+        ImGui.setCursorScreenPos(kebabX, startY)
+        if (ImGui.invisibleButton("##grid_columns_kebab_btn", kebabW, headerH) || (isKebabHovered && ImGui.isMouseClicked(0))) {
+            ImGui.openPopup(popupId)
+        }
+
+        // Draw vertical dots
+        val dotCol = if (isKebabHovered || isPopupOpen) {
+            ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
+        } else {
+            ImGui.colorConvertFloat4ToU32(0.7f, 0.7f, 0.7f, 0.6f)
+        }
+        val cx = kebabX + kebabW * 0.5f
+        val cy = startY + headerH * 0.5f
+        val r = 2.5f
+        val dotSpacing = 7.0f
+        dl.addCircleFilled(cx, cy - dotSpacing, r, dotCol)
+        dl.addCircleFilled(cx, cy, r, dotCol)
+        dl.addCircleFilled(cx, cy + dotSpacing, r, dotCol)
+
+        // If any column needed by the patch is missing or audio engine is off, draw red [!] badge
+        if (anyMissing) {
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                val badgeX = cx + 7f
+                val badgeY = cy - 7f
+                dl.addCircleFilled(badgeX, badgeY, 6f, ImGui.colorConvertFloat4ToU32(0.85f, 0.15f, 0.15f, 0.95f))
+                val alertText = "!"
+                val alertW = ImGui.calcTextSize(alertText).x
+                val alertH = ImGui.getTextLineHeight()
+                dl.addText(badgeX - alertW * 0.5f, badgeY - alertH * 0.5f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f), alertText)
+            }
+        }
+
+        if (isKebabHovered && session.uiTheme.tooltipsEnabled && !isPopupOpen) {
+            if (anyMissing) {
+                ImGui.beginTooltip()
+                ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset Grid Columns:")
+                ImGui.text("Active patch uses modulators that are hidden or offline:")
+                if (midiMissing) ImGui.bulletText("MIDI column is hidden")
+                if (lfoMissing) ImGui.bulletText("LFO column is hidden")
+                if (seqMissing) ImGui.bulletText("SEQ column is hidden")
+                if (audioColHidden) ImGui.bulletText("Audio (AUD) column is hidden")
+                if (audioEngineOff) ImGui.bulletText("Audio Engine is disabled")
+                ImGui.spacing()
+                ImGui.textDisabled("Click to toggle columns or enable missing features.")
+                ImGui.endTooltip()
+            } else {
+                ImGui.setTooltip("Configure visible CV columns in Preset Grid.")
+            }
+        }
+
+        // Kebab popup menu
+        if (ImGui.beginPopup(popupId)) {
+            session.uiTheme.h3("Preset Grid Columns")
+            ImGui.separator()
+            ImGui.spacing()
+
+            // 1. MIDI
+            val midiVal = imgui.type.ImBoolean(session.uiTheme.showMidiCol)
+            if (ImGui.checkbox("Show MIDI Column##grid_col_kebab", midiVal)) {
+                session.uiTheme.showMidiCol = midiVal.get()
+                session.uiTheme.saveSettings()
+            }
+            if (deckDeps.usesMidi) {
+                ImGui.sameLine()
+                if (!session.uiTheme.showMidiCol) {
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
+                } else {
+                    ImGui.textDisabled(" (used)")
+                }
+            }
+
+            // 2. LFO
+            val lfoVal = imgui.type.ImBoolean(session.uiTheme.showLfoCol)
+            if (ImGui.checkbox("Show LFO Column##grid_col_kebab", lfoVal)) {
+                session.uiTheme.showLfoCol = lfoVal.get()
+                session.uiTheme.saveSettings()
+            }
+            if (deckDeps.usesLfo) {
+                ImGui.sameLine()
+                if (!session.uiTheme.showLfoCol) {
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
+                } else {
+                    ImGui.textDisabled(" (used)")
+                }
+            }
+
+            // 3. SEQ
+            val seqVal = imgui.type.ImBoolean(session.uiTheme.showSeqCol)
+            if (ImGui.checkbox("Show SEQ Column##grid_col_kebab", seqVal)) {
+                session.uiTheme.showSeqCol = seqVal.get()
+                session.uiTheme.saveSettings()
+            }
+            if (deckDeps.usesSeq) {
+                ImGui.sameLine()
+                if (!session.uiTheme.showSeqCol) {
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
+                } else {
+                    ImGui.textDisabled(" (used)")
+                }
+            }
+
+            // 4. AUD
+            val audioVal = imgui.type.ImBoolean(session.uiTheme.showAudioCol)
+            if (ImGui.checkbox("Show Audio Column (AUD)##grid_col_kebab", audioVal)) {
+                session.uiTheme.showAudioCol = audioVal.get()
+                session.uiTheme.saveSettings()
+            }
+            if (deckDeps.usesAudio || !session.uiTheme.audioEngineEnabled) {
+                ImGui.sameLine()
+                if (!session.uiTheme.audioEngineEnabled) {
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Audio Engine Off")
+                } else if (!session.uiTheme.showAudioCol) {
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, " [!] Needed by patch")
+                } else {
+                    ImGui.textDisabled(" (used)")
+                }
+            }
+
+            // Quick action buttons
+            if (anyMissing) {
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+                if (ImGui.button("Turn On Needed Columns", -1f, 28f)) {
+                    if (deckDeps.usesMidi) session.uiTheme.showMidiCol = true
+                    if (deckDeps.usesLfo) session.uiTheme.showLfoCol = true
+                    if (deckDeps.usesSeq) session.uiTheme.showSeqCol = true
+                    if (deckDeps.usesAudio) session.uiTheme.showAudioCol = true
+                    if (deckDeps.usesAudio && !session.uiTheme.audioEngineEnabled) {
+                        session.uiTheme.audioEngineEnabled = true
+                        session.audioEngine.start()
+                    }
+                    session.uiTheme.saveSettings()
+                }
+            }
+
+            if (!session.uiTheme.audioEngineEnabled) {
+                if (!anyMissing) {
+                    ImGui.spacing()
+                    ImGui.separator()
+                    ImGui.spacing()
+                }
+                if (ImGui.button("Enable Audio Engine", -1f, 28f)) {
+                    session.uiTheme.audioEngineEnabled = true
+                    session.audioEngine.start()
+                    session.uiTheme.saveSettings()
+                }
+            }
+
+            ImGui.endPopup()
         }
         
         // Restore cursor
