@@ -14,10 +14,11 @@
   - Overlaid directly on the video previews without shrinking preview width or distorting aspect ratios.
 - **Master Output Monitor Overlay**:
   - Added bottom-right overlay with `[M]` Master badge, `[🎲 ALL]` button to its left, and vertical Master Level fader directly above `[M]` extending upward. Leaves top-right free for the `[REC]` tally badge.
-- **Middle-Click Reset**:
-  - Middle-clicking any fader track immediately resets the level to 100% (1.0), matching `CellConfig` and crossfader conventions.
-- **Single-Row Crossfader Strip**:
-  - Removed the second row of dice buttons beneath the crossfader in `MixerMonitorPanel`, streamlining the Master Controls child window to a single row (~34px) and maximizing vertical screen space for preview monitors.
+- **Interactive Badges & Non-Overlapping Monitor Click Bounds**:
+  - Clicking `[A]`, `[B]`, `[BG]`, `[PV]`, or `[M]` badges directly focuses that deck/mixer tab in the Preset Grid.
+  - Background monitor drag/focus hitboxes exclude the 60px overlay gutter, preventing accidental tab switching or drag-and-drop actions when operating faders or dice.
+- **Channel Preview Dimming**:
+  - Live monitor previews for Deck A, Deck B, Deck BG, and Deck PV dim dynamically as their corresponding level fader is reduced below 1.0.
 
 ### Application Icons & Window Branding (`Main.kt`, `build.gradle.kts`, `scripts/install_desktop.sh`, `liquid-lsd.desktop`, `web/`, `website/`, `src/main/resources/icons/`)
 - **Desktop Window Icons & Compositor Integration (GLFW, X11, Wayland)**:

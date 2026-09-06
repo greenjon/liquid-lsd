@@ -48,8 +48,11 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.image(mixer.masterFBO.texture, availW, masterH, 0f, 1f, 1f, 0f)
 
+        val overlayW = 60f
+        val monitorBtnW = (availW - overlayW).coerceAtLeast(1f)
+
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
-        ImGui.invisibleButton("##main_output_monitor", availW.coerceAtLeast(1f), masterH.coerceAtLeast(1f))
+        ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Main output monitor. Click to focus Preset Grid Mix tab.")
         }
@@ -102,16 +105,24 @@ class MixerMonitorPanel(
             dlMaster.addText(textX, textY, masterThemeCol, "M")
         }
 
+        ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
+        if (ImGui.invisibleButton("##badge_btn_master", badgeW, badgeH) || ImGui.isItemClicked(0)) {
+            presetState.activeTopTab = "Mixer"
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Master output. Click to focus Preset Grid Mix tab.")
+        }
+
         // 2. [🎲 ALL] Button (to the left of [M])
         if (session.uiTheme.randomizationEnabled) {
             val dieW = badgeH
             val dieH = badgeH
             val dieMinX = badgeMinX - 4f - dieW
             ImGui.setCursorScreenPos(dieMinX, badgeMinY)
-            ImGui.invisibleButton("##btn_rand_all_monitor", dieW, dieH)
+            val isDieClicked = ImGui.invisibleButton("##btn_rand_all_monitor", dieW, dieH)
             val isDieHovered = ImGui.isItemHovered()
             val isDieActive = ImGui.isItemActive()
-            if (ImGui.isItemClicked(0)) {
+            if (isDieClicked) {
                 PresetGridUndo.pushUndoState(presetState, mixer)
                 mixer.randomizeAll()
             }

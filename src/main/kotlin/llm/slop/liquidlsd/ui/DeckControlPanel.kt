@@ -81,10 +81,16 @@ class DeckControlPanel(
         val dl = ImGui.getWindowDrawList()
         dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
 
-        ImGui.image(deck.getOutputTexture(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
-        
         ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.invisibleButton("##drag_source_$label", imgAvailW.coerceAtLeast(1f), imgAvailH.coerceAtLeast(1f))
+        ImGui.image(deck.getOutputTexture(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
+
+        val isLeftCol = label == "Deck A" || label == "Deck BG"
+        val overlayW = 60f
+        val dragBtnX = if (isLeftCol) imgX else imgX + overlayW
+        val dragBtnW = (imgAvailW - overlayW).coerceAtLeast(1f)
+
+        ImGui.setCursorScreenPos(dragBtnX, imgY)
+        ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Interactive monitor for $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
         }
@@ -173,8 +179,14 @@ class DeckControlPanel(
             ImGui.endPopup()
         }
         
-        if (isPV && mixer.levelPV < 0.999f) {
-            val dimAlpha = (1.0f - mixer.levelPV).coerceIn(0f, 1f)
+        val deckLevel = when (label) {
+            "Deck A" -> mixer.levelA
+            "Deck B" -> mixer.levelB
+            "Deck BG" -> mixer.levelBG
+            else -> mixer.levelPV
+        }
+        if (deckLevel < 0.999f) {
+            val dimAlpha = (1.0f - deckLevel).coerceIn(0f, 1f)
             dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, dimAlpha))
         }
 
@@ -184,7 +196,6 @@ class DeckControlPanel(
 
         // --- Clustered Inner Overlays: Badge, Die, and Vertical Level Fader ---
         val letter = deckPayloadName
-        val isLeftCol = label == "Deck A" || label == "Deck BG"
         val badgePadX = 8f
         val badgePadY = 3f
         val fontLevel = UITheme.FontLevel.H2
@@ -225,15 +236,23 @@ class DeckControlPanel(
             dl.addText(textX, textY, themeCol, letter)
         }
 
+        ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
+        if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
+            presetState.activeTopTab = label
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Focus $label tab in Preset Grid.")
+        }
+
         // 2. Die Button (placed toward outside of badge along the top row)
         if (session.uiTheme.randomizationEnabled) {
             val dieW = badgeH
             val dieH = badgeH
             ImGui.setCursorScreenPos(dieMinX, badgeMinY)
-            ImGui.invisibleButton("##btn_rand_die_$label", dieW, dieH)
+            val isDieClicked = ImGui.invisibleButton("##btn_rand_die_$label", dieW, dieH)
             val isDieHovered = ImGui.isItemHovered()
             val isDieActive = ImGui.isItemActive()
-            if (ImGui.isItemClicked(0)) {
+            if (isDieClicked) {
                 PresetGridUndo.pushUndoState(presetState, mixer)
                 when (label) {
                     "Deck A" -> mixer.randomizeDeckA()
@@ -271,13 +290,6 @@ class DeckControlPanel(
         val stripH = (imgAvailH - badgeH - badgeMargin * 2f - 8f).coerceIn(40f, 130f)
         val stripMaxY = stripMinY + stripH
 
-        val currentLevel = when (label) {
-            "Deck A" -> mixer.levelA
-            "Deck B" -> mixer.levelB
-            "Deck BG" -> mixer.levelBG
-            else -> mixer.levelPV
-        }
-
         ImGui.setCursorScreenPos(stripMinX, stripMinY)
         ImGui.invisibleButton("##fader_$label", stripW, stripH)
         val isFaderHovered = ImGui.isItemHovered()
@@ -298,7 +310,13 @@ class DeckControlPanel(
         if (isFaderHovered || isFaderActive) {
             if (io.mouseWheel != 0f) {
                 val delta = if (io.keyShift) 0.01f else 0.05f
-                val newLevel = (currentLevel + io.mouseWheel * delta).coerceIn(0f, 1f)
+                val current = when (label) {
+                    "Deck A" -> mixer.levelA
+                    "Deck B" -> mixer.levelB
+                    "Deck BG" -> mixer.levelBG
+                    else -> mixer.levelPV
+                }
+                val newLevel = (current + io.mouseWheel * delta).coerceIn(0f, 1f)
                 when (label) {
                     "Deck A" -> mixer.levelA = newLevel
                     "Deck B" -> mixer.levelB = newLevel
@@ -316,7 +334,13 @@ class DeckControlPanel(
                 }
             }
             if (session.uiTheme.tooltipsEnabled) {
-                val pctText = (currentLevel * 100f).roundToInt()
+                val current = when (label) {
+                    "Deck A" -> mixer.levelA
+                    "Deck B" -> mixer.levelB
+                    "Deck BG" -> mixer.levelBG
+                    else -> mixer.levelPV
+                }
+                val pctText = (current * 100f).roundToInt()
                 val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
                 ImGui.setTooltip("$label $desc: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
             }
@@ -328,8 +352,14 @@ class DeckControlPanel(
         dl.addRectFilled(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBg, 3f)
         dl.addRect(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBorder, 3f, 0, 1.0f)
 
-        // Draw Filled Level Bar (bottom up)
-        val fillH = stripH * currentLevel
+        // Draw Filled Level Bar (bottom up) with live level
+        val liveLevel = when (label) {
+            "Deck A" -> mixer.levelA
+            "Deck B" -> mixer.levelB
+            "Deck BG" -> mixer.levelBG
+            else -> mixer.levelPV
+        }
+        val fillH = stripH * liveLevel
         val fillTop = stripMaxY - fillH
         if (fillH > 1f) {
             dl.addRectFilled(stripMinX + 2f, fillTop, stripMinX + stripW - 2f, stripMaxY - 1f, themeCol, 2f)
