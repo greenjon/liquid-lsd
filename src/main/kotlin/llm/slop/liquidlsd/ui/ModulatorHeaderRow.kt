@@ -44,9 +44,8 @@ object ModulatorHeaderRow {
         val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else if (existing.sourceId.startsWith("audio_")) "Audio" else "Modulator"
         val titleText = if (modsToDraw.size > 1) "Audio ${idx + 1}: ${bandLabel ?: typeLabel}" else (bandLabel ?: typeLabel)
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val btnHeight = ImGui.getFrameHeight()
-        val btnWidth = 50f * fontScale
+        val btnWidth = 47.5f
 
         if (bypassed) {
             ImGui.popStyleVar() // Draw header controls at full opacity
@@ -59,7 +58,7 @@ object ModulatorHeaderRow {
         }
 
         if (idx == 0) {
-            val resetWidth = 50f * fontScale
+            val resetWidth = 47.5f
             val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
             ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)
             ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), alignY)
@@ -108,7 +107,7 @@ object ModulatorHeaderRow {
 
         // 2. Dice icon (Randomize button)
         if (session.uiTheme.randomizationEnabled) {
-            ImGui.sameLine(0f, 10f * fontScale)
+            ImGui.sameLine(0f, 9.5f)
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
@@ -133,13 +132,13 @@ object ModulatorHeaderRow {
         }
 
         // 3. Operator dropdown (ADD/MUL/SCALE combo box)
-        ImGui.sameLine(0f, 10f * fontScale)
+        ImGui.sameLine(0f, 9.5f)
         operatorIndex.set(when (existing.operator) {
             ModulationOperator.ADD -> 0
             ModulationOperator.MUL -> 1
             ModulationOperator.SCALE -> 2
         })
-        ImGui.pushItemWidth(100f * fontScale)
+        ImGui.pushItemWidth(95f)
         if (ImGui.combo("##op", operatorIndex, operatorLabels)) {
             val newOp = when (operatorIndex.get()) {
                 0 -> ModulationOperator.ADD

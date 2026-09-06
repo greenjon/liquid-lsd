@@ -19,21 +19,10 @@ object SettingsPanel {
     private const val POPUP_ID  = "Settings##modal"
     private const val MODAL_W   = 780f
 
-    // Scale percentage model: 100% == BASE_PX (15 px).
-    // Range 75 %–200 % in 5 % steps.
-    private const val BASE_PX   = 15f
-    private const val MIN_PCT   = 75
-    private const val MAX_PCT   = 200
-    private const val STEP_PCT  = 5
-
-    /** Convert a raw baseSize (px) to the nearest 5 % step integer. */
-    private fun pxToPct(px: Float): Int {
-        val raw = (px / BASE_PX * 100f).toInt()
-        return (raw / STEP_PCT * STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
-    }
-
-    /** Convert a percentage integer back to baseSize px. */
-    fun pctToPx(pct: Int): Float = pct / 100f * BASE_PX
+    // Library preset name scale model: Range 80%–120% in 10% steps.
+    private const val MIN_PRESET_SCALE_PCT = 80
+    private const val MAX_PRESET_SCALE_PCT = 120
+    private const val STEP_PCT             = 10
 
     enum class Category(val label: String) {
         APPEARANCE("Appearance"),
@@ -45,24 +34,29 @@ object SettingsPanel {
         GENERAL("General")
     }
 
-    private var activeCategory = Category.APPEARANCE
-    private var pendingGuiScale: Int? = null
+    var isOpen: Boolean = false
+        private set
+
+    var activeCategory = Category.APPEARANCE
+        private set
+
+    private var pendingPresetScale: Int? = null
 
     fun open(category: Category? = null) {
-        pendingGuiScale = null
+        isOpen = true
+        pendingPresetScale = null
         if (category != null) {
             activeCategory = category
         }
         ImGui.openPopup(POPUP_ID)
     }
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, displayW: Float, displayH: Float,
+    fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float = session.uiTheme.baseSize, displayW: Float, displayH: Float,
              mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
-             onScaleChanged: (Int) -> Unit) {
+             onPresetScaleChanged: (Int) -> Unit) {
 
-        val fontScale = (currentSize / 15f).coerceAtLeast(1.0f)
-        val defaultW = (MODAL_W * fontScale).coerceIn(600f, displayW * 0.95f)
-        val defaultH = (520f * fontScale).coerceIn(400f, displayH * 0.90f)
+        val defaultW = MODAL_W.coerceIn(600f, displayW * 0.95f)
+        val defaultH = 520f.coerceIn(400f, displayH * 0.90f)
 
         val targetW = if (session.uiTheme.settingsWidth > 100f) session.uiTheme.settingsWidth.coerceIn(480f, displayW * 0.98f) else defaultW
         val targetH = if (session.uiTheme.settingsHeight > 100f) session.uiTheme.settingsHeight.coerceIn(320f, displayH * 0.98f) else defaultH
@@ -76,7 +70,11 @@ object SettingsPanel {
 
         val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoScrollbar
 
-        if (!ImGui.beginPopupModal(POPUP_ID, flags)) return
+        if (!ImGui.beginPopupModal(POPUP_ID, flags)) {
+            isOpen = false
+            return
+        }
+        isOpen = true
 
         val currentWinW = ImGui.getWindowWidth()
         val currentWinH = ImGui.getWindowHeight()
@@ -133,7 +131,7 @@ object SettingsPanel {
         // Right Content Child
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
-                Category.APPEARANCE    -> drawAppearance(session, currentSize, onScaleChanged)
+                Category.APPEARANCE    -> drawAppearance(session, currentSize, onPresetScaleChanged)
                 Category.VIDEO_DISPLAY -> drawVideoDisplaySettings(session)
                 Category.AUDIO_ENGINE  -> drawAudioEngineSettings(session)
                 Category.BROADCAST     -> drawBroadcastSettings(session, mixer)
@@ -153,12 +151,15 @@ object SettingsPanel {
             ImGui.calcTextSize("  Close  ").x + 40f
         }.coerceAtLeast(110f)
         ImGui.setCursorPosX(ImGui.getWindowContentRegionMinX() + (availW - closeW) * 0.5f)
-        if (ImGui.button("Close", closeW, 0f)) ImGui.closeCurrentPopup()
+        if (ImGui.button("Close", closeW, 0f)) {
+            isOpen = false
+            ImGui.closeCurrentPopup()
+        }
 
         ImGui.endPopup()
     }
 
-    private fun drawAppearance(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onScaleChanged: (Int) -> Unit) {
+    private fun drawAppearance(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onPresetScaleChanged: (Int) -> Unit) {
         session.uiTheme.h2("Appearance")
         ImGui.separator()
         ImGui.spacing()
@@ -185,100 +186,57 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // Percentage scale slider – 75 % to 200 %, locked to 5 % steps.
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val sliderBoxW = 52f * fontScale
-        val committedPct = session.uiTheme.guiScalePercent
-        val currentPct = pendingGuiScale ?: committedPct
-        val t = UITheme
-        val basePx = 15.0f * (currentPct / 100f)
-        session.uiTheme.caption(
-            "Cap ${(basePx * t.multCaption).toInt()}  " +
-            "Body ${(basePx * t.multBody).toInt()}  " +
-            "H3 ${(basePx * t.multH3).toInt()}  " +
-            "H2 ${(basePx * t.multH2).toInt()}  " +
-            "H1 ${(basePx * t.multH1).toInt()} px"
-        )
-        ImGui.spacing()
-
-        CustomRangeSlider.drawCompactSlider(
-            session = session,
-            label = "UI Scale",
-            currentValue = currentPct.toFloat(),
-            minLimit = MIN_PCT.toFloat(),
-            maxLimit = MAX_PCT.toFloat(),
-            defaultValue = 100f,
-            formatValue = { "${(it / STEP_PCT).toInt() * STEP_PCT}%" },
-            idPrefix = "settings_gui_scale",
-            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
-            showCurrentLabel = false,
-            customBoxWidth = sliderBoxW,
-            onValueChanged = { newVal ->
-                val snappedPct = ((newVal / STEP_PCT).toInt() * STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
-                pendingGuiScale = snappedPct
-            }
-        )
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(
-                "Scale the entire UI (fonts, padding, widgets) from $MIN_PCT% to $MAX_PCT%.\n" +
-                "Drag smoothly and release mouse to apply.\n" +
-                "Ctrl+- and Ctrl+= adjust by 5% steps.\n" +
-                "HiDPI display scaling is handled automatically."
-            )
-        }
-        ImGui.spacing()
-        val canDecrease = currentPct > MIN_PCT
-        val canIncrease = currentPct < MAX_PCT
-        if (!canDecrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
-        if (ImGui.button("-##sdec") && canDecrease) {
-            val next = (currentPct - STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
-            pendingGuiScale = null
-            onScaleChanged(next)
-        }
-        if (!canDecrease) ImGui.popStyleVar()
-        ImGui.sameLine()
-        if (!canIncrease) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.35f)
-        if (ImGui.button("+##sinc") && canIncrease) {
-            val next = (currentPct + STEP_PCT).coerceIn(MIN_PCT, MAX_PCT)
-            pendingGuiScale = null
-            onScaleChanged(next)
-        }
-        if (!canIncrease) ImGui.popStyleVar()
-
-        // Commit on mouse release
-        if (!ImGui.isMouseDown(0) && pendingGuiScale != null) {
-            val target = pendingGuiScale!!
-            pendingGuiScale = null
-            if (target != committedPct) {
-                onScaleChanged(target)
-            }
-        }
-
+        // Fixed UI Typography hierarchy
+        session.uiTheme.body("UI Scale: Fixed at 95%")
+        session.uiTheme.caption("Cap ${UITheme.FONT_CAPTION.toInt()}  Body ${UITheme.FONT_BODY.toInt()}  H3 ${UITheme.FONT_H3.toInt()}  H2 ${UITheme.FONT_H2.toInt()}  H1 ${UITheme.FONT_H1.toInt()} px")
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
-        // Preset Grid Cell Scaling
-        session.uiTheme.caption("Preset Grid Knob Scale:")
+        // Library Preset Name Scale: 80% to 120%
+        val sliderBoxW = 50f
+        val committedScale = session.uiTheme.presetNameScalePercent
+        val currentScale = pendingPresetScale ?: committedScale
+        val presetPx = UITheme.FONT_BODY * (currentScale / 100f)
+        session.uiTheme.caption("Library Preset Name Size: ${"%.1f".format(presetPx)} px ($currentScale%)")
+        ImGui.spacing()
+
         CustomRangeSlider.drawCompactSlider(
             session = session,
-            label = "Grid Knob Scale",
-            currentValue = session.uiTheme.gridCellRatio,
-            minLimit = 0.70f,
-            maxLimit = 2.00f,
-            defaultValue = 1.0f,
-            formatValue = { "%.2fx".format(it) },
-            idPrefix = "settings_grid_cell_ratio",
+            label = "Preset Name Size",
+            currentValue = currentScale.toFloat(),
+            minLimit = MIN_PRESET_SCALE_PCT.toFloat(),
+            maxLimit = MAX_PRESET_SCALE_PCT.toFloat(),
+            defaultValue = 100f,
+            formatValue = {
+                val snapped = (kotlin.math.round(it / STEP_PCT) * STEP_PCT).toInt().coerceIn(MIN_PRESET_SCALE_PCT, MAX_PRESET_SCALE_PCT)
+                "$snapped%"
+            },
+            idPrefix = "settings_preset_name_scale",
             themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
             showCurrentLabel = false,
             customBoxWidth = sliderBoxW,
             onValueChanged = { newVal ->
-                session.uiTheme.gridCellRatio = newVal.coerceIn(0.70f, 2.00f)
-                session.uiTheme.saveSettings()
+                val snapped = (kotlin.math.round(newVal / STEP_PCT) * STEP_PCT).toInt().coerceIn(MIN_PRESET_SCALE_PCT, MAX_PRESET_SCALE_PCT)
+                pendingPresetScale = snapped
             }
         )
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Scale Preset Grid knob cell size and padding relative to default (0.70x to 2.00x).")
+            ImGui.setTooltip(
+                "Scale preset names in the Library browser ($MIN_PRESET_SCALE_PCT% to $MAX_PRESET_SCALE_PCT%).\n" +
+                "Drag smoothly and release mouse to apply.\n" +
+                "Ctrl+- and Ctrl+= adjust by 10% steps."
+            )
+        }
+        ImGui.spacing()
+
+        // Commit on mouse release
+        if (!ImGui.isMouseDown(0) && pendingPresetScale != null) {
+            val target = pendingPresetScale!!
+            pendingPresetScale = null
+            if (target != committedScale) {
+                onPresetScaleChanged(target)
+            }
         }
     }
 
@@ -412,8 +370,7 @@ object SettingsPanel {
             ImGui.setTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
         }
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val sliderBoxW = 52f * fontScale
+        val sliderBoxW = 50f
         CustomRangeSlider.drawCompactSlider(
             session = session,
             label = "Video Bitrate",
@@ -661,8 +618,7 @@ object SettingsPanel {
         ImGui.spacing()
 
         // Target Update Rate
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val sliderBoxW = 52f * fontScale
+        val sliderBoxW = 50f
         CustomRangeSlider.drawCompactSlider(
             session = session,
             label = "Rate Limit",
@@ -810,8 +766,8 @@ object SettingsPanel {
                 ShortcutItem("F", "Toggle Fullscreen / Clean Mode", "Hides all UI chrome to display full master video output."),
                 ShortcutItem("Esc", "Exit Fullscreen / Clean Mode", "Restores the user interface when in Fullscreen Clean Mode."),
                 ShortcutItem("B", "Toggle Background Video", "Renders master visuals behind the semi-transparent interface."),
-                ShortcutItem("Ctrl + - / Cmd + -", "Decrease GUI Scale", "Reduces interface font size and widget padding by 5%."),
-                ShortcutItem("Ctrl + = / Cmd + =", "Increase GUI Scale", "Increases interface font size and widget padding by 5%."),
+                ShortcutItem("Ctrl + - / Cmd + -", "Decrease Preset Name Size", "Reduces Library browser preset name font size by 10% (80%–120%)."),
+                ShortcutItem("Ctrl + = / Cmd + =", "Increase Preset Name Size", "Increases Library browser preset name font size by 10% (80%–120%)."),
                 ShortcutItem("Ctrl + R / Cmd + R", "Start / Stop Recording", "Toggles live master output recording to MP4 video.")
             )
         )

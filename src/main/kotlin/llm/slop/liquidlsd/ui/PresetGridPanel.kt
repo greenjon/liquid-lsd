@@ -74,9 +74,8 @@ object PresetGridPanel {
     private const val BOX_PADDING_X = 6f
 
     fun getKebabWidth(session: llm.slop.liquidlsd.SessionContext): Float {
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val scrollbarW = ImGui.getStyle().scrollbarSize
-        return maxOf(19f * fontScale, scrollbarW)
+        return maxOf(18f, scrollbarW)
     }
 
     fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState): Float {
@@ -96,8 +95,7 @@ object PresetGridPanel {
             PresetGridTabs.calculateSectionTabsWidth(session, state, activeDeck)
         } else 0f
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val baseLabelW = 160f * fontScale
+        val baseLabelW = 152f
         val labelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
 
         val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
@@ -167,8 +165,7 @@ object PresetGridPanel {
         } else 0f
 
         val avail = ImGui.getContentRegionAvailX()
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val baseLabelW = 160f * fontScale
+        val baseLabelW = 152f
         val idealLabelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
         val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (isMidiVisible) "midi" else "value"
@@ -503,9 +500,8 @@ object PresetGridPanel {
         }
         val cx = kebabX + kebabW * 0.5f
         val cy = startY + headerH * 0.5f
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val r = 1.9f * fontScale
-        val dotSpacing = 5.5f * fontScale
+        val r = 1.8f
+        val dotSpacing = 5.2f
         dl.addCircleFilled(cx, cy - dotSpacing, r, dotCol)
         dl.addCircleFilled(cx, cy, r, dotCol)
         dl.addCircleFilled(cx, cy + dotSpacing, r, dotCol)
@@ -513,9 +509,9 @@ object PresetGridPanel {
         // If any column needed by the patch is missing or engine is off, draw red [!] badge
         if (anyMissing) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                val badgeX = cx + 5.5f * fontScale
-                val badgeY = cy - 5.5f * fontScale
-                dl.addCircleFilled(badgeX, badgeY, 5f * fontScale, ImGui.colorConvertFloat4ToU32(0.85f, 0.15f, 0.15f, 0.95f))
+                val badgeX = cx + 5.2f
+                val badgeY = cy - 5.2f
+                dl.addCircleFilled(badgeX, badgeY, 4.75f, ImGui.colorConvertFloat4ToU32(0.85f, 0.15f, 0.15f, 0.95f))
                 val alertText = "!"
                 val alertW = ImGui.calcTextSize(alertText).x
                 val alertH = ImGui.getTextLineHeight()
@@ -665,16 +661,14 @@ object PresetGridPanel {
         val isDeckPV = deckLabel == "Deck PV"
         val deckColorU32 = PresetGridTabs.getDeckColor(deckLabel, 1f)
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-
         val availW = ImGui.getContentRegionAvailX()
-        val cardW = (availW - 16f).coerceIn(160f, 360f * fontScale).coerceAtMost(availW)
+        val cardW = (availW - 16f).coerceIn(160f, 342f).coerceAtMost(availW)
         val paddingX = ((availW - cardW) * 0.5f).coerceAtLeast(0f)
 
-        ImGui.dummy(0f, 12f * fontScale)
+        ImGui.dummy(0f, 11.4f)
         ImGui.indent(paddingX)
 
-        val cardH = (220f * fontScale).coerceAtLeast(180f)
+        val cardH = 209f
         if (ImGui.beginChild("##launchpad_$deckLabel", cardW, cardH, true)) {
             ImGui.spacing()
             ImGui.spacing()
@@ -698,9 +692,9 @@ object PresetGridPanel {
 
             val availBtnW = ImGui.getContentRegionAvailX()
             val buttonWidth = availBtnW
-            val buttonHeight = (32f * fontScale).coerceAtLeast(26f)
+            val buttonHeight = 30.4f
 
-            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 6f * fontScale)
+            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 5.7f)
 
             // --- Button 1: Add Visual Source ---
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.22f, 0.30f, 1f))

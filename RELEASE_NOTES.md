@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.41
+
+> [!NOTE]
+> **Release 1.0.0-beta.41** brings a fixed 95% global UI typography scale, dedicated Library preset name scaling, inside-clustered monitor overlays with 4-channel physical console level faders and preview dimming, multi-resolution application icons and FreeDesktop launcher integration with Wayland/X11 app IDs, sticky two-row Library column headers, redesigned single-handle Master Crossfader, minimum 1280×720 window bounds, unified column visibility driven directly by engine subsystems, and hex-planar / tetrahedral 24-chamber kaleidoscope 3D modes.
+
+### Fixed 95% UI Scale & Focused Library Preset Sizing (`UITheme.kt`, `AppSettings.kt`, `SettingsPanel.kt`, `GridMetrics.kt`, `UIManager.kt`)
+- **Permanently Fixed 95% Global UI Scale**:
+  - Pinned all application typography to exact pixel sizes at 95% scale: Caption 12px, Body 14px, Code 14px, H3 15px, H2 18px, H1 22px, baseSize 14.25px.
+  - Eliminated dynamic `(baseSize / 15f)` runtime scaling calculations across 14+ UI panels (`PresetGridPanel`, `AudioEnginePanel`, `CellConfigPanel`, `CustomRangeSlider`, `BeatDivisionSlider`, `Lfo1Section`, `Lfo2Section`, `ModulatorHeaderRow`, `OscilloscopeDrawer`, etc.).
+- **Deprecation & Removal of Grid Knob Cell Scale**:
+  - Completely removed the non-functional `gridCellRatio` setting and UI slider.
+  - Precalculated `GridMetrics` into a singleton `INSTANCE` at 95% scale (`cell = 33.25f`), eliminating per-frame heap allocations during Preset Grid rendering.
+- **Dedicated Library Preset Name Sizing**:
+  - Introduced `presetNameScalePercent` (80%–120%, default 100%, 10% step) to scale preset names in the Library (`PresetListPanel`), Playlist Editor (`PlaylistEditorPanel`), and Play Queues (`QueueActionsPanel`, `BgQueueActionsPanel`) without altering performance controls or deck headers. 10% steps ensure each step produces a distinct, pixel-aligned font size without glyph bounding box collisions.
+  - Added an informational typography hierarchy display in `Settings > Appearance` alongside the new "Preset Name Size" slider.
+- **Repurposed Zoom Shortcuts**:
+  - Shortcuts `Ctrl + -` and `Ctrl + =` (`Cmd + -` and `Cmd + =` on macOS, with keypad +/- support) now adjust Library preset name scale in 10% increments.
+
 ### Clustered Monitor Overlays & 4-Channel Level Faders (`DeckControlPanel.kt`, `MixerMonitorPanel.kt`, `Mixer.kt`, `Renderer.kt`, `mixer.frag`)
 - **4-Channel Console Level Faders**:
   - Added non-modulatable 0.0–1.0 channel level multipliers (`levelA`, `levelB`, `levelBG`, `levelPV`, `masterLevel`) to `Mixer`.

@@ -110,8 +110,7 @@ object AudioEnginePanel {
             ImGui.separator()
             ImGui.spacing()
 
-            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-            val sliderBoxW = 52f * fontScale
+            val sliderBoxW = 50f
 
             val bpm = audioEngine.getEstimatedBpm()
             val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
@@ -190,8 +189,7 @@ object AudioEnginePanel {
 
         ImGui.spacing()
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val sliderBoxW = 52f * fontScale // ~20% smaller than standard 65f
+        val sliderBoxW = 50f // ~20% smaller than standard 65f
 
         val tableFlags = ImGuiTableFlags.SizingStretchSame
         if (ImGui.beginTable("##audio_engine_2col_table", 2, tableFlags)) {

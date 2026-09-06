@@ -326,11 +326,9 @@ class UIManager(
 
         if (pendingFontRebuild) {
             pendingFontRebuild = false
-            val currentBaseSize = session.uiTheme.baseSize
             session.uiTheme.rebuildFonts(ImGui.getIO())
             imguiGl3.updateFontsTexture()
-            UIThemeStyler.scaleStyleFromDefault(defaultStyle, currentBaseSize)
-            logger.info { "Font size applied: ${currentBaseSize}px (guiScale=${session.uiTheme.guiScalePercent}%)" }
+            logger.info { "Preset font size applied (presetNameScalePercent=${session.uiTheme.presetNameScalePercent}%)" }
         }
 
         imguiGlfw.newFrame()
@@ -365,7 +363,7 @@ class UIManager(
             drawLayout(mixer, displayWidth, displayHeight)
 
             SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newPct ->
-                applyGuiScalePercent(newPct)
+                applyPresetNameScale(newPct)
             }
 
             VideoExportModal.draw(session, mixer, renderer, displayWidth, displayHeight)
@@ -394,21 +392,25 @@ class UIManager(
         logger.info { "Window content scale changed: ${clamped}x" }
     }
 
-    fun applyGuiScalePercent(newPct: Int) {
-        val clamped = newPct.coerceIn(75, 200)
-        if (clamped != session.uiTheme.guiScalePercent) {
-            session.uiTheme.guiScalePercent = clamped
+    fun applyPresetNameScale(newPct: Int) {
+        val clamped = (kotlin.math.round(newPct / 10f) * 10).toInt().coerceIn(80, 120)
+        if (clamped != session.uiTheme.presetNameScalePercent) {
+            session.uiTheme.presetNameScalePercent = clamped
             pendingFontRebuild = true
+            if (SettingsPanel.isOpen) {
+                pendingOpenSettings = true
+                pendingOpenSettingsCategory = SettingsPanel.activeCategory
+            }
             session.uiTheme.saveSettings()
-            logger.info { "User GUI scale changed to: ${clamped}%, scheduling font rebuild (effective baseSize=${session.uiTheme.baseSize}px)" }
+            logger.info { "User preset name scale changed to: $clamped%, scheduling font rebuild" }
         }
     }
 
-    fun adjustFontSize(delta: Float) {
-        val step = 5
-        val currentPct = session.uiTheme.guiScalePercent
-        val targetPct = if (delta > 0) currentPct + step else currentPct - step
-        applyGuiScalePercent(targetPct)
+    fun adjustPresetNameScale(delta: Float) {
+        val step = 10
+        val currentPct = session.uiTheme.presetNameScalePercent
+        val targetPct = (if (delta > 0) currentPct + step else currentPct - step).coerceIn(80, 120)
+        applyPresetNameScale(targetPct)
     }
 
     fun triggerExitFlow() {

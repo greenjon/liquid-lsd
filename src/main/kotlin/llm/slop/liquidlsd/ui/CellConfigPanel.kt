@@ -52,7 +52,7 @@ object CellConfigPanel {
             availableTabs.add("Audio" to "audio")
         }
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val fontScale = 0.95f
         val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f * fontScale, 4f * fontScale)
@@ -243,7 +243,7 @@ object CellConfigPanel {
                 
                 // For Audio Slot 2 when inactive/virtual: render a clean collapsed enable bar
                 if (cvId == "audio" && idx == 1 && idx >= activeMods.size) {
-                    val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+                    val fontScale = 0.95f
                     val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.28f, 0.28f, 1f))

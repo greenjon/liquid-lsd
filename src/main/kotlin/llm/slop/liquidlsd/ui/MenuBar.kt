@@ -263,10 +263,9 @@ class MenuBar(
         val showAudio = audioActive && session.uiTheme.audioEngineEnabled && audioLatency > 0.0f
         val showBeatDots = true
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-        val dotR = 3.5f * fontScale
-        val dotGap = 7f * fontScale
-        val dotsTotalW = (dotR * 2f * 4f) + (dotGap * 3f) + (10f * fontScale)
+        val dotR = 3.3f
+        val dotGap = 6.6f
+        val dotsTotalW = (dotR * 2f * 4f) + (dotGap * 3f) + 9.5f
 
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
         val bpmText = "BPM: %3.0f  ".format(bpm)
@@ -276,7 +275,7 @@ class MenuBar(
         val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
 
         val isFrameless = session.uiTheme.framelessWindow && windowFrameController != null
-        val btnW = (24f * fontScale).coerceIn(24f, 40f)
+        val btnW = 24f
         val btnH = ImGui.getFrameHeight()
         val windowBtnsW = if (isFrameless) (btnW * 3f) + (4f * 2f) + 12f else 0f
 
@@ -342,7 +341,7 @@ class MenuBar(
                     }
                 }
 
-                ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - (4f * fontScale), textH)
+                ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - 3.8f, textH)
                 if (ImGui.isItemClicked()) {
                     onOpenAudioEngineMonitor()
                 }
@@ -353,7 +352,7 @@ class MenuBar(
                         ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nClick to open Audio Engine settings.")
                     }
                 }
-                ImGui.sameLine(0f, 4f * fontScale)
+                ImGui.sameLine(0f, 3.8f)
             }
 
             // ── BPM ───────────────────────────────────────────────────────────────

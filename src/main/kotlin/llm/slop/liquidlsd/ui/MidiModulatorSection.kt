@@ -24,7 +24,6 @@ object MidiModulatorSection {
             val ch = parts[0].toIntOrNull() ?: 0
             val cc = parts[1].toIntOrNull() ?: 0
             val liveVal = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(ch, cc)
-            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
 
             session.uiTheme.caption("Assigned MIDI Target: Channel ${ch + 1}, CC $cc (Live: ${"%.2f".format(liveVal)})")
             ImGui.spacing()

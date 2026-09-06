@@ -424,11 +424,10 @@ object OscilloscopeDrawer {
         val currentIdx = availableTimebases.indexOf(currentTimebase).coerceAtLeast(0)
         timebaseComboIndex.set(currentIdx)
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
         val maxLabelWidth = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             timebaseLabels.maxOfOrNull { ImGui.calcTextSize(it).x } ?: 40f
         }
-        val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 18f * fontScale).coerceAtLeast(80f * fontScale)
+        val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 17f).coerceAtLeast(76f)
 
         ImGui.pushItemWidth(comboWidth)
         if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", timebaseComboIndex, timebaseLabels)) {
@@ -444,7 +443,7 @@ object OscilloscopeDrawer {
         }
         ImGui.popItemWidth()
 
-        ImGui.sameLine(0f, 8f * fontScale)
+        ImGui.sameLine(0f, 7.6f)
         val infoLabel = if (currentTimebase == ScopeTimebase.AUTO) {
             "Auto (${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")})"
         } else {
@@ -456,7 +455,7 @@ object OscilloscopeDrawer {
         if (activeMods.isNotEmpty()) {
             val isMuted = activeMods.all { it.bypassed }
             val btnText = if (isMuted) "[ MUTED ]" else "[ LIVE ]"
-            val btnW = (ImGui.calcTextSize(btnText).x + 16f * fontScale).coerceAtLeast(60f * fontScale)
+            val btnW = (ImGui.calcTextSize(btnText).x + 15.2f).coerceAtLeast(57f)
             val btnH = ImGui.getFrameHeight()
 
             ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - btnW)

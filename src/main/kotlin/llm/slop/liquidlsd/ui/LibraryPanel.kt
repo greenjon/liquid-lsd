@@ -174,9 +174,8 @@ object LibraryPanel {
 
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
-            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-            val btnH = (22f * fontScale).coerceIn(18f, 28f)
-            val bottomSpacing = (2.5f * fontScale).coerceIn(2f, 4f)
+            val btnH = 21f
+            val bottomSpacing = 2.5f
             val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
             // Centered Action Toolbar

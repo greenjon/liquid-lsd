@@ -36,7 +36,7 @@ object UITheme {
 
     // -- Semantic Levels -------------------------------------------------------
 
-    enum class FontLevel { H1, H2, H3, BODY, CAPTION, CODE }
+    enum class FontLevel { H1, H2, H3, BODY, CAPTION, CODE, PRESET_NAME }
 
     enum class AutoVjDirtyBehavior { SKIP, AUTO_DISCARD, AUTO_SAVE }
 
@@ -70,7 +70,18 @@ object UITheme {
         STRETCH("Stretch")
     }
 
-    // -- Mutable sizing knobs (user-tweakable from Settings later) -------------
+    // -- Sizing knobs & typography constants -----------------------------------
+
+    const val FONT_CAPTION = 12f
+    const val FONT_BODY    = 14f
+    const val FONT_CODE    = 14f
+    const val FONT_H3      = 15f
+    const val FONT_H2      = 18f
+    const val FONT_H1      = 22f
+
+    const val BASE_FONT_PX = 14f
+    const val BASE_SIZE    = 14.25f
+    val baseSize: Float get() = BASE_SIZE
 
     @Volatile
     var settings = AppSettings()
@@ -79,14 +90,9 @@ object UITheme {
         get() = settings.theme
         set(value) { settings = settings.copy(theme = value) }
 
-    const val BASE_FONT_PX = 15f
-
-    var guiScalePercent: Int
-        get() = settings.guiScalePercent
-        set(value) { settings = settings.copy(guiScalePercent = value.coerceIn(75, 200)) }
-
-    val baseSize: Float
-        get() = BASE_FONT_PX * (guiScalePercent / 100f)
+    var presetNameScalePercent: Int
+        get() = settings.presetNameScalePercent
+        set(value) { settings = settings.copy(presetNameScalePercent = (kotlin.math.round(value / 10f) * 10).toInt().coerceIn(80, 120)) }
 
     var audioEngineEnabled: Boolean
         get() = settings.audioEngineEnabled
@@ -178,10 +184,6 @@ object UITheme {
         get() = settings.lastCustomLibraryRatio
         set(value) { settings = settings.copy(lastCustomLibraryRatio = value) }
 
-    var gridCellRatio: Float
-        get() = settings.gridCellRatio
-        set(value) { settings = settings.copy(gridCellRatio = value) }
-
     var renderResolutionPreset: ResolutionPreset
         get() = settings.renderResolutionPreset
         set(value) { settings = settings.copy(renderResolutionPreset = value) }
@@ -271,16 +273,10 @@ object UITheme {
             if (settingsFile.exists()) {
                 val props = Properties()
                 settingsFile.inputStream().use { props.load(it) }
-                val savedPct = props.getProperty("guiScalePercent")?.toIntOrNull()
-                if (savedPct != null) {
-                    guiScalePercent = savedPct.coerceIn(75, 200)
-                    logger.info { "Loaded guiScalePercent from settings file: $guiScalePercent%" }
-                } else {
-                    val savedSize = props.getProperty("baseSize")?.toFloatOrNull()
-                    if (savedSize != null) {
-                        guiScalePercent = ((savedSize / BASE_FONT_PX) * 100f).toInt().coerceIn(75, 200)
-                        logger.info { "Migrated baseSize ($savedSize px) to guiScalePercent: $guiScalePercent%" }
-                    }
+                val savedPresetScale = props.getProperty("presetNameScalePercent")?.toIntOrNull()
+                if (savedPresetScale != null) {
+                    presetNameScalePercent = (kotlin.math.round(savedPresetScale / 10f) * 10).toInt().coerceIn(80, 120)
+                    logger.info { "Loaded presetNameScalePercent from settings file: $presetNameScalePercent%" }
                 }
                 val savedAudio = props.getBoolean("audioEngineEnabled")
                 if (savedAudio != null) {
@@ -417,7 +413,6 @@ object UITheme {
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { col2Ratio = it.coerceIn(0.10f, 0.70f) }
                 (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { libraryRatio = it.coerceIn(0.10f, 0.90f) }
                 (props.getProperty("lastCustomLibraryRatio") ?: props.getProperty("lastCustomAssetBrowserRatio"))?.toFloatOrNull()?.let { lastCustomLibraryRatio = it.coerceIn(0.10f, 0.90f) }
-                props.getProperty("gridCellRatio")?.toFloatOrNull()?.let { gridCellRatio = it.coerceIn(0.70f, 2.00f) }
                 props.getProperty("renderResolutionPreset")?.let { saved ->
                     renderResolutionPreset = try { ResolutionPreset.valueOf(saved) } catch (e: Exception) { ResolutionPreset.RES_1080P }
                 }
@@ -434,7 +429,7 @@ object UITheme {
                 props.getProperty("settingsHeight")?.toFloatOrNull()?.let { settingsHeight = it.coerceIn(300f, 2160f) }
                 props.getBoolean("framelessWindow")?.let { framelessWindow = it }
             } else {
-                logger.info { "No settings file found, using default baseSize: $baseSize, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
+                logger.info { "No settings file found, using defaults: fixed UI 95%, presetNameScalePercent: $presetNameScalePercent%, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
             }
         } catch (e: Exception) {
             logger.warn(e) { "Failed to load settings, using defaults" }
@@ -447,8 +442,7 @@ object UITheme {
             if (settingsFile.exists()) {
                 settingsFile.inputStream().use { props.load(it) }
             }
-            props.setProperty("guiScalePercent", guiScalePercent.toString())
-            props.setProperty("baseSize", baseSize.toString())
+            props.setProperty("presetNameScalePercent", presetNameScalePercent.toString())
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
             props.setProperty("audioBackend", AudioEngine.backendMode.name)
             props.setProperty("audioDeviceName", AudioEngine.selectedDeviceName ?: "")
@@ -481,7 +475,6 @@ object UITheme {
             props.setProperty("col2Ratio", col2Ratio.toString())
             props.setProperty("libraryRatio", libraryRatio.toString())
             props.setProperty("lastCustomLibraryRatio", lastCustomLibraryRatio.toString())
-            props.setProperty("gridCellRatio", gridCellRatio.toString())
             props.setProperty("renderResolutionPreset", renderResolutionPreset.name)
             props.setProperty("customRenderWidth", customRenderWidth.toString())
             props.setProperty("customRenderHeight", customRenderHeight.toString())
@@ -507,23 +500,15 @@ object UITheme {
         }
     }
 
-    /** Per-level multipliers. Changing these + calling rebuildFonts() is all
-     *  the Settings panel needs to do. */
-    var multH1:      Float = 1.60f
-    var multH2:      Float = 1.30f
-    var multH3:      Float = 1.12f
-    var multBody:    Float = 1.00f
-    var multCaption: Float = 0.85f
-    var multCode:    Float = 1.00f   // code always body-sized but different face
-
     // -- Loaded fonts (initialised by loadFonts) -------------------------------
 
-    private lateinit var fontH1:      ImFont
-    private lateinit var fontH2:      ImFont
-    private lateinit var fontH3:      ImFont
-    private lateinit var fontBody:    ImFont
-    private lateinit var fontCaption: ImFont
-    private lateinit var fontCode:    ImFont
+    private lateinit var fontH1:         ImFont
+    private lateinit var fontH2:         ImFont
+    private lateinit var fontH3:         ImFont
+    private lateinit var fontBody:       ImFont
+    private lateinit var fontCaption:    ImFont
+    private lateinit var fontCode:       ImFont
+    private lateinit var fontPresetName: ImFont
 
     // Keep raw bytes of loaded fonts and ranges permanently alive to prevent GC/JNI unpinning segfaults
     private var regularBytes: ByteArray? = null
@@ -580,7 +565,7 @@ object UITheme {
     }
 
     /**
-     * Loads all six font levels into ImGui's font atlas.
+     * Loads all font levels into ImGui's font atlas.
      * Must be called after [ImGui.createContext] but before the GL3 backend
      * initialises (i.e. before [imguiGl3.init]), or after a [rebuildFonts]
      * cycle (atlas clear -> reload -> GL3 re-upload).
@@ -620,37 +605,33 @@ object UITheme {
             return f
         }
 
-        // Load each level; bodies/captions/H3 use icons, large headers and code don't duplicate icons.
-        fontBody    = addFont(regularBytes!!, baseSize * multBody,    cfg(), withIcons = true)
-        fontCaption = addFont(regularBytes!!, baseSize * multCaption, cfg(), withIcons = true)
-        fontH3      = addFont(mediumBytes!!,  baseSize * multH3,      cfg(), withIcons = true)
-        fontH2      = addFont(boldBytes!!,    baseSize * multH2,      cfg(), withIcons = false)
-        fontH1      = addFont(boldBytes!!,    baseSize * multH1,      cfg(), withIcons = false)
-        fontCode    = addFont(codeBytes!!,    baseSize * multCode,    cfg(), withIcons = false)
+        // Fixed semantic fonts (95% UI baseline)
+        fontBody       = addFont(regularBytes!!, FONT_BODY,    cfg(), withIcons = true)
+        fontCaption    = addFont(regularBytes!!, FONT_CAPTION, cfg(), withIcons = true)
+        fontH3         = addFont(mediumBytes!!,  FONT_H3,      cfg(), withIcons = true)
+        fontH2         = addFont(boldBytes!!,    FONT_H2,      cfg(), withIcons = false)
+        fontH1         = addFont(boldBytes!!,    FONT_H1,      cfg(), withIcons = false)
+        fontCode       = addFont(codeBytes!!,    FONT_CODE,    cfg(), withIcons = false)
+
+        val presetFontSize = (FONT_BODY * (presetNameScalePercent / 100f)).coerceIn(10f, 22f)
+        fontPresetName = addFont(regularBytes!!, presetFontSize, cfg(), withIcons = true)
 
         isLoaded = true
         logger.info {
-            "UITheme fonts loaded -- base=${baseSize}px  " +
-            "H1=${(baseSize * multH1).toInt()}  H2=${(baseSize * multH2).toInt()}  " +
-            "H3=${(baseSize * multH3).toInt()}  Body=${(baseSize * multBody).toInt()}  " +
-            "Caption=${(baseSize * multCaption).toInt()}  Code=${(baseSize * multCode).toInt()}"
+            "UITheme fonts loaded -- H1=${FONT_H1}px  H2=${FONT_H2}px  H3=${FONT_H3}px  Body=${FONT_BODY}px  Caption=${FONT_CAPTION}px  Code=${FONT_CODE}px  PresetName=${presetFontSize}px ($presetNameScalePercent%)"
         }
     }
 
     /**
-     * Clears the font atlas and reloads all fonts at the current [baseSize] /
-     * multiplier values. Call this from the Settings panel whenever the user
-     * commits a size change. The GL3 backend will detect the atlas dirty flag
-     * and re-upload the texture on the very next frame.
+     * Clears the font atlas and reloads all fonts at their configured sizes.
+     * Call this whenever the user commits a preset name font size change.
      */
     fun rebuildFonts(io: ImGuiIO) {
         isLoaded = false
         io.fonts.clear()
         loadFonts(io)
-        // Instruct the backend to re-upload by clearing the cached texture.
-        // imgui-java's ImGuiImplGl3 checks for this automatically each frame.
         io.fonts.build()
-        logger.info { "UITheme fonts rebuilt at baseSize=$baseSize" }
+        logger.info { "UITheme fonts rebuilt (presetNameScalePercent=$presetNameScalePercent%)" }
     }
 
     // -- Core rendering primitive ----------------------------------------------
@@ -658,12 +639,13 @@ object UITheme {
     /** Resolve a [FontLevel] to its loaded [ImFont]. Falls back to the ImGui
      *  default font if [loadFonts] has not been called yet. */
     fun fontFor(level: FontLevel): ImFont? = if (!isLoaded) null else when (level) {
-        FontLevel.H1      -> fontH1
-        FontLevel.H2      -> fontH2
-        FontLevel.H3      -> fontH3
-        FontLevel.BODY    -> fontBody
-        FontLevel.CAPTION -> fontCaption
-        FontLevel.CODE    -> fontCode
+        FontLevel.H1          -> fontH1
+        FontLevel.H2          -> fontH2
+        FontLevel.H3          -> fontH3
+        FontLevel.BODY        -> fontBody
+        FontLevel.CAPTION     -> fontCaption
+        FontLevel.CODE        -> fontCode
+        FontLevel.PRESET_NAME -> fontPresetName
     }
 
     /**

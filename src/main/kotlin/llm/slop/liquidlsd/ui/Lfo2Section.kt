@@ -32,7 +32,7 @@ object Lfo2Section {
         val modeLabels = arrayOf("AM (Depth)", "PM (Phase)", "ADD (Additive)")
         val modeIdx = ImInt(if (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
 
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val fontScale = 0.95f
         val isLfo2Active = (currentMode != llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
         val dirtyMarker = if (isLfo2Active) " [ON] •" else ""
         val lfo2Title = "${if (existing.sourceId == "lfo") "LFO 2 (Modulator)" else "Oscillator 2 (Modulator)"}$dirtyMarker###lfo2_header"

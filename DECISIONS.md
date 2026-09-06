@@ -2,6 +2,26 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Fixed 95% Global UI Scale, Removal of Grid Cell Ratio, and Dedicated Library Preset Sizing (`UITheme.kt`, `AppSettings.kt`, `SettingsPanel.kt`, `GridMetrics.kt`, `UIManager.kt`, `PresetListPanel.kt`)
+
+- **Decision**: Permanently fix the global UI scale at 95% across all panels and controls, remove arbitrary runtime UI scaling and the non-functional `gridCellRatio`, and introduce a dedicated, bounded user control (80%–120%) exclusively for preset name sizing in the Library:
+  - **Fixed 95% Semantic Typography Hierarchy**: Defined exact pixel values for all core font levels at 95% scaling:
+    - Caption: 12px
+    - Body: 14px
+    - Code: 14px
+    - H3: 15px
+    - H2: 18px
+    - H1: 22px
+    - Baseline size: 14.25px (95% of 15px baseline)
+  - **Zero Dynamic Font Scaling Overhead**: Replaced per-frame `baseSize / 15f` runtime scaling calculations across 14+ UI panels (`PresetGridPanel`, `AudioEnginePanel`, `CellConfigPanel`, `CustomRangeSlider`, `BeatDivisionSlider`, `Lfo1Section`, `Lfo2Section`, `ModulatorHeaderRow`, `OscilloscopeDrawer`, etc.) with fixed constants or precalculated metrics.
+  - **Removal of Grid Knob Cell Scale (`gridCellRatio`)**: Deprecated and completely removed `gridCellRatio` from settings, persistence, and UI. Precalculated `GridMetrics` into a singleton `INSTANCE` at 95% scale (`cell = 33.25f`), eliminating per-frame heap allocations during grid rendering.
+  - **Focused Library Preset Name Sizing (`presetNameScalePercent`)**: Added `presetNameScalePercent` (range 80% to 120%, default 100%, 10% step) to `AppSettings` and `UITheme`. Added `FontLevel.PRESET_NAME` which renders preset items in `PresetListPanel`, `PlaylistEditorPanel`, `QueueActionsPanel`, and `BgQueueActionsPanel` with proportional font scaling. Deck headers remain fixed at standard size. 10% steps guarantee that each step rasterizes to a distinct integer pixel size without glyph height collisions.
+  - **Repurposed Zoom Shortcuts**: `Ctrl + -` and `Ctrl + =` (`Cmd + -` and `Cmd + =` on macOS, with keypad +/- support) now adjust Library preset name scale in 10% increments rather than rebuilding global UI fonts.
+- **Rationale**:
+  - Eliminates visual glitches, overlapping text boxes, and layout instability caused by arbitrary global scaling in immediate-mode ImGui layouts.
+  - Aligns with standard audio/VJ software paradigms (e.g. Mixxx) where typography scaling is focused on high-density library lists rather than the fixed-geometry performance controls.
+  - Removes unnecessary garbage collection overhead and continuous font atlas rebuilds.
+
 ## Clustered Monitor Overlays, Channel Level Faders, and Single-Row Master Controls (`DeckControlPanel.kt`, `MixerMonitorPanel.kt`, `Mixer.kt`, `Renderer.kt`, `mixer.frag`)
 
 - **Decision**: Redesign the 4 deck monitors and main output monitor with inside-clustered overlays, physical mixer channel level faders, and streamlined single-row crossfader controls:

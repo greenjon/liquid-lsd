@@ -138,7 +138,13 @@ object PresetListPanel {
             if (hasIssues && !isSelected) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.95f, 0.40f, 0.40f, 1f)
             }
-            if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
+            var itemClicked = false
+            session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
+                if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
+                    itemClicked = true
+                }
+            }
+            if (itemClicked) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
             if (hasIssues && !isSelected) {

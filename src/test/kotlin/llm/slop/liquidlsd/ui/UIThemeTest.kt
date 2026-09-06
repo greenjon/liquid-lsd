@@ -22,7 +22,7 @@ class UIThemeTest {
         }
 
         try {
-            UITheme.guiScalePercent = 160
+            UITheme.presetNameScalePercent = 110
             UITheme.showMidiCol = false
             UITheme.showLfoCol = true
             UITheme.showAudioCol = false
@@ -42,7 +42,7 @@ class UIThemeTest {
             assertTrue(settingsFile.exists(), "Settings file should be written")
 
             // Reset values to defaults in memory
-            UITheme.guiScalePercent = 100
+            UITheme.presetNameScalePercent = 100
             UITheme.showMidiCol = true
             UITheme.showLfoCol = false
             UITheme.showAudioCol = true
@@ -63,8 +63,8 @@ class UIThemeTest {
             loadMethod.invoke(UITheme)
 
             // Assert restored values match what was saved
-            assertEquals(160, UITheme.guiScalePercent)
-            assertEquals(24.0f, UITheme.baseSize)
+            assertEquals(110, UITheme.presetNameScalePercent)
+            assertEquals(14.25f, UITheme.baseSize)
             assertFalse(UITheme.showMidiCol)
             assertTrue(UITheme.showLfoCol)
             assertFalse(UITheme.showAudioCol)
@@ -83,39 +83,6 @@ class UIThemeTest {
 
         } finally {
             // Restore original settings file if backed up, or delete test file
-            if (hadBackup && backupFile.exists()) {
-                backupFile.copyTo(settingsFile, overwrite = true)
-                backupFile.delete()
-            } else {
-                settingsFile.delete()
-            }
-            val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-            loadMethod.isAccessible = true
-            loadMethod.invoke(UITheme)
-        }
-    }
-
-    @Test
-    fun testLegacyBaseSizeMigration() {
-        val settingsFile = File("lsd-settings.properties")
-        val backupFile = File("lsd-settings.properties.bak")
-        var hadBackup = false
-        if (settingsFile.exists()) {
-            settingsFile.copyTo(backupFile, overwrite = true)
-            hadBackup = true
-        }
-
-        try {
-            // Write legacy settings file with baseSize but no guiScalePercent
-            settingsFile.writeText("baseSize=22.5\n")
-
-            val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-            loadMethod.isAccessible = true
-            loadMethod.invoke(UITheme)
-
-            // 22.5px / 15px = 1.5 -> 150%
-            assertEquals(150, UITheme.guiScalePercent)
-        } finally {
             if (hadBackup && backupFile.exists()) {
                 backupFile.copyTo(settingsFile, overwrite = true)
                 backupFile.delete()
@@ -213,29 +180,39 @@ class UIThemeTest {
 
     @Test
     fun testFontSizeBoundaries() {
-        // Scale range: 75 %–200 % of BASE_PX=15f
-        UITheme.guiScalePercent = 50 // below min
-        assertEquals(75, UITheme.guiScalePercent)
-        assertEquals(11.25f, UITheme.baseSize)
+        // Preset name scale range: 80%–120%
+        UITheme.presetNameScalePercent = 50 // below min
+        assertEquals(80, UITheme.presetNameScalePercent)
 
-        UITheme.guiScalePercent = 250 // above max
-        assertEquals(200, UITheme.guiScalePercent)
-        assertEquals(30.0f, UITheme.baseSize)
+        UITheme.presetNameScalePercent = 250 // above max
+        assertEquals(120, UITheme.presetNameScalePercent)
 
-        // 100 % = 15 px (default baseline)
-        UITheme.guiScalePercent = 100
-        assertEquals(15f, UITheme.baseSize)
+        // 100% default
+        UITheme.presetNameScalePercent = 100
+        assertEquals(100, UITheme.presetNameScalePercent)
 
-        // 150 % user scale = 22.5 px
-        UITheme.guiScalePercent = 150
-        assertEquals(22.5f, UITheme.baseSize)
+        // 110% user scale
+        UITheme.presetNameScalePercent = 110
+        assertEquals(110, UITheme.presetNameScalePercent)
 
-        // 75 % and 200 % round-trip through pctToPx
-        assertEquals(11.25f, SettingsPanel.pctToPx(75))
-        assertEquals(30f,    SettingsPanel.pctToPx(200))
+        // Snaps to multiples of 10
+        UITheme.presetNameScalePercent = 104
+        assertEquals(100, UITheme.presetNameScalePercent)
+        UITheme.presetNameScalePercent = 106
+        assertEquals(110, UITheme.presetNameScalePercent)
+
+        // UITheme semantic font size constants
+        assertEquals(12f, UITheme.FONT_CAPTION)
+        assertEquals(14f, UITheme.FONT_BODY)
+        assertEquals(14f, UITheme.FONT_CODE)
+        assertEquals(15f, UITheme.FONT_H3)
+        assertEquals(18f, UITheme.FONT_H2)
+        assertEquals(22f, UITheme.FONT_H1)
+        assertEquals(14.25f, UITheme.BASE_SIZE)
+        assertEquals(14.25f, UITheme.baseSize)
 
         // Reset to default
-        UITheme.guiScalePercent = 100
+        UITheme.presetNameScalePercent = 100
     }
 
     @Test

@@ -25,7 +25,7 @@ object Lfo1Section {
         val showWaveform = hasAdvanced && (!isSnh || isGen)
 
         if (showWaveform) {
-            val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+            val fontScale = 0.95f
             val btnW = 35f * fontScale
             val btnH = ImGui.getFrameHeight()
 

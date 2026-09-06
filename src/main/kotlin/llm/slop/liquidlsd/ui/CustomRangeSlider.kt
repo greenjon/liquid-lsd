@@ -248,7 +248,7 @@ object CustomRangeSlider {
         val startY = ImGui.getCursorScreenPosY()
         
         val buttonSize = ImGui.getFrameHeight()
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val fontScale = 0.95f
         val captionHeight = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
         
         val labelY = startY + 2f * fontScale

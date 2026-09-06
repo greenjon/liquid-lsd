@@ -237,7 +237,13 @@ object PlaylistEditorPanel {
             val availW = ImGui.getContentRegionAvailX()
             val itemW = (availW - btnW).coerceAtLeast(10f)
 
-            if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
+            var itemClicked = false
+            session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
+                if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
+                    itemClicked = true
+                }
+            }
+            if (itemClicked) {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()

@@ -78,7 +78,7 @@ object SeqSection {
         themeColor: Int,
         onReplace: (CvModulator) -> Unit
     ) {
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val fontScale = 0.95f
         val isBipolar = param.minClamp < 0f
         val stepMinLimit = if (isBipolar) -1.0f else 0.0f
         val stepMaxLimit = 1.0f

@@ -196,7 +196,7 @@ fun main(args: Array<String>) {
     val yScaleBuf = FloatArray(1)
     glfwGetWindowContentScale(window, xScaleBuf, yScaleBuf)
     val startupScale = xScaleBuf[0].coerceAtLeast(1.0f)
-    logger.info { "Display content scale detected: ${startupScale}x → Base UI font size ${UITheme.baseSize}px (userScale=${UITheme.guiScalePercent}%)" }
+    logger.info { "Display content scale detected: ${startupScale}x → UI fixed at 95% (Cap 12, Body 14, H3 15, H2 18, H1 22 px), PresetName=${UITheme.presetNameScalePercent}%" }
 
     glfwMakeContextCurrent(window)
     glfwSwapInterval(1) // Enable vsync
@@ -343,7 +343,9 @@ fun main(args: Array<String>) {
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
-        val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_EQUAL)
+        val isMinus = key == GLFW_KEY_MINUS || key == GLFW_KEY_KP_SUBTRACT
+        val isEqual = key == GLFW_KEY_EQUAL || key == GLFW_KEY_KP_ADD
+        val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (isMinus || isEqual)
         val isRecordHotKey = (mods and GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_R
         val isEscapeFullscreen = key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
@@ -352,10 +354,10 @@ fun main(args: Array<String>) {
 
         if (action == GLFW_PRESS) {
             if (isFontSizeHotKey) {
-                if (key == GLFW_KEY_MINUS) {
-                    uiManager.adjustFontSize(-1f)
-                } else if (key == GLFW_KEY_EQUAL) {
-                    uiManager.adjustFontSize(1f)
+                if (isMinus) {
+                    uiManager.adjustPresetNameScale(-1f)
+                } else if (isEqual) {
+                    uiManager.adjustPresetNameScale(1f)
                 }
             } else if (isRecordHotKey) {
                 if (llm.slop.liquidlsd.export.RealtimeRecorder.isRecording) {

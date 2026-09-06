@@ -4,7 +4,7 @@ import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioTarget
 
 data class AppSettings(
-    val guiScalePercent: Int = 100,
+    val presetNameScalePercent: Int = 100,
     val audioEngineEnabled: Boolean = true,
     val audioBackend: AudioEngine.AudioBackendMode = AudioEngine.AudioBackendMode.AUTO,
     val audioDeviceName: String = "",
@@ -37,7 +37,6 @@ data class AppSettings(
     val col2Ratio: Float = 0.40f,
     val libraryRatio: Float = 0.50f,
     val lastCustomLibraryRatio: Float = 0.50f,
-    val gridCellRatio: Float = 1.0f,
     val renderResolutionPreset: UITheme.ResolutionPreset = UITheme.ResolutionPreset.RES_1080P,
     val customRenderWidth: Int = 1920,
     val customRenderHeight: Int = 1080,

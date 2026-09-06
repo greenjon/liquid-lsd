@@ -32,7 +32,7 @@ object AudioModulatorSection {
         onReplace: (CvModulator) -> Unit
     ) {
         val bypassed = existing.bypassed
-        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val fontScale = 0.95f
 
         val isTransient = existing.sourceId.startsWith("audio_flux_")
         val currentBandIdx = when (existing.sourceId) {
