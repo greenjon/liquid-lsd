@@ -31,7 +31,7 @@ object BrowserRowMoreButton {
         isRowHovered: Boolean,
         isSelected: Boolean,
         idSuffix: String,
-        btnWidth: Float = 28f,
+        btnWidth: Float = 20f,
         btnHeight: Float = 0f,
         tooltip: String = "Row options..."
     ): Boolean {
@@ -72,8 +72,8 @@ object BrowserRowMoreButton {
             }
             val cx = btnMinX + btnWidth * 0.5f
             val cy = btnMinY + rowH * 0.5f
-            val r = 3.5f
-            val spacing = 9.0f
+            val r = 2.5f
+            val spacing = 7.0f
 
             dl.addCircleFilled(cx, cy - spacing, r, dotCol)
             dl.addCircleFilled(cx, cy, r, dotCol)

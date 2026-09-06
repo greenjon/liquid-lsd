@@ -35,16 +35,13 @@ object PresetGridTabs {
         return getDeckColor(state.activeTopTab, alpha)
     }
 
+    fun calculateLeftTabsHeight(session: llm.slop.liquidlsd.SessionContext): Float {
+        return session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
+    }
+
     fun calculateLeftTabsWidth(session: llm.slop.liquidlsd.SessionContext): Float {
-        val labels = listOf("MIX", "A", "B", "BG", "PV")
-        var maxW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            labels.forEach { label ->
-                val w = ImGui.calcTextSize(label).x
-                if (w > maxW) maxW = w
-            }
-        }
-        return (maxW + 28f).coerceAtLeast(60f)
+        // Keep the same height, but make them a square
+        return calculateLeftTabsHeight(session)
     }
 
     fun drawLeftTabs(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer? = null, topOffset: Float = 36f) {
@@ -340,6 +337,8 @@ object PresetGridTabs {
      * Renders content only when the named section matches the deck's active sub-tab.
      * For the Mixer top-tab, always renders when Mixer is the active top-tab.
      */
+    const val PARAM_INDENT = 6f
+
     fun drawSubGroupContent(
         session: llm.slop.liquidlsd.SessionContext,
         parentLabel: String,
@@ -368,9 +367,9 @@ object PresetGridTabs {
         val dl      = ImGui.getWindowDrawList()
         val subStartY = startY
 
-        ImGui.indent()
+        ImGui.indent(PARAM_INDENT)
         content()
-        ImGui.unindent()
+        ImGui.unindent(PARAM_INDENT)
 
         val endY = ImGui.getCursorScreenPosY()
 

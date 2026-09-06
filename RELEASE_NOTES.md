@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Preset Grid UI Layout Tightening (`PresetGridTabs.kt`, `PresetGridPanel.kt`, `PresetGridRenderer.kt`, `BrowserRowMoreButton.kt`)
+- **Square Side Tab Buttons**: Made the deck selector buttons (`MIX`, `A`, `B`, `BG`, `PV`) square (`width == height`), significantly reducing horizontal footprint while maintaining comfortable click targets.
+- **Tightened Parameter Indentation**: Reduced the parameter label indent from Dear ImGui's default ~21–24 px to 6 px (~1/4 width), gaining horizontal space for parameter names and matching section tab insets.
+- **Refined Kebab Button Proportions**:
+  - Decreased kebab button width by ~25–30% (from 26 px / 28 px to 19 px / 20 px).
+  - Scaled down kebab dot radius and spacing for a more refined, minimal appearance.
+- **Unified Border Box & Vertical Scrollbar Alignment**:
+  - Aligned the right-hand edge of the preset grid container frame box (`boxMaxX`) to share the exact right-hand edge of the column settings kebab.
+  - Sized the preset grid scrolling child window (`##preset_grid_scroll`) to position the vertical scrollbar directly in the narrow vertical column beneath the kebab, eliminating visual gaps and overlaps.
+- **Symmetrical Right Border to Panel Edge Padding**:
+  - Eliminated extra trailing horizontal margin in `PresetGridPanel.calculateRequiredWidth` and `PresetGridPanel.draw`.
+  - Balanced the right padding between the preset grid box border and the panel edge/divider line to match the standard `windowPaddingX` (8 px), creating visual symmetry with the padding between the divider line and Cell Config's content.
+
 ### Minimum Window Dimensions Raised to 1280 x 720 (`Main.kt`, `WindowFrameController.kt`)
 - **Updated Minimum Bounds**: Raised the desktop minimum window dimensions from 800 × 600 (SVGA 4:3) to 1280 × 720 (720p HD 16:9).
 - **Layout & Multi-Deck Preservation**: Prevents severe horizontal layout compression and UI clipping across the top title bar controls, preset grid, and audio modulation matrix on compact or resized windows, aligning standard desktop bounds with modern HD DJ/VJ workflows.

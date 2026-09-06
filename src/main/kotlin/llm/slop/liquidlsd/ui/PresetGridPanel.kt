@@ -69,9 +69,15 @@ object PresetGridPanel {
         return CvTheme.getThemeColor(colId, alpha)
     }
 
-    private const val SECTION_TABS_INSET_X = 24f
+    private const val SECTION_TABS_INSET_X = PresetGridTabs.PARAM_INDENT
     private const val TITLE_BAR_SPACING = 24f
     private const val BOX_PADDING_X = 6f
+
+    fun getKebabWidth(session: llm.slop.liquidlsd.SessionContext): Float {
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val scrollbarW = ImGui.getStyle().scrollbarSize
+        return maxOf(19f * fontScale, scrollbarW)
+    }
 
     fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: PresetGridState): Float {
         val metrics = GridMetrics.compute(session)
@@ -96,12 +102,14 @@ object PresetGridPanel {
 
         val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (isMidiVisible) "midi" else "value"
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f + 32f
+        val kebabW = getKebabWidth(session)
+        val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f + kebabW
 
-        val gridTotalW = sideTabWidth + BOX_PADDING_X * 2f + labelColW + maxGridW + 24f
+        val windowPaddingX = try { ImGui.getStyle().windowPaddingX } catch (e: Throwable) { 8f }
+        val gridTotalW = sideTabWidth + BOX_PADDING_X + labelColW + maxGridW + (windowPaddingX * 2f)
         var titleTextW = 0f
         session.uiTheme.withFont(UITheme.FontLevel.H3) { titleTextW = ImGui.calcTextSize("Preset Grid").x }
-        val titleTotalW = titleTextW + TITLE_BAR_SPACING + sourceTabW + 24f
+        val titleTotalW = titleTextW + TITLE_BAR_SPACING + sourceTabW + (windowPaddingX * 2f)
 
         return maxOf(gridTotalW, titleTotalW)
     }
@@ -164,8 +172,9 @@ object PresetGridPanel {
         val idealLabelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
         val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
         val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (isMidiVisible) "midi" else "value"
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f + 32f
-        val maxAllowedLabelColW = (avail - sideTabWidth - maxGridW - 20f).coerceAtLeast(120f)
+        val kebabW = getKebabWidth(session)
+        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f + kebabW
+        val maxAllowedLabelColW = (avail - sideTabWidth - BOX_PADDING_X - maxGridW).coerceAtLeast(120f)
         val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
 
         val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
@@ -189,7 +198,8 @@ object PresetGridPanel {
             containerTopY = ImGui.getCursorScreenPosY()
             ImGui.setCursorPosX(ImGui.getCursorPosX() + BOX_PADDING_X)
             gridStartX = ImGui.getCursorScreenPosX()
-            val boxMaxX = (gridStartX + labelColW + maxGridW + BOX_PADDING_X).coerceAtMost(ImGui.getWindowPosX() + avail)
+            val gridContentWidth = labelColW + maxGridW
+            val boxMaxX = gridStartX + gridContentWidth
 
             // Column Headers (VAL, MIDI, LFO, SEQ, AUD)
             if (!isDeckEmpty) {
@@ -198,7 +208,7 @@ object PresetGridPanel {
                 ImGui.spacing()
             }
 
-            if (ImGui.beginChild("##preset_grid_scroll", 0f, 0f, false)) {
+            if (ImGui.beginChild("##preset_grid_scroll", gridContentWidth, 0f, false)) {
                 ImGui.setScrollX(0f)
                 if (state.activeTopTab == "Mixer") {
                     PresetGridTabs.drawSubGroupContent(session, "Mixer", "Mixer", state) {
@@ -470,8 +480,8 @@ object PresetGridPanel {
         val isMidiVisible = session.uiTheme.midiEnabled
         val lastColId = if (cvCols.isNotEmpty()) cvCols.last() else if (isMidiVisible) "midi" else "value"
         val lastColRightX = startX + labelColW + getColumnOffset(session, lastColId) + CELL
-        val kebabX = lastColRightX + CELL_PAD * 0.5f + 2f
-        val kebabW = 26f
+        val kebabX = lastColRightX + CELL_PAD * 0.5f
+        val kebabW = getKebabWidth(session)
         val isKebabHovered = mousePos.x >= kebabX && mousePos.x <= (kebabX + kebabW) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
         val popupId = "preset_grid_columns_popup"
         val isPopupOpen = ImGui.isPopupOpen(popupId)
@@ -493,8 +503,9 @@ object PresetGridPanel {
         }
         val cx = kebabX + kebabW * 0.5f
         val cy = startY + headerH * 0.5f
-        val r = 2.5f
-        val dotSpacing = 7.0f
+        val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
+        val r = 1.9f * fontScale
+        val dotSpacing = 5.5f * fontScale
         dl.addCircleFilled(cx, cy - dotSpacing, r, dotCol)
         dl.addCircleFilled(cx, cy, r, dotCol)
         dl.addCircleFilled(cx, cy + dotSpacing, r, dotCol)
@@ -502,9 +513,9 @@ object PresetGridPanel {
         // If any column needed by the patch is missing or engine is off, draw red [!] badge
         if (anyMissing) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                val badgeX = cx + 7f
-                val badgeY = cy - 7f
-                dl.addCircleFilled(badgeX, badgeY, 6f, ImGui.colorConvertFloat4ToU32(0.85f, 0.15f, 0.15f, 0.95f))
+                val badgeX = cx + 5.5f * fontScale
+                val badgeY = cy - 5.5f * fontScale
+                dl.addCircleFilled(badgeX, badgeY, 5f * fontScale, ImGui.colorConvertFloat4ToU32(0.85f, 0.15f, 0.15f, 0.95f))
                 val alertText = "!"
                 val alertW = ImGui.calcTextSize(alertText).x
                 val alertH = ImGui.getTextLineHeight()

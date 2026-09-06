@@ -60,7 +60,7 @@ object PresetGridRenderer {
         val cursorStartX = ImGui.getCursorPosX()
         val indent = ImGui.getCursorScreenPosX() - gridStartX
         val labelBtnW = labelColW - indent - CELL_PAD
-        val kebabW = 28f
+        val kebabW = 20f
         val textBtnW = (labelBtnW - kebabW).coerceAtLeast(1f)
 
         ImGui.setCursorPosY(rowY)
