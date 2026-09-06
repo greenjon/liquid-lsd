@@ -194,6 +194,20 @@ tasks.processResources {
                 println("Copied library to ${destLib.absolutePath}")
             }
 
+            // Copy icon and desktop entry
+            val iconSrc = file("src/main/resources/icons/icon.png")
+            if (iconSrc.exists()) {
+                iconSrc.copyTo(file("$distDir/icon.png"), overwrite = true)
+            }
+            val icoSrc = file("src/main/resources/icons/icon.ico")
+            if (icoSrc.exists()) {
+                icoSrc.copyTo(file("$distDir/icon.ico"), overwrite = true)
+            }
+            val desktopSrc = file("liquid-lsd.desktop")
+            if (desktopSrc.exists()) {
+                desktopSrc.copyTo(file("$distDir/liquid-lsd.desktop"), overwrite = true)
+            }
+
             // 2. Define platforms, their URLs, extension, and JRE folder
             val platforms = listOf(
                 Triple("windows-x64", "https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse", "zip"),
@@ -341,6 +355,44 @@ tasks.processResources {
         """.trimIndent())
         runMacIntel.setExecutable(true)
 
+        val installDesktop = file("$distDir/install-desktop.sh")
+        installDesktop.writeText("""
+            #!/bin/bash
+            set -e
+            SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
+            APPS_DIR="${'$'}{XDG_DATA_HOME:-${'$'}HOME/.local/share}/applications"
+            ICONS_DIR="${'$'}{XDG_DATA_HOME:-${'$'}HOME/.local/share}/icons/hicolor/512x512/apps"
+
+            mkdir -p "${'$'}APPS_DIR" "${'$'}ICONS_DIR"
+
+            if [ -f "${'$'}SCRIPT_DIR/icon.png" ]; then
+                cp "${'$'}SCRIPT_DIR/icon.png" "${'$'}ICONS_DIR/liquid-lsd.png"
+            fi
+
+            cat << DESKTOP_EOF > "${'$'}APPS_DIR/liquid-lsd.desktop"
+            [Desktop Entry]
+            Version=1.0
+            Type=Application
+            Name=Liquid LSD
+            GenericName=Audio-Reactive Visual Synthesizer
+            Comment=Libre Shader Decks - Real-time audio-reactive graphics workstation
+            Exec="${'$'}SCRIPT_DIR/run-linux.sh" %F
+            Icon=liquid-lsd
+            Terminal=false
+            Categories=AudioVideo;Graphics;Audio;
+            StartupNotify=true
+            StartupWMClass=liquid-lsd
+            DESKTOP_EOF
+
+            chmod +x "${'$'}APPS_DIR/liquid-lsd.desktop"
+
+            command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "${'$'}APPS_DIR" 2>/dev/null || true
+            command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache "${'$'}{XDG_DATA_HOME:-${'$'}HOME/.local/share}/icons/hicolor" 2>/dev/null || true
+
+            echo "✓ Liquid LSD desktop entry and icon installed to ${'$'}APPS_DIR/liquid-lsd.desktop"
+        """.trimIndent())
+        installDesktop.setExecutable(true)
+
         println("Launcher scripts generated successfully.")
     }
 }
@@ -352,6 +404,7 @@ val zipWindows = tasks.register<Zip>("zipWindows") {
     into("liquid-lsd-windows-x64")
     from("build/dist") {
         include("run-windows.bat")
+        include("icon.ico")
         include("lsd-all.jar")
         include("jre/windows-x64/**")
         include("library/**")
@@ -365,6 +418,9 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
     into("liquid-lsd-linux-x64")
     from("build/dist") {
         include("run-linux.sh")
+        include("install-desktop.sh")
+        include("liquid-lsd.desktop")
+        include("icon.png")
         include("lsd-all.jar")
         include("jre/linux-x64/**")
         include("library/**")

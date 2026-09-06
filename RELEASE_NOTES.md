@@ -2,10 +2,12 @@
 
 ## [Unreleased]
 
-### Application Icons & Window Branding (`Main.kt`, `web/`, `website/`, `src/main/resources/icons/`)
-- **Desktop Window Icons (GLFW)**:
+### Application Icons & Window Branding (`Main.kt`, `build.gradle.kts`, `scripts/install_desktop.sh`, `liquid-lsd.desktop`, `web/`, `website/`, `src/main/resources/icons/`)
+- **Desktop Window Icons & Compositor Integration (GLFW, X11, Wayland)**:
   - Integrated multi-resolution application icon loading (`16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`) via `stbi_load_from_memory` and `glfwSetWindowIcon` in `Main.kt`.
-  - Automatically applied to the primary application window as well as secondary / external monitor preview windows.
+  - Added `GLFW_WAYLAND_APP_ID`, `GLFW_X11_CLASS_NAME`, and `GLFW_X11_INSTANCE_NAME` hints to ensure proper window grouping and taskbar/dock icon association under modern Linux compositors (GNOME, KDE, Sway/Hyprland).
+  - Implemented automatic local FreeDesktop icon and `.desktop` entry registration (`ensureLinuxDesktopEntry()`), alongside distribution packaging scripts (`scripts/install_desktop.sh` and `build.gradle.kts` dist integration).
+  - Automatically applied icons and window classes to both primary desktop and secondary / external monitor preview windows.
 - **Web & Documentation Branding**:
   - Wired high-resolution favicon and Apple touch icon assets into `web/index.html` and documentation templates (`website/templates/doc_page.html`, `website/templates/index.html`).
 

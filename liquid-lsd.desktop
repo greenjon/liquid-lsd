@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Liquid LSD
+GenericName=Audio-Reactive Visual Synthesizer
+Comment=Libre Shader Decks - Real-time audio-reactive graphics workstation
+Exec=run-linux.sh
+Icon=liquid-lsd
+Terminal=false
+Categories=AudioVideo;Graphics;Audio;
+StartupNotify=true
+StartupWMClass=liquid-lsd

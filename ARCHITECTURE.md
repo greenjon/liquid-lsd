@@ -184,6 +184,7 @@ Preset Grid columns: VAL | MIDI | LFO | SEQ | AUD
 ## Application Icons & Window Branding
 The project includes an official application icon featuring an audio-reactive psychedelic eye with chromatic aberration and a falling liquid drop.
 - **Desktop (GLFW)**: `setWindowAppIcons(window)` in `Main.kt` loads multi-resolution PNGs (`16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`) from `src/main/resources/icons/` into LWJGL `GLFWImage.Buffer` using `stbi_load_from_memory`. Applied to both primary desktop and secondary output preview windows.
+- **Linux Compositor & Desktop Entry**: Windows configure `GLFW_WAYLAND_APP_ID`, `GLFW_X11_CLASS_NAME`, and `GLFW_X11_INSTANCE_NAME` as `liquid-lsd`. `ensureLinuxDesktopEntry()` registers local FreeDesktop launcher and hicolor icons in user data paths, supported by `scripts/install_desktop.sh` and distribution zip packages.
 - **Web Player**: `web/favicon.ico`, `web/favicon.png` (32×32), `web/apple-touch-icon.png` (180×180), `web/icon-192.png`, and `web/icon-512.png` wired into `web/index.html`.
 - **Website & Documentation**: Bundled under `website/assets/images/` and generated into `greenjon/assets/images/`.
 

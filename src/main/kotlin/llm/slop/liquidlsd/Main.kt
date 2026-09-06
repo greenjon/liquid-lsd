@@ -175,6 +175,7 @@ fun main(args: Array<String>) {
 
     glfwWindowHintString(GLFW_X11_CLASS_NAME, "Liquid LSD")
     glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "liquid-lsd")
+    glfwWindowHintString(GLFW_WAYLAND_APP_ID, "liquid-lsd")
 
     // Configure window decorations based on user setting (Frameless CSD vs Native)
     val isFrameless = UITheme.framelessWindow
@@ -184,6 +185,7 @@ fun main(args: Array<String>) {
     val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
     if (window == 0L) throw RuntimeException("Failed to create GLFW window")
     setWindowAppIcons(window)
+    ensureLinuxDesktopEntry()
 
     // Enforce minimum window size to prevent desktop layout compression
     glfwSetWindowSizeLimits(window, 1280, 720, GLFW_DONT_CARE, GLFW_DONT_CARE)
@@ -654,6 +656,9 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE)
+    glfwWindowHintString(GLFW_X11_CLASS_NAME, "Liquid LSD Output")
+    glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "liquid-lsd")
+    glfwWindowHintString(GLFW_WAYLAND_APP_ID, "liquid-lsd")
 
     val externalMonitor = getExternalMonitor()
     if (externalMonitor != null) {
@@ -740,5 +745,56 @@ private fun setWindowAppIcons(window: Long) {
         for (buf in directBuffers) {
             MemoryUtil.memFree(buf)
         }
+    }
+}
+
+/**
+ * On Linux desktops, Wayland and X11 compositors require a registered `.desktop` file
+ * and FreeDesktop hicolor icon to associate the running window (app_id: "liquid-lsd")
+ * with the correct application icon in the dock/taskbar and Alt-Tab switcher.
+ */
+private fun ensureLinuxDesktopEntry() {
+    if (!System.getProperty("os.name", "").lowercase().contains("linux")) return
+    try {
+        val userHome = System.getProperty("user.home") ?: return
+        val xdgData = System.getenv("XDG_DATA_HOME")?.takeIf { it.isNotBlank() }
+            ?: "$userHome/.local/share"
+
+        val appsDir = java.io.File(xdgData, "applications")
+        val iconsDir = java.io.File(xdgData, "icons/hicolor/512x512/apps")
+        val targetIcon = java.io.File(iconsDir, "liquid-lsd.png")
+        val targetDesktop = java.io.File(appsDir, "liquid-lsd.desktop")
+
+        if (!targetIcon.exists()) {
+            iconsDir.mkdirs()
+            val stream = object {}.javaClass.getResourceAsStream("/icons/icon-512.png")
+            if (stream != null) {
+                stream.use { input ->
+                    java.nio.file.Files.copy(input, targetIcon.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                }
+                logger.info { "Registered local desktop application icon: ${targetIcon.absolutePath}" }
+            }
+        }
+
+        if (!targetDesktop.exists()) {
+            appsDir.mkdirs()
+            val desktopContent = """
+                [Desktop Entry]
+                Version=1.0
+                Type=Application
+                Name=Liquid LSD
+                GenericName=Audio-Reactive Visual Synthesizer
+                Comment=Libre Shader Decks - Real-time audio-reactive graphics workstation
+                Icon=liquid-lsd
+                Terminal=false
+                Categories=AudioVideo;Graphics;Audio;
+                StartupNotify=true
+                StartupWMClass=liquid-lsd
+            """.trimIndent()
+            targetDesktop.writeText(desktopContent)
+            logger.info { "Registered local desktop entry: ${targetDesktop.absolutePath}" }
+        }
+    } catch (t: Throwable) {
+        logger.debug(t) { "Unable to auto-register desktop entry (harmless in sandboxed or read-only environments)" }
     }
 }
