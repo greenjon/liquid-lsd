@@ -499,7 +499,12 @@ object PresetManager {
                 bgActiveIndex = BgQueueManager.activeIndex,
                 isAutoBGEnabled = BgQueueManager.isAutoBGEnabled,
                 isBgRepeatEnabled = BgQueueManager.isRepeatEnabled,
-                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled
+                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled,
+                levelA = mixer.levelA,
+                levelB = mixer.levelB,
+                levelBG = mixer.levelBG,
+                levelPV = mixer.levelPV,
+                masterLevel = mixer.masterLevel
             )
             
             val content = json.encodeToString(session)
@@ -523,6 +528,11 @@ object PresetManager {
             mixer.crossfade.applyDto(session.crossfade)
             mixer.masterAlpha.applyDto(session.masterAlpha)
             mixer.mode.set(session.blendMode)
+            mixer.levelA = session.levelA
+            mixer.levelB = session.levelB
+            mixer.levelBG = session.levelBG
+            mixer.levelPV = session.levelPV
+            mixer.masterLevel = session.masterLevel
             
             mixer.deckA.applyDto(session.deckA)
             mixer.deckB.applyDto(session.deckB)

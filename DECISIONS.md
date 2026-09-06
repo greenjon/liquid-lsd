@@ -2,6 +2,25 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## Clustered Monitor Overlays, Channel Level Faders, and Single-Row Master Controls (`DeckControlPanel.kt`, `MixerMonitorPanel.kt`, `Mixer.kt`, `Renderer.kt`, `mixer.frag`)
+
+- **Decision**: Redesign the 4 deck monitors and main output monitor with inside-clustered overlays, physical mixer channel level faders, and streamlined single-row crossfader controls:
+  - **4-Channel Console Level Faders**: Added non-modulatable 0.0–1.0 channel level multipliers (`levelA`, `levelB`, `levelBG`, `levelPV`, `masterLevel`) to `Mixer`. These scale channel output in `mixer.frag` (`uLevelA`, `uLevelB`, `uLevelBG`, `uMasterLevel`) and act as pre-crossfade channel faders (Deck A/B), background gain (BG), preview dimmer (PV), and master gain (Master).
+  - **Multiplier Pattern (Avoiding Takeover Magic)**: Rather than adding complex CV takeover/muting/unmuting logic, channel faders are pure scaling multipliers (`effectiveAlpha = modulatedAlpha * channelFader`). At 1.0 (unity), CV passes through unaltered; at 0.0, the channel is completely cut.
+  - **Inside-Clustered Monitor Controls**:
+    - Left monitors (`Deck A`, `Deck BG`): Badges `[A]` and `[BG]` moved to top-right corner; die `[🎲]` placed to the left of the badge; vertical level fader hangs directly below the badge.
+    - Right monitors (`Deck B`, `Deck PV`): Badges `[B]` and `[PV]` moved to top-left corner; die `[🎲]` placed to the right of the badge; vertical level fader hangs directly below the badge.
+    - Central Spine Clustering: All 4 faders and dice are clustered along the center gutter directly beneath the crossfader, within minimal mouse travel radius.
+    - Video Preview Preservation: Overlays reside directly within the video preview without shrinking or distorting the aspect ratio.
+  - **Master Monitor Overlay**:
+    - Bottom-right corner: Badge `[M]`, die `[🎲 ALL]` to its left, and vertical Master Level fader directly above `[M]` extending upward. Leaves top-right free for the `[REC]` tally badge.
+  - **Middle-Click Reset**: Middle-clicking any fader track immediately resets its level to 100% (1.0), matching `CellConfig` and crossfader conventions while preventing accidental jumps on double-click.
+  - **Single-Row Master Controls Strip**: Removed the 5-button dice row below the crossfader in `MixerMonitorPanel`, reducing `MasterControls` height to a single row (~34px) and reclaiming vertical screen real estate for preview monitors.
+- **Rationale**:
+  - Unifies the VJ mixing console experience with physical channel strips and crossfader.
+  - Preserves deck preset boundaries: channel faders are console properties that do not transfer when copying or swapping patches.
+  - Enhances spatial ergonomics during live performance.
+
 ## Title Bar to Panel Layout Spacing & Gap Standardization (`UIManager.kt`, `WindowLayoutSafetyTest.kt`)
 
 - **Decision**: Replace legacy magic clamp (`.coerceAtLeast(32f)`) on menu bar height with an explicit, named constant `TITLE_BAR_PANEL_GAP = 1.0f`:

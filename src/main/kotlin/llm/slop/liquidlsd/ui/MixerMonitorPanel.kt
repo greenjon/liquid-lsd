@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.presets.PresetManager
+import kotlin.math.roundToInt
 
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 
@@ -70,17 +71,133 @@ class MixerMonitorPanel(
             dlMaster.addText(badgeX + 16f, badgeY + 1f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f), recText)
         }
 
+        // --- Master Output Overlays: [M] Badge, [🎲 ALL], and Vertical Master Level Fader ---
+        val masterThemeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.82f, 0.65f, 1f) // Mint accent for Master
+        val fontLevel = UITheme.FontLevel.H2
+        var textW = 0f
+        var textH = 0f
+        session.uiTheme.withFont(fontLevel) {
+            val sz = ImGui.calcTextSize("M")
+            textW = sz.x
+            textH = sz.y
+        }
+        val badgePadX = 8f
+        val badgePadY = 3f
+        val badgeW = (textW + badgePadX * 2f).coerceAtLeast(24f)
+        val badgeH = (textH + badgePadY * 2f).coerceAtLeast(24f)
+        val badgeMargin = 6f
+
+        val badgeMaxX = imgScreenX + availW - badgeMargin
+        val badgeMinX = badgeMaxX - badgeW
+        val badgeMaxY = imgScreenY + masterH - badgeMargin
+        val badgeMinY = badgeMaxY - badgeH
+
+        // 1. Master Badge Pill [M]
+        dlMaster.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dlMaster.addRect(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, masterThemeCol, 4f, 0, 1.5f)
+
+        val textX = badgeMinX + (badgeW - textW) * 0.5f
+        val textY = badgeMinY + (badgeH - textH) * 0.5f
+        session.uiTheme.withFont(fontLevel) {
+            dlMaster.addText(textX, textY, masterThemeCol, "M")
+        }
+
+        // 2. [🎲 ALL] Button (to the left of [M])
+        if (session.uiTheme.randomizationEnabled) {
+            val dieW = badgeH
+            val dieH = badgeH
+            val dieMinX = badgeMinX - 4f - dieW
+            ImGui.setCursorScreenPos(dieMinX, badgeMinY)
+            ImGui.invisibleButton("##btn_rand_all_monitor", dieW, dieH)
+            val isDieHovered = ImGui.isItemHovered()
+            val isDieActive = ImGui.isItemActive()
+            if (ImGui.isItemClicked(0)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                mixer.randomizeAll()
+            }
+            if (isDieHovered && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nClick to randomize with undo support.")
+            }
+
+            val dieBg = when {
+                isDieActive -> ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 0.95f)
+                isDieHovered -> ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 0.90f)
+                else -> ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.14f, 0.80f)
+            }
+            val dieBorder = if (isDieHovered) masterThemeCol else ImGui.colorConvertFloat4ToU32(0.35f, 0.30f, 0.38f, 0.8f)
+            dlMaster.addRectFilled(dieMinX, badgeMinY, dieMinX + dieW, badgeMinY + dieH, dieBg, 4f)
+            dlMaster.addRect(dieMinX, badgeMinY, dieMinX + dieW, badgeMinY + dieH, dieBorder, 4f, 0, 1.5f)
+
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                val sz = ImGui.calcTextSize(Icons.DICES)
+                val iconX = dieMinX + (dieW - sz.x) * 0.5f
+                val iconY = badgeMinY + (dieH - sz.y) * 0.5f
+                val iconCol = if (isDieHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.9f)
+                dlMaster.addText(iconX, iconY, iconCol, Icons.DICES)
+            }
+        }
+
+        // 3. Vertical Master Level Fader (directly above [M], extending upward)
+        val stripW = 14f
+        val stripMinX = badgeMinX + (badgeW - stripW) * 0.5f
+        val stripMaxY = badgeMinY - 4f
+        val stripH = (masterH - badgeH - badgeMargin * 2f - 24f).coerceIn(40f, 140f)
+        val stripMinY = stripMaxY - stripH
+
+        ImGui.setCursorScreenPos(stripMinX, stripMinY)
+        ImGui.invisibleButton("##fader_master", stripW, stripH)
+        val isFaderHovered = ImGui.isItemHovered()
+        val isFaderActive = ImGui.isItemActive()
+
+        if (isFaderActive) {
+            val mouseY = ImGui.getIO().mousePos.y
+            val pct = ((stripMaxY - mouseY) / stripH).coerceIn(0f, 1f)
+            mixer.masterLevel = pct
+        }
+
+        val io = ImGui.getIO()
+        if (isFaderHovered || isFaderActive) {
+            if (io.mouseWheel != 0f) {
+                val delta = if (io.keyShift) 0.01f else 0.05f
+                mixer.masterLevel = (mixer.masterLevel + io.mouseWheel * delta).coerceIn(0f, 1f)
+                io.mouseWheel = 0f
+            }
+            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
+                mixer.masterLevel = 1.0f
+            }
+            if (session.uiTheme.tooltipsEnabled) {
+                val pctText = (mixer.masterLevel * 100f).roundToInt()
+                ImGui.setTooltip("Master Level: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            }
+        }
+
+        // Draw Fader Track
+        val faderBg = ImGui.colorConvertFloat4ToU32(0.06f, 0.06f, 0.08f, 0.85f)
+        val faderBorder = if (isFaderHovered || isFaderActive) masterThemeCol else ImGui.colorConvertFloat4ToU32(0.25f, 0.28f, 0.35f, 0.7f)
+        dlMaster.addRectFilled(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBg, 3f)
+        dlMaster.addRect(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBorder, 3f, 0, 1.0f)
+
+        // Draw Filled Level Bar (bottom to top)
+        val fillH = stripH * mixer.masterLevel
+        val fillTop = stripMaxY - fillH
+        if (fillH > 1f) {
+            dlMaster.addRectFilled(stripMinX + 2f, fillTop, stripMinX + stripW - 2f, stripMaxY - 1f, masterThemeCol, 2f)
+        }
+
+        // Draw Handle Indicator line
+        val handleCol = if (isFaderActive) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.85f)
+        dlMaster.addLine(stripMinX + 1f, fillTop, stripMinX + stripW - 1f, fillTop, handleCol, 2f)
+
         // Restore Y cursor position
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY + masterH)
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
-        // --- Master Mixer Controls ---
-        val numRows = if (session.uiTheme.randomizationEnabled) 2f else 1f
+        // --- Master Mixer Controls (Single Row: Crossfader) ---
         val masterControlsH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            (ImGui.getFrameHeightWithSpacing() * numRows) + (ImGui.getStyle().itemSpacing.y * (numRows - 1f)) + 12f
-        }.coerceAtLeast(if (session.uiTheme.randomizationEnabled) 58f else 34f)
+            ImGui.getFrameHeightWithSpacing() + 12f
+        }.coerceAtLeast(34f)
 
         ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.05f, 0.1f, 0.08f, 0.4f)) // Faint mint background
         ImGui.setCursorScreenPos(imgScreenX, ImGui.getCursorScreenPosY())
@@ -88,89 +205,6 @@ class MixerMonitorPanel(
         
         // Row 1: Crossfader with Deck A box on left and Deck B box on right
         drawCrossfaderSlider(session, mixer)
-
-        // Row 2: Momentary Controls: Randomize A/B/BG/PV/All
-        if (session.uiTheme.randomizationEnabled) {
-            ImGui.spacing()
-            val spacingX = ImGui.getStyle().itemSpacing.x
-            val totalAvailW = ImGui.getContentRegionAvailX()
-            val numButtons = 5
-            val mBtnW = ((totalAvailW - (spacingX * (numButtons - 1))) / numButtons).coerceAtLeast(20f)
-            val mBtnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() * 0.9f }.coerceAtLeast(20f)
-
-            // Rand A Button
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("${Icons.DICES} A##rand_deck_a", mBtnW, mBtnH)) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
-                mixer.randomizeDeckA()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck A modulators & base values (Mixer/randDeckA).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
-            }
-            ImGui.popStyleColor(3)
-
-            ImGui.sameLine()
-
-            // Rand B Button
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("${Icons.DICES} B##rand_deck_b", mBtnW, mBtnH)) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
-                mixer.randomizeDeckB()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck B modulators & base values (Mixer/randDeckB).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
-            }
-            ImGui.popStyleColor(3)
-
-            ImGui.sameLine()
-
-            // Rand BG Button
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("${Icons.DICES} BG##rand_deck_bg", mBtnW, mBtnH)) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
-                mixer.randomizeDeckBG()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck BG modulators & base values (Mixer/randDeckBG).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
-            }
-            ImGui.popStyleColor(3)
-
-            ImGui.sameLine()
-
-            // Rand PV Button
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 1f))
-            if (ImGui.button("${Icons.DICES} PV##rand_deck_pv", mBtnW, mBtnH)) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
-                mixer.randomizeDeckPV()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize Deck PV modulators & base values (Mixer/randDeckPV).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
-            }
-            ImGui.popStyleColor(3)
-
-            ImGui.sameLine()
-
-            // Rand All Button
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.36f, 0.22f, 0.32f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.46f, 0.30f, 0.42f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.56f, 0.38f, 0.52f, 1f))
-            if (ImGui.button("${Icons.DICES} All##rand_all", mBtnW, mBtnH)) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
-                mixer.randomizeAll()
-            }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nSupports continuous 0-1 morphing when modulated by CV, LFOs, or MIDI.")
-            }
-            ImGui.popStyleColor(3)
-        }
 
         ImGui.endChild()
         ImGui.popStyleColor()

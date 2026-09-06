@@ -43,6 +43,13 @@ class Mixer(
     val bloom = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val xfadeSpeed = ModulatableParameter(5.0f, minClamp = 0.1f, maxClamp = 30.0f)
 
+    // Channel level multiplier faders (0.0 to 1.0, non-modulatable, console channel strip isolation)
+    var levelA: Float = 1.0f
+    var levelB: Float = 1.0f
+    var levelBG: Float = 1.0f
+    var levelPV: Float = 1.0f
+    var masterLevel: Float = 1.0f
+
     @Volatile var targetCrossfade = -1.0f
     var isAutoFading = false
 

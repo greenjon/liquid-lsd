@@ -301,6 +301,10 @@ class Renderer {
         mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
         mixerShader.setUniform("uBgAlpha", 1.0f)
         mixerShader.setUniform("uBloom", mixer.bloom.value)
+        mixerShader.setUniform("uLevelA", mixer.levelA)
+        mixerShader.setUniform("uLevelB", mixer.levelB)
+        mixerShader.setUniform("uLevelBG", mixer.levelBG)
+        mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
 
         // Blit mixed output
         Geometry.drawFullscreenQuad()

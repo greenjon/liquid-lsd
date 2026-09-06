@@ -90,7 +90,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + ping-pong FBOs + 2D/3D View params + FB params
-│   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO (Deck PV excluded)
+│   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers (Deck PV excluded)
 │   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope -> feedback -> mix -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
@@ -120,8 +120,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SettingsPanel.kt        — App configuration & tabbed preferences modal
 │   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Settings tab drawer)
 │   ├── ColorTunerPanel.kt      — Interactive theme editor
-│   ├── DeckControlPanel.kt     — Individual deck controls
-│   ├── MixerMonitorPanel.kt    — 2x2 monitor matrix and crossfader
+│   ├── DeckControlPanel.kt     — Individual deck preview monitor, toolbar, inside-clustered badge/die overlays, and vertical channel level fader
+│   ├── MixerMonitorPanel.kt    — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels

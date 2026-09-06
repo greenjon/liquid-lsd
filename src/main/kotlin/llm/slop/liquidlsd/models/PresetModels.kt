@@ -262,7 +262,12 @@ data class SessionStateDto(
     val bgActiveIndex: Int = -1,
     val isAutoBGEnabled: Boolean = false,
     val isBgRepeatEnabled: Boolean = false,
-    val isBgShuffleEnabled: Boolean = false
+    val isBgShuffleEnabled: Boolean = false,
+    val levelA: Float = 1.0f,
+    val levelB: Float = 1.0f,
+    val levelBG: Float = 1.0f,
+    val levelPV: Float = 1.0f,
+    val masterLevel: Float = 1.0f
 )
 
 @Serializable

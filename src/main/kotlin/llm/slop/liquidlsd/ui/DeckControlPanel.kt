@@ -173,12 +173,18 @@ class DeckControlPanel(
             ImGui.endPopup()
         }
         
+        if (isPV && mixer.levelPV < 0.999f) {
+            val dimAlpha = (1.0f - mixer.levelPV).coerceIn(0f, 1f)
+            dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, dimAlpha))
+        }
+
         // Draw border perfectly wrapped around the image
         val borderThickness = if (onAirFactor >= 0.70f) 2.5f else 1.5f
         dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, borderThickness)
 
-        // Draw lower-left letter badge overlay on monitor
+        // --- Clustered Inner Overlays: Badge, Die, and Vertical Level Fader ---
         val letter = deckPayloadName
+        val isLeftCol = label == "Deck A" || label == "Deck BG"
         val badgePadX = 8f
         val badgePadY = 3f
         val fontLevel = UITheme.FontLevel.H2
@@ -192,11 +198,24 @@ class DeckControlPanel(
         val badgeW = (textW + badgePadX * 2f).coerceAtLeast(24f)
         val badgeH = (textH + badgePadY * 2f).coerceAtLeast(24f)
         val badgeMargin = 6f
-        val badgeMinX = imgX + badgeMargin
-        val badgeMaxY = imgY + imgAvailH - badgeMargin
-        val badgeMinY = badgeMaxY - badgeH
-        val badgeMaxX = badgeMinX + badgeW
+        val badgeMinY = imgY + badgeMargin
+        val badgeMaxY = badgeMinY + badgeH
 
+        val (badgeMinX, badgeMaxX, dieMinX) = if (isLeftCol) {
+            // Left monitors (Deck A & Deck BG): Inside edge is the RIGHT edge of the preview
+            val bMaxX = imgX + imgAvailW - badgeMargin
+            val bMinX = bMaxX - badgeW
+            val dMinX = bMinX - 4f - badgeH
+            Triple(bMinX, bMaxX, dMinX)
+        } else {
+            // Right monitors (Deck B & Deck PV): Inside edge is the LEFT edge of the preview
+            val bMinX = imgX + badgeMargin
+            val bMaxX = bMinX + badgeW
+            val dMinX = bMaxX + 4f
+            Triple(bMinX, bMaxX, dMinX)
+        }
+
+        // 1. Badge Pill
         dl.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
         dl.addRect(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, themeCol, 4f, 0, 1.5f)
 
@@ -205,6 +224,120 @@ class DeckControlPanel(
         session.uiTheme.withFont(fontLevel) {
             dl.addText(textX, textY, themeCol, letter)
         }
+
+        // 2. Die Button (placed toward outside of badge along the top row)
+        if (session.uiTheme.randomizationEnabled) {
+            val dieW = badgeH
+            val dieH = badgeH
+            ImGui.setCursorScreenPos(dieMinX, badgeMinY)
+            ImGui.invisibleButton("##btn_rand_die_$label", dieW, dieH)
+            val isDieHovered = ImGui.isItemHovered()
+            val isDieActive = ImGui.isItemActive()
+            if (ImGui.isItemClicked(0)) {
+                PresetGridUndo.pushUndoState(presetState, mixer)
+                when (label) {
+                    "Deck A" -> mixer.randomizeDeckA()
+                    "Deck B" -> mixer.randomizeDeckB()
+                    "Deck BG" -> mixer.randomizeDeckBG()
+                    else -> mixer.randomizeDeckPV()
+                }
+            }
+            if (isDieHovered && session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Randomize $label modulators & base values.\nClick to randomize with undo support.")
+            }
+
+            val dieBg = when {
+                isDieActive -> ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 0.95f)
+                isDieHovered -> ImGui.colorConvertFloat4ToU32(0.38f, 0.28f, 0.36f, 0.90f)
+                else -> ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.14f, 0.80f)
+            }
+            val dieBorder = if (isDieHovered) themeCol else ImGui.colorConvertFloat4ToU32(0.35f, 0.30f, 0.38f, 0.8f)
+            dl.addRectFilled(dieMinX, badgeMinY, dieMinX + dieW, badgeMinY + dieH, dieBg, 4f)
+            dl.addRect(dieMinX, badgeMinY, dieMinX + dieW, badgeMinY + dieH, dieBorder, 4f, 0, 1.5f)
+
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                val sz = ImGui.calcTextSize(Icons.DICES)
+                val iconX = dieMinX + (dieW - sz.x) * 0.5f
+                val iconY = badgeMinY + (dieH - sz.y) * 0.5f
+                val iconCol = if (isDieHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.9f)
+                dl.addText(iconX, iconY, iconCol, Icons.DICES)
+            }
+        }
+
+        // 3. Vertical Level Fader (directly below the badge)
+        val stripW = 14f
+        val stripMinX = badgeMinX + (badgeW - stripW) * 0.5f
+        val stripMinY = badgeMaxY + 4f
+        val stripH = (imgAvailH - badgeH - badgeMargin * 2f - 8f).coerceIn(40f, 130f)
+        val stripMaxY = stripMinY + stripH
+
+        val currentLevel = when (label) {
+            "Deck A" -> mixer.levelA
+            "Deck B" -> mixer.levelB
+            "Deck BG" -> mixer.levelBG
+            else -> mixer.levelPV
+        }
+
+        ImGui.setCursorScreenPos(stripMinX, stripMinY)
+        ImGui.invisibleButton("##fader_$label", stripW, stripH)
+        val isFaderHovered = ImGui.isItemHovered()
+        val isFaderActive = ImGui.isItemActive()
+
+        if (isFaderActive) {
+            val mouseY = ImGui.getIO().mousePos.y
+            val pct = ((stripMaxY - mouseY) / stripH).coerceIn(0f, 1f)
+            when (label) {
+                "Deck A" -> mixer.levelA = pct
+                "Deck B" -> mixer.levelB = pct
+                "Deck BG" -> mixer.levelBG = pct
+                else -> mixer.levelPV = pct
+            }
+        }
+
+        val io = ImGui.getIO()
+        if (isFaderHovered || isFaderActive) {
+            if (io.mouseWheel != 0f) {
+                val delta = if (io.keyShift) 0.01f else 0.05f
+                val newLevel = (currentLevel + io.mouseWheel * delta).coerceIn(0f, 1f)
+                when (label) {
+                    "Deck A" -> mixer.levelA = newLevel
+                    "Deck B" -> mixer.levelB = newLevel
+                    "Deck BG" -> mixer.levelBG = newLevel
+                    else -> mixer.levelPV = newLevel
+                }
+                io.mouseWheel = 0f
+            }
+            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
+                when (label) {
+                    "Deck A" -> mixer.levelA = 1.0f
+                    "Deck B" -> mixer.levelB = 1.0f
+                    "Deck BG" -> mixer.levelBG = 1.0f
+                    else -> mixer.levelPV = 1.0f
+                }
+            }
+            if (session.uiTheme.tooltipsEnabled) {
+                val pctText = (currentLevel * 100f).roundToInt()
+                val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
+                ImGui.setTooltip("$label $desc: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            }
+        }
+
+        // Draw Fader Track
+        val faderBg = ImGui.colorConvertFloat4ToU32(0.06f, 0.06f, 0.08f, 0.85f)
+        val faderBorder = if (isFaderHovered || isFaderActive) themeCol else ImGui.colorConvertFloat4ToU32(0.25f, 0.28f, 0.35f, 0.7f)
+        dl.addRectFilled(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBg, 3f)
+        dl.addRect(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBorder, 3f, 0, 1.0f)
+
+        // Draw Filled Level Bar (bottom up)
+        val fillH = stripH * currentLevel
+        val fillTop = stripMaxY - fillH
+        if (fillH > 1f) {
+            dl.addRectFilled(stripMinX + 2f, fillTop, stripMinX + stripW - 2f, stripMaxY - 1f, themeCol, 2f)
+        }
+
+        // Draw Handle Indicator line
+        val handleCol = if (isFaderActive) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.85f)
+        dl.addLine(stripMinX + 1f, fillTop, stripMinX + stripW - 1f, fillTop, handleCol, 2f)
 
         ImGui.endChild()
         ImGui.popStyleVar()

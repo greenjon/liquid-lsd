@@ -11,10 +11,14 @@ uniform float uBalance; // 0.0 = Tex1 (Deck A), 1.0 = Tex2 (Deck B)
 uniform float uAlpha; // Master output alpha / gain
 uniform float uBgAlpha; // Background layer alpha multiplier
 uniform float uBloom; // 0.0 = no bloom, 1.0 = full bloom
+uniform float uLevelA; // Deck A channel level multiplier
+uniform float uLevelB; // Deck B channel level multiplier
+uniform float uLevelBG; // Deck BG channel level multiplier
+uniform float uMasterLevel; // Master channel level multiplier
 
 vec4 sampleBlended(vec2 uv) {
-    vec4 color1 = texture(uTex1, uv);
-    vec4 color2 = texture(uTex2, uv);
+    vec4 color1 = texture(uTex1, uv) * uLevelA;
+    vec4 color2 = texture(uTex2, uv) * uLevelB;
     float t = clamp(uBalance, 0.0, 1.0);
     vec4 blended = vec4(0.0);
 
@@ -44,7 +48,7 @@ vec4 sampleBlended(vec2 uv) {
 }
 
 vec4 sampleComposite(vec2 uv) {
-    vec4 bg = texture(uTexBG, uv) * uBgAlpha;
+    vec4 bg = texture(uTexBG, uv) * (uBgAlpha * uLevelBG);
     vec4 fg = sampleBlended(uv);
     vec3 rgb = fg.rgb + bg.rgb * (1.0 - fg.a);
     float a = clamp(fg.a + bg.a * (1.0 - fg.a), 0.0, 1.0);
@@ -53,6 +57,7 @@ vec4 sampleComposite(vec2 uv) {
 
 void main() {
     vec4 baseColor = sampleComposite(vTexCoord);
+    float finalAlpha = uAlpha * uMasterLevel;
 
     if (uBloom > 0.0) {
         float stepX = 0.004 * uBloom;
@@ -70,8 +75,8 @@ void main() {
         blur += sampleComposite(vTexCoord + vec2(stepX, stepY)) * 0.075;
 
         // Screen-blend the blurred highlight additively
-        fragColor = (baseColor + blur * uBloom * 1.5) * uAlpha;
+        fragColor = (baseColor + blur * uBloom * 1.5) * finalAlpha;
     } else {
-        fragColor = baseColor * uAlpha;
+        fragColor = baseColor * finalAlpha;
     }
 }

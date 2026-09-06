@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Clustered Monitor Overlays & 4-Channel Level Faders (`DeckControlPanel.kt`, `MixerMonitorPanel.kt`, `Mixer.kt`, `Renderer.kt`, `mixer.frag`)
+- **4-Channel Console Level Faders**:
+  - Added non-modulatable 0.0–1.0 channel level multipliers (`levelA`, `levelB`, `levelBG`, `levelPV`, `masterLevel`) to `Mixer`.
+  - Level faders act as physical mixer console channel strips: they scale output in `mixer.frag` (`uLevelA`, `uLevelB`, `uLevelBG`, `uMasterLevel`) without interfering with or resetting underlying CV modulators.
+  - Console isolation: Channel fader settings are preserved across preset swaps, copies, and patch reloads.
+- **Inside-Clustered Monitor Overlays**:
+  - **Deck A & Deck BG**: Badges `[A]` and `[BG]` relocated to the top-right corner; die buttons `[🎲]` positioned to the left of the badges; vertical level faders hang directly below the badges.
+  - **Deck B & Deck PV**: Badges `[B]` and `[PV]` relocated to the top-left corner; die buttons `[🎲]` positioned to the right of the badges; vertical level faders hang directly below the badges.
+  - Central Command Spine: All 4 channel faders and dice are clustered in the middle gutter right below the crossfader, within immediate mouse reach.
+  - Overlaid directly on the video previews without shrinking preview width or distorting aspect ratios.
+- **Master Output Monitor Overlay**:
+  - Added bottom-right overlay with `[M]` Master badge, `[🎲 ALL]` button to its left, and vertical Master Level fader directly above `[M]` extending upward. Leaves top-right free for the `[REC]` tally badge.
+- **Middle-Click Reset**:
+  - Middle-clicking any fader track immediately resets the level to 100% (1.0), matching `CellConfig` and crossfader conventions.
+- **Single-Row Crossfader Strip**:
+  - Removed the second row of dice buttons beneath the crossfader in `MixerMonitorPanel`, streamlining the Master Controls child window to a single row (~34px) and maximizing vertical screen space for preview monitors.
+
 ### Application Icons & Window Branding (`Main.kt`, `build.gradle.kts`, `scripts/install_desktop.sh`, `liquid-lsd.desktop`, `web/`, `website/`, `src/main/resources/icons/`)
 - **Desktop Window Icons & Compositor Integration (GLFW, X11, Wayland)**:
   - Integrated multi-resolution application icon loading (`16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`) via `stbi_load_from_memory` and `glfwSetWindowIcon` in `Main.kt`.

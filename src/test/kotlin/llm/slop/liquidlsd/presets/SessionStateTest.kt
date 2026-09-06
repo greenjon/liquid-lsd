@@ -57,7 +57,12 @@ class SessionStateTest {
             queueNext = dummyParam,
             queuePrev = dummyParam,
             isRepeatEnabled = true,
-            isShuffleEnabled = true
+            isShuffleEnabled = true,
+            levelA = 0.8f,
+            levelB = 0.6f,
+            levelBG = 0.4f,
+            levelPV = 0.2f,
+            masterLevel = 0.9f
         )
 
         val jsonStr = json.encodeToString(session)
@@ -83,6 +88,11 @@ class SessionStateTest {
         assertTrue(decoded.isShuffleEnabled)
         assertTrue(decoded.isAutoBGEnabled)
         assertEquals(listOf("presets/bg.lsd"), decoded.bgQueue)
+        assertEquals(0.8f, decoded.levelA)
+        assertEquals(0.6f, decoded.levelB)
+        assertEquals(0.4f, decoded.levelBG)
+        assertEquals(0.2f, decoded.levelPV)
+        assertEquals(0.9f, decoded.masterLevel)
     }
 
     @Test
