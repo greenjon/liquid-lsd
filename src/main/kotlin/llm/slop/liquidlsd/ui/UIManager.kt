@@ -494,7 +494,7 @@ class UIManager(
         val col2W = (libraryW - col1W).coerceAtLeast(20f)
 
         val libTitleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            (ImGui.getTextLineHeight() + 21f + (style.getWindowBorderSize() * 2f)).coerceAtLeast(42f)
+            (ImGui.getTextLineHeight() + 12f + (style.getWindowBorderSize() * 2f)).coerceAtLeast(32f)
         }
 
         val libraryH = when (theme.libraryMode) {
@@ -542,7 +542,7 @@ class UIManager(
         ImGui.setNextWindowPos(0f, libraryPosH)
         ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f))
         val flags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 10.5f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6.0f)
         if (ImGui.begin("Library", flags)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, presetState)

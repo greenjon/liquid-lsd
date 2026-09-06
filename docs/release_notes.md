@@ -7,7 +7,10 @@
   - The top two header rows of each of the four Library columns (Presets, Playlists, Queue, BG Queue)—including panel titles, action buttons, search filters, playlist selector combo, and playback/auto-vj controls—remain pinned/sticky at the top when scrolling through lists.
   - The item lists now scroll within dedicated inner child windows (`##presets_scroll`, `##playlist_items_scroll`, `##queue_items_scroll`, `##bg_queue_items_scroll`), while the outer column frames lock scrolling via `NoScrollbar` and `NoScrollWithMouse`.
 - **Proportional Action Toolbar Buttons**:
-  - Resized the deck load/audition buttons in `BrowserActionToolbar` from an oversized fixed width (80 px) to ~1.5x their height (`btnH * 1.5f`, ~36 px at standard scaling), streamlining horizontal footprint and toolbar centering.
+  - Resized the deck load/audition buttons in `BrowserActionToolbar` from an oversized fixed width (80 px) to ~1.5x their height (`btnH * 1.5f`, ~33 px at standard scaling), streamlining horizontal footprint and toolbar centering.
+- **Balanced Title Bar Button Height & Padding**:
+  - Reduced button height in the Library title bar from ~32 px to ~22 px (`(22f * fontScale)`), creating sleeker, more compact controls.
+  - Adjusted title bar frame padding to 6.0 px (`libTitleBarH = 32f`), preserving the ~2.5 px bottom margin while adding sufficient top clearance to prevent button borders from clipping against the horizontal splitter line.
 - **Fixed Lock/Unlock Icons**:
   - Corrected the Lucide PUA glyph codepoints for `Icons.LOCK` (`\ue10b`, previously misassigned to `map-pin`) and `Icons.UNLOCK` (`\ue10c`, previously misassigned to `user`), restoring standard padlock icons on the quick audition latch button.
 

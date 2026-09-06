@@ -164,7 +164,7 @@ object BrowserActionToolbar {
         val canQueueAB = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_AB
         val alphaQ = if (canQueueAB) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), alphaQ)
-        if (ImGui.button("Q##toolbar_deck_q", btnW, btnH) && canQueueAB && selectedFile != null) {
+        if (ImGui.button("Q##toolbar_deck_q", btnW, btnH) && canQueueAB) {
             session.playQueueManager.appendToQueue(selectedFile)
             LibraryPanel.shouldReclaimFocus = true
         }
@@ -180,7 +180,7 @@ object BrowserActionToolbar {
         val canQueueBG = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_BG
         val alphaBGQ = if (canQueueBG) 1f else 0.35f
         BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), alphaBGQ)
-        if (ImGui.button("BGQ##toolbar_deck_bgq", btnW, btnH) && canQueueBG && selectedFile != null) {
+        if (ImGui.button("BGQ##toolbar_deck_bgq", btnW, btnH) && canQueueBG) {
             BgQueueManager.appendToQueue(selectedFile)
             LibraryPanel.shouldReclaimFocus = true
         }

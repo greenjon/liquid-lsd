@@ -87,7 +87,7 @@ class MixerMonitorPanel(
         ImGui.beginChild("MasterControls", availW, masterControlsH, true, imgui.flag.ImGuiWindowFlags.NoScrollbar)
         
         // Row 1: Crossfader with Deck A box on left and Deck B box on right
-        drawCrossfaderSlider(session, mixer, availW)
+        drawCrossfaderSlider(session, mixer)
 
         // Row 2: Momentary Controls: Randomize A/B/BG/PV/All
         if (session.uiTheme.randomizationEnabled) {
@@ -210,9 +210,9 @@ class MixerMonitorPanel(
 
     private fun drawCrossfaderSlider(
         session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
-        availW: Float
+        mixer: Mixer
     ) {
+        val contentW = ImGui.getContentRegionAvailX()
         val fontLevel = UITheme.FontLevel.H2
         var textWA = 0f
         var textWB = 0f
@@ -233,12 +233,12 @@ class MixerMonitorPanel(
         val rowH = badgeH
         val centerY = startY + rowH * 0.5f
 
-        // Reserve row space
-        ImGui.dummy(availW, rowH)
+        // Reserve row space using actual available content width
+        ImGui.dummy(contentW, rowH)
         val dl = ImGui.getWindowDrawList()
 
         // 1. Deck A Box (styled identically to Deck A monitor badge)
-        val badgeAX = startX
+        val badgeAX = startX + 1f
         val badgeAY = startY
         val rgbA = BrowserDeckButtons.colorA()
         val colorA = ImGui.colorConvertFloat4ToU32(rgbA[0], rgbA[1], rgbA[2], 1f)
@@ -266,7 +266,7 @@ class MixerMonitorPanel(
         }
 
         // 2. Deck B Box (styled identically to Deck B monitor badge)
-        val badgeBX = startX + availW - badgeW
+        val badgeBX = startX + contentW - badgeW - 1f
         val badgeBY = startY
         val rgbB = BrowserDeckButtons.colorB()
         val colorB = ImGui.colorConvertFloat4ToU32(rgbB[0], rgbB[1], rgbB[2], 1f)

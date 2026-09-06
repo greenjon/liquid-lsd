@@ -178,7 +178,7 @@ fun main(args: Array<String>) {
 
     // Create window
     val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
-        ?: throw RuntimeException("Failed to create GLFW window")
+    if (window == 0L) throw RuntimeException("Failed to create GLFW window")
 
     // Enforce minimum window size to prevent desktop layout compression
     glfwSetWindowSizeLimits(window, 1280, 720, GLFW_DONT_CARE, GLFW_DONT_CARE)

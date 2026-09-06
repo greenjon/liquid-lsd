@@ -175,13 +175,14 @@ object LibraryPanel {
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
             val fontScale = (session.uiTheme.baseSize / 15f).coerceIn(0.8f, 2.5f)
-            val btnW = (24f * fontScale).coerceIn(24f, 40f)
-            val btnH = (menuBarH - 8f).coerceAtLeast(20f)
-            val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
+            val btnH = (22f * fontScale).coerceIn(18f, 28f)
+            val bottomSpacing = (2.5f * fontScale).coerceIn(2f, 4f)
+            val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
             // Centered Action Toolbar
             val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.calculateToolbarWidth(btnH)
-            val windowBtnsW = (btnW * 2f) + 4f
+            val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
+            val windowBtnsW = (windowBtnW * 2f) + 4f
             val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceIn(8f, (safeW - totalToolbarW - windowBtnsW - 8f).coerceAtLeast(8f))
 
             ImGui.setCursorPosX(targetCenterX)
@@ -206,7 +207,7 @@ object LibraryPanel {
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 // Minimize [-]
                 val isHidden = session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE
-                if (ImGui.button("${Icons.MINUS}##lib_min", btnW, btnH)) {
+                if (ImGui.button("${Icons.MINUS}##lib_min", windowBtnW, btnH)) {
                     if (isHidden) {
                         session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                         isLibraryExpanding = true
@@ -227,7 +228,7 @@ object LibraryPanel {
                 // Maximize / Restore [□] / [❐]
                 val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
                 val maxIcon = if (isFull) Icons.COPY else Icons.SQUARE
-                if (ImGui.button("$maxIcon##lib_max", btnW, btnH)) {
+                if (ImGui.button("$maxIcon##lib_max", windowBtnW, btnH)) {
                     if (isFull) {
                         session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                         isLibraryExpanding = false
