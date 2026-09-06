@@ -74,6 +74,7 @@ class Deck(
     val viewDepthDim = ModulatableParameter(0.5f, minClamp = 0.0f, maxClamp = 1.0f)
     val viewSeparation = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
     val viewBlendMode = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f) // 1.0 = Additive, 0.0 = Alpha
+    val viewRoundness = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f) // 1.0 = Circular Disc, 0.0 = Square Quad
 
     // Feedback parameters with custom clamp ranges
     val fbDecay = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
@@ -124,6 +125,7 @@ class Deck(
         viewDepthDim.reset()
         viewSeparation.reset()
         viewBlendMode.reset()
+        viewRoundness.reset()
 
         fbDecay.reset()
         fbGain.reset()
@@ -161,6 +163,7 @@ class Deck(
         allParams.add(this.viewDepthDim)
         allParams.add(this.viewSeparation)
         allParams.add(this.viewBlendMode)
+        allParams.add(this.viewRoundness)
         allParams.add(this.fbDecay)
         allParams.add(this.fbGain)
         allParams.add(this.fbZoom)
@@ -211,6 +214,7 @@ class Deck(
         viewDepthDim.evaluate()
         viewSeparation.evaluate()
         viewBlendMode.evaluate()
+        viewRoundness.evaluate()
 
         fbDecay.evaluate()
         fbGain.evaluate()
@@ -261,6 +265,7 @@ class Deck(
         list.add("$prefix/View/DepthDim" to viewDepthDim)
         list.add("$prefix/View/Separation" to viewSeparation)
         list.add("$prefix/View/BlendMode" to viewBlendMode)
+        list.add("$prefix/View/Roundness" to viewRoundness)
 
         // Add Deck's own feedback parameters
         list.add("$prefix/FB/Decay" to fbDecay)

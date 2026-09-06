@@ -24,6 +24,7 @@
 ### Hex-Planar (60°) & Tetrahedral 24-Chamber Kaleidoscope 3D Modes
 - **Hex-Planar Display Mode (6 Planes @ 60°)**: Added Mode 3 to the universal `View` pipeline, replicating any 2D visual source across the 6 symmetry planes of the tetrahedral Coxeter group ($A_3$: $x = \pm y, y = \pm z, z = \pm x$). All 6 planes pass through $(0, 0, 0)$ at $60^\circ$ angles, sharing the exact same origin and expanding along their normals into a 12-faced rhombic dodecahedral cage when `Separation` is increased.
 - **Tetrahedral Kaleidoscope Mode (24-Chamber Space Folding)**: Added Mode 4 to the universal `View` pipeline (`tetra_kaleido.vert`, `tetra_kaleido.frag`), implementing iterative Coxeter reflection folding across simple roots. Virtual camera rays fold 24 times into the tetrahedral fundamental domain, producing seamless mirror reflections across all sector boundaries.
+- **Circular Disc Boundaries (`Roundness`)**: Added a modulatable `Roundness` parameter (0.0 = square, 1.0 = circle, default 1.0) with anti-aliased edge feathering. In 3D rotation, intersecting circular discs produce continuous, seamless celestial gyroscopes and armillary spheres, completely eliminating boxy corner sweeping.
 - **Background Transparency & Discard Precision**: Non-luminous background fragments are cleanly discarded, ensuring both modes float transparently over the background deck with zero gray shadow artifacts.
 
 ### Unified Audio & Transient Modulator System

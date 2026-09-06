@@ -212,6 +212,7 @@ object SourceDocRegistry {
         "view/Separation" to "Axial separation offset: pushes intersecting planes outward along their normal axes.",
         "view/Blend Mode" to "3D intersection blending: 0 = alpha transparency, 1 = additive luminous glow.",
         "view/BlendMode" to "3D intersection blending: 0 = alpha transparency, 1 = additive luminous glow.",
+        "view/Roundness" to "Boundary shape of intersecting planes: 0 = square quad, 1 = circular disc (smooth celestial gyroscope).",
 
         // Feedback
         "feedback/Decay" to "Feedback trail persistence: 0 = no feedback, 1 = maximum trail retention.",

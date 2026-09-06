@@ -7,6 +7,7 @@ uniform sampler2D uTexture;
 uniform float uDepthDim;      // 0.0 = uniform brightness, 1.0 = deep proximity falloff
 uniform float uAlpha;         // Global alpha
 uniform float uBlendAdditive; // 0.0 = standard alpha, 1.0 = additive luminous boost
+uniform float uRoundness;     // 0.0 = square quad, 1.0 = circular disc
 
 out vec4 fragColor;
 
@@ -27,14 +28,17 @@ void main() {
     // otherwise derive opacity strictly from luminance.
     float baseAlpha = (texColor.a < 0.999) ? min(texColor.a, alphaFromLum) : alphaFromLum;
 
-    // Subtle edge border softening to prevent harsh quad rectangular seams in 3D
-    vec2 edgeDist = min(vTexCoord, 1.0 - vTexCoord);
-    float borderFade = smoothstep(0.0, 0.015, min(edgeDist.x, edgeDist.y));
+    // Shape boundary: smooth transition from square quad (0.0) to circular disc (1.0)
+    vec2 p = (vTexCoord - vec2(0.5)) * 2.0;
+    float squareDist = max(abs(p.x), abs(p.y));
+    float circleDist = length(p);
+    float shapeDist = mix(squareDist, circleDist, uRoundness);
+    float borderFade = smoothstep(1.0, 0.96, shapeDist);
 
     float effectiveAlpha = baseAlpha * uAlpha * borderFade;
 
     // Discard any fragment that has no visible light or opacity
-    if (effectiveAlpha < 0.002 || lum < 0.01) {
+    if (effectiveAlpha < 0.002 || lum < 0.01 || borderFade <= 0.001) {
         discard;
     }
 

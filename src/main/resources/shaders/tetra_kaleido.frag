@@ -14,6 +14,7 @@ uniform float uDepthDim;
 uniform float uAlpha;
 uniform float uBlendAdditive;
 uniform float uAspectRatio;
+uniform float uRoundness;
 
 mat3 rotationMatrixX(float angle) {
     float c = cos(angle);
@@ -87,9 +88,12 @@ void main() {
     float cellScale = 1.2 + uSeparation * 2.5;
     vec2 sampleUV = vec2(0.5) + vec2(p.y, p.z) * cellScale;
 
-    // Subtle edge border softening at the 2D texture boundary
-    vec2 edgeDist = min(sampleUV, 1.0 - sampleUV);
-    float borderFade = smoothstep(0.0, 0.02, min(edgeDist.x, edgeDist.y));
+    // Shape boundary: smooth transition from square quad (0.0) to circular disc (1.0)
+    vec2 pCell = (sampleUV - vec2(0.5)) * 2.0;
+    float squareDist = max(abs(pCell.x), abs(pCell.y));
+    float circleDist = length(pCell);
+    float shapeDist = mix(squareDist, circleDist, uRoundness);
+    float borderFade = smoothstep(1.0, 0.96, shapeDist);
 
     vec4 texColor = texture(uTexture, clamp(sampleUV, 0.0, 1.0));
 

@@ -469,6 +469,7 @@ object PresetGridTabs {
                     PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
         }

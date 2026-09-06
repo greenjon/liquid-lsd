@@ -99,6 +99,7 @@ Every Deck includes a universal **`View`** stage that applies spatial framing, c
    - **`3D Persp`**: Continuous transition from orthographic projection to deep wide-angle perspective.
    - **`Depth Dim`**: Camera headlight proximity dimming. Near portions stay crisp and bright while receding portions dissolve smoothly into atmospheric haze.
    - **`Separation`**: Pushes intersecting planes outward along their normal axes into an open geometric cage.
+   - **`Roundness`**: Plane boundary shape transition from square quad (0.0) to circular disc (1.0). Defaults to 1.0 for a celestial armillary sphere / gyroscope silhouette without boxy edge sweeping.
    - **`Blend Mode`**: Toggles between additive luminous blending (for glowing neon intersections) and transparent alpha blending.
 
 ---

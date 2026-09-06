@@ -438,7 +438,8 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         "viewPersp" to viewPersp.toDto(),
         "viewDepthDim" to viewDepthDim.toDto(),
         "viewSeparation" to viewSeparation.toDto(),
-        "viewBlendMode" to viewBlendMode.toDto()
+        "viewBlendMode" to viewBlendMode.toDto(),
+        "viewRoundness" to viewRoundness.toDto()
     )
     
     return DeckPresetDto(
@@ -489,6 +490,7 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     viewDepthDim.reset()
     viewSeparation.reset()
     viewBlendMode.reset()
+    viewRoundness.reset()
 
     // Apply view parameters (if present in preset)
     dto.viewParameters["view3DMode"]?.let { view3DMode.applyDto(it) }
@@ -500,6 +502,7 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.viewParameters["viewDepthDim"]?.let { viewDepthDim.applyDto(it) }
     dto.viewParameters["viewSeparation"]?.let { viewSeparation.applyDto(it) }
     dto.viewParameters["viewBlendMode"]?.let { viewBlendMode.applyDto(it) }
+    dto.viewParameters["viewRoundness"]?.let { viewRoundness.applyDto(it) }
     
     // Reset feedback parameters to baseline defaults before applying
     fbDecay.reset()

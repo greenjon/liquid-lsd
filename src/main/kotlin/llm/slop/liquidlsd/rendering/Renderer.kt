@@ -176,6 +176,7 @@ class Renderer {
                 tetraKaleidoShader.setUniform("uAlpha", deck.source.globalAlpha.value)
                 tetraKaleidoShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
                 tetraKaleidoShader.setUniform("uAspectRatio", aspect)
+                tetraKaleidoShader.setUniform("uRoundness", deck.viewRoundness.value)
 
                 Geometry.drawFullscreenQuad()
 
@@ -199,6 +200,7 @@ class Renderer {
                 triPlanarShader.setUniform("uAlpha", deck.source.globalAlpha.value)
                 triPlanarShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
                 triPlanarShader.setUniform("uAspectRatio", aspect)
+                triPlanarShader.setUniform("uRoundness", deck.viewRoundness.value)
                 triPlanarShader.setUniform("u3DMode", modeVal)
 
                 val numInstances = if (modeVal == 3 || modeVal == 2) 6 else 3
