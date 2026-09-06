@@ -33,7 +33,7 @@ Deck PV  (preview only — same pipeline as A/B/BG, excluded from Mixer output)
 
 ```
 src/main/kotlin/llm/slop/liquidlsd/
-├── Main.kt                     — GLFW window, render loop
+├── Main.kt                     — GLFW window, multi-resolution app icon loading (16x16 to 256x256), render loop
 ├── SessionContext.kt           — Application state & context
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
@@ -180,6 +180,12 @@ value = result.coerceIn(0f, 1f)
 Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
 Preset Grid columns: VAL | MIDI | LFO | SEQ | AUD  
 *(Note: Engine subsystems `midiEnabled`, `sequencerEnabled`, and `audioEngineEnabled` serve as the single source of truth for Preset Grid and Cell Config column visibility; the header kebab menu `⋮` allows immediate toggling of these engines and columns).*
+
+## Application Icons & Window Branding
+The project includes an official application icon featuring an audio-reactive psychedelic eye with chromatic aberration and a falling liquid drop.
+- **Desktop (GLFW)**: `setWindowAppIcons(window)` in `Main.kt` loads multi-resolution PNGs (`16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`) from `src/main/resources/icons/` into LWJGL `GLFWImage.Buffer` using `stbi_load_from_memory`. Applied to both primary desktop and secondary output preview windows.
+- **Web Player**: `web/favicon.ico`, `web/favicon.png` (32×32), `web/apple-touch-icon.png` (180×180), `web/icon-192.png`, and `web/icon-512.png` wired into `web/index.html`.
+- **Website & Documentation**: Bundled under `website/assets/images/` and generated into `greenjon/assets/images/`.
 
 ## Design Principles
 - **Zero-allocation audio loops** — pre-allocated buffers, no object creation in JACK callback or Java Sound conversion loop

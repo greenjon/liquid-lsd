@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Application Icons & Window Branding (`Main.kt`, `web/`, `website/`, `src/main/resources/icons/`)
+- **Desktop Window Icons (GLFW)**:
+  - Integrated multi-resolution application icon loading (`16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`) via `stbi_load_from_memory` and `glfwSetWindowIcon` in `Main.kt`.
+  - Automatically applied to the primary application window as well as secondary / external monitor preview windows.
+- **Web & Documentation Branding**:
+  - Wired high-resolution favicon and Apple touch icon assets into `web/index.html` and documentation templates (`website/templates/doc_page.html`, `website/templates/index.html`).
+
 ### Library Panel UI Refinements (`LibraryPanel.kt`, `BrowserActionToolbar.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `Icons.kt`)
 - **Sticky Top Two Rows in Library Columns**:
   - The top two header rows of each of the four Library columns (Presets, Playlists, Queue, BG Queue)—including panel titles, action buttons, search filters, playlist selector combo, and playback/auto-vj controls—remain pinned/sticky at the top when scrolling through lists.

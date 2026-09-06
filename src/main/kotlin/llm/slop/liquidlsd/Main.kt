@@ -18,6 +18,10 @@ import llm.slop.liquidlsd.presets.PresetManager
 import mu.KotlinLogging
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
+import org.lwjgl.glfw.GLFWImage
+import org.lwjgl.stb.STBImage.*
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL33.*
 
@@ -179,6 +183,7 @@ fun main(args: Array<String>) {
     // Create window
     val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
     if (window == 0L) throw RuntimeException("Failed to create GLFW window")
+    setWindowAppIcons(window)
 
     // Enforce minimum window size to prevent desktop layout compression
     glfwSetWindowSizeLimits(window, 1280, 720, GLFW_DONT_CARE, GLFW_DONT_CARE)
@@ -657,6 +662,7 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE)
         val win = glfwCreateWindow(mode.width(), mode.height(), "Liquid LSD Output", externalMonitor, primaryWindow)
         if (win != 0L) {
+            setWindowAppIcons(win)
             logger.info { "Created secondary window fullscreen on external monitor (width: ${mode.width()}, height: ${mode.height()})" }
             return win
         }
@@ -665,6 +671,7 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
         val win = glfwCreateWindow(1280, 720, "Liquid LSD Output Preview", 0, primaryWindow)
         if (win != 0L) {
+            setWindowAppIcons(win)
             logger.info { "Created secondary preview window (no external monitor found)" }
             return win
         }
@@ -681,5 +688,57 @@ private fun destroySecondaryWindow(win: Long) {
 
         glfwDestroyWindow(win)
         logger.info { "Destroyed secondary window" }
+    }
+}
+
+private fun setWindowAppIcons(window: Long) {
+    if (window == 0L) return
+    val iconSizes = listOf(16, 32, 48, 64, 128, 256)
+    val directBuffers = mutableListOf<java.nio.ByteBuffer>()
+    val pixelBuffers = mutableListOf<java.nio.ByteBuffer>()
+
+    try {
+        MemoryStack.stackPush().use { stack ->
+            val w = stack.mallocInt(1)
+            val h = stack.mallocInt(1)
+            val comp = stack.mallocInt(1)
+
+            val loadedIcons = mutableListOf<Triple<Int, Int, java.nio.ByteBuffer>>()
+
+            for (size in iconSizes) {
+                val res = "/icons/icon-$size.png"
+                val stream = object {}.javaClass.getResourceAsStream(res) ?: continue
+                val bytes = stream.use { it.readBytes() }
+                val byteBuffer = MemoryUtil.memAlloc(bytes.size)
+                directBuffers.add(byteBuffer)
+                byteBuffer.put(bytes).flip()
+
+                w.clear(); h.clear(); comp.clear()
+                val pixels = stbi_load_from_memory(byteBuffer, w, h, comp, 4)
+                if (pixels != null) {
+                    pixelBuffers.add(pixels)
+                    loadedIcons.add(Triple(w.get(0), h.get(0), pixels))
+                }
+            }
+
+            if (loadedIcons.isNotEmpty()) {
+                val buffer = GLFWImage.malloc(loadedIcons.size, stack)
+                for (i in loadedIcons.indices) {
+                    val (iconW, iconH, pixels) = loadedIcons[i]
+                    buffer.get(i).set(iconW, iconH, pixels)
+                }
+                glfwSetWindowIcon(window, buffer)
+                logger.info { "Configured GLFW window icon with ${loadedIcons.size} resolution mipmaps (16x16 to 256x256)." }
+            }
+        }
+    } catch (e: Exception) {
+        logger.warn(e) { "Failed to set GLFW window icon" }
+    } finally {
+        for (pixels in pixelBuffers) {
+            stbi_image_free(pixels)
+        }
+        for (buf in directBuffers) {
+            MemoryUtil.memFree(buf)
+        }
     }
 }
