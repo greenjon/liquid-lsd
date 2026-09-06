@@ -131,9 +131,10 @@ object BgQueueActionsPanel {
         ImGui.separator()
         ImGui.spacing()
         
-        // Queue list
-        var moveFrom = -1
-        var moveTo = -1
+        if (ImGui.beginChild("##bg_queue_items_scroll", 0f, 0f, false)) {
+            // Queue list
+            var moveFrom = -1
+            var moveTo = -1
         var removeFromQueueIndex = -1
         var insertSlot = -1
         var insertLineY = -1f
@@ -315,5 +316,7 @@ object BgQueueActionsPanel {
             }
             ImGui.popStyleColor()
         }
+        }
+        ImGui.endChild()
     }
 }

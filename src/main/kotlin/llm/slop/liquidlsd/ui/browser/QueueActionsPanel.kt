@@ -135,9 +135,10 @@ object QueueActionsPanel {
         ImGui.separator()
         ImGui.spacing()
         
-        // Queue list
-        var moveFrom = -1
-        var moveTo = -1
+        if (ImGui.beginChild("##queue_items_scroll", 0f, 0f, false)) {
+            // Queue list
+            var moveFrom = -1
+            var moveTo = -1
         var removeFromQueueIndex = -1
         // Insertion-line state: slot where the next drop will land, and the Y pixel for the indicator line.
         var insertSlot = -1
@@ -323,5 +324,7 @@ object QueueActionsPanel {
             }
             ImGui.popStyleColor()
         }
+        }
+        ImGui.endChild()
     }
 }

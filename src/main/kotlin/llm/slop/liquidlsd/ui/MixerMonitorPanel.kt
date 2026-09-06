@@ -9,6 +9,8 @@ import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.presets.PresetManager
 
+import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
+
 class MixerMonitorPanel(
     private val presetState: PresetGridState,
     private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit,
@@ -28,7 +30,8 @@ class MixerMonitorPanel(
             textLineHeightWithSpacing = ImGui.getTextLineHeightWithSpacing(),
             frameHeightWithSpacing = ImGui.getFrameHeightWithSpacing(),
             itemSpacingY = style.getItemSpacingY(),
-            aspectRatio = session.uiTheme.renderAspectRatio
+            aspectRatio = session.uiTheme.renderAspectRatio,
+            randomizationEnabled = session.uiTheme.randomizationEnabled
         )
         val availW = layout.renderWidth.coerceAtLeast(1f)
         val masterH = layout.masterHeight.coerceAtLeast(1f)
@@ -74,55 +77,26 @@ class MixerMonitorPanel(
         ImGui.spacing()
 
         // --- Master Mixer Controls ---
+        val numRows = if (session.uiTheme.randomizationEnabled) 2f else 1f
         val masterControlsH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            (ImGui.getFrameHeightWithSpacing() * 3f) + (ImGui.getStyle().itemSpacing.y * 2f) + 8f
-        }.coerceAtLeast(85f)
+            (ImGui.getFrameHeightWithSpacing() * numRows) + (ImGui.getStyle().itemSpacing.y * (numRows - 1f)) + 12f
+        }.coerceAtLeast(if (session.uiTheme.randomizationEnabled) 58f else 34f)
+
         ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.05f, 0.1f, 0.08f, 0.4f)) // Faint mint background
         ImGui.setCursorScreenPos(imgScreenX, ImGui.getCursorScreenPosY())
         ImGui.beginChild("MasterControls", availW, masterControlsH, true, imgui.flag.ImGuiWindowFlags.NoScrollbar)
         
-        // Crossfader (mapped display value from -1.0 to 1.0)
-        drawFlatSlider(session, "Mixer/crossfade", "Crossfader", mixer.crossfade, -1f, 1f, 80f, -1f, 1f, ImGui.colorConvertFloat4ToU32(0.4f, 1.0f, 0.8f, 1f), "Blend between Deck A (-1.0) and Deck B (1.0). Deck PV runs in parallel as a preview.", mixer = mixer) {
-            ""
-        }
+        // Row 1: Crossfader with Deck A box on left and Deck B box on right
+        drawCrossfaderSlider(session, mixer, availW)
 
-        ImGui.spacing()
-
-        // --- Momentary Controls: Playlist Prev/Next & Randomize A/B/C/All ---
-        val spacingX = ImGui.getStyle().itemSpacing.x
-        val totalAvailW = ImGui.getContentRegionAvailX()
-        val numButtons = if (session.uiTheme.randomizationEnabled) 7 else 2
-        val mBtnW = ((totalAvailW - (spacingX * (numButtons - 1))) / numButtons).coerceAtLeast(20f)
-        val mBtnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() * 0.9f }.coerceAtLeast(20f)
-
-        // Prev Button
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.26f, 0.32f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.36f, 0.45f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.46f, 0.58f, 1f))
-        if (ImGui.button("< Prev##queue_prev", mBtnW, mBtnH)) {
-            session.playQueueManager.triggerPrevious(mixer)
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Trigger previous preset in the playlist queue (Mixer/queuePrev).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
-        }
-        ImGui.popStyleColor(3)
-
-        ImGui.sameLine()
-
-        // Next Button
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.26f, 0.32f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.36f, 0.45f, 1f))
-        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.46f, 0.58f, 1f))
-        if (ImGui.button("Next >##queue_next", mBtnW, mBtnH)) {
-            session.playQueueManager.triggerNext(mixer)
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Trigger next preset in the playlist queue (Mixer/queueNext).\nDoes not trigger manual takeover; can be modulated by CV or MIDI concurrently.")
-        }
-        ImGui.popStyleColor(3)
-
+        // Row 2: Momentary Controls: Randomize A/B/BG/PV/All
         if (session.uiTheme.randomizationEnabled) {
-            ImGui.sameLine()
+            ImGui.spacing()
+            val spacingX = ImGui.getStyle().itemSpacing.x
+            val totalAvailW = ImGui.getContentRegionAvailX()
+            val numButtons = 5
+            val mBtnW = ((totalAvailW - (spacingX * (numButtons - 1))) / numButtons).coerceAtLeast(20f)
+            val mBtnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() * 0.9f }.coerceAtLeast(20f)
 
             // Rand A Button
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.28f, 0.20f, 0.26f, 1f))
@@ -198,12 +172,6 @@ class MixerMonitorPanel(
             ImGui.popStyleColor(3)
         }
 
-        ImGui.spacing()
-
-        drawFlatSlider(session, "Mixer/xfadeSpeed", "Fade Speed", mixer.xfadeSpeed, 0.1f, 30.0f, 80f, 0.1f, 30.0f, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f), "Adjust transition duration for automatic crossfading and Auto-VJ transitions.", mixer = mixer) {
-            "%.1fs".format(it)
-        }
-        
         ImGui.endChild()
         ImGui.popStyleColor()
 
@@ -240,166 +208,222 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, row2Y + subH + 4f)
     }
 
-    fun drawFlatSlider(
+    private fun drawCrossfaderSlider(
         session: llm.slop.liquidlsd.SessionContext,
-        paramKey: String,
-        label: String,
-        param: ModulatableParameter,
-        min: Float,
-        max: Float,
-        labelW: Float = 100f,
-        displayMin: Float = min,
-        displayMax: Float = max,
-        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.2f, 1f),
-        tooltip: String? = null,
-        mixer: Mixer? = null,
-        formatValue: (Float) -> String = { "%.3f".format(it) }
+        mixer: Mixer,
+        availW: Float
     ) {
-        ImGui.pushID(label)
-
-        val totalAvailW = ImGui.getContentRegionAvailX()
-        var textW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) { textW = ImGui.calcTextSize(label).x }
-        session.uiTheme.body(label)
-
-        val minSliderW = 40f
-        val canFitSameLine = totalAvailW - (textW + 15f) >= minSliderW
-        if (canFitSameLine) {
-            ImGui.sameLine(textW + 15f)
-        } else {
-            ImGui.spacing()
+        val fontLevel = UITheme.FontLevel.H2
+        var textWA = 0f
+        var textWB = 0f
+        var textH = 0f
+        session.uiTheme.withFont(fontLevel) {
+            textWA = ImGui.calcTextSize("A").x
+            textWB = ImGui.calcTextSize("B").x
+            textH = ImGui.getTextLineHeight()
         }
 
-        val barStartX = ImGui.getCursorScreenPosX()
-        val barScreenY = ImGui.getCursorScreenPosY() + 3f
-        val barW = (ImGui.getContentRegionAvailX() - 5f).coerceAtLeast(minSliderW)
-        val barH = maxOf(14f, session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() * 0.75f })
+        val badgePadX = 8f
+        val badgePadY = 3f
+        val badgeW = (maxOf(textWA, textWB) + badgePadX * 2f).coerceAtLeast(24f)
+        val badgeH = (textH + badgePadY * 2f).coerceAtLeast(24f)
 
-        ImGui.invisibleButton("##slider", barW, barH)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val baseTip = tooltip ?: "Click and drag to adjust $label."
-            ImGui.setTooltip(baseTip)
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+        val rowH = badgeH
+        val centerY = startY + rowH * 0.5f
+
+        // Reserve row space
+        ImGui.dummy(availW, rowH)
+        val dl = ImGui.getWindowDrawList()
+
+        // 1. Deck A Box (styled identically to Deck A monitor badge)
+        val badgeAX = startX
+        val badgeAY = startY
+        val rgbA = BrowserDeckButtons.colorA()
+        val colorA = ImGui.colorConvertFloat4ToU32(rgbA[0], rgbA[1], rgbA[2], 1f)
+
+        dl.addRectFilled(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + badgeH, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dl.addRect(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + badgeH, colorA, 4f, 0, 1.5f)
+
+        val textAX = badgeAX + (badgeW - textWA) * 0.5f
+        val textAY = badgeAY + (badgeH - textH) * 0.5f
+        session.uiTheme.withFont(fontLevel) {
+            dl.addText(textAX, textAY, colorA, "A")
         }
 
+        ImGui.setCursorScreenPos(badgeAX, badgeAY)
+        ImGui.invisibleButton("##btn_crossfade_deck_a", badgeW, badgeH)
+        if (ImGui.isItemHovered()) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
+            if (session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Deck A (Click to snap crossfader to Deck A)")
+            }
+        }
+        if (ImGui.isItemClicked(0)) {
+            mixer.onCrossfadeManualTakeover()
+            mixer.crossfade.set(-1.0f)
+        }
+
+        // 2. Deck B Box (styled identically to Deck B monitor badge)
+        val badgeBX = startX + availW - badgeW
+        val badgeBY = startY
+        val rgbB = BrowserDeckButtons.colorB()
+        val colorB = ImGui.colorConvertFloat4ToU32(rgbB[0], rgbB[1], rgbB[2], 1f)
+
+        dl.addRectFilled(badgeBX, badgeBY, badgeBX + badgeW, badgeBY + badgeH, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dl.addRect(badgeBX, badgeBY, badgeBX + badgeW, badgeBY + badgeH, colorB, 4f, 0, 1.5f)
+
+        val textBX = badgeBX + (badgeW - textWB) * 0.5f
+        val textBY = badgeBY + (badgeH - textH) * 0.5f
+        session.uiTheme.withFont(fontLevel) {
+            dl.addText(textBX, textBY, colorB, "B")
+        }
+
+        ImGui.setCursorScreenPos(badgeBX, badgeBY)
+        ImGui.invisibleButton("##btn_crossfade_deck_b", badgeW, badgeH)
+        if (ImGui.isItemHovered()) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
+            if (session.uiTheme.tooltipsEnabled) {
+                ImGui.setTooltip("Deck B (Click to snap crossfader to Deck B)")
+            }
+        }
+        if (ImGui.isItemClicked(0)) {
+            mixer.onCrossfadeManualTakeover()
+            mixer.crossfade.set(1.0f)
+        }
+
+        // 3. Crossfader Slider (Standard track slider style from CustomRangeSlider)
+        val gap = 10f
+        val lineStartX = badgeAX + badgeW + gap
+        val lineEndX = badgeBX - gap
+        val lineWidth = (lineEndX - lineStartX).coerceAtLeast(10f)
+
+        val trackPadX = 3f
+        val trackW = lineWidth + trackPadX * 2f
+        val trackH = maxOf(badgeH, 18f)
+        ImGui.setCursorScreenPos(lineStartX - trackPadX, centerY - trackH * 0.5f)
+        ImGui.invisibleButton("##crossfader_slider_track", trackW, trackH)
+
+        val isTrackHovered = ImGui.isItemHovered()
+        val isTrackActive = ImGui.isItemActive()
+        val mouseDown = isTrackActive
+
+        val paramKey = "Mixer/crossfade"
         val isTarget = presetState.midiLearnTarget?.let {
             it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
         } ?: false
 
         if (presetState.isMidiLearnMode) {
             if (ImGui.isItemClicked(0)) {
-                presetState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, label, param, min, max)
+                presetState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, "Crossfader", mixer.crossfade, -1f, 1f)
             }
-        } else if (ImGui.isItemActive()) {
-            if (paramKey == "Mixer/crossfade") {
-                mixer?.onCrossfadeManualTakeover()
-            }
+        } else if (mouseDown) {
+            mixer.onCrossfadeManualTakeover()
             val mouseX = ImGui.getIO().mousePos.x
-            val pct = if (barW > 0f) ((mouseX - barStartX) / barW).coerceIn(0f, 1f) else 0f
-            val newValue = min + pct * (max - min)
-            param.set(newValue)
+            val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
+            val newVal = -1.0f + pct * 2.0f
+            mixer.crossfade.set(newVal)
         }
 
-        val valueRange = max - min
-        val displayRange = displayMax - displayMin
+        val io = ImGui.getIO()
+        if (isTrackHovered || isTrackActive) {
+            if (io.mouseWheel != 0f) {
+                mixer.onCrossfadeManualTakeover()
+                val shift = io.keyShift
+                val ctrl = io.keyCtrl
+                val delta = if (ctrl && shift) 0.1f else if (shift) 0.02f else 0.05f
+                val newVal = (mixer.crossfade.baseValue + io.mouseWheel * delta).coerceIn(-1.0f, 1.0f)
+                mixer.crossfade.set(newVal)
+                io.mouseWheel = 0f
+            }
+            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click center reset
+                mixer.onCrossfadeManualTakeover()
+                mixer.crossfade.set(0.0f)
+            }
+        }
 
-        // Draw the flat bar visual using DrawList
-        val dl = ImGui.getWindowDrawList()
-        dl.addRectFilled(
-            barStartX, barScreenY,
-            barStartX + barW, barScreenY + barH,
-            ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f),
-            3f
-        )
+        if (isTrackHovered && session.uiTheme.tooltipsEnabled) {
+            val curVal = mixer.crossfade.value
+            val blendText = when {
+                curVal <= -0.99f -> "100% Deck A"
+                curVal >= 0.99f -> "100% Deck B"
+                kotlin.math.abs(curVal) < 0.02f -> "Center (50% A / 50% B)"
+                curVal < 0f -> "Deck A: %.0f%% | Deck B: %.0f%%".format((1f - (curVal + 1f) * 0.5f) * 100f, ((curVal + 1f) * 0.5f) * 100f)
+                else -> "Deck A: %.0f%% | Deck B: %.0f%%".format((1f - (curVal + 1f) * 0.5f) * 100f, ((curVal + 1f) * 0.5f) * 100f)
+            }
+            val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
+            val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+            ImGui.setTooltip("Crossfader$midiText: $blendText\nDrag or scroll to blend. Middle-click to center.")
+        }
 
-        // Draw learning highlight if active
+        // --- Render Slider Visuals ---
+        // Inactive track line
+        val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+        dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
+
+        // Faint vertical marks: ends (-1.0, +1.0), midway (-0.5, +0.5), and middle (0.0)
+        val markColFaint = ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.65f, 0.28f)
+        val markColCenter = ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.45f)
+        val markColEnds = ImGui.colorConvertFloat4ToU32(0.70f, 0.70f, 0.70f, 0.35f)
+
+        // Ends: 0% (-1.0) and 100% (+1.0)
+        dl.addLine(lineStartX, centerY - 6f, lineStartX, centerY + 6f, markColEnds, 1.5f)
+        dl.addLine(lineEndX, centerY - 6f, lineEndX, centerY + 6f, markColEnds, 1.5f)
+
+        // Midway points: 25% (-0.5) and 75% (+0.5)
+        val midLeftX = lineStartX + lineWidth * 0.25f
+        val midRightX = lineStartX + lineWidth * 0.75f
+        dl.addLine(midLeftX, centerY - 5f, midLeftX, centerY + 5f, markColFaint, 1f)
+        dl.addLine(midRightX, centerY - 5f, midRightX, centerY + 5f, markColFaint, 1f)
+
+        // Middle: 50% (0.0 center)
+        val centerX = lineStartX + lineWidth * 0.50f
+        dl.addLine(centerX, centerY - 8f, centerX, centerY + 8f, markColCenter, 1.5f)
+
+        // Active track line (standard theme color from CustomRangeSlider)
+        val themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
+        val valPct = ((mixer.crossfade.baseValue - (-1f)) / 2f).coerceIn(0f, 1f)
+        val valHandleX = lineStartX + valPct * lineWidth
+        dl.addLine(lineStartX, centerY, valHandleX, centerY, themeColor, 3f)
+
+        // Single handle (standard CustomRangeSlider dimensions and styling)
+        val handleW = 6f
+        val handleH = 16f
+        val handleBgCol = if (isTrackActive) {
+            ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f)
+        } else {
+            ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
+        }
+        val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+
+        dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+        dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+
+        // Hover / Active / MIDI learn highlight
         if (isTarget) {
-            dl.addRect(
-                barStartX - 1f, barScreenY - 1f,
-                barStartX + barW + 1f, barScreenY + barH + 1f,
-                ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f),
-                3f,
-                0,
-                1.5f
-            )
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f), 4f, 0, 1.5f)
         } else if (presetState.isMidiLearnMode) {
-            // Subtle dotted or low alpha border to show map-ability
-            dl.addRect(
-                barStartX, barScreenY,
-                barStartX + barW, barScreenY + barH,
-                ImGui.colorConvertFloat4ToU32(0.8f, 0.5f, 0f, 0.4f),
-                3f,
-                0,
-                1f
-            )
-        }
-
-        // Fill mapping slider value
-        val activeVal = if (paramKey == "Mixer/crossfade" || param.modulators.any { !it.bypassed }) param.value else param.baseValue
-        val currentDisplayVal = displayMin + if (valueRange > 0f) ((activeVal - min) / valueRange) * displayRange else 0f
-        val pct = if (valueRange > 0f) ((activeVal - min) / valueRange).coerceIn(0f, 1f) else 0f
-
-        val isBipolar = min < 0f
-        if (isBipolar && valueRange > 0f) {
-            val centerPct = ((0f - min) / valueRange).coerceIn(0f, 1f)
-            val startX = barStartX + barW * centerPct
-            val endX = barStartX + barW * pct
-            val x1 = minOf(startX, endX)
-            val x2 = maxOf(startX, endX)
-            if (x2 > x1) {
-                dl.addRectFilled(
-                    x1, barScreenY,
-                    x2, barScreenY + barH,
-                    themeColor,
-                    3f
-                )
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0.8f, 0.5f, 0f, 0.4f), 4f, 0, 1f)
+        } else if (isTrackHovered || isTrackActive) {
+            val borderCol = if (isTrackActive) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
             }
-            // Draw a subtle vertical line at the center to mark the zero point
-            val zeroCol = ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 0.8f)
-            dl.addLine(startX, barScreenY - 1f, startX, barScreenY + barH + 1f, zeroCol, 1.5f)
-        } else {
-            val fillWidth = barW * pct
-            if (fillWidth > 0f) {
-                dl.addRectFilled(
-                    barStartX, barScreenY,
-                    barStartX + fillWidth, barScreenY + barH,
-                    themeColor,
-                    3f
-                )
-            }
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
         }
 
-        // Draw fader position thumb indicator (especially helpful for live crossfader modulation)
-        if (paramKey == "Mixer/crossfade" && valueRange > 0f) {
-            val thumbX = (barStartX + barW * pct).coerceIn(barStartX + 1f, barStartX + barW - 1f)
-            val thumbCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
-            dl.addLine(thumbX, barScreenY - 1.5f, thumbX, barScreenY + barH + 1.5f, thumbCol, 2.5f)
+        // Dynamic modulated value indicator (Amber Gold dot when modulated)
+        val hasModulators = mixer.crossfade.modulators.any { !it.bypassed }
+        if (hasModulators || mixer.isAutoFading) {
+            val livePct = ((mixer.crossfade.value - (-1f)) / 2f).coerceIn(0f, 1f)
+            val liveX = lineStartX + livePct * lineWidth
+            val dotR = 4f
+            val curDotCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f) // Bright Amber Gold
+            dl.addCircleFilled(liveX, centerY, dotR, curDotCol)
+            dl.addCircle(liveX, centerY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
         }
-
-        // MIDI mapped indicator
-        val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
-        val midiIndicator = mapping?.let { m ->
-            if (m.channel == 0) "[CC ${m.cc}]" else "[Ch ${m.channel + 1} CC ${m.cc}]"
-        }
-
-        // Value text overlay
-        val baseValStr = formatValue(currentDisplayVal)
-        val valStr = if (midiIndicator != null) {
-            if (baseValStr.isNotEmpty()) "$midiIndicator $baseValStr" else midiIndicator
-        } else {
-            baseValStr
-        }
-        
-        if (valStr.isNotEmpty()) {
-            val textWidth = ImGui.calcTextSize(valStr).x
-            val valTextH = ImGui.calcTextSize(valStr).y
-            val valTextX = barStartX + barW - textWidth - 5f
-            val valTextY = barScreenY + (barH - valTextH) * 0.5f
-
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                dl.addText(valTextX, valTextY, ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.8f), valStr)
-            }
-        }
-
-        ImGui.popID()
     }
 }
+

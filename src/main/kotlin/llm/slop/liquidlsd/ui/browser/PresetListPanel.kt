@@ -94,26 +94,25 @@ object PresetListPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // Flat list of all presets
-        val allPresets = FileSystemManager.scanAllPresets()
-        val query = searchBuffer.get().trim().lowercase()
+        if (ImGui.beginChild("##presets_scroll", 0f, 0f, false)) {
+            // Flat list of all presets
+            val allPresets = FileSystemManager.scanAllPresets()
+            val query = searchBuffer.get().trim().lowercase()
 
-        val filtered = if (query.isEmpty()) {
-            allPresets
-        } else {
-            allPresets.filter { asset ->
-                asset.name.lowercase().contains(query) ||
-                    asset.tags.any { it.lowercase().contains(query) }
+            val filtered = if (query.isEmpty()) {
+                allPresets
+            } else {
+                allPresets.filter { asset ->
+                    asset.name.lowercase().contains(query) ||
+                        asset.tags.any { it.lowercase().contains(query) }
+                }
             }
-        }
-        filteredPresets = filtered
+            filteredPresets = filtered
 
-        if (filtered.isEmpty()) {
-            ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
-            return
-        }
-
-        filtered.forEachIndexed { index, asset ->
+            if (filtered.isEmpty()) {
+                ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
+            } else {
+                filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
             val deps = asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path))
@@ -251,7 +250,10 @@ object PresetListPanel {
             }
 
             ImGui.popID()
+                }
+            }
         }
+        ImGui.endChild()
 
         // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
         val io = ImGui.getIO()

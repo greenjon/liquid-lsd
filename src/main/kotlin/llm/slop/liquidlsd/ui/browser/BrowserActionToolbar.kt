@@ -18,7 +18,14 @@ enum class DeckAuditionTarget(val label: String, val deckIndex: Int) {
 }
 
 object BrowserActionToolbar {
-    const val BTN_WIDTH: Float = 80f
+    fun calculateButtonWidth(btnHeight: Float): Float = kotlin.math.round(btnHeight * 1.5f)
+
+    fun calculateToolbarWidth(btnHeight: Float): Float {
+        val btnW = calculateButtonWidth(btnHeight)
+        return (7 * btnW) + (5 * 6f) + (1 * 14f)
+    }
+
+    const val BTN_WIDTH: Float = 36f
     const val TOOLBAR_WIDTH: Float = (7 * BTN_WIDTH) + (5 * 6f) + (1 * 14f)
 
     var isAuditionLocked: Boolean = false
@@ -34,7 +41,7 @@ object BrowserActionToolbar {
     ) {
         val hasSelection = selectedFile != null && selectedFile.exists()
         val btnH = if (btnHeight > 0f) btnHeight else ImGui.getFrameHeight()
-        val btnW = BTN_WIDTH
+        val btnW = calculateButtonWidth(btnH)
 
         // 0. [ LOCK / PADLOCK ]
         val lockColor = BrowserDeckButtons.colorLock()

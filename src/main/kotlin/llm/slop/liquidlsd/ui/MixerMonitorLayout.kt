@@ -20,10 +20,13 @@ object MixerMonitorLayoutCalculator {
         textLineHeightWithSpacing: Float,
         frameHeightWithSpacing: Float,
         itemSpacingY: Float,
-        aspectRatio: Float = 9f / 16f
+        aspectRatio: Float = 9f / 16f,
+        randomizationEnabled: Boolean = true
     ): Float {
         val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
-        val masterControlsH = (frameHeightWithSpacing * 3f + itemSpacingY * 2f + 8f).coerceAtLeast(85f)
+        val numRows = if (randomizationEnabled) 2f else 1f
+        val masterControlsH = (frameHeightWithSpacing * numRows + itemSpacingY * (numRows - 1f) + 12f)
+            .coerceAtLeast(if (randomizationEnabled) 58f else 34f)
         val presetNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
 
         val verticalChrome = estimateVerticalChrome(
@@ -52,12 +55,15 @@ object MixerMonitorLayoutCalculator {
         textLineHeightWithSpacing: Float,
         frameHeightWithSpacing: Float,
         itemSpacingY: Float,
-        aspectRatio: Float = 9f / 16f
+        aspectRatio: Float = 9f / 16f,
+        randomizationEnabled: Boolean = true
     ): MixerMonitorLayout {
         val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
         val contentWidth = (windowWidth - (windowPaddingX * 2f)).coerceAtLeast(1f)
 
-        val masterControlsH = (frameHeightWithSpacing * 3f + itemSpacingY * 2f + 8f).coerceAtLeast(85f)
+        val numRows = if (randomizationEnabled) 2f else 1f
+        val masterControlsH = (frameHeightWithSpacing * numRows + itemSpacingY * (numRows - 1f) + 12f)
+            .coerceAtLeast(if (randomizationEnabled) 58f else 34f)
         val presetNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
 
         val verticalChrome = estimateVerticalChrome(

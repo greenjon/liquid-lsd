@@ -180,7 +180,7 @@ object LibraryPanel {
             val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
 
             // Centered Action Toolbar
-            val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.TOOLBAR_WIDTH
+            val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.calculateToolbarWidth(btnH)
             val windowBtnsW = (btnW * 2f) + 4f
             val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceIn(8f, (safeW - totalToolbarW - windowBtnsW - 8f).coerceAtLeast(8f))
 
@@ -256,29 +256,31 @@ object LibraryPanel {
         val colWidth = ((availW - totalSpacing) * 0.25f).coerceAtLeast(20f)
         val lastColWidth = (availW - colWidth * 3f - totalSpacing).coerceAtLeast(20f)
 
+        val outerFlags = imgui.flag.ImGuiWindowFlags.NoScrollbar or imgui.flag.ImGuiWindowFlags.NoScrollWithMouse
+
         // Column 1: Presets Library
-        ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true)
+        ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
         PresetListPanel.draw(session, mixer, presetState)
         ImGui.endChild()
         ImGui.sameLine()
 
         // Column 2: Playlist Editor
-        ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true)
+        ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
         PlaylistEditorPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
         // Column 3: Play Queue (A/B)
-        ImGui.beginChild("LibraryQueue", colWidth, contentH, true)
+        ImGui.beginChild("LibraryQueue", colWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
         // Column 4: Background Queue (BG)
-        ImGui.beginChild("LibraryBgQueue", lastColWidth, contentH, true)
+        ImGui.beginChild("LibraryBgQueue", lastColWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()

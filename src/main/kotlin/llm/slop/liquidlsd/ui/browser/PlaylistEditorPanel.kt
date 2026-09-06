@@ -45,12 +45,14 @@ object PlaylistEditorPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        if (selectedFile == null || currentPlaylist == null) {
-            drawEmptyPlaylistsState()
-            return
+        if (ImGui.beginChild("##playlist_items_scroll", 0f, 0f, false)) {
+            if (selectedFile == null || currentPlaylist == null) {
+                drawEmptyPlaylistsState()
+            } else {
+                drawPlaylistContent(session, mixer, currentPlaylist)
+            }
         }
-
-        drawPlaylistContent(session, mixer, currentPlaylist)
+        ImGui.endChild()
     }
 
     private fun drawHeader(

@@ -47,7 +47,7 @@ Most panel `draw(...)` methods (like `PresetGridPanel`) receive `session: Sessio
 
 Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerMonitorPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckMonitorToolbar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
-`MixerMonitorPanel` features the master output monitor and a dedicated `MasterControls` child container consisting of the master `crossfade` slider, a dedicated row of momentary buttons (`< Prev`, `Next >`, `Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`), and the `xfadeSpeed` slider. Momentary triggers act as discrete pulses without initiating manual takeover or muting modulators.
+`MixerMonitorPanel` features the master output monitor and a dedicated `MasterControls` child container consisting of the redesigned master `crossfade` slider flanked by interactive `[ A ]` and `[ B ]` boxed badges (with faint vertical tick marks at ends, midway points, and center, styled identically to `CustomRangeSlider`), and a row of momentary randomization buttons (`Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`) when randomization is enabled. Momentary triggers act as discrete pulses without initiating manual takeover or muting modulators. Clicking the `[ A ]` or `[ B ]` boxes immediately snaps the crossfader to Deck A (-1.0) or Deck B (+1.0) with manual takeover.
 
 Left-clicking the main output monitor immediately focuses the Preset Grid to the `MIX` tab (`activeTopTab = "Mixer"`). Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck PV`) immediately focuses the Preset Grid to that deck (`activeTopTab`). Dragging from a deck monitor initiates deck copy, move, or swap routing, and dropping preset files directly onto a monitor loads the preset into the corresponding deck.
 
@@ -112,6 +112,11 @@ Left-clicking the main output monitor immediately focuses the Preset Grid to the
   - `Output`: `Secondary Output Window`, `Record Master Output (REC)`, `Web Broadcast`, and `Export Video (Offline Studio)...`.
   - `Help`: `Documentation` and `Show Tooltips` toggle.
   - Contextual HUD status badges for recording (`REC mm:ss`, dropped frames counter) and Web Broadcast (`LIVE`, `CONNECTING`, `LIVE ERR`) appear dynamically on the title bar only when active.
+
+### 8. `LibraryPanel.kt` & `BrowserActionToolbar.kt`
+- **Sticky Column Headers**: The 4 Library columns (Presets, Playlist Editor, Play Queue, Background Queue) use outer child containers configured with `ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoScrollWithMouse`. The top two rows of each column (header title + action buttons, followed by the filter/combo/control bar) remain pinned and sticky, while their items scroll independently in dedicated inner child windows (`##presets_scroll`, `##playlist_items_scroll`, `##queue_items_scroll`, `##bg_queue_items_scroll`).
+- **Proportional Action Buttons (`BrowserActionToolbar.kt`)**: Action buttons (Quick Audition Lock, Deck Load A/B/BG/PV, and Queue Q/BGQ) dynamically calculate button width as ~1.5x button height (`calculateButtonWidth(btnH)`), providing balanced click targets and compact title bar centering.
+- **Accurate Lucide PUA Mappings**: Audition latch toggle uses standard Lucide padlock codepoints (`Icons.LOCK = "\ue10b"`, `Icons.UNLOCK = "\ue10c"`).
 
 ---
 

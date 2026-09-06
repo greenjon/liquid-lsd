@@ -36,8 +36,8 @@ object Icons {
     const val MORE_HORIZONTAL = "\ue0b6" // ellipsis
     const val MORE_VERTICAL   = "\ue0b7" // ellipsis-vertical
     const val NOTE            = "\ue132" // pencil
-    const val LOCK            = "\ue111" // lock
-    const val UNLOCK          = "\ue19f" // unlock
+    const val LOCK            = "\ue10b" // lock
+    const val UNLOCK          = "\ue10c" // lock-open / unlock
     const val BOT             = "\ue1bb" // bot
     const val BOT_OFF         = "\ue5e0" // bot-off
     const val X               = "\ue1b2" // x / close

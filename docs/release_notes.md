@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Library Panel UI Refinements (`LibraryPanel.kt`, `BrowserActionToolbar.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `Icons.kt`)
+- **Sticky Top Two Rows in Library Columns**:
+  - The top two header rows of each of the four Library columns (Presets, Playlists, Queue, BG Queue)—including panel titles, action buttons, search filters, playlist selector combo, and playback/auto-vj controls—remain pinned/sticky at the top when scrolling through lists.
+  - The item lists now scroll within dedicated inner child windows (`##presets_scroll`, `##playlist_items_scroll`, `##queue_items_scroll`, `##bg_queue_items_scroll`), while the outer column frames lock scrolling via `NoScrollbar` and `NoScrollWithMouse`.
+- **Proportional Action Toolbar Buttons**:
+  - Resized the deck load/audition buttons in `BrowserActionToolbar` from an oversized fixed width (80 px) to ~1.5x their height (`btnH * 1.5f`, ~36 px at standard scaling), streamlining horizontal footprint and toolbar centering.
+- **Fixed Lock/Unlock Icons**:
+  - Corrected the Lucide PUA glyph codepoints for `Icons.LOCK` (`\ue10b`, previously misassigned to `map-pin`) and `Icons.UNLOCK` (`\ue10c`, previously misassigned to `user`), restoring standard padlock icons on the quick audition latch button.
+
+### Mixer Monitor UI Refinement (`MixerMonitorPanel.kt`, `MixerMonitorLayout.kt`)
+- **Redesigned Master Crossfader**:
+  - Replaced the previous progress-bar style flat fader with the standard single-handle slider styling from `CustomRangeSlider` (3 px track line, 6x16 px handle, hover/drag bounding rect highlight, and dynamic modulated amber dot).
+  - Added faint vertical position tick marks across the crossfader track indicating the ends (-1.0, +1.0), midway points (-0.5, +0.5), and middle center (0.0).
+  - Placed **[ A ]** and **[ B ]** boxed badges to the left and right of the crossfader, styled identically to the Deck A and Deck B monitor overlays.
+  - Interactive badges: clicking [A] snaps crossfade to 100% Deck A (-1.0), and clicking [B] snaps crossfade to 100% Deck B (+1.0). Middle-clicking or scrolling adjusts or centers (0.0) the crossfader.
+  - Removed the `"Crossfader"` text label for a cleaner, centered look.
+- **Streamlined Master Controls**:
+  - Removed the `< Prev` and `Next >` queue trigger buttons.
+  - Sized the 5 momentary randomization buttons (`Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`) to distribute evenly across full panel width when randomization is enabled.
+  - Removed the redundant Fade Speed slider from the Mixer Monitor child window.
+  - Updated `MixerMonitorLayoutCalculator` vertical chrome calculations to account for the reduced row count, giving more vertical canvas space to preview monitors.
+
 ### Preset Grid UI Layout Tightening (`PresetGridTabs.kt`, `PresetGridPanel.kt`, `PresetGridRenderer.kt`, `BrowserRowMoreButton.kt`)
 - **Square Side Tab Buttons**: Made the deck selector buttons (`MIX`, `A`, `B`, `BG`, `PV`) square (`width == height`), significantly reducing horizontal footprint while maintaining comfortable click targets.
 - **Tightened Parameter Indentation**: Reduced the parameter label indent from Dear ImGui's default ~21–24 px to 6 px (~1/4 width), gaining horizontal space for parameter names and matching section tab insets.
@@ -14,6 +36,9 @@
 - **Symmetrical Right Border to Panel Edge Padding**:
   - Eliminated extra trailing horizontal margin in `PresetGridPanel.calculateRequiredWidth` and `PresetGridPanel.draw`.
   - Balanced the right padding between the preset grid box border and the panel edge/divider line to match the standard `windowPaddingX` (8 px), creating visual symmetry with the padding between the divider line and Cell Config's content.
+- **Global Slim 10 px Scrollbar**:
+  - Configured global base `scrollbarSize` to 10.0 px (with 5.0 px pill rounding) in `UIManager.kt`.
+  - Applies uniformly across all panels (Preset Grid, Cell Config, and Library), providing a cleaner, more compact visual profile while maintaining dynamic scaling with UI font size preferences.
 
 ### Minimum Window Dimensions Raised to 1280 x 720 (`Main.kt`, `WindowFrameController.kt`)
 - **Updated Minimum Bounds**: Raised the desktop minimum window dimensions from 800 × 600 (SVGA 4:3) to 1280 × 720 (720p HD 16:9).

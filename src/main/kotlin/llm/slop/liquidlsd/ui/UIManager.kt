@@ -117,6 +117,8 @@ class UIManager(
             setFrameRounding(3.0f)
             setPopupBorderSize(1.0f)
             setPopupRounding(4.0f)
+            setScrollbarSize(10.0f)
+            setScrollbarRounding(5.0f)
         }
 
         // Scale style sizes proportionally to the loaded baseSize relative to the baseline of 15f
