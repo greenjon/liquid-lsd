@@ -2,11 +2,22 @@
 
 ## [Unreleased]
 
-### Build System & Toolchain Warning Cleanups (`build.gradle.kts`, `gradlew`, `gradlew.bat`, `gradle.properties`, `SessionStateTest.kt`)
-- **JDK 25 Native Access Enablement (`gradlew`, `gradlew.bat`, `gradle.properties`)**: Configured `--enable-native-access=ALL-UNNAMED` in Gradle wrapper default JVM options and daemon JVM args (`org.gradle.jvmargs`), eliminating the Java 25 `System::load` restricted method warning from `native-platform` on modern JDKs.
-- **Gradle 9 Dependency Notation Deprecations (`build.gradle.kts`)**: Converted multi-argument `implementation(...)` and `runtimeOnly(...)` dependency calls for LWJGL and ImGui to standard single-string coordinate notation (`"group:name:version"` and `"group:name:version:classifier"`), resolving all Gradle 9 deprecation warnings.
-- **Documentation Task Logging (`build.gradle.kts`)**: Switched `mkdocs` missing fallback notice in `generateDocs` from stdout warning formatting to `logger.info`, keeping standard build task output clean when MkDocs is not installed.
-- **Kotlin Smart-Cast Nullability Warnings (`SessionStateTest.kt`)**: Removed redundant safe-call operators (`?.`) on values following `assertNotNull` assertions in `SessionStateTest`, resolving Kotlin 2.3+ compiler warnings.
+---
+
+## Version 1.0.0-beta.53
+
+> [!NOTE]
+> **Release 1.0.0-beta.53** introduces a streamlined Library panel layout with swapped Background Queue and Play Queue columns, transport controls clustered into the column headers with dynamic Play/Pause icons, inline queue clearing, and build toolchain modernization including Gradle 9 dependency coordinate notation and JDK 25 native access enablement.
+
+### Library Play Queue Rearrangement & Swapped Column Layout (`LibraryPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `docs/user_guide/library.md`)
+- **Queue Column Order Swap (`LibraryPanel.kt`)**: Swapped Column 3 and Column 4 in the Library panel so the Background Queue (`LibraryBgQueue`) is presented before the main A/B Play Queue (`LibraryQueue`).
+- **Transport Controls Cluster in Header (`QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`)**:
+  - Relocated automated cycle toggles (Auto-VJ and Auto-BG) from the second row to the top row header, positioned between the Previous (`<`) and Next (`>`) buttons.
+  - Converted the button icon to a standard transport toggle: displays Play (`Icons.PLAY`) when paused, and Pause (`Icons.PAUSE`) when actively cycling presets.
+  - Retained standard theme button styling for transport controls and preserved existing tooltips.
+- **Inline Controls Row & Unified Button Styling (`QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`)**:
+  - Moved the `Clear` button to the second row inline directly after `Export`.
+  - Unified the active color scheme across both queues: Shuffle and Repeat buttons highlight with mint-green text and background when active, and revert to standard theme button styling when inactive.
 
 ---
 

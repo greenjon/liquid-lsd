@@ -23,11 +23,11 @@ Liquid LSD features flexible workspace dock layouts:
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │              │  [🔒] [A] [B] [BG] [PV]  │  [Q] [BGQ]  │  [ + ▾]  │         [-] [□]│
 ├───────────────────┬───────────────────┬───────────────────┬───────────────────────┤
-│ Presets       [+] │ Playlists [+] [••]│ Queue     [Clear] │ BG Queue      [Clear] │
+│ Presets       [+] │ Playlists [+] [••]│ BG Queue [<][▶][>]│ Queue        [<][▶][>]│
 ├───────────────────┼───────────────────┼───────────────────┼───────────────────────┤
-│ [🔍 Search...]    │ [Select Playlist▾]│ [AUTO-VJ] [🔁][🔀]│ [AUTO-BG] [🔁][🔀]   │
-│ Preset Alpha      │ 1. Preset Alpha   │ ▶ 1. Preset 1     │ ▶ 1. Nebula BG        │
-│ Preset Beta       │ 2. Preset Beta    │   2. Preset 2     │   2. Dark Grid BG     │
+│ [🔍 Search...]    │ [Select Playlist▾]│ [🔁][🔀][Export][x│ [🔁][🔀][Export][Clear│
+│ Preset Alpha      │ 1. Preset Alpha   │ ▶ 1. Nebula BG    │ ▶ 1. Preset 1         │
+│ Preset Beta       │ 2. Preset Beta    │   2. Dark Grid BG │   2. Preset 2         │
 └───────────────────┴───────────────────┴───────────────────┴───────────────────────┘
 ```
 
@@ -119,30 +119,19 @@ The Middle column allows inspecting and arranging setlists side-by-side with you
 
 ---
 
-## 3. A/B Play Queue (Column 3)
+## 3. Background Queue (Column 3)
 
-The 3rd column displays the live sequence of presets for main A/B deck Auto-VJ and playback.
+The 3rd column manages automated cycling and sequential playback for the dedicated background layer (`Deck BG`).
 
-- **Auto-VJ (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automated cycling through queue presets at configured crossfade intervals.
-- **Repeat & Shuffle**: Controls queue cycle loop and randomization.
-- **Export Button**: Exports the current live A/B queue as a new `.lsdset` playlist file.
-- **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
-  - **Load to Deck A / B / BG / PV**: Instantly loads the queued preset to any deck.
-  - **Add to Background Queue**: Routes the queued preset over to the Background queue.
-  - **Remove from queue**: Removes the preset from the active queue.
-  - **Delete preset from library...**: Permanently deletes the preset file.
-- **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
-
----
-
-## 4. Background Queue (Column 4)
-
-The 4th column manages automated cycling and sequential playback for the dedicated background layer (`Deck BG`).
-
-- **Auto-BG (`BOT` / `BOT_OFF` Robot Icon Button)**: Enables automatic cycling through background presets.
-- **Dip-to-Black Transitions**: Smoothly fades out the current background, loads the new preset, and fades back in beneath the live foreground.
-- **Repeat & Shuffle**: Continuous loop and shuffle for background visuals.
-- **Export Button**: Exports the current background queue as a new `.lsdset` playlist file.
+- **Transport Controls**:
+  - `[ < ]`: Trigger previous preset in Background Queue.
+  - `[ ▶ ]` / `[ ⏸ ]`: Transport play/pause toggle. Starts or pauses Auto-BG cycling through background presets with smooth dip-to-black transitions.
+  - `[ > ]`: Trigger next preset in Background Queue.
+- **Controls Row**:
+  - **`[ 🔁 ]` Repeat**: Continuously loops playback back to the start when the end of the queue is reached.
+  - **`[ 🔀 ]` Shuffle**: Plays presets in randomized order (mint-green highlight when active, standard theme grey when inactive).
+  - **`[ Export ]`**: Saves current background queue sequence as a new `.lsdset` playlist.
+  - **`[ Clear ]`**: Empties the background queue.
 - **Double-Click & Right-Click Play**: Trigger instant cuts or dip-to-black transitions on demand.
 - **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
   - **Play (Dip to Black) / Play (Instant Cut)**: Triggers playback with or without dip-to-black fade.
@@ -153,7 +142,29 @@ The 4th column manages automated cycling and sequential playback for the dedicat
 
 ---
 
-## 3. Drag-and-Drop Matrix
+## 4. A/B Play Queue (Column 4)
+
+The 4th column displays the live sequence of presets for main A/B deck Auto-VJ and playback.
+
+- **Transport Controls**:
+  - `[ < ]`: Trigger previous preset in Play Queue.
+  - `[ ▶ ]` / `[ ⏸ ]`: Transport play/pause toggle. Starts or pauses Auto-VJ automated cycling through queue presets at configured crossfade intervals.
+  - `[ > ]`: Trigger next preset in Play Queue.
+- **Controls Row**:
+  - **`[ 🔁 ]` Repeat**: Continuously loops playback back to the start when the end of the queue is reached.
+  - **`[ 🔀 ]` Shuffle**: Plays presets in randomized order (mint-green highlight when active, standard theme grey when inactive).
+  - **`[ Export ]`**: Saves current play queue sequence as a new `.lsdset` playlist.
+  - **`[ Clear ]`**: Empties the play queue.
+- **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
+  - **Load to Deck A / B / BG / PV**: Instantly loads the queued preset to any deck.
+  - **Add to Background Queue**: Routes the queued preset over to the Background queue.
+  - **Remove from queue**: Removes the preset from the active queue.
+  - **Delete preset from library...**: Permanently deletes the preset file.
+- **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
+
+---
+
+## 5. Drag-and-Drop Matrix
 
 | Dragged Item | Target Destination | Resulting Action |
 |---|---|---|

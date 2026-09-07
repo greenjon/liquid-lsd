@@ -272,17 +272,17 @@ object LibraryPanel {
         ImGui.endChild()
         ImGui.sameLine()
 
-        // Column 3: Play Queue (A/B)
-        ImGui.beginChild("LibraryQueue", colWidth, contentH, true, outerFlags)
+        // Column 3: Background Queue (BG)
+        ImGui.beginChild("LibraryBgQueue", colWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
-        QueueActionsPanel.draw(session, mixer)
+        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.sameLine()
 
-        // Column 4: Background Queue (BG)
-        ImGui.beginChild("LibraryBgQueue", lastColWidth, contentH, true, outerFlags)
+        // Column 4: Play Queue (A/B)
+        ImGui.beginChild("LibraryQueue", lastColWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
-        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
+        QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
         // Global library keyboard shortcuts: 1-4 (Decks), Q / Shift+Q (Queues), Up/Down (Navigation)

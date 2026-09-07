@@ -18,12 +18,12 @@ object QueueActionsPanel {
     var selectedIndex: Int = -1
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
         val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
+        val playPauseBtnW = ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
         val itemSpacingX = ImGui.getStyle().getItemSpacingX()
-        val totalRightW = clearBtnW + navBtnW * 2f + itemSpacingX * 2f
+        val totalRightW = navBtnW * 2f + playPauseBtnW + itemSpacingX * 2f
 
-        // Title Bar: "Queue" on the left, "<", ">", "Clear" buttons on the right
+        // Title Bar: "Queue" on the left, "<", "[Play/Pause]", ">" buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ImGui.text("Queue")
@@ -42,6 +42,20 @@ object QueueActionsPanel {
         }
 
         ImGui.sameLine()
+        val autoVjActive = session.playQueueManager.isAutoVJEnabled
+        val autoVjIcon = if (autoVjActive) Icons.PAUSE else Icons.PLAY
+        if (ImGui.button("$autoVjIcon##autoVj", playPauseBtnW, 0f)) {
+            val nextState = !session.playQueueManager.isAutoVJEnabled
+            session.playQueueManager.isAutoVJEnabled = nextState
+            if (nextState) {
+                mixer.muteCrossfadeNonMidiCv()
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
+        }
+
+        ImGui.sameLine()
         if (ImGui.button(">##queueNext", navBtnW, 0f)) {
             session.playQueueManager.triggerNext(mixer)
         }
@@ -49,42 +63,10 @@ object QueueActionsPanel {
             ImGui.setTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
         }
 
-        ImGui.sameLine()
-        if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
-            session.playQueueManager.clearQueue()
-            selectedIndex = -1
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Empty the play queue.")
-        }
-
         ImGui.separator()
         ImGui.spacing()
 
-        // Controls Row
-        val autoVjActive = session.playQueueManager.isAutoVJEnabled
-        if (autoVjActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        val autoVjIcon = if (autoVjActive) Icons.BOT else Icons.BOT_OFF
-        if (ImGui.button("$autoVjIcon##autoVj")) {
-            val nextState = !session.playQueueManager.isAutoVJEnabled
-            session.playQueueManager.isAutoVJEnabled = nextState
-            if (nextState) {
-                mixer.muteCrossfadeNonMidiCv()
-            }
-        }
-        if (autoVjActive) {
-            ImGui.popStyleColor(4)
-        }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
-        }
-        
-        ImGui.sameLine()
+        // Controls Row: Repeat, Shuffle, Export, Clear
         val repeatActive = session.playQueueManager.isRepeatEnabled
         if (repeatActive) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
@@ -131,7 +113,17 @@ object QueueActionsPanel {
             ImGui.setTooltip("Save current queue sequence as a new playlist.")
         }
         BrowserPopupHandler.drawExportQueuePopup(session)
-        
+
+        ImGui.sameLine()
+        val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+        if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
+            session.playQueueManager.clearQueue()
+            selectedIndex = -1
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Empty the play queue.")
+        }
+
         ImGui.separator()
         ImGui.spacing()
         
