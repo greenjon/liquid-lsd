@@ -36,6 +36,7 @@ class UIThemeTest {
             UITheme.outputScaleMode = UITheme.OutputScaleMode.FILL
             UITheme.settingsWidth = 750f
             UITheme.settingsHeight = 600f
+            UITheme.tapKeyTrigger = UITheme.TapKeyTrigger.PERIOD
 
             // Save to disk
             UITheme.saveSettings()
@@ -43,6 +44,7 @@ class UIThemeTest {
 
             // Reset values to defaults in memory
             UITheme.presetNameScalePercent = 100
+            UITheme.tapKeyTrigger = UITheme.TapKeyTrigger.T
             UITheme.showMidiCol = true
             UITheme.showLfoCol = false
             UITheme.showAudioCol = true
@@ -80,6 +82,7 @@ class UIThemeTest {
             assertEquals(1200, UITheme.renderHeight)
             assertEquals(750f, UITheme.settingsWidth)
             assertEquals(600f, UITheme.settingsHeight)
+            assertEquals(UITheme.TapKeyTrigger.PERIOD, UITheme.tapKeyTrigger)
 
         } finally {
             // Restore original settings file if backed up, or delete test file
@@ -225,6 +228,7 @@ class UIThemeTest {
     @Test
     fun testImGuiKeys() {
         val fields = imgui.flag.ImGuiKey::class.java.fields
+        println("ImGuiKey fields: " + fields.map { it.name }.joinToString(", "))
         assertTrue(fields.isNotEmpty(), "ImGuiKey fields should not be empty")
     }
 }

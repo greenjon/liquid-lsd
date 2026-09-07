@@ -248,6 +248,22 @@ class BeatTrackerEngine(
     }
 
     /**
+     * Nudges tempo tracking towards an externally tapped or specified BPM.
+     * Re-centers the dynamic programming target beat interval Tau0 and seeds candidate tempo.
+     */
+    fun nudgeTempo(tappedBpm: Float) {
+        val clamped = tappedBpm.coerceIn(bpmFloor, bpmCeiling)
+        currentBpm = clamped
+        stableCandidateBpm = clamped
+        val fps = sampleRate / fftSize.coerceAtLeast(1)
+        targetBeatIntervalTau0 = fps * (60.0f / clamped)
+        snapFreqHz = clamped.toDouble() / 60.0
+        snapBeatPeriodSec = 60.0 / clamped.toDouble()
+        stableAccumulatedSec = stabilityLockDurationSec
+        isLocked = true
+    }
+
+    /**
      * Parabolic interpolation across 3 points (y1, y2, y3) to find peak offset in [-0.5, 0.5].
      */
     fun interpolateParabolicPeak(y1: Float, y2: Float, y3: Float): Float {

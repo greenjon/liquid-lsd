@@ -72,11 +72,13 @@ class SaveLoadFixesTest {
         val queuePrevParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
         val bgQueueNextParam = ModulatableParameter(0.8f, minClamp = 0f, maxClamp = 1f)
         val bgQueuePrevParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+        val tapTempoParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
         
         every { mixer.queueNext } returns queueNextParam
         every { mixer.queuePrev } returns queuePrevParam
         every { mixer.bgQueueNext } returns bgQueueNextParam
         every { mixer.bgQueuePrev } returns bgQueuePrevParam
+        every { mixer.tapTempo } returns tapTempoParam
         every { mixer.syncQueueTriggerPrevValues() } answers { callOriginal() }
         every { mixer.pollQueueAdvance() } answers { callOriginal() }
         every { mixer.pollBgQueueAdvance() } answers { callOriginal() }

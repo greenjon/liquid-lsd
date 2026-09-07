@@ -234,6 +234,7 @@ object SourceDocRegistry {
         "mixer/queueNext" to "Trigger: steps the play queue forward by one preset.",
         "mixer/bgQueuePrev" to "Trigger: steps the background queue backward by one preset.",
         "mixer/bgQueueNext" to "Trigger: steps the background queue forward by one preset.",
+        "mixer/tapTempo" to "Trigger: taps in BPM tempo and synchronizes beat phase.",
         "mixer/randDeckA" to "Trigger: randomises all modulation values on Deck A.",
         "mixer/randDeckB" to "Trigger: randomises all modulation values on Deck B.",
         "mixer/randDeckBG" to "Trigger: randomises all modulation values on Deck BG.",

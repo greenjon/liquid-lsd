@@ -99,9 +99,18 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 ### 4. Audio Engine Disabled / Internal Manual Clock Mode
 When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
 - **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_*`) are stopped to conserve CPU cycles.
-- **Internal Manual Tempo Clock**: Beat synchronization does not halt; instead, it runs continuously on the internal clock driven by `AudioEngine.manualBpm` (configurable between 40.0 and 200.0 BPM, default 120.0 BPM).
-- **Smooth Beat Continuity Across Adjustments**: When changing manual BPM while the engine is disabled, `AudioEngine.setBpmDirectly` captures `CVRegistry.getSynchronizedTotalBeats()` and re-anchors `CVRegistry.updateBeatAnchor` to prevent phase jumps or beat counter regressions.
 - **Persistent Title Bar Telemetry**: Both the BPM readout (rendered in warm amber to distinguish manual fixed clock mode) and the 4-beat phase meter remain visible in the top title bar, with hover tooltips clarifying that the audio engine is disabled and clicking opening Settings.
+
+### 5. VJ Tap Tempo & Phase Synchronization
+The application features a real-time Tap Tempo system ([`TapTempoController.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via mouse click on the top-bar BPM display, keyboard shortcut (`T` default, configurable to `.` or `None`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):
+- **Interval Averaging & Timeout Reset**: Tracks a rolling buffer of up to 8 taps with microsecond resolution. Taps separated by > 2.0 seconds (30 BPM) automatically reset the sequence so a new cadence begins cleanly.
+- **Immediate Top-Bar Visual Feedback**: While tapping, the BPM readout instantly confirms incoming taps with a bright gold flash and counter readout (`[TAP 1]`, `[TAP 2]`), returning to standard display once the cadence times out.
+- **Manual / Locked Mode Behavior**:
+  - Immediately updates `manualBpm`, `estimatedBpm`, and `CVRegistry.alignBeatPhase` to the tapped tempo.
+  - **Downbeat Phase Quantization**: Every tap represents an arrival on the beat; the engine quantizes `totalBeats` to the nearest whole integer boundary (`round(totalBeats)`), resetting render monotonic progress so visual pulses and the 4-beat meter immediately lock to the musical downbeat.
+- **Active Audio Tracking Mode Behavior**:
+  - **Dynamic Programming Prior Shift**: Recalculates the causal dynamic programming target interval $\tau_0 = \text{fps} \times (60.0 / \text{BPM})$ and sets `stableCandidateBpm` to the tapped tempo with `isLocked = true` and `stableAccumulatedSec = stabilityLockDurationSec`, immediately locking the autocorrelation search window to the tapped tempo and breaking octave traps (half-time/double-time locks).
+  - **Phase Slew Nudge**: Injects a phase nudge (`pendingPhaseNudge = 0.0`) into the audio callback's `phaseSlewBuffer`, smoothly slewing the visual flywheel phase without visual jump discontinuities.
 
 ---
 

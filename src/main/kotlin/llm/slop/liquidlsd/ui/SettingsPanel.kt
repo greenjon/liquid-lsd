@@ -493,6 +493,16 @@ object SettingsPanel {
             session.midiMappingManager.saveActiveProfile()
         }
 
+        val tapCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/tapTempo"))
+        if (ImGui.inputInt("Tap Tempo CC", tapCc)) {
+            val newVal = tapCc.get().coerceIn(-1, 127)
+            session.midiMappingManager.addMapping("Global/tapTempo", newVal)
+            session.midiMappingManager.saveActiveProfile()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("MIDI CC assigned to tap tempo. Set to -1 to unmap.")
+        }
+
         ImGui.spacing()
         val triggers = UITheme.QueueKeyTrigger.values()
         val triggerNames = triggers.map { it.name }.toTypedArray()
@@ -500,6 +510,17 @@ object SettingsPanel {
         if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
             session.uiTheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
             session.uiTheme.saveSettings()
+        }
+
+        val tapTriggers = UITheme.TapKeyTrigger.values()
+        val tapTriggerNames = tapTriggers.map { it.displayName }.toTypedArray()
+        val currentTapIdx = imgui.type.ImInt(session.uiTheme.tapKeyTrigger.ordinal)
+        if (ImGui.combo("Tap Tempo Key", currentTapIdx, tapTriggerNames)) {
+            session.uiTheme.tapKeyTrigger = tapTriggers[currentTapIdx.get()]
+            session.uiTheme.saveSettings()
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Keyboard key for tapping in BPM tempo when not typing in text fields.")
         }
     }
 

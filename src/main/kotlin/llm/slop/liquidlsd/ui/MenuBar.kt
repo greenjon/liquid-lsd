@@ -287,9 +287,16 @@ class MenuBar(
         val dotGap = 6.6f
         val dotsTotalW = (dotR * 2f * 4f) + (dotGap * 3f) + 9.5f
 
+        val flash = session.tapTempoController.getFlashIntensity()
+        val tapCount = session.tapTempoController.getActiveTapCount()
+
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
-        val bpmText = "BPM: %3.0f  ".format(bpm)
-        val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else ""
+        val bpmText = when {
+            tapCount == 1 -> "BPM: [TAP 1]  "
+            tapCount >= 2 -> "BPM: %3.0f [%d]  ".format(bpm, tapCount)
+            else -> "BPM: %3.0f  ".format(bpm)
+        }
+        val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else if (isAudioDisabled) "DSP: OFF  " else "DSP: --  "
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%3.0f ms  ".format(ftMs)
         val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
@@ -300,6 +307,7 @@ class MenuBar(
         val windowBtnsW = if (isFrameless) (btnW * 3f) + (4f * 2f) + 12f else 0f
 
         session.uiTheme.withFont(UITheme.FontLevel.CODE) {
+            val textH = ImGui.getTextLineHeight()
             val barWidth  = ImGui.getContentRegionAvailX()
             val textWidth = ImGui.calcTextSize(fullLabel).x
             val totalRightW = textWidth + dotsTotalW + windowBtnsW
@@ -342,7 +350,6 @@ class MenuBar(
                 val dotsStartX = ImGui.getCursorScreenPosX()
                 val dotsStartY = ImGui.getCursorScreenPosY()
                 val dl = ImGui.getWindowDrawList()
-                val textH = ImGui.getTextLineHeight()
                 val cy = dotsStartY + (textH * 0.5f)
 
                 for (i in 0..3) {
@@ -376,44 +383,84 @@ class MenuBar(
             }
 
             // ── BPM ───────────────────────────────────────────────────────────────
-            if (isAudioDisabled) {
+            val bpmW = ImGui.calcTextSize(bpmText).x
+            val bpmPosX = ImGui.getCursorPosX()
+            val bpmPosY = ImGui.getCursorPosY()
+
+            ImGui.invisibleButton("##bpm_tap_button", bpmW, textH)
+            val isBpmHovered = ImGui.isItemHovered()
+            val isBpmClicked = ImGui.isItemClicked(0)
+
+            ImGui.setCursorPos(bpmPosX, bpmPosY)
+
+            if (flash > 0.01f) {
+                // Bright yellow/gold flash highlight on tap
+                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.95f, 0.2f, 1.0f)
+            } else if (tapCount > 0) {
+                // Warm amber tone during active tap cadence
+                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.82f, 0.35f, 1.0f)
+            } else if (isAudioDisabled) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.95f, 0.80f, 0.40f, 1.0f) // warm amber tone for manual tempo
             } else {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue for live audio engine
             }
             ImGui.text(bpmText)
             ImGui.popStyleColor()
-            if (ImGui.isItemClicked()) {
-                onOpenAudioEngineMonitor()
+
+            if (isBpmClicked) {
+                session.tapTempoController.tap()
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            if (isBpmHovered && session.uiTheme.tooltipsEnabled) {
+                val keyHint = when (session.uiTheme.tapKeyTrigger) {
+                    UITheme.TapKeyTrigger.T -> "Key: [T]"
+                    UITheme.TapKeyTrigger.PERIOD -> "Key: [.]"
+                    UITheme.TapKeyTrigger.NONE -> "Key: None"
+                }
+                val tapStatus = if (tapCount > 0) " (Taps: $tapCount)" else ""
                 if (isAudioDisabled) {
-                    ImGui.setTooltip("Manual BPM: %.0f (Audio engine disabled, tempo is fixed).\nClick to open Audio Engine settings to adjust tempo.".format(bpm))
+                    ImGui.setTooltip("Manual BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint).\nAudio engine is disabled (tempo is fixed).\nClick DSP badge to open Audio Engine settings.".format(bpm))
                 } else if (audioActive) {
-                    ImGui.setTooltip("Audio Engine BPM: estimated tempo.\nClick to open Audio Engine settings.")
+                    ImGui.setTooltip("Audio Engine BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint) to nudge audio tracker.\nClick DSP badge to open Audio Engine settings.".format(bpm))
                 } else {
-                    ImGui.setTooltip("Audio Engine BPM (Engine inactive).\nClick to open Audio Engine settings.")
+                    ImGui.setTooltip("Audio Engine BPM: %.1f$tapStatus (Engine inactive)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings.".format(bpm))
                 }
             }
             ImGui.sameLine(0f, 0f)
 
             // ── DSP Latency ───────────────────────────────────────────────────────
-            if (showAudio) {
-                when {
-                    audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
-                    audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
-                    else                 -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
-                }
-                ImGui.text(dspText)
-                ImGui.popStyleColor()
-                if (ImGui.isItemClicked()) {
-                    onOpenAudioEngineMonitor()
-                }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Audio callback DSP execution time.\nClick to open Audio Engine settings.")
-                }
-                ImGui.sameLine(0f, 0f)
+            val dspW = ImGui.calcTextSize(dspText).x
+            val dspPosX = ImGui.getCursorPosX()
+            val dspPosY = ImGui.getCursorPosY()
+
+            ImGui.invisibleButton("##dsp_monitor_button", dspW, textH)
+            val isDspHovered = ImGui.isItemHovered()
+            val isDspClicked = ImGui.isItemClicked(0)
+
+            ImGui.setCursorPos(dspPosX, dspPosY)
+
+            if (!showAudio) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f) // dim slate gray when inactive/off
+            } else when {
+                audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
+                audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
+                else                 -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
             }
+            ImGui.text(dspText)
+            ImGui.popStyleColor()
+
+            if (isDspClicked) {
+                onOpenAudioEngineMonitor()
+            }
+            if (isDspHovered && session.uiTheme.tooltipsEnabled) {
+                if (showAudio) {
+                    ImGui.setTooltip("Audio callback DSP execution time: %.2fms\nClick to open Audio Engine settings.".format(audioLatency))
+                } else if (isAudioDisabled) {
+                    ImGui.setTooltip("Audio engine is disabled.\nClick to open Audio Engine settings.")
+                } else {
+                    ImGui.setTooltip("Audio engine is inactive.\nClick to open Audio Engine settings.")
+                }
+            }
+            ImGui.sameLine(0f, 0f)
 
             // ── FPS ───────────────────────────────────────────────────────────────
             val maxFpsConfig = session.uiTheme.maxFps

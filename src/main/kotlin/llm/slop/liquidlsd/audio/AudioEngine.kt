@@ -63,6 +63,10 @@ class BeatDetector(
         return engine.interpolateParabolicPeak(y1, y2, y3)
     }
 
+    fun nudgeTempo(bpm: Float) {
+        engine.nudgeTempo(bpm)
+    }
+
     fun processBlock(
         unfilteredAmp: Float,
         lowAmp: Float,
@@ -198,6 +202,30 @@ object AudioEngine {
             totalBeats = currentBeats
         }
         CVRegistry.updateBeatAnchor(currentBeats, bpm, System.nanoTime())
+    }
+
+    /**
+     * Registers a VJ tap event.
+     * In manual / locked mode: sets manualBpm and aligns beat phase downbeat.
+     * In active tracking mode: nudges beat tracker candidate tempo and smooth phase slew.
+     */
+    fun registerTap(tappedBpm: Float?, tapTimestampNs: Long = System.nanoTime()) {
+        val effectiveBpm = tappedBpm ?: estimatedBpm
+        if (tappedBpm != null) {
+            estimatedBpm = tappedBpm
+            manualBpm = tappedBpm
+            beatDetector.nudgeTempo(tappedBpm)
+        }
+        if (!isBpmLocked) {
+            beatDetector.pendingPhaseNudge = 0.0
+        }
+        if (!isActive() || isBpmLocked) {
+            val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
+            val alignedBeats = kotlin.math.round(currentBeats)
+            totalBeats = alignedBeats
+            phaseSlewBuffer = 0.0
+            CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, tapTimestampNs)
+        }
     }
 
     /**

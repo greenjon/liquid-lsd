@@ -112,6 +112,10 @@ class Mixer(
         }
     }
 
+    val tapTempo = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true).apply {
+        modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
+    }
+
     val randDeckA = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
     val randDeckB = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
     val randDeckBG = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
@@ -135,6 +139,7 @@ class Mixer(
     private var prevQueueNextVal = 0.0f
     private var prevBgQueuePrevVal = 0.0f
     private var prevBgQueueNextVal = 0.0f
+    private var prevTapTempoVal = 0.0f
     private var lastUpdateTimeNs: Long = System.nanoTime()
 
     fun getAllMixerRandomizableParameters(): List<ModulatableParameter> {
@@ -162,6 +167,7 @@ class Mixer(
         list.add("$prefix/queueNext" to queueNext)
         list.add("$prefix/bgQueuePrev" to bgQueuePrev)
         list.add("$prefix/bgQueueNext" to bgQueueNext)
+        list.add("$prefix/tapTempo" to tapTempo)
         list.add("$prefix/randDeckA" to randDeckA)
         list.add("$prefix/randDeckB" to randDeckB)
         list.add("$prefix/randDeckBG" to randDeckBG)
@@ -247,6 +253,7 @@ class Mixer(
         queueNext.evaluate()
         bgQueuePrev.evaluate()
         bgQueueNext.evaluate()
+        tapTempo.evaluate()
         randDeckA.evaluate()
         randDeckB.evaluate()
         randDeckBG.evaluate()
@@ -327,6 +334,18 @@ class Mixer(
     }
 
     /**
+     * Evaluates if the tapTempo parameter crossed the 0.5 threshold on a rising edge since last frame.
+     * Returns true if triggered.
+     */
+    fun pollTapTempo(): Boolean {
+        val nextVal = tapTempo.value
+        val triggered = prevTapTempoVal < 0.5f && nextVal >= 0.5f
+        prevTapTempoVal = nextVal
+        if (tapTempo.baseValue != 0f) tapTempo.baseValue = 0f
+        return triggered
+    }
+
+    /**
      * Synchronizes current queue trigger parameter values into edge-detection trackers.
      * Prevents false 0->1 trigger edge detection on startup / session load.
      */
@@ -335,10 +354,12 @@ class Mixer(
         queuePrev.evaluate()
         bgQueueNext.evaluate()
         bgQueuePrev.evaluate()
+        tapTempo.evaluate()
         prevQueueNextVal = queueNext.value
         prevQueuePrevVal = queuePrev.value
         prevBgQueueNextVal = bgQueueNext.value
         prevBgQueuePrevVal = bgQueuePrev.value
+        prevTapTempoVal = tapTempo.value
     }
 
     /**

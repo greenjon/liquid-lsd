@@ -493,6 +493,7 @@ object PresetManager {
                 queuePrev = mixer.queuePrev.toDto(),
                 bgQueueNext = mixer.bgQueueNext.toDto(),
                 bgQueuePrev = mixer.bgQueuePrev.toDto(),
+                tapTempo = mixer.tapTempo.toDto(),
                 isRepeatEnabled = PlayQueueManager.isRepeatEnabled,
                 isShuffleEnabled = PlayQueueManager.isShuffleEnabled,
                 bgQueue = BgQueueManager.queue.map { serializeSessionPath(it) },
@@ -551,10 +552,12 @@ object PresetManager {
             session.queuePrev?.let { mixer.queuePrev.applyDto(it) }
             session.bgQueueNext?.let { mixer.bgQueueNext.applyDto(it) }
             session.bgQueuePrev?.let { mixer.bgQueuePrev.applyDto(it) }
+            session.tapTempo?.let { mixer.tapTempo.applyDto(it) }
             mixer.queueNext.baseValue = 0f
             mixer.queuePrev.baseValue = 0f
             mixer.bgQueueNext.baseValue = 0f
             mixer.bgQueuePrev.baseValue = 0f
+            mixer.tapTempo.baseValue = 0f
             mixer.syncQueueTriggerPrevValues()
             
             activePresetA = if (session.deckA.isEmpty) null else session.deckA.name

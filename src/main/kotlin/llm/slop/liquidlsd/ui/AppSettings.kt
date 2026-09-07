@@ -24,6 +24,7 @@ data class AppSettings(
     val autoVjDirtyBehavior: UITheme.AutoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD,
     val activeMidiProfile: String = "default",
     val queueKeyTrigger: UITheme.QueueKeyTrigger = UITheme.QueueKeyTrigger.NONE,
+    val tapKeyTrigger: UITheme.TapKeyTrigger = UITheme.TapKeyTrigger.T,
     val tooltipsEnabled: Boolean = true,
     val maxFps: Int = 30,
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,

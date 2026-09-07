@@ -44,7 +44,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── AmplitudeExtractor.kt   — RMS amplitude per band
 │   ├── AudioInputDevice.kt     — Input device selection
 │   ├── SystemAudioVolume.kt    — Master volume control
-│   └── MidiJackWatchdog.kt     — MIDI hotplug monitoring
+│   ├── MidiJackWatchdog.kt     — MIDI hotplug monitoring
+│   └── TapTempoController.kt   — VJ tap tempo cadence tracking, interval averaging, 2.0s timeout reset, and phase alignment
 ├── broadcast/
 │   ├── BroadcastEngine.kt      — Live WebSocket relay client, throttled delta streaming, auto-reconnect
 │   ├── BroadcastSettings.kt    — Broadcast configuration and persistence (lsd-settings.properties)

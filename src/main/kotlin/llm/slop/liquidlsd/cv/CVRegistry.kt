@@ -63,6 +63,19 @@ object CVRegistry {
         updatePushedValue("bpm", bpm)
     }
 
+    /**
+     * Explicitly snaps beat phase to a downbeat anchor (e.g. from a manual tap),
+     * resetting the render-thread monotonic anchor so the phase snap takes effect immediately.
+     */
+    fun alignBeatPhase(beats: Double, bpm: Float, timeNs: Long) {
+        anchorBeats = beats
+        anchorBpm = bpm
+        anchorTimeNs = timeNs
+        lastRenderBeats = beats
+        lastRenderTimeNs = timeNs
+        updatePushedValue("bpm", bpm)
+    }
+
     fun resetBeatAnchor(beats: Double = 0.0, bpm: Float = 120f, timeNs: Long = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()) {
         anchorBeats = beats
         anchorBpm = bpm

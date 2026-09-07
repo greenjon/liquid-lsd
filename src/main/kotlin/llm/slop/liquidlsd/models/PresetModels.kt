@@ -256,6 +256,7 @@ data class SessionStateDto(
     val queuePrev: ParameterDto? = null,
     val bgQueueNext: ParameterDto? = null,
     val bgQueuePrev: ParameterDto? = null,
+    val tapTempo: ParameterDto? = null,
     val isRepeatEnabled: Boolean = false,
     val isShuffleEnabled: Boolean = false,
     val bgQueue: List<String> = emptyList(),

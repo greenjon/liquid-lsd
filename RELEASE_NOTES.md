@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### VJ Tap Tempo & Phase Downbeat Synchronization (`TapTempoController.kt`, `AudioEngine.kt`, `BeatTrackerEngine.kt`, `MenuBar.kt`, `Mixer.kt`, `SettingsPanel.kt`)
+- **Real-Time Tap Cadence Engine (`TapTempoController.kt`)**:
+  - Implements an allocation-free circular buffer averaging the last 8 tap intervals with nanosecond resolution.
+  - Automatically resets sequence cadence when tap intervals exceed 2.0 seconds (30 BPM cutoff).
+  - Emits a transient visual flash on the BPM readout (300ms decay) and tracks active tap counts (`TAP [N]`).
+- **Dual-Mode Audio Engine Integration (`AudioEngine.kt`, `BeatTrackerEngine.kt`)**:
+  - **Manual / Locked Mode (`isBpmLocked = true` or Audio Disabled)**: Direct tempo update to `manualBpm` and instant downbeat phase quantization (`round(totalBeats)`), locking visual pulses and the 4-beat bar meter to the musical downbeat on tap.
+  - **Live Audio Tracking Mode (`!isBpmLocked`)**: Nudges the beat tracker's candidate tempo, recalculates dynamic programming search center $\tau_0$, and injects a smooth phase nudge into `phaseSlewBuffer`, immediately breaking octave traps (half-time/double-time false locks) without visual jump discontinuities.
+- **Mouse & Keyboard Interactions (`MenuBar.kt`, `Main.kt`, `SettingsPanel.kt`, `UITheme.kt`)**:
+  - Clicking the `BPM: <val>` readout in the top bar triggers Tap Tempo using an invisible button target, firing immediately on mouse down (`isItemClicked(0)`).
+  - While tapping, the BPM readout displays immediate visual confirmation: flashes in bright gold and renders the active tap count (`BPM: [TAP 1]`, `BPM: 128 [2]`).
+  - Clicking the `DSP: <val>ms` badge (or 4-beat phase dots) opens the Audio Settings panel. The DSP badge is persistently visible even when audio is disabled (`DSP: OFF`) or inactive (`DSP: --`).
+  - Added keyboard trigger support in GLFW key callback (`Main.kt`): pressing `T` (default) or `.` (configurable in Settings under `Tap Tempo Key`) triggers tap tempo when text inputs are not focused.
+- **Beat & Flywheel Synchronization (`AudioEngine.kt`, `BeatTrackerEngine.kt`, `CVRegistry.kt`)**:
+  - In manual/locked mode, `CVRegistry.alignBeatPhase()` instantly aligns visual pulses and CV oscillators to whole-beat boundaries without monotonic jitter filtering delay.
+  - In audio tracking mode, `BeatTrackerEngine.nudgeTempo()` applies a stability lock (`isLocked = true`, `stableAccumulatedSec = stabilityLockDurationSec`) around the tapped BPM to keep the tracker locked to the tap.
+
 ---
 
 ## Version 1.0.0-beta.53

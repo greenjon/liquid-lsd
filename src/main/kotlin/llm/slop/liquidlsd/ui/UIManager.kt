@@ -106,6 +106,7 @@ class UIManager(
     private var lastPrevMidiCcHigh = false
     private var lastBgNextMidiCcHigh = false
     private var lastBgPrevMidiCcHigh = false
+    private var lastTapMidiCcHigh = false
 
     private var currentMixer: Mixer? = null
 
@@ -278,13 +279,27 @@ class UIManager(
                         }
                         lastBgPrevMidiCcHigh = isHigh
                     }
+                    val tapCc = session.midiMappingManager.getCcForSpecial("Global/tapTempo")
+                    val tapCh = session.midiMappingManager.getChannelForSpecial("Global/tapTempo")
+                    if (tapCc != -1 && cc == tapCc && channel == tapCh) {
+                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+                        val isHigh = valNow > 0.5f
+                        if (isHigh && !lastTapMidiCcHigh) {
+                            session.tapTempoController.tap()
+                        }
+                        lastTapMidiCcHigh = isHigh
+                    }
                 }
             }
         }
 
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
+        if (mixer.pollTapTempo()) {
+            session.tapTempoController.tap()
+        }
         var keyDelta = 0
         if (!ImGui.getIO().wantTextInput) {
+
             val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_F, false)
             val isSlash = ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_SLASH, false)
             if (isCtrlF || isSlash) {
