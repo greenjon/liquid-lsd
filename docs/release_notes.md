@@ -10,6 +10,7 @@
 ### Mixer Monitor & Performance Console Polish (`MixerMonitorPanel.kt`, `LinuxEvdevTouchBackend.kt`, `scripts/install_desktop.sh`)
 - **Zero-Centered Bipolar Master Crossfader**: Crossfader bar line now renders outward from the center detent (0.0), matching standard DJ hardware fader conventions: fills left with Deck A amber color when in Deck A territory (-1.0 to 0.0), and fills right with Deck B cyan color when in Deck B territory (0.0 to +1.0).
 - **Streamlined Crossfader Chrome**: Removed redundant duplicate alpha stem HUD from `MixerMonitorPanel`, allowing the fader to align cleanly with the channel strips.
+- **Static Deck Preview Borders**: Removed dynamic crossfader-linked brightness and thickness modulation from `DeckControlPanel`. Deck preview monitors now consistently render at full theme saturation and constant 2.0px border thickness regardless of crossfader position.
 - **udev Rule Priority & Hotplug Reliability**: Renamed touchpad permission rule to `70-liquidlsd-touchpad.rules` with `TAG+="seat"` and `RUN{builtin}+="uaccess"`, ensuring proper evaluation before systemd-logind seat tagging and dynamic ACL application across kernel input device events.
 
 ---

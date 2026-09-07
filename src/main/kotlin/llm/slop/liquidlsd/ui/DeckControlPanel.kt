@@ -44,13 +44,7 @@ class DeckControlPanel(
             "Deck BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
             else -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
         }
-        val onAirFactor = when (label) {
-            "Deck A" -> (1.0f - mixer.crossfade.baseValue).coerceIn(0.35f, 1.0f)
-            "Deck B" -> mixer.crossfade.baseValue.coerceIn(0.35f, 1.0f)
-            "Deck BG" -> if (!deck.isEmpty) 1.0f else 0.40f
-            else -> if (!deck.isEmpty) 1.0f else 0.40f
-        }
-        val themeCol = ImGui.colorConvertFloat4ToU32(rgb[0] * onAirFactor, rgb[1] * onAirFactor, rgb[2] * onAirFactor, 1f)
+        val themeCol = ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f)
 
         // Ensure no internal padding interferes with drawing
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, 0f)
@@ -191,8 +185,7 @@ class DeckControlPanel(
         }
 
         // Draw border perfectly wrapped around the image
-        val borderThickness = if (onAirFactor >= 0.70f) 2.5f else 1.5f
-        dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, borderThickness)
+        dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
 
         // --- Clustered Inner Overlays: Badge, Die, and Vertical Level Fader ---
         val letter = deckPayloadName
