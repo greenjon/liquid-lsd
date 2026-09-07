@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Build System & Toolchain Warning Cleanups (`build.gradle.kts`, `gradlew`, `gradlew.bat`, `gradle.properties`, `SessionStateTest.kt`)
+- **JDK 25 Native Access Enablement (`gradlew`, `gradlew.bat`, `gradle.properties`)**: Configured `--enable-native-access=ALL-UNNAMED` in Gradle wrapper default JVM options and daemon JVM args (`org.gradle.jvmargs`), eliminating the Java 25 `System::load` restricted method warning from `native-platform` on modern JDKs.
+- **Gradle 9 Dependency Notation Deprecations (`build.gradle.kts`)**: Converted multi-argument `implementation(...)` and `runtimeOnly(...)` dependency calls for LWJGL and ImGui to standard single-string coordinate notation (`"group:name:version"` and `"group:name:version:classifier"`), resolving all Gradle 9 deprecation warnings.
+- **Documentation Task Logging (`build.gradle.kts`)**: Switched `mkdocs` missing fallback notice in `generateDocs` from stdout warning formatting to `logger.info`, keeping standard build task output clean when MkDocs is not installed.
+- **Kotlin Smart-Cast Nullability Warnings (`SessionStateTest.kt`)**: Removed redundant safe-call operators (`?.`) on values following `assertNotNull` assertions in `SessionStateTest`, resolving Kotlin 2.3+ compiler warnings.
+
 ---
 
 ## Version 1.0.0-beta.52

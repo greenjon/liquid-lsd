@@ -33,28 +33,28 @@ dependencies {
 
     // LWJGL - Core
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
-    implementation("org.lwjgl", "lwjgl")
-    implementation("org.lwjgl", "lwjgl-glfw")
-    implementation("org.lwjgl", "lwjgl-opengl")
-    implementation("org.lwjgl", "lwjgl-openal")
-    implementation("org.lwjgl", "lwjgl-stb")
+    implementation("org.lwjgl:lwjgl")
+    implementation("org.lwjgl:lwjgl-glfw")
+    implementation("org.lwjgl:lwjgl-opengl")
+    implementation("org.lwjgl:lwjgl-openal")
+    implementation("org.lwjgl:lwjgl-stb")
 
     // LWJGL - Natives for all platforms
     val lwjglNativesList = listOf("natives-linux", "natives-windows", "natives-macos", "natives-macos-arm64", "natives-linux-arm64")
     lwjglNativesList.forEach { platform ->
-        runtimeOnly("org.lwjgl", "lwjgl", classifier = platform)
-        runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = platform)
-        runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = platform)
-        runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = platform)
-        runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = platform)
+        runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:$platform")
+        runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion:$platform")
+        runtimeOnly("org.lwjgl:lwjgl-opengl:$lwjglVersion:$platform")
+        runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion:$platform")
+        runtimeOnly("org.lwjgl:lwjgl-stb:$lwjglVersion:$platform")
     }
 
     // ImGui
-    implementation("io.github.spair", "imgui-java-binding", imguiVersion)
-    implementation("io.github.spair", "imgui-java-lwjgl3", imguiVersion)
-    implementation("io.github.spair", "imgui-java-natives-linux", imguiVersion)
-    implementation("io.github.spair", "imgui-java-natives-windows", imguiVersion)
-    implementation("io.github.spair", "imgui-java-natives-macos", imguiVersion)
+    implementation("io.github.spair:imgui-java-binding:$imguiVersion")
+    implementation("io.github.spair:imgui-java-lwjgl3:$imguiVersion")
+    implementation("io.github.spair:imgui-java-natives-linux:$imguiVersion")
+    implementation("io.github.spair:imgui-java-natives-windows:$imguiVersion")
+    implementation("io.github.spair:imgui-java-natives-macos:$imguiVersion")
 
     // JACK Audio (Linux only - will add fallbacks later)
     implementation("org.jaudiolibs:jnajack:1.4.0")
@@ -131,7 +131,7 @@ val generateDocs = tasks.register("generateDocs") {
                 .waitFor()
             if (result != 0) throw GradleException("mkdocs build failed with exit code $result")
         } else {
-            println("WARNING: 'mkdocs' executable not found. Skipping documentation generation, will use existing resource files if present.")
+            logger.info("mkdocs executable not found. Skipping documentation generation; using existing resource files if present.")
         }
     }
 }
