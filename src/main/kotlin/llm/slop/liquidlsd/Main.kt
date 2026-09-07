@@ -151,6 +151,7 @@ fun main(args: Array<String>) {
     java.io.File("library/presets").mkdirs()
     java.io.File("library/playlists").mkdirs()
     java.io.File("library/midi").mkdirs()
+    llm.slop.liquidlsd.ui.FileSystemManager.ensureDefaultLibrary()
 
 
 

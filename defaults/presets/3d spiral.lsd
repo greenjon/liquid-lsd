@@ -1,0 +1,270 @@
+{
+    "name": "3d spiral",
+    "visualSourceType": "mandala",
+    "parameters": {
+        "Lobes": {
+            "baseValue": 12.667807,
+            "baseMin": 15.724852,
+            "baseMax": 15.724852,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Recipe Select": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "L1": {
+            "baseValue": 0.35010436,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "L2": {
+            "baseValue": 0.21931985,
+            "baseMin": 0.1,
+            "baseMax": 0.715,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "L3": {
+            "baseValue": 0.35843506,
+            "baseMin": 0.0,
+            "baseMax": 0.695,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "L4": {
+            "baseValue": 0.36512604,
+            "baseMin": 0.23944607,
+            "baseMax": 0.23944607,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Thickness": {
+            "baseValue": 0.5504868,
+            "baseMin": 0.74260354,
+            "baseMax": 0.74260354,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Hue Offset": {
+            "baseValue": 0.65508705,
+            "baseMin": 0.3668639,
+            "baseMax": 0.3668639,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Hue Sweep": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Depth": {
+            "baseValue": 0.5204927,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "feedbackParameters": {
+        "fbDecay": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbGain": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbZoom": {
+            "baseValue": 0.1726155,
+            "baseMin": 0.16568053,
+            "baseMax": 0.16568053,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbRotate": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbHueShift": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbBlur": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbChroma": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbMode": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbKaleido": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "viewParameters": {
+        "view3DMode": {
+            "baseValue": 0.70414203,
+            "baseMin": 0.70414203,
+            "baseMax": 0.70414203,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewZoom": {
+            "baseValue": 2.0426035,
+            "baseMin": 2.0426035,
+            "baseMax": 2.0426035,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewRotateX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "TRIANGLE",
+                    "subdivision": 5.0,
+                    "slope": 0.999,
+                    "depthMin": 1.0,
+                    "depthMax": 1.0,
+                    "subdivisionMin": 5.0,
+                    "subdivisionMax": 5.0,
+                    "phaseOffsetMin": 0.0,
+                    "phaseOffsetMax": 0.0,
+                    "slopeMin": 0.5,
+                    "slopeMax": 0.5,
+                    "morph": 1.0,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "viewRotateY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "TRIANGLE",
+                    "subdivision": 5.0,
+                    "slope": 0.999,
+                    "depthMin": 1.0,
+                    "depthMax": 1.0,
+                    "subdivisionMin": 5.0,
+                    "subdivisionMax": 5.0,
+                    "phaseOffsetMin": 0.0,
+                    "phaseOffsetMax": 0.0,
+                    "slopeMin": 0.5,
+                    "slopeMax": 0.5,
+                    "morph": 1.0,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "viewRotateZ": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "TRIANGLE",
+                    "subdivision": 5.0,
+                    "slope": 0.999,
+                    "depthMin": 1.0,
+                    "depthMax": 1.0,
+                    "subdivisionMin": 5.0,
+                    "subdivisionMax": 5.0,
+                    "phaseOffsetMin": 0.0,
+                    "phaseOffsetMax": 0.0,
+                    "slopeMin": 0.5,
+                    "slopeMax": 0.5,
+                    "morph": 1.0,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "viewPersp": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewDepthDim": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewSeparation": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewBlendMode": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "globalAlpha": {
+        "baseValue": 1.0,
+        "baseMin": 1.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    }
+}

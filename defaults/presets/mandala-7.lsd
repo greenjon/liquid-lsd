@@ -1,0 +1,200 @@
+{
+    "name": "mandala-7",
+    "visualSourceType": "mandala",
+    "parameters": {
+        "Lobes": {
+            "baseValue": 4.0,
+            "baseMin": 5.313218,
+            "baseMax": 5.313218,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Recipe Select": {
+            "baseValue": 0.0,
+            "baseMin": 0.14705883,
+            "baseMax": 0.14705883,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "L1": {
+            "baseValue": 0.7639464,
+            "baseMin": 0.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 0.3297192,
+                    "bypassed": true,
+                    "subdivision": 8.0,
+                    "genUnit": "BEAT",
+                    "hold": 0.98260325,
+                    "holdMin": 0.98260325,
+                    "holdMax": 0.98260325,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "L2": {
+            "baseValue": 0.6373285,
+            "baseMin": 0.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 0.3297192,
+                    "bypassed": true,
+                    "subdivision": 8.0,
+                    "genUnit": "BEAT",
+                    "hold": 0.98260325,
+                    "holdMin": 0.98260325,
+                    "holdMax": 0.98260325,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "L3": {
+            "baseValue": 0.4392358,
+            "baseMin": 0.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 0.3297192,
+                    "bypassed": true,
+                    "subdivision": 8.0,
+                    "genUnit": "BEAT",
+                    "hold": 0.98260325,
+                    "holdMin": 0.98260325,
+                    "holdMax": 0.98260325,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "L4": {
+            "baseValue": 0.5627783,
+            "baseMin": 0.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 0.3297192,
+                    "bypassed": true,
+                    "subdivision": 8.0,
+                    "genUnit": "BEAT",
+                    "hold": 0.98260325,
+                    "holdMin": 0.98260325,
+                    "holdMax": 0.98260325,
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "Thickness": {
+            "baseValue": 0.2608309,
+            "baseMin": 0.057142857,
+            "baseMax": 0.26190478,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "Hue Offset": {
+            "baseValue": 0.44176978,
+            "baseMin": 0.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "Hue Sweep": {
+            "baseValue": 0.25,
+            "baseMin": 0.4,
+            "baseMax": 0.4,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Depth": {
+            "baseValue": 0.4168771,
+            "baseMin": 0.2,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        }
+    },
+    "feedbackParameters": {
+        "fbDecay": {
+            "baseValue": 0.0,
+            "baseMin": 0.6810345,
+            "baseMax": 0.6810345,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbGain": {
+            "baseValue": 1.0,
+            "baseMin": 1.137931,
+            "baseMax": 1.137931,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbZoom": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbRotate": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbHueShift": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbBlur": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbChroma": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbMode": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbKaleido": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "globalAlpha": {
+        "baseValue": 1.0,
+        "baseMin": 1.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    }
+}

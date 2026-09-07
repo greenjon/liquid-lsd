@@ -519,8 +519,9 @@ object PresetManager {
         try {
             val sessionFile = File(LIBRARY_ROOT, "last_session.json")
             if (!sessionFile.exists()) {
-                logger.info { "No previous session file found. Starting empty." }
+                logger.info { "No previous session file found. Initializing default state." }
                 startEmpty(mixer)
+                loadInitialPreset(mixer)
                 return
             }
             val content = sessionFile.readText()
@@ -666,6 +667,29 @@ object PresetManager {
         PlayQueueManager.clearQueue()
         BgQueueManager.clearQueue()
         logger.info { "Started application empty" }
+    }
+
+    private fun loadInitialPreset(mixer: Mixer) {
+        try {
+            val presets = llm.slop.liquidlsd.ui.FileSystemManager.scanAllPresets()
+            if (presets.isEmpty()) return
+            val candidate = presets.firstOrNull { it.name.equals("3d mandala", ignoreCase = true) }
+                ?: presets.first()
+            val file = File(candidate.path)
+            if (!file.exists()) return
+            val rawDto = json.decodeFromString<DeckPresetDto>(file.readText())
+            val namedDto = rawDto.copy(name = file.nameWithoutExtension)
+            val (sanitizedDto, _) = sanitizePresetDto(namedDto)
+            mixer.deckA.applyDto(sanitizedDto)
+            activePresetA = sanitizedDto.name
+            cachedDtoA = mixer.deckA.toDto(sanitizedDto.name, sanitizedDto.tags).copy(
+                presetNotes = sanitizedDto.presetNotes,
+                paramNotes = sanitizedDto.paramNotes
+            )
+            logger.info { "First launch: loaded initial preset '${sanitizedDto.name}' onto Deck A" }
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to load initial preset on first launch" }
+        }
     }
 }
 

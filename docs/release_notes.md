@@ -2,10 +2,20 @@
 
 ## [Unreleased]
 
-### Clean First-Run Startup with 4 Blank Screens (`Deck.kt`, `Main.kt`, `PresetManager.kt`)
-- **Blank Screens on First Launch**: When loading the application for the first time (or when no previous session exists), all four decks (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) now start completely blank with cleared framebuffers and active Launchpad controls instead of pre-populating animated Mandala visual sources.
-- **Removed Hardcoded Mandala Recipes**: Cleaned up legacy Fourier ratio assignments from `Main.kt` and updated `Deck` constructor to default to `isEmpty = true`.
-- **Defensive Session Load**: If `last_session.json` is missing or fails to parse, `PresetManager.loadSession` reliably falls back to `startEmpty(mixer)`.
+---
+
+## Version 1.0.0-beta.51
+
+> [!NOTE]
+> **Release 1.0.0-beta.51** introduces bundled factory presets and playlists with safe first-run library seeding, on-demand factory restore, first-run visual autoload on Deck A, a clean-lined modern application icon, static deck preview monitor borders, and zero-centered bipolar crossfader rendering.
+
+### Bundled Factory Presets, Playlists & Safe First-Run Seeding (`build.gradle.kts`, `FileSystemManager.kt`, `PresetManager.kt`, `MenuBar.kt`, `PresetListPanel.kt`)
+- **Version-Controlled Defaults**: Added `defaults/presets/` and `defaults/playlists/` directories tracked in Git. Curated presets and setlists can be created inside the app and synced to repository defaults via `./gradlew syncDefaultsFromLibrary`.
+- **Automated Resource Packaging (`build.gradle.kts`)**: Gradle build automatically generates `manifest.txt` indices and bundles default presets and playlists into application classpath resources (`default_presets/`, `default_playlists/`), making them immediately available on clean clones and binary releases.
+- **Safe First-Run Seeding**: On first launch, `FileSystemManager.ensureDefaultLibrary()` unpacks bundled presets and playlists into `library/presets` and `library/playlists`, recording a persistent `library/.defaults_installed` marker file.
+- **Permanent Deletion Safety**: If a user intentionally deletes a factory preset or playlist from their local library, the initialization marker prevents it from resurrecting on future application launches.
+- **First-Run Visual Autoload**: When starting without an existing session, Deck A automatically loads a curated starter visual preset (`3d mandala`) instead of starting on a blank screen, while preserving clean empty starts when `--empty` / `-e` is passed.
+- **On-Demand Factory Restore**: Added **"Restore Factory Presets..."** to the **File** menu and an in-browser restore button in `PresetListPanel` when no presets are found, allowing users to safely restore missing factory presets/playlists at any time without overwriting their custom work.
 
 ### Mixer Monitor & Performance Console Polish (`MixerMonitorPanel.kt`, `LinuxEvdevTouchBackend.kt`, `scripts/install_desktop.sh`)
 - **Zero-Centered Bipolar Master Crossfader**: Crossfader bar line now renders outward from the center detent (0.0), matching standard DJ hardware fader conventions: fills left with Deck A amber color when in Deck A territory (-1.0 to 0.0), and fills right with Deck B cyan color when in Deck B territory (0.0 to +1.0).

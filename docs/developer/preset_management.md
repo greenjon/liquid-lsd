@@ -125,3 +125,25 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
 - **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdset` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
 - **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).
 - **`PlayQueueManager.kt` / `BgQueueManager.kt`**: Provides `removeFileFromQueue(file)` to remove all references to a deleted file from both queues and shift active index/shuffle state.
+
+---
+
+## 6. Factory Presets & Playlists Bundling (`defaults/`, First-Run Seeding)
+
+To ensure users never start with a blank screen on clean git clones or new releases while protecting user customizations:
+
+### Version-Controlled Defaults (`defaults/`)
+- Curated presets and playlists are kept under version control in `defaults/presets/` and `defaults/playlists/`.
+- **Syncing from Library**: Developers can run `./gradlew syncDefaultsFromLibrary` to copy curated `.lsd` presets from `library/presets/` and `.lsdset` setlists from `library/playlists/` into `defaults/`.
+- **Automated Packaging (`prepareDefaultAssets`)**: During build, Gradle automatically generates `manifest.txt` indices and packages the contents of `defaults/` into the classpath (`/default_presets/` and `/default_playlists/`).
+
+### Safe First-Run Seeding (`FileSystemManager.ensureDefaultLibrary`)
+- On first launch, `FileSystemManager.ensureDefaultLibrary()` checks for the presence of `library/.defaults_installed`.
+- If uninitialized, it extracts all bundled presets into `library/presets/` and bundled playlists into `library/playlists/` (skipping any existing files to protect user data), then records `library/.defaults_installed`.
+- **Deletion Safety**: If a user intentionally deletes a factory preset or playlist, the existence of `library/.defaults_installed` ensures it will **not** be resurrected on subsequent application launches.
+- **First-Run Visual Autoload**: When starting without a pre-existing `last_session.json` (and without `--empty`), `PresetManager.loadSession` automatically loads the first available starter preset (preferring `3d mandala`) onto Deck A so the user is immediately greeted with live graphics.
+
+### Factory Restore Action (`FileSystemManager.restoreFactoryPresets`)
+- Users can trigger **File > Restore Factory Presets...** (or via the empty preset browser button) at any time.
+- Calls `ensureDefaultLibrary(forceRestore = true)` which re-extracts any missing factory presets and playlists without touching or overwriting custom presets.
+

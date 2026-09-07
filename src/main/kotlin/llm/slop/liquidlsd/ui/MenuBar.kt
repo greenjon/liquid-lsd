@@ -45,6 +45,12 @@ class MenuBar(
                         }
                         ImGui.endMenu()
                     }
+                    if (ImGui.menuItem("Restore Factory Presets...")) {
+                        popupManager.pendingOpenRestoreDefaultsPopup = true
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
+                    }
                     ImGui.separator()
                     if (ImGui.menuItem("Settings...")) {
                         onOpenSettings()

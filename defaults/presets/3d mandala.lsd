@@ -1,0 +1,532 @@
+{
+    "name": "3d mandala",
+    "visualSourceType": "mandala",
+    "parameters": {
+        "Lobes": {
+            "baseValue": 12.667807,
+            "baseMin": 15.724852,
+            "baseMax": 15.724852,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Recipe Select": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "L1": {
+            "baseValue": 0.35010436,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "RANDOM",
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "L2": {
+            "baseValue": 0.2830361,
+            "baseMin": 0.1,
+            "baseMax": 0.715,
+            "randomizeBase": true,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "RANDOM",
+                    "subdivision": 0.999,
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "L3": {
+            "baseValue": 0.039097797,
+            "baseMin": 0.0,
+            "baseMax": 0.695,
+            "randomizeBase": true,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "RANDOM",
+                    "subdivision": 0.998,
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "L4": {
+            "baseValue": 0.36512604,
+            "baseMin": 0.23944607,
+            "baseMax": 0.23944607,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "RANDOM",
+                    "subdivision": 0.99700004,
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "Thickness": {
+            "baseValue": 0.5504868,
+            "baseMin": 0.74260354,
+            "baseMax": 0.74260354,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Hue Offset": {
+            "baseValue": 0.65508705,
+            "baseMin": 0.3668639,
+            "baseMax": 0.3668639,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Hue Sweep": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Depth": {
+            "baseValue": 0.5204927,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "feedbackParameters": {
+        "fbDecay": {
+            "baseValue": 0.40170515,
+            "baseMin": 0.0,
+            "baseMax": 0.61807233,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "fbGain": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbZoom": {
+            "baseValue": 0.1726155,
+            "baseMin": 0.16568053,
+            "baseMax": 0.16568053,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbRotate": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbHueShift": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbBlur": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbChroma": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbMode": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "fbKaleido": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "viewParameters": {
+        "view3DMode": {
+            "baseValue": 3.4074075,
+            "baseMin": 3.4074075,
+            "baseMax": 3.4074075,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewZoom": {
+            "baseValue": 2.0358026,
+            "baseMin": 2.0358026,
+            "baseMax": 2.0358026,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewRotateX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "TRIANGLE",
+                    "subdivision": 5.0,
+                    "slope": 0.999,
+                    "slopeMin": 0.5,
+                    "slopeMax": 0.5,
+                    "morph": 1.0,
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "viewRotateY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "TRIANGLE",
+                    "subdivision": 5.0,
+                    "slope": 0.999,
+                    "slopeMin": 0.5,
+                    "slopeMax": 0.5,
+                    "morph": 1.0,
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "viewRotateZ": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": [
+                {
+                    "sourceId": "lfo",
+                    "operator": "ADD",
+                    "depth": 1.0,
+                    "waveform": "TRIANGLE",
+                    "subdivision": 5.0,
+                    "slope": 0.999,
+                    "slopeMin": 0.5,
+                    "slopeMax": 0.5,
+                    "morph": 1.0,
+                    "seqSteps": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "id": "virtual_lfo"
+                }
+            ]
+        },
+        "viewPersp": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewDepthDim": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewSeparation": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewBlendMode": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "viewRoundness": {
+            "baseValue": 1.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": false,
+            "modulators": []
+        }
+    },
+    "globalAlpha": {
+        "baseValue": 1.0,
+        "baseMin": 1.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    }
+}

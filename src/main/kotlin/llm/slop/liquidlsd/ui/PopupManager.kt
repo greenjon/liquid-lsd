@@ -204,4 +204,34 @@ class PopupManager(
             ImGui.endPopup()
         }
     }
+
+    var pendingOpenRestoreDefaultsPopup = false
+    var lastRestoreMessage: String? = null
+
+    fun drawRestoreDefaultsPopup() {
+        if (pendingOpenRestoreDefaultsPopup) {
+            ImGui.openPopup("Restore Factory Presets?##restore_defaults")
+            pendingOpenRestoreDefaultsPopup = false
+        }
+
+        if (ImGui.beginPopupModal("Restore Factory Presets?##restore_defaults", ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.textWrapped("This will restore any missing factory presets and playlists from the application bundle into your library.")
+            ImGui.spacing()
+            ImGui.textDisabled("Note: Your custom presets and modifications will not be overwritten.")
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            if (ImGui.button("Restore Defaults", 130f, 0f)) {
+                val res = FileSystemManager.restoreFactoryPresets()
+                lastRestoreMessage = "Restored ${res.presetsExtracted} preset(s) and ${res.playlistsExtracted} playlist(s)."
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 80f, 0f)) {
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
 }

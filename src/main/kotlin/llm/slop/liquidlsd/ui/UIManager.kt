@@ -384,6 +384,7 @@ class UIManager(
             popupManager.drawDeckConfirmPopups(session, mixer)
             popupManager.drawSourceChangeConfirmPopup(session, mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
+            popupManager.drawRestoreDefaultsPopup()
 
             NoteEditorModal.draw()
             SavePresetModal.draw(session)

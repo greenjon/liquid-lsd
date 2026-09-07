@@ -67,6 +67,10 @@ object PresetListPanel {
                 UIManager.newPresetSafely(mixer, mixer.deckPV)
                 presetState.activeTopTab = "Deck PV"
             }
+            ImGui.separator()
+            if (ImGui.menuItem("Restore Factory Presets")) {
+                FileSystemManager.restoreFactoryPresets()
+            }
             ImGui.endPopup()
         }
 
@@ -111,6 +115,15 @@ object PresetListPanel {
 
             if (filtered.isEmpty()) {
                 ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
+                if (allPresets.isEmpty()) {
+                    ImGui.spacing()
+                    if (ImGui.button("${Icons.REFRESH} Restore Factory Presets")) {
+                        FileSystemManager.restoreFactoryPresets()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Re-extract bundled factory presets into library/presets")
+                    }
+                }
             } else {
                 filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)

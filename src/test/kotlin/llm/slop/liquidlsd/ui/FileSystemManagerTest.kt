@@ -119,4 +119,29 @@ class FileSystemManagerTest {
         val deletedSig = FileSystemManager.getDirectorySignature(directory)
         assertTrue(addedSig != deletedSig, "Directory signature should change when file is deleted")
     }
+
+    @Test
+    fun testEnsureDefaultLibraryInstallsDefaultsAndRespectsMarker() {
+        val marker = File("library/.defaults_installed")
+        val existedBefore = marker.exists()
+        val originalContent = if (existedBefore) marker.readText() else null
+
+        try {
+            // First call with forceRestore = true
+            val result = FileSystemManager.ensureDefaultLibrary(forceRestore = true)
+            assertTrue(marker.exists())
+
+            // Calling without forceRestore should recognize it was already installed
+            val secondResult = FileSystemManager.ensureDefaultLibrary(forceRestore = false)
+            assertTrue(secondResult.wasAlreadyInstalled)
+            assertEquals(0, secondResult.presetsExtracted)
+            assertEquals(0, secondResult.playlistsExtracted)
+        } finally {
+            if (existedBefore && originalContent != null) {
+                marker.writeText(originalContent)
+            } else {
+                marker.delete()
+            }
+        }
+    }
 }

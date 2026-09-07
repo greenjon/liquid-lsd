@@ -491,5 +491,90 @@ object FileSystemManager {
         }
         return root
     }
+
+    data class LibrarySeedResult(
+        val presetsExtracted: Int,
+        val playlistsExtracted: Int,
+        val wasAlreadyInstalled: Boolean
+    )
+
+    private const val DEFAULTS_MARKER_FILE = "library/.defaults_installed"
+
+    /**
+     * Seeds default presets and playlists into library/ if not already initialized.
+     * If [forceRestore] is true, missing factory files will be re-extracted without overwriting existing files.
+     */
+    fun ensureDefaultLibrary(forceRestore: Boolean = false): LibrarySeedResult {
+        val markerFile = File(DEFAULTS_MARKER_FILE)
+        if (markerFile.exists() && !forceRestore) {
+            return LibrarySeedResult(0, 0, wasAlreadyInstalled = true)
+        }
+
+        val presetsRoot = getPresetsRoot()
+        val playlistsRoot = getPlaylistsRoot()
+        var presetsCount = 0
+        var playlistsCount = 0
+
+        // Extract bundled presets
+        presetsCount += extractBundledAssets("default_presets", presetsRoot)
+
+        // Extract bundled playlists
+        playlistsCount += extractBundledAssets("default_playlists", playlistsRoot)
+
+        try {
+            val parent = markerFile.parentFile
+            if (parent != null && !parent.exists()) parent.mkdirs()
+            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\n")
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to write defaults marker file" }
+        }
+
+        if (presetsCount > 0 || playlistsCount > 0) {
+            clearScanCache()
+            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s)" }
+        }
+
+        return LibrarySeedResult(presetsCount, playlistsCount, wasAlreadyInstalled = false)
+    }
+
+    private fun extractBundledAssets(resourceFolder: String, targetDir: File): Int {
+        val classLoader = FileSystemManager::class.java.classLoader
+        val manifestStream = classLoader.getResourceAsStream("$resourceFolder/manifest.txt")
+            ?: return 0
+        val filenames = manifestStream.bufferedReader().useLines { lines ->
+            lines.map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }.toList()
+        }
+
+        var count = 0
+        for (filename in filenames) {
+            val targetFile = File(targetDir, filename)
+            if (targetFile.exists()) {
+                // Never overwrite user-modified or existing files
+                continue
+            }
+            val assetStream = classLoader.getResourceAsStream("$resourceFolder/$filename")
+                ?: continue
+            try {
+                val parent = targetFile.parentFile
+                if (parent != null && !parent.exists()) parent.mkdirs()
+                assetStream.use { input ->
+                    targetFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                count++
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to extract default asset: $filename" }
+            }
+        }
+        return count
+    }
+
+    /**
+     * Re-extracts any missing factory presets and playlists without overwriting existing files.
+     */
+    fun restoreFactoryPresets(): LibrarySeedResult {
+        return ensureDefaultLibrary(forceRestore = true)
+    }
 }
 

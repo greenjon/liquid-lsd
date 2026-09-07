@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "llm.slop"
-version = findProperty("version")?.takeIf { it != "unspecified" } ?: "1.0.0-beta.50"
+version = findProperty("version")?.takeIf { it != "unspecified" } ?: "1.0.0-beta.51"
 
 repositories {
     mavenCentral()
@@ -145,15 +145,111 @@ tasks.withType<Jar> {
     }
 }
 
+abstract class SyncDefaultsTask : DefaultTask() {
+    @get:Internal
+    abstract val libraryDir: DirectoryProperty
+
+    @get:Internal
+    abstract val defaultsDir: DirectoryProperty
+
+    @TaskAction
+    fun sync() {
+        val lib = libraryDir.get().asFile
+        val def = defaultsDir.get().asFile
+        val presetsSrc = File(lib, "presets")
+        val presetsDest = File(def, "presets")
+        if (presetsSrc.exists()) {
+            presetsDest.mkdirs()
+            presetsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsd" }?.forEach { f ->
+                f.copyTo(File(presetsDest, f.name), overwrite = true)
+                println("Synced preset to defaults: ${f.name}")
+            }
+        }
+        val playlistsSrc = File(lib, "playlists")
+        val playlistsDest = File(def, "playlists")
+        if (playlistsSrc.exists()) {
+            playlistsDest.mkdirs()
+            playlistsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdset" }?.forEach { f ->
+                f.copyTo(File(playlistsDest, f.name), overwrite = true)
+                println("Synced playlist to defaults: ${f.name}")
+            }
+        }
+    }
+}
+
+abstract class PrepareDefaultAssetsTask : DefaultTask() {
+    @get:InputDirectory
+    abstract val defaultsDir: DirectoryProperty
+
+    @get:Input
+    abstract val appVersion: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun prepare() {
+        val outBase = outputDir.get().asFile
+        val presetsOut = File(outBase, "default_presets")
+        val playlistsOut = File(outBase, "default_playlists")
+        presetsOut.mkdirs()
+        playlistsOut.mkdirs()
+
+        // Write version.txt
+        File(outBase, "version.txt").writeText(appVersion.get().trim() + "\n")
+
+        val inBase = defaultsDir.get().asFile
+        val presetsIn = File(inBase, "presets")
+        val presetFiles = if (presetsIn.exists()) {
+            presetsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsd" }?.sortedBy { it.name } ?: emptyList<File>()
+        } else emptyList<File>()
+
+        val presetManifest = File(presetsOut, "manifest.txt")
+        val presetLines = mutableListOf<String>()
+        presetFiles.forEach { f ->
+            f.copyTo(File(presetsOut, f.name), overwrite = true)
+            presetLines.add(f.name)
+        }
+        presetManifest.writeText(presetLines.joinToString("\n"))
+
+        val playlistsIn = File(inBase, "playlists")
+        val playlistFiles = if (playlistsIn.exists()) {
+            playlistsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdset" }?.sortedBy { it.name } ?: emptyList<File>()
+        } else emptyList<File>()
+
+        val playlistManifest = File(playlistsOut, "manifest.txt")
+        val playlistLines = mutableListOf<String>()
+        playlistFiles.forEach { f ->
+            f.copyTo(File(playlistsOut, f.name), overwrite = true)
+            playlistLines.add(f.name)
+        }
+        playlistManifest.writeText(playlistLines.joinToString("\n"))
+    }
+}
+
+val syncDefaultsFromLibrary = tasks.register<SyncDefaultsTask>("syncDefaultsFromLibrary") {
+    group = "distribution"
+    description = "Syncs presets and playlists from library/ into defaults/ for version control and distribution."
+    libraryDir.set(layout.projectDirectory.dir("library"))
+    defaultsDir.set(layout.projectDirectory.dir("defaults"))
+}
+
+val prepareDefaultAssets = tasks.register<PrepareDefaultAssetsTask>("prepareDefaultAssets") {
+    group = "build"
+    description = "Prepares bundled presets and playlists with manifests for classpath packaging."
+    defaultsDir.set(layout.projectDirectory.dir("defaults"))
+    appVersion.set(project.version.toString())
+    outputDir.set(layout.buildDirectory.dir("generated/default_assets"))
+}
+
 tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     dependsOn(generateDocs)
+    dependsOn(prepareDefaultAssets)
     from("library/sources") {
         into("default_sources")
     }
-    inputs.property("version", project.version.toString())
-    filesMatching("version.txt") {
-        filter { project.version.toString() }
-    }
+    from(layout.buildDirectory.dir("generated/default_assets"))
 }
 
     val packageThumbDrive = tasks.register("packageThumbDrive") {
@@ -208,6 +304,24 @@ tasks.processResources {
                 val destLib = file("$distDir/library")
                 libraryDir.copyRecursively(destLib, overwrite = true)
                 println("Copied library to ${destLib.absolutePath}")
+            }
+            val defPresets = file("defaults/presets")
+            if (defPresets.exists()) {
+                val destPresets = file("$distDir/library/presets")
+                destPresets.mkdirs()
+                defPresets.listFiles { f -> f.isFile && f.extension.lowercase() == "lsd" }?.forEach { f ->
+                    val target = File(destPresets, f.name)
+                    if (!target.exists()) f.copyTo(target)
+                }
+            }
+            val defPlaylists = file("defaults/playlists")
+            if (defPlaylists.exists()) {
+                val destPlaylists = file("$distDir/library/playlists")
+                destPlaylists.mkdirs()
+                defPlaylists.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdset" }?.forEach { f ->
+                    val target = File(destPlaylists, f.name)
+                    if (!target.exists()) f.copyTo(target)
+                }
             }
 
             // Copy icon and desktop entry
