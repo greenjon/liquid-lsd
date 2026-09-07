@@ -12,9 +12,9 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
 class Deck(
     var source: VisualSource,
     var width: Int = 1920,
-    var height: Int = 1080
+    var height: Int = 1080,
+    var isEmpty: Boolean = true
 ) : ParameterOwner {
-    var isEmpty: Boolean = false
 
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)

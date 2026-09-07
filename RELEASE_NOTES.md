@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Clean First-Run Startup with 4 Blank Screens (`Deck.kt`, `Main.kt`, `PresetManager.kt`)
+- **Blank Screens on First Launch**: When loading the application for the first time (or when no previous session exists), all four decks (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) now start completely blank with cleared framebuffers and active Launchpad controls instead of pre-populating animated Mandala visual sources.
+- **Removed Hardcoded Mandala Recipes**: Cleaned up legacy Fourier ratio assignments from `Main.kt` and updated `Deck` constructor to default to `isEmpty = true`.
+- **Defensive Session Load**: If `last_session.json` is missing or fails to parse, `PresetManager.loadSession` reliably falls back to `startEmpty(mixer)`.
+
+### Mixer Monitor & Performance Console Polish (`MixerMonitorPanel.kt`, `LinuxEvdevTouchBackend.kt`, `scripts/install_desktop.sh`)
+- **Zero-Centered Bipolar Master Crossfader**: Crossfader bar line now renders outward from the center detent (0.0), matching standard DJ hardware fader conventions: fills left with Deck A amber color when in Deck A territory (-1.0 to 0.0), and fills right with Deck B cyan color when in Deck B territory (0.0 to +1.0).
+- **Streamlined Crossfader Chrome**: Removed redundant duplicate alpha stem HUD from `MixerMonitorPanel`, allowing the fader to align cleanly with the channel strips.
+- **udev Rule Priority & Hotplug Reliability**: Renamed touchpad permission rule to `70-liquidlsd-touchpad.rules` with `TAG+="seat"` and `RUN{builtin}+="uaccess"`, ensuring proper evaluation before systemd-logind seat tagging and dynamic ACL application across kernel input device events.
+
 ---
 
 ## Version 1.0.0-beta.50
@@ -21,13 +31,14 @@
   - Sticky hold retains fader levels when all fingers are lifted.
   - Bezel clamping ($Y \le 0.48 \to 0.0$, $Y \ge 0.94 \to 1.0$; $X \le 0.05 \to -1.0$, $X \ge 0.95 \to 1.0$, center detent $\pm 0.02 \to 0.0$) ensures comfortable control without hitting physical laptop chassis edges.
 - **Native Platform Backends**:
-  - **Linux**: Direct evdev reader via JNA `libc`, `EVIOCGRAB` (`0x40044590`) cursor grab, `EVIOCGABS` hardware axis query, and MT Protocol B slot cache.
+  - **Linux**: Direct evdev reader via JNA `libc`, `O_RDWR` with `EVIOCGRAB` (`0x40044590`) cursor grab, `EVIOCGABS` hardware axis query, MT Protocol B slot cache, POSIX ACL validation using `access(2)` (circumventing JVM `File.canWrite()` ACL blind spots), and absolute hardware axis verification with explicit TrackPoint/pointing-stick filtering.
   - **macOS**: Cocoa `NSTouch` indirect touch events.
-  - **Zero-Crash Graceful Permissions**: Non-root `uaccess` systemd udev rule via `pkexec`, interactive permission badge in UI, and in-app hot-reload.
+  - **Zero-Crash Graceful Permissions**: Non-root `uaccess` systemd udev rule (`/etc/udev/rules.d/70-liquidlsd-touchpad.rules`) via `pkexec`, interactive permission badge in UI, and in-app hot-reload.
   - **Thread-Safety**: Low-latency lock-free event queue drained strictly on Thread 0 once per frame.
 - **Visual Feedback HUD**:
-  - Real-time glowing cyan contact dots for active fingers and amber dots for anchor fingers.
-  - Unobtrusive sticky hold lines indicating held alpha levels.
+  - Real-time glowing cyan contact dots for active fingers and amber dots for anchor fingers directly on the Crossfader slider.
+  - Active alpha levels are reflected seamlessly on each individual deck's monitor preview fader.
+  - **Zero-Centered Bipolar Crossfader Bar**: Crossfader slider track bar now correctly originates from center (`0.0`), extending leftward tinted with Deck A's color when fading towards Deck A, and rightward tinted with Deck B's color when fading towards Deck B (rather than filling unidirectionally from Deck A).
   - Clean Mode remains 100% clean with zero HUD overlays.
 
 ### Startup Version Checker & GitHub Update Prompt (`UpdateChecker.kt`, `SemVer.kt`, `AppVersion.kt`, `UpdatePromptModal.kt`, `AboutModal.kt`, `MenuBar.kt`, `SettingsPanel.kt`)

@@ -57,7 +57,7 @@ Every zone maintains an independent **LIFO (Last-In-First-Out) multi-touch stack
 - Creates rhythmic video flashes and stroboscopic accents.
 
 ### 3. Sticky Hold Levels
-When all fingers are lifted from an alpha strip, the fader level stays frozen at that position. A subtle horizontal hold-line marker is drawn on the UI HUD so you can see the stored alpha state before touching down to jump it.
+When all fingers are lifted from an alpha strip, the fader level stays frozen at that position. Each deck's active alpha is immediately visible on its respective monitor preview fader slider.
 
 ---
 
@@ -75,13 +75,13 @@ Physical laptop trackpads lose capacitive accuracy near the outer chassis. The c
 On Linux, Liquid LSD reads raw multi-touch data directly via `/dev/input/event*` and uses `ioctl(EVIOCGRAB)` to lock the OS mouse cursor while CapsLock is engaged.
 
 1. **Automated Setup via Polkit**:
-   If permissions are missing, Liquid LSD displays `[Touchpad: Permission Required]` above the crossfader and in `Settings > Window Frame & Chrome`. Clicking this badge launches `pkexec` to install `/etc/udev/rules.d/99-liquidlsd-touchpad.rules`:
+   If permissions are missing, Liquid LSD displays `[Touchpad: Permission Required]` above the crossfader and in `Settings > Window Frame & Chrome`. Clicking this badge launches `pkexec` to install `/etc/udev/rules.d/70-liquidlsd-touchpad.rules`:
    ```udev
-   KERNEL=="event*", SUBSYSTEM=="input", ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess"
+   KERNEL=="event*", SUBSYSTEM=="input", ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess", TAG+="seat", RUN{builtin}+="uaccess"
    ```
-   Systemd's `uaccess` tag immediately grants non-root read/write access to the logged-in desktop seat user without rebooting.
+   Systemd's `uaccess` tag immediately grants non-root read/write access to the logged-in desktop seat user via POSIX ACLs without requiring a reboot or group changes. Liquid LSD verifies permissions using `access(2)` via JNA to properly detect POSIX ACL grants.
 2. **Desktop Installer Script**:
-   Running `./scripts/install_desktop.sh` automatically configures this rule during installation.
+   Running `./scripts/install_desktop.sh` automatically configures this rule and cleans up legacy rules during installation.
 
 ### macOS (Cocoa Indirect Touches)
 On macOS, trackpads support native indirect touch events through AppKit without requiring root permissions or special drivers.

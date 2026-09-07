@@ -519,7 +519,8 @@ object PresetManager {
         try {
             val sessionFile = File(LIBRARY_ROOT, "last_session.json")
             if (!sessionFile.exists()) {
-                logger.info { "No previous session file found." }
+                logger.info { "No previous session file found. Starting empty." }
+                startEmpty(mixer)
                 return
             }
             val content = sessionFile.readText()
@@ -598,7 +599,8 @@ object PresetManager {
             )
             logger.info { "Successfully loaded session state from ${sessionFile.name}" }
         } catch (e: Exception) {
-            logger.error(e) { "Failed to load session state" }
+            logger.error(e) { "Failed to load session state, falling back to empty" }
+            startEmpty(mixer)
         }
     }
 

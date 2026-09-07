@@ -31,6 +31,7 @@ class LinuxEvdevTouchBackend(
         fun read(fd: Int, buf: ByteArray, count: Int): Int
         fun ioctl(fd: Int, request: Int, arg: Int): Int
         fun ioctl(fd: Int, request: Int, arg: Structure): Int
+        fun access(path: String, mode: Int): Int
     }
 
     @Structure.FieldOrder("value", "minimum", "maximum", "fuzz", "flat", "resolution")
@@ -44,14 +45,16 @@ class LinuxEvdevTouchBackend(
     }
 
     companion object {
-        private const val O_RDONLY = 0x0000
+        private const val R_OK = 4
+        private const val W_OK = 2
+        private const val O_RDWR = 0x0002
         private const val O_NONBLOCK = 0x0800
 
         // _IOW('E', 0x90, int) = 0x40044590 (decimal 1074021776)
         const val EVIOCGRAB = 0x40044590
 
-        // _IOR('E', 0x20 + axis, struct input_absinfo) = 0x80184520 + axis
-        fun EVIOCGABS(axis: Int): Int = (0x80184520L or axis.toLong()).toInt()
+        // _IOR('E', 0x40 + axis, struct input_absinfo) = 0x80184540 + axis
+        fun EVIOCGABS(axis: Int): Int = (0x80184540L + axis.toLong()).toInt()
 
         const val EV_SYN = 0x00
         const val EV_ABS = 0x03
@@ -107,7 +110,14 @@ class LinuxEvdevTouchBackend(
 
     fun hasTouchpadAccess(devicePath: String): Boolean {
         val file = File(devicePath)
-        return file.exists() && file.canRead() && file.canWrite()
+        if (!file.exists()) return false
+        val c = clib
+        return if (c != null) {
+            // access(2) properly checks POSIX ACLs against calling process credentials
+            c.access(devicePath, R_OK or W_OK) == 0
+        } else {
+            file.canRead() && file.canWrite()
+        }
     }
 
     fun detectDevice(): String? {
@@ -125,8 +135,8 @@ class LinuxEvdevTouchBackend(
             return null
         }
 
-        if (!file.canRead() || !file.canWrite()) {
-            logger.warn { "Touchpad detected at $candidate but read/write permissions are missing." }
+        if (!hasTouchpadAccess(candidate)) {
+            logger.warn { "Touchpad detected at $candidate but read/write permissions are missing (POSIX ACL check failed)." }
             state = TouchBackendState.PERMISSION_REQUIRED
             return candidate
         }
@@ -141,7 +151,8 @@ class LinuxEvdevTouchBackend(
         val byIdDir = File("/dev/input/by-id")
         if (byIdDir.isDirectory) {
             val nodes = byIdDir.listFiles { _, name ->
-                name.contains("touchpad", ignoreCase = true) || name.contains("trackpad", ignoreCase = true)
+                (name.contains("touchpad", ignoreCase = true) || name.contains("trackpad", ignoreCase = true)) &&
+                        !name.contains("trackpoint", ignoreCase = true)
             }
             if (!nodes.isNullOrEmpty()) {
                 val resolved = nodes[0].canonicalPath
@@ -156,37 +167,69 @@ class LinuxEvdevTouchBackend(
             try {
                 val content = procFile.readText()
                 val blocks = content.split("\n\n")
+
+                data class Candidate(val path: String, val name: String, val score: Int)
+                val candidates = mutableListOf<Candidate>()
+
                 for (block in blocks) {
                     val lines = block.lines()
                     val nameLine = lines.firstOrNull { it.startsWith("N: Name=") } ?: ""
                     val handlersLine = lines.firstOrNull { it.startsWith("H: Handlers=") } ?: ""
-                    val isTouchpad = nameLine.contains("touchpad", ignoreCase = true) ||
-                            nameLine.contains("trackpad", ignoreCase = true) ||
-                            nameLine.contains("synaptics", ignoreCase = true) ||
-                            nameLine.contains("elan", ignoreCase = true)
 
-                    if (isTouchpad) {
+                    // Negative filters: exclude trackpoints, pointing sticks, pens/styluses, keyboards, mice
+                    val lowerName = nameLine.lowercase()
+                    if (lowerName.contains("trackpoint") ||
+                        lowerName.contains("pointingstick") ||
+                        lowerName.contains("pen") ||
+                        lowerName.contains("stylus") ||
+                        lowerName.contains("keyboard") ||
+                        (lowerName.contains("mouse") && !lowerName.contains("touchpad") && !lowerName.contains("trackpad"))
+                    ) {
+                        continue
+                    }
+
+                    // A multi-touch touchpad MUST advertise absolute coordinates (B: ABS=...)
+                    val hasAbs = lines.any {
+                        it.startsWith("B: ABS=") && it.substringAfter("=").trim().isNotEmpty() && it.substringAfter("=").trim() != "0"
+                    }
+                    if (!hasAbs) continue
+
+                    val isExplicitTouchpad = lowerName.contains("touchpad") || lowerName.contains("trackpad")
+                    val isVendorCandidate = lowerName.contains("synaptics") ||
+                            lowerName.contains("elan") ||
+                            lowerName.contains("alps") ||
+                            lowerName.contains("apple")
+
+                    if (isExplicitTouchpad || isVendorCandidate) {
                         val eventMatch = Regex("""event\d+""").find(handlersLine)
                         if (eventMatch != null) {
                             val path = "/dev/input/${eventMatch.value}"
-                            logger.info { "Found touchpad in /proc/bus/input/devices: $nameLine -> $path" }
-                            return path
+                            var score = if (isExplicitTouchpad) 100 else 50
+                            if (hasTouchpadAccess(path)) {
+                                score += 20
+                            }
+                            candidates.add(Candidate(path, nameLine, score))
                         }
                     }
+                }
+
+                if (candidates.isNotEmpty()) {
+                    val best = candidates.maxByOrNull { it.score }!!
+                    logger.info { "Selected touchpad device from /proc/bus/input/devices: ${best.name} -> ${best.path} (score=${best.score})" }
+                    return best.path
                 }
             } catch (t: Throwable) {
                 logger.debug(t) { "Error scanning /proc/bus/input/devices" }
             }
         }
 
-        // 3. Fallback: check event devices directly for MT capabilities
+        // 3. Fallback: check event devices directly for standard candidate indices
         val inputDir = File("/dev/input")
         if (inputDir.isDirectory) {
             val eventFiles = inputDir.listFiles { _, name -> name.startsWith("event") }
             if (eventFiles != null) {
                 for (f in eventFiles) {
                     if (f.name.contains("event6") || f.name.contains("event5")) {
-                        // Candidate fallback on standard laptops
                         return f.absolutePath
                     }
                 }
@@ -206,7 +249,7 @@ class LinuxEvdevTouchBackend(
             return false
         }
 
-        fd = c.open(path, O_RDONLY or O_NONBLOCK)
+        fd = c.open(path, O_RDWR or O_NONBLOCK)
         if (fd < 0) {
             logger.error { "Failed to open $path: fd=$fd" }
             state = TouchBackendState.PERMISSION_REQUIRED
@@ -231,12 +274,14 @@ class LinuxEvdevTouchBackend(
         val absY = InputAbsInfo()
 
         val retX = c.ioctl(fd, EVIOCGABS(ABS_MT_POSITION_X), absX)
+        absX.read()
         if (retX == 0 && absX.maximum > absX.minimum) {
             minX = absX.minimum
             maxX = absX.maximum
         } else {
             // Fallback to legacy ABS_X
             val retLegacyX = c.ioctl(fd, EVIOCGABS(ABS_X), absX)
+            absX.read()
             if (retLegacyX == 0 && absX.maximum > absX.minimum) {
                 minX = absX.minimum
                 maxX = absX.maximum
@@ -244,17 +289,20 @@ class LinuxEvdevTouchBackend(
         }
 
         val retY = c.ioctl(fd, EVIOCGABS(ABS_MT_POSITION_Y), absY)
+        absY.read()
         if (retY == 0 && absY.maximum > absY.minimum) {
             minY = absY.minimum
             maxY = absY.maximum
         } else {
             // Fallback to legacy ABS_Y
             val retLegacyY = c.ioctl(fd, EVIOCGABS(ABS_Y), absY)
+            absY.read()
             if (retLegacyY == 0 && absY.maximum > absY.minimum) {
                 minY = absY.minimum
                 maxY = absY.maximum
             }
         }
+        logger.info { "Evdev hardware limits queried: X=$minX..$maxX, Y=$minY..$maxY" }
     }
 
     override fun setGrabbed(grabbed: Boolean) {

@@ -256,7 +256,6 @@ class MixerMonitorPanel(
 
     private fun drawTouchConsoleHUD(
         session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
         contentW: Float
     ) {
         val controller = session.touchConsoleController
@@ -300,83 +299,7 @@ class MixerMonitorPanel(
                 controller.requestPermissionElevation()
             }
             ImGui.spacing()
-            return
         }
-
-        if (!controller.isActive) return
-
-        // --- Render 3-Stem Alpha HUD (Deck A, BG, Deck B) ---
-        val hudH = 20f
-        val gap = 6f
-        val colW = (contentW - gap * 2f) / 3f
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
-
-        ImGui.dummy(contentW, hudH)
-        val dl = ImGui.getWindowDrawList()
-
-        val stems = listOf(
-            Triple("A", mixer.levelA, controller.holdLevelA to controller.getLevelAContacts()),
-            Triple("BG", mixer.levelBG, controller.holdLevelBG to controller.getLevelBGContacts()),
-            Triple("B", mixer.levelB, controller.holdLevelB to controller.getLevelBContacts())
-        )
-
-        for (i in stems.indices) {
-            val (name, level, data) = stems[i]
-            val (holdLevel, contacts) = data
-            val bx = startX + i * (colW + gap)
-            val by = startY
-
-            val bgCol = ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.85f)
-            val borderCol = if (contacts.isNotEmpty()) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f)
-                            else ImGui.colorConvertFloat4ToU32(0.20f, 0.20f, 0.20f, 0.8f)
-
-            dl.addRectFilled(bx, by, bx + colW, by + hudH, bgCol, 3f)
-            dl.addRect(bx, by, bx + colW, by + hudH, borderCol, 3f, 0, 1.0f)
-
-            // Fill bar
-            val fillW = colW * level.coerceIn(0f, 1f)
-            val fillCol = when (name) {
-                "A" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.1f, 0.35f)
-                "B" -> ImGui.colorConvertFloat4ToU32(0.1f, 0.8f, 0.7f, 0.35f)
-                else -> ImGui.colorConvertFloat4ToU32(0.6f, 0.3f, 0.9f, 0.35f)
-            }
-            dl.addRectFilled(bx + 1f, by + 1f, bx + fillW, by + hudH - 1f, fillCol, 2f)
-
-            // Sticky Hold Line marker
-            val holdX = bx + colW * holdLevel.coerceIn(0f, 1f)
-            val holdCol = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.5f)
-            dl.addLine(holdX, by + 2f, holdX, by + hudH - 2f, holdCol, 1.5f)
-
-            // Stem Label
-            val lbl = "$name: ${(level * 100f).toInt()}%"
-            val lblW = ImGui.calcTextSize(lbl).x
-            val lblX = bx + (colW - lblW) * 0.5f
-            val lblY = by + (hudH - ImGui.getTextLineHeight()) * 0.5f
-            val textCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f)
-            dl.addText(lblX, lblY, textCol, lbl)
-
-            // Render glowing touch dots on stem
-            if (contacts.isNotEmpty()) {
-                val lastContact = contacts.last()
-                for (c in contacts) {
-                    val contactLevel = when {
-                        c.y <= 0.48f -> 0.0f
-                        c.y >= 0.94f -> 1.0f
-                        else -> ((c.y - 0.48f) / 0.46f).coerceIn(0f, 1f)
-                    }
-                    val cx = bx + colW * contactLevel
-                    val cy = by + hudH * 0.5f
-                    if (c == lastContact) {
-                        dl.addCircleFilled(cx, cy, 4.5f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 1.0f))
-                        dl.addCircle(cx, cy, 6.5f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 0.5f), 12, 1.2f)
-                    } else {
-                        dl.addCircleFilled(cx, cy, 3.5f, ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.15f, 0.85f))
-                    }
-                }
-            }
-        }
-        ImGui.spacing()
     }
 
     private fun drawCrossfaderSlider(
@@ -384,7 +307,7 @@ class MixerMonitorPanel(
         mixer: Mixer
     ) {
         val contentW = ImGui.getContentRegionAvailX()
-        drawTouchConsoleHUD(session, mixer, contentW)
+        drawTouchConsoleHUD(session, contentW)
 
         val fontLevel = UITheme.FontLevel.H2
         var textWA = 0f
@@ -554,11 +477,13 @@ class MixerMonitorPanel(
         val centerX = lineStartX + lineWidth * 0.50f
         dl.addLine(centerX, centerY - 8f, centerX, centerY + 8f, markColCenter, 1.5f)
 
-        // Active track line (standard theme color from CustomRangeSlider)
-        val themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
+        // Active track line (Zero-centered bipolar slider from -1.0 [Deck A] to +1.0 [Deck B])
         val valPct = ((mixer.crossfade.baseValue - (-1f)) / 2f).coerceIn(0f, 1f)
         val valHandleX = lineStartX + valPct * lineWidth
-        dl.addLine(lineStartX, centerY, valHandleX, centerY, themeColor, 3f)
+        val barColor = if (mixer.crossfade.baseValue < 0f) colorA else colorB
+        if (kotlin.math.abs(valHandleX - centerX) > 0.5f) {
+            dl.addLine(centerX, centerY, valHandleX, centerY, barColor, 3f)
+        }
 
         // Single handle (standard CustomRangeSlider dimensions and styling)
         val handleW = 6f

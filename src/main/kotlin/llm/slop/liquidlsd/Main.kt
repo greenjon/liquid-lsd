@@ -6,7 +6,6 @@ import llm.slop.liquidlsd.rendering.Shader
 import llm.slop.liquidlsd.rendering.GLDebug
 import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.rendering.Mandala
-import llm.slop.liquidlsd.rendering.MandalaRatio
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.UIManager
@@ -253,63 +252,18 @@ fun main(args: Array<String>) {
     val masterMandala = llm.slop.liquidlsd.rendering.VisualSourceRegistry.availableSources.firstOrNull { it.id == "mandala" } as? Mandala
         ?: throw RuntimeException("Mandala source not loaded from library/sources/mandala")
 
-    // Create Deck A with a 4-petal recipe (yellow-ish theme default)
-    val recipeA = MandalaRatio(
-        id = "15001423042349762156",
-        a = 26,
-        b = 23,
-        c = 14,
-        d = 14
-    )
     val initialWidth = UITheme.renderWidth
     val initialHeight = UITheme.renderHeight
 
-    val mandalaA = masterMandala.clone()
-    mandalaA.recipe = recipeA
-    val deckA = Deck(mandalaA, initialWidth, initialHeight)
-
-    // Create Deck B with a 3-petal recipe (shifted start hue)
-    val recipeB = MandalaRatio(
-        id = "3859966211554434234",
-        a = 32,
-        b = 23,
-        c = 11,
-        d = 11
-    )
-    val mandalaB = masterMandala.clone()
-    mandalaB.recipe = recipeB
-    mandalaB.parameters["Hue Offset"]?.set(0.5f) // starting color offset for distinction
-    val deckB = Deck(mandalaB, initialWidth, initialHeight)
-
-    // Create Deck BG (background layer)
-    val recipeBG = MandalaRatio(
-        id = "7777777777777777777",
-        a = 4,
-        b = 4,
-        c = 2,
-        d = 2
-    )
-    val mandalaBG = masterMandala.clone()
-    mandalaBG.recipe = recipeBG
-    val deckBG = Deck(mandalaBG, initialWidth, initialHeight)
-
-    // Create Deck PV (for preview / live tweaking)
-    val recipePV = MandalaRatio(
-        id = "9999999999999999999", // generic ID
-        a = 3,
-        b = 3,
-        c = 3,
-        d = 3
-    )
-    val mandalaPV = masterMandala.clone()
-    mandalaPV.recipe = recipePV
-    val deckPV = Deck(mandalaPV, initialWidth, initialHeight)
+    val deckA = Deck(masterMandala.clone(), initialWidth, initialHeight)
+    val deckB = Deck(masterMandala.clone(), initialWidth, initialHeight)
+    val deckBG = Deck(masterMandala.clone(), initialWidth, initialHeight)
+    val deckPV = Deck(masterMandala.clone(), initialWidth, initialHeight)
 
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckBG, deckPV, initialWidth, initialHeight)
-    if (UITheme.startupBehavior == UITheme.StartupBehavior.EMPTY) {
-        PresetManager.startEmpty(mixer)
-    } else {
+    PresetManager.startEmpty(mixer)
+    if (UITheme.startupBehavior != UITheme.StartupBehavior.EMPTY) {
         PresetManager.loadSession(mixer)
     }
     NotesManager.loadSourceNotes()

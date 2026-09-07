@@ -2,6 +2,17 @@
 
 This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
 
+## First-Run Clean Startup with Blank Deck Screens (`Deck.kt`, `Main.kt`, `PresetManager.kt`, `SaveLoadFixesTest.kt`)
+
+- **Decision**: Initialize all four decks (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) as blank/empty screens on initial application startup:
+  - **Deck Default `isEmpty = true`**: Configured `Deck(..., var isEmpty: Boolean = true)` so newly instantiated decks default to an empty/blank state.
+  - **Removal of Hardcoded Mandala Startup Recipes (`Main.kt`)**: Removed legacy hardcoded Fourier ratio definitions (`recipeA`, `recipeB`, `recipeBG`, `recipePV`) from `Main.kt`. Decks now cleanly initialize without pre-populating animated Mandala sources.
+  - **Explicit `startEmpty(mixer)` on Missing Session (`PresetManager.loadSession`)**: When `last_session.json` is missing (first run or deleted state) or fails to load, `loadSession` explicitly triggers `startEmpty(mixer)` to ensure all decks are reset, active preset labels/DTOs are null, and the play queues are cleared.
+  - **Clean Launchpad UI Workflow**: On first launch, the 4 deck monitors and master preview display blank black screens, and selecting any deck in the Preset Grid presents the Launchpad with "Add Source" and "Load Preset" buttons, providing an intuitive, distraction-free entry point for artists.
+- **Rationale**:
+  - Replaces legacy hardcoded initial state with a clean, intentional slate on first launch.
+  - Preserves user sessions when `last_session.json` exists, while ensuring first-time users or users with empty startup settings get clean blank monitors.
+
 ## Fixed 95% Global UI Scale, Removal of Grid Cell Ratio, and Dedicated Library Preset Sizing (`UITheme.kt`, `AppSettings.kt`, `SettingsPanel.kt`, `GridMetrics.kt`, `UIManager.kt`, `PresetListPanel.kt`)
 
 - **Decision**: Permanently fix the global UI scale at 95% across all panels and controls, remove arbitrary runtime UI scaling and the non-functional `gridCellRatio`, and introduce a dedicated, bounded user control (80%–120%) exclusively for preset name sizing in the Library:
@@ -540,9 +551,10 @@ This document outlines the key architectural decisions made in the development o
     - Sticky hold preserves fader level when all fingers are lifted.
     - Bezel clamping ($Y \le 0.48 \to 0.0$, $Y \ge 0.94 \to 1.0$; $X \le 0.05 \to -1.0$, $X \ge 0.95 \to 1.0$, center detent $\pm 0.02 \to 0.0$) ensures comfortable control without hitting the physical plastic chassis.
   - **Platform Architecture**:
-    - **Linux**: Direct evdev reader via JNA `libc` (`open`, `close`, `read`, `ioctl`), `EVIOCGRAB` (`0x40044590`) cursor grab, and `EVIOCGABS` hardware axis limit query with Multi-Touch Protocol B slot state caching synchronized on `SYN_REPORT`.
+    - **Linux**: Direct evdev reader via JNA `libc` (`open`, `close`, `read`, `ioctl`, `access`), `O_RDWR` with `EVIOCGRAB` (`0x40044590`) cursor grab, and `EVIOCGABS` hardware axis limit query with Multi-Touch Protocol B slot state caching synchronized on `SYN_REPORT`.
+    - **Device Discovery & TrackPoint Isolation**: Device scanning inspects `/dev/input/by-id` and `/proc/bus/input/devices`, explicitly rejecting non-touchpad hardware (`trackpoint`, `pointingstick`, `pen`, `stylus`, raw mice) and verifying absolute hardware coordinate capability (`B: ABS=`). This avoids selecting ThinkPad TrackPoints or standard mice that share vendor substrings (e.g. `ELAN`).
     - **macOS**: Cocoa `NSTouch` indirect touch events.
-    - **Permissions**: Systemd `TAG+="uaccess"` udev rule via `pkexec` with graceful in-app detection (`hasTouchpadAccess`) and hot-reload.
+    - **Permissions & POSIX ACL Verification**: Systemd `TAG+="uaccess", TAG+="seat", RUN{builtin}+="uaccess"` udev rule (`/etc/udev/rules.d/70-liquidlsd-touchpad.rules`) via `pkexec`. Access is validated via JNA `access(2)` (`R_OK or W_OK`) rather than JVM `File.canWrite()`, because `File.canWrite()` ignores POSIX ACLs assigned to desktop seat users by `systemd-logind`.
     - **Thread Safety**: Events are pushed into a lock-free queue and processed strictly on Thread 0 once per frame.
 
 ---

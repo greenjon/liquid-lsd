@@ -14,6 +14,8 @@ import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SaveLoadFixesTest {
 
@@ -106,5 +108,35 @@ class SaveLoadFixesTest {
         val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
         val dto = json.decodeFromString<DeckPresetDto>(jsonStr)
         assertEquals(0, dto.viewParameters.size, "viewParameters must default to emptyMap when not present in JSON")
+    }
+
+    @Test
+    fun testStartEmptyResetsAllDecksAndActivePresets() {
+        val mixer = mockk<Mixer>(relaxed = true)
+        val deckA = mockk<Deck>(relaxed = true)
+        val deckB = mockk<Deck>(relaxed = true)
+        val deckBG = mockk<Deck>(relaxed = true)
+        val deckPV = mockk<Deck>(relaxed = true)
+
+        every { mixer.deckA } returns deckA
+        every { mixer.deckB } returns deckB
+        every { mixer.deckBG } returns deckBG
+        every { mixer.deckPV } returns deckPV
+
+        PresetManager.activePresetA = "SomePresetA"
+        PresetManager.activePresetB = "SomePresetB"
+        PresetManager.activePresetBG = "SomePresetBG"
+        PresetManager.activePresetPV = "SomePresetPV"
+
+        PresetManager.startEmpty(mixer)
+
+        verify { deckA.reset() }
+        verify { deckB.reset() }
+        verify { deckBG.reset() }
+        verify { deckPV.reset() }
+        assertNull(PresetManager.activePresetA)
+        assertNull(PresetManager.activePresetB)
+        assertNull(PresetManager.activePresetBG)
+        assertNull(PresetManager.activePresetPV)
     }
 }

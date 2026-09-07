@@ -42,6 +42,10 @@ var activePresetMtimePV: Long? = null
 - Updated upon completing successful `saveDeckPresetAsync` operations.
 - Consumed by `DeckControlPanel` to draw hover tooltips (`Last saved: yyyy-MM-dd HH:mm   v<version>`).
 
+### Clean First-Run & Session Lifecycle (`startEmpty`, `loadSession`)
+- **Initial App Launch**: Newly instantiated decks default to `isEmpty = true`. When launching without a pre-existing `last_session.json` (or when `StartupBehavior.EMPTY` is active), `PresetManager.startEmpty(mixer)` is invoked.
+- **Empty Deck State**: Resets parameters across all available visual sources and 2D/3D view pipelines, clears FBO framebuffers, and leaves all deck monitors as blank black screens with the Preset Grid Launchpad activated ("Add Source" / "Load Preset").
+
 ---
 
 ## 2. Notes System Manager (`NotesManager.kt`)

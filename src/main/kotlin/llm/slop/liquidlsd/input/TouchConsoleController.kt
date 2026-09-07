@@ -306,11 +306,12 @@ class TouchConsoleController(
         Thread({
             var success = false
             try {
-                val cmd = "cat << 'EOF' > /etc/udev/rules.d/99-liquidlsd-touchpad.rules\n" +
+                val cmd = "rm -f /etc/udev/rules.d/99-liquidlsd-touchpad.rules\n" +
+                        "cat << 'EOF' > /etc/udev/rules.d/70-liquidlsd-touchpad.rules\n" +
                         "# Liquid LSD - Enable seat user access to touchpads for performance console\n" +
-                        "KERNEL==\"event*\", SUBSYSTEM==\"input\", ENV{ID_INPUT_TOUCHPAD}==\"1\", TAG+=\"uaccess\"\n" +
+                        "KERNEL==\"event*\", SUBSYSTEM==\"input\", ENV{ID_INPUT_TOUCHPAD}==\"1\", TAG+=\"uaccess\", TAG+=\"seat\", RUN{builtin}+=\"uaccess\"\n" +
                         "EOF\n" +
-                        "udevadm control --reload-rules && udevadm trigger --subsystem-match=input"
+                        "udevadm control --reload-rules && udevadm trigger --action=add --subsystem-match=input"
 
                 logger.info { "Executing pkexec to install touchpad udev permissions..." }
                 val process = ProcessBuilder("pkexec", "bash", "-c", cmd).start()
@@ -318,7 +319,11 @@ class TouchConsoleController(
 
                 if (exitCode == 0) {
                     logger.info { "Touchpad permissions successfully installed via pkexec!" }
-                    Thread.sleep(300) // Brief pause for udevadm trigger to finish
+                    Thread.sleep(400) // Brief pause for udevadm trigger to finish
+                    val b = backend
+                    if (b is LinuxEvdevTouchBackend) {
+                        b.detectDevice()
+                    }
                     backend.start()
                     success = (backend.state == TouchBackendState.READY)
                 } else {
