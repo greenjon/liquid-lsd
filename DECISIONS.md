@@ -199,6 +199,23 @@ This document outlines the key architectural decisions made in the development o
   - Aspect-ratio correction prevents non-square circular distortion during 2D rotation.
   - Full native-resolution `rawSource2DFBO` avoids the horizontal downsampling that would occur if using the square 1:1 `rawSourceFBO` in 2D mode.
 
+## 3D Mode Scale Normalization, Cube Cage Base Offset & Tetrahedral Kaleidoscope Space-Folding (`tri_planar.vert`, `tetra_kaleido.frag`)
+
+- **Decision**: Calibrate and normalize scale across 2D flat mode and all four 3D modes, provide base unit displacement for the Cube Cage mode, and overhaul tetrahedral space folding in the kaleidoscope shader:
+  - **1:1 Scale Normalization across 2D and 3D View Modes**:
+    - In `tri_planar.vert`, clip space coordinates (`clipX`, `clipY`) are scaled by `cameraDistance = 2.5` instead of `1.5`. With hardware perspective division by $w = 2.5$, the NDC vertical bounds span $[-1, 1]$ exactly at `Zoom = 1.0` and `Pitch/Yaw/Roll = 0`, matching 2D flat mode height 1:1 without requiring compensatory zoom ($\approx 1.6$).
+    - In `tetra_kaleido.frag`, normalized virtual camera FOV so that at `Zoom = 1.0` and default `Persp = 0.5`, the central medallion facet exactly fills the vertical viewport height.
+  - **Cube Cage 6-Panel Outward Displacement (`tri_planar.vert`)**:
+    - In Mode 2 (`Cube Cage`, $1.5 \dots 2.5$), added a base unit displacement (`baseOffset = 1.0`) along face normals (`localPos += normal * (1.0 + uSeparation)`). When `Separation = 0.0`, the 6 panels form a true 3D cube box rather than collapsing onto the 3 central planes of Tri-Axial mode. Increasing `Separation` explodes the cube outward into a floating panel array.
+  - **Tetrahedral Kaleidoscope Space-Folding & Discard Precision (`tetra_kaleido.frag`)**:
+    - Replaced the flawed, contradictory reflection sorting loop with a 4-pass Coxeter $A_3$ tetrahedral space-folding algorithm reflecting across $x \pm y = 0, y \pm z = 0, z \pm x = 0$, guaranteeing convergence to the fundamental chamber ($p_x \ge p_y \ge |p_z| \ge 0$).
+    - Switched from unnormalized 3D ray vectors to plane-projected coordinates ($u = p_y / p_x, v = p_z / p_x$), ensuring coordinates remain strictly bounded within $[-1, 1]$ across all 24 chambers.
+    - Resolved the complete black screen bug caused by excessive fragment discard (`borderFade <= 0.001`), ensuring smooth disc rounding and vibrant kaleidoscopic tiling.
+- **Rationale**:
+  - Consistent scale across 2D and 3D modes ensures smooth, predictable transitions when modulating `3D Mode` without sudden jarring changes in visual size.
+  - Mode 2 (Cube Cage) now presents an unmistakably distinct 3D geometry from Mode 1 (Tri-Axial).
+  - Mode 4 (Tetrahedral Kaleidoscope) functions as a fully operational, mathematically correct 24-chamber 3D optical kaleidoscope.
+
 ---
 
 ## 3D Mode Restriction to 2D Sources & Native 3D Transform Streamlining (`DynamicVisualSource.kt`, `Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `meta.json`)

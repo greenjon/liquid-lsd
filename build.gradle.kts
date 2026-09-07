@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "llm.slop"
-version = findProperty("version")?.takeIf { it != "unspecified" } ?: "1.0.0-beta.51"
+version = findProperty("version")?.takeIf { it != "unspecified" } ?: "1.0.0-beta.52"
 
 repositories {
     mavenCentral()

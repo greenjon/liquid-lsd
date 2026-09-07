@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.52
+
+> [!NOTE]
+> **Release 1.0.0-beta.52** introduces 1:1 scale normalization across 2D and 3D modes (matching vertical frame heights at Zoom 1.0), true 6-panel default cube displacement for Cube Cage mode, visibility and space-folding restoration for the 24-chamber Tetrahedral Kaleidoscope mode, and restriction of secondary 3D projection passes strictly to flat 2D sources while routing native 3D parameters contextually in the View tab.
+
+### 3D Mode Scale Normalization, Cube Cage Base Offset & Tetrahedral Kaleidoscope Fixes (`tri_planar.vert`, `tetra_kaleido.frag`)
+- **1:1 Scale Normalization Across 2D and 3D Modes (`tri_planar.vert`, `tetra_kaleido.frag`)**:
+  - Aligned hardware perspective division in `tri_planar.vert` (`clipX`, `clipY` scaled by `cameraDistance = 2.5`) so that at `Zoom = 1.0` and `Rotate = (0, 0, 0)`, the 3D planes fill the vertical viewport frame $[-1, 1]$ identically to 2D flat mode, eliminating the previous scale discrepancy where 3D mode required a Zoom of $\approx 1.6$ to match 2D height.
+  - Normalized camera ray FOV in `tetra_kaleido.frag` so that at `Zoom = 1.0` and default `Persp = 0.5`, the central kaleidoscopic facet exactly fills the vertical frame.
+- **Cube Cage 6-Panel Base Displacement (`tri_planar.vert`)**:
+  - For Mode 2 (`Cube Cage`, slider range $1.5 \dots 2.5$), added a base unit displacement (`baseOffset = 1.0`) along the face normals (`localPos += normal * (1.0 + uSeparation)`). This ensures the 6 planes form a true 3D cube box by default even when `Separation = 0.0`, rather than collapsing into the same 3 central planes as Tri-Axial mode.
+- **Tetrahedral Kaleidoscope Space-Folding & Visibility Restoration (`tetra_kaleido.frag`)**:
+  - Fixed the iterative Coxeter space-folding loop in `tetra_kaleido.frag` to cleanly reflect camera rays across all 6 reflection planes of the $A_3$ tetrahedral group into the fundamental chamber ($p_x \ge p_y \ge |p_z| \ge 0$).
+  - Switched from unnormalized directional coordinates to plane-projected coordinates ($u = p_y / p_x, v = p_z / p_x$), mapping the 2D source seamlessly across the central facet without out-of-bounds clipping.
+  - Eliminated the black screen bug caused by an inverted/contradictory sorting loop and an aggressive `borderFade <= 0.001` fragment discard, ensuring smooth roundness disc fade and vibrant kaleidoscopic tiling across all 24 tetrahedral chambers.
+
 ### 3D Mode Restriction to 2D Sources & Streamlined 3D Transform Controls (`DynamicVisualSource.kt`, `Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `meta.json`)
 - **Exclusive 2D->3D Elevation**: Universal 3D modes (Tri-Axial, Cube Cage, Hex-Planar, and Tetrahedral Kaleidoscope) are now strictly restricted to flat 2D visual sources (`mandala`, `colors`, `dynamic_spiral`, `attractor_feedback`). Native 3D visual sources (`icosahedron`, `icosa-v3`, `hyper_mesh`, `icosa_dodeca`, `chladni`, `gyroid`, `hyper_slice`) bypass secondary 3D projection passes, preventing geometric distortion and raymarching artifacts.
 - **Contextual View Tab Streamlining**: For native 3D sources, the `3D Mode` parameter is removed from the View tab. This eliminates duplicate rotation controls (`Rotate X` and `Rotate Y`) and prevents conflicts between deck view parameters and native source parameters (`Control X`, `Control Y`).

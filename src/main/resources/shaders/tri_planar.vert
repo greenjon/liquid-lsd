@@ -102,8 +102,10 @@ void main() {
         }
     }
 
-    // Offset plane along its normal by separation
-    localPos += normal * uSeparation;
+    // Offset plane along its normal by separation.
+    // In Mode 2 (Cube Cage), the 6 planes have a unit base offset (1.0) along their normals to form a true cube box.
+    float baseOffset = (u3DMode == 2) ? 1.0 : 0.0;
+    localPos += normal * (baseOffset + uSeparation);
 
     // Apply 3D rotations: Roll (Z), Pitch (X), Yaw (Y)
     mat3 rot = rotationMatrixY(uYaw) * rotationMatrixX(uPitch) * rotationMatrixZ(uRoll);
@@ -114,9 +116,10 @@ void main() {
     float cameraDistance = 2.5;
     float w = max(0.05, cameraDistance - rPos.z * uPersp);
 
-    // Apply zoom and aspect ratio to clip coordinates so hardware division by w yields perspective-correct interpolation
-    float clipX = (rPos.x * uZoom * 1.5) / uAspectRatio;
-    float clipY = rPos.y * uZoom * 1.5;
+    // Scale clip coordinates by cameraDistance so that at uZoom = 1.0 (with rPos.z = 0 and uPersp = 0.0),
+    // hardware division by w yields NDC [-1, 1], exactly filling the frame height identical to 2D Flat mode.
+    float clipX = (rPos.x * uZoom * cameraDistance) / uAspectRatio;
+    float clipY = rPos.y * uZoom * cameraDistance;
     float clipZ = rPos.z * 0.1;
 
     vCameraDepth = rPos.z;

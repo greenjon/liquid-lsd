@@ -87,14 +87,14 @@ Every Deck includes a universal **`View`** stage that applies spatial framing, c
 
 - **2D Visual Sources** (Mandala, Colors, Dynamic Spiral, Attractor Feedback, Video, etc.):
   1. **Universal Controls (Always Active in 2D & 3D)**:
-     - **`Zoom`**: Continuous scaling ($0.1\times$ to $5.0\times$). In 2D mode, $1.0$ represents exact native 1:1 pixel framing. In 3D mode, scales camera projection distance.
+     - **`Zoom`**: Continuous scaling ($0.1\times$ to $5.0\times$). Calibrated identically across 2D Flat and all 3D modes: $1.0$ fills the vertical frame height. In 3D modes, controls camera projection scale.
      - **`Rotate Z` (Roll)**: In-plane clockwise/counter-clockwise rotation. In 2D mode, rotation is aspect-ratio corrected so circles remain circles without elliptical distortion; out-of-bounds canvas regions render clean transparent black. In 3D mode, controls the roll axis.
   2. **3D Display Modes (`3D Mode`)**: Elevates flat 2D sources into 3D structures.
      - `0.0`: **2D Flat** — Native widescreen 2D mode with full resolution via `rawSource2DFBO`. 3D-only parameters are hidden to keep the UI clean.
-   - `1.0`: **Tri-Axial Orthogonal Planes** — Replicates the 2D source across three intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a 3D holographic gyroscope / celestial sphere.
-   - `2.0`: **Cube Cage** — Extrudes the source across 6 orthogonal faces ($\pm XY, \pm YZ, \pm ZX$).
-   - `3.0`: **Hex-Planar ($60^\circ$ Tetrahedral Planes)** — Replicates the source across the 6 reflection planes of the tetrahedral symmetry group ($A_3$), intersecting at $60^\circ$ and $90^\circ$ angles through $(0, 0, 0)$. Expanding `Separation` pushes the planes outward into a 12-faced rhombic dodecahedral cage.
-   - `4.0`: **Tetrahedral Kaleidoscope (24-Chamber Space Folding)** — Continuous Coxeter $A_3$ space-folding kaleidoscope that reflects 3D camera rays into the 24 fundamental tetrahedral chambers, producing seamless continuous mirrors across all sector boundaries.
+     - `1.0`: **Tri-Axial Orthogonal Planes** — Replicates the 2D source across three intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a 3D holographic gyroscope / celestial sphere.
+     - `2.0`: **Cube Cage** — Forms a 6-sided 3D cube box across $\pm XY, \pm YZ, \pm ZX$ with a unit base displacement. Expanding `Separation` pushes the faces outward into an exploding cube array.
+     - `3.0`: **Hex-Planar ($60^\circ$ Tetrahedral Planes)** — Replicates the source across the 6 reflection planes of the tetrahedral symmetry group ($A_3$), intersecting at $60^\circ$ and $90^\circ$ angles through $(0, 0, 0)$. Expanding `Separation` pushes the planes outward into a 12-faced rhombic dodecahedral cage.
+     - `4.0`: **Tetrahedral Kaleidoscope (24-Chamber Space Folding)** — Continuous Coxeter $A_3$ space-folding kaleidoscope that reflects 3D camera rays into the 24 fundamental tetrahedral chambers, producing seamless continuous mirrors across all sector boundaries.
 3. **Contextual 3D Parameters (Active when `3D Mode >= 0.5`)**:
    - **`Rotate X` (Pitch), `Rotate Y` (Yaw)**: 3D rotational tumbling controlled manually or driven by LFOs/CV/Audio.
    - **`3D Persp`**: Continuous transition from orthographic projection to deep wide-angle perspective.
