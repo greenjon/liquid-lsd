@@ -83,13 +83,14 @@ The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean 
 
 ## Universal View & 3D Transformation Pipeline
 
-Every Deck includes a universal **`View`** stage that applies spatial framing, continuous zooming, and rotation to any 2D visual source (Mandala, Chladni, Dynamic Spiral, Attractor, Video, etc.) before entering the feedback chain:
+Every Deck includes a universal **`View`** stage that applies spatial framing, continuous zooming, and rotation before entering the feedback chain:
 
-1. **Universal Controls (Always Active in 2D & 3D)**:
-   - **`Zoom`**: Continuous scaling ($0.1\times$ to $5.0\times$). In 2D mode, $1.0$ represents exact native 1:1 pixel framing. In 3D mode, scales camera projection distance.
-   - **`Rotate Z` (Roll)**: In-plane clockwise/counter-clockwise rotation. In 2D mode, rotation is aspect-ratio corrected so circles remain circles without elliptical distortion; out-of-bounds canvas regions render clean transparent black. In 3D mode, controls the roll axis.
-2. **3D Display Modes (`3D Mode`)**:
-   - `0.0`: **2D Flat** — Native widescreen 2D mode with full resolution via `rawSource2DFBO`. 3D-only parameters are hidden to keep the UI clean.
+- **2D Visual Sources** (Mandala, Colors, Dynamic Spiral, Attractor Feedback, Video, etc.):
+  1. **Universal Controls (Always Active in 2D & 3D)**:
+     - **`Zoom`**: Continuous scaling ($0.1\times$ to $5.0\times$). In 2D mode, $1.0$ represents exact native 1:1 pixel framing. In 3D mode, scales camera projection distance.
+     - **`Rotate Z` (Roll)**: In-plane clockwise/counter-clockwise rotation. In 2D mode, rotation is aspect-ratio corrected so circles remain circles without elliptical distortion; out-of-bounds canvas regions render clean transparent black. In 3D mode, controls the roll axis.
+  2. **3D Display Modes (`3D Mode`)**: Elevates flat 2D sources into 3D structures.
+     - `0.0`: **2D Flat** — Native widescreen 2D mode with full resolution via `rawSource2DFBO`. 3D-only parameters are hidden to keep the UI clean.
    - `1.0`: **Tri-Axial Orthogonal Planes** — Replicates the 2D source across three intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a 3D holographic gyroscope / celestial sphere.
    - `2.0`: **Cube Cage** — Extrudes the source across 6 orthogonal faces ($\pm XY, \pm YZ, \pm ZX$).
    - `3.0`: **Hex-Planar ($60^\circ$ Tetrahedral Planes)** — Replicates the source across the 6 reflection planes of the tetrahedral symmetry group ($A_3$), intersecting at $60^\circ$ and $90^\circ$ angles through $(0, 0, 0)$. Expanding `Separation` pushes the planes outward into a 12-faced rhombic dodecahedral cage.
@@ -101,6 +102,10 @@ Every Deck includes a universal **`View`** stage that applies spatial framing, c
    - **`Separation`**: Pushes intersecting planes outward along their normal axes into an open geometric cage.
    - **`Roundness`**: Plane boundary shape transition from square quad (0.0) to circular disc (1.0). Defaults to 1.0 for a celestial armillary sphere / gyroscope silhouette without boxy edge sweeping.
    - **`Blend Mode`**: Toggles between additive luminous blending (for glowing neon intersections) and transparent alpha blending.
+
+- **Native 3D Visual Sources** (Icosahedron 32-Stellation, Icosahedron V3 CSG, 4D Hyper-Mesh, Icosa-Dodeca, Chladni, Gyroid, 4D Hyper-Slice):
+  - Native 3D sources handle their own 3D rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and camera scaling (`Zoom`) in their respective raymarched or polygon renderers.
+  - The `3D Mode` parameter is excluded to avoid distortion and duplicate rotation controls (`Rotate X` and `Rotate Y`). The source's native transform controls appear cleanly under the `View` tab.
 
 ---
 

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### 3D Mode Restriction to 2D Sources & Streamlined 3D Transform Controls (`DynamicVisualSource.kt`, `Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `meta.json`)
+- **Exclusive 2D->3D Elevation**: Universal 3D modes (Tri-Axial, Cube Cage, Hex-Planar, and Tetrahedral Kaleidoscope) are now strictly restricted to flat 2D visual sources (`mandala`, `colors`, `dynamic_spiral`, `attractor_feedback`). Native 3D visual sources (`icosahedron`, `icosa-v3`, `hyper_mesh`, `icosa_dodeca`, `chladni`, `gyroid`, `hyper_slice`) bypass secondary 3D projection passes, preventing geometric distortion and raymarching artifacts.
+- **Contextual View Tab Streamlining**: For native 3D sources, the `3D Mode` parameter is removed from the View tab. This eliminates duplicate rotation controls (`Rotate X` and `Rotate Y`) and prevents conflicts between deck view parameters and native source parameters (`Control X`, `Control Y`).
+- **Canonical Parameter Routing**: Native 3D source transform parameters (`Zoom`, `Rotate X`, `Rotate Y`, `Rotate Z`) displayed in the View tab are addressed via their canonical source paths (`$deckLabel/${activeSource.displayName}/$name`), guaranteeing seamless MIDI mapping, CV modulation, and clipboard operations without ID collisions.
+- **Native 3D Tagging & Automatic Detection (`is3D`)**: Tagged all 7 native 3D sources with `"is3D": true` in `meta.json` and added automatic fallback detection in `VisualSourceRegistry` for any sources exposing `Rotate X` and `Rotate Y` parameters.
+- **Deck Source Assignment Safety**: Assigning a 3D source to a Deck automatically resets `view3DMode` to `0.0`.
+
 ---
 
 ## Version 1.0.0-beta.51

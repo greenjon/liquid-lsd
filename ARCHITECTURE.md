@@ -98,10 +98,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + ping-pong FBOs + 2D/3D View params + FB params
 │   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers (Deck PV excluded)
-│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope -> feedback -> mix -> blit
-│   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource)
-│   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources
-│   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders
+│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> mix -> blit
+│   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
+│   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D detection
+│   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging and uniform binding
 │   ├── DynamicSpiral.kt        — Specialized particle/spiral visual source
 │   ├── HyperMesh.kt            — Real-time 4D Polychoron (600-cell & 120-cell) visual source with Hopf fibration
 │   ├── Icosahedron.kt          — 32-Stellation icosahedral manifold visual source

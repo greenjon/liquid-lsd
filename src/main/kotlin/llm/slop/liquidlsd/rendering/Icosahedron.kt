@@ -112,8 +112,9 @@ class Icosahedron(
     parameters: LinkedHashMap<String, ModulatableParameter>,
     globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),
     hasFeedback: Boolean = false,
-    ownsShader: Boolean = false
-) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader) {
+    ownsShader: Boolean = false,
+    is3D: Boolean = true
+) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D) {
 
     // Pre-allocated array to store the 60 flattened vec3 normals (60 * 3 = 180 floats)
     // without runtime allocations inside the frame rendering loop.
@@ -138,7 +139,8 @@ class Icosahedron(
             parameters = clonedParams,
             globalAlpha = this.globalAlpha.clone(),
             hasFeedback = this.hasFeedback,
-            ownsShader = false
+            ownsShader = false,
+            is3D = this.is3D
         )
     }
 

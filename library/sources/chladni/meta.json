@@ -1,6 +1,7 @@
 {
   "id": "chladni",
   "name": "Chladni",
+  "is3D": true,
   "parameters": [
     {
       "name": "Mode",

@@ -1,6 +1,7 @@
 {
   "id": "gyroid",
   "name": "Gyroid",
+  "is3D": true,
   "parameters": [
     {
       "name": "Scale X",

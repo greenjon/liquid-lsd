@@ -10,11 +10,19 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
  * as well as parameters that control the feedback loop.
  */
 class Deck(
-    var source: VisualSource,
+    initialSource: VisualSource,
     var width: Int = 1920,
     var height: Int = 1080,
     var isEmpty: Boolean = true
 ) : ParameterOwner {
+
+    var source: VisualSource = initialSource
+        set(value) {
+            field = value
+            if (value.is3D) {
+                view3DMode.reset()
+            }
+        }
 
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
@@ -99,14 +107,14 @@ class Deck(
         rawSourceFBO.clear(0f, 0f, 0f, 0f)
         rawSource2DFBO.clear(0f, 0f, 0f, 0f)
         
-        val initialId = (source as? DynamicVisualSource)?.id
+        val initialId = (initialSource as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
             .filter { it.id != initialId }
             .map { it.clone() }
         
-        availableSources.add(source.clone())
+        availableSources.add(initialSource.clone())
         availableSources.addAll(registrySources)
-        source = availableSources.first()
+        this.source = availableSources.first()
     }
 
     fun reset() {

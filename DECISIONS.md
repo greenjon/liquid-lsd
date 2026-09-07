@@ -201,6 +201,29 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
+## 3D Mode Restriction to 2D Sources & Native 3D Transform Streamlining (`DynamicVisualSource.kt`, `Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `meta.json`)
+
+- **Decision**: Restrict 3D projection modes (`Tri-Axial`, `Cube Cage`, `Hex-Planar`, and `Tetrahedral Kaleidoscope`) strictly to 2D visual sources, completely excluding the `3D Mode` parameter and its secondary projection pipeline from native 3D visual sources:
+  - **Native 3D Source Tagging & Auto-Detection (`is3D`)**:
+    - Added `"is3D": true` to the metadata manifests of all 7 native 3D visual generators: `icosahedron` (Icosahedron 32-Stellation), `icosa-v3` (Icosahedron V3 CSG), `hyper_mesh` (4D Hyper-Mesh), `icosa_dodeca` (Icosa-Dodeca), `chladni` (Chladni), `gyroid` (Gyroid), and `hyper_slice` (4D Hyper-Slice).
+    - Exposed `val is3D: Boolean` on `VisualSource` and `DynamicVisualSource`.
+    - Added automatic fallback detection in `VisualSourceRegistry.kt`: any source declaring `Rotate X` and `Rotate Y` parameters is identified as 3D if not explicitly configured in `meta.json`.
+  - **Exclusion of `3D Mode` from Native 3D UI (`PresetGridTabs.kt`)**:
+    - In `PresetGridTabs.kt`, the `3D Mode` row is only rendered when `!activeSource.is3D`. For 3D sources, `3D Mode` is completely excluded.
+    - Eliminates duplicate sets of rotation controls: previously, enabling 3D mode on 3D sources caused the deck's `Rotate X` and `Rotate Y` to appear alongside the source's native `Rotate X`, `Rotate Y`, `Control X`, and `Control Y`.
+    - The `View` tab for 3D sources displays the source's own camera/transform parameters (`Zoom`, `Rotate X`, `Rotate Y`, `Rotate Z`) sorted in a consistent, canonical sequence.
+    - Parameter routing uses the canonical source parameter key (`$deckLabel/${activeSource.displayName}/$name`), guaranteeing seamless MIDI mapping, CV modulation, and undo/redo without ID collisions against Deck View parameters.
+  - **Pipeline Bypass in Rendering (`Renderer.kt`)**:
+    - In `Renderer.kt`, 3D projection is conditioned on `!deck.source.is3D && deck.view3DMode.value >= 0.5f`.
+    - When a 3D source is active, the tri-planar/kaleidoscopic projection pipeline is completely bypassed. The native 3D source renders at full native resolution to `rawSource2DFBO` and passes through `view2d.frag` at unscaled 1:1 scale (`uZoom = 1.0f`, `uRotateZ = 0.0f`), preserving the shader's internal perspective and raymarched geometry.
+  - **Automatic State Reset on Source Assignment (`Deck.kt`)**:
+    - When assigning `deck.source`, if the new source has `is3D == true`, `view3DMode.reset()` is automatically triggered.
+- **Rationale**:
+  - The 3D projection modes (`tri_planar`, `tetra_kaleido`) were specifically engineered to turn flat 2D sources into 3D objects; re-projecting an already raymarched 3D volume or 4D polychoron mesh through orthogonal planes or kaleidoscope space folding severely mangled and distorted the 3D source's geometry.
+  - Eliminates confusing redundant controls in the UI: 3D sources now show one clean, unified set of spatial rotation controls in the View tab.
+
+---
+
 ## Mandala Architecture Unification as DynamicVisualSource (`Mandala.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `WebPresetSerializer.kt`)
 
 - **Decision**: Completely unify `Mandala` into the generic `DynamicVisualSource` framework, removing hardcoded `if (source is Mandala)` / `if (mandala != null)` special cases across the serialization, UI, and preset model layers:

@@ -48,8 +48,9 @@ class HyperMesh(
     parameters: LinkedHashMap<String, ModulatableParameter>,
     globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),
     hasFeedback: Boolean = false,
-    ownsShader: Boolean = false
-) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader) {
+    ownsShader: Boolean = false,
+    is3D: Boolean = true
+) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D) {
 
     var edgeVao600: Int = 0
         private set
@@ -403,7 +404,8 @@ class HyperMesh(
             parameters = clonedParams,
             globalAlpha = this.globalAlpha.clone(),
             hasFeedback = this.hasFeedback,
-            ownsShader = false
+            ownsShader = false,
+            is3D = this.is3D
         )
         copy.edgeVao600 = this.edgeVao600
         copy.nodeVao600 = this.nodeVao600

@@ -23,7 +23,8 @@ data class SourceMeta(
     val name: String,
     val parameters: List<ParamMeta>,
     val feedback: Boolean = false,
-    val description: String = ""
+    val description: String = "",
+    val is3D: Boolean = false
 )
 
 /**
@@ -48,7 +49,8 @@ open class DynamicVisualSource(
     override val parameters: LinkedHashMap<String, ModulatableParameter>,
     override val globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),
     val hasFeedback: Boolean = false,
-    val ownsShader: Boolean = false // Only the master instances in the registry own the shader
+    val ownsShader: Boolean = false, // Only the master instances in the registry own the shader
+    override val is3D: Boolean = false
 ) : VisualSource {
     var fb1: FBO? = null
     var fb2: FBO? = null
@@ -108,7 +110,8 @@ open class DynamicVisualSource(
             parameters = clonedParams,
             globalAlpha = this.globalAlpha.clone(),
             hasFeedback = this.hasFeedback,
-            ownsShader = false // Cloned instances do not own the shared shader
+            ownsShader = false, // Cloned instances do not own the shared shader
+            is3D = this.is3D
         )
     }
 

@@ -2,6 +2,7 @@
   "id": "icosahedron",
   "name": "Icosahedron 32-Stellation",
   "description": "Continuous 2D Du Val manifold covering all 32 achiral stellations of the icosahedron.",
+  "is3D": true,
   "parameters": [
     {
       "name": "Control X",

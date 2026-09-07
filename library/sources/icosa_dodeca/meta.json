@@ -2,6 +2,7 @@
   "id": "icosa_dodeca",
   "name": "Icosa-Dodeca",
   "description": "Continuous H3 Coxeter symmetry morph between Icosahedron and Dodecahedron, with Great Kepler-Poinsot Stellations, kaleidoscopic chamber coloring, and crystal reveal.",
+  "is3D": true,
   "parameters": [
     {
       "name": "Morph",

@@ -21,6 +21,13 @@ interface VisualSource : ParameterOwner {
     val parameters: Map<String, ModulatableParameter>
 
     /**
+     * Indicates whether this is a native 3D visual source (e.g. raymarched volume or 3D/4D mesh)
+     * which handles its own 3D rotation and projection.
+     */
+    val is3D: Boolean
+        get() = false
+
+    /**
      * Top-level parameters for mixing and composition.
      */
     val globalAlpha: ModulatableParameter

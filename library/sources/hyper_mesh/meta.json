@@ -3,6 +3,7 @@
   "name": "4D Hyper-Mesh",
   "description": "Real-time 4D Polychoron (600-cell & 120-cell) with hyper-rotations and Hopf fibration coloring.",
   "feedback": false,
+  "is3D": true,
   "parameters": [
     {
       "name": "Rotate XW",

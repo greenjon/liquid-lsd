@@ -111,12 +111,14 @@ class Renderer {
             return
         }
         // 1. Render clean source image
-        val is3D = deck.view3DMode.value >= 0.5f
+        val is3D = !deck.source.is3D && deck.view3DMode.value >= 0.5f
         if (!is3D) {
-            // Render 2D source into rawSource2DFBO (widescreen native resolution)
+            // Render 2D source or native 3D source into rawSource2DFBO (widescreen native resolution)
             render(deck.source, deck.rawSource2DFBO)
 
-            // Render 2D transformed view (Zoom, Rotate Z) onto cleanFBO
+            // Render transformed view onto cleanFBO.
+            // Native 3D sources handle their own camera Zoom and 3D rotation internally;
+            // for 3D sources we pass 1.0 Zoom and 0.0 RotateZ to blit 1:1 without compounding 2D canvas transforms.
             deck.cleanFBO.bind()
             glClearColor(0f, 0f, 0f, 0f)
             glClear(GL_COLOR_BUFFER_BIT)
@@ -129,8 +131,10 @@ class Renderer {
             glBindTexture(GL_TEXTURE_2D, deck.rawSource2DFBO.texture)
             view2DShader.setUniform("uTexture", 0)
 
-            view2DShader.setUniform("uZoom", deck.viewZoom.value)
-            view2DShader.setUniform("uRotateZ", deck.viewRotateZ.value)
+            val zoom = if (deck.source.is3D) 1.0f else deck.viewZoom.value
+            val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
+            view2DShader.setUniform("uZoom", zoom)
+            view2DShader.setUniform("uRotateZ", rotZ)
             val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
             view2DShader.setUniform("uAspectRatio", aspect)
 

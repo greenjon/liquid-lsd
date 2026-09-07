@@ -3,6 +3,7 @@
   "name": "4D Hyper-Slice",
   "description": "Raymarched 3D cross-section MRI scan through 4D 600-cell and 120-cell polychora via H4 Coxeter domain folding.",
   "feedback": false,
+  "is3D": true,
   "parameters": [
     {
       "name": "Slice Offset",

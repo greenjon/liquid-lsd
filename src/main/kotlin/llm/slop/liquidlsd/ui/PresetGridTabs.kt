@@ -15,6 +15,11 @@ object PresetGridTabs {
         "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z"
     )
 
+    private val PREFERRED_TRANSFORM_ORDER = listOf(
+        "Zoom", "Rotate X", "Rotate Y", "Rotate Z",
+        "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z"
+    )
+
     var activeBtnMinX: Float = 0f
     var activeBtnMinY: Float = 0f
     var activeBtnMaxX: Float = 0f
@@ -400,6 +405,11 @@ object PresetGridTabs {
                 else otherParams.add(entry)
             }
 
+            transformParams.sortBy { (key, _) ->
+                val idx = PREFERRED_TRANSFORM_ORDER.indexOf(key)
+                if (idx >= 0) idx else 999
+            }
+
             drawSubGroupContent(session, deckLabel, "SRC", state) {
                 otherParams.forEachIndexed { i, (name, param) ->
                     PresetGridRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, i, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -422,22 +432,32 @@ object PresetGridTabs {
 
             drawSubGroupContent(session, deckLabel, "View", state) {
                 var row = 0
-                PresetGridRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                if (!activeSource.is3D) {
+                    PresetGridRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-                val modeVal = deck.view3DMode.value
-                if (modeVal >= 0.5f) {
-                    PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                }
+                    val modeVal = deck.view3DMode.value
+                    if (modeVal >= 0.5f) {
+                        PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    }
 
-                transformParams.forEach { (name, param) ->
-                    PresetGridRenderer.drawParamRow(session, name, "$deckLabel/View/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    transformParams.forEach { (name, param) ->
+                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    }
+                } else {
+                    // For native 3D sources: 3D Mode is not applicable (only used for elevating 2D to 3D).
+                    // The source's own camera/transform parameters (Zoom, Rotate X, Rotate Y, Rotate Z)
+                    // are shown directly under the View tab with canonical source parameter routing.
+                    transformParams.forEach { (name, param) ->
+                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    }
                 }
             }
         } else {
@@ -456,19 +476,21 @@ object PresetGridTabs {
 
             drawSubGroupContent(session, deckLabel, "View", state) {
                 var row = 0
-                PresetGridRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                if (!activeSource.is3D) {
+                    PresetGridRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    PresetGridRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-                val modeVal = deck.view3DMode.value
-                if (modeVal >= 0.5f) {
-                    PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    PresetGridRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    val modeVal = deck.view3DMode.value
+                    if (modeVal >= 0.5f) {
+                        PresetGridRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                        PresetGridRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    }
                 }
             }
         }

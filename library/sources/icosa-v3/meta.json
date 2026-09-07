@@ -2,6 +2,7 @@
   "id": "icosa-v3",
   "name": "Icosahedron V3 CSG",
   "description": "Domain-folded Icosahedral CSG rendering.",
+  "is3D": true,
   "parameters": [
     {
       "name": "Control X",

@@ -13,6 +13,28 @@ The project is in active beta: the core workflow is usable, the UI is close to i
 - Dynamic GLSL visual sources loaded from `library/sources/`.
 - Bundled shader and font resources under `src/main/resources/`.
 
+## Current status (Sept 6 2026)
+
+- Almost entirely tested on Fedora linux
+- the video pipe is solid as far as I can tell
+- the main UI has a reasonable amount of polish
+- Themes are usable but imperfect
+- Settings panel could be made a lot prettier
+- The selection of visual sources is a mixed bag. Mandala and Dynamic Spiral are the easiest to use. There's 3 or 4 different icosa/dodecahedrons that will eventually become 1. Chladni and Gyroid seem promising but may need different parameters exposed to the user. Colors is pretty basic, for when you want basic. As the app stabilizes, my attention will turn to adding new visual sources and refining the existing ones. 
+- the beat analyser is pretty good, at long last
+- LFO and Audio cv's are full featured and pretty well tested
+- the system for creating and renaming presets and playlists seems full featured and stable
+- the two methods for turning 2D objects to 3D seems solid
+
+- the feedback system is well featured and tested
+- tooltips, user docs and dev docs are pretty mature
+- the sequencer is new and barely tested
+- using the CAPS lock to turn the trackpad is new, somewhat tested
+- the tagging system for adding notes to parameters and visual sources has had limited testing
+- MIDI is barely tested
+- 
+"How to" videos do not exist
+
 ## Requirements
 
 - JDK 17.

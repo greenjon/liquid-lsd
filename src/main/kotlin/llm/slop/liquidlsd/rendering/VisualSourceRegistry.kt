@@ -159,6 +159,8 @@ object VisualSourceRegistry {
                     parameters[pMeta.name] = param
                 }
 
+                val isSource3D = meta.is3D || (parameters.containsKey("Rotate X") && parameters.containsKey("Rotate Y"))
+
                 val dynamicSource = if (meta.id == "mandala") {
                     val initialRecipe = MandalaLibrary.MandalaRatios.first()
                     Mandala(
@@ -186,7 +188,8 @@ object VisualSourceRegistry {
                         shader = shader,
                         parameters = parameters,
                         hasFeedback = meta.feedback,
-                        ownsShader = true
+                        ownsShader = true,
+                        is3D = isSource3D
                     )
                 } else if (meta.id == "icosahedron") {
                     Icosahedron(
@@ -195,9 +198,9 @@ object VisualSourceRegistry {
                         shader = shader,
                         parameters = parameters,
                         hasFeedback = meta.feedback,
-                        ownsShader = true
+                        ownsShader = true,
+                        is3D = isSource3D
                     )
-
                 } else {
                     DynamicVisualSource(
                         id = meta.id,
@@ -205,7 +208,8 @@ object VisualSourceRegistry {
                         shader = shader,
                         parameters = parameters,
                         hasFeedback = meta.feedback,
-                        ownsShader = true // Master instance owns the shader
+                        ownsShader = true, // Master instance owns the shader
+                        is3D = isSource3D
                     )
                 }
                 availableSources.add(dynamicSource)
