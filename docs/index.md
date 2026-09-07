@@ -21,6 +21,7 @@ Comprehensive guides for visual synthesis, modulation matrix routing, setlist ma
 - **[Web Broadcasting & Retro TV](user_guide/web_broadcast.md)**: Live WebSocket performance broadcasting, retro CRT TV shell, rotary volume dial ($V^2$), live DSP, and 24/7 Autopilot.
 - **[Library & Playlists](user_guide/library.md)**: Preset library navigation, playlist editor, Auto-VJ play queue, and drag-and-drop setlist staging.
 - **[Custom Shaders & Sources](user_guide/custom_visuals.md)**: Adding dynamic visual sources in `library/sources/`, `meta.json` manifests, parameter grouping, GLSL uniform injection, and custom shader creation.
+- **[Trackpad Performance Console](user_guide/trackpad_console.md)**: CapsLock SCS.3m virtual console, 4-zone layout, multi-finger cut stutters, video strobes, and Linux permissions.
 
 ### 🛠️ [Developer Reference](developer/architecture.md)
 In-depth technical architecture, threading boundaries, DSP algorithms, rendering math, and UI design patterns.

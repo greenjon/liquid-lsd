@@ -228,6 +228,13 @@ class MenuBar(
                     if (ImGui.menuItem("Documentation")) {
                         DocManager.openDocumentation()
                     }
+                    if (ImGui.menuItem("Check for Updates...")) {
+                        AboutModal.open()
+                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("Check GitHub releases for the latest version of Liquid LSD.")
+                    }
                     ImGui.separator()
                     val tooltipsEnabled = session.uiTheme.tooltipsEnabled
                     if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
@@ -236,6 +243,13 @@ class MenuBar(
                     }
                     if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
                         ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
+                    }
+                    ImGui.separator()
+                    if (ImGui.menuItem("About Liquid LSD")) {
+                        AboutModal.open()
+                    }
+                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                        ImGui.setTooltip("View version details, check for updates, and visit GitHub.")
                     }
                     ImGui.endMenu()
                 }

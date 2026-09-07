@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "llm.slop"
-version = "1.0-SNAPSHOT"
+version = findProperty("version")?.takeIf { it != "unspecified" } ?: "1.0.0-beta.50"
 
 repositories {
     mavenCentral()
@@ -58,6 +58,9 @@ dependencies {
 
     // JACK Audio (Linux only - will add fallbacks later)
     implementation("org.jaudiolibs:jnajack:1.4.0")
+
+    // Native interop (POSIX ioctl on Linux, Cocoa on macOS)
+    implementation("net.java.dev.jna:jna:5.19.1")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
@@ -133,10 +136,23 @@ val generateDocs = tasks.register("generateDocs") {
     }
 }
 
+tasks.withType<Jar> {
+    manifest {
+        attributes(
+            "Implementation-Title" to "Liquid LSD",
+            "Implementation-Version" to project.version
+        )
+    }
+}
+
 tasks.processResources {
     dependsOn(generateDocs)
     from("library/sources") {
         into("default_sources")
+    }
+    inputs.property("version", project.version.toString())
+    filesMatching("version.txt") {
+        filter { project.version.toString() }
     }
 }
 

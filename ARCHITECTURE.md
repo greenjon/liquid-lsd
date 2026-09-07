@@ -59,6 +59,13 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── midi/
 │   ├── MidiEngine.kt           — MIDI connection and event polling
 │   └── MidiMappingManager.kt   — Maps MIDI CC to UI/parameters
+├── input/
+│   ├── TouchConsoleController.kt — 4-zone SCS.3m virtual console, LIFO stacks, zone affinity
+│   ├── TouchConsoleEvent.kt    — Low-latency native touch event model
+│   ├── TouchStripBackend.kt    — Hardware backend interface & states
+│   ├── LinuxEvdevTouchBackend.kt — Linux evdev JNA reader, EVIOCGRAB, EVIOCGABS, MT Protocol B cache
+│   ├── MacCocoaTouchBackend.kt — macOS Cocoa NSTouch indirect touch events
+│   └── NoOpTouchBackend.kt     — Safe fallback
 ├── models/
 │   ├── PresetModels.kt         — Data models + DTOs for preset serialization
 │   └── ClipboardManager.kt     — Copy/paste for preset elements
@@ -245,6 +252,34 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
   - `./gradlew checkWebSync`: Gradle `Exec` task that validates zero drift across all tracked assets.
   - `./gradlew syncWeb`: Gradle `Exec` task that applies automated shader translation.
   - `WebSyncTest.kt`: JVM unit test executed on every `./gradlew test` run to guard against accidental drift.
+
+## Touchpad Performance Console (SCS.3m Virtual Console)
+
+Transforms the laptop trackpad into an absolute 4-zone performance surface when `CapsLock` is engaged:
+- **Spatial Zoning**:
+  - **Bottom 28%** ($Y \le 0.28$): Horizontal Crossfader (Deck A $\leftrightarrow$ Deck B, mapped to `mixer.crossfade` $[-1.0, 1.0]$).
+  - **Deadzone Buffer** ($Y \in [0.28, 0.45]$): 17% buffer height rejecting new touch-downs while preserving active drag continuity under Zone Affinity.
+  - **Top 55%** ($Y \ge 0.45$): Three vertical Level/Alpha faders ($0.0 \dots 1.0$, direct jump):
+    - Left 33%: Deck A Level (`mixer.levelA`)
+    - Center 33%: Deck BG Level (`mixer.levelBG`)
+    - Right 33%: Deck B Level (`mixer.levelB`)
+- **Multi-Touch Engine**:
+  - 4 independent LIFO touch stacks. Touching with a second finger instantly jumps to that position; releasing snaps back to the underlying anchor finger.
+  - Bezel clamping ($Y \le 0.48 \to 0.0$, $Y \ge 0.94 \to 1.0$; $X \le 0.05 \to -1.0$, $X \ge 0.95 \to 1.0$, center detent $\pm 0.02 \to 0.0$).
+  - Sticky hold level indicators on UI HUD.
+- **Native Backends**:
+  - **Linux**: Direct evdev reader via JNA `libc`, `EVIOCGRAB` (`0x40044590`) cursor grab, `EVIOCGABS` hardware axis query, and MT Protocol B slot cache.
+  - **macOS**: Cocoa `NSTouch` indirect touch events.
+  - **Thread-Safety**: Low-latency lock-free event queue drained strictly on Thread 0 once per frame.
+
+## Version & Update Engine (`update`)
+
+- **Authoritative Version Resolution (`AppVersion.kt`)**: Dynamically resolves the runtime version from JAR manifest attributes (`Implementation-Version`), packaged classpath `/version.txt`, or fallback default.
+- **Semantic Versioning (`SemVer.kt`)**: Zero-dependency parser and comparator implementing SemVer 2.0.0 precedence rules (supporting numeric major/minor/patch, release vs pre-release precedence, dot-separated pre-release tokens, and snapshot identifiers).
+- **Background Release Checker (`UpdateChecker.kt`)**: Asynchronous, daemon-threaded update engine checking GitHub releases with 5-second timeouts. Features dual-mode detection (GitHub REST API with fallback to web redirect inspection) and fail-safe error handling to guarantee audio processing and rendering loops remain unblocked.
+- **Interactive Modals (`UpdatePromptModal.kt`, `AboutModal.kt`)**:
+  - `UpdatePromptModal`: Prompts when newer releases are discovered, offering immediate download via system browser, session reminder, or permanent per-version skip.
+  - `AboutModal`: Accessible from the Help menu; displays current version, manual update checker, and repository links.
 
 ## Build & Run
 ```bash

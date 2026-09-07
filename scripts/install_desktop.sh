@@ -41,3 +41,24 @@ command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$
 command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache "${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor" 2>/dev/null || true
 
 echo "✓ Liquid LSD desktop entry and icon successfully installed to $APPS_DIR/liquid-lsd.desktop"
+
+# 2. Configure udev rule for touchpad access (Performance Console)
+RULE_PATH="/etc/udev/rules.d/99-liquidlsd-touchpad.rules"
+
+if [ ! -f "$RULE_PATH" ]; then
+    echo "Configuring touchpad performance permissions..."
+
+    # GUI root elevation via Polkit (pkexec)
+    if command -v pkexec >/dev/null 2>&1; then
+        pkexec bash -c "cat << 'EOF' > $RULE_PATH
+# Liquid LSD - Enable seat user access to touchpads for performance console
+KERNEL==\"event*\", SUBSYSTEM==\"input\", ENV{ID_INPUT_TOUCHPAD}==\"1\", TAG+=\"uaccess\"
+EOF
+udevadm control --reload-rules && udevadm trigger --subsystem-match=input" && echo "✓ Touchpad performance permissions successfully installed to $RULE_PATH" || {
+            echo "Warning: Touchpad permissions could not be installed. Performance console may be disabled until permissions are granted."
+        }
+    else
+        echo "Note: pkexec not found. To enable trackpad performance console, manually create $RULE_PATH with:"
+        echo 'KERNEL=="event*", SUBSYSTEM=="input", ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess"'
+    fi
+fi

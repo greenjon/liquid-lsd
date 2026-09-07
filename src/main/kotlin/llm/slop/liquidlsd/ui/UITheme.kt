@@ -228,6 +228,18 @@ object UITheme {
         get() = settings.framelessWindow
         set(value) { settings = settings.copy(framelessWindow = value) }
 
+    var trackpadConsoleEnabled: Boolean
+        get() = settings.trackpadConsoleEnabled
+        set(value) { settings = settings.copy(trackpadConsoleEnabled = value) }
+
+    var checkUpdatesOnStartup: Boolean
+        get() = settings.checkUpdatesOnStartup
+        set(value) { settings = settings.copy(checkUpdatesOnStartup = value) }
+
+    var ignoredUpdateVersion: String
+        get() = settings.ignoredUpdateVersion
+        set(value) { settings = settings.copy(ignoredUpdateVersion = value) }
+
     fun getDefaultVideosDirectory(): File {
         val configured = settings.recordingDirectory.trim()
         if (configured.isNotBlank()) {
@@ -428,6 +440,9 @@ object UITheme {
                 props.getProperty("settingsWidth")?.toFloatOrNull()?.let { settingsWidth = it.coerceIn(400f, 3840f) }
                 props.getProperty("settingsHeight")?.toFloatOrNull()?.let { settingsHeight = it.coerceIn(300f, 2160f) }
                 props.getBoolean("framelessWindow")?.let { framelessWindow = it }
+                props.getBoolean("trackpadConsoleEnabled")?.let { trackpadConsoleEnabled = it }
+                props.getBoolean("checkUpdatesOnStartup")?.let { checkUpdatesOnStartup = it }
+                props.getProperty("ignoredUpdateVersion")?.let { ignoredUpdateVersion = it }
             } else {
                 logger.info { "No settings file found, using defaults: fixed UI 95%, presetNameScalePercent: $presetNameScalePercent%, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
             }
@@ -486,6 +501,9 @@ object UITheme {
             props.setProperty("settingsWidth", settingsWidth.toString())
             props.setProperty("settingsHeight", settingsHeight.toString())
             props.setProperty("framelessWindow", framelessWindow.toString())
+            props.setProperty("trackpadConsoleEnabled", trackpadConsoleEnabled.toString())
+            props.setProperty("checkUpdatesOnStartup", checkUpdatesOnStartup.toString())
+            props.setProperty("ignoredUpdateVersion", ignoredUpdateVersion)
             val tmpFile = File("${settingsFile.absolutePath}.tmp")
             tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             java.nio.file.Files.move(

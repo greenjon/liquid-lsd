@@ -44,6 +44,7 @@ class SettingsDefaultsTest {
         assertFalse(defaultSettings.sequencerEnabled, "Sequencer should be disabled by default")
         assertFalse(defaultSettings.randomizationEnabled, "Randomization should be disabled by default")
         assertFalse(defaultSettings.midiEnabled, "MIDI should be disabled by default")
+        assertTrue(defaultSettings.checkUpdatesOnStartup, "Update check on startup should be enabled by default")
     }
 
     @Test

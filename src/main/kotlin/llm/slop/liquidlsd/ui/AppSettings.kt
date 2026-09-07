@@ -47,5 +47,8 @@ data class AppSettings(
     val recordingFps: Int = 60,
     val settingsWidth: Float = 640f,
     val settingsHeight: Float = 520f,
-    val framelessWindow: Boolean = true
+    val framelessWindow: Boolean = true,
+    val trackpadConsoleEnabled: Boolean = true,
+    val checkUpdatesOnStartup: Boolean = true,
+    val ignoredUpdateVersion: String = ""
 )

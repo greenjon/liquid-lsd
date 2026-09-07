@@ -527,12 +527,34 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## 19. Renderer Polymorphic Draw Topology (`drawTopology()`)
-- **Decision**: Eliminate source-type branching (`is Mandala`, `is HyperMesh`) from `Renderer.kt` by introducing an open `drawTopology()` method on `DynamicVisualSource`, delegating vertex attribute binding and primitive drawing to each individual visual generator.
+---
+
+## 20. CapsLock Multi-Touch Trackpad Performance Console (SCS.3m Virtual Console)
+- **Decision**: Implement a 4-zone capacitive trackpad performance console inspired by the vintage Stanton SCS.3m DJ mixer, activated via the `CapsLock` latch key.
+  - **4-Zone Spatial Layout**:
+    - Bottom 28% ($Y \in [0.00, 0.28]$): Horizontal Crossfader (Deck A $\leftrightarrow$ Deck B, mapped to `mixer.crossfade` $[-1.0, 1.0]$).
+    - Middle 17% ($Y \in [0.28, 0.45]$): Safety Deadzone Buffer (retains active drift under Zone Affinity, rejects new taps).
+    - Top 55% ($Y \in [0.45, 1.00]$): Three independent vertical Level/Alpha faders for Deck A, Deck BG, and Deck B ($0.0 \dots 1.0$, direct jump).
+  - **Independent LIFO Multi-Touch Stacks**:
+    - Each zone maintains an independent LIFO touch stack. New taps jump directly to the contact point; lifting a tap snaps back to the underlying anchor finger, enabling high-speed cut stutters and video flash/strobe blackout gates.
+    - Sticky hold preserves fader level when all fingers are lifted.
+    - Bezel clamping ($Y \le 0.48 \to 0.0$, $Y \ge 0.94 \to 1.0$; $X \le 0.05 \to -1.0$, $X \ge 0.95 \to 1.0$, center detent $\pm 0.02 \to 0.0$) ensures comfortable control without hitting the physical plastic chassis.
+  - **Platform Architecture**:
+    - **Linux**: Direct evdev reader via JNA `libc` (`open`, `close`, `read`, `ioctl`), `EVIOCGRAB` (`0x40044590`) cursor grab, and `EVIOCGABS` hardware axis limit query with Multi-Touch Protocol B slot state caching synchronized on `SYN_REPORT`.
+    - **macOS**: Cocoa `NSTouch` indirect touch events.
+    - **Permissions**: Systemd `TAG+="uaccess"` udev rule via `pkexec` with graceful in-app detection (`hasTouchpadAccess`) and hot-reload.
+    - **Thread Safety**: Events are pushed into a lock-free queue and processed strictly on Thread 0 once per frame.
+
+---
+
+## 21. Non-Blocking Startup Version Checker & GitHub Release Prompt (`UpdateChecker`)
+- **Decision**: Implement a lightweight, zero-dependency background version checker (`UpdateChecker.kt`), SemVer 2.0.0 parser and comparator (`SemVer.kt`), update notification modal (`UpdatePromptModal.kt`), and unified "About Liquid LSD" dialog (`AboutModal.kt`).
 - **Rationale**:
-  - **Zero Source Knowledge in Renderer**: `Renderer.render()` is collapsed into a single, unified render path that only binds framebuffers, evaluates common uniforms (`uAlpha`, `uResolution`, `uTime`, `uAspectRatio`), calls `source.drawTopology()`, and performs feedback ping-pong / blitting.
-  - **Encapsulated GPU Geometries**: `Mandala` encapsulates its own triangle-strip ribbon VAO/VBO lifecycle (`initGeometry()`, `dispose()`, and handle sharing on `clone()`), and `HyperMesh` encapsulates its dual 600-cell and 120-cell strut/node draw calls.
-  - **Zero Regression**: Preserves 100% visual and mathematical equivalence across all generators while making future custom mesh or geometry-based visual sources cleanly pluggable without modifying `Renderer.kt`.
-
-
-
+  - **Audio & Render Safety (Thread Isolation)**: Network I/O is executed strictly on a background daemon thread (`LiquidLSD-UpdateChecker`) with 5-second connection and read timeouts. Zero socket operations, heap-allocating parsers, or blocking waits occur on the JACK audio callback thread or the GLFW primary render thread.
+  - **Dual Network Fallback**: Queries GitHub's REST API (`https://api.github.com/repos/greenjon/liquid-lsd/releases/latest`) as primary, falling back to HTTP redirect inspection of `https://github.com/greenjon/liquid-lsd/releases/latest` (`Location` header) to reliably extract release tags even if GitHub API unauthenticated rate limits (60 req/hr) are exceeded.
+  - **SemVer 2.0.0 Precedence**: Accurately compares major, minor, patch, and dot-separated pre-release segments (e.g. `v1.0.0-beta.42` > `v1.0.0-beta.41`, release > pre-release) while stripping optional `v` prefixes.
+  - **User Experience & Skip Control**:
+    - Automatic startup checks are enabled by default and can be toggled in `Settings > General > Startup & Updates`.
+    - Users can choose **Download Update** (opens browser directly to the GitHub release page), **Remind Later**, or **Skip Version** (persists `ignoredUpdateVersion` so future launches do not re-prompt for that specific release).
+    - Unobtrusive: Network failures fail silently on startup without disturbing performances or offline sets.
+    - Quick Access: "Check for Updates..." and "About Liquid LSD" are available under the **Help** menu and in **Settings**.

@@ -4,6 +4,51 @@
 
 ---
 
+## Version 1.0.0-beta.50
+
+> [!NOTE]
+> **Release 1.0.0-beta.50** introduces the **CapsLock Multi-Touch Trackpad Performance Console** (transforming laptop trackpads into a tactile 4-zone SCS.3m virtual mixer console with LIFO finger cut stutters, direct-jump alpha faders, sticky hold, and hardware-level Linux evdev and macOS Cocoa backends), alongside the **Startup Version Checker & GitHub Update Prompt** (non-blocking background release checks, SemVer 2.0.0 precedence engine, interactive update modal, and About dialog).
+
+### CapsLock Multi-Touch Trackpad Performance Console (SCS.3m Virtual Console) (`TouchConsoleController.kt`, `LinuxEvdevTouchBackend.kt`, `MacCocoaTouchBackend.kt`, `MixerMonitorPanel.kt`, `SettingsPanel.kt`)
+- **4-Zone Performance Surface**:
+  - Turns laptop trackpads into an absolute multi-touch performance console when `CapsLock` is engaged.
+  - **Bottom 28%**: Horizontal Crossfader (Deck A $\leftrightarrow$ Deck B, direct jump, cut stutters).
+  - **Middle 17%**: Safety Deadzone Buffer (retains active drift under Zone Affinity, rejects new taps).
+  - **Top 55%**: Three independent vertical Level/Alpha faders for Deck A, Deck BG, and Deck B ($0.0 \dots 1.0$, direct jump).
+- **Independent LIFO Multi-Touch Stacks**:
+  - Each zone maintains an independent LIFO touch stack. Tapping with a second finger instantly jumps to that position; releasing snaps back to the underlying anchor finger.
+  - Enables machine-gun crossfade cut stutters and video flash/strobe blackout gates.
+  - Sticky hold retains fader levels when all fingers are lifted.
+  - Bezel clamping ($Y \le 0.48 \to 0.0$, $Y \ge 0.94 \to 1.0$; $X \le 0.05 \to -1.0$, $X \ge 0.95 \to 1.0$, center detent $\pm 0.02 \to 0.0$) ensures comfortable control without hitting physical laptop chassis edges.
+- **Native Platform Backends**:
+  - **Linux**: Direct evdev reader via JNA `libc`, `EVIOCGRAB` (`0x40044590`) cursor grab, `EVIOCGABS` hardware axis query, and MT Protocol B slot cache.
+  - **macOS**: Cocoa `NSTouch` indirect touch events.
+  - **Zero-Crash Graceful Permissions**: Non-root `uaccess` systemd udev rule via `pkexec`, interactive permission badge in UI, and in-app hot-reload.
+  - **Thread-Safety**: Low-latency lock-free event queue drained strictly on Thread 0 once per frame.
+- **Visual Feedback HUD**:
+  - Real-time glowing cyan contact dots for active fingers and amber dots for anchor fingers.
+  - Unobtrusive sticky hold lines indicating held alpha levels.
+  - Clean Mode remains 100% clean with zero HUD overlays.
+
+### Startup Version Checker & GitHub Update Prompt (`UpdateChecker.kt`, `SemVer.kt`, `AppVersion.kt`, `UpdatePromptModal.kt`, `AboutModal.kt`, `MenuBar.kt`, `SettingsPanel.kt`)
+- **Non-Blocking Background Update Engine (`UpdateChecker.kt`)**:
+  - Checks for the latest release on GitHub asynchronously via a daemon thread on application startup without blocking audio callbacks or GLFW/OpenGL rendering.
+  - Dual-mode network query: Uses the GitHub REST API (`releases/latest`) with an automatic fallback that inspects HTTP redirect headers (`Location`) from `github.com/.../releases/latest`, bypassing unauthenticated API rate limits.
+  - Strict 5-second timeouts with fail-safe error handling so offline or network errors never interrupt application startup.
+- **SemVer 2.0.0 Parsing & Precedence (`SemVer.kt`)**:
+  - Zero-dependency semantic version parser adhering to SemVer 2.0.0 rules (numeric core segments, release vs pre-release precedence, dot-separated tag sequences e.g. `beta.42` > `beta.41`, and snapshot detection).
+- **Interactive Update Prompt Modal (`UpdatePromptModal.kt`)**:
+  - Automatically alerts the user when a newer release is published on GitHub.
+  - Displays the current version, latest version, and release title.
+  - Options: **Download Update** (opens browser directly to the GitHub release page), **Remind Later** (dismisses for the current session), or **Skip Version** (persists `ignoredUpdateVersion` in preferences so the user is not prompted again for that specific release).
+- **"About Liquid LSD" Dialog & Help Menu Controls (`AboutModal.kt`, `MenuBar.kt`)**:
+  - Added **About Liquid LSD** and **Check for Updates...** to the **Help** menu.
+  - The About dialog displays the current runtime version, provides a manual **Check for Updates** button with real-time status feedback, and provides direct links to the GitHub repository and documentation.
+- **Startup & Update Preferences (`SettingsPanel.kt`, `AppSettings.kt`, `UITheme.kt`)**:
+  - Added "Automatically check for updates on launch" toggle and a manual "Check for Updates Now" action in `Settings > General > Startup & Updates`.
+
+---
+
 ## Version 1.0.0-beta.41
 
 > [!NOTE]

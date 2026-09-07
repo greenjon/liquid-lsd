@@ -20,5 +20,6 @@ class SessionContext {
     val visualSourceRegistry = VisualSourceRegistry
     val uiTheme = UITheme
     val broadcastEngine = BroadcastEngine
+    val touchConsoleController = llm.slop.liquidlsd.input.TouchConsoleController(this)
 }
 

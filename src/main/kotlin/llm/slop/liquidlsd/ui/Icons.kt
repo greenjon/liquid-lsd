@@ -25,6 +25,7 @@ object Icons {
     const val ALERT       = "\ue193" // alert-triangle
     const val INFO        = "\ue0f9" // info
     const val SAVE        = "\ue14d" // save
+    const val DOWNLOAD    = "\ue0af" // download
     const val EJECT       = "\ue45d" // unplug
     const val UPLOAD      = "\ue19e" // upload / load
     const val LAYOUT_FULL = "\ue377" // rectangle-vertical

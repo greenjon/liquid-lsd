@@ -89,6 +89,18 @@ class UIManager(
 
     private val missingItemsPanel = MissingItemsPanel()
 
+    init {
+        if (session.uiTheme.checkUpdatesOnStartup && !llm.slop.liquidlsd.update.UpdateChecker.hasCheckedOnStartup) {
+            llm.slop.liquidlsd.update.UpdateChecker.hasCheckedOnStartup = true
+            llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = false) { result ->
+                if (result is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable) {
+                    if (result.latestRelease.tagName != session.uiTheme.ignoredUpdateVersion) {
+                        UpdatePromptModal.request(result.latestRelease, result.currentVersion)
+                    }
+                }
+            }
+        }
+    }
 
     private var lastNextMidiCcHigh = false
     private var lastPrevMidiCcHigh = false
@@ -375,6 +387,8 @@ class UIManager(
 
             NoteEditorModal.draw()
             SavePresetModal.draw(session)
+            UpdatePromptModal.draw(session)
+            AboutModal.draw(session)
 
             missingItemsPanel.draw(session)
 

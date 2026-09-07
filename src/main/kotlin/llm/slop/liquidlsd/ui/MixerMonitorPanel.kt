@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.presets.PresetManager
 import kotlin.math.roundToInt
 
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
+import llm.slop.liquidlsd.input.TouchBackendState
 
 class MixerMonitorPanel(
     private val presetState: PresetGridState,
@@ -253,11 +254,138 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, row2Y + subH + 4f)
     }
 
+    private fun drawTouchConsoleHUD(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        contentW: Float
+    ) {
+        val controller = session.touchConsoleController
+        val state = controller.backend.state
+
+        if (controller.isElevatingPermissions) {
+            ImGui.textDisabled("${Icons.ACTIVITY} Configuring Touchpad Permissions (Polkit)...")
+            ImGui.spacing()
+            return
+        }
+
+        if (state == TouchBackendState.PERMISSION_REQUIRED) {
+            val badgeH = 22f
+            val dl = ImGui.getWindowDrawList()
+            val startX = ImGui.getCursorScreenPosX()
+            val startY = ImGui.getCursorScreenPosY()
+
+            ImGui.dummy(contentW, badgeH)
+            val isHovered = ImGui.isItemHovered()
+            val isClicked = ImGui.isItemClicked(0)
+
+            val bgCol = if (isHovered) ImGui.colorConvertFloat4ToU32(0.35f, 0.15f, 0.05f, 0.9f)
+                        else ImGui.colorConvertFloat4ToU32(0.20f, 0.08f, 0.02f, 0.8f)
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.90f, 0.50f, 0.10f, 0.8f)
+            val textCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.20f, 1.0f)
+
+            dl.addRectFilled(startX, startY, startX + contentW, startY + badgeH, bgCol, 4f)
+            dl.addRect(startX, startY, startX + contentW, startY + badgeH, borderCol, 4f, 0, 1.0f)
+
+            val label = "${Icons.ALERT} Touchpad: Permission Required (Click to Install udev Access)"
+            val textW = ImGui.calcTextSize(label).x
+            val textX = startX + (contentW - textW) * 0.5f
+            val textY = startY + (badgeH - ImGui.getTextLineHeight()) * 0.5f
+            dl.addText(textX, textY, textCol, label)
+
+            if (isHovered) {
+                ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
+                ImGui.setTooltip("Click to run Polkit elevation (pkexec) to grant non-root touch access for the Performance Console")
+            }
+            if (isClicked) {
+                controller.requestPermissionElevation()
+            }
+            ImGui.spacing()
+            return
+        }
+
+        if (!controller.isActive) return
+
+        // --- Render 3-Stem Alpha HUD (Deck A, BG, Deck B) ---
+        val hudH = 20f
+        val gap = 6f
+        val colW = (contentW - gap * 2f) / 3f
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+
+        ImGui.dummy(contentW, hudH)
+        val dl = ImGui.getWindowDrawList()
+
+        val stems = listOf(
+            Triple("A", mixer.levelA, controller.holdLevelA to controller.getLevelAContacts()),
+            Triple("BG", mixer.levelBG, controller.holdLevelBG to controller.getLevelBGContacts()),
+            Triple("B", mixer.levelB, controller.holdLevelB to controller.getLevelBContacts())
+        )
+
+        for (i in stems.indices) {
+            val (name, level, data) = stems[i]
+            val (holdLevel, contacts) = data
+            val bx = startX + i * (colW + gap)
+            val by = startY
+
+            val bgCol = ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.85f)
+            val borderCol = if (contacts.isNotEmpty()) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f)
+                            else ImGui.colorConvertFloat4ToU32(0.20f, 0.20f, 0.20f, 0.8f)
+
+            dl.addRectFilled(bx, by, bx + colW, by + hudH, bgCol, 3f)
+            dl.addRect(bx, by, bx + colW, by + hudH, borderCol, 3f, 0, 1.0f)
+
+            // Fill bar
+            val fillW = colW * level.coerceIn(0f, 1f)
+            val fillCol = when (name) {
+                "A" -> ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.1f, 0.35f)
+                "B" -> ImGui.colorConvertFloat4ToU32(0.1f, 0.8f, 0.7f, 0.35f)
+                else -> ImGui.colorConvertFloat4ToU32(0.6f, 0.3f, 0.9f, 0.35f)
+            }
+            dl.addRectFilled(bx + 1f, by + 1f, bx + fillW, by + hudH - 1f, fillCol, 2f)
+
+            // Sticky Hold Line marker
+            val holdX = bx + colW * holdLevel.coerceIn(0f, 1f)
+            val holdCol = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.5f)
+            dl.addLine(holdX, by + 2f, holdX, by + hudH - 2f, holdCol, 1.5f)
+
+            // Stem Label
+            val lbl = "$name: ${(level * 100f).toInt()}%"
+            val lblW = ImGui.calcTextSize(lbl).x
+            val lblX = bx + (colW - lblW) * 0.5f
+            val lblY = by + (hudH - ImGui.getTextLineHeight()) * 0.5f
+            val textCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f)
+            dl.addText(lblX, lblY, textCol, lbl)
+
+            // Render glowing touch dots on stem
+            if (contacts.isNotEmpty()) {
+                val lastContact = contacts.last()
+                for (c in contacts) {
+                    val contactLevel = when {
+                        c.y <= 0.48f -> 0.0f
+                        c.y >= 0.94f -> 1.0f
+                        else -> ((c.y - 0.48f) / 0.46f).coerceIn(0f, 1f)
+                    }
+                    val cx = bx + colW * contactLevel
+                    val cy = by + hudH * 0.5f
+                    if (c == lastContact) {
+                        dl.addCircleFilled(cx, cy, 4.5f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 1.0f))
+                        dl.addCircle(cx, cy, 6.5f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 0.5f), 12, 1.2f)
+                    } else {
+                        dl.addCircleFilled(cx, cy, 3.5f, ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.15f, 0.85f))
+                    }
+                }
+            }
+        }
+        ImGui.spacing()
+    }
+
     private fun drawCrossfaderSlider(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer
     ) {
         val contentW = ImGui.getContentRegionAvailX()
+        drawTouchConsoleHUD(session, mixer, contentW)
+
         val fontLevel = UITheme.FontLevel.H2
         var textWA = 0f
         var textWB = 0f
@@ -457,6 +585,33 @@ class MixerMonitorPanel(
                 ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
             }
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
+        }
+
+        // Touch Console active border & contact dots
+        if (session.touchConsoleController.isActive) {
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0.0f, 0.9f, 1.0f, 0.75f), 4f, 0, 1.5f)
+
+            val xfContacts = session.touchConsoleController.getCrossfaderContacts()
+            if (xfContacts.isNotEmpty()) {
+                val lastContact = xfContacts.last()
+                for (c in xfContacts) {
+                    val rawX = c.x
+                    val mappedPct = when {
+                        rawX <= 0.05f -> 0.0f
+                        rawX >= 0.95f -> 1.0f
+                        kotlin.math.abs(rawX - 0.50f) <= 0.02f -> 0.5f
+                        else -> ((rawX - 0.05f) / 0.90f).coerceIn(0.0f, 1.0f)
+                    }
+                    val cx = lineStartX + mappedPct * lineWidth
+                    if (c == lastContact) {
+                        dl.addCircleFilled(cx, centerY, 5.0f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 1.0f))
+                        dl.addCircle(cx, centerY, 7.5f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 0.5f), 12, 1.5f)
+                    } else {
+                        dl.addCircleFilled(cx, centerY, 4.0f, ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.15f, 0.85f))
+                        dl.addCircle(cx, centerY, 5.5f, ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.15f, 0.4f), 12, 1.0f)
+                    }
+                }
+            }
         }
 
         // Dynamic modulated value indicator (Amber Gold dot when modulated)

@@ -28,7 +28,7 @@ import org.lwjgl.opengl.GL33.*
 private val logger = KotlinLogging.logger {}
 
 private fun getAppVersion(): String {
-    return object {}.javaClass.`package`?.implementationVersion ?: "1.0.0-SNAPSHOT"
+    return llm.slop.liquidlsd.update.AppVersion.CURRENT
 }
 
 private fun printVersion() {
@@ -313,6 +313,12 @@ fun main(args: Array<String>) {
         PresetManager.loadSession(mixer)
     }
     NotesManager.loadSourceNotes()
+    session.touchConsoleController.initialize(window, mixer)
+    glfwSetWindowFocusCallback(window) { _, focused ->
+        if (!focused) {
+            session.touchConsoleController.onFocusLost()
+        }
+    }
     GLDebug.checkErrors("Mixer and Decks initialization")
 
     logger.info { "Rendering components initialized" }
@@ -350,10 +356,13 @@ fun main(args: Array<String>) {
         val isEscapeFullscreen = key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
         val isPlainFOrB = (mods == 0) && (key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed
-        val isHotKey = isPlainFOrB || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen
+        val isCapsLock = key == GLFW_KEY_CAPS_LOCK
+        val isHotKey = isPlainFOrB || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen || isCapsLock
 
         if (action == GLFW_PRESS) {
-            if (isFontSizeHotKey) {
+            if (isCapsLock) {
+                session.touchConsoleController.toggleActive()
+            } else if (isFontSizeHotKey) {
                 if (isMinus) {
                     uiManager.adjustPresetNameScale(-1f)
                 } else if (isEqual) {
@@ -412,6 +421,7 @@ fun main(args: Array<String>) {
     while (!glfwWindowShouldClose(window)) {
         val frameStartTime = glfwGetTime()
         glfwPollEvents()
+        session.touchConsoleController.processPendingEvents()
 
         // Query window and framebuffer dimensions
         glfwGetFramebufferSize(window, w, h)
@@ -627,7 +637,8 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.disposeAll()
     Geometry.dispose()
 
-    // Dispose UI
+    // Dispose UI and input
+    session.touchConsoleController.shutdown()
     uiManager.dispose()
 
     llm.slop.liquidlsd.rendering.GLResourceTracker.assertNoLeaks()

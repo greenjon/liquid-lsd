@@ -107,7 +107,15 @@ object DocManager {
         }
     }
 
-    private fun openInBrowser(uri: URI) {
+    fun openUrl(url: String) {
+        try {
+            openInBrowser(URI(url))
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to parse and open URL '$url': ${e.message}" }
+        }
+    }
+
+    fun openInBrowser(uri: URI) {
         try {
             if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
                 java.awt.Desktop.getDesktop().browse(uri)

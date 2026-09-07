@@ -8,6 +8,7 @@ import imgui.type.ImBoolean
 
 import imgui.flag.ImGuiTableFlags
 import imgui.flag.ImGuiTableColumnFlags
+import llm.slop.liquidlsd.input.TouchBackendState
 
 /**
  * Modal settings overlay with a left vertical navigation bar.
@@ -532,7 +533,7 @@ object SettingsPanel {
         }
 
         ImGui.spacing()
-        session.uiTheme.h2("Startup & AutoVJ")
+        session.uiTheme.h2("Startup & Updates")
         ImGui.separator()
         ImGui.spacing()
 
@@ -554,6 +555,55 @@ object SettingsPanel {
         }
 
         ImGui.spacing()
+        val updatesOnStartup = ImBoolean(session.uiTheme.checkUpdatesOnStartup)
+        if (ImGui.checkbox("Automatically check for updates on launch", updatesOnStartup)) {
+            val nextVal = updatesOnStartup.get()
+            if (nextVal != session.uiTheme.checkUpdatesOnStartup) {
+                session.uiTheme.checkUpdatesOnStartup = nextVal
+                session.uiTheme.saveSettings()
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
+        }
+
+        ImGui.spacing()
+        val checking = llm.slop.liquidlsd.update.UpdateChecker.isChecking
+        val lastResult = llm.slop.liquidlsd.update.UpdateChecker.lastResult
+        if (checking) {
+            ImGui.textColored(0.9f, 0.7f, 0.2f, 1.0f, "${Icons.REFRESH} Checking for updates...")
+        } else {
+            when (lastResult) {
+                is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable -> {
+                    ImGui.textColored(0.3f, 0.9f, 0.4f, 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
+                    ImGui.sameLine()
+                    if (ImGui.button("View Update##settings_update", 120f, 0f)) {
+                        UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
+                    }
+                }
+                is llm.slop.liquidlsd.update.UpdateCheckResult.UpToDate -> {
+                    ImGui.textColored(0.5f, 0.9f, 0.5f, 1.0f, "Liquid LSD is up to date (${lastResult.currentVersion}).")
+                    ImGui.sameLine()
+                    if (ImGui.button("Check Again##settings_check", 120f, 0f)) {
+                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                    }
+                }
+                is llm.slop.liquidlsd.update.UpdateCheckResult.Error -> {
+                    ImGui.textColored(1.0f, 0.4f, 0.4f, 1.0f, "Check failed: ${lastResult.message}")
+                    ImGui.sameLine()
+                    if (ImGui.button("Retry##settings_retry", 100f, 0f)) {
+                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                    }
+                }
+                llm.slop.liquidlsd.update.UpdateCheckResult.Idle, llm.slop.liquidlsd.update.UpdateCheckResult.Checking -> {
+                    if (ImGui.button("${Icons.REFRESH} Check for Updates Now", 200f, 0f)) {
+                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                    }
+                }
+            }
+        }
+
+        ImGui.spacing()
         session.uiTheme.h2("Window Frame & Chrome")
         ImGui.separator()
         ImGui.spacing()
@@ -568,6 +618,50 @@ object SettingsPanel {
         }
         if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
             ImGui.setTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
+        }
+
+        ImGui.spacing()
+        session.uiTheme.h2("Trackpad Performance Console (SCS.3m)")
+        ImGui.separator()
+        ImGui.spacing()
+
+        val trackpadEnabled = ImBoolean(session.uiTheme.trackpadConsoleEnabled)
+        if (ImGui.checkbox("Enable CapsLock Trackpad Console", trackpadEnabled)) {
+            val nextVal = trackpadEnabled.get()
+            if (nextVal != session.uiTheme.trackpadConsoleEnabled) {
+                session.uiTheme.trackpadConsoleEnabled = nextVal
+                session.uiTheme.saveSettings()
+                if (!nextVal && session.touchConsoleController.isActive) {
+                    session.touchConsoleController.toggleActive(false)
+                }
+            }
+        }
+        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+            ImGui.setTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Alpha faders.\nDisables cursor movement and gestures while active.")
+        }
+
+        val controller = session.touchConsoleController
+        val state = controller.backend.state
+        when (state) {
+            TouchBackendState.READY -> {
+                ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "${Icons.ACTIVITY} Touchpad Status: Ready (Press CapsLock to engage)")
+            }
+            TouchBackendState.PERMISSION_REQUIRED -> {
+                ImGui.textColored(1.0f, 0.6f, 0.1f, 1f, "${Icons.ALERT} Touchpad Status: Read/Write Permission Required")
+                ImGui.sameLine()
+                if (ImGui.button("Install Permissions (Polkit)")) {
+                    controller.requestPermissionElevation()
+                }
+                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+                    ImGui.setTooltip("Runs pkexec to add a uaccess udev rule for your seat user without rebooting.")
+                }
+            }
+            TouchBackendState.NO_DEVICE -> {
+                ImGui.textDisabled("Touchpad Status: No hardware trackpad detected")
+            }
+            TouchBackendState.DISABLED -> {
+                ImGui.textDisabled("Touchpad Status: Disabled on this platform")
+            }
         }
     }
 
