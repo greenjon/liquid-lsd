@@ -206,6 +206,27 @@ object UIThemeStyler {
         }
 
         style.setColor(ImGuiCol.ModalWindowDimBg, 0f, 0f, 0f, 0.72f)
+
+        // Capture the base text and border colours for this theme so tooltips can restore them
+        // regardless of any per-widget ImGuiCol.Text / ImGuiCol.Border pushes active at call time
+        // (e.g. BrowserDeckButtons pushes both Text and Border to deck accent colours).
+        // Values mirror the colours set in the when(theme) block above.
+        TooltipHelper.baseTextColor = when (theme) {
+            UITheme.Theme.BORING          -> ImGui.colorConvertFloat4ToU32(0.90f, 0.90f, 0.92f, 1.00f)
+            UITheme.Theme.DARK_SOLARIZED  -> ImGui.colorConvertFloat4ToU32(0.51f, 0.58f, 0.59f, 1.00f)
+            UITheme.Theme.LIGHT_SOLARIZED -> ImGui.colorConvertFloat4ToU32(0.40f, 0.48f, 0.51f, 1.00f)
+            UITheme.Theme.DARK_LUNARIZED  -> ImGui.colorConvertFloat4ToU32(0.97f, 0.91f, 0.88f, 1.00f)
+            UITheme.Theme.LIGHT_LUNARIZED -> ImGui.colorConvertFloat4ToU32(0.15f, 0.17f, 0.21f, 1.00f)
+            UITheme.Theme.NEON            -> ImGui.colorConvertFloat4ToU32(1.00f, 1.00f, 1.00f, 1.00f)
+        }
+        TooltipHelper.baseBorderColor = when (theme) {
+            UITheme.Theme.BORING          -> ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.25f, 0.90f)
+            UITheme.Theme.DARK_SOLARIZED  -> ImGui.colorConvertFloat4ToU32(0.08f, 0.30f, 0.36f, 0.90f)
+            UITheme.Theme.LIGHT_SOLARIZED -> ImGui.colorConvertFloat4ToU32(0.75f, 0.72f, 0.64f, 0.90f)
+            UITheme.Theme.DARK_LUNARIZED  -> ImGui.colorConvertFloat4ToU32(0.42f, 0.16f, 0.08f, 0.90f)
+            UITheme.Theme.LIGHT_LUNARIZED -> ImGui.colorConvertFloat4ToU32(0.65f, 0.70f, 0.85f, 0.90f)
+            UITheme.Theme.NEON            -> ImGui.colorConvertFloat4ToU32(0.40f, 0.10f, 0.50f, 0.85f)
+        }
     }
 
     fun drawNeonBackgroundIfNeeded(session: SessionContext, posX: Float, posY: Float, panelW: Float, panelH: Float, displayWidth: Float) {

@@ -402,7 +402,7 @@ object PresetGridPanel {
         session.uiTheme.body(labelValue)
         ImGui.popStyleColor()
         if (isValueHeaderHovered && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("VAL: Base parameter value and modulation bounds/limits.")
+            showTooltip("VAL: Base parameter value and modulation bounds/limits.", (valueColX.toInt() shl 16) xor startY.toInt())
         }
 
         // Draw MIDI header
@@ -428,7 +428,7 @@ object PresetGridPanel {
             session.uiTheme.body(labelMidi)
             ImGui.popStyleColor()
             if (isMidiHeaderHovered && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("MIDI: Map MIDI CC/Notes from controllers to modulate this parameter.")
+                showTooltip("MIDI: Map MIDI CC/Notes from controllers to modulate this parameter.", (midiColX.toInt() shl 16) xor startY.toInt())
             }
         }
 
@@ -460,7 +460,7 @@ object PresetGridPanel {
                     "audio" -> "AUD: Audio-reactive modulators (Continuous RMS envelopes & Transient triggers across 4 frequency bands)."
                     else -> "CV Modulator source."
                 }
-                ImGui.setTooltip(cvDesc)
+                showTooltip(cvDesc, (colX.toInt() shl 16) xor startY.toInt())
             }
         }
 
@@ -521,19 +521,20 @@ object PresetGridPanel {
         }
 
         if (isKebabHovered && session.uiTheme.tooltipsEnabled && !isPopupOpen) {
+            val key = popupId.hashCode()
             if (anyMissing) {
-                ImGui.beginTooltip()
-                ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset Grid Columns:")
-                ImGui.text("Active patch uses modulators that are disabled:")
-                if (midiMissing) ImGui.bulletText("MIDI is disabled")
-                if (lfoMissing) ImGui.bulletText("LFO column is hidden")
-                if (seqMissing) ImGui.bulletText("Step Sequencer is disabled")
-                if (audioMissing) ImGui.bulletText("Audio Engine is disabled")
-                ImGui.spacing()
-                ImGui.textDisabled("Click to toggle modulators or enable missing features.")
-                ImGui.endTooltip()
+                showCustomTooltip(key, estimatedWidth = 300f, estimatedHeight = 140f) {
+                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset Grid Columns:")
+                    ImGui.text("Active patch uses modulators that are disabled:")
+                    if (midiMissing) ImGui.bulletText("MIDI is disabled")
+                    if (lfoMissing) ImGui.bulletText("LFO column is hidden")
+                    if (seqMissing) ImGui.bulletText("Step Sequencer is disabled")
+                    if (audioMissing) ImGui.bulletText("Audio Engine is disabled")
+                    ImGui.spacing()
+                    ImGui.textDisabled("Click to toggle modulators or enable missing features.")
+                }
             } else {
-                ImGui.setTooltip("Configure visible CV columns and modulator engines.")
+                showTooltip("Configure visible CV columns and modulator engines.", key)
             }
         }
 
@@ -704,9 +705,7 @@ object PresetGridPanel {
             if (ImGui.button("${Icons.PLUS}  Add Source", buttonWidth, buttonHeight)) {
                 ImGui.openPopup("##launchpad_source_popup_$deckLabel")
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Select a visual generator source (Mandala, Gyroid, Dynamic Spiral, etc.)")
-            }
+            itemTooltip("Select a visual generator source (Mandala, Gyroid, Dynamic Spiral, etc.)")
             ImGui.popStyleColor(3)
 
             if (ImGui.beginPopup("##launchpad_source_popup_$deckLabel")) {
@@ -743,9 +742,7 @@ object PresetGridPanel {
             if (ImGui.button("${Icons.FOLDER}  Load Preset", buttonWidth, buttonHeight)) {
                 ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Choose a saved preset for $deckLabel")
-            }
+            itemTooltip("Choose a saved preset for $deckLabel")
             ImGui.popStyleColor(3)
 
             if (ImGui.beginPopup("##launchpad_preset_popup_$deckLabel")) {

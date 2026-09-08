@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.ui.Icons
+import llm.slop.liquidlsd.ui.itemTooltip
 
 /**
  * Helper to draw a right-aligned vertical kebab ("⋮") button on list/grid rows.
@@ -88,8 +89,8 @@ object BrowserRowMoreButton {
             ImGui.openPopup(popupId)
         }
 
-        if (isBtnHovered && isVisible && tooltip.isNotEmpty() && !isPopupOpen && !ImGui.isPopupOpen(popupId)) {
-            ImGui.setTooltip(tooltip)
+        if (isVisible && tooltip.isNotEmpty() && !isPopupOpen && !ImGui.isPopupOpen(popupId)) {
+            itemTooltip(tooltip)
         }
 
         ImGui.popStyleVar()

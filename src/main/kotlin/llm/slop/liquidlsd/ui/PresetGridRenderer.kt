@@ -89,68 +89,69 @@ object PresetGridRenderer {
         ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
         session.uiTheme.h3(label)
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
-            // Rich tooltip: name, range, live value breakdown, description, user note
-            val liveVal = param.value
-            val baseVal = param.baseValue
-            val modDelta = liveVal - baseVal
-            val minVal = param.minClamp
-            val maxVal = param.maxClamp
+            val key = paramKey.hashCode()
+            showCustomTooltip(key, estimatedWidth = 320f, estimatedHeight = 120f) {
+                // Rich tooltip: name, range, live value breakdown, description, user note
+                val liveVal = param.value
+                val baseVal = param.baseValue
+                val modDelta = liveVal - baseVal
+                val minVal = param.minClamp
+                val maxVal = param.maxClamp
 
-            // Derive deckLabel and sourceId from paramKey (format: "Deck A/SourceName/ParamName")
-            val keyParts = paramKey.split("/")
-            val deckLabel = if (keyParts.size >= 1) keyParts[0] else ""
-            val sourceId = if (keyParts.size >= 2) {
-                // Map display-name segment back to source id for feedback/mixer params
-                when (val seg = keyParts[1].lowercase()) {
-                    "fb" -> "feedback"
-                    "mixer" -> "mixer"
-                    else -> seg.replace(" ", "_")
+                // Derive deckLabel and sourceId from paramKey (format: "Deck A/SourceName/ParamName")
+                val keyParts = paramKey.split("/")
+                val deckLabel = if (keyParts.size >= 1) keyParts[0] else ""
+                val sourceId = if (keyParts.size >= 2) {
+                    // Map display-name segment back to source id for feedback/mixer params
+                    when (val seg = keyParts[1].lowercase()) {
+                        "fb" -> "feedback"
+                        "mixer" -> "mixer"
+                        else -> seg.replace(" ", "_")
+                    }
+                } else ""
+                val paramName = if (keyParts.size >= 3) keyParts.drop(2).joinToString("/") else label
+
+                val fmt: (Float) -> String = { v ->
+                    if (param.isAngle) "${"%+.1f".format(v * 180f / PI.toFloat())}°"
+                    else "%+.3f".format(v)
                 }
-            } else ""
-            val paramName = if (keyParts.size >= 3) keyParts.drop(2).joinToString("/") else label
-
-            val fmt: (Float) -> String = { v ->
-                if (param.isAngle) "${"%+.1f".format(v * 180f / PI.toFloat())}°"
-                else "%+.3f".format(v)
-            }
-            val fmtAbs: (Float) -> String = { v ->
-                if (param.isAngle) "${"%,.1f".format(v * 180f / PI.toFloat())}°"
-                else "%.3f".format(v)
-            }
-
-            val description = when (sourceId) {
-                "feedback" -> SourceDocRegistry.paramDescriptions["feedback/fb${paramName.replace(" ", "")}"]
-                    ?: SourceDocRegistry.paramDescriptions["feedback/$paramName"] ?: ""
-                "mixer" -> {
-                    val mixerKey = if (keyParts.size >= 2) keyParts[1] else paramName
-                    SourceDocRegistry.getMixerParamDescription(mixerKey)
+                val fmtAbs: (Float) -> String = { v ->
+                    if (param.isAngle) "${"%,.1f".format(v * 180f / PI.toFloat())}°"
+                    else "%.3f".format(v)
                 }
-                else -> SourceDocRegistry.getParamDescription(sourceId, paramName)
-            }
-            val userNote = NotesManager.getParamNote(deckLabel, paramKey)
 
-            ImGui.beginTooltip()
-            ImGui.text(label)
-            ImGui.separator()
-            ImGui.textDisabled("Range: ${fmtAbs(minVal)} – ${fmtAbs(maxVal)}   Default: ${fmtAbs(param.defaultValue)}")
-            val isMixerMode = paramKey == "Mixer/mode"
-            val modSign = if (modDelta >= 0f) "+" else ""
-            if (isMixerMode) {
-                ImGui.text("Live: ${getMixModeLabel(liveVal)}  (base ${getMixModeLabel(baseVal)})")
-            } else {
-                ImGui.text("Live: ${fmtAbs(liveVal)}  (base ${fmtAbs(baseVal)} $modSign${"%.3f".format(modDelta)}${if (param.isAngle) "°" else ""})")
-            }
-            if (description.isNotEmpty()) {
+                val description = when (sourceId) {
+                    "feedback" -> SourceDocRegistry.paramDescriptions["feedback/fb${paramName.replace(" ", "")}"]
+                        ?: SourceDocRegistry.paramDescriptions["feedback/$paramName"] ?: ""
+                    "mixer" -> {
+                        val mixerKey = if (keyParts.size >= 2) keyParts[1] else paramName
+                        SourceDocRegistry.getMixerParamDescription(mixerKey)
+                    }
+                    else -> SourceDocRegistry.getParamDescription(sourceId, paramName)
+                }
+                val userNote = NotesManager.getParamNote(deckLabel, paramKey)
+
+                ImGui.text(label)
                 ImGui.separator()
-                ImGui.textWrapped(description)
+                ImGui.textDisabled("Range: ${fmtAbs(minVal)} – ${fmtAbs(maxVal)}   Default: ${fmtAbs(param.defaultValue)}")
+                val isMixerMode = paramKey == "Mixer/mode"
+                val modSign = if (modDelta >= 0f) "+" else ""
+                if (isMixerMode) {
+                    ImGui.text("Live: ${getMixModeLabel(liveVal)}  (base ${getMixModeLabel(baseVal)})")
+                } else {
+                    ImGui.text("Live: ${fmtAbs(liveVal)}  (base ${fmtAbs(baseVal)} $modSign${"%.3f".format(modDelta)}${if (param.isAngle) "°" else ""})")
+                }
+                if (description.isNotEmpty()) {
+                    ImGui.separator()
+                    ImGui.textWrapped(description)
+                }
+                if (userNote.isNotEmpty()) {
+                    ImGui.spacing()
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.85f, 0.4f, 1.0f)
+                    ImGui.textWrapped("${Icons.NOTE} $userNote")
+                    ImGui.popStyleColor()
+                }
             }
-            if (userNote.isNotEmpty()) {
-                ImGui.spacing()
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.85f, 0.4f, 1.0f)
-                ImGui.textWrapped("${Icons.NOTE} $userNote")
-                ImGui.popStyleColor()
-            }
-            ImGui.endTooltip()
         }
         if (ImGui.isItemClicked(0)) {
             state.select(PresetCellId(paramKey, "value"), param)
@@ -166,9 +167,7 @@ object PresetGridRenderer {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
                     ImGui.menuItem("Randomize row (Disabled)")
                     ImGui.popStyleColor()
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-                    }
+                    itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
                 } else {
                     if (ImGui.menuItem("Randomize row")) {
                         onPushUndo()
@@ -270,17 +269,15 @@ object PresetGridRenderer {
             val isMixerMode = paramKey == "Mixer/mode"
             val displayValue = if (isMixerMode) getMixModeLabel(param.value) else if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
             val displayBase  = if (isMixerMode) getMixModeLabel(param.baseValue) else if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
-            if (isMixerMode || paramKey.endsWith("/Max Points")) {
-                ImGui.beginTooltip()
-                ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure in VAL panel. Middle-click to reset.\n\nNote: This parameter is non-modulatable.")
-                ImGui.endTooltip()
-            } else if (param.modulatorFilter != null) {
-                ImGui.beginTooltip()
-                ImGui.text("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active.")
-                ImGui.endTooltip()
-            } else {
-                ImGui.setTooltip("Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds and default values. Middle-click to reset.")
+            val tipText = when {
+                isMixerMode || paramKey.endsWith("/Max Points") ->
+                    "Parameter value: $displayValue (Base: $displayBase)\nClick to configure in VAL panel. Middle-click to reset.\n\nNote: This parameter is non-modulatable."
+                param.modulatorFilter != null ->
+                    "Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active."
+                else ->
+                    "Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds and default values. Middle-click to reset."
             }
+            showTooltip(tipText, (valX.toInt() shl 16) xor (valY.toInt() and 0xFFFF))
         }
 
         val bgCol = when {
@@ -348,7 +345,7 @@ object PresetGridRenderer {
             } else {
                 "No MIDI mapping. Click to view CC mapping options (MIDI Map mode)."
             }
-            ImGui.setTooltip(details)
+            showTooltip(details, (midiX.toInt() shl 16) xor (midiY.toInt() and 0xFFFF))
         }
         if (ImGui.isItemClicked(0)) {
             if (state.isMidiLearnMode) {
@@ -484,7 +481,7 @@ object PresetGridRenderer {
                 "audio"   -> "Audio-Reactive Modulator"
                 else      -> cvId
             }
-            ImGui.setTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig.")
+            showTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig.", (x.toInt() shl 16) xor (y.toInt() and 0xFFFF))
         }
         if (ImGui.isItemClicked(0)) {
             if (state.isMidiLearnMode) {

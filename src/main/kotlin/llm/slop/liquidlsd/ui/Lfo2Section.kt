@@ -55,9 +55,7 @@ object Lfo2Section {
             val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
             onReplace(existing.copy(generatorModMode = nextMode))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
-        }
+        itemTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
         ImGui.popStyleColor(3)
 
         // 2. Dice button for LFO 2
@@ -67,9 +65,7 @@ object Lfo2Section {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
                 ImGui.popStyleColor()
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-                }
+                itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
                     val randomized = existing
@@ -81,9 +77,7 @@ object Lfo2Section {
                         .randomizeModHold()
                     onReplace(randomized)
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Randomize LFO 2 values")
-                }
+                itemTooltip("Randomize LFO 2 values")
             }
         }
 
@@ -99,9 +93,7 @@ object Lfo2Section {
             val nextMode = llm.slop.liquidlsd.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
             onReplace(existing.copy(generatorModMode = nextMode))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Depth.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
-        }
+        itemTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Depth.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
 
@@ -129,9 +121,7 @@ object Lfo2Section {
                 modHold = 0.0f
             ))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Load standard smooth Sine wave for LFO 2.")
-        }
+            itemTooltip("Load standard smooth Sine wave for LFO 2.")
 
         // Triangle Button
         ImGui.sameLine(0f, 4f * fontScale)
@@ -143,9 +133,7 @@ object Lfo2Section {
                 modHold = 0.0f
             ))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Load linear Triangle wave for LFO 2.")
-        }
+        itemTooltip("Load linear Triangle wave for LFO 2.")
 
         // Square Button
         ImGui.sameLine(0f, 4f * fontScale)
@@ -157,9 +145,7 @@ object Lfo2Section {
                 modHold = 0.999f
             ))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Load binary Square wave for LFO 2.")
-        }
+        itemTooltip("Load binary Square wave for LFO 2.")
 
         // Random Button
         ImGui.sameLine(0f, 4f * fontScale)
@@ -169,9 +155,7 @@ object Lfo2Section {
                 modWaveform = Waveform.RANDOM
             ))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Load step or smooth Random noise for LFO 2.")
-        }
+        itemTooltip("Load step or smooth Random noise for LFO 2.")
 
         // 3. LFO 2 Slew / Duty Preset buttons (only if not Random)
         if (existing.modWaveform != Waveform.RANDOM) {
@@ -184,9 +168,7 @@ object Lfo2Section {
             if (CustomIconButton.drawWaveformButton("lfo2_left_$idx", if (isModSquareWave) WaveShape.SQUARE_10 else WaveShape.RAMP_DOWN, isModLeft, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = if (isModSquareWave) 0.1f else 0.001f))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 10% (narrow pulse)." else "Set LFO 2 asymmetry fully Left.")
-            }
+            itemTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 10% (narrow pulse)." else "Set LFO 2 asymmetry fully Left.")
 
             // Center Button
             ImGui.sameLine(0f, 4f * fontScale)
@@ -194,9 +176,7 @@ object Lfo2Section {
             if (CustomIconButton.drawWaveformButton("lfo2_center_$idx", if (isModSquareWave) WaveShape.SQUARE else WaveShape.TRIANGLE, isModCenter, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = 0.5f))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 50% (balanced square wave)." else "Set LFO 2 asymmetry to Center.")
-            }
+            itemTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 50% (balanced square wave)." else "Set LFO 2 asymmetry to Center.")
 
             // Right Button
             ImGui.sameLine(0f, 4f * fontScale)
@@ -204,9 +184,7 @@ object Lfo2Section {
             if (CustomIconButton.drawWaveformButton("lfo2_right_$idx", if (isModSquareWave) WaveShape.SQUARE_90 else WaveShape.RAMP_UP, isModRight, themeColor, btnW, btnH)) {
                 onReplace(existing.copy(modSlope = if (isModSquareWave) 0.9f else 0.999f))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 90% (wide pulse)." else "Set LFO 2 asymmetry fully Right.")
-            }
+            itemTooltip(if (isModSquareWave) "Set LFO 2 duty cycle to 90% (wide pulse)." else "Set LFO 2 asymmetry fully Right.")
         }
 
         ImGui.spacing()
@@ -251,9 +229,7 @@ object Lfo2Section {
                 modSubdivisionMax = adjustedMax
             ))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select frequency unit for LFO 2:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.\nFrame: Rate is synchronized to render frame count (1-10000 frames).")
-        }
+        itemTooltip("Select frequency unit for LFO 2:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.\nFrame: Rate is synchronized to render frame count (1-10000 frames).")
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
 
@@ -267,61 +243,31 @@ object Lfo2Section {
             ImGui.spacing()
 
             // Modulation Depth range slider
+            val modDepthCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { generatorModDepth }, getMin = { generatorModDepthMin }, getMax = { generatorModDepthMax },
+                minLimit = 0f, maxLimit = 1f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeGeneratorModDepth = enabled, generatorModDepthMin = nMin, generatorModDepthMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(generatorModDepthMin = sMin, generatorModDepthMax = sMax, generatorModDepth = v) },
+                copyWithValue   = { v -> copy(generatorModDepth = v, generatorModDepthMin = v, generatorModDepthMax = v) },
+                randomizeNow    = { randomizeGeneratorModDepth() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_depth",
                 label = "Mod Depth",
                 themeColor = themeColor,
                 currentValue = existing.generatorModDepth,
                 currentMin = existing.generatorModDepthMin,
                 currentMax = existing.generatorModDepthMax,
-                minLimit = 0f,
-                maxLimit = 1f,
-                defaultValue = 0.5f,
+                minLimit = 0f, maxLimit = 1f, defaultValue = 0.5f,
                 isRandomizable = existing.randomizeGeneratorModDepth,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.generatorModDepthMin
-                        val rMax = existing.generatorModDepthMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.generatorModDepth - 0.1f).coerceAtLeast(0f), (existing.generatorModDepth + 0.1f).coerceAtMost(1f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeGeneratorModDepth = true,
-                            generatorModDepthMin = nextMin,
-                            generatorModDepthMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeGeneratorModDepth = false,
-                            generatorModDepthMin = existing.generatorModDepth,
-                            generatorModDepthMax = existing.generatorModDepth
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeGeneratorModDepth())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.generatorModDepth.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        generatorModDepthMin = safeMin,
-                        generatorModDepthMax = safeMax,
-                        generatorModDepth = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        generatorModDepth = newVal,
-                        generatorModDepthMin = newVal,
-                        generatorModDepthMax = newVal
-                    ))
-                }
+                onRandomizableChanged = modDepthCbs.onRandomizableChanged,
+                onRandomizeNow        = modDepthCbs.onRandomizeNow,
+                onRangeChanged        = modDepthCbs.onRangeChanged,
+                onValueChanged        = modDepthCbs.onValueChanged,
             )
 
             ImGui.spacing()
@@ -417,9 +363,7 @@ object Lfo2Section {
                     currentValue = existing.modSubdivision.toInt().coerceIn(1, 10000).toFloat(),
                     currentMin = existing.modSubdivisionMin.toInt().coerceIn(1, 10000).toFloat(),
                     currentMax = existing.modSubdivisionMax.toInt().coerceIn(1, 10000).toFloat(),
-                    minLimit = 1f,
-                    maxLimit = 10000f,
-                    defaultValue = 1f,
+                    minLimit = 1f, maxLimit = 10000f, defaultValue = 1f,
                     isRandomizable = existing.randomizeModSubdivision,
                     isRandomizeDisabled = param.isRandomizeDisabled,
                     randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
@@ -427,6 +371,7 @@ object Lfo2Section {
                     formatLabel = formatLabelFunc,
                     isLogarithmic = true,
                     parseValue = parseFunc,
+                    // Frames use integer halving/doubling for expansion — kept inline.
                     onRandomizableChanged = { checked ->
                         if (checked) {
                             val rMin = existing.modSubdivisionMin.toInt().coerceIn(1, 10000)
@@ -486,15 +431,14 @@ object Lfo2Section {
                     currentValue = existing.modSubdivision,
                     currentMin = existing.modSubdivisionMin,
                     currentMax = existing.modSubdivisionMax,
-                    minLimit = 0.01f,
-                    maxLimit = 86400f,
-                    defaultValue = 1.0f,
+                    minLimit = 0.01f, maxLimit = 86400f, defaultValue = 1.0f,
                     isRandomizable = existing.randomizeModSubdivision,
                     isRandomizeDisabled = param.isRandomizeDisabled,
                     randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = formatFunc,
                     isLogarithmic = true,
                     parseValue = parseFunc,
+                    // Period uses multiplicative expansion — kept inline.
                     onRandomizableChanged = { checked ->
                         if (checked) {
                             val rMin = existing.modSubdivisionMin
@@ -542,240 +486,120 @@ object Lfo2Section {
             }
 
             // LFO 2 Phase Offset
+            val modPhaseCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { modPhaseOffset }, getMin = { modPhaseOffsetMin }, getMax = { modPhaseOffsetMax },
+                minLimit = 0f, maxLimit = 1f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeModPhaseOffset = enabled, modPhaseOffsetMin = nMin, modPhaseOffsetMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(modPhaseOffsetMin = sMin, modPhaseOffsetMax = sMax, modPhaseOffset = v) },
+                copyWithValue   = { v -> copy(modPhaseOffset = v, modPhaseOffsetMin = v, modPhaseOffsetMax = v) },
+                randomizeNow    = { randomizeModPhaseOffset() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_phase",
                 label = "LFO 2 Phase",
                 themeColor = themeColor,
                 currentValue = existing.modPhaseOffset,
                 currentMin = existing.modPhaseOffsetMin,
                 currentMax = existing.modPhaseOffsetMax,
-                minLimit = 0f,
-                maxLimit = 1f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 1f, defaultValue = 0f,
                 isRandomizable = existing.randomizeModPhaseOffset,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.modPhaseOffsetMin
-                        val rMax = existing.modPhaseOffsetMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.modPhaseOffset - 0.1f).coerceAtLeast(0f), (existing.modPhaseOffset + 0.1f).coerceAtMost(1f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeModPhaseOffset = true,
-                            modPhaseOffsetMin = nextMin,
-                            modPhaseOffsetMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeModPhaseOffset = false,
-                            modPhaseOffsetMin = existing.modPhaseOffset,
-                            modPhaseOffsetMax = existing.modPhaseOffset
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeModPhaseOffset())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.modPhaseOffset.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        modPhaseOffsetMin = safeMin,
-                        modPhaseOffsetMax = safeMax,
-                        modPhaseOffset = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        modPhaseOffset = newVal,
-                        modPhaseOffsetMin = newVal,
-                        modPhaseOffsetMax = newVal
-                    ))
-                }
+                onRandomizableChanged = modPhaseCbs.onRandomizableChanged,
+                onRandomizeNow        = modPhaseCbs.onRandomizeNow,
+                onRangeChanged        = modPhaseCbs.onRangeChanged,
+                onValueChanged        = modPhaseCbs.onValueChanged,
             )
             ImGui.spacing()
 
             // LFO 2 Morph
+            val modMorphCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { modMorph }, getMin = { modMorphMin }, getMax = { modMorphMax },
+                minLimit = 0f, maxLimit = 1f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeModMorph = enabled, modMorphMin = nMin, modMorphMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(modMorphMin = sMin, modMorphMax = sMax, modMorph = v) },
+                copyWithValue   = { v -> copy(modMorph = v, modMorphMin = v, modMorphMax = v) },
+                randomizeNow    = { randomizeModMorph() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_morph",
                 label = "LFO 2 Morph",
                 themeColor = themeColor,
                 currentValue = existing.modMorph,
                 currentMin = existing.modMorphMin,
                 currentMax = existing.modMorphMax,
-                minLimit = 0f,
-                maxLimit = 1f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 1f, defaultValue = 0f,
                 isRandomizable = existing.randomizeModMorph,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.modMorphMin
-                        val rMax = existing.modMorphMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.modMorph - 0.1f).coerceAtLeast(0f), (existing.modMorph + 0.1f).coerceAtMost(1f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeModMorph = true,
-                            modMorphMin = nextMin,
-                            modMorphMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeModMorph = false,
-                            modMorphMin = existing.modMorph,
-                            modMorphMax = existing.modMorph
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeModMorph())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.modMorph.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        modMorphMin = safeMin,
-                        modMorphMax = safeMax,
-                        modMorph = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        modMorph = newVal,
-                        modMorphMin = newVal,
-                        modMorphMax = newVal
-                    ))
-                }
+                onRandomizableChanged = modMorphCbs.onRandomizableChanged,
+                onRandomizeNow        = modMorphCbs.onRandomizeNow,
+                onRangeChanged        = modMorphCbs.onRangeChanged,
+                onValueChanged        = modMorphCbs.onValueChanged,
             )
             ImGui.spacing()
 
             // LFO 2 Hold
+            val modHoldCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { modHold }, getMin = { modHoldMin }, getMax = { modHoldMax },
+                minLimit = 0f, maxLimit = 0.999f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeModHold = enabled, modHoldMin = nMin, modHoldMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(modHoldMin = sMin, modHoldMax = sMax, modHold = v) },
+                copyWithValue   = { v -> copy(modHold = v, modHoldMin = v, modHoldMax = v) },
+                randomizeNow    = { randomizeModHold() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_hold",
                 label = "LFO 2 Hold",
                 themeColor = themeColor,
                 currentValue = existing.modHold,
                 currentMin = existing.modHoldMin,
                 currentMax = existing.modHoldMax,
-                minLimit = 0f,
-                maxLimit = 0.999f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 0.999f, defaultValue = 0f,
                 isRandomizable = existing.randomizeModHold,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.modHoldMin
-                        val rMax = existing.modHoldMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.modHold - 0.1f).coerceAtLeast(0f), (existing.modHold + 0.1f).coerceAtMost(0.999f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeModHold = true,
-                            modHoldMin = nextMin,
-                            modHoldMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeModHold = false,
-                            modHoldMin = existing.modHold,
-                            modHoldMax = existing.modHold
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeModHold())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.modHold.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        modHoldMin = safeMin,
-                        modHoldMax = safeMax,
-                        modHold = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        modHold = newVal,
-                        modHoldMin = newVal,
-                        modHoldMax = newVal
-                    ))
-                }
+                onRandomizableChanged = modHoldCbs.onRandomizableChanged,
+                onRandomizeNow        = modHoldCbs.onRandomizeNow,
+                onRangeChanged        = modHoldCbs.onRangeChanged,
+                onValueChanged        = modHoldCbs.onValueChanged,
             )
             ImGui.spacing()
 
             // LFO 2 Slew / Duty Cycle (mod slope, if not random)
             if (existing.modWaveform != Waveform.RANDOM) {
                 val isModSquareWave = existing.modWaveform == Waveform.SQUARE
+                val modSlopeCbs = cvModulatorSlider(
+                    existing = existing,
+                    getValue = { modSlope }, getMin = { modSlopeMin }, getMax = { modSlopeMax },
+                    minLimit = 0.001f, maxLimit = 0.999f,
+                    copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeModSlope = enabled, modSlopeMin = nMin, modSlopeMax = nMax) },
+                    copyWithRange   = { sMin, sMax, v -> copy(modSlopeMin = sMin, modSlopeMax = sMax, modSlope = v) },
+                    copyWithValue   = { v -> copy(modSlope = v, modSlopeMin = v, modSlopeMax = v) },
+                    randomizeNow    = { randomizeModSlope() },
+                    onReplace = onReplace,
+                )
                 CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_mod_slope",
                     label = if (isModSquareWave) "LFO 2 Duty Cycle" else "LFO 2 Slew",
                     themeColor = themeColor,
                     currentValue = existing.modSlope,
                     currentMin = existing.modSlopeMin,
                     currentMax = existing.modSlopeMax,
-                    minLimit = 0.001f,
-                    maxLimit = 0.999f,
-                    defaultValue = 0.5f,
+                    minLimit = 0.001f, maxLimit = 0.999f, defaultValue = 0.5f,
                     isRandomizable = existing.randomizeModSlope,
                     isRandomizeDisabled = param.isRandomizeDisabled,
                     randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = { "%.3f".format(it) },
-                    onRandomizableChanged = { checked ->
-                        if (checked) {
-                            val rMin = existing.modSlopeMin
-                            val rMax = existing.modSlopeMax
-                            val (nextMin, nextMax) = if (rMin == rMax) {
-                                Pair((existing.modSlope - 0.1f).coerceAtLeast(0.001f), (existing.modSlope + 0.1f).coerceAtMost(0.999f))
-                            } else {
-                                Pair(rMin, rMax)
-                            }
-                            onReplace(existing.copy(
-                                randomizeModSlope = true,
-                                modSlopeMin = nextMin,
-                                modSlopeMax = nextMax
-                            ))
-                        } else {
-                            onReplace(existing.copy(
-                                randomizeModSlope = false,
-                                modSlopeMin = existing.modSlope,
-                                modSlopeMax = existing.modSlope
-                            ))
-                        }
-                    },
-                    onRandomizeNow = {
-                        onReplace(existing.randomizeModSlope())
-                    },
-                    onRangeChanged = { nextMin, nextMax ->
-                        val safeMin = minOf(nextMin, nextMax)
-                        val safeMax = maxOf(nextMin, nextMax)
-                        val nextActive = existing.modSlope.coerceIn(safeMin, safeMax)
-                        onReplace(existing.copy(
-                            modSlopeMin = safeMin,
-                            modSlopeMax = safeMax,
-                            modSlope = nextActive
-                        ))
-                    },
-                    onValueChanged = { newVal ->
-                        onReplace(existing.copy(
-                            modSlope = newVal,
-                            modSlopeMin = newVal,
-                            modSlopeMax = newVal
-                        ))
-                    }
+                    onRandomizableChanged = modSlopeCbs.onRandomizableChanged,
+                    onRandomizeNow        = modSlopeCbs.onRandomizeNow,
+                    onRangeChanged        = modSlopeCbs.onRangeChanged,
+                    onValueChanged        = modSlopeCbs.onValueChanged,
                 )
                 ImGui.spacing()
             }

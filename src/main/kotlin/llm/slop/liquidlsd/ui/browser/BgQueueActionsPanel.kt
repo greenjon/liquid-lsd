@@ -10,6 +10,7 @@ import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
 import mu.KotlinLogging
 import java.io.File
 
@@ -37,9 +38,7 @@ object BgQueueActionsPanel {
         if (ImGui.button("<##bgQueuePrev", navBtnW, 0f)) {
             BgQueueManager.triggerPrevious(mixer)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Trigger previous preset in Background Queue (Mixer/bgQueuePrev).")
-        }
+        itemTooltip("Trigger previous preset in Background Queue (Mixer/bgQueuePrev).")
 
         ImGui.sameLine()
         val autoBgActive = BgQueueManager.isAutoBGEnabled
@@ -47,17 +46,13 @@ object BgQueueActionsPanel {
         if (ImGui.button("$autoBgIcon##autoBg", playPauseBtnW, 0f)) {
             BgQueueManager.isAutoBGEnabled = !BgQueueManager.isAutoBGEnabled
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.")
-        }
+        itemTooltip("Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.")
 
         ImGui.sameLine()
         if (ImGui.button(">##bgQueueNext", navBtnW, 0f)) {
             BgQueueManager.triggerNext(mixer)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Trigger next preset in Background Queue (Mixer/bgQueueNext).")
-        }
+        itemTooltip("Trigger next preset in Background Queue (Mixer/bgQueueNext).")
 
         ImGui.separator()
         ImGui.spacing()
@@ -76,9 +71,7 @@ object BgQueueActionsPanel {
         if (repeatActive) {
             ImGui.popStyleColor(4)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Repeat BG Queue: cycle back to start when the bottom is reached.")
-        }
+        itemTooltip("Repeat BG Queue: cycle back to start when the bottom is reached.")
 
         ImGui.sameLine()
         val shuffleActive = BgQueueManager.isShuffleEnabled
@@ -97,17 +90,13 @@ object BgQueueActionsPanel {
         if (shuffleActive) {
             ImGui.popStyleColor(4)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Shuffle BG Queue: play presets in a random order.")
-        }
+        itemTooltip("Shuffle BG Queue: play presets in a random order.")
 
         ImGui.sameLine()
         if (ImGui.button("Export##bgQueueExport")) {
             ImGui.openPopup("ExportBgQueuePopup")
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save current background queue sequence as a new playlist.")
-        }
+        itemTooltip("Save current background queue sequence as a new playlist.")
         BrowserPopupHandler.drawExportBgQueuePopup()
 
         ImGui.sameLine()
@@ -116,9 +105,7 @@ object BgQueueActionsPanel {
             BgQueueManager.clearQueue()
             selectedIndex = -1
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Empty the background queue.")
-        }
+        itemTooltip("Empty the background queue.")
 
         ImGui.separator()
         ImGui.spacing()

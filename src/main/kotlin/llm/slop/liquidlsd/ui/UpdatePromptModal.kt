@@ -107,9 +107,7 @@ object UpdatePromptModal {
                 latestRelease = null
                 ImGui.closeCurrentPopup()
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Don't prompt again for ${release.tagName}. You can still check manually anytime.")
-            }
+            itemTooltip("Don't prompt again for ${release.tagName}. You can still check manually anytime.")
 
             ImGui.endPopup()
         }

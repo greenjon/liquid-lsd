@@ -29,6 +29,16 @@ Hovering over any parameter row in the Preset Grid or any slider control across 
 3. **Engine Description**: Built-in description explaining what the parameter mathematically or visually controls.
 4. **User Parameter Note**: Displays your custom user note (in amber text) if a note has been attached to this parameter.
 
+### Ergonomic Quadrant Positioning & Hover Delay
+
+Tooltips in Liquid LSD follow an ergonomic, Mixxx/Qt-inspired quadrant layout rather than default bottom-right positioning:
+
+- **Beneath Pointer Alignment**: Tooltips are positioned directly beneath the mouse pointer's bounding box ($16 \times 22\,\text{px}$) with a $4\,\text{px}$ vertical gap, preventing the tooltip popup from obscuring sliders, numeric readouts, or adjacent controls to the right of the cursor.
+- **Dynamic Right-Edge Mirroring**: By default, the left edge of the tooltip aligns with the left edge of the cursor bounding box. If the tooltip would extend beyond the right boundary of the viewport, it flips horizontally so its right edge aligns with the right edge of the cursor box (extending to the left).
+- **Bottom-Edge Overflow Flip**: If a tooltip would extend past the bottom edge of the window or viewport, it flips vertically to appear directly above the cursor bounding box.
+- **Viewport Margin Clamping**: All tooltips maintain a minimum $8\,\text{px}$ safety margin from all window edges.
+- **250ms Hover Delay**: A subtle $250\,\text{ms}$ hover delay is enforced before displaying any item tooltip. This eliminates distracting visual flickering when sweeping the mouse quickly across complex matrix grids, sliders, and buttons.
+
 ---
 
 ## The Three-Tier Note System

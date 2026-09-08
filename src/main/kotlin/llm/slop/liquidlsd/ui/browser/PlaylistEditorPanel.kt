@@ -15,6 +15,7 @@ import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
 import mu.KotlinLogging
 import java.io.File
 
@@ -81,9 +82,7 @@ object PlaylistEditorPanel {
         if (ImGui.button("${Icons.PLUS}##createNewPlaylistBtn", btnSize, btnSize)) {
             ImGui.openPopup("NewPlaylistPopup")
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new playlist.")
-        }
+        itemTooltip("Create new playlist.")
 
         ImGui.sameLine()
 
@@ -95,9 +94,7 @@ object PlaylistEditorPanel {
         if (ImGui.button("${Icons.MORE_HORIZONTAL}##playlistMoreBtn", btnSize, btnSize)) {
             ImGui.openPopup("playlist_header_more_menu")
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Playlist actions.")
-        }
+        itemTooltip("Playlist actions.")
         if (moreDisabled) {
             ImGui.endDisabled()
         }
@@ -123,9 +120,7 @@ object PlaylistEditorPanel {
             }
             ImGui.endCombo()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select active playlist.")
-        }
+        itemTooltip("Select active playlist.")
 
         // Popup menu for playlist actions
         if (selectedFile != null && currentPlaylist != null) {

@@ -48,16 +48,12 @@ class MenuBar(
                     if (ImGui.menuItem("Restore Factory Presets...")) {
                         popupManager.pendingOpenRestoreDefaultsPopup = true
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
-                    }
+                    itemTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
                     ImGui.separator()
                     if (ImGui.menuItem("Settings...")) {
                         onOpenSettings()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
-                    }
+                    itemTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
                     ImGui.separator()
                     if (ImGui.menuItem("Exit")) {
                         logger.info { "Exit clicked" }
@@ -77,9 +73,7 @@ class MenuBar(
                     if (ImGui.menuItem("Secondary Output Window", "", isOutOpen)) {
                         onToggleOutputWindow()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
-                    }
+                    itemTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
 
                     if (ImGui.menuItem("Record Master Output (REC)", "Ctrl+R", isRec)) {
                         if (isRec) {
@@ -98,10 +92,8 @@ class MenuBar(
                             )
                         }
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        val audioTxt = if (session.uiTheme.recordingIncludeAudio) "with audio" else "video only"
-                        ImGui.setTooltip("Toggle live master output recording.\nFolder: ${session.uiTheme.getDefaultVideosDirectory().absolutePath}\nSettings: ${session.uiTheme.recordingFps} FPS @ ${session.uiTheme.recordingBitrateMbps} Mbps ($audioTxt)")
-                    }
+                    val audioTxt = if (session.uiTheme.recordingIncludeAudio) "with audio" else "video only"
+                    itemTooltip("Toggle live master output recording.\nFolder: ${session.uiTheme.getDefaultVideosDirectory().absolutePath}\nSettings: ${session.uiTheme.recordingFps} FPS @ ${session.uiTheme.recordingBitrateMbps} Mbps ($audioTxt)")
 
                     if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
                         if (isBroadcasting) {
@@ -110,17 +102,13 @@ class MenuBar(
                             llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
                         }
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Connect and broadcast live session state to the Web TV client.")
-                    }
+                    itemTooltip("Connect and broadcast live session state to the Web TV client.")
 
                     ImGui.separator()
                     if (ImGui.menuItem("Export Video (Offline Studio)...")) {
                         VideoExportModal.open()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Render high-quality offline video with precise per-frame timing.")
-                    }
+                    itemTooltip("Render high-quality offline video with precise per-frame timing.")
                     ImGui.endMenu()
                 }
 
@@ -139,9 +127,7 @@ class MenuBar(
                         llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                     }
                     ImGui.popStyleColor(2)
-                    if (ImGui.isItemHovered()) {
-                        ImGui.setTooltip("Click to stop recording and finalize video file.")
-                    }
+                    itemTooltip("Click to stop recording and finalize video file.")
 
                     ImGui.sameLine(0f, 4f)
                     if (dropped > 0) {
@@ -151,9 +137,7 @@ class MenuBar(
                     }
                     ImGui.text("Drop: %d (%.1f%%)".format(dropped, dropPct))
                     ImGui.popStyleColor()
-                    if (ImGui.isItemHovered()) {
-                        ImGui.setTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
-                    }
+                    itemTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
                 }
 
                 // ── Web Broadcast Status Pill (visible only when active/connecting/error) ─
@@ -165,9 +149,7 @@ class MenuBar(
                             llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                         }
                         ImGui.popStyleColor(2)
-                        if (ImGui.isItemHovered()) {
-                            ImGui.setTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
-                        }
+                        itemTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
                     }
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.7f, 0.15f, 1.0f)
@@ -176,9 +158,7 @@ class MenuBar(
                             llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                         }
                         ImGui.popStyleColor(2)
-                        if (ImGui.isItemHovered()) {
-                            ImGui.setTooltip("Connecting to relay server...\nClick to cancel.")
-                        }
+                        itemTooltip("Connecting to relay server...\nClick to cancel.")
                     }
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1.0f)
@@ -187,9 +167,7 @@ class MenuBar(
                             llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
                         }
                         ImGui.popStyleColor(2)
-                        if (ImGui.isItemHovered()) {
-                            ImGui.setTooltip("Broadcast error: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Failed"}\nClick to retry.")
-                        }
+                        itemTooltip("Broadcast error: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Failed"}\nClick to retry.")
                     }
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
                         // Inactive: hidden from top-level bar to reduce clutter
@@ -212,13 +190,12 @@ class MenuBar(
                         }
                     }
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    if (midiEnabled) {
-                        ImGui.setTooltip("Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it.")
-                    } else {
-                        ImGui.setTooltip("MIDI is disabled in Settings. Enable MIDI in Settings -> MIDI & Controls to use MIDI Learn.")
-                    }
+                val midiTip = if (midiEnabled) {
+                    "Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it."
+                } else {
+                    "MIDI is disabled in Settings. Enable MIDI in Settings -> MIDI & Controls to use MIDI Learn."
                 }
+                itemTooltip(midiTip)
                 if (isMidiLearn) {
                     ImGui.popStyleColor()
                 }
@@ -226,9 +203,7 @@ class MenuBar(
                 if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
                     ColorTunerPanel.toggle()
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
-                }
+                itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
 
                 if (ImGui.beginMenu("Help")) {
                     if (ImGui.menuItem("Documentation")) {
@@ -238,25 +213,19 @@ class MenuBar(
                         AboutModal.open()
                         llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Check GitHub releases for the latest version of Liquid LSD.")
-                    }
+                    itemTooltip("Check GitHub releases for the latest version of Liquid LSD.")
                     ImGui.separator()
                     val tooltipsEnabled = session.uiTheme.tooltipsEnabled
                     if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
                         session.uiTheme.tooltipsEnabled = !tooltipsEnabled
                         session.uiTheme.saveSettings()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
-                    }
+                    itemTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
                     ImGui.separator()
                     if (ImGui.menuItem("About Liquid LSD")) {
                         AboutModal.open()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("View version details, check for updates, and visit GitHub.")
-                    }
+                    itemTooltip("View version details, check for updates, and visit GitHub.")
                     ImGui.endMenu()
                 }
 
@@ -372,13 +341,12 @@ class MenuBar(
                 if (ImGui.isItemClicked()) {
                     onOpenAudioEngineMonitor()
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    if (isAudioDisabled) {
-                        ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nAudio engine is disabled (manual BPM: %.0f).\nClick to open Audio Engine settings.".format(bpm))
-                    } else {
-                        ImGui.setTooltip("Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nClick to open Audio Engine settings.")
-                    }
+                val beatTip = if (isAudioDisabled) {
+                    "Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nAudio engine is disabled (manual BPM: %.0f).\nClick to open Audio Engine settings.".format(bpm)
+                } else {
+                    "Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nClick to open Audio Engine settings."
                 }
+                itemTooltip(beatTip)
                 ImGui.sameLine(0f, 3.8f)
             }
 
@@ -410,20 +378,21 @@ class MenuBar(
             if (isBpmClicked) {
                 session.tapTempoController.tap()
             }
-            if (isBpmHovered && session.uiTheme.tooltipsEnabled) {
+            if (isBpmHovered) {
                 val keyHint = when (session.uiTheme.tapKeyTrigger) {
                     UITheme.TapKeyTrigger.T -> "Key: [T]"
                     UITheme.TapKeyTrigger.PERIOD -> "Key: [.]"
                     UITheme.TapKeyTrigger.NONE -> "Key: None"
                 }
                 val tapStatus = if (tapCount > 0) " (Taps: $tapCount)" else ""
-                if (isAudioDisabled) {
-                    ImGui.setTooltip("Manual BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint).\nAudio engine is disabled (tempo is fixed).\nClick DSP badge to open Audio Engine settings.".format(bpm))
+                val bpmTip = if (isAudioDisabled) {
+                    "Manual BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint).\nAudio engine is disabled (tempo is fixed).\nClick DSP badge to open Audio Engine settings.".format(bpm)
                 } else if (audioActive) {
-                    ImGui.setTooltip("Audio Engine BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint) to nudge audio tracker.\nClick DSP badge to open Audio Engine settings.".format(bpm))
+                    "Audio Engine BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint) to nudge audio tracker.\nClick DSP badge to open Audio Engine settings.".format(bpm)
                 } else {
-                    ImGui.setTooltip("Audio Engine BPM: %.1f$tapStatus (Engine inactive)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings.".format(bpm))
+                    "Audio Engine BPM: %.1f$tapStatus (Engine inactive)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings.".format(bpm)
                 }
+                showTooltip(bpmTip, "bpm_tap_tooltip".hashCode())
             }
             ImGui.sameLine(0f, 0f)
 
@@ -451,14 +420,15 @@ class MenuBar(
             if (isDspClicked) {
                 onOpenAudioEngineMonitor()
             }
-            if (isDspHovered && session.uiTheme.tooltipsEnabled) {
-                if (showAudio) {
-                    ImGui.setTooltip("Audio callback DSP execution time: %.2fms\nClick to open Audio Engine settings.".format(audioLatency))
+            if (isDspHovered) {
+                val dspTip = if (showAudio) {
+                    "Audio callback DSP execution time: %.2fms\nClick to open Audio Engine settings.".format(audioLatency)
                 } else if (isAudioDisabled) {
-                    ImGui.setTooltip("Audio engine is disabled.\nClick to open Audio Engine settings.")
+                    "Audio engine is disabled.\nClick to open Audio Engine settings."
                 } else {
-                    ImGui.setTooltip("Audio engine is inactive.\nClick to open Audio Engine settings.")
+                    "Audio engine is inactive.\nClick to open Audio Engine settings."
                 }
+                showTooltip(dspTip, "dsp_badge_tooltip".hashCode())
             }
             ImGui.sameLine(0f, 0f)
 
@@ -500,9 +470,7 @@ class MenuBar(
                     if (ImGui.button("${Icons.MINUS}##win_min", btnW, btnH)) {
                         windowFrameController.minimize()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Minimize")
-                    }
+                    itemTooltip("Minimize")
 
                     ImGui.sameLine(0f, 2f)
 
@@ -512,9 +480,7 @@ class MenuBar(
                     if (ImGui.button("$maxIcon##win_max", btnW, btnH)) {
                         windowFrameController.toggleMaximize()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip(if (isMax) "Restore" else "Maximize")
-                    }
+                    itemTooltip(if (isMax) "Restore" else "Maximize")
 
                     ImGui.sameLine(0f, 2f)
 
@@ -525,9 +491,7 @@ class MenuBar(
                         onTriggerExitFlow()
                     }
                     ImGui.popStyleColor(2)
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Close Liquid LSD")
-                    }
+                    itemTooltip("Close Liquid LSD")
                 }
             }
         }

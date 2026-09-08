@@ -10,7 +10,7 @@ package llm.slop.liquidlsd.update
  */
 object AppVersion {
 
-    const val FALLBACK_VERSION = "1.0.0-beta.53"
+    const val FALLBACK_VERSION = "1.0.0-beta.54"
 
     val CURRENT: String by lazy {
         // 1. Check implementationVersion from package manifest

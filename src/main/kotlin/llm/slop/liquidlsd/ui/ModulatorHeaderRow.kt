@@ -76,9 +76,7 @@ object ModulatorHeaderRow {
                 }
                 return
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Clear/reset modulators")
-            }
+            itemTooltip("Clear/reset modulators")
             ImGui.popStyleColor(2)
             if (isVirtual) {
                 ImGui.endDisabled()
@@ -100,9 +98,7 @@ object ModulatorHeaderRow {
         if (ImGui.button("${Icons.POWER}##bypass_bar_$idx", btnWidth, btnHeight)) {
             onReplace(existing.copy(bypassed = !bypassed))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (bypassed) "Unmute modulator (Enable)" else "Mute modulator (Bypass)")
-        }
+        itemTooltip(if (bypassed) "Unmute modulator (Enable)" else "Mute modulator (Bypass)")
         ImGui.popStyleColor(3)
 
         // 2. Dice icon (Randomize button)
@@ -112,9 +108,7 @@ object ModulatorHeaderRow {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
                 ImGui.popStyleColor()
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-                }
+                itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
                     val randomized = existing
@@ -125,9 +119,7 @@ object ModulatorHeaderRow {
                         .randomizeSlope()
                     onReplace(randomized)
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Randomize primary LFO / modulator values")
-                }
+                itemTooltip("Randomize primary LFO / modulator values")
             }
         }
 
@@ -147,9 +139,7 @@ object ModulatorHeaderRow {
             }
             onReplace(existing.copy(operator = newOp))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Modulation Operator:\nADD: Modulator value is added to parameter's base.\nMUL: Modulator multiplies the base value.\nSCALE: Modulator scales the remaining range.")
-        }
+        itemTooltip("Modulation Operator:\nADD: Modulator value is added to parameter's base.\nMUL: Modulator multiplies the base value.\nSCALE: Modulator scales the remaining range.")
         ImGui.popItemWidth()
     }
 }

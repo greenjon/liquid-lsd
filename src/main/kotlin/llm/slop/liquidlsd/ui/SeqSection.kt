@@ -116,9 +116,7 @@ object SeqSection {
             val newPhase = (-currentPhaseRemainder).toFloat()
             onReplace(existing.copy(phaseOffset = newPhase))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Instantly realign the sequencer playhead to Step 0 at the current moment.")
-        }
+        itemTooltip("Instantly realign the sequencer playhead to Step 0 at the current moment.")
 
         ImGui.spacing()
 
@@ -231,19 +229,15 @@ object SeqSection {
             if (isCurrent) {
                 ImGui.popStyleColor(2)
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                val rows = count / 8
-                ImGui.setTooltip("Set sequence length to $count steps ($rows ${if (rows == 1) "row" else "rows"} of 8)")
-            }
+            val rows = count / 8
+            itemTooltip("Set sequence length to $count steps ($rows ${if (rows == 1) "row" else "rows"} of 8)")
         }
 
         ImGui.sameLine(0f, 18f * fontScale)
         if (ImGui.button("Clear (All 0)##seq_clear_${existing.id}")) {
             onReplace(existing.copy(seqSteps = List(32) { 0.0f }))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Reset all 32 step values to 0.0.")
-        }
+        itemTooltip("Reset all 32 step values to 0.0.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -356,9 +350,7 @@ object SeqSection {
                         mutableSteps[stepIdx] = 0.0f
                         onReplace(existing.copy(seqSteps = mutableSteps))
                     }
-                    if (session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Step ${stepIdx + 1}: ${"%.3f".format(curVal)}\nType number, Up/Down arrow, or Scroll.\nMiddle-click to reset to 0.")
-                    }
+                    showTooltip("Step ${stepIdx + 1}: ${"%.3f".format(curVal)}\nType number, Up/Down arrow, or Scroll.\nMiddle-click to reset to 0.")
                 }
 
                 ImGui.popItemWidth()
@@ -389,9 +381,7 @@ object SeqSection {
                 onReplace(existing.copy(seqHold = v, seqHoldMin = v, seqHoldMax = v))
             }
         )
-        if (session.uiTheme.tooltipsEnabled && ImGui.isItemHovered()) {
-            ImGui.setTooltip("100% = Instant step jumps (no glide).\n0% = Continuous glide over full step duration.\n50% = Hold 50% of step, glide for 50%.")
-        }
+        itemTooltip("100% = Instant step jumps (no glide).\n0% = Continuous glide over full step duration.\n50% = Hold 50% of step, glide for 50%.")
 
         ImGui.spacing()
 
@@ -408,9 +398,7 @@ object SeqSection {
             onReplace(existing.copy(seqCurveSmooth = false))
         }
         if (!isSmooth) ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Linear glide interpolation between steps.")
-        }
+        itemTooltip("Linear glide interpolation between steps.")
 
         ImGui.sameLine(0f, 6f * fontScale)
         if (isSmooth) {
@@ -421,9 +409,7 @@ object SeqSection {
             onReplace(existing.copy(seqCurveSmooth = true))
         }
         if (isSmooth) ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Smooth cosine / S-curve glide easing between steps.")
-        }
+        itemTooltip("Smooth cosine / S-curve glide easing between steps.")
 
         ImGui.spacing()
         ImGui.separator()

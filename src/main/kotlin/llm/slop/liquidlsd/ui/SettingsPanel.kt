@@ -178,9 +178,7 @@ object SettingsPanel {
             session.uiTheme.theme = nextTheme
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select the user interface color palette theme.")
-        }
+        itemTooltip("Select the user interface color palette theme.")
         ImGui.spacing()
 
         session.uiTheme.h2("Fonts & Sizing")
@@ -222,13 +220,11 @@ object SettingsPanel {
                 pendingPresetScale = snapped
             }
         )
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(
-                "Scale preset names in the Library browser ($MIN_PRESET_SCALE_PCT% to $MAX_PRESET_SCALE_PCT%).\n" +
-                "Drag smoothly and release mouse to apply.\n" +
-                "Ctrl+- and Ctrl+= adjust by 10% steps."
-            )
-        }
+        itemTooltip(
+            "Scale preset names in the Library browser ($MIN_PRESET_SCALE_PCT% to $MAX_PRESET_SCALE_PCT%).\n" +
+            "Drag smoothly and release mouse to apply.\n" +
+            "Ctrl+- and Ctrl+= adjust by 10% steps."
+        )
         ImGui.spacing()
 
         // Commit on mouse release
@@ -263,9 +259,7 @@ object SettingsPanel {
             }
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select internal target rendering resolution. Lower resolutions (e.g. 720p or 540p) significantly reduce GPU load on heavy raymarch shaders.")
-        }
+        itemTooltip("Select internal target rendering resolution. Lower resolutions (e.g. 720p or 540p) significantly reduce GPU load on heavy raymarch shaders.")
 
         if (session.uiTheme.renderResolutionPreset == UITheme.ResolutionPreset.CUSTOM) {
             ImGui.spacing()
@@ -299,9 +293,7 @@ object SettingsPanel {
             session.uiTheme.outputScaleMode = scaleModes[currentScaleIdx.get()]
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("How output is scaled when target screen aspect ratio differs from render resolution: Fit (Letterbox/Pillarbox), Fill (Crop), or Stretch.")
-        }
+        itemTooltip("How output is scaled when target screen aspect ratio differs from render resolution: Fit (Letterbox/Pillarbox), Fill (Crop), or Stretch.")
 
         ImGui.spacing()
         session.uiTheme.h2("Performance & Background")
@@ -313,18 +305,14 @@ object SettingsPanel {
             session.uiTheme.backgroundVideoEnabled = bgVideoEnabled.get()
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Render master output video behind the semi-transparent interface (Hotkey: B).")
-        }
+        itemTooltip("Render master output video behind the semi-transparent interface (Hotkey: B).")
 
         val fpsCapVal = ImBoolean(session.uiTheme.maxFps <= 30)
         if (ImGui.checkbox("Cap UI to 30 FPS", fpsCapVal)) {
             session.uiTheme.maxFps = if (fpsCapVal.get()) 30 else 60
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Limit frame rate to 30 FPS to conserve power.")
-        }
+        itemTooltip("Limit frame rate to 30 FPS to conserve power.")
 
         ImGui.spacing()
         session.uiTheme.h2("Live Texture Streaming (Resolume / OBS)")
@@ -335,9 +323,7 @@ object SettingsPanel {
         if (ImGui.checkbox("Enable Live GPU Texture Sharing (Spout / Syphon)", streamingVal)) {
             llm.slop.liquidlsd.rendering.TextureStreamerManager.isEnabled = streamingVal.get()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Broadcasts master visuals in real-time over GPU shared memory to Resolume Arena, OBS Studio, and TouchDesigner with zero-copy overhead.")
-        }
+        itemTooltip("Broadcasts master visuals in real-time over GPU shared memory to Resolume Arena, OBS Studio, and TouchDesigner with zero-copy overhead.")
         session.uiTheme.caption("Active Streamer: ${llm.slop.liquidlsd.rendering.TextureStreamerManager.activeStreamer.name}")
 
         ImGui.spacing()
@@ -358,18 +344,14 @@ object SettingsPanel {
             session.uiTheme.recordingDirectory = ""
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Reset recording output folder to standard system Videos directory: $defaultDir")
-        }
+        itemTooltip("Reset recording output folder to standard system Videos directory: $defaultDir")
 
         val recAudioVal = ImBoolean(session.uiTheme.recordingIncludeAudio)
         if (ImGui.checkbox("Record with Audio Muxing", recAudioVal)) {
             session.uiTheme.recordingIncludeAudio = recAudioVal.get()
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
-        }
+        itemTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
 
         val sliderBoxW = 50f
         CustomRangeSlider.drawCompactSlider(
@@ -421,9 +403,7 @@ object SettingsPanel {
                 }
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Toggle MIDI controller input and CC mapping.")
-        }
+        itemTooltip("Toggle MIDI controller input and CC mapping.")
 
         if (!session.uiTheme.midiEnabled) {
             ImGui.spacing()
@@ -460,9 +440,7 @@ object SettingsPanel {
             session.uiTheme.activeMidiProfile = nextProfile
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Select active MIDI controller CC assignment profile.")
-        }
+        itemTooltip("Select active MIDI controller CC assignment profile.")
 
         ImGui.spacing()
         val nextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queueNext"))
@@ -499,9 +477,7 @@ object SettingsPanel {
             session.midiMappingManager.addMapping("Global/tapTempo", newVal)
             session.midiMappingManager.saveActiveProfile()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("MIDI CC assigned to tap tempo. Set to -1 to unmap.")
-        }
+        itemTooltip("MIDI CC assigned to tap tempo. Set to -1 to unmap.")
 
         ImGui.spacing()
         val triggers = UITheme.QueueKeyTrigger.values()
@@ -519,9 +495,7 @@ object SettingsPanel {
             session.uiTheme.tapKeyTrigger = tapTriggers[currentTapIdx.get()]
             session.uiTheme.saveSettings()
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Keyboard key for tapping in BPM tempo when not typing in text fields.")
-        }
+        itemTooltip("Keyboard key for tapping in BPM tempo when not typing in text fields.")
     }
 
     private fun drawGeneralSettings(session: llm.slop.liquidlsd.SessionContext) {
@@ -537,9 +511,7 @@ object SettingsPanel {
                 session.uiTheme.saveSettings()
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Toggle parameter and modulator randomization controls.")
-        }
+        itemTooltip("Toggle parameter and modulator randomization controls.")
 
         val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
         if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
@@ -549,9 +521,7 @@ object SettingsPanel {
                 session.uiTheme.saveSettings()
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Enable or disable the step sequencer modulation engine across presets and cell configuration.")
-        }
+        itemTooltip("Enable or disable the step sequencer modulation engine across presets and cell configuration.")
 
         ImGui.spacing()
         session.uiTheme.h2("Startup & Updates")
@@ -584,9 +554,7 @@ object SettingsPanel {
                 session.uiTheme.saveSettings()
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
-        }
+        itemTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
 
         ImGui.spacing()
         val checking = llm.slop.liquidlsd.update.UpdateChecker.isChecking
@@ -637,9 +605,7 @@ object SettingsPanel {
                 session.uiTheme.saveSettings()
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
-        }
+        itemTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
 
         ImGui.spacing()
         session.uiTheme.h2("Trackpad Performance Console (SCS.3m)")
@@ -657,9 +623,7 @@ object SettingsPanel {
                 }
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Alpha faders.\nDisables cursor movement and gestures while active.")
-        }
+        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Alpha faders.\nDisables cursor movement and gestures while active.")
 
         val controller = session.touchConsoleController
         val state = controller.backend.state
@@ -673,9 +637,7 @@ object SettingsPanel {
                 if (ImGui.button("Install Permissions (Polkit)")) {
                     controller.requestPermissionElevation()
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Runs pkexec to add a uaccess udev rule for your seat user without rebooting.")
-                }
+                itemTooltip("Runs pkexec to add a uaccess udev rule for your seat user without rebooting.")
             }
             TouchBackendState.NO_DEVICE -> {
                 ImGui.textDisabled("Touchpad Status: No hardware trackpad detected")
@@ -708,9 +670,7 @@ object SettingsPanel {
             llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl = serverUrlBuf.get().trim()
             llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
         }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("WebSocket relay URL (e.g. ws://127.0.0.1:9000 or wss://spaz.org/lsd-relay)")
-        }
+        itemTooltip("WebSocket relay URL (e.g. ws://127.0.0.1:9000 or wss://spaz.org/lsd-relay)")
 
         ImGui.spacing()
 
@@ -751,9 +711,7 @@ object SettingsPanel {
                 llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
             }
         )
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Maximum rate to dispatch parameter delta packets to the relay.")
-        }
+        itemTooltip("Maximum rate to dispatch parameter delta packets to the relay.")
 
         ImGui.spacing()
 
@@ -822,9 +780,7 @@ object SettingsPanel {
             if (ImGui.button("${Icons.REFRESH} Force Sync State", 160f, 32f)) {
                 llm.slop.liquidlsd.broadcast.BroadcastEngine.forceSync()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Re-send full state snapshot to relay immediately.")
-            }
+            itemTooltip("Re-send full state snapshot to relay immediately.")
         }
     }
 

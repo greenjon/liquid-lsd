@@ -85,9 +85,7 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(dragBtnX, imgY)
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Interactive monitor for $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
-        }
+        itemTooltip("Interactive monitor for $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
             presetState.activeTopTab = label
         }
@@ -233,9 +231,7 @@ class DeckControlPanel(
         if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
             presetState.activeTopTab = label
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Focus $label tab in Preset Grid.")
-        }
+        itemTooltip("Focus $label tab in Preset Grid.")
 
         // 2. Die Button (placed toward outside of badge along the top row)
         if (session.uiTheme.randomizationEnabled) {
@@ -254,9 +250,7 @@ class DeckControlPanel(
                     else -> mixer.randomizeDeckPV()
                 }
             }
-            if (isDieHovered && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize $label modulators & base values.\nClick to randomize with undo support.")
-            }
+            itemTooltip("Randomize $label modulators & base values.\nClick to randomize with undo support.")
 
             val dieBg = when {
                 isDieActive -> ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 0.95f)
@@ -326,17 +320,15 @@ class DeckControlPanel(
                     else -> mixer.levelPV = 1.0f
                 }
             }
-            if (session.uiTheme.tooltipsEnabled) {
-                val current = when (label) {
-                    "Deck A" -> mixer.levelA
-                    "Deck B" -> mixer.levelB
-                    "Deck BG" -> mixer.levelBG
-                    else -> mixer.levelPV
-                }
-                val pctText = (current * 100f).roundToInt()
-                val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
-                ImGui.setTooltip("$label $desc: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            val current = when (label) {
+                "Deck A" -> mixer.levelA
+                "Deck B" -> mixer.levelB
+                "Deck BG" -> mixer.levelBG
+                else -> mixer.levelPV
             }
+            val pctText = (current * 100f).roundToInt()
+            val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
+            showTooltip("$label $desc: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
         }
 
         // Draw Fader Track
@@ -491,13 +483,12 @@ fun drawDeckMonitorToolbar(
     ImGui.setCursorScreenPos(barX, startY)
     ImGui.invisibleButton("##preset_bar_btn_$tag", barW.coerceAtLeast(1f), rowH.coerceAtLeast(1f))
 
-    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
+    itemTooltip {
         val presetNote = NotesManager.getPresetNote(deckLabel)
         val mtimeStr = mtime?.let {
             SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
         } ?: "unknown"
 
-        ImGui.beginTooltip()
         ImGui.text(activePreset ?: "None")
         if (hasDeckIssues) {
             ImGui.spacing()
@@ -516,7 +507,6 @@ fun drawDeckMonitorToolbar(
             ImGui.spacing()
             ImGui.textDisabled("(no preset note — right-click to add one)")
         }
-        ImGui.endTooltip()
     }
 
     if (ImGui.beginPopupContextItem("preset_name_menu_$tag")) {
@@ -588,8 +578,8 @@ private fun drawIconButton(
         dl.addText(iconX, iconY, iconCol, icon)
     }
 
-    if (isHovered && tooltip != null && session.uiTheme.tooltipsEnabled) {
-        ImGui.setTooltip(tooltip)
+    if (tooltip != null) {
+        itemTooltip(tooltip)
     }
 
     return isClicked

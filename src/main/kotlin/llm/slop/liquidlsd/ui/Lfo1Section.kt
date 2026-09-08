@@ -42,9 +42,7 @@ object Lfo1Section {
                     hold = 0.0f
                 ))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load standard smooth Sine wave LFO.")
-            }
+            itemTooltip("Load standard smooth Sine wave LFO.")
 
             // Triangle Button
             ImGui.sameLine(0f, 4f * fontScale)
@@ -56,9 +54,7 @@ object Lfo1Section {
                     hold = 0.0f
                 ))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load linear Triangle wave LFO.")
-            }
+            itemTooltip("Load linear Triangle wave LFO.")
 
             // Square Button
             ImGui.sameLine(0f, 4f * fontScale)
@@ -70,9 +66,7 @@ object Lfo1Section {
                     hold = 0.999f
                 ))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load binary Square wave LFO.")
-            }
+            itemTooltip("Load binary Square wave LFO.")
 
             // Random Button
             ImGui.sameLine(0f, 4f * fontScale)
@@ -82,9 +76,7 @@ object Lfo1Section {
                     waveform = Waveform.RANDOM
                 ))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Load step or smooth Random noise LFO.")
-            }
+            itemTooltip("Load step or smooth Random noise LFO.")
 
             // 2. Slew / Duty Preset buttons (only if not Random)
             if (existing.waveform != Waveform.RANDOM) {
@@ -97,9 +89,7 @@ object Lfo1Section {
                 if (CustomIconButton.drawWaveformButton("lfo1_left", if (isSquareWave) WaveShape.SQUARE_10 else WaveShape.RAMP_DOWN, isLeft, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = if (isSquareWave) 0.1f else 0.001f))
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(if (isSquareWave) "Set Square duty cycle to 10% (narrow pulse)." else "Set LFO asymmetry fully Left (sawtooth falling / ramp down).")
-                }
+                itemTooltip(if (isSquareWave) "Set Square duty cycle to 10% (narrow pulse)." else "Set LFO asymmetry fully Left (sawtooth falling / ramp down).")
 
                 // Center Button
                 ImGui.sameLine(0f, 4f * fontScale)
@@ -107,9 +97,7 @@ object Lfo1Section {
                 if (CustomIconButton.drawWaveformButton("lfo1_center", if (isSquareWave) WaveShape.SQUARE else WaveShape.TRIANGLE, isCenter, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = 0.5f))
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(if (isSquareWave) "Set Square duty cycle to 50% (balanced square wave)." else "Set LFO asymmetry to Center (perfectly symmetrical).")
-                }
+                itemTooltip(if (isSquareWave) "Set Square duty cycle to 50% (balanced square wave)." else "Set LFO asymmetry to Center (perfectly symmetrical).")
 
                 // Right Button
                 ImGui.sameLine(0f, 4f * fontScale)
@@ -117,9 +105,7 @@ object Lfo1Section {
                 if (CustomIconButton.drawWaveformButton("lfo1_right", if (isSquareWave) WaveShape.SQUARE_90 else WaveShape.RAMP_UP, isRight, themeColor, btnW, btnH)) {
                     onReplace(existing.copy(slope = if (isSquareWave) 0.9f else 0.999f))
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(if (isSquareWave) "Set Square duty cycle to 90% (wide pulse)." else "Set LFO asymmetry fully Right (sawtooth rising / ramp up).")
-                }
+                itemTooltip(if (isSquareWave) "Set Square duty cycle to 90% (wide pulse)." else "Set LFO asymmetry fully Right (sawtooth rising / ramp up).")
             }
 
             ImGui.spacing()
@@ -165,9 +151,7 @@ object Lfo1Section {
                         subdivisionMax = adjustedMax
                     ))
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Select frequency unit:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.\nFrame: Rate is synchronized to render frame count (1-10000 frames).")
-                }
+                itemTooltip("Select frequency unit:\nTime: Rate is in seconds.\nBeat: Rate is synchronized to BPM subdivisions.\nFrame: Rate is synchronized to render frame count (1-10000 frames).")
                 ImGui.popItemWidth()
                 if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
                 ImGui.spacing()
@@ -177,120 +161,60 @@ object Lfo1Section {
         ImGui.spacing()
 
         // -- DC Offset ---------------------------------------------
+        val dcOffsetCbs = cvModulatorSlider(
+            existing = existing,
+            getValue = { dcOffset }, getMin = { dcOffsetMin }, getMax = { dcOffsetMax },
+            minLimit = -1f, maxLimit = 1f,
+            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDcOffset = enabled, dcOffsetMin = nMin, dcOffsetMax = nMax) },
+            copyWithRange   = { sMin, sMax, v -> copy(dcOffsetMin = sMin, dcOffsetMax = sMax, dcOffset = v) },
+            copyWithValue   = { v -> copy(dcOffset = v, dcOffsetMin = v, dcOffsetMax = v) },
+            randomizeNow    = { randomizeDcOffset() },
+            onReplace = onReplace,
+        )
         CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
             label = "DC Offset",
             themeColor = themeColor,
             currentValue = existing.dcOffset,
             currentMin = existing.dcOffsetMin,
             currentMax = existing.dcOffsetMax,
-            minLimit = -1f,
-            maxLimit = 1f,
-            defaultValue = 0f,
+            minLimit = -1f, maxLimit = 1f, defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
             isRandomizeDisabled = param.isRandomizeDisabled,
             randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.dcOffsetMin
-                    val rMax = existing.dcOffsetMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.dcOffset - 0.1f).coerceAtLeast(-1f), (existing.dcOffset + 0.1f).coerceAtMost(1f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizeDcOffset = true,
-                        dcOffsetMin = nextMin,
-                        dcOffsetMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizeDcOffset = false,
-                        dcOffsetMin = existing.dcOffset,
-                        dcOffsetMax = existing.dcOffset
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeDcOffset())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.dcOffset.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    dcOffsetMin = safeMin,
-                    dcOffsetMax = safeMax,
-                    dcOffset = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    dcOffset = newVal,
-                    dcOffsetMin = newVal,
-                    dcOffsetMax = newVal
-                ))
-            }
+            onRandomizableChanged = dcOffsetCbs.onRandomizableChanged,
+            onRandomizeNow        = dcOffsetCbs.onRandomizeNow,
+            onRangeChanged        = dcOffsetCbs.onRangeChanged,
+            onValueChanged        = dcOffsetCbs.onValueChanged,
         )
         ImGui.spacing()
 
-        // -- Depth ---------------------------------------------
+        // -- Depth -------------------------------------------------
+        val depthCbs = cvModulatorSlider(
+            existing = existing,
+            getValue = { depth }, getMin = { depthMin }, getMax = { depthMax },
+            minLimit = 0f, maxLimit = 1f,
+            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDepth = enabled, depthMin = nMin, depthMax = nMax) },
+            copyWithRange   = { sMin, sMax, v -> copy(depthMin = sMin, depthMax = sMax, depth = v) },
+            copyWithValue   = { v -> copy(depth = v, depthMin = v, depthMax = v) },
+            randomizeNow    = { randomizeDepth() },
+            onReplace = onReplace,
+        )
         CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
             label = "Depth",
             themeColor = themeColor,
             currentValue = existing.depth,
             currentMin = existing.depthMin,
             currentMax = existing.depthMax,
-            minLimit = 0f,
-            maxLimit = 1f,
-            defaultValue = 0.5f,
+            minLimit = 0f, maxLimit = 1f, defaultValue = 0.5f,
             isRandomizable = existing.randomizeDepth,
             isRandomizeDisabled = param.isRandomizeDisabled,
             randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.depthMin
-                    val rMax = existing.depthMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.depth - 0.1f).coerceAtLeast(0f), (existing.depth + 0.1f).coerceAtMost(1f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizeDepth = true,
-                        depthMin = nextMin,
-                        depthMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizeDepth = false,
-                        depthMin = existing.depth,
-                        depthMax = existing.depth
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeDepth())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.depth.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    depthMin = safeMin,
-                    depthMax = safeMax,
-                    depth = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    depth = newVal,
-                    depthMin = newVal,
-                    depthMax = newVal
-                ))
-            }
+            onRandomizableChanged = depthCbs.onRandomizableChanged,
+            onRandomizeNow        = depthCbs.onRandomizeNow,
+            onRangeChanged        = depthCbs.onRangeChanged,
+            onValueChanged        = depthCbs.onValueChanged,
         )
         ImGui.spacing()
 
@@ -382,15 +306,15 @@ object Lfo1Section {
                 currentValue = existing.subdivision,
                 currentMin = existing.subdivisionMin,
                 currentMax = existing.subdivisionMax,
-                minLimit = 0.01f,
-                maxLimit = 86400f,
-                defaultValue = 1.0f,
+                minLimit = 0.01f, maxLimit = 86400f, defaultValue = 1.0f,
                 isRandomizable = existing.randomizeSubdivision,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = formatFunc,
                 isLogarithmic = true,
                 parseValue = parseFunc,
+                // Period uses multiplicative expansion (x0.5 / x2) instead of ±0.1 offset,
+                // and rounds values >= 1 hour to whole seconds — so kept inline.
                 onRandomizableChanged = { checked ->
                     if (checked) {
                         val rMin = existing.subdivisionMin
@@ -462,9 +386,7 @@ object Lfo1Section {
                 currentValue = existing.subdivision.toInt().coerceIn(1, 10000).toFloat(),
                 currentMin = existing.subdivisionMin.toInt().coerceIn(1, 10000).toFloat(),
                 currentMax = existing.subdivisionMax.toInt().coerceIn(1, 10000).toFloat(),
-                minLimit = 1f,
-                maxLimit = 10000f,
-                defaultValue = 1f,
+                minLimit = 1f, maxLimit = 10000f, defaultValue = 1f,
                 isRandomizable = existing.randomizeSubdivision,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
@@ -472,6 +394,7 @@ object Lfo1Section {
                 formatLabel = formatLabelFunc,
                 isLogarithmic = true,
                 parseValue = parseFunc,
+                // Frames use integer halving/doubling for expansion — kept inline.
                 onRandomizableChanged = { checked ->
                     if (checked) {
                         val rMin = existing.subdivisionMin.toInt().coerceIn(1, 10000)
@@ -529,179 +452,89 @@ object Lfo1Section {
         val advHeader = "Advanced Parameters$dirtyMarker###adv_params_header"
         if (ImGui.collapsingHeader(advHeader, 0)) {
             // -- Phase Offset -----------------------------------------
+            val phaseOffsetCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { phaseOffset }, getMin = { phaseOffsetMin }, getMax = { phaseOffsetMax },
+                minLimit = 0f, maxLimit = 1f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizePhaseOffset = enabled, phaseOffsetMin = nMin, phaseOffsetMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(phaseOffsetMin = sMin, phaseOffsetMax = sMax, phaseOffset = v) },
+                copyWithValue   = { v -> copy(phaseOffset = v, phaseOffsetMin = v, phaseOffsetMax = v) },
+                randomizeNow    = { randomizePhaseOffset() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
                 label = if (isGen) "LFO 1 Phase" else "Phase Offset",
                 themeColor = themeColor,
                 currentValue = existing.phaseOffset,
                 currentMin = existing.phaseOffsetMin,
                 currentMax = existing.phaseOffsetMax,
-                minLimit = 0f,
-                maxLimit = 1f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 1f, defaultValue = 0f,
                 isRandomizable = existing.randomizePhaseOffset,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.phaseOffsetMin
-                        val rMax = existing.phaseOffsetMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.phaseOffset - 0.1f).coerceAtLeast(0f), (existing.phaseOffset + 0.1f).coerceAtMost(1f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizePhaseOffset = true,
-                            phaseOffsetMin = nextMin,
-                            phaseOffsetMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizePhaseOffset = false,
-                            phaseOffsetMin = existing.phaseOffset,
-                            phaseOffsetMax = existing.phaseOffset
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizePhaseOffset())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.phaseOffset.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        phaseOffsetMin = safeMin,
-                        phaseOffsetMax = safeMax,
-                        phaseOffset = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        phaseOffset = newVal,
-                        phaseOffsetMin = newVal,
-                        phaseOffsetMax = newVal
-                    ))
-                }
+                onRandomizableChanged = phaseOffsetCbs.onRandomizableChanged,
+                onRandomizeNow        = phaseOffsetCbs.onRandomizeNow,
+                onRangeChanged        = phaseOffsetCbs.onRangeChanged,
+                onValueChanged        = phaseOffsetCbs.onValueChanged,
             )
             ImGui.spacing()
 
             // -- Morph Slider --
+            val morphCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { morph }, getMin = { morphMin }, getMax = { morphMax },
+                minLimit = 0f, maxLimit = 1f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeMorph = enabled, morphMin = nMin, morphMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(morphMin = sMin, morphMax = sMax, morph = v) },
+                copyWithValue   = { v -> copy(morph = v, morphMin = v, morphMax = v) },
+                randomizeNow    = { randomizeMorph() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_morph",
                 label = if (isGen) "LFO 1 Morph" else "Morph",
                 themeColor = themeColor,
                 currentValue = existing.morph,
                 currentMin = existing.morphMin,
                 currentMax = existing.morphMax,
-                minLimit = 0f,
-                maxLimit = 1f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 1f, defaultValue = 0f,
                 isRandomizable = existing.randomizeMorph,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.morphMin
-                        val rMax = existing.morphMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.morph - 0.1f).coerceAtLeast(0f), (existing.morph + 0.1f).coerceAtMost(1f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeMorph = true,
-                            morphMin = nextMin,
-                            morphMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeMorph = false,
-                            morphMin = existing.morph,
-                            morphMax = existing.morph
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeMorph())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.morph.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        morphMin = safeMin,
-                        morphMax = safeMax,
-                        morph = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        morph = newVal,
-                        morphMin = newVal,
-                        morphMax = newVal
-                    ))
-                }
+                onRandomizableChanged = morphCbs.onRandomizableChanged,
+                onRandomizeNow        = morphCbs.onRandomizeNow,
+                onRangeChanged        = morphCbs.onRangeChanged,
+                onValueChanged        = morphCbs.onValueChanged,
             )
             ImGui.spacing()
 
             // -- Hold Slider --
+            val holdCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { hold }, getMin = { holdMin }, getMax = { holdMax },
+                minLimit = 0f, maxLimit = 0.999f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeHold = enabled, holdMin = nMin, holdMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(holdMin = sMin, holdMax = sMax, hold = v) },
+                copyWithValue   = { v -> copy(hold = v, holdMin = v, holdMax = v) },
+                randomizeNow    = { randomizeHold() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id + "_hold",
                 label = if (isGen) "LFO 1 Hold" else "Hold",
                 themeColor = themeColor,
                 currentValue = existing.hold,
                 currentMin = existing.holdMin,
                 currentMax = existing.holdMax,
-                minLimit = 0f,
-                maxLimit = 0.999f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 0.999f, defaultValue = 0f,
                 isRandomizable = existing.randomizeHold,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "%.3f".format(it) },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.holdMin
-                        val rMax = existing.holdMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.hold - 0.1f).coerceAtLeast(0f), (existing.hold + 0.1f).coerceAtMost(0.999f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeHold = true,
-                            holdMin = nextMin,
-                            holdMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeHold = false,
-                            holdMin = existing.hold,
-                            holdMax = existing.hold
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeHold())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.hold.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        holdMin = safeMin,
-                        holdMax = safeMax,
-                        hold = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        hold = newVal,
-                        holdMin = newVal,
-                        holdMax = newVal
-                    ))
-                }
+                onRandomizableChanged = holdCbs.onRandomizableChanged,
+                onRandomizeNow        = holdCbs.onRandomizeNow,
+                onRangeChanged        = holdCbs.onRangeChanged,
+                onValueChanged        = holdCbs.onValueChanged,
             )
             ImGui.spacing()
 
@@ -713,61 +546,31 @@ object Lfo1Section {
                 } else {
                     if (isGen) "LFO 1 Slew" else "Slew"
                 }
+                val slopeCbs = cvModulatorSlider(
+                    existing = existing,
+                    getValue = { slope }, getMin = { slopeMin }, getMax = { slopeMax },
+                    minLimit = 0.001f, maxLimit = 0.999f,
+                    copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeSlope = enabled, slopeMin = nMin, slopeMax = nMax) },
+                    copyWithRange   = { sMin, sMax, v -> copy(slopeMin = sMin, slopeMax = sMax, slope = v) },
+                    copyWithValue   = { v -> copy(slope = v, slopeMin = v, slopeMax = v) },
+                    randomizeNow    = { randomizeSlope() },
+                    onReplace = onReplace,
+                )
                 CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
                     label = label,
                     themeColor = themeColor,
                     currentValue = existing.slope,
                     currentMin = existing.slopeMin,
                     currentMax = existing.slopeMax,
-                    minLimit = 0.001f,
-                    maxLimit = 0.999f,
-                    defaultValue = 0.5f,
+                    minLimit = 0.001f, maxLimit = 0.999f, defaultValue = 0.5f,
                     isRandomizable = existing.randomizeSlope,
                     isRandomizeDisabled = param.isRandomizeDisabled,
                     randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                     formatValue = { "%.3f".format(it) },
-                    onRandomizableChanged = { checked ->
-                        if (checked) {
-                            val rMin = existing.slopeMin
-                            val rMax = existing.slopeMax
-                            val (nextMin, nextMax) = if (rMin == rMax) {
-                                Pair((existing.slope - 0.1f).coerceAtLeast(0.001f), (existing.slope + 0.1f).coerceAtMost(0.999f))
-                            } else {
-                                Pair(rMin, rMax)
-                            }
-                            onReplace(existing.copy(
-                                randomizeSlope = true,
-                                slopeMin = nextMin,
-                                slopeMax = nextMax
-                            ))
-                        } else {
-                            onReplace(existing.copy(
-                                randomizeSlope = false,
-                                slopeMin = existing.slope,
-                                slopeMax = existing.slope
-                            ))
-                        }
-                    },
-                    onRandomizeNow = {
-                        onReplace(existing.randomizeSlope())
-                    },
-                    onRangeChanged = { nextMin, nextMax ->
-                        val safeMin = minOf(nextMin, nextMax)
-                        val safeMax = maxOf(nextMin, nextMax)
-                        val nextActive = existing.slope.coerceIn(safeMin, safeMax)
-                        onReplace(existing.copy(
-                            slopeMin = safeMin,
-                            slopeMax = safeMax,
-                            slope = nextActive
-                        ))
-                    },
-                    onValueChanged = { newVal ->
-                        onReplace(existing.copy(
-                            slope = newVal,
-                            slopeMin = newVal,
-                            slopeMax = newVal
-                        ))
-                    }
+                    onRandomizableChanged = slopeCbs.onRandomizableChanged,
+                    onRandomizeNow        = slopeCbs.onRandomizeNow,
+                    onRangeChanged        = slopeCbs.onRangeChanged,
+                    onValueChanged        = slopeCbs.onValueChanged,
                 )
             }
         }

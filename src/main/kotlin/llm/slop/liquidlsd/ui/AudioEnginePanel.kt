@@ -90,9 +90,7 @@ object AudioEnginePanel {
                 if (nextVal) audioEngine.start() else audioEngine.stop()
             }
         }
-        if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-            ImGui.setTooltip("Toggle audio capture and analysis. Disabling stops audio processing.")
-        }
+        itemTooltip("Toggle audio capture and analysis. Disabling stops audio processing.")
 
         if (!theme.audioEngineEnabled) {
             ImGui.spacing()
@@ -137,9 +135,7 @@ object AudioEnginePanel {
             val curX = ImGui.getCursorScreenPosX()
             val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
             ImGui.dummy(indicatorSize, indicatorSize)
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Manual tempo clock. Flashes on internal beat phase.")
-            }
+            itemTooltip("Manual tempo clock. Flashes on internal beat phase.")
             val dl = ImGui.getWindowDrawList()
             val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
             val borderCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.5f)
@@ -178,9 +174,7 @@ object AudioEnginePanel {
                 audioEngine.setBpmDirectly(120.0f)
                 theme.saveSettings()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Resets the manual tempo clock to standard 120.0 BPM.")
-            }
+            itemTooltip("Resets the manual tempo clock to standard 120.0 BPM.")
 
             ImGui.spacing()
             theme.caption("Note: BEAT-synced LFOs, Sequencers, and the title bar 4-beat meter track this manual BPM clock.")
@@ -211,9 +205,7 @@ object AudioEnginePanel {
                 audioEngine.selectDevice(audioEngine.selectedDeviceName, nextBackend)
                 theme.saveSettings()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Select audio capture backend (JACK for low-latency Linux, Java Sound for cross-platform).")
-            }
+            itemTooltip("Select audio capture backend (JACK for low-latency Linux, Java Sound for cross-platform).")
 
             ImGui.spacing()
 
@@ -232,16 +224,12 @@ object AudioEnginePanel {
                     theme.saveSettings()
                 }
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Select the audio input capture device.")
-            }
+            itemTooltip("Select the audio input capture device.")
             ImGui.sameLine()
             if (ImGui.button("${Icons.REFRESH}##refreshDevices")) {
                 audioEngine.refreshInputDevices()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Rescan for newly connected audio input hardware.")
-            }
+            itemTooltip("Rescan for newly connected audio input hardware.")
 
             ImGui.spacing()
 
@@ -261,9 +249,7 @@ object AudioEnginePanel {
                 SignalState.SILENT -> theme.bodyColored(0.5f, 0.5f, 0.5f, 1.0f, "SILENT")
                 SignalState.ACTIVE -> theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "ACTIVE")
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Active: Signal detected and tracking tempo. Silent: No input audio or level too low.")
-            }
+            itemTooltip("Active: Signal detected and tracking tempo. Silent: No input audio or level too low.")
 
             if (!isAudioActive) {
                 ImGui.spacing()
@@ -276,9 +262,7 @@ object AudioEnginePanel {
                         audioEngine.tryReconnect(force = true)
                     }.start()
                 }
-                if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                    ImGui.setTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
-                }
+                itemTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
             } else if (backend == "Java Sound") {
                 ImGui.spacing()
                 if (ImGui.button("${Icons.REFRESH} Switch to JACK Audio", 220f, 28f)) {
@@ -286,9 +270,7 @@ object AudioEnginePanel {
                         audioEngine.tryReconnect(force = true)
                     }.start()
                 }
-                if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                    ImGui.setTooltip("Stops Java Sound and attempts to connect to a running JACK/PipeWire audio server.")
-                }
+                itemTooltip("Stops Java Sound and attempts to connect to a running JACK/PipeWire audio server.")
             }
 
             // MIDI Controllers Status
@@ -336,9 +318,7 @@ object AudioEnginePanel {
             val curX = ImGui.getCursorScreenPosX()
             val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
             ImGui.dummy(indicatorSize, indicatorSize)
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Real-time tempo estimate. Flashes on detected beat phase.")
-            }
+            itemTooltip("Real-time tempo estimate. Flashes on detected beat phase.")
             val dl = ImGui.getWindowDrawList()
             val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
             val borderCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.5f)
@@ -351,9 +331,7 @@ object AudioEnginePanel {
                 audioEngine.isBpmLocked = isLocked.get()
                 theme.saveSettings()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
-            }
+            itemTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
 
             ImGui.spacing()
 
@@ -396,9 +374,7 @@ object AudioEnginePanel {
                 }
                 ImGui.endCombo()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Select frequency band for primary onset detection (LOW/Kick, MID/Snare, HIGH/Hi-hat, or UNFILTERED).")
-            }
+            itemTooltip("Select frequency band for primary onset detection (LOW/Kick, MID/Snare, HIGH/Hi-hat, or UNFILTERED).")
 
             ImGui.spacing()
 
@@ -409,25 +385,19 @@ object AudioEnginePanel {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
                 theme.saveSettings()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply Beat Tracker configuration tuned for precise tempo detection.")
-            }
+            itemTooltip("Apply Beat Tracker configuration tuned for precise tempo detection.")
             ImGui.sameLine()
             if (ImGui.button("Balanced")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
                 theme.saveSettings()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply Beat Tracker configuration balanced between tracking reactivity and stability.")
-            }
+            itemTooltip("Apply Beat Tracker configuration balanced between tracking reactivity and stability.")
             ImGui.sameLine()
             if (ImGui.button("Eco")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
                 theme.saveSettings()
             }
-            if (ImGui.isItemHovered() && theme.tooltipsEnabled) {
-                ImGui.setTooltip("Apply Beat Tracker configuration with relaxed inertia.")
-            }
+            itemTooltip("Apply Beat Tracker configuration with relaxed inertia.")
 
             ImGui.spacing()
 

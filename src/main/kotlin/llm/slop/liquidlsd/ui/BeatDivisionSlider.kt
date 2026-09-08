@@ -152,9 +152,9 @@ object BeatDivisionSlider {
                 onValueChanged(resetVal)
             }
         }
-        if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
+        if (isLabelHovered) {
             val defFmt = ": ${formatValue(defaultValue)}"
-            ImGui.setTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
+            showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
         }
 
         // Render name of variable beside the die, to its left, sharing vertical center
@@ -171,10 +171,7 @@ object BeatDivisionSlider {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
                 ImGui.popStyleColor()
-                val hovered = ImGui.isItemHovered()
-                if (hovered && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-                }
+                itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!effectiveIsRandomizable) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
@@ -192,10 +189,7 @@ object BeatDivisionSlider {
                     }
                     onRandomizeNow()
                 }
-                val hovered = ImGui.isItemHovered()
-                if (hovered && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
-                }
+                itemTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
             }
         }
 
@@ -209,9 +203,7 @@ object BeatDivisionSlider {
                 val nextMin = minIdx.get().toFloat()
                 onRangeChanged(nextMin, maxOf(nextMin, currentMax))
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Minimum modulation speed subdivision dropdown")
-            }
+            itemTooltip("Minimum modulation speed subdivision dropdown")
             ImGui.popItemWidth()
 
             // Max combo
@@ -222,9 +214,7 @@ object BeatDivisionSlider {
                 val nextMax = maxIdx.get().toFloat()
                 onRangeChanged(minOf(nextMax, currentMin), nextMax)
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Maximum modulation speed subdivision dropdown")
-            }
+            itemTooltip("Maximum modulation speed subdivision dropdown")
             ImGui.popItemWidth()
         } else {
             val valIdx = ImInt(currentValue.toInt().coerceIn(0, subdivisionLabels.size - 1))
@@ -233,9 +223,7 @@ object BeatDivisionSlider {
             if (ImGui.combo("##bd_val_$label", valIdx, subdivisionLabels)) {
                 onValueChanged(valIdx.get().toFloat())
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Base speed subdivision dropdown")
-            }
+            itemTooltip("Base speed subdivision dropdown")
             ImGui.popItemWidth()
         }
 
@@ -387,35 +375,33 @@ object BeatDivisionSlider {
                     onValueChanged(resetVal)
                 }
             }
-            if (session.uiTheme.tooltipsEnabled) {
-                if (effectiveIsRandomizable) {
-                    val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
-                    val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
-                    val minHandleX = lineStartX + minPct * lineWidth
-                    val maxHandleX = lineStartX + maxPct * lineWidth
-                    val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
-                    val curX = lineStartX + curPct * lineWidth
+            if (effectiveIsRandomizable) {
+                val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
+                val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
+                val minHandleX = lineStartX + minPct * lineWidth
+                val maxHandleX = lineStartX + maxPct * lineWidth
+                val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+                val curX = lineStartX + curPct * lineWidth
 
-                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
-                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
-                    val distToCur = kotlin.math.abs(mouseX - curX)
+                val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                val distToCur = kotlin.math.abs(mouseX - curX)
 
-                    when {
-                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}\nScroll to adjust. Middle-click to reset.")
-                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}\nScroll to adjust. Middle-click to reset.")
-                        distToCur < 6f -> ImGui.setTooltip("Current modulated speed for $label: ${formatValue(currentValue)}")
-                        else -> ImGui.setTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
-                    }
+                when {
+                    distToMin < 8f -> showTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}\nScroll to adjust. Middle-click to reset.")
+                    distToMax < 8f -> showTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}\nScroll to adjust. Middle-click to reset.")
+                    distToCur < 6f -> showTooltip("Current modulated speed for $label: ${formatValue(currentValue)}")
+                    else -> showTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
+                }
+            } else {
+                val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
+                val valHandleX = lineStartX + valPct * lineWidth
+                val distToVal = kotlin.math.abs(mouseX - valHandleX)
+
+                if (distToVal < 8f) {
+                    showTooltip("Base speed for $label: ${formatValue(currentValue)}\nScroll to adjust. Middle-click to reset.")
                 } else {
-                    val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
-                    val valHandleX = lineStartX + valPct * lineWidth
-                    val distToVal = kotlin.math.abs(mouseX - valHandleX)
-
-                    if (distToVal < 8f) {
-                        ImGui.setTooltip("Base speed for $label: ${formatValue(currentValue)}\nScroll to adjust. Middle-click to reset.")
-                    } else {
-                        ImGui.setTooltip("Drag or Scroll to adjust base speed for $label. Middle-click to reset.")
-                    }
+                    showTooltip("Drag or Scroll to adjust base speed for $label. Middle-click to reset.")
                 }
             }
         }

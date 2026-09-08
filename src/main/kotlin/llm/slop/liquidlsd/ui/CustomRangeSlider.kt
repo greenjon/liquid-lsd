@@ -118,15 +118,13 @@ object CustomRangeSlider {
                 val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
                 onChanged(resetTarget)
             }
-            if (session.uiTheme.tooltipsEnabled) {
-                val fieldType = when {
-                    key.endsWith("_min") -> "Minimum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
-                    key.endsWith("_max") -> "Maximum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
-                    key.endsWith("_value") -> "Base value. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
-                    else -> "Type a precise numeric value. Up/Down or Scroll to adjust. Middle-click to reset."
-                }
-                ImGui.setTooltip(fieldType)
+            val fieldType = when {
+                key.endsWith("_min") -> "Minimum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
+                key.endsWith("_max") -> "Maximum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
+                key.endsWith("_value") -> "Base value. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
+                else -> "Type a precise numeric value. Up/Down or Scroll to adjust. Middle-click to reset."
             }
+            showTooltip(fieldType)
         }
         textWidgetActive[key] = isItemFocused
         ImGui.popItemWidth()
@@ -347,9 +345,9 @@ object CustomRangeSlider {
                 onValueChanged(resetTarget)
             }
         }
-        if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
+        if (isLabelHovered) {
             val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
-            ImGui.setTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
+            showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
         }
 
         // Render name of variable beside the die, to its left, sharing vertical center
@@ -366,10 +364,7 @@ object CustomRangeSlider {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
                 ImGui.popStyleColor()
-                val hovered = ImGui.isItemHovered()
-                if (hovered && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-                }
+                itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!effectiveIsRandomizable) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
@@ -387,10 +382,7 @@ object CustomRangeSlider {
                     }
                     onRandomizeNow()
                 }
-                val hovered = ImGui.isItemHovered()
-                if (hovered && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
-                }
+                itemTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
             }
         }
         
@@ -626,35 +618,33 @@ object CustomRangeSlider {
                     onValueChanged(resetTarget)
                 }
             }
-            if (session.uiTheme.tooltipsEnabled) {
-                if (effectiveIsRandomizable) {
-                    val minPct = toPct(currentMin)
-                    val maxPct = toPct(currentMax)
-                    val minHandleX = lineStartX + minPct * lineWidth
-                    val maxHandleX = lineStartX + maxPct * lineWidth
-                    val curPct = toPct(currentValue)
-                    val curX = lineStartX + curPct * lineWidth
+            if (effectiveIsRandomizable) {
+                val minPct = toPct(currentMin)
+                val maxPct = toPct(currentMax)
+                val minHandleX = lineStartX + minPct * lineWidth
+                val maxHandleX = lineStartX + maxPct * lineWidth
+                val curPct = toPct(currentValue)
+                val curX = lineStartX + curPct * lineWidth
 
-                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
-                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
-                    val distToCur = kotlin.math.abs(mouseX - curX)
+                val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                val distToCur = kotlin.math.abs(mouseX - curX)
 
-                    when {
-                        distToMin < 8f -> ImGui.setTooltip("Minimum boundary for $label: ${labelFormatFunc(currentMin)}\nScroll to adjust. Middle-click track to reset.")
-                        distToMax < 8f -> ImGui.setTooltip("Maximum boundary for $label: ${labelFormatFunc(currentMax)}\nScroll to adjust. Middle-click track to reset.")
-                        distToCur < 6f -> ImGui.setTooltip("Current modulated value for $label: ${labelFormatFunc(currentValue)}")
-                        else -> ImGui.setTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
-                    }
+                when {
+                    distToMin < 8f -> showTooltip("Minimum boundary for $label: ${labelFormatFunc(currentMin)}\nScroll to adjust. Middle-click track to reset.")
+                    distToMax < 8f -> showTooltip("Maximum boundary for $label: ${labelFormatFunc(currentMax)}\nScroll to adjust. Middle-click track to reset.")
+                    distToCur < 6f -> showTooltip("Current modulated value for $label: ${labelFormatFunc(currentValue)}")
+                    else -> showTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
+                }
+            } else {
+                val valPct = toPct(currentValue)
+                val valHandleX = lineStartX + valPct * lineWidth
+                val distToVal = kotlin.math.abs(mouseX - valHandleX)
+
+                if (distToVal < 8f) {
+                    showTooltip("Base value for $label: ${labelFormatFunc(currentValue)}\nScroll to adjust. Middle-click to reset.")
                 } else {
-                    val valPct = toPct(currentValue)
-                    val valHandleX = lineStartX + valPct * lineWidth
-                    val distToVal = kotlin.math.abs(mouseX - valHandleX)
-
-                    if (distToVal < 8f) {
-                        ImGui.setTooltip("Base value for $label: ${labelFormatFunc(currentValue)}\nScroll to adjust. Middle-click to reset.")
-                    } else {
-                        ImGui.setTooltip("Drag or Scroll to adjust base value for $label. Middle-click to reset.")
-                    }
+                    showTooltip("Drag or Scroll to adjust base value for $label. Middle-click to reset.")
                 }
             }
         }

@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PresetGridState
 import llm.slop.liquidlsd.ui.UIManager
+import llm.slop.liquidlsd.ui.itemTooltip
 import java.io.File
 
 enum class DeckAuditionTarget(val label: String, val deckIndex: Int) {
@@ -60,14 +61,12 @@ object BrowserActionToolbar {
             }
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val tooltip = if (isAuditionLocked) {
-                "Quick Audition Latch: ON (Target: ${latchedDeckTarget?.label ?: "None"}).\nClick presets or use Up/Down arrows to auto-load."
-            } else {
-                "Quick Audition Latch: OFF.\nClick to arm audition mode (defaults to Deck PV)."
-            }
-            ImGui.setTooltip(tooltip)
+        val tooltip = if (isAuditionLocked) {
+            "Quick Audition Latch: ON (Target: ${latchedDeckTarget?.label ?: "None"}).\nClick presets or use Up/Down arrows to auto-load."
+        } else {
+            "Quick Audition Latch: OFF.\nClick to arm audition mode (defaults to Deck PV)."
         }
+        itemTooltip(tooltip)
         BrowserDeckButtons.pop()
 
         ImGui.sameLine(0f, 6f)
@@ -87,9 +86,7 @@ object BrowserActionToolbar {
             }
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (isAuditionLocked) "Latch audition target to Deck A." else "Load selected preset to Deck A (Hotkey: 1).")
-        }
+        itemTooltip(if (isAuditionLocked) "Latch audition target to Deck A." else "Load selected preset to Deck A (Hotkey: 1).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine(0f, 6f)
@@ -109,9 +106,7 @@ object BrowserActionToolbar {
             }
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (isAuditionLocked) "Latch audition target to Deck B." else "Load selected preset to Deck B (Hotkey: 2).")
-        }
+        itemTooltip(if (isAuditionLocked) "Latch audition target to Deck B." else "Load selected preset to Deck B (Hotkey: 2).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine(0f, 6f)
@@ -131,9 +126,7 @@ object BrowserActionToolbar {
             }
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (isAuditionLocked) "Latch audition target to Deck BG." else "Load selected preset to Deck BG / Background (Hotkey: 3).")
-        }
+        itemTooltip(if (isAuditionLocked) "Latch audition target to Deck BG." else "Load selected preset to Deck BG / Background (Hotkey: 3).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine(0f, 6f)
@@ -153,9 +146,7 @@ object BrowserActionToolbar {
             }
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip(if (isAuditionLocked) "Latch audition target to Deck PV." else "Preview selected preset on Deck PV (Hotkey: 4).")
-        }
+        itemTooltip(if (isAuditionLocked) "Latch audition target to Deck PV." else "Preview selected preset on Deck PV (Hotkey: 4).")
         BrowserDeckButtons.pop()
 
         ImGui.sameLine(0f, 14f)
@@ -168,10 +159,8 @@ object BrowserActionToolbar {
             session.playQueueManager.appendToQueue(selectedFile)
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val tip = if (source == LibraryPanel.SelectionSource.QUEUE_AB) "Preset is already in the A/B Play Queue (Hotkey: Q)." else "Add selected preset to the A/B Play Queue (Hotkey: Q)."
-            ImGui.setTooltip(tip)
-        }
+        val qTip = if (source == LibraryPanel.SelectionSource.QUEUE_AB) "Preset is already in the A/B Play Queue (Hotkey: Q)." else "Add selected preset to the A/B Play Queue (Hotkey: Q)."
+        itemTooltip(qTip)
         BrowserDeckButtons.pop()
 
         ImGui.sameLine(0f, 6f)
@@ -184,10 +173,8 @@ object BrowserActionToolbar {
             BgQueueManager.appendToQueue(selectedFile)
             LibraryPanel.shouldReclaimFocus = true
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val tip = if (source == LibraryPanel.SelectionSource.QUEUE_BG) "Preset is already in the Background Queue (Hotkey: Shift+Q)." else "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
-            ImGui.setTooltip(tip)
-        }
+        val bgqTip = if (source == LibraryPanel.SelectionSource.QUEUE_BG) "Preset is already in the Background Queue (Hotkey: Shift+Q)." else "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
+        itemTooltip(bgqTip)
         BrowserDeckButtons.pop()
     }
 }

@@ -69,9 +69,7 @@ object AudioModulatorSection {
                 onReplace(existing.copy(sourceId = newSource))
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Continuous Envelope: Tracks continuous volume and sustained body of audio frequencies.")
-        }
+        itemTooltip("Continuous Envelope: Tracks continuous volume and sustained body of audio frequencies.")
         ImGui.popStyleColor(3)
 
         ImGui.sameLine(0f, 4f * fontScale)
@@ -93,9 +91,7 @@ object AudioModulatorSection {
                 onReplace(existing.copy(sourceId = newSource))
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Transient Trigger: Tracks sudden onsets, drum strikes, and energy growth (Spectral Flux).")
-        }
+        itemTooltip("Transient Trigger: Tracks sudden onsets, drum strikes, and energy growth (Spectral Flux).")
         ImGui.popStyleColor(3)
 
         ImGui.spacing()
@@ -110,9 +106,7 @@ object AudioModulatorSection {
             val newSource = if (isTransient) FLUX_SOURCES[selectedIdx] else RMS_SOURCES[selectedIdx]
             onReplace(existing.copy(sourceId = newSource))
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Frequency Band:\nFull Mix: Entire frequency spectrum\nLow / Bass: Sub and kick frequencies (< 150Hz)\nMid: Vocals, synths, and snares (150Hz - 2.5kHz)\nHigh: Cymbals, hi-hats, and air (> 2.5kHz)")
-        }
+        itemTooltip("Frequency Band:\nFull Mix: Entire frequency spectrum\nLow / Bass: Sub and kick frequencies (< 150Hz)\nMid: Vocals, synths, and snares (150Hz - 2.5kHz)\nHigh: Cymbals, hi-hats, and air (> 2.5kHz)")
         ImGui.popItemWidth()
 
         ImGui.spacing()
@@ -153,16 +147,24 @@ object AudioModulatorSection {
                 ))
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Dynamics / Smoothing:\nInstant: 1-frame strobe or raw amplitude flutter\nStrobe / Snap: 0ms attack, 35ms decay snap\nPunchy (Accent): 5ms attack, 150ms decay\nSmooth Swell: 40ms attack, 400ms decay\nSlow Bloom: 100ms attack, 900ms decay\nAmbient Drift: 250ms attack, 1800ms decay\nCustom…: Freely adjust Attack and Decay sliders")
-        }
+        itemTooltip("Dynamics / Smoothing:\nInstant: 1-frame strobe or raw amplitude flutter\nStrobe / Snap: 0ms attack, 35ms decay snap\nPunchy (Accent): 5ms attack, 150ms decay\nSmooth Swell: 40ms attack, 400ms decay\nSlow Bloom: 100ms attack, 900ms decay\nAmbient Drift: 250ms attack, 1800ms decay\nCustom…: Freely adjust Attack and Decay sliders")
         ImGui.popItemWidth()
         if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
         ImGui.spacing()
 
         // 2. Custom Attack and Decay Sliders
         if (existing.followerMode == AudioFollowerMode.CUSTOM) {
-            // Attack (ms) Slider
+            // Attack (ms) Slider — uses asymmetric offset (-20/+50) so kept inline for onRandomizableChanged.
+            val attackCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { attackMs }, getMin = { attackMsMin }, getMax = { attackMsMax },
+                minLimit = 0f, maxLimit = 500f, defaultOffset = 20f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeAttackMs = enabled, attackMsMin = nMin, attackMsMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(attackMsMin = sMin, attackMsMax = sMax, attackMs = v) },
+                copyWithValue   = { v -> copy(attackMs = v, attackMsMin = v, attackMsMax = v) },
+                randomizeNow    = { randomizeAttackMs() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(
                 session = session,
                 idPrefix = "${existing.id}_att",
@@ -171,59 +173,29 @@ object AudioModulatorSection {
                 currentValue = existing.attackMs,
                 currentMin = existing.attackMsMin,
                 currentMax = existing.attackMsMax,
-                minLimit = 0f,
-                maxLimit = 500f,
-                defaultValue = 0f,
+                minLimit = 0f, maxLimit = 500f, defaultValue = 0f,
                 isRandomizable = existing.randomizeAttackMs,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "${it.toInt()}ms" },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.attackMsMin
-                        val rMax = existing.attackMsMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.attackMs - 20f).coerceAtLeast(0f), (existing.attackMs + 50f).coerceAtMost(500f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeAttackMs = true,
-                            attackMsMin = nextMin,
-                            attackMsMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeAttackMs = false,
-                            attackMsMin = existing.attackMs,
-                            attackMsMax = existing.attackMs
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeAttackMs())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.attackMs.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        attackMsMin = safeMin,
-                        attackMsMax = safeMax,
-                        attackMs = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        attackMs = newVal,
-                        attackMsMin = newVal,
-                        attackMsMax = newVal
-                    ))
-                }
+                onRandomizableChanged = attackCbs.onRandomizableChanged,
+                onRandomizeNow        = attackCbs.onRandomizeNow,
+                onRangeChanged        = attackCbs.onRangeChanged,
+                onValueChanged        = attackCbs.onValueChanged,
             )
             ImGui.spacing()
 
-            // Decay (ms) Slider
+            // Decay (ms) Slider — uses asymmetric offset (-100/+200) so kept inline for onRandomizableChanged.
+            val decayCbs = cvModulatorSlider(
+                existing = existing,
+                getValue = { decayMs }, getMin = { decayMsMin }, getMax = { decayMsMax },
+                minLimit = 10f, maxLimit = 3000f, defaultOffset = 100f,
+                copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDecayMs = enabled, decayMsMin = nMin, decayMsMax = nMax) },
+                copyWithRange   = { sMin, sMax, v -> copy(decayMsMin = sMin, decayMsMax = sMax, decayMs = v) },
+                copyWithValue   = { v -> copy(decayMs = v, decayMsMin = v, decayMsMax = v) },
+                randomizeNow    = { randomizeDecayMs() },
+                onReplace = onReplace,
+            )
             CustomRangeSlider.drawCustomRangeSlider(
                 session = session,
                 idPrefix = "${existing.id}_dec",
@@ -232,60 +204,30 @@ object AudioModulatorSection {
                 currentValue = existing.decayMs,
                 currentMin = existing.decayMsMin,
                 currentMax = existing.decayMsMax,
-                minLimit = 10f,
-                maxLimit = 3000f,
-                defaultValue = 100f,
+                minLimit = 10f, maxLimit = 3000f, defaultValue = 100f,
                 isRandomizable = existing.randomizeDecayMs,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = { "${it.toInt()}ms" },
-                onRandomizableChanged = { checked ->
-                    if (checked) {
-                        val rMin = existing.decayMsMin
-                        val rMax = existing.decayMsMax
-                        val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((existing.decayMs - 100f).coerceAtLeast(10f), (existing.decayMs + 200f).coerceAtMost(3000f))
-                        } else {
-                            Pair(rMin, rMax)
-                        }
-                        onReplace(existing.copy(
-                            randomizeDecayMs = true,
-                            decayMsMin = nextMin,
-                            decayMsMax = nextMax
-                        ))
-                    } else {
-                        onReplace(existing.copy(
-                            randomizeDecayMs = false,
-                            decayMsMin = existing.decayMs,
-                            decayMsMax = existing.decayMs
-                        ))
-                    }
-                },
-                onRandomizeNow = {
-                    onReplace(existing.randomizeDecayMs())
-                },
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    val nextActive = existing.decayMs.coerceIn(safeMin, safeMax)
-                    onReplace(existing.copy(
-                        decayMsMin = safeMin,
-                        decayMsMax = safeMax,
-                        decayMs = nextActive
-                    ))
-                },
-                onValueChanged = { newVal ->
-                    onReplace(existing.copy(
-                        decayMs = newVal,
-                        decayMsMin = newVal,
-                        decayMsMax = newVal
-                    ))
-                }
+                onRandomizableChanged = decayCbs.onRandomizableChanged,
+                onRandomizeNow        = decayCbs.onRandomizeNow,
+                onRangeChanged        = decayCbs.onRangeChanged,
+                onValueChanged        = decayCbs.onValueChanged,
             )
             ImGui.spacing()
         }
 
         // 3. DC Offset Slider
+        val dcOffsetCbs = cvModulatorSlider(
+            existing = existing,
+            getValue = { dcOffset }, getMin = { dcOffsetMin }, getMax = { dcOffsetMax },
+            minLimit = -1f, maxLimit = 1f,
+            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDcOffset = enabled, dcOffsetMin = nMin, dcOffsetMax = nMax) },
+            copyWithRange   = { sMin, sMax, v -> copy(dcOffsetMin = sMin, dcOffsetMax = sMax, dcOffset = v) },
+            copyWithValue   = { v -> copy(dcOffset = v, dcOffsetMin = v, dcOffsetMax = v) },
+            randomizeNow    = { randomizeDcOffset() },
+            onReplace = onReplace,
+        )
         CustomRangeSlider.drawCustomRangeSlider(
             session = session,
             idPrefix = existing.id,
@@ -294,59 +236,29 @@ object AudioModulatorSection {
             currentValue = existing.dcOffset,
             currentMin = existing.dcOffsetMin,
             currentMax = existing.dcOffsetMax,
-            minLimit = -1f,
-            maxLimit = 1f,
-            defaultValue = 0f,
+            minLimit = -1f, maxLimit = 1f, defaultValue = 0f,
             isRandomizable = existing.randomizeDcOffset,
             isRandomizeDisabled = param.isRandomizeDisabled,
             randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.dcOffsetMin
-                    val rMax = existing.dcOffsetMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.dcOffset - 0.1f).coerceAtLeast(-1f), (existing.dcOffset + 0.1f).coerceAtMost(1f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizeDcOffset = true,
-                        dcOffsetMin = nextMin,
-                        dcOffsetMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizeDcOffset = false,
-                        dcOffsetMin = existing.dcOffset,
-                        dcOffsetMax = existing.dcOffset
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeDcOffset())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.dcOffset.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    dcOffsetMin = safeMin,
-                    dcOffsetMax = safeMax,
-                    dcOffset = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    dcOffset = newVal,
-                    dcOffsetMin = newVal,
-                    dcOffsetMax = newVal
-                ))
-            }
+            onRandomizableChanged = dcOffsetCbs.onRandomizableChanged,
+            onRandomizeNow        = dcOffsetCbs.onRandomizeNow,
+            onRangeChanged        = dcOffsetCbs.onRangeChanged,
+            onValueChanged        = dcOffsetCbs.onValueChanged,
         )
         ImGui.spacing()
 
         // 4. Depth Slider
+        val depthCbs = cvModulatorSlider(
+            existing = existing,
+            getValue = { depth }, getMin = { depthMin }, getMax = { depthMax },
+            minLimit = 0f, maxLimit = 1f,
+            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDepth = enabled, depthMin = nMin, depthMax = nMax) },
+            copyWithRange   = { sMin, sMax, v -> copy(depthMin = sMin, depthMax = sMax, depth = v) },
+            copyWithValue   = { v -> copy(depth = v, depthMin = v, depthMax = v) },
+            randomizeNow    = { randomizeDepth() },
+            onReplace = onReplace,
+        )
         CustomRangeSlider.drawCustomRangeSlider(
             session = session,
             idPrefix = existing.id,
@@ -355,55 +267,15 @@ object AudioModulatorSection {
             currentValue = existing.depth,
             currentMin = existing.depthMin,
             currentMax = existing.depthMax,
-            minLimit = 0f,
-            maxLimit = 1f,
-            defaultValue = 0.5f,
+            minLimit = 0f, maxLimit = 1f, defaultValue = 0.5f,
             isRandomizable = existing.randomizeDepth,
             isRandomizeDisabled = param.isRandomizeDisabled,
             randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
             formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked ->
-                if (checked) {
-                    val rMin = existing.depthMin
-                    val rMax = existing.depthMax
-                    val (nextMin, nextMax) = if (rMin == rMax) {
-                        Pair((existing.depth - 0.1f).coerceAtLeast(0f), (existing.depth + 0.1f).coerceAtMost(1f))
-                    } else {
-                        Pair(rMin, rMax)
-                    }
-                    onReplace(existing.copy(
-                        randomizeDepth = true,
-                        depthMin = nextMin,
-                        depthMax = nextMax
-                    ))
-                } else {
-                    onReplace(existing.copy(
-                        randomizeDepth = false,
-                        depthMin = existing.depth,
-                        depthMax = existing.depth
-                    ))
-                }
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeDepth())
-            },
-            onRangeChanged = { nextMin, nextMax ->
-                val safeMin = minOf(nextMin, nextMax)
-                val safeMax = maxOf(nextMin, nextMax)
-                val nextActive = existing.depth.coerceIn(safeMin, safeMax)
-                onReplace(existing.copy(
-                    depthMin = safeMin,
-                    depthMax = safeMax,
-                    depth = nextActive
-                ))
-            },
-            onValueChanged = { newVal ->
-                onReplace(existing.copy(
-                    depth = newVal,
-                    depthMin = newVal,
-                    depthMax = newVal
-                ))
-            }
+            onRandomizableChanged = depthCbs.onRandomizableChanged,
+            onRandomizeNow        = depthCbs.onRandomizeNow,
+            onRangeChanged        = depthCbs.onRangeChanged,
+            onValueChanged        = depthCbs.onValueChanged,
         )
         ImGui.spacing()
     }

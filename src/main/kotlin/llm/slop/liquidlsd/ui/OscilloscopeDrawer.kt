@@ -433,14 +433,12 @@ object OscilloscopeDrawer {
         if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", timebaseComboIndex, timebaseLabels)) {
             param.setScopeTimebase(scopeKey, availableTimebases[timebaseComboIndex.get().coerceIn(0, availableTimebases.size - 1)])
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            val tooltip = if (isLfoScope) {
-                "Oscilloscope Time Window: Auto scales to LFO period, or choose a fixed window (1s to 24h)."
-            } else {
-                "Oscilloscope Time Window: Choose a fixed window (1s to 24h)."
-            }
-            ImGui.setTooltip(tooltip)
+        val tooltip = if (isLfoScope) {
+            "Oscilloscope Time Window: Auto scales to LFO period, or choose a fixed window (1s to 24h)."
+        } else {
+            "Oscilloscope Time Window: Choose a fixed window (1s to 24h)."
         }
+        itemTooltip(tooltip)
         ImGui.popItemWidth()
 
         ImGui.sameLine(0f, 7.6f)
@@ -477,9 +475,7 @@ object OscilloscopeDrawer {
                 param.modulators.clear()
                 param.modulators.addAll(updated)
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip(if (isMuted) "Unmute cell modulation (Route to Value)" else "Mute cell modulation (Preview on O-scope)")
-            }
+            itemTooltip(if (isMuted) "Unmute cell modulation (Route to Value)" else "Mute cell modulation (Preview on O-scope)")
             ImGui.popStyleColor(3)
         }
         ImGui.spacing()
@@ -544,21 +540,22 @@ object OscilloscopeDrawer {
         val my = io.mousePos.y
 
         if (mx in startX..(startX + w) && my in startY..(startY + h)) {
+            val baseKey = (startX.toInt() shl 16) xor startY.toInt()
             if (!hasLfo) {
                 if (abs(mx - nowX) <= 10f) {
-                    ImGui.setTooltip("Playhead (NOW):\nCurrent live value.")
+                    showTooltip("Playhead (NOW):\nCurrent live value.", baseKey xor 1)
                 } else {
-                    ImGui.setTooltip("Waveform History:\nRecorded CV trajectory leading into current value (-${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("-").removePrefix("+")} to NOW).")
+                    showTooltip("Waveform History:\nRecorded CV trajectory leading into current value (-${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("-").removePrefix("+")} to NOW).", baseKey xor 2)
                 }
             } else {
                 // LFO scope is always 50:50 — past and future spans are equal
                 val halfSpan = totalDuration * 0.5f
                 if (abs(mx - nowX) <= 6f) {
-                    ImGui.setTooltip("Playhead (NOW):\nCurrent parameter value & phase.")
+                    showTooltip("Playhead (NOW):\nCurrent parameter value & phase.", baseKey xor 3)
                 } else if (mx < nowX) {
-                    ImGui.setTooltip("Waveform Lookback:\nModulation trajectory leading into current phase (-${ScopeTimebase.formatTimeOffset(halfSpan).removePrefix("-").removePrefix("+")} to NOW).")
+                    showTooltip("Waveform Lookback:\nModulation trajectory leading into current phase (-${ScopeTimebase.formatTimeOffset(halfSpan).removePrefix("-").removePrefix("+")} to NOW).", baseKey xor 4)
                 } else {
-                    ImGui.setTooltip("Waveform Lookahead:\nProjected modulation trajectory ahead of current phase (NOW to +${ScopeTimebase.formatTimeOffset(halfSpan).removePrefix("+")}).")
+                    showTooltip("Waveform Lookahead:\nProjected modulation trajectory ahead of current phase (NOW to +${ScopeTimebase.formatTimeOffset(halfSpan).removePrefix("+")}).", baseKey xor 5)
                 }
             }
         }

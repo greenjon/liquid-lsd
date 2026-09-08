@@ -100,6 +100,34 @@ Left-clicking the main output monitor immediately focuses the Preset Grid to the
 ### 6. Custom Sliders (`CustomRangeSlider.kt` & `BeatDivisionSlider.kt`)
 - Compute row height (`h`), label positions (`labelY`), widget rows (`row2Y`), and center line (`centerY`) using calibrated typography metrics (`captionHeight`, `getFrameHeight()`) to ensure the "Current:" label and slider tracks never overlap adjacent rows or widgets.
 
+### 6a. `CvModulatorSliderHelpers.kt` — Randomizable Slider Callback Bundle
+
+Every `drawCustomRangeSlider` call operating on a `CvModulator` field requires three structurally identical callbacks: `onRandomizableChanged`, `onRangeChanged`, and `onValueChanged`. The helper function `cvModulatorSlider(...)` generates all three from a minimal description of which field is being bound:
+
+```kotlin
+val depthCbs = cvModulatorSlider(
+    existing = existing,
+    getValue = { depth }, getMin = { depthMin }, getMax = { depthMax },
+    minLimit = 0f, maxLimit = 1f,
+    copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDepth = enabled, depthMin = nMin, depthMax = nMax) },
+    copyWithRange   = { sMin, sMax, v -> copy(depthMin = sMin, depthMax = sMax, depth = v) },
+    copyWithValue   = { v -> copy(depth = v, depthMin = v, depthMax = v) },
+    randomizeNow    = { randomizeDepth() },
+    onReplace = onReplace,
+)
+// Pass callbacks directly into drawCustomRangeSlider named arguments:
+//   onRandomizableChanged = depthCbs.onRandomizableChanged
+//   onRandomizeNow        = depthCbs.onRandomizeNow
+//   onRangeChanged        = depthCbs.onRangeChanged
+//   onValueChanged        = depthCbs.onValueChanged
+```
+
+**Standard expansion logic** (`defaultOffset = 0.1f`): when enabling randomization and the range is currently collapsed (min == max), the range expands by `±defaultOffset`, clamped to `[minLimit, maxLimit]`. Sliders with non-standard expansion (e.g. beat subdivision uses index stepping, period/frame use multiplicative halving/doubling) keep their `onRandomizableChanged` inline and use the helper only for `onRangeChanged` / `onValueChanged`.
+
+**Files using this helper:** `Lfo1Section`, `Lfo2Section`, `AudioModulatorSection`, `MidiModulatorSection`.
+
+
+
 ### 7. `SettingsPanel.kt` & `AudioEnginePanel.kt`
 - **Settings Category Routing**: `SettingsPanel` organizes application preferences into 7 clean categories (`APPEARANCE`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `BROADCAST`, `MIDI_CONTROL`, `SHORTCUTS`, `GENERAL`) and supports targeted opening via `SettingsPanel.open(category)`. The `APPEARANCE` category displays an informational typography hierarchy and the "Preset Name Size" slider (80%–120%).
 - **Unified Modulator Control**: Enabling an engine subsystem (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) automatically determines column visibility in the Preset Grid and Cell Config panel. The Preset Grid header kebab menu (`⋮`) acts as a quick-switchboard to toggle these subsystems directly without modal navigation.
@@ -118,6 +146,35 @@ Left-clicking the main output monitor immediately focuses the Preset Grid to the
 - **Sticky Column Headers**: The 4 Library columns (Presets, Playlist Editor, Play Queue, Background Queue) use outer child containers configured with `ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoScrollWithMouse`. The top two rows of each column (header title + action buttons, followed by the filter/combo/control bar) remain pinned and sticky, while their items scroll independently in dedicated inner child windows (`##presets_scroll`, `##playlist_items_scroll`, `##queue_items_scroll`, `##bg_queue_items_scroll`).
 - **Proportional Action Buttons & Balanced Padding (`BrowserActionToolbar.kt`, `LibraryPanel.kt`)**: Action buttons (Quick Audition Lock, Deck Load A/B/BG/PV, and Queue Q/BGQ) and window controls use a compact height of ~22 px (`btnH = 22f * fontScale`) with width dynamically calculated as ~1.5x button height (`calculateButtonWidth(btnH)`). Library title bar vertical frame padding is scaled to 6.0 px (`libTitleBarH = 32f`), preserving the ~2.5 px bottom margin while adding sufficient top clearance to prevent button borders from clipping against the horizontal splitter line.
 - **Accurate Lucide PUA Mappings**: Audition latch toggle uses standard Lucide padlock codepoints (`Icons.LOCK = "\ue10b"`, `Icons.UNLOCK = "\ue10c"`).
+
+### 9. Tooltip Subsystem & Ergonomic Positioning (`TooltipHelper.kt`)
+- **Ergonomic Design Rationale**: Dear ImGui's built-in `setTooltip` positions popups strictly to the bottom-right of the mouse pointer (`mouse.x + 16, mouse.y + 10`), routinely obscuring parameter readouts, sliders, and adjacent matrix cells. In addition, Dear ImGui 1.86.12 lacks native hover delay flags (`ImGuiHoveredFlags.DelayNormal` was introduced in 1.88+). `TooltipHelper.kt` provides an ergonomic, zero-allocation tooltip positioning and delay subsystem.
+- **Pure Geometric Quadrant Engine (`calculateTooltipPos`)**:
+  - Calculates tooltip placement relative to a fixed $16 \times 22\,\text{px}$ cursor bounding box with a $4\,\text{px}$ vertical gap and $8\,\text{px}$ viewport margin.
+  - **Beneath Pointer**: By default, places the tooltip below the cursor box (`targetY = mouseY + CURSOR_HEIGHT + CURSOR_GAP`) with its left edge aligned with the cursor's left edge (`targetX = mouseX`, `pivotX = 0.0f`).
+  - **Right-Edge Alignment**: If the tooltip width overflows the right viewport edge (`mouseX + tipW > viewX + viewW - MARGIN`), it anchors to the cursor's right edge (`targetX = mouseX + CURSOR_WIDTH`, `pivotX = 1.0f`), extending cleanly to the left.
+  - **Bottom-Edge Overflow Flip**: If the tooltip overflows the viewport bottom (`targetY + tipH > viewY + viewH - MARGIN`), it flips above the cursor box (`targetY = mouseY - CURSOR_GAP`, `pivotY = 1.0f`).
+  - **Viewport Edge Clamping**: Clamps final window coordinates within viewport bounds `[viewX + MARGIN, viewX + viewW - MARGIN]`.
+- **`ImGuiCond.Always` — Required to Override Dear ImGui's Internal Positioning**:
+  - `prepareTooltipPos` uses `ImGuiCond.Always`. Dear ImGui's own `BeginTooltip()` internally calls `setNextWindowPos(mouse + offset, Always)` — any weaker condition such as `Appearing` is silently overridden, causing all tooltips to land at roughly the cursor hotspot position from frame 2 onward.
+  - `Always` ensures our `setNextWindowPos` fires last, wins, and places tooltips at the computed quadrant position every frame.
+- **Direct Top-Left Window Positioning with Zero ImGui Pivot**:
+  - `prepareTooltipPos` converts the geometric result `(targetX, targetY, pivotX, pivotY)` directly into top-left window coordinates: `finalX = targetX - contentWidth * pivotX`, `finalY = targetY - contentHeight * pivotY` (clamped within display bounds), passing `(finalX, finalY)` to `setNextWindowPos` with a zero pivot `(0.0f, 0.0f)`.
+  - In Dear ImGui, passing a non-zero pivot (e.g. `1.0f`) causes `SetNextWindowPos` to evaluate `pos -= window->SizeFull * pivot`. On frame 1 of a newly appearing tooltip, `window->SizeFull` is uninitialized `(0, 0)`, so ImGui applies a zero offset on frame 1 and only shifts the window on frame 2 when `SizeFull` is calculated. Pre-computing the top-left coordinate with zero pivot completely eliminates this frame-1 uninitialized size offset jump.
+- **8-Slot Circular Size Cache**:
+  - Custom tooltips cache their rendered width and height across frames in an 8-slot circular ring buffer. Hovering across rows in PresetGrid or switching between deck tooltips retains recent dimensions, guaranteeing immediate accurate quadrant placement without cache churn.
+- **`ImGuiCol.Text` and `ImGuiCol.Border` Theme Isolation**:
+  - All tooltip helpers push `ImGuiCol.Text` and `ImGuiCol.Border` using `TooltipHelper.baseTextColor` and `TooltipHelper.baseBorderColor` before `beginTooltip()`. This prevents styling state from calling widgets (such as `BrowserDeckButtons.push()`, which colors text and borders with deck accents) from bleeding into the tooltip window and its border.
+  - `UIThemeStyler.setupThemeColors()` sets both base colors whenever the theme is applied or switched.
+
+- **Zero-Allocation Hover Delay Tracker (`shouldShowTooltip`)**:
+  - Tracks hover state without runtime heap allocations using a spatial hash key combining item bounding rect and content: `(minX.toInt() shl 16) xor minY.toInt() xor text.hashCode()`.
+  - Compares `ImGui.getFrameCount()` against `lastHoveredFrame` to detect cursor departures or transitions between adjacent widgets.
+  - Suppresses rendering until the cursor hovers continuously for $250\,\text{ms}$ (`DEFAULT_HOVER_DELAY_MS`), preventing distracting visual flashing during mouse sweeps across sliders, buttons, and grid cells.
+- **Standardized UI Integration API**:
+  - `itemTooltip(text: String, delayMs: Long = 250L)`: Replaces the verbose boilerplate pattern `if (isItemHovered() && tooltipsEnabled) ImGui.setTooltip(text)` across all UI panels.
+  - `itemTooltip(delayMs: Long = 250L, block: () -> Unit)`: Renders custom multi-section tooltips with dimension measurement caching.
+  - `showTooltip(text: String)`: Positions and displays an ergonomic tooltip when hover detection is handled externally (e.g. within complex custom slider hitboxes).
 
 ---
 

@@ -124,9 +124,7 @@ object AboutModal {
             if (ImGui.button("GitHub Repository", 160f, 30f)) {
                 DocManager.openUrl("https://github.com/greenjon/liquid-lsd")
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Open the project repository on GitHub in your default browser.")
-            }
+            itemTooltip("Open the project repository on GitHub in your default browser.")
 
             ImGui.sameLine()
             if (ImGui.button("Documentation", 140f, 30f)) {

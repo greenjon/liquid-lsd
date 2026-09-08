@@ -132,8 +132,8 @@ object PresetGridTabs {
                 dl.addText(textX, textY, textCol, shortLabel)
             }
 
-            if (isHovered && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip(tooltipText)
+            if (isHovered) {
+                showTooltip(tooltipText, (pMinX.toInt() shl 16) xor (pMinY.toInt() and 0xFFFF))
             }
         }
         ImGui.popStyleVar()
@@ -237,9 +237,7 @@ object PresetGridTabs {
                 ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Click to change Visual Source for ${state.activeTopTab}.")
-        }
+        itemTooltip("Click to change Visual Source for ${state.activeTopTab}.")
         ImGui.popStyleColor(3)
 
         if (ImGui.beginPopup("##header_source_popup_${state.activeTopTab}")) {
@@ -323,15 +321,13 @@ object PresetGridTabs {
                         "Deck PV" -> state.activeDeckPVSubTab = tab
                     }
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    val tooltip = when (tab) {
-                        "SRC" -> "Source: Parameters for active visual generator (${deck.source.displayName})."
-                        "FX" -> "FX: Color, shading, and feedback loop parameters."
-                        "View" -> "View: 3D perspective, zoom, and rotation parameters."
-                        else -> "$tab parameters"
-                    }
-                    ImGui.setTooltip(tooltip)
+                val tooltip = when (tab) {
+                    "SRC" -> "Source: Parameters for active visual generator (${deck.source.displayName})."
+                    "FX" -> "FX: Color, shading, and feedback loop parameters."
+                    "View" -> "View: 3D perspective, zoom, and rotation parameters."
+                    else -> "$tab parameters"
                 }
+                itemTooltip(tooltip)
                 ImGui.popStyleColor(3)
             }
         }

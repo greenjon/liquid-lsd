@@ -218,9 +218,7 @@ object LibraryPanel {
                     }
                     session.uiTheme.saveSettings()
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(if (isHidden) "Restore Library" else "Minimize Library to bottom bar")
-                }
+                itemTooltip(if (isHidden) "Restore Library" else "Minimize Library to bottom bar")
 
                 ImGui.sameLine(0f, 2f)
 
@@ -239,9 +237,7 @@ object LibraryPanel {
                     }
                     session.uiTheme.saveSettings()
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(if (isFull) "Restore Library (Half size)" else "Maximize Library (Full size)")
-                }
+                itemTooltip(if (isFull) "Restore Library (Half size)" else "Maximize Library (Full size)")
             }
 
             ImGui.endMenuBar()

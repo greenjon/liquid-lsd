@@ -125,9 +125,7 @@ object ValueParamSection {
                 val newVal = if (options.size > 1) nextIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
                 param.set(newVal)
             }
-            if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Select symmetry-preserving cycle count. Keeps color distributions aligned with geometry lobes.")
-            }
+            itemTooltip("Select symmetry-preserving cycle count. Keeps color distributions aligned with geometry lobes.")
             ImGui.popItemWidth()
 
             ImGui.spacing()
@@ -349,9 +347,7 @@ object ValueParamSection {
                     param.baseMin = newVal
                     param.baseMax = newVal
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Select blending mode between Deck A and Deck B.\n0: ADD — additive blend\n1: SCREEN — screen blend\n2: MULT — multiply blend\n3: MAX — maximum pixel brightness\n4: XFADE — 4th-order polynomial crossfade")
-                }
+                itemTooltip("Select blending mode between Deck A and Deck B.\n0: ADD — additive blend\n1: SCREEN — screen blend\n2: MULT — multiply blend\n3: MAX — maximum pixel brightness\n4: XFADE — 4th-order polynomial crossfade")
                 ImGui.popItemWidth()
 
                 ImGui.spacing()
@@ -451,9 +447,7 @@ object ValueParamSection {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)
                 ImGui.popStyleColor()
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-                }
+                itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!randomizeBaseActive) {
                     ImGui.beginDisabled()

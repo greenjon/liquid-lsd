@@ -54,9 +54,7 @@ class MixerMonitorPanel(
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Main output monitor. Click to focus Preset Grid Mix tab.")
-        }
+        itemTooltip("Main output monitor. Click to focus Preset Grid Mix tab.")
         if (ImGui.isItemClicked(0)) {
             presetState.activeTopTab = "Mixer"
         }
@@ -110,9 +108,7 @@ class MixerMonitorPanel(
         if (ImGui.invisibleButton("##badge_btn_master", badgeW, badgeH) || ImGui.isItemClicked(0)) {
             presetState.activeTopTab = "Mixer"
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Master output. Click to focus Preset Grid Mix tab.")
-        }
+        itemTooltip("Master output. Click to focus Preset Grid Mix tab.")
 
         // 2. [🎲 ALL] Button (to the left of [M])
         if (session.uiTheme.randomizationEnabled) {
@@ -127,9 +123,7 @@ class MixerMonitorPanel(
                 PresetGridUndo.pushUndoState(presetState, mixer)
                 mixer.randomizeAll()
             }
-            if (isDieHovered && session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nClick to randomize with undo support.")
-            }
+            itemTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nClick to randomize with undo support.")
 
             val dieBg = when {
                 isDieActive -> ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 0.95f)
@@ -177,10 +171,8 @@ class MixerMonitorPanel(
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
                 mixer.masterLevel = 1.0f
             }
-            if (session.uiTheme.tooltipsEnabled) {
-                val pctText = (mixer.masterLevel * 100f).roundToInt()
-                ImGui.setTooltip("Master Level: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
-            }
+            val pctText = (mixer.masterLevel * 100f).roundToInt()
+            itemTooltip("Master Level: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
         }
 
         // Draw Fader Track
@@ -293,7 +285,7 @@ class MixerMonitorPanel(
 
             if (isHovered) {
                 ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
-                ImGui.setTooltip("Click to run Polkit elevation (pkexec) to grant non-root touch access for the Performance Console")
+                itemTooltip("Click to run Polkit elevation (pkexec) to grant non-root touch access for the Performance Console")
             }
             if (isClicked) {
                 controller.requestPermissionElevation()
@@ -352,9 +344,7 @@ class MixerMonitorPanel(
         ImGui.invisibleButton("##btn_crossfade_deck_a", badgeW, badgeH)
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
-            if (session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Deck A (Click to snap crossfader to Deck A)")
-            }
+            itemTooltip("Deck A (Click to snap crossfader to Deck A)")
         }
         if (ImGui.isItemClicked(0)) {
             mixer.onCrossfadeManualTakeover()
@@ -380,9 +370,7 @@ class MixerMonitorPanel(
         ImGui.invisibleButton("##btn_crossfade_deck_b", badgeW, badgeH)
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
-            if (session.uiTheme.tooltipsEnabled) {
-                ImGui.setTooltip("Deck B (Click to snap crossfader to Deck B)")
-            }
+            itemTooltip("Deck B (Click to snap crossfader to Deck B)")
         }
         if (ImGui.isItemClicked(0)) {
             mixer.onCrossfadeManualTakeover()
@@ -450,7 +438,7 @@ class MixerMonitorPanel(
             }
             val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
             val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            ImGui.setTooltip("Crossfader$midiText: $blendText\nDrag or scroll to blend. Middle-click to center.")
+            itemTooltip("Crossfader$midiText: $blendText\nDrag or scroll to blend. Middle-click to center.")
         }
 
         // --- Render Slider Visuals ---

@@ -440,9 +440,7 @@ object ColorTunerPanel {
                     ImGui.dummy(chipSize, chipSize)
                     ImGui.sameLine(0f, 4f)
                     session.uiTheme.caption(label)
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("${swatch.name}\n${swatch.hex}\nRGB(${swatch.r}, ${swatch.g}, ${swatch.b})")
-                    }
+                    itemTooltip("${swatch.name}\n${swatch.hex}\nRGB(${swatch.r}, ${swatch.g}, ${swatch.b})")
 
                     curX += totalW + itemSpacing
                 }
@@ -524,9 +522,7 @@ object ColorTunerPanel {
                                         currentRespectAlpha[elem.colId] = isAlpha.get()
                                         applySingleElementToImGui(session, elem.colId, currentSwatch, isAlpha.get())
                                     }
-                                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                                        ImGui.setTooltip("Respect background video transparency (alpha = 0.75)")
-                                    }
+                                    itemTooltip("Respect background video transparency (alpha = 0.75)")
                                 } else {
                                     session.uiTheme.caption("-")
                                 }

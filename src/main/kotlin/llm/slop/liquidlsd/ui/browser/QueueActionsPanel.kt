@@ -10,6 +10,7 @@ import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
 import mu.KotlinLogging
 import java.io.File
 
@@ -37,9 +38,7 @@ object QueueActionsPanel {
         if (ImGui.button("<##queuePrev", navBtnW, 0f)) {
             session.playQueueManager.triggerPrevious(mixer)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Trigger previous preset in Play Queue (Mixer/queuePrev).")
-        }
+        itemTooltip("Trigger previous preset in Play Queue (Mixer/queuePrev).")
 
         ImGui.sameLine()
         val autoVjActive = session.playQueueManager.isAutoVJEnabled
@@ -51,17 +50,13 @@ object QueueActionsPanel {
                 mixer.muteCrossfadeNonMidiCv()
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
-        }
+        itemTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
 
         ImGui.sameLine()
         if (ImGui.button(">##queueNext", navBtnW, 0f)) {
             session.playQueueManager.triggerNext(mixer)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
-        }
+        itemTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
 
         ImGui.separator()
         ImGui.spacing()
@@ -80,9 +75,7 @@ object QueueActionsPanel {
         if (repeatActive) {
             ImGui.popStyleColor(4)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
-        }
+        itemTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
 
         ImGui.sameLine()
         val shuffleActive = session.playQueueManager.isShuffleEnabled
@@ -101,17 +94,13 @@ object QueueActionsPanel {
         if (shuffleActive) {
             ImGui.popStyleColor(4)
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Shuffle Queue: play presets in a random order.")
-        }
+        itemTooltip("Shuffle Queue: play presets in a random order.")
 
         ImGui.sameLine()
         if (ImGui.button("Export")) {
             ImGui.openPopup("ExportQueuePopup")
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Save current queue sequence as a new playlist.")
-        }
+        itemTooltip("Save current queue sequence as a new playlist.")
         BrowserPopupHandler.drawExportQueuePopup(session)
 
         ImGui.sameLine()
@@ -120,9 +109,7 @@ object QueueActionsPanel {
             session.playQueueManager.clearQueue()
             selectedIndex = -1
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Empty the play queue.")
-        }
+        itemTooltip("Empty the play queue.")
 
         ImGui.separator()
         ImGui.spacing()

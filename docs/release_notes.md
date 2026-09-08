@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.54
+
+> [!NOTE]
+> **Release 1.0.0-beta.54** introduces the Inter-App Ecosystem & Interoperability Roadmap, live VJ Tap Tempo engine with phase downbeat quantization, ergonomic tooltip quadrant positioning with zero-pivot frame stabilization and opacity enforcement, and `cvModulatorSlider` callback deduplication across all parameter sections.
+
+### Inter-App Ecosystem & Interoperability Roadmap (`docs/developer/interop_roadmap.md`, `docs/index.md`)
+- Published the comprehensive multi-phase architectural roadmap for integrating Liquid LSD with third-party VJ software, media servers, and DAWs (Resolume, MadMapper, TouchDesigner, VDMX, OBS Studio, Ableton Live, Bitwig):
+  - **Phase 0 (Foundation & Ergonomics)**:
+    - **0.1 (Tooltip Formatting Polish)**: Multi-tier hover layout unification, eliminating visual clutter and standardizing type badges, values, descriptions, and shortcut hints.
+    - **0.2 (LFO Min/Max Conversion)**: Human-readable modulation bounds replacing abstract Depth and DC offset controls, paired with dual-ended range sliders and backward-compatible preset math.
+  - **Phase 1 (Stage Utility)**: Zero-copy GPU video sharing via Spout (Windows) and Syphon (macOS), providing independent output streams for Deck A, Deck B, Deck BG, Deck PV, and Master composite, featuring per-output resolution scaling and automatic naming conventions (`LiquidLSD-DeckA`, etc.).
+  - **Phase 2.1 (Content Library)**: Interactive Shader Format (ISF) parser to import thousands of open-source community visual generators and export Liquid LSD sources to third-party apps.
+  - **Phase 2.2 (FX System & Dual FX Slots)**: Migration of post-processing to modular ISF effect chains featuring two dedicated, modulatable FX slots per deck — `[ Slot 1: Color / Degradation ]` (Luma Key, Hue Cycle, Posterize, Invert) and `[ Slot 2: Spatial / Distortion ]` (Feedback Trails, Glitch, Mirror, Edge Warp).
+  - **Phase 2.3 (Mixer Transitions)**: Extensible ISF 2-image crossfade and transition shaders for custom Deck A/B blending.
+  - **Phase 3 (Musical Timing)**: Ableton Link peer-to-peer beat, tempo, and quantum phase synchronization as a network alternative to BTrack audio onset detection.
+  - **Phase 4 (Video Ingest & Processing)**: Spout/Syphon live video input as a selectable, automatable visual source with full preset persistence, 2D/3D geometry transforms, and audio-reactive feedback FX.
+
 ### VJ Tap Tempo & Phase Downbeat Synchronization (`TapTempoController.kt`, `AudioEngine.kt`, `BeatTrackerEngine.kt`, `MenuBar.kt`, `Mixer.kt`, `SettingsPanel.kt`)
 - **Real-Time Tap Cadence Engine (`TapTempoController.kt`)**:
   - Implements an allocation-free circular buffer averaging the last 8 tap intervals with nanosecond resolution.
@@ -18,6 +37,47 @@
 - **Beat & Flywheel Synchronization (`AudioEngine.kt`, `BeatTrackerEngine.kt`, `CVRegistry.kt`)**:
   - In manual/locked mode, `CVRegistry.alignBeatPhase()` instantly aligns visual pulses and CV oscillators to whole-beat boundaries without monotonic jitter filtering delay.
   - In audio tracking mode, `BeatTrackerEngine.nudgeTempo()` applies a stability lock (`isLocked = true`, `stableAccumulatedSec = stabilityLockDurationSec`) around the tapped BPM to keep the tracker locked to the tap.
+
+### Ergonomic Tooltip Quadrant Positioning, Opacity Enforcement & Zero-Allocation Hover Delay (`TooltipHelper.kt`, UI Panels)
+- **Mixxx/Qt-Inspired Quadrant Layout (`TooltipHelper.kt`)**:
+  - Replaced Dear ImGui's default bottom-right tooltip placement (`mouse + 16, mouse + 10`) which routinely obscured parameter sliders, values, and adjacent UI controls.
+  - Aligns tooltips beneath a fixed $16 \times 22\,\text{px}$ pointer bounding box with a $4\,\text{px}$ gap.
+  - **Dynamic Right-Edge Anchoring**: Aligns tooltip left edge with the cursor box left edge by default; automatically flips to anchor its right edge against the cursor box right edge when close to the viewport right border (extending leftward).
+  - **Bottom-Edge Overflow Flip**: Flips the tooltip above the cursor box when overflowing the bottom of the viewport/window.
+  - **Safety Margins**: Maintains an $8\,\text{px}$ margin from all viewport edges with boundary coordinate clamping.
+- **100% Solid Opacity Guarantee (`setNextWindowBgAlpha(1.0f)`)**:
+  - Fixed semi-transparent tooltip rendering when hovering over bypassed modulators or inactive buttons.
+  - Wrapped tooltip rendering in `ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 1.0f)` and `ImGui.setNextWindowBgAlpha(1.0f)` across all tooltip helpers, insulating tooltips from parent widget alpha inheritance and ensuring crisp, high-contrast legibility.
+- **Zero-Allocation Hover Delay Tracker (`TooltipHelper.kt`)**:
+  - Implements a non-allocating hover delay tracker ($250\,\text{ms}$ threshold) using spatial item hashing (`(minX shl 16) xor minY xor text.hashCode()`) and frame gap tracking.
+  - Eliminates visual flicker and tooltip pop-in during swift cursor sweeps across matrix rows, sliders, and buttons without relying on Dear ImGui 1.88+ flags.
+- **Zero Raw `setTooltip` / `beginTooltip` Across Entire Application**:
+  - Migrated 100% of tooltips across all UI subsystems to `itemTooltip`, `showTooltip`, and `showCustomTooltip`:
+    - `PresetGridRenderer` & `PresetGridPanel`: Value cells, MIDI cells, CV cells, parameter headers, column config kebab menu.
+    - `PresetGridTabs`: Left deck tabs, top source selectors, and subtabs.
+    - `ModulatorHeaderRow`: Power toggle, dice, operator dropdown, and clear controls.
+    - `MixerMonitorPanel` & `OscilloscopeDrawer`: Master monitor, crossfader, fader badges, oscilloscope canvas, timebase selector, and mute controls.
+    - `MenuBar`: Menu items, Recording HUD, Web Broadcast HUD, Beat Phase dots, BPM readout, DSP badge, frameless CSD window controls.
+    - `SettingsPanel` & `UpdatePromptModal`: All preference sliders, checkboxes, directory pickers, and modals.
+    - `LibraryPanel` & `browser/*`: Preset list issue badges, Playlists, Play Queue, Background Queue, and action toolbars.
+
+### `CvModulatorSliderHelpers.kt` — Randomizable Slider Callback Deduplication
+- Introduced `cvModulatorSlider(...)` in `ui/CvModulatorSliderHelpers.kt`, a helper that generates the standard `onRandomizableChanged` / `onRandomizeNow` / `onRangeChanged` / `onValueChanged` callback bundle for any `CvModulator` field exposed via `drawCustomRangeSlider`.
+- Eliminated ~280 lines of structurally identical boilerplate across `Lfo1Section`, `Lfo2Section`, `AudioModulatorSection`, and `MidiModulatorSection` (from 760+762+403+154 = 2079 total to 578+609+282+94+81 = 1644, a net reduction of ~435 lines including the new helper).
+- Beat-subdivision (index-stepping) and Period/Frame (multiplicative halving/doubling) sliders retain inline `onRandomizableChanged` blocks because their expansion logic differs from the standard `±offset` pattern.
+
+### Tooltip Polish — Round 2 & 3: Parameter Tooltip Positioning, Zero-Pivot Stabilization, Border & Text Isolation (`TooltipHelper.kt`, `UIThemeStyler.kt`)
+
+**Root cause of tooltip jumping and flickers**:
+- In Dear ImGui, passing non-zero pivot offsets (e.g. `pivotX = 1.0f` or `pivotY = 1.0f`) to `SetNextWindowPos` evaluates `pos -= window->SizeFull * pivot`. On frame 1 of a newly appearing tooltip, `window->SizeFull` is uninitialized `(0, 0)`. Dear ImGui therefore applied a 0-pixel offset on frame 1, placing the window at the cursor instead of shifted by its size, and only shifted it on frame 2 when `SizeFull` was computed.
+- In addition, an experimental `pushTextWrapPos` call forced text into a collapsing width loop where `recordCustomSize` recorded the collapsed width, shrinking text down to 1–2 characters wide and forming an unconstrained vertical tower.
+- **Fix**: Removed `pushTextWrapPos` completely, and updated `prepareTooltipPos` to convert `(targetX, targetY, pivotX, pivotY)` directly into exact top-left window coordinates: `finalX = targetX - contentWidth * pivotX`, `finalY = targetY - contentHeight * pivotY`, passing `(finalX, finalY)` to `setNextWindowPos` with a zero pivot `(0, 0)`. Dear ImGui receives pre-computed top-left coordinates and never applies uninitialized `SizeFull * pivot` offsets on frame 1.
+- **Size Cache Guard**: `recordCustomSize` now ignores degenerate dimensions (`width < 100f || height < 30f`), ensuring the cache only stores valid, rendered tooltip sizes.
+
+**Other improvements**:
+- **`ImGuiCol.Border` and `ImGuiCol.Text` Isolation**: Pushes `TooltipHelper.baseTextColor` and `TooltipHelper.baseBorderColor` (dynamically captured per theme in `UIThemeStyler.setupThemeColors()`) inside `pushTooltipStyles()`. Prevents button styles (like `BrowserDeckButtons` colored borders/text) from tinting tooltip windows or frames.
+- **8-Slot Circular Size Cache**: Keeps a rolling history of the last 8 custom tooltip dimensions (zero heap allocation), ensuring re-hovering across parameter rows or deck headers is an instant cache hit.
+- **Compilation Safety**: Annotated `pushTooltipStyles()` and `popTooltipStyles()` with `@PublishedApi internal` so public inline custom tooltip functions compile cleanly.
 
 ---
 

@@ -16,6 +16,8 @@ import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.PresetGridState
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.showCustomTooltip
 import mu.KotlinLogging
 import java.io.File
 
@@ -44,9 +46,7 @@ object PresetListPanel {
         if (ImGui.button("${Icons.PLUS}##preset_new_preset", btnSize, btnSize)) {
             ImGui.openPopup("create_new_preset_popup")
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Create new preset on a deck...")
-        }
+        itemTooltip("Create new preset on a deck...")
 
         if (ImGui.beginPopup("create_new_preset_popup")) {
             ImGui.textDisabled("Create new preset on:")
@@ -91,9 +91,7 @@ object PresetListPanel {
                 LibraryPanel.shouldReclaimFocus = true
             }
         }
-        if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-            ImGui.setTooltip("Type to filter presets by name or tags.\nPress Esc while searching to clear.")
-        }
+        itemTooltip("Type to filter presets by name or tags.\nPress Esc while searching to clear.")
 
         ImGui.separator()
         ImGui.spacing()
@@ -120,9 +118,7 @@ object PresetListPanel {
                     if (ImGui.button("${Icons.REFRESH} Restore Factory Presets")) {
                         FileSystemManager.restoreFactoryPresets()
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Re-extract bundled factory presets into library/presets")
-                    }
+                    itemTooltip("Re-extract bundled factory presets into library/presets")
                 }
             } else {
                 filtered.forEachIndexed { index, asset ->
@@ -173,26 +169,26 @@ object PresetListPanel {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
 
-            if (isRowHovered && session.uiTheme.tooltipsEnabled) {
+            if (isRowHovered) {
                 if (hasIssues) {
-                    ImGui.beginTooltip()
-                    ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset has inactive or hidden modulators:")
-                    ImGui.spacing()
-                    for (issue in issues) {
-                        ImGui.bullet()
-                        ImGui.text("${issue.title}: ${issue.description}")
-                    }
-                    if (asset.tags.isNotEmpty()) {
+                    showCustomTooltip(asset.path.hashCode()) {
+                        ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset has inactive or hidden modulators:")
                         ImGui.spacing()
+                        for (issue in issues) {
+                            ImGui.bullet()
+                            ImGui.text("${issue.title}: ${issue.description}")
+                        }
+                        if (asset.tags.isNotEmpty()) {
+                            ImGui.spacing()
+                            ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
+                        }
+                    }
+                } else if (asset.tags.isNotEmpty()) {
+                    showCustomTooltip(asset.path.hashCode()) {
+                        ImGui.text(asset.name)
+                        ImGui.separator()
                         ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
                     }
-                    ImGui.endTooltip()
-                } else if (asset.tags.isNotEmpty()) {
-                    ImGui.beginTooltip()
-                    ImGui.text(asset.name)
-                    ImGui.separator()
-                    ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
-                    ImGui.endTooltip()
                 }
             }
 

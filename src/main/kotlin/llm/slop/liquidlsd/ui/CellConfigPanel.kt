@@ -77,9 +77,7 @@ object CellConfigPanel {
                 if (ImGui.button(label, btnW, btnH)) {
                     state.selectedCell = PresetCellId(currentParamKey, targetCvId)
                 }
-                if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                    ImGui.setTooltip("Switch CellConfig view to $label CV modulation for parameter")
-                }
+                itemTooltip("Switch CellConfig view to $label CV modulation for parameter")
                 ImGui.popStyleColor(3)
             }
         }
@@ -252,9 +250,7 @@ object CellConfigPanel {
                         val newMod = existing.copy(id = java.util.UUID.randomUUID().toString(), bypassed = false, depth = 0.5f)
                         replaceModulator(state, param, newMod, mixer)
                     }
-                    if (ImGui.isItemHovered() && session.uiTheme.tooltipsEnabled) {
-                        ImGui.setTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")
-                    }
+                    itemTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")
                     ImGui.popStyleColor(3)
                     ImGui.popID()
                     continue
