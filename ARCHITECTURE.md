@@ -112,7 +112,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FBO.kt                  — OpenGL framebuffer wrapper
 │   ├── GLDebug.kt              — OpenGL debug context callbacks
 │   ├── GLResourceTracker.kt    — OpenGL leak tracking
-│   ├── TextureStreamer.kt      — Async texture loading
+│   ├── TextureStreamer.kt      — Multi-endpoint live video sharing (Spout2 on Windows, Syphon Obj-C Runtime on macOS, Linux Texture Bridge)
+│   ├── VideoOutputSettings.kt  — Video output endpoints, resolution overrides, scaling modes, and stream configurations
 │   └── ViewportHelper.kt       — Output scaling modes
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop

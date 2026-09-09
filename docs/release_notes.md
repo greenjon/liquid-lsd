@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.58
+
+> [!NOTE]
+> **Release 1.0.0-beta.58** introduces a multi-endpoint video sharing matrix allowing Decks and Master to be streamed simultaneously over GPU shared memory (Spout2 on Windows, native JNA Objective-C Runtime Syphon on macOS, Linux Texture Bridge) with per-endpoint resolution overrides and scaling modes.
+
 ### Multi-Endpoint Video Sharing Matrix (`VideoOutputSettings.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`, `UITheme.kt`, `AppSettings.kt`, `Renderer.kt`, `Main.kt`)
 - **Video Output Matrix**: Added configuration UI and pipeline routing for streaming individual Deck outputs (Deck A, Deck B, Deck BG, Deck PV) alongside Master output via Spout (Windows), Syphon (macOS), and Linux texture sharing bridges.
 - **Native Syphon Bridge (macOS)**: Replaced legacy JNI-based Syphon wrappers with a modern, high-performance Objective-C Runtime bridge using JNA pointers. Supports Intel and Apple Silicon (ARM64) natively.
