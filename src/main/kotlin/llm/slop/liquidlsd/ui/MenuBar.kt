@@ -204,6 +204,49 @@ class MenuBar(
                 }
                 itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
 
+                // ── Clock Source & Ableton Link Status Pill ─────────────────────
+                val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
+                val currentClock = AudioEngine.clockSource
+
+                if (currentClock == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
+                    val peers = linkEngine.getNumPeers()
+                    val peerText = if (peers == 1) "1 peer" else "$peers peers"
+                    val label = "${Icons.ACTIVITY} LINK [$peerText]"
+
+                    if (peers > 0) {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
+                    } else {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.65f, 0.25f, 1.0f)
+                    }
+
+                    if (ImGui.button(label)) {
+                        onOpenAudioEngineMonitor()
+                    }
+                    ImGui.popStyleColor(2)
+
+                    val backendName = linkEngine.getActiveBackendName()
+                    val quantumBeats = linkEngine.quantum.toInt()
+                    val linkTip = "Ableton Link Clock Active\nPeers: $peers connected\nQuantum: $quantumBeats beats (1 bar)\nBackend: $backendName\nClick to open Audio & Link settings."
+                    itemTooltip(linkTip)
+                }
+
+                if (ImGui.beginMenu("Clock: ${currentClock.displayName}")) {
+                    for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
+                        val isSelected = (source == currentClock)
+                        if (ImGui.menuItem(source.displayName, "", isSelected)) {
+                            AudioEngine.clockSource = source
+                            if (source == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
+                                linkEngine.setEnabled(true)
+                            }
+                            session.uiTheme.saveSettings()
+                        }
+                    }
+                    ImGui.endMenu()
+                }
+                itemTooltip("Select timing and beat clock synchronization source.")
+
                 if (ImGui.beginMenu("Help")) {
                     if (ImGui.menuItem("Documentation")) {
                         DocManager.openDocumentation()

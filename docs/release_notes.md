@@ -11,12 +11,14 @@
 - **Session Serialization & Web Broadcast**: Full persistence of `transitionSlot` in `SessionStateDto` and JSON broadcast serialization for web clients.
 - **Bundled Transitions**: Shipped default transition shaders: `linear_crossfade.fs`, `wipe_horizontal.fs`, `wipe_vertical.fs`, `radial_wipe.fs`, `glitch_transition.fs`, `luma_wipe.fs`, and `zoom_fade.fs`.
 
-### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `Main.kt`)
-- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows and Syphon on macOS.
+### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `Renderer.kt`, `VisualSourceRegistry.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `ExternalVideoSourceTest.kt`, `Main.kt`)
+- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows (`SpoutReceiverImpl`) and Syphon on macOS (`SyphonReceiverImpl`).
+- **Complete Rendering Pipeline Integration**: Integrated `renderExternalVideoSource` in `Renderer.kt`, blitting incoming video textures (`currentTextureId`) directly into deck framebuffers (`rawSource2DFBO` / `rawSourceFBO`) with full downstream 2D/3D transformations, feedback loops, and dual ISF post-processing slots.
 - **Dynamic Server Discovery**: Integrated background polling (`ExternalVideoDiscovery`) to automatically detect launched or closed external video servers across the system.
-- **Native Visual Source Integration**: Added `ExternalVideoSource`, making external video feeds selectable visual generators within Decks, fully routing into 2D/3D transformations, feedback loops, and ISF post-processing slots.
+- **Native Visual Source Integration & Registry Cleanup**: Added `ExternalVideoSource` to `VisualSourceRegistry` with single-instance guard checks, making external video feeds selectable visual generators within Decks.
 - **UI Server Selector**: Implemented a dynamic server combo selector in `PresetGridTabs` for picking live external servers.
-- **Preset Serialization**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load.
+- **Preset Serialization & Unit Tests**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load, with full unit test coverage in `ExternalVideoSourceTest.kt`.
+- **Platform Scope**: Windows (Spout2) and macOS (Syphon) active; Linux DMA-BUF / PipeWire ingest postponed.
 
 ### Phase 2.2.2: Multi-Pass ISF Engine, Dual FX Slots & Universal Shader Picker (`ShaderPickerPopup.kt`, `ISFParser.kt`, `ISFFilter.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`, `ISFMultiPassTest.kt`)
 - **Dual FX Architecture**: Added a second serialized FX slot (**Slot 2: Spatial / Distortion**) to each Deck pipeline (`Visual Source` $\rightarrow$ `2D/3D Transform` $\rightarrow$ `cleanFBO` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `feedback.frag`).

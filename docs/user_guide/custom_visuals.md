@@ -119,3 +119,13 @@ void main() {
 1. **Always Multiply by `uAlpha`**: Ensure `FragColor` final alpha or RGB output is scaled by `uAlpha`.
 2. **Handle Extreme Parameter Bounds**: Test parameters against extreme min/max values (via Random or LFO modulators) to verify shader stability.
 3. **Hot Shader Reloading**: Modify `.frag` or `meta.json` files and restart the app to see immediate updates.
+
+---
+
+## External Live Video Ingest (Spout & Syphon)
+
+In addition to procedural GLSL shaders, Liquid LSD can ingest live video feeds from third-party applications (OBS, Resolume, TouchDesigner, webcams, capture cards, media players):
+
+1. In the Deck **SRC** tab, select **External Video** from the Visual Source dropdown.
+2. In the **Server** dropdown combo box, pick any active Spout2 sender (Windows) or Syphon server (macOS) discovered on your local system.
+3. The live video stream routes directly into the Deck pipeline, allowing full 2D/3D transformations (zoom, rotation, tri-planar/tetrahedral projection), audio-reactive feedback loops, and dual ISF post-processing effects.

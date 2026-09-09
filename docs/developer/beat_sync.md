@@ -7,18 +7,18 @@ This document details tempo detection, beat clock flywheel accumulator logic, an
 ## Architecture Overview
 
 ```
-JACK / Java Sound Callback (Audio Engine Thread)
+Clock Source Selection: ClockSource (AUDIO_TRACKER | ABLETON_LINK | MANUAL_TAP)
     │
-    ├─► BeatTrackerEngine.processMultiBand() / processBlock()  ← runs every audio block (~50–200 Hz)
-    │       ├─► 512-Point Zero-Allocation FFT (Complex Spectral Difference ODF) [every block]
-    │       ├─► Multi-Band Cross-Spectral Autocorrelation & Harmonic Unwrapping [periodic every 4 blocks, ~21.5 Hz]
-    │       ├─► Causal Dynamic Programming Recurrence with Pre-Computed Log Penalties [every block]
-    │       └─► Beat Anchor Projections & Flywheel Tracking [every block]
+    ├──► ABLETON_LINK: AbletonLinkEngine (Native JNI / Carabiner TCP)
+    │       └─► CVRegistry.updateBeatAnchor(linkBeat, linkBpm, nanoTime)
     │
-    ├─► Flywheel Accumulator: totalBeats += (bufferFrames / sampleRate) * (BPM / 60.0)
-    │       └─► Second-order phase slew tracks pendingPhaseNudge
+    ├──► AUDIO_TRACKER: JACK / Java Sound Callback (Audio Engine Thread)
+    │       ├─► BeatTrackerEngine.processMultiBand() / processBlock()
+    │       └─► CVRegistry.updateBeatAnchor(totalBeats, bpm, nanoTime)
     │
-    └─► CVRegistry.updateBeatAnchor(totalBeats, bpm, nanoTime)
+    └──► MANUAL_TAP: Internal Manual Flywheel & Tap Tempo Controller
+            └─► CVRegistry.alignBeatPhase(alignedBeats, manualBpm, nanoTime)
+```
               │  (@Volatile primitive fields update: zero heap allocation)
               │
         Render Thread 0 (Every Frame @ 60Hz–144Hz+)

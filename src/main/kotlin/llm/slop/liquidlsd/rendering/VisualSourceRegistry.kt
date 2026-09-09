@@ -96,9 +96,6 @@ object VisualSourceRegistry {
                 logger.info { "Extracted bundled visual source: $sourceId" }
             }
         }
-        
-        // Register static native sources
-        availableSources.add(ExternalVideoSource())
     }
 
     fun loadAll() {
@@ -131,8 +128,10 @@ object VisualSourceRegistry {
             }
         }
         
-        // Register static native sources
-        availableSources.add(ExternalVideoSource())
+        // Register static native sources (ensure single instance)
+        if (availableSources.none { it is ExternalVideoSource }) {
+            availableSources.add(ExternalVideoSource())
+        }
     }
 
     private fun loadFromISFFile(file: File, overrideId: String? = null): ISFVisualSource? {

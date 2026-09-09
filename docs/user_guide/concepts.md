@@ -63,6 +63,19 @@ With the integration of hundreds of ISF sources, filters, and transition crossfa
 - **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (source selection vs. FX slot 1 vs. FX slot 2 vs. mixer transitions).
 - **Detach / Clear**: Use the `[ Detach / None ]` button to quickly clear a shader slot or reset the mixer to default built-in blend modes.
 
+### Ableton Link & Clock Synchronization
+Liquid LSD features a tri-state clock source engine (`ClockSource`):
+- **BTrack Audio**: Autonomous FFT onset detection and causal dynamic programming flywheel tracking live microphone/line input.
+- **Ableton Link**: Sample-accurate, peer-to-peer beat, phase, and tempo synchronization across local Ethernet and Wi-Fi networks with DAWs (Ableton Live, Bitwig, Serato, Traktor, Reaper) and VJ software.
+- **Manual Fixed**: Internal fixed-tempo flywheel with real-time VJ tap tempo cadence tracking and downbeat quantization.
+
+#### Using Ableton Link:
+1. Ensure Liquid LSD and your DAW / performance software are connected to the same local Wi-Fi or Ethernet network.
+2. In the top MenuBar, click the **Clock** menu and select **Ableton Link** (or enable Link in **Settings -> Audio Engine & Input Device**).
+3. The top bar will display `LINK [N peers]` showing active connected peers on the network.
+4. Changing tempo in your DAW automatically updates Liquid LSD's tempo and aligns LFOs, step sequencers, and beat modulators to the shared network beat timeline.
+5. Select the **Link Quantum** (1 beat, 4 beats / 1 bar, 8 beats / 2 bars, 16 beats / 4 bars) to align phrase triggers and visual cycles to musical bar boundaries.
+
 ### Dual FX Post-Processing Slots
 Each Deck features two serialized, independently modulatable ISF post-processing slots positioned before the feedback loop:
 - **Slot 1 (Color / Degradation)**: Color remapping, inversion, posterization, luma keying, and signal degradation filters.

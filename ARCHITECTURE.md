@@ -42,6 +42,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
 │   ├── BeatTrackerEngine.kt    — Real-time Beat Tracker (inspired by BTrack) with causal dynamic programming and continuous phase generator
+│   ├── ClockSource.kt          — Timing source enum (AUDIO_TRACKER, ABLETON_LINK, MANUAL_TAP)
 │   ├── JackClient.kt           — JNAJack callback wrapper
 │   ├── JavaSoundClient.kt      — Java Sound TargetDataLine fallback client
 │   ├── BiquadFilter.kt         — Zero-alloc biquad IIR filter
@@ -50,6 +51,12 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SystemAudioVolume.kt    — Master volume control
 │   ├── MidiJackWatchdog.kt     — MIDI hotplug monitoring
 │   └── TapTempoController.kt   — VJ tap tempo cadence tracking, interval averaging, 2.0s timeout reset, and phase alignment
+├── link/                       — Ableton Link network interop & clock synchronization
+│   ├── AbletonLinkEngine.kt    — Central manager for Link network session state & tempo sync
+│   ├── LinkBackend.kt          — Driver interface (Native JNI, Carabiner TCP, No-Op)
+│   ├── NativeJniLinkBackend.kt — C++ JNI bridge (liblink_jni) embedding ableton::Link
+│   ├── CarabinerTcpLinkBackend.kt — TCP socket client for local Carabiner daemon
+│   └── NoOpLinkBackend.kt      — Disconnected fallback backend
 ├── broadcast/
 │   ├── BroadcastEngine.kt      — Live WebSocket relay client, throttled delta streaming, auto-reconnect
 │   ├── BroadcastSettings.kt    — Broadcast configuration and persistence (lsd-settings.properties)

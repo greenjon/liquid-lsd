@@ -54,6 +54,7 @@ junk.json
 old_cell.kt
 imgui.ini
 output/
+.artifacts/
 
 # Website export bundle
 greenjon/

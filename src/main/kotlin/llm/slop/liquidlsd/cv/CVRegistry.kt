@@ -198,6 +198,11 @@ object CVRegistry {
     fun updateAll() {
         currentFrameIndex++
         targetFps = llm.slop.liquidlsd.ui.UITheme.maxFps.coerceAtLeast(1).toFloat()
+
+        if (llm.slop.liquidlsd.audio.AudioEngine.clockSource == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
+            llm.slop.liquidlsd.link.AbletonLinkEngine.updateClockAnchor()
+        }
+
         val totalBeats = getSynchronizedTotalBeats()
         val elapsedSeconds = getElapsedRealtimeSec()
 

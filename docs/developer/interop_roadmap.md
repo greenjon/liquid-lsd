@@ -150,24 +150,26 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
 
 ---
 
-## Phase 3: Musical Timing — Ableton Link Integration
+## Phase 3: Musical Timing — Ableton Link Integration [COMPLETED]
 
 ### Objective
 Provide synchronization with DAWs (Ableton Live, Bitwig, Traktor, Serato, Reaper) and other performance software across local Wi-Fi or Ethernet networks via **Ableton Link**, supplementing Liquid LSD's real-time audio FFT/beat tracker (`BeatTrackerEngine`).
 
 ### Architecture & Synchronization Model
-- **Dual Timing Backend (Hybrid Clock)**:
-  - Users can select the clock source in the MenuBar or Settings:
-    - `Audio Tracker (BTrack)`: Autonomous FFT onset detection and dynamic programming flywheel from live microphone/line input.
-    - `Ableton Link`: Network-synchronized shared beat timeline, tempo, and quantum phase.
-    - `Manual / Tap Tempo`: Internal flywheel running at fixed manual BPM.
-- **Link Beat Engine Integration**:
-  - Integrate native Ableton Link library via JNI / C bindings.
-  - Synchronize tempo (BPM changes propagate bidirectionally across the Link session).
-  - Synchronize phase: map Link beat time into `CVRegistry` beat clock phase ($0.0 \dots 1.0$) and whole-beat downbeat quantizations.
-  - Support quantum settings (e.g. 4 beats / 1 bar, 8 beats / 2 bars) for phrase-aligned preset triggers and modulator cycling.
+- **Tri-State Timing Core (Hybrid Clock)**:
+  - Selectable clock source in MenuBar, Audio Panel, and Settings:
+    - `BTrack Audio`: Autonomous FFT onset detection and dynamic programming flywheel from live microphone/line input.
+    - `Ableton Link`: Network-synchronized shared beat timeline, tempo, and quantum phase across local peers.
+    - `Manual Fixed`: Internal flywheel running at fixed manual BPM with VJ tap tempo.
+- **Multi-Backend Link Engine (`AbletonLinkEngine`)**:
+  - Native JNI C++ bridge (`link_jni` embedding `ableton::Link`) supporting `linux-x64`, `windows-x64`, `macos-x64`, and `macos-arm64`.
+  - Secondary Carabiner TCP socket backend (`CarabinerTcpLinkBackend`) for local daemon connectivity.
+  - Automatic `NoOpLinkBackend` fallback when Link is inactive or uninstalled.
+  - Bidirectional tempo and phase synchronization mapping into `CVRegistry`.
+  - Quantum selection (1, 4, 8, 16 beats) and start/stop transport sync support.
 - **UI & HUD Indicators**:
-  - Top MenuBar status indicator: `LINK [N peers]` showing connected peers, session tempo, and bar phase ring.
+  - Top MenuBar status pill `LINK [N peers]` showing connected peers, quantum phase ring, active driver, and quick clock dropdown menu.
+  - Dedicated Ableton Link controls card in `AudioEnginePanel`.
   - Seamless fallback: if Link session disconnects, clock seamlessly reverts to internal flywheel or audio tracking without audio/visual glitches.
 
 ---
@@ -186,12 +188,15 @@ Enable Liquid LSD to ingest external live video streams (webcams, Blackmagic cap
   - The external source selection is serialized in preset JSON (`sourceId: "spout_input"`, `serverName: "Resolume Arena - Layer 1"`).
   - Graceful fallback: if the saved server name is not found on preset load, displays empty / disconnected state cleanly without crashing the render pipeline.
 - **Video Processing Pipeline**:
-  - External video frames are consumed via `TextureReceiver` and bound to Liquid LSD's rendering pipeline.
-  - Full compatibility with Liquid LSD's downstream stages:
+  - External video frames are consumed via `TextureReceiver` and bound to Liquid LSD's rendering pipeline (`renderExternalVideoSource` in `Renderer.kt`).
+  - Active video textures (`currentTextureId`) blit into deck framebuffers (`rawSource2DFBO` / `rawSourceFBO`) with full compatibility across Liquid LSD's downstream stages:
     - 2D transforms: Zoom, Rotate Z, Pan.
     - 3D projections: Tri-Planar, Cube Cage, Hex-Planar, and Coxeter space folding.
     - Audio-reactive feedback loops (decay, chromatic aberration, blur, hue shifts).
     - ISF post-processing effects.
+- **Platform Scope**:
+  - Windows (Spout2 via `SpoutReceiverImpl`) and macOS (Syphon via `SyphonReceiverImpl`) are fully active.
+  - Linux DMA-BUF / PipeWire ingest is postponed and stubbed to `NullTextureReceiver`.
 
 ---
 

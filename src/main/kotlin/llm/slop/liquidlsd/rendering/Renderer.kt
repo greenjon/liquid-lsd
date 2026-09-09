@@ -31,6 +31,10 @@ class Renderer {
     }
 
     fun render(source: VisualSource, targetFBO: FBO) {
+        if (source is ExternalVideoSource) {
+            renderExternalVideoSource(source, targetFBO)
+            return
+        }
         if (source !is DynamicVisualSource) return
 
         val hasFb = source.hasFeedback
@@ -102,7 +106,28 @@ class Renderer {
         }
     }
 
+    private fun renderExternalVideoSource(source: ExternalVideoSource, targetFBO: FBO) {
+        targetFBO.bind()
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
 
+        val tex = source.currentTextureId
+        if (tex != 0) {
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+            blitShader.bind()
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            blitShader.setUniform("uTexture", 0)
+
+            Geometry.drawFullscreenQuad()
+
+            blitShader.unbind()
+            glActiveTexture(GL_TEXTURE0)
+        }
+        targetFBO.unbind()
+    }
 
     /**
      * Renders a Deck's visual source and updates its ping-pong feedback loop.

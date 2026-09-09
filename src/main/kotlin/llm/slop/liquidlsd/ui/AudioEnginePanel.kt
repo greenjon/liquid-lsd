@@ -437,6 +437,83 @@ object AudioEnginePanel {
             }
 
             // -----------------------------------------------------------------
+            // Clock Sync & Ableton Link Section
+            // -----------------------------------------------------------------
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            theme.h2("${Icons.ACTIVITY} Clock Sync & Ableton Link")
+            ImGui.separator()
+            ImGui.spacing()
+
+            val currentClock = AudioEngine.clockSource
+            theme.body("Active Clock Source:")
+            for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
+                if (ImGui.radioButton("${source.displayName}##clock_${source.name}", currentClock == source)) {
+                    AudioEngine.clockSource = source
+                    if (source == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
+                        llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(true)
+                    }
+                    theme.saveSettings()
+                }
+                ImGui.sameLine(0f, 16f)
+            }
+            ImGui.newLine()
+
+            val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
+            val isLinkEnabled = linkEngine.isEnabled
+
+            val linkState = imgui.type.ImBoolean(isLinkEnabled)
+            if (ImGui.checkbox("Enable Ableton Link", linkState)) {
+                linkEngine.setEnabled(linkState.get())
+                theme.saveSettings()
+            }
+            itemTooltip("Participate in local network Ableton Link session for peer tempo & beat sync.")
+
+            if (isLinkEnabled) {
+                val peers = linkEngine.getNumPeers()
+                val backendName = linkEngine.getActiveBackendName()
+
+                ImGui.alignTextToFramePadding()
+                theme.body("Peers Connected: ")
+                ImGui.sameLine()
+                if (peers > 0) {
+                    theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "$peers peer(s)")
+                } else {
+                    theme.bodyColored(0.9f, 0.7f, 0.2f, 1.0f, "0 peers (searching...)")
+                }
+
+                ImGui.sameLine(0f, 20f)
+                theme.body("Driver: ")
+                ImGui.sameLine()
+                theme.captionColored(0.6f, 0.8f, 1.0f, 1.0f, backendName)
+
+                // Quantum Selector
+                ImGui.spacing()
+                theme.body("Link Quantum:")
+                val currentQuantum = linkEngine.quantum
+                val quantums = doubleArrayOf(1.0, 4.0, 8.0, 16.0)
+                val quantumLabels = arrayOf("1 Beat", "4 Beats (1 Bar)", "8 Beats (2 Bars)", "16 Beats (4 Bars)")
+                for (i in quantums.indices) {
+                    val q = quantums[i]
+                    if (ImGui.radioButton("${quantumLabels[i]}##quantum_$q", currentQuantum == q)) {
+                        linkEngine.quantum = q
+                        theme.saveSettings()
+                    }
+                    if (i < quantums.size - 1) ImGui.sameLine(0f, 12f)
+                }
+
+                // Transport Sync
+                val ssSync = imgui.type.ImBoolean(linkEngine.isStartStopSyncEnabled())
+                if (ImGui.checkbox("Enable Start/Stop Transport Sync", ssSync)) {
+                    linkEngine.setStartStopSyncEnabled(ssSync.get())
+                    theme.saveSettings()
+                }
+                itemTooltip("Synchronize play/pause transport state across connected Ableton Link peers.")
+            }
+
+            // -----------------------------------------------------------------
             // RIGHT COLUMN: Raw Audio Input + Sound-Derived CV Oscilloscopes
             // -----------------------------------------------------------------
             ImGui.tableSetColumnIndex(1)

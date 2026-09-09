@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Phase 3: Musical Timing — Ableton Link Integration (`ClockSource.kt`, `AbletonLinkEngine.kt`, `LinkBackend.kt`, `NativeJniLinkBackend.kt`, `CarabinerTcpLinkBackend.kt`, `NativeLibraryLoader.kt`, `MenuBar.kt`, `AudioEnginePanel.kt`, `SettingsPanel.kt`, `AppSettings.kt`, `UITheme.kt`, `AbletonLinkEngineTest.kt`)
+- **Tri-State Clock Source Core**: Integrated `ClockSource` enum (`AUDIO_TRACKER` for BTrack FFT onset engine, `ABLETON_LINK` for network peer sync, `MANUAL_TAP` for internal fixed tempo & VJ tap tempo).
+- **Multi-Backend Ableton Link Architecture**:
+  - Native JNI C++ bridge (`link_jni` embedding `ableton::Link`) for sample-accurate peer-to-peer beat, phase, and tempo sync across `linux-x64`, `windows-x64`, `macos-x64`, and `macos-arm64`.
+  - Carabiner TCP socket backend (`CarabinerTcpLinkBackend`) connecting to local Carabiner Link daemon (`127.0.0.1:17000`).
+  - Graceful `NoOpLinkBackend` fallback when Link is inactive.
+- **Top MenuBar Telemetry & HUD Pill**: Added `LINK [N peers]` status pill, quantum bar phase ring, active driver readout, and clock source dropdown selector (`[BTRACK]`, `[LINK]`, `[MANUAL]`).
+- **Audio Engine & Settings Controls**: Added dedicated Ableton Link configuration card in `AudioEnginePanel` with quantum selector (1, 4, 8, 16 beats) and start/stop transport sync support.
+- **Settings Persistence & Unit Tests**: Full persistence of clock source and Link configuration in `AppSettings` / `UITheme`, with unit test suite in `AbletonLinkEngineTest.kt`.
+
 ### Phase 2.3: ISF Mixer Transitions & Fallback Architecture (`ISFTransitionRegistry.kt`, `ISFFilter.kt`, `Mixer.kt`, `Renderer.kt`, `ShaderPickerPopup.kt`, `MixerMonitorPanel.kt`, `PresetGridPanel.kt`, `PresetModels.kt`, `PresetManager.kt`, `WebPresetSerializer.kt`)
 - **Extensible ISF Transition Engine**: Integrated shader-based crossfader transitions accepting `startImage` (Deck A), `endImage` (Deck B), and `progress` ($0.0 \dots 1.0$).
 - **Fallback Non-ISF Mixer**: Guaranteed seamless fallback to built-in non-ISF `mixer.frag` blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) when `transitionFilter == null`.
@@ -11,12 +21,14 @@
 - **Session Serialization & Web Broadcast**: Full persistence of `transitionSlot` in `SessionStateDto` and JSON broadcast serialization for web clients.
 - **Bundled Transitions**: Shipped default transition shaders: `linear_crossfade.fs`, `wipe_horizontal.fs`, `wipe_vertical.fs`, `radial_wipe.fs`, `glitch_transition.fs`, `luma_wipe.fs`, and `zoom_fade.fs`.
 
-### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `Main.kt`)
-- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows and Syphon on macOS.
+### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `Renderer.kt`, `VisualSourceRegistry.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `ExternalVideoSourceTest.kt`, `Main.kt`)
+- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows (`SpoutReceiverImpl`) and Syphon on macOS (`SyphonReceiverImpl`).
+- **Complete Rendering Pipeline Integration**: Integrated `renderExternalVideoSource` in `Renderer.kt`, blitting incoming video textures (`currentTextureId`) directly into deck framebuffers (`rawSource2DFBO` / `rawSourceFBO`) with full downstream 2D/3D transformations, feedback loops, and dual ISF post-processing slots.
 - **Dynamic Server Discovery**: Integrated background polling (`ExternalVideoDiscovery`) to automatically detect launched or closed external video servers across the system.
-- **Native Visual Source Integration**: Added `ExternalVideoSource`, making external video feeds selectable visual generators within Decks, fully routing into 2D/3D transformations, feedback loops, and ISF post-processing slots.
+- **Native Visual Source Integration & Registry Cleanup**: Added `ExternalVideoSource` to `VisualSourceRegistry` with single-instance guard checks, making external video feeds selectable visual generators within Decks.
 - **UI Server Selector**: Implemented a dynamic server combo selector in `PresetGridTabs` for picking live external servers.
-- **Preset Serialization**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load.
+- **Preset Serialization & Unit Tests**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load, with full unit test coverage in `ExternalVideoSourceTest.kt`.
+- **Platform Scope**: Windows (Spout2) and macOS (Syphon) active; Linux DMA-BUF / PipeWire ingest postponed.
 
 ### Phase 2.2.2: Multi-Pass ISF Engine, Dual FX Slots & Universal Shader Picker (`ShaderPickerPopup.kt`, `ISFParser.kt`, `ISFFilter.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`, `ISFMultiPassTest.kt`)
 - **Dual FX Architecture**: Added a second serialized FX slot (**Slot 2: Spatial / Distortion**) to each Deck pipeline (`Visual Source` $\rightarrow$ `2D/3D Transform` $\rightarrow$ `cleanFBO` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `feedback.frag`).

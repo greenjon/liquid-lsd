@@ -347,6 +347,27 @@ object UITheme {
                     logger.info { "Loaded audioManualBpm from settings: $savedManualBpm" }
                 }
 
+                props.getProperty("clockSource")?.let { savedSource ->
+                    try {
+                        AudioEngine.clockSource = llm.slop.liquidlsd.audio.ClockSource.valueOf(savedSource)
+                    } catch (_: Exception) {}
+                }
+                props.getBoolean("linkEnabled")?.let {
+                    llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(it)
+                }
+                props.getProperty("linkQuantum")?.toDoubleOrNull()?.let {
+                    llm.slop.liquidlsd.link.AbletonLinkEngine.quantum = it.coerceIn(1.0, 32.0)
+                }
+                props.getBoolean("linkStartStopSync")?.let {
+                    llm.slop.liquidlsd.link.AbletonLinkEngine.setStartStopSyncEnabled(it)
+                }
+                props.getProperty("carabinerHost")?.let {
+                    llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerHost = it
+                }
+                props.getProperty("carabinerPort")?.toIntOrNull()?.let {
+                    llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerPort = it.coerceIn(1024, 65535)
+                }
+
                 val savedBeatTarget = props.getProperty("audioBeatTarget")?.let {
                     try { AudioTarget.valueOf(it) } catch (e: Exception) { null }
                 }
@@ -501,6 +522,12 @@ object UITheme {
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
+            props.setProperty("clockSource", AudioEngine.clockSource.name)
+            props.setProperty("linkEnabled", llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled.toString())
+            props.setProperty("linkQuantum", llm.slop.liquidlsd.link.AbletonLinkEngine.quantum.toString())
+            props.setProperty("linkStartStopSync", llm.slop.liquidlsd.link.AbletonLinkEngine.isStartStopSyncEnabled().toString())
+            props.setProperty("carabinerHost", llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerHost)
+            props.setProperty("carabinerPort", llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerPort.toString())
             props.setProperty("audioBeatTarget", AudioEngine.beatDetector.settings.target.name)
             props.setProperty("audioBpmFloor", AudioEngine.beatDetector.settings.bpmSearchFloor.toString())
             props.setProperty("audioBpmCeiling", AudioEngine.beatDetector.settings.bpmSearchCeiling.toString())
