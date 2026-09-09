@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.60
+
+> [!NOTE]
+> **Release 1.0.0-beta.60** introduces Phase 2.2.1 modular post-processing FX Slot 1 with native single-pass ISF filter engine integration across Deck pipelines, hardware dry/wet signal blending via `glBlendColor`, bundled creative filters, FX tab parameter controls, and preset serialization.
+
 ### Phase 2.2.1: Single-Pass ISF Filter Engine & Deck Pipeline Integration (`VisualEffect.kt`, `ISFFilter.kt`, `ISFFilterRegistry.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`)
 - **Modular FX Slot 1**: Integrated a dedicated post-processing FX slot into each Deck's rendering pipeline.
 - **ISF Filter Support**: Native support for single-pass ISF (Interactive Shader Format) image filters with automatic parameter mapping.
