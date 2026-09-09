@@ -350,8 +350,10 @@ class MixerMonitorPanel(
             mixer.crossfade.set(-1.0f)
         }
 
-        // 2. Deck B Box (styled identically to Deck B monitor badge)
-        val badgeBX = startX + contentW - badgeW - 1f
+        // 2. Deck B Box & Transition Picker
+        val gap = 10f
+        val transBtnW = 140f
+        val badgeBX = startX + contentW - badgeW - transBtnW - gap - 1f
         val badgeBY = startY
         val rgbB = BrowserDeckButtons.colorB()
         val colorB = ImGui.colorConvertFloat4ToU32(rgbB[0], rgbB[1], rgbB[2], 1f)
@@ -376,8 +378,18 @@ class MixerMonitorPanel(
             mixer.crossfade.set(1.0f)
         }
 
+        // Transition Shader Selector Button
+        val transBtnX = badgeBX + badgeW + gap
+        ImGui.setCursorScreenPos(transBtnX, badgeBY)
+        val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
+        if (ImGui.button("${Icons.SETTINGS} $transName##trans_picker_btn", transBtnW, badgeH)) {
+            ShaderPickerPopup.show("Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { id ->
+                mixer.setTransition(id)
+            }
+        }
+        itemTooltip("Select ISF transition shader (wipes, glitches, dissolves) or default non-ISF blend modes.")
+
         // 3. Crossfader Slider (Standard track slider style from CustomRangeSlider)
-        val gap = 10f
         val lineStartX = badgeAX + badgeW + gap
         val lineEndX = badgeBX - gap
         val lineWidth = (lineEndX - lineStartX).coerceAtLeast(10f)

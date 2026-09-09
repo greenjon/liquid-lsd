@@ -102,10 +102,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── VisualEffect.kt         — Interface for post-processing effects
-│   ├── isf/                    — ISF specification parser, data models, ISFFilter, and ISFVisualSource
+│   ├── isf/                    — ISF specification parser, data models, ISFFilter, ISFVisualSource, and ISFTransitionRegistry
 │   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + fxFBO1 + ping-pong FBOs + 2D/3D View params + FB params
-│   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers (Deck PV excluded)
-│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> mix -> blit
+│   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers & ISF transition engine (blendFBO)
+│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> ISF transition pass / non-ISF mix -> composite -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging and uniform binding

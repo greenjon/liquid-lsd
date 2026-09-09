@@ -653,3 +653,17 @@ This document outlines the key architectural decisions made in the development o
   - Unlocks rich creative post-processing combinations (e.g. Invert/Posterize in Slot 1 followed by Bloom/Glitch in Slot 2) prior to entering feedback.
   - Zero draw call / zero memory overhead when slots are bypassed or Dry/Wet is $0.0$.
   - Strictly adheres to VIDVOX ISF 2.0 specifications and Liquid LSD's zero-heap real-time performance guidelines.
+
+## Phase 2.3: ISF Mixer Transitions & Fallback Architecture (`ISFTransitionRegistry.kt`, `ISFFilter.kt`, `Mixer.kt`, `Renderer.kt`, `ShaderPickerPopup.kt`, `MixerMonitorPanel.kt`, `PresetGridPanel.kt`, `PresetModels.kt`, `PresetManager.kt`, `WebPresetSerializer.kt`)
+
+- **Decision**: Implement extensible ISF-based crossfader transitions while maintaining seamless fallback to the built-in non-ISF mixer:
+  - **ISF Transition Engine (`ISFTransitionRegistry.kt`, `ISFFilter.kt`)**: Implemented ISF transition shader loading for 2-image transitions accepting `startImage` (Deck A), `endImage` (Deck B), and `progress` ($0.0 \dots 1.0$).
+  - **Fallback Non-ISF Mixer (`Mixer.kt`, `Renderer.kt`)**: When no ISF transition is selected (`transitionFilter == null`), rendering falls back to `mixerShader` (`mixer.frag`) with built-in blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`).
+  - **Composite Pipeline Integrity (`Renderer.kt`)**: Active transition shaders render into an intermediate `blendFBO`, which is then composited in `mixer.frag` with Deck BG (`uTexBG`), channel level multipliers (`uLevelA`, `uLevelB`, `uLevelBG`), master bloom, and master alpha.
+  - **Shader Picker Integration (`ShaderPickerPopup.kt`)**: Extended `ShaderPickerPopup` with `PickerType.MIXER_TRANSITION` for category filtering, fuzzy search, and detaching transitions back to default blend modes.
+  - **Modulatable Transition Parameters (`PresetGridPanel.kt`, `MixerMonitorPanel.kt`)**: Transition parameters (e.g. wipe direction, softness, glitch intensity) automatically register in the Preset Grid Mix tab for LFO, audio reactivity, and MIDI modulation.
+  - **Session Serialization (`PresetModels.kt`, `PresetManager.kt`, `WebPresetSerializer.kt`)**: Added `transitionSlot: FXSlotDto?` to `SessionStateDto` for preset persistence and web client state synchronization.
+  - **Bundled Transitions (`default_transitions/`)**: Shipped bundled transition shaders: `linear_crossfade.fs`, `wipe_horizontal.fs`, `wipe_vertical.fs`, `radial_wipe.fs`, `glitch_transition.fs`, `luma_wipe.fs`, and `zoom_fade.fs`.
+- **Rationale**:
+  - Completes Phase 2 of the Interoperability Roadmap by standardizing visual sources, dual FX slots, and mixer transitions on the open ISF specification.
+  - Guarantees 100% backward compatibility and zero overhead when custom transition shaders are not in use.

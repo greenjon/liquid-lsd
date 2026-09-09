@@ -279,7 +279,8 @@ data class SessionStateDto(
     val levelB: Float = 1.0f,
     val levelBG: Float = 1.0f,
     val levelPV: Float = 1.0f,
-    val masterLevel: Float = 1.0f
+    val masterLevel: Float = 1.0f,
+    val transitionSlot: FXSlotDto? = null
 )
 
 @Serializable

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Phase 2.3: ISF Mixer Transitions & Fallback Architecture (`ISFTransitionRegistry.kt`, `ISFFilter.kt`, `Mixer.kt`, `Renderer.kt`, `ShaderPickerPopup.kt`, `MixerMonitorPanel.kt`, `PresetGridPanel.kt`, `PresetModels.kt`, `PresetManager.kt`, `WebPresetSerializer.kt`)
+- **Extensible ISF Transition Engine**: Integrated shader-based crossfader transitions accepting `startImage` (Deck A), `endImage` (Deck B), and `progress` ($0.0 \dots 1.0$).
+- **Fallback Non-ISF Mixer**: Guaranteed seamless fallback to built-in non-ISF `mixer.frag` blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) when `transitionFilter == null`.
+- **Composite Chain Preserved**: Transition output is composited in `mixer.frag` with Deck BG (`uTexBG`), channel gain multipliers, master bloom, and master alpha.
+- **Shader Picker Integration**: Reused `ShaderPickerPopup` (`PickerType.MIXER_TRANSITION`) for instant fuzzy search, category pill filtering, and transition detaching.
+- **Modulatable Transition Parameters**: Transition shader inputs (e.g. wipe direction, softness, glitch intensity) register in the Preset Grid Mix tab for LFO, audio reactivity, and MIDI modulation.
+- **Session Serialization & Web Broadcast**: Full persistence of `transitionSlot` in `SessionStateDto` and JSON broadcast serialization for web clients.
+- **Bundled Transitions**: Shipped default transition shaders: `linear_crossfade.fs`, `wipe_horizontal.fs`, `wipe_vertical.fs`, `radial_wipe.fs`, `glitch_transition.fs`, `luma_wipe.fs`, and `zoom_fade.fs`.
+
 ### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `Main.kt`)
 - **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows and Syphon on macOS.
 - **Dynamic Server Discovery**: Integrated background polling (`ExternalVideoDiscovery`) to automatically detect launched or closed external video servers across the system.

@@ -10,6 +10,7 @@ import imgui.flag.ImGuiTableColumnFlags
 import imgui.type.ImString
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
+import llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry
 import llm.slop.liquidlsd.SessionContext
 
 /**
@@ -21,7 +22,7 @@ import llm.slop.liquidlsd.SessionContext
 object ShaderPickerPopup {
     private const val POPUP_ID = "Shader Picker###shader_picker_popup"
     
-    enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2 }
+    enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2, MIXER_TRANSITION }
     
     private var pendingOpen = false
     private var pickerType = PickerType.SOURCE
@@ -49,6 +50,7 @@ object ShaderPickerPopup {
         this.selectedCategory = when(type) {
             PickerType.FX_SLOT_1 -> "Color Adjustment"
             PickerType.FX_SLOT_2 -> "Distortion"
+            PickerType.MIXER_TRANSITION -> "Transitions"
             else -> "All"
         }
         updateItems()
@@ -73,6 +75,17 @@ object ShaderPickerPopup {
                 
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(ShaderItem(source.id, source.displayName, source.categories, "Source"))
+                }
+            }
+        } else if (pickerType == PickerType.MIXER_TRANSITION) {
+            ISFTransitionRegistry.availableTransitions.forEach { transition ->
+                transition.categories.forEach { tempCats.add(it) }
+
+                val matchesSearch = transition.displayName.lowercase().contains(searchText) || transition.id.lowercase().contains(searchText)
+                val matchesCategory = selectedCategory == "All" || transition.categories.contains(selectedCategory)
+
+                if (matchesSearch && matchesCategory) {
+                    filteredItems.add(ShaderItem(transition.id, transition.displayName, transition.categories, "Transition"))
                 }
             }
         } else {

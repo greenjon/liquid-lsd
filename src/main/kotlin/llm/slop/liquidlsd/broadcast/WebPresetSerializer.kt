@@ -63,6 +63,7 @@ object WebPresetSerializer {
         put("balance", JsonPrimitive(round4(balance01)))
         put("alpha", JsonPrimitive(round4(mixer.masterAlpha.value)))
         put("bloom", JsonPrimitive(round4(mixer.bloom.value)))
+        put("transition", JsonPrimitive(mixer.transitionFilter?.id ?: ""))
     }
 
     fun serializeFullPreset(mixer: Mixer): JsonObject = buildJsonObject {

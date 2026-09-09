@@ -42,7 +42,12 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
         (Swap Read/Write FBOs)
                  │
                  ▼
-    [Mixer.kt / mixer.frag] ──► [masterFBO] ──► Screen
+     [Mixer.kt Transition Stage]
+     ├── Active ISF Transition: [transitionFilter] -> [blendFBO] -> [mixer.frag composite]
+     └── Default Non-ISF Fallback: [mixer.frag (uMode = ADD/SCREEN/MULT/MAX/XFADE)]
+                 │
+                 ▼
+            [masterFBO] ──► Screen
 ```
 
 ### Execution Steps

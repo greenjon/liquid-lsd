@@ -476,6 +476,15 @@ object PresetManager {
             val deckBGDto = if (mixer.deckBG.isEmpty) emptyDeckDto(mixer.deckBG, mixer) else mixer.deckBG.toDto(activePresetBG ?: "Deck BG")
             val deckPVDto = if (mixer.deckPV.isEmpty) emptyDeckDto(mixer.deckPV, mixer) else mixer.deckPV.toDto(activePresetPV ?: "Deck PV")
             
+            val transSlot = mixer.transitionFilter?.takeIf { it.id.isNotEmpty() }?.let { trans ->
+                FXSlotDto(
+                    filterId = trans.id,
+                    enabled = trans.enabled,
+                    dryWet = trans.dryWet.toDto(),
+                    parameters = trans.parameters.mapValues { it.value.toDto() }
+                )
+            }
+
             val session = SessionStateDto(
                 deckA = deckADto,
                 deckB = deckBDto,
@@ -505,7 +514,8 @@ object PresetManager {
                 levelB = mixer.levelB,
                 levelBG = mixer.levelBG,
                 levelPV = mixer.levelPV,
-                masterLevel = mixer.masterLevel
+                masterLevel = mixer.masterLevel,
+                transitionSlot = transSlot
             )
             
             val content = json.encodeToString(session)
@@ -536,6 +546,18 @@ object PresetManager {
             mixer.levelBG = session.levelBG
             mixer.levelPV = session.levelPV
             mixer.masterLevel = session.masterLevel
+
+            mixer.setTransition(null)
+            session.transitionSlot?.let { transDto ->
+                mixer.setTransition(transDto.filterId)
+                mixer.transitionFilter?.let { trans ->
+                    trans.enabled = transDto.enabled
+                    trans.dryWet.applyDto(transDto.dryWet)
+                    for ((key, paramDto) in transDto.parameters) {
+                        trans.parameters[key]?.applyDto(paramDto)
+                    }
+                }
+            }
             
             mixer.deckA.applyDto(session.deckA)
             mixer.deckB.applyDto(session.deckB)

@@ -57,17 +57,24 @@ Built-in procedural visual generators:
 - **Icosa-Dodeca**: Continuous $H_3$ Coxeter polyhedral morph and Kepler-Poinsot stellation raymarcher with translucent crystal reveal.
 
 ### Universal Searchable Shader Picker
-With the integration of hundreds of ISF sources and filters, Liquid LSD uses a unified **Shader Picker** modal instead of flat dropdown menus.
+With the integration of hundreds of ISF sources, filters, and transition crossfaders, Liquid LSD uses a unified **Shader Picker** modal instead of flat dropdown menus.
 - **Searchable**: Type any part of a shader's name, ID, or category into the search bar for instant filtering.
-- **Categorized**: Content is organized into semantic categories like `Generator`, `Geometric`, `Color Adjustment`, `Distortion`, `Blur`, and `Stylize`.
-- **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (e.g., source selection vs. FX slot 1 vs. FX slot 2).
-- **Detach / Clear**: Use the `[ Detach / None ]` button to quickly clear a shader slot.
+- **Categorized**: Content is organized into semantic categories like `Generator`, `Geometric`, `Color Adjustment`, `Distortion`, `Blur`, `Wipe`, `Glitch`, and `Transitions`.
+- **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (source selection vs. FX slot 1 vs. FX slot 2 vs. mixer transitions).
+- **Detach / Clear**: Use the `[ Detach / None ]` button to quickly clear a shader slot or reset the mixer to default built-in blend modes.
 
 ### Dual FX Post-Processing Slots
 Each Deck features two serialized, independently modulatable ISF post-processing slots positioned before the feedback loop:
 - **Slot 1 (Color / Degradation)**: Color remapping, inversion, posterization, luma keying, and signal degradation filters.
 - **Slot 2 (Spatial / Distortion)**: 3D plane elevation (`3d_elevation.fs`), full feedback loops (`feedback.fs`), multi-pass bloom, chromatic aberration, digital glitch, spatial folding, and persistent motion trails.
 - **Bypass & Dry/Wet Mix**: Both slots support independent bypass toggles and continuous Dry/Wet parameter modulation. Bypassed or zero-wet slots execute with zero draw call overhead.
+
+### Extensible ISF Mixer Transitions
+The Master Mixer crossfader supports custom ISF-based transition shaders (`ISFTransitionRegistry`) alongside built-in blend modes:
+- **Bundled Transitions**: Includes `linear_crossfade`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `glitch_transition`, `luma_wipe`, and `zoom_fade`.
+- **Custom Shader Expansion**: Drop custom ISF transition shaders into `library/transitions/` for immediate discovery.
+- **Modulatable Parameters**: Custom parameters exposed by transition shaders (e.g. softness, wipe direction, glitch intensity) register in the Preset Grid Mix tab for LFO, audio reactivity, and MIDI modulation.
+- **Default Fallback**: When no transition shader is selected (`[ Default Blend ]`), the mixer falls back to built-in non-ISF blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`).
 
 #### Icosa-Dodeca Quick Reference & Classic Solids
 The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean bridges, and Kepler-Poinsot star polyhedra:

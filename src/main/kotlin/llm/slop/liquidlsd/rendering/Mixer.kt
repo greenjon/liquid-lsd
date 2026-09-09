@@ -21,6 +21,25 @@ class Mixer(
     // The master FBO where the blended result is rendered
     var masterFBO = FBO(width, height)
 
+    // FBO for intermediate transition rendering pass when an ISF transition is active
+    var blendFBO = FBO(width, height)
+
+    // Optional ISF transition filter for custom transition crossfading
+    var transitionFilter: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
+
+    /**
+     * Sets or clears the active ISF transition filter.
+     * Passing null or an empty string resets to the built-in non-ISF mixer blend modes.
+     */
+    fun setTransition(id: String?) {
+        transitionFilter?.dispose()
+        transitionFilter = if (!id.isNullOrBlank()) {
+            llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition(id)
+        } else {
+            null
+        }
+    }
+
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
         width = newWidth
@@ -28,6 +47,11 @@ class Mixer(
         masterFBO.dispose()
         masterFBO = FBO(width, height)
         masterFBO.clear(0f, 0f, 0f, 0f)
+
+        blendFBO.dispose()
+        blendFBO = FBO(width, height)
+        blendFBO.clear(0f, 0f, 0f, 0f)
+
         deckA.resize(newWidth, newHeight)
         deckB.resize(newWidth, newHeight)
         deckBG.resize(newWidth, newHeight)
@@ -174,6 +198,10 @@ class Mixer(
         list.add("$prefix/randDeckPV" to randDeckPV)
         list.add("$prefix/randAll" to randAll)
 
+        transitionFilter?.let { filter ->
+            list.addAll(filter.getParameterPaths("$prefix/Transition"))
+        }
+
         list.addAll(deckA.getParameterPaths("Deck A"))
         list.addAll(deckB.getParameterPaths("Deck B"))
         list.addAll(deckBG.getParameterPaths("Deck BG"))
@@ -259,6 +287,8 @@ class Mixer(
         randDeckBG.evaluate()
         randDeckPV.evaluate()
         randAll.evaluate()
+
+        transitionFilter?.update()
 
         // Continuous random morphing evaluation
         val isModA = randDeckA.modulators.any { !it.bypassed } || randDeckA.value > 0.0001f
@@ -363,9 +393,11 @@ class Mixer(
     }
 
     /**
-     * Disposes the master FBO.
+     * Disposes the master FBO and transition filter resources.
      */
     fun dispose() {
         masterFBO.dispose()
+        blendFBO.dispose()
+        transitionFilter?.dispose()
     }
 }

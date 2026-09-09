@@ -211,6 +211,7 @@ fun main(args: Array<String>) {
     // Load dynamic visual sources and ISF filters
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+    llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
     llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
@@ -605,6 +606,7 @@ fun main(args: Array<String>) {
     mixer.dispose()
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.disposeAll()
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.disposeAll()
+    llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.disposeAll()
     Geometry.dispose()
 
     // Dispose UI and input

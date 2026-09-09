@@ -128,11 +128,12 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
     - `Visual Source` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `Mixer / Output`.
     - Each slot features independent bypass toggles, wet/dry mix, preset loading, and parameter randomization hooks in the Preset Grid.
 
-### Phase 2.3: Mixer Crossfading & Blending via ISF [SCHEDULED]
+### Phase 2.3: Mixer Crossfading & Blending via ISF [COMPLETED]
 - **Extensible Transition Engine**:
-  - Replace the fixed blending modes in `mixer.frag` with ISF transition shaders.
-  - Transition shaders accept two texture inputs (`startImage` / `Deck A`, `endImage` / `Deck B`) and a transition progress uniform (`progress` / crossfader position $0.0 \dots 1.0$).
-  - Allow user-installed wipe, glitch, melt, displacement, and geometric crossfade transitions in `library/transitions/`.
+  - Optional ISF transition shaders taking two texture inputs (`startImage` / `Deck A`, `endImage` / `Deck B`) and a transition progress uniform (`progress` / crossfader position $0.0 \dots 1.0$).
+  - Seamless fallback to current non-ISF `mixer.frag` blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) when no transition is selected.
+  - Reuses `ShaderPickerPopup` (`PickerType.MIXER_TRANSITION`) for search, category filtering, and detaching transitions.
+  - Bundled transitions (`linear_crossfade`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `glitch_transition`, `luma_wipe`, `zoom_fade`) and support for user-installed transitions in `library/transitions/`.
 
 ### Technical Tasks & Implementation Milestones
 - [x] Implement ISF JSON header parser and GLSL preprocessor (`ISFParser`). [DONE]
@@ -142,6 +143,10 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
 - [x] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2). [DONE]
 - [x] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2). [DONE]
 - [x] Port feedback loop to modular ISF effect (Phase 2.2.3). [DONE]
+- [x] Build `ISFTransitionRegistry` and bundled transition shaders (Phase 2.3). [DONE]
+- [x] Integrate ISF transition pass into `Mixer.kt` and `Renderer.kt` with fallback to non-ISF mixer. [DONE]
+- [x] Extend `ShaderPickerPopup` and `MixerMonitorPanel` for transition selection. [DONE]
+- [x] Support session state serialization (`transitionSlot`) and web client broadcast. [DONE]
 
 ---
 

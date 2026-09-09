@@ -348,38 +348,91 @@ class Renderer {
 
         glDisable(GL_BLEND)
 
-        mixerShader.bind()
+        val activeTransition = mixer.transitionFilter?.takeIf { it.enabled }
+        val progress = (mixer.crossfade.value + 1.0f) / 2.0f
 
-        // Bind Deck A output texture to Unit 0
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, mixer.deckA.getOutputTexture())
-        mixerShader.setUniform("uTex1", 0)
+        if (activeTransition != null) {
+            // Pass 1: Render ISF Transition Shader into intermediate blendFBO
+            mixer.blendFBO.bind()
+            glViewport(0, 0, mixer.width, mixer.height)
+            glClearColor(0f, 0f, 0f, 0f)
+            glClear(GL_COLOR_BUFFER_BIT)
 
-        // Bind Deck B output texture to Unit 1
-        glActiveTexture(GL_TEXTURE1)
-        glBindTexture(GL_TEXTURE_2D, mixer.deckB.getOutputTexture())
-        mixerShader.setUniform("uTex2", 1)
+            activeTransition.renderTransition(
+                startTexture = mixer.deckA.getOutputTexture(),
+                endTexture = mixer.deckB.getOutputTexture(),
+                progressValue = progress,
+                width = mixer.width,
+                height = mixer.height
+            )
 
-        // Bind Deck BG output texture to Unit 2
-        glActiveTexture(GL_TEXTURE2)
-        glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
-        mixerShader.setUniform("uTexBG", 2)
+            // Pass 2: Composite blended result with Deck BG, level multipliers, bloom & master alpha
+            mixer.masterFBO.bind()
+            glViewport(0, 0, mixer.width, mixer.height)
+            glClearColor(0f, 0f, 0f, 1f)
+            glClear(GL_COLOR_BUFFER_BIT)
 
-        // Set mix uniforms
-        mixerShader.setUniform("uMode", mixer.mode.value.toInt())
-        mixerShader.setUniform("uBalance", (mixer.crossfade.value + 1.0f) / 2.0f)
-        mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
-        mixerShader.setUniform("uBgAlpha", 1.0f)
-        mixerShader.setUniform("uBloom", mixer.bloom.value)
-        mixerShader.setUniform("uLevelA", mixer.levelA)
-        mixerShader.setUniform("uLevelB", mixer.levelB)
-        mixerShader.setUniform("uLevelBG", mixer.levelBG)
-        mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
+            mixerShader.bind()
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, mixer.blendFBO.texture)
+            mixerShader.setUniform("uTex1", 0)
 
-        // Blit mixed output
-        Geometry.drawFullscreenQuad()
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, mixer.deckB.getOutputTexture())
+            mixerShader.setUniform("uTex2", 1)
 
-        mixerShader.unbind()
+            glActiveTexture(GL_TEXTURE2)
+            glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
+            mixerShader.setUniform("uTexBG", 2)
+
+            mixerShader.setUniform("uMode", 4) // XFADE
+            mixerShader.setUniform("uBalance", 0.0f) // 100% blendFBO
+            mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
+            mixerShader.setUniform("uBgAlpha", 1.0f)
+            mixerShader.setUniform("uBloom", mixer.bloom.value)
+            mixerShader.setUniform("uLevelA", mixer.levelA)
+            mixerShader.setUniform("uLevelB", mixer.levelB)
+            mixerShader.setUniform("uLevelBG", mixer.levelBG)
+            mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
+
+            Geometry.drawFullscreenQuad()
+            mixerShader.unbind()
+        } else {
+            // Fallback non-ISF mixer: Built-in blend modes pass
+            mixerShader.bind()
+
+            // Bind Deck A output texture to Unit 0
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, mixer.deckA.getOutputTexture())
+            mixerShader.setUniform("uTex1", 0)
+
+            // Bind Deck B output texture to Unit 1
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, mixer.deckB.getOutputTexture())
+            mixerShader.setUniform("uTex2", 1)
+
+            // Bind Deck BG output texture to Unit 2
+            glActiveTexture(GL_TEXTURE2)
+            glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
+            mixerShader.setUniform("uTexBG", 2)
+
+            // Set mix uniforms
+            mixerShader.setUniform("uMode", mixer.mode.value.toInt())
+            mixerShader.setUniform("uBalance", progress)
+            mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
+            mixerShader.setUniform("uBgAlpha", 1.0f)
+            mixerShader.setUniform("uBloom", mixer.bloom.value)
+            mixerShader.setUniform("uLevelA", mixer.levelA)
+            mixerShader.setUniform("uLevelB", mixer.levelB)
+            mixerShader.setUniform("uLevelBG", mixer.levelBG)
+            mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
+
+            // Blit mixed output
+            Geometry.drawFullscreenQuad()
+
+            mixerShader.unbind()
+        }
+
         mixer.masterFBO.unbind()
     }
 

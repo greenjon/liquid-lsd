@@ -198,6 +198,73 @@ class ISFFilter(
         glActiveTexture(GL_TEXTURE0)
     }
 
+    /**
+     * Renders a 2-image transition reading from [startTexture] (Deck A) and [endTexture] (Deck B)
+     * into the currently bound FBO using [progressValue] (0.0 to 1.0).
+     */
+    fun renderTransition(startTexture: Int, endTexture: Int, progressValue: Float, width: Int, height: Int) {
+        if (deckWidth != width || deckHeight != height) {
+            deckWidth = width
+            deckHeight = height
+            resizePassFBOs()
+        }
+
+        shader.bind()
+
+        val currentTime = TimeSource.getTimeSec().toFloat()
+        val deltaTime = currentTime - lastTime
+        lastTime = currentTime
+
+        shader.setUniform("TIME", currentTime)
+        shader.setUniform("TIMEDELTA", deltaTime)
+        shader.setUniform("FRAMEINDEX", frameIndex++)
+        
+        val now = LocalDateTime.now()
+        shader.setUniform("DATE", now.year.toFloat(), now.monthValue.toFloat(), now.dayOfMonth.toFloat(), 
+            now.hour * 3600f + now.minute * 60f + now.second + now.nano / 1_000_000_000f)
+
+        // Set user parameters
+        for (input in header.INPUTS) {
+            val type = input.TYPE.lowercase()
+            if (type == "image") continue
+
+            if (input.NAME.equals("progress", ignoreCase = true)) {
+                shader.setUniform(input.NAME, progressValue)
+                continue
+            }
+
+            val param = parameters[input.NAME] ?: continue
+            when (type) {
+                "float", "long", "bool" -> shader.setUniform(input.NAME, param.value)
+                "point2d" -> shader.setUniform(input.NAME, param.value, 0f) 
+                "color" -> shader.setUniform(input.NAME, param.value, param.value, param.value, 1.0f) 
+            }
+        }
+
+        shader.setUniform("PASSINDEX", 0)
+        shader.setUniform("RENDERSIZE", width.toFloat(), height.toFloat())
+
+        // Map image inputs (startImage -> unit 0, endImage -> unit 1)
+        val imageInputs = header.INPUTS.filter { it.TYPE.lowercase() == "image" }
+        val startName = imageInputs.find { it.NAME.equals("startImage", true) || it.NAME.equals("inputImage", true) || it.NAME.equals("uTex1", true) }?.NAME
+            ?: imageInputs.firstOrNull()?.NAME ?: "startImage"
+        val endName = imageInputs.find { it.NAME.equals("endImage", true) || it.NAME.equals("toImage", true) || it.NAME.equals("uTex2", true) }?.NAME
+            ?: imageInputs.getOrNull(1)?.NAME ?: "endImage"
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, startTexture)
+        shader.setUniform(startName, 0)
+
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, endTexture)
+        shader.setUniform(endName, 1)
+
+        Geometry.drawFullscreenQuad()
+
+        shader.unbind()
+        glActiveTexture(GL_TEXTURE0)
+    }
+
     private fun resizePassFBOs() {
         // clear existing
         passFBOs.values.forEach { it.dispose() }
