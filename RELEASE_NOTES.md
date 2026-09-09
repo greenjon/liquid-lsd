@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Phase 2.2.2 - Part 2: Multi-Pass ISF Preprocessor & Buffer System (`ISFParser.kt`, `ISFFilter.kt`)
+- **Multi-Pass ISF Shader Processing**: Added full support for ISF multi-pass shader pipelines (`PASSES` array) with intermediate FBO target declarations.
+- **Persistent Ping-Pong History Buffers**: Added support for temporal feedback accumulation (`PERSISTENT: true`) using ping-pong FBO pairs without GPU read/write hazards.
+- **Pass Resolution Expressions & Dynamic Scaling**: Supports pass resolution formulas (such as `$WIDTH/2.0` and `$HEIGHT/2.0`) for downscaled bloom, blur, and feedback passes.
+- **ISF Target Samplers GLSL Generation**: `ISFParser` now automatically declares `uniform sampler2D <TARGET>;` for pass target buffers so subsequent passes can sample intermediate pass outputs.
+- **Dynamic Resizing & Resource Management**: Automatic pass FBO reallocation on resolution or deck dimension changes, and clean GL resource disposal.
+
 ### Phase 2.2.2 - Part 1: Universal Searchable Category Shader Picker (`ShaderPickerPopup.kt`, `VisualSource.kt`, `VisualEffect.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`)
 - **Universal Shader Picker**: Introduced a unified modal dialog for selecting Visual Sources and FX Filters with instant search and category filtering.
 - **Categorized Content**: Sources and effects are now tagged with categories (e.g., `3D`, `Fractal`, `Blur`, `Stylize`) for better organization.

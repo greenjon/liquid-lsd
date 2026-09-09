@@ -139,8 +139,8 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
 - [x] Support automatic mapping of ISF inputs to `ModulatableParameter`. [DONE]
 - [x] Integrate ISF post-processing stage (Slot 1) into Deck pipeline. [DONE]
 - [x] Build UI for ISF filter selection and parameter modulation in Preset Grid. [DONE]
-- [ ] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2).
-- [ ] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2).
+- [x] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2 Part 2). [DONE]
+- [ ] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2 Part 3).
 - [ ] Port feedback loop to modular ISF effect (Phase 2.2.3).
 
 ---
