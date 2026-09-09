@@ -72,11 +72,12 @@ Enable Liquid LSD to act as a high-performance visual generator feeding external
     - Aspect ratio conform modes (Fit/Letterbox, Fill/Crop, Stretch).
 
 ### Technical Tasks & Implementation Milestones
-- [ ] Research and bundle native JVM bindings for Spout2 (Windows) and Syphon (macOS).
-- [ ] Create `VideoSharingEngine` abstraction with platform-specific backends (`SpoutBackend`, `SyphonBackend`, `PipeWireBackend`, `NoOpBackend`).
-- [ ] Hook into Deck and Mixer rendering pipelines: blit/share textures from `rawSource2DFBO` / `cleanFBO` / `masterFBO` immediately following render passes.
-- [ ] Build Settings UI panel for Spout/Syphon output configuration with resolution dropdowns and live connection indicators.
-- [ ] Document Spout/Syphon configuration and multi-app workflows in `docs/user_guide/` and `docs/developer/`.
+### Technical Tasks & Implementation Milestones
+- [x] Research and bundle native JVM bindings for Spout2 (Windows) and Syphon (macOS). [DONE]
+- [x] Create `VideoSharingEngine` abstraction with platform-specific backends (`SpoutBackend`, `SyphonBackend`, `PipeWireBackend`, `NoOpBackend`). [DONE]
+- [x] Hook into Deck and Mixer rendering pipelines: blit/share textures from `rawSource2DFBO` / `cleanFBO` / `masterFBO` immediately following render passes. [DONE]
+- [x] Build Settings UI panel for Spout/Syphon output configuration with resolution dropdowns and live connection indicators. [DONE]
+- [x] Document Spout/Syphon configuration and multi-app workflows in `docs/user_guide/` and `docs/developer/`. [DONE]
 
 ---
 
@@ -99,17 +100,17 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
                           [Slot 2: Spatial/Distort]
 ```
 
-### Phase 2.1: ISF Parser & Visual Source Migration
+### Phase 2.1: ISF Parser & Visual Source Migration [COMPLETED]
 - **ISF Specification Support**:
   - Parse ISF JSON header comments (`/*{ "DESCRIPTION": "...", "INPUTS": [ ... ] }*/`) embedded directly at the top of GLSL files.
-  - Parse input types (`float`, `bool`, `color`, `point2D`, `long`/`event`) and automatically map them to Liquid LSD's `ModulatableParameter` system.
+  - Parse input types (`float`, `bool`, `color`, `point2D`, `long`/`event`) and automatically map them to Liquid LSD's `ModulatableParameter System`.
   - Support ISF standard uniforms: `RENDERSIZE` (`vec2`), `TIME` (`float`), `TIMEDELTA` (`float`), `FRAMEINDEX` (`int`), `DATE` (`vec4`).
 - **Source Compatibility**:
   - Convert existing procedural sources (`Mandala`, `Gyroid`, `Chladni`, `Dynamic Spiral`, etc.) into ISF-compliant shader sources where feasible.
   - Maintain hot-reloading: drop `.fs` or `.isf` files into `library/sources/` for instant compilation and parameter binding.
   - Fallback and migration path for existing `meta.json` source bundles.
 
-### Phase 2.2: FX System Conversion to ISF & Dual FX Slots
+### Phase 2.2: FX System Conversion to ISF & Dual FX Slots [IN PROGRESS]
 - **Modular Post-Processing Chain**:
   - Migrate the hardcoded feedback post-processing stage (`feedback.frag`) into a modular, chainable ISF effect processor.
   - Map ISF `image` inputs (e.g. `inputImage`) to Deck clean/feedback FBO textures.
@@ -117,21 +118,30 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
   - Expose ISF FX parameter inputs directly within the Preset Grid for audio/LFO modulation.
 - **Dual FX Architecture (Two Dedicated Slots per Deck)**:
   - Provide two serialized, independently modulatable FX slots in each deck processing chain:
-    - **Slot 1: Color / Degradation** (Pixel & Chromatic Processing)
+    - **Slot 1: Color / Degradation** (Pixel & Chromatic Processing) [Phase 2.2.1 COMPLETED]
       - Focus: Color alteration, tonal remapping, keying, and signal degradation.
       - Examples: *Luma Key*, *Hue Cycle / Shift*, *Posterize*, *Invert*, *Color Grade / LUT*, *Threshold / Dither*.
-    - **Slot 2: Spatial / Distortion** (Geometric & Feedback Processing)
+    - **Slot 2: Spatial / Distortion** (Geometric & Feedback Processing) [Phase 2.2.2 SCHEDULED]
       - Focus: Coordinate space distortion, temporal feedback, optics, and geometric dislocation.
       - Examples: *Feedback Trails*, *Digital Glitch / Artifacting*, *Mirror / Kaleidoscope*, *Edge Warp / Barrel Distortion*, *Displacement Map*.
   - **Signal Chain & Routing**:
     - `Visual Source` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `Mixer / Output`.
     - Each slot features independent bypass toggles, wet/dry mix, preset loading, and parameter randomization hooks in the Preset Grid.
 
-### Phase 2.3: Mixer Crossfading & Blending via ISF
+### Phase 2.3: Mixer Crossfading & Blending via ISF [SCHEDULED]
 - **Extensible Transition Engine**:
   - Replace the fixed blending modes in `mixer.frag` with ISF transition shaders.
   - Transition shaders accept two texture inputs (`startImage` / `Deck A`, `endImage` / `Deck B`) and a transition progress uniform (`progress` / crossfader position $0.0 \dots 1.0$).
   - Allow user-installed wipe, glitch, melt, displacement, and geometric crossfade transitions in `library/transitions/`.
+
+### Technical Tasks & Implementation Milestones
+- [x] Implement ISF JSON header parser and GLSL preprocessor (`ISFParser`). [DONE]
+- [x] Support automatic mapping of ISF inputs to `ModulatableParameter`. [DONE]
+- [x] Integrate ISF post-processing stage (Slot 1) into Deck pipeline. [DONE]
+- [x] Build UI for ISF filter selection and parameter modulation in Preset Grid. [DONE]
+- [ ] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2).
+- [ ] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2).
+- [ ] Port feedback loop to modular ISF effect (Phase 2.2.3).
 
 ---
 

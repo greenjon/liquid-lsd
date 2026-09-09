@@ -208,8 +208,9 @@ fun main(args: Array<String>) {
     val queryIds = IntArray(2)
     org.lwjgl.opengl.GL15.glGenQueries(queryIds)
 
-    // Load dynamic visual sources
+    // Load dynamic visual sources and ISF filters
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
@@ -602,6 +603,7 @@ fun main(args: Array<String>) {
     deckPV.dispose()
     mixer.dispose()
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.disposeAll()
+    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.disposeAll()
     Geometry.dispose()
 
     // Dispose UI and input

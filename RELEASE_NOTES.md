@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Phase 2.2.1: Single-Pass ISF Filter Engine & Deck Pipeline Integration (`VisualEffect.kt`, `ISFFilter.kt`, `ISFFilterRegistry.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`)
+- **Modular FX Slot 1**: Integrated a dedicated post-processing FX slot into each Deck's rendering pipeline.
+- **ISF Filter Support**: Native support for single-pass ISF (Interactive Shader Format) image filters with automatic parameter mapping.
+- **Hardware Dry/Wet Blending**: Efficient signal blending using `glBlendColor` for minimal GPU overhead.
+- **Bundled Filters**: Includes Invert, Hue Shift, Posterize, Luma Key, and Edge Detect filters.
+- **Preset Grid Controls**: Added filter selection and parameter modulation controls to the FX tab.
+- **Serialization**: Full preset serialization and round-trip support for FX slot configurations.
+
 ---
 
 ## Version 1.0.0-beta.59

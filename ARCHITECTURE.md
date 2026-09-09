@@ -17,6 +17,8 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                  │                  │                  │
               cleanFBO           cleanFBO           cleanFBO
                  │                  │                  │
+            [FX Slot 1]        [FX Slot 1]        [FX Slot 1]
+                 │                  │                  │
            feedback.frag      feedback.frag      feedback.frag
                  └──────────────────┼──────────────────┘
                                  Mixer.kt
@@ -97,8 +99,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
-│   ├── isf/                    — ISF specification parser, data models, and ISFVisualSource
-│   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + ping-pong FBOs + 2D/3D View params + FB params
+│   ├── VisualEffect.kt         — Interface for post-processing effects
+│   ├── isf/                    — ISF specification parser, data models, ISFFilter, and ISFVisualSource
+│   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + fxFBO1 + ping-pong FBOs + 2D/3D View params + FB params
 │   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers (Deck PV excluded)
 │   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> mix -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)

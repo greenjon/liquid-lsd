@@ -25,6 +25,8 @@ object PresetGridTabs {
     var activeBtnMaxX: Float = 0f
     var activeBtnMaxY: Float = 0f
 
+    private val fxEnabledBuf = imgui.type.ImBoolean()
+
     fun getDeckColor(tab: String, alpha: Float = 1f): Int {
         val rgb = when (tab) {
             "Deck A", "A" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorA()
@@ -415,6 +417,47 @@ object PresetGridTabs {
 
             drawSubGroupContent(session, deckLabel, "FX", state) {
                 var row = 0
+
+                // FX Slot 1 Filter Selection
+                val fx = deck.fxSlot1
+                val filterName = fx?.displayName ?: "None"
+
+                ImGui.textDisabled("Filter")
+                ImGui.sameLine()
+                ImGui.setNextItemWidth(labelColW - 60f)
+                if (ImGui.beginCombo("##fx1_selector_$deckLabel", filterName)) {
+                    if (ImGui.menuItem("None", "", fx == null)) {
+                        deck.fxSlot1?.dispose()
+                        deck.fxSlot1 = null
+                        onPushUndo()
+                    }
+                    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.forEach { filter ->
+                        if (ImGui.menuItem(filter.displayName, "", fx?.id == filter.id)) {
+                            deck.fxSlot1?.dispose()
+                            deck.fxSlot1 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(filter.id)
+                            onPushUndo()
+                        }
+                    }
+                    ImGui.endCombo()
+                }
+
+                if (fx != null) {
+                    ImGui.sameLine()
+                    fxEnabledBuf.set(fx.enabled)
+                    if (ImGui.checkbox("##fx1_enabled_$deckLabel", fxEnabledBuf)) {
+                        fx.enabled = fxEnabledBuf.get()
+                        onPushUndo()
+                    }
+                    itemTooltip("Bypass filter.")
+
+                    PresetGridRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX1/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+                    fx.parameters.forEach { (name, param) ->
+                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/FX1/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    }
+                    ImGui.separator()
+                }
+
                 PresetGridRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -459,6 +502,47 @@ object PresetGridTabs {
         } else {
             drawSubGroupContent(session, deckLabel, "FX", state) {
                 var row = 0
+
+                // FX Slot 1 Filter Selection
+                val fx = deck.fxSlot1
+                val filterName = fx?.displayName ?: "None"
+
+                ImGui.textDisabled("Filter")
+                ImGui.sameLine()
+                ImGui.setNextItemWidth(labelColW - 60f)
+                if (ImGui.beginCombo("##fx1_selector_$deckLabel", filterName)) {
+                    if (ImGui.menuItem("None", "", fx == null)) {
+                        deck.fxSlot1?.dispose()
+                        deck.fxSlot1 = null
+                        onPushUndo()
+                    }
+                    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.forEach { filter ->
+                        if (ImGui.menuItem(filter.displayName, "", fx?.id == filter.id)) {
+                            deck.fxSlot1?.dispose()
+                            deck.fxSlot1 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(filter.id)
+                            onPushUndo()
+                        }
+                    }
+                    ImGui.endCombo()
+                }
+
+                if (fx != null) {
+                    ImGui.sameLine()
+                    fxEnabledBuf.set(fx.enabled)
+                    if (ImGui.checkbox("##fx1_enabled_$deckLabel", fxEnabledBuf)) {
+                        fx.enabled = fxEnabledBuf.get()
+                        onPushUndo()
+                    }
+                    itemTooltip("Bypass filter.")
+
+                    PresetGridRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX1/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+                    fx.parameters.forEach { (name, param) ->
+                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/FX1/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    }
+                    ImGui.separator()
+                }
+
                 PresetGridRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 PresetGridRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)

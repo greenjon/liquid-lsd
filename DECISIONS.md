@@ -626,3 +626,17 @@ This document outlines the key architectural decisions made in the development o
   - Abstract Depth and Offset are mathematically precise but cognitively heavy during fast-paced live VJ sets. Min/Max bounds map directly to the visual extremes of the parameter being modulated.
   - Symmetrizing the randomization UI for bounds allows for complex, multi-layered generative drift (e.g., a "breathing" LFO where the floor and ceiling themselves drift over time).
   - Cleaning up the Sequencer UI reduces clutter and focuses control on pattern amplitude, as step values are already typically defined relative to the sequencer's base range.
+
+## Phase 2.2.1: Single-Pass ISF Filter Engine & Deck Pipeline Integration (`VisualEffect.kt`, `ISFFilter.kt`, `ISFFilterRegistry.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`)
+
+- **Decision**: Integrate a modular ISF post-processing stage into each Deck's rendering pipeline, supporting single-pass image filters:
+  - **Modular FX Slot 1**: Each deck features one dedicated FX slot (Slot 1) positioned between the 2D/3D geometry transform (`cleanFBO`) and the feedback loop.
+  - **ISFFilter Engine**: Implemented `ISFFilter` following the ISF v2.0 specification for single-pass fragment shaders. Includes automatic parameter synthesis for modulatable inputs and standard ISF uniform injection.
+  - **Hardware Dry/Wet Blending**: When Dry/Wet is between 0.0 and 1.0, the dry signal is blended with the filter output using `glBlendColor` / `GL_CONSTANT_ALPHA` to minimize draw calls.
+  - **Preset Grid Integration**: Added filter selection, bypass, and modulatable parameter controls to the "FX" sub-tab in the Preset Grid.
+  - **Bundled Filters**: Included standard single-pass ISF filters (Invert, Hue Shift, Posterize, Luma Key, Edge Detect) in application resources.
+- **Rationale**:
+  - Establishes the foundation for modular effect chains as outlined in the Inter-App Interoperability Roadmap.
+  - Leverages the existing ISF ecosystem for extensible image processing.
+  - Enhances creative flexibility by allowing color and stylized effects to be applied before the feedback loop.
+  - Maintains backward compatibility with existing presets through optional DTO fields.

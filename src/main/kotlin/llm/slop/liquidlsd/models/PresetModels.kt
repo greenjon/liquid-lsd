@@ -231,10 +231,19 @@ data class DeckPresetDto(
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
+    val fxSlot1: FXSlotDto? = null,
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
+)
+
+@Serializable
+data class FXSlotDto(
+    val filterId: String,
+    val enabled: Boolean = true,
+    val dryWet: ParameterDto,
+    val parameters: Map<String, ParameterDto> = emptyMap()
 )
 
 @Serializable
@@ -447,6 +456,15 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         "viewBlendMode" to viewBlendMode.toDto(),
         "viewRoundness" to viewRoundness.toDto()
     )
+
+    val fx1 = fxSlot1?.takeIf { it.id.isNotEmpty() }?.let { fx ->
+        FXSlotDto(
+            filterId = fx.id,
+            enabled = fx.enabled,
+            dryWet = fx.dryWet.toDto(),
+            parameters = fx.parameters.mapValues { it.value.toDto() }
+        )
+    }
     
     return DeckPresetDto(
         name = name,
@@ -455,6 +473,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
+        fxSlot1 = fx1,
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty
     )
@@ -531,6 +550,21 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.feedbackParameters["fbChroma"]?.let { fbChroma.applyDto(it) }
     dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
     dto.feedbackParameters["fbKaleido"]?.let { fbKaleido.applyDto(it) }
+
+    // Apply FX Slot 1
+    fxSlot1?.dispose()
+    fxSlot1 = null
+    dto.fxSlot1?.let { fxDto ->
+        val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
+        if (fx != null) {
+            fx.enabled = fxDto.enabled
+            fx.dryWet.applyDto(fxDto.dryWet)
+            for ((key, paramDto) in fxDto.parameters) {
+                fx.parameters[key]?.applyDto(paramDto)
+            }
+            fxSlot1 = fx
+        }
+    }
     
     // Apply global parameters
     source.globalAlpha.reset()
