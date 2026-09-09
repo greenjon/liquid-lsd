@@ -92,8 +92,7 @@ class MenuBar(
                             )
                         }
                     }
-                    val audioTxt = if (session.uiTheme.recordingIncludeAudio) "with audio" else "video only"
-                    itemTooltip("Toggle live master output recording.\nFolder: ${session.uiTheme.getDefaultVideosDirectory().absolutePath}\nSettings: ${session.uiTheme.recordingFps} FPS @ ${session.uiTheme.recordingBitrateMbps} Mbps ($audioTxt)")
+                    itemTooltip("Toggle live master output recording.")
 
                     if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
                         if (isBroadcasting) {
@@ -342,9 +341,9 @@ class MenuBar(
                     onOpenAudioEngineMonitor()
                 }
                 val beatTip = if (isAudioDisabled) {
-                    "Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nAudio engine is disabled (manual BPM: %.0f).\nClick to open Audio Engine settings.".format(bpm)
+                    "Beat Phase (4/4 Bar Sync)\nAudio engine is disabled.\nClick to open Audio Engine settings."
                 } else {
-                    "Beat Phase (4/4 Bar Sync)\nBeat ${currentBeat + 1} of 4\nClick to open Audio Engine settings."
+                    "Beat Phase (4/4 Bar Sync)\nClick to open Audio Engine settings."
                 }
                 itemTooltip(beatTip)
                 ImGui.sameLine(0f, 3.8f)
@@ -384,13 +383,12 @@ class MenuBar(
                     UITheme.TapKeyTrigger.PERIOD -> "Key: [.]"
                     UITheme.TapKeyTrigger.NONE -> "Key: None"
                 }
-                val tapStatus = if (tapCount > 0) " (Taps: $tapCount)" else ""
                 val bpmTip = if (isAudioDisabled) {
-                    "Manual BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint).\nAudio engine is disabled (tempo is fixed).\nClick DSP badge to open Audio Engine settings.".format(bpm)
+                    "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings."
                 } else if (audioActive) {
-                    "Audio Engine BPM: %.1f$tapStatus\nClick to tap tempo ($keyHint) to nudge audio tracker.\nClick DSP badge to open Audio Engine settings.".format(bpm)
+                    "Audio Engine BPM\nClick to tap tempo ($keyHint) to nudge audio tracker.\nClick DSP badge to open Audio Engine settings."
                 } else {
-                    "Audio Engine BPM: %.1f$tapStatus (Engine inactive)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings.".format(bpm)
+                    "Audio Engine BPM (Engine Inactive)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings."
                 }
                 showTooltip(bpmTip, "bpm_tap_tooltip".hashCode())
             }
@@ -422,7 +420,7 @@ class MenuBar(
             }
             if (isDspHovered) {
                 val dspTip = if (showAudio) {
-                    "Audio callback DSP execution time: %.2fms\nClick to open Audio Engine settings.".format(audioLatency)
+                    "Audio callback DSP execution time\nClick to open Audio Engine settings."
                 } else if (isAudioDisabled) {
                     "Audio engine is disabled.\nClick to open Audio Engine settings."
                 } else {

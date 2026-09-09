@@ -9,13 +9,12 @@ Liquid LSD features an integrated engine documentation registry, multi-tier user
 Every visual generator, feedback chain control, and mixer parameter in Liquid LSD includes built-in engine documentation supplied by `SourceDocRegistry`.
 
 ### Interactive Parameter Tooltips
-Hovering over any parameter row in the Preset Grid or any slider control across the interface (when tooltips are enabled) displays a multi-section tooltip:
+Hovering over any parameter row in the Preset Grid or any slider control across the interface (when tooltips are enabled) displays a clean, multi-section tooltip:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Lobes                                                       │
 │ Range: 1.0 to 16.0  (Default: 4.0)                          │
-│ Live: 8.3  (base 4.0  +4.3)                                 │
 ├─────────────────────────────────────────────────────────────┤
 │ Dictates rotational symmetry and repeating petal count      │
 │ for the mandala geometry.                                   │
@@ -25,9 +24,8 @@ Hovering over any parameter row in the Preset Grid or any slider control across 
 ```
 
 1. **Parameter Title & Range**: Displays the human-readable name, valid numeric bounds, and factory default value.
-2. **Live Value Breakdown**: Shows the evaluated current value alongside a real-time breakdown of base value and net CV modulation delta (`Live: X (base Y + mod Z)`).
-3. **Engine Description**: Built-in description explaining what the parameter mathematically or visually controls.
-4. **User Parameter Note**: Displays your custom user note (in amber text) if a note has been attached to this parameter.
+2. **Engine Description**: Built-in description explaining what the parameter mathematically or visually controls.
+3. **User Parameter Note**: Displays your custom user note (in amber text) if a note has been attached to this parameter.
 
 ### Ergonomic Quadrant Positioning & Hover Delay
 

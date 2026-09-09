@@ -153,8 +153,7 @@ object BeatDivisionSlider {
             }
         }
         if (isLabelHovered) {
-            val defFmt = ": ${formatValue(defaultValue)}"
-            showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
+            showTooltip("Variable: $label\nMiddle-click to reset to default.")
         }
 
         // Render name of variable beside the die, to its left, sharing vertical center
@@ -388,9 +387,9 @@ object BeatDivisionSlider {
                 val distToCur = kotlin.math.abs(mouseX - curX)
 
                 when {
-                    distToMin < 8f -> showTooltip("Minimum boundary speed for $label: ${formatValue(currentMin)}\nScroll to adjust. Middle-click to reset.")
-                    distToMax < 8f -> showTooltip("Maximum boundary speed for $label: ${formatValue(currentMax)}\nScroll to adjust. Middle-click to reset.")
-                    distToCur < 6f -> showTooltip("Current modulated speed for $label: ${formatValue(currentValue)}")
+                    distToMin < 8f -> showTooltip("Minimum boundary speed for $label\nScroll to adjust. Middle-click to reset.")
+                    distToMax < 8f -> showTooltip("Maximum boundary speed for $label\nScroll to adjust. Middle-click to reset.")
+                    distToCur < 6f -> showTooltip("Current modulated speed for $label")
                     else -> showTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
                 }
             } else {
@@ -399,7 +398,7 @@ object BeatDivisionSlider {
                 val distToVal = kotlin.math.abs(mouseX - valHandleX)
 
                 if (distToVal < 8f) {
-                    showTooltip("Base speed for $label: ${formatValue(currentValue)}\nScroll to adjust. Middle-click to reset.")
+                    showTooltip("Base speed for $label\nScroll to adjust. Middle-click to reset.")
                 } else {
                     showTooltip("Drag or Scroll to adjust base speed for $label. Middle-click to reset.")
                 }

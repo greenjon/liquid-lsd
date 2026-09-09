@@ -4,6 +4,19 @@
 
 ---
 
+## Version 1.0.0-beta.55
+
+> [!NOTE]
+> **Release 1.0.0-beta.55** focuses on UI stability and visual ergonomics: streamlines tooltip text across the entire interface by removing volatile live numeric values that induced rapid dimension resizing, improves Gradle parallel tooling build performance, and aligns interactive documentation.
+
+### UI Ergonomics & Tooltip Stabilization (`PresetGridRenderer.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `MenuBar.kt`, `MixerMonitorPanel.kt`, `DeckControlPanel.kt`, `SeqSection.kt`)
+- **Static Dimensions & Zero-Resize Hover**:
+  - Removed fast-fluctuating live numeric readout lines (e.g. `Live: 8.3 (base 4.0 +4.3)`, live modulated boundary speeds/values, audio callback DSP times, crossfader percentages) from tooltips.
+  - Eliminates tooltip window resizing and layout jitter on every audio buffer or LFO phase tick while hovering over sliders, cells, and meters.
+  - Parameter tooltips now present stable, high-contrast information: Title, valid Range, Factory Default, Engine Description, User Parameter Notes, and interactive shortcut hints (`Click to configure`, `Middle-click to reset`, `Scroll to adjust`).
+- **Tooling Optimization (`gradle.properties`)**:
+  - Enabled `org.gradle.tooling.parallel=true` for faster project synchronization and Gradle 9.4+ tooling model building.
+
 ## Version 1.0.0-beta.54
 
 > [!NOTE]

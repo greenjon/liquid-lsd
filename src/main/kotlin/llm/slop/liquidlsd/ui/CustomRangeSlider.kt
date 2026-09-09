@@ -631,9 +631,9 @@ object CustomRangeSlider {
                 val distToCur = kotlin.math.abs(mouseX - curX)
 
                 when {
-                    distToMin < 8f -> showTooltip("Minimum boundary for $label: ${labelFormatFunc(currentMin)}\nScroll to adjust. Middle-click track to reset.")
-                    distToMax < 8f -> showTooltip("Maximum boundary for $label: ${labelFormatFunc(currentMax)}\nScroll to adjust. Middle-click track to reset.")
-                    distToCur < 6f -> showTooltip("Current modulated value for $label: ${labelFormatFunc(currentValue)}")
+                    distToMin < 8f -> showTooltip("Minimum boundary for $label\nScroll to adjust. Middle-click track to reset.")
+                    distToMax < 8f -> showTooltip("Maximum boundary for $label\nScroll to adjust. Middle-click track to reset.")
+                    distToCur < 6f -> showTooltip("Current modulated value for $label")
                     else -> showTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
                 }
             } else {
@@ -642,7 +642,7 @@ object CustomRangeSlider {
                 val distToVal = kotlin.math.abs(mouseX - valHandleX)
 
                 if (distToVal < 8f) {
-                    showTooltip("Base value for $label: ${labelFormatFunc(currentValue)}\nScroll to adjust. Middle-click to reset.")
+                    showTooltip("Base value for $label\nScroll to adjust. Middle-click to reset.")
                 } else {
                     showTooltip("Drag or Scroll to adjust base value for $label. Middle-click to reset.")
                 }

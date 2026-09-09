@@ -171,8 +171,7 @@ class MixerMonitorPanel(
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
                 mixer.masterLevel = 1.0f
             }
-            val pctText = (mixer.masterLevel * 100f).roundToInt()
-            itemTooltip("Master Level: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            itemTooltip("Master Output Level\nDrag or scroll to adjust. Middle-click to reset (100%).")
         }
 
         // Draw Fader Track
@@ -428,17 +427,9 @@ class MixerMonitorPanel(
         }
 
         if (isTrackHovered && session.uiTheme.tooltipsEnabled) {
-            val curVal = mixer.crossfade.value
-            val blendText = when {
-                curVal <= -0.99f -> "100% Deck A"
-                curVal >= 0.99f -> "100% Deck B"
-                kotlin.math.abs(curVal) < 0.02f -> "Center (50% A / 50% B)"
-                curVal < 0f -> "Deck A: %.0f%% | Deck B: %.0f%%".format((1f - (curVal + 1f) * 0.5f) * 100f, ((curVal + 1f) * 0.5f) * 100f)
-                else -> "Deck A: %.0f%% | Deck B: %.0f%%".format((1f - (curVal + 1f) * 0.5f) * 100f, ((curVal + 1f) * 0.5f) * 100f)
-            }
             val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
             val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            itemTooltip("Crossfader$midiText: $blendText\nDrag or scroll to blend. Middle-click to center.")
+            itemTooltip("Crossfader$midiText\nDrag or scroll to blend. Middle-click to center.")
         }
 
         // --- Render Slider Visuals ---

@@ -350,7 +350,7 @@ object SeqSection {
                         mutableSteps[stepIdx] = 0.0f
                         onReplace(existing.copy(seqSteps = mutableSteps))
                     }
-                    showTooltip("Step ${stepIdx + 1}: ${"%.3f".format(curVal)}\nType number, Up/Down arrow, or Scroll.\nMiddle-click to reset to 0.")
+                    showTooltip("Step ${stepIdx + 1}\nType number, Up/Down arrow, or Scroll.\nMiddle-click to reset to 0.")
                 }
 
                 ImGui.popItemWidth()

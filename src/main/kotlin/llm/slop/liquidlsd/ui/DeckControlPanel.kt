@@ -320,15 +320,8 @@ class DeckControlPanel(
                     else -> mixer.levelPV = 1.0f
                 }
             }
-            val current = when (label) {
-                "Deck A" -> mixer.levelA
-                "Deck B" -> mixer.levelB
-                "Deck BG" -> mixer.levelBG
-                else -> mixer.levelPV
-            }
-            val pctText = (current * 100f).roundToInt()
             val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
-            showTooltip("$label $desc: $pctText%\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            showTooltip("$label $desc\nDrag or scroll to adjust. Middle-click to reset (100%).")
         }
 
         // Draw Fader Track

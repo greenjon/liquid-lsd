@@ -91,10 +91,7 @@ object PresetGridRenderer {
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             val key = paramKey.hashCode()
             showCustomTooltip(key, estimatedWidth = 320f, estimatedHeight = 120f) {
-                // Rich tooltip: name, range, live value breakdown, description, user note
-                val liveVal = param.value
-                val baseVal = param.baseValue
-                val modDelta = liveVal - baseVal
+                // Rich tooltip: name, range, default, description, user note
                 val minVal = param.minClamp
                 val maxVal = param.maxClamp
 
@@ -111,10 +108,6 @@ object PresetGridRenderer {
                 } else ""
                 val paramName = if (keyParts.size >= 3) keyParts.drop(2).joinToString("/") else label
 
-                val fmt: (Float) -> String = { v ->
-                    if (param.isAngle) "${"%+.1f".format(v * 180f / PI.toFloat())}°"
-                    else "%+.3f".format(v)
-                }
                 val fmtAbs: (Float) -> String = { v ->
                     if (param.isAngle) "${"%,.1f".format(v * 180f / PI.toFloat())}°"
                     else "%.3f".format(v)
@@ -134,13 +127,6 @@ object PresetGridRenderer {
                 ImGui.text(label)
                 ImGui.separator()
                 ImGui.textDisabled("Range: ${fmtAbs(minVal)} – ${fmtAbs(maxVal)}   Default: ${fmtAbs(param.defaultValue)}")
-                val isMixerMode = paramKey == "Mixer/mode"
-                val modSign = if (modDelta >= 0f) "+" else ""
-                if (isMixerMode) {
-                    ImGui.text("Live: ${getMixModeLabel(liveVal)}  (base ${getMixModeLabel(baseVal)})")
-                } else {
-                    ImGui.text("Live: ${fmtAbs(liveVal)}  (base ${fmtAbs(baseVal)} $modSign${"%.3f".format(modDelta)}${if (param.isAngle) "°" else ""})")
-                }
                 if (description.isNotEmpty()) {
                     ImGui.separator()
                     ImGui.textWrapped(description)
@@ -267,15 +253,13 @@ object PresetGridRenderer {
         }
         if (isValHovered && session.uiTheme.tooltipsEnabled) {
             val isMixerMode = paramKey == "Mixer/mode"
-            val displayValue = if (isMixerMode) getMixModeLabel(param.value) else if (param.isAngle) "${"%.1f".format(param.value * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.value)
-            val displayBase  = if (isMixerMode) getMixModeLabel(param.baseValue) else if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
             val tipText = when {
                 isMixerMode || paramKey.endsWith("/Max Points") ->
-                    "Parameter value: $displayValue (Base: $displayBase)\nClick to configure in VAL panel. Middle-click to reset.\n\nNote: This parameter is non-modulatable."
+                    "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
                 param.modulatorFilter != null ->
-                    "Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active."
+                    "Base parameter value.\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active."
                 else ->
-                    "Parameter value: $displayValue (Base: $displayBase)\nClick to configure bounds and default values. Middle-click to reset."
+                    "Base parameter value.\nClick to configure bounds and default values. Middle-click to reset."
             }
             showTooltip(tipText, (valX.toInt() shl 16) xor (valY.toInt() and 0xFFFF))
         }
