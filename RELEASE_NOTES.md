@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.62
+
+> [!NOTE]
+> **Release 1.0.0-beta.62** introduces Ableton Link peer-to-peer beat, phase, and tempo synchronization across local networks with a tri-state clock source engine, ISF mixer transition shaders with full fallback and composite preservation, Spout and Syphon live video ingest with dynamic server discovery, and dual modular FX slots with multi-pass ISF and spatial distortion.
+
 ### Phase 3: Musical Timing — Ableton Link Integration (`ClockSource.kt`, `AbletonLinkEngine.kt`, `LinkBackend.kt`, `NativeJniLinkBackend.kt`, `CarabinerTcpLinkBackend.kt`, `NativeLibraryLoader.kt`, `MenuBar.kt`, `AudioEnginePanel.kt`, `SettingsPanel.kt`, `AppSettings.kt`, `UITheme.kt`, `AbletonLinkEngineTest.kt`)
 - **Tri-State Clock Source Core**: Integrated `ClockSource` enum (`AUDIO_TRACKER` for BTrack FFT onset engine, `ABLETON_LINK` for network peer sync, `MANUAL_TAP` for internal fixed tempo & VJ tap tempo).
 - **Multi-Backend Ableton Link Architecture**:

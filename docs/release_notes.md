@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+---
+
+## Version 1.0.0-beta.62
+
+> [!NOTE]
+> **Release 1.0.0-beta.62** introduces Ableton Link peer-to-peer beat, phase, and tempo synchronization across local networks with a tri-state clock source engine, ISF mixer transition shaders with full fallback and composite preservation, Spout and Syphon live video ingest with dynamic server discovery, and dual modular FX slots with multi-pass ISF and spatial distortion.
+
+### Phase 3: Musical Timing — Ableton Link Integration (`ClockSource.kt`, `AbletonLinkEngine.kt`, `LinkBackend.kt`, `NativeJniLinkBackend.kt`, `CarabinerTcpLinkBackend.kt`, `NativeLibraryLoader.kt`, `MenuBar.kt`, `AudioEnginePanel.kt`, `SettingsPanel.kt`, `AppSettings.kt`, `UITheme.kt`, `AbletonLinkEngineTest.kt`)
+- **Tri-State Clock Source Core**: Integrated `ClockSource` enum (`AUDIO_TRACKER` for BTrack FFT onset engine, `ABLETON_LINK` for network peer sync, `MANUAL_TAP` for internal fixed tempo & VJ tap tempo).
+- **Multi-Backend Ableton Link Architecture**:
+  - Native JNI C++ bridge (`link_jni` embedding `ableton::Link`) for sample-accurate peer-to-peer beat, phase, and tempo sync across `linux-x64`, `windows-x64`, `macos-x64`, and `macos-arm64`.
+  - Carabiner TCP socket backend (`CarabinerTcpLinkBackend`) connecting to local Carabiner Link daemon (`127.0.0.1:17000`).
+  - Graceful `NoOpLinkBackend` fallback when Link is inactive.
+- **Top MenuBar Telemetry & HUD Pill**: Added `LINK [N peers]` status pill, quantum bar phase ring, active driver readout, and clock source dropdown selector (`[BTRACK]`, `[LINK]`, `[MANUAL]`).
+- **Audio Engine & Settings Controls**: Added dedicated Ableton Link configuration card in `AudioEnginePanel` with quantum selector (1, 4, 8, 16 beats) and start/stop transport sync support.
+- **Settings Persistence & Unit Tests**: Full persistence of clock source and Link configuration in `AppSettings` / `UITheme`, with unit test suite in `AbletonLinkEngineTest.kt`.
+
 ### Phase 2.3: ISF Mixer Transitions & Fallback Architecture (`ISFTransitionRegistry.kt`, `ISFFilter.kt`, `Mixer.kt`, `Renderer.kt`, `ShaderPickerPopup.kt`, `MixerMonitorPanel.kt`, `PresetGridPanel.kt`, `PresetModels.kt`, `PresetManager.kt`, `WebPresetSerializer.kt`)
 - **Extensible ISF Transition Engine**: Integrated shader-based crossfader transitions accepting `startImage` (Deck A), `endImage` (Deck B), and `progress` ($0.0 \dots 1.0$).
 - **Fallback Non-ISF Mixer**: Guaranteed seamless fallback to built-in non-ISF `mixer.frag` blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) when `transitionFilter == null`.
