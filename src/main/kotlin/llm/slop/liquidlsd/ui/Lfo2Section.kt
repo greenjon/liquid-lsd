@@ -53,7 +53,13 @@ object Lfo2Section {
         
         if (ImGui.button("${Icons.POWER}##bypass_lfo2_$idx", btnWidth, btnHeight)) {
             val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
-            onReplace(existing.copy(generatorModMode = nextMode))
+            val nextDepth = if (lfo2Bypassed && existing.generatorModDepth == 0.0f) 1.0f else existing.generatorModDepth
+            onReplace(existing.copy(
+                generatorModMode = nextMode,
+                generatorModDepth = nextDepth,
+                generatorModDepthMin = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMin,
+                generatorModDepthMax = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMax
+            ))
         }
         itemTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
         ImGui.popStyleColor(3)
@@ -91,7 +97,13 @@ object Lfo2Section {
         ImGui.pushItemWidth(160f * fontScale)
         if (ImGui.combo("##gen_mod_mode", modeIdx, modeLabels)) {
             val nextMode = llm.slop.liquidlsd.parameters.GeneratorModMode.entries[modeIdx.get() + 1]
-            onReplace(existing.copy(generatorModMode = nextMode))
+            val nextDepth = if (nextMode != llm.slop.liquidlsd.parameters.GeneratorModMode.NONE && existing.generatorModDepth == 0.0f) 1.0f else existing.generatorModDepth
+            onReplace(existing.copy(
+                generatorModMode = nextMode,
+                generatorModDepth = nextDepth,
+                generatorModDepthMin = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMin,
+                generatorModDepthMax = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMax
+            ))
         }
         itemTooltip("Select modulation target/mode for LFO 2:\nAM: Modulates LFO 1's Depth.\nPM: Modulates LFO 1's Phase/Frequency.\nADD: Adds LFO 2 directly to LFO 1's output.")
         ImGui.popItemWidth()
@@ -259,7 +271,7 @@ object Lfo2Section {
                 currentValue = existing.generatorModDepth,
                 currentMin = existing.generatorModDepthMin,
                 currentMax = existing.generatorModDepthMax,
-                minLimit = 0f, maxLimit = 1f, defaultValue = 0.5f,
+                minLimit = 0f, maxLimit = 1f, defaultValue = 1.0f,
                 isRandomizable = existing.randomizeGeneratorModDepth,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,

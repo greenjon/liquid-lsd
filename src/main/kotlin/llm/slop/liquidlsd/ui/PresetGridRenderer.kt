@@ -492,7 +492,11 @@ object PresetGridRenderer {
                     "audio"   -> "audio_amp"
                     else      -> cvId
                 }
-                param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = 0.5f, bypassed = false))
+                val defaultDepth = when (defaultSource) {
+                    "seq"     -> 1.0f
+                    else      -> 0.5f
+                }
+                param.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = defaultSource, depth = defaultDepth, bypassed = false))
                 if (paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
             }
         }

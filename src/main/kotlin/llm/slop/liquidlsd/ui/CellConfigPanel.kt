@@ -29,15 +29,16 @@ object CellConfigPanel {
         virtualModulators.clear()
         if (cvId == "audio") {
             if (activeMods.isEmpty()) {
-                virtualModulators.add(CvModulator(id = "virtual_audio_1", sourceId = "audio_amp", bypassed = true))
-                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = "audio_flux_bass", bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_1", sourceId = "audio_amp", depth = 0.5f, bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = "audio_flux_bass", depth = 0.5f, bypassed = true))
             } else if (activeMods.size == 1) {
                 val fallbackSource = if (activeMods[0].sourceId.startsWith("audio_flux_")) "audio_amp" else "audio_flux_bass"
-                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = fallbackSource, bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = fallbackSource, depth = 0.5f, bypassed = true))
             }
         } else {
             if (activeMods.isEmpty()) {
-                virtualModulators.add(CvModulator(id = "virtual_$cvId", sourceId = cvId, bypassed = true))
+                val defaultDepth = if (cvId == "seq") 1.0f else 0.5f
+                virtualModulators.add(CvModulator(id = "virtual_$cvId", sourceId = cvId, depth = defaultDepth, bypassed = true))
             }
         }
     }

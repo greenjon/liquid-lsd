@@ -4,6 +4,23 @@
 
 ---
 
+## Version 1.0.0-beta.57
+
+> [!NOTE]
+> **Release 1.0.0-beta.57** improves Cell Config panel responsiveness with a guaranteed minimum layout width, optimizes numeric input box sizing across modulators and audio engine settings, and introduces 100% default depth ergonomics for Step Sequencer and LFO 2.
+
+### UI Layout & Space Optimization (`UIManager.kt`, `CustomRangeSlider.kt`, `AudioEnginePanel.kt`)
+- **Cell Config Minimum Width**: Enforced a minimum width of 450px for the Cell Config panel. The Mixer Monitor now scales down to accommodate this space when necessary, ensuring configuration controls remain accessible even at lower resolutions or with all Preset Grid columns visible.
+- **Improved Input Box Efficiency**: Optimized the width of standard numeric input boxes (Depth, Phase, etc.) to 44px (approx. 41.8px at 95% scale).
+- **LFO Range Slider Alignment**: Fixed a rendering error where the LFO range slider overlapped the 'Max' numeric input box when randomization was disabled.
+- **Proportional Audio Engine Sizing**: Adjusted the Audio Engine settings input boxes to 35.2px to maintain a 20% smaller proportionality relative to the new standard width.
+
+### Sequencer & LFO 2 100% Default Modulation Depth (`CvModulator.kt`, `PresetGridRenderer.kt`, `CellConfigPanel.kt`, `Lfo2Section.kt`)
+- **Step Sequencer 100% Depth**: New sequencer modulators now default to 100% (1.0) depth so that step values output 1:1 direct voltage without requiring manual depth adjustments.
+- **LFO 2 100% Depth & Auto-Activation**: LFO 2 modulator depth now defaults to 100% (1.0) with middle-click reset to 100%, and automatically ensures full depth upon enabling an AM/PM/ADD modulation mode.
+
+---
+
 ## Version 1.0.0-beta.56
 
 > [!NOTE]

@@ -7,7 +7,7 @@ import java.util.UUID
 data class CvModulator(
     val sourceId: String,
     val operator: ModulationOperator = ModulationOperator.ADD,
-    var depth: Float = 0.0f,
+    var depth: Float = if (sourceId == "seq") 1.0f else 0.0f,
     val bypassed: Boolean = false,
     // Beat synchronization/shape settings
     val waveform: Waveform = Waveform.SINE,
@@ -57,7 +57,7 @@ data class CvModulator(
     var modSlope: Float = 0.5f,
     val modGenUnit: GenUnit = GenUnit.TIME,
     val generatorModMode: GeneratorModMode = GeneratorModMode.NONE,
-    var generatorModDepth: Float = 0.0f,
+    var generatorModDepth: Float = 1.0f,
 
     val modSubdivisionMin: Float = modSubdivision,
     val modSubdivisionMax: Float = modSubdivision,

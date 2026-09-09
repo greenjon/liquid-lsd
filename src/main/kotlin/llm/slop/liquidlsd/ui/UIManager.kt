@@ -518,12 +518,12 @@ class UIManager(
             itemSpacingY = style.getItemSpacingY(),
             aspectRatio = theme.renderAspectRatio
         )
-        val maxAllowedRightW = (displayWidth - col1W - 50f).coerceAtLeast(100f)
+        val maxAllowedRightW = (displayWidth - col1W - 450f).coerceAtLeast(100f)
         val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
         // Column 2 (Middle Panel / Cell Config) and Library (Spans Col 1 + Col 2)
         val libraryW = (displayWidth - rightW).coerceAtLeast(100f)
-        val col2W = (libraryW - col1W).coerceAtLeast(20f)
+        val col2W = (libraryW - col1W).coerceAtLeast(450f)
 
         val libTitleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             (ImGui.getTextLineHeight() + 12f + (style.getWindowBorderSize() * 2f)).coerceAtLeast(32f)

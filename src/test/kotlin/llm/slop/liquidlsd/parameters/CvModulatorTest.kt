@@ -587,5 +587,19 @@ class CvModulatorTest {
         assertEquals(0.0f, calculateAdvancedLFO(0.75, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
         assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
     }
+
+    @Test
+    fun testSequencerAndLfo2DefaultDepths() {
+        val seqMod = CvModulator(sourceId = "seq")
+        assertEquals(1.0f, seqMod.depth, "Sequencer depth should default to 1.0f (100%)")
+        assertEquals(1.0f, seqMod.depthMin)
+        assertEquals(1.0f, seqMod.depthMax)
+
+        val lfoMod = CvModulator(sourceId = "lfo")
+        assertEquals(0.0f, lfoMod.depth, "LFO 1 carrier depth defaults to 0.0f")
+        assertEquals(1.0f, lfoMod.generatorModDepth, "LFO 2 generatorModDepth should default to 1.0f (100%)")
+        assertEquals(1.0f, lfoMod.generatorModDepthMin)
+        assertEquals(1.0f, lfoMod.generatorModDepthMax)
+    }
 }
 

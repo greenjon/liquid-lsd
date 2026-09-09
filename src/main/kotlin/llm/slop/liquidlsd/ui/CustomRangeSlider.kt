@@ -164,9 +164,9 @@ object CustomRangeSlider {
         // 1. Header Row (Label + Dice)
         val labelColW = 110f * fontScale
         val textBoxesStartX = startX + labelColW + 10f * fontScale
-        val boxWidth = 42f * fontScale
+        val boxWidth = 44f * fontScale
         val boxSpacing = 8f
-        val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
+        val sliderStartX = textBoxesStartX + (boxWidth * 2f + boxSpacing) + 15f
         val lineEndX = maxOf(sliderStartX + 1f, startX + w - 10f)
         val lineWidth = (lineEndX - sliderStartX).coerceAtLeast(1f)
 
@@ -472,7 +472,7 @@ object CustomRangeSlider {
         val labelColW = 110f * fontScale
         val textBoxesStartX = startX + labelColW + 10f * fontScale
         
-        val boxWidth = customBoxWidth ?: (42f * fontScale)
+        val boxWidth = customBoxWidth ?: (44f * fontScale)
         val boxSpacing = 8f
         
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
