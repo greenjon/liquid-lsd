@@ -228,6 +228,7 @@ data class DeckPresetDto(
     val name: String,
     val tags: List<String> = emptyList(),
     val visualSourceType: String, // e.g., "Mandala" or "Mandelbulb"
+    val serverName: String = "",
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
@@ -429,7 +430,12 @@ fun ModulatableParameter.applyDto(dto: ParameterDto) {
 }
 
 fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
-    val sourceName = (source as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id ?: "mandala"
+    val sourceName = when (val s = source) {
+        is llm.slop.liquidlsd.rendering.DynamicVisualSource -> s.id
+        is llm.slop.liquidlsd.rendering.ExternalVideoSource -> s.id
+        else -> "mandala"
+    }
+    val extServerName = (source as? llm.slop.liquidlsd.rendering.ExternalVideoSource)?.serverName ?: ""
     
     val paramsMap = source.parameters.mapValues { it.value.toDto() }
     
@@ -480,6 +486,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         name = name,
         tags = tags,
         visualSourceType = sourceName,
+        serverName = extServerName,
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
@@ -501,11 +508,17 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     
     // Select the active source by visualSourceType id
     val matchedSource = availableSources.firstOrNull { src ->
-        (src as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id == dto.visualSourceType
+        when (src) {
+            is llm.slop.liquidlsd.rendering.DynamicVisualSource -> src.id == dto.visualSourceType
+            is llm.slop.liquidlsd.rendering.ExternalVideoSource -> src.id == dto.visualSourceType
+            else -> false
+        }
     }
     if (matchedSource != null) {
-        source = matchedSource
+        source = matchedSource.clone()
     }
+    
+    (source as? llm.slop.liquidlsd.rendering.ExternalVideoSource)?.serverName = dto.serverName
     
     val dynObj = source as? llm.slop.liquidlsd.rendering.DynamicVisualSource
     if (dynObj != null) {

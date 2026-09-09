@@ -30,7 +30,7 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
      [FX Slot 1: Color/Degrade] (fxSlot1, fxFBO1 — Invert, Posterize, Luma Key, etc.)
                  │
                  ▼
-     [FX Slot 2: Spatial/Distort] (fxSlot2, fxFBO2 — Bloom, Glitch, Mirror, Trails, etc.)
+     [FX Slot 2: Spatial/Distort] (fxSlot2, fxFBO2 — 3D Elevation, Feedback Loop, Bloom, Glitch, Mirror, Trails)
                  │
                  ▼
         [feedback.frag] ◄── [Previous Frame Feedback Texture]

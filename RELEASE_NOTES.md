@@ -2,13 +2,20 @@
 
 ## [Unreleased]
 
+### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `Main.kt`)
+- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows and Syphon on macOS.
+- **Dynamic Server Discovery**: Integrated background polling (`ExternalVideoDiscovery`) to automatically detect launched or closed external video servers across the system.
+- **Native Visual Source Integration**: Added `ExternalVideoSource`, making external video feeds selectable visual generators within Decks, fully routing into 2D/3D transformations, feedback loops, and ISF post-processing slots.
+- **UI Server Selector**: Implemented a dynamic server combo selector in `PresetGridTabs` for picking live external servers.
+- **Preset Serialization**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load.
+
 ### Phase 2.2.2: Multi-Pass ISF Engine, Dual FX Slots & Universal Shader Picker (`ShaderPickerPopup.kt`, `ISFParser.kt`, `ISFFilter.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`, `ISFMultiPassTest.kt`)
 - **Dual FX Architecture**: Added a second serialized FX slot (**Slot 2: Spatial / Distortion**) to each Deck pipeline (`Visual Source` $\rightarrow$ `2D/3D Transform` $\rightarrow$ `cleanFBO` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `feedback.frag`).
 - **Multi-Pass ISF Shader Processing**: Full support for multi-pass ISF shaders (`PASSES` array) with intermediate target FBOs and custom pass dimensions (e.g. `$WIDTH/2.0`, `$HEIGHT/2.0`).
 - **Persistent Ping-Pong History Buffers**: Temporal feedback accumulation (`PERSISTENT: true`) using ping-pong FBO pairs without GPU read/write feedback hazards.
 - **Universal Searchable Category Shader Picker**: Replaced flat dropdowns with `ShaderPickerPopup`, a zero-allocation modal dialog supporting instant fuzzy search and category filtering for Visual Sources and both FX Slots.
 - **Dual FX Preset Serialization**: Full round-trip serialization of both FX slots (`fxSlot1` and `fxSlot2`) in `DeckPresetDto`, maintaining 100% backward compatibility for existing presets.
-- **Bundled Multi-Pass & Spatial Filters**: Shipped default filters including `bloom.fs` (multi-pass bloom), `feedback_trails.fs` (persistent temporal decay), `glitch.fs` (chromatic aberration and scanline dislocation), and `mirror.fs` (coordinate space folding).
+- **Bundled Multi-Pass & Spatial Filters**: Shipped default filters including `3d_elevation.fs` (unified 3D plane projection across Tri-Axial, Cube Cage, and Hex-Planar modes), `bloom.fs` (multi-pass bloom), `feedback.fs` (full ISF feedback loop with zoom, rotate, kaleidoscope, hue shift, chroma aberration, blur & mode blend), `feedback_trails.fs` (persistent temporal decay), `glitch.fs` (chromatic aberration and scanline dislocation), and `mirror.fs` (coordinate space folding).
 
 ---
 

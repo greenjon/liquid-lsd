@@ -66,7 +66,7 @@ With the integration of hundreds of ISF sources and filters, Liquid LSD uses a u
 ### Dual FX Post-Processing Slots
 Each Deck features two serialized, independently modulatable ISF post-processing slots positioned before the feedback loop:
 - **Slot 1 (Color / Degradation)**: Color remapping, inversion, posterization, luma keying, and signal degradation filters.
-- **Slot 2 (Spatial / Distortion)**: Multi-pass bloom, chromatic aberration, digital glitch, spatial folding, and persistent motion trails.
+- **Slot 2 (Spatial / Distortion)**: 3D plane elevation (`3d_elevation.fs`), full feedback loops (`feedback.fs`), multi-pass bloom, chromatic aberration, digital glitch, spatial folding, and persistent motion trails.
 - **Bypass & Dry/Wet Mix**: Both slots support independent bypass toggles and continuous Dry/Wet parameter modulation. Bypassed or zero-wet slots execute with zero draw call overhead.
 
 #### Icosa-Dodeca Quick Reference & Classic Solids

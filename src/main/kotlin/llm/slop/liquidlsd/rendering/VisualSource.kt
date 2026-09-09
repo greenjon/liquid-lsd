@@ -10,6 +10,12 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
  */
 interface VisualSource : ParameterOwner {
     /**
+     * Unique string identifier for this visual source.
+     */
+    val id: String
+        get() = "unknown"
+
+    /**
      * Human-readable display name of this visual source.
      */
     val displayName: String

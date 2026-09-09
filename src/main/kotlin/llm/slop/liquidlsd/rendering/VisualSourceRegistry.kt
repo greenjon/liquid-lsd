@@ -11,7 +11,7 @@ import java.io.File
 private val logger = KotlinLogging.logger {}
 
 object VisualSourceRegistry {
-    val availableSources = mutableListOf<DynamicVisualSource>()
+    val availableSources = mutableListOf<VisualSource>()
     
     private val json = Json {
         ignoreUnknownKeys = true
@@ -96,6 +96,9 @@ object VisualSourceRegistry {
                 logger.info { "Extracted bundled visual source: $sourceId" }
             }
         }
+        
+        // Register static native sources
+        availableSources.add(ExternalVideoSource())
     }
 
     fun loadAll() {
@@ -127,6 +130,9 @@ object VisualSourceRegistry {
                 logger.error(e) { "Failed to load standalone ISF source: ${file.name}" }
             }
         }
+        
+        // Register static native sources
+        availableSources.add(ExternalVideoSource())
     }
 
     private fun loadFromISFFile(file: File, overrideId: String? = null): ISFVisualSource? {

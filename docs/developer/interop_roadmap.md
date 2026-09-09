@@ -123,7 +123,7 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
       - Examples: *Luma Key*, *Hue Cycle / Shift*, *Posterize*, *Invert*, *Color Grade / LUT*, *Threshold / Dither*.
     - **Slot 2: Spatial / Distortion** (Geometric & Feedback Processing) [COMPLETED]
       - Focus: Coordinate space distortion, temporal feedback, optics, and geometric dislocation.
-      - Examples: *Feedback Trails*, *Digital Glitch / Artifacting*, *Mirror / Kaleidoscope*, *Edge Warp / Barrel Distortion*, *Displacement Map*.
+      - Examples: *3D Elevation / Spatial Projection*, *Feedback Trails*, *Digital Glitch / Artifacting*, *Mirror / Kaleidoscope*, *Edge Warp / Barrel Distortion*, *Displacement Map*.
   - **Signal Chain & Routing**:
     - `Visual Source` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `Mixer / Output`.
     - Each slot features independent bypass toggles, wet/dry mix, preset loading, and parameter randomization hooks in the Preset Grid.
@@ -141,7 +141,7 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
 - [x] Build UI for ISF filter selection and parameter modulation in Preset Grid. [DONE]
 - [x] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2). [DONE]
 - [x] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2). [DONE]
-- [ ] Port feedback loop to modular ISF effect (Phase 2.2.3).
+- [x] Port feedback loop to modular ISF effect (Phase 2.2.3). [DONE]
 
 ---
 
@@ -167,7 +167,7 @@ Provide synchronization with DAWs (Ableton Live, Bitwig, Traktor, Serato, Reaper
 
 ---
 
-## Phase 4: Video Processing — Spout & Syphon Input
+## Phase 4: Video Processing — Spout & Syphon Input [COMPLETED]
 
 ### Objective
 Enable Liquid LSD to ingest external live video streams (webcams, Blackmagic capture cards via OBS, Resolume layer outputs, TouchDesigner generative textures) and route them as native visual sources through Liquid LSD's 2D/3D geometry, feedback loops, and modulation FX.
@@ -176,12 +176,12 @@ Enable Liquid LSD to ingest external live video streams (webcams, Blackmagic cap
 - **Spout/Syphon as a Visual Source**:
   - `Spout/Syphon Input` appears as a selectable visual source in the Deck source selector dropdown alongside `Mandala`, `Gyroid`, etc.
   - When selected, a source picker dropdown in the Preset Grid allows selecting from currently discovered external servers (e.g., `Resolume Arena - Layer 1`, `OBS-Camera`, `TouchDesigner-Out`).
-  - Discovery updates dynamically when third-party servers launch or terminate.
+  - Discovery updates dynamically via `ExternalVideoDiscovery` when third-party servers launch or terminate.
 - **Preset Persistence & Serialization**:
   - The external source selection is serialized in preset JSON (`sourceId: "spout_input"`, `serverName: "Resolume Arena - Layer 1"`).
-  - Graceful fallback: if the saved server name is not found on preset load, display a placeholder test-pattern / warning badge in the Deck Monitor without crashing the render pipeline.
+  - Graceful fallback: if the saved server name is not found on preset load, displays empty / disconnected state cleanly without crashing the render pipeline.
 - **Video Processing Pipeline**:
-  - External video frames are bound to `rawSource2DFBO`.
+  - External video frames are consumed via `TextureReceiver` and bound to Liquid LSD's rendering pipeline.
   - Full compatibility with Liquid LSD's downstream stages:
     - 2D transforms: Zoom, Rotate Z, Pan.
     - 3D projections: Tri-Planar, Cube Cage, Hex-Planar, and Coxeter space folding.

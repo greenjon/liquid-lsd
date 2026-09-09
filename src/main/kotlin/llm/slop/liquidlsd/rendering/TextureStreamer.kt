@@ -18,6 +18,15 @@ interface SpoutLibrary : Library {
     fun SendTexture(ptr: Pointer, textureID: Int, textureTarget: Int, width: Int, height: Int, invert: Boolean, hostFBO: Int): Boolean
     fun ReleaseSender(ptr: Pointer)
     fun SetSenderName(ptr: Pointer, name: String): Boolean
+    
+    // Receiver functions
+    fun CreateReceiver(ptr: Pointer, name: ByteArray, width: IntArray, height: IntArray, bUseActive: Boolean): Boolean
+    fun ReceiveTexture(ptr: Pointer, name: ByteArray, width: IntArray, height: IntArray, textureID: Int, textureTarget: Int, invert: Boolean, hostFBO: Int): Boolean
+    fun ReleaseReceiver(ptr: Pointer)
+    
+    // Discovery functions
+    fun GetSenderCount(ptr: Pointer): Int
+    fun GetSender(ptr: Pointer, index: Int, sendername: ByteArray, maxsize: Int): Boolean
 }
 
 /**
@@ -45,6 +54,8 @@ interface FoundationLibrary : Library {
 class SyphonBridge {
     private val objc: ObjCLibrary by lazy { Native.load("objc", ObjCLibrary::class.java) }
     private var syphonServerClass: Pointer? = null
+    private var syphonClientClass: Pointer? = null
+    private var syphonServerDirectoryClass: Pointer? = null
     
     init {
         if (System.getProperty("os.name").lowercase().contains("mac")) {
@@ -65,8 +76,11 @@ class SyphonBridge {
                     }
                 }
 
-                // 3. Resolve the class
+                // 3. Resolve the classes
                 syphonServerClass = objc.objc_getClass("SyphonServer")
+                syphonClientClass = objc.objc_getClass("SyphonClient")
+                syphonServerDirectoryClass = objc.objc_getClass("SyphonServerDirectory")
+                
                 if (syphonServerClass == null) {
                     logger.warn { "SyphonServer class not found. Ensure Syphon.framework is in library/natives/ or /Library/Frameworks/" }
                 }
@@ -120,6 +134,135 @@ class SyphonBridge {
 
         // Texture target GL_TEXTURE_2D = 0x0DE1
         objc.objc_msgSend(serverPtr, selPublish, textureId, 0x0DE1, rect, size, false)
+    }
+
+    // --- Client / Receiver ---
+    
+    fun getAvailableServers(): List<String> {
+        val dirCls = syphonServerDirectoryClass ?: return emptyList()
+        val selShared = objc.sel_registerName("sharedDirectory")
+        val selServers = objc.sel_registerName("servers")
+        val selCount = objc.sel_registerName("count")
+        val selObjectAtIndex = objc.sel_registerName("objectAtIndex:")
+        val selObjectForKey = objc.sel_registerName("objectForKey:")
+        val selUTF8String = objc.sel_registerName("UTF8String")
+
+        val nsStringCls = objc.objc_getClass("NSString")
+        val selStringWithUTF8String = objc.sel_registerName("stringWithUTF8String:")
+
+        val directory = objc.objc_msgSend(dirCls, selShared)
+        val serversArray = objc.objc_msgSend(directory, selServers)
+        
+        val countPtr = objc.objc_msgSend(serversArray, selCount)
+        val count = Pointer.nativeValue(countPtr).toInt()
+
+        val results = mutableListOf<String>()
+        val appNameKey = objc.objc_msgSend(nsStringCls, selStringWithUTF8String, "SyphonServerDescriptionAppNameKey")
+        val nameKey = objc.objc_msgSend(nsStringCls, selStringWithUTF8String, "SyphonServerDescriptionNameKey")
+        
+        for (i in 0 until count) {
+            // Need to pass index properly. JNA objc_msgSend with integer args might need a wrapper or primitive wrapper?
+            // Actually, objectAtIndex: takes NSUInteger, so a long/int.
+            val dict = objc.objc_msgSend(serversArray, selObjectAtIndex, i.toLong())
+            
+            val appNamePtr = objc.objc_msgSend(dict, selObjectForKey, appNameKey)
+            val namePtr = objc.objc_msgSend(dict, selObjectForKey, nameKey)
+            
+            val appNameStrPtr = if (appNamePtr != null && Pointer.nativeValue(appNamePtr) != 0L) objc.objc_msgSend(appNamePtr, selUTF8String) else null
+            val nameStrPtr = if (namePtr != null && Pointer.nativeValue(namePtr) != 0L) objc.objc_msgSend(namePtr, selUTF8String) else null
+            
+            val appName = appNameStrPtr?.getString(0, "UTF-8") ?: ""
+            val name = nameStrPtr?.getString(0, "UTF-8") ?: ""
+            
+            val fullName = if (name.isNotEmpty()) "$appName - $name" else appName
+            if (fullName.isNotEmpty()) {
+                results.add(fullName)
+            }
+        }
+        return results
+    }
+
+    fun createClient(serverName: String): Pointer? {
+        val clientCls = syphonClientClass ?: return null
+        val selAlloc = objc.sel_registerName("alloc")
+        val selInit = objc.sel_registerName("initWithServerDescription:options:newFrameHandler:")
+        
+        // Find the matching server description dict
+        val dirCls = syphonServerDirectoryClass ?: return null
+        val selShared = objc.sel_registerName("sharedDirectory")
+        val selServers = objc.sel_registerName("servers")
+        val selCount = objc.sel_registerName("count")
+        val selObjectAtIndex = objc.sel_registerName("objectAtIndex:")
+        val selObjectForKey = objc.sel_registerName("objectForKey:")
+        val selUTF8String = objc.sel_registerName("UTF8String")
+
+        val nsStringCls = objc.objc_getClass("NSString")
+        val selStringWithUTF8String = objc.sel_registerName("stringWithUTF8String:")
+
+        val directory = objc.objc_msgSend(dirCls, selShared)
+        val serversArray = objc.objc_msgSend(directory, selServers)
+        
+        val countPtr = objc.objc_msgSend(serversArray, selCount)
+        val count = Pointer.nativeValue(countPtr).toInt()
+
+        val appNameKey = objc.objc_msgSend(nsStringCls, selStringWithUTF8String, "SyphonServerDescriptionAppNameKey")
+        val nameKey = objc.objc_msgSend(nsStringCls, selStringWithUTF8String, "SyphonServerDescriptionNameKey")
+        
+        var targetDict: Pointer? = null
+        for (i in 0 until count) {
+            val dict = objc.objc_msgSend(serversArray, selObjectAtIndex, i.toLong())
+            val appNamePtr = objc.objc_msgSend(dict, selObjectForKey, appNameKey)
+            val namePtr = objc.objc_msgSend(dict, selObjectForKey, nameKey)
+            
+            val appNameStrPtr = if (appNamePtr != null && Pointer.nativeValue(appNamePtr) != 0L) objc.objc_msgSend(appNamePtr, selUTF8String) else null
+            val nameStrPtr = if (namePtr != null && Pointer.nativeValue(namePtr) != 0L) objc.objc_msgSend(namePtr, selUTF8String) else null
+            
+            val appName = appNameStrPtr?.getString(0, "UTF-8") ?: ""
+            val name = nameStrPtr?.getString(0, "UTF-8") ?: ""
+            val fullName = if (name.isNotEmpty()) "$appName - $name" else appName
+            
+            if (fullName == serverName) {
+                targetDict = dict
+                break
+            }
+        }
+        
+        if (targetDict == null) return null
+        
+        val instance = objc.objc_msgSend(clientCls, selAlloc)
+        return objc.objc_msgSend(instance, selInit, targetDict, null, null)
+    }
+
+    fun hasNewFrame(clientPtr: Pointer): Boolean {
+        val selHasNewFrame = objc.sel_registerName("hasNewFrame")
+        val res = objc.objc_msgSend(clientPtr, selHasNewFrame)
+        return res != null && Pointer.nativeValue(res) != 0L
+    }
+
+    fun newFrameImage(clientPtr: Pointer): Pointer? {
+        val selNewFrameImage = objc.sel_registerName("newFrameImage")
+        return objc.objc_msgSend(clientPtr, selNewFrameImage)
+    }
+
+    fun textureNameForImage(imagePtr: Pointer): Int {
+        val selTextureName = objc.sel_registerName("textureName")
+        val res = objc.objc_msgSend(imagePtr, selTextureName)
+        return Pointer.nativeValue(res).toInt()
+    }
+    
+    fun textureSizeForImage(imagePtr: Pointer): IntArray {
+        val selTextureSize = objc.sel_registerName("textureSize")
+        // textureSize returns NSSize struct. Since JNA objc_msgSend with struct return
+        // can be tricky, we'll assume standard SyphonImage textureSize works.
+        // Actually, returning a struct by value requires objc_msgSend_stret on some archs.
+        // Let's skip size query if we can, or just try it:
+        // Or we don't query size here and just let LiquidLSD query GL_TEXTURE_WIDTH
+        return intArrayOf(0, 0) 
+    }
+
+    fun stopClient(clientPtr: Pointer) {
+        val selStop = objc.sel_registerName("stop")
+        objc.objc_msgSend(clientPtr, selStop)
     }
 }
 

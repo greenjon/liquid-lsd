@@ -92,4 +92,27 @@ class ISFFilterTest {
         assertEquals(1.0f, clone.dryWet.baseValue)
         assertEquals(0.5f, clone.parameters["speed"]?.baseValue)
     }
+
+    @Test
+    fun `test 3D elevation ISF filter header parsing`() {
+        val stream = javaClass.classLoader.getResourceAsStream("default_filters/3d_elevation.fs")
+        assertNotNull(stream, "3d_elevation.fs bundled resource must exist")
+        val source = stream!!.bufferedReader().use { it.readText() }
+
+        val header = ISFParser.parseHeader(source)
+        assertNotNull(header, "3d_elevation.fs header should parse successfully")
+        assertEquals(9, header?.INPUTS?.size, "3d_elevation should have 9 inputs")
+
+        val shader = mockk<Shader>(relaxed = true)
+        val filter = ISFFilter("3d_elevation", "3D Elevation", header!!, shader)
+        assertEquals(8, filter.parameters.size) // 9 inputs - 1 image input = 8 parameters
+        assertTrue(filter.parameters.containsKey("mode3D"))
+        assertTrue(filter.parameters.containsKey("pitch"))
+        assertTrue(filter.parameters.containsKey("yaw"))
+        assertTrue(filter.parameters.containsKey("roll"))
+        assertTrue(filter.parameters.containsKey("zoom"))
+        assertTrue(filter.parameters.containsKey("separation"))
+        assertTrue(filter.parameters.containsKey("perspective"))
+        assertTrue(filter.parameters.containsKey("depthDim"))
+    }
 }

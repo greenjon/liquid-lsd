@@ -211,6 +211,7 @@ fun main(args: Array<String>) {
     // Load dynamic visual sources and ISF filters
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+    llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }

@@ -44,7 +44,7 @@ data class SourceMeta(
  *    dispose of the shared [shader], as it does not own it.
  */
 open class DynamicVisualSource(
-    val id: String,
+    override val id: String,
     override val displayName: String,
     val shader: Shader,
     override val parameters: LinkedHashMap<String, ModulatableParameter>,
