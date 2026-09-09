@@ -9,6 +9,8 @@ import llm.slop.liquidlsd.parameters.ParameterOwner
 interface VisualEffect : ParameterOwner {
     val id: String
     val displayName: String
+    val categories: List<String>
+        get() = emptyList()
     val parameters: Map<String, ModulatableParameter>
     val dryWet: ModulatableParameter
     var enabled: Boolean

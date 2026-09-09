@@ -17,8 +17,9 @@ class ISFVisualSource(
     parameters: LinkedHashMap<String, ModulatableParameter>,
     hasFeedback: Boolean = false,
     ownsShader: Boolean = false,
-    is3D: Boolean = header.is3D || (parameters.containsKey("Rotate X") && parameters.containsKey("Rotate Y"))
-) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D) {
+    is3D: Boolean = header.is3D || (parameters.containsKey("Rotate X") && parameters.containsKey("Rotate Y")),
+    override val categories: List<String> = header.CATEGORIES ?: emptyList()
+) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D, categories = categories) {
 
     private var frameIndex = 0
     private var lastTime = TimeSource.getTimeSec().toFloat()

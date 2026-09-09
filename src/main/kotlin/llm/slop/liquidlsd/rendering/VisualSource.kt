@@ -16,6 +16,12 @@ interface VisualSource : ParameterOwner {
         get() = "Visual Source"
 
     /**
+     * Categories for this visual source (e.g., "Generator", "Geometric", "3D").
+     */
+    val categories: List<String>
+        get() = emptyList()
+
+    /**
      * Map of parameter names to their modulatable counterparts.
      */
     val parameters: Map<String, ModulatableParameter>

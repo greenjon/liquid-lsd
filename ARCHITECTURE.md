@@ -19,6 +19,8 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                  │                  │                  │
             [FX Slot 1]        [FX Slot 1]        [FX Slot 1]
                  │                  │                  │
+            [FX Slot 2]        [FX Slot 2]        [FX Slot 2]
+                 │                  │                  │
            feedback.frag      feedback.frag      feedback.frag
                  └──────────────────┼──────────────────┘
                                  Mixer.kt
@@ -122,6 +124,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
 │   ├── MenuBar.kt              — Unified header bar, navigation menus, telemetry HUD & window controls
+│   ├── ShaderPickerPopup.kt    — High-performance category-based shader & source selector
 │   ├── WindowFrameController.kt— Client-Side Decorations (CSD), window dragging & perimeter edge resizing
 │   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling

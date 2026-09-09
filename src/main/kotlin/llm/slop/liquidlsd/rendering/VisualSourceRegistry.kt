@@ -229,7 +229,8 @@ object VisualSourceRegistry {
                     parameters = parameters,
                     hasFeedback = meta.feedback,
                     ownsShader = true,
-                    recipe = initialRecipe
+                    recipe = initialRecipe,
+                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "Geometric")
                 )
             } else if (meta.id == "dynamic_spiral") {
                 DynamicSpiral(
@@ -238,7 +239,8 @@ object VisualSourceRegistry {
                     shader = shader,
                     parameters = parameters,
                     hasFeedback = meta.feedback,
-                    ownsShader = true
+                    ownsShader = true,
+                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "Organic", "Liquid")
                 )
             } else if (meta.id == "hyper_mesh") {
                 HyperMesh(
@@ -248,7 +250,8 @@ object VisualSourceRegistry {
                     parameters = parameters,
                     hasFeedback = meta.feedback,
                     ownsShader = true,
-                    is3D = isSource3D
+                    is3D = isSource3D,
+                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "3D", "Geometric", "Fractal")
                 )
             } else if (meta.id == "icosahedron") {
                 Icosahedron(
@@ -258,7 +261,8 @@ object VisualSourceRegistry {
                     parameters = parameters,
                     hasFeedback = meta.feedback,
                     ownsShader = true,
-                    is3D = isSource3D
+                    is3D = isSource3D,
+                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "3D", "Geometric")
                 )
             } else {
                 DynamicVisualSource(
@@ -268,7 +272,8 @@ object VisualSourceRegistry {
                     parameters = parameters,
                     hasFeedback = meta.feedback,
                     ownsShader = true, // Master instance owns the shader
-                    is3D = isSource3D
+                    is3D = isSource3D,
+                    categories = meta.categories
                 )
             }
             availableSources.add(dynamicSource)

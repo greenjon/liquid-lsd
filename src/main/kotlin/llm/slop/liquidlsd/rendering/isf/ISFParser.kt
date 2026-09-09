@@ -89,6 +89,17 @@ object ISFParser {
         }
         sb.append("\n")
 
+        // 5.5 Pass Targets as Uniforms
+        sb.append("// ISF Pass Targets\n")
+        val passTargets = header.PASSES.mapNotNull { it.TARGET }
+        for (target in passTargets) {
+            val declRegex = Regex("""\buniform\s+sampler2D\s+${Regex.escape(target)}\s*;""")
+            if (!declRegex.containsMatchIn(stripped)) {
+                sb.append("uniform sampler2D $target;\n")
+            }
+        }
+        sb.append("\n")
+
         // 6. Clean up stripped body (strip redundant #version directives and preexisting vTexCoord/out vec4)
         var body = stripped
         val versionDirectiveRegex = Regex("""^\s*#version\s+.*$""", RegexOption.MULTILINE)

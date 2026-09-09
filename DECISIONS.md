@@ -640,3 +640,15 @@ This document outlines the key architectural decisions made in the development o
   - Leverages the existing ISF ecosystem for extensible image processing.
   - Enhances creative flexibility by allowing color and stylized effects to be applied before the feedback loop.
   - Maintains backward compatibility with existing presets through optional DTO fields.
+
+## Phase 2.2.2 - Part 1: Universal Searchable Category Shader Picker (`ShaderPickerPopup.kt`, `VisualSource.kt`, `VisualEffect.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`)
+
+- **Decision**: Replace flat dropdown menus with a unified, high-performance modal picker for selecting Visual Sources and FX Filters:
+  - **Category-Based Filtering**: Shaders and sources are organized into semantic categories (e.g., `Generator`, `Geometric`, `Color Adjustment`, `Distortion`).
+  - **Instant Search**: Implemented fuzzy text search across display names, IDs, and categories using static `ImString` buffers.
+  - **Zero-Allocation Architecture**: Designed the picker to avoid per-frame heap allocations during filtering and rendering, adhering to real-time performance constraints.
+  - **Context-Aware Defaults**: The picker opens with the most relevant category pre-selected based on the slot type (e.g., `Color Adjustment` for FX Slot 1).
+- **Rationale**:
+  - Scales gracefully to handle 300+ installed shaders without UI lag or ergonomic breakdown.
+  - Improves discoverability of procedural sources and post-processing effects.
+  - Provides a consistent interface for shader selection across sources and modular FX slots.

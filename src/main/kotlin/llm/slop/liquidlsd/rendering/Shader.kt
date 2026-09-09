@@ -121,7 +121,9 @@ class Shader(vertexSource: String, fragmentSource: String) {
                 location = glGetUniformLocation(programId, "$name[0]")
             }
             if (location == -1) {
-                val isStandardSystemUniform = name == "uTime" || name == "uAlpha" || name == "uResolution"
+                val isStandardSystemUniform = name == "uTime" || name == "uAlpha" || name == "uResolution" ||
+                        name == "TIME" || name == "TIMEDELTA" || name == "FRAMEINDEX" || name == "DATE" || 
+                        name == "RENDERSIZE" || name == "uAspectRatio"
                 if (!isStandardSystemUniform) {
                     logger.warn { "Uniform '$name' not found in shader program $programId" }
                 }

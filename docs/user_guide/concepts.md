@@ -56,6 +56,13 @@ Built-in procedural visual generators:
 - **Chladni**: Acoustic 2D/3D vibration pattern generator.
 - **Icosa-Dodeca**: Continuous $H_3$ Coxeter polyhedral morph and Kepler-Poinsot stellation raymarcher with translucent crystal reveal.
 
+### Universal Searchable Shader Picker
+With the integration of hundreds of ISF sources and filters, Liquid LSD uses a unified **Shader Picker** modal instead of flat dropdown menus.
+- **Searchable**: Type any part of a shader's name, ID, or category into the search bar for instant filtering.
+- **Categorized**: Content is organized into semantic categories like `Generator`, `Geometric`, `Color Adjustment`, `Distortion`, `Blur`, and `Stylize`.
+- **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (e.g., source selection vs. FX slot 1).
+- **Detach / Clear**: Use the `[ Detach / None ]` button to quickly clear a shader slot.
+
 #### Icosa-Dodeca Quick Reference & Classic Solids
 The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean bridges, and Kepler-Poinsot star polyhedra:
 

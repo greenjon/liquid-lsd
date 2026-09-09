@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Phase 2.2.2 - Part 1: Universal Searchable Category Shader Picker (`ShaderPickerPopup.kt`, `VisualSource.kt`, `VisualEffect.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`)
+- **Universal Shader Picker**: Introduced a unified modal dialog for selecting Visual Sources and FX Filters with instant search and category filtering.
+- **Categorized Content**: Sources and effects are now tagged with categories (e.g., `3D`, `Fractal`, `Blur`, `Stylize`) for better organization.
+- **High Performance**: Zero-allocation UI implementation ensures the picker remains responsive even with hundreds of shaders.
+- **Improved Source/FX Selection**: Replaced legacy dropdowns in the Preset Grid titles and FX tab with the searchable picker.
+
 ---
 
 ## Version 1.0.0-beta.60

@@ -113,8 +113,9 @@ class Icosahedron(
     globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),
     hasFeedback: Boolean = false,
     ownsShader: Boolean = false,
-    is3D: Boolean = true
-) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D) {
+    is3D: Boolean = true,
+    override val categories: List<String> = listOf("Generator", "3D", "Geometric")
+) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D, categories = categories) {
 
     // Pre-allocated array to store the 60 flattened vec3 normals (60 * 3 = 180 floats)
     // without runtime allocations inside the frame rendering loop.
@@ -140,7 +141,8 @@ class Icosahedron(
             globalAlpha = this.globalAlpha.clone(),
             hasFeedback = this.hasFeedback,
             ownsShader = false,
-            is3D = this.is3D
+            is3D = this.is3D,
+            categories = this.categories
         )
     }
 

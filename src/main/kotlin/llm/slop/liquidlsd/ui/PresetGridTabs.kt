@@ -236,39 +236,26 @@ object PresetGridTabs {
 
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             if (ImGui.button(displayLabel, btnW, subTabH)) {
-                ImGui.openPopup("##header_source_popup_${state.activeTopTab}")
+                val deckLabel = state.activeTopTab
+                ShaderPickerPopup.show("Select Source for $deckLabel", ShaderPickerPopup.PickerType.SOURCE) { newSourceId ->
+                    val newSource = VisualSourceRegistry.availableSources.find { it.id == newSourceId }
+                    if (newSource != null) {
+                        if (deckPresetController != null) {
+                            deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
+                        } else {
+                            deck.source = newSource.clone()
+                            deck.isEmpty = false
+                            session.presetManager.clearDeckActivePreset(deck, mixer)
+                            state.clearSelection()
+                            state.setDeckSubTab(deckLabel, "SRC")
+                            PresetGridUndo.pushUndoState(state, mixer)
+                        }
+                    }
+                }
             }
         }
         itemTooltip("Click to change Visual Source for ${state.activeTopTab}.")
         ImGui.popStyleColor(3)
-
-        if (ImGui.beginPopup("##header_source_popup_${state.activeTopTab}")) {
-            ImGui.textDisabled("Select Visual Source:")
-            ImGui.separator()
-
-            val deckLabel = state.activeTopTab
-            val changeSource = { newSource: VisualSource ->
-                if (deckPresetController != null) {
-                    deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
-                } else {
-                    deck.source = newSource.clone()
-                    deck.isEmpty = false
-                    session.presetManager.clearDeckActivePreset(deck, mixer)
-                    state.clearSelection()
-                    state.setDeckSubTab(deckLabel, "SRC")
-                    PresetGridUndo.pushUndoState(state, mixer)
-                }
-            }
-
-            VisualSourceRegistry.availableSources.forEach { source ->
-                if (ImGui.menuItem(source.displayName)) {
-                    if (deck.source != source) {
-                        changeSource(source)
-                    }
-                }
-            }
-            ImGui.endPopup()
-        }
         ImGui.popStyleVar(1)
     }
 
@@ -425,20 +412,21 @@ object PresetGridTabs {
                 ImGui.textDisabled("Filter")
                 ImGui.sameLine()
                 ImGui.setNextItemWidth(labelColW - 60f)
-                if (ImGui.beginCombo("##fx1_selector_$deckLabel", filterName)) {
-                    if (ImGui.menuItem("None", "", fx == null)) {
-                        deck.fxSlot1?.dispose()
-                        deck.fxSlot1 = null
-                        onPushUndo()
-                    }
-                    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.forEach { filter ->
-                        if (ImGui.menuItem(filter.displayName, "", fx?.id == filter.id)) {
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
+                    ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
+                        if (newFilterId == null) {
                             deck.fxSlot1?.dispose()
-                            deck.fxSlot1 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(filter.id)
+                            deck.fxSlot1 = null
                             onPushUndo()
+                        } else {
+                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                            if (filter != null) {
+                                deck.fxSlot1?.dispose()
+                                deck.fxSlot1 = filter
+                                onPushUndo()
+                            }
                         }
                     }
-                    ImGui.endCombo()
                 }
 
                 if (fx != null) {
@@ -510,20 +498,21 @@ object PresetGridTabs {
                 ImGui.textDisabled("Filter")
                 ImGui.sameLine()
                 ImGui.setNextItemWidth(labelColW - 60f)
-                if (ImGui.beginCombo("##fx1_selector_$deckLabel", filterName)) {
-                    if (ImGui.menuItem("None", "", fx == null)) {
-                        deck.fxSlot1?.dispose()
-                        deck.fxSlot1 = null
-                        onPushUndo()
-                    }
-                    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.forEach { filter ->
-                        if (ImGui.menuItem(filter.displayName, "", fx?.id == filter.id)) {
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
+                    ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
+                        if (newFilterId == null) {
                             deck.fxSlot1?.dispose()
-                            deck.fxSlot1 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(filter.id)
+                            deck.fxSlot1 = null
                             onPushUndo()
+                        } else {
+                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                            if (filter != null) {
+                                deck.fxSlot1?.dispose()
+                                deck.fxSlot1 = filter
+                                onPushUndo()
+                            }
                         }
                     }
-                    ImGui.endCombo()
                 }
 
                 if (fx != null) {

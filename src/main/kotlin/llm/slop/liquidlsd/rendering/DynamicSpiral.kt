@@ -20,8 +20,9 @@ class DynamicSpiral(
     shader: Shader,
     parameters: LinkedHashMap<String, ModulatableParameter>,
     hasFeedback: Boolean = false,
-    ownsShader: Boolean = false
-) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader) {
+    ownsShader: Boolean = false,
+    override val categories: List<String> = listOf("Generator", "Organic", "Liquid")
+) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader, categories = categories) {
 
     private var lastTimeNanos: Long = System.nanoTime()
     var integratedTime: Float = 0f
@@ -89,7 +90,8 @@ class DynamicSpiral(
             shader = this.shader,
             parameters = clonedParams,
             hasFeedback = this.hasFeedback,
-            ownsShader = false // Cloned instances do not own the shared shader
+            ownsShader = false, // Cloned instances do not own the shared shader
+            categories = this.categories
         )
         copy.integratedTime = this.integratedTime
         copy.integratedShear = this.integratedShear

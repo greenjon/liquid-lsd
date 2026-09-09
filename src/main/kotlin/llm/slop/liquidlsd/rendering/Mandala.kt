@@ -65,8 +65,9 @@ class Mandala(
     parameters: LinkedHashMap<String, ModulatableParameter>,
     hasFeedback: Boolean = false,
     ownsShader: Boolean = false,
-    recipe: MandalaRatio
-) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader) {
+    recipe: MandalaRatio,
+    override val categories: List<String> = listOf("Generator", "Geometric")
+) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader, categories = categories) {
 
     var recipe: MandalaRatio = recipe
         set(value) {
@@ -225,7 +226,8 @@ class Mandala(
             parameters = clonedParams,
             hasFeedback = this.hasFeedback,
             ownsShader = false,
-            recipe = this.recipe
+            recipe = this.recipe,
+            categories = this.categories
         )
         copy.vao = this.vao
         copy.vbo = this.vbo

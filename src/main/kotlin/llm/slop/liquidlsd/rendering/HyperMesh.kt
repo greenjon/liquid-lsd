@@ -49,8 +49,9 @@ class HyperMesh(
     globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),
     hasFeedback: Boolean = false,
     ownsShader: Boolean = false,
-    is3D: Boolean = true
-) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D) {
+    is3D: Boolean = true,
+    override val categories: List<String> = listOf("Generator", "3D", "Geometric", "Fractal")
+) : DynamicVisualSource(id, displayName, shader, parameters, globalAlpha = globalAlpha, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D, categories = categories) {
 
     var edgeVao600: Int = 0
         private set
@@ -405,7 +406,8 @@ class HyperMesh(
             globalAlpha = this.globalAlpha.clone(),
             hasFeedback = this.hasFeedback,
             ownsShader = false,
-            is3D = this.is3D
+            is3D = this.is3D,
+            categories = this.categories
         )
         copy.edgeVao600 = this.edgeVao600
         copy.nodeVao600 = this.nodeVao600

@@ -94,7 +94,7 @@
       "web": "web/icosahedron_math.js",
       "mode": "manual_review",
       "description": "Icosahedral projection and Du Val 60-orbit vectors parity",
-      "last_synced_hash": "d555b5f8284d3bc2e4a0360e83dd0372f2ae5745cbcb131413672ffd23b44159"
+      "last_synced_hash": "c87a360e6b95057d1d76dc2ff149082336b20ac611bdbfbd15cbffb5c2e11a02"
     },
     {
       "desktop": "src/main/kotlin/llm/slop/liquidlsd/cv/Evaluators.kt",
