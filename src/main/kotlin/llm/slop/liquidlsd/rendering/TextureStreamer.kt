@@ -1,5 +1,8 @@
 package llm.slop.liquidlsd.rendering
 
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
 import llm.slop.liquidlsd.ui.UITheme
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
@@ -9,24 +12,115 @@ private val logger = KotlinLogging.logger {}
 /**
  * JNA Interface for Spout2 (Windows)
  */
-interface SpoutLibrary : com.sun.jna.Library {
-    fun CreateSpout(): com.sun.jna.Pointer
-    fun ReleaseSpout(ptr: com.sun.jna.Pointer)
-    fun SendTexture(ptr: com.sun.jna.Pointer, textureID: Int, textureTarget: Int, width: Int, height: Int, invert: Boolean, hostFBO: Int): Boolean
-    fun ReleaseSender(ptr: com.sun.jna.Pointer)
-    fun SetSenderName(ptr: com.sun.jna.Pointer, name: String): Boolean
+interface SpoutLibrary : Library {
+    fun CreateSpout(): Pointer
+    fun ReleaseSpout(ptr: Pointer)
+    fun SendTexture(ptr: Pointer, textureID: Int, textureTarget: Int, width: Int, height: Int, invert: Boolean, hostFBO: Int): Boolean
+    fun ReleaseSender(ptr: Pointer)
+    fun SetSenderName(ptr: Pointer, name: String): Boolean
 }
 
 /**
- * Objective-C / JNI Bridge for Syphon (macOS)
+ * Minimal Objective-C Runtime interface via JNA for Syphon (macOS)
+ */
+interface ObjCLibrary : Library {
+    fun objc_getClass(name: String): Pointer
+    fun sel_registerName(name: String): Pointer
+    fun objc_msgSend(receiver: Pointer, selector: Pointer, vararg args: Any?): Pointer
+    
+    // For doubles/floats on x64, objc_msgSend_fpret might be needed, 
+    // but for pointers/ints objc_msgSend is fine.
+}
+
+/**
+ * Foundation / CoreFoundation for loading frameworks
+ */
+interface FoundationLibrary : Library {
+    fun NSFullUserName(): Pointer // Dummy to ensure load
+}
+
+/**
+ * Native Syphon Bridge using Objective-C Runtime (no JSyphon needed)
  */
 class SyphonBridge {
-    // In a real implementation, this would be a JNI wrapper like JSyphon
-    // or use LWJGL's Objective-C bridge.
+    private val objc: ObjCLibrary by lazy { Native.load("objc", ObjCLibrary::class.java) }
+    private var syphonServerClass: Pointer? = null
     
-    fun createServer(name: String): Long = 0L
-    fun stopServer(serverPtr: Long) {}
-    fun publishTexture(serverPtr: Long, textureId: Int, target: Int, x: Int, y: Int, w: Int, h: Int, isFlipped: Boolean) {}
+    init {
+        if (System.getProperty("os.name").lowercase().contains("mac")) {
+            try {
+                // 1. Add our natives folder to the search path
+                val nativesPath = java.io.File("library/natives").absolutePath
+                System.setProperty("jna.library.path", "${System.getProperty("jna.library.path") ?: ""}${java.io.File.pathSeparator}$nativesPath")
+
+                // 2. Try to load the Syphon framework from common locations
+                // JNA will look in /Library/Frameworks, ~/Library/Frameworks, and our jna.library.path
+                try {
+                    Native.load("Syphon", Library::class.java)
+                } catch (e: Throwable) {
+                    logger.debug { "Syphon framework not found in standard paths, attempting manual load from library/natives" }
+                    val frameworkPath = java.io.File(nativesPath, "Syphon.framework/Versions/A/Syphon").absolutePath
+                    if (java.io.File(frameworkPath).exists()) {
+                        Native.load(frameworkPath, Library::class.java)
+                    }
+                }
+
+                // 3. Resolve the class
+                syphonServerClass = objc.objc_getClass("SyphonServer")
+                if (syphonServerClass == null) {
+                    logger.warn { "SyphonServer class not found. Ensure Syphon.framework is in library/natives/ or /Library/Frameworks/" }
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to initialize Syphon bridge" }
+            }
+        }
+    }
+
+    fun isAvailable() = syphonServerClass != null
+
+    fun createServer(name: String): Pointer? {
+        val cls = syphonServerClass ?: return null
+        val selAlloc = objc.sel_registerName("alloc")
+        val selInit = objc.sel_registerName("initWithName:options:handler:")
+        
+        val instance = objc.objc_msgSend(cls, selAlloc)
+        // options and handler can be null (Pointer.NULL)
+        return objc.objc_msgSend(instance, selInit, name, null, null)
+    }
+
+    fun stopServer(serverPtr: Pointer) {
+        val selStop = objc.sel_registerName("stop")
+        objc.objc_msgSend(serverPtr, selStop)
+        // Note: in ARC environments we might need to release, 
+        // but Syphon objects usually handle their own lifecycle via stop.
+    }
+
+    fun publishTexture(serverPtr: Pointer, textureId: Int, w: Int, h: Int) {
+        val selPublish = objc.sel_registerName("publishFrameTexture:textureTarget:imageRegion:textureDimensions:flipped:")
+        
+        // imageRegion and textureDimensions are NSRect and NSSize (structs).
+        // JNA can handle structs, but for "full screen" blits Syphon often allows simple params.
+        // However, the selector expects the full signature.
+        
+        // Structure for NSSize { width, height }
+        val size = object : com.sun.jna.Structure() {
+            @JvmField var width: Double = w.toDouble()
+            @JvmField var height: Double = h.toDouble()
+            override fun getFieldOrder() = listOf("width", "height")
+        }
+        
+        // Structure for NSRect { origin: {x,y}, size: {w,h} }
+        val rect = object : com.sun.jna.Structure() {
+            @JvmField var x: Double = 0.0
+            @JvmField var y: Double = 0.0
+            @JvmField var width: Double = w.toDouble()
+            @JvmField var height: Double = h.toDouble()
+            override fun getFieldOrder() = listOf("x", "y", "width", "height")
+        }
+
+        // Texture target GL_TEXTURE_2D = 0x0DE1
+        objc.objc_msgSend(serverPtr, selPublish, textureId, 0x0DE1, rect, size, false)
+    }
 }
 
 /**
@@ -104,27 +198,31 @@ class SyphonStreamer(override val identifier: String) : TextureStreamer {
         get() = System.getProperty("os.name").lowercase().contains("mac")
 
     private var active = false
-    private var serverPtr: Long = 0
+    private var serverPtr: Pointer? = null
     private val bridge = SyphonBridge()
 
     override fun start(width: Int, height: Int): Boolean {
         if (!isSupported) return false
+        if (!bridge.isAvailable()) {
+            logger.warn { "Syphon bridge not available. Frame sharing disabled." }
+            return false
+        }
         logger.info { "Initializing Syphon Server '$identifier' (${width}x${height})" }
         serverPtr = bridge.createServer(identifier)
-        active = true
-        return true
+        active = serverPtr != null
+        return active
     }
 
     override fun update(textureId: Int, width: Int, height: Int) {
-        if (!active || serverPtr == 0L) return
-        bridge.publishTexture(serverPtr, textureId, GL_TEXTURE_2D, 0, 0, width, height, false)
+        if (!active || serverPtr == null) return
+        bridge.publishTexture(serverPtr!!, textureId, width, height)
     }
 
     override fun stop() {
-        if (active && serverPtr != 0L) {
+        if (active && serverPtr != null) {
             logger.info { "Closing Syphon Server '$identifier'" }
-            bridge.stopServer(serverPtr)
-            serverPtr = 0
+            bridge.stopServer(serverPtr!!)
+            serverPtr = null
             active = false
         }
     }

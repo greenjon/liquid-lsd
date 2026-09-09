@@ -4,9 +4,11 @@
 
 ### Multi-Endpoint Video Sharing Matrix (`VideoOutputSettings.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`, `UITheme.kt`, `AppSettings.kt`, `Renderer.kt`, `Main.kt`)
 - **Video Output Matrix**: Added configuration UI and pipeline routing for streaming individual Deck outputs (Deck A, Deck B, Deck BG, Deck PV) alongside Master output via Spout (Windows), Syphon (macOS), and Linux texture sharing bridges.
+- **Native Syphon Bridge (macOS)**: Replaced legacy JNI-based Syphon wrappers with a modern, high-performance Objective-C Runtime bridge using JNA pointers. Supports Intel and Apple Silicon (ARM64) natively.
+- **Native Spout2 Bridge (Windows)**: Integrated zero-copy GPU texture sharing using JNA bindings for `SpoutLibrary.dll`.
 - **Independent Resolution & Scaling**: Added per-endpoint resolution overrides (`Sync to Master`, `4K UHD`, `1080p`, `720p`, `540p`) and scaling modes (`Fit`, `Fill`, `Stretch`).
-- **GPU Rescaling Pipeline**: Implemented blit shader rescaling pass to dynamically resize and reformat textures to destination FBOs prior to broadcasting.
-- **Settings Persistence**: Serialized multi-stream video output configurations into `lsd-settings.properties`.
+- **GPU Rescaling Pipeline**: Implemented blit shader rescaling pass in `Renderer.kt` and `TextureStreamerManager` to dynamically resize and reformat textures to destination FBOs prior to broadcasting.
+- **Settings Persistence**: Serialized multi-stream video output configurations into `lsd-settings.properties` using JSON mapping.
 
 ---
 
