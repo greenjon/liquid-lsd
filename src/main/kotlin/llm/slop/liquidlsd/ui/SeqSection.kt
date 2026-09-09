@@ -438,26 +438,5 @@ object SeqSection {
         )
 
         ImGui.spacing()
-
-        CustomRangeSlider.drawCustomRangeSlider(
-            session = session,
-            idPrefix = existing.id,
-            label = "DC Offset",
-            themeColor = themeColor,
-            currentValue = existing.dcOffset,
-            currentMin = existing.dcOffsetMin,
-            currentMax = existing.dcOffsetMax,
-            minLimit = -1f,
-            maxLimit = 1f,
-            defaultValue = 0f,
-            isRandomizable = existing.randomizeDcOffset,
-            isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeDcOffset = checked)) },
-            onRandomizeNow = { onReplace(existing.randomizeDcOffset()) },
-            onRangeChanged = { min, max -> onReplace(existing.copy(dcOffsetMin = min, dcOffsetMax = max)) },
-            onValueChanged = { v -> onReplace(existing.copy(dcOffset = v, dcOffsetMin = v, dcOffsetMax = v)) }
-        )
     }
 }

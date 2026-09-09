@@ -160,61 +160,52 @@ object Lfo1Section {
 
         ImGui.spacing()
 
-        // -- DC Offset ---------------------------------------------
-        val dcOffsetCbs = cvModulatorSlider(
-            existing = existing,
-            getValue = { dcOffset }, getMin = { dcOffsetMin }, getMax = { dcOffsetMax },
-            minLimit = -1f, maxLimit = 1f,
-            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDcOffset = enabled, dcOffsetMin = nMin, dcOffsetMax = nMax) },
-            copyWithRange   = { sMin, sMax, v -> copy(dcOffsetMin = sMin, dcOffsetMax = sMax, dcOffset = v) },
-            copyWithValue   = { v -> copy(dcOffset = v, dcOffsetMin = v, dcOffsetMax = v) },
-            randomizeNow    = { randomizeDcOffset() },
-            onReplace = onReplace,
-        )
-        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
-            label = "DC Offset",
-            themeColor = themeColor,
-            currentValue = existing.dcOffset,
-            currentMin = existing.dcOffsetMin,
-            currentMax = existing.dcOffsetMax,
-            minLimit = -1f, maxLimit = 1f, defaultValue = 0f,
-            isRandomizable = existing.randomizeDcOffset,
+        // -- Modulation Range (Min/Max) ---------------------------
+        CustomRangeSlider.drawMinMaxRangeSlider(
+            session = session,
+            label = if (isGen) "LFO 1 Range" else "Modulation Range",
+            currentMin = existing.getLfoMin(),
+            currentMax = existing.getLfoMax(),
+            minRangeMin = existing.dcOffsetMin,
+            minRangeMax = existing.dcOffsetMax,
+            maxRangeMin = existing.depthMin,
+            maxRangeMax = existing.depthMax,
+            minLimit = -1f,
+            maxLimit = 1f,
+            isRandomizable = existing.randomizeDcOffset || existing.randomizeDepth,
             isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = dcOffsetCbs.onRandomizableChanged,
-            onRandomizeNow        = dcOffsetCbs.onRandomizeNow,
-            onRangeChanged        = dcOffsetCbs.onRangeChanged,
-            onValueChanged        = dcOffsetCbs.onValueChanged,
-        )
-        ImGui.spacing()
-
-        // -- Depth -------------------------------------------------
-        val depthCbs = cvModulatorSlider(
-            existing = existing,
-            getValue = { depth }, getMin = { depthMin }, getMax = { depthMax },
-            minLimit = 0f, maxLimit = 1f,
-            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDepth = enabled, depthMin = nMin, depthMax = nMax) },
-            copyWithRange   = { sMin, sMax, v -> copy(depthMin = sMin, depthMax = sMax, depth = v) },
-            copyWithValue   = { v -> copy(depth = v, depthMin = v, depthMax = v) },
-            randomizeNow    = { randomizeDepth() },
-            onReplace = onReplace,
-        )
-        CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
-            label = "Depth",
             themeColor = themeColor,
-            currentValue = existing.depth,
-            currentMin = existing.depthMin,
-            currentMax = existing.depthMax,
-            minLimit = 0f, maxLimit = 1f, defaultValue = 0.5f,
-            isRandomizable = existing.randomizeDepth,
-            isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = { "%.3f".format(it) },
-            onRandomizableChanged = depthCbs.onRandomizableChanged,
-            onRandomizeNow        = depthCbs.onRandomizeNow,
-            onRangeChanged        = depthCbs.onRangeChanged,
-            onValueChanged        = depthCbs.onValueChanged,
+            idPrefix = existing.id,
+            onRandomizableChanged = { enabled ->
+                val rMin = existing.dcOffsetMin
+                val rMax = existing.dcOffsetMax
+                val dMin = existing.depthMin
+                val dMax = existing.depthMax
+                val curMin = existing.getLfoMin()
+                val curMax = existing.getLfoMax()
+                
+                onReplace(existing.copy(
+                    lfoMinMaxMode = true,
+                    randomizeDcOffset = enabled,
+                    randomizeDepth = enabled,
+                    dcOffsetMin = if (enabled && rMin == rMax) (curMin - 0.1f).coerceAtLeast(-1f) else if (!enabled) curMin else rMin,
+                    dcOffsetMax = if (enabled && rMin == rMax) (curMin + 0.1f).coerceAtMost(1f) else if (!enabled) curMin else rMax,
+                    depthMin = if (enabled && dMin == dMax) (curMax - 0.1f).coerceAtLeast(-1f) else if (!enabled) curMax else dMin,
+                    depthMax = if (enabled && dMin == dMax) (curMax + 0.1f).coerceAtMost(1f) else if (!enabled) curMax else dMax
+                ))
+            },
+            onRandomizeNow = {
+                onReplace(existing.randomizeDcOffset().randomizeDepth())
+            },
+            onMinMaxChanged = { min, max ->
+                onReplace(existing.withLfoRange(min, max).copy(lfoMinMaxMode = true))
+            },
+            onMinRangeChanged = { rMin, rMax ->
+                onReplace(existing.copy(lfoMinMaxMode = true, dcOffsetMin = rMin, dcOffsetMax = rMax))
+            },
+            onMaxRangeChanged = { rMin, rMax ->
+                onReplace(existing.copy(lfoMinMaxMode = true, depthMin = rMin, depthMax = rMax))
+            }
         )
         ImGui.spacing()
 

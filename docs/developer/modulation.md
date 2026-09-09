@@ -120,6 +120,18 @@ When the preset randomize action fires, `randomizeActiveValues()` samples unifor
 `[min, max]` range. For beat-based subdivision the sample is drawn from a discrete set of musical
 values `{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}`. For frame-based subdivision, it samples discrete integers in `[min, max]`.
 
+### Modulation Range Bounds (Min/Max Mode)
+
+For LFO 1 and Audio followers, the UI presents human-readable **Min Value** and **Max Value** modulation bounds rather than abstract `depth` (amplitude) and `dcOffset` (center).
+
+- **Mapping**:
+  - $\text{Min} = \text{dcOffset} - \text{depth}$
+  - $\text{Max} = \text{dcOffset} + \text{depth}$
+  - $\text{depth} = (\text{Max} - \text{Min}) / 2$
+  - $\text{dcOffset} = (\text{Max} + \text{Min}) / 2$
+- **Methods**: `CvModulator.getLfoMin()`, `CvModulator.getLfoMax()`, `CvModulator.withLfoRange(min, max)`.
+- **Randomization Range Storage**: When `lfoMinMaxMode` is true, the two-tier randomization sliders store the bounds for the Minimum limit in `dcOffsetMin` / `dcOffsetMax` (with flag `randomizeDcOffset`) and the bounds for the Maximum limit in `depthMin` / `depthMax` (with flag `randomizeDepth`). This ensures complete preset serialization compatibility without altering the underlying DTO schema.
+
 ### Audio Envelope Followers — applies when `isAudioSource(sourceId)`
 
 When a modulator uses an audio band source (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`), it can apply an independent asymmetric one-pole IIR envelope follower:

@@ -4,6 +4,22 @@
 
 ---
 
+## Version 1.0.0-beta.56
+
+> [!NOTE]
+> **Release 1.0.0-beta.56** introduces human-readable modulation bounds for LFOs and Audio followers, providing intuitive dual-handled range sliders that replace abstract Depth/Offset math, alongside a streamlined Step Sequencer UI.
+
+### Human-Readable Modulation Bounds (Min/Max) (`CvModulator.kt`, `CustomRangeSlider.kt`, `Lfo1Section.kt`, `AudioModulatorSection.kt`)
+- **Min/Max Conversion**: Converted LFO 1 and Audio modulator user controls to explicit Min and Max value bounds.
+- **Dual-Handled Sliders**: Replaced separate Depth and DC Offset sliders with a single, intuitive dual-handled range slider.
+- **Two-Tier Randomization**: When randomization is enabled, the UI provides two dedicated range sliders to independently define the random drift for the Minimum and Maximum boundaries.
+- **Backward Compatibility**: Preserved existing preset math and DTOs by retaining internal Depth/Offset storage with on-the-fly bidirectional conversion.
+
+### UI Cleanup & Ergonomics (`SeqSection.kt`)
+- **Sequencer Simplification**: Removed the redundant DC Offset control from the Step Sequencer UI to reduce visual clutter.
+
+---
+
 ## Version 1.0.0-beta.55
 
 > [!NOTE]

@@ -183,7 +183,7 @@ object AudioEnginePanel {
 
         ImGui.spacing()
 
-        val sliderBoxW = 50f // ~20% smaller than standard 65f
+        val sliderBoxW = 34f // ~20% smaller than standard 42f
 
         val tableFlags = ImGuiTableFlags.SizingStretchSame
         if (ImGui.beginTable("##audio_engine_2col_table", 2, tableFlags)) {

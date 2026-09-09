@@ -130,6 +130,210 @@ object CustomRangeSlider {
         ImGui.popItemWidth()
     }
 
+    fun drawMinMaxRangeSlider(
+        session: llm.slop.liquidlsd.SessionContext,
+        label: String,
+        currentMin: Float,
+        currentMax: Float,
+        minRangeMin: Float,
+        minRangeMax: Float,
+        maxRangeMin: Float,
+        maxRangeMax: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        isRandomizable: Boolean,
+        isRandomizeDisabled: Boolean = false,
+        themeColor: Int,
+        idPrefix: String,
+        formatValue: (Float) -> String = { "%.3f".format(it) },
+        onRandomizableChanged: (Boolean) -> Unit,
+        onRandomizeNow: () -> Unit,
+        onMinMaxChanged: (Float, Float) -> Unit,
+        onMinRangeChanged: (Float, Float) -> Unit,
+        onMaxRangeChanged: (Float, Float) -> Unit
+    ) {
+        val effectiveIsRandomizable = if (isRandomizeDisabled) false else (isRandomizable && session.uiTheme.randomizationEnabled)
+        val fontScale = 0.95f
+        val buttonSize = ImGui.getFrameHeight()
+        val w = ImGui.getContentRegionAvailX()
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+
+        ImGui.pushID("${idPrefix}_$label")
+
+        // 1. Header Row (Label + Dice)
+        val labelColW = 110f * fontScale
+        val textBoxesStartX = startX + labelColW + 10f * fontScale
+        val boxWidth = 42f * fontScale
+        val boxSpacing = 8f
+        val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f
+        val lineEndX = maxOf(sliderStartX + 1f, startX + w - 10f)
+        val lineWidth = (lineEndX - sliderStartX).coerceAtLeast(1f)
+
+        ImGui.setCursorScreenPos(startX, startY + (buttonSize - session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }) / 2f)
+        session.uiTheme.body(label)
+
+        if (session.uiTheme.randomizationEnabled) {
+            val randBtnX = startX + labelColW - buttonSize
+            ImGui.setCursorScreenPos(randBtnX, startY)
+            if (isRandomizeDisabled) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.button("${Icons.DICES}##rand_disabled", buttonSize, buttonSize)
+                ImGui.popStyleColor()
+                itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+            } else {
+                if (!effectiveIsRandomizable) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
+                }
+                if (ImGui.button("${Icons.DICES}##rand_toggle", buttonSize, buttonSize)) {
+                    onRandomizableChanged(!effectiveIsRandomizable)
+                }
+                if (!effectiveIsRandomizable) ImGui.popStyleColor()
+                if (ImGui.isItemClicked(1)) {
+                    if (!effectiveIsRandomizable) onRandomizableChanged(true)
+                    onRandomizeNow()
+                }
+                itemTooltip("Left-click to toggle randomization.\nRight-click to randomize now.")
+            }
+        }
+
+        // 2. Sliders
+        if (!effectiveIsRandomizable) {
+            // SINGLE track for Min/Max
+            val labelY = startY - 14f
+            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min")
+            ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, labelY)
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max")
+
+            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue)
+            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue)
+
+            renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged)
+        } else {
+            // DOUBLE tracks (Top for Min, Bottom for Max)
+            val row2Y = startY + buttonSize + 4f
+            
+            // Labels for columns
+            val labelY = startY - 14f
+            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min Bound Range")
+            ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, labelY)
+            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max Bound Range")
+
+            // Top: Min range
+            drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue)
+            drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue)
+            renderInternalDualSlider(idPrefix + label + "_min_r", minRangeMin, minRangeMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinRangeChanged)
+
+            // Bottom: Max range
+            drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue)
+            drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue)
+            renderInternalDualSlider(idPrefix + label + "_max_r", maxRangeMin, maxRangeMax, minLimit, maxLimit, sliderStartX, row2Y, lineWidth, themeColor, onMaxRangeChanged)
+            
+            ImGui.setCursorPosY(ImGui.getCursorPosY() + buttonSize + 4f)
+        }
+
+        ImGui.popID()
+        ImGui.spacing()
+    }
+
+    private fun renderInternalDualSlider(
+        id: String,
+        curMin: Float,
+        curMax: Float,
+        minLimit: Float,
+        maxLimit: Float,
+        lineStartX: Float,
+        startY: Float,
+        lineWidth: Float,
+        themeColor: Int,
+        onChanged: (Float, Float) -> Unit
+    ) {
+        val buttonSize = ImGui.getFrameHeight()
+        val centerY = startY + buttonSize / 2f
+        val lineEndX = lineStartX + lineWidth
+        val dl = ImGui.getWindowDrawList()
+        val io = ImGui.getIO()
+        val mouseX = io.mousePos.x
+
+        val toPct = { v: Float -> (v - minLimit) / (maxLimit - minLimit) }
+        val toVal = { p: Float -> minLimit + p * (maxLimit - minLimit) }
+
+        val minPct = toPct(curMin)
+        val maxPct = toPct(curMax)
+        val minHandleX = lineStartX + minPct * lineWidth
+        val maxHandleX = lineStartX + maxPct * lineWidth
+
+        val trackPadX = 6f
+        ImGui.setCursorScreenPos(lineStartX - trackPadX, startY)
+        ImGui.invisibleButton("##track_$id", lineWidth + trackPadX * 2f, buttonSize)
+        val isTrackHovered = ImGui.isItemHovered()
+        val isTrackActive = ImGui.isItemActive()
+        val isTrackActivated = ImGui.isItemActivated()
+
+        if (isTrackActivated) {
+            activeSliderLabel = id
+            clickMouseX = mouseX
+            val isOverlapping = kotlin.math.abs(minHandleX - maxHandleX) < 4f
+            if (isOverlapping) {
+                if (mouseX < minHandleX - 5f) { draggingMin = true; draggingMax = false }
+                else if (mouseX > maxHandleX + 5f) { draggingMax = true; draggingMin = false }
+            } else {
+                val dMin = kotlin.math.abs(mouseX - minHandleX)
+                val dMax = kotlin.math.abs(mouseX - maxHandleX)
+                if (dMin < dMax) { draggingMin = true; draggingMax = false }
+                else { draggingMax = true; draggingMin = false }
+            }
+        }
+
+        if (isTrackActive && activeSliderLabel == id) {
+            val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
+            val rawVal = toVal(pct)
+            if (!draggingMin && !draggingMax) {
+                if (mouseX > clickMouseX + 2f) { draggingMax = true; onChanged(curMin, rawVal.coerceIn(curMin, maxLimit)) }
+                else if (mouseX < clickMouseX - 2f) { draggingMin = true; onChanged(rawVal.coerceIn(minLimit, curMax), curMax) }
+            } else if (draggingMin) {
+                onChanged(rawVal.coerceIn(minLimit, curMax), curMax)
+            } else if (draggingMax) {
+                onChanged(curMin, rawVal.coerceIn(curMin, maxLimit))
+            }
+        } else if (!isTrackActive && activeSliderLabel == id) {
+            draggingMin = false; draggingMax = false; activeSliderLabel = null
+        }
+
+        // Draw
+        val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+        dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
+        dl.addLine(minHandleX, centerY, maxHandleX, centerY, themeColor, 3f)
+
+        val handleW = 6f
+        val handleH = 16f
+        val handleBgCol = ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
+        val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+
+        dl.addRectFilled(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+        dl.addRect(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+        dl.addRectFilled(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
+        dl.addRect(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
+
+        if (isTrackHovered) {
+            isAnySliderHovered = true
+            val borderCol = if (isTrackActive) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f)
+                            else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
+            
+            if (io.mouseWheel != 0f) {
+                val delta = io.mouseWheel * (if (io.keyCtrl && io.keyShift) 0.1f else if (io.keyShift) 0.01f else 0.001f)
+                val dMin = kotlin.math.abs(mouseX - minHandleX)
+                val dMax = kotlin.math.abs(mouseX - maxHandleX)
+                if (dMin < dMax) onChanged((curMin + delta).coerceIn(minLimit, curMax), curMax)
+                else onChanged(curMin, (curMax + delta).coerceIn(curMin, maxLimit))
+            }
+            if (ImGui.isMouseClicked(2)) onChanged(minLimit, maxLimit)
+        }
+    }
+
     fun drawCompactSlider(
         session: llm.slop.liquidlsd.SessionContext,
         label: String,
@@ -268,7 +472,7 @@ object CustomRangeSlider {
         val labelColW = 110f * fontScale
         val textBoxesStartX = startX + labelColW + 10f * fontScale
         
-        val boxWidth = customBoxWidth ?: (65f * fontScale)
+        val boxWidth = customBoxWidth ?: (42f * fontScale)
         val boxSpacing = 8f
         
         val sliderStartX = textBoxesStartX + (if (effectiveIsRandomizable) (boxWidth * 2f + boxSpacing) else boxWidth) + 15f

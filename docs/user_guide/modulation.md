@@ -51,6 +51,7 @@ Selecting a **GEN 1** or **GEN 2** cell enables full dual-oscillator LFO shaping
   - **Slope**: Adjusts asymmetry (`0.5` = symmetric triangle, `1.0` = slow rise/sharp drop).
   - **Morph**: Log-cosh waveshaping (`0.0` = sharp triangle, `1.0` = smooth sine).
   - **Hold**: Compresses transition region to create peak plateaus.
+- **Modulation Range (Min/Max)**: Intuitive dual-handled slider defining the output limits directly (e.g. `0.20` to `0.85`) instead of requiring manual Depth/Offset arithmetic. When randomization is toggled on, provides two dedicated range sliders to independently control random drift for the Minimum and Maximum bounds.
 
 ### Secondary Modulator (LFO 2)
 LFO 2 is a second internal oscillator that modulates LFO 1:
@@ -122,6 +123,9 @@ Selecting an **AUDIO** modulation cell opens the unified Audio Modulator section
 
 ### Dual-Trace Oscilloscope
 The oscilloscope plots the raw audio energy in a faint ghost trace ($35\%$ opacity) beneath the solid smoothed follower curve, allowing you to visually see how the Attack catches transients and how the Decay tail descends.
+
+### Modulation Range (Min/Max)
+Audio modulators feature a dual-handled range slider allowing direct configuration of minimum and maximum envelope modulation limits. Toggling randomization enables independent random drift sliders for both the lower and upper bounds.
 
 ---
 

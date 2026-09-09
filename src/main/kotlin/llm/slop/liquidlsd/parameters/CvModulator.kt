@@ -105,21 +105,51 @@ data class CvModulator(
     val randomizeSeqHold: Boolean = false,
     val seqCurveSmooth: Boolean = false,
 
+    val lfoMinMaxMode: Boolean = false,
+
     val id: String = UUID.randomUUID().toString()
 ) {
+    fun getLfoMin(): Float = dcOffset - depth
+    fun getLfoMax(): Float = dcOffset + depth
+
+    fun withLfoRange(min: Float, max: Float): CvModulator {
+        val d = (max - min) / 2f
+        val o = (max + min) / 2f
+        return this.copy(
+            depth = d,
+            dcOffset = o,
+            depthMin = if (!lfoMinMaxMode) d else depthMin,
+            depthMax = if (!lfoMinMaxMode) d else depthMax,
+            dcOffsetMin = if (!lfoMinMaxMode) o else dcOffsetMin,
+            dcOffsetMax = if (!lfoMinMaxMode) o else dcOffsetMax
+        )
+    }
     private fun isDiscreteSubdivision(): Boolean {
         return sourceId == "beatPhase" || sourceId == "sampleAndHold" || 
                (sourceId == "lfo" && genUnit == GenUnit.BEAT)
     }
 
     fun randomizeActiveValues(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
-        val newDepth = if (randomizeDepth) {
-            if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-        } else depth
+        val (newDepth, newDcOffset) = if (lfoMinMaxMode) {
+            val rMin = if (randomizeDcOffset) {
+                if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
+            } else (dcOffset - depth)
 
-        val newDcOffset = if (randomizeDcOffset) {
-            if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-        } else dcOffset
+            val rMax = if (randomizeDepth) {
+                if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
+            } else (dcOffset + depth)
+
+            Pair((rMax - rMin) / 2f, (rMax + rMin) / 2f)
+        } else {
+            val d = if (randomizeDepth) {
+                if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
+            } else depth
+
+            val o = if (randomizeDcOffset) {
+                if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
+            } else dcOffset
+            Pair(d, o)
+        }
 
         val newPhase = if (randomizePhaseOffset) {
             if (phaseOffsetMin == phaseOffsetMax) phaseOffsetMin else random.nextFloat() * (phaseOffsetMax - phaseOffsetMin) + phaseOffsetMin
@@ -228,12 +258,22 @@ data class CvModulator(
 
     fun randomizeDepth(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
         if (!randomizeDepth) return this
+        if (lfoMinMaxMode) {
+            val rMin = dcOffset - depth
+            val rMax = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
+            return this.copy(depth = (rMax - rMin) / 2f, dcOffset = (rMax + rMin) / 2f)
+        }
         val newDepth = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
         return this.copy(depth = newDepth)
     }
 
     fun randomizeDcOffset(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
         if (!randomizeDcOffset) return this
+        if (lfoMinMaxMode) {
+            val rMax = dcOffset + depth
+            val rMin = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
+            return this.copy(depth = (rMax - rMin) / 2f, dcOffset = (rMax + rMin) / 2f)
+        }
         val newDcOffset = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
         return this.copy(dcOffset = newDcOffset)
     }

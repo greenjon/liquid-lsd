@@ -599,14 +599,17 @@ This document outlines the key architectural decisions made in the development o
 
 ---
 
-## 21. Non-Blocking Startup Version Checker & GitHub Release Prompt (`UpdateChecker`)
-- **Decision**: Implement a lightweight, zero-dependency background version checker (`UpdateChecker.kt`), SemVer 2.0.0 parser and comparator (`SemVer.kt`), update notification modal (`UpdatePromptModal.kt`), and unified "About Liquid LSD" dialog (`AboutModal.kt`).
+## 22. LFO and Audio Min/Max Conversion & Sequencer UI Simplification (`CvModulator.kt`, `Lfo1Section.kt`, `AudioModulatorSection.kt`, `SeqSection.kt`, `CustomRangeSlider.kt`)
+
+- **Decision**: Convert LFO 1 and Audio modulator user controls from abstract "Depth" (amplitude) and "DC Offset" (center) to intuitive "Min Value" and "Max Value" range bounds:
+  - **Human-Readable Bounds**: Users now explicitly define the modulation boundaries (e.g., Min 0.20, Max 0.85) rather than calculating offset and span in their heads.
+  - **Dual-Handled Range Sliders**: Introduced `drawMinMaxRangeSlider` in `CustomRangeSlider.kt`. It provides a single track with two independent handles for setting modulation limits in one visual sweep.
+  - **Two-Tier Randomization Ranges**: When "randomize" is enabled for Min/Max, the UI expands to two dual-handled sliders:
+    - Top Slider: Defines the random range for the **Minimum** boundary.
+    - Bottom Slider: Defines the random range for the **Maximum** boundary.
+  - **Backward-Compatible Math & DTOs**: Retained internal `depth` and `dcOffset` fields in `CvModulator.kt` for seamless integration with the existing rendering engine and math routines. Bidirectional conversion math ($Depth = (Max - Min) / 2$, $Offset = (Max + Min) / 2$) is performed on the fly during UI interaction and randomization.
+  - **Sequencer UI Simplification**: Removed the redundant "DC Offset" control from the Step Sequencer UI (`SeqSection.kt`), keeping "Depth" as the sole scaling factor to streamline pattern modulation.
 - **Rationale**:
-  - **Audio & Render Safety (Thread Isolation)**: Network I/O is executed strictly on a background daemon thread (`LiquidLSD-UpdateChecker`) with 5-second connection and read timeouts. Zero socket operations, heap-allocating parsers, or blocking waits occur on the JACK audio callback thread or the GLFW primary render thread.
-  - **Dual Network Fallback**: Queries GitHub's REST API (`https://api.github.com/repos/greenjon/liquid-lsd/releases/latest`) as primary, falling back to HTTP redirect inspection of `https://github.com/greenjon/liquid-lsd/releases/latest` (`Location` header) to reliably extract release tags even if GitHub API unauthenticated rate limits (60 req/hr) are exceeded.
-  - **SemVer 2.0.0 Precedence**: Accurately compares major, minor, patch, and dot-separated pre-release segments (e.g. `v1.0.0-beta.42` > `v1.0.0-beta.41`, release > pre-release) while stripping optional `v` prefixes.
-  - **User Experience & Skip Control**:
-    - Automatic startup checks are enabled by default and can be toggled in `Settings > General > Startup & Updates`.
-    - Users can choose **Download Update** (opens browser directly to the GitHub release page), **Remind Later**, or **Skip Version** (persists `ignoredUpdateVersion` so future launches do not re-prompt for that specific release).
-    - Unobtrusive: Network failures fail silently on startup without disturbing performances or offline sets.
-    - Quick Access: "Check for Updates..." and "About Liquid LSD" are available under the **Help** menu and in **Settings**.
+  - Abstract Depth and Offset are mathematically precise but cognitively heavy during fast-paced live VJ sets. Min/Max bounds map directly to the visual extremes of the parameter being modulated.
+  - Symmetrizing the randomization UI for bounds allows for complex, multi-layered generative drift (e.g., a "breathing" LFO where the floor and ceiling themselves drift over time).
+  - Cleaning up the Sequencer UI reduces clutter and focuses control on pattern amplitude, as step values are already typically defined relative to the sequencer's base range.
