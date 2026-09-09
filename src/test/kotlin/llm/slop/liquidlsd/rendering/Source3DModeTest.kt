@@ -43,13 +43,26 @@ class Source3DModeTest {
 
         for (folder in folders) {
             val metaFile = File(folder, "meta.json")
-            assertTrue(metaFile.exists(), "Source folder '${folder.name}' missing meta.json")
+            val isfFile = folder.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }?.firstOrNull()
 
-            val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
-            if (expected3DSources.contains(meta.id)) {
-                assertTrue(meta.is3D, "Expected 3D source '${meta.id}' to have is3D == true in meta.json")
-            } else if (expected2DSources.contains(meta.id)) {
-                assertFalse(meta.is3D, "Expected 2D source '${meta.id}' to have is3D == false in meta.json")
+            val (sourceId, is3D) = if (metaFile.exists()) {
+                val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
+                meta.id to meta.is3D
+            } else if (isfFile != null) {
+                val rawSource = isfFile.readText()
+                val header = llm.slop.liquidlsd.rendering.isf.ISFParser.parseHeader(rawSource)
+                val params = if (header != null) llm.slop.liquidlsd.rendering.isf.ISFVisualSource.createParameters(header) else emptyMap()
+                val detected3D = header?.is3D == true || (params.containsKey("Rotate X") && params.containsKey("Rotate Y"))
+                folder.name to detected3D
+            } else {
+                assertTrue(false, "Source folder '${folder.name}' missing both meta.json and ISF shader")
+                continue
+            }
+
+            if (expected3DSources.contains(sourceId)) {
+                assertTrue(is3D, "Expected 3D source '$sourceId' to have is3D == true")
+            } else if (expected2DSources.contains(sourceId)) {
+                assertFalse(is3D, "Expected 2D source '$sourceId' to have is3D == false")
             }
         }
     }

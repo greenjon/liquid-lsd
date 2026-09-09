@@ -4,6 +4,19 @@
 
 ---
 
+## Version 1.0.0-beta.59
+
+> [!NOTE]
+> **Release 1.0.0-beta.59** introduces native, first-class Interactive Shader Format (ISF v2.0) visual source support without requiring companion `meta.json` sidecar files, automatic GLSL 3.30 boilerplate injection, support for standalone `.fs`/`.isf` sources, and dual-format manifest testing.
+
+### First-Class ISF Visual Source Support (`ISFModels.kt`, `ISFParser.kt`, `ISFVisualSource.kt`, `VisualSourceRegistry.kt`, `Renderer.kt`, `VisualSourceManifestTest.kt`, `Source3DModeTest.kt`)
+- **First-Class ISF Source Format**: Visual source discovery and manifest verification now support standalone ISF files (`.fs`, `.isf`) and folder-based shaders without requiring an accompanying `meta.json` file.
+- **ISF GLSL Preprocessor & Code Synthesis**: Added `ISFParser.buildGLSLFragmentShader()` which automatically injects GLSL 3.30 `#version` directives, fragment output mapping (`gl_FragColor`), normalized coordinates (`isf_FragNormCoord`), standard uniforms (`RENDERSIZE`, `TIME`, `TIMEDELTA`, `FRAMEINDEX`, `DATE`, `PASSINDEX`), and input uniforms into the shader source prior to compilation.
+- **Support for Vector & Scalar MIN/MAX Schemas**: Enhanced parameter parsing to accept either scalar or vector array bounds for `point2D` and complex inputs.
+- **Dual-Format Test Validation**: Updated `VisualSourceManifestTest` and `Source3DModeTest` to inspect either legacy `meta.json` or embedded ISF headers (`/*{ ... }*/`), allowing new visual sources to be pure ISF shaders.
+- **ISF 3D Mode & Feedback Flags**: Added `is3D` and `feedback` metadata support to `ISFHeader` and automatic 3D mode classification based on `Rotate X` and `Rotate Y` parameter detection.
+- **Colors Source Parity**: Preserved all 7 parameters (`Style`, `Hue`, `Sat`, `Val`, `Sweep`, `Speed`, `Zoom`) and restored full backwards compatibility.
+
 ## Version 1.0.0-beta.58
 
 > [!NOTE]

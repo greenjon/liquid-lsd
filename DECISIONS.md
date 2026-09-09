@@ -13,6 +13,19 @@ This document outlines the key architectural decisions made in the development o
   - Replaces legacy hardcoded initial state with a clean, intentional slate on first launch.
   - Preserves user sessions when `last_session.json` exists, while ensuring first-time users or users with empty startup settings get clean blank monitors.
 
+## Interactive Shader Format (ISF) Implementation (`ISFVisualSource.kt`, `ISFParser.kt`, `ISFModels.kt`, `VisualSourceRegistry.kt`, `Renderer.kt`, `VisualSourceManifestTest.kt`, `Source3DModeTest.kt`)
+
+- **Decision**: Introduce native support for the ISF specification (v2.0) to standardize visual source loading and effect processing, without requiring `meta.json`:
+  - **Shader-Embedded Metadata**: Support parsing JSON headers directly from GLSL files using `/*{ ... }*/` comments.
+  - **Automatic Parameter Mapping**: ISF `float`, `bool`, `long`, `color`, and `point2D` inputs are automatically converted into Liquid LSD `ModulatableParameter` instances. Complex types like `color` and `point2D` are split into individual modulatable components (e.g., `Color R`, `Color G`, etc.), with support for both scalar and vector `MIN`/`MAX` schemas.
+  - **ISF GLSL Preprocessor & Uniform Injection**: Implemented `ISFParser.buildGLSLFragmentShader()` which automatically injects required GLSL 3.30 boilerplate before compilation: standard uniforms (`RENDERSIZE`, `TIME`, `TIMEDELTA`, `FRAMEINDEX`, `DATE`, `PASSINDEX`), input uniform declarations (`float`, `bool`, `vec4`, `vec2`), coordinate aliases (`isf_FragNormCoord` -> `vTexCoord`), sampler macros (`IMG_NORM_PIXEL`, `IMG_PIXEL`), and fragment output mapping (`gl_FragColor` -> `isf_FragColor`).
+  - **Flexible Discovery & Dual-Format Manifest Validation**: `VisualSourceRegistry` scans for standalone `.fs`/`.isf` files and folders containing ISF-compatible shaders, while maintaining full backward compatibility with the legacy `meta.json` format. Visual source tests (`VisualSourceManifestTest`, `Source3DModeTest`) discover and validate sources using either `meta.json` or embedded ISF headers, removing the mandatory `meta.json` restriction across the codebase.
+- **Rationale**:
+  - Leverages a massive ecosystem of existing high-quality shaders from the VJ community.
+  - Simplifies shader development by consolidating metadata and code into a single file.
+  - Eliminates the maintenance burden of separate `meta.json` sidecar files for new and imported shaders while preserving legacy source compatibility.
+  - Provides a robust foundation for Phase 2.1 migration and future modular effect chains.
+
 ## Fixed 95% Global UI Scale, Removal of Grid Cell Ratio, and Dedicated Library Preset Sizing (`UITheme.kt`, `AppSettings.kt`, `SettingsPanel.kt`, `GridMetrics.kt`, `UIManager.kt`, `PresetListPanel.kt`)
 
 - **Decision**: Permanently fix the global UI scale at 95% across all panels and controls, remove arbitrary runtime UI scaling and the non-functional `gridCellRatio`, and introduce a dedicated, bounded user control (80%–120%) exclusively for preset name sizing in the Library:

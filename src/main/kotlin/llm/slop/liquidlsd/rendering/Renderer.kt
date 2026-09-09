@@ -71,6 +71,7 @@ class Renderer {
         // Common uniforms for all sources
         source.shader.setUniform("uAlpha",       source.globalAlpha.value)
         source.shader.setUniform("uResolution",  targetFBO.width.toFloat(), targetFBO.height.toFloat())
+        source.shader.setUniform("RENDERSIZE",   targetFBO.width.toFloat(), targetFBO.height.toFloat())
         source.shader.setUniform("uTime",        TimeSource.getTimeSec().toFloat())
         source.shader.setUniform("uAspectRatio", targetFBO.width.toFloat() / targetFBO.height.toFloat())
         if (hasFb) {

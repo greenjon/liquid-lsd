@@ -27,21 +27,68 @@ class VisualSourceManifestTest {
         for (folder in folders) {
             val metaFile = File(folder, "meta.json")
             val fragFile = File(folder, "shader.frag")
+            val isfFile = folder.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }?.firstOrNull()
 
-            assertTrue(metaFile.exists(), "Source folder '${folder.name}' missing meta.json")
-            assertTrue(fragFile.exists(), "Source folder '${folder.name}' missing shader.frag")
+            if (metaFile.exists()) {
+                assertTrue(fragFile.exists(), "Source folder '${folder.name}' with meta.json missing shader.frag")
 
-            val metaText = metaFile.readText()
-            val meta = json.decodeFromString<SourceMeta>(metaText)
+                val metaText = metaFile.readText()
+                val meta = json.decodeFromString<SourceMeta>(metaText)
 
-            assertEquals(folder.name, meta.id, "Source folder name and meta.id should match")
-            assertTrue(meta.name.isNotBlank(), "Source display name must not be blank")
-            assertTrue(meta.parameters.isNotEmpty(), "Source should define parameters")
+                assertEquals(folder.name, meta.id, "Source folder name and meta.id should match")
+                assertTrue(meta.name.isNotBlank(), "Source display name must not be blank")
+                assertTrue(meta.parameters.isNotEmpty(), "Source should define parameters")
 
-            discoveredIds.add(meta.id)
+                discoveredIds.add(meta.id)
+            } else if (isfFile != null) {
+                // ISF format source folder without meta.json
+                val rawSource = isfFile.readText()
+                val header = llm.slop.liquidlsd.rendering.isf.ISFParser.parseHeader(rawSource)
+                assertTrue(header != null, "Source folder '${folder.name}' missing meta.json and valid ISF header in ${isfFile.name}")
+
+                val displayName = header.DESCRIPTION ?: folder.name
+                assertTrue(displayName.isNotBlank(), "ISF display name must not be blank")
+                assertTrue(header.INPUTS.isNotEmpty(), "ISF source '${folder.name}' should define inputs")
+
+                discoveredIds.add(folder.name)
+            } else {
+                assertTrue(false, "Source folder '${folder.name}' missing both meta.json and ISF shader file")
+            }
         }
 
         assertTrue(discoveredIds.contains("icosa_dodeca"), "icosa_dodeca visual source must be discovered")
+    }
+
+    @Test
+    fun testISFFolderWithoutMetaJsonIsValid() {
+        val tempDir = java.nio.file.Files.createTempDirectory("isf_test_source").toFile()
+        try {
+            val isfFolder = File(tempDir, "custom_isf_pattern")
+            isfFolder.mkdirs()
+            val shaderFile = File(isfFolder, "shader.fs")
+            shaderFile.writeText(
+                """
+                /*{
+                    "DESCRIPTION": "Custom ISF Pattern",
+                    "INPUTS": [
+                        { "NAME": "Speed", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
+                    ]
+                }*/
+                void main() {
+                    gl_FragColor = vec4(Speed, 0.0, 0.0, 1.0);
+                }
+                """.trimIndent()
+            )
+
+            val rawSource = shaderFile.readText()
+            val header = llm.slop.liquidlsd.rendering.isf.ISFParser.parseHeader(rawSource)
+            assertNotNull(header, "ISF header should parse without meta.json")
+            assertEquals("Custom ISF Pattern", header.DESCRIPTION)
+            assertEquals(1, header.INPUTS.size)
+            assertEquals("Speed", header.INPUTS[0].NAME)
+        } finally {
+            tempDir.deleteRecursively()
+        }
     }
 
     @Test
