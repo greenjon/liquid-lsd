@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Multi-Endpoint Video Sharing Matrix (`VideoOutputSettings.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`, `UITheme.kt`, `AppSettings.kt`, `Renderer.kt`, `Main.kt`)
+- **Video Output Matrix**: Added configuration UI and pipeline routing for streaming individual Deck outputs (Deck A, Deck B, Deck BG, Deck PV) alongside Master output via Spout (Windows), Syphon (macOS), and Linux texture sharing bridges.
+- **Independent Resolution & Scaling**: Added per-endpoint resolution overrides (`Sync to Master`, `4K UHD`, `1080p`, `720p`, `540p`) and scaling modes (`Fit`, `Fill`, `Stretch`).
+- **GPU Rescaling Pipeline**: Implemented blit shader rescaling pass to dynamically resize and reformat textures to destination FBOs prior to broadcasting.
+- **Settings Persistence**: Serialized multi-stream video output configurations into `lsd-settings.properties`.
+
 ---
 
 ## Version 1.0.0-beta.57

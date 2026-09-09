@@ -4,9 +4,13 @@ import imgui.ImFont
 import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.ImGuiIO
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
+import llm.slop.liquidlsd.rendering.VideoOutputEndpoint
+import llm.slop.liquidlsd.rendering.VideoOutputConfig
 import mu.KotlinLogging
 import java.io.File
 import java.util.Properties
@@ -250,6 +254,16 @@ object UITheme {
         get() = settings.ignoredUpdateVersion
         set(value) { settings = settings.copy(ignoredUpdateVersion = value) }
 
+    var videoOutputConfigs: Map<llm.slop.liquidlsd.rendering.VideoOutputEndpoint, llm.slop.liquidlsd.rendering.VideoOutputConfig>
+        get() = settings.videoOutputConfigs
+        set(value) { settings = settings.copy(videoOutputConfigs = value) }
+
+    fun updateVideoOutputConfig(endpoint: llm.slop.liquidlsd.rendering.VideoOutputEndpoint, config: llm.slop.liquidlsd.rendering.VideoOutputConfig) {
+        val nextMap = settings.videoOutputConfigs.toMutableMap()
+        nextMap[endpoint] = config
+        videoOutputConfigs = nextMap
+    }
+
     fun getDefaultVideosDirectory(): File {
         val configured = settings.recordingDirectory.trim()
         if (configured.isNotBlank()) {
@@ -455,8 +469,17 @@ object UITheme {
                 props.getProperty("settingsHeight")?.toFloatOrNull()?.let { settingsHeight = it.coerceIn(300f, 2160f) }
                 props.getBoolean("framelessWindow")?.let { framelessWindow = it }
                 props.getBoolean("trackpadConsoleEnabled")?.let { trackpadConsoleEnabled = it }
-                props.getBoolean("checkUpdatesOnStartup")?.let { checkUpdatesOnStartup = it }
+                props.getProperty("checkUpdatesOnStartup")?.let { checkUpdatesOnStartup = it.toBoolean() }
                 props.getProperty("ignoredUpdateVersion")?.let { ignoredUpdateVersion = it }
+                
+                props.getProperty("videoOutputConfigs")?.let { json ->
+                    try {
+                        videoOutputConfigs = Json.decodeFromString(json)
+                        logger.info { "Loaded videoOutputConfigs from settings file" }
+                    } catch (e: Exception) {
+                        logger.warn(e) { "Failed to parse videoOutputConfigs JSON" }
+                    }
+                }
             } else {
                 logger.info { "No settings file found, using defaults: fixed UI 95%, presetNameScalePercent: $presetNameScalePercent%, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
             }
@@ -519,6 +542,13 @@ object UITheme {
             props.setProperty("trackpadConsoleEnabled", trackpadConsoleEnabled.toString())
             props.setProperty("checkUpdatesOnStartup", checkUpdatesOnStartup.toString())
             props.setProperty("ignoredUpdateVersion", ignoredUpdateVersion)
+            
+            try {
+                props.setProperty("videoOutputConfigs", Json.encodeToString(videoOutputConfigs))
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to serialize videoOutputConfigs to JSON" }
+            }
+            
             val tmpFile = File("${settingsFile.absolutePath}.tmp")
             tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
             java.nio.file.Files.move(

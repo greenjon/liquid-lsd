@@ -318,6 +318,29 @@ class Renderer {
     }
 
     /**
+     * Rescales a source texture into a destination FBO using a specified scaling mode.
+     */
+    fun rescale(srcTex: Int, srcW: Int, srcH: Int, destFbo: FBO, mode: llm.slop.liquidlsd.ui.UITheme.OutputScaleMode) {
+        destFbo.bind()
+        val vp = ViewportHelper.computeViewport(destFbo.width, destFbo.height, srcW, srcH, mode)
+        glViewport(vp.x, vp.y, vp.width, vp.height)
+        
+        glClearColor(0f, 0f, 0f, 1f)
+        glClear(GL_COLOR_BUFFER_BIT)
+        
+        glDisable(GL_BLEND)
+        blitShader.bind()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, srcTex)
+        blitShader.setUniform("uTexture", 0)
+        Geometry.drawFullscreenQuad()
+        blitShader.unbind()
+        
+        destFbo.unbind()
+        glActiveTexture(GL_TEXTURE0)
+    }
+
+    /**
      * Clean up OpenGL resources.
      */
     fun dispose() {

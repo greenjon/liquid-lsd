@@ -448,8 +448,13 @@ fun main(args: Array<String>) {
             mixer.update()
             renderer.renderMixer(mixer)
 
-            // 6. Broadcast live texture stream & capture live recording frame
-            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(mixer.masterFBO.texture, mixer.width, mixer.height)
+            // 6. External Video Sharing & Capture
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_A, deckA.getOutputTexture(), mixer.width, mixer.height, renderer)
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_B, deckB.getOutputTexture(), mixer.width, mixer.height, renderer)
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_BG, mixer.deckBG.getOutputTexture(), mixer.width, mixer.height, renderer)
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_PV, mixer.deckPV.getOutputTexture(), mixer.width, mixer.height, renderer)
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.MASTER, mixer.masterFBO.texture, mixer.width, mixer.height, renderer)
+
             llm.slop.liquidlsd.export.RealtimeRecorder.captureFrame(mixer.masterFBO.framebufferId)
             llm.slop.liquidlsd.broadcast.BroadcastEngine.tick(mixer)
         }

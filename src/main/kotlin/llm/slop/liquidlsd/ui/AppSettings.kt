@@ -51,5 +51,7 @@ data class AppSettings(
     val framelessWindow: Boolean = true,
     val trackpadConsoleEnabled: Boolean = true,
     val checkUpdatesOnStartup: Boolean = true,
-    val ignoredUpdateVersion: String = ""
+    val ignoredUpdateVersion: String = "",
+    val videoOutputConfigs: Map<llm.slop.liquidlsd.rendering.VideoOutputEndpoint, llm.slop.liquidlsd.rendering.VideoOutputConfig> = 
+        llm.slop.liquidlsd.rendering.VideoOutputEndpoint.values().associateWith { llm.slop.liquidlsd.rendering.VideoOutputConfig() }
 )

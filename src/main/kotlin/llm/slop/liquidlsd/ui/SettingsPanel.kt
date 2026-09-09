@@ -315,16 +315,77 @@ object SettingsPanel {
         itemTooltip("Limit frame rate to 30 FPS to conserve power.")
 
         ImGui.spacing()
-        session.uiTheme.h2("Live Texture Streaming (Resolume / OBS)")
+        session.uiTheme.h2("Live Video Sharing (Spout / Syphon / PipeWire)")
         ImGui.separator()
         ImGui.spacing()
 
-        val streamingVal = ImBoolean(llm.slop.liquidlsd.rendering.TextureStreamerManager.isEnabled)
-        if (ImGui.checkbox("Enable Live GPU Texture Sharing (Spout / Syphon)", streamingVal)) {
-            llm.slop.liquidlsd.rendering.TextureStreamerManager.isEnabled = streamingVal.get()
+        ImGui.textWrapped("Zero-copy GPU texture sharing to Resolume, OBS, and MadMapper. Downscaling preview outputs is recommended to save GPU power.")
+        ImGui.spacing()
+
+        val tableFlags = ImGuiTableFlags.BordersOuter or ImGuiTableFlags.RowBg or ImGuiTableFlags.Resizable
+        if (ImGui.beginTable("##video_sharing_matrix", 6, tableFlags)) {
+            ImGui.tableSetupColumn("Endpoint", ImGuiTableColumnFlags.WidthFixed, 100f)
+            ImGui.tableSetupColumn("Enable",   ImGuiTableColumnFlags.WidthFixed, 50f)
+            ImGui.tableSetupColumn("Name",     ImGuiTableColumnFlags.WidthStretch, 1f)
+            ImGui.tableSetupColumn("Res",      ImGuiTableColumnFlags.WidthFixed, 120f)
+            ImGui.tableSetupColumn("Scale",    ImGuiTableColumnFlags.WidthFixed, 80f)
+            ImGui.tableSetupColumn("Status",   ImGuiTableColumnFlags.WidthFixed, 60f)
+            ImGui.tableHeadersRow()
+
+            llm.slop.liquidlsd.rendering.VideoOutputEndpoint.values().forEach { endpoint ->
+                val config = session.uiTheme.videoOutputConfigs[endpoint] ?: llm.slop.liquidlsd.rendering.VideoOutputConfig()
+                
+                ImGui.tableNextRow()
+                ImGui.tableNextColumn()
+                session.uiTheme.body(endpoint.displayName)
+                
+                ImGui.tableNextColumn()
+                val enabled = ImBoolean(config.isEnabled)
+                if (ImGui.checkbox("##enable_${endpoint.name}", enabled)) {
+                    session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(isEnabled = enabled.get()))
+                    session.uiTheme.saveSettings()
+                }
+                
+                ImGui.tableNextColumn()
+                val nameInput = imgui.type.ImString(config.customName, 64)
+                ImGui.setNextItemWidth(-1f)
+                if (ImGui.inputText("##name_${endpoint.name}", nameInput)) {
+                    session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(customName = nameInput.get()))
+                    session.uiTheme.saveSettings()
+                }
+                
+                ImGui.tableNextColumn()
+                val resModes = llm.slop.liquidlsd.rendering.OutputResolutionMode.values()
+                val resModeNames = resModes.map { it.displayName }.toTypedArray()
+                val currentResIdx = imgui.type.ImInt(config.resolutionMode.ordinal)
+                ImGui.setNextItemWidth(-1f)
+                if (ImGui.combo("##res_${endpoint.name}", currentResIdx, resModeNames)) {
+                    session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(resolutionMode = resModes[currentResIdx.get()]))
+                    session.uiTheme.saveSettings()
+                }
+                if (config.resolutionMode != llm.slop.liquidlsd.rendering.OutputResolutionMode.SYNC_MASTER && config.resolutionMode != llm.slop.liquidlsd.rendering.OutputResolutionMode.RES_540P) {
+                    itemTooltip("${Icons.ALERT} High resolution outputs significantly impact GPU performance!")
+                }
+
+                ImGui.tableNextColumn()
+                val scaleModes = UITheme.OutputScaleMode.values()
+                val scaleModeNames = scaleModes.map { it.displayName.split(" ")[0] }.toTypedArray()
+                val currentScaleIdx = imgui.type.ImInt(config.scalingMode.ordinal)
+                ImGui.setNextItemWidth(-1f)
+                if (ImGui.combo("##scale_${endpoint.name}", currentScaleIdx, scaleModeNames)) {
+                    session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(scalingMode = scaleModes[currentScaleIdx.get()]))
+                    session.uiTheme.saveSettings()
+                }
+
+                ImGui.tableNextColumn()
+                if (config.isEnabled) {
+                    ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "LIVE")
+                } else {
+                    ImGui.textDisabled("OFF")
+                }
+            }
+            ImGui.endTable()
         }
-        itemTooltip("Broadcasts master visuals in real-time over GPU shared memory to Resolume Arena, OBS Studio, and TouchDesigner with zero-copy overhead.")
-        session.uiTheme.caption("Active Streamer: ${llm.slop.liquidlsd.rendering.TextureStreamerManager.activeStreamer.name}")
 
         ImGui.spacing()
         session.uiTheme.h2("Live Video Recording")
