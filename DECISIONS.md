@@ -641,26 +641,15 @@ This document outlines the key architectural decisions made in the development o
   - Enhances creative flexibility by allowing color and stylized effects to be applied before the feedback loop.
   - Maintains backward compatibility with existing presets through optional DTO fields.
 
-## Phase 2.2.2 - Part 2: Multi-Pass ISF Preprocessor & Buffer System (`ISFParser.kt`, `ISFFilter.kt`)
+## Phase 2.2.2: Multi-Pass ISF Engine, Dual FX Slots & Universal Shader Picker (`ShaderPickerPopup.kt`, `ISFParser.kt`, `ISFFilter.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`, `ISFMultiPassTest.kt`)
 
-- **Decision**: Extend `ISFParser` and `ISFFilter` to support multi-pass ISF shaders (`PASSES` array), custom pass target resolution expressions, and persistent history feedback buffers:
-  - **GLSL Sampler Injection (`ISFParser.kt`)**: Added automatic GLSL declaration of `uniform sampler2D <TARGET>;` for pass target names declared in `header.PASSES`, allowing subsequent passes or persistent ping-pong history loops to sample intermediate render buffers.
-  - **Dynamic FBO Allocation & Resolution Parsing (`ISFFilter.kt`)**: Added support for multi-pass FBO target maps (`passFBOs`) and ping-pong history pairs (`passHistoryFBOs`) supporting custom resolution formulas (e.g. `$WIDTH/2.0` and `$HEIGHT/2.0`). Buffer precision (`GL_RGBA8` or high-dynamic `GL_RGBA32F`) is allocated according to the `FLOAT` flag on each pass definition.
-  - **Multi-Pass Render Execution**: Single-pass shaders bypass multi-pass setup for zero overhead. Multi-pass execution sets `PASSINDEX` and `RENDERSIZE` for each pass, binds input textures and target sampler uniforms across active texture units, renders fullscreen quads into intermediate pass target FBOs or destination FBOs, and swaps ping-pong history buffers for `PERSISTENT: true` accumulation passes.
-  - **Lifecycle & Resizing**: Internal pass target FBOs automatically resize when Deck render resolution changes and cleanly release all GPU resources on `dispose()`.
+- **Decision**: Introduce multi-pass ISF shader processing, dual serialized FX slots per Deck, preset serialization, and a high-performance searchable shader picker:
+  - **Dual FX Pipeline Architecture (`Deck.kt`, `Renderer.kt`)**: Added a second serialized FX slot (**Slot 2: Spatial / Distortion**) to each Deck pipeline (`Visual Source` $\rightarrow$ `2D/3D Transform` $\rightarrow$ `cleanFBO` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `feedback.frag`).
+  - **Multi-Pass ISF Shader Engine (`ISFParser.kt`, `ISFFilter.kt`)**: Implemented support for `PASSES` arrays, custom target buffer resolution expressions (`$WIDTH/2.0`, `$HEIGHT/2.0`), automatic sampler uniform injection (`uniform sampler2D <TARGET>;`), and ping-pong accumulation buffers for `PERSISTENT: true` temporal feedback loops without GPU read/write hazards.
+  - **Universal Shader Picker Modal (`ShaderPickerPopup.kt`)**: Built a zero-allocation, searchable modal dialog with category pill filtering (`Color Adjustment`, `Distortion`, `Glitch`, `Geometry`, `3D`, `Generator`, `All`) capable of smoothly handling 300+ installed visual sources and ISF effects.
+  - **Dual FX Preset Serialization (`PresetModels.kt`, `PresetGridTabs.kt`)**: Full serialization of both `fxSlot1` and `fxSlot2` in `DeckPresetDto`, paired with redesigned FX tab control panels for Slot 1, Slot 2, and Feedback. Optional `fxSlot2 = null` default preserves 100% backward compatibility for existing presets.
+  - **Bundled Creative ISF Shaders (`default_filters/`)**: Shipped default filters including `bloom.fs` (multi-pass bloom highlights and Gaussian diffusion), `feedback_trails.fs` (persistent motion trails), `glitch.fs` (scanline dislocation and chromatic aberration), and `mirror.fs` (coordinate space folding).
 - **Rationale**:
-  - Enables complex multi-pass image processing effects (such as multi-stage Gaussian bloom, motion trails, chromatic aberration, and persistent temporal feedback decay) directly within ISF filter slots.
-  - Strictly adheres to VIDVOX ISF 2.0 specifications for multi-pass fragment shaders.
-  - Maintains zero allocation during rendering cycles and prevents GPU read/write feedback hazards.
-
-## Phase 2.2.2 - Part 1: Universal Searchable Category Shader Picker (`ShaderPickerPopup.kt`, `VisualSource.kt`, `VisualEffect.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`)
-
-- **Decision**: Replace flat dropdown menus with a unified, high-performance modal picker for selecting Visual Sources and FX Filters:
-  - **Category-Based Filtering**: Shaders and sources are organized into semantic categories (e.g., `Generator`, `Geometric`, `Color Adjustment`, `Distortion`).
-  - **Instant Search**: Implemented fuzzy text search across display names, IDs, and categories using static `ImString` buffers.
-  - **Zero-Allocation Architecture**: Designed the picker to avoid per-frame heap allocations during filtering and rendering, adhering to real-time performance constraints.
-  - **Context-Aware Defaults**: The picker opens with the most relevant category pre-selected based on the slot type (e.g., `Color Adjustment` for FX Slot 1).
-- **Rationale**:
-  - Scales gracefully to handle 300+ installed shaders without UI lag or ergonomic breakdown.
-  - Improves discoverability of procedural sources and post-processing effects.
-  - Provides a consistent interface for shader selection across sources and modular FX slots.
+  - Unlocks rich creative post-processing combinations (e.g. Invert/Posterize in Slot 1 followed by Bloom/Glitch in Slot 2) prior to entering feedback.
+  - Zero draw call / zero memory overhead when slots are bypassed or Dry/Wet is $0.0$.
+  - Strictly adheres to VIDVOX ISF 2.0 specifications and Liquid LSD's zero-heap real-time performance guidelines.

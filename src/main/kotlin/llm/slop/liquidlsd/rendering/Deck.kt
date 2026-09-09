@@ -27,9 +27,12 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
-    // ISF Filter Slot 1
+    // ISF Filter Slot 1 & Slot 2
     var fxSlot1: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
     var fxFBO1 = FBO(width, height)
+
+    var fxSlot2: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
+    var fxFBO2 = FBO(width, height)
 
     // FBO for capturing raw 2D source output before 3D view transformation (square 1:1 aspect for orthogonal planes)
     var rawSourceFBO = FBO(height, height)
@@ -52,12 +55,14 @@ class Deck(
         fb1.dispose()
         fb2.dispose()
         fxFBO1.dispose()
+        fxFBO2.dispose()
         cleanFBO = FBO(width, height)
         rawSourceFBO = FBO(height, height)
         rawSource2DFBO = FBO(width, height)
         fb1 = FBO(width, height)
         fb2 = FBO(width, height)
         fxFBO1 = FBO(width, height)
+        fxFBO2 = FBO(width, height)
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
@@ -126,6 +131,7 @@ class Deck(
     fun reset() {
         isEmpty = true
         fxSlot1?.reset()
+        fxSlot2?.reset()
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -157,6 +163,7 @@ class Deck(
         fb1.clear(0f, 0f, 0f, 0f)
         fb2.clear(0f, 0f, 0f, 0f)
         fxFBO1.clear(0f, 0f, 0f, 0f)
+        fxFBO2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         rawSourceFBO.clear(0f, 0f, 0f, 0f)
         rawSource2DFBO.clear(0f, 0f, 0f, 0f)
@@ -172,6 +179,13 @@ class Deck(
         allParams.add(this.source.globalAlpha)
         
         fxSlot1?.let { fx ->
+            if (fx.enabled) {
+                allParams.add(fx.dryWet)
+                allParams.addAll(fx.parameters.values)
+            }
+        }
+        
+        fxSlot2?.let { fx ->
             if (fx.enabled) {
                 allParams.add(fx.dryWet)
                 allParams.addAll(fx.parameters.values)
@@ -230,6 +244,7 @@ class Deck(
     fun update() {
         source.update()
         fxSlot1?.update()
+        fxSlot2?.update()
         view3DMode.evaluate()
         viewZoom.evaluate()
         viewRotateX.evaluate()
@@ -269,7 +284,9 @@ class Deck(
         fb1.dispose()
         fb2.dispose()
         fxFBO1.dispose()
+        fxFBO2.dispose()
         fxSlot1?.dispose()
+        fxSlot2?.dispose()
         // Note: `source` is always one of the entries in `availableSources`, so the
         // forEach below already disposes it. Do NOT call source.dispose() here — that
         // would double-free the active source's GPU objects.
@@ -284,6 +301,7 @@ class Deck(
 
         // Add FX parameters
         fxSlot1?.getParameterPaths("$prefix/FX1")?.let { list.addAll(it) }
+        fxSlot2?.getParameterPaths("$prefix/FX2")?.let { list.addAll(it) }
 
         // Add Deck's View parameters
         list.add("$prefix/View/3DMode" to view3DMode)

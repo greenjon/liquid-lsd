@@ -220,17 +220,18 @@ class Renderer {
             }
         }
 
-        // --- Phase 2.2.1: ISF Filter Stage ---
-        val fx = deck.fxSlot1
-        val liveTexture = if (fx != null && fx.enabled && fx.dryWet.value > 0.0f) {
+        // --- Dual FX Filter Stages ---
+        // Stage 1: FX Slot 1 (Color / Degradation)
+        val fx1 = deck.fxSlot1
+        val texAfterFx1 = if (fx1 != null && fx1.enabled && fx1.dryWet.value > 0.0f) {
             deck.fxFBO1.bind()
             glClearColor(0f, 0f, 0f, 0f)
             glClear(GL_COLOR_BUFFER_BIT)
             glDisable(GL_BLEND)
 
-            fx.render(deck.cleanFBO.texture, deck.fxFBO1.width, deck.fxFBO1.height)
+            fx1.render(deck.cleanFBO.texture, deck.fxFBO1.width, deck.fxFBO1.height)
 
-            val dryWet = fx.dryWet.value
+            val dryWet = fx1.dryWet.value
             if (dryWet < 1.0f) {
                 // Blend dry (cleanFBO) with wet (fxFBO1)
                 glEnable(GL_BLEND)
@@ -250,6 +251,38 @@ class Renderer {
             deck.fxFBO1.texture
         } else {
             deck.cleanFBO.texture
+        }
+
+        // Stage 2: FX Slot 2 (Spatial / Distortion)
+        val fx2 = deck.fxSlot2
+        val liveTexture = if (fx2 != null && fx2.enabled && fx2.dryWet.value > 0.0f) {
+            deck.fxFBO2.bind()
+            glClearColor(0f, 0f, 0f, 0f)
+            glClear(GL_COLOR_BUFFER_BIT)
+            glDisable(GL_BLEND)
+
+            fx2.render(texAfterFx1, deck.fxFBO2.width, deck.fxFBO2.height)
+
+            val dryWet = fx2.dryWet.value
+            if (dryWet < 1.0f) {
+                // Blend dry (texAfterFx1) with wet (fxFBO2)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+                glBlendColor(0f, 0f, 0f, 1.0f - dryWet) // dry amount
+
+                blitShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, texAfterFx1)
+                blitShader.setUniform("uTexture", 0)
+                Geometry.drawFullscreenQuad()
+                blitShader.unbind()
+                glDisable(GL_BLEND)
+            }
+
+            deck.fxFBO2.unbind()
+            deck.fxFBO2.texture
+        } else {
+            texAfterFx1
         }
 
         // 2. Blend clean image and current history into next history FBO

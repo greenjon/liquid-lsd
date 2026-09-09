@@ -60,8 +60,14 @@ Built-in procedural visual generators:
 With the integration of hundreds of ISF sources and filters, Liquid LSD uses a unified **Shader Picker** modal instead of flat dropdown menus.
 - **Searchable**: Type any part of a shader's name, ID, or category into the search bar for instant filtering.
 - **Categorized**: Content is organized into semantic categories like `Generator`, `Geometric`, `Color Adjustment`, `Distortion`, `Blur`, and `Stylize`.
-- **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (e.g., source selection vs. FX slot 1).
+- **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (e.g., source selection vs. FX slot 1 vs. FX slot 2).
 - **Detach / Clear**: Use the `[ Detach / None ]` button to quickly clear a shader slot.
+
+### Dual FX Post-Processing Slots
+Each Deck features two serialized, independently modulatable ISF post-processing slots positioned before the feedback loop:
+- **Slot 1 (Color / Degradation)**: Color remapping, inversion, posterization, luma keying, and signal degradation filters.
+- **Slot 2 (Spatial / Distortion)**: Multi-pass bloom, chromatic aberration, digital glitch, spatial folding, and persistent motion trails.
+- **Bypass & Dry/Wet Mix**: Both slots support independent bypass toggles and continuous Dry/Wet parameter modulation. Bypassed or zero-wet slots execute with zero draw call overhead.
 
 #### Icosa-Dodeca Quick Reference & Classic Solids
 The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean bridges, and Kepler-Poinsot star polyhedra:

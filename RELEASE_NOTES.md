@@ -2,18 +2,13 @@
 
 ## [Unreleased]
 
-### Phase 2.2.2 - Part 2: Multi-Pass ISF Preprocessor & Buffer System (`ISFParser.kt`, `ISFFilter.kt`)
-- **Multi-Pass ISF Shader Processing**: Added full support for ISF multi-pass shader pipelines (`PASSES` array) with intermediate FBO target declarations.
-- **Persistent Ping-Pong History Buffers**: Added support for temporal feedback accumulation (`PERSISTENT: true`) using ping-pong FBO pairs without GPU read/write hazards.
-- **Pass Resolution Expressions & Dynamic Scaling**: Supports pass resolution formulas (such as `$WIDTH/2.0` and `$HEIGHT/2.0`) for downscaled bloom, blur, and feedback passes.
-- **ISF Target Samplers GLSL Generation**: `ISFParser` now automatically declares `uniform sampler2D <TARGET>;` for pass target buffers so subsequent passes can sample intermediate pass outputs.
-- **Dynamic Resizing & Resource Management**: Automatic pass FBO reallocation on resolution or deck dimension changes, and clean GL resource disposal.
-
-### Phase 2.2.2 - Part 1: Universal Searchable Category Shader Picker (`ShaderPickerPopup.kt`, `VisualSource.kt`, `VisualEffect.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`)
-- **Universal Shader Picker**: Introduced a unified modal dialog for selecting Visual Sources and FX Filters with instant search and category filtering.
-- **Categorized Content**: Sources and effects are now tagged with categories (e.g., `3D`, `Fractal`, `Blur`, `Stylize`) for better organization.
-- **High Performance**: Zero-allocation UI implementation ensures the picker remains responsive even with hundreds of shaders.
-- **Improved Source/FX Selection**: Replaced legacy dropdowns in the Preset Grid titles and FX tab with the searchable picker.
+### Phase 2.2.2: Multi-Pass ISF Engine, Dual FX Slots & Universal Shader Picker (`ShaderPickerPopup.kt`, `ISFParser.kt`, `ISFFilter.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`, `ISFMultiPassTest.kt`)
+- **Dual FX Architecture**: Added a second serialized FX slot (**Slot 2: Spatial / Distortion**) to each Deck pipeline (`Visual Source` $\rightarrow$ `2D/3D Transform` $\rightarrow$ `cleanFBO` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `feedback.frag`).
+- **Multi-Pass ISF Shader Processing**: Full support for multi-pass ISF shaders (`PASSES` array) with intermediate target FBOs and custom pass dimensions (e.g. `$WIDTH/2.0`, `$HEIGHT/2.0`).
+- **Persistent Ping-Pong History Buffers**: Temporal feedback accumulation (`PERSISTENT: true`) using ping-pong FBO pairs without GPU read/write feedback hazards.
+- **Universal Searchable Category Shader Picker**: Replaced flat dropdowns with `ShaderPickerPopup`, a zero-allocation modal dialog supporting instant fuzzy search and category filtering for Visual Sources and both FX Slots.
+- **Dual FX Preset Serialization**: Full round-trip serialization of both FX slots (`fxSlot1` and `fxSlot2`) in `DeckPresetDto`, maintaining 100% backward compatibility for existing presets.
+- **Bundled Multi-Pass & Spatial Filters**: Shipped default filters including `bloom.fs` (multi-pass bloom), `feedback_trails.fs` (persistent temporal decay), `glitch.fs` (chromatic aberration and scanline dislocation), and `mirror.fs` (coordinate space folding).
 
 ---
 

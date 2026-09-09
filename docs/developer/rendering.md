@@ -27,6 +27,12 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
             [cleanFBO]  (Composited clean source frame)
                  │
                  ▼
+     [FX Slot 1: Color/Degrade] (fxSlot1, fxFBO1 — Invert, Posterize, Luma Key, etc.)
+                 │
+                 ▼
+     [FX Slot 2: Spatial/Distort] (fxSlot2, fxFBO2 — Bloom, Glitch, Mirror, Trails, etc.)
+                 │
+                 ▼
         [feedback.frag] ◄── [Previous Frame Feedback Texture]
                  │
                  ▼
@@ -45,9 +51,13 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
      - **2D Mode (`3D Mode < 0.5`)**: The active 2D source renders clean geometry or shader pixels to `rawSource2DFBO` (`width x height`). `view2d.frag` executes a fullscreen blit pass onto `cleanFBO`, applying isotropic aspect-ratio-corrected rotation (`Rotate Z` / Roll) and scaling (`Zoom`) with out-of-bounds border blanking.
      - **3D Mode (`3D Mode >= 0.5`)**: The active 2D source renders into square `rawSourceFBO` (`height x height`). `tri_planar.vert` and `tri_planar.frag` (or `tetra_kaleido.frag`) project 3 intersecting planes (Tri-Axial), a 6-sided extruded cube cage with unit base displacement (Cube Cage), 6 tetrahedral symmetry planes at 60° (Hex-Planar), or a 24-chamber Coxeter space-folding kaleidoscope (Tetra Kaleido) onto `cleanFBO`. The projection is scale-normalized to 1.0 against `cameraDistance` so that `Zoom = 1.0` fills the vertical frame height identically to 2D flat mode.
    - **Native 3D Sources (`source.is3D == true`)**: Native 3D visual sources (`icosahedron`, `icosa-v3`, `hyper_mesh`, `icosa_dodeca`, `chladni`, `gyroid`, `hyper_slice`) handle their own 3D rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and camera zoom internally. They render directly to `rawSource2DFBO` at full native widescreen resolution, and `view2d.frag` blits the frame 1:1 onto `cleanFBO` (`uZoom = 1.0f`, `uRotateZ = 0.0f`) without secondary distortion. 3D Mode is excluded.
-2. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, `cleanFBO` texture, and evaluated feedback parameters (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
-3. **Buffer Swap**: Swaps the read and write feedback FBO references.
-4. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.
+2. **Dual FX Serial Processing Stage**:
+   - **FX Slot 1 (Color / Degradation)**: If active and `dryWet > 0.0`, processes `cleanFBO` texture into `fxFBO1`. For multi-pass ISF filters (`header.PASSES`), intermediate target FBOs and ping-pong history pairs are bound sequentially. Hardware dry/wet blending is performed using `glBlendColor(..., 1.0 - dryWet)` to mix `cleanFBO` into `fxFBO1`. Outputs `texAfterFx1`.
+   - **FX Slot 2 (Spatial / Distortion)**: If active and `dryWet > 0.0`, processes `texAfterFx1` into `fxFBO2` (with multi-pass support and hardware `glBlendColor` mix). Outputs `uTextureLive`.
+   - **Zero-Overhead Bypass**: If either slot is bypassed or its `dryWet == 0.0`, the texture passes directly to the next stage without additional draw calls or intermediate blits.
+3. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, live input texture (`uTextureLive`), and evaluated feedback parameters (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
+4. **Buffer Swap**: Swaps the read and write feedback FBO references.
+5. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.
 
 ---
 

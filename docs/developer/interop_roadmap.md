@@ -110,7 +110,7 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
   - Maintain hot-reloading: drop `.fs` or `.isf` files into `library/sources/` for instant compilation and parameter binding.
   - Fallback and migration path for existing `meta.json` source bundles.
 
-### Phase 2.2: FX System Conversion to ISF & Dual FX Slots [IN PROGRESS]
+### Phase 2.2: FX System Conversion to ISF & Dual FX Slots [COMPLETED]
 - **Modular Post-Processing Chain**:
   - Migrate the hardcoded feedback post-processing stage (`feedback.frag`) into a modular, chainable ISF effect processor.
   - Map ISF `image` inputs (e.g. `inputImage`) to Deck clean/feedback FBO textures.
@@ -118,10 +118,10 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
   - Expose ISF FX parameter inputs directly within the Preset Grid for audio/LFO modulation.
 - **Dual FX Architecture (Two Dedicated Slots per Deck)**:
   - Provide two serialized, independently modulatable FX slots in each deck processing chain:
-    - **Slot 1: Color / Degradation** (Pixel & Chromatic Processing) [Phase 2.2.1 COMPLETED]
+    - **Slot 1: Color / Degradation** (Pixel & Chromatic Processing) [COMPLETED]
       - Focus: Color alteration, tonal remapping, keying, and signal degradation.
       - Examples: *Luma Key*, *Hue Cycle / Shift*, *Posterize*, *Invert*, *Color Grade / LUT*, *Threshold / Dither*.
-    - **Slot 2: Spatial / Distortion** (Geometric & Feedback Processing) [Phase 2.2.2 SCHEDULED]
+    - **Slot 2: Spatial / Distortion** (Geometric & Feedback Processing) [COMPLETED]
       - Focus: Coordinate space distortion, temporal feedback, optics, and geometric dislocation.
       - Examples: *Feedback Trails*, *Digital Glitch / Artifacting*, *Mirror / Kaleidoscope*, *Edge Warp / Barrel Distortion*, *Displacement Map*.
   - **Signal Chain & Routing**:
@@ -139,8 +139,8 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
 - [x] Support automatic mapping of ISF inputs to `ModulatableParameter`. [DONE]
 - [x] Integrate ISF post-processing stage (Slot 1) into Deck pipeline. [DONE]
 - [x] Build UI for ISF filter selection and parameter modulation in Preset Grid. [DONE]
-- [x] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2 Part 2). [DONE]
-- [ ] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2 Part 3).
+- [x] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2). [DONE]
+- [x] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2). [DONE]
 - [ ] Port feedback loop to modular ISF effect (Phase 2.2.3).
 
 ---

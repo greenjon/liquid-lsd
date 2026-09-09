@@ -232,6 +232,7 @@ data class DeckPresetDto(
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
     val fxSlot1: FXSlotDto? = null,
+    val fxSlot2: FXSlotDto? = null,
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
@@ -465,6 +466,15 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
             parameters = fx.parameters.mapValues { it.value.toDto() }
         )
     }
+
+    val fx2 = fxSlot2?.takeIf { it.id.isNotEmpty() }?.let { fx ->
+        FXSlotDto(
+            filterId = fx.id,
+            enabled = fx.enabled,
+            dryWet = fx.dryWet.toDto(),
+            parameters = fx.parameters.mapValues { it.value.toDto() }
+        )
+    }
     
     return DeckPresetDto(
         name = name,
@@ -474,6 +484,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
         fxSlot1 = fx1,
+        fxSlot2 = fx2,
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty
     )
@@ -563,6 +574,21 @@ fun Deck.applyDto(dto: DeckPresetDto) {
                 fx.parameters[key]?.applyDto(paramDto)
             }
             fxSlot1 = fx
+        }
+    }
+
+    // Apply FX Slot 2
+    fxSlot2?.dispose()
+    fxSlot2 = null
+    dto.fxSlot2?.let { fxDto ->
+        val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
+        if (fx != null) {
+            fx.enabled = fxDto.enabled
+            fx.dryWet.applyDto(fxDto.dryWet)
+            for ((key, paramDto) in fxDto.parameters) {
+                fx.parameters[key]?.applyDto(paramDto)
+            }
+            fxSlot2 = fx
         }
     }
     

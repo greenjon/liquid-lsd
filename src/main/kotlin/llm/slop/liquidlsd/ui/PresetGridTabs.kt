@@ -26,6 +26,8 @@ object PresetGridTabs {
     var activeBtnMaxY: Float = 0f
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
+    private val fx1EnabledBuf = imgui.type.ImBoolean()
+    private val fx2EnabledBuf = imgui.type.ImBoolean()
 
     fun getDeckColor(tab: String, alpha: Float = 1f): Int {
         val rgb = when (tab) {
@@ -403,58 +405,7 @@ object PresetGridTabs {
             }
 
             drawSubGroupContent(session, deckLabel, "FX", state) {
-                var row = 0
-
-                // FX Slot 1 Filter Selection
-                val fx = deck.fxSlot1
-                val filterName = fx?.displayName ?: "None"
-
-                ImGui.textDisabled("Filter")
-                ImGui.sameLine()
-                ImGui.setNextItemWidth(labelColW - 60f)
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
-                    ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
-                        if (newFilterId == null) {
-                            deck.fxSlot1?.dispose()
-                            deck.fxSlot1 = null
-                            onPushUndo()
-                        } else {
-                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                            if (filter != null) {
-                                deck.fxSlot1?.dispose()
-                                deck.fxSlot1 = filter
-                                onPushUndo()
-                            }
-                        }
-                    }
-                }
-
-                if (fx != null) {
-                    ImGui.sameLine()
-                    fxEnabledBuf.set(fx.enabled)
-                    if (ImGui.checkbox("##fx1_enabled_$deckLabel", fxEnabledBuf)) {
-                        fx.enabled = fxEnabledBuf.get()
-                        onPushUndo()
-                    }
-                    itemTooltip("Bypass filter.")
-
-                    PresetGridRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX1/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                    fx.parameters.forEach { (name, param) ->
-                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/FX1/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                    ImGui.separator()
-                }
-
-                PresetGridRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Rotate",    "$deckLabel/FB/Rotate",   deck.fbRotate,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Hue Shift", "$deckLabel/FB/HueShift", deck.fbHueShift, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Blur",      "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                drawFxSubgroupContent(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
             drawSubGroupContent(session, deckLabel, "View", state) {
@@ -489,58 +440,7 @@ object PresetGridTabs {
             }
         } else {
             drawSubGroupContent(session, deckLabel, "FX", state) {
-                var row = 0
-
-                // FX Slot 1 Filter Selection
-                val fx = deck.fxSlot1
-                val filterName = fx?.displayName ?: "None"
-
-                ImGui.textDisabled("Filter")
-                ImGui.sameLine()
-                ImGui.setNextItemWidth(labelColW - 60f)
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
-                    ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
-                        if (newFilterId == null) {
-                            deck.fxSlot1?.dispose()
-                            deck.fxSlot1 = null
-                            onPushUndo()
-                        } else {
-                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                            if (filter != null) {
-                                deck.fxSlot1?.dispose()
-                                deck.fxSlot1 = filter
-                                onPushUndo()
-                            }
-                        }
-                    }
-                }
-
-                if (fx != null) {
-                    ImGui.sameLine()
-                    fxEnabledBuf.set(fx.enabled)
-                    if (ImGui.checkbox("##fx1_enabled_$deckLabel", fxEnabledBuf)) {
-                        fx.enabled = fxEnabledBuf.get()
-                        onPushUndo()
-                    }
-                    itemTooltip("Bypass filter.")
-
-                    PresetGridRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX1/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                    fx.parameters.forEach { (name, param) ->
-                        PresetGridRenderer.drawParamRow(session, name, "$deckLabel/FX1/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                    ImGui.separator()
-                }
-
-                PresetGridRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Rotate",    "$deckLabel/FB/Rotate",   deck.fbRotate,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Hue Shift", "$deckLabel/FB/HueShift", deck.fbHueShift, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Blur",      "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                PresetGridRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                drawFxSubgroupContent(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
             drawSubGroupContent(session, deckLabel, "View", state) {
@@ -563,6 +463,115 @@ object PresetGridTabs {
                 }
             }
         }
+    }
+
+    private fun drawFxSubgroupContent(
+        session: llm.slop.liquidlsd.SessionContext,
+        deckLabel: String,
+        deck: Deck,
+        state: PresetGridState,
+        labelColW: Float,
+        mixer: Mixer,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        var row = 0
+
+        // --- Slot 1: Color / Degradation ---
+        val fx1 = deck.fxSlot1
+        val filterName1 = fx1?.displayName ?: "None"
+
+        ImGui.textDisabled("Slot 1")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(labelColW - 60f)
+        if (ImGui.button("$filterName1  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
+            ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
+                if (newFilterId == null) {
+                    deck.fxSlot1?.dispose()
+                    deck.fxSlot1 = null
+                    onPushUndo()
+                } else {
+                    val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                    if (filter != null) {
+                        deck.fxSlot1?.dispose()
+                        deck.fxSlot1 = filter
+                        onPushUndo()
+                    }
+                }
+            }
+        }
+
+        if (fx1 != null) {
+            ImGui.sameLine()
+            fx1EnabledBuf.set(fx1.enabled)
+            if (ImGui.checkbox("##fx1_enabled_$deckLabel", fx1EnabledBuf)) {
+                fx1.enabled = fx1EnabledBuf.get()
+                onPushUndo()
+            }
+            itemTooltip("Bypass Slot 1 filter.")
+
+            PresetGridRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX1/DryWet", fx1.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+            fx1.parameters.forEach { (name, param) ->
+                PresetGridRenderer.drawParamRow(session, name, "$deckLabel/FX1/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            }
+        }
+        ImGui.separator()
+
+        // --- Slot 2: Spatial / Distortion ---
+        val fx2 = deck.fxSlot2
+        val filterName2 = fx2?.displayName ?: "None"
+
+        ImGui.textDisabled("Slot 2")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(labelColW - 60f)
+        if (ImGui.button("$filterName2  ${Icons.CHEVRON_DOWN}##fx2_selector_$deckLabel", labelColW - 60f, 0f)) {
+            ShaderPickerPopup.show("Select FX Slot 2 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_2) { newFilterId ->
+                if (newFilterId == null) {
+                    deck.fxSlot2?.dispose()
+                    deck.fxSlot2 = null
+                    onPushUndo()
+                } else {
+                    val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                    if (filter != null) {
+                        deck.fxSlot2?.dispose()
+                        deck.fxSlot2 = filter
+                        onPushUndo()
+                    }
+                }
+            }
+        }
+
+        if (fx2 != null) {
+            ImGui.sameLine()
+            fx2EnabledBuf.set(fx2.enabled)
+            if (ImGui.checkbox("##fx2_enabled_$deckLabel", fx2EnabledBuf)) {
+                fx2.enabled = fx2EnabledBuf.get()
+                onPushUndo()
+            }
+            itemTooltip("Bypass Slot 2 filter.")
+
+            PresetGridRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX2/DryWet", fx2.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+            fx2.parameters.forEach { (name, param) ->
+                PresetGridRenderer.drawParamRow(session, name, "$deckLabel/FX2/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            }
+        }
+        ImGui.separator()
+
+        // --- Feedback & Optics ---
+        PresetGridRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Rotate",    "$deckLabel/FB/Rotate",   deck.fbRotate,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Hue Shift", "$deckLabel/FB/HueShift", deck.fbHueShift, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Blur",      "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        PresetGridRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
     }
 }
 

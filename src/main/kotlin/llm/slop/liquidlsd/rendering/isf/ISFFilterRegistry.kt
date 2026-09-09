@@ -9,7 +9,7 @@ private val logger = KotlinLogging.logger {}
 
 object ISFFilterRegistry {
     private val filters = ConcurrentHashMap<String, ISFFilter>()
-    private val bundledFilters = listOf("invert", "hue_shift", "posterize", "luma_key", "edge_detect")
+    private val bundledFilters = listOf("invert", "hue_shift", "posterize", "luma_key", "edge_detect", "bloom", "feedback_trails", "glitch", "mirror")
 
     val availableFilters: List<ISFFilter>
         get() = filters.values.toList().sortedBy { it.displayName }
@@ -70,12 +70,6 @@ object ISFFilterRegistry {
 
     private fun registerFilterFromSource(id: String, displayName: String, source: String) {
         val header = ISFParser.parseHeader(source) ?: return
-        
-        // Single-pass check for Phase 2.2.1
-        if (header.PASSES.size > 1) {
-            logger.info { "Skipping multi-pass filter $id (scheduled for Phase 2.2.2)" }
-            return
-        }
 
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)
