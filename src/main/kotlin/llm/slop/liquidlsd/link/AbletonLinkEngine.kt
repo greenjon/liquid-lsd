@@ -137,10 +137,16 @@ object AbletonLinkEngine {
 
     /**
      * Shuts down Link session and releases backend drivers.
+     *
+     * Sets [isEnabled] to `false` **before** closing the backend so that any concurrent
+     * [updateClockAnchor] call on the render/audio thread sees the flag and returns immediately
+     * without touching the (already-destroyed) native handle. This closes the use-after-free
+     * race window described in AUDIT #3.
      */
     @Synchronized
     fun shutdown() {
         if (isInitialized) {
+            isEnabled = false          // ← must precede backend destruction
             activeBackend.close()
             activeBackend = NoOpLinkBackend()
             isInitialized = false

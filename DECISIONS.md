@@ -1,3 +1,13 @@
+## Platform Target: Linux ARM64 Dropped
+
+- **Decision**: Linux ARM64 (aarch64) is **no longer a supported build target** as of 2026-09-10.
+- **Reason**: A required native module dependency does not provide an ARM64 Linux binary and cannot be compiled for that architecture. The exact module was not documented at the time of the decision.
+- **Remaining targets**: Linux x64, macOS x64, macOS ARM64 (Apple Silicon), Windows x64.
+- **Note on ARM64 macOS**: macOS ARM64 (Apple Silicon) remains fully supported. The `NSRect`/`NSSize` JNA `Structure` field-type fix (`Double` instead of `Float`) introduced in the beta 57–62 audit specifically targets ARM64 macOS correctness and must be preserved.
+- **Impact**: Audit finding #16 ("PipeWire struct offsets wrong on ARM64 Linux") is **closed as N/A** — PipeWire is Linux-only and ARM64 Linux is no longer a target. Raw byte-offset struct access in `PipeWireLibrary.kt` only needs to be correct for x86_64 Linux.
+
+---
+
 ## Zero-Copy Linux Video Sharing & Live Video Ingest via PipeWire 0.3 (`PipeWireLibrary.kt`, `PipeWireBridge.kt`, `TextureReceiver.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`)
 
 - **Decision**: Implement zero-copy GPU video frame streaming and live video ingest on Linux using **PipeWire 0.3** (`libpipewire-0.3.so`) with DMA-BUF GPU export, shared-memory (`SPA_DATA_MemFd`) fallback, and `PipeWireReceiverImpl` ingestion:

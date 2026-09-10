@@ -1020,10 +1020,12 @@ object SettingsPanel {
                 val added = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.addCustomDirectory(pathStr)
                 if (added) {
                     customFolderPathBuf!!.set("")
-                    llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
-                    llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
-                    llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
-                    llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+                    // Async scan so the render thread is never stalled by disk I/O.
+                    llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
+                        llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+                        llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+                        llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+                    })
                 }
             }
         }
@@ -1031,10 +1033,12 @@ object SettingsPanel {
 
         ImGui.sameLine()
         if (ImGui.button("Rescan Now##rescan_isf")) {
-            llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
-            llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
-            llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
-            llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+            // Async scan so the render thread is never stalled by disk I/O.
+            llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
+                llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+                llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+                llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+            })
         }
         itemTooltip("Force immediate re-scan of all enabled ISF directories.")
 
@@ -1061,8 +1065,11 @@ object SettingsPanel {
                 val enabled = ImBoolean(resolved.config.isEnabled)
                 if (ImGui.checkbox("##en_${resolved.config.path}", enabled)) {
                     llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.toggleDirectoryEnabled(resolved.config.path, enabled.get())
-                    llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
-                    llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+                    llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
+                        llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+                        llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+                        llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+                    })
                 }
 
                 // Col 1: Path
@@ -1099,8 +1106,11 @@ object SettingsPanel {
                 } else {
                     if (ImGui.button("Remove##${resolved.config.path}")) {
                         llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.removeDirectory(resolved.config.path)
-                        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
-                        llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+                        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
+                            llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+                            llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+                            llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+                        })
                     }
                 }
             }
