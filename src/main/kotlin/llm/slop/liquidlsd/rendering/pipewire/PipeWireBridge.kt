@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.rendering.pipewire
 
 import com.sun.jna.Pointer
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import java.nio.ByteBuffer
 
@@ -22,6 +23,10 @@ class PipeWireBridge {
     private var streamName = ""
     private var currentWidth = 0
     private var currentHeight = 0
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var drainJob: Job? = null
+    private val reusableSpaData = SpaData()
 
     val isAvailable: Boolean
         get() = pw != null
@@ -122,6 +127,14 @@ class PipeWireBridge {
 
             active = true
             isDmaBufActive = checkDmaBufSupport()
+            drainJob = scope.launch {
+                while (isActive && active) {
+                    if (pendingFrame.get() != null) {
+                        drainPendingFrame()
+                    }
+                    delay(8)
+                }
+            }
             logger.info { "Initialized PipeWire Video Stream '$name' (${width}x${height}, DMA-BUF: $isDmaBufActive)" }
             return true
         } catch (e: Throwable) {
@@ -177,7 +190,9 @@ class PipeWireBridge {
                 if (spaBufPtr != null) {
                     val datasPtr = spaBufPtr.getPointer(8)
                     if (datasPtr != null) {
-                        val dataPtr = datasPtr.getPointer(0) // spa_data.data pointer
+                        reusableSpaData.bindMemory(datasPtr)
+                        reusableSpaData.read()
+                        val dataPtr = reusableSpaData.data
                         if (dataPtr != null) {
                             val remaining = buf.remaining()
                             val dest = dataPtr.getByteBuffer(0, remaining.toLong())
@@ -197,6 +212,10 @@ class PipeWireBridge {
      * Disconnects and destroys the PipeWire video stream and associated thread loop.
      */
     fun stopServer() {
+        drainJob?.cancel()
+        drainJob = null
+        pendingFrame.set(null)
+
         val lib = pw
         val loop = threadLoop
 

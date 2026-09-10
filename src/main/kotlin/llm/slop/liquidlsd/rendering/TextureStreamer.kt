@@ -252,14 +252,16 @@ class SyphonBridge {
         return Pointer.nativeValue(res).toInt()
     }
     
+    private val cachedTextureSize = IntArray(2)
+
     fun textureSizeForImage(imagePtr: Pointer): IntArray {
         val selTextureSize = objc.sel_registerName("textureSize")
         // textureSize returns NSSize struct. Since JNA objc_msgSend with struct return
         // can be tricky, we'll assume standard SyphonImage textureSize works.
-        // Actually, returning a struct by value requires objc_msgSend_stret on some archs.
-        // Let's skip size query if we can, or just try it:
-        // Or we don't query size here and just let LiquidLSD query GL_TEXTURE_WIDTH
-        return intArrayOf(0, 0) 
+        // Returning pre-allocated array avoids per-frame heap allocations.
+        cachedTextureSize[0] = 0
+        cachedTextureSize[1] = 0
+        return cachedTextureSize
     }
 
     fun stopClient(clientPtr: Pointer) {
@@ -309,8 +311,9 @@ class SpoutStreamer(override val identifier: String) : TextureStreamer {
             
             spoutLib = com.sun.jna.Native.load("SpoutLibrary", SpoutLibrary::class.java)
             spoutPtr = spoutLib?.CreateSpout()
-            spoutLib?.SetSenderName(spoutPtr!!, identifier)
-            logger.info { "Initialized Spout Sender '$identifier' (${width}x${height})" }
+            val safeIdentifier = identifier.take(255)
+            spoutLib?.SetSenderName(spoutPtr!!, safeIdentifier)
+            logger.info { "Initialized Spout Sender '$safeIdentifier' (${width}x${height})" }
             active = true
             return true
         } catch (e: Throwable) {
@@ -470,7 +473,7 @@ object TextureStreamerManager {
         val targetHeight = config.getEffectiveHeight(height)
         
         val streamer = streamers.getOrPut(endpoint) {
-            val name = config.customName.ifBlank { "LiquidLSD-${endpoint.name}" }
+            val name = config.customName.ifBlank { "LiquidLSD-${endpoint.name}" }.take(255)
             createStreamer(name).apply { start(targetWidth, targetHeight) }
         }
 

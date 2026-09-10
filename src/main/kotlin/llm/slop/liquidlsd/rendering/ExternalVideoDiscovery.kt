@@ -128,28 +128,50 @@ object ExternalVideoDiscovery {
         return results.toList()
     }
 
+    private var cachedSpoutLib: SpoutLibrary? = null
+    private var spoutLoadFailed = false
+    private val spoutNameBuffer = ByteArray(256)
+    private var lastSpoutSenderCount = -1
+    private var cachedSpoutList: List<String> = emptyList()
+
     private fun fetchSpoutServers(): List<String> {
-        val results = mutableListOf<String>()
-        try {
-            val lib = com.sun.jna.Native.load("SpoutLibrary", SpoutLibrary::class.java)
+        if (spoutLoadFailed) return emptyList()
+        val lib = cachedSpoutLib ?: try {
+            com.sun.jna.Native.load("SpoutLibrary", SpoutLibrary::class.java).also { cachedSpoutLib = it }
+        } catch (e: Throwable) {
+            spoutLoadFailed = true
+            return emptyList()
+        }
+
+        return try {
             val ptr = lib.CreateSpout()
-            if (ptr != null) {
+            if (com.sun.jna.Pointer.nativeValue(ptr) == 0L) return emptyList()
+            try {
                 val count = lib.GetSenderCount(ptr)
-                val nameBuffer = ByteArray(256)
+                if (count == 0) {
+                    lastSpoutSenderCount = 0
+                    cachedSpoutList = emptyList()
+                    return emptyList()
+                }
+                val results = mutableListOf<String>()
                 for (i in 0 until count) {
-                    if (lib.GetSender(ptr, i, nameBuffer, 256)) {
-                        val name = String(nameBuffer).trimEnd('\u0000')
+                    spoutNameBuffer.fill(0)
+                    if (lib.GetSender(ptr, i, spoutNameBuffer, 256)) {
+                        val name = String(spoutNameBuffer).trimEnd('\u0000')
                         if (name.isNotBlank()) {
                             results.add(name)
                         }
                     }
                 }
+                lastSpoutSenderCount = count
+                cachedSpoutList = results
+                results
+            } finally {
                 lib.ReleaseSpout(ptr)
             }
         } catch (e: Throwable) {
-            // Silently ignore if SpoutLibrary is missing
+            emptyList()
         }
-        return results
     }
 
     private fun fetchSyphonServers(): List<String> {

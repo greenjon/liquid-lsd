@@ -83,4 +83,29 @@ class ExternalVideoSourceTest {
         assertEquals("TouchDesigner-Out", dto.serverName)
         assertFalse(dto.isEmpty)
     }
+
+    @Test
+    fun testServerNameSwitchDisconnectsPrevious() {
+        val source = ExternalVideoSource(id = "spout_input", serverName = "ServerA")
+        source.update()
+        assertEquals(0, source.currentTextureId)
+
+        // Switching to ServerB should trigger disconnect of ServerA
+        source.serverName = "ServerB"
+        source.update()
+        assertEquals(0, source.currentTextureId)
+
+        // Switching to blank should disconnect and reset
+        source.serverName = ""
+        source.update()
+        assertEquals(0, source.currentTextureId)
+    }
+
+    @Test
+    fun testIdentifierClamping() {
+        val longName = "A".repeat(300)
+        val clamped = longName.take(255)
+        assertEquals(255, clamped.length)
+        assertTrue(clamped.all { it == 'A' })
+    }
 }

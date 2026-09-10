@@ -49,6 +49,9 @@ class SpoutReceiverImpl : TextureReceiver {
 
     override fun start(serverName: String): Boolean {
         if (!isSupported) return false
+        if (active || spoutPtr != null || localTextureId != 0) {
+            stop()
+        }
         try {
             val nativesPath = java.io.File("library/natives").absolutePath
             System.setProperty("jna.library.path", "${System.getProperty("jna.library.path") ?: ""}${java.io.File.pathSeparator}$nativesPath")
@@ -200,6 +203,7 @@ class PipeWireReceiverImpl : TextureReceiver {
 
     private var active = false
     private var localTextureId = 0
+    private val reusableSpaData = SpaData()
 
     override var currentWidth = 1920
         private set
@@ -301,11 +305,11 @@ class PipeWireReceiverImpl : TextureReceiver {
                     if (spaBufPtr != null) {
                         val datasPtr = spaBufPtr.getPointer(8)
                         if (datasPtr != null) {
-                            val spaData = SpaData(datasPtr)
-                            spaData.read()
+                            reusableSpaData.bindMemory(datasPtr)
+                            reusableSpaData.read()
 
-                            val dataPtr = spaData.data
-                            val dataSize = spaData.datasize.coerceAtLeast(spaData.maxsize)
+                            val dataPtr = reusableSpaData.data
+                            val dataSize = reusableSpaData.datasize.coerceAtLeast(reusableSpaData.maxsize)
 
                             if (dataPtr != null && dataSize > 0) {
                                 if (localTextureId == 0) {
@@ -313,16 +317,16 @@ class PipeWireReceiverImpl : TextureReceiver {
                                     glBindTexture(GL_TEXTURE_2D, localTextureId)
                                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
                                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-                                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as java.nio.ByteBuffer?)
+                                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0L)
                                     glBindTexture(GL_TEXTURE_2D, 0)
                                 }
 
-                                val byteBuffer = dataPtr.getByteBuffer(0, dataSize.toLong())
+                                val dataAddress = Pointer.nativeValue(dataPtr)
                                 glBindTexture(GL_TEXTURE_2D, localTextureId)
                                 if (dataSize >= currentWidth * currentHeight * 4) {
-                                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, currentWidth, currentHeight, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer)
+                                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, currentWidth, currentHeight, GL_RGBA, GL_UNSIGNED_BYTE, dataAddress)
                                 } else {
-                                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer)
+                                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataAddress)
                                 }
                                 glBindTexture(GL_TEXTURE_2D, 0)
                                 textureToReturn = localTextureId

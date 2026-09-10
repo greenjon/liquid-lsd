@@ -100,6 +100,10 @@ open class SpaData : Structure {
     @JvmField var datasize: Int = 0
     @JvmField var data: Pointer? = null
     @JvmField var chunk: Pointer? = null
+
+    fun bindMemory(p: Pointer) {
+        useMemory(p)
+    }
 }
 
 /**
