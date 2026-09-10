@@ -5,8 +5,6 @@ import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Shader
 import llm.slop.liquidlsd.utils.TimeSource
 import kotlinx.serialization.json.*
-import java.time.LocalDateTime
-import java.time.LocalTime
 import kotlin.math.roundToInt
 
 class ISFVisualSource(
@@ -34,12 +32,27 @@ class ISFVisualSource(
         shader.setUniform("TIMEDELTA", deltaTime)
         shader.setUniform("FRAMEINDEX", frameIndex++)
         
-        val now = LocalDateTime.now()
-        val secondsSinceMidnight = LocalTime.now().toSecondOfDay().toFloat() + (now.nano / 1_000_000_000f)
-        shader.setUniform("DATE", now.year.toFloat(), now.monthValue.toFloat(), now.dayOfMonth.toFloat(), secondsSinceMidnight)
+        // Derive DATE components via epoch arithmetic — zero allocation (no LocalDateTime/LocalTime objects)
+        val epochMs = System.currentTimeMillis()
+        val epochSec = epochMs / 1000L
+        val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
+        // Gregorian calendar from epoch seconds (proleptic, valid well past 2100)
+        val daysSinceEpoch = (epochSec / 86400L).toInt()
+        val year400 = daysSinceEpoch / 146097; val rem400 = daysSinceEpoch % 146097
+        val year100 = minOf(rem400 / 36524, 3); val rem100 = rem400 - year100 * 36524
+        val year4   = rem100 / 1461;             val rem4   = rem100 % 1461
+        val year1   = minOf(rem4 / 365, 3);      val rem1   = rem4 - year1 * 365
+        val yearNum = 1970 + year400 * 400 + year100 * 100 + year4 * 4 + year1
+        val isLeap  = (yearNum % 4 == 0 && yearNum % 100 != 0) || yearNum % 400 == 0
+        val monthStarts = if (isLeap) MONTH_STARTS_LEAP else MONTH_STARTS_NORMAL
+        var monthNum = 11
+        for (m in 0..10) { if (rem1 < monthStarts[m + 1]) { monthNum = m; break } }
+        shader.setUniform("DATE", yearNum.toFloat(), (monthNum + 1).toFloat(), (rem1 - monthStarts[monthNum] + 1).toFloat(), secondsSinceMidnight)
         
-        // 2. ISF Input uniforms
-        header.INPUTS.forEach { input ->
+        // 2. ISF Input uniforms — indexed loop avoids Iterator allocation on the render thread
+        val inputs = header.INPUTS
+        for (i in 0 until inputs.size) {
+            val input = inputs[i]
             when (input.TYPE) {
                 "float" -> {
                     shader.setUniform(input.NAME, parameters[input.NAME]?.value ?: 0f)
@@ -67,6 +80,11 @@ class ISFVisualSource(
     }
 
     companion object {
+        // Day-of-year offset for the 1st of each month (index 0=Jan … 11=Dec), plus sentinel at [12]
+        // Used in setupUniforms() so the DATE computation is allocation-free on the render thread.
+        private val MONTH_STARTS_NORMAL = intArrayOf(0,31,59,90,120,151,181,212,243,273,304,334,365)
+        private val MONTH_STARTS_LEAP   = intArrayOf(0,31,60,91,121,152,182,213,244,274,305,335,366)
+
         fun createParameters(header: ISFHeader): LinkedHashMap<String, ModulatableParameter> {
             val params = LinkedHashMap<String, ModulatableParameter>()
             header.INPUTS.forEach { input ->

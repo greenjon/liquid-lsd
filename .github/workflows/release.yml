@@ -50,17 +50,19 @@ jobs:
               prev_tag = other_tags[0] if other_tags else ""
               print(f"Triggered by tag push: {tag_name} (previous tag: {prev_tag})")
           else:
-              all_tags = subprocess.check_output(["git", "tag", "-l", "v*", "--sort=-v:refname"], text=True).splitlines()
+              all_tags = subprocess.check_output(["git", "tag", "-l", "v0.9.*", "--sort=-v:refname"], text=True).splitlines()
               latest_tag = all_tags[0] if all_tags else ""
               if not latest_tag:
-                  tag_name = "v1.0.0-beta.1"
-                  prev_tag = ""
+                  tag_name = "v0.9.1"
+                  all_v_tags = subprocess.check_output(["git", "tag", "-l", "v*", "--sort=-v:refname"], text=True).splitlines()
+                  prev_tag = all_v_tags[0] if all_v_tags else ""
               else:
-                  beta_match = re.match(r"^(v[0-9]+\.[0-9]+\.[0-9]+-beta\.)([0-9]+)$", latest_tag)
-                  if beta_match:
-                      tag_name = f"{beta_match.group(1)}{int(beta_match.group(2)) + 1}"
+                  v_match = re.match(r"^v0\.9\.([0-9]+)$", latest_tag)
+                  if v_match:
+                      next_patch = int(v_match.group(1)) + 1
+                      tag_name = f"v0.9.{next_patch}"
                   else:
-                      tag_name = f"{latest_tag}-beta.1"
+                      tag_name = "v0.9.1"
                   prev_tag = latest_tag
 
               print(f"Push to branch: Determined next tag {tag_name} (previous tag: {prev_tag})")

@@ -1,23 +1,21 @@
-# Library & Playlist Management
+# Library & Playlists
 
-Liquid LSD includes a dedicated **Library Management System** for organizing visual presets, building live performance playlists, and managing the play queue.
-
----
-
-## Toggling Modes & Resizing
-
-Liquid LSD features flexible workspace dock layouts:
-
-1. **Performance Mode (Default)**: Preset Grid, Cell Config, and Mixer / Monitor panels with the Library docked at the bottom.
-2. **Library View Modes**: Switch between **Half Height**, **Full Height**, and **Hide** via:
-   - **Title Bar Window Controls**: Click `[-]` (Minimize to bottom dock) or `[□]` / `[❐]` (Maximize to Full / Restore to Half) located on the right side of the Library's menu bar.
-   - **Spacebar Quick-Cycle**: Press <kbd>Space</kbd> (when not typing in a search bar or text input) to seamlessly ping-pong cycle through:
-     $$\text{HIDE} \longrightarrow \text{HALF} \longrightarrow \text{FULL} \longrightarrow \text{HALF} \longrightarrow \text{HIDE}$$
-   - **Title Bar Drag-to-Resize**: Click-drag anywhere in the empty area of the Library title/menu bar to smoothly adjust the Library's height. Dragging all the way down collapses it into **Hide** mode. Double-clicking empty space in the title bar snaps the Library back to 50% Half height.
+The Library is your setlist staging ground. Use it to organize presets, build `.lsdset` playlists, audition looks without flashing the live stage, and queue automated transitions.
 
 ---
 
-## Panel Layout in Library Mode
+## Docking, Resizing & Shortcuts
+
+The Library docks along the bottom of the workspace:
+
+* **Cycle View Modes (<kbd>Space</kbd>)**: When not typing in a text field, tap <kbd>Space</kbd> to step through dock sizes:
+  `Hide` $\rightarrow$ `Half Height` $\rightarrow$ `Full Screen` $\rightarrow$ `Half Height` $\rightarrow$ `Hide`
+* **Double-Click Title Bar**: Instantly snaps the Library to 50% split (Half Height).
+* **Window Controls**: Click `[-]` to minimize to the bottom dock, or `[□]` to maximize/restore.
+
+---
+
+## Panel Layout
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
@@ -33,150 +31,86 @@ Liquid LSD features flexible workspace dock layouts:
 
 ---
 
-## Unified Menu Bar Action Toolbar & Quick Audition Latch
+---
 
-Located in the top Library Menu Bar, the action toolbar provides a unified control strip operating on whichever preset is currently selected across all four columns:
+## Action Toolbar & Quick Audition
 
-- **`[ 🔒 ]` Quick Audition Latch**: Toggles sticky audition mode.
-  - When turned **ON**, it automatically latches to **Deck PV** (Preview) by default. Clicking any preset or navigating with **`↑` / `↓` arrow keys** in any column instantly loads the preset into the latched deck for rapid auditioning.
-  - Clicking any deck button (`A`, `B`, `BG`, `PV`) while locked switches the latch target.
-  - Clicking the *currently latched* deck button unlatches it.
-  - Turning the padlock **OFF** clears all latches and restores standard selection mode.
-- **`[ A ]`**: Loads the currently selected preset into Deck A (or latches Deck A when audition mode is armed).
-- **`[ B ]`**: Loads the currently selected preset into Deck B (or latches Deck B when audition mode is armed).
-- **`[ BG ]`**: Loads the currently selected preset into Deck BG / Background (or latches Deck BG when audition mode is armed).
-- **`[ PV ]`**: Previews the currently selected preset in Deck PV / Preview (or latches Deck PV when audition mode is armed).
-- **`[ Q ]`**: Appends the currently selected preset to the A/B Play Queue (automatically dimmed if the selection is already in the A/B Play Queue).
-- **`[ BGQ ]`**: Appends the currently selected preset to the Background Queue (automatically dimmed if the selection is already in the Background Queue).
-- **`[ + ▾ ]`**: Opens a dropdown to create a new blank preset on any deck (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`).
+The top toolbar acts on whatever preset is selected in **any** column:
 
-> [!TIP]
-> Selecting any preset in **any of the 4 columns** (Preset Library, Playlist Editor, A/B Queue, BG Queue) focuses that patch globally across the Library for unambiguous one-click routing.
+* **`[ 🔒 ]` Audition Latch**: Locks a deck for instant previewing.
+  * Latches to **Deck PV** (Preview) by default. When active, clicking presets or scrolling with **`↑` / `↓`** arrows immediately loads them into the audition deck
+  * Click `A`, `B`, or `BG` while locked to change the target deck. Click the active deck again or uncheck `[ 🔒 ]` to return to standard selection mode
+* **`[ A ]` / `[ B ]` / `[ BG ]` / `[ PV ]`**: Send the selected preset to that specific deck.
+* **`[ Q ]` / `[ BGQ ]`**: Add the selected preset to the A/B Queue or Background Queue.
+* **`[ + ▾ ]`**: Create a new blank preset on any deck.
+  
+  ### Global Selection Hotkeys
+  
+  Select any preset in any column and use these quick keys:
+* **`1` / `2` / `3` / `4`**: Route to **Deck A**, **Deck B**, **Deck BG**, or **Deck PV**.
+* **`Q` / `Shift + Q`**: Add to **A/B Queue** or **Background Queue**.
+* **`Ctrl + F` or `/`**: Jump focus directly to preset search (opens Library automatically if hidden).
+* **`Esc`**: Clear search filter and return navigation focus to the table.
+* **`Delete` / `Backspace`**: Remove the preset from the active playlist/queue, or confirm permanent deletion from disk.
 
 ---
 
-## 1. Preset Library (Column 1)
+## 1. Preset Library (All Presets)
 
-The Left column displays the complete pool of all available presets discovered across `library/presets/`.
+The master browser for all presets saved in `library/presets/`.
 
-### Features & Navigation
-- **Search & Tag Filter**: Type into the top search bar to filter presets in real-time by preset name or assigned tags.
-- **Clean List View**: Preset rows display clean typography without cluttered inline buttons.
-- **Offline & Dependency Alert Badges (`[!]`)**: Presets that rely on modulators or features currently offline (e.g., Audio Engine disabled), inactive (e.g., MIDI or Sequencer disabled), or hidden in the Preset Grid display a prominent red `[!]` prefix badge. Hovering the preset row displays a detailed tooltip listing all affected subsystems and hidden columns. Presets are never hidden from the library or blocked from loading.
-- **Double-Click**: Automatically loads the preset into the inactive deck based on crossfader position.
-- **Keyboard Shortcuts**:
-  - `Ctrl + F` / `/`: Focus Preset Search filter bar (automatically opens Library if hidden).
-  - `Esc` (while search is focused): Clears search query and returns focus to the preset table.
-  - `↑` / `↓` Arrows: Navigate through presets across columns (auto-loading to the latched deck if Audition Lock `[🔒]` is armed) without focus interruption.
-  - `1`: Load selected preset into **Deck A**.
-  - `2`: Load selected preset into **Deck B**.
-  - `3`: Load selected preset into **Deck BG** (Background).
-  - `4`: Preview selected preset on **Deck PV** (Preview).
-  - `Q`: Append selected preset to **A/B Play Queue**.
-  - `Shift + Q`: Append selected preset to **Background Queue (BG)**.
-  - `Delete` / `Backspace`: Delete selected preset from your library (with permanent deletion confirmation).
-- **Context Menu Actions (Right-Click & Vertical Kebab `⋮` Button)**:
-  - **Quick Affordance**: Hovering over any preset row, selecting it with arrow keys, or having its menu open displays a vertical kebab button (`⋮`) on the right edge of the row. Left-clicking `⋮` or right-clicking anywhere on the row brings up the context actions menu:
-    - **Load to Deck A / B / BG / PV**: Instant deck routing.
-    - **Add to A/B Queue / Background Queue**: Fast queue assignment.
-    - **Add to '{Active Playlist}'**: Appends the preset directly into the currently selected playlist.
-    - **Rename / Edit Tags… (`F2`)**: Opens the metadata modal to edit filename and tags.
-    - **Duplicate Preset…**: Opens the metadata modal pre-populated with `<name>_copy`.
-    - **Delete**: Permanently deletes the preset from disk with a confirmation modal.
+* **Smart Search**: Filter instantly by name or tag.
+* **Double-Click**: Automatically loads the preset into whichever deck is currently inactive on the crossfader.
+* **Dependency Warning (`[!]`)**: Presets appear with a red `[!]` badge if they depend on an offline subsystem (like disabled MIDI or audio engines). Hover the badge to inspect missing components; presets can still be loaded normally
+* **Context Menu (Right-Click or `⋮`)**: Rename, add tags (`F2`), duplicate (`<name>_copy`), append to queues, or permanently delete.
 
 ---
 
-## 2. Playlist Editor (Column 2)
+## 2. Playlist Editor (Setlists)
 
-The Middle column allows inspecting and arranging setlists side-by-side with your preset library.
+Create and manage custom `.lsdset` setlists side-by-side with your preset pool.
 
-### Header & Playlist Switcher
-- **Playlist Dropdown Combo**: Click to instantly switch the active playlist from all discovered `.lsdset` files.
-- **`[ + ]` Create New Playlist**: Prompts for a playlist name and creates a new empty setlist file.
-- **`[ ••• ]` Playlist Actions Menu**:
-  - **A/B Play Queue Actions**:
-    - **Play now in A/B Queue (and replace queue)**: Loads and starts Auto-VJ playback of the entire playlist in the A/B queue.
-    - **Insert into A/B Queue after current**: Inserts all playlist presets into the live A/B queue after the current track.
-    - **Add to the bottom of A/B Queue**: Appends the playlist to the end of the A/B queue.
-  - **Background Queue Actions**:
-    - **Play now in BG Queue (and replace queue)**: Loads and starts Auto-BG playback of the entire playlist in the Background queue.
-    - **Insert into BG Queue after current**: Inserts all playlist presets into the live Background queue after the current track.
-    - **Add to the bottom of BG Queue**: Appends the playlist to the end of the Background queue.
-  - **File Operations**:
-    - **Rename...**: Renames the active playlist file on disk.
-    - **Clone**: Duplicates the active playlist as `<name>_copy.lsdset`.
-    - **Delete**: Permanently removes the playlist file.
-
-### Playlist Preset Rows & Auto-Save
-- **Auto-Save on Edit**: Any modification (adding presets, dragging to reorder, or removing items) automatically saves to disk.
-- **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the playlist and press `Delete` or `Backspace` to remove it from the playlist.
-- **Drag Reordering**: Drag items up and down with mint-green insertion line feedback.
-- **Item Context Menu (Right-Click)**:
-  - **Load to Deck A / B / BG / PV**: Routes the preset to the specified deck.
-  - **Add to A/B Queue / Background Queue**: Appends the preset to either queue.
-  - **Remove from playlist**: Removes the preset from the playlist.
-  - **Delete preset from library...**: Permanently deletes the preset file from your library.
+* **Switch Setlists**: Select any playlist from the top dropdown.
+* **Menu Actions (`•••`)**:
+  * **Play Now**: Replace the current live queue with this playlist and trigger playback immediately.
+  * **Insert After Current**: Slide the playlist into the live queue right after the active preset.
+  * **Add to Bottom**: Append the playlist to the end of the queue.
+* **Reorder & Auto-Save**: Drag and drop presets up and down with mint-green insertion feedback. Every change auto-saves to disk immediately
 
 ---
 
-## 3. Background Queue (Column 3)
+## 3. Background Queue (Deck BG)
 
-The 3rd column manages automated cycling and sequential playback for the dedicated background layer (`Deck BG`).
+Dedicated sequencing for the background layer (`Deck BG`).
 
-- **Transport Controls**:
-  - `[ < ]`: Trigger previous preset in Background Queue.
-  - `[ ▶ ]` / `[ ⏸ ]`: Transport play/pause toggle. Starts or pauses Auto-BG cycling through background presets with smooth dip-to-black transitions.
-  - `[ > ]`: Trigger next preset in Background Queue.
-- **Controls Row**:
-  - **`[ 🔁 ]` Repeat**: Continuously loops playback back to the start when the end of the queue is reached.
-  - **`[ 🔀 ]` Shuffle**: Plays presets in randomized order (mint-green highlight when active, standard theme grey when inactive).
-  - **`[ Export ]`**: Saves current background queue sequence as a new `.lsdset` playlist.
-  - **`[ Clear ]`**: Empties the background queue.
-- **Double-Click & Right-Click Play**: Trigger instant cuts or dip-to-black transitions on demand.
-- **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
-  - **Play (Dip to Black) / Play (Instant Cut)**: Triggers playback with or without dip-to-black fade.
-  - **Load to Deck A / B / PV**: Routes the background preset to other decks.
-  - **Add to A/B Queue**: Routes the background preset over to the live A/B play queue.
-  - **Remove from BG queue**: Removes the preset from the background queue.
-  - **Delete preset from library...**: Permanently deletes the preset file.
+* **Transport (`<`, `▶`/`⏸`, `>`)**: Step through presets or trigger continuous Auto-BG playback with dip-to-black fades.
+* **Repeat (`🔁`) & Shuffle (`🔀`)**: Loop the queue indefinitely or randomize playback order.
+* **Export**: Save the current background sequence as an `.lsdset` playlist.
+* **Instant Cuts vs. Fades**: Double-click or right-click to choose between an immediate cut or a smooth dip to black.
 
 ---
 
-## 4. A/B Play Queue (Column 4)
+## 4. A/B Play Queue (Live Auto-VJ)
 
-The 4th column displays the live sequence of presets for main A/B deck Auto-VJ and playback.
+The live playback sequence driving the main crossfader and stage output[cite: 3, 5].
 
-- **Transport Controls**:
-  - `[ < ]`: Trigger previous preset in Play Queue.
-  - `[ ▶ ]` / `[ ⏸ ]`: Transport play/pause toggle. Starts or pauses Auto-VJ automated cycling through queue presets at configured crossfade intervals.
-  - `[ > ]`: Trigger next preset in Play Queue.
-- **Controls Row**:
-  - **`[ 🔁 ]` Repeat**: Continuously loops playback back to the start when the end of the queue is reached.
-  - **`[ 🔀 ]` Shuffle**: Plays presets in randomized order (mint-green highlight when active, standard theme grey when inactive).
-  - **`[ Export ]`**: Saves current play queue sequence as a new `.lsdset` playlist.
-  - **`[ Clear ]`**: Empties the play queue.
-- **Item Context Menu (Right-Click & Vertical Kebab `⋮` Button)**:
-  - **Load to Deck A / B / BG / PV**: Instantly loads the queued preset to any deck.
-  - **Add to Background Queue**: Routes the queued preset over to the Background queue.
-  - **Remove from queue**: Removes the preset from the active queue.
-  - **Delete preset from library...**: Permanently deletes the preset file.
-- **Keyboard Shortcut (`Delete` / `Backspace`)**: Select an item in the play queue and press `Delete` or `Backspace` to remove it from the queue.
+* **Auto-VJ Transport (`<`, `▶`/`⏸`, `>`)**: Plays through the queue sequentially, triggering automated transitions between Deck A and Deck B at your configured timing intervals[cite: 3, 5].
+* **Loop & Shuffle**: Set continuous loop playback (`🔁`) or non-repeating shuffle (`🔀`).
+* **Export**: Save an improvised live queue as a permanent playlist file.
 
 ---
 
-## 5. Drag-and-Drop Matrix
+## Drag-and-Drop Staging
 
-| Dragged Item | Target Destination | Resulting Action |
-|---|---|---|
-| **Preset from Left Column** | Between presets in Playlist Editor | Inserts preset at hovered slot with mint-green guideline |
-| **Preset from Left Column** | Empty playlist area / bottom | Appends preset to the end of the playlist |
-| **Preset within playlist** | Reorder within active playlist | Reorders preset sequence |
-| **Preset from Left Column** | Queue panel | Adds preset to live queue |
+| From                          | To                             | Result                                        |
+|:----------------------------- |:------------------------------ |:--------------------------------------------- |
+| **Preset Library**            | Between items in Playlist      | Inserts at hovered position (mint-green line) |
+| **Preset Library**            | Empty space at playlist bottom | Appends to the end of the playlist            |
+| **Playlist Item**             | Up / Down within Playlist      | Reorders the setlist                          |
+| **Preset Library / Playlist** | A/B or BG Queue                | Adds preset to live playback queue            |
 
 ---
 
-## 4. Handling Missing Items
+## Missing Items
 
-If a playlist references a preset file that was moved or deleted from disk:
-- The preset row appears in **red** with `[!] (missing)`.
-- Right-click the missing row to remove the reference.
+If an `.lsdset` references a preset that was renamed, moved, or deleted from disk, the row displays in red with **`[!] (missing)`**. Right-click the row to prune the dead link from the playlist

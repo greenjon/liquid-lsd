@@ -36,7 +36,10 @@ object ShaderPickerPopup {
     private val filteredItems = mutableListOf<ShaderItem>()
     private val categories = mutableListOf<String>()
 
-    data class ShaderItem(val id: String, val displayName: String, val categories: List<String>, val type: String)
+    data class ShaderItem(val id: String, val displayName: String, val categories: List<String>, val type: String) {
+        // Pre-joined at construction time — zero allocation when the table row renders
+        val categoriesLabel: String = categories.joinToString(", ")
+    }
 
     /**
      * Request the picker to open.
@@ -151,8 +154,10 @@ object ShaderPickerPopup {
 
             // ── Category Pills Row ──
             ImGui.beginChild("##categories_pills", 0f, 40f, false, ImGuiWindowFlags.HorizontalScrollbar)
-            // Use a copy to avoid ConcurrentModificationException when updateItems() is called
-            categories.toList().forEach { cat ->
+            // categories is only mutated by updateItems() which runs on this same ImGui thread —
+            // no defensive copy needed (no ConcurrentModificationException risk).
+            for (i in 0 until categories.size) {
+                val cat = categories[i]
                 val isSelected = cat == selectedCategory
                 if (isSelected) {
                     ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
@@ -202,10 +207,10 @@ object ShaderPickerPopup {
                          ImGui.closeCurrentPopup()
                     }
                     
-                    // Col 1: Categories
+                    // Col 1: Categories (pre-joined at updateItems() time, zero allocation here)
                     ImGui.tableSetColumnIndex(1)
                     session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                        ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categories.joinToString(", "))
+                        ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categoriesLabel)
                     }
 
                     // Col 2: Action Button

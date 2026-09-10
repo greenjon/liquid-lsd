@@ -140,25 +140,56 @@ class PipeWireBridge {
         }
     }
 
+    // ── Lock-free frame hand-off from GL thread → PipeWire thread ──────────────────────────────
+    // The GL thread deposits a reference here via publishFrameBuffer(); the PW event loop thread
+    // picks it up in the next process() callback without either thread blocking the other.
+    // AtomicReference provides the required visibility guarantee without any mutex.
+    private val pendingFrame = java.util.concurrent.atomic.AtomicReference<ByteBuffer?>(null)
+
     /**
-     * Publishes an RGBA image buffer (CPU or mapped memory) into the PipeWire video stream.
+     * Called from the GL render thread once per frame to hand a new RGBA image to PipeWire.
+     *
+     * **RT-safe for the GL thread**: deposits the buffer reference atomically and returns immediately
+     * — no pw_thread_loop_lock, no blocking, no allocation.  The PipeWire event-loop thread picks
+     * up the pending buffer in its next process() invocation and performs the actual copy + queue.
      */
     fun publishFrameBuffer(buffer: ByteBuffer, width: Int, height: Int) {
+        if (!active || stream == null) return
+        // Overwrite any frame we haven't consumed yet (drop oldest, keep newest)
+        pendingFrame.set(buffer)
+    }
+
+    /**
+     * Called from inside the PipeWire event-loop thread (process callback or a periodic poller).
+     * Drains [pendingFrame] and pushes data into the PipeWire stream.
+     * Must NOT be called from the GL thread.
+     */
+    fun drainPendingFrame() {
         val lib = pw ?: return
-        val st = stream ?: return
-        val loop = threadLoop ?: return
-        if (!active) return
+        val st  = stream ?: return
+        val buf = pendingFrame.getAndSet(null) ?: return
 
         try {
-            lib.pw_thread_loop_lock(loop)
-            val pwBuf = lib.pw_stream_dequeue_buffer(st)
-            if (pwBuf != null) {
+            val pwBuf = lib.pw_stream_dequeue_buffer(st) ?: return
+            try {
+                // Resolve the spa_buffer data pointer and copy pixel data into it
+                val spaBufPtr = pwBuf.getPointer(0)
+                if (spaBufPtr != null) {
+                    val datasPtr = spaBufPtr.getPointer(8)
+                    if (datasPtr != null) {
+                        val dataPtr = datasPtr.getPointer(0) // spa_data.data pointer
+                        if (dataPtr != null) {
+                            val remaining = buf.remaining()
+                            val dest = dataPtr.getByteBuffer(0, remaining.toLong())
+                            dest.put(buf.asReadOnlyBuffer())
+                        }
+                    }
+                }
+            } finally {
                 lib.pw_stream_queue_buffer(st, pwBuf)
             }
         } catch (e: Throwable) {
-            logger.debug { "Error publishing frame buffer to PipeWire stream '$streamName': ${e.message}" }
-        } finally {
-            lib.pw_thread_loop_unlock(loop)
+            logger.debug { "Error draining pending frame to PipeWire stream '$streamName': ${e.message}" }
         }
     }
 

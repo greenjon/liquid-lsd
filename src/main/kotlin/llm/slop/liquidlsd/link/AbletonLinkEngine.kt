@@ -116,11 +116,20 @@ object AbletonLinkEngine {
     /**
      * Frame/block tick called when ClockSource == ABLETON_LINK.
      * Synchronizes beat time and tempo directly with CVRegistry.
+     *
+     * Uses a **single** [timeNs] snapshot for both [getTempo] and [getBeatAtTime] queries so that
+     * tempo and beat are always coherent with each other (Link capture-and-commit pattern).
+     * Also drains any log messages deferred from the RT audio path.
      */
     fun updateClockAnchor(timeNs: Long = System.nanoTime()) {
         if (!isEnabled) return
+        // Drain log messages deposited by the audio-thread damping filter
+        // (this runs on the render/GL thread — safe to log here)
+        llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.drainPendingLog()
+
         val timeUs = timeNs / 1000
-        val bpm = activeBackend.getTempo().toFloat()
+        // Single atomic snapshot: both values derived from the same timeUs to stay phase-coherent
+        val bpm  = activeBackend.getTempo().toFloat()
         val beat = activeBackend.getBeatAtTime(timeUs, quantum)
 
         CVRegistry.updateBeatAnchor(beat, bpm, timeNs)

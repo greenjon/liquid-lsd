@@ -12,9 +12,9 @@ class UpdateCheckerTest {
     fun testParseReleaseJson() {
         val sampleJson = """
             {
-              "tag_name": "v1.0.0-beta.42",
-              "name": "v1.0.0-beta.42 - New Audio Filters",
-              "html_url": "https://github.com/greenjon/liquid-lsd/releases/tag/v1.0.0-beta.42",
+              "tag_name": "v0.9.2",
+              "name": "v0.9.2 - New Audio Filters",
+              "html_url": "https://github.com/greenjon/liquid-lsd/releases/tag/v0.9.2",
               "body": "### Highlights\n- Fixed audio filter curves\n- Added update checker",
               "published_at": "2026-09-06T20:00:00Z"
             }
@@ -22,9 +22,9 @@ class UpdateCheckerTest {
 
         val release = UpdateChecker.parseReleaseJson(sampleJson)
         assertNotNull(release)
-        assertEquals("v1.0.0-beta.42", release.tagName)
-        assertEquals("v1.0.0-beta.42 - New Audio Filters", release.name)
-        assertEquals("https://github.com/greenjon/liquid-lsd/releases/tag/v1.0.0-beta.42", release.htmlUrl)
+        assertEquals("v0.9.2", release.tagName)
+        assertEquals("v0.9.2 - New Audio Filters", release.name)
+        assertEquals("https://github.com/greenjon/liquid-lsd/releases/tag/v0.9.2", release.htmlUrl)
         assertTrue(release.body.contains("Fixed audio filter curves"))
         assertEquals("2026-09-06T20:00:00Z", release.publishedAt)
     }
@@ -37,27 +37,27 @@ class UpdateCheckerTest {
 
     @Test
     fun testVersionComparisonLogic() {
-        val currentVer = "1.0.0-beta.41"
+        val currentVer = "0.9.1"
         val currentSemVer = SemVer.parse(currentVer)
 
         val newerRelease = ReleaseInfo(
-            tagName = "v1.0.0-beta.42",
-            htmlUrl = "https://github.com/greenjon/liquid-lsd/releases/tag/v1.0.0-beta.42",
-            name = "v1.0.0-beta.42",
+            tagName = "v0.9.2",
+            htmlUrl = "https://github.com/greenjon/liquid-lsd/releases/tag/v0.9.2",
+            name = "v0.9.2",
             body = "",
             publishedAt = ""
         )
         val newerSemVer = SemVer.parse(newerRelease.tagName)
-        assertTrue(newerSemVer > currentSemVer, "beta.42 should be detected as an update over beta.41")
+        assertTrue(newerSemVer > currentSemVer, "v0.9.2 should be detected as an update over v0.9.1")
 
         val olderRelease = ReleaseInfo(
-            tagName = "v1.0.0-beta.40",
-            htmlUrl = "https://github.com/greenjon/liquid-lsd/releases/tag/v1.0.0-beta.40",
-            name = "v1.0.0-beta.40",
+            tagName = "v0.9.0",
+            htmlUrl = "https://github.com/greenjon/liquid-lsd/releases/tag/v0.9.0",
+            name = "v0.9.0",
             body = "",
             publishedAt = ""
         )
         val olderSemVer = SemVer.parse(olderRelease.tagName)
-        assertTrue(olderSemVer < currentSemVer, "beta.40 should not be detected as an update over beta.41")
+        assertTrue(olderSemVer < currentSemVer, "v0.9.0 should not be detected as an update over v0.9.1")
     }
 }

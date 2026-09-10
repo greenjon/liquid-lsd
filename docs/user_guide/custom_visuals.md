@@ -1,165 +1,62 @@
-# Custom Visual Sources & Shaders
+# Custom Shaders (ISF) & External Video
 
-Liquid LSD is designed for extensibility. Beyond its built-in procedural visual generators (Mandalas, Gyroids, Chladni, Dynamic Spiral, Attractor Feedback, Icosa-Dodeca, Icosahedron 32-Stellation, Hyper-Mesh, Hyper-Slice), you can easily build, install, and share custom dynamic GLSL visual sources.
-
----
-
-## Installing a Custom Visual Source
-
-1. Open the `library/sources/` directory inside your Liquid LSD installation folder.
-2. Create a new subfolder (e.g. `library/sources/my_cool_shader/`).
-3. Place your `meta.json` manifest and `shader.frag` file into this folder.
-4. Launch Liquid LSD.
-
-The application automatically scans `library/sources/` on startup, compiles new shaders against the shared vertex pipeline, generates UI sliders for parameters, and adds the source to the Deck Source selector.
+Liquid LSD uses the open-standard **Interactive Shader Format (ISF v2.0)** for custom visual generators, filter effects, and crossfade transitions[cite: 3, 4]. Any standard ISF shader from platforms like [editor.isf.video](https://editor.isf.video) will load directly into the application with automatic UI controls and CV modulation[cite: 3, 4].
 
 ---
 
-## Creating Custom Visual Sources
+## 1. Adding ISF Shaders
 
-A custom visual source subfolder requires two files:
-1. `meta.json` (defines UI controls, parameters, and descriptions)
-2. `[shader_name].frag` (standard GLSL 330 core fragment shader)
+To add shaders, drop `.fs` (fragment) or `.vs` (vertex) files into the appropriate library directory[cite: 4]:
 
-### The `meta.json` Manifest Format
+* **Visual Generators**: Drop into `library/sources/` (or your OS user ISF directory)[cite: 4]. These appear in the Deck **Source** picker[cite: 3, 4].
+* **Post-Processing Filters**: Drop into `library/filters/`[cite: 4]. These appear in the Deck **FX Slot 1** and **FX Slot 2** menus[cite: 3].
+* **Mixer Transitions**: Drop into `library/transitions/`[cite: 3, 4]. These register in the **Master Mixer** crossfader menu[cite: 3].
 
-The manifest file defines the shader metadata, UI parameters, and optional documentation strings:
-
-```json
-{
-  "id": "pulsing_circle",
-  "name": "Pulsing Circle",
-  "description": "Generates a glowing, pulse-modulated vector circle.",
-  "parameters": [
-    {
-      "name": "Radius",
-      "default": 0.5,
-      "min": 0.1,
-      "max": 2.0,
-      "description": "Base radius of the generated circle."
-    },
-    {
-      "name": "Glow Intensity",
-      "default": 0.8,
-      "min": 0.0,
-      "max": 5.0,
-      "description": "Multiplicative brightness and falloff glow depth."
-    }
-  ]
-}
-```
-
-#### Manifest Fields
-- **`id`**: Unique string identifier; must match the `.frag` filename (e.g. `pulsing_circle.frag`).
-- **`name`**: Human-readable source title shown in UI dropdowns.
-- **`description`** *(Optional)*: Engine description surfaced in UI tooltips and hover popups.
-- **`parameters`**: Array of modulatable parameter descriptors:
-  - `name`: Parameter title.
-  - `default`, `min`, `max`: Parameter range bounds.
-  - `description` *(Optional)*: Parameter documentation string displayed in the Preset Grid hover tooltip.
-
-> [!TIP]
-> **Automatic View Subgrouping**  
-> If you name specific parameters using standard spatial names (`Zoom`, `Rotate X`, `Rotate Y`, `Rotate Z`, `Cam Rotate X`, `Cam Rotate Y`, `Cam Rotate Z`, `Scale`, `Scale X`, `Scale Y`, `Scale Z`), Liquid LSD will automatically group them inside the standardized **View** UI collapsible subgroup.
+Liquid LSD automatically parses the ISF JSON header inside the shader file, sets up your parameter sliders in the Cell Config panel, and exposes them to the CV modulation matrix[cite: 3, 4].
 
 ---
 
-## The Fragment Shader (`.frag`)
+## 2. Live Coding & Hot-Reloading
 
-Shaders are written in GLSL version `330 core`.
+You can write or tweak shaders live during a performance without restarting the app[cite: 4]:
 
-### Built-in Injected Uniforms
-Liquid LSD automatically injects core rendering uniforms:
-- `uniform float uTime;` — Time in seconds since application launch.
-- `uniform vec2 uResolution;` — Target rendering viewport width and height in pixels.
-- `uniform float uAlpha;` — Deck master gain / opacity setting (`0.0` to `1.0`).
-
-### Parameter Uniform Mapping
-Every parameter defined in `meta.json` is automatically injected as a `uniform float`. Parameter names are converted by removing spaces and prefixing with `u` (e.g., `"Glow Intensity"` $\rightarrow$ `uniform float uGlowIntensity;`).
-
-### Shader Example (`pulsing_circle.frag`)
-
-```glsl
-#version 330 core
-
-out vec4 FragColor;
-
-// Built-in Injected Uniforms
-uniform float uTime;
-uniform vec2 uResolution;
-uniform float uAlpha;
-
-// Parameter Uniforms (from meta.json)
-uniform float uRadius;
-uniform float uGlowIntensity;
-
-void main() {
-    // Normalize UV coordinates (-1 to 1)
-    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
-
-    // Distance from center
-    float dist = length(uv);
-
-    // Apply radius parameter with time pulse
-    float currentRadius = uRadius + sin(uTime * 2.0) * 0.1;
-    float circle = smoothstep(currentRadius, currentRadius - 0.02, dist);
-
-    // Apply glow intensity
-    vec3 color = vec3(0.2, 0.5, 1.0) * circle * uGlowIntensity;
-
-    // Output final color (always multiply by uAlpha for Deck gain control!)
-    FragColor = vec4(color, uAlpha * circle);
-}
-```
+* **Instant Hot-Reload**: Saving changes to any `.fs` or `.vs` file in an active directory triggers an immediate background compile[cite: 4].
+* **Crash-Proof Sandbox**: Shaders are validated in an isolated compilation check before swapping into the live engine[cite: 4]. If your GLSL has syntax errors, Liquid LSD keeps the existing frame running smoothly on stage—no dropped frames, black screens, or UI lockups[cite: 4].
+* **Save Debouncing**: An automatic 250ms debounce prevents mid-save write collisions from external code editors[cite: 4].
 
 ---
 
-## Creator Best Practices
+## 3. External Video Ingest (Spout, Syphon & PipeWire)
 
-1. **Always Multiply by `uAlpha`**: Ensure `FragColor` final alpha or RGB output is scaled by `uAlpha`.
-2. **Handle Extreme Parameter Bounds**: Test parameters against extreme min/max values (via Random or LFO modulators) to verify shader stability.
-3. **Hot Shader Reloading**: Modify `.frag` or `meta.json` files and restart the app to see immediate updates.
+Liquid LSD can receive live video streams from external VJ suites, media servers, capture cards, or creative coding rigs (TouchDesigner, Resolume, OBS, notch)[cite: 4]:
 
----
-
-## External Live Video Ingest (Spout, Syphon & PipeWire)
-
-In addition to procedural GLSL shaders, Liquid LSD can ingest live video feeds from third-party applications (OBS, Resolume, TouchDesigner, webcams, capture cards, media players):
-
-1. In the Deck **SRC** tab, select **External Video** from the Visual Source dropdown.
-2. In the **Server** dropdown combo box, pick any active Spout2 sender (Windows), Syphon server (macOS), or PipeWire video stream (Linux) discovered on your local system.
-3. The live video stream routes directly into the Deck pipeline, allowing full 2D/3D transformations (zoom, rotation, tri-planar/tetrahedral projection), audio-reactive feedback loops, and dual ISF post-processing effects.
+1. In the target Deck's **SRC** tab, set the Visual Source to **External Video**[cite: 4].
+2. Open the **Server** dropdown and pick your stream[cite: 4]:
+   
+   * **macOS**: Syphon servers[cite: 4].
+   
+   * **Windows**: Spout2 senders[cite: 4].
+   
+   * **Linux**: PipeWire video nodes[cite: 4].
+3. The incoming feed routes directly through the deck pipeline—giving you full access to 3D transformations, dual ISF post-effects, and audio-reactive feedback loops[cite: 4].
 
 ---
 
-## ISF Library Management & Shader Locations
+## 4. Managing Shader Directories
 
-Liquid LSD features a professional, Mixxx-style library management system for Interactive Shader Format (ISF v2.0) generators, single/multi-pass filters, and crossfader transition shaders.
+Liquid LSD scans standard system directories on startup, but you can also mount external drives or custom git repos[cite: 4].
 
-### Default Platform Search Paths
-On initial app launch, Liquid LSD automatically checks standard platform locations for ISF assets:
-- **macOS**:
-  - System: `/Library/Graphics/ISF/`
-  - User: `~/Library/Graphics/ISF/`
-- **Windows**:
-  - System: `C:\ProgramData\ISF/`
-  - User: `%LOCALAPPDATA%\ISF/`
-- **Linux**:
-  - System: `/usr/share/isf/` and `/usr/local/share/isf/`
-  - User: `~/.local/share/isf/` (respecting `$XDG_DATA_HOME/isf/`)
-- **Built-In**:
-  - Internal application asset directories (`library/sources`, `library/filters`, `library/transitions`).
+### Standard Search Paths
 
-### Shader Locations Preferences Pane
-You can manage search directories at runtime via the **Settings Panel -> Shader Locations** pane:
-- **Origin Badges**: Distinguishes between `Built-in`, `System`, `User`, and `Custom` directory sources.
-- **Toggles**: Enable or disable specific directories without deleting them from configuration.
-- **Drive Status Indicators**: Real-time health monitoring (`Active` [green], `Missing` [yellow/orange warning for unplugged external SSDs], `Unreadable` [red]).
-- **Add & Remove Folders**: Add arbitrary local directories via folder path input and remove custom folders. Built-in system directories are protected.
-- **Rescan Now**: Force an immediate re-scan of all enabled directories.
+* **macOS**: `/Library/Graphics/ISF/` and `~/Library/Graphics/ISF/`[cite: 4]
+* **Windows**: `C:\ProgramData\ISF\` and `%LOCALAPPDATA%\ISF\`[cite: 4]
+* **Linux**: `/usr/share/isf/`, `/usr/local/share/isf/`, and `~/.local/share/isf/`[cite: 4]
+* **Bundled Assets**: `library/sources/`, `library/filters/`, and `library/transitions/`[cite: 4]
 
-### Live File Monitoring & Hot-Reloading
-Liquid LSD continuously monitors active ISF directories using Java NIO `WatchService`. When `.fs`, `.isf`, `.frag`, or `.vs`/`.vert` files are created, modified, or deleted:
-- A 250ms debounce mechanism prevents compilation mid-write during external editor saves.
-- Shaders are validated in an isolated compilation check before swapping live pointers, guaranteeing zero UI thread crashes or rendering dropouts.
+### Custom Paths & Drive Health
 
+Open **Settings -> Shader Locations** to manage folders at runtime[cite: 4]:
+
+* **Origin Badges**: Easily distinguish between `Built-in`, `System`, `User`, and `Custom` directories[cite: 4].
+* **Drive Health Indicators**: Displays folder status in real time (**Active** [green], **Missing** [orange warning for unmounted USB/SSDs], or **Unreadable** [red])[cite: 4].
+* **Rescan Now**: Instantly re-indexes all enabled folders without restarting the workstation[cite: 4].

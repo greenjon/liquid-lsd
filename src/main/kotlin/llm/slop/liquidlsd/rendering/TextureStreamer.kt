@@ -109,31 +109,33 @@ class SyphonBridge {
         // but Syphon objects usually handle their own lifecycle via stop.
     }
 
+    // Named JNA Structures for Syphon's publishFrameTexture — reused across frames, zero per-frame allocation.
+    // NSSize and NSRect fields are Double (CGFloat = double on all modern Apple platforms).
+    class NSSize : com.sun.jna.Structure() {
+        @JvmField var width:  Double = 0.0
+        @JvmField var height: Double = 0.0
+        override fun getFieldOrder() = listOf("width", "height")
+    }
+    class NSRect : com.sun.jna.Structure() {
+        @JvmField var x:      Double = 0.0
+        @JvmField var y:      Double = 0.0
+        @JvmField var width:  Double = 0.0
+        @JvmField var height: Double = 0.0
+        override fun getFieldOrder() = listOf("x", "y", "width", "height")
+    }
+
+    private val publishSize = NSSize()
+    private val publishRect = NSRect()
+
     fun publishTexture(serverPtr: Pointer, textureId: Int, w: Int, h: Int) {
         val selPublish = objc.sel_registerName("publishFrameTexture:textureTarget:imageRegion:textureDimensions:flipped:")
         
-        // imageRegion and textureDimensions are NSRect and NSSize (structs).
-        // JNA can handle structs, but for "full screen" blits Syphon often allows simple params.
-        // However, the selector expects the full signature.
-        
-        // Structure for NSSize { width, height }
-        val size = object : com.sun.jna.Structure() {
-            @JvmField var width: Double = w.toDouble()
-            @JvmField var height: Double = h.toDouble()
-            override fun getFieldOrder() = listOf("width", "height")
-        }
-        
-        // Structure for NSRect { origin: {x,y}, size: {w,h} }
-        val rect = object : com.sun.jna.Structure() {
-            @JvmField var x: Double = 0.0
-            @JvmField var y: Double = 0.0
-            @JvmField var width: Double = w.toDouble()
-            @JvmField var height: Double = h.toDouble()
-            override fun getFieldOrder() = listOf("x", "y", "width", "height")
-        }
+        // Reuse pre-allocated structures; only update the dimension fields
+        publishSize.width  = w.toDouble(); publishSize.height = h.toDouble()
+        publishRect.x = 0.0; publishRect.y = 0.0; publishRect.width = w.toDouble(); publishRect.height = h.toDouble()
 
         // Texture target GL_TEXTURE_2D = 0x0DE1
-        objc.objc_msgSend(serverPtr, selPublish, textureId, 0x0DE1, rect, size, false)
+        objc.objc_msgSend(serverPtr, selPublish, textureId, 0x0DE1, publishRect, publishSize, false)
     }
 
     // --- Client / Receiver ---

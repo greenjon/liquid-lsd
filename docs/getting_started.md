@@ -1,74 +1,83 @@
 # Getting Started
 
-This guide walks you through system prerequisites, compilation, packaging, and the initial launch steps for Liquid LSD across supported operating systems.
+Liquid LSD comes pre-packaged with its own embedded runtime and shader libraries. No external Java installation or system dependencies are required.
+
+> **Building from source?** If you are compiling or hacking on the Kotlin/OpenGL codebase directly, see the repository README for Gradle build instructions.
 
 ---
 
-## System Prerequisites
+## 1. Installation & Launch
 
-Liquid LSD is built on Kotlin/JVM and OpenGL 3.3. It runs natively on Linux (x86_64 & ARM64), macOS (Intel & Apple Silicon), and Windows (x64).
+Download the archive for your operating system and CPU architecture, unzip it, and launch:
 
-### Java Development Kit (JDK)
-- **JDK 17 or higher** is required on all platforms.
-  - **Linux**: Install via package manager (Ubuntu/Debian: `sudo apt install openjdk-17-jdk`, Fedora: `sudo dnf install java-17-openjdk-devel`).
-  - **macOS**: Recommended Azul Zulu JDK via Homebrew (`brew install --cask zulu17`).
-  - **Windows**: Install Azul Zulu or Eclipse Temurin JDK 17+ installer.
+* **macOS (Apple Silicon / M-Series)**: 
+  Double-click `run-mac-arm.command`.
+* **macOS (Intel)**: 
+  Double-click `run-mac-intel.command`.
+  *(Note: If macOS displays a Gatekeeper warning on first launch, right-click the script and select **Open**).*
+* **Windows (x64)**: 
+  Double-click `run-windows.bat`.
+* **Linux (x64 / ARM64)**: 
+  Open a terminal inside the folder and run:
+  ```bash
+  ./run-linux.sh
 
-### Audio Architecture
-- **Linux (Recommended)**: PipeWire with `pipewire-jack` or native JACK2 server for ultra-low latency audio analysis and inter-app routing.
-- **Cross-Platform Fallback (macOS, Windows, JACK-less Linux)**: Works out-of-the-box using system audio capture via `JavaSoundClient`. No external audio daemons or complex routing required!
+Seeing the actual directory structures clarifies the whole distribution model: you bundle a private `jre/`, which means **users don't even need to install Java (JDK 17)**. The launcher scripts handle the ZGC and platform-specific flags (`-XstartOnFirstThread`, etc.) automatically.
+
+Here is the revised, accurate **`getting_started.md`** matching the release archives:
+
+Markdown
+
+```
+# Getting Started
+
+Liquid LSD comes pre-packaged with its own embedded runtime and shader libraries. No external Java installation or system dependencies are required.
+
+> **Building from source?** If you are compiling or hacking on the Kotlin/OpenGL codebase directly, see the repository README for Gradle build instructions.
 
 ---
 
-## Build & Run Instructions
+## 1. Installation & Launch
 
-Liquid LSD uses Gradle as its build system with a bundled wrapper (`gradlew` or `gradlew.bat`).
+Download the archive for your operating system and CPU architecture, unzip it, and launch:
 
-### Compiling Source Code
-To check for syntax and type-check Kotlin sources without launching the GUI:
-```bash
-./gradlew compileKotlin
+* **macOS (Apple Silicon / M-Series)**: 
+  Double-click `run-mac-arm.command`.
+* **macOS (Intel)**: 
+  Double-click `run-mac-intel.command`.
+  *(Note: If macOS displays a Gatekeeper warning on first launch, right-click the script and select **Open**).*
+* **Windows (x64)**: 
+  Double-click `run-windows.bat`.
+* **Linux (x64 / ARM64)**: 
+  Open a terminal inside the folder and run:
+  ```bash  ./run-linux.sh
 ```
 
-### Running in Development Mode
-Launch the workstation directly from source:
-```bash
-./gradlew run
-```
-*(On Windows: `.\gradlew.bat run`). If Gradle daemon socket warnings occur, add `--no-daemon`.*
+*(Optional: Run `./install-desktop.sh` to add Liquid LSD directly to your desktop environment's application menu).*
 
-### Packaging Standalone Fat JAR
-To package the executable JAR with all cross-platform native library binaries (LWJGL OpenGL/GLFW, JNAJack, ImGui wrappers):
-```bash
-./gradlew shadowJar
-```
-The resulting fat JAR is output to:
-```
-build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
-```
+## 2. Audio Routing
 
-Launch the packaged JAR with low-latency ZGC flags:
-```bash
-# Linux / Windows:
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+Liquid LSD drives visual parameters and generative shaders via real-time audio analysis. Ensure audio is routed into the app before you perform:
 
-# macOS (requires -XstartOnFirstThread for GLFW Cocoa main thread event loop):
-java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+- **macOS & Windows**: Out-of-the-box system capture. The app automatically hooks into your operating system's default input device. Start playback or select your interface/virtual loopback device in OS sound settings.
+
+- **Linux (PipeWire / JACK)**: Sub-millisecond direct routing. Connect your hardware capture card or media player to `lsd:input_1` and `lsd:input_2` using Helvum, qjackctl, or `jack_connect`.
+
+- **Linux (Fallback)**: If PipeWire/JACK is not running, Liquid LSD captures audio directly from the default ALSA/Pulse device.
+
+## 3. First Launch Walkthrough
+
+Once launched, the workstation opens into three primary panels:
+
+```
++---------------------+-----------------------+---------------------+
+|     PRESET GRID     |      CELL CONFIG      |     MIXER / OUT     |
+| (CV Mod Matrix)     | (Parameters & LFOs)   | (Master Deck & Mon) |
++---------------------+-----------------------+---------------------+
 ```
 
----
+1. **Verify the Audio Feed**: Look at the **Preset Grid** (left). The `AUDIO` bands (`AMP`, `BASS`, `MID`, `HIGH`) and `TRIGGER` meters will pulse in real time with your audio stream.
 
-## First Launch Walkthrough
+2. **Inspect & Tweak**: Click a cell in the grid to reveal its controls in the **Cell Config** panel (middle). Hover over parameter labels to view live engine readouts and tooltips.
 
-1. **Launch Liquid LSD**: Run `./gradlew run`.
-2. **Verify Interface**: A window titled **Liquid LSD - Libre Shader Decks** will open showing real-time generative visuals and a three-column interface:
-   - **Left Panel**: Preset Grid (CV modulation matrix).
-   - **Middle Panel**: Cell Config (parameter editor, LFO controls & oscilloscope).
-   - **Right Panel**: Mixer / Master Output Monitor.
-3. **Check Audio Input**:
-   - On **Linux with PipeWire/JACK**: Route audio from your media player or hardware input to `lsd:input_1` / `lsd:input_2` using Helvum, qjackctl, or `jack_connect`.
-   - On **macOS / Windows / Standalone Linux**: Liquid LSD automatically captures from your system default audio input device using Java Sound.
-4. **Observe Modulation**: As audio plays, the `AUDIO` (`AMP`, `BASS`, `MID`, `HIGH`) and `TRIGGER` columns in the Preset Grid will animate dynamically.
-5. **Explore Documentation & Notes**:
-   - Hover over parameter labels to view built-in engine descriptions and live value breakdowns.
-   - Press **`F3`** to switch between Performance Mode and Asset Management Mode.
+3. **Toggle Layout**: Press **`F3`** to switch between **Performance Mode** (focused live show view) and **Asset Management Mode** (playlists, library browsers, and shader source tools).

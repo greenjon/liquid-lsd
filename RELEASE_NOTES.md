@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Code Audit Fixes — Beta 57–62 Surface (post-beta.62)
+
+**Real-time safety:**
+- **`BeatTrackToLinkDamping` — removed `ReentrantLock` from JACK audio thread path** (#AUDIT-RT-01): `processRawBpm` and `processBeatOnset` are now lock-free and allocation-free. Internal ring-buffer/EMA state is single-writer (audio thread only) — no synchronization needed. The two `@Volatile` public properties provide visibility to the UI thread without locks. Logger calls are now deferred via `AtomicReference<String?>` and drained by the render thread from inside `AbletonLinkEngine.updateClockAnchor()` (GL thread, once per frame).
+- **`BeatTrackToLinkDamping.calculateMedian()` — pre-allocated sort scratch buffer**: `DoubleArray(historyCount)` was re-allocated each call inside `processRawBpm`. Now uses a class-level `sortScratch: DoubleArray(16)` reused across frames — zero allocation on the hot path.
+- **`PipeWireReceiverImpl.update()` — removed `pw_thread_loop_lock` from GL render thread** (#AUDIT-RT-02): `pw_stream_dequeue_buffer` / `pw_stream_queue_buffer` are safe to call from the consumer thread without the loop lock; the loop lock is only required when modifying stream topology (which happens in `start()`).
+- **`PipeWireBridge.publishFrameBuffer()` — removed `pw_thread_loop_lock` from GL render thread + fixed blank frames** (#AUDIT-RT-02, #AUDIT-FUNC-01): The old code locked the PW loop on every rendered frame AND never copied pixel data into the buffer (immediate enqueue with no data). Now uses a lock-free `AtomicReference<ByteBuffer?>` staging slot (`pendingFrame`). The GL thread deposits the buffer reference atomically; the PW event-loop thread drains it via `drainPendingFrame()`, copies the RGBA pixels into the SPA buffer data pointer, then queues it. This simultaneously fixes the GL-thread blocking AND the blank-output bug.
+
+**Rendering performance:**
+- **`Renderer.kt` fbDecay cubic curve**: `Math.pow((1.0f - s).toDouble(), 3.0).toFloat()` → `val invS = 1.0f - s; invS * invS * invS`.
+- **`ISFVisualSource.setupUniforms()` — zero-allocation DATE uniform**: Replaced `LocalDateTime.now()` / `LocalTime.now()` per-frame with pure primitive epoch arithmetic. Month lookup uses two constant `IntArray` tables (`MONTH_STARTS_NORMAL` / `MONTH_STARTS_LEAP`) in the companion object.
+- **`ISFVisualSource.setupUniforms()` — `forEach` → indexed loop**: `header.INPUTS.forEach` allocated an `Iterator` each frame. Replaced with `for (i in 0 until inputs.size)` — allocation-free.
+- **`ISFLibraryRegistry.allAssets` — cached sorted snapshot**: The getter previously called `.toList().sortedBy {}` on every access (every render frame while the library panel is visible). Now rebuilt once per scan into `@Volatile cachedAssets`. The render thread reads from the pre-sorted stable list — zero allocation.
+- **`SpoutReceiverImpl.update()` — eliminate per-frame `ByteArray`/`IntArray`**: Promoted `ByteArray(256)` + `IntArray(1)` locals to class-level `recvNameBuf`/`recvWBuf`/`recvHBuf` fields reused across frames.
+- **`SyphonBridge.publishTexture()` — eliminate per-frame anonymous JNA `Structure` objects**: Replaced with named inner classes `NSSize` / `NSRect` whose instances are created once and mutated in-place. Fields use `Double` (matching `CGFloat` on Apple Silicon LP64 ABI), fixing silent coordinate corruption on ARM64 macOS.
+
+**Link/audio correctness:**
+- **`AbletonLinkEngine.updateClockAnchor()` — capture-and-commit atomicity** (#AUDIT-LINK-01): Now uses a single `timeUs` snapshot for both `getTempo()` and `getBeatAtTime()` queries, ensuring tempo and beat phase are always coherent.
+
+**UI performance:**
+- **`ShaderPickerPopup` — `joinToString` per row per frame**: Category string now cached in `ShaderItem.categoriesLabel` at `updateItems()` time — zero allocation during table rendering.
+- **`ShaderPickerPopup` — `categories.toList()` defensive copy**: Removed unnecessary copy; the list is only mutated from the same ImGui thread.
+
 ### Phase 4: Mixxx-Style ISF Library Management, Asynchronous Scanner, File Watcher Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`)
 - **Platform-Standard ISF Search Locations**: Pre-populates default search directories for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF/`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application asset bundles.
 - **Robust Path Expansion & Variable Resolution**: Automatically expands `~`, Windows `%ENV_VAR%`, and Unix `$ENV_VAR` / `${ENV_VAR}` variables into absolute canonical paths.

@@ -33,8 +33,10 @@ object ISFLibraryRegistry {
         }
     }
 
-    val allAssets: List<ISFAsset>
-        get() = assetsMap.values.toList().sortedBy { it.displayName }
+    // Sorted snapshot of all assets — rebuilt after each scan, never re-sorted per-frame.
+    @Volatile private var cachedAssets: List<ISFAsset> = emptyList()
+
+    val allAssets: List<ISFAsset> get() = cachedAssets
 
     fun getAsset(id: String): ISFAsset? = assetsMap[id]
 
@@ -85,9 +87,11 @@ object ISFLibraryRegistry {
 
         assetsMap.clear()
         assetsMap.putAll(winningAssets)
+        // Rebuild the cached sorted snapshot once per scan — zero allocation on the render thread.
+        cachedAssets = assetsMap.values.sortedBy { it.displayName }
 
         logger.info { "ISF Library scan completed. Indexed ${assetsMap.size} unique shaders from ${enabledDirs.size} directories." }
-        return allAssets
+        return cachedAssets
     }
 
     /**
@@ -115,5 +119,6 @@ object ISFLibraryRegistry {
      */
     fun clear() {
         assetsMap.clear()
+        cachedAssets = emptyList()
     }
 }

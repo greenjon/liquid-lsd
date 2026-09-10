@@ -1,8 +1,12 @@
 # Core Concepts & Visual Architecture
 
-Liquid LSD is structured around modular visual sources, a multi-deck rendering engine, ping-pong feedback loops, and a central visual mixer.
+Liquid LSD is a multi-deck visual instrument. It pairs procedural geometry and GLSL shaders with an analog-style Control Voltage (CV) matrix, dedicated feedback loops, and a central performance mixer[cite: 1, 3].
 
 ---
+
+## Signal Flow
+
+Audio enters the DSP engine, generates synchronized CV modulation, and drives each visual generator. The outputs pass through independent FX and feedback stages before blending in the central mixer. Optionally, video from other apps can be used as an input, using Spout/PipeWire/Syphon (depending on your OS). Further, any of the four decks and the Master ouput can be used as an input in other VJ apps, again using Spout/PipeWire/Syphon. Liquid LSD can take an input from Ableton Link so BPM is in sync with your other apps. Or, Liquid LSD can use its sound analyser to find the beat, and output that as an Ableton Link.
 
 ## High-Level Rendering Architecture
 
@@ -10,223 +14,169 @@ Liquid LSD is structured around modular visual sources, a multi-deck rendering e
 graph TD
     Audio[Audio Input: JACK / Java Sound] --> DSP[DSP Engine & Band Split]
     DSP --> CV[CV Registry & Beat Clock]
-    
+
     subgraph Decks [Visual Generators]
         DeckA[Deck A: Live Source + Ping-Pong FBO]
         DeckB[Deck B: Live Source + Ping-Pong FBO]
         DeckBG[Deck BG: Background Source + Ping-Pong FBO]
         DeckPV[Deck PV: Audition / Preview Deck]
     end
-    
+
     CV --> DeckA
     CV --> DeckB
     CV --> DeckBG
     CV --> DeckPV
-    
+
     DeckA --> Mixer[Central Mixer & Blend Modes]
     DeckB --> Mixer
     DeckBG --> Mixer
     Mixer --> Master[Master Output FBO -> Screen]
-    
+
     style DeckPV stroke:#f66,stroke-dasharray: 5 5
 ```
 
 ---
 
-## Visual Generators (Visual Sources)
+## Here is the finalized **`user_guide/concepts.md`** with those three clarifications dialed in:
 
-Every deck runs a pluggable **Visual Source** that generates procedural geometry or raymarched shaders. Liquid LSD includes 10 built-in engines along with support for dynamic GLSL shaders.
+Markdown
 
-### 1. Mandala Synthesis Engine (`Mandala.kt`)
-The core procedural geometry generator:
-- **Lobe Count (Petals)**: Controls rotational symmetry (how many repeating arms are generated).
-- **Mandala Ratios**: Accesses a curated library of ~300 ratio presets determining mathematical harmonic intersections.
-- **Analytical Size Normalization**: Automatically normalizes 4 arm lengths ($L_1 \dots L_4$) using sum-of-lengths scaling ($\text{scale} = R_{\text{target}} / \sum |L_i|$ where $R_{\text{target}} = 2.0$), keeping outer boundary scale stable and filling the screen height comfortably across all slider configurations and dynamic LFO modulations.
-- **3D Projections**:
-  - *Spherical Mapping*: Extrudes 2D curves onto a 3D sphere via longitude/latitude angles.
-  - *Polyhedral Reflections*: Replicates curves across Cubic/Octahedral (8 instances) or Tetrahedral (4 instances) reflection groups.
-  - *Coordinate Permutation*: Projects curves onto XY, YZ, and ZX planes simultaneously.
-  - *Perspective View*: Seamlessly transition from orthographic (`3D Persp` = 0) to immersive perspective projection (`3D Persp` = 1).
+```
+# Core Concepts & Visual Architecture
 
-### 2. Procedural & Raymarched Shader Sources
-Built-in procedural visual generators:
-- **Attractor Feedback**: Strange attractor log-density inverse mapping with feedback trail accumulation.
-- **Dynamic Spiral**: Multi-point spiral curve generator with radial range culling.
-- **Gyroid**: Dynamic 3D triply periodic minimal surface raymarcher.
-- **Chladni**: Acoustic 2D/3D vibration pattern generator.
-- **Icosa-Dodeca**: Continuous $H_3$ Coxeter polyhedral morph and Kepler-Poinsot stellation raymarcher with translucent crystal reveal.
-
-### Universal Searchable Shader Picker
-With the integration of hundreds of ISF sources, filters, and transition crossfaders, Liquid LSD uses a unified **Shader Picker** modal instead of flat dropdown menus.
-- **Searchable**: Type any part of a shader's name, ID, or category into the search bar for instant filtering.
-- **Categorized**: Content is organized into semantic categories like `Generator`, `Geometric`, `Color Adjustment`, `Distortion`, `Blur`, `Wipe`, `Glitch`, and `Transitions`.
-- **Context-Aware**: The picker automatically pre-selects the most relevant category based on where you open it (source selection vs. FX slot 1 vs. FX slot 2 vs. mixer transitions).
-- **Detach / Clear**: Use the `[ Detach / None ]` button to quickly clear a shader slot or reset the mixer to default built-in blend modes.
-
-### Ableton Link & Clock Synchronization
-Liquid LSD features a tri-state clock source engine (`ClockSource`):
-- **Audio Beat Tracker**: Autonomous FFT onset detection and causal dynamic programming flywheel tracking live microphone/line input.
-- **Ableton Link**: Sample-accurate, peer-to-peer beat, phase, and tempo synchronization across local Ethernet and Wi-Fi networks with DAWs (Ableton Live, Bitwig, Serato, Traktor, Reaper) and VJ software.
-- **Manual Fixed**: Internal fixed-tempo flywheel with real-time VJ tap tempo cadence tracking and downbeat quantization.
-
-#### Using Ableton Link:
-1. Ensure Liquid LSD and your DAW / performance software are connected to the same local Wi-Fi or Ethernet network.
-2. In the top MenuBar, click the **Clock** menu and select **Ableton Link** (or enable Link in **Settings -> Audio Engine & Input Device**).
-3. The top bar will display `LINK [N peers]` showing active connected peers on the network.
-4. Changing tempo in your DAW automatically updates Liquid LSD's tempo and aligns LFOs, step sequencers, and beat modulators to the shared network beat timeline.
-5. Select the **Link Quantum** (1 beat, 4 beats / 1 bar, 8 beats / 2 bars, 16 beats / 4 bars) to align phrase triggers and visual cycles to musical bar boundaries.
-
-### Dual FX Post-Processing Slots
-Each Deck features two serialized, independently modulatable ISF post-processing slots positioned before the feedback loop:
-- **Slot 1 (Color / Degradation)**: Color remapping, inversion, posterization, luma keying, and signal degradation filters.
-- **Slot 2 (Spatial / Distortion)**: 3D plane elevation (`3d_elevation.fs`), full feedback loops (`feedback.fs`), multi-pass bloom, chromatic aberration, digital glitch, spatial folding, and persistent motion trails.
-- **Bypass & Dry/Wet Mix**: Both slots support independent bypass toggles and continuous Dry/Wet parameter modulation. Bypassed or zero-wet slots execute with zero draw call overhead.
-
-### Extensible ISF Mixer Transitions
-The Master Mixer crossfader supports custom ISF-based transition shaders (`ISFTransitionRegistry`) alongside built-in blend modes:
-- **Bundled Transitions**: Includes `linear_crossfade`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `glitch_transition`, `luma_wipe`, and `zoom_fade`.
-- **Custom Shader Expansion**: Drop custom ISF transition shaders into `library/transitions/` for immediate discovery.
-- **Modulatable Parameters**: Custom parameters exposed by transition shaders (e.g. softness, wipe direction, glitch intensity) register in the Preset Grid Mix tab for LFO, audio reactivity, and MIDI modulation.
-- **Default Fallback**: When no transition shader is selected (`[ Default Blend ]`), the mixer falls back to built-in non-ISF blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`).
-
-#### Icosa-Dodeca Quick Reference & Classic Solids
-The **Icosa-Dodeca** engine morphs through regular Platonic solids, Archimedean bridges, and Kepler-Poinsot star polyhedra:
-
-* **`Morph` ($0.0 \to 1.0$)**: Primary 4-phase cyclic timeline sweeping across canonical shapes:
-  * `0.00`: **Icosahedron** (20 triangular faces)
-  * `0.125`: **Icosidodecahedron** (32 faces: 20 triangles + 12 pentagons)
-  * `0.25`: **Dodecahedron** (12 pentagonal faces)
-  * `0.50`: **Great Stellated Dodecahedron** (12 5-pointed star pyramids)
-  * `0.75`: **Great Icosahedron** (20 3-sided star spikes)
-  * `1.00`: Loops back smoothly to Icosahedron.
-* **`Stellation` ($0.0 \to 1.0$)**: Direct star spike height boost. Set `Morph = 0.0` or `0.25` and dial `Stellation` to grow star spikes manually.
-* **`Support H` ($-1.0 \to 1.0$)**: Plane distance from center. Lowering to `-0.15` produces truncated forms (e.g. Buckyball / Soccer Ball).
-* **`Opacity` ($0.0 \to 1.0$)**: Face transparency. Sweet spot is `0.6–0.8` for "Crystal Reveal" to see inner intersecting geometric facets.
-
-| Solid Name | Morph | Stellation | Support H | Description |
-| :--- | :---: | :---: | :---: | :--- |
-| **Icosahedron** | `0.00` | `0.00` | `0.00` | 20 equilateral triangular faces. |
-| **Icosidodecahedron** | `0.125` | `0.00` | `0.00` | Archimedean duality bridge (triangles + pentagons). |
-| **Dodecahedron** | `0.25` | `0.00` | `0.00` | 12 regular pentagonal faces. |
-| **Great Stellated Dodecahedron** | `0.50` | `0.00` | `0.00` | 12 sharp 5-fold star spikes. |
-| **Great Icosahedron** | `0.75` | `0.00` | `0.00` | 20 sharp 3-fold star spikes. |
-| **Truncated Icosahedron (Buckyball)** | `0.00` | `0.00` | `-0.15` | Classic soccer ball (pentagons & hexagons). |
+Liquid LSD is a multi-deck visual instrument. It pairs procedural geometry and GLSL shaders with an analog-style Control Voltage (CV) matrix, dedicated feedback loops, and a central performance mixer[cite: 1, 3].
 
 ---
 
-## Universal View & 3D Transformation Pipeline
+## Signal Flow
 
-Every Deck includes a universal **`View`** stage that applies spatial framing, continuous zooming, and rotation before entering the feedback chain:
+Audio enters the DSP engine, generates synchronized CV modulation, and drives each visual generator. Visuals then run through two post-processing FX slots and an internal ping-pong feedback stage before blending in the master mixer:
 
-- **2D Visual Sources** (Mandala, Colors, Dynamic Spiral, Attractor Feedback, Video, etc.):
-  1. **Universal Controls (Always Active in 2D & 3D)**:
-     - **`Zoom`**: Continuous scaling ($0.1\times$ to $5.0\times$). Calibrated identically across 2D Flat and all 3D modes: $1.0$ fills the vertical frame height. In 3D modes, controls camera projection scale.
-     - **`Rotate Z` (Roll)**: In-plane clockwise/counter-clockwise rotation. In 2D mode, rotation is aspect-ratio corrected so circles remain circles without elliptical distortion; out-of-bounds canvas regions render clean transparent black. In 3D mode, controls the roll axis.
-  2. **3D Display Modes (`3D Mode`)**: Elevates flat 2D sources into 3D structures.
-     - `0.0`: **2D Flat** — Native widescreen 2D mode with full resolution via `rawSource2DFBO`. 3D-only parameters are hidden to keep the UI clean.
-     - `1.0`: **Tri-Axial Orthogonal Planes** — Replicates the 2D source across three intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a 3D holographic gyroscope / celestial sphere.
-     - `2.0`: **Cube Cage** — Forms a 6-sided 3D cube box across $\pm XY, \pm YZ, \pm ZX$ with a unit base displacement. Expanding `Separation` pushes the faces outward into an exploding cube array.
-     - `3.0`: **Hex-Planar ($60^\circ$ Tetrahedral Planes)** — Replicates the source across the 6 reflection planes of the tetrahedral symmetry group ($A_3$), intersecting at $60^\circ$ and $90^\circ$ angles through $(0, 0, 0)$. Expanding `Separation` pushes the planes outward into a 12-faced rhombic dodecahedral cage.
-     - `4.0`: **Tetrahedral Kaleidoscope (24-Chamber Space Folding)** — Continuous Coxeter $A_3$ space-folding kaleidoscope that reflects 3D camera rays into the 24 fundamental tetrahedral chambers, producing seamless continuous mirrors across all sector boundaries.
-3. **Contextual 3D Parameters (Active when `3D Mode >= 0.5`)**:
-   - **`Rotate X` (Pitch), `Rotate Y` (Yaw)**: 3D rotational tumbling controlled manually or driven by LFOs/CV/Audio.
-   - **`3D Persp`**: Continuous transition from orthographic projection to deep wide-angle perspective.
-   - **`Depth Dim`**: Camera headlight proximity dimming. Near portions stay crisp and bright while receding portions dissolve smoothly into atmospheric haze.
-   - **`Separation`**: Pushes intersecting planes outward along their normal axes into an open geometric cage.
-   - **`Roundness`**: Plane boundary shape transition from square quad (0.0) to circular disc (1.0). Defaults to 1.0 for a celestial armillary sphere / gyroscope silhouette without boxy edge sweeping.
-   - **`Blend Mode`**: Toggles between additive luminous blending (for glowing neon intersections) and transparent alpha blending.
+```mermaidgraph TD    Audio[Audio Input: JACK / Java Sound] --> DSP[DSP Engine & Beat Clock]    DSP --> CV[CV Modulation Matrix]        subgraph Decks [Visual Generators + Dual ISF FX]        DeckA[Deck A: Live Source + Ping-Pong FBO]        DeckB[Deck B: Live Source + Ping-Pong FBO]        DeckBG[Deck BG: Background Source + Ping-Pong FBO]        DeckPV[Deck PV: Audition / Preview Deck]    end        CV --> DeckA    CV --> DeckB    CV --> DeckBG    CV --> DeckPV        DeckBG --> Composite[Background Composite]    DeckA --> Mixer[Central Mixer & Blend Modes]    DeckB --> Mixer    Mixer --> Composite    Composite --> Master[Master Output -> Screen / Projector]        style DeckPV stroke:#f66,stroke-dasharray: 5 5
+```
 
-- **Native 3D Visual Sources** (Icosahedron 32-Stellation, Icosahedron V3 CSG, 4D Hyper-Mesh, Icosa-Dodeca, Chladni, Gyroid, 4D Hyper-Slice):
-  - Native 3D sources handle their own 3D rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and camera scaling (`Zoom`) in their respective raymarched or polygon renderers.
-  - The `3D Mode` parameter is excluded to avoid distortion and duplicate rotation controls (`Rotate X` and `Rotate Y`). The source's native transform controls appear cleanly under the `View` tab.
+## The Four Decks
 
----
+Liquid LSD uses a dedicated four-deck layout designed for live stage performance:
 
-## Framebuffer Feedback Loops (Ping-Pong FBOs)
+- **Deck A & Deck B (Live Performance)**: The primary stage decks routed directly into the crossfader and blend modes.
 
-Each deck incorporates an independent dual Framebuffer Object (FBO) feedback loop:
-1. The visual source (and optional 3D View pass) renders into `cleanFBO`.
-2. The previous frame's feedback texture is combined with `cleanFBO` inside `feedback.frag`.
-3. Feedback transformation uniforms (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**) shift and decay the image continuously.
-4. Read and write feedback buffers swap (ping-pong) each frame, creating fluid liquid trails, organic motion, and video-feedback zoom effects.
+- **Deck BG (Background Layer)**: Renders directly behind Decks A and B. Ideal for subtle textures, dark ambient backdrops, or color fields when running transparent foregrounds.
 
----
+- **Deck PV (Preview / Audition)**: Runs an identical, fully independent rendering and feedback chain, but **never routes to the master output**. Audition presets, sketch out new looks, and route CV modulation in real time on your preview monitor before going live.
 
-## Deck Architecture: Live Decks A/B vs. Background & Preview Decks
+## Visual Generators
 
-Liquid LSD features a four-deck architecture tailored for live VJ performance:
+Every deck hosts an independent visual engine. You can load native procedural sources or dynamic GLSL/ISF shaders:
 
-### Deck A & Deck B (Live Performance Decks)
-Decks A and B drive the live master output. They feed directly into the central Mixer.
+- **Mandala Synthesis Engine**: Procedural geometry generator with ~300 curated harmonic ratios. Built-in size normalization ensures the outer boundaries stay stable and fill your vertical frame cleanly, no matter how wild your LFO modulation gets. Supports spherical wrapping, cubic cages, and continuous orthographic-to-perspective projection.
 
-### Deck BG (Background Layer)
-Deck BG renders beneath the crossfaded Deck A & Deck B composite, allowing transparent foregrounds to float naturally over dynamic background visuals.
+- **Icosa-Dodeca**: A real-time 3D polyhedral raymarcher. Seamlessly morphs across Platonic solids, Archimedean bridges, and Kepler-Poinsot star polyhedra:
 
-### Deck PV (Preview / Audition Deck)
-Deck PV runs the complete rendering pipeline (Visual Source + Ping-Pong Feedback), but is **strictly excluded from the Mixer master output**. 
-- **Auditioning Presets**: Performers can load, build, edit, and preview new presets on Deck PV while Decks A, B, and BG continue delivering live visuals to the audience screen.
-- **Safe Preparation**: Test complex CV routings or shader parameters safely on Deck PV before loading them onto live decks.
+- `0.00`: Icosahedron (20 triangular faces)
 
----
+- `0.125`: Icosidodecahedron (20 triangles + 12 pentagons)
 
-## Central Mixer & Blending Modes
+- `0.25`: Dodecahedron (12 pentagonal faces)
 
-The central Mixer blends the outputs of Deck A and Deck B to form the master video signal.
+- `0.50`: Great Stellated Dodecahedron (12 5-pointed star pyramids)
 
-### Blending Equations
-- **`ADD`** (Additive): Sums RGB values; ideal for dark background contrast.
-- **`SCREEN`**: Lightens overlapping areas while preserving dark detail.
-- **`MULT`** (Multiply): Multiplies RGB values; creates subtractive stencil masks.
-- **`MAX`** (Lighten): Compares A and B per-pixel and selects the brightest color.
-- **`XFADE`** (Crossfade): Standard linear interpolation between Deck A and Deck B.
+- `0.75`: Great Icosahedron (20 3-sided star spikes)
 
-Mix modes can be configured directly in the **Preset Grid (MIX tab)** by selecting the **VAL** cell on the **mix mode** row and choosing from the dropdown combo. Mix mode is non-modulatable to provide a solid compositing baseline for crossfade operations. Left-clicking the main output monitor in the Mixer Monitor panel instantly opens the **MIX** tab, mirroring the deck preview monitor click shortcuts (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`).
+- Tip: Set `Opacity` to `0.6–0.8` to enable translucent crystal reveals of internal facets.
 
-### Crossfader Modulation & Manual Takeover
-The `crossfade` slider interpolates between Deck A (-1.0) and Deck B (1.0). Like all parameters in Liquid LSD, `crossfade` can be modulated by CV sources (e.g. an LFO or `audio_bass`) to automate deck switching in tight sync with the music.
+- **Procedural Engines**: Built-in math generators including **Attractor Feedback** (strange attractor log-density trails), **Dynamic Spiral** (radial curves), **Gyroid** (triply periodic minimal surfaces), and **Chladni** (acoustic nodal vibration plates).
 
-- **Manual Takeover**: If the user moves the crossfader slider using the mouse or a mapped MIDI controller:
-  - **Auto-VJ Disarms**: Auto-VJ is immediately turned off (`AUTO-VJ` checkbox unchecks) and any active automated crossfade transition is stopped.
-  - **CV Modulators Mute**: All non-MIDI CV modulators assigned to `Mixer/crossfade` are automatically muted (`bypassed = true`), giving the performer clean 1:1 manual authority over deck blending without fighting background modulation.
-  - **MIDI Controllers Remain Active**: Modulators mapped to physical MIDI CCs are preserved and remain active.
-- **Auto-Centering on CV Unmute**: When the user un-mutes any CV modulator on the crossfader in the modulation matrix or cell inspector, `crossfade.baseValue` automatically snaps to `0.0` (unbiased center). This ensures that LFOs or audio followers immediately resume full-range, symmetrical oscillation between Deck A and Deck B without clipping against previous manual hold positions. Modulator `DC Offset` can be used whenever an intentional deck bias is desired.
+### The Shader Picker
 
-### Momentary Controls & Triggers (Prev/Next, Rand A/B/BG/PV/All)
-Located directly beneath the Crossfader in the Master Mixer panel, a row of momentary buttons provides direct access to queue navigation and randomization:
-- **`< Prev` / `Next >`**: Steps backward or forward through the active playlist queue (`Mixer/queuePrev`, `Mixer/queueNext`).
-- **`Rand A` / `Rand B` / `Rand BG` / `Rand PV`**: Re-rolls all randomizable modulators and base values for the selected deck (`Mixer/randDeckA`, `Mixer/randDeckB`, `Mixer/randDeckBG`, `Mixer/randDeckPV`).
-- **`Rand All`**: Re-rolls modulators and randomizable values across Deck A, Deck B, Deck BG, Deck PV, and Master parameters simultaneously (`Mixer/randAll`).
+Pressing the shader selector opens a universal, searchable library modal:
 
-**Simultaneous Triggers without Takeover**: Unlike continuous fader positions that hold a continuous value, momentary triggers are discrete pulses (rising-edge events). Using the mouse buttons, hardware MIDI triggers, or clock/LFO CV gates executes the discrete action immediately without muting modulators or disarming background automation.
+- **Search & Filter**: Type any keyword, tag, or author to filter hundreds of ISF and GLSL shaders instantly.
 
----
+- **Context-Sensitive**: Automatically filters categories based on whether you are assigning a generator, an FX slot, or a mixer transition.
 
-## Render Resolution & Video Output Scaling
+- **Detach / None**: Quickly unloads the active shader with a single click.
 
-Liquid LSD provides granular control over internal render resolution and external display output scaling under **Settings -> Video & Display**:
+## Dual ISF FX Slots
 
-### 1. Resolution Presets & Custom Dimensions
-- **16:9 Presets**: 1080p ($1920 \times 1080$), 720p ($1280 \times 720$), 540p ($960 \times 540$), 1440p ($2560 \times 1440$), 4K UHD ($3840 \times 2160$).
-- **4:3 Presets**: UXGA ($1600 \times 1200$), XGA ($1024 \times 768$), SVGA ($800 \times 600$) for club projectors and vintage CRT displays.
-- **1:1 Square Presets**: $1080 \times 1080$, $800 \times 800$, $600 \times 600$ for modular stage LED walls and livestreams.
-- **Custom**: User-specified width and height (from $128 \times 128$ to $7680 \times 4320$).
+Each deck features two chained post-processing slots positioned directly before the feedback loop:
 
-### 2. GPU Performance Scaling
-Running complex shaders across three decks simultaneously evaluates millions of pixels per frame. Switching from 1080p to 720p or 540p reduces GPU load by 55%–75%, allowing smooth 60 FPS performance on laptops and integrated GPUs.
+- **Slot 1 (Color & Signal)**: Color grading, inversions, posterization, luma keying, and digital degradation.
 
-### 3. Display Scaling Modes
-When the internal render aspect ratio differs from the connected display or secondary projector:
-- **Fit (Letterbox / Pillarbox)**: Maintains exact render aspect ratio with black border bars.
-- **Fill (Crop)**: Centers and crops edges to completely fill the screen without borders.
-- **Stretch**: Stretches the image to fill the output screen.
+- **Slot 2 (Spatial & Distortion)**: 3D plane elevation, multi-pass bloom, chromatic aberration, digital glitch, and spatial folding.
 
----
+- **Zero Overhead Bypass**: Each slot supports an independent bypass toggle and continuous Dry/Wet modulation. Bypassed or zero-wet slots execute with zero GPU draw call overhead.
 
-## UI Display Modes & Global Shortcuts
+## Universal View & 3D Stage
 
-- **Background Video (`B`)**: Toggles rendering the master video output directly behind the semi-transparent ImGui interface. Can also be toggled via **Settings -> Video & Display -> Background Video**.
-- **Clean Mode (`F`)**: Toggles clean fullscreen view, hiding the entire user interface to view pure master video output without distractions.
-- **Exit Fullscreen (`Esc`)**: Exits clean fullscreen view immediately and returns to standard UI layout.
-- **Global Font Scaling (`Ctrl-` / `Ctrl=`)**: Zooms and scales the entire interface typography and widget layouts dynamically.
-- **Keyboard Shortcuts Reference**: Open **Settings -> Keyboard Shortcuts** for a comprehensive panel-by-panel reference of all application shortcuts and mouse gestures.
+Every deck has a universal **View** tab to position, scale, and project visuals before they hit the feedback loop:
 
+- **Universal Framing (2D & 3D)**:
+
+- **Zoom**: Continuous camera and scale control ($0.1\times$ to $5.0\times$). Calibrated so `1.0` fills the vertical frame height exactly.
+
+- **Rotate Z (Roll)**: Clockwise/counter-clockwise in-plane roll with aspect-ratio correction.
+
+- **3D Display Modes** (Converts flat 2D sources into 3D geometry):
+
+- **2D Flat (`0.0`)**: Direct widescreen rendering with maximum efficiency.
+
+- **Tri-Axial Orthogonal (`1.0`)**: Replicates the source across intersecting $XY$, $YZ$, and $ZX$ planes to create an armillary gyroscope.
+
+- **Cube Cage (`2.0`)**: Maps visuals to a 6-sided cubic box. Expanding `Separation` pushes faces outward into an exploding cube array.
+
+- **Hex-Planar (`3.0`)**: 6 intersecting tetrahedral planes forming an open rhombic dodecahedron.
+
+- **Tetrahedral Kaleidoscope (`4.0`)**: 24-chamber space-folding kaleidoscope with continuous reflection mirrors.
+
+## Framebuffer Feedback Loops (Ping-Pong)
+
+Each deck includes an independent dual-FBO ping-pong feedback loop:
+
+1. The generator (plus 3D View and FX) draws to an internal buffer (`cleanFBO`).
+
+2. The buffer blends with the previous frame inside `feedback.frag`.
+
+3. Real-time parameters (**Decay, Gain, Zoom, Rotate, Hue Shift, Blur, Chroma Offset**) transform and decay the accumulated trails.
+
+4. The read and write buffers swap every frame, producing fluid liquid trails and infinite video-echo tunnels.
+
+## Master Mixer & Clock Sync
+
+### Blend Modes & Transitions
+
+The mixer combines Deck A and Deck B using either standard mathematical blend modes (**ADD**, **SCREEN**, **MULT**, **MAX**, **XFADE**) or custom ISF transition shaders (**Wipes**, **Glitch**, **Luma Dissolve**, **Zoom Fade**).
+
+- Left-clicking the master monitor preview jumps directly to the **MIX** tab in the grid.
+
+### Crossfader Takeover & Auto-Centering
+
+- **Automated CV Routing**: Drive the crossfader with LFOs, audio bass triggers, or beat clocks for automated scene switching.
+
+- **Manual Takeover**: Grabbing the crossfader slider with your mouse or a mapped MIDI controller immediately disarms Auto-VJ and mutes non-MIDI CV modulators, giving you clean 1:1 manual authority.
+
+- **Auto-Centering**: Unmuting any CV modulator on the crossfader automatically resets its base value to `0.0`, ensuring modulators oscillate symmetrically between decks without clipping against an old manual fader position.
+
+### Clock Synchronization (Ableton Link)
+
+Liquid LSD tracks musical timing through three switchable clock modes:
+
+- **Ableton Link**: Peer-to-peer wireless beat, phase, and tempo sync across your local network with Ableton Live, Bitwig, Traktor, Serato, or other VJ rigs.
+
+- **Audio Beat Tracker**: Automatic onset detection and tempo tracking via incoming audio FFT.
+
+- **Manual Flywheel**: Internal tempo with manual tap tempo cadence.
+
+## Output Scaling & Global Shortcuts
+
+- **GPU Performance Scaling**: Running complex shaders across all active decks evaluates millions of pixels per frame. Lower your internal render resolution under **Settings -> Video & Display** (e.g., from 1080p to 720p or 540p) to reduce GPU overhead by up to 75% on laptops and integrated GPUs.
+
+- **Fit / Fill / Stretch**: Adjust output aspect ratios when sending video to non-standard LED walls or vintage 4:3 club projectors.
+
+- **`B`**: Toggle background video rendering behind the UI.
+
+- **`F`**: Toggle fullscreen mode (hides the entire UI for pure master video out).
+
+- **`Esc`**: Exit fullscreen mode immediately.
+
+- **`Ctrl-` / `Ctrl=`**: Dynamically scale interface fonts in the library of presets.

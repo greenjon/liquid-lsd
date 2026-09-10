@@ -335,7 +335,8 @@ class Renderer {
 
         // Set feedback parameters (map feedback strength S to decay using a cubic curve)
         val s = deck.fbDecay.value
-        val decayVal = Math.pow((1.0f - s).toDouble(), 3.0).toFloat()
+        val invS = 1.0f - s
+        val decayVal = invS * invS * invS  // cubic decay curve, avoids Math.pow + double conversion
         feedbackShader.setUniform("uDecay", decayVal)
         feedbackShader.setUniform("uGain", deck.fbGain.value)
         feedbackShader.setUniform("uZoom", deck.fbZoom.value)

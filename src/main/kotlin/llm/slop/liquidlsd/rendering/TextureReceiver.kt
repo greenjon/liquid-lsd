@@ -78,6 +78,10 @@ class SpoutReceiverImpl : TextureReceiver {
     }
 
     private var localTextureId = 0
+    // Pre-allocated reusable buffers — avoids ByteArray/IntArray allocation on every render frame
+    private val recvNameBuf = ByteArray(256)
+    private val recvWBuf    = IntArray(1)
+    private val recvHBuf    = IntArray(1)
 
     override fun update(): Int {
         if (!active || spoutPtr == null) return 0
@@ -93,16 +97,16 @@ class SpoutReceiverImpl : TextureReceiver {
             }
         }
         
-        val nameBytes = ByteArray(256)
-        val w = intArrayOf(currentWidth)
-        val h = intArrayOf(currentHeight)
+        recvNameBuf.fill(0)
+        recvWBuf[0] = currentWidth
+        recvHBuf[0] = currentHeight
         
-        val success = spoutLib?.ReceiveTexture(spoutPtr!!, nameBytes, w, h, localTextureId, GL_TEXTURE_2D, false, 0) == true
+        val success = spoutLib?.ReceiveTexture(spoutPtr!!, recvNameBuf, recvWBuf, recvHBuf, localTextureId, GL_TEXTURE_2D, false, 0) == true
         if (success) {
             // Re-allocate if size changed
-            if (w[0] != currentWidth || h[0] != currentHeight) {
-                currentWidth = w[0]
-                currentHeight = h[0]
+            if (recvWBuf[0] != currentWidth || recvHBuf[0] != currentHeight) {
+                currentWidth = recvWBuf[0]
+                currentHeight = recvHBuf[0]
                 if (localTextureId != 0) {
                     glDeleteTextures(localTextureId)
                 }
@@ -287,7 +291,9 @@ class PipeWireReceiverImpl : TextureReceiver {
         var textureToReturn = localTextureId
 
         try {
-            lib.pw_thread_loop_lock(threadLoop!!)
+            // pw_stream_dequeue_buffer / pw_stream_queue_buffer are safe to call from the consumer
+            // thread (GL thread here) without holding pw_thread_loop_lock.  The loop lock is only
+            // required when modifying stream topology (connect/disconnect), which we do in start().
             val pwBufPtr = lib.pw_stream_dequeue_buffer(stream!!)
             if (pwBufPtr != null) {
                 try {
@@ -329,8 +335,6 @@ class PipeWireReceiverImpl : TextureReceiver {
             }
         } catch (e: Throwable) {
             logger.debug { "Error receiving PipeWire buffer: ${e.message}" }
-        } finally {
-            lib.pw_thread_loop_unlock(threadLoop!!)
         }
 
         return textureToReturn

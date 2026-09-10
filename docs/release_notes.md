@@ -46,6 +46,21 @@
 
 ---
 
+## Version 0.9.1
+
+> [!NOTE]
+> **Release 0.9.1** marks the official stable transition from `1.0.0-beta.x` to the `0.9.x` production release line. It bundles all feature-frozen capabilities including Ableton Link beat/phase/tempo synchronization, PipeWire 0.3 Linux live video sharing, ISF v2.0 visual source generator and mixer transition shaders, Spout/Syphon live video ingest, modular post-processing FX slots, multi-touch trackpad performance console, and robust automated 5-platform CI/CD packaging and smoke-testing.
+
+### 🌟 Key Stable Features & Architecture Highlights
+- **Authoritative Semantic Versioning & 0.9.x Pipeline**: Transitioned project build, runtime versioning (`AppVersion.kt`), and GitHub Actions release automation (`release.yml`) to authoritative `0.9.x` production releases.
+- **Ableton Link & Carabiner Peer Sync**: Multi-backend Ableton Link (`linux-x64`, `windows-x64`, `macos-x64`, `macos-arm64`) and TCP Carabiner synchronization with Phase 1-4 audio-to-link damping and broadcast engines.
+- **Interactive Shader Format (ISF v2.0) & Mixxx-Style Management**: Full ISF generator, transition, and effect support with background async directory scanner (`ISFScanner`), file watcher live reload (`ISFFileWatcher`), and path precedence resolution.
+- **Cross-Platform Live Video Ingest & Broadcast**: PipeWire 0.3 DMA-BUF / MemFd ingest on Linux, Spout2 on Windows, Syphon on macOS, and live WebSocket broadcasting.
+- **Modular Post-Processing & Audio Reactivity**: Dual modular FX slots, ISF multi-pass support, LFO/audio follower min/max bounds conversion, and CapLock multi-touch trackpad performance console.
+- **Automated Multi-Platform Verification**: Comprehensive 5-platform CI/CD binary packaging and smoke testing ensuring 100% reliability across Linux, macOS, and Windows.
+
+---
+
 ## Version 1.0.0-beta.62
 
 > [!NOTE]
