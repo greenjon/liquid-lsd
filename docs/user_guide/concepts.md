@@ -65,7 +65,7 @@ With the integration of hundreds of ISF sources, filters, and transition crossfa
 
 ### Ableton Link & Clock Synchronization
 Liquid LSD features a tri-state clock source engine (`ClockSource`):
-- **BTrack Audio**: Autonomous FFT onset detection and causal dynamic programming flywheel tracking live microphone/line input.
+- **Audio Beat Tracker**: Autonomous FFT onset detection and causal dynamic programming flywheel tracking live microphone/line input.
 - **Ableton Link**: Sample-accurate, peer-to-peer beat, phase, and tempo synchronization across local Ethernet and Wi-Fi networks with DAWs (Ableton Live, Bitwig, Serato, Traktor, Reaper) and VJ software.
 - **Manual Fixed**: Internal fixed-tempo flywheel with real-time VJ tap tempo cadence tracking and downbeat quantization.
 

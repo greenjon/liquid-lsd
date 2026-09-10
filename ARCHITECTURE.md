@@ -41,7 +41,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── SessionContext.kt           — Application state & context
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
-│   ├── BeatTrackerEngine.kt    — Real-time Beat Tracker (inspired by BTrack) with causal dynamic programming and continuous phase generator
+│   ├── BeatTrackerEngine.kt    — Real-time Beat Tracker (inspired by Adam Stark's beat tracking research) with causal dynamic programming and continuous phase generator
 │   ├── ClockSource.kt          — Timing source enum (AUDIO_TRACKER, ABLETON_LINK, MANUAL_TAP)
 │   ├── JackClient.kt           — JNAJack callback wrapper
 │   ├── JavaSoundClient.kt      — Java Sound TargetDataLine fallback client
@@ -53,7 +53,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── TapTempoController.kt   — VJ tap tempo cadence tracking, interval averaging, 2.0s timeout reset, and phase alignment
 ├── link/                       — Ableton Link network interop & clock synchronization
 │   ├── LinkSyncManager.kt      — Central state machine (DISABLED, LINK_FOLLOWER, AUDIO_BROADCAST)
-│   ├── BTrackToLinkDamping.kt  — Signal conditioner (Median + EMA, 0.5 BPM / 4-beat hysteresis, >=0.5 beat phase error)
+│   ├── BeatTrackToLinkDamping.kt — Signal conditioner (Median + EMA, 0.5 BPM / 4-beat hysteresis, >=0.5 beat phase error)
 │   ├── SyncMode.kt             — SyncMode enum and AudioTempoEventSink callback interface
 │   ├── AbletonLinkEngine.kt    — Manager for Link network session state & tempo sync
 │   ├── LinkBackend.kt          — Driver interface (Native JNI, Carabiner TCP, No-Op)

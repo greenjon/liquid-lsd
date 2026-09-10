@@ -7,7 +7,7 @@ enum class ClockSource(val displayName: String) {
     /**
      * Autonomous FFT onset detection and dynamic programming flywheel from real-time audio input.
      */
-    AUDIO_TRACKER("BTrack Audio"),
+    AUDIO_TRACKER("Audio Beat Tracker"),
 
     /**
      * Network-synchronized shared beat timeline, tempo, and quantum phase via Ableton Link.

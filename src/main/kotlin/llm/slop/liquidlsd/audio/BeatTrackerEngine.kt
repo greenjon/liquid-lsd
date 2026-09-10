@@ -5,7 +5,7 @@ import kotlin.math.*
 
 /**
  * Real-time audio beat tracking engine and continuous phase-locked modulation generator.
- * Modeled on BTrack (Adam Stark) and the Dan Ellis causal dynamic programming model.
+ * Inspired by the beat tracking algorithm by Adam Stark and the Dan Ellis causal dynamic programming model.
  *
  * Implemented in pure Kotlin with strict zero-allocation constraints on the real-time audio thread
  * (targeting Kotlin Multiplatform / Native / JVM with JACK backend).

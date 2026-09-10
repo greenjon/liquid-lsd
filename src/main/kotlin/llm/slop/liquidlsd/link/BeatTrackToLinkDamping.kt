@@ -6,7 +6,7 @@ import kotlin.concurrent.withLock
 import kotlin.math.abs
 
 /**
- * Signal conditioning filter between BTrack raw audio beat detector and Ableton Link / Carabiner.
+ * Signal conditioning filter between raw audio beat detector and Ableton Link / Carabiner.
  *
  * Prevents network tempo spam and micro-warping in connected Link peers by applying:
  * 1. **Sanity Range Filtering**: Discards raw BPM detections outside `[minBpm, maxBpm]` (60–200 BPM).
@@ -17,7 +17,7 @@ import kotlin.math.abs
  * 4. **Major Phase Error Realignment**: Measures phase error relative to the network Link timeline clock and
  *    only publishes beat realignments when phase error >= 0.5 beats (half-beat), ignoring acoustic onset jitter.
  */
-class BTrackToLinkDamping(
+class BeatTrackToLinkDamping(
     var minBpm: Double = 60.0,
     var maxBpm: Double = 200.0,
     var medianWindowSize: Int = 7,
@@ -49,7 +49,7 @@ class BTrackToLinkDamping(
     private var pendingDivergenceCount = 0
 
     /**
-     * Processes a raw BPM sample from BTrack.
+     * Processes a raw BPM sample from audio beat tracker.
      * Applies sanity bounds, rolling median, EMA smoothing, and hysteresis checks.
      */
     fun processRawBpm(rawBpm: Double) {
@@ -84,7 +84,7 @@ class BTrackToLinkDamping(
                 if (pendingDivergenceCount >= sustainedBeatsThreshold) {
                     lastPublishedBpm = emaBpm
                     pendingDivergenceCount = 0
-                    logger.info { "BTrackToLinkDamping: Committed outbound tempo update -> %.2f BPM (delta=%.2f)".format(lastPublishedBpm, delta) }
+                    logger.info { "BeatTrackToLinkDamping: Committed outbound tempo update -> %.2f BPM (delta=%.2f)".format(lastPublishedBpm, delta) }
                     downstreamSink?.onTempoCommitted(lastPublishedBpm)
                 }
             } else {
@@ -94,7 +94,7 @@ class BTrackToLinkDamping(
     }
 
     /**
-     * Processes a beat onset event from BTrack.
+     * Processes a beat onset event from audio beat tracker.
      * Measures phase error relative to Ableton Link's timeline clock and only triggers
      * realignment if phase error exceeds [phaseErrorThresholdBeats] (>= 0.5 beats).
      */
@@ -113,7 +113,7 @@ class BTrackToLinkDamping(
             val phaseError = abs(wrappedDiff)
 
             if (phaseError >= phaseErrorThresholdBeats) {
-                logger.info { "BTrackToLinkDamping: Major phase error detected (%.2f beats >= %.2f threshold). Aligning phase.".format(phaseError, phaseErrorThresholdBeats) }
+                logger.info { "BeatTrackToLinkDamping: Major phase error detected (%.2f beats >= %.2f threshold). Aligning phase.".format(phaseError, phaseErrorThresholdBeats) }
                 downstreamSink?.onBeatAligned(beatTime, timestampUs, q)
             }
         }

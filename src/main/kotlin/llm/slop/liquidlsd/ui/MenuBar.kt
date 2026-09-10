@@ -235,7 +235,7 @@ class MenuBar(
                     val backendName = linkEngine.getActiveBackendName()
                     val bpmText = syncManager.formattedActiveBpm
                     val confPercent = syncManager.confidencePercent
-                    val linkTip = "Ableton Link Sync: ${syncManager.currentMode.displayName}\nActive BPM: $bpmText\nPeers: $peers connected\nBTrack Confidence: $confPercent%\nBackend: $backendName\nClick to open Audio & Link settings."
+                    val linkTip = "Ableton Link Sync: ${syncManager.currentMode.displayName}\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Audio & Link settings."
                     itemTooltip(linkTip)
                 }
 

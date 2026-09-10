@@ -158,7 +158,7 @@ Provide synchronization with DAWs (Ableton Live, Bitwig, Traktor, Serato, Reaper
 ### Architecture & Synchronization Model
 - **Tri-State Timing Core (Hybrid Clock)**:
   - Selectable clock source in MenuBar, Audio Panel, and Settings:
-    - `BTrack Audio`: Autonomous FFT onset detection and dynamic programming flywheel from live microphone/line input.
+    - `Audio Beat Tracker`: Autonomous FFT onset detection and dynamic programming flywheel from live microphone/line input.
     - `Ableton Link`: Network-synchronized shared beat timeline, tempo, and quantum phase across local peers.
     - `Manual Fixed`: Internal flywheel running at fixed manual BPM with VJ tap tempo.
 - **Multi-Backend Link Engine (`AbletonLinkEngine`)**:

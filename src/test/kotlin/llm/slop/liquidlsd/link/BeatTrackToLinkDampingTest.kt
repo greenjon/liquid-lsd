@@ -3,9 +3,9 @@ package llm.slop.liquidlsd.link
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.*
 
-class BTrackToLinkDampingTest {
+class BeatTrackToLinkDampingTest {
 
-    private lateinit var filter: BTrackToLinkDamping
+    private lateinit var filter: BeatTrackToLinkDamping
     private val committedBpm = AtomicReference<Double?>(null)
     private val alignedBeat = AtomicReference<Double?>(null)
 
@@ -24,7 +24,7 @@ class BTrackToLinkDampingTest {
             }
         }
 
-        filter = BTrackToLinkDamping(
+        filter = BeatTrackToLinkDamping(
             minBpm = 60.0,
             maxBpm = 200.0,
             medianWindowSize = 5,

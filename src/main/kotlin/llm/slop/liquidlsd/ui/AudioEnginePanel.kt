@@ -520,12 +520,12 @@ object AudioEnginePanel {
                     }
                 }
 
-                // BTrack Confidence meter
+                // Beat Tracker Confidence meter
                 ImGui.spacing()
                 val confidence = llm.slop.liquidlsd.link.LinkSyncManager.confidence
                 val confPercent = llm.slop.liquidlsd.link.LinkSyncManager.confidencePercent
                 ImGui.alignTextToFramePadding()
-                theme.body("BTrack Confidence: ")
+                theme.body("Beat Tracker Confidence: ")
                 ImGui.sameLine()
                 val (cr, cg, cb) = when {
                     confidence >= 0.70f -> Triple(0.2f, 0.9f, 0.4f)
@@ -535,7 +535,7 @@ object AudioEnginePanel {
                 theme.bodyColored(cr, cg, cb, 1.0f, "$confPercent%")
                 ImGui.sameLine(0f, 10f)
                 ImGui.progressBar(confidence, 120f, 16f, "")
-                itemTooltip("Rhythmic tracking stability metric from BTrack causal beat tracker.")
+                itemTooltip("Rhythmic tracking stability metric from audio beat tracker.")
 
                 // Quantum Selector
                 ImGui.spacing()

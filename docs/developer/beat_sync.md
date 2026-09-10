@@ -13,12 +13,12 @@ Link Sync State Machine: LinkSyncManager
     │
     ├──► SyncMode.LINK_FOLLOWER: Link network active as follower
     │       └─► Receives Carabiner/Link BPM & phase to drive visual engine timeline
-    │       └─► Outbound BTrack tempo events are suppressed
+    │       └─► Outbound audio tempo events are suppressed
     │
     └──► SyncMode.AUDIO_BROADCAST: Link network active as master/broadcaster
-            └─► Local master clock driven by BTrack audio detector or manual tap
+            └─► Local master clock driven by audio beat detector or manual tap
             └─► Incoming Carabiner BPM updates ignored from local master clock
-            └─► Filters BTrack jitter via BTrackToLinkDamping (Median + EMA, 0.5 BPM / 4-beat hysteresis, >= 0.5 beat phase error)
+            └─► Filters audio beat tracking jitter via BeatTrackToLinkDamping (Median + EMA, 0.5 BPM / 4-beat hysteresis, >= 0.5 beat phase error)
             └─► Dispatches onTempoCommitted / onBeatAligned to AudioTempoEventSink
 
 Clock Source Selection: ClockSource (AUDIO_TRACKER | ABLETON_LINK | MANUAL_TAP)
@@ -50,7 +50,7 @@ Clock Source Selection: ClockSource (AUDIO_TRACKER | ABLETON_LINK | MANUAL_TAP)
 
 ## Beat Tracker Model (`BeatTrackerEngine.kt`)
 
-Liquid LSD features a real-time beat tracker and continuous phase generator modeled on BTrack (Adam Stark) and the Dan Ellis causal dynamic programming beat tracker.
+Liquid LSD features a real-time beat tracker and continuous phase generator modeled on the beat tracking algorithm by Adam Stark and the Dan Ellis causal dynamic programming beat tracker.
 
 ### 1. Complex Spectral Difference Onset Detection Function (ODF)
 - Evaluates a zero-allocation 512-point Radix-2 Cooley-Tukey FFT with pre-computed twiddle factors and Hann windowing.

@@ -23,9 +23,9 @@ object LinkSyncManager {
     private val eventSinks = CopyOnWriteArrayList<AudioTempoEventSink>()
 
     /**
-     * Damping filter for conditioning raw BTrack audio beat detector output before network broadcast.
+     * Damping filter for conditioning raw audio beat detector output before network broadcast.
      */
-    val signalDamping = BTrackToLinkDamping(
+    val signalDamping = BeatTrackToLinkDamping(
         downstreamSink = object : AudioTempoEventSink {
             override fun onTempoCommitted(bpm: Double) {
                 if (currentMode == SyncMode.AUDIO_BROADCAST) {
@@ -74,13 +74,13 @@ object LinkSyncManager {
         get() = String.format(java.util.Locale.US, "%.1f", activeBpm)
 
     /**
-     * BTrack audio beat tracker tracking confidence/stability metric [0.0f, 1.0f].
+     * Audio beat tracker tracking confidence/stability metric [0.0f, 1.0f].
      */
     val confidence: Float
         get() = AudioEngine.confidence
 
     /**
-     * BTrack tracking confidence percentage [0, 100].
+     * Tracking confidence percentage [0, 100].
      */
     val confidencePercent: Int
         get() = (confidence * 100f).coerceIn(0f, 100f).toInt()
@@ -92,7 +92,7 @@ object LinkSyncManager {
         get() = currentMode == SyncMode.AUDIO_BROADCAST && AbletonLinkEngine.isEnabled && AbletonLinkEngine.isConnected()
 
     /**
-     * Registers an output event sink to receive BTrack tempo and beat events during [SyncMode.AUDIO_BROADCAST].
+     * Registers an output event sink to receive audio beat tracker tempo and beat events during [SyncMode.AUDIO_BROADCAST].
      */
     fun registerEventSink(sink: AudioTempoEventSink) {
         if (!eventSinks.contains(sink)) {
@@ -188,7 +188,7 @@ object LinkSyncManager {
     }
 
     /**
-     * Dispatches a raw tempo change event from BTrack through the damping filter.
+     * Dispatches a raw tempo change event from audio beat tracker through the damping filter.
      * Only active when operating in [SyncMode.AUDIO_BROADCAST].
      */
     fun publishTempoCommitted(bpm: Double) {
@@ -197,7 +197,7 @@ object LinkSyncManager {
     }
 
     /**
-     * Dispatches a raw beat/phase alignment event from BTrack through the damping filter.
+     * Dispatches a raw beat/phase alignment event from audio beat tracker through the damping filter.
      * Only active when operating in [SyncMode.AUDIO_BROADCAST].
      */
     fun publishBeatAligned(beatTime: Double, microsecondTimestamp: Long = 0L, quantum: Double = 4.0) {

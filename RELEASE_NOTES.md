@@ -6,22 +6,22 @@
 - **Asynchronous Carabiner Outbound Command Queue**: Refactored `CarabinerTcpLinkBackend` to use a lock-free `ConcurrentLinkedQueue<String>`, ensuring network socket writes never block the audio processing or UI rendering threads.
 - **Carabiner Protocol Integration & Formatting**: Formatted outbound commands using `Locale.US` for `bpm <val>` tempo updates and timestamped `beat <val> [timeUs] [quantum]` phase alignment.
 - **Automatic Socket Reconnection & Recovery**: Isolated all socket I/O to a background daemon thread (`CarabinerTcpClient`) with a 3-second auto-reconnect loop upon socket disconnection or Carabiner daemon restarts.
-- **Observable Link UI State**: Exposed `activeBpm` (formatted to 1 decimal place), `confidence` (BTrack tracking stability metric), and `isTransmitting` (`SyncMode.AUDIO_BROADCAST` active & connected).
-- **UI Status Controls & Badges**: Integrated `SyncMode` radio controls, `[TRANSMITTING]` / `[STANDBY]` status indicators, BTrack confidence stability progress bar, and header menu bar status pill in `AudioEnginePanel.kt` and `MenuBar.kt`.
+- **Observable Link UI State**: Exposed `activeBpm` (formatted to 1 decimal place), `confidence` (beat tracking stability metric), and `isTransmitting` (`SyncMode.AUDIO_BROADCAST` active & connected).
+- **UI Status Controls & Badges**: Integrated `SyncMode` radio controls, `[TRANSMITTING]` / `[STANDBY]` status indicators, Beat Tracker confidence stability progress bar, and header menu bar status pill in `AudioEnginePanel.kt` and `MenuBar.kt`.
 - **Comprehensive Unit Test Suite**: Created `CarabinerTcpLinkBackendTest.kt` with a mock Carabiner server verifying non-blocking command queuing, protocol parsing, auto-reconnection, and transmission state.
 
-### Phase 2: BTrack to Link Signal Conditioning & Damping Bridge (`BTrackToLinkDamping.kt`, `LinkSyncManager.kt`, `AppSettings.kt`, `UITheme.kt`, `BTrackToLinkDampingTest.kt`)
-- **`BTrackToLinkDamping` Signal Conditioner**: Created signal conditioner to filter raw audio beat tracking micro-fluctuations before network transmission.
+### Phase 2: Audio Beat Tracker to Link Signal Conditioning & Damping Bridge (`BeatTrackToLinkDamping.kt`, `LinkSyncManager.kt`, `AppSettings.kt`, `UITheme.kt`, `BeatTrackToLinkDampingTest.kt`)
+- **`BeatTrackToLinkDamping` Signal Conditioner**: Created signal conditioner to filter raw audio beat tracking micro-fluctuations before network transmission.
 - **Sanity Bounds & Trajectory Smoothing**: Filters raw BPM outside 60–200 BPM, applying a 7-sample rolling median filter to discard onset outliers followed by alpha Exponential Moving Average (EMA) smoothing.
 - **Quantization & Hysteresis**: Prevents peer timeline warping by requiring a >= 0.5 BPM divergence sustained for at least 4 consecutive beats before committing outbound tempo changes to Carabiner.
 - **Major Phase Error Realignment**: Measures beat onset phase error against Carabiner's timeline clock, only publishing beat realignments when phase error exceeds >= 0.5 beats (half-beat) to eliminate acoustic onset jitter stutter.
-- **Settings Persistence & Unit Testing**: Integrated damping parameters into `AppSettings` and `UITheme`, backed by a unit test suite (`BTrackToLinkDampingTest.kt`) verifying median/EMA smoothing, hysteresis counters, and phase error thresholding.
+- **Settings Persistence & Unit Testing**: Integrated damping parameters into `AppSettings` and `UITheme`, backed by a unit test suite (`BeatTrackToLinkDampingTest.kt`) verifying median/EMA smoothing, hysteresis counters, and phase error thresholding.
 
 ### Phase 1: Ableton Link Master & Audio Broadcast Architecture (`SyncMode.kt`, `LinkSyncManager.kt`, `AudioEngine.kt`, `AppSettings.kt`, `UITheme.kt`, `LinkSyncManagerTest.kt`)
 - **Tri-State Sync Mode State Machine**: Created `SyncMode` enum (`DISABLED`, `LINK_FOLLOWER`, `AUDIO_BROADCAST`) to cleanly separate follower and broadcast responsibilities.
 - **`LinkSyncManager` Orchestration**: Created central thread-safe manager for mode transitions, active coroutine job cancellation to break echo loops, and status telemetry (`isLinked`, `peersCount`, `currentMode`, `activeBpm`).
-- **`AudioTempoEventSink` Interface**: Added callback interface with `onTempoCommitted(bpm)` and `onBeatAligned(beatTime, microsecondTimestamp, quantum)` for emitting BTrack audio tempo and downbeat events in `AUDIO_BROADCAST` mode.
-- **Audio Thread Lock-Free Dispatch**: Updated `AudioEngine` to publish BTrack tempo and beat alignment events to `LinkSyncManager` without heap allocations or thread blocking.
+- **`AudioTempoEventSink` Interface**: Added callback interface with `onTempoCommitted(bpm)` and `onBeatAligned(beatTime, microsecondTimestamp, quantum)` for emitting audio beat tracker tempo and downbeat events in `AUDIO_BROADCAST` mode.
+- **Audio Thread Lock-Free Dispatch**: Updated `AudioEngine` to publish audio beat tracker tempo and beat alignment events to `LinkSyncManager` without heap allocations or thread blocking.
 - **Performer Gig Guardrail**: Enforced safety rule where app launch always defaults to `SyncMode.DISABLED` (sanitizing any saved `AUDIO_BROADCAST` state) to prevent accidental live network timeline takeovers.
 - **Comprehensive Unit Testing**: Added `LinkSyncManagerTest.kt` verifying state transitions, event sink dispatching, thread-safe concurrent toggling, and startup safety sanitization.
 
@@ -41,12 +41,12 @@
 > **Release 1.0.0-beta.62** introduces Ableton Link peer-to-peer beat, phase, and tempo synchronization across local networks with a tri-state clock source engine, ISF mixer transition shaders with full fallback and composite preservation, Spout and Syphon live video ingest with dynamic server discovery, and dual modular FX slots with multi-pass ISF and spatial distortion.
 
 ### Phase 3: Musical Timing — Ableton Link Integration (`ClockSource.kt`, `AbletonLinkEngine.kt`, `LinkBackend.kt`, `NativeJniLinkBackend.kt`, `CarabinerTcpLinkBackend.kt`, `NativeLibraryLoader.kt`, `MenuBar.kt`, `AudioEnginePanel.kt`, `SettingsPanel.kt`, `AppSettings.kt`, `UITheme.kt`, `AbletonLinkEngineTest.kt`)
-- **Tri-State Clock Source Core**: Integrated `ClockSource` enum (`AUDIO_TRACKER` for BTrack FFT onset engine, `ABLETON_LINK` for network peer sync, `MANUAL_TAP` for internal fixed tempo & VJ tap tempo).
+- **Tri-State Clock Source Core**: Integrated `ClockSource` enum (`AUDIO_TRACKER` for audio beat tracker FFT onset engine, `ABLETON_LINK` for network peer sync, `MANUAL_TAP` for internal fixed tempo & VJ tap tempo).
 - **Multi-Backend Ableton Link Architecture**:
   - Native JNI C++ bridge (`link_jni` embedding `ableton::Link`) for sample-accurate peer-to-peer beat, phase, and tempo sync across `linux-x64`, `windows-x64`, `macos-x64`, and `macos-arm64`.
   - Carabiner TCP socket backend (`CarabinerTcpLinkBackend`) connecting to local Carabiner Link daemon (`127.0.0.1:17000`).
   - Graceful `NoOpLinkBackend` fallback when Link is inactive.
-- **Top MenuBar Telemetry & HUD Pill**: Added `LINK [N peers]` status pill, quantum bar phase ring, active driver readout, and clock source dropdown selector (`[BTRACK]`, `[LINK]`, `[MANUAL]`).
+- **Top MenuBar Telemetry & HUD Pill**: Added `LINK [N peers]` status pill, quantum bar phase ring, active driver readout, and clock source dropdown selector (`[AUDIO]`, `[LINK]`, `[MANUAL]`).
 - **Audio Engine & Settings Controls**: Added dedicated Ableton Link configuration card in `AudioEnginePanel` with quantum selector (1, 4, 8, 16 beats) and start/stop transport sync support.
 - **Settings Persistence & Unit Tests**: Full persistence of clock source and Link configuration in `AppSettings` / `UITheme`, with unit test suite in `AbletonLinkEngineTest.kt`.
 
