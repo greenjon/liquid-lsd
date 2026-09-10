@@ -319,7 +319,8 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        ImGui.textWrapped("Zero-copy GPU texture sharing to Resolume, OBS, and MadMapper. Downscaling preview outputs is recommended to save GPU power.")
+        val backendName = llm.slop.liquidlsd.rendering.TextureStreamerManager.getBackendName()
+        ImGui.textWrapped("Zero-copy GPU texture sharing to Resolume, OBS, and MadMapper. Active driver: $backendName")
         ImGui.spacing()
 
         val tableFlags = ImGuiTableFlags.BordersOuter or ImGuiTableFlags.RowBg or ImGuiTableFlags.Resizable
@@ -380,6 +381,9 @@ object SettingsPanel {
                 ImGui.tableNextColumn()
                 if (config.isEnabled) {
                     ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "LIVE")
+                    val streamer = llm.slop.liquidlsd.rendering.TextureStreamerManager.getStreamer(endpoint)
+                    val statusText = if (streamer is llm.slop.liquidlsd.rendering.LinuxTextureBridge) streamer.getDriverStatus() else "LIVE"
+                    itemTooltip("Active Backend: $backendName\nStatus: $statusText")
                 } else {
                     ImGui.textDisabled("OFF")
                 }

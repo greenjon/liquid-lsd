@@ -412,11 +412,12 @@ class CvModulatorTest {
 
     @Test
     fun testActiveModulatorsFilterBypassedBands() {
+        llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
         llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
         llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_bass", 1.0f)
 
-        val activeAmp = CvModulator(sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = false)
-        val mutedBass = CvModulator(sourceId = "audio_bass", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = true)
+        val activeAmp = CvModulator(id = "test_amp", sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = false)
+        val mutedBass = CvModulator(id = "test_bass", sourceId = "audio_bass", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = true)
 
         val mods = listOf(activeAmp, mutedBass)
         val hasAnyUnbypassed = mods.any { !it.bypassed }

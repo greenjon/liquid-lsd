@@ -1,6 +1,16 @@
-# Architectural Decisions - Liquid LSD
+## Zero-Copy Linux Video Sharing & Live Video Ingest via PipeWire 0.3 (`PipeWireLibrary.kt`, `PipeWireBridge.kt`, `TextureReceiver.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`)
 
-This document outlines the key architectural decisions made in the development of Liquid LSD, detailing the context, options considered, and the rationale behind each choice.
+- **Decision**: Implement zero-copy GPU video frame streaming and live video ingest on Linux using **PipeWire 0.3** (`libpipewire-0.3.so`) with DMA-BUF GPU export, shared-memory (`SPA_DATA_MemFd`) fallback, and `PipeWireReceiverImpl` ingestion:
+  - **JNA Native PipeWire Bindings**: Implemented `PipeWireLibrary.kt` to bind `libpipewire-0.3.so.0` / `libpipewire-0.3.so` functions (`pw_init`, `pw_thread_loop_*`, `pw_context_*`, `pw_stream_*`) and SPA video parameters (`SPA_VIDEO_FORMAT_RGBA`).
+  - **Thread-Loop Lifecycle & Stream Management**: Implemented `PipeWireBridge.kt` to handle native thread loop lifecycle, stream setup, format negotiation, and buffer submission for video outputs.
+  - **Native Linux Video Ingest (`PipeWireReceiverImpl` & `fetchPipeWireStreams`)**: Created `PipeWireReceiverImpl` in `TextureReceiver.kt` to ingest external live PipeWire video feeds into OpenGL textures, and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt` to auto-discover active PipeWire video nodes (`pw-dump` / `pw-cli`).
+  - **Zero-Stall GPU-to-Stream Readback (`LinuxTextureBridge`)**: Replaced the stubbed `LinuxTextureBridge` in `TextureStreamer.kt` with active PipeWire streaming. Uses `PboReadbackPipeline` to perform asynchronous PBO DMA readback from FBO textures without stalling the GL rendering pipeline.
+  - **Graceful Fallback & Zero Hard Dependencies**: If `libpipewire-0.3.so` is absent or PipeWire is not running, `LinuxTextureBridge` cleanly degrades to `NullTextureStreamer` and `PipeWireReceiverImpl` degrades to `NullTextureReceiver`. If GPU DRM DMA-BUF export is unsupported by the display driver, it uses `SPA_DATA_MemFd` ring buffer memory.
+  - **Settings UI & Telemetry Integration**: Updated `SettingsPanel.kt` to display active driver information (`PipeWire 0.3 (Linux)`, `Spout2 (Windows)`, `Syphon (macOS)`) and hover tooltips detailing live stream status.
+- **Rationale**:
+  - Achieves feature parity across Windows (Spout2), macOS (Syphon), and Linux (PipeWire 0.3).
+  - PipeWire 0.3 is the default multimedia server on modern Linux distributions (Ubuntu 22.04+, Debian 12+, Fedora 34+, Arch).
+  - Eliminates main-thread OpenGL pipeline stalls while sharing live video feeds with OBS Studio, Resolume Arena, qpwgraph, and stage projection servers.
 
 ## First-Run Clean Startup with Blank Deck Screens (`Deck.kt`, `Main.kt`, `PresetManager.kt`, `SaveLoadFixesTest.kt`)
 

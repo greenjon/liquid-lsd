@@ -117,8 +117,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging and uniform binding
 │   ├── DynamicSpiral.kt        — Specialized particle/spiral visual source
-│   ├── ExternalVideoSource.kt  — Live video ingest visual source driven by Spout/Syphon streams
-│   ├── ExternalVideoDiscovery.kt — Background discovery service polling for active Spout/Syphon servers
+│   ├── ExternalVideoSource.kt  — Live video ingest visual source driven by Spout/Syphon/PipeWire video streams
+│   ├── ExternalVideoDiscovery.kt — Background discovery service polling for active Spout, Syphon, and PipeWire video streams
 │   ├── HyperMesh.kt            — Real-time 4D Polychoron (600-cell & 120-cell) visual source with Hopf fibration
 │   ├── Icosahedron.kt          — 32-Stellation icosahedral manifold visual source
 │   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
@@ -127,8 +127,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FBO.kt                  — OpenGL framebuffer wrapper
 │   ├── GLDebug.kt              — OpenGL debug context callbacks
 │   ├── GLResourceTracker.kt    — OpenGL leak tracking
-│   ├── TextureStreamer.kt      — Multi-endpoint live video sharing (Spout2 on Windows, Syphon Obj-C Runtime on macOS, Linux Texture Bridge)
-│   ├── TextureReceiver.kt      — Live video stream ingestion client bindings (Spout2 on Windows, Syphon Client on macOS)
+│   ├── TextureStreamer.kt      — Multi-endpoint live video sharing (Spout2 on Windows, Syphon Obj-C Runtime on macOS, PipeWire 0.3 on Linux)
+│   ├── TextureReceiver.kt      — Live video stream ingestion client bindings (Spout2 on Windows, Syphon Client on macOS, PipeWire 0.3 on Linux)
 │   ├── VideoOutputSettings.kt  — Video output endpoints, resolution overrides, scaling modes, and stream configurations
 │   └── ViewportHelper.kt       — Output scaling modes
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md

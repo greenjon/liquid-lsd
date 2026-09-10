@@ -122,10 +122,10 @@ void main() {
 
 ---
 
-## External Live Video Ingest (Spout & Syphon)
+## External Live Video Ingest (Spout, Syphon & PipeWire)
 
 In addition to procedural GLSL shaders, Liquid LSD can ingest live video feeds from third-party applications (OBS, Resolume, TouchDesigner, webcams, capture cards, media players):
 
 1. In the Deck **SRC** tab, select **External Video** from the Visual Source dropdown.
-2. In the **Server** dropdown combo box, pick any active Spout2 sender (Windows) or Syphon server (macOS) discovered on your local system.
+2. In the **Server** dropdown combo box, pick any active Spout2 sender (Windows), Syphon server (macOS), or PipeWire video stream (Linux) discovered on your local system.
 3. The live video stream routes directly into the Deck pipeline, allowing full 2D/3D transformations (zoom, rotation, tri-planar/tetrahedral projection), audio-reactive feedback loops, and dual ISF post-processing effects.

@@ -58,7 +58,8 @@ class FBO(
         glBindTexture(GL_TEXTURE_2D, 0)
 
         logger.debug { "Created FBO ${framebufferId} (${width}x${height}), texture: $texture" }
-        GLResourceTracker.register(framebufferId, "FBO created at ${Thread.currentThread().stackTrace[2]}")
+        val caller = Thread.currentThread().stackTrace.getOrNull(3) ?: Thread.currentThread().stackTrace[2]
+        GLResourceTracker.register(framebufferId, "FBO created at $caller")
     }
 
     /**

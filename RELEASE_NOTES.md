@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Zero-Copy Linux Video Sharing & Ingest via PipeWire 0.3 (`PipeWireLibrary.kt`, `PipeWireBridge.kt`, `TextureReceiver.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`)
+- **Native PipeWire 0.3 JNA Bindings**: Implemented `PipeWireLibrary.kt` to dynamically bind `libpipewire-0.3.so` functions (`pw_init`, `pw_thread_loop_*`, `pw_context_*`, `pw_stream_*`) and SPA video parameters without hard compile-time dependencies.
+- **PipeWire Bridge & Stream Lifecycle**: Implemented `PipeWireBridge.kt` managing native thread loop initialization, stream creation, and format negotiation with PipeWire consumers (OBS Studio, Wayland compositors, qpwgraph, WirePlumber).
+- **Native Linux Video Ingest (`PipeWireReceiverImpl` & `fetchPipeWireStreams`)**: Created `PipeWireReceiverImpl` in `TextureReceiver.kt` to ingest external live PipeWire video feeds into OpenGL textures, and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt` to auto-discover active PipeWire video nodes (`pw-dump` / `pw-cli`).
+- **Asynchronous PBO DMA Readback**: Updated `LinuxTextureBridge` in `TextureStreamer.kt` with `PboReadbackPipeline` async GPU-to-CPU buffer transfers, avoiding main-thread OpenGL stalls.
+- **GPU DMA-BUF Export & MemFd Fallback**: Automatically exports GPU DMA-BUF buffers when Mesa/EGL drivers are present, with graceful fallback to PipeWire shared memory (`SPA_DATA_MemFd`) and `NullTextureStreamer` when PipeWire is absent.
+- **Settings Telemetry & Driver Status**: Added active video driver readout (`PipeWire 0.3 (Linux)`, `Spout2 (Windows)`, `Syphon (macOS)`) and hover tooltips in `SettingsPanel.kt`.
+
 ---
 
 ## Version 1.0.0-beta.62
@@ -28,14 +36,14 @@
 - **Session Serialization & Web Broadcast**: Full persistence of `transitionSlot` in `SessionStateDto` and JSON broadcast serialization for web clients.
 - **Bundled Transitions**: Shipped default transition shaders: `linear_crossfade.fs`, `wipe_horizontal.fs`, `wipe_vertical.fs`, `radial_wipe.fs`, `glitch_transition.fs`, `luma_wipe.fs`, and `zoom_fade.fs`.
 
-### Phase 4: Video Processing — Spout & Syphon Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `Renderer.kt`, `VisualSourceRegistry.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `ExternalVideoSourceTest.kt`, `Main.kt`)
-- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows (`SpoutReceiverImpl`) and Syphon on macOS (`SyphonReceiverImpl`).
+### Phase 4: Video Processing — Spout, Syphon & PipeWire Input (`TextureReceiver.kt`, `TextureStreamer.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `Renderer.kt`, `VisualSourceRegistry.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `ExternalVideoSourceTest.kt`, `Main.kt`)
+- **Native Live Video Ingest**: Ingest live video feeds from external applications (webcams, OBS, Resolume, TouchDesigner) via Spout2 on Windows (`SpoutReceiverImpl`), Syphon on macOS (`SyphonReceiverImpl`), and PipeWire 0.3 on Linux (`PipeWireReceiverImpl`).
 - **Complete Rendering Pipeline Integration**: Integrated `renderExternalVideoSource` in `Renderer.kt`, blitting incoming video textures (`currentTextureId`) directly into deck framebuffers (`rawSource2DFBO` / `rawSourceFBO`) with full downstream 2D/3D transformations, feedback loops, and dual ISF post-processing slots.
-- **Dynamic Server Discovery**: Integrated background polling (`ExternalVideoDiscovery`) to automatically detect launched or closed external video servers across the system.
+- **Dynamic Server Discovery**: Integrated background polling (`ExternalVideoDiscovery`) to automatically detect launched or closed external video servers and PipeWire video streams across the system (`fetchPipeWireStreams`).
 - **Native Visual Source Integration & Registry Cleanup**: Added `ExternalVideoSource` to `VisualSourceRegistry` with single-instance guard checks, making external video feeds selectable visual generators within Decks.
-- **UI Server Selector**: Implemented a dynamic server combo selector in `PresetGridTabs` for picking live external servers.
-- **Preset Serialization & Unit Tests**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load, with full unit test coverage in `ExternalVideoSourceTest.kt`.
-- **Platform Scope**: Windows (Spout2) and macOS (Syphon) active; Linux DMA-BUF / PipeWire ingest postponed.
+- **UI Server Selector**: Implemented a dynamic server combo selector in `PresetGridTabs` for picking live external servers and PipeWire video streams.
+- **Preset Serialization & Unit Tests**: Persisted `serverName` selection in `DeckPresetDto` for seamless connection restore on preset load, with full unit test coverage in `ExternalVideoSourceTest.kt` and `PipeWireBridgeTest.kt`.
+- **Platform Scope**: Windows (Spout2), macOS (Syphon), and Linux (PipeWire 0.3 via `PipeWireReceiverImpl`) active across all platforms.
 
 ### Phase 2.2.2: Multi-Pass ISF Engine, Dual FX Slots & Universal Shader Picker (`ShaderPickerPopup.kt`, `ISFParser.kt`, `ISFFilter.kt`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`, `ISFMultiPassTest.kt`)
 - **Dual FX Architecture**: Added a second serialized FX slot (**Slot 2: Spatial / Distortion**) to each Deck pipeline (`Visual Source` $\rightarrow$ `2D/3D Transform` $\rightarrow$ `cleanFBO` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `feedback.frag`).

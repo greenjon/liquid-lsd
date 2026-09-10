@@ -51,8 +51,81 @@ object ExternalVideoDiscovery {
         return when {
             osName.contains("win") -> fetchSpoutServers()
             osName.contains("mac") -> fetchSyphonServers()
+            osName.contains("linux") -> fetchPipeWireStreams()
             else -> emptyList()
         }
+    }
+
+    fun fetchPipeWireStreams(): List<String> {
+        val results = mutableSetOf<String>()
+        try {
+            val process = ProcessBuilder("pw-dump", "Node")
+                .redirectError(ProcessBuilder.Redirect.DISCARD)
+                .start()
+            val output = process.inputStream.bufferedReader().use { it.readText() }
+            process.waitFor()
+
+            if (output.isNotBlank()) {
+                val nodeBlocks = output.split("{\n    \"id\":", "{\n  \"id\":")
+                for (block in nodeBlocks) {
+                    val isVideo = block.contains("\"media.class\": \"Video") ||
+                            block.contains("\"media.class\": \"Stream/Output/Video") ||
+                            block.contains("\"mediaType\": \"video\"") ||
+                            block.contains("\"media.type\": \"Video\"")
+                    if (isVideo) {
+                        val descMatch = Regex("\"node.description\": \"([^\"]+)\"").find(block)
+                        val nameMatch = Regex("\"node.name\": \"([^\"]+)\"").find(block)
+                        val name = descMatch?.groupValues?.get(1) ?: nameMatch?.groupValues?.get(1)
+                        if (!name.isNullOrBlank()) {
+                            results.add(name)
+                        }
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            // Silently fall back
+        }
+
+        if (results.isEmpty()) {
+            try {
+                val process = ProcessBuilder("pw-cli", "list-objects", "Node")
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
+                    .start()
+                val output = process.inputStream.bufferedReader().use { it.readText() }
+                process.waitFor()
+
+                var currentName = ""
+                var isVideoNode = false
+
+                for (line in output.lines()) {
+                    val trimmed = line.trim()
+                    if (trimmed.startsWith("id ")) {
+                        if (isVideoNode && currentName.isNotBlank()) {
+                            results.add(currentName)
+                        }
+                        currentName = ""
+                        isVideoNode = false
+                    }
+                    if (trimmed.contains("media.class = \"Video") || trimmed.contains("media.type = \"Video")) {
+                        isVideoNode = true
+                    }
+                    if (trimmed.startsWith("node.description =")) {
+                        val desc = trimmed.substringAfter("node.description =").trim('"', ' ', '\t')
+                        if (desc.isNotBlank()) currentName = desc
+                    } else if (trimmed.startsWith("node.name =") && currentName.isBlank()) {
+                        val n = trimmed.substringAfter("node.name =").trim('"', ' ', '\t')
+                        if (n.isNotBlank()) currentName = n
+                    }
+                }
+                if (isVideoNode && currentName.isNotBlank()) {
+                    results.add(currentName)
+                }
+            } catch (e: Throwable) {
+                // Ignore
+            }
+        }
+
+        return results.toList()
     }
 
     private fun fetchSpoutServers(): List<String> {

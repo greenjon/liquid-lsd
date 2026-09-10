@@ -70,6 +70,7 @@ class ExternalVideoSource(
         receiver = when {
             osName.contains("win") -> SpoutReceiverImpl()
             osName.contains("mac") -> SyphonReceiverImpl()
+            osName.contains("linux") -> PipeWireReceiverImpl()
             else -> NullTextureReceiver()
         }
         

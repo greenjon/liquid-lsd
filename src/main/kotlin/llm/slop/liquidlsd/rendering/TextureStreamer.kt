@@ -378,25 +378,56 @@ class LinuxTextureBridge(override val identifier: String) : TextureStreamer {
     override val isSupported: Boolean
         get() = System.getProperty("os.name").lowercase().contains("linux")
 
+    private val bridge = llm.slop.liquidlsd.rendering.pipewire.PipeWireBridge()
+    private var pboPipeline: llm.slop.liquidlsd.export.PboReadbackPipeline? = null
     private var active = false
 
     override fun start(width: Int, height: Int): Boolean {
         if (!isSupported) return false
-        logger.info { "Initializing Linux Texture Bridge '$identifier' (${width}x${height})" }
-        active = true
-        // TODO: PipeWire DMA-BUF initialization
-        return true
+        if (!bridge.isAvailable) {
+            logger.warn { "PipeWire library not available on system. Video sharing disabled for '$identifier'." }
+            return false
+        }
+
+        logger.info { "Initializing Linux PipeWire Texture Bridge '$identifier' (${width}x${height})" }
+        active = bridge.createServer(identifier, width, height)
+        if (active) {
+            pboPipeline = llm.slop.liquidlsd.export.PboReadbackPipeline(width, height)
+        }
+        return active
     }
 
     override fun update(textureId: Int, width: Int, height: Int) {
-        if (!active) return
+        if (!active || !bridge.isConnected) return
+
+        var pipeline = pboPipeline
+        if (pipeline == null || pipeline.width != width || pipeline.height != height) {
+            pipeline?.dispose()
+            pipeline = llm.slop.liquidlsd.export.PboReadbackPipeline(width, height)
+            pboPipeline = pipeline
+        }
+
+        val frameBuffer = pipeline.readFrameAsync(0)
+        if (frameBuffer != null) {
+            bridge.publishFrameBuffer(frameBuffer, width, height)
+        }
     }
 
     override fun stop() {
         if (active) {
-            logger.info { "Closing Linux Texture Bridge '$identifier'" }
+            logger.info { "Closing Linux PipeWire Texture Bridge '$identifier'" }
+            bridge.stopServer()
+            pboPipeline?.dispose()
+            pboPipeline = null
             active = false
         }
+    }
+
+    fun getDriverStatus(): String = when {
+        !bridge.isAvailable -> "PipeWire Unavailable"
+        !active -> "Disabled"
+        bridge.isDmaBufSupported -> "PipeWire 0.3 (DMA-BUF Active)"
+        else -> "PipeWire 0.3 (MemFd Fallback)"
     }
 }
 
@@ -409,6 +440,18 @@ object TextureStreamerManager {
     private val rescalers = mutableMapOf<VideoOutputEndpoint, FBO>()
     
     private val osName = System.getProperty("os.name").lowercase()
+
+    fun getBackendName(): String = when {
+        osName.contains("win") -> "Spout2 (Windows)"
+        osName.contains("mac") -> "Syphon (macOS)"
+        osName.contains("linux") -> {
+            val lib = llm.slop.liquidlsd.rendering.pipewire.PipeWireLibrary.load()
+            if (lib != null) "PipeWire 0.3 (Linux)" else "Linux Texture Bridge (Unavailable)"
+        }
+        else -> "None"
+    }
+
+    fun getStreamer(endpoint: VideoOutputEndpoint): TextureStreamer? = streamers[endpoint]
 
     fun update(endpoint: VideoOutputEndpoint, textureId: Int, width: Int, height: Int, renderer: Renderer) {
         val config = UITheme.settings.videoOutputConfigs[endpoint] ?: VideoOutputConfig()

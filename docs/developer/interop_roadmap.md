@@ -195,8 +195,8 @@ Enable Liquid LSD to ingest external live video streams (webcams, Blackmagic cap
     - Audio-reactive feedback loops (decay, chromatic aberration, blur, hue shifts).
     - ISF post-processing effects.
 - **Platform Scope**:
-  - Windows (Spout2 via `SpoutReceiverImpl`) and macOS (Syphon via `SyphonReceiverImpl`) are fully active.
-  - Linux DMA-BUF / PipeWire ingest is postponed and stubbed to `NullTextureReceiver`.
+  - Windows (Spout2 via `SpoutReceiverImpl`), macOS (Syphon via `SyphonReceiverImpl`), and Linux (PipeWire 0.3 via `PipeWireReceiverImpl` and `PipeWireBridge` & `LinuxTextureBridge`) are fully active.
+  - Linux video output utilizes PipeWire 0.3 stream negotiation with DMA-BUF GPU export and `SPA_DATA_MemFd` ring buffer fallback; Linux video ingest discovers external live video nodes via `fetchPipeWireStreams()` (`pw-dump` / `pw-cli`) and ingests frames via `PipeWireReceiverImpl`.
 
 ---
 
@@ -211,5 +211,5 @@ Enable Liquid LSD to ingest external live video streams (webcams, Blackmagic cap
 | **Phase 2.2** | **Dual FX Slots (ISF Effects)** | Multi-pass FBO pipeline, ISF image inputs | Two dedicated slots per deck: [Slot 1: Color/Degradation] and [Slot 2: Spatial/Distortion]. |
 | **Phase 2.3** | **Mixer Transitions (ISF Crossfades)** | ISF 2-image transition shaders | Custom wipe, glitch, and morph crossfader transitions. |
 | **Phase 3** | **Musical Timing (Ableton Link)** | Ableton Link C++/JNI bindings | Sample-accurate wireless/wired network beat & tempo sync with DAWs. |
-| **Phase 4** | **Video Ingest (Spout/Syphon Input)** | Texture sharing consumer, Dynamic source binding | External camera, media player, and generative stream processing with Liquid LSD FX. |
+| **Phase 4** | **Video Ingest (Spout/Syphon/PipeWire Input)** | Spout2 (Win), Syphon (macOS), PipeWire (Linux), Dynamic source binding | External camera, OBS, media player, and generative stream processing with Liquid LSD FX. |
 
