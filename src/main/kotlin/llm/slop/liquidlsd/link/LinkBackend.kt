@@ -53,9 +53,14 @@ interface LinkBackend {
     fun getPhaseAtTime(timeUs: Long, quantum: Double): Double
 
     /**
+     * Returns true if the underlying driver/socket connection is active and connected.
+     */
+    fun isConnected(): Boolean = isEnabled()
+
+    /**
      * Requests aligning beat phase to targetBeat at timeUs for the given quantum.
      */
-    fun requestBeatAtTime(beat: Double, quantum: Double)
+    fun requestBeatAtTime(beat: Double, timeUs: Long = 0L, quantum: Double = 4.0)
 
     /**
      * Enables or disables Start/Stop Transport Synchronization across Link peers.

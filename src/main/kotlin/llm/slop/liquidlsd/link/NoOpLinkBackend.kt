@@ -48,8 +48,10 @@ class NoOpLinkBackend : LinkBackend {
         return beat % q
     }
 
-    override fun requestBeatAtTime(beat: Double, quantum: Double) {
-        val nowUs = System.nanoTime() / 1000
+    override fun isConnected(): Boolean = false
+
+    override fun requestBeatAtTime(beat: Double, timeUs: Long, quantum: Double) {
+        val nowUs = if (timeUs > 0) timeUs else (System.nanoTime() / 1000)
         val elapsedBeats = beat.coerceAtLeast(0.0)
         val elapsedSec = elapsedBeats / (bpm / 60.0)
         startTimeUs = nowUs - (elapsedSec * 1_000_000.0).toLong()

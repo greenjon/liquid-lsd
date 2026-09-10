@@ -78,6 +78,8 @@ object AbletonLinkEngine {
 
     fun getActiveBackendName(): String = activeBackend.name
 
+    fun isConnected(): Boolean = isEnabled && activeBackend.isConnected()
+
     fun getNumPeers(): Int = if (isEnabled) activeBackend.getNumPeers() else 0
 
     fun getTempo(): Double = activeBackend.getTempo()
@@ -88,13 +90,15 @@ object AbletonLinkEngine {
 
     fun getBeatAtTime(timeUs: Long): Double = activeBackend.getBeatAtTime(timeUs, quantum)
 
+    fun getBeatAtTime(timeUs: Long, quantum: Double): Double = activeBackend.getBeatAtTime(timeUs, quantum)
+
     fun getPhaseAtTime(timeUs: Long): Double = activeBackend.getPhaseAtTime(timeUs, quantum)
 
     /**
      * Aligns beat phase across Link network session.
      */
-    fun requestBeatAtTime(beat: Double) {
-        activeBackend.requestBeatAtTime(beat, quantum)
+    fun requestBeatAtTime(beat: Double, timeUs: Long = 0L, targetQuantum: Double = quantum) {
+        activeBackend.requestBeatAtTime(beat, timeUs, targetQuantum)
     }
 
     fun isStartStopSyncEnabled(): Boolean = activeBackend.isStartStopSyncEnabled()

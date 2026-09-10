@@ -141,6 +141,7 @@ object AudioEngine {
     private val extractor = AmplitudeExtractor()
     val beatDetector = BeatDetector()
     val beatTracker: BeatTrackerEngine get() = beatDetector.engine
+    val confidence: Float get() = beatDetector.confidence
 
     // Pre-allocated buffer for oscilloscope rendering of raw input samples
     // KNOWN BENIGN DATA RACE: The index and buffer array in rawHistory are updated without
@@ -208,6 +209,9 @@ object AudioEngine {
             }
             CVRegistry.updateBeatAnchor(currentBeats, bpm, System.nanoTime())
         }
+        if (llm.slop.liquidlsd.link.LinkSyncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+            llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(bpm.toDouble())
+        }
     }
 
     /**
@@ -223,6 +227,9 @@ object AudioEngine {
             beatDetector.nudgeTempo(tappedBpm)
             if (clockSource == ClockSource.ABLETON_LINK) {
                 llm.slop.liquidlsd.link.AbletonLinkEngine.setTempo(tappedBpm.toDouble())
+            }
+            if (llm.slop.liquidlsd.link.LinkSyncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+                llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(tappedBpm.toDouble())
             }
         }
         if (clockSource == ClockSource.ABLETON_LINK) {
@@ -241,6 +248,9 @@ object AudioEngine {
             totalBeats = alignedBeats
             phaseSlewBuffer = 0.0
             CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, tapTimestampNs)
+            if (llm.slop.liquidlsd.link.LinkSyncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+                llm.slop.liquidlsd.link.LinkSyncManager.publishBeatAligned(alignedBeats, tapTimestampNs / 1000)
+            }
         }
     }
 
@@ -490,8 +500,17 @@ object AudioEngine {
             llm.slop.liquidlsd.link.AbletonLinkEngine.updateClockAnchor(currentTime + blockDurationNs)
         } else {
             // Flywheel momentum: always advance totalBeats using effective BPM (smooth coasting even through silence)
+            val prevBeats = totalBeats
             totalBeats += deltaTimeSec * (effectiveBpm / 60.0)
             CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
+
+            if (llm.slop.liquidlsd.link.LinkSyncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+                val prevBeatIndex = prevBeats.toLong()
+                val currentBeatIndex = totalBeats.toLong()
+                if (currentBeatIndex > prevBeatIndex) {
+                    llm.slop.liquidlsd.link.LinkSyncManager.publishBeatAligned(currentBeatIndex.toDouble(), (currentTime + blockDurationNs) / 1000)
+                }
+            }
         }
 
         val ampNorm      = (amp  / 0.25f).coerceIn(0f, 1f)

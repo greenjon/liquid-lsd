@@ -3,13 +3,19 @@ package llm.slop.liquidlsd.link
 import mu.KotlinLogging
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.io.PrintWriter
+import java.net.InetSocketAddress
 import java.net.Socket
+import java.nio.charset.StandardCharsets
+import java.util.Locale
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Ableton Link backend communicating over TCP socket with Carabiner Link daemon (`127.0.0.1:17000`).
+ * Uses an asynchronous non-blocking command pipeline and automatic background reconnection logic.
  */
 class CarabinerTcpLinkBackend(
     val host: String = "127.0.0.1",
@@ -21,7 +27,10 @@ class CarabinerTcpLinkBackend(
     private var socket: Socket? = null
     private var writer: PrintWriter? = null
     private var reader: BufferedReader? = null
+
     private val running = AtomicBoolean(false)
+    @Volatile private var connected = false
+    private val commandQueue = ConcurrentLinkedQueue<String>()
     private val executor = Executors.newSingleThreadExecutor { r -> Thread(r, "CarabinerTcpClient").apply { isDaemon = true } }
 
     @Volatile private var isLinkEnabled = false
@@ -36,61 +45,84 @@ class CarabinerTcpLinkBackend(
     override fun init(initialBpm: Double): Boolean {
         currentBpm = initialBpm
         anchorTimeUs = System.nanoTime() / 1000
-        try {
-            val sock = Socket(host, port)
-            sock.soTimeout = 3000
-            socket = sock
-            writer = PrintWriter(sock.getOutputStream(), true)
-            reader = BufferedReader(InputStreamReader(sock.getInputStream()))
-            running.set(true)
+        isLinkEnabled = true
+        running.set(true)
 
-            executor.submit { listenLoop() }
-
-            // Initial setup commands
-            sendCommand("status")
-            sendCommand("bpm $initialBpm")
-            isLinkEnabled = true
-            logger.info { "CarabinerTcpLinkBackend: Connected to $host:$port" }
-            return true
-        } catch (e: Exception) {
-            logger.debug { "CarabinerTcpLinkBackend: Connection to $host:$port failed: ${e.message}" }
-            close()
-            return false
-        }
+        executor.submit { connectionWorkerLoop() }
+        return true
     }
 
+    override fun isConnected(): Boolean = connected && running.get()
+
+    /**
+     * Enqueues an outbound Carabiner TCP command on a lock-free queue.
+     * Guaranteed non-blocking for caller threads (audio callback / UI rendering thread).
+     */
     private fun sendCommand(cmd: String) {
-        try {
-            writer?.println(cmd)
-            writer?.flush()
-        } catch (e: Exception) {
-            logger.warn(e) { "Error sending Carabiner command: $cmd" }
-        }
+        if (!running.get()) return
+        commandQueue.offer(cmd)
     }
 
-    private fun listenLoop() {
+    private fun connectionWorkerLoop() {
         while (running.get()) {
+            if (!connected) {
+                try {
+                    val sock = Socket()
+                    sock.connect(InetSocketAddress(host, port), 2000)
+                    sock.tcpNoDelay = true
+                    sock.soTimeout = 100
+                    writer = PrintWriter(OutputStreamWriter(sock.getOutputStream(), StandardCharsets.UTF_8), true)
+                    reader = BufferedReader(InputStreamReader(sock.getInputStream(), StandardCharsets.UTF_8))
+                    socket = sock
+                    connected = true
+                    logger.info { "CarabinerTcpLinkBackend: Connected to $host:$port" }
+
+                    // Initial setup commands
+                    sendCommand("status")
+                    sendCommand(String.format(Locale.US, "bpm %.2f", currentBpm))
+                    if (isLinkEnabled) {
+                        sendCommand("enable")
+                    }
+                } catch (e: Exception) {
+                    closeSocket()
+                    if (!running.get()) break
+                    try { Thread.sleep(3000) } catch (_: InterruptedException) {}
+                    continue
+                }
+            }
+
             try {
-                val line = reader?.readLine() ?: break
+                // 1. Flush pending outbound commands
+                while (running.get() && connected) {
+                    val cmd = commandQueue.poll() ?: break
+                    val w = writer ?: break
+                    w.println(cmd)
+                    if (w.checkError()) {
+                        throw java.io.IOException("PrintWriter error during send")
+                    }
+                }
+
+                // 2. Read incoming network line (blocks up to soTimeout = 100ms)
+                val r = reader ?: break
+                val line = r.readLine() ?: throw java.io.IOException("Socket EOF")
                 parseLine(line)
+            } catch (_: java.net.SocketTimeoutException) {
+                // Expected timeout when no incoming messages; loop back to flush outbound queue
             } catch (e: Exception) {
                 if (running.get()) {
-                    logger.debug { "Carabiner socket read finished or disconnected: ${e.message}" }
+                    logger.debug { "Carabiner socket disconnected: ${e.message}" }
                 }
-                break
+                closeSocket()
+                try { Thread.sleep(2000) } catch (_: InterruptedException) {}
             }
         }
-        close()
+        closeSocket()
     }
 
     private fun parseLine(line: String) {
         val trimmed = line.trim()
         if (trimmed.isEmpty()) return
 
-        // Carabiner protocol line examples:
-        // "status { bpm: 120.0, beat: 12.5, peers: 1, start-stop: 1, playing: 1 }"
-        // "bpm 128.0"
-        // "peers 2"
         try {
             when {
                 trimmed.startsWith("status") -> {
@@ -124,14 +156,20 @@ class CarabinerTcpLinkBackend(
         }
     }
 
-    override fun close() {
-        running.set(false)
+    private fun closeSocket() {
+        connected = false
+        currentPeers = 0
         try { socket?.close() } catch (_: Exception) {}
         socket = null
         writer = null
         reader = null
+    }
+
+    override fun close() {
+        running.set(false)
+        closeSocket()
+        commandQueue.clear()
         isLinkEnabled = false
-        currentPeers = 0
     }
 
     override fun setEnabled(enabled: Boolean) {
@@ -151,7 +189,7 @@ class CarabinerTcpLinkBackend(
 
     override fun setTempo(bpm: Double) {
         currentBpm = bpm.coerceIn(20.0, 300.0)
-        sendCommand("bpm %.2f".format(currentBpm))
+        sendCommand(String.format(Locale.US, "bpm %.2f", currentBpm))
     }
 
     override fun getBeatAtTime(timeUs: Long, quantum: Double): Double {
@@ -166,10 +204,14 @@ class CarabinerTcpLinkBackend(
         return beat % q
     }
 
-    override fun requestBeatAtTime(beat: Double, quantum: Double) {
+    override fun requestBeatAtTime(beat: Double, timeUs: Long, quantum: Double) {
         anchorBeat = beat
-        anchorTimeUs = System.nanoTime() / 1000
-        sendCommand("beat %.2f".format(beat))
+        anchorTimeUs = if (timeUs > 0) timeUs else (System.nanoTime() / 1000)
+        if (timeUs > 0) {
+            sendCommand(String.format(Locale.US, "beat %.2f %d %.2f", beat, timeUs, quantum))
+        } else {
+            sendCommand(String.format(Locale.US, "beat %.2f", beat))
+        }
     }
 
     override fun setStartStopSyncEnabled(enabled: Boolean) {

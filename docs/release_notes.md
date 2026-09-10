@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Phase 3: Carabiner TCP Command Integration & UI State (`CarabinerTcpLinkBackend.kt`, `LinkSyncManager.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `CarabinerTcpLinkBackendTest.kt`)
+- **Asynchronous Carabiner Outbound Command Queue**: Refactored `CarabinerTcpLinkBackend` to use a lock-free `ConcurrentLinkedQueue<String>`, ensuring network socket writes never block the audio processing or UI rendering threads.
+- **Carabiner Protocol Integration & Formatting**: Formatted outbound commands using `Locale.US` for `bpm <val>` tempo updates and timestamped `beat <val> [timeUs] [quantum]` phase alignment.
+- **Automatic Socket Reconnection & Recovery**: Isolated all socket I/O to a background daemon thread (`CarabinerTcpClient`) with a 3-second auto-reconnect loop upon socket disconnection or Carabiner daemon restarts.
+- **Observable Link UI State**: Exposed `activeBpm` (formatted to 1 decimal place), `confidence` (BTrack tracking stability metric), and `isTransmitting` (`SyncMode.AUDIO_BROADCAST` active & connected).
+- **UI Status Controls & Badges**: Integrated `SyncMode` radio controls, `[TRANSMITTING]` / `[STANDBY]` status indicators, BTrack confidence stability progress bar, and header menu bar status pill in `AudioEnginePanel.kt` and `MenuBar.kt`.
+- **Comprehensive Unit Test Suite**: Created `CarabinerTcpLinkBackendTest.kt` with a mock Carabiner server verifying non-blocking command queuing, protocol parsing, auto-reconnection, and transmission state.
+
+### Phase 2: BTrack to Link Signal Conditioning & Damping Bridge (`BTrackToLinkDamping.kt`, `LinkSyncManager.kt`, `AppSettings.kt`, `UITheme.kt`, `BTrackToLinkDampingTest.kt`)
+- **`BTrackToLinkDamping` Signal Conditioner**: Created signal conditioner to filter raw audio beat tracking micro-fluctuations before network transmission.
+- **Sanity Bounds & Trajectory Smoothing**: Filters raw BPM outside 60–200 BPM, applying a 7-sample rolling median filter to discard onset outliers followed by alpha Exponential Moving Average (EMA) smoothing.
+- **Quantization & Hysteresis**: Prevents peer timeline warping by requiring a >= 0.5 BPM divergence sustained for at least 4 consecutive beats before committing outbound tempo changes to Carabiner.
+- **Major Phase Error Realignment**: Measures beat onset phase error against Carabiner's timeline clock, only publishing beat realignments when phase error exceeds >= 0.5 beats (half-beat) to eliminate acoustic onset jitter stutter.
+- **Settings Persistence & Unit Testing**: Integrated damping parameters into `AppSettings` and `UITheme`, backed by a unit test suite (`BTrackToLinkDampingTest.kt`) verifying median/EMA smoothing, hysteresis counters, and phase error thresholding.
+
+### Phase 1: Ableton Link Master & Audio Broadcast Architecture (`SyncMode.kt`, `LinkSyncManager.kt`, `AudioEngine.kt`, `AppSettings.kt`, `UITheme.kt`, `LinkSyncManagerTest.kt`)
+- **Tri-State Sync Mode State Machine**: Created `SyncMode` enum (`DISABLED`, `LINK_FOLLOWER`, `AUDIO_BROADCAST`) to cleanly separate follower and broadcast responsibilities.
+- **`LinkSyncManager` Orchestration**: Created central thread-safe manager for mode transitions, active coroutine job cancellation to break echo loops, and status telemetry (`isLinked`, `peersCount`, `currentMode`, `activeBpm`).
+- **`AudioTempoEventSink` Interface**: Added callback interface with `onTempoCommitted(bpm)` and `onBeatAligned(beatTime, microsecondTimestamp, quantum)` for emitting BTrack audio tempo and downbeat events in `AUDIO_BROADCAST` mode.
+- **Audio Thread Lock-Free Dispatch**: Updated `AudioEngine` to publish BTrack tempo and beat alignment events to `LinkSyncManager` without heap allocations or thread blocking.
+- **Performer Gig Guardrail**: Enforced safety rule where app launch always defaults to `SyncMode.DISABLED` (sanitizing any saved `AUDIO_BROADCAST` state) to prevent accidental live network timeline takeovers.
+- **Comprehensive Unit Testing**: Added `LinkSyncManagerTest.kt` verifying state transitions, event sink dispatching, thread-safe concurrent toggling, and startup safety sanitization.
+
 ### Zero-Copy Linux Video Sharing & Ingest via PipeWire 0.3 (`PipeWireLibrary.kt`, `PipeWireBridge.kt`, `TextureReceiver.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`)
 - **Native PipeWire 0.3 JNA Bindings**: Implemented `PipeWireLibrary.kt` to dynamically bind `libpipewire-0.3.so` functions (`pw_init`, `pw_thread_loop_*`, `pw_context_*`, `pw_stream_*`) and SPA video parameters without hard compile-time dependencies.
 - **PipeWire Bridge & Stream Lifecycle**: Implemented `PipeWireBridge.kt` managing native thread loop initialization, stream creation, and format negotiation with PipeWire consumers (OBS Studio, Wayland compositors, qpwgraph, WirePlumber).

@@ -447,6 +447,17 @@ object AudioEnginePanel {
             ImGui.separator()
             ImGui.spacing()
 
+            val currentMode = llm.slop.liquidlsd.link.LinkSyncManager.currentMode
+            theme.body("Link Sync Mode:")
+            for (mode in llm.slop.liquidlsd.link.SyncMode.entries) {
+                if (ImGui.radioButton("${mode.displayName}##sync_mode_${mode.name}", currentMode == mode)) {
+                    llm.slop.liquidlsd.link.LinkSyncManager.setSyncMode(mode)
+                    theme.saveSettings()
+                }
+                ImGui.sameLine(0f, 12f)
+            }
+            ImGui.newLine()
+
             val currentClock = AudioEngine.clockSource
             theme.body("Active Clock Source:")
             for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
@@ -488,6 +499,43 @@ object AudioEnginePanel {
                 theme.body("Driver: ")
                 ImGui.sameLine()
                 theme.captionColored(0.6f, 0.8f, 1.0f, 1.0f, backendName)
+
+                // Transmission & Active BPM status
+                ImGui.spacing()
+                theme.body("Active BPM: ")
+                ImGui.sameLine()
+                theme.bodyColored(0.2f, 0.9f, 0.9f, 1.0f, "${llm.slop.liquidlsd.link.LinkSyncManager.formattedActiveBpm} BPM")
+
+                val isTx = llm.slop.liquidlsd.link.LinkSyncManager.isTransmitting
+                if (currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+                    ImGui.sameLine(0f, 20f)
+                    theme.body("Transmission: ")
+                    ImGui.sameLine()
+                    if (isTx) {
+                        theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "[TRANSMITTING]")
+                        itemTooltip("Audio beat tracker is actively driving tempo and beat phase alignment to Link session.")
+                    } else {
+                        theme.bodyColored(0.9f, 0.6f, 0.2f, 1.0f, "[STANDBY / CONNECTING]")
+                        itemTooltip("Audio broadcast mode is active, waiting for Link backend socket connection.")
+                    }
+                }
+
+                // BTrack Confidence meter
+                ImGui.spacing()
+                val confidence = llm.slop.liquidlsd.link.LinkSyncManager.confidence
+                val confPercent = llm.slop.liquidlsd.link.LinkSyncManager.confidencePercent
+                ImGui.alignTextToFramePadding()
+                theme.body("BTrack Confidence: ")
+                ImGui.sameLine()
+                val (cr, cg, cb) = when {
+                    confidence >= 0.70f -> Triple(0.2f, 0.9f, 0.4f)
+                    confidence >= 0.40f -> Triple(0.9f, 0.8f, 0.2f)
+                    else -> Triple(0.9f, 0.3f, 0.3f)
+                }
+                theme.bodyColored(cr, cg, cb, 1.0f, "$confPercent%")
+                ImGui.sameLine(0f, 10f)
+                ImGui.progressBar(confidence, 120f, 16f, "")
+                itemTooltip("Rhythmic tracking stability metric from BTrack causal beat tracker.")
 
                 // Quantum Selector
                 ImGui.spacing()

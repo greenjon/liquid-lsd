@@ -352,6 +352,19 @@ object UITheme {
                         AudioEngine.clockSource = llm.slop.liquidlsd.audio.ClockSource.valueOf(savedSource)
                     } catch (_: Exception) {}
                 }
+                props.getProperty("syncMode")?.let { savedModeStr ->
+                    try {
+                        val loadedMode = llm.slop.liquidlsd.link.SyncMode.valueOf(savedModeStr)
+                        // Safety requirement: AUDIO_BROADCAST is sanitized to DISABLED on launch to prevent accidental broadcast
+                        val safeStartupMode = if (loadedMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+                            logger.info { "Sanitizing startup syncMode from AUDIO_BROADCAST to DISABLED to prevent unintended network broadcast." }
+                            llm.slop.liquidlsd.link.SyncMode.DISABLED
+                        } else {
+                            loadedMode
+                        }
+                        llm.slop.liquidlsd.link.LinkSyncManager.setSyncMode(safeStartupMode)
+                    } catch (_: Exception) {}
+                }
                 props.getBoolean("linkEnabled")?.let {
                     llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(it)
                 }
@@ -360,6 +373,15 @@ object UITheme {
                 }
                 props.getBoolean("linkStartStopSync")?.let {
                     llm.slop.liquidlsd.link.AbletonLinkEngine.setStartStopSyncEnabled(it)
+                }
+                props.getProperty("linkDampingHysteresisBpm")?.toDoubleOrNull()?.let {
+                    llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.hysteresisThresholdBpm = it.coerceIn(0.1, 5.0)
+                }
+                props.getProperty("linkDampingSustainedBeats")?.toIntOrNull()?.let {
+                    llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.sustainedBeatsThreshold = it.coerceIn(1, 16)
+                }
+                props.getProperty("linkDampingPhaseThresholdBeats")?.toDoubleOrNull()?.let {
+                    llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.phaseErrorThresholdBeats = it.coerceIn(0.1, 2.0)
                 }
                 props.getProperty("carabinerHost")?.let {
                     llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerHost = it
@@ -523,9 +545,13 @@ object UITheme {
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
             props.setProperty("clockSource", AudioEngine.clockSource.name)
+            props.setProperty("syncMode", llm.slop.liquidlsd.link.LinkSyncManager.currentMode.name)
             props.setProperty("linkEnabled", llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled.toString())
             props.setProperty("linkQuantum", llm.slop.liquidlsd.link.AbletonLinkEngine.quantum.toString())
             props.setProperty("linkStartStopSync", llm.slop.liquidlsd.link.AbletonLinkEngine.isStartStopSyncEnabled().toString())
+            props.setProperty("linkDampingHysteresisBpm", llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.hysteresisThresholdBpm.toString())
+            props.setProperty("linkDampingSustainedBeats", llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.sustainedBeatsThreshold.toString())
+            props.setProperty("linkDampingPhaseThresholdBeats", llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.phaseErrorThresholdBeats.toString())
             props.setProperty("carabinerHost", llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerHost)
             props.setProperty("carabinerPort", llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerPort.toString())
             props.setProperty("audioBeatTarget", AudioEngine.beatDetector.settings.target.name)

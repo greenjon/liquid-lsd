@@ -131,9 +131,11 @@ class NativeJniLinkBackend : LinkBackend {
         }
     }
 
-    override fun requestBeatAtTime(beat: Double, quantum: Double) {
+    override fun isConnected(): Boolean = initialized && nativeHandle != 0L && isEnabled()
+
+    override fun requestBeatAtTime(beat: Double, timeUs: Long, quantum: Double) {
         if (!initialized || nativeHandle == 0L) return
-        val nowUs = System.nanoTime() / 1000
+        val nowUs = if (timeUs > 0) timeUs else (System.nanoTime() / 1000)
         try {
             NativeLinkBindings.nRequestBeatAtTime(nativeHandle, beat, nowUs, quantum)
         } catch (e: Throwable) {

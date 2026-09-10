@@ -52,7 +52,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MidiJackWatchdog.kt     — MIDI hotplug monitoring
 │   └── TapTempoController.kt   — VJ tap tempo cadence tracking, interval averaging, 2.0s timeout reset, and phase alignment
 ├── link/                       — Ableton Link network interop & clock synchronization
-│   ├── AbletonLinkEngine.kt    — Central manager for Link network session state & tempo sync
+│   ├── LinkSyncManager.kt      — Central state machine (DISABLED, LINK_FOLLOWER, AUDIO_BROADCAST)
+│   ├── BTrackToLinkDamping.kt  — Signal conditioner (Median + EMA, 0.5 BPM / 4-beat hysteresis, >=0.5 beat phase error)
+│   ├── SyncMode.kt             — SyncMode enum and AudioTempoEventSink callback interface
+│   ├── AbletonLinkEngine.kt    — Manager for Link network session state & tempo sync
 │   ├── LinkBackend.kt          — Driver interface (Native JNI, Carabiner TCP, No-Op)
 │   ├── NativeJniLinkBackend.kt — C++ JNI bridge (liblink_jni) embedding ableton::Link
 │   ├── CarabinerTcpLinkBackend.kt — TCP socket client for local Carabiner daemon

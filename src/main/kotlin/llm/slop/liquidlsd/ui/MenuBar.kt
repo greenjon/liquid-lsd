@@ -206,18 +206,24 @@ class MenuBar(
 
                 // ── Clock Source & Ableton Link Status Pill ─────────────────────
                 val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
+                val syncManager = llm.slop.liquidlsd.link.LinkSyncManager
                 val currentClock = AudioEngine.clockSource
 
-                if (currentClock == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
+                if (currentClock == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK || syncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
                     val peers = linkEngine.getNumPeers()
                     val peerText = if (peers == 1) "1 peer" else "$peers peers"
-                    val label = "${Icons.ACTIVITY} LINK [$peerText]"
+                    val isTx = syncManager.isTransmitting
+                    val modeText = if (syncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) "LINK TX" else "LINK"
+                    val label = "${Icons.ACTIVITY} $modeText [$peerText]"
 
-                    if (peers > 0) {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan
+                    if (isTx) {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.7f, 0.3f, 1.0f) // green for transmitting
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.3f, 0.8f, 0.4f, 1.0f)
+                    } else if (peers > 0) {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan for connected follower
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
                     } else {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber searching
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.65f, 0.25f, 1.0f)
                     }
 
@@ -227,8 +233,9 @@ class MenuBar(
                     ImGui.popStyleColor(2)
 
                     val backendName = linkEngine.getActiveBackendName()
-                    val quantumBeats = linkEngine.quantum.toInt()
-                    val linkTip = "Ableton Link Clock Active\nPeers: $peers connected\nQuantum: $quantumBeats beats (1 bar)\nBackend: $backendName\nClick to open Audio & Link settings."
+                    val bpmText = syncManager.formattedActiveBpm
+                    val confPercent = syncManager.confidencePercent
+                    val linkTip = "Ableton Link Sync: ${syncManager.currentMode.displayName}\nActive BPM: $bpmText\nPeers: $peers connected\nBTrack Confidence: $confPercent%\nBackend: $backendName\nClick to open Audio & Link settings."
                     itemTooltip(linkTip)
                 }
 
