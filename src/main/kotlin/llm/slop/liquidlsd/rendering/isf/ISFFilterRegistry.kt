@@ -11,13 +11,21 @@ object ISFFilterRegistry {
     private val filters = ConcurrentHashMap<String, ISFFilter>()
     private val bundledFilters = listOf("invert", "hue_shift", "posterize", "luma_key", "edge_detect", "bloom", "feedback_trails", "feedback", "3d_elevation", "glitch", "mirror")
 
+    @Volatile
+    private var cachedFilters: List<ISFFilter> = emptyList()
+
     val availableFilters: List<ISFFilter>
-        get() = filters.values.toList().sortedBy { it.displayName }
+        get() = cachedFilters
+
+    private fun rebuildCache() {
+        cachedFilters = filters.values.toList().sortedBy { it.displayName }
+    }
 
     fun loadAll() {
         disposeAll()
         loadBundledFilters()
         scanUserFilters()
+        rebuildCache()
     }
 
     fun disposeAll() {
@@ -29,6 +37,7 @@ object ISFFilterRegistry {
             }
         }
         filters.clear()
+        rebuildCache()
     }
 
     private fun loadBundledFilters() {
@@ -78,6 +87,15 @@ object ISFFilterRegistry {
 
     private fun registerFilterFromSource(id: String, displayName: String, source: String) {
         val header = ISFParser.parseHeader(source) ?: return
+
+        // Mutual exclusion: skip if this shader is categorised as a transition or has a progress input
+        val isTransitionCategory = header.CATEGORIES?.any { it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true) } == true
+        val hasProgress = header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) }
+        val inTransitionRegistry = ISFTransitionRegistry.hasTransition(id)
+        if (isTransitionCategory || hasProgress || inTransitionRegistry) {
+            logger.debug { "Skipping ISF transition '$id' from filter registry" }
+            return
+        }
 
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)

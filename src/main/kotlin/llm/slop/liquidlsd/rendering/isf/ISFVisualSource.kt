@@ -22,6 +22,71 @@ class ISFVisualSource(
     private var frameIndex = 0
     private var lastTime = TimeSource.getTimeSec().toFloat()
 
+    private sealed class ISFInputBinding {
+        abstract fun apply(shader: Shader)
+
+        class FloatInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
+            override fun apply(shader: Shader) {
+                shader.setUniform(name, param?.value ?: 0f)
+            }
+        }
+
+        class BoolInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
+            override fun apply(shader: Shader) {
+                shader.setUniform(name, if ((param?.value ?: 0f) > 0.5f) 1.0f else 0.0f)
+            }
+        }
+
+        class LongInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
+            override fun apply(shader: Shader) {
+                shader.setUniform(name, param?.value ?: 0f)
+            }
+        }
+
+        class ColorInput(
+            val name: String,
+            val r: ModulatableParameter?,
+            val g: ModulatableParameter?,
+            val b: ModulatableParameter?,
+            val a: ModulatableParameter?
+        ) : ISFInputBinding() {
+            override fun apply(shader: Shader) {
+                shader.setUniform(name, r?.value ?: 0f, g?.value ?: 0f, b?.value ?: 0f, a?.value ?: 1f)
+            }
+        }
+
+        class Point2DInput(
+            val name: String,
+            val x: ModulatableParameter?,
+            val y: ModulatableParameter?
+        ) : ISFInputBinding() {
+            override fun apply(shader: Shader) {
+                shader.setUniform(name, x?.value ?: 0f, y?.value ?: 0f)
+            }
+        }
+    }
+
+    private val inputBindings: Array<ISFInputBinding> = header.INPUTS.mapNotNull { input ->
+        when (input.TYPE) {
+            "float" -> ISFInputBinding.FloatInput(input.NAME, parameters[input.NAME])
+            "bool" -> ISFInputBinding.BoolInput(input.NAME, parameters[input.NAME])
+            "long" -> ISFInputBinding.LongInput(input.NAME, parameters[input.NAME])
+            "color" -> ISFInputBinding.ColorInput(
+                input.NAME,
+                parameters["${input.NAME} R"],
+                parameters["${input.NAME} G"],
+                parameters["${input.NAME} B"],
+                parameters["${input.NAME} A"]
+            )
+            "point2D" -> ISFInputBinding.Point2DInput(
+                input.NAME,
+                parameters["${input.NAME} X"],
+                parameters["${input.NAME} Y"]
+            )
+            else -> null
+        }
+    }.toTypedArray()
+
     override fun setupUniforms(shader: Shader) {
         // 1. ISF standard uniforms
         val currentTime = TimeSource.getTimeSec().toFloat()
@@ -49,33 +114,9 @@ class ISFVisualSource(
         for (m in 0..10) { if (rem1 < monthStarts[m + 1]) { monthNum = m; break } }
         shader.setUniform("DATE", yearNum.toFloat(), (monthNum + 1).toFloat(), (rem1 - monthStarts[monthNum] + 1).toFloat(), secondsSinceMidnight)
         
-        // 2. ISF Input uniforms — indexed loop avoids Iterator allocation on the render thread
-        val inputs = header.INPUTS
-        for (i in 0 until inputs.size) {
-            val input = inputs[i]
-            when (input.TYPE) {
-                "float" -> {
-                    shader.setUniform(input.NAME, parameters[input.NAME]?.value ?: 0f)
-                }
-                "bool" -> {
-                    shader.setUniform(input.NAME, if ((parameters[input.NAME]?.value ?: 0f) > 0.5f) 1.0f else 0.0f)
-                }
-                "long" -> {
-                    shader.setUniform(input.NAME, parameters[input.NAME]?.value ?: 0f)
-                }
-                "color" -> {
-                    val r = parameters["${input.NAME} R"]?.value ?: 0f
-                    val g = parameters["${input.NAME} G"]?.value ?: 0f
-                    val b = parameters["${input.NAME} B"]?.value ?: 0f
-                    val a = parameters["${input.NAME} A"]?.value ?: 1f
-                    shader.setUniform(input.NAME, r, g, b, a)
-                }
-                "point2D" -> {
-                    val x = parameters["${input.NAME} X"]?.value ?: 0f
-                    val y = parameters["${input.NAME} Y"]?.value ?: 0f
-                    shader.setUniform(input.NAME, x, y)
-                }
-            }
+        // 2. ISF Input uniforms — pre-bound direct references, zero allocations per frame
+        for (i in 0 until inputBindings.size) {
+            inputBindings[i].apply(shader)
         }
     }
 

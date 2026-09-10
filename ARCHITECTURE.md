@@ -33,6 +33,13 @@ Deck PV  (preview only — same pipeline as A/B/BG, excluded from Mixer output)
    └── used to build/audition presets while A, B, and BG are performing live
 ```
 
+## Zero-Allocation Render Loop Guarantees
+
+To maintain stable 60–120 FPS playback without ZGC pause interruptions or frame drops, the hot render path (executed strictly on OS Thread 0) adheres to strict zero-allocation rules:
+- **ISF & Visual Generators (`ISFVisualSource.kt`, `DynamicVisualSource.kt`, `ISFFilter.kt`)**: Uniform names, derived input bindings (`color`, `point2D`, `float`, `bool`), and multipass targets are pre-bound at initialization time. Uniform setters, `DATE` epoch calculations, and parameter updates loop directly over pre-allocated arrays, avoiding `LocalDateTime` instantiation, map lookups, string formatting, and collection iterator allocations.
+- **Mixer & Modulators (`Mixer.kt`, `ModulatableParameter.kt`)**: Modulator activity checks on `CopyOnWriteArrayList` use index-based O(1) traversal (`hasActiveModulator()`) instead of `.any { }` to prevent per-frame `COWIterator` allocations.
+- **Registries (`ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ISFLibraryRegistry.kt`)**: `availableFilters`, `availableTransitions`, and `allAssets` are backed by `@Volatile` immutable sorted snapshots rebuilt once per scan or modification, eliminating per-frame list re-allocation and re-sorting during picker rendering. Mutual exclusion prevents transition shaders from polluting the filter registry.
+
 ## File Map
 
 ```

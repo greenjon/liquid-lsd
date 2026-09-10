@@ -58,6 +58,14 @@ open class DynamicVisualSource(
     var fb2: FBO? = null
     var fbIndex: Int = 0
 
+    protected class UniformBinding(val uniformName: String, val param: ModulatableParameter)
+
+    protected val uniformBindings: Array<UniformBinding> = parameters.map { (name, param) ->
+        UniformBinding("u" + name.replace(" ", ""), param)
+    }.toTypedArray()
+
+    private val cachedParams: Array<ModulatableParameter> = parameters.values.toTypedArray()
+
     init {
         // Registration moved to getParameterPaths
     }
@@ -69,10 +77,17 @@ open class DynamicVisualSource(
     fun getCurrentHistoryFBO(): FBO? = if (fbIndex == 0) fb1 else fb2
     fun getNextHistoryFBO(): FBO? = if (fbIndex == 0) fb2 else fb1
 
+    override fun update() {
+        for (i in 0 until cachedParams.size) {
+            cachedParams[i].evaluate()
+        }
+        globalAlpha.evaluate()
+    }
+
     open fun setupUniforms(shader: Shader) {
-        parameters.forEach { (name, param) ->
-            val uniformName = "u" + name.replace(" ", "")
-            shader.setUniform(uniformName, param.value)
+        for (i in 0 until uniformBindings.size) {
+            val binding = uniformBindings[i]
+            shader.setUniform(binding.uniformName, binding.param.value)
         }
     }
 

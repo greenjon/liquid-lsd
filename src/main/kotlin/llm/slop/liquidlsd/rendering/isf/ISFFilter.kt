@@ -7,7 +7,6 @@ import llm.slop.liquidlsd.rendering.Shader
 import llm.slop.liquidlsd.rendering.VisualEffect
 import llm.slop.liquidlsd.utils.TimeSource
 import org.lwjgl.opengl.GL33.*
-import java.time.LocalDateTime
 
 class ISFFilter(
     override val id: String,
@@ -23,6 +22,9 @@ class ISFFilter(
     override var enabled = true
 
     private val inputImageName: String?
+    private val transitionStartName: String
+    private val transitionEndName: String
+
     private var frameIndex = 0
     private var lastTime = TimeSource.getTimeSec().toFloat()
     
@@ -32,9 +34,26 @@ class ISFFilter(
     private var deckWidth = 0
     private var deckHeight = 0
 
+    private class PassBinding(val target: String, val isPersistent: Boolean)
+    private val passBindings: Array<PassBinding> = header.PASSES.mapNotNull { pass ->
+        pass.TARGET?.let { PassBinding(it, pass.PERSISTENT) }
+    }.toTypedArray()
+
+    private class FilterParamBinding(val name: String, val type: String, val param: ModulatableParameter)
+    private val filterParamBindings: Array<FilterParamBinding>
+    private val transitionParamBindings: Array<FilterParamBinding>
+    private val cachedParams: Array<ModulatableParameter>
+
     init {
         // Find the primary image input
         inputImageName = header.INPUTS.find { it.TYPE.lowercase() == "image" }?.NAME
+
+        // Pre-resolve transition image names
+        val imageInputs = header.INPUTS.filter { it.TYPE.lowercase() == "image" }
+        transitionStartName = imageInputs.find { it.NAME.equals("startImage", true) || it.NAME.equals("inputImage", true) || it.NAME.equals("uTex1", true) }?.NAME
+            ?: imageInputs.firstOrNull()?.NAME ?: "startImage"
+        transitionEndName = imageInputs.find { it.NAME.equals("endImage", true) || it.NAME.equals("toImage", true) || it.NAME.equals("uTex2", true) }?.NAME
+            ?: imageInputs.getOrNull(1)?.NAME ?: "endImage"
 
         // Create modulatable parameters for non-image inputs
         for (input in header.INPUTS) {
@@ -50,11 +69,24 @@ class ISFFilter(
                 maxClamp = maxVal
             )
         }
+
+        filterParamBindings = header.INPUTS.mapNotNull { input ->
+            val param = parameters[input.NAME]
+            if (param != null) FilterParamBinding(input.NAME, input.TYPE.lowercase(), param) else null
+        }.toTypedArray()
+
+        transitionParamBindings = filterParamBindings.filter {
+            it.type != "image" && !it.name.equals("progress", ignoreCase = true)
+        }.toTypedArray()
+
+        cachedParams = parameters.values.toTypedArray()
     }
 
     override fun update() {
         dryWet.evaluate()
-        parameters.values.forEach { it.evaluate() }
+        for (i in 0 until cachedParams.size) {
+            cachedParams[i].evaluate()
+        }
     }
 
     /**
@@ -98,20 +130,15 @@ class ISFFilter(
         shader.setUniform("TIME", currentTime)
         shader.setUniform("TIMEDELTA", deltaTime)
         shader.setUniform("FRAMEINDEX", frameIndex++)
-        
-        val now = LocalDateTime.now()
-        shader.setUniform("DATE", now.year.toFloat(), now.monthValue.toFloat(), now.dayOfMonth.toFloat(), 
-            now.hour * 3600f + now.minute * 60f + now.second + now.nano / 1_000_000_000f)
+        setUniformDate(shader)
 
-        // Set user parameters
-        for (input in header.INPUTS) {
-            val param = parameters[input.NAME] ?: continue
-            val type = input.TYPE.lowercase()
-            
-            when (type) {
-                "float", "long", "bool" -> shader.setUniform(input.NAME, param.value)
-                "point2d" -> shader.setUniform(input.NAME, param.value, 0f) 
-                "color" -> shader.setUniform(input.NAME, param.value, param.value, param.value, 1.0f) 
+        // Set user parameters — indexed loop over pre-bound parameters
+        for (i in 0 until filterParamBindings.size) {
+            val binding = filterParamBindings[i]
+            when (binding.type) {
+                "float", "long", "bool" -> shader.setUniform(binding.name, binding.param.value)
+                "point2d" -> shader.setUniform(binding.name, binding.param.value, 0f) 
+                "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
             }
         }
 
@@ -161,10 +188,11 @@ class ISFFilter(
                     texUnit++
                 }
 
-                // Bind all pass targets available
-                for (target in header.PASSES.mapNotNull { it.TARGET }) {
-                    val p = header.PASSES.find { it.TARGET == target }
-                    val texToBind = if (p?.PERSISTENT == true) {
+                // Bind all pass targets available — zero-allocation loop over pre-resolved pass bindings
+                for (b in 0 until passBindings.size) {
+                    val binding = passBindings[b]
+                    val target = binding.target
+                    val texToBind = if (binding.isPersistent) {
                         // read from the history persistent FBO
                         passHistoryFBOs[target]?.second?.texture ?: 0
                     } else {
@@ -218,46 +246,30 @@ class ISFFilter(
         shader.setUniform("TIME", currentTime)
         shader.setUniform("TIMEDELTA", deltaTime)
         shader.setUniform("FRAMEINDEX", frameIndex++)
-        
-        val now = LocalDateTime.now()
-        shader.setUniform("DATE", now.year.toFloat(), now.monthValue.toFloat(), now.dayOfMonth.toFloat(), 
-            now.hour * 3600f + now.minute * 60f + now.second + now.nano / 1_000_000_000f)
+        setUniformDate(shader)
 
-        // Set user parameters
-        for (input in header.INPUTS) {
-            val type = input.TYPE.lowercase()
-            if (type == "image") continue
-
-            if (input.NAME.equals("progress", ignoreCase = true)) {
-                shader.setUniform(input.NAME, progressValue)
-                continue
-            }
-
-            val param = parameters[input.NAME] ?: continue
-            when (type) {
-                "float", "long", "bool" -> shader.setUniform(input.NAME, param.value)
-                "point2d" -> shader.setUniform(input.NAME, param.value, 0f) 
-                "color" -> shader.setUniform(input.NAME, param.value, param.value, param.value, 1.0f) 
+        // Set user parameters — indexed loop over pre-bound transition parameters
+        shader.setUniform("progress", progressValue)
+        for (i in 0 until transitionParamBindings.size) {
+            val binding = transitionParamBindings[i]
+            when (binding.type) {
+                "float", "long", "bool" -> shader.setUniform(binding.name, binding.param.value)
+                "point2d" -> shader.setUniform(binding.name, binding.param.value, 0f) 
+                "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
             }
         }
 
         shader.setUniform("PASSINDEX", 0)
         shader.setUniform("RENDERSIZE", width.toFloat(), height.toFloat())
 
-        // Map image inputs (startImage -> unit 0, endImage -> unit 1)
-        val imageInputs = header.INPUTS.filter { it.TYPE.lowercase() == "image" }
-        val startName = imageInputs.find { it.NAME.equals("startImage", true) || it.NAME.equals("inputImage", true) || it.NAME.equals("uTex1", true) }?.NAME
-            ?: imageInputs.firstOrNull()?.NAME ?: "startImage"
-        val endName = imageInputs.find { it.NAME.equals("endImage", true) || it.NAME.equals("toImage", true) || it.NAME.equals("uTex2", true) }?.NAME
-            ?: imageInputs.getOrNull(1)?.NAME ?: "endImage"
-
+        // Map pre-resolved image inputs (startImage -> unit 0, endImage -> unit 1)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, startTexture)
-        shader.setUniform(startName, 0)
+        shader.setUniform(transitionStartName, 0)
 
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, endTexture)
-        shader.setUniform(endName, 1)
+        shader.setUniform(transitionEndName, 1)
 
         Geometry.drawFullscreenQuad()
 
@@ -334,5 +346,27 @@ class ISFFilter(
             list.add("$prefix/$name" to param)
         }
         return list
+    }
+
+    private fun setUniformDate(shader: Shader) {
+        val epochMs = System.currentTimeMillis()
+        val epochSec = epochMs / 1000L
+        val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
+        val daysSinceEpoch = (epochSec / 86400L).toInt()
+        val year400 = daysSinceEpoch / 146097; val rem400 = daysSinceEpoch % 146097
+        val year100 = minOf(rem400 / 36524, 3); val rem100 = rem400 - year100 * 36524
+        val year4   = rem100 / 1461;             val rem4   = rem100 % 1461
+        val year1   = minOf(rem4 / 365, 3);      val rem1   = rem4 - year1 * 365
+        val yearNum = 1970 + year400 * 400 + year100 * 100 + year4 * 4 + year1
+        val isLeap  = (yearNum % 4 == 0 && yearNum % 100 != 0) || yearNum % 400 == 0
+        val monthStarts = if (isLeap) MONTH_STARTS_LEAP else MONTH_STARTS_NORMAL
+        var monthNum = 11
+        for (m in 0..10) { if (rem1 < monthStarts[m + 1]) { monthNum = m; break } }
+        shader.setUniform("DATE", yearNum.toFloat(), (monthNum + 1).toFloat(), (rem1 - monthStarts[monthNum] + 1).toFloat(), secondsSinceMidnight)
+    }
+
+    companion object {
+        private val MONTH_STARTS_NORMAL = intArrayOf(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365)
+        private val MONTH_STARTS_LEAP   = intArrayOf(0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366)
     }
 }

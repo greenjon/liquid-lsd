@@ -290,24 +290,24 @@ class Mixer(
 
         transitionFilter?.update()
 
-        // Continuous random morphing evaluation
-        val isModA = randDeckA.modulators.any { !it.bypassed } || randDeckA.value > 0.0001f
+        // Continuous random morphing evaluation — zero-allocation check
+        val isModA = randDeckA.hasActiveModulator() || randDeckA.value > 0.0001f
         if (isModA) {
             deckA.morphController.update(randDeckA.value)
         }
-        val isModB = randDeckB.modulators.any { !it.bypassed } || randDeckB.value > 0.0001f
+        val isModB = randDeckB.hasActiveModulator() || randDeckB.value > 0.0001f
         if (isModB) {
             deckB.morphController.update(randDeckB.value)
         }
-        val isModBG = randDeckBG.modulators.any { !it.bypassed } || randDeckBG.value > 0.0001f
+        val isModBG = randDeckBG.hasActiveModulator() || randDeckBG.value > 0.0001f
         if (isModBG) {
             deckBG.morphController.update(randDeckBG.value)
         }
-        val isModPV = randDeckPV.modulators.any { !it.bypassed } || randDeckPV.value > 0.0001f
+        val isModPV = randDeckPV.hasActiveModulator() || randDeckPV.value > 0.0001f
         if (isModPV) {
             deckPV.morphController.update(randDeckPV.value)
         }
-        val isModAll = randAll.modulators.any { !it.bypassed } || randAll.value > 0.0001f
+        val isModAll = randAll.hasActiveModulator() || randAll.value > 0.0001f
         if (isModAll) {
             morphControllerAll.update(randAll.value)
         }

@@ -19,13 +19,23 @@ object ISFTransitionRegistry {
         "zoom_fade"
     )
 
+    @Volatile
+    private var cachedTransitions: List<ISFFilter> = emptyList()
+
     val availableTransitions: List<ISFFilter>
-        get() = transitions.values.toList().sortedBy { it.displayName }
+        get() = cachedTransitions
+
+    fun hasTransition(id: String): Boolean = transitions.containsKey(id)
+
+    private fun rebuildCache() {
+        cachedTransitions = transitions.values.toList().sortedBy { it.displayName }
+    }
 
     fun loadAll() {
         disposeAll()
         loadBundledTransitions()
         scanUserTransitions()
+        rebuildCache()
     }
 
     fun disposeAll() {
@@ -37,6 +47,7 @@ object ISFTransitionRegistry {
             }
         }
         transitions.clear()
+        rebuildCache()
     }
 
     private fun loadBundledTransitions() {

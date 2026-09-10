@@ -32,6 +32,18 @@ class ModulatableParameter(
     val modulators = CopyOnWriteArrayList<CvModulator>()
     val history = CvHistoryBuffer(historySize)
 
+    /**
+     * Allocation-free check for active modulators on the hot render path.
+     * Iterates by index to avoid allocating a COWIterator from [modulators].
+     */
+    fun hasActiveModulator(): Boolean {
+        val size = modulators.size
+        for (i in 0 until size) {
+            if (!modulators[i].bypassed) return true
+        }
+        return false
+    }
+
     val defaultValue: Float = baseValue
     var baseMin: Float = baseValue
     var baseMax: Float = baseValue

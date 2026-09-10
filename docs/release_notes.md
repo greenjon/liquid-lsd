@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### ISF & Render Loop Zero-Allocation Optimization & Registry Hygiene (`ISFFilter.kt`, `ISFVisualSource.kt`, `DynamicVisualSource.kt`, `Mixer.kt`, `ModulatableParameter.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`)
+- **Zero-Allocation ISF DATE Computation in Filters**: Replaced `LocalDateTime.now()` in `ISFFilter.render()` and `renderTransition()` with fast epoch arithmetic and pre-computed month day tables, eliminating per-frame heap allocations on the OpenGL render thread.
+- **Pre-Bound Parameter and Multipass Direct Dispatch**: Pre-bound ISF input bindings (`float`, `bool`, `long`, `color`, `point2D`) and multipass targets in `ISFVisualSource.kt` and `ISFFilter.kt`, eliminating runtime string interpolations (`"${input.NAME} R"`, etc.), dynamic Map lookups, and per-pass `header.PASSES.mapNotNull { }` list allocations.
+- **Dynamic Visual Source Uniform Optimization**: Cached uniform names and parameter arrays in `DynamicVisualSource.kt`, eliminating per-frame `"u" + name.replace(" ", "")` string generation and iterator allocation across all visual generators (Mandala, Dynamic Spiral, HyperMesh, Icosahedron).
+- **Zero-Allocation Modulator Checking (`hasActiveModulator`)**: Added `hasActiveModulator()` to `ModulatableParameter` to inspect `modulators` via O(1) indexed traversal, removing 5 `CopyOnWriteArrayList` `COWIterator` allocations per frame in `Mixer.kt`.
+- **Registry Performance & Mutual Exclusion**: Cached `availableFilters` and `availableTransitions` with `@Volatile` immutable snapshots to avoid per-access sorting, and enforced mutual exclusion in `ISFFilterRegistry` to prevent transition shaders from duplicating in the filter picker.
+
 ### Phase 4: Mixxx-Style ISF Library Management, Asynchronous Scanner, File Watcher Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`)
 - **Platform-Standard ISF Search Locations**: Pre-populates default search directories for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF/`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application asset bundles.
 - **Robust Path Expansion & Variable Resolution**: Automatically expands `~`, Windows `%ENV_VAR%`, and Unix `$ENV_VAR` / `${ENV_VAR}` variables into absolute canonical paths.
