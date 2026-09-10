@@ -101,30 +101,39 @@ object VisualSourceRegistry {
     fun loadAll() {
         disposeAll()
         
-        val sourcesDir = File("library/sources")
-        if (!sourcesDir.exists()) {
-            sourcesDir.mkdirs()
+        val defaultSourcesDir = File("library/sources")
+        if (!defaultSourcesDir.exists()) {
+            defaultSourcesDir.mkdirs()
         }
 
-        ensureDefaultSources(sourcesDir)
+        ensureDefaultSources(defaultSourcesDir)
 
-        // Load folders
-        val folders = sourcesDir.listFiles { file -> file.isDirectory } ?: emptyArray()
-        for (folder in folders) {
-            loadFromFolder(folder)
-        }
+        llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.loadSettings()
+        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
 
-        // Load standalone ISF files
-        val files = sourcesDir.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") } ?: emptyArray()
-        for (file in files) {
-            try {
-                val source = loadFromISFFile(file)
-                if (source != null) {
-                    availableSources.add(source)
-                    logger.info { "Loaded standalone ISF visual source: ${source.displayName} (${source.id})" }
+        val resolvedDirs = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.getResolvedDirectories()
+        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == llm.slop.liquidlsd.rendering.isf.DirectoryStatus.ACTIVE }
+
+        for (resolved in enabledDirs) {
+            val dir = File(resolved.expandedPath)
+            if (!dir.exists() || !dir.isDirectory) continue
+
+            val folders = dir.listFiles { file -> file.isDirectory } ?: emptyArray()
+            for (folder in folders) {
+                loadFromFolder(folder)
+            }
+
+            val files = dir.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") } ?: emptyArray()
+            for (file in files) {
+                try {
+                    val source = loadFromISFFile(file)
+                    if (source != null && availableSources.none { it.id == source.id }) {
+                        availableSources.add(source)
+                        logger.info { "Loaded standalone ISF visual source: ${source.displayName} (${source.id})" }
+                    }
+                } catch (e: Exception) {
+                    logger.error(e) { "Failed to load standalone ISF source: ${file.name}" }
                 }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load standalone ISF source: ${file.name}" }
             }
         }
         

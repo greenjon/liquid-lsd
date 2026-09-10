@@ -57,23 +57,31 @@ object ISFTransitionRegistry {
     }
 
     private fun scanUserTransitions() {
-        val dir = File("library/transitions")
-        if (!dir.exists()) {
-            dir.mkdirs()
-            return
+        val defaultDir = File("library/transitions")
+        if (!defaultDir.exists()) {
+            defaultDir.mkdirs()
         }
 
-        dir.listFiles { _, name -> name.endsWith(".fs") || name.endsWith(".isf") || name.endsWith(".frag") }
-            ?.forEach { file ->
-                try {
-                    val source = file.readText()
-                    val id = file.nameWithoutExtension
-                    val displayName = id.replace("_", " ").capitalize()
-                    registerTransitionFromSource(id, displayName, source)
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to load user transition: ${file.path}" }
+        val resolvedDirs = ISFDirectoryManager.getResolvedDirectories()
+        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
+
+        for (resolved in enabledDirs) {
+            val dir = File(resolved.expandedPath)
+            if (!dir.exists() || !dir.isDirectory) continue
+
+            dir.walkTopDown()
+                .filter { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }
+                .forEach { file ->
+                    try {
+                        val source = file.readText()
+                        val id = file.nameWithoutExtension
+                        val displayName = id.replace("_", " ").capitalize()
+                        registerTransitionFromSource(id, displayName, source)
+                    } catch (e: Exception) {
+                        logger.error(e) { "Failed to load user transition: ${file.path}" }
+                    }
                 }
-            }
+        }
     }
 
     private fun registerTransitionFromSource(id: String, displayName: String, source: String) {

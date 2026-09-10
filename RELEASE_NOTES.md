@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Phase 4: Mixxx-Style ISF Library Management, Asynchronous Scanner, File Watcher Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`)
+- **Platform-Standard ISF Search Locations**: Pre-populates default search directories for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF/`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application asset bundles.
+- **Robust Path Expansion & Variable Resolution**: Automatically expands `~`, Windows `%ENV_VAR%`, and Unix `$ENV_VAR` / `${ENV_VAR}` variables into absolute canonical paths.
+- **Directory Lifecycle & Status Tracking (`DirectoryStatus`)**: Real-time evaluation of path accessibility (`Active`, `Missing`, `Unreadable`). Unplugged external SSDs are marked as `Missing` and retained in user configuration without being purged.
+- **Persistent JSON Configuration**: Serializes user directory paths and active toggle states into `library/isf_directories.json`.
+- **Asynchronous Scanner & Safe Header Parser (`ISFScanner.kt`, `ISFLibraryRegistry.kt`)**: Non-blocking background recursive scanner indexing generators, filters, and transitions with robust exception resilience for malformed or truncated ISF JSON headers.
+- **Precedence Collision Resolution**: Deterministic collision handling when unique shader IDs collide, honoring source priority: `Custom` (4) > `UserStandard` (3) > `SystemStandard` (2) > `BuiltIn` (1).
+- **Cross-Platform File Watcher & Live Reload (`ISFFileWatcher.kt`)**: Background directory monitoring via Java NIO `WatchService` with a 250ms debounce mechanism preventing compiler errors during external editor saves.
+- **Mixxx-Style "Shader Locations" Preferences Pane (`SettingsPanel.kt`)**: Settings UI displaying origin badges, enable/disable checkboxes, drive status indicators, "Add Folder", "Remove Folder" (with built-in path protection), and "Rescan Now" controls.
+- **Comprehensive Unit & Integration Test Suite**: Added thorough test coverage in `ISFDirectoryManagerTest.kt`, `ISFLibraryRegistryTest.kt`, and `ISFFileWatcherTest.kt`.
+
 ### Phase 3: Carabiner TCP Command Integration & UI State (`CarabinerTcpLinkBackend.kt`, `LinkSyncManager.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `CarabinerTcpLinkBackendTest.kt`)
 - **Asynchronous Carabiner Outbound Command Queue**: Refactored `CarabinerTcpLinkBackend` to use a lock-free `ConcurrentLinkedQueue<String>`, ensuring network socket writes never block the audio processing or UI rendering threads.
 - **Carabiner Protocol Integration & Formatting**: Formatted outbound commands using `Locale.US` for `bpm <val>` tempo updates and timestamped `beat <val> [timeUs] [quantum]` phase alignment.

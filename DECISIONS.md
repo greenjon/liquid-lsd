@@ -677,3 +677,19 @@
 - **Rationale**:
   - Completes Phase 2 of the Interoperability Roadmap by standardizing visual sources, dual FX slots, and mixer transitions on the open ISF specification.
   - Guarantees 100% backward compatibility and zero overhead when custom transition shaders are not in use.
+
+## Phase 2.4: Mixxx-Style ISF Library Management System, Directory Scanner, Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`, Registries)
+
+- **Decision**: Implement a robust, cross-platform library management system for ISF assets (generators, filters, transitions) modeled after Mixxx:
+  - **Platform-Standard Default Locations (`ISFDirectoryManager.kt`)**: Pre-populates default search paths for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF\`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application bundle assets.
+  - **Path Expansion & Variable Resolution**: Automatically expands `~`, Windows `%ENV_VAR%`, and Unix `$ENV_VAR` / `${ENV_VAR}` variables into absolute canonical paths.
+  - **Directory Lifecycle & Status Tracking (`DirectoryStatus`)**: Evaluates directory availability (`Active`, `Missing`, `Unreadable`). Disconnected or missing external drives are marked as `Missing` and retained in configuration without being purged.
+  - **Persistent JSON Configuration**: Serializes user directory paths and active toggle states into `library/isf_directories.json`.
+  - **Asynchronous Scanner & Safe Header Parser (`ISFScanner.kt`, `ISFLibraryRegistry.kt`)**: Recursively traverses enabled and active directories for `.fs`, `.isf`, and `.frag` shaders with graceful exception handling for malformed or truncated JSON headers.
+  - **Precedence Collision Resolution**: Resolves unique shader ID conflicts deterministically based on source origin priority: `Custom` (4) > `UserStandard` (3) > `SystemStandard` (2) > `BuiltIn` (1).
+  - **Cross-Platform File Watcher & Live Reload (`ISFFileWatcher.kt`)**: Implements background directory monitoring via Java NIO `WatchService` with a 250ms debounce mechanism to prevent compiler errors during external editor saves.
+  - **Mixxx-Style Preferences UI Pane (`SettingsPanel.kt`)**: Built the **Shader Locations** settings pane displaying origin badges, enable/disable checkboxes, drive status badges, "Add Folder", "Remove Folder" (with built-in path protection), and "Rescan Now" controls.
+- **Rationale**:
+  - Unlocks professional VJ asset organization, allowing artists to manage external shader collections and SSD libraries seamlessly.
+  - Guarantees zero-allocation performance on the audio thread and non-blocking background scanning for Thread 0.
+

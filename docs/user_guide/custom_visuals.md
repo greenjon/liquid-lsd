@@ -129,3 +129,37 @@ In addition to procedural GLSL shaders, Liquid LSD can ingest live video feeds f
 1. In the Deck **SRC** tab, select **External Video** from the Visual Source dropdown.
 2. In the **Server** dropdown combo box, pick any active Spout2 sender (Windows), Syphon server (macOS), or PipeWire video stream (Linux) discovered on your local system.
 3. The live video stream routes directly into the Deck pipeline, allowing full 2D/3D transformations (zoom, rotation, tri-planar/tetrahedral projection), audio-reactive feedback loops, and dual ISF post-processing effects.
+
+---
+
+## ISF Library Management & Shader Locations
+
+Liquid LSD features a professional, Mixxx-style library management system for Interactive Shader Format (ISF v2.0) generators, single/multi-pass filters, and crossfader transition shaders.
+
+### Default Platform Search Paths
+On initial app launch, Liquid LSD automatically checks standard platform locations for ISF assets:
+- **macOS**:
+  - System: `/Library/Graphics/ISF/`
+  - User: `~/Library/Graphics/ISF/`
+- **Windows**:
+  - System: `C:\ProgramData\ISF/`
+  - User: `%LOCALAPPDATA%\ISF/`
+- **Linux**:
+  - System: `/usr/share/isf/` and `/usr/local/share/isf/`
+  - User: `~/.local/share/isf/` (respecting `$XDG_DATA_HOME/isf/`)
+- **Built-In**:
+  - Internal application asset directories (`library/sources`, `library/filters`, `library/transitions`).
+
+### Shader Locations Preferences Pane
+You can manage search directories at runtime via the **Settings Panel -> Shader Locations** pane:
+- **Origin Badges**: Distinguishes between `Built-in`, `System`, `User`, and `Custom` directory sources.
+- **Toggles**: Enable or disable specific directories without deleting them from configuration.
+- **Drive Status Indicators**: Real-time health monitoring (`Active` [green], `Missing` [yellow/orange warning for unplugged external SSDs], `Unreadable` [red]).
+- **Add & Remove Folders**: Add arbitrary local directories via folder path input and remove custom folders. Built-in system directories are protected.
+- **Rescan Now**: Force an immediate re-scan of all enabled directories.
+
+### Live File Monitoring & Hot-Reloading
+Liquid LSD continuously monitors active ISF directories using Java NIO `WatchService`. When `.fs`, `.isf`, `.frag`, or `.vs`/`.vert` files are created, modified, or deleted:
+- A 250ms debounce mechanism prevents compilation mid-write during external editor saves.
+- Shaders are validated in an isolated compilation check before swapping live pointers, guaranteeing zero UI thread crashes or rendering dropouts.
+
