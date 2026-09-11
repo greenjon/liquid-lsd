@@ -74,12 +74,12 @@ Physical laptop trackpads lose capacitive accuracy near the outer chassis. The c
 ### Linux (evdev & uaccess)
 On Linux, Liquid LSD reads raw multi-touch data directly via `/dev/input/event*` and uses `ioctl(EVIOCGRAB)` to lock the OS mouse cursor while CapsLock is engaged.
 
-1. **Automated Setup via Polkit**:
-   If permissions are missing, Liquid LSD displays `[Touchpad: Permission Required]` above the crossfader and in `Settings > Window Frame & Chrome`. Clicking this badge launches `pkexec` to install `/etc/udev/rules.d/70-liquidlsd-touchpad.rules`:
+1. **Automated Setup via Polkit in Settings**:
+   If permissions are missing, Liquid LSD displays `Touchpad Status: Read/Write Permission Required` with an **[Install Permissions (Polkit)]** button in `Settings > Window Frame & Chrome`. Clicking this button launches `pkexec` to install `/etc/udev/rules.d/70-liquidlsd-touchpad.rules`:
    ```udev
    KERNEL=="event*", SUBSYSTEM=="input", ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess", TAG+="seat", RUN{builtin}+="uaccess"
    ```
-   Systemd's `uaccess` tag immediately grants non-root read/write access to the logged-in desktop seat user via POSIX ACLs without requiring a reboot or group changes. Liquid LSD verifies permissions using `access(2)` via JNA to properly detect POSIX ACL grants.
+   Systemd's `uaccess` tag immediately grants non-root read/write access to the logged-in desktop seat user via POSIX ACLs without requiring a reboot or group changes. Liquid LSD verifies permissions using `access(2)` via JNA to properly detect POSIX ACL grants. Keeping this in Settings ensures the Mixer crossfader layout remains clean and perfectly framed.
 2. **Desktop Installer Script**:
    Running `./scripts/install_desktop.sh` automatically configures this rule and cleans up legacy rules during installation.
 

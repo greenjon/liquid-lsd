@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### ISF GLSL Uniform Deduplication & Directory Registry Scoping (`ISFParser.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `VisualSourceRegistry.kt`, `ISFParserTest.kt`)
+- **Automatic Standard Uniform Deduplication**: Updated `ISFParser.buildGLSLFragmentShader()` to automatically detect and strip preexisting standard uniform declarations (`TIME`, `uAlpha`, `RENDERSIZE`, `TIMEDELTA`, `FRAMEINDEX`, `DATE`, `PASSINDEX`) from shader source bodies while declaring them safely at global scope at the top. Prevents GLSL 3.30 compilation errors (`redeclared`) when shaders explicitly declare built-in uniforms.
+- **Directory & Asset Registry Separation**: Restricted `ISFFilterRegistry`, `ISFTransitionRegistry`, and `VisualSourceRegistry` from cross-scanning mismatched directory types (e.g. generator sources in `library/sources` are no longer parsed as filters or transitions, and filters/transitions in `library/filters` or `library/transitions` are not loaded as visual sources).
+- **Filter & Transition Classification Guard**: `ISFFilterRegistry` verifies shaders have image inputs (`inputImage`) and are not generators before compilation; `ISFTransitionRegistry` ensures shaders declare transition categories, `progress` inputs, or transition directory paths before registering them.
+
 ### Stereo Audio Pipeline, Channel Selector & Visual VU Input Metering (`AudioEngine.kt`, `JackClient.kt`, `JavaSoundClient.kt`, `AudioEnginePanel.kt`, `AppSettings.kt`, `UITheme.kt`)
 - **Dual-Channel Audio Ingestion (Stereo Capture)**: Upgraded both `JackClient` (Linux JACK/PipeWire dual input ports `lsd:input_1` and `lsd:input_2`) and `JavaSoundClient` (cross-platform 16-bit stereo 44.1kHz/48kHz capture with zero-allocation PCM deinterleaving and mono-fallback mirroring) to feed true stereo audio into the DSP engine.
 - **Channel Routing Selector (Mix, Left Only, Right Only)**: Added `AudioChannelRouting` with options:
@@ -373,7 +378,7 @@
 - **Native Platform Backends**:
   - **Linux**: Direct evdev reader via JNA `libc`, `O_RDWR` with `EVIOCGRAB` (`0x40044590`) cursor grab, `EVIOCGABS` hardware axis query, MT Protocol B slot cache, POSIX ACL validation using `access(2)` (circumventing JVM `File.canWrite()` ACL blind spots), and absolute hardware axis verification with explicit TrackPoint/pointing-stick filtering.
   - **macOS**: Cocoa `NSTouch` indirect touch events.
-  - **Zero-Crash Graceful Permissions**: Non-root `uaccess` systemd udev rule (`/etc/udev/rules.d/70-liquidlsd-touchpad.rules`) via `pkexec`, interactive permission badge in UI, and in-app hot-reload.
+  - **Zero-Crash Graceful Permissions**: Non-root `uaccess` systemd udev rule (`/etc/udev/rules.d/70-liquidlsd-touchpad.rules`) via `pkexec`, interactive permission status and Polkit elevation button cleanly located in Settings (`Settings > Window Frame & Chrome`) to prevent shifting the Mixer UI layout, and in-app hot-reload.
   - **Thread-Safety**: Low-latency lock-free event queue drained strictly on Thread 0 once per frame.
 - **Visual Feedback HUD**:
   - Real-time glowing cyan contact dots for active fingers and amber dots for anchor fingers directly on the Crossfader slider.

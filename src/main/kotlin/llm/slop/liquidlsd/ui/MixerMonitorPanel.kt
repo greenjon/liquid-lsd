@@ -245,60 +245,11 @@ class MixerMonitorPanel(
         ImGui.setCursorScreenPos(startX, row2Y + subH + 4f)
     }
 
-    private fun drawTouchConsoleHUD(
-        session: llm.slop.liquidlsd.SessionContext,
-        contentW: Float
-    ) {
-        val controller = session.touchConsoleController
-        val state = controller.backend.state
-
-        if (controller.isElevatingPermissions) {
-            ImGui.textDisabled("${Icons.ACTIVITY} Configuring Touchpad Permissions (Polkit)...")
-            ImGui.spacing()
-            return
-        }
-
-        if (state == TouchBackendState.PERMISSION_REQUIRED) {
-            val badgeH = 22f
-            val dl = ImGui.getWindowDrawList()
-            val startX = ImGui.getCursorScreenPosX()
-            val startY = ImGui.getCursorScreenPosY()
-
-            ImGui.dummy(contentW, badgeH)
-            val isHovered = ImGui.isItemHovered()
-            val isClicked = ImGui.isItemClicked(0)
-
-            val bgCol = if (isHovered) ImGui.colorConvertFloat4ToU32(0.35f, 0.15f, 0.05f, 0.9f)
-                        else ImGui.colorConvertFloat4ToU32(0.20f, 0.08f, 0.02f, 0.8f)
-            val borderCol = ImGui.colorConvertFloat4ToU32(0.90f, 0.50f, 0.10f, 0.8f)
-            val textCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.20f, 1.0f)
-
-            dl.addRectFilled(startX, startY, startX + contentW, startY + badgeH, bgCol, 4f)
-            dl.addRect(startX, startY, startX + contentW, startY + badgeH, borderCol, 4f, 0, 1.0f)
-
-            val label = "${Icons.ALERT} Touchpad: Permission Required (Click to Install udev Access)"
-            val textW = ImGui.calcTextSize(label).x
-            val textX = startX + (contentW - textW) * 0.5f
-            val textY = startY + (badgeH - ImGui.getTextLineHeight()) * 0.5f
-            dl.addText(textX, textY, textCol, label)
-
-            if (isHovered) {
-                ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
-                itemTooltip("Click to run Polkit elevation (pkexec) to grant non-root touch access for the Performance Console")
-            }
-            if (isClicked) {
-                controller.requestPermissionElevation()
-            }
-            ImGui.spacing()
-        }
-    }
-
     private fun drawCrossfaderSlider(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer
     ) {
         val contentW = ImGui.getContentRegionAvailX()
-        drawTouchConsoleHUD(session, contentW)
 
         val fontLevel = UITheme.FontLevel.H2
         var textWA = 0f

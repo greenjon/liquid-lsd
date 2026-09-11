@@ -695,7 +695,9 @@ object SettingsPanel {
 
         val controller = session.touchConsoleController
         val state = controller.backend.state
-        when (state) {
+        if (controller.isElevatingPermissions) {
+            ImGui.textDisabled("${Icons.ACTIVITY} Touchpad Status: Configuring permissions via Polkit...")
+        } else when (state) {
             TouchBackendState.READY -> {
                 ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "${Icons.ACTIVITY} Touchpad Status: Ready (Press CapsLock to engage)")
             }
