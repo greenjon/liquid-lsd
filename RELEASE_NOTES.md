@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### UI Text Formatting & Font Glyph Safety (`UITheme.kt`)
+- **Format String Corruption Fix (`UITheme.kt`)**: Replaced calls to native `ImGui.textColored(...)` in semantic text helpers (`bodyColored`, `h1Colored`, `h2Colored`, `h3Colored`, `captionColored`, `codeColored`) with explicit `PushStyleColor(ImGuiCol.Text, ...)` + unformatted `ImGui.text(text)` + `PopStyleColor()`. `ImGui.textColored` passes text strings as printf format strings (`fmt`), which caused arbitrary memory reads and corrupted text whenever strings contained `%` characters (such as the Beat Tracker confidence percentage readout `"$confPercent%"`).
+- **Caption Text Safety (`UITheme.kt`)**: Implemented `UITheme.caption(...)` via `PushStyleColor(ImGuiCol.Text, getColorU32(ImGuiCol.TextDisabled))` + `ImGui.text(text)` + `PopStyleColor()`, removing vulnerable `ImGui.textDisabled(text)` format string handling.
+- **Lucide Icon Support in H1 / H2 Headers (`UITheme.kt`)**: Enabled `withIcons = true` when loading `fontH1` and `fontH2` in `UITheme.loadFonts()`, resolving missing glyph `?` placeholders when rendering headers containing `Icons.*` (such as `theme.h2("${Icons.SETTINGS} Beat Clock Mode")`).
+
 ### Ableton Link & Master Tempo Deck Architecture (`TempoSyncPanel.kt`, `LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `SettingsPanel.kt`, `UITheme.kt`)
 - **Resolume-Inspired Master Tempo Deck (`TempoSyncPanel.kt`)**: Extracted timing and tempo controls into a dedicated "Tempo & Sync" settings category with intuitive transport controls: large BPM readout with visual beat-flash indicator, 4-beat bar progress dots, tap tempo button, manual ±0.1 / ±1.0 BPM nudging, downbeat resync, and clock source selection (`AUDIO_TRACKER`, `ABLETON_LINK`, `MANUAL_TAP`).
 - **Clean Separation of Concerns**: Streamlined `AudioEnginePanel` to focus purely on hardware devices, backends (JACK / Java Sound), stereo channel routing, gain/volume, and audio signal/CV oscilloscopes, while moving high-level timing and network sync to `TempoSyncPanel`.

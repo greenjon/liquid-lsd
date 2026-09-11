@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### UI Text Formatting & Font Glyph Safety (`UITheme.kt`)
+- **Format String Corruption Fix (`UITheme.kt`)**: Replaced calls to native `ImGui.textColored(...)` in semantic text helpers (`bodyColored`, `h1Colored`, `h2Colored`, `h3Colored`, `captionColored`, `codeColored`) with explicit `PushStyleColor(ImGuiCol.Text, ...)` + unformatted `ImGui.text(text)` + `PopStyleColor()`. `ImGui.textColored` passes text strings as printf format strings (`fmt`), which caused arbitrary memory reads and corrupted text whenever strings contained `%` characters (such as the Beat Tracker confidence percentage readout `"$confPercent%"`).
+- **Caption Text Safety (`UITheme.kt`)**: Implemented `UITheme.caption(...)` via `PushStyleColor(ImGuiCol.Text, getColorU32(ImGuiCol.TextDisabled))` + `ImGui.text(text)` + `PopStyleColor()`, removing vulnerable `ImGui.textDisabled(text)` format string handling.
+- **Lucide Icon Support in H1 / H2 Headers (`UITheme.kt`)**: Enabled `withIcons = true` when loading `fontH1` and `fontH2` in `UITheme.loadFonts()`, resolving missing glyph `?` placeholders when rendering headers containing `Icons.*` (such as `theme.h2("${Icons.SETTINGS} Beat Clock Mode")`).
+
 ### Ableton Link Sync Architecture Simplification (`LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `UITheme.kt`)
 - **Eliminated `SyncMode` State Machine**: Removed the redundant `SyncMode` enum (`DISABLED`, `LINK_FOLLOWER`, `AUDIO_BROADCAST`), mode transition lock, background coroutine jobs, and `AudioTempoEventSink` delegation interface.
 - **Direct Ableton Link State Integration**: Ableton Link synchronization is now governed directly by `AbletonLinkEngine.isEnabled`. When enabled, audio beat tracker tempo/phase updates pass through `BeatTrackToLinkDamping` signal filtering (lambda callbacks `onTempoCommitted` and `onBeatAligned`) directly to `AbletonLinkEngine`.

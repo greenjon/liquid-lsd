@@ -4,6 +4,7 @@ import imgui.ImFont
 import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.ImGuiIO
+import imgui.flag.ImGuiCol
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.audio.AudioEngine
@@ -713,8 +714,8 @@ object UITheme {
         fontBody       = addFont(regularBytes!!, FONT_BODY,    cfg(), withIcons = true)
         fontCaption    = addFont(regularBytes!!, FONT_CAPTION, cfg(), withIcons = true)
         fontH3         = addFont(mediumBytes!!,  FONT_H3,      cfg(), withIcons = true)
-        fontH2         = addFont(boldBytes!!,    FONT_H2,      cfg(), withIcons = false)
-        fontH1         = addFont(boldBytes!!,    FONT_H1,      cfg(), withIcons = false)
+        fontH2         = addFont(boldBytes!!,    FONT_H2,      cfg(), withIcons = true)
+        fontH1         = addFont(boldBytes!!,    FONT_H1,      cfg(), withIcons = true)
         fontCode       = addFont(codeBytes!!,    FONT_CODE,    cfg(), withIcons = false)
 
         val presetFontSize = (FONT_BODY * (presetNameScalePercent / 100f)).coerceIn(10f, 22f)
@@ -773,26 +774,54 @@ object UITheme {
     fun h2(text: String)      = withFont(FontLevel.H2)      { ImGui.text(text) }
     fun h3(text: String)      = withFont(FontLevel.H3)      { ImGui.text(text) }
     fun body(text: String)    = withFont(FontLevel.BODY)    { ImGui.text(text) }
-    fun caption(text: String) = withFont(FontLevel.CAPTION) { ImGui.textDisabled(text) }
+    fun caption(text: String) = withFont(FontLevel.CAPTION) {
+        ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(ImGuiCol.TextDisabled))
+        ImGui.text(text)
+        ImGui.popStyleColor()
+    }
     fun code(text: String)    = withFont(FontLevel.CODE)    { ImGui.text(text) }
 
     // -- Coloured variants -----------------------------------------------------
 
     fun h1Colored(r: Float, g: Float, b: Float, a: Float, text: String) =
-        withFont(FontLevel.H1) { ImGui.textColored(r, g, b, a, text) }
+        withFont(FontLevel.H1) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.text(text)
+            ImGui.popStyleColor()
+        }
 
     fun h2Colored(r: Float, g: Float, b: Float, a: Float, text: String) =
-        withFont(FontLevel.H2) { ImGui.textColored(r, g, b, a, text) }
+        withFont(FontLevel.H2) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.text(text)
+            ImGui.popStyleColor()
+        }
 
     fun h3Colored(r: Float, g: Float, b: Float, a: Float, text: String) =
-        withFont(FontLevel.H3) { ImGui.textColored(r, g, b, a, text) }
+        withFont(FontLevel.H3) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.text(text)
+            ImGui.popStyleColor()
+        }
 
     fun bodyColored(r: Float, g: Float, b: Float, a: Float, text: String) =
-        withFont(FontLevel.BODY) { ImGui.textColored(r, g, b, a, text) }
+        withFont(FontLevel.BODY) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.text(text)
+            ImGui.popStyleColor()
+        }
 
     fun captionColored(r: Float, g: Float, b: Float, a: Float, text: String) =
-        withFont(FontLevel.CAPTION) { ImGui.textColored(r, g, b, a, text) }
+        withFont(FontLevel.CAPTION) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.text(text)
+            ImGui.popStyleColor()
+        }
 
     fun codeColored(r: Float, g: Float, b: Float, a: Float, text: String) =
-        withFont(FontLevel.CODE) { ImGui.textColored(r, g, b, a, text) }
+        withFont(FontLevel.CODE) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.text(text)
+            ImGui.popStyleColor()
+        }
 }
