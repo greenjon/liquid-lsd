@@ -28,7 +28,6 @@ object SettingsPanel {
 
     enum class Category(val label: String) {
         GENERAL("General"),
-        APPEARANCE("Appearance"),
         VIDEO_DISPLAY("Video & Display"),
         AUDIO_ENGINE("Audio Engine"),
         SHADER_LOCATIONS("Shader Locations"),
@@ -133,8 +132,7 @@ object SettingsPanel {
         // Right Content Child
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
-                Category.GENERAL          -> drawGeneralSettings(session)
-                Category.APPEARANCE       -> drawAppearance(session, currentSize, onPresetScaleChanged)
+                Category.GENERAL          -> drawGeneralSettings(session, currentSize, onPresetScaleChanged)
                 Category.VIDEO_DISPLAY    -> drawVideoDisplaySettings(session)
                 Category.AUDIO_ENGINE     -> drawAudioEngineSettings(session)
                 Category.SHADER_LOCATIONS -> drawShaderLocationsSettings(session)
@@ -161,82 +159,7 @@ object SettingsPanel {
         ImGui.endPopup()
     }
 
-    private fun drawAppearance(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onPresetScaleChanged: (Int) -> Unit) {
-        session.uiTheme.h2("Appearance")
-        ImGui.separator()
-        ImGui.spacing()
 
-        val themes = UITheme.Theme.values()
-        val themeNames = themes.map { theme ->
-            theme.name.split("_")
-                .joinToString(" ") { word ->
-                    word.lowercase().replaceFirstChar { it.uppercaseChar() }
-                }
-        }.toTypedArray()
-        val currentThemeIdx = imgui.type.ImInt(session.uiTheme.theme.ordinal)
-        if (ImGui.combo("UI Theme", currentThemeIdx, themeNames)) {
-            val nextTheme = themes[currentThemeIdx.get()]
-            session.uiTheme.theme = nextTheme
-            session.uiTheme.saveSettings()
-        }
-        itemTooltip("Select the user interface color palette theme.")
-        ImGui.spacing()
-
-        session.uiTheme.h2("Fonts & Sizing")
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Fixed UI Typography hierarchy
-        session.uiTheme.body("UI Scale: Fixed at 95%")
-        session.uiTheme.caption("Cap ${UITheme.FONT_CAPTION.toInt()}  Body ${UITheme.FONT_BODY.toInt()}  H3 ${UITheme.FONT_H3.toInt()}  H2 ${UITheme.FONT_H2.toInt()}  H1 ${UITheme.FONT_H1.toInt()} px")
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Library Preset Name Scale: 80% to 120%
-        val sliderBoxW = 50f
-        val committedScale = session.uiTheme.presetNameScalePercent
-        val currentScale = pendingPresetScale ?: committedScale
-        val presetPx = UITheme.FONT_BODY * (currentScale / 100f)
-        session.uiTheme.caption("Library Preset Name Size: ${"%.1f".format(presetPx)} px ($currentScale%)")
-        ImGui.spacing()
-
-        CustomRangeSlider.drawCompactSlider(
-            session = session,
-            label = "Preset Name Size",
-            currentValue = currentScale.toFloat(),
-            minLimit = MIN_PRESET_SCALE_PCT.toFloat(),
-            maxLimit = MAX_PRESET_SCALE_PCT.toFloat(),
-            defaultValue = 100f,
-            formatValue = {
-                val snapped = (kotlin.math.round(it / STEP_PCT) * STEP_PCT).toInt().coerceIn(MIN_PRESET_SCALE_PCT, MAX_PRESET_SCALE_PCT)
-                "$snapped%"
-            },
-            idPrefix = "settings_preset_name_scale",
-            themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
-            showCurrentLabel = false,
-            customBoxWidth = sliderBoxW,
-            onValueChanged = { newVal ->
-                val snapped = (kotlin.math.round(newVal / STEP_PCT) * STEP_PCT).toInt().coerceIn(MIN_PRESET_SCALE_PCT, MAX_PRESET_SCALE_PCT)
-                pendingPresetScale = snapped
-            }
-        )
-        itemTooltip(
-            "Scale preset names in the Library browser ($MIN_PRESET_SCALE_PCT% to $MAX_PRESET_SCALE_PCT%).\n" +
-            "Drag smoothly and release mouse to apply.\n" +
-            "Ctrl+- and Ctrl+= adjust by 10% steps."
-        )
-        ImGui.spacing()
-
-        // Commit on mouse release
-        if (!ImGui.isMouseDown(0) && pendingPresetScale != null) {
-            val target = pendingPresetScale!!
-            pendingPresetScale = null
-            if (target != committedScale) {
-                onPresetScaleChanged(target)
-            }
-        }
-    }
 
     private fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 
@@ -451,7 +374,7 @@ object SettingsPanel {
         AudioEnginePanel.drawContent(session)
     }
 
-    private fun drawGeneralSettings(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawGeneralSettings(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onPresetScaleChanged: (Int) -> Unit) {
         session.uiTheme.h2("Features")
         ImGui.separator()
         ImGui.spacing()
@@ -598,7 +521,54 @@ object SettingsPanel {
         }
 
         ImGui.spacing()
-        session.uiTheme.h2("Startup & Updates")
+        val updatesOnStartup = ImBoolean(session.uiTheme.checkUpdatesOnStartup)
+        if (ImGui.checkbox("Automatically check for updates on launch", updatesOnStartup)) {
+            val nextVal = updatesOnStartup.get()
+            if (nextVal != session.uiTheme.checkUpdatesOnStartup) {
+                session.uiTheme.checkUpdatesOnStartup = nextVal
+                session.uiTheme.saveSettings()
+            }
+        }
+        itemTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
+
+        ImGui.sameLine(0f, 15f)
+        val checking = llm.slop.liquidlsd.update.UpdateChecker.isChecking
+        val checkBtnLabel = if (checking) "${Icons.REFRESH} Checking..." else "${Icons.REFRESH} Check for Updates Now##settings_check_now"
+        if (ImGui.button(checkBtnLabel, 180f, 0f)) {
+            if (!checking) {
+                llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+            }
+        }
+        itemTooltip("Query GitHub for the latest release version.")
+
+        val lastResult = llm.slop.liquidlsd.update.UpdateChecker.lastResult
+        when (lastResult) {
+            is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable -> {
+                ImGui.spacing()
+                ImGui.alignTextToFramePadding()
+                ImGui.textColored(0.3f, 0.9f, 0.4f, 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
+                ImGui.sameLine()
+                if (ImGui.button("View Update##settings_update", 120f, 0f)) {
+                    UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
+                }
+            }
+            is llm.slop.liquidlsd.update.UpdateCheckResult.UpToDate -> {
+                ImGui.spacing()
+                ImGui.alignTextToFramePadding()
+                ImGui.textColored(0.5f, 0.9f, 0.5f, 1.0f, "Liquid LSD is up to date (${lastResult.currentVersion}).")
+            }
+            is llm.slop.liquidlsd.update.UpdateCheckResult.Error -> {
+                ImGui.spacing()
+                ImGui.alignTextToFramePadding()
+                ImGui.textColored(1.0f, 0.4f, 0.4f, 1.0f, "Check failed: ${lastResult.message}")
+            }
+            is llm.slop.liquidlsd.update.UpdateCheckResult.Idle, is llm.slop.liquidlsd.update.UpdateCheckResult.Checking -> {
+                // Handled inline via the button / checking state above
+            }
+        }
+
+        ImGui.spacing()
+        session.uiTheme.h2("Startup Behavior")
         ImGui.separator()
         ImGui.spacing()
 
@@ -623,49 +593,76 @@ object SettingsPanel {
         }
 
         ImGui.spacing()
-        val updatesOnStartup = ImBoolean(session.uiTheme.checkUpdatesOnStartup)
-        if (ImGui.checkbox("Automatically check for updates on launch", updatesOnStartup)) {
-            val nextVal = updatesOnStartup.get()
-            if (nextVal != session.uiTheme.checkUpdatesOnStartup) {
-                session.uiTheme.checkUpdatesOnStartup = nextVal
-                session.uiTheme.saveSettings()
-            }
-        }
-        itemTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
-
+        session.uiTheme.h2("Theme")
+        ImGui.separator()
         ImGui.spacing()
-        val checking = llm.slop.liquidlsd.update.UpdateChecker.isChecking
-        val lastResult = llm.slop.liquidlsd.update.UpdateChecker.lastResult
-        if (checking) {
-            ImGui.textColored(0.9f, 0.7f, 0.2f, 1.0f, "${Icons.REFRESH} Checking for updates...")
-        } else {
-            when (lastResult) {
-                is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable -> {
-                    ImGui.textColored(0.3f, 0.9f, 0.4f, 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
-                    ImGui.sameLine()
-                    if (ImGui.button("View Update##settings_update", 120f, 0f)) {
-                        UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
-                    }
+
+        val themes = UITheme.Theme.values()
+        val themeNames = themes.map { theme ->
+            theme.name.split("_")
+                .joinToString(" ") { word ->
+                    word.lowercase().replaceFirstChar { it.uppercaseChar() }
                 }
-                is llm.slop.liquidlsd.update.UpdateCheckResult.UpToDate -> {
-                    ImGui.textColored(0.5f, 0.9f, 0.5f, 1.0f, "Liquid LSD is up to date (${lastResult.currentVersion}).")
-                    ImGui.sameLine()
-                    if (ImGui.button("Check Again##settings_check", 120f, 0f)) {
-                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
-                    }
+        }.toTypedArray()
+        val currentThemeIdx = imgui.type.ImInt(session.uiTheme.theme.ordinal)
+        val themeComboW = (ImGui.getContentRegionAvailX() * 0.33f * 0.5f).coerceAtLeast(80f)
+        ImGui.setNextItemWidth(themeComboW)
+        if (ImGui.combo("##ui_theme", currentThemeIdx, themeNames)) {
+            val nextTheme = themes[currentThemeIdx.get()]
+            session.uiTheme.theme = nextTheme
+            session.uiTheme.saveSettings()
+        }
+        itemTooltip("Select the user interface color palette theme.")
+        ImGui.spacing()
+
+        session.uiTheme.h2("Font Size")
+        ImGui.sameLine(0f, 15f)
+        session.uiTheme.captionColored(0.7f, 0.7f, 0.7f, 0.85f, "only changes the size of the text in the Library of Presets")
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Library Preset Name Scale: 80% to 120%
+        val sliderBoxW = 50f
+        val committedScale = session.uiTheme.presetNameScalePercent
+        val currentScale = pendingPresetScale ?: committedScale
+        val sliderW = (ImGui.getContentRegionAvailX() * 0.25f).coerceAtLeast(160f)
+        if (ImGui.beginChild("##preset_slider_child", sliderW, 46f, false)) {
+            CustomRangeSlider.drawCompactSlider(
+                session = session,
+                label = "",
+                currentValue = currentScale.toFloat(),
+                minLimit = MIN_PRESET_SCALE_PCT.toFloat(),
+                maxLimit = MAX_PRESET_SCALE_PCT.toFloat(),
+                defaultValue = 100f,
+                formatValue = {
+                    val snapped = (kotlin.math.round(it / STEP_PCT) * STEP_PCT).toInt().coerceIn(MIN_PRESET_SCALE_PCT, MAX_PRESET_SCALE_PCT)
+                    "$snapped%"
+                },
+                idPrefix = "settings_preset_name_scale",
+                themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+                showCurrentLabel = false,
+                customBoxWidth = sliderBoxW,
+                readOnly = true,
+                onValueChanged = { newVal ->
+                    val snapped = (kotlin.math.round(newVal / STEP_PCT) * STEP_PCT).toInt().coerceIn(MIN_PRESET_SCALE_PCT, MAX_PRESET_SCALE_PCT)
+                    pendingPresetScale = snapped
                 }
-                is llm.slop.liquidlsd.update.UpdateCheckResult.Error -> {
-                    ImGui.textColored(1.0f, 0.4f, 0.4f, 1.0f, "Check failed: ${lastResult.message}")
-                    ImGui.sameLine()
-                    if (ImGui.button("Retry##settings_retry", 100f, 0f)) {
-                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
-                    }
-                }
-                llm.slop.liquidlsd.update.UpdateCheckResult.Idle, llm.slop.liquidlsd.update.UpdateCheckResult.Checking -> {
-                    if (ImGui.button("${Icons.REFRESH} Check for Updates Now", 200f, 0f)) {
-                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
-                    }
-                }
+            )
+        }
+        ImGui.endChild()
+        itemTooltip(
+            "Scale preset names in the Library browser ($MIN_PRESET_SCALE_PCT% to $MAX_PRESET_SCALE_PCT%).\n" +
+            "Drag smoothly and release mouse to apply.\n" +
+            "Ctrl+- and Ctrl+= adjust by 10% steps."
+        )
+        ImGui.spacing()
+
+        // Commit on mouse release
+        if (!ImGui.isMouseDown(0) && pendingPresetScale != null) {
+            val target = pendingPresetScale!!
+            pendingPresetScale = null
+            if (target != committedScale) {
+                onPresetScaleChanged(target)
             }
         }
     }

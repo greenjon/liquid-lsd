@@ -65,7 +65,8 @@ object CustomRangeSlider {
         defaultValue: Float? = null,
         onChanged: (Float) -> Unit,
         formatValue: (Float) -> String = { "%.3f".format(it) },
-        parseValue: (String) -> Float? = { it.toFloatOrNull() }
+        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        readOnly: Boolean = false
     ) {
         val buffer = textBuffers.getOrPut(key) { imgui.type.ImString(formatValue(currentValue), 32) }
         val active = textWidgetActive.getOrDefault(key, false)
@@ -76,7 +77,10 @@ object CustomRangeSlider {
         ImGui.pushItemWidth(width)
 
         // Native callback to handle arrow keys
-        val flags = imgui.flag.ImGuiInputTextFlags.CallbackHistory
+        var flags = imgui.flag.ImGuiInputTextFlags.CallbackHistory
+        if (readOnly) {
+            flags = flags or imgui.flag.ImGuiInputTextFlags.ReadOnly
+        }
         val callback = textCallbacks.getOrPut(key) { ReusableInputCallback() }
         callback.currentValue = currentValue
         callback.minLimit = minLimit
@@ -162,8 +166,8 @@ object CustomRangeSlider {
         ImGui.pushID("${idPrefix}_$label")
 
         // 1. Header Row (Label + Dice)
-        val labelColW = 110f * fontScale
-        val textBoxesStartX = startX + labelColW + 10f * fontScale
+        val labelColW = if (label.isEmpty()) 0f else (110f * fontScale)
+        val textBoxesStartX = startX + labelColW + (if (label.isEmpty()) 0f else (10f * fontScale))
         val boxWidth = 44f * fontScale
         val boxSpacing = 8f
         val sliderStartX = textBoxesStartX + (boxWidth * 2f + boxSpacing) + 15f
@@ -348,7 +352,8 @@ object CustomRangeSlider {
         parseValue: (String) -> Float? = { it.toFloatOrNull() },
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
-        onValueChanged: (Float) -> Unit
+        onValueChanged: (Float) -> Unit,
+        readOnly: Boolean = false
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -368,7 +373,8 @@ object CustomRangeSlider {
             isLogarithmic = isLogarithmic,
             parseValue = parseValue,
             showCurrentLabel = showCurrentLabel,
-            customBoxWidth = customBoxWidth
+            customBoxWidth = customBoxWidth,
+            readOnly = readOnly
         )
     }
 
@@ -387,7 +393,8 @@ object CustomRangeSlider {
         isLogarithmic: Boolean = false,
         parseValue: (String) -> Float? = { it.toFloatOrNull() },
         showCurrentLabel: Boolean = true,
-        customBoxWidth: Float? = null
+        customBoxWidth: Float? = null,
+        readOnly: Boolean = false
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -407,7 +414,8 @@ object CustomRangeSlider {
             isLogarithmic = isLogarithmic,
             parseValue = parseValue,
             showCurrentLabel = showCurrentLabel,
-            customBoxWidth = customBoxWidth
+            customBoxWidth = customBoxWidth,
+            readOnly = readOnly
         )
     }
 
@@ -435,7 +443,8 @@ object CustomRangeSlider {
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
         isRandomizeDisabled: Boolean = false,
-        randomizeDisabledTooltip: String? = null
+        randomizeDisabledTooltip: String? = null,
+        readOnly: Boolean = false
     ) {
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else ((isRandomizable && session.uiTheme.randomizationEnabled) || (!showControls && isRandomizable))
         val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
@@ -469,8 +478,8 @@ object CustomRangeSlider {
         val spacing = ImGui.getStyle().itemSpacing.x
         val combinedWidth = buttonSize
         
-        val labelColW = 110f * fontScale
-        val textBoxesStartX = startX + labelColW + 10f * fontScale
+        val labelColW = if (label.isEmpty()) 0f else (110f * fontScale)
+        val textBoxesStartX = startX + labelColW + (if (label.isEmpty()) 0f else (10f * fontScale))
         
         val boxWidth = customBoxWidth ?: (44f * fontScale)
         val boxSpacing = 8f
@@ -537,28 +546,30 @@ object CustomRangeSlider {
         
         // --- ROW 2: Widgets ---
         
-        val labelW = if (effectiveShowControls) (labelColW - buttonSize - 4f).coerceAtLeast(10f) else labelColW
-        ImGui.setCursorScreenPos(startX, row2Y)
-        ImGui.invisibleButton("##label_btn_${idPrefix}_$label", labelW, buttonSize)
-        val isLabelHovered = ImGui.isItemHovered()
-        if (ImGui.isItemClicked(2)) {
-            val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
-            if (effectiveIsRandomizable) {
-                onRangeChanged(resetTarget, resetTarget)
-            } else {
-                onValueChanged(resetTarget)
+        if (label.isNotEmpty()) {
+            val labelW = if (effectiveShowControls) (labelColW - buttonSize - 4f).coerceAtLeast(10f) else labelColW
+            ImGui.setCursorScreenPos(startX, row2Y)
+            ImGui.invisibleButton("##label_btn_${idPrefix}_$label", labelW, buttonSize)
+            val isLabelHovered = ImGui.isItemHovered()
+            if (ImGui.isItemClicked(2)) {
+                val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
+                if (effectiveIsRandomizable) {
+                    onRangeChanged(resetTarget, resetTarget)
+                } else {
+                    onValueChanged(resetTarget)
+                }
             }
-        }
-        if (isLabelHovered) {
-            val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
-            showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
-        }
+            if (isLabelHovered) {
+                val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
+                showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
+            }
 
-        // Render name of variable beside the die, to its left, sharing vertical center
-        val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
-        val textY = row2Y + (buttonSize - textHeight) / 2f
-        ImGui.setCursorScreenPos(startX, textY)
-        session.uiTheme.body(label)
+            // Render name of variable beside the die, to its left, sharing vertical center
+            val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
+            val textY = row2Y + (buttonSize - textHeight) / 2f
+            ImGui.setCursorScreenPos(startX, textY)
+            session.uiTheme.body(label)
+        }
         
         if (effectiveShowControls) {
             val randBtnX = startX + labelColW - buttonSize
@@ -639,7 +650,8 @@ object CustomRangeSlider {
                     onValueChanged(newVal)
                 },
                 formatValue = formatValue,
-                parseValue = parseValue
+                parseValue = parseValue,
+                readOnly = readOnly
             )
         }
         
