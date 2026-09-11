@@ -19,7 +19,7 @@ import llm.slop.liquidlsd.input.TouchBackendState
 object SettingsPanel {
 
     private const val POPUP_ID  = "Settings##modal"
-    private const val MODAL_W   = 780f
+    private const val MODAL_W   = 1000f
 
     // Library preset name scale model: Range 80%–120% in 10% steps.
     private const val MIN_PRESET_SCALE_PCT = 80
@@ -56,18 +56,21 @@ object SettingsPanel {
              mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
              onPresetScaleChanged: (Int) -> Unit) {
 
-        val defaultW = MODAL_W.coerceIn(600f, displayW * 0.95f)
-        val defaultH = 520f.coerceIn(400f, displayH * 0.90f)
+        val minW = 1000f.coerceAtMost(displayW * 0.98f)
+        val minH = 320f.coerceAtMost(displayH * 0.98f)
 
-        val targetW = if (session.uiTheme.settingsWidth > 100f) session.uiTheme.settingsWidth.coerceIn(480f, displayW * 0.98f) else defaultW
-        val targetH = if (session.uiTheme.settingsHeight > 100f) session.uiTheme.settingsHeight.coerceIn(320f, displayH * 0.98f) else defaultH
+        val defaultW = MODAL_W.coerceIn(minW, displayW * 0.98f)
+        val defaultH = 520f.coerceIn(minH, displayH * 0.90f)
+
+        val targetW = if (session.uiTheme.settingsWidth > 100f) session.uiTheme.settingsWidth.coerceIn(minW, displayW * 0.98f) else defaultW
+        val targetH = if (session.uiTheme.settingsHeight > 100f) session.uiTheme.settingsHeight.coerceIn(minH, displayH * 0.98f) else defaultH
 
         ImGui.setNextWindowPos(
             displayW * 0.5f, displayH * 0.5f,
             ImGuiCond.Appearing, 0.5f, 0.5f
         )
         ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.Appearing)
-        ImGui.setNextWindowSizeConstraints(480f, 320f, displayW * 0.98f, displayH * 0.98f)
+        ImGui.setNextWindowSizeConstraints(minW, minH, displayW * 0.98f, displayH * 0.98f)
 
         val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoScrollbar
 
@@ -165,16 +168,17 @@ object SettingsPanel {
 
     private fun drawVideoDisplaySettings(session: llm.slop.liquidlsd.SessionContext) {
         session.uiTheme.h2("Render Resolution")
-        ImGui.separator()
-        ImGui.spacing()
-
+        ImGui.sameLine(0f, 15f)
         session.uiTheme.caption("Internal render resolution for Decks, Mixer, and Video Output:")
+        ImGui.separator()
         ImGui.spacing()
 
         val presets = UITheme.ResolutionPreset.values()
         val presetNames = presets.map { it.displayName }.toTypedArray()
         val currentPresetIdx = imgui.type.ImInt(session.uiTheme.renderResolutionPreset.ordinal)
-        if (ImGui.combo("Resolution Preset", currentPresetIdx, presetNames)) {
+        val renderPresetComboW = (ImGui.getContentRegionAvailX() * 0.4f).coerceAtLeast(160f)
+        ImGui.setNextItemWidth(renderPresetComboW)
+        if (ImGui.combo("##Resolution Preset", currentPresetIdx, presetNames, presetNames.size)) {
             val nextPreset = presets[currentPresetIdx.get()]
             session.uiTheme.renderResolutionPreset = nextPreset
             if (nextPreset != UITheme.ResolutionPreset.CUSTOM) {
@@ -200,12 +204,6 @@ object SettingsPanel {
         }
 
         ImGui.spacing()
-        val activeW = session.uiTheme.renderWidth
-        val activeH = session.uiTheme.renderHeight
-        val gcdVal = gcd(activeW, activeH).coerceAtLeast(1)
-        session.uiTheme.body("Active: ${activeW}x${activeH} (${activeW / gcdVal}:${activeH / gcdVal})")
-
-        ImGui.spacing()
         session.uiTheme.h2("Display Scaling")
         ImGui.separator()
         ImGui.spacing()
@@ -213,7 +211,9 @@ object SettingsPanel {
         val scaleModes = UITheme.OutputScaleMode.values()
         val scaleModeNames = scaleModes.map { it.displayName }.toTypedArray()
         val currentScaleIdx = imgui.type.ImInt(session.uiTheme.outputScaleMode.ordinal)
-        if (ImGui.combo("Output Scaling", currentScaleIdx, scaleModeNames)) {
+        val displayScaleComboW = (ImGui.getContentRegionAvailX() * 0.4f).coerceAtLeast(160f)
+        ImGui.setNextItemWidth(displayScaleComboW)
+        if (ImGui.combo("##Output Scaling", currentScaleIdx, scaleModeNames)) {
             session.uiTheme.outputScaleMode = scaleModes[currentScaleIdx.get()]
             session.uiTheme.saveSettings()
         }
@@ -362,9 +362,13 @@ object SettingsPanel {
         )
 
         ImGui.spacing()
+        session.uiTheme.body("Recording Framerate:")
+        ImGui.sameLine(0f, 15f)
         val fpsOptions = arrayOf("30 FPS", "60 FPS")
         val fpsIdx = imgui.type.ImInt(if (session.uiTheme.recordingFps <= 30) 0 else 1)
-        if (ImGui.combo("Recording Framerate", fpsIdx, fpsOptions)) {
+        val recordingFpsComboW = (ImGui.getContentRegionAvailX() * 0.6f).coerceAtLeast(100f)
+        ImGui.setNextItemWidth(recordingFpsComboW)
+        if (ImGui.combo("##Recording Framerate", fpsIdx, fpsOptions)) {
             session.uiTheme.recordingFps = if (fpsIdx.get() == 0) 30 else 60
             session.uiTheme.saveSettings()
         }

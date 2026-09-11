@@ -5,7 +5,13 @@
 ### Settings & UI Controls (`SettingsPanel.kt`, `Main.kt`, `MenuBar.kt`, `UITheme.kt`, `AppSettings.kt`, `BrowserRowMoreButton.kt`)
 - **Settings Modal Closure Fix**: Fixed an issue where toggling "Enable MIDI" in Settings > General would immediately close the Settings modal window. Row context buttons (`BrowserRowMoreButton` and Preset Grid column kebab) now inspect ImGui widget hover states (`ImGui.isItemHovered()`) rather than raw mouse screen coordinates, preventing clicks inside modal windows from erroneously firing background row popups and closing active modals.
 - **Settings Layout & Categories Redesign**: Reorganized the Settings modal interface to promote **General** as the primary first tab. Moved parameter randomization, step sequencer, MIDI settings (and CC mappings), frameless window toggle, and SCS.3m trackpad console controls into a unified **Features** section on the General tab.
-- **Update Check Migration & Single-Row Layout**: Moved the "Automatically check for updates on launch" toggle and "Check for Updates Now" button inline on a single row under Settings > General, removing the redundant "Software Updates:" section header.
+- **Video & Display Settings Streamlining (`SettingsPanel.kt`)**: Refined the layout under **Settings > Video & Display**:
+  - Moved the "Internal render resolution..." caption inline to the right of the "Render Resolution" section header (`h2`).
+  - Set the resolution preset dropdown width to 0.4x content width, removed its redundant text label, and configured popup height to display all items without scrollbars.
+  - Removed the active size text readout line below the resolution dropdown.
+  - Set the Display Scaling dropdown width to 0.4x content width and removed its redundant text label ("Output Scaling").
+  - Moved the recording framerate dropdown inline to the right of the "Recording Framerate:" text label with 0.6x width.
+- **Minimum Settings Modal Width (1000px)**: Updated `SettingsPanel` window size constraints and default sizing to enforce a minimum modal width of `1000px`.
 - **Inline Trackpad Status**: Positioned the SCS.3m touchpad status readout and Polkit permission installer button inline to the right of the Enable Trackpad Console checkbox.
 - **Startup & AutoVJ Dropdown Width Expansion**: Expanded the width of the **Startup Behavior** and **AutoVJ Dirty Behavior** dropdown combo boxes under Settings > General back to 1/3rd of panel content width (min 160px) for optimal readability.
 - **Preset Size Slider Read-Only & Clean Layout**: Removed label text to the left of the Library Preset Name Size slider and marked its value text box as read-only (`ImGuiInputTextFlags.ReadOnly`) so it acts cleanly as a value display indicator driven by the slider.
