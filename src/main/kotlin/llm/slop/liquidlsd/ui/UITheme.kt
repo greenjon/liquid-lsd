@@ -355,7 +355,7 @@ object UITheme {
 
                 props.getProperty("clockSource")?.let { savedSource ->
                     try {
-                        AudioEngine.clockSource = llm.slop.liquidlsd.audio.ClockSource.valueOf(savedSource)
+                        AudioEngine.clockSource = llm.slop.liquidlsd.audio.ClockSource.fromString(savedSource)
                     } catch (_: Exception) {}
                 }
                 props.getBoolean("linkEnabled")?.let {

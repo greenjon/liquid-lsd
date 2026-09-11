@@ -220,7 +220,7 @@ class MenuBar(
                 val syncManager = llm.slop.liquidlsd.link.LinkSyncManager
                 val currentClock = AudioEngine.clockSource
 
-                if (currentClock == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK || linkEngine.isEnabled) {
+                if (linkEngine.isEnabled) {
                     val peers = linkEngine.getNumPeers()
                     val peerText = if (peers == 1) "1 peer" else "$peers peers"
                     val label = "${Icons.ACTIVITY} LINK [$peerText]"
@@ -234,14 +234,14 @@ class MenuBar(
                     }
 
                     if (ImGui.button(label)) {
-                        onOpenAudioEngineMonitor()
+                        SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
                     }
                     ImGui.popStyleColor(2)
 
                     val backendName = linkEngine.getActiveBackendName()
                     val bpmText = syncManager.formattedActiveBpm
                     val confPercent = syncManager.confidencePercent
-                    val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Audio & Link settings."
+                    val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Tempo & Link deck."
                     itemTooltip(linkTip)
                 }
 
@@ -250,11 +250,17 @@ class MenuBar(
                         val isSelected = (source == currentClock)
                         if (ImGui.menuItem(source.displayName, "", isSelected)) {
                             AudioEngine.clockSource = source
-                            if (source == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
-                                linkEngine.setEnabled(true)
-                            }
                             session.uiTheme.saveSettings()
                         }
+                    }
+                    ImGui.separator()
+                    val linkItemLabel = if (linkEngine.isEnabled) "Disable Ableton Link" else "Enable Ableton Link"
+                    if (ImGui.menuItem(linkItemLabel, "", linkEngine.isEnabled)) {
+                        linkEngine.setEnabled(!linkEngine.isEnabled)
+                        session.uiTheme.saveSettings()
+                    }
+                    if (ImGui.menuItem("Configure Tempo & Link...")) {
+                        SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
                     }
                     ImGui.endMenu()
                 }
@@ -394,13 +400,9 @@ class MenuBar(
 
                 ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - 3.8f, textH)
                 if (ImGui.isItemClicked()) {
-                    onOpenAudioEngineMonitor()
+                    SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
                 }
-                val beatTip = if (isAudioDisabled) {
-                    "Beat Phase (4/4 Bar Sync)\nAudio engine is disabled.\nClick to open Audio Engine settings."
-                } else {
-                    "Beat Phase (4/4 Bar Sync)\nClick to open Audio Engine settings."
-                }
+                val beatTip = "Beat Phase (4/4 Bar Sync)\nClick to open Tempo & Sync settings."
                 itemTooltip(beatTip)
                 ImGui.sameLine(0f, 3.8f)
             }
@@ -413,6 +415,7 @@ class MenuBar(
             ImGui.invisibleButton("##bpm_tap_button", bpmW, textH)
             val isBpmHovered = ImGui.isItemHovered()
             val isBpmClicked = ImGui.isItemClicked(0)
+            val isBpmRightClicked = ImGui.isItemClicked(1)
 
             ImGui.setCursorPos(bpmPosX, bpmPosY)
 
@@ -433,14 +436,17 @@ class MenuBar(
             if (isBpmClicked) {
                 session.tapTempoController.tap()
             }
+            if (isBpmRightClicked) {
+                SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+            }
             if (isBpmHovered) {
                 val keyHint = "Key: [T]"
                 val bpmTip = if (isAudioDisabled) {
-                    "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings."
+                    "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync settings."
                 } else if (audioActive) {
-                    "Audio Engine BPM\nClick to tap tempo ($keyHint) to nudge audio tracker.\nClick DSP badge to open Audio Engine settings."
+                    "Audio Engine BPM\nClick to tap tempo ($keyHint) to nudge audio tracker.\nRight-click to open Tempo & Sync settings."
                 } else {
-                    "Audio Engine BPM (Engine Inactive)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings."
+                    "Audio Engine BPM (Engine Inactive)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync settings."
                 }
                 showTooltip(bpmTip, "bpm_tap_tooltip".hashCode())
             }

@@ -180,9 +180,15 @@ object AudioEngine {
     @Volatile var meterRmsR: Float = 0f
 
     // ── User controls ────────────────────────────────────────────────────────
-    @Volatile var isBpmLocked = true // default to locked/manual now that real-time estimate is removed
+    @Volatile var clockSource: ClockSource = ClockSource.MANUAL
     @Volatile var manualBpm = 120f
-    @Volatile var clockSource: ClockSource = ClockSource.AUDIO_TRACKER
+
+    @Deprecated("Use clockSource == ClockSource.MANUAL instead")
+    var isBpmLocked: Boolean
+        get() = clockSource == ClockSource.MANUAL
+        set(value) {
+            clockSource = if (value) ClockSource.MANUAL else ClockSource.AUDIO_TRACKER
+        }
 
     // ── State machine ────────────────────────────────────────────────────────
     val config = DetectionConfig()
@@ -206,23 +212,77 @@ object AudioEngine {
     }
 
     fun setBpmDirectly(bpm: Float) {
-        estimatedBpm = bpm
-        manualBpm = bpm
+        val clamped = bpm.coerceIn(40.0f, 240.0f)
+        estimatedBpm = clamped
+        manualBpm = clamped
         val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
-        if (linkEngine.isEnabled || clockSource == ClockSource.ABLETON_LINK) {
-            linkEngine.setTempo(bpm.toDouble())
-            llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(bpm.toDouble())
+        if (linkEngine.isEnabled) {
+            linkEngine.setTempo(clamped.toDouble())
+            llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(clamped.toDouble())
         }
         val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
         if (!isActive()) {
             totalBeats = currentBeats
         }
-        CVRegistry.updateBeatAnchor(currentBeats, bpm, System.nanoTime())
+        CVRegistry.updateBeatAnchor(currentBeats, clamped, System.nanoTime())
+    }
+
+    /**
+     * Nudges the manual tempo by [deltaBpm] (e.g. +0.5 or -0.5).
+     */
+    fun nudgeTempo(deltaBpm: Float) {
+        val current = if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
+            llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat()
+        } else {
+            manualBpm
+        }
+        setBpmDirectly(current + deltaBpm)
+    }
+
+    /**
+     * Halves the current tempo (e.g. 140 -> 70 BPM).
+     */
+    fun halveTempo() {
+        val current = if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
+            llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat()
+        } else {
+            estimatedBpm
+        }
+        setBpmDirectly(current * 0.5f)
+    }
+
+    /**
+     * Doubles the current tempo (e.g. 70 -> 140 BPM).
+     */
+    fun doubleTempo() {
+        val current = if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
+            llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat()
+        } else {
+            estimatedBpm
+        }
+        setBpmDirectly(current * 2.0f)
+    }
+
+    /**
+     * Snaps beat phase immediately to downbeat (1.0) and resets phase slew and detector offsets.
+     */
+    fun resyncDownbeat(timestampNs: Long = System.nanoTime()) {
+        val effectiveBpm = estimatedBpm
+        val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
+        val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
+        val alignedBeats = kotlin.math.round(currentBeats)
+        totalBeats = alignedBeats
+        phaseSlewBuffer = 0.0
+        beatDetector.pendingPhaseNudge = 0.0
+        CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, timestampNs)
+        if (linkEngine.isEnabled) {
+            linkEngine.requestBeatAtTime(alignedBeats)
+        }
     }
 
     /**
      * Registers a VJ tap event.
-     * In manual / locked / Link mode: sets manualBpm and aligns beat phase downbeat.
+     * In manual / Link mode: sets manualBpm and aligns beat phase downbeat.
      * In active tracking mode: nudges beat tracker candidate tempo and smooth phase slew.
      */
     fun registerTap(tappedBpm: Float?, tapTimestampNs: Long = System.nanoTime()) {
@@ -232,22 +292,22 @@ object AudioEngine {
             estimatedBpm = tappedBpm
             manualBpm = tappedBpm
             beatDetector.nudgeTempo(tappedBpm)
-            if (linkEngine.isEnabled || clockSource == ClockSource.ABLETON_LINK) {
+            if (linkEngine.isEnabled) {
                 linkEngine.setTempo(tappedBpm.toDouble())
                 llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(tappedBpm.toDouble())
             }
         }
-        if (linkEngine.isEnabled || clockSource == ClockSource.ABLETON_LINK) {
+        if (linkEngine.isEnabled) {
             val currentBeats = CVRegistry.getSynchronizedTotalBeats()
             val alignedBeats = kotlin.math.round(currentBeats)
             linkEngine.requestBeatAtTime(alignedBeats)
             CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, tapTimestampNs)
             return
         }
-        if (!isBpmLocked) {
+        if (clockSource == ClockSource.AUDIO_TRACKER) {
             beatDetector.pendingPhaseNudge = 0.0
         }
-        if (!isActive() || isBpmLocked || clockSource == ClockSource.MANUAL_TAP) {
+        if (!isActive() || clockSource == ClockSource.MANUAL) {
             val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
             val alignedBeats = kotlin.math.round(currentBeats)
             totalBeats = alignedBeats
@@ -515,7 +575,7 @@ object AudioEngine {
         }
 
         // 7. Tick the flywheel (sample-accurate) with phase slewing
-        if (!isBpmLocked) {
+        if (clockSource == ClockSource.AUDIO_TRACKER) {
             val phaseNudge = beatDetector.pendingPhaseNudge
             if (phaseNudge >= 0.0) {
                 beatDetector.pendingPhaseNudge = -1.0
@@ -530,7 +590,7 @@ object AudioEngine {
             totalBeats += activeSlew
             phaseSlewBuffer -= activeSlew
         } else {
-            // Under manual BPM lock, suppress phase nudges and clear slew buffer
+            // Under manual BPM mode, suppress phase nudges and clear slew buffer
             beatDetector.pendingPhaseNudge = -1.0
             phaseSlewBuffer = 0.0
         }
@@ -540,12 +600,12 @@ object AudioEngine {
 
         // 8. Determine effective BPM and advance totalBeats
         val effectiveBpm = when {
-            clockSource == ClockSource.ABLETON_LINK || isLinkActive -> linkEngine.getTempo().toFloat()
-            clockSource == ClockSource.MANUAL_TAP -> manualBpm
-            else -> if (isBpmLocked) manualBpm else autoBpm
+            isLinkActive -> linkEngine.getTempo().toFloat()
+            clockSource == ClockSource.MANUAL -> manualBpm
+            else -> autoBpm
         }
         estimatedBpm = effectiveBpm
-        if (clockSource == ClockSource.ABLETON_LINK || isLinkActive) {
+        if (isLinkActive) {
             manualBpm = effectiveBpm
         }
 
@@ -553,9 +613,9 @@ object AudioEngine {
         val blockDurationNs = (deltaTimeSec * 1_000_000_000.0).toLong()
 
         // 9. Publish to CV Registry and history buffers directly at audio block rate
-        if (clockSource == ClockSource.ABLETON_LINK || isLinkActive) {
+        if (isLinkActive) {
             linkEngine.updateClockAnchor(currentTime + blockDurationNs)
-            if (clockSource == ClockSource.AUDIO_TRACKER && !isBpmLocked && isActive()) {
+            if (clockSource == ClockSource.AUDIO_TRACKER && isActive()) {
                 llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(autoBpm.toDouble())
             }
         } else {

@@ -55,8 +55,8 @@ class AbletonLinkEngineTest {
         AudioEngine.clockSource = ClockSource.AUDIO_TRACKER
         assertEquals(ClockSource.AUDIO_TRACKER, AudioEngine.clockSource)
 
-        // Transition to ABLETON_LINK
-        AudioEngine.clockSource = ClockSource.ABLETON_LINK
+        // Enable Ableton Link in MANUAL mode
+        AudioEngine.clockSource = ClockSource.MANUAL
         AbletonLinkEngine.setEnabled(true)
         AbletonLinkEngine.setTempo(124.0)
 
@@ -64,15 +64,26 @@ class AbletonLinkEngineTest {
         val beatsLink = CVRegistry.getSynchronizedTotalBeats()
         assertTrue(beatsLink >= 0.0)
 
-        // Transition to MANUAL_TAP
-        AudioEngine.clockSource = ClockSource.MANUAL_TAP
+        // Adjust manual BPM directly
         AudioEngine.setBpmDirectly(130f)
         assertEquals(130f, AudioEngine.manualBpm)
 
         val beatsManual = CVRegistry.getSynchronizedTotalBeats()
         assertTrue(beatsManual >= 0.0)
 
+        // Test downbeat resync
+        AudioEngine.resyncDownbeat()
+        val beatsResynced = CVRegistry.getSynchronizedTotalBeats()
+        assertTrue(beatsResynced >= 0.0)
+
+        // Test halve and double tempo
+        AudioEngine.halveTempo()
+        assertEquals(65f, AudioEngine.manualBpm)
+        AudioEngine.doubleTempo()
+        assertEquals(130f, AudioEngine.manualBpm)
+
         // Reset back to default
-        AudioEngine.clockSource = ClockSource.AUDIO_TRACKER
+        AbletonLinkEngine.setEnabled(false)
+        AudioEngine.clockSource = ClockSource.MANUAL
     }
 }

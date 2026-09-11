@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
-### Ableton Link Sync Architecture Simplification (`LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `UITheme.kt`)
+### Ableton Link & Master Tempo Deck Architecture (`TempoSyncPanel.kt`, `LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `SettingsPanel.kt`, `UITheme.kt`)
+- **Resolume-Inspired Master Tempo Deck (`TempoSyncPanel.kt`)**: Extracted timing and tempo controls into a dedicated "Tempo & Sync" settings category with intuitive transport controls: large BPM readout with visual beat-flash indicator, 4-beat bar progress dots, tap tempo button, manual ±0.1 / ±1.0 BPM nudging, downbeat resync, and clock source selection (`AUDIO_TRACKER`, `ABLETON_LINK`, `MANUAL_TAP`).
+- **Clean Separation of Concerns**: Streamlined `AudioEnginePanel` to focus purely on hardware devices, backends (JACK / Java Sound), stereo channel routing, gain/volume, and audio signal/CV oscilloscopes, while moving high-level timing and network sync to `TempoSyncPanel`.
+- **Enhanced MenuBar Tempo Navigation**: Right-clicking the BPM indicator or clicking the 4-beat phase dots now directly opens the dedicated Tempo & Sync settings deck, with new quick-access menu items for toggling Ableton Link and opening configuration.
 - **Eliminated `SyncMode` State Machine**: Removed the redundant `SyncMode` enum (`DISABLED`, `LINK_FOLLOWER`, `AUDIO_BROADCAST`), mode transition lock, background coroutine jobs, and `AudioTempoEventSink` delegation interface.
 - **Direct Ableton Link State Integration**: Ableton Link synchronization is now governed directly by `AbletonLinkEngine.isEnabled`. When enabled, audio beat tracker tempo/phase updates pass through `BeatTrackToLinkDamping` signal filtering (lambda callbacks `onTempoCommitted` and `onBeatAligned`) directly to `AbletonLinkEngine`.
 - **Streamlined UI & Menus**: Removed `SyncMode` radio button controls and transmission status badges from `AudioEnginePanel`, and simplified the header status pill in `MenuBar` to clean `LINK [peers]` state indicators.

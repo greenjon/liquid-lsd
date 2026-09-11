@@ -199,7 +199,7 @@ object CVRegistry {
         currentFrameIndex++
         targetFps = llm.slop.liquidlsd.ui.UITheme.maxFps.coerceAtLeast(1).toFloat()
 
-        if (llm.slop.liquidlsd.audio.AudioEngine.clockSource == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
+        if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
             llm.slop.liquidlsd.link.AbletonLinkEngine.updateClockAnchor()
         }
 

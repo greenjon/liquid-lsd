@@ -122,87 +122,6 @@ object AudioEnginePanel {
             ImGui.textWrapped("${Icons.ALERT} Audio engine is disabled. Live audio input and audio-reactive CV signals (Amp, Bass, Mid, High, Flux) are inactive.")
             ImGui.popStyleColor()
             ImGui.spacing()
-            theme.caption("Beat synchronization runs on the internal manual tempo clock below.")
-
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-
-            theme.h2("${Icons.SETTINGS} Beat Sync & Manual Tempo")
-            ImGui.separator()
-            ImGui.spacing()
-
-            val sliderBoxW = 50f
-
-            val bpm = audioEngine.getEstimatedBpm()
-            val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
-            val beatPhase = totalBeats % 1.0
-            val flashIntensity = if (beatPhase < 0.25) {
-                (1.0 - (beatPhase / 0.25)).toFloat()
-            } else {
-                0.0f
-            }
-
-            ImGui.alignTextToFramePadding()
-            theme.h3("BPM: ")
-            ImGui.sameLine()
-
-            val r = 1.0f
-            val g = 0.8f + 0.2f * (1.0f - flashIntensity)
-            val b = 0.2f + 0.8f * (1.0f - flashIntensity)
-            theme.h3Colored(r, g, b, 1.0f, "%.1f".format(bpm))
-
-            ImGui.sameLine(0f, 12f)
-
-            // Beat flashing dot
-            val indicatorSize = 14f
-            val curX = ImGui.getCursorScreenPosX()
-            val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
-            ImGui.dummy(indicatorSize, indicatorSize)
-            itemTooltip("Manual tempo clock. Flashes on internal beat phase.")
-            val dl = ImGui.getWindowDrawList()
-            val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
-            val borderCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.5f)
-            dl.addCircleFilled(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, indicatorCol)
-            dl.addCircle(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, borderCol, 16, 1.0f)
-
-            ImGui.sameLine(0f, 20f)
-            theme.captionColored(0.85f, 0.75f, 0.35f, 1.0f, "Manual Fixed Clock")
-
-            ImGui.spacing()
-
-            // Manual BPM Slider
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Manual BPM",
-                currentValue = audioEngine.manualBpm,
-                minLimit = 40f,
-                maxLimit = 200f,
-                defaultValue = 120f,
-                formatValue = { "%.1f".format(it) },
-                idPrefix = "audio_engine_manual_bpm_disabled",
-                themeColor = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f),
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    audioEngine.manualBpm = newVal
-                    audioEngine.setBpmDirectly(newVal)
-                    theme.saveSettings()
-                }
-            )
-
-            ImGui.spacing()
-
-            if (ImGui.button("${Icons.REFRESH} Reset to 120.0 BPM", 180f, 26f)) {
-                audioEngine.manualBpm = 120.0f
-                audioEngine.setBpmDirectly(120.0f)
-                theme.saveSettings()
-            }
-            itemTooltip("Resets the manual tempo clock to standard 120.0 BPM.")
-
-            ImGui.spacing()
-            theme.caption("Note: BEAT-synced LFOs, Sequencers, and the title bar 4-beat meter track this manual BPM clock.")
-            return
         }
 
         ImGui.spacing()
@@ -366,254 +285,35 @@ object AudioEnginePanel {
             ImGui.spacing()
 
             // -----------------------------------------------------------------
-            // 2. Real-Time BPM Readout & Beat Synchronization
+            // 2. Quick Tempo & Sync Status / Link
             // -----------------------------------------------------------------
-            theme.h2("${Icons.SETTINGS} Beat Sync & Detection")
+            theme.h2("${Icons.ACTIVITY} Master Tempo & Link")
             ImGui.separator()
             ImGui.spacing()
 
-            val bpm = audioEngine.getEstimatedBpm()
-            val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
-            val beatPhase = totalBeats % 1.0
-            val flashIntensity = if (beatPhase < 0.25) {
-                (1.0 - (beatPhase / 0.25)).toFloat()
-            } else {
-                0.0f
-            }
-
-            ImGui.alignTextToFramePadding()
-            theme.h3("BPM: ")
-            ImGui.sameLine()
-
-            val r = 1.0f
-            val g = 0.8f + 0.2f * (1.0f - flashIntensity)
-            val b = 0.2f + 0.8f * (1.0f - flashIntensity)
-            theme.h3Colored(r, g, b, 1.0f, "%.1f".format(bpm))
-
-            ImGui.sameLine(0f, 12f)
-
-            // Beat flashing dot
-            val indicatorSize = 14f
-            val curX = ImGui.getCursorScreenPosX()
-            val curY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - indicatorSize) / 2f
-            ImGui.dummy(indicatorSize, indicatorSize)
-            itemTooltip("Real-time tempo estimate. Flashes on detected beat phase.")
-            val dl = ImGui.getWindowDrawList()
-            val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.6f, 0.0f, 0.15f + 0.85f * flashIntensity)
-            val borderCol = ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.5f)
-            dl.addCircleFilled(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, indicatorCol)
-            dl.addCircle(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, borderCol, 16, 1.0f)
-
-            ImGui.sameLine(0f, 20f)
-            isLocked.set(audioEngine.isBpmLocked)
-            if (ImGui.checkbox("Lock Manual BPM", isLocked)) {
-                audioEngine.isBpmLocked = isLocked.get()
-                theme.saveSettings()
-            }
-            itemTooltip("Ignore incoming audio tempo and lock entirely to the Manual BPM slider.")
-
-            ImGui.spacing()
-
-            // Manual BPM Slider
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Manual BPM",
-                currentValue = audioEngine.manualBpm,
-                minLimit = 40f,
-                maxLimit = 200f,
-                defaultValue = 120f,
-                formatValue = { "%.1f".format(it) },
-                idPrefix = "audio_engine_manual_bpm",
-                themeColor = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f),
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    audioEngine.manualBpm = newVal
-                    audioEngine.setBpmDirectly(newVal)
-                    theme.saveSettings()
-                }
-            )
-
-            ImGui.spacing()
-
-            // Auto Beat Detection Parameters (Beat Tracker)
-            val settings = audioEngine.beatDetector.settings
-
-            theme.body("Target Band:")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(140f)
-            if (ImGui.beginCombo("##BeatDetectionTarget", settings.target.name)) {
-                for (target in audioTargets) {
-                    val isSelected = settings.target == target
-                    if (ImGui.selectable(target.name, isSelected)) {
-                        settings.target = target
-                        theme.saveSettings()
-                    }
-                    if (isSelected) ImGui.setItemDefaultFocus()
-                }
-                ImGui.endCombo()
-            }
-            itemTooltip("Select frequency band for primary onset detection (LOW/Kick, MID/Snare, HIGH/Hi-hat, or UNFILTERED).")
-
-            ImGui.spacing()
-
-            // Detection Presets
-            theme.body("Presets:")
-            ImGui.sameLine()
-            if (ImGui.button("High Accuracy")) {
-                audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
-                theme.saveSettings()
-            }
-            itemTooltip("Apply Beat Tracker configuration tuned for precise tempo detection.")
-            ImGui.sameLine()
-            if (ImGui.button("Balanced")) {
-                audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
-                theme.saveSettings()
-            }
-            itemTooltip("Apply Beat Tracker configuration balanced between tracking reactivity and stability.")
-            ImGui.sameLine()
-            if (ImGui.button("Eco")) {
-                audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
-                theme.saveSettings()
-            }
-            itemTooltip("Apply Beat Tracker configuration with relaxed inertia.")
-
-            ImGui.spacing()
-
-            val beatThemeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
-
-            // BPM Search Range Dual-Headed Slider
-            CustomRangeSlider.drawCustomRangeSlider(
-                session = session,
-                label = "BPM Range",
-                currentValue = bpm,
-                currentMin = settings.bpmSearchFloor.toFloat(),
-                currentMax = settings.bpmSearchCeiling.toFloat(),
-                minLimit = 40f,
-                maxLimit = 240f,
-                isRandomizable = true,
-                showControls = false,
-                defaultValue = 40f,
-                formatValue = { "${it.toInt()}" },
-                idPrefix = "audio_engine_bpm_range",
-                themeColor = beatThemeCol,
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onRangeChanged = { nextMin, nextMax ->
-                    val safeMin = minOf(nextMin, nextMax)
-                    val safeMax = maxOf(nextMin, nextMax)
-                    settings.bpmSearchFloor = safeMin.toInt()
-                    settings.bpmSearchCeiling = safeMax.toInt()
-                    theme.saveSettings()
-                }
-            )
-
-            if (!audioEngine.beatDetector.isTargetLevelSufficient) {
-                ImGui.spacing()
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
-                ImGui.textWrapped("${Icons.ALERT} Low Signal: Not enough energy in the selected target band (${settings.target.name}) for reliable analysis. Tempo is gracefully locked to 120.0 BPM fallback.")
-                ImGui.popStyleColor()
-            }
-
-            // -----------------------------------------------------------------
-            // Clock Sync & Ableton Link Section
-            // -----------------------------------------------------------------
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-
-            theme.h2("${Icons.ACTIVITY} Clock Sync & Ableton Link")
-            ImGui.separator()
-            ImGui.spacing()
-
-            val currentClock = AudioEngine.clockSource
-            theme.body("Active Clock Source:")
-            for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
-                if (ImGui.radioButton("${source.displayName}##clock_${source.name}", currentClock == source)) {
-                    AudioEngine.clockSource = source
-                    if (source == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK) {
-                        llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(true)
-                    }
-                    theme.saveSettings()
-                }
-                ImGui.sameLine(0f, 16f)
-            }
-            ImGui.newLine()
-
+            val currentClock = audioEngine.clockSource
+            val currentBpm = audioEngine.getEstimatedBpm()
             val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
             val isLinkEnabled = linkEngine.isEnabled
 
-            val linkState = imgui.type.ImBoolean(isLinkEnabled)
-            if (ImGui.checkbox("Enable Ableton Link", linkState)) {
-                linkEngine.setEnabled(linkState.get())
-                theme.saveSettings()
-            }
-            itemTooltip("Participate in local network Ableton Link session for peer tempo & beat sync.")
-
-            if (isLinkEnabled) {
+            ImGui.alignTextToFramePadding()
+            theme.body("Active Tempo: ")
+            ImGui.sameLine()
+            theme.h3Colored(0.2f, 0.9f, 0.9f, 1.0f, "%.1f BPM".format(currentBpm))
+            ImGui.sameLine(0f, 12f)
+            val linkStatusText = if (isLinkEnabled) {
                 val peers = linkEngine.getNumPeers()
-                val backendName = linkEngine.getActiveBackendName()
-
-                ImGui.alignTextToFramePadding()
-                theme.body("Peers Connected: ")
-                ImGui.sameLine()
-                if (peers > 0) {
-                    theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "$peers peer(s)")
-                } else {
-                    theme.bodyColored(0.9f, 0.7f, 0.2f, 1.0f, "0 peers (searching...)")
-                }
-
-                ImGui.sameLine(0f, 20f)
-                theme.body("Driver: ")
-                ImGui.sameLine()
-                theme.captionColored(0.6f, 0.8f, 1.0f, 1.0f, backendName)
-
-                // Active BPM status
-                ImGui.spacing()
-                theme.body("Active BPM: ")
-                ImGui.sameLine()
-                theme.bodyColored(0.2f, 0.9f, 0.9f, 1.0f, "${llm.slop.liquidlsd.link.LinkSyncManager.formattedActiveBpm} BPM")
-
-                // Beat Tracker Confidence meter
-                ImGui.spacing()
-                val confidence = llm.slop.liquidlsd.link.LinkSyncManager.confidence
-                val confPercent = llm.slop.liquidlsd.link.LinkSyncManager.confidencePercent
-                ImGui.alignTextToFramePadding()
-                theme.body("Beat Tracker Confidence: ")
-                ImGui.sameLine()
-                val (cr, cg, cb) = when {
-                    confidence >= 0.70f -> Triple(0.2f, 0.9f, 0.4f)
-                    confidence >= 0.40f -> Triple(0.9f, 0.8f, 0.2f)
-                    else -> Triple(0.9f, 0.3f, 0.3f)
-                }
-                theme.bodyColored(cr, cg, cb, 1.0f, "$confPercent%")
-                ImGui.sameLine(0f, 10f)
-                ImGui.progressBar(confidence, 120f, 16f, "")
-                itemTooltip("Rhythmic tracking stability metric from audio beat tracker.")
-
-                // Quantum Selector
-                ImGui.spacing()
-                theme.body("Link Quantum:")
-                val currentQuantum = linkEngine.quantum
-                val quantums = doubleArrayOf(1.0, 4.0, 8.0, 16.0)
-                val quantumLabels = arrayOf("1 Beat", "4 Beats (1 Bar)", "8 Beats (2 Bars)", "16 Beats (4 Bars)")
-                for (i in quantums.indices) {
-                    val q = quantums[i]
-                    if (ImGui.radioButton("${quantumLabels[i]}##quantum_$q", currentQuantum == q)) {
-                        linkEngine.quantum = q
-                        theme.saveSettings()
-                    }
-                    if (i < quantums.size - 1) ImGui.sameLine(0f, 12f)
-                }
-
-                // Transport Sync
-                val ssSync = imgui.type.ImBoolean(linkEngine.isStartStopSyncEnabled())
-                if (ImGui.checkbox("Enable Start/Stop Transport Sync", ssSync)) {
-                    linkEngine.setStartStopSyncEnabled(ssSync.get())
-                    theme.saveSettings()
-                }
-                itemTooltip("Synchronize play/pause transport state across connected Ableton Link peers.")
+                "Link Active ($peers peer${if (peers == 1) "" else "s"})"
+            } else {
+                "Link Off"
             }
+            theme.captionColored(0.7f, 0.75f, 0.8f, 1.0f, "(${currentClock.displayName} • $linkStatusText)")
+
+            ImGui.spacing()
+            if (ImGui.button("${Icons.SETTINGS} Configure Tempo & Link Deck ->", 260f, 30f)) {
+                SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+            }
+            itemTooltip("Open master tempo deck to adjust BPM slider, tap tempo, beat tracking, or Ableton Link.")
 
             // -----------------------------------------------------------------
             // RIGHT COLUMN: Raw Audio Input + Sound-Derived CV Oscilloscopes

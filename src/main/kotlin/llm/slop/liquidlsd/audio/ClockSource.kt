@@ -5,17 +5,22 @@ package llm.slop.liquidlsd.audio
  */
 enum class ClockSource(val displayName: String) {
     /**
+     * Fixed manual BPM, slider control, and tap-tempo flywheel.
+     */
+    MANUAL("Manual Fixed"),
+
+    /**
      * Autonomous FFT onset detection and dynamic programming flywheel from real-time audio input.
      */
-    AUDIO_TRACKER("Audio Beat Tracker"),
+    AUDIO_TRACKER("Audio Beat Tracker");
 
-    /**
-     * Network-synchronized shared beat timeline, tempo, and quantum phase via Ableton Link.
-     */
-    ABLETON_LINK("Ableton Link"),
-
-    /**
-     * Fixed manual BPM and tap-tempo flywheel.
-     */
-    MANUAL_TAP("Manual Fixed")
+    companion object {
+        fun fromString(name: String): ClockSource = when (name.trim().uppercase()) {
+            "MANUAL", "MANUAL_TAP" -> MANUAL
+            "AUDIO_TRACKER" -> AUDIO_TRACKER
+            "ABLETON_LINK" -> MANUAL
+            else -> AUDIO_TRACKER
+        }
+    }
 }
+

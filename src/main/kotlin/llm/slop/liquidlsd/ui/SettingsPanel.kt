@@ -29,7 +29,8 @@ object SettingsPanel {
     enum class Category(val label: String) {
         GENERAL("General"),
         VIDEO_DISPLAY("Video & Display"),
-        AUDIO_ENGINE("Audio Engine"),
+        TEMPO_SYNC("Tempo & Sync"),
+        AUDIO_ENGINE("Audio Hardware"),
         SHADER_LOCATIONS("Shader Locations"),
         BROADCAST("Web Broadcast"),
         SHORTCUTS("Keyboard Shortcuts")
@@ -137,6 +138,7 @@ object SettingsPanel {
             when (activeCategory) {
                 Category.GENERAL          -> drawGeneralSettings(session, currentSize, onPresetScaleChanged)
                 Category.VIDEO_DISPLAY    -> drawVideoDisplaySettings(session)
+                Category.TEMPO_SYNC       -> drawTempoSyncSettings(session)
                 Category.AUDIO_ENGINE     -> drawAudioEngineSettings(session)
                 Category.SHADER_LOCATIONS -> drawShaderLocationsSettings(session)
                 Category.BROADCAST        -> drawBroadcastSettings(session, mixer)
@@ -372,6 +374,10 @@ object SettingsPanel {
             session.uiTheme.recordingFps = if (fpsIdx.get() == 0) 30 else 60
             session.uiTheme.saveSettings()
         }
+    }
+
+    private fun drawTempoSyncSettings(session: llm.slop.liquidlsd.SessionContext) {
+        TempoSyncPanel.drawContent(session)
     }
 
     private fun drawAudioEngineSettings(session: llm.slop.liquidlsd.SessionContext) {
