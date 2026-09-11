@@ -7,6 +7,7 @@ data class AppSettings(
     val presetNameScalePercent: Int = 100,
     val audioEngineEnabled: Boolean = true,
     val audioBackend: AudioEngine.AudioBackendMode = AudioEngine.AudioBackendMode.AUTO,
+    val audioChannelRouting: llm.slop.liquidlsd.audio.AudioChannelRouting = llm.slop.liquidlsd.audio.AudioChannelRouting.MIX,
     val audioDeviceName: String = "",
     val audioInputGain: Float = 1.0f,
     val audioBpmLocked: Boolean = true,

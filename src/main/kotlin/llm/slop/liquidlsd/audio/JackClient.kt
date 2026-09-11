@@ -22,12 +22,14 @@ enum class JackStartFailure {
  */
 class JackClient(
     val clientName: String = "lsd",
-    val onProcess: (FloatBuffer, Int, Float) -> Unit // (buffer, nframes, sampleRate)
+    val onProcess: (FloatBuffer, FloatBuffer?, Int, Float) -> Unit // (leftBuffer, rightBuffer, nframes, sampleRate)
 ) {
     @Volatile
     private var client: org.jaudiolibs.jnajack.JackClient? = null
     @Volatile
-    private var inputPort: JackPort? = null
+    private var inputPortL: JackPort? = null
+    @Volatile
+    private var inputPortR: JackPort? = null
     @Volatile
     var lastStartFailure: JackStartFailure? = null
         private set
@@ -84,9 +86,14 @@ class JackClient(
             val sampleRate = client!!.sampleRate.toFloat()
             logger.info { "JACK Client opened. Sample Rate: $sampleRate" }
 
-            // Register mono input port
-            inputPort = client!!.registerPort(
-                "input",
+            // Register stereo input ports
+            inputPortL = client!!.registerPort(
+                "input_1",
+                JackPortType.AUDIO,
+                EnumSet.of(JackPortFlags.JackPortIsInput)
+            )
+            inputPortR = client!!.registerPort(
+                "input_2",
                 JackPortType.AUDIO,
                 EnumSet.of(JackPortFlags.JackPortIsInput)
             )
@@ -94,9 +101,10 @@ class JackClient(
             // Register the process callback
             client!!.setProcessCallback { _, nframes ->
                 try {
-                    val buffer = inputPort?.floatBuffer
-                    if (buffer != null) {
-                        onProcess(buffer, nframes, sampleRate)
+                    val bufL = inputPortL?.floatBuffer
+                    val bufR = inputPortR?.floatBuffer
+                    if (bufL != null) {
+                        onProcess(bufL, bufR, nframes, sampleRate)
                     }
                 } catch (e: Throwable) {
                     lastCallbackError.set(e)
@@ -122,7 +130,8 @@ class JackClient(
             }
             logger.warn { "$summary: ${e.message}. Running in silent / fallback mode." }
             client = null
-            inputPort = null
+            inputPortL = null
+            inputPortR = null
             return false
         }
     }
@@ -137,11 +146,12 @@ class JackClient(
     }
 
     /**
-     * Auto-connects our input port to the first physical system capture port.
+     * Auto-connects our input ports to physical system capture ports.
      */
     private fun autoConnectInput() {
         val c = client ?: return
-        val port = inputPort ?: return
+        val portL = inputPortL ?: return
+        val portR = inputPortR ?: return
         try {
             val jack = Jack.getInstance()
             val systemPorts = jack.getPorts(
@@ -151,8 +161,15 @@ class JackClient(
                 EnumSet.of(JackPortFlags.JackPortIsPhysical, JackPortFlags.JackPortIsOutput)
             )
             if (systemPorts != null && systemPorts.isNotEmpty()) {
-                jack.connect(c, systemPorts[0], port.name)
-                logger.info { "Auto-connected JACK input to system port: ${systemPorts[0]}" }
+                jack.connect(c, systemPorts[0], portL.name)
+                logger.info { "Auto-connected JACK left input to system port: ${systemPorts[0]}" }
+                if (systemPorts.size > 1) {
+                    jack.connect(c, systemPorts[1], portR.name)
+                    logger.info { "Auto-connected JACK right input to system port: ${systemPorts[1]}" }
+                } else {
+                    jack.connect(c, systemPorts[0], portR.name)
+                    logger.info { "Auto-connected single JACK capture port to both channels: ${systemPorts[0]}" }
+                }
             } else {
                 logger.warn { "No physical capture ports found to connect." }
             }
@@ -178,6 +195,7 @@ class JackClient(
             // Ignore
         }
         client = null
-        inputPort = null
+        inputPortL = null
+        inputPortR = null
     }
 }

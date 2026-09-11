@@ -17,7 +17,8 @@ object WebPresetSerializer {
     }
 
     private fun round4(v: Float): Float {
-        return (v * 10000.0f).roundToInt() / 10000.0f
+        val rounded = (v * 10000.0f).roundToInt() / 10000.0f
+        return if (kotlin.math.abs(rounded) < 1e-6f) 0.0f else rounded
     }
 
     fun serializeFeedback(deck: Deck): JsonObject = buildJsonObject {

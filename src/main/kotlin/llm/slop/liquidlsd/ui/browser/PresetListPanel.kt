@@ -28,6 +28,10 @@ object PresetListPanel {
     var shouldFocusSearch: Boolean = false
     var filteredPresets: List<AssetItem> = emptyList()
 
+    private var lastQuery: String = ""
+    private var lastAllPresets: List<AssetItem>? = null
+    private var cachedFiltered: List<AssetItem> = emptyList()
+
     fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
         val btnSize = ImGui.getFrameHeight()
 
@@ -97,17 +101,25 @@ object PresetListPanel {
         ImGui.spacing()
 
         if (ImGui.beginChild("##presets_scroll", 0f, 0f, false)) {
-            // Flat list of all presets
+            // Flat list of all presets with zero-alloc caching on hot render path
             val allPresets = FileSystemManager.scanAllPresets()
             val query = searchBuffer.get().trim().lowercase()
 
-            val filtered = if (query.isEmpty()) {
-                allPresets
+            val filtered = if (allPresets === lastAllPresets && query == lastQuery) {
+                cachedFiltered
             } else {
-                allPresets.filter { asset ->
-                    asset.name.lowercase().contains(query) ||
-                        asset.tags.any { it.lowercase().contains(query) }
+                lastQuery = query
+                lastAllPresets = allPresets
+                val res = if (query.isEmpty()) {
+                    allPresets
+                } else {
+                    allPresets.filter { asset ->
+                        asset.name.lowercase().contains(query) ||
+                            asset.tags.any { it.lowercase().contains(query) }
+                    }
                 }
+                cachedFiltered = res
+                res
             }
             filteredPresets = filtered
 

@@ -47,4 +47,28 @@ class JavaSoundClientTest {
         assertEquals(1, samplesProcessed)
         assertEquals(0.0f, floatArray[0])
     }
+
+    @Test
+    fun testStereoPcmToFloatConversion() {
+        // Frame 0: L=0, R=32767
+        // Frame 1: L=-32768, R=16384
+        val byteBuffer = byteArrayOf(
+            // Frame 0: L (0x00, 0x00), R (0xFF, 0x7F)
+            0x00, 0x00,
+            0xFF.toByte(), 0x7F,
+            // Frame 1: L (0x00, 0x80), R (0x00, 0x40)
+            0x00, 0x80.toByte(),
+            0x00, 0x40
+        )
+
+        val leftArray = FloatArray(2)
+        val rightArray = FloatArray(2)
+        val framesProcessed = JavaSoundClient.convertStereoPcmToFloat(byteBuffer, byteBuffer.size, leftArray, rightArray)
+
+        assertEquals(2, framesProcessed)
+        assertEquals(0.0f, leftArray[0])
+        assertEquals(32767f / 32768f, rightArray[0])
+        assertEquals(-1.0f, leftArray[1])
+        assertEquals(0.5f, rightArray[1])
+    }
 }

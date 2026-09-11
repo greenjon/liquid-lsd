@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Stereo Audio Pipeline, Channel Selector & Visual VU Input Metering (`AudioEngine.kt`, `JackClient.kt`, `JavaSoundClient.kt`, `AudioEnginePanel.kt`, `AppSettings.kt`, `UITheme.kt`)
+- **Dual-Channel Audio Ingestion (Stereo Capture)**: Upgraded both `JackClient` (Linux JACK/PipeWire dual input ports `lsd:input_1` and `lsd:input_2`) and `JavaSoundClient` (cross-platform 16-bit stereo 44.1kHz/48kHz capture with zero-allocation PCM deinterleaving and mono-fallback mirroring) to feed true stereo audio into the DSP engine.
+- **Channel Routing Selector (Mix, Left Only, Right Only)**: Added `AudioChannelRouting` with options:
+  - `Mix (L + R)` (Default): Standard DJ/broadcast -6dB arithmetic downmix ($s[i] = 0.5 \cdot (L[i] + R[i])$) guaranteeing zero digital clipping on coherent in-phase material while matching unity gain when switching from single-channel mono.
+  - `Left Only`: Routes Left channel at full level.
+  - `Right Only`: Routes Right channel at full level (or silence if no right channel present).
+- **Real-Time 2-Channel Visual VU Peak Meter**: Implemented a responsive stereo peak/RMS input meter in the Audio Engine settings panel. Includes fast-attack / exponential decay ballistics, 1.2s peak-hold tick indicators, multi-segment color thresholds (-12 dB green, -3 dB amber/yellow, 0 dB red), instant `CLIP` LED badge, and visual `[Bypassed]` badge highlighting when a channel is bypassed by routing.
+- **Settings Persistence**: Serialized `audioChannelRouting` property in `lsd-settings.properties` through `UITheme` and `AppSettings`.
+- **Zero-Allocation Callback Safety**: All stereo metering, channel routing, and pre-allocated buffer transfers adhere strictly to JACK real-time callback safety constraints without heap allocations.
+
 ### Code Audit Fixes — Beta 57–62 Surface (post-beta.62)
 
 **Real-time safety:**
@@ -32,6 +42,10 @@
 **UI performance:**
 - **`ShaderPickerPopup` — `joinToString` per row per frame**: Category string now cached in `ShaderItem.categoriesLabel` at `updateItems()` time — zero allocation during table rendering.
 - **`ShaderPickerPopup` — `categories.toList()` defensive copy**: Removed unnecessary copy; the list is only mutated from the same ImGui thread.
+- **`PresetListPanel.kt` — zero-allocation search filter cache**: Search query filtering over preset assets previously reallocated `List`, iterators, and lambdas every frame at 60 FPS. Now caches `cachedFiltered` and only re-filters when `query` or the underlying `allPresets` list changes — zero per-frame allocation on the hot path.
+
+**Serialization & Protocol Safety:**
+- **`WebPresetSerializer.kt` — numeric formatting & scientific notation avoidance**: Enhanced `round4` to clamp sub-micro near-zero floats to `0.0f` to ensure standard decimal notation without scientific exponential notation for WebGL2 TV clients.
 
 ### Phase 4: Mixxx-Style ISF Library Management, Asynchronous Scanner, File Watcher Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`)
 - **Platform-Standard ISF Search Locations**: Pre-populates default search directories for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF/`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application asset bundles.

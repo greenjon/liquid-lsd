@@ -102,6 +102,13 @@ object UITheme {
         get() = settings.audioEngineEnabled
         set(value) { settings = settings.copy(audioEngineEnabled = value) }
 
+    var audioChannelRouting: llm.slop.liquidlsd.audio.AudioChannelRouting
+        get() = AudioEngine.channelRouting
+        set(value) {
+            AudioEngine.channelRouting = value
+            settings = settings.copy(audioChannelRouting = value)
+        }
+
     var backgroundVideoEnabled: Boolean
         get() = settings.backgroundVideoEnabled
         set(value) { settings = settings.copy(backgroundVideoEnabled = value) }
@@ -328,6 +335,15 @@ object UITheme {
                         logger.warn(e) { "Failed to parse audioBackend '$savedBackend'" }
                     }
                 }
+                val savedRouting = props.getProperty("audioChannelRouting")
+                if (savedRouting != null) {
+                    try {
+                        audioChannelRouting = llm.slop.liquidlsd.audio.AudioChannelRouting.fromString(savedRouting)
+                        logger.info { "Loaded audioChannelRouting from settings: $audioChannelRouting" }
+                    } catch (e: Exception) {
+                        logger.warn(e) { "Failed to parse audioChannelRouting '$savedRouting'" }
+                    }
+                }
                 val savedDevice = props.getProperty("audioDeviceName")
                 if (savedDevice != null) {
                     AudioEngine.selectedDeviceName = if (savedDevice.isBlank()) null else savedDevice
@@ -540,6 +556,7 @@ object UITheme {
             props.setProperty("presetNameScalePercent", presetNameScalePercent.toString())
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
             props.setProperty("audioBackend", AudioEngine.backendMode.name)
+            props.setProperty("audioChannelRouting", AudioEngine.channelRouting.name)
             props.setProperty("audioDeviceName", AudioEngine.selectedDeviceName ?: "")
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())

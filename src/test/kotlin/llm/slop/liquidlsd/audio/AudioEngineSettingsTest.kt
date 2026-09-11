@@ -36,6 +36,7 @@ class AudioEngineSettingsTest {
         UITheme.audioEngineEnabled = false
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.JAVASOUND_ONLY
         AudioEngine.selectedDeviceName = "Custom Test Mic"
+        AudioEngine.channelRouting = AudioChannelRouting.RIGHT_ONLY
         AudioEngine.inputGain = 3.5f
         AudioEngine.isBpmLocked = false
         AudioEngine.manualBpm = 145.5f
@@ -56,6 +57,7 @@ class AudioEngineSettingsTest {
         // Reset to different defaults
         UITheme.audioEngineEnabled = true
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.AUTO
+        AudioEngine.channelRouting = AudioChannelRouting.MIX
         AudioEngine.selectedDeviceName = null
         AudioEngine.inputGain = 1.0f
         AudioEngine.isBpmLocked = true
@@ -70,6 +72,7 @@ class AudioEngineSettingsTest {
         // Verify all settings were restored correctly
         assertEquals(false, UITheme.audioEngineEnabled)
         assertEquals(AudioEngine.AudioBackendMode.JAVASOUND_ONLY, AudioEngine.backendMode)
+        assertEquals(AudioChannelRouting.RIGHT_ONLY, AudioEngine.channelRouting)
         assertEquals("Custom Test Mic", AudioEngine.selectedDeviceName)
         assertEquals(3.5f, AudioEngine.inputGain, 0.001f)
         assertEquals(false, AudioEngine.isBpmLocked)

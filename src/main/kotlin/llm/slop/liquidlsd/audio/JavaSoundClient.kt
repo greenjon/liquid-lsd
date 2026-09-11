@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger {}
  */
 class JavaSoundClient(
     val deviceName: String? = null,
-    val onProcess: (FloatBuffer, Int, Float) -> Unit // (buffer, nframes, sampleRate)
+    val onProcess: (FloatBuffer, FloatBuffer?, Int, Float) -> Unit // (leftBuffer, rightBuffer, nframes, sampleRate)
 ) {
     @Volatile
     var isConnected = false
@@ -29,14 +29,23 @@ class JavaSoundClient(
     fun start(): Boolean {
         try {
             logger.info { "Starting Java Sound Audio client (device: ${deviceName ?: "Default"})..." }
-            val format = AudioFormat(44100f, 16, 1, true, false) // 44.1kHz, 16-bit, Mono, Signed, Little-Endian
-            val info = DataLine.Info(TargetDataLine::class.java, format)
             
-            val targetLine = findTargetDataLine(info, deviceName) ?: run {
-                // Try 48kHz if 44.1kHz is not supported
-                val altFormat = AudioFormat(48000f, 16, 1, true, false)
-                val altInfo = DataLine.Info(TargetDataLine::class.java, altFormat)
-                findTargetDataLine(altInfo, deviceName)
+            // Prefer stereo (2 channels) at 44.1kHz, then 48kHz; fallback to mono (1 channel)
+            val formatsToTry = listOf(
+                AudioFormat(44100f, 16, 2, true, false),
+                AudioFormat(48000f, 16, 2, true, false),
+                AudioFormat(44100f, 16, 1, true, false),
+                AudioFormat(48000f, 16, 1, true, false)
+            )
+
+            var targetLine: TargetDataLine? = null
+            for (fmt in formatsToTry) {
+                val info = DataLine.Info(TargetDataLine::class.java, fmt)
+                targetLine = findTargetDataLine(info, deviceName)
+                if (targetLine != null) {
+                    logger.info { "Found compatible TargetDataLine: ${fmt.sampleRate}Hz, ${fmt.channels}ch" }
+                    break
+                }
             }
 
             if (targetLine == null) {
@@ -44,11 +53,15 @@ class JavaSoundClient(
                 return false
             }
 
-            val bufferSize = 512 // 512 samples per read chunk (approx. 11.6ms at 44.1kHz)
+            val channels = targetLine.format.channels
+            val bufferFrames = 512 // 512 frames per read chunk (~11.6ms at 44.1kHz)
+            val bytesPerFrame = channels * 2
+            val bufferSizeBytes = bufferFrames * bytesPerFrame
+
             try {
-                targetLine.open(targetLine.format, bufferSize * 2) // buffer size in bytes
+                targetLine.open(targetLine.format, bufferSizeBytes * 2) // buffer size in bytes
             } catch (e: LineUnavailableException) {
-                logger.warn { "Failed to open TargetDataLine with buffer size ${bufferSize * 2}: ${e.message}. Trying default buffer size." }
+                logger.warn { "Failed to open TargetDataLine with buffer size ${bufferSizeBytes * 2}: ${e.message}. Trying default buffer size." }
                 targetLine.open(targetLine.format)
             }
             
@@ -60,9 +73,11 @@ class JavaSoundClient(
             val sampleRate = targetLine.format.sampleRate
 
             thread = Thread({
-                val byteBuffer = ByteArray(bufferSize * 2)
-                val floatArray = FloatArray(bufferSize)
-                val floatBuffer = FloatBuffer.wrap(floatArray)
+                val byteBuffer = ByteArray(bufferSizeBytes)
+                val leftArray = FloatArray(bufferFrames)
+                val rightArray = FloatArray(bufferFrames)
+                val leftBuffer = FloatBuffer.wrap(leftArray)
+                val rightBuffer = FloatBuffer.wrap(rightArray)
 
                 try {
                     while (running) {
@@ -70,12 +85,22 @@ class JavaSoundClient(
                         val bytesRead = currentLine.read(byteBuffer, 0, byteBuffer.size)
                         if (bytesRead <= 0) continue
 
-                        val samplesRead = convertPcmToFloat(byteBuffer, bytesRead, floatArray)
+                        val framesRead = if (channels == 2) {
+                            convertStereoPcmToFloat(byteBuffer, bytesRead, leftArray, rightArray)
+                        } else {
+                            val count = convertPcmToFloat(byteBuffer, bytesRead, leftArray)
+                            for (i in 0 until count) {
+                                rightArray[i] = leftArray[i]
+                            }
+                            count
+                        }
 
-                        floatBuffer.position(0)
-                        floatBuffer.limit(samplesRead)
+                        leftBuffer.position(0)
+                        leftBuffer.limit(framesRead)
+                        rightBuffer.position(0)
+                        rightBuffer.limit(framesRead)
 
-                        onProcess(floatBuffer, samplesRead, sampleRate)
+                        onProcess(leftBuffer, rightBuffer, framesRead, sampleRate)
                     }
                 } catch (e: Exception) {
                     logger.error(e) { "Error in Java Sound capture loop" }
@@ -84,7 +109,7 @@ class JavaSoundClient(
             }, "JavaSoundClient-Capture").apply { isDaemon = true }
 
             thread?.start()
-            logger.info { "Java Sound Audio client started successfully on ${targetLine.format.sampleRate}Hz." }
+            logger.info { "Java Sound Audio client started successfully on ${targetLine.format.sampleRate}Hz (${channels}ch)." }
             return true
         } catch (e: Throwable) {
             logger.warn { "Failed to start Java Sound audio: ${e.message}" }
@@ -189,6 +214,28 @@ class JavaSoundClient(
                 val high = byteBuffer[i * 2 + 1].toInt()
                 val sample = ((high shl 8) or low).toShort()
                 floatArray[i] = sample.toFloat() / 32768f
+            }
+            return limit
+        }
+
+        /**
+         * Converts 16-bit signed little-endian interleaved stereo PCM byte data into floats in range [-1.0, 1.0].
+         * Writes channel 0 to leftArray and channel 1 to rightArray.
+         * Returns the number of frames successfully written.
+         */
+        fun convertStereoPcmToFloat(byteBuffer: ByteArray, bytesRead: Int, leftArray: FloatArray, rightArray: FloatArray): Int {
+            val framesRead = bytesRead / 4
+            val limit = minOf(framesRead, leftArray.size, rightArray.size)
+            for (i in 0 until limit) {
+                val lowL = byteBuffer[i * 4].toInt() and 0xff
+                val highL = byteBuffer[i * 4 + 1].toInt()
+                val sampleL = ((highL shl 8) or lowL).toShort()
+                leftArray[i] = sampleL.toFloat() / 32768f
+
+                val lowR = byteBuffer[i * 4 + 2].toInt() and 0xff
+                val highR = byteBuffer[i * 4 + 3].toInt()
+                val sampleR = ((highR shl 8) or lowR).toShort()
+                rightArray[i] = sampleR.toFloat() / 32768f
             }
             return limit
         }

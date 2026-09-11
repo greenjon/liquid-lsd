@@ -48,6 +48,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── SessionContext.kt           — Application state & context
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
+│   ├── AudioChannelRouting.kt  — Stereo channel routing enum (Mix L+R, Left Only, Right Only)
 │   ├── BeatTrackerEngine.kt    — Real-time Beat Tracker (inspired by Adam Stark's beat tracking research) with causal dynamic programming and continuous phase generator
 │   ├── ClockSource.kt          — Timing source enum (AUDIO_TRACKER, ABLETON_LINK, MANUAL_TAP)
 │   ├── JackClient.kt           — JNAJack callback wrapper

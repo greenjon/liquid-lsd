@@ -121,11 +121,36 @@ To prevent this:
 
 ---
 
+## Stereo Pipeline, Channel Routing & Input Metering
+
+Liquid LSD ingests dual-channel (stereo) audio from JACK/PipeWire and Java Sound, and provides user-selectable routing into the downstream DSP analysis filter bank:
+
+### 1. Channel Routing Strategy (`AudioChannelRouting.kt`)
+The operational signal $s[i]$ fed into the biquad filter bank and beat detector is determined by the selected routing mode:
+- **`MIX` ("Mix (L + R)") [Default]**:
+  Uses a standard arithmetic -6 dB downmix:
+  $$s[i] = 0.5 \cdot (L[i] + R[i])$$
+  - **Headroom Guarantee**: Perfectly coherent in-phase material ($L=1.0, R=1.0$) sums to exactly $1.0$ (0 dBFS). Clipping is mathematically prevented without requiring artificial compressors or non-linear saturation that could smear transient detection.
+  - **Unity Level Consistency**: When switching between `Mix`, `Left Only`, and `Right Only` on standard mono or center-panned sources, the signal level remains identical (1.0x).
+  - **Mono Capture Fallback**: When only a single physical capture port is available, `MIX` mode passes $L[i]$ directly at unity gain without the -6 dB attenuation penalty.
+- **`LEFT_ONLY` ("Left Only")**: Routes Left channel directly ($s[i] = L[i]$).
+- **`RIGHT_ONLY` ("Right Only")**: Routes Right channel directly ($s[i] = R[i]$, or silence if no right channel is connected).
+
+### 2. Real-Time 2-Channel Input Peak Metering
+[`AudioEnginePanel.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt) renders a 2-channel stereo peak/RMS meter with:
+- **Independent Channel Visualization**: Left and Right levels are measured on raw incoming audio *before* routing. If a user feeds a dead Left channel and an active Right channel, the meter immediately reveals the hardware state.
+- **Visual Routing Feedback**: Inactive channels are drawn with dimmed opacity and a `[Bypassed]` badge when `Left Only` or `Right Only` routing is selected.
+- **Ballistics**: Fast attack with smooth exponential release (~20 dB/s) and a 1.2-second peak-hold indicator tick.
+- **Clipping Warning**: Instant red `CLIP` indicator when peak level $\ge 1.0$.
+
+---
+
 ## Audio Engine Settings Persistence
 
 All Audio Engine configuration parameters are serialized to and restored from `lsd-settings.properties` via [`UITheme.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt):
 - `audioEngineEnabled`: Master toggle for audio processing.
 - `audioBackend`: Selected audio backend mode (`AUTO`, `JACK_ONLY`, `JAVASOUND_ONLY`).
+- `audioChannelRouting`: Stereo routing selector (`MIX`, `LEFT_ONLY`, `RIGHT_ONLY`).
 - `audioDeviceName`: Explicitly selected audio hardware input device name (or default).
 - `audioInputGain`: Input pre-amplification multiplier (0.0x–10.0x).
 - `audioBpmLocked`: Manual BPM lock state.
@@ -133,5 +158,6 @@ All Audio Engine configuration parameters are serialized to and restored from `l
 - `audioBeatTarget`: Frequency band target for onset detection (`LOW`, `MID`, `HIGH`, `UNFILTERED`).
 - `audioBpmFloor` & `audioBpmCeiling`: BPM search range bounds for the Beat Tracker.
 - `audioTransitionAlpha` & `audioTrackingInertia`: Beat Tracker tuning constants.
+
 
 

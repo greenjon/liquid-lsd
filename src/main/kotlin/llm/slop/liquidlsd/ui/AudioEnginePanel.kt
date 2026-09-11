@@ -6,6 +6,7 @@ import imgui.flag.ImGuiTableFlags
 import imgui.type.ImBoolean
 import imgui.type.ImInt
 import llm.slop.liquidlsd.audio.AudioEngine
+import llm.slop.liquidlsd.audio.AudioChannelRouting
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.SignalState
@@ -45,6 +46,19 @@ object AudioEnginePanel {
         "JACK Only (Linux Pro Audio)",
         "Java Sound Only (Cross-Platform)"
     )
+
+    private val channelRoutings = llm.slop.liquidlsd.audio.AudioChannelRouting.entries.toTypedArray()
+    private val channelRoutingNames = channelRoutings.map { it.displayName }.toTypedArray()
+    private val currentRoutingIdx = ImInt()
+
+    // Meter ballistics state (Thread 0 only)
+    private var displayPeakL = 0f
+    private var displayPeakR = 0f
+    private var peakHoldL = 0f
+    private var peakHoldR = 0f
+    private var peakHoldTimeL = 0L
+    private var peakHoldTimeR = 0L
+    private var lastMeterTimeNs = System.nanoTime()
 
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
 
@@ -230,6 +244,26 @@ object AudioEnginePanel {
                 audioEngine.refreshInputDevices()
             }
             itemTooltip("Rescan for newly connected audio input hardware.")
+
+            ImGui.spacing()
+
+            // Channel Routing Selector
+            theme.body("Channel Routing:")
+            currentRoutingIdx.set(audioEngine.channelRouting.ordinal)
+            ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
+            if (ImGui.combo("##ChannelRouting", currentRoutingIdx, channelRoutingNames)) {
+                val chosenRouting = channelRoutings[currentRoutingIdx.get()]
+                audioEngine.channelRouting = chosenRouting
+                theme.saveSettings()
+            }
+            itemTooltip("Select audio channel routing: Mix (L + R) with -6dB attenuation to prevent clipping, Left Only, or Right Only.")
+
+            ImGui.spacing()
+
+            // Visual Input Metering
+            theme.body("Input Peak Meter (L / R):")
+            drawStereoVuMeter(session, ImGui.getContentRegionAvailX().coerceAtMost(380f))
+            itemTooltip("Real-time 2-channel stereo input peak meter. Shows physical incoming channel levels before routing.")
 
             ImGui.spacing()
 
@@ -613,6 +647,8 @@ object AudioEnginePanel {
             }
 
             ImGui.spacing()
+            drawStereoVuMeter(session)
+            ImGui.spacing()
             audioEngine.rawHistory.copyTo(rawSamples)
             val rawColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 1.0f) // Neon Green
             OscilloscopeDrawer.drawBufferOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 65f)
@@ -645,6 +681,143 @@ object AudioEnginePanel {
 
             ImGui.endTable()
         }
+    }
+
+    /**
+     * Renders a responsive 2-channel stereo peak/RMS meter with peak-hold ballistics and clipping indicator.
+     */
+    fun drawStereoVuMeter(session: llm.slop.liquidlsd.SessionContext, customWidth: Float = -1f) {
+        val audioEngine = session.audioEngine
+        val currentTime = System.nanoTime()
+        val dt = ((currentTime - lastMeterTimeNs).coerceIn(1_000_000L, 100_000_000L) / 1_000_000_000.0).toFloat()
+        lastMeterTimeNs = currentTime
+
+        val rawTargetL = audioEngine.meterPeakL
+        val rawTargetR = audioEngine.meterPeakR
+
+        // Ballistics: instant attack, exponential release
+        val decay = kotlin.math.exp(-dt * 5.0f)
+        displayPeakL = if (rawTargetL > displayPeakL) rawTargetL else displayPeakL * decay
+        displayPeakR = if (rawTargetR > displayPeakR) rawTargetR else displayPeakR * decay
+
+        // Peak hold: hold for 1.2s then decay
+        if (rawTargetL >= peakHoldL) {
+            peakHoldL = rawTargetL
+            peakHoldTimeL = currentTime
+        } else if (currentTime - peakHoldTimeL > 1_200_000_000L) {
+            peakHoldL = (peakHoldL - dt * 1.5f).coerceAtLeast(0f)
+        }
+
+        if (rawTargetR >= peakHoldR) {
+            peakHoldR = rawTargetR
+            peakHoldTimeR = currentTime
+        } else if (currentTime - peakHoldTimeR > 1_200_000_000L) {
+            peakHoldR = (peakHoldR - dt * 1.5f).coerceAtLeast(0f)
+        }
+
+        val availWidth = if (customWidth > 0f) customWidth else ImGui.getContentRegionAvailX()
+        val barHeight = 12f
+        val labelWidth = 18f
+        val dbWidth = 62f
+        val meterBarWidth = (availWidth - labelWidth - dbWidth - 16f).coerceAtLeast(60f)
+
+        val dl = ImGui.getWindowDrawList()
+        val currentRouting = audioEngine.channelRouting
+
+        fun drawChannelBar(chLabel: String, peakVal: Float, holdVal: Float, isBypassedByRouting: Boolean) {
+            val posX = ImGui.getCursorScreenPosX()
+            val posY = ImGui.getCursorScreenPosY()
+
+            // Channel label (L / R)
+            val textCol = if (isBypassedByRouting) {
+                ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 0.6f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f)
+            }
+            dl.addText(posX, posY - 1f, textCol, chLabel)
+
+            // Bar background
+            val barStartX = posX + labelWidth
+            val barEndX = barStartX + meterBarWidth
+            val barEndY = posY + barHeight
+            val bgCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.14f, 1.0f)
+            dl.addRectFilled(barStartX, posY, barEndX, barEndY, bgCol, 2f)
+
+            // Bar fill
+            val clampedPeak = peakVal.coerceIn(0f, 1.2f)
+            val fillFraction = (clampedPeak / 1.0f).coerceIn(0f, 1.0f)
+            if (fillFraction > 0.005f) {
+                val fillWidth = meterBarWidth * fillFraction
+                val barFillEnd = barStartX + fillWidth
+
+                val alpha = if (isBypassedByRouting) 0.35f else 0.95f
+                val greenCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 0.35f, alpha)
+                val yellowCol = ImGui.colorConvertFloat4ToU32(0.95f, 0.80f, 0.20f, alpha)
+                val redCol = ImGui.colorConvertFloat4ToU32(0.95f, 0.25f, 0.25f, alpha)
+
+                val warnSplitX = barStartX + meterBarWidth * 0.70f // ~ -12 dB
+                val clipSplitX = barStartX + meterBarWidth * 0.90f // ~ -3 dB
+
+                if (barFillEnd <= warnSplitX) {
+                    dl.addRectFilled(barStartX, posY, barFillEnd, barEndY, greenCol, 2f)
+                } else if (barFillEnd <= clipSplitX) {
+                    dl.addRectFilled(barStartX, posY, warnSplitX, barEndY, greenCol, 2f)
+                    dl.addRectFilled(warnSplitX, posY, barFillEnd, barEndY, yellowCol, 2f)
+                } else {
+                    dl.addRectFilled(barStartX, posY, warnSplitX, barEndY, greenCol, 2f)
+                    dl.addRectFilled(warnSplitX, posY, clipSplitX, barEndY, yellowCol, 2f)
+                    dl.addRectFilled(clipSplitX, posY, barFillEnd, barEndY, redCol, 2f)
+                }
+            }
+
+            // Peak hold tick
+            val clampedHold = holdVal.coerceIn(0f, 1.0f)
+            if (clampedHold > 0.02f) {
+                val holdX = barStartX + (meterBarWidth * clampedHold)
+                val holdCol = if (holdVal >= 1.0f) {
+                    ImGui.colorConvertFloat4ToU32(1.0f, 0.2f, 0.2f, 1.0f)
+                } else {
+                    ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 0.85f)
+                }
+                dl.addLine(holdX, posY, holdX, barEndY, holdCol, 1.5f)
+            }
+
+            // Border
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.28f, 0.8f)
+            dl.addRect(barStartX, posY, barEndX, barEndY, borderCol, 2f)
+
+            // dB or clip text readout
+            val dbTextX = barEndX + 8f
+            if (peakVal >= 1.0f) {
+                val clipCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.2f, 0.2f, 1.0f)
+                dl.addText(dbTextX, posY - 1f, clipCol, "CLIP")
+            } else if (peakVal < 0.001f) {
+                val muteCol = ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 0.8f)
+                dl.addText(dbTextX, posY - 1f, muteCol, "-inf dB")
+            } else {
+                val dbVal = 20f * kotlin.math.log10(peakVal)
+                val dbCol = if (dbVal > -3f) {
+                    ImGui.colorConvertFloat4ToU32(0.95f, 0.75f, 0.25f, 1.0f)
+                } else {
+                    ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.65f, 0.9f)
+                }
+                dl.addText(dbTextX, posY - 1f, dbCol, "%+.1f dB".format(dbVal))
+            }
+
+            if (isBypassedByRouting) {
+                val badgeX = dbTextX + 48f
+                dl.addText(badgeX, posY - 1f, ImGui.colorConvertFloat4ToU32(0.6f, 0.6f, 0.6f, 0.6f), "[Bypassed]")
+            }
+
+            ImGui.dummy(availWidth, barHeight)
+        }
+
+        val isLeftBypassed = currentRouting == AudioChannelRouting.RIGHT_ONLY
+        val isRightBypassed = currentRouting == AudioChannelRouting.LEFT_ONLY
+
+        drawChannelBar("L", displayPeakL, peakHoldL, isLeftBypassed)
+        ImGui.spacing()
+        drawChannelBar("R", displayPeakR, peakHoldR, isRightBypassed)
     }
 }
 

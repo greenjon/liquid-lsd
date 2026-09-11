@@ -319,6 +319,22 @@ object RealtimeRecorder {
     }
 
     /**
+     * Called from AudioEngine.processAudio with pre-routed/downmixed FloatArray samples.
+     * Zero allocations and non-blocking.
+     */
+    fun pushAudioArray(samples: FloatArray, offset: Int, count: Int, sampleRate: Float) {
+        if (!isRecording || !isRecordingAudio) return
+        val block = freeAudioBlocks.poll() ?: return
+        val len = count.coerceAtMost(block.buffer.size)
+        System.arraycopy(samples, offset, block.buffer, 0, len)
+        block.length = len
+        block.sampleRate = sampleRate
+        if (!pendingAudioBlocks.offer(block)) {
+            freeAudioBlocks.offer(block)
+        }
+    }
+
+    /**
      * Called once per rendered frame from Thread 0 (OpenGL thread).
      */
     fun captureFrame(fboId: Int) {

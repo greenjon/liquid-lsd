@@ -132,4 +132,83 @@ class AudioEngineTest {
             prev = current
         }
     }
+
+    @Test
+    fun testStereoRoutingMixDownmixAndHeadroom() {
+        AudioEngine.channelRouting = AudioChannelRouting.MIX
+        AudioEngine.inputGain = 1.0f
+
+        val nframes = 256
+        val bufL = FloatBuffer.allocate(nframes)
+        val bufR = FloatBuffer.allocate(nframes)
+
+        // Case 1: In-phase coherent 1.0 peak signals on both channels
+        for (i in 0 until nframes) {
+            bufL.put(i, 1.0f)
+            bufR.put(i, 1.0f)
+        }
+
+        AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
+
+        // In MIX mode, (1.0 + 1.0) * 0.5 = 1.0 -> 0 dBFS, zero clipping
+        val sample = AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1)
+        kotlin.test.assertEquals(1.0f, sample, 0.001f, "MIX of dual 1.0 in-phase signals must sum to exactly 1.0 (no clipping)")
+        kotlin.test.assertEquals(1.0f, AudioEngine.meterPeakL, 0.001f)
+        kotlin.test.assertEquals(1.0f, AudioEngine.meterPeakR, 0.001f)
+
+        // Case 2: Signal on Left only, silent on Right
+        for (i in 0 until nframes) {
+            bufL.put(i, 0.8f)
+            bufR.put(i, 0.0f)
+        }
+        AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
+        // In MIX mode with Right dead: (0.8 + 0.0) * 0.5 = 0.4 (-6 dB attenuation)
+        val sample2 = AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1)
+        kotlin.test.assertEquals(0.4f, sample2, 0.001f, "MIX of 0.8L and 0.0R must be 0.4 (-6dB)")
+        kotlin.test.assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
+        kotlin.test.assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
+    }
+
+    @Test
+    fun testStereoRoutingLeftOnlyAndRightOnly() {
+        AudioEngine.inputGain = 1.0f
+        val nframes = 256
+        val bufL = FloatBuffer.allocate(nframes)
+        val bufR = FloatBuffer.allocate(nframes)
+
+        for (i in 0 until nframes) {
+            bufL.put(i, 0.75f)
+            bufR.put(i, 0.25f)
+        }
+
+        // Test LEFT_ONLY
+        AudioEngine.channelRouting = AudioChannelRouting.LEFT_ONLY
+        AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
+        kotlin.test.assertEquals(0.75f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "LEFT_ONLY must route Left channel at full level")
+
+        // Test RIGHT_ONLY
+        AudioEngine.channelRouting = AudioChannelRouting.RIGHT_ONLY
+        AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
+        kotlin.test.assertEquals(0.25f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "RIGHT_ONLY must route Right channel at full level")
+
+        // Meters must still show true physical levels for both channels regardless of routing
+        kotlin.test.assertEquals(0.75f, AudioEngine.meterPeakL, 0.001f)
+        kotlin.test.assertEquals(0.25f, AudioEngine.meterPeakR, 0.001f)
+    }
+
+    @Test
+    fun testMonoInputFallbackInMixRouting() {
+        // When rightBuffer is null (e.g. single mono capture port), MIX mode routes Left at unity (no -6dB penalty)
+        AudioEngine.channelRouting = AudioChannelRouting.MIX
+        AudioEngine.inputGain = 1.0f
+
+        val nframes = 256
+        val buf = FloatBuffer.allocate(nframes)
+        for (i in 0 until nframes) buf.put(i, 0.8f)
+
+        AudioEngine.processAudio(buf, nframes, 44100f)
+        kotlin.test.assertEquals(0.8f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "Single-channel mono in MIX mode must preserve unity gain")
+        kotlin.test.assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
+        kotlin.test.assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
+    }
 }

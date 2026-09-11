@@ -160,9 +160,10 @@ object AudioEngine {
     private val fluxHighHistory = CVRegistry.getHistory("audio_flux_high")
 
     // Temporary processing buffers — sized to standard maximum JACK limits to guarantee no allocations.
-    private val lowBuffer  = FloatArray(16384)
-    private val midBuffer  = FloatArray(16384)
-    private val highBuffer = FloatArray(16384)
+    private val mixedBuffer = FloatArray(16384)
+    private val lowBuffer   = FloatArray(16384)
+    private val midBuffer   = FloatArray(16384)
+    private val highBuffer  = FloatArray(16384)
 
     // ── Flywheel state ──────────────────────────────────────────────────────
     private var totalSamplesProcessed = 0L
@@ -170,6 +171,13 @@ object AudioEngine {
     private var phaseSlewBuffer = 0.0
     @Volatile private var estimatedBpm = 120f
     @Volatile var inputGain = 1.0f
+
+    // ── Channel Routing & Stereo Metering ────────────────────────────────────
+    @Volatile var channelRouting: AudioChannelRouting = AudioChannelRouting.MIX
+    @Volatile var meterPeakL: Float = 0f
+    @Volatile var meterPeakR: Float = 0f
+    @Volatile var meterRmsL: Float = 0f
+    @Volatile var meterRmsR: Float = 0f
 
     // ── User controls ────────────────────────────────────────────────────────
     @Volatile var isBpmLocked = true // default to locked/manual now that real-time estimate is removed
@@ -325,8 +333,8 @@ object AudioEngine {
 
         var jackStarted = false
         if (backendMode != AudioBackendMode.JAVASOUND_ONLY) {
-            jackClient = JackClient("lsd") { buffer, nframes, sampleRate ->
-                processAudio(buffer, nframes, sampleRate)
+            jackClient = JackClient("lsd") { bufL, bufR, nframes, sampleRate ->
+                processAudio(bufL, bufR, nframes, sampleRate)
             }
             jackStarted = jackClient?.start() == true
             lastJackFailure = jackClient?.lastStartFailure
@@ -349,8 +357,8 @@ object AudioEngine {
 
         if (!jackStarted && backendMode != AudioBackendMode.JACK_ONLY) {
             logger.info { "Starting Java Sound client (device: ${selectedDeviceName ?: "Default"})..." }
-            javaSoundClient = JavaSoundClient(selectedDeviceName) { buffer, nframes, sampleRate ->
-                processAudio(buffer, nframes, sampleRate)
+            javaSoundClient = JavaSoundClient(selectedDeviceName) { bufL, bufR, nframes, sampleRate ->
+                processAudio(bufL, bufR, nframes, sampleRate)
             }
             val javaStarted = javaSoundClient?.start() == true
             if (!javaStarted) {
@@ -376,7 +384,15 @@ object AudioEngine {
     }
 
     /**
-     * Processes a new block of audio samples from JACK. Runs on the real-time audio thread.
+     * Overload for single-buffer / mono processing.
+     */
+    internal fun processAudio(buffer: FloatBuffer, nframes: Int, sampleRate: Float, timestampNanos: Long = System.nanoTime()) {
+        processAudio(buffer, null, nframes, sampleRate, timestampNanos)
+    }
+
+    /**
+     * Processes a new block of audio samples (stereo or mono) from JACK or Java Sound.
+     * Runs on the real-time audio thread.
      * 
      * JACK CALLBACK SAFETY RULES (Strictly Enforced):
      * - ZERO heap allocations (no `new`, no boxing, no Kotlin lambdas that allocate, no standard iterators)
@@ -394,7 +410,13 @@ object AudioEngine {
      * - `Executors.submit { ... }` (lambda allocation)
      * - `String` manipulation or concatenation
      */
-    internal fun processAudio(buffer: FloatBuffer, nframes: Int, sampleRate: Float, timestampNanos: Long = System.nanoTime()) {
+    internal fun processAudio(
+        leftBuffer: FloatBuffer,
+        rightBuffer: FloatBuffer?,
+        nframes: Int,
+        sampleRate: Float,
+        timestampNanos: Long = System.nanoTime()
+    ) {
         val currentTime = timestampNanos
 
         // Ensure nframes doesn't exceed our pre-allocated buffers
@@ -409,25 +431,63 @@ object AudioEngine {
             lastSampleRate = sampleRate
         }
 
-        // 2. Buffer bounds safety check (removed allocation branch to enforce zero allocations)
-        // safeFrames handles bounds safety.
+        // 2. Stereo peak & RMS metering (pre-routing, scaled by gain) + Channel routing
+        val leftStart = leftBuffer.position()
+        val rBuf = if (rightBuffer != null && (rightBuffer.limit() - rightBuffer.position()) >= safeFrames) rightBuffer else null
+        val rightStart = rBuf?.position() ?: 0
 
-        // 3. Filter bank + raw history
-        val startPos = buffer.position()
+        var sumSqL = 0f
+        var peakL = 0f
+        var sumSqR = 0f
+        var peakR = 0f
+
         val gain = inputGain
+        val routing = channelRouting
+
         for (i in 0 until safeFrames) {
-            val sample = buffer.get(startPos + i) * gain
+            val sL = leftBuffer.get(leftStart + i)
+            val absL = kotlin.math.abs(sL)
+            if (absL > peakL) peakL = absL
+            sumSqL += sL * sL
+
+            val sR = if (rBuf != null) {
+                val rVal = rBuf.get(rightStart + i)
+                val absR = kotlin.math.abs(rVal)
+                if (absR > peakR) peakR = absR
+                sumSqR += rVal * rVal
+                rVal
+            } else {
+                sL
+            }
+
+            // Downmixing / routing:
+            // MIX: -6dB downmix (0.5 * (L + R)) if true stereo, or L if mono
+            // LEFT_ONLY: L
+            // RIGHT_ONLY: R if stereo, else 0.0
+            val routed = when (routing) {
+                AudioChannelRouting.MIX -> if (rBuf != null) 0.5f * (sL + sR) else sL
+                AudioChannelRouting.LEFT_ONLY -> sL
+                AudioChannelRouting.RIGHT_ONLY -> if (rBuf != null) sR else 0f
+            }
+
+            val sample = routed * gain
+            mixedBuffer[i] = sample
             rawHistory.add(sample)
             lowBuffer[i]  = lowPass.process(sample)
             midBuffer[i]  = midPass.process(sample)
             highBuffer[i] = highPass.process(sample)
         }
 
+        meterPeakL = peakL * gain
+        meterPeakR = (if (rBuf != null) peakR else 0f) * gain
+        meterRmsL = if (safeFrames > 0) kotlin.math.sqrt(sumSqL / safeFrames) * gain else 0f
+        meterRmsR = if (rBuf != null && safeFrames > 0) kotlin.math.sqrt(sumSqR / safeFrames) * gain else 0f
+
         // Tap live audio stream for real-time video recording (zero allocation)
-        llm.slop.liquidlsd.export.RealtimeRecorder.pushAudioBlock(buffer, startPos, safeFrames, sampleRate, gain)
+        llm.slop.liquidlsd.export.RealtimeRecorder.pushAudioArray(mixedBuffer, 0, safeFrames, sampleRate)
 
         // 4. RMS amplitudes per band
-        val amp  = extractor.calculateRms(buffer, safeFrames) * gain
+        val amp  = extractor.calculateRms(mixedBuffer, safeFrames)
         val bass = extractor.calculateRms(lowBuffer,  safeFrames)
         val mid  = extractor.calculateRms(midBuffer,  safeFrames)
         val high = extractor.calculateRms(highBuffer, safeFrames)

@@ -108,7 +108,7 @@
       "web": "web/renderer.js",
       "mode": "manual_review",
       "description": "JSON preset serialization schema & dead reckoning state sync",
-      "last_synced_hash": "bcc3730039ef6d1d539ea62415d40034fc4b598b76488a172631d721b0e68ddf"
+      "last_synced_hash": "10db1914b8082e592e56754c24db5b0009b1c8460df2329c6e636dd6b795ad96"
     }
   ]
 }
