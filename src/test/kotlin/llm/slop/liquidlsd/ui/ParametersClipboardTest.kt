@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class PresetGridClipboardTest {
+class ParametersClipboardTest {
 
     @Test
     fun testGetModsForCellExtraction() {
@@ -25,24 +25,24 @@ class PresetGridClipboardTest {
         param.modulators.addAll(listOf(lfoMod, audioAmpMod, audioBassMod, audioFluxMod, midiMod))
 
         // Value / Final / Base cell should yield empty modulators list (since it represents base value/row)
-        assertEquals(0, PresetGridKeyboard.getModsForCell(param, "value").size)
-        assertEquals(0, PresetGridKeyboard.getModsForCell(param, "final").size)
-        assertEquals(0, PresetGridKeyboard.getModsForCell(param, "base").size)
+        assertEquals(0, ParametersKeyboard.getModsForCell(param, "value").size)
+        assertEquals(0, ParametersKeyboard.getModsForCell(param, "final").size)
+        assertEquals(0, ParametersKeyboard.getModsForCell(param, "base").size)
 
         // LFO cell
-        val lfoExtracted = PresetGridKeyboard.getModsForCell(param, "lfo")
+        val lfoExtracted = ParametersKeyboard.getModsForCell(param, "lfo")
         assertEquals(1, lfoExtracted.size)
         assertEquals("lfo", lfoExtracted[0].sourceId)
 
         // Audio cell should extract all audio sources (both RMS and Flux)
-        val audioExtracted = PresetGridKeyboard.getModsForCell(param, "audio")
+        val audioExtracted = ParametersKeyboard.getModsForCell(param, "audio")
         assertEquals(3, audioExtracted.size)
         assertTrue(audioExtracted.any { it.sourceId == "audio_amp" })
         assertTrue(audioExtracted.any { it.sourceId == "audio_bass" })
         assertTrue(audioExtracted.any { it.sourceId == "audio_flux_bass" })
 
         // MIDI cell should extract midi CC sources
-        val midiExtracted = PresetGridKeyboard.getModsForCell(param, "midi")
+        val midiExtracted = ParametersKeyboard.getModsForCell(param, "midi")
         assertEquals(1, midiExtracted.size)
         assertEquals("midi_cc_7", midiExtracted[0].sourceId)
     }
@@ -53,7 +53,7 @@ class PresetGridClipboardTest {
         val audioMod = CvModulator(sourceId = "audio_mid", depth = 0.8f, operator = ModulationOperator.ADD)
         srcParam.modulators.add(audioMod)
 
-        val audioMods = PresetGridKeyboard.getModsForCell(srcParam, "audio")
+        val audioMods = ParametersKeyboard.getModsForCell(srcParam, "audio")
         ClipboardManager.cellClipboard = CellClipboardData(
             sourceParamKey = "Deck A/Geometry/L1",
             sourceCvId = "audio",
@@ -78,7 +78,7 @@ class PresetGridClipboardTest {
         val midiMod = CvModulator(sourceId = "midi_cc_16", depth = 0.6f)
         srcParam.modulators.add(midiMod)
 
-        val midiMods = PresetGridKeyboard.getModsForCell(srcParam, "midi")
+        val midiMods = ParametersKeyboard.getModsForCell(srcParam, "midi")
         ClipboardManager.cellClipboard = CellClipboardData(
             sourceParamKey = "Deck A/Geometry/L2",
             sourceCvId = "midi",

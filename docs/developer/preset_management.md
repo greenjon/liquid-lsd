@@ -44,7 +44,7 @@ var activePresetMtimePV: Long? = null
 
 ### Clean First-Run & Session Lifecycle (`startEmpty`, `loadSession`)
 - **Initial App Launch**: Newly instantiated decks default to `isEmpty = true`. When launching without a pre-existing `last_session.json` (or when `StartupBehavior.EMPTY` is active), `PresetManager.startEmpty(mixer)` is invoked.
-- **Empty Deck State**: Resets parameters across all available visual sources and 2D/3D view pipelines, clears FBO framebuffers, and leaves all deck monitors as blank black screens with the Preset Grid Launchpad activated ("Add Source" / "Load Preset").
+- **Empty Deck State**: Resets parameters across all available visual sources and 2D/3D view pipelines, clears FBO framebuffers, and leaves all deck monitors as blank black screens with the Parameters Launchpad activated ("Add Source" / "Load Preset").
 
 ---
 
@@ -104,7 +104,7 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
   - **Confirmation Dialog (`PopupManager.drawSourceChangeConfirmPopup`)**: If the deck has an active named preset or unsaved parameter edits, prompts the user before replacing the source.
   - **Preset Unbinding**: Clears `activePreset` and `cachedDto` in `PresetManager` so subsequent saves require naming or cannot overwrite the previous preset file.
   - **Selection Invalidation & Subtab Synchronization**: Clears `PresetGridState.selectedCell` / `selectedParam` and switches the deck subtab to the new source.
-  - **Stale Parameter Protection (`CellConfigPanel`)**: `CellConfigPanel.draw()` defensively validates `state.selectedParam` against `ParameterResolver.findParameterByPath()`. If the parameter was orphaned or detached, selection is immediately cleared.
+  - **Stale Parameter Protection (`PropertiesPanel`)**: `PropertiesPanel.draw()` defensively validates `state.selectedParam` against `ParameterResolver.findParameterByPath()`. If the parameter was orphaned or detached, selection is immediately cleared.
 
 ---
 

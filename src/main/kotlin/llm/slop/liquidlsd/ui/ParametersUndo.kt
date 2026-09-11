@@ -4,20 +4,20 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ParameterResolver
 
-object PresetGridUndo {
-    fun createUndoSnapshot(mixer: Mixer): PresetGridUndoSnapshot {
+object ParametersUndo {
+    fun createUndoSnapshot(mixer: Mixer): ParametersUndoSnapshot {
         val mods = mutableMapOf<String, List<CvModulator>>()
         ParameterResolver.getAllParameterPaths(mixer).forEach { (path, p) ->
             mods[path] = p.modulators.map { it.copy() }
         }
-        return PresetGridUndoSnapshot(mods)
+        return ParametersUndoSnapshot(mods)
     }
 
-    fun pushUndoState(state: PresetGridState, mixer: Mixer) {
+    fun pushUndoState(state: ParametersState, mixer: Mixer) {
         state.pushUndoState(createUndoSnapshot(mixer))
     }
 
-    fun performUndo(state: PresetGridState, mixer: Mixer) {
+    fun performUndo(state: ParametersState, mixer: Mixer) {
         val snapshot = state.popUndoState() ?: return
         ParameterResolver.getAllParameterPaths(mixer).forEach { (path, p) ->
             snapshot.modulatorsByParamKey[path]?.let { savedMods ->

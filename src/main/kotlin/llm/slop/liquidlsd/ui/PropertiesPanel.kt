@@ -14,14 +14,14 @@ import llm.slop.liquidlsd.rendering.DynamicVisualSource
 private val AUDIO_RMS_BANDS = listOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
 
 /**
- * Draws the Cell Config panel contents.
- * Call this inside an ImGui.begin("Cell Config") / ImGui.end() block.
+ * Draws the Properties panel contents.
+ * Call this inside an ImGui.begin("Properties") / ImGui.end() block.
  */
-object CellConfigPanel {
+object PropertiesPanel {
 
     private var activeHistory: CvHistoryBuffer? = null
     private var ghostHistory: CvHistoryBuffer? = null
-    private var activeCellId: PresetCellId? = null
+    private var activeCellId: ParameterCellId? = null
     private val virtualModulators = mutableListOf<CvModulator>()
     private var lastActiveIds: Set<String> = emptySet()
 
@@ -43,7 +43,7 @@ object CellConfigPanel {
         }
     }
 
-    private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, currentParamKey: String, currentCvId: String) {
+    private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, currentParamKey: String, currentCvId: String) {
         val availableTabs = mutableListOf<Pair<String, String>>()
         availableTabs.add("Value" to "value")
         if (session.uiTheme.midiEnabled) availableTabs.add("MIDI" to "midi")
@@ -76,9 +76,9 @@ object CellConfigPanel {
                 }
                 val btnW = (ImGui.calcTextSize(label).x + 18f * fontScale).coerceAtLeast(44f * fontScale)
                 if (ImGui.button(label, btnW, btnH)) {
-                    state.selectedCell = PresetCellId(currentParamKey, targetCvId)
+                    state.selectedCell = ParameterCellId(currentParamKey, targetCvId)
                 }
-                itemTooltip("Switch CellConfig view to $label CV modulation for parameter")
+                itemTooltip("Switch Properties view to $label CV modulation for parameter")
                 ImGui.popStyleColor(3)
             }
         }
@@ -88,14 +88,14 @@ object CellConfigPanel {
         ImGui.spacing()
     }
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, state: PresetGridState, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer) {
         val cell = state.selectedCell
         val param = state.selectedParam
 
         if (cell == null || param == null) {
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("Click a cell in the Preset Grid to configure it.")
+            session.uiTheme.caption("Click a parameter or cell to view its properties.")
             return
         }
 
@@ -104,7 +104,7 @@ object CellConfigPanel {
             state.clearSelection()
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("Click a cell in the Preset Grid to configure it.")
+            session.uiTheme.caption("Click a parameter or cell to view its properties.")
             return
         }
 
@@ -392,7 +392,7 @@ object CellConfigPanel {
         ImGui.popStyleVar()
     }
 
-    private fun replaceModulator(state: PresetGridState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator, mixer: Mixer? = null) {
+    private fun replaceModulator(state: ParametersState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator, mixer: Mixer? = null) {
         val idx = param.modulators.indexOfFirst { it.id == newMod.id || (it.sourceId.isNotEmpty() && it.sourceId == newMod.sourceId) }
         val wasBypassed = if (idx >= 0) param.modulators[idx].bypassed else true
         if (idx >= 0) {

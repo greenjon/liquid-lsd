@@ -12,7 +12,7 @@ graph TD
     
     SessionContext[SessionContext.kt - DI Container for Subsystems]
     UITheme[UITheme.kt - Fonts, Styling, Settings]
-    PresetGridState[PresetGridState.kt - Selection & 30-level Undo Stack]
+    ParametersState[ParametersState.kt - Selection & 30-level Undo Stack]
     PopupManager[PopupManager.kt - Modal Dialog Management]
     DeckPresetController[DeckPresetController.kt - Deck Presets & File Dialogs]
     WindowFrameController[WindowFrameController.kt - CSD Dragging & Edge Resizing]
@@ -20,38 +20,38 @@ graph TD
     
     UIManager --> SessionContext
     UIManager --> UITheme
-    UIManager --> PresetGridState
+    UIManager --> ParametersState
     UIManager --> PopupManager
     UIManager --> DeckPresetController
     UIManager --> WindowFrameController
     UIManager --> NoteEditorModal
     
     UIManager --> MenuBar[MenuBar.kt]
-    UIManager --> PresetGridPanel[PresetGridPanel.kt]
-    UIManager --> CellConfigPanel[CellConfigPanel.kt]
-    UIManager --> MixerMonitorPanel[MixerMonitorPanel.kt]
+    UIManager --> ParametersPanel[ParametersPanel.kt]
+    UIManager --> PropertiesPanel[PropertiesPanel.kt]
+    UIManager --> MixerPanel[MixerPanel.kt]
     UIManager --> LibraryPanel[LibraryPanel.kt & PlaylistEditorPanel.kt]
 
-    CellConfigPanel --> AudioModulatorSection[AudioModulatorSection.kt - Audio Followers & Controls]
-    CellConfigPanel --> TriggerModulatorSection[TriggerModulatorSection.kt - Trigger Impulse Controls]
-    CellConfigPanel --> MidiModulatorSection[MidiModulatorSection.kt - MIDI CC Modulator Controls]
-    CellConfigPanel --> Lfo1Section[Lfo1Section.kt - LFO 1 / Generator Shaping]
-    CellConfigPanel --> Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
+    PropertiesPanel --> AudioModulatorSection[AudioModulatorSection.kt - Audio Followers & Controls]
+    PropertiesPanel --> TriggerModulatorSection[TriggerModulatorSection.kt - Trigger Impulse Controls]
+    PropertiesPanel --> MidiModulatorSection[MidiModulatorSection.kt - MIDI CC Modulator Controls]
+    PropertiesPanel --> Lfo1Section[Lfo1Section.kt - LFO 1 / Generator Shaping]
+    PropertiesPanel --> Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
     
-    MixerMonitorPanel --> DeckControlPanel[DeckControlPanel.kt]
+    MixerPanel --> DeckControlPanel[DeckControlPanel.kt]
     DeckControlPanel --> drawDeckMonitorToolbar[drawDeckMonitorToolbar Helper]
     UIManager --> SavePresetModal[SavePresetModal.kt]
 ```
 
-Most panel `draw(...)` methods (like `PresetGridPanel`) receive `session: SessionContext`, the current `Mixer` reference, and `presetState: PresetGridState` at frame render time. Other panels like `MixerMonitorPanel` and `DeckControlPanel` receive state via dependency injection in their constructors. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
+Most panel `draw(...)` methods (like `ParametersPanel`) receive `session: SessionContext`, the current `Mixer` reference, and `parametersState: ParametersState` at frame render time. Other panels like `MixerPanel` and `DeckControlPanel` receive state via dependency injection in their constructors. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
 
-Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerMonitorPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckMonitorToolbar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
+Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckMonitorToolbar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
-`MixerMonitorPanel` features the master output monitor and a dedicated `MasterControls` child container consisting of the redesigned master `crossfade` slider flanked by interactive `[ A ]` and `[ B ]` boxed badges (with faint vertical tick marks at ends, midway points, and center, styled identically to `CustomRangeSlider`), and a row of momentary randomization buttons (`Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`) when randomization is enabled. Momentary triggers act as discrete pulses without initiating manual takeover or muting modulators. Clicking the `[ A ]` or `[ B ]` boxes immediately snaps the crossfader to Deck A (-1.0) or Deck B (+1.0) with manual takeover.
+`MixerPanel` features the master output monitor and a dedicated `MasterControls` child container consisting of the redesigned master `crossfade` slider flanked by interactive `[ A ]` and `[ B ]` boxed badges (with faint vertical tick marks at ends, midway points, and center, styled identically to `CustomRangeSlider`), and a row of momentary randomization buttons (`Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`) when randomization is enabled. Momentary triggers act as discrete pulses without initiating manual takeover or muting modulators. Clicking the `[ A ]` or `[ B ]` boxes immediately snaps the crossfader to Deck A (-1.0) or Deck B (+1.0) with manual takeover.
 
-Left-clicking the main output monitor immediately focuses the Preset Grid to the `MIX` tab (`activeTopTab = "Mixer"`). Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck PV`) immediately focuses the Preset Grid to that deck (`activeTopTab`). Dragging from a deck monitor initiates deck copy, move, or swap routing, and dropping preset files directly onto a monitor loads the preset into the corresponding deck.
+Left-clicking the main output monitor immediately focuses Parameters to the `MIX` tab (`activeTopTab = "Mixer"`). Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck PV`) immediately focuses Parameters to that deck (`activeTopTab`). Dragging from a deck monitor initiates deck copy, move, or swap routing, and dropping preset files directly onto a monitor loads the preset into the corresponding deck.
 
-`MixerMonitorLayoutCalculator` calculates exact aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights. It also calculates the exact maximum allowed window width (`calculateMaxAllowedWindowWidth`) to lock the Mixer / Monitor panel to its ideal aspect-ratio width, preventing wasted letterbox blank space and ensuring the flexible center column (`CellConfigPanel` / `LibraryPanel`) absorbs all remaining display space.
+`MixerLayoutCalculator` calculates exact aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights. It also calculates the exact maximum allowed window width (`calculateMaxAllowedWindowWidth`) to lock the Mixer panel to its ideal aspect-ratio width, preventing wasted letterbox blank space and ensuring the flexible center column (`PropertiesPanel` / `LibraryPanel`) absorbs all remaining display space.
 
 ---
 
@@ -60,7 +60,7 @@ Left-clicking the main output monitor immediately focuses the Preset Grid to the
 ### 1. `UIManager.kt` & Global Hotkey Routing (`Main.kt`)
 - **Main Loop Integration**: Invoked once per frame (`render(mixer, width, height)`). Initialises and disposes `ImGuiImplGlfw` and `ImGuiImplGl3`. Zeroes `io.mouseWheelH` per frame to globally disable unintended horizontal scroll wheel panning from trackpads or trackpoints.
 - **Global Key Routing (`Main.kt` & `UIManager.kt`)**: Chained GLFW key callback intercepts `F` (clean mode toggle), `B` (background video toggle), and `Ctrl-`/`Ctrl=` (Library preset name font scaling) whenever `!io.wantTextInput` or when clean mode is enabled. Spacebar cycles Library view (`HIDE` $\leftrightarrow$ `HALF` $\leftrightarrow$ `FULL`) when not typing.
-- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace with mathematically locked left/right ends (Preset Grid fitted to active columns, Mixer Monitor fitted to aspect preview height) and a flexible middle column (Cell Config & Library). Outer panels strictly enforce `ImGuiWindowFlags.NoScrollbar` with exact inner column width calculation to prevent layout drifting. Vertical positioning below the top title bar uses `titleBarH + TITLE_BAR_PANEL_GAP` (`1.0f`), preserving an exact 1 px visual divider without hardcoded minimum bounds.
+- **Workspace Layout Orchestration**: Coordinates the three-column desktop workspace with mathematically locked left/right ends (Parameters fitted to active columns, Mixer fitted to aspect preview height) and a flexible middle column (Properties & Library). Outer panels strictly enforce `ImGuiWindowFlags.NoScrollbar` with exact inner column width calculation to prevent layout drifting. Vertical positioning below the top title bar uses `titleBarH + TITLE_BAR_PANEL_GAP` (`1.0f`), preserving an exact 1 px visual divider without hardcoded minimum bounds.
 - **Title Bar Drag-to-Resize**: Supports vertical resizing of the docked Library by click-dragging empty areas of the Library menu bar.
 - **Deferred Font Atlas Rebuilding**: Adjusting preset name scale sets `pendingFontRebuild`. Rebuilding the font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
@@ -71,16 +71,16 @@ Left-clicking the main output monitor immediately focuses the Preset Grid to the
 - **`ColorTunerPanel.kt`**: Interactive developer tool window accessible via the "Color" top menu item. Provides real-time swatch assignment to all 17 themed ImGui elements without background dimming, enabling live dial-in across all palettes with instant clipboard Kotlin code generation.
 - **`SplitterManager.kt`**: Manages mouse hit-testing, resize cursors (`ResizeEW` / `ResizeNS`), double-click reset positions, and draw-list divider rendering for vertical and horizontal layout splitters.
 
-### 3. `DeckPresetController.kt` & `PresetGridKeyboard.kt`
+### 3. `DeckPresetController.kt` & `ParametersKeyboard.kt`
 - **`DeckPresetController.kt` Role**: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.
 - **Deck Actions**: Coordinates move/copy/swap deck utilities with dirty-state checks, quick save vs "Save As" flow (`SavePresetModal`), duplicate copy naming (`_copy`), and ejecting with Auto-VJ dirty behavior resolution.
-- **`PresetGridKeyboard.kt` Keyboard Shortcuts**: Intercepts keyboard navigation and editing commands within the Preset Grid:
+- **`ParametersKeyboard.kt` Keyboard Shortcuts**: Intercepts keyboard navigation and editing commands within Parameters:
   - `Ctrl+S` / `Cmd+S`: Saves the active deck preset directly if named, or opens the Save As modal if untitled. Ignored when focused on the Mixer or an empty deck.
   - `Shift+Ctrl+S` / `Shift+Cmd+S`: Opens the Save Preset As dialog for the active deck with auto-populated tags and duplicate name recommendation (`_copy`). Ignored when focused on the Mixer or an empty deck.
   - `Ctrl+Z` / `Cmd+Z`: Parameter and modulator undo.
   - `Ctrl+C` / `Ctrl+V`: Copy and paste of cell modulators or entire parameter rows.
   - `Delete` / `Backspace`: Resets active parameter or removes cell modulators.
-- **Safe Visual Source Switching (`changeVisualSourceSafely`)**: Prompts user confirmation if changing visual sources when an active preset is loaded or dirty, resets active preset and cached DTO associations, clears stale selections in `PresetGridState`, updates sub-tabs, and pushes an undo snapshot.
+- **Safe Visual Source Switching (`changeVisualSourceSafely`)**: Prompts user confirmation if changing visual sources when an active preset is loaded or dirty, resets active preset and cached DTO associations, clears stale selections in `ParametersState`, updates sub-tabs, and pushes an undo snapshot.
 - **ImGui File Browsers**: Manages independent `ImGuiFileBrowser` dialogs for Deck A and Deck B and executes asynchronous disk I/O via `PresetManager`.
 
 ### 4. `NoteEditorModal.kt`
@@ -130,7 +130,7 @@ val depthCbs = cvModulatorSlider(
 
 ### 7. `SettingsPanel.kt` & `AudioEnginePanel.kt`
 - **Settings Category Routing**: `SettingsPanel` organizes application preferences into 7 clean categories (`GENERAL`, `APPEARANCE`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `SHADER_LOCATIONS`, `BROADCAST`, `SHORTCUTS`) and supports targeted opening via `SettingsPanel.open(category)`. The `APPEARANCE` category displays an informational typography hierarchy and the "Preset Name Size" slider (80%–120%).
-- **Unified Modulator Control**: Enabling an engine subsystem (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) automatically determines column visibility in the Preset Grid and Cell Config panel. The Preset Grid header kebab menu (`⋮`) acts as a quick-switchboard to toggle these subsystems directly without modal navigation.
+- **Unified Modulator Control**: Enabling an engine subsystem (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) automatically determines column visibility in the Parameters and Properties panel. The Parameters header kebab menu (`⋮`) acts as a quick-switchboard to toggle these subsystems directly without modal navigation.
 - **Audio Engine Tab & Oscilloscopes (`AudioEnginePanel.kt`)**: The audio subsystem UI is encapsulated within `AudioEnginePanel.kt` and drawn in a balanced two-column layout:
   - **Left Column**: Backend, input hardware device, channel routing dropdowns positioned inline on the same line as their text labels; Input Gain and System Volume sliders located below Channel Routing; Input Peak Meter, sync state, and beat synchronization / detection controls (manual BPM locking, Beat Tracker target band, detection presets, dual-headed BPM range slider). Colored backend status ("Jack active", "Java Sound Active", or "Audio Inactive") is displayed inline to the right of the "Enable Audio Engine" checkbox.
   - **Right Column**: Raw Audio Buffer oscilloscope and all sound-derived Control Voltage (CV) oscilloscopes stacked vertically.
@@ -162,7 +162,7 @@ val depthCbs = cvModulatorSlider(
   - `prepareTooltipPos` converts the geometric result `(targetX, targetY, pivotX, pivotY)` directly into top-left window coordinates: `finalX = targetX - contentWidth * pivotX`, `finalY = targetY - contentHeight * pivotY` (clamped within display bounds), passing `(finalX, finalY)` to `setNextWindowPos` with a zero pivot `(0.0f, 0.0f)`.
   - In Dear ImGui, passing a non-zero pivot (e.g. `1.0f`) causes `SetNextWindowPos` to evaluate `pos -= window->SizeFull * pivot`. On frame 1 of a newly appearing tooltip, `window->SizeFull` is uninitialized `(0, 0)`, so ImGui applies a zero offset on frame 1 and only shifts the window on frame 2 when `SizeFull` is calculated. Pre-computing the top-left coordinate with zero pivot completely eliminates this frame-1 uninitialized size offset jump.
 - **8-Slot Circular Size Cache**:
-  - Custom tooltips cache their rendered width and height across frames in an 8-slot circular ring buffer. Hovering across rows in PresetGrid or switching between deck tooltips retains recent dimensions, guaranteeing immediate accurate quadrant placement without cache churn.
+  - Custom tooltips cache their rendered width and height across frames in an 8-slot circular ring buffer. Hovering across rows in Parameters or switching between deck tooltips retains recent dimensions, guaranteeing immediate accurate quadrant placement without cache churn.
 - **`ImGuiCol.Text` and `ImGuiCol.Border` Theme Isolation**:
   - All tooltip helpers push `ImGuiCol.Text` and `ImGuiCol.Border` using `TooltipHelper.baseTextColor` and `TooltipHelper.baseBorderColor` before `beginTooltip()`. This prevents styling state from calling widgets (such as `BrowserDeckButtons.push()`, which colors text and borders with deck accents) from bleeding into the tooltip window and its border.
   - `UIThemeStyler.setupThemeColors()` sets both base colors whenever the theme is applied or switched.
@@ -194,7 +194,7 @@ Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules 
 ## Pattern for Adding a New UI Panel
 
 1. **Pre-allocate String Buffers**: Define all `ImString` fields at the class/object level (e.g. `val searchBuffer = ImString(256)`).
-2. **Inject Context at Draw Time**: Accept `session: SessionContext`, `mixer: Mixer`, and `presetState: PresetGridState` in the `draw(...)` signature.
+2. **Inject Context at Draw Time**: Accept `session: SessionContext`, `mixer: Mixer`, and `parametersState: ParametersState` in the `draw(...)` signature.
 3. **Use Deferred Root Popups**: To open a popup, set a `pendingOpen` flag and call `ImGui.openPopup(id)` at the root ID level.
 4. **Register in `UIManager`**: Hook panel rendering into `UIManager.render()`.
 

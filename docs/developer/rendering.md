@@ -12,10 +12,9 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 [VisualSource (Mandala / GLSL Shader)]
                  │
                  ├── (3D Mode < 0.5: 2D View Pass)
+                 │   (3D Mode < 0.5: Direct Coordinate-Space 2D View Pass)
                  │   ▼
-                 │   [rawSource2DFBO] (Native widescreen 16:9)
-                 │   ▼
-                 │   [view2d.frag] (Zoom, Rotate Z with aspect correction)
+                 │   [blit.vert / source shader] (uZoom, uRotateZ directly in vertex space)
                  │
                  └── (3D Mode >= 0.5: 3D Tri-Planar Pass)
                      ▼
@@ -53,14 +52,13 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 ### Execution Steps
 1. **Source Render & View Stage**:
    - **2D Sources (`!source.is3D`)**:
-     - **2D Mode (`3D Mode < 0.5`)**: The active 2D source renders clean geometry or shader pixels to `rawSource2DFBO` (`width x height`). `view2d.frag` executes a fullscreen blit pass onto `cleanFBO`, applying isotropic aspect-ratio-corrected rotation (`Rotate Z` / Roll) and scaling (`Zoom`) with out-of-bounds border blanking.
+     - **2D Mode (`3D Mode < 0.5`)**: The active 2D source renders directly into `cleanFBO` via `blit.vert` (or `mandala/shader.vert`), passing `uZoom`, `uRotateZ`, and `uAspectRatio` directly into the vertex shader. The procedural equations and fragment calculations evaluate across the full viewport in transformed coordinate space. Infinite patterns (e.g., brick wall, plasma) reveal more pattern elements filling the entire screen without boundaries, while finite objects (e.g. Mandala) render scaled/rotated in the center with transparent black around them, enabling downstream feedback loops to radiate freely to the edges.
      - **3D Mode (`3D Mode >= 0.5`)**: The active 2D source renders into square `rawSourceFBO` (`height x height`). `tri_planar.vert` and `tri_planar.frag` (or `tetra_kaleido.frag`) project 3 intersecting planes (Tri-Axial), a 6-sided extruded cube cage with unit base displacement (Cube Cage), 6 tetrahedral symmetry planes at 60° (Hex-Planar), or a 24-chamber Coxeter space-folding kaleidoscope (Tetra Kaleido) onto `cleanFBO`. The projection is scale-normalized to 1.0 against `cameraDistance` so that `Zoom = 1.0` fills the vertical frame height identically to 2D flat mode.
    - **Native 3D Sources (`source.is3D == true`)**: Native 3D visual sources (`icosahedron`, `icosa-v3`, `hyper_mesh`, `icosa_dodeca`, `chladni`, `gyroid`, `hyper_slice`) handle their own 3D rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and camera zoom internally. They render directly to `rawSource2DFBO` at full native widescreen resolution, and `view2d.frag` blits the frame 1:1 onto `cleanFBO` (`uZoom = 1.0f`, `uRotateZ = 0.0f`) without secondary distortion. 3D Mode is excluded.
    - **External Video Ingest Sources (`ExternalVideoSource`)**: Ingest live video streams from external applications via Spout2 on Windows, Syphon on macOS, or PipeWire 0.3 on Linux (`PipeWireReceiverImpl` in `TextureReceiver.kt` and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt`). `Renderer.renderExternalVideoSource` blits the active incoming texture (`currentTextureId`) using `blitShader` into `rawSource2DFBO` (for 2D mode view transformations) or `rawSourceFBO` (for 3D tri-planar / tetrahedral projection). External video sources are fully compatible with 2D/3D view transformations, dual FX slots, and feedback loops.
 2. **Dual FX Serial Processing Stage**:
    - **FX Slot 1 (Color / Degradation)**: If active and `dryWet > 0.0`, processes `cleanFBO` texture into `fxFBO1`. For multi-pass ISF filters (`header.PASSES`), intermediate target FBOs and ping-pong history pairs are bound sequentially. Hardware dry/wet blending is performed using `glBlendColor(..., 1.0 - dryWet)` to mix `cleanFBO` into `fxFBO1`. Outputs `texAfterFx1`.
    - **FX Slot 2 (Spatial / Distortion)**: If active and `dryWet > 0.0`, processes `texAfterFx1` into `fxFBO2` (with multi-pass support and hardware `glBlendColor` mix). Outputs `uTextureLive`.
-   - **Zero-Overhead Bypass**: If either slot is bypassed or its `dryWet == 0.0`, the texture passes directly to the next stage without additional draw calls or intermediate blits.
 3. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, live input texture (`uTextureLive`), and evaluated feedback parameters (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
 4. **Buffer Swap**: Swaps the read and write feedback FBO references.
 5. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.
@@ -77,7 +75,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
   - `FIT`: Preserves exact content aspect ratio with letterboxing or pillarboxing.
   - `FILL`: Centers and crops edges to completely fill the target screen.
   - `STRETCH`: Stretches content to fill the target viewport.
-- **Aspect-Adaptive UI Previews**: `MixerMonitorLayoutCalculator` dynamically adjusts Deck A, Deck B, Deck PV, and Master preview monitor heights to match the active render aspect ratio.
+- **Aspect-Adaptive UI Previews**: `MixerLayoutCalculator` dynamically adjusts Deck A, Deck B, Deck PV, and Master preview monitor heights to match the active render aspect ratio.
 
 ---
 
@@ -87,7 +85,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 - **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers all built-in engines (`colors`, `mandala`, `dynamic_spiral`, `gyroid`, `chladni`, `attractor_feedback`, `icosa_dodeca`, `icosahedron`, `hyper_mesh`, `hyper_slice`).
 - **Parameter Descriptions**: `paramDescriptions: Map<String, String>` keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
-- **UI Lookup API**: Surfaced by `PresetGridRenderer` and `DeckControlPanel` to draw rich tooltips.
+- **UI Lookup API**: Surfaced by `ParametersRenderer` and `DeckControlPanel` to draw rich tooltips.
 
 ---
 

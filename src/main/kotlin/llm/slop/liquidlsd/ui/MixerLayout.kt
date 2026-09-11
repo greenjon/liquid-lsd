@@ -1,6 +1,6 @@
 package llm.slop.liquidlsd.ui
 
-data class MixerMonitorLayout(
+data class MixerLayout(
     val contentWidth: Float,
     val renderWidth: Float,
     val offsetX: Float,
@@ -9,7 +9,7 @@ data class MixerMonitorLayout(
     val deckPVHeight: Float = deckChildHeight
 )
 
-object MixerMonitorLayoutCalculator {
+object MixerLayoutCalculator {
     private const val TWO_DECK_PADDING = 16f
     private const val MIN_MASTER_HEIGHT = 120f
     private const val MIN_DECK_CHILD_HEIGHT = 80f
@@ -55,7 +55,7 @@ object MixerMonitorLayoutCalculator {
         itemSpacingY: Float,
         aspectRatio: Float = 9f / 16f,
         randomizationEnabled: Boolean = true
-    ): MixerMonitorLayout {
+    ): MixerLayout {
         val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
         val contentWidth = (windowWidth - (windowPaddingX * 2f)).coerceAtLeast(1f)
 
@@ -84,7 +84,7 @@ object MixerMonitorLayoutCalculator {
         val desiredMasterHeight = renderWidth * aspect
         val desiredDeckChildHeight = (halfWidth * aspect) + presetNameExtraHeight
 
-        return MixerMonitorLayout(
+        return MixerLayout(
             contentWidth = contentWidth,
             renderWidth = renderWidth,
             offsetX = offsetX,

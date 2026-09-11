@@ -55,7 +55,7 @@ This is the pattern used throughout the codebase (`LibraryPanel`, `DeckPresetCon
 
 > ⚠️ **`SettingsPanel`** currently allocates `ImBoolean` and `ImInt` as locals on every draw call.
 > This is acceptable *only* because it is shown infrequently (not every frame). Do not introduce
-> this pattern in hot-path panels like `PresetGridPanel`, `CellConfigPanel`, or `MixerMonitorPanel`.
+> this pattern in hot-path panels like `ParametersPanel`, `PropertiesPanel`, or `MixerPanel`.
 
 ---
 

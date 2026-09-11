@@ -14,7 +14,7 @@ import llm.slop.liquidlsd.models.toDto
 
 import org.lwjgl.glfw.GLFW.GLFW_KEY_S
 
-object PresetGridKeyboard {
+object ParametersKeyboard {
     fun getModsForCell(param: ModulatableParameter, cvSourceId: String): List<CvModulator> {
         return when (cvSourceId) {
             "value", "final", "base" -> emptyList()
@@ -25,11 +25,11 @@ object PresetGridKeyboard {
     }
 
     fun handleKeyboardShortcuts(
-        state: PresetGridState,
+        state: ParametersState,
         mixer: Mixer,
         deckPresetController: DeckPresetController? = null,
-        onPushUndo: (PresetGridState, Mixer) -> Unit,
-        onPerformUndo: (PresetGridState, Mixer) -> Unit
+        onPushUndo: (ParametersState, Mixer) -> Unit,
+        onPerformUndo: (ParametersState, Mixer) -> Unit
     ) {
         val io = ImGui.getIO()
         if (io.wantTextInput) return
@@ -57,7 +57,7 @@ object PresetGridKeyboard {
         // Undo: Ctrl+Z / Cmd+Z
         if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Z), false)) {
             if (isShift) {
-                // Currently no redo queue is tracked by PresetGridUndo.kt but we swallow the key
+                // Currently no redo queue is tracked by ParametersUndo.kt but we swallow the key
             } else {
                 onPerformUndo(state, mixer)
             }

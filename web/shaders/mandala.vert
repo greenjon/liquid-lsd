@@ -13,6 +13,8 @@ uniform float uD;
 
 uniform float uThickness;
 uniform float uAspectRatio;
+uniform float uZoom;
+uniform float uRotateZ;
 
 out float vPhase;
 out vec2 vCurvePos;
@@ -51,6 +53,15 @@ void main() {
 
     // 3. 2D Position scaled to normalized device coordinates
     vec2 finalPos = localP * 0.5;
+
+    // Apply Zoom and Rotate Z
+    float zoom = (uZoom > 0.0001) ? uZoom : 1.0;
+    float cosRot = cos(uRotateZ);
+    float sinRot = sin(uRotateZ);
+    finalPos = vec2(
+        finalPos.x * cosRot + finalPos.y * sinRot,
+        -finalPos.x * sinRot + finalPos.y * cosRot
+    ) * zoom;
 
     // 4. Aspect ratio correction
     finalPos.x /= uAspectRatio;

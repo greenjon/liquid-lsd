@@ -313,7 +313,7 @@ fun isAudioSource(sourceId: String): Boolean = when (sourceId) {
  *   Bipolar source on Monopolar param: modAmount = ((cv+1)/2) * depth + dc → in [ 0, 1]
  *   Unipolar source (Audio/Trigger/MIDI): modAmount = cv * depth + dc       → in [ 0, 1] (silence is 0)
  *
- * Used by the O-scope in CellConfigPanel and PresetGrid knob indicators so displays match engine output.
+ * Used by the O-scope in PropertiesPanel and Parameters knob indicators so displays match engine output.
  */
 fun getCombinedEffectiveValue(mods: List<CvModulator>, isBipolar: Boolean, includeBypassed: Boolean = false): Float =
     getCombinedEffectiveValueAtOffset(mods, isBipolar, 0.0, includeBypassed)

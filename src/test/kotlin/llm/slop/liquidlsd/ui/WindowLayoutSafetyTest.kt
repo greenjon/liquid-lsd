@@ -20,10 +20,10 @@ class WindowLayoutSafetyTest {
     }
 
     @Test
-    fun testMixerMonitorMaxAllowedWidthOnSmallHeight() {
+    fun testMixerMaxAllowedWidthOnSmallHeight() {
         val tinyHeights = listOf(0f, 1f, 10f, 50f, 100f, 200f, 300f)
         for (h in tinyHeights) {
-            val maxW = MixerMonitorLayoutCalculator.calculateMaxAllowedWindowWidth(
+            val maxW = MixerLayoutCalculator.calculateMaxAllowedWindowWidth(
                 availableHeight = h,
                 windowPaddingX = 8f,
                 textLineHeightWithSpacing = 22f,

@@ -8,7 +8,7 @@
 
 ## 1. Motivation & Value Proposition
 
-As Liquid LSD matures with complex modular UI panels (Preset Grid, Modular Cell Config accordions, Library drawer, Live Deck Monitors, and Custom CSD Titlebar), visual regression testing and up-to-date documentation imagery become essential.
+As Liquid LSD matures with complex modular UI panels (Parameters, Properties accordions, Library drawer, Live Deck Monitors, and Custom CSD Titlebar), visual regression testing and up-to-date documentation imagery become essential.
 
 ### Core Objectives
 1. **Automated Documentation & Web Assets**: Generate crisp, deterministic UI screenshots for user guides (`docs/user_guide/`) and web broadcasting pages on demand or during release builds.

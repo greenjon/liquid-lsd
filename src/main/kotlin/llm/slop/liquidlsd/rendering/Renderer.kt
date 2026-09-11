@@ -30,9 +30,9 @@ class Renderer {
         view2DShader = Shader.fromResources("shaders/blit.vert", "shaders/view2d.frag")
     }
 
-    fun render(source: VisualSource, targetFBO: FBO) {
+    fun render(source: VisualSource, targetFBO: FBO, zoom: Float = 1.0f, rotZ: Float = 0.0f) {
         if (source is ExternalVideoSource) {
-            renderExternalVideoSource(source, targetFBO)
+            renderExternalVideoSource(source, targetFBO, zoom, rotZ)
             return
         }
         if (source !is DynamicVisualSource) return
@@ -73,11 +73,14 @@ class Renderer {
         source.setupUniforms(source.shader)
 
         // Common uniforms for all sources
+        val aspect = targetFBO.width.toFloat() / targetFBO.height.toFloat()
         source.shader.setUniform("uAlpha",       source.globalAlpha.value)
         source.shader.setUniform("uResolution",  targetFBO.width.toFloat(), targetFBO.height.toFloat())
         source.shader.setUniform("RENDERSIZE",   targetFBO.width.toFloat(), targetFBO.height.toFloat())
         source.shader.setUniform("uTime",        TimeSource.getTimeSec().toFloat())
-        source.shader.setUniform("uAspectRatio", targetFBO.width.toFloat() / targetFBO.height.toFloat())
+        source.shader.setUniform("uAspectRatio", aspect)
+        source.shader.setUniform("uZoom",        zoom)
+        source.shader.setUniform("uRotateZ",     rotZ)
         if (hasFb) {
             source.shader.setUniform("src", 0)
         }
@@ -106,7 +109,7 @@ class Renderer {
         }
     }
 
-    private fun renderExternalVideoSource(source: ExternalVideoSource, targetFBO: FBO) {
+    private fun renderExternalVideoSource(source: ExternalVideoSource, targetFBO: FBO, zoom: Float = 1.0f, rotZ: Float = 0.0f) {
         targetFBO.bind()
         glClearColor(0f, 0f, 0f, 0f)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -116,14 +119,18 @@ class Renderer {
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-            blitShader.bind()
+            view2DShader.bind()
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, tex)
-            blitShader.setUniform("uTexture", 0)
+            view2DShader.setUniform("uTexture", 0)
+            view2DShader.setUniform("uZoom", zoom)
+            view2DShader.setUniform("uRotateZ", rotZ)
+            val aspect = targetFBO.width.toFloat() / targetFBO.height.toFloat()
+            view2DShader.setUniform("uAspectRatio", aspect)
 
             Geometry.drawFullscreenQuad()
 
-            blitShader.unbind()
+            view2DShader.unbind()
             glActiveTexture(GL_TEXTURE0)
         }
         targetFBO.unbind()
@@ -139,39 +146,14 @@ class Renderer {
         // 1. Render clean source image
         val is3D = !deck.source.is3D && deck.view3DMode.value >= 0.5f
         if (!is3D) {
-            // Render 2D source or native 3D source into rawSource2DFBO (widescreen native resolution)
-            render(deck.source, deck.rawSource2DFBO)
-
-            // Render transformed view onto cleanFBO.
-            // Native 3D sources handle their own camera Zoom and 3D rotation internally;
-            // for 3D sources we pass 1.0 Zoom and 0.0 RotateZ to blit 1:1 without compounding 2D canvas transforms.
-            deck.cleanFBO.bind()
-            glClearColor(0f, 0f, 0f, 0f)
-            glClear(GL_COLOR_BUFFER_BIT)
-
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-            view2DShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, deck.rawSource2DFBO.texture)
-            view2DShader.setUniform("uTexture", 0)
-
+            // Render 2D source directly into cleanFBO with viewZoom and viewRotateZ coordinate scaling.
+            // Native 3D sources handle their own camera Zoom and 3D rotation internally (pass 1.0 zoom, 0.0 rotZ).
             val zoom = if (deck.source.is3D) 1.0f else deck.viewZoom.value
             val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
-            view2DShader.setUniform("uZoom", zoom)
-            view2DShader.setUniform("uRotateZ", rotZ)
-            val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
-            view2DShader.setUniform("uAspectRatio", aspect)
-
-            Geometry.drawFullscreenQuad()
-
-            view2DShader.unbind()
-            deck.cleanFBO.unbind()
-            glActiveTexture(GL_TEXTURE0)
+            render(deck.source, deck.cleanFBO, zoom, rotZ)
         } else {
-            // Render 2D source into rawSourceFBO
-            render(deck.source, deck.rawSourceFBO)
+            // Render 2D source into rawSourceFBO (square 1:1, unscaled)
+            render(deck.source, deck.rawSourceFBO, 1.0f, 0.0f)
 
             // Render 3D Tri-Planar projection onto cleanFBO
             deck.cleanFBO.bind()

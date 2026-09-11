@@ -1,3 +1,40 @@
+## Suite C UI Panel Architecture Migration (`Parameters`, `Properties`, `Mixer`, `Library`)
+
+- **Decision**: Migrate all four primary workspace UI panels to the intuitive "Suite C" naming conventions across three phased refactors with complete zero-trace codebase migration:
+  - **Phase 1: Mixer** (`Mixer / Monitor` → `Mixer`): Renamed `MixerMonitorPanel.kt` to `MixerPanel.kt` and `MixerMonitorLayout.kt` to `MixerLayout.kt`. UI window title updated to `ImGui.begin("Mixer")`.
+  - **Phase 2: Properties** (`Cell Config` → `Properties`): Renamed `CellConfigPanel.kt` to `PropertiesPanel.kt`. UI window title updated to `ImGui.begin("Properties")`.
+  - **Phase 3: Parameters** (`Preset Grid` → `Parameters`):
+    - `PresetGridPanel.kt` → `ParametersPanel.kt` (object `ParametersPanel`, window title `ImGui.begin("Parameters")`)
+    - `PresetGridState.kt` → `ParametersState.kt` (`class ParametersState`, `ParameterCellId`, `ParametersUndoSnapshot`)
+    - `PresetGridRenderer.kt` → `ParametersRenderer.kt`
+    - `PresetGridTabs.kt` → `ParametersTabs.kt`
+    - `PresetGridKeyboard.kt` → `ParametersKeyboard.kt`
+    - `PresetGridUndo.kt` → `ParametersUndo.kt`
+    - `PresetGridKeyboardTest.kt` → `ParametersKeyboardTest.kt`
+    - `PresetGridClipboardTest.kt` → `ParametersClipboardTest.kt`
+- **Rationale**:
+  - The previous nomenclature ("Preset Grid", "Cell Config", "Mixer / Monitor") caused confusion for new users and cognitive overhead for developers. "Preset Grid" misleadingly implied a grid of saved presets rather than a parameter matrix; "Cell Config" sounded like low-level spreadsheet settings; "Mixer / Monitor" was redundant.
+  - "Suite C" adopts established conventions from modern modular synthesizers, DAW environments (Ableton Live, Bitwig), and professional VJ software (Resolume Arena, TouchDesigner):
+    - **Parameters**: The complete controllable parameter surface and modulation routing matrix.
+    - **Properties**: The inspector/editor for the selected parameter, oscillator, or modulation source.
+    - **Mixer**: Deck monitors, crossfader, faders, and master preview.
+    - **Library**: Presets, playlists, and playback queues.
+  - A zero-trace policy was strictly enforced across all three phases so no deprecated aliases, obsolete comments, or legacy naming remained in the codebase.
+
+---
+
+## Coordinate-Space 2D View Transformation Architecture (`blit.vert`, `mandala/shader.vert`, `Renderer.kt`, `Shader.kt`)
+
+- **Decision**: Perform 2D View scaling (`Zoom`) and in-plane roll (`Rotate Z`) directly in coordinate space during visual source generation, rather than blitting an intermediate 16:9 texture card via `view2d.frag`:
+  - **Vertex-Space Coordinate Transformation (`blit.vert`)**: Injected `uZoom`, `uRotateZ`, and `uAspectRatio` into `blit.vert` (and `mandala/shader.vert`), centering transformations at `(0.5, 0.5)` with isotropic aspect-ratio compensation.
+  - **Full-Screen Continuous Evaluation**: For infinite procedural patterns (such as ISF shaders like "Brick Pattern", fractal noise, plasma), zooming out evaluates mathematical equations over a broader coordinate domain, filling the entire display with more pattern elements without rectangular boundaries or black letterboxing. For finite centered sources (e.g. Mandala, particles), scaling down leaves transparent black space around the object, allowing downstream feedback trails and spatial effects to radiate outward unimpeded across the full screen.
+  - **No Tiling or Border Cards**: Replaced post-process texture quad blitting and discarded mirror/repeat tiling heuristics, preventing visible rotation corners or artificial quad edges.
+- **Rationale**:
+  - Blitting an already-rendered 16:9 frame (`rawSource2DFBO` -> `view2d.frag`) treats every procedural graphic like a flat rectangular photograph, creating an isolated floating box when zoomed out and spinning rectangular corners when rotated.
+  - Applying transforms directly in vertex space evaluates shaders natively across the entire screen canvas at native resolution.
+
+---
+
 ## Platform Target: Linux ARM64 Dropped
 
 - **Decision**: Linux ARM64 (aarch64) is **no longer a supported build target** as of 2026-09-10.
@@ -729,4 +766,19 @@
 - **Rationale**:
   - Unlocks professional VJ asset organization, allowing artists to manage external shader collections and SSD libraries seamlessly.
   - Guarantees zero-allocation performance on the audio thread and non-blocking background scanning for Thread 0.
+
+## 2D View Canvas Edge Wrap Modes (`view2d.frag`, `Deck.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetGridTabs.kt`)
+
+- **Decision**: Introduce canvas edge wrap modes to the 2D View transformation pipeline, defaulting to seamless Mirror Repeat:
+  - **Wrap Modes in `view2d.frag` (`uWrapMode`)**:
+    - Mode 0 (**Mirror**, default): Evaluates `1.0 - abs(mod(uv, 2.0) - 1.0)`. Reflects coordinates smoothly across tile boundaries as a continuous triangle wave, eliminating rectangular boundaries and corner cutoffs entirely.
+    - Mode 1 (**Repeat**): Standard periodic tiling via `fract(uv)`.
+    - Mode 2 (**Clamp**): Stretches edge pixels via `clamp(uv, 0.0, 1.0)`.
+    - Mode 3 (**Border**): Legacy behavior outputting transparent black (`vec4(0.0)`) for out-of-bounds coordinates.
+  - **Parameter Integration & Serialization (`Deck.kt`, `PresetModels.kt`)**: Added `viewWrapMode` ($0 \dots 3$) to `Deck`, exposed in the `View` subgroup of `PresetGridTabs`, and serialized in `viewParameters` DTOs.
+- **Rationale**:
+  - Resolves the issue where zooming out (`View > Zoom < 1.0`) shrunk the canvas into an isolated small rectangle floating in black.
+  - Resolves the issue where in-plane rotation (`View > Rotate Z`) produced spinning rectangle corners and black edge cutoffs.
+  - Allows outward-radiating feedback and downstream FX to expand and fill the entire screen seamlessly, even when the initial source is zoomed out or rotated.
+
 

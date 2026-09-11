@@ -42,8 +42,8 @@ When the app opens, you'll see three main panels side by side:
 
 ```
 +---------------------+-----------------------+---------------------+
-|     PRESET GRID     |      CELL CONFIG      |     MIXER / OUT     |
-| (CV Mod Matrix)     | (Parameters & LFOs)   | (Decks & Monitor)   |
+|     PARAMETERS      |      PROPERTIES       |        MIXER        |
+| (CV Mod Matrix)     | (Parameters & LFOs)   | (Decks & Output)    |
 +---------------------+-----------------------+---------------------+
 ```
 
@@ -51,7 +51,7 @@ Here's what to try first:
 
 1. **Check the audio feed.** Go to **File>Settings>Audio Hardware** — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
 
-2. **Click anything.** Click any cell in the Preset Grid to select it. The **Cell Config** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
+2. **Click anything.** Click any cell in the Parameters panel to select it. The **Properties** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 
 3. **Open the Library.** Press **`Space`** (when not in a text field) to raise the Library panel into view. This is where you browse presets, build playlists, and manage your play queues. Cycle through Full Height, Half Height, and Docked to find the layout that suits what you're doing.
 

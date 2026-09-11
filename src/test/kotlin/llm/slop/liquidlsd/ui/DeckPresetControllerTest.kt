@@ -111,8 +111,8 @@ class DeckPresetControllerTest {
 
     @Test
     fun testChangeVisualSourcePromptsWhenPresetActive() {
-        val state = PresetGridState()
-        state.selectedCell = PresetCellId("Deck A/Geometry/L1", "lfo")
+        val state = ParametersState()
+        state.selectedCell = ParameterCellId("Deck A/Geometry/L1", "lfo")
         state.selectedParam = mockk(relaxed = true)
 
         val oldSource = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
@@ -152,7 +152,7 @@ class DeckPresetControllerTest {
 
     @Test
     fun testChangeVisualSourceDirectWhenCleanAndNoActivePreset() {
-        val state = PresetGridState()
+        val state = ParametersState()
         val oldSource = mockk<llm.slop.liquidlsd.rendering.VisualSource>(relaxed = true)
         every { oldSource.displayName } returns "OldSource"
         every { deckA.source } returns oldSource

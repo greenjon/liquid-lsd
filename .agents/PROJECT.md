@@ -61,7 +61,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── parameters/          — ModulatableParameter, CvModulator, waveforms, operators
 ├── presets/             — Save/load presets, play queue, playlists, clipboard
 ├── rendering/           — Decks, Mixer, Mandala, shaders, FBOs, VisualSource abstraction
-├── ui/                  — UIManager, PresetGridPanel, CellConfigPanel, PresetGridState
+├── ui/                  — UIManager, ParametersPanel, PropertiesPanel, MixerPanel, ParametersState
 └── utils/               — TimeUtils
 ```
 

@@ -407,7 +407,7 @@ object SettingsPanel {
                 session.uiTheme.saveSettings()
             }
         }
-        itemTooltip("Enable or disable the step sequencer modulation engine across presets and cell configuration.")
+        itemTooltip("Enable or disable the step sequencer modulation engine across presets and parameter properties.")
 
         val midiEnabled = ImBoolean(session.uiTheme.midiEnabled)
         if (ImGui.checkbox("Enable MIDI", midiEnabled)) {
@@ -891,15 +891,15 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // 2. Preset Grid & Modulation Matrix
-        session.uiTheme.h3("Preset Grid & Modulation Matrix")
+        // 2. Parameters & Modulation Matrix
+        session.uiTheme.h3("Parameters & Modulation Matrix")
         ImGui.spacing()
         drawShortcutTable(
             session,
-            "##grid_shortcuts",
+            "##parameters_shortcuts",
             listOf(
-                ShortcutItem("Ctrl + S / Cmd + S", "Save Active Deck Preset", "Saves the active deck preset in Patch Grid (opens Save As if untitled; ignored on Mixer)."),
-                ShortcutItem("Shift + Ctrl + S / Shift + Cmd + S", "Save Active Deck Preset As...", "Opens the Save As modal for the active deck in Patch Grid (ignored on Mixer)."),
+                ShortcutItem("Ctrl + S / Cmd + S", "Save Active Deck Preset", "Saves the active deck preset in Parameters (opens Save As if untitled; ignored on Mixer)."),
+                ShortcutItem("Shift + Ctrl + S / Shift + Cmd + S", "Save Active Deck Preset As...", "Opens the Save As modal for the active deck in Parameters (ignored on Mixer)."),
                 ShortcutItem("Ctrl + Z / Cmd + Z", "Undo Parameter Action", "Reverts last parameter tweak, randomize, paste, or reset."),
                 ShortcutItem("Ctrl + C / Cmd + C", "Copy Cell or Row", "Copies modulation routing (or row settings if Base/Final cell is selected)."),
                 ShortcutItem("Ctrl + V / Cmd + V", "Paste Cell or Row", "Applies copied modulators or parameter settings with an undo point."),
@@ -912,12 +912,12 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // 3. Cell Config & Number Inputs
-        session.uiTheme.h3("Cell Config & Number Inputs")
+        // 3. Properties & Number Inputs
+        session.uiTheme.h3("Properties & Number Inputs")
         ImGui.spacing()
         drawShortcutTable(
             session,
-            "##cellconfig_shortcuts",
+            "##properties_shortcuts",
             listOf(
                 ShortcutItem("Up / Down Arrow", "Step Numeric Value (Focused Input)", "Increments/decrements focused number box: \u00B10.001 (fine), Shift: \u00B10.01, Ctrl+Shift: \u00B10.1."),
                 ShortcutItem("Mouse Wheel (Hover)", "Adjust Value / Range Bounds", "Scrolls value or hovered min/max range handle: \u00B10.001 (fine), Shift: \u00B10.01, Ctrl+Shift: \u00B10.1."),

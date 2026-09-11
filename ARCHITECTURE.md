@@ -152,19 +152,19 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
-│   ├── PresetGridPanel.kt      — Modulation matrix: param rows × CV columns
-│   ├── CellConfigPanel.kt      — Edits one CvModulator with oscilloscope
+│   ├── ParametersPanel.kt      — Parameter matrix with tabs, source dropdown, and modulator columns
+│   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
 │   ├── SettingsPanel.kt        — App configuration & tabbed preferences modal
 │   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Settings tab drawer)
 │   ├── ColorTunerPanel.kt      — Interactive theme editor
 │   ├── DeckControlPanel.kt     — Individual deck preview monitor, toolbar, inside-clustered badge/die overlays, and vertical channel level fader
-│   ├── MixerMonitorPanel.kt    — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
+│   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
-│   └── PresetGridState.kt      — Selection state & 30-level Undo Stack
+│   └── ParametersState.kt      — Selection state & 30-level Undo Stack
 ├── tools/
 │   └── SiteGenerator.kt        — Static site, documentation HTML, and offline ZIP builder for greenjon.com
 └── utils/
@@ -213,7 +213,7 @@ value = result.coerceIn(minClamp, maxClamp)
 ```
 ┌──────────────────┬────────────────┬────────────────┐
 │                  │                │                │
-│  Preset Grid     │  Cell Config   │ Mixer/Monitor  │
+│  Parameters      │  Properties    │  Mixer         │
 │  (40% width)     │  (30% width)   │  (30% width)   │
 │                  │                │                │
 ├──────────────────┴────────────────┴────────────────┤
@@ -222,9 +222,9 @@ value = result.coerceIn(minClamp, maxClamp)
 └────────────────────────────────────────────────────┘
 ```
 
-Preset Grid rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
-Preset Grid columns: VAL | MIDI | LFO | SEQ | AUD  
-*(Note: Engine subsystems `midiEnabled`, `sequencerEnabled`, and `audioEngineEnabled` serve as the single source of truth for Preset Grid and Cell Config column visibility; the header kebab menu `⋮` allows immediate toggling of these engines and columns).*
+Parameters rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
+Parameters columns: VAL | MIDI | LFO | SEQ | AUD  
+*(Note: Engine subsystems `midiEnabled`, `sequencerEnabled`, and `audioEngineEnabled` serve as the single source of truth for Parameters and Properties column visibility; the header kebab menu `⋮` allows immediate toggling of these engines and columns).*
 
 ## Application Icons & Window Branding
 The project includes an official application icon featuring an audio-reactive psychedelic eye with chromatic aberration and a falling liquid drop.

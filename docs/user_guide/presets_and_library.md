@@ -41,8 +41,8 @@ If Auto-VJ switches presets while a deck has unsaved changes, you can control wh
 
 The Library panel spans the left and middle columns and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
 
-- **Full Height** — The Preset Grid and Cell Config panels are hidden. Use this when you're fully focused on building or editing playlists and queues.
-- **Half Height** — The Library sits in the lower half of the workspace, with the Preset Grid and Cell Config still visible above it. Good for tweaking modulation while keeping your setlist in view.
+- **Full Height** — The Parameters and Properties panels are hidden. Use this when you're fully focused on building or editing playlists and queues.
+- **Half Height** — The Library sits in the lower half of the workspace, with Parameters and Properties still visible above it. Good for tweaking modulation while keeping your setlist in view.
 - **Docked** — The Library collapses to a slim toolbar. Use this during a performance when you don't need to manage playlists or queues.
 
 In Half Height mode, drag the Library's title bar to resize it freely — the height is remembered. Double-click the title bar to snap back to a 50/50 split. The window buttons on the right of the title bar also let you jump between heights directly.
@@ -59,7 +59,7 @@ The left column shows every preset saved in `library/presets/`.
 
 ### Audition Latch
 
-Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clicking any preset (or pressing `↑` / `↓`) immediately loads it into the preview deck (Deck PV) so you can hear and see it without touching the live output. Click `A`, `B`, or `BG` while latched to target a different deck. Click the lock again to return to normal selection.
+Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clicking any preset (or pressing `↑` / `↓`) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click `A`, `B`, or `BG` while latched to target a different deck. Click the lock again to return to normal selection.
 
 ---
 
@@ -122,7 +122,7 @@ Liquid LSD keeps hardware controller maps separate from visual presets, so you c
 
 ### MIDI Learn
 
-1. Click the **MIDI Learn** button in the Preset Grid header or next to any parameter slider.
+1. Click the **MIDI Learn** button in the Parameters header or next to any parameter slider.
 2. Move a knob, fader, or button on your controller.
 3. Liquid LSD captures the CC and confirms the binding automatically.
 4. To unbind, right-click the mapped control and clear the MIDI assignment.

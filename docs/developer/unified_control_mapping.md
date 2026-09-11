@@ -37,7 +37,7 @@ graph TD
         Mixer[Mixer & Crossfader]
         DeckA[Deck A Engine]
         DeckB[Deck B Engine]
-        Grid[Preset Grid]
+        Grid[Parameters Panel]
         Lib[Library & Playlists]
         Audio[Audio / Clock / JACK]
         UI[UI / Layout / Modals]
@@ -162,7 +162,7 @@ Replace `deck_x` with `deck_a` or `deck_b` (or `deck_selected`):
 
 ---
 
-### 3.5 Preset Grid & Performance Matrix
+### 3.5 Parameters & Performance Matrix
 | Action Identifier | Description | Input Mode |
 |---|---|---|
 | `grid.trigger_cell_a(x, y)` | Load preset at grid $(x, y)$ into Deck A | Trigger |
@@ -170,7 +170,7 @@ Replace `deck_x` with `deck_a` or `deck_b` (or `deck_selected`):
 | `grid.preview_cell(x, y)` | Preview preset at grid $(x, y)$ in monitor | Trigger |
 | `grid.clear_cell(x, y)` | Clear / delete preset at grid cell $(x, y)$ | Trigger |
 | `grid.edit_cell_notes(x, y)` | Open Note Editor modal for cell $(x, y)$ | Trigger |
-| `grid.tab_select(index)` | Select preset grid tab / bank $(1 \dots N)$ | Index |
+| `grid.tab_select(index)` | Select parameters tab / bank $(1 \dots N)$ | Index |
 | `grid.tab_next` | Switch to next grid tab | Trigger |
 | `grid.tab_prev` | Switch to previous grid tab | Trigger |
 | `grid.tab_add` | Create new preset tab | Trigger |
@@ -224,7 +224,7 @@ Replace `deck_x` with `deck_a` or `deck_b` (or `deck_selected`):
 |---|---|---|
 | `ui.toggle_left_panel` | Toggle Library / Browser panel visibility | Toggle |
 | `ui.toggle_right_panel` | Toggle Settings / Audio / Oscilloscope panel | Toggle |
-| `ui.toggle_bottom_panel` | Toggle Preset Grid panel visibility | Toggle |
+| `ui.toggle_bottom_panel` | Toggle Parameters panel visibility | Toggle |
 | `ui.cycle_theme` | Cycle UI theme (Dark, Cyberpunk, High Contrast) | Stepped |
 | `ui.reset_layout` | Reset dockers and splitters to default | Trigger |
 

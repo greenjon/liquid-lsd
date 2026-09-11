@@ -91,7 +91,7 @@ Source Notes are global and persist no matter which preset you load — good for
 ### Adding and editing notes
 
 **Parameter notes:**
-Hover over any parameter row in the Preset Grid and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
+Hover over any parameter row in the Parameters panel and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
 
 **Preset notes:**
 Right-click the preset name label below the deck monitor preview and choose **Add/Edit Preset Note...**

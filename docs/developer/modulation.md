@@ -29,7 +29,7 @@ Key properties:
 | `modulators` | `CopyOnWriteArrayList<CvModulator>` — safe for read-heavy concurrent access |
 | `modulatorFilter` | Optional `@Volatile` predicate; when set only matching modulators are evaluated (used by deck-preview mode) |
 | `value` | Last evaluated output (internal set; updated every `evaluate()` call) |
-| `history` | `CvHistoryBuffer` ring buffer — read by the oscilloscope in `CellConfigPanel` |
+| `history` | `CvHistoryBuffer` ring buffer — read by the oscilloscope in `PropertiesPanel` |
 | `scopeTimebase` | `ScopeTimebase` (`AUTO`, `1s`, `10s`, `100s`, `15m`, `2.5h`, `24h`) — transient per-parameter oscilloscope zoom |
 
 MIDI mapping fields (`mappedMidiId`, `midiMapMin`, `midiMapMax`) are deprecated. Use
@@ -216,7 +216,7 @@ interpolated estimate updated from the JACK audio thread via `@Volatile` fields 
 
 ### LfoSpeedMode
 
-UI hint only (`SLOW`, `MEDIUM`, `FAST`). Controls the slider range shown in `CellConfigPanel`
+UI hint only (`SLOW`, `MEDIUM`, `FAST`). Controls the slider range shown in `PropertiesPanel`
 when the user adjusts `subdivision` in time mode. Does not affect evaluation.
 
 ---
@@ -318,7 +318,7 @@ The overall parameter categories cover:
 
 ## Crossfade Manual Takeover & Auto-Centering
 
-**Files**: `rendering/Mixer.kt`, `ui/MixerMonitorPanel.kt`, `ui/PresetGridRenderer.kt`, `ui/CellConfigPanel.kt`, `midi/MidiMappingManager.kt`
+**Files**: `rendering/Mixer.kt`, `ui/MixerPanel.kt`, `ui/ParametersRenderer.kt`, `ui/PropertiesPanel.kt`, `midi/MidiMappingManager.kt`
 
 The master crossfader (`Mixer/crossfade`) implements a performance takeover workflow:
 1. **Manual Takeover (`Mixer.onCrossfadeManualTakeover()`)**: Triggered when the user interacts with the crossfader slider via mouse or incoming hardware MIDI CC.

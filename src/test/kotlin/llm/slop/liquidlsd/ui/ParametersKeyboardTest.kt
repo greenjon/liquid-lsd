@@ -12,7 +12,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class PresetGridKeyboardTest {
+class ParametersKeyboardTest {
 
     private lateinit var mixer: Mixer
     private lateinit var deckA: Deck
@@ -63,11 +63,11 @@ class PresetGridKeyboardTest {
 
     @Test
     fun testCtrlSSavesActiveDeckPreset() {
-        val state = PresetGridState()
+        val state = ParametersState()
         state.activeTopTab = "Deck A"
 
         simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = false) {
-            PresetGridKeyboard.handleKeyboardShortcuts(
+            ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
                 deckPresetController = deckPresetController,
@@ -83,11 +83,11 @@ class PresetGridKeyboardTest {
 
     @Test
     fun testShiftCtrlSCallsSaveAsForActiveDeck() {
-        val state = PresetGridState()
+        val state = ParametersState()
         state.activeTopTab = "Deck B"
 
         simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = true) {
-            PresetGridKeyboard.handleKeyboardShortcuts(
+            ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
                 deckPresetController = deckPresetController,
@@ -103,11 +103,11 @@ class PresetGridKeyboardTest {
 
     @Test
     fun testCtrlSIgnoredWhenMixerIsActive() {
-        val state = PresetGridState()
+        val state = ParametersState()
         state.activeTopTab = "Mixer"
 
         simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = false) {
-            PresetGridKeyboard.handleKeyboardShortcuts(
+            ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
                 deckPresetController = deckPresetController,
@@ -123,12 +123,12 @@ class PresetGridKeyboardTest {
 
     @Test
     fun testCtrlSIgnoredWhenDeckIsEmpty() {
-        val state = PresetGridState()
+        val state = ParametersState()
         state.activeTopTab = "Deck A"
         every { deckA.isEmpty } returns true
 
         simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = false) {
-            PresetGridKeyboard.handleKeyboardShortcuts(
+            ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
                 deckPresetController = deckPresetController,

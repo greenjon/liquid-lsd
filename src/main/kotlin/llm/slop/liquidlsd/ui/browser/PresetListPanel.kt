@@ -13,7 +13,7 @@ import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
-import llm.slop.liquidlsd.ui.PresetGridState
+import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
@@ -32,7 +32,7 @@ object PresetListPanel {
     private var lastAllPresets: List<AssetItem>? = null
     private var cachedFiltered: List<AssetItem> = emptyList()
 
-    fun draw(session: SessionContext, mixer: Mixer, presetState: PresetGridState) {
+    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val btnSize = ImGui.getFrameHeight()
 
         // Title Bar: "Presets" on the left, [+] button on the right
@@ -57,19 +57,19 @@ object PresetListPanel {
             ImGui.separator()
             if (ImGui.menuItem("Deck A")) {
                 UIManager.newPresetSafely(mixer, mixer.deckA)
-                presetState.activeTopTab = "Deck A"
+                parametersState.activeTopTab = "Deck A"
             }
             if (ImGui.menuItem("Deck B")) {
                 UIManager.newPresetSafely(mixer, mixer.deckB)
-                presetState.activeTopTab = "Deck B"
+                parametersState.activeTopTab = "Deck B"
             }
             if (ImGui.menuItem("Deck BG")) {
                 UIManager.newPresetSafely(mixer, mixer.deckBG)
-                presetState.activeTopTab = "Deck BG"
+                parametersState.activeTopTab = "Deck BG"
             }
             if (ImGui.menuItem("Deck PV")) {
                 UIManager.newPresetSafely(mixer, mixer.deckPV)
-                presetState.activeTopTab = "Deck PV"
+                parametersState.activeTopTab = "Deck PV"
             }
             ImGui.separator()
             if (ImGui.menuItem("Restore Factory Presets")) {

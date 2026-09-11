@@ -33,7 +33,7 @@ object ValueParamSection {
 
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
-        state: PresetGridState,
+        state: ParametersState,
         param: ModulatableParameter,
         paramKey: String,
         themeColor: Int,

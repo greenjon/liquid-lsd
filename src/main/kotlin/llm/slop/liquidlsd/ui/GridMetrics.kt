@@ -3,7 +3,7 @@ package llm.slop.liquidlsd.ui
 import llm.slop.liquidlsd.SessionContext
 
 /**
- * Layout tokens for Preset Grid cell rendering fixed at the 95% UI baseline.
+ * Layout tokens for Parameters cell rendering fixed at the 95% UI baseline.
  * Uses a precomputed singleton to eliminate per-frame heap allocations.
  */
 data class GridMetrics(

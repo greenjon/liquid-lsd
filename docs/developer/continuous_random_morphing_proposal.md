@@ -1,7 +1,7 @@
 # Proposal: Continuous Constrained Random Morphing
 
 **Status**: Draft / RFC  
-**Target Area**: `rendering/Mixer.kt`, `rendering/Deck.kt`, `parameters/ModulatableParameter.kt`, `ui/PresetGridPanel.kt`, `ui/MixerMonitorPanel.kt`  
+**Target Area**: `rendering/Mixer.kt`, `rendering/Deck.kt`, `parameters/ModulatableParameter.kt`, `ui/ParametersPanel.kt`, `ui/MixerPanel.kt`  
 **Authors**: GJ & Antigravity  
 
 ---

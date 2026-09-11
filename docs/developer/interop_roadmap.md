@@ -115,7 +115,7 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
   - Migrate the hardcoded feedback post-processing stage (`feedback.frag`) into a modular, chainable ISF effect processor.
   - Map ISF `image` inputs (e.g. `inputImage`) to Deck clean/feedback FBO textures.
   - Support multi-pass ISF shaders (`PASSES` array with custom buffer definitions and persistent history buffers).
-  - Expose ISF FX parameter inputs directly within the Preset Grid for audio/LFO modulation.
+  - Expose ISF FX parameter inputs directly within Parameters for audio/LFO modulation.
 - **Dual FX Architecture (Two Dedicated Slots per Deck)**:
   - Provide two serialized, independently modulatable FX slots in each deck processing chain:
     - **Slot 1: Color / Degradation** (Pixel & Chromatic Processing) [COMPLETED]
@@ -126,7 +126,7 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
       - Examples: *3D Elevation / Spatial Projection*, *Feedback Trails*, *Digital Glitch / Artifacting*, *Mirror / Kaleidoscope*, *Edge Warp / Barrel Distortion*, *Displacement Map*.
   - **Signal Chain & Routing**:
     - `Visual Source` $\rightarrow$ `[Slot 1: Color / Degradation]` $\rightarrow$ `[Slot 2: Spatial / Distortion]` $\rightarrow$ `Mixer / Output`.
-    - Each slot features independent bypass toggles, wet/dry mix, preset loading, and parameter randomization hooks in the Preset Grid.
+    - Each slot features independent bypass toggles, wet/dry mix, preset loading, and parameter randomization hooks in Parameters.
 
 ### Phase 2.3: Mixer Crossfading & Blending via ISF [COMPLETED]
 - **Extensible Transition Engine**:
@@ -139,7 +139,7 @@ Adopt the **Interactive Shader Format (ISF)** standard created by VIDVOX. This r
 - [x] Implement ISF JSON header parser and GLSL preprocessor (`ISFParser`). [DONE]
 - [x] Support automatic mapping of ISF inputs to `ModulatableParameter`. [DONE]
 - [x] Integrate ISF post-processing stage (Slot 1) into Deck pipeline. [DONE]
-- [x] Build UI for ISF filter selection and parameter modulation in Preset Grid. [DONE]
+- [x] Build UI for ISF filter selection and parameter modulation in Parameters. [DONE]
 - [x] Implement multi-pass ISF support with ping-pong buffers (Phase 2.2.2). [DONE]
 - [x] Add second modular FX slot (Slot 2) for spatial/distortion effects (Phase 2.2.2). [DONE]
 - [x] Port feedback loop to modular ISF effect (Phase 2.2.3). [DONE]
@@ -182,7 +182,7 @@ Enable Liquid LSD to ingest external live video streams (webcams, Blackmagic cap
 ### Visual Source Integration
 - **Spout/Syphon as a Visual Source**:
   - `Spout/Syphon Input` appears as a selectable visual source in the Deck source selector dropdown alongside `Mandala`, `Gyroid`, etc.
-  - When selected, a source picker dropdown in the Preset Grid allows selecting from currently discovered external servers (e.g., `Resolume Arena - Layer 1`, `OBS-Camera`, `TouchDesigner-Out`).
+  - When selected, a source picker dropdown in Parameters allows selecting from currently discovered external servers (e.g., `Resolume Arena - Layer 1`, `OBS-Camera`, `TouchDesigner-Out`).
   - Discovery updates dynamically via `ExternalVideoDiscovery` when third-party servers launch or terminate.
 - **Preset Persistence & Serialization**:
   - The external source selection is serialized in preset JSON (`sourceId: "spout_input"`, `serverName: "Resolume Arena - Layer 1"`).

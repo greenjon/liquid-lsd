@@ -13,8 +13,8 @@ import kotlin.math.roundToInt
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import llm.slop.liquidlsd.input.TouchBackendState
 
-class MixerMonitorPanel(
-    private val presetState: PresetGridState,
+class MixerPanel(
+    private val parametersState: ParametersState,
     private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit,
     private val onUtilityAction: (Int, Deck, Deck) -> Unit, // (mode: 0=Move, 1=Copy, 2=Swap, from, to)
     private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
@@ -24,7 +24,7 @@ class MixerMonitorPanel(
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val style = ImGui.getStyle()
-        val layout = MixerMonitorLayoutCalculator.calculate(
+        val layout = MixerLayoutCalculator.calculate(
             windowWidth = ImGui.getWindowWidth(),
             availableHeight = ImGui.getContentRegionAvailY(),
             windowPaddingX = style.getWindowPaddingX(),
@@ -54,9 +54,9 @@ class MixerMonitorPanel(
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
-        itemTooltip("Main output monitor. Click to focus Preset Grid Mix tab.")
+        itemTooltip("Main output monitor. Click to focus Parameters Mix tab.")
         if (ImGui.isItemClicked(0)) {
-            presetState.activeTopTab = "Mixer"
+            parametersState.activeTopTab = "Mixer"
         }
 
         // Live recording tally badge overlay
@@ -106,9 +106,9 @@ class MixerMonitorPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_master", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            presetState.activeTopTab = "Mixer"
+            parametersState.activeTopTab = "Mixer"
         }
-        itemTooltip("Master output. Click to focus Preset Grid Mix tab.")
+        itemTooltip("Master output. Click to focus Parameters Mix tab.")
 
         // 2. [🎲 ALL] Button (to the left of [M])
         if (session.uiTheme.randomizationEnabled) {
@@ -120,7 +120,7 @@ class MixerMonitorPanel(
             val isDieHovered = ImGui.isItemHovered()
             val isDieActive = ImGui.isItemActive()
             if (isDieClicked) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
+                ParametersUndo.pushUndoState(parametersState, mixer)
                 mixer.randomizeAll()
             }
             itemTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nClick to randomize with undo support.")
@@ -356,13 +356,13 @@ class MixerMonitorPanel(
         val mouseDown = isTrackActive
 
         val paramKey = "Mixer/crossfade"
-        val isTarget = presetState.midiLearnTarget?.let {
+        val isTarget = parametersState.midiLearnTarget?.let {
             it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
         } ?: false
 
-        if (presetState.isMidiLearnMode) {
+        if (parametersState.isMidiLearnMode) {
             if (ImGui.isItemClicked(0)) {
-                presetState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, "Crossfader", mixer.crossfade, -1f, 1f)
+                parametersState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, "Crossfader", mixer.crossfade, -1f, 1f)
             }
         } else if (mouseDown) {
             mixer.onCrossfadeManualTakeover()
@@ -443,7 +443,7 @@ class MixerMonitorPanel(
         // Hover / Active / MIDI learn highlight
         if (isTarget) {
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f), 4f, 0, 1.5f)
-        } else if (presetState.isMidiLearnMode) {
+        } else if (parametersState.isMidiLearnMode) {
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0.8f, 0.5f, 0f, 0.4f), 4f, 0, 1f)
         } else if (isTrackHovered || isTrackActive) {
             val borderCol = if (isTrackActive) {

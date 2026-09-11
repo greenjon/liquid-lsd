@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Suite C UI Panel Migration — Phase 3: Parameters Panel (`ParametersPanel.kt`, `ParametersState.kt`, `ParametersRenderer.kt`, `ParametersTabs.kt`, `ParametersKeyboard.kt`, `ParametersUndo.kt`, `UIManager.kt`, `DeckControlPanel.kt`, `DeckPresetController.kt`, `MixerPanel.kt`, `PropertiesPanel.kt`, `LibraryPanel.kt`, `SettingsPanel.kt`)
+- **Panel Renaming (`Preset Grid` → `Parameters`)**: Renamed Column 1 (the left parameter matrix, modulation routing grid, and deck/mixer tabs) to **`Parameters`**, completing Phase 3 and the overall migration to the Suite C panel architecture (`Parameters`, `Properties`, `Mixer`, `Library`).
+- **Codebase Cleanliness & Zero-Trace Migration**: Renamed all source files, classes, models, and tests:
+  - `PresetGridPanel.kt` → `ParametersPanel.kt` (object `ParametersPanel`)
+  - `PresetGridState.kt` → `ParametersState.kt` (class `ParametersState`, `ParameterCellId`, `ParametersUndoSnapshot`)
+  - `PresetGridRenderer.kt` → `ParametersRenderer.kt` (object `ParametersRenderer`)
+  - `PresetGridTabs.kt` → `ParametersTabs.kt` (object `ParametersTabs`)
+  - `PresetGridKeyboard.kt` → `ParametersKeyboard.kt` (object `ParametersKeyboard`)
+  - `PresetGridUndo.kt` → `ParametersUndo.kt` (object `ParametersUndo`)
+  - `PresetGridKeyboardTest.kt` → `ParametersKeyboardTest.kt`
+  - `PresetGridClipboardTest.kt` → `ParametersClipboardTest.kt`
+  - Updated all caller references, window names (`ImGui.begin("Parameters")`), internal ImGui IDs, tooltips, comments, and variable names with zero remaining references to `PresetGrid`, `PresetCell`, or `Preset Grid` in `src/`.
+- **Documentation & User Guides**: Updated `ARCHITECTURE.md`, `docs/developer/ui.md`, `docs/developer/preset_management.md`, `docs/developer/interop_roadmap.md`, `docs/developer/unified_control_mapping.md`, `docs/developer/screen_capture_and_ui_iteration_proposal.md`, `docs/getting_started.md`, `docs/user_guide/your_workspace.md`, `docs/user_guide/modulation.md`, `docs/user_guide/performance_controls.md`, and `docs/user_guide/presets_and_library.md`.
+
+### Suite C UI Panel Migration — Phase 2: Properties Panel (`PropertiesPanel.kt`, `UIManager.kt`, `SettingsPanel.kt`, `PresetGridRenderer.kt`, `Evaluators.kt`)
+- **Panel Renaming (`Cell Config` → `Properties`)**: Renamed Column 2 (the center parameter and modulation editor panel) to **`Properties`**, progressing Phase 2 of the Suite C UI simplification.
+- **Codebase Cleanliness & Zero-Trace Migration**: Renamed `CellConfigPanel.kt` to `PropertiesPanel.kt` (object `PropertiesPanel`), updated window titles, and replaced all internal references and empty-state captions across the codebase with zero remaining references in `src/`.
+- **Documentation & User Guides**: Updated user guides, getting started diagrams, Settings shortcut references, and developer documentation to reflect `Properties`.
+
+### Suite C UI Panel Migration — Phase 1: Mixer Panel (`MixerPanel.kt`, `MixerLayout.kt`, `UIManager.kt`, `MixerLayoutTest.kt`, `WindowLayoutSafetyTest.kt`)
+- **Panel Renaming (`Mixer / Monitor` → `Mixer`)**: Renamed Column 3 (the right-hand panel containing master output preview, crossfader, and 4-deck monitors) to **`Mixer`**, initiating Phase 1 of the Suite C UI simplification.
+- **Codebase Cleanliness & Zero-Trace Migration**: Renamed `MixerMonitorPanel.kt` to `MixerPanel.kt` (class `MixerPanel`), `MixerMonitorLayout.kt` to `MixerLayout.kt` (`MixerLayoutCalculator`, `MixerLayout`), and updated all references, drawing calls, and unit tests across the codebase.
+- **Documentation & User Guides**: Updated `ARCHITECTURE.md`, `docs/developer/ui.md`, `docs/getting_started.md`, `docs/user_guide/your_workspace.md`, and technical architecture documentation to consistently use `Mixer`.
+
+### Coordinate-Space 2D View Transformations (`blit.vert`, `mandala/shader.vert`, `Renderer.kt`, `Shader.kt`)
+- **Direct Coordinate-Space Zoom & Roll (`blit.vert`, `Renderer.kt`)**: Re-architected 2D View transformations (`View > Zoom` and `View > Rotate Z`) so scaling and in-plane roll operate in coordinate space during visual source generation, rather than blitting an intermediate 16:9 texture card onto `cleanFBO`.
+- **Full-Screen Continuous Evaluation**:
+  - For infinite procedural generators (e.g. "Brick Pattern" ISF, fractal noise, plasma), zooming out evaluates equations across a wider coordinate space, filling the entire screen with smaller pattern elements without rectangular borders.
+  - For finite visual objects (e.g. Mandala), scaling down renders the centered object cleanly surrounded by transparent black space, allowing downstream feedback loops and spatial effects to expand and fill the entire screen.
+  - When rotating in the Z axis (`Rotate Z`), patterns rotate smoothly without revealing spinning rectangular boundaries or cropped corners.
+- **Zero Tiling / Quad Borders**: Eliminated texture card wrapping and tiling heuristics. Dynamic 2D sources render directly to `cleanFBO` with `uZoom`, `uRotateZ`, and `uAspectRatio` injected into `blit.vert` and `mandala/shader.vert`.
+
 ### GitHub Actions Automated Release Notes Scoping (`release.yml`, `docs/release_notes.md`, `RELEASE_NOTES.md`, `DECISIONS.md`)
 - **Scoped Release Notes Extraction**: Configured automated release note extraction in `release.yml` to extract only the notes added between `prev_tag` and `HEAD` from candidate release notes files via `git diff`. Eliminates historical accumulation where previous release notes persisted into newly published releases.
 - **Fallback to Topmost Unreleased Section**: When `prev_tag` is not available, extraction scopes strictly to the first `### ` section under `## [Unreleased]`, preventing unbounded multiversion capture.

@@ -10,7 +10,7 @@ import llm.slop.liquidlsd.audio.AudioEngine
 
 class MenuBar(
     private val popupManager: PopupManager,
-    private val presetState: PresetGridState,
+    private val parametersState: ParametersState,
     private val onTriggerExitFlow: () -> Unit,
     private val onOpenSettings: () -> Unit,
     private val onOpenAudioEngineMonitor: () -> Unit,
@@ -187,15 +187,15 @@ class MenuBar(
                 }
 
                 // MIDI Map toggle button
-                val isMidiLearn = presetState.isMidiLearnMode
+                val isMidiLearn = parametersState.isMidiLearnMode
                 val midiEnabled = session.uiTheme.midiEnabled
                 if (isMidiLearn) {
                     ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
                 }
                 if (ImGui.menuItem("MIDI Map", "", isMidiLearn, midiEnabled)) {
-                    presetState.isMidiLearnMode = !isMidiLearn
-                    if (!presetState.isMidiLearnMode) {
-                        presetState.midiLearnTarget = null
+                    parametersState.isMidiLearnMode = !isMidiLearn
+                    if (!parametersState.isMidiLearnMode) {
+                        parametersState.midiLearnTarget = null
                     } else {
                         if (MidiEngine.getActiveDeviceCount() == 0) {
                             popupManager.pendingOpenMidiWarningPopup = true

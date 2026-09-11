@@ -168,7 +168,7 @@ object LibraryPanel {
         FileSystemManager.scanAllPlaylists()
     }
 
-    fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, presetState: PresetGridState) {
+    fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState) {
         checkAutoRefresh()
         val safeW = width.coerceAtLeast(80f)
 
@@ -191,7 +191,7 @@ object LibraryPanel {
             llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.draw(
                 session = session,
                 mixer = mixer,
-                presetState = presetState,
+                parametersState = parametersState,
                 selectedFile = selectedFile,
                 source = activeSelectionSource,
                 btnHeight = btnH
@@ -257,7 +257,7 @@ object LibraryPanel {
         // Column 1: Presets Library
         ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true, outerFlags)
         ImGui.setScrollX(0f)
-        PresetListPanel.draw(session, mixer, presetState)
+        PresetListPanel.draw(session, mixer, parametersState)
         ImGui.endChild()
         ImGui.sameLine()
 

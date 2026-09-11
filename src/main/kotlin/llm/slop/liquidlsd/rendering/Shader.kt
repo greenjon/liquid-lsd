@@ -123,7 +123,7 @@ class Shader(vertexSource: String, fragmentSource: String) {
             if (location == -1) {
                 val isStandardSystemUniform = name == "uTime" || name == "uAlpha" || name == "uResolution" ||
                         name == "TIME" || name == "TIMEDELTA" || name == "FRAMEINDEX" || name == "DATE" || 
-                        name == "RENDERSIZE" || name == "uAspectRatio"
+                        name == "RENDERSIZE" || name == "uAspectRatio" || name == "uZoom" || name == "uRotateZ"
                 if (!isStandardSystemUniform) {
                     logger.warn { "Uniform '$name' not found in shader program $programId" }
                 }

@@ -1,12 +1,12 @@
 # Modulation
 
-Modulation is how you make your visuals react to music. Instead of just setting parameters to fixed values, you connect them to live signals — audio energy, LFOs, step patterns, or MIDI knobs — and let those signals drive what's happening on screen.
+Modulation is how you make your visuals react to music, touch, MIDI, oscillators, or a sequencer. Instead of just setting parameters to fixed values, you connect them to live signals — audio energy, LFOs, step patterns, or MIDI knobs — and let those signals drive what's happening on screen.
 
 ---
 
 ## The CV Grid
 
-The **Preset Grid** is the left panel, visible whenever the Library is in Half Height or Docked mode. It's a matrix:
+The **Parameters** panel is the left panel, visible whenever the Library is in Half Height or Docked mode. It's a matrix:
 
 - **Rows** = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)
 - **Columns** = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)
@@ -35,11 +35,11 @@ Clicking an **AUD** cell opens the audio modulator config. Each parameter suppor
 
 ### Frequency bands
 
-| Band | What it tracks |
-|------|---------------|
-| AMP | Full-spectrum energy |
-| BASS | Low end — kick drums, sub-bass (below ~150 Hz) |
-| MID | Midrange — vocals, snares, lead synths (~1 kHz) |
+| Band | What it tracks                                     |
+| ---- | -------------------------------------------------- |
+| AMP  | Full-spectrum energy                               |
+| BASS | Low end — kick drums, sub-bass (below ~150 Hz)     |
+| MID  | Midrange — vocals, snares, lead synths (~1 kHz)    |
 | HIGH | Top end — hi-hats, cymbals, texture (above ~5 kHz) |
 
 ### Detection modes
@@ -51,15 +51,15 @@ Clicking an **AUD** cell opens the audio modulator config. Each parameter suppor
 
 These control how quickly the signal rises and falls:
 
-| Profile | Character |
-|---------|-----------|
-| Instant (Raw Jitter) | No smoothing — raw and jittery. |
-| Snap | Immediate attack, fast release. Good for fast percussive tracks. |
-| Punchy | Slight attack, medium release. Captures rhythm cleanly. |
-| Smooth Swell | Slower attack, long release. Peaks become gentle pulses. |
-| Slow Pulse | Gradual rise, lingering tail. |
-| Ambient Drift | Long, fluid swells. Ideal for ambient or drone music. |
-| Custom | Set your own attack and decay times. |
+| Profile              | Character                                                        |
+| -------------------- | ---------------------------------------------------------------- |
+| Instant (Raw Jitter) | No smoothing — raw and jittery.                                  |
+| Snap                 | Immediate attack, fast release. Good for fast percussive tracks. |
+| Punchy               | Slight attack, medium release. Captures rhythm cleanly.          |
+| Smooth Swell         | Slower attack, long release. Peaks become gentle pulses.         |
+| Slow Pulse           | Gradual rise, lingering tail.                                    |
+| Ambient Drift        | Long, fluid swells. Ideal for ambient or drone music.            |
+| Custom               | Set your own attack and decay times.                             |
 
 Selecting **Custom** inherits the timings from whatever profile was active before, so you can fine-tune from a sensible starting point.
 
@@ -82,16 +82,19 @@ Clicking an **LFO** cell opens the LFO config. Each cell has a primary oscillato
 ### Primary LFO (LFO 1)
 
 **Waveforms:**
+
 - **Sine** — Smooth, rounded oscillation.
 - **Triangle** — Linear rise and fall, adjustable asymmetry.
 - **Square** — Snaps between two values. Adjust pulse width with the Hold control.
 - **Random (Sample & Hold)** — Holds a random value for each cycle, then jumps to a new one.
 
 **Clock mode:**
+
 - **Time** — Set the period in seconds. Use Fast / Medium / Slow sliders.
 - **Beat** — Synced to the beat clock. Subdivisions from 1/8 beat to 8 bars.
 
 **Waveshaping:**
+
 - **Slope** — Makes the waveform asymmetric. At 0.5 it's symmetric; at 1.0 you get a slow rise and a fast drop.
 - **Morph** — Softens sharp corners. At 0.0 you get a pure triangle; at 1.0 you get a smooth sine-like curve.
 - **Hold** — Compresses the transition into a shorter moment and adds a plateau at the peak.
@@ -112,13 +115,14 @@ LFO 2 modulates LFO 1 to add movement and complexity:
 
 The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.
 
-> **Note:** The sequencer is disabled by default. Enable it in **Settings → General** or **Settings → Preset Grid**.
+> **Note:** The sequencer is disabled by default. Enable it in **Settings → General** or **Settings → Parameters & Modulation Matrix**.
 
 ### The step grid
 
 Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Click any cell to type a value (0.0 to 1.0), or hover and scroll to adjust. The active step is highlighted in bright green.
 
 **Keyboard editing shortcuts** (when a step is focused):
+
 - `Up` / `Down` — fine step (±0.001)
 - `Shift` + `Up` / `Down` — medium step (±0.01)
 - `Ctrl+Shift` + `Up` / `Down` — coarse step (±0.1)
@@ -155,24 +159,25 @@ All outputs are clamped to the parameter's valid range automatically.
 ### Adjusting values without clicking
 
 Hover over any slider or number and scroll the mouse wheel:
+
 - Scroll — fine step
 - `Shift` + scroll — medium step
 - `Ctrl+Shift` + scroll — coarse step
 
 Middle-click any slider or value cell to reset to factory default.
 
-### Preset Grid shortcuts
+### Parameters panel shortcuts
 
-| Action | Shortcut |
-|--------|---------|
-| Save active preset | `Ctrl+S` |
-| Save preset as... | `Shift+Ctrl+S` |
-| Undo / Redo | `Ctrl+Z` / `Ctrl+Y` |
-| Copy cell | `Ctrl+C` (with a CV cell selected) |
-| Paste cell | `Ctrl+V` (onto another cell) |
-| Copy full parameter row | `Ctrl+C` (with the VALUE cell selected) |
-| Clear / reset selected cell | `Delete` or `Backspace` |
-| Toggle cell mute | Middle-click the cell |
+| Action                      | Shortcut                                |
+| --------------------------- | --------------------------------------- |
+| Save active preset          | `Ctrl+S`                                |
+| Save preset as...           | `Shift+Ctrl+S`                          |
+| Undo / Redo                 | `Ctrl+Z` / `Ctrl+Y`                     |
+| Copy cell                   | `Ctrl+C` (with a CV cell selected)      |
+| Paste cell                  | `Ctrl+V` (onto another cell)            |
+| Copy full parameter row     | `Ctrl+C` (with the VALUE cell selected) |
+| Clear / reset selected cell | `Delete` or `Backspace`                 |
+| Toggle cell mute            | Middle-click the cell                   |
 
 **Muted cells** still show the live oscilloscope but don't affect the parameter — useful for previewing what a connection would do without committing to it.
 

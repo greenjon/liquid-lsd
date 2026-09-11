@@ -6,7 +6,7 @@ import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
-import llm.slop.liquidlsd.ui.PresetGridState
+import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.itemTooltip
 import java.io.File
@@ -35,7 +35,7 @@ object BrowserActionToolbar {
     fun draw(
         session: SessionContext,
         mixer: Mixer,
-        presetState: PresetGridState,
+        parametersState: ParametersState,
         selectedFile: File?,
         source: LibraryPanel.SelectionSource?,
         btnHeight: Float = 0f

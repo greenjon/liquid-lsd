@@ -20,7 +20,7 @@ import java.util.Date
 import kotlin.math.roundToInt
 
 class DeckControlPanel(
-    private val presetState: PresetGridState
+    private val parametersState: ParametersState
 ) {
     private var pendingRightDragFrom: String? = null
 
@@ -85,9 +85,9 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(dragBtnX, imgY)
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
-        itemTooltip("Interactive monitor for $label. Click to focus Preset Grid, drag to route to another deck, or drop presets to load.")
+        itemTooltip("Interactive monitor for $label. Click to focus Parameters, drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
-            presetState.activeTopTab = label
+            parametersState.activeTopTab = label
         }
         
         val deckPayloadName = when (label) {
@@ -229,9 +229,9 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            presetState.activeTopTab = label
+            parametersState.activeTopTab = label
         }
-        itemTooltip("Focus $label tab in Preset Grid.")
+        itemTooltip("Focus $label tab in Parameters.")
 
         // 2. Die Button (placed toward outside of badge along the top row)
         if (session.uiTheme.randomizationEnabled) {
@@ -242,7 +242,7 @@ class DeckControlPanel(
             val isDieHovered = ImGui.isItemHovered()
             val isDieActive = ImGui.isItemActive()
             if (isDieClicked) {
-                PresetGridUndo.pushUndoState(presetState, mixer)
+                ParametersUndo.pushUndoState(parametersState, mixer)
                 when (label) {
                     "Deck A" -> mixer.randomizeDeckA()
                     "Deck B" -> mixer.randomizeDeckB()

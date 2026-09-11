@@ -59,7 +59,7 @@ class UIManager(
 
     private val splitterManager = SplitterManager()
 
-    private val presetState = PresetGridState()
+    private val parametersState = ParametersState()
 
     private val popupManager: PopupManager = PopupManager(
         onTriggerExit = { org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose(windowHandle, true) },
@@ -72,7 +72,7 @@ class UIManager(
 
     private val menuBar = MenuBar(
         popupManager = popupManager,
-        presetState = presetState,
+        parametersState = parametersState,
         onTriggerExitFlow = { triggerExitFlow() },
         onOpenSettings = {
             pendingOpenSettings = true
@@ -162,7 +162,7 @@ class UIManager(
         logger.info { "UIManager initialized" }
     }
 
-    private val deckControlPanel = DeckControlPanel(presetState)
+    private val deckControlPanel = DeckControlPanel(parametersState)
 
     private val deckUtilityAction = { mode: Int, from: Deck, to: Deck ->
         val mixer = currentMixer
@@ -185,8 +185,8 @@ class UIManager(
         }
     }
 
-    private val mixerMonitorPanel = MixerMonitorPanel(
-        presetState = presetState,
+    private val mixerPanel = MixerPanel(
+        parametersState = parametersState,
         drawDeckControls = { mixer, label, deck, width, height, isDeckA ->
             deckControlPanel.drawDeckControls(session, mixer, label, deck, width, height, isDeckA, deckUtilityAction, monitorSaveDeck, monitorEjectDeck)
         },
@@ -214,7 +214,7 @@ class UIManager(
             while (true) {
                 val event = llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.poll() ?: break
                 val (channel, cc) = event
-                val target = presetState.midiLearnTarget
+                val target = parametersState.midiLearnTarget
                 if (target != null) {
                     val midiId = "midi_cc_${channel}_${cc}"
                     when (target) {
@@ -237,7 +237,7 @@ class UIManager(
                             }
                         }
                     }
-                    presetState.midiLearnTarget = null
+                    parametersState.midiLearnTarget = null
                 } else {
                     val nextCc = session.midiMappingManager.getCcForSpecial("Global/queueNext")
                     val nextCh = session.midiMappingManager.getChannelForSpecial("Global/queueNext")
@@ -454,7 +454,7 @@ class UIManager(
 
         /**
          * Vertical gap in pixels between the bottom edge of the top title/menu bar
-         * and the top edge of the workspace panels (Preset Grid, Cell Config, Mixer/Monitor).
+         * and the top edge of the workspace panels (Parameters, Properties, Mixer).
          * Provides a subtle visual separator between the application header and performance panels.
          */
         const val TITLE_BAR_PANEL_GAP = 1.0f
@@ -502,16 +502,16 @@ class UIManager(
         val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
         CustomRangeSlider.isAnySliderHovered = false
 
-        // Column 1 (Left Panel / Preset Grid): Auto-calculated based on active columns & font scale
-        val reqCol1W = currentMixer?.let { PresetGridPanel.calculateRequiredWidth(session, it, presetState) } ?: (displayWidth * 0.30f)
+        // Column 1 (Left Panel / Parameters): Auto-calculated based on active columns & font scale
+        val reqCol1W = currentMixer?.let { ParametersPanel.calculateRequiredWidth(session, it, parametersState) } ?: (displayWidth * 0.30f)
         val maxCol1W = (displayWidth * 0.50f).coerceAtMost(displayWidth - 200f).coerceAtLeast(displayWidth * minRatio)
         val minCol1W = (displayWidth * minRatio).coerceAtMost(maxCol1W)
         val col1W = reqCol1W.coerceIn(minCol1W, maxCol1W)
 
-        // Column 3 (Right Panel / Mixer Monitor): Sized strictly to max allowed width based on height & aspect ratio
+        // Column 3 (Right Panel / Mixer): Sized strictly to max allowed width based on height & aspect ratio
         val style = ImGui.getStyle()
         val availHForMixer = (contentH - (style.getWindowPaddingY() * 2f)).coerceAtLeast(1f)
-        val maxRightW = MixerMonitorLayoutCalculator.calculateMaxAllowedWindowWidth(
+        val maxRightW = MixerLayoutCalculator.calculateMaxAllowedWindowWidth(
             availableHeight = availHForMixer,
             windowPaddingX = style.getWindowPaddingX(),
             textLineHeightWithSpacing = ImGui.getTextLineHeightWithSpacing(),
@@ -522,7 +522,7 @@ class UIManager(
         val maxAllowedRightW = (displayWidth - col1W - 450f).coerceAtLeast(100f)
         val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
-        // Column 2 (Middle Panel / Cell Config) and Library (Spans Col 1 + Col 2)
+        // Column 2 (Middle Panel / Properties) and Library (Spans Col 1 + Col 2)
         val libraryW = (displayWidth - rightW).coerceAtLeast(100f)
         val col2W = (libraryW - col1W).coerceAtLeast(450f)
 
@@ -539,29 +539,29 @@ class UIManager(
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
             val topH = (contentH - libraryH).coerceAtLeast(1f)
 
-            // Column 1: Preset Grid
+            // Column 1: Parameters
             ImGui.setNextWindowPos(0f, menuBarH)
             ImGui.setNextWindowSize(col1W.coerceAtLeast(1f), topH)
-            val presetGridFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
-            if (ImGui.begin("Preset Grid", presetGridFlags)) {
+            val parametersFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
+            if (ImGui.begin("Parameters", parametersFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                PresetGridPanel.draw(session, currentMixer!!, presetState, deckPresetController)
+                ParametersPanel.draw(session, currentMixer!!, parametersState, deckPresetController)
             }
             ImGui.end()
 
-            // Column 2: Cell Config
+            // Column 2: Properties
             ImGui.setNextWindowPos(col1W, menuBarH)
             ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
-            val cellConfigFlags = if (sliderWasHovered) {
+            val propertiesFlags = if (sliderWasHovered) {
                 noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar
             } else {
                 noDecorate or ImGuiWindowFlags.NoScrollbar
             }
-            if (ImGui.begin("Cell Config", cellConfigFlags)) {
+            if (ImGui.begin("Properties", propertiesFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                CellConfigPanel.draw(session, presetState, currentMixer!!)
+                PropertiesPanel.draw(session, parametersState, currentMixer!!)
 
-                // Static divider line between Preset Grid & Cell Config
+                // Static divider line between Parameters & Properties
                 val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
                 ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
             }
@@ -578,7 +578,7 @@ class UIManager(
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6.0f)
         if (ImGui.begin("Library", flags)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, presetState)
+            LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState)
 
             if (theme.libraryMode != UITheme.LibraryMode.FULL) {
                 val titleBarH = libTitleBarH
@@ -627,23 +627,23 @@ class UIManager(
         ImGui.end()
         ImGui.popStyleVar()
 
-        // Column 3: Mixer / Monitor
+        // Column 3: Mixer
         ImGui.setNextWindowPos(libraryW, menuBarH)
         ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
         val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoScrollbar
-        if (ImGui.begin("Mixer / Monitor", noTitleDecorate)) {
+        if (ImGui.begin("Mixer", noTitleDecorate)) {
             UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            drawMixerMonitor(currentMixer!!)
+            drawMixer(currentMixer!!)
 
-            // Static divider line between Center Column/Library and Mixer/Monitor
+            // Static divider line between Center Column/Library and Mixer
             val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
             ImGui.getWindowDrawList().addLine(libraryW, menuBarH, libraryW, menuBarH + contentH, dividerColor, 1.5f)
         }
         ImGui.end()
     }
 
-    private fun drawMixerMonitor(mixer: Mixer) {
-        mixerMonitorPanel.draw(session, mixer)
+    private fun drawMixer(mixer: Mixer) {
+        mixerPanel.draw(session, mixer)
     }
 
     fun dispose() {

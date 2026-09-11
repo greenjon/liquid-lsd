@@ -235,7 +235,7 @@ object PresetDependencyAnalyzer {
             issues.add(
                 DependencyIssue(
                     title = "LFO Column Hidden",
-                    description = "Preset uses LFO modulation, but LFO column is hidden in Preset Grid.",
+                    description = "Preset uses LFO modulation, but LFO column is hidden in Parameters.",
                     severity = DependencySeverity.INFO,
                     affectedColumn = "lfo"
                 )

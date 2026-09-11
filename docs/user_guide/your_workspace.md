@@ -8,8 +8,8 @@ Liquid LSD has a lot going on, but it's organized around a handful of core ideas
 
 The Library panel spans the left and middle columns of the app and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
 
-- **Full Height** — The Preset Grid and Cell Config panels are hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.
-- **Half Height** — The Library sits in the lower half, with the Preset Grid and Cell Config still visible above it. Good for tweaking modulation while keeping an eye on your setlist.
+- **Full Height** — The Parameters and Properties panels are hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.
+- **Half Height** — The Library sits in the lower half, with the Parameters and Properties panels still visible above it. Good for tweaking modulation while keeping an eye on your setlist.
 - **Docked** — The Library collapses to a slim toolbar at the bottom of the screen. Use this when you don't need to manage playlists or queues and want the full workspace visible.
 
 You can drag the Library's title bar up or down to resize it freely in Half Height mode — the height you set is remembered. Double-click the title bar to snap back to exactly 50/50. The standard window buttons on the right of the title bar also let you jump between heights.
@@ -45,7 +45,7 @@ Here's how audio becomes visuals:
 
 ---
 
-## The Preset Grid (Left Panel)
+## The Parameters Panel (Left Panel)
 
 This is where you connect things. Every row is a visual parameter (like "Lobes", "Zoom", or "Hue"), and each column is a modulation source (audio, LFO, sequencer, MIDI, or manual value). Click the intersection of a row and a column to configure that connection.
 
@@ -53,13 +53,13 @@ See [Modulation](modulation.md) for the full guide.
 
 ---
 
-## The Cell Config Panel (Middle)
+## The Properties Panel (Middle)
 
-When you click a cell in the Preset Grid, the Cell Config panel opens to show you the details — waveform controls for LFOs, band selectors for audio, step patterns for the sequencer, etc. It also shows a live oscilloscope so you can see exactly what signal is going to the parameter.
+When you click a cell in the Parameters panel, the Properties panel opens to show you the details — waveform controls for LFOs, band selectors for audio, step patterns for the sequencer, etc. It also shows a live oscilloscope so you can see exactly what signal is going to the parameter.
 
 ---
 
-## The Mixer & Output Monitor (Right Panel)
+## The Mixer (Right Panel)
 
 The right panel shows:
 - Live previews of each deck

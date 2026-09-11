@@ -17,12 +17,12 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
-object PresetGridRenderer {
+object ParametersRenderer {
     
     fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String, 
         paramKey: String, 
         param: ModulatableParameter, 
-        state: PresetGridState, 
+        state: ParametersState, 
         labelColW: Float, 
         mixer: Mixer,
         gridStartX: Float,
@@ -140,10 +140,10 @@ object PresetGridRenderer {
             }
         }
         if (ImGui.isItemClicked(0)) {
-            state.select(PresetCellId(paramKey, "value"), param)
+            state.select(ParameterCellId(paramKey, "value"), param)
         }
         if (ImGui.isItemClicked(2)) {
-            state.select(PresetCellId(paramKey, "value"), param)
+            state.select(ParameterCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
         }
@@ -230,7 +230,7 @@ object PresetGridRenderer {
         dl: ImDrawList,
         param: llm.slop.liquidlsd.parameters.ModulatableParameter,
         paramKey: String,
-        state: PresetGridState,
+        state: ParametersState,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
         getColumnOffset: (String) -> Float,
@@ -244,10 +244,10 @@ object PresetGridRenderer {
         ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
         val isValHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked(0)) {
-            state.select(PresetCellId(paramKey, "value"), param)
+            state.select(ParameterCellId(paramKey, "value"), param)
         }
         if (ImGui.isItemClicked(2)) {
-            state.select(PresetCellId(paramKey, "value"), param)
+            state.select(ParameterCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
         }
@@ -292,7 +292,7 @@ object PresetGridRenderer {
         dl: ImDrawList,
         param: llm.slop.liquidlsd.parameters.ModulatableParameter,
         paramKey: String,
-        state: PresetGridState,
+        state: ParametersState,
         mixer: llm.slop.liquidlsd.rendering.Mixer,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
@@ -301,7 +301,7 @@ object PresetGridRenderer {
     ) {
         val midiX = gridStartX + labelColW + getColumnOffset("midi")
         val midiY = rowScreenY
-        val midiCellId = PresetCellId(paramKey, "midi")
+        val midiCellId = ParameterCellId(paramKey, "midi")
         val isMidiSelected = state.selectedCell == midiCellId
 
         val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
@@ -419,14 +419,14 @@ object PresetGridRenderer {
         param: llm.slop.liquidlsd.parameters.ModulatableParameter,
         paramKey: String,
         cvId: String,
-        state: PresetGridState,
+        state: ParametersState,
         mixer: llm.slop.liquidlsd.rendering.Mixer,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
         getColumnOffset: (String) -> Float,
         onPushUndo: () -> Unit
     ) {
-        val cellId = PresetCellId(paramKey, cvId)
+        val cellId = ParameterCellId(paramKey, cvId)
         val isSelected = state.selectedCell == cellId
         val activeMods = when (cvId) {
             "audio"   -> param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
@@ -465,7 +465,7 @@ object PresetGridRenderer {
                 "audio"   -> "Audio-Reactive Modulator"
                 else      -> cvId
             }
-            showTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate cellconfig.", (x.toInt() shl 16) xor (y.toInt() and 0xFFFF))
+            showTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate properties.", (x.toInt() shl 16) xor (y.toInt() and 0xFFFF))
         }
         if (ImGui.isItemClicked(0)) {
             if (state.isMidiLearnMode) {

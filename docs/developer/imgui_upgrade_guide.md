@@ -105,7 +105,7 @@ Upgrading from `1.86.x` to `1.92.x` introduces breaking changes across GLFW/GL3 
   ```
 - **Cause**: Dear ImGui overhauled its keyboard input pipeline (the "New Key API"). `ImGuiKey` constants are now direct key identifiers rather than indices into the legacy `io.KeysDown` array. `ImGui.getKeyIndex(...)` was removed.
 - **Impacted Files**:
-  - `src/main/kotlin/llm/slop/liquidlsd/ui/PresetGridKeyboard.kt`
+  - `src/main/kotlin/llm/slop/liquidlsd/ui/ParametersKeyboard.kt`
   - `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt`
   - `src/main/kotlin/llm/slop/liquidlsd/ui/browser/BgQueueActionsPanel.kt`
   - `src/main/kotlin/llm/slop/liquidlsd/ui/browser/PlaylistEditorPanel.kt`

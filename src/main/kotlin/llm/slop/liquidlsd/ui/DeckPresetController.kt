@@ -207,7 +207,7 @@ class DeckPresetController(
         deck: Deck,
         deckLabel: String,
         newSource: llm.slop.liquidlsd.rendering.VisualSource,
-        state: PresetGridState
+        state: ParametersState
     ) {
         val currentSource = deck.source
         if (currentSource == newSource) return
@@ -226,7 +226,7 @@ class DeckPresetController(
             session.presetManager.clearDeckActivePreset(deck, mixer)
             state.clearSelection()
             state.setDeckSubTab(deckLabel, "SRC")
-            PresetGridUndo.pushUndoState(state, mixer)
+            ParametersUndo.pushUndoState(state, mixer)
         }
 
         if (!activeName.isNullOrBlank() || isDirty) {

@@ -4,10 +4,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class MixerMonitorLayoutTest {
+class MixerLayoutTest {
     @Test
     fun usesFullAvailableWidthWithoutUnconditionalScrollbarReservation() {
-        val layout = MixerMonitorLayoutCalculator.calculate(
+        val layout = MixerLayoutCalculator.calculate(
             windowWidth = 576f,
             availableHeight = 1048f,
             windowPaddingX = 8f,
@@ -25,7 +25,7 @@ class MixerMonitorLayoutTest {
 
     @Test
     fun shrinksPreviewsWhenPaneHeightIsTight() {
-        val roomy = MixerMonitorLayoutCalculator.calculate(
+        val roomy = MixerLayoutCalculator.calculate(
             windowWidth = 576f,
             availableHeight = 1048f,
             windowPaddingX = 8f,
@@ -34,7 +34,7 @@ class MixerMonitorLayoutTest {
             frameHeightWithSpacing = 25f,
             itemSpacingY = 4f
         )
-        val tight = MixerMonitorLayoutCalculator.calculate(
+        val tight = MixerLayoutCalculator.calculate(
             windowWidth = 576f,
             availableHeight = 720f,
             windowPaddingX = 8f,
@@ -52,7 +52,7 @@ class MixerMonitorLayoutTest {
 
     @Test
     fun clampsToMinimumHeightsOnExtremelySmallScreens() {
-        val tiny = MixerMonitorLayoutCalculator.calculate(
+        val tiny = MixerLayoutCalculator.calculate(
             windowWidth = 576f,
             availableHeight = 300f,
             windowPaddingX = 8f,
@@ -70,7 +70,7 @@ class MixerMonitorLayoutTest {
     @Test
     fun testDynamicAspectRatios() {
         // 4:3 aspect ratio (aspect = 1200 / 1600 = 0.75f)
-        val layout4x3 = MixerMonitorLayoutCalculator.calculate(
+        val layout4x3 = MixerLayoutCalculator.calculate(
             windowWidth = 800f,
             availableHeight = 1600f,
             windowPaddingX = 8f,
@@ -84,7 +84,7 @@ class MixerMonitorLayoutTest {
         assertTrue(layout4x3.deckChildHeight > 0f)
 
         // 1:1 aspect ratio (aspect = 1.0f)
-        val layoutSquare = MixerMonitorLayoutCalculator.calculate(
+        val layoutSquare = MixerLayoutCalculator.calculate(
             windowWidth = 800f,
             availableHeight = 1600f,
             windowPaddingX = 8f,
@@ -101,7 +101,7 @@ class MixerMonitorLayoutTest {
     @Test
     fun testMaxAllowedWindowWidthMatchesLayoutCapacity() {
         val windowPaddingX = 8f
-        val maxAllowedW = MixerMonitorLayoutCalculator.calculateMaxAllowedWindowWidth(
+        val maxAllowedW = MixerLayoutCalculator.calculateMaxAllowedWindowWidth(
             availableHeight = 1048f,
             windowPaddingX = windowPaddingX,
             textLineHeightWithSpacing = 22f,
@@ -111,7 +111,7 @@ class MixerMonitorLayoutTest {
         )
 
         // At exact maxAllowedWidth, renderWidth must equal contentWidth and offsetX must be 0
-        val exactLayout = MixerMonitorLayoutCalculator.calculate(
+        val exactLayout = MixerLayoutCalculator.calculate(
             windowWidth = maxAllowedW,
             availableHeight = 1048f,
             windowPaddingX = windowPaddingX,
@@ -126,7 +126,7 @@ class MixerMonitorLayoutTest {
         assertEquals(0f, exactLayout.offsetX, 0.01f)
 
         // If windowWidth exceeds maxAllowedW, renderWidth stays capped at maxAllowedContentWidth and offsetX > 0
-        val oversizedLayout = MixerMonitorLayoutCalculator.calculate(
+        val oversizedLayout = MixerLayoutCalculator.calculate(
             windowWidth = maxAllowedW + 200f,
             availableHeight = 1048f,
             windowPaddingX = windowPaddingX,
