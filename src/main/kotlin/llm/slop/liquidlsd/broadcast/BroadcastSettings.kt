@@ -61,4 +61,11 @@ object BroadcastSettings {
             logger.warn(e) { "Failed to save broadcast settings to ${settingsFile.name}" }
         }
     }
+
+    fun resetDefaults() {
+        serverUrl = ""
+        token = ""
+        autoConnect = false
+        targetFps = 25
+    }
 }

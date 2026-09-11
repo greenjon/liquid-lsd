@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### GitHub Actions Automated Release Notes Scoping (`release.yml`, `docs/release_notes.md`, `RELEASE_NOTES.md`, `DECISIONS.md`)
+- **Scoped Release Notes Extraction**: Configured automated release note extraction in `release.yml` to extract only the notes added between `prev_tag` and `HEAD` from candidate release notes files via `git diff`. Eliminates historical accumulation where previous release notes persisted into newly published releases.
+- **Fallback to Topmost Unreleased Section**: When `prev_tag` is not available, extraction scopes strictly to the first `### ` section under `## [Unreleased]`, preventing unbounded multiversion capture.
+- **Release Documentation Consolidation**: Cleanly filed 0.9.1 feature freeze sections (Phase 1–4 Ableton Link & ISF management, PipeWire 0.3 video ingest) under `## Version 0.9.1`, synchronizing `docs/release_notes.md` and `RELEASE_NOTES.md`.
+
+### Architecture Compliance & Zero-Allocation Render Loop Optimizations (`VisualSourceRegistry.kt`, `Main.kt`, `MidiMappingManager.kt`, `ParameterResolver.kt`, `CVRegistry.kt`, `Evaluators.kt`, `Deck.kt`, `PresetManager.kt`)
+- **Thread 0 OpenGL Compilation Discipline (`VisualSourceRegistry.kt`, `Main.kt`)**: Added `pendingGlTasks` concurrent queue to `VisualSourceRegistry` and `processPendingGlTasks()` called exclusively on Thread 0 inside `Main.kt` render loop. Background source scans now delegate `Shader(...)` compilation to Thread 0, completely preventing GLFW/GL driver errors on Linux. Initial startup scans default to synchronous (`async = false`) compilation on Thread 0 before entering the render loop.
+- **Pre-Resolved Flat Array MIDI CC Updating (`MidiMappingManager.kt`, `Deck.kt`, `PresetManager.kt`)**: Replaced per-frame string parsing and recursive parameter tree traversals in `MidiMappingManager.update(mixer)` with an indexed flat `ResolvedMidiBinding` array. Resolved bindings are invalidated and rebuilt only when MIDI mappings change or when presets/sources are swapped.
+- **Concurrent Parameter Path Memoization (`ParameterResolver.kt`)**: Implemented a thread-safe `ConcurrentHashMap` path resolution cache in `ParameterResolver`, eliminating O(N) recursive tree traversals on modulators and MIDI mappings.
+- **Indexed CV Updates & Primitive Bit-Packed MIDI CC Keys (`CVRegistry.kt`)**: Maintained active non-audio CV sources in a contiguous `activeNonAudioSources` array traversed with primitive integer index bounds, avoiding per-frame map iterations. Incoming MIDI CC lookups now bit-pack channel and CC values into 64-bit primitives (`(channel.toLong() shl 32) or cc.toLong()`), removing per-frame string splitting.
+- **Zero-Allocation Audio Follower Lookup (`Evaluators.kt`)**: Guarded `AudioFollowerTracker.process` with direct state map lookup before falling back to `computeIfAbsent`, eliminating capturing lambda heap allocations in the audio evaluation pipeline.
+- **Broadcast Settings Test Determinism (`BroadcastSettings.kt`, `BroadcastSettingsTest.kt`)**: Added `BroadcastSettings.resetDefaults()` and isolated test cases to guarantee that existing user configuration files do not bleed into test assertions.
+
 ### Web Broadcast Configuration & Dynamic Menu Visibility (`BroadcastSettings.kt`, `BroadcastEngine.kt`, `SettingsPanel.kt`, `MenuBar.kt`, `Main.kt`)
 - **Removed Hardcoded Credentials**: Removed hardcoded default relay server URL (`http://spaz.org/lsd-relay`) and broadcaster secret token (`lsd25`) from `BroadcastSettings.kt`, initializing both as empty strings (`""`).
 - **Dynamic Output Menu Item**: Hid the `Output > Web Broadcast` menu item in `MenuBar.kt` when either the relay server URL or broadcaster token is not populated in Settings (`BroadcastSettings.isConfigured`).
@@ -12,12 +25,21 @@
 - **Caption Text Safety (`UITheme.kt`)**: Implemented `UITheme.caption(...)` via `PushStyleColor(ImGuiCol.Text, getColorU32(ImGuiCol.TextDisabled))` + `ImGui.text(text)` + `PopStyleColor()`, removing vulnerable `ImGui.textDisabled(text)` format string handling.
 - **Lucide Icon Support in H1 / H2 Headers (`UITheme.kt`)**: Enabled `withIcons = true` when loading `fontH1` and `fontH2` in `UITheme.loadFonts()`, resolving missing glyph `?` placeholders when rendering headers containing `Icons.*` (such as `theme.h2("${Icons.SETTINGS} Beat Clock Mode")`).
 
-### Ableton Link Sync Architecture Simplification (`LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `UITheme.kt`)
+### Ableton Link & Master Tempo Deck Architecture (`TempoSyncPanel.kt`, `LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `SettingsPanel.kt`, `UITheme.kt`)
+- **Resolume-Inspired Master Tempo Deck (`TempoSyncPanel.kt`)**: Extracted timing and tempo controls into a dedicated "Tempo & Sync" settings category with intuitive transport controls: large BPM readout with visual beat-flash indicator, 4-beat bar progress dots, tap tempo button, manual ±0.1 / ±1.0 BPM nudging, downbeat resync, and clock source selection (`AUDIO_TRACKER`, `ABLETON_LINK`, `MANUAL_TAP`).
+- **Clean Separation of Concerns**: Streamlined `AudioEnginePanel` to focus purely on hardware devices, backends (JACK / Java Sound), stereo channel routing, gain/volume, and audio signal/CV oscilloscopes, while moving high-level timing and network sync to `TempoSyncPanel`.
+- **Enhanced MenuBar Tempo Navigation**: Right-clicking the BPM indicator or clicking the 4-beat phase dots now directly opens the dedicated Tempo & Sync settings deck, with new quick-access menu items for toggling Ableton Link and opening configuration.
 - **Eliminated `SyncMode` State Machine**: Removed the redundant `SyncMode` enum (`DISABLED`, `LINK_FOLLOWER`, `AUDIO_BROADCAST`), mode transition lock, background coroutine jobs, and `AudioTempoEventSink` delegation interface.
 - **Direct Ableton Link State Integration**: Ableton Link synchronization is now governed directly by `AbletonLinkEngine.isEnabled`. When enabled, audio beat tracker tempo/phase updates pass through `BeatTrackToLinkDamping` signal filtering (lambda callbacks `onTempoCommitted` and `onBeatAligned`) directly to `AbletonLinkEngine`.
 - **Streamlined UI & Menus**: Removed `SyncMode` radio button controls and transmission status badges from `AudioEnginePanel`, and simplified the header status pill in `MenuBar` to clean `LINK [peers]` state indicators.
 
-### Settings & UI Controls (`SettingsPanel.kt`, `Main.kt`, `MenuBar.kt`, `UITheme.kt`, `AppSettings.kt`, `BrowserRowMoreButton.kt`)
+### Settings & UI Controls (`SettingsPanel.kt`, `AudioEnginePanel.kt`, `Main.kt`, `MenuBar.kt`, `UITheme.kt`, `AppSettings.kt`, `BrowserRowMoreButton.kt`)
+- **Audio Engine & General Settings Layout Refinement (`AudioEnginePanel.kt`, `SettingsPanel.kt`)**:
+  - Moved the MIDI detection hardware status readout from `AudioEnginePanel` to `SettingsPanel > General`, positioning it inline to the right of the "Enable MIDI" checkbox.
+  - Placed dropdown combo boxes for Audio Backend, Input Hardware Device, and Channel Routing inline on the same line as their text labels in `AudioEnginePanel`.
+  - Moved Input Gain and System Volume sliders from the right column to the left column directly below Channel Routing.
+  - Replaced the standalone "Driver: [Backend]" section with colored status badges ("Jack active", "Java Sound Active", or "Audio Inactive") positioned inline to the right of the "Enable Audio Engine" checkbox.
+  - Commented out the "Switch to JACK Audio" reconnect button with `// TODO: make this button less annoying`.
 - **Settings Modal Closure Fix**: Fixed an issue where toggling "Enable MIDI" in Settings > General would immediately close the Settings modal window. Row context buttons (`BrowserRowMoreButton` and Preset Grid column kebab) now inspect ImGui widget hover states (`ImGui.isItemHovered()`) rather than raw mouse screen coordinates, preventing clicks inside modal windows from erroneously firing background row popups and closing active modals.
 - **Settings Layout & Categories Redesign**: Reorganized the Settings modal interface to promote **General** as the primary first tab. Moved parameter randomization, step sequencer, MIDI settings (and CC mappings), frameless window toggle, and SCS.3m trackpad console controls into a unified **Features** section on the General tab.
 - **Video & Display Settings Streamlining (`SettingsPanel.kt`)**: Refined the layout under **Settings > Video & Display**:
@@ -52,16 +74,57 @@
 - **Settings Persistence**: Serialized `audioChannelRouting` property in `lsd-settings.properties` through `UITheme` and `AppSettings`.
 - **Zero-Allocation Callback Safety**: All stereo metering, channel routing, and pre-allocated buffer transfers adhere strictly to JACK real-time callback safety constraints without heap allocations.
 
-### ISF & Render Loop Zero-Allocation Optimization & Registry Hygiene (`ISFFilter.kt`, `ISFVisualSource.kt`, `DynamicVisualSource.kt`, `Mixer.kt`, `ModulatableParameter.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`)
-- **Zero-Allocation ISF DATE Computation in Filters**: Replaced `LocalDateTime.now()` in `ISFFilter.render()` and `renderTransition()` with fast epoch arithmetic and pre-computed month day tables, eliminating per-frame heap allocations on the OpenGL render thread.
-- **Pre-Bound Parameter and Multipass Direct Dispatch**: Pre-bound ISF input bindings (`float`, `bool`, `long`, `color`, `point2D`) and multipass targets in `ISFVisualSource.kt` and `ISFFilter.kt`, eliminating runtime string interpolations (`"${input.NAME} R"`, etc.), dynamic Map lookups, and per-pass `header.PASSES.mapNotNull { }` list allocations.
-- **Dynamic Visual Source Uniform Optimization**: Cached uniform names and parameter arrays in `DynamicVisualSource.kt`, eliminating per-frame `"u" + name.replace(" ", "")` string generation and iterator allocation across all visual generators (Mandala, Dynamic Spiral, HyperMesh, Icosahedron).
-- **Zero-Allocation Modulator Checking (`hasActiveModulator`)**: Added `hasActiveModulator()` to `ModulatableParameter` to inspect `modulators` via O(1) indexed traversal, removing 5 `CopyOnWriteArrayList` `COWIterator` allocations per frame in `Mixer.kt`.
-- **Registry Performance & Mutual Exclusion**: Cached `availableFilters` and `availableTransitions` with `@Volatile` immutable snapshots to avoid per-access sorting, and enforced mutual exclusion in `ISFFilterRegistry` to prevent transition shaders from duplicating in the filter picker.
+### Code Audit Fixes — Beta 57–62 Surface (post-beta.62)
+
+**Real-time safety:**
+- **`BeatTrackToLinkDamping` — removed `ReentrantLock` from JACK audio thread path** (#AUDIT-RT-01): `processRawBpm` and `processBeatOnset` are now lock-free and allocation-free. Internal ring-buffer/EMA state is single-writer (audio thread only) — no synchronization needed. The two `@Volatile` public properties provide visibility to the UI thread without locks. Logger calls are now deferred via `AtomicReference<String?>` and drained by the render thread from inside `AbletonLinkEngine.updateClockAnchor()` (GL thread, once per frame).
+- **`BeatTrackToLinkDamping.calculateMedian()` — pre-allocated sort scratch buffer**: `DoubleArray(historyCount)` was re-allocated each call inside `processRawBpm`. Now uses a class-level `sortScratch: DoubleArray(16)` reused across frames — zero allocation on the hot path.
+- **`PipeWireReceiverImpl.update()` — removed `pw_thread_loop_lock` from GL render thread** (#AUDIT-RT-02): `pw_stream_dequeue_buffer` / `pw_stream_queue_buffer` are safe to call from the consumer thread without the loop lock; the loop lock is only required when modifying stream topology (which happens in `start()`).
+- **`PipeWireBridge.publishFrameBuffer()` — removed `pw_thread_loop_lock` from GL render thread + fixed blank frames** (#AUDIT-RT-02, #AUDIT-FUNC-01): The old code locked the PW loop on every rendered frame AND never copied pixel data into the buffer (immediate enqueue with no data). Now uses a lock-free `AtomicReference<ByteBuffer?>` staging slot (`pendingFrame`). The GL thread deposits the buffer reference atomically; the PW event-loop thread drains it via `drainPendingFrame()`, copies the RGBA pixels into the SPA buffer data pointer, then queues it. This simultaneously fixes the GL-thread blocking AND the blank-output bug.
+- **`AbletonLinkEngine.shutdown()` — use-after-free safety** (#AUDIT-LINK-03): `shutdown()` now sets `isEnabled = false` before calling `activeBackend.close()`. Since `updateClockAnchor()` (called from the render thread) guards with `if (!isEnabled) return`, any concurrent call returns immediately without touching the native handle being destroyed. Closes the shutdown race window.
+
+**Rendering performance:**
+- **`Renderer.kt` fbDecay cubic curve**: `Math.pow((1.0f - s).toDouble(), 3.0).toFloat()` → `val invS = 1.0f - s; invS * invS * invS`.
+- **`ISFVisualSource.setupUniforms()` — zero-allocation DATE uniform**: Replaced `LocalDateTime.now()` / `LocalTime.now()` per-frame with pure primitive epoch arithmetic. Month lookup uses two constant `IntArray` tables (`MONTH_STARTS_NORMAL` / `MONTH_STARTS_LEAP`) in the companion object.
+- **`ISFVisualSource.setupUniforms()` — `forEach` → indexed loop**: `header.INPUTS.forEach` allocated an `Iterator` each frame. Replaced with `for (i in 0 until inputs.size)` — allocation-free.
+- **`ISFLibraryRegistry.allAssets` — cached sorted snapshot**: The getter previously called `.toList().sortedBy {}` on every access (every render frame while the library panel is visible). Now rebuilt once per scan into `@Volatile cachedAssets`. The render thread reads from the pre-sorted stable list — zero allocation.
+- **`SpoutReceiverImpl.update()` — eliminate per-frame `ByteArray`/`IntArray`**: Promoted `ByteArray(256)` + `IntArray(1)` locals to class-level `recvNameBuf`/`recvWBuf`/`recvHBuf` fields reused across frames.
+- **`SpoutReceiverImpl.start()` — release receiver & texture handles on sender switch**: Ensured `start()` cleans up previous native receiver handles (`ReleaseReceiver`, `ReleaseSpout`) and GL textures before connecting to a new sender.
+- **`PipeWireReceiverImpl.update()` — zero-allocation SPA buffer ingest**: Pre-allocated reusable `SpaData` structure via `bindMemory(datasPtr)` and passed raw native memory address directly to `glTexSubImage2D`/`glTexImage2D`, completely eliminating per-frame `SpaData` and `ByteBuffer` wrapper heap allocations on Thread 0.
+- **`PipeWireBridge` — background frame draining worker & SPA buffer mapping**: Wired `drainPendingFrame()` to a dedicated background IO coroutine worker so that frames deposited via `publishFrameBuffer()` are reliably drained and published to PipeWire consumers without blocking Thread 0. Fixed SPA buffer data pointer resolution using `reusableSpaData.bindMemory(datasPtr)` to properly map pixel buffer offsets.
+- **`SyphonBridge.textureSizeForImage()` — eliminated per-frame `IntArray` allocation**: Replaced per-call `intArrayOf(0, 0)` with a class-level reusable buffer.
+- **`SyphonBridge.publishTexture()` — eliminate per-frame anonymous JNA `Structure` objects**: Replaced with named inner classes `NSSize` / `NSRect` whose instances are created once and mutated in-place. Fields use `Double` (matching `CGFloat` on Apple Silicon LP64 ABI), fixing silent coordinate corruption on ARM64 macOS.
+- **`ExternalVideoDiscovery.kt` — cached Spout library & zero-allocation polling**: Cached `SpoutLibrary` JNA bindings across polling cycles and eliminated per-poll string allocations when sender count is 0 or unchanged.
+- **`TextureStreamer.kt` / `VideoOutputSettings.kt` — Spout sender name clamping**: Enforced `.take(255)` on Spout sender identifier strings before JNA calls to prevent native C-string buffer overflows.
+- **`SettingsPanel` shader location actions — non-blocking async rescan**: All four ISF scan-triggering actions (Add Folder, Rescan Now, Remove, enable/disable toggle) now call `scanLibraryAsync()` instead of `scanLibrary()`. Disk I/O no longer blocks the ImGui render thread.
+
+**Link/audio correctness:**
+- **`AbletonLinkEngine.updateClockAnchor()` — capture-and-commit atomicity** (#AUDIT-LINK-01): Now uses a single `timeUs` snapshot for both `getTempo()` and `getBeatAtTime()` queries, ensuring tempo and beat phase are always coherent.
+
+**UI performance:**
+- **`ShaderPickerPopup` — `joinToString` per row per frame**: Category string now cached in `ShaderItem.categoriesLabel` at `updateItems()` time — zero allocation during table rendering.
+- **`ShaderPickerPopup` — `categories.toList()` defensive copy**: Removed unnecessary copy; the list is only mutated from the same ImGui thread.
+- **`PresetListPanel.kt` — zero-allocation search filter cache**: Search query filtering over preset assets previously reallocated `List`, iterators, and lambdas every frame at 60 FPS. Now caches `cachedFiltered` and only re-filters when `query` or the underlying `allPresets` list changes — zero per-frame allocation on the hot path.
 - **Startup Asynchrony & ISF Scanning UI Progress Indicator (`Main.kt`, `VisualSourceRegistry.kt`, `ISFLibraryRegistry.kt`, `MenuBar.kt`)**: Decoupled bundled source initialization from directory scanning during startup. Bundled generators and defaults load synchronously on Thread 0 so decks and mandala initialization complete instantly, while recursive directory scanning runs asynchronously in the background. Exposed `isScanning`, `scanProgress`, and `scanCurrentPath` telemetry on `ISFLibraryRegistry`, rendering a non-intrusive status pill in `MenuBar` with live percentage and tooltip diagnostics during background indexing.
 - **Comprehensive Session Missing Items Accumulation (`PresetManager.kt`, `MissingItemsPanel.kt`)**: Refactored `resolveRestoredQueue` to return `unresolvedPaths` without prematurely overwriting `sessionState.unresolvedItems`. Unified missing item accumulation across main play queue, background queue, transition filters, deck visual sources, and FX slot filters so earlier missing items are never erased. Enhanced `MissingItemsPanel` to render missing shader/filter diagnostics cleanly while restricting file browser re-linking to missing queue files.
-- **Library Search Zero-Allocation Caching (`PresetListPanel.kt`)**: Replaced per-frame list filtering with cached filter results, re-evaluating only when query string or preset directory snapshot changes.
-- **Web Preset Float Serialization (`WebPresetSerializer.kt`)**: Added underflow protection in `round4` to prevent scientific notation formatting for WebGL2 TV clients.
+
+**Serialization & Protocol Safety:**
+- **`WebPresetSerializer.kt` — numeric formatting & scientific notation avoidance**: Enhanced `round4` to clamp sub-micro near-zero floats to `0.0f` to ensure standard decimal notation without scientific exponential notation for WebGL2 TV clients.
+
+---
+
+## Version 0.9.1
+
+> [!NOTE]
+> **Release 0.9.1** marks the official stable transition from `1.0.0-beta.x` to the `0.9.x` production release line. It bundles all feature-frozen capabilities including Ableton Link beat/phase/tempo synchronization, PipeWire 0.3 Linux live video sharing, ISF v2.0 visual source generator and mixer transition shaders, Spout/Syphon live video ingest, modular post-processing FX slots, multi-touch trackpad performance console, and robust automated 5-platform CI/CD packaging and smoke-testing.
+
+### 🌟 Key Stable Features & Architecture Highlights
+- **Authoritative Semantic Versioning & 0.9.x Pipeline**: Transitioned project build, runtime versioning (`AppVersion.kt`), and GitHub Actions release automation (`release.yml`) to authoritative `0.9.x` production releases.
+- **Ableton Link & Carabiner Peer Sync**: Multi-backend Ableton Link (`linux-x64`, `windows-x64`, `macos-x64`, `macos-arm64`) and TCP Carabiner synchronization with Phase 1-4 audio-to-link damping and broadcast engines.
+- **Interactive Shader Format (ISF v2.0) & Mixxx-Style Management**: Full ISF generator, transition, and effect support with background async directory scanner (`ISFScanner`), file watcher live reload (`ISFFileWatcher`), and path precedence resolution.
+- **Cross-Platform Live Video Ingest & Broadcast**: PipeWire 0.3 DMA-BUF / MemFd ingest on Linux, Spout2 on Windows, Syphon on macOS, and live WebSocket broadcasting.
+- **Modular Post-Processing & Audio Reactivity**: Dual modular FX slots, ISF multi-pass support, LFO/audio follower min/max bounds conversion, and CapLock multi-touch trackpad performance console.
+- **Automated Multi-Platform Verification**: Comprehensive 5-platform CI/CD binary packaging and smoke testing ensuring 100% reliability across Linux, macOS, and Windows.
 
 ### Phase 4: Mixxx-Style ISF Library Management, Asynchronous Scanner, File Watcher Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`)
 - **Platform-Standard ISF Search Locations**: Pre-populates default search directories for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF/`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application asset bundles.
@@ -104,21 +167,6 @@
 - **Asynchronous PBO DMA Readback**: Updated `LinuxTextureBridge` in `TextureStreamer.kt` with `PboReadbackPipeline` async GPU-to-CPU buffer transfers, avoiding main-thread OpenGL stalls.
 - **GPU DMA-BUF Export & MemFd Fallback**: Automatically exports GPU DMA-BUF buffers when Mesa/EGL drivers are present, with graceful fallback to PipeWire shared memory (`SPA_DATA_MemFd`) and `NullTextureStreamer` when PipeWire is absent.
 - **Settings Telemetry & Driver Status**: Added active video driver readout (`PipeWire 0.3 (Linux)`, `Spout2 (Windows)`, `Syphon (macOS)`) and hover tooltips in `SettingsPanel.kt`.
-
----
-
-## Version 0.9.1
-
-> [!NOTE]
-> **Release 0.9.1** marks the official stable transition from `1.0.0-beta.x` to the `0.9.x` production release line. It bundles all feature-frozen capabilities including Ableton Link beat/phase/tempo synchronization, PipeWire 0.3 Linux live video sharing, ISF v2.0 visual source generator and mixer transition shaders, Spout/Syphon live video ingest, modular post-processing FX slots, multi-touch trackpad performance console, and robust automated 5-platform CI/CD packaging and smoke-testing.
-
-### 🌟 Key Stable Features & Architecture Highlights
-- **Authoritative Semantic Versioning & 0.9.x Pipeline**: Transitioned project build, runtime versioning (`AppVersion.kt`), and GitHub Actions release automation (`release.yml`) to authoritative `0.9.x` production releases.
-- **Ableton Link & Carabiner Peer Sync**: Multi-backend Ableton Link (`linux-x64`, `windows-x64`, `macos-x64`, `macos-arm64`) and TCP Carabiner synchronization with Phase 1-4 audio-to-link damping and broadcast engines.
-- **Interactive Shader Format (ISF v2.0) & Mixxx-Style Management**: Full ISF generator, transition, and effect support with background async directory scanner (`ISFScanner`), file watcher live reload (`ISFFileWatcher`), and path precedence resolution.
-- **Cross-Platform Live Video Ingest & Broadcast**: PipeWire 0.3 DMA-BUF / MemFd ingest on Linux, Spout2 on Windows, Syphon on macOS, and live WebSocket broadcasting.
-- **Modular Post-Processing & Audio Reactivity**: Dual modular FX slots, ISF multi-pass support, LFO/audio follower min/max bounds conversion, and CapLock multi-touch trackpad performance console.
-- **Automated Multi-Platform Verification**: Comprehensive 5-platform CI/CD binary packaging and smoke testing ensuring 100% reliability across Linux, macOS, and Windows.
 
 ---
 

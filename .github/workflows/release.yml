@@ -100,24 +100,73 @@ jobs:
           ]
 
           human_notes_body = ""
+
+          # 2a. Match exact version heading (e.g. ## Version 0.9.1)
           for fpath in candidate_files:
               if os.path.exists(fpath):
-                  with open(fpath, "r", encoding="utf-8") as f:
-                      content = f.read()
+                  try:
+                      with open(fpath, "r", encoding="utf-8") as f:
+                          content = f.read()
+                      pattern_version = rf"(##\s+Version\s+{re.escape(v_num)}.*?)(?=\n---\s*\n##|\n##\s+Version|\Z)"
+                      match = re.search(pattern_version, content, re.DOTALL | re.IGNORECASE)
+                      if match:
+                          extracted = match.group(1).strip()
+                          human_notes_body = re.sub(r"^##\s+Version\s+[^\n]+\s*", "", extracted, flags=re.IGNORECASE).strip()
+                          break
+                  except Exception:
+                      continue
 
-                  # 2a. Match exact version heading (e.g. ## Version 1.0.0-beta.38)
-                  pattern_version = rf"(##\s+Version\s+{re.escape(v_num)}.*?)(?=\n---\s*\n##|\n##\s+Version|\Z)"
-                  match = re.search(pattern_version, content, re.DOTALL | re.IGNORECASE)
+          # 2b. If no exact version heading and prev_tag exists, extract newly added notes between prev_tag and HEAD
+          if not human_notes_body and prev_tag:
+              for fpath in candidate_files:
+                  if os.path.exists(fpath):
+                      try:
+                          diff_out = subprocess.check_output(
+                              ["git", "diff", f"{prev_tag}..HEAD", "--", fpath],
+                              text=True, stderr=subprocess.DEVNULL
+                          )
+                          if not diff_out.strip():
+                              continue
 
-                  # 2b. If no exact match, look for an Unreleased heading
-                  if not match:
-                      pattern_unreleased = r"(##\s+\[?Unreleased\]?.*?)(?=\n---\s*\n##|\n##\s+Version|\Z)"
-                      match = re.search(pattern_unreleased, content, re.DOTALL | re.IGNORECASE)
+                          added_lines = []
+                          for line in diff_out.splitlines():
+                              if line.startswith("+++") or line.startswith("---") or line.startswith("@@"):
+                                  continue
+                              if line.startswith("+"):
+                                  added_lines.append(line[1:])
 
-                  if match:
-                      extracted = match.group(1).strip()
-                      human_notes_body = re.sub(r"^##\s+(?:Version\s+[^\n]+|\[?Unreleased\]?)\s*", "", extracted, flags=re.IGNORECASE).strip()
-                      break
+                          added_text = "\n".join(added_lines).strip()
+                          added_text = re.sub(r"^##\s+\[?Unreleased\]?\s*", "", added_text, flags=re.IGNORECASE).strip()
+
+                          if added_text:
+                              # If diff has bullets without a section header (###), prepend active section header from the file
+                              if not added_text.startswith("#"):
+                                  with open(fpath, "r", encoding="utf-8") as f:
+                                      file_content = f.read()
+                                  m_hdr = re.search(r"##\s+\[?Unreleased\]?\s*\n+(###\s+[^\n]+)", file_content, re.IGNORECASE)
+                                  if m_hdr:
+                                      added_text = f"{m_hdr.group(1).strip()}\n{added_text}"
+
+                              human_notes_body = added_text
+                              break
+                      except Exception:
+                          continue
+
+          # 2c. Fallback if prev_tag is not available: extract ONLY the topmost section under ## [Unreleased]
+          if not human_notes_body and not prev_tag:
+              for fpath in candidate_files:
+                  if os.path.exists(fpath):
+                      try:
+                          with open(fpath, "r", encoding="utf-8") as f:
+                              content = f.read()
+                          # Match only the first ### subsection under ## [Unreleased]
+                          pattern_top = r"##\s+\[?Unreleased\]?\s*\n+(###\s+[^\n]+.*?)(?=\n###\s+|\n---\s*\n##|\n##\s+Version|\Z)"
+                          match = re.search(pattern_top, content, re.DOTALL | re.IGNORECASE)
+                          if match:
+                              human_notes_body = match.group(1).strip()
+                              break
+                      except Exception:
+                          continue
 
           # 3. Assemble release body (Human-friendly notes + Git commit log)
           body = f"## Version {v_num}\n\n"

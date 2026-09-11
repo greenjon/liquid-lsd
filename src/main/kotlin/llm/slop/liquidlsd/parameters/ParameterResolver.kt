@@ -5,14 +5,33 @@ import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 
+import java.util.concurrent.ConcurrentHashMap
+
 object ParameterResolver {
+    private val pathCache = ConcurrentHashMap<String, ModulatableParameter>()
+    @Volatile private var cachedMixer: Mixer? = null
+
+    fun clearCache() {
+        pathCache.clear()
+        cachedMixer = null
+    }
+
     fun getAllParameterPaths(mixer: Mixer): List<Pair<String, ModulatableParameter>> {
         return mixer.getParameterPaths("Mixer")
     }
 
     fun findParameterByPath(mixer: Mixer, path: String): ModulatableParameter? {
-        // Simple O(N) search against the list. We could optimize this by caching if performance is an issue,
-        // but it is usually only called when restoring UI state or handling midi mappings occasionally.
-        return getAllParameterPaths(mixer).find { it.first == path }?.second
+        if (cachedMixer !== mixer) {
+            pathCache.clear()
+            cachedMixer = mixer
+        }
+        val cached = pathCache[path]
+        if (cached != null) return cached
+
+        val found = getAllParameterPaths(mixer).find { it.first == path }?.second
+        if (found != null) {
+            pathCache[path] = found
+        }
+        return found
     }
 }

@@ -85,6 +85,7 @@ object MidiMappingManager {
             activeProfileName = safeProfileName
             saveActiveProfile()
         }
+        bindingsDirty = true
     }
 
     fun saveActiveProfile() {
@@ -110,12 +111,14 @@ object MidiMappingManager {
         val newMappings = activeProfile.mappings.toMutableMap()
         newMappings[parameterPath] = MidiControlMapping(cc, channel, minVal, maxVal)
         activeProfile = activeProfile.copy(mappings = newMappings)
+        bindingsDirty = true
     }
 
     fun removeMapping(parameterPath: String) {
         val newMappings = activeProfile.mappings.toMutableMap()
         newMappings.remove(parameterPath)
         activeProfile = activeProfile.copy(mappings = newMappings)
+        bindingsDirty = true
     }
 
     fun getCcForSpecial(specialPath: String): Int {
@@ -124,24 +127,67 @@ object MidiMappingManager {
 
     private val lastMidiValues = java.util.concurrent.ConcurrentHashMap<String, Float>()
 
+    private class ResolvedMidiBinding(
+        val path: String,
+        val param: ModulatableParameter,
+        val channel: Int,
+        val cc: Int,
+        val minVal: Float,
+        val maxVal: Float,
+        val isCrossfade: Boolean
+    )
+
+    @Volatile
+    private var resolvedBindings: Array<ResolvedMidiBinding> = emptyArray()
+    @Volatile
+    private var bindingsDirty = true
+
+    fun invalidateBindings() {
+        bindingsDirty = true
+    }
+
+    private fun rebuildResolvedBindings(mixer: Mixer) {
+        val list = ArrayList<ResolvedMidiBinding>()
+        for ((path, mapping) in activeProfile.mappings) {
+            if (path.startsWith("Global/")) continue
+            val param = ParameterResolver.findParameterByPath(mixer, path) ?: continue
+            list.add(
+                ResolvedMidiBinding(
+                    path = path,
+                    param = param,
+                    channel = mapping.channel,
+                    cc = mapping.cc,
+                    minVal = mapping.minVal,
+                    maxVal = mapping.maxVal,
+                    isCrossfade = (path == "Mixer/crossfade")
+                )
+            )
+        }
+        resolvedBindings = list.toTypedArray()
+        bindingsDirty = false
+    }
+
     fun getChannelForSpecial(specialPath: String): Int {
         return activeProfile.mappings[specialPath]?.channel ?: 0
     }
 
     fun update(mixer: Mixer) {
-        for ((path, mapping) in activeProfile.mappings) {
-            if (path.startsWith("Global/")) continue // special trigger mappings
-            val param = ParameterResolver.findParameterByPath(mixer, path) ?: continue
-            val rawMidi = MidiEngine.getCcValue(mapping.channel, mapping.cc)
-            val prevMidi = lastMidiValues[path]
+        if (bindingsDirty) {
+            rebuildResolvedBindings(mixer)
+        }
+        val bindings = resolvedBindings
+        for (i in 0 until bindings.size) {
+            val b = bindings[i]
+            val rawMidi = MidiEngine.getCcValue(b.channel, b.cc)
+            val prevMidi = lastMidiValues[b.path]
             if (prevMidi != null && prevMidi != rawMidi) {
-                if (path == "Mixer/crossfade") {
+                if (b.isCrossfade) {
                     mixer.onCrossfadeManualTakeover()
                 }
             }
-            lastMidiValues[path] = rawMidi
-            val scaled = mapping.minVal + rawMidi * (mapping.maxVal - mapping.minVal)
-            param.baseValue = scaled
+            lastMidiValues[b.path] = rawMidi
+            val scaled = b.minVal + rawMidi * (b.maxVal - b.minVal)
+            b.param.baseValue = scaled
         }
     }
 

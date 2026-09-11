@@ -22,6 +22,8 @@ class Deck(
             if (value.is3D) {
                 view3DMode.reset()
             }
+            llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
+            llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
         }
 
     // FBO for rendering the clean visual source output

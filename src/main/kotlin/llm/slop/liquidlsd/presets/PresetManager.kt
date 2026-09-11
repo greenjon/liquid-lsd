@@ -375,9 +375,11 @@ object PresetManager {
     }
 
     fun applyPendingPresets(mixer: Mixer) {
+        var appliedAny = false
         // Poll deck A preset queue
         var pendingA = deckAPresetQueue.poll()
         while (pendingA != null) {
+            appliedAny = true
             try {
                 val deckADto = pendingA.dto
                 mixer.deckA.applyDto(deckADto)
@@ -400,6 +402,7 @@ object PresetManager {
         // Poll deck B preset queue
         var pendingB = deckBPresetQueue.poll()
         while (pendingB != null) {
+            appliedAny = true
             try {
                 val deckBDto = pendingB.dto
                 mixer.deckB.applyDto(deckBDto)
@@ -422,6 +425,7 @@ object PresetManager {
         // Poll deck BG preset queue
         var pendingBG = deckBGPresetQueue.poll()
         while (pendingBG != null) {
+            appliedAny = true
             try {
                 val deckBGDto = pendingBG.dto
                 mixer.deckBG.applyDto(deckBGDto)
@@ -441,6 +445,7 @@ object PresetManager {
         // Poll deck PV preset queue
         var pendingPV = deckPVPresetQueue.poll()
         while (pendingPV != null) {
+            appliedAny = true
             try {
                 val deckPVDto = pendingPV.dto
                 mixer.deckPV.applyDto(deckPVDto)
@@ -460,8 +465,12 @@ object PresetManager {
             pendingPV = deckPVPresetQueue.poll()
         }
 
-        // Notify broadcast engine if connected so full state is pushed immediately
-        llm.slop.liquidlsd.broadcast.BroadcastEngine.notifyStateChanged()
+        if (appliedAny) {
+            llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
+            llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
+            // Notify broadcast engine if connected so full state is pushed immediately
+            llm.slop.liquidlsd.broadcast.BroadcastEngine.notifyStateChanged()
+        }
     }
 
     fun saveSession(mixer: Mixer) {
@@ -656,6 +665,8 @@ object PresetManager {
             )
 
             sessionState = sessionState.copy(unresolvedItems = allUnresolved.distinct())
+            llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
+            llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
             logger.info { "Successfully loaded session state from ${sessionFile.name} (unresolved items: ${allUnresolved.size})" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load session state, falling back to empty" }
@@ -724,6 +735,8 @@ object PresetManager {
         cachedDtoPV = null
         PlayQueueManager.clearQueue()
         BgQueueManager.clearQueue()
+        llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
+        llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
         logger.info { "Started application empty" }
     }
 

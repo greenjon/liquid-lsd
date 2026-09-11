@@ -20,6 +20,41 @@ object CVRegistry {
     private val sources = ConcurrentHashMap<String, CVSource>()
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
 
+    private class ActiveSourceEntry(
+        val source: CVSource,
+        val history: CvHistoryBuffer?
+    )
+
+    @Volatile
+    private var activeNonAudioSources: Array<ActiveSourceEntry> = emptyArray()
+
+    private val parsedMidiCc = ConcurrentHashMap<String, Long>()
+
+    private fun getMidiChannelAndCc(id: String): Long {
+        val cached = parsedMidiCc[id]
+        if (cached != null) return cached
+
+        val prefixLen = 8 // "midi_cc_".length
+        val underIdx = id.indexOf('_', prefixLen)
+        val packed = if (underIdx > prefixLen) {
+            val channel = id.substring(prefixLen, underIdx).toIntOrNull() ?: 0
+            val cc = id.substring(underIdx + 1).toIntOrNull() ?: 0
+            (channel.toLong() shl 32) or (cc.toLong() and 0xffffffffL)
+        } else 0L
+        parsedMidiCc[id] = packed
+        return packed
+    }
+
+    private fun rebuildActiveSources() {
+        val list = ArrayList<ActiveSourceEntry>()
+        for (s in sources.values) {
+            if (!isAudioSource(s.id)) {
+                list.add(ActiveSourceEntry(s, histories[s.id]))
+            }
+        }
+        activeNonAudioSources = list.toTypedArray()
+    }
+
     init {
         register(MutableCVSource("bpm", 120f))
         register(BeatSine())
@@ -54,6 +89,7 @@ object CVRegistry {
     fun register(source: CVSource) {
         sources[source.id] = source
         histories[source.id] = CvHistoryBuffer(600)
+        rebuildActiveSources()
     }
 
     fun updateBeatAnchor(beats: Double, bpm: Float, timeNs: Long) {
@@ -145,12 +181,10 @@ object CVRegistry {
         }
         if (id.startsWith("midi_cc_")) {
             if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0f
-            val parts = id.substring("midi_cc_".length).split('_')
-            if (parts.size >= 2) {
-                val channel = parts[0].toIntOrNull() ?: 0
-                val cc = parts[1].toIntOrNull() ?: 0
-                return llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-            }
+            val packed = getMidiChannelAndCc(id)
+            val channel = (packed ushr 32).toInt()
+            val cc = packed.toInt()
+            return llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
         }
         return sources[id]?.value ?: 0f
     }
@@ -206,10 +240,11 @@ object CVRegistry {
         val totalBeats = getSynchronizedTotalBeats()
         val elapsedSeconds = getElapsedRealtimeSec()
 
-        for (source in sources.values) {
-            if (isAudioSource(source.id)) continue
-            source.update(totalBeats, elapsedSeconds)
-            histories[source.id]?.add(source.value)
+        val active = activeNonAudioSources
+        for (i in 0 until active.size) {
+            val entry = active[i]
+            entry.source.update(totalBeats, elapsedSeconds)
+            entry.history?.add(entry.source.value)
         }
     }
 

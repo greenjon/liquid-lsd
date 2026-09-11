@@ -158,6 +158,23 @@ object VisualSourceRegistry {
         }
     }
 
+    private val pendingGlTasks = java.util.concurrent.ConcurrentLinkedQueue<Runnable>()
+
+    /**
+     * Drains and executes pending OpenGL compilation tasks strictly on Thread 0.
+     */
+    fun processPendingGlTasks() {
+        var task = pendingGlTasks.poll()
+        while (task != null) {
+            try {
+                task.run()
+            } catch (e: Exception) {
+                logger.error(e) { "Error executing pending OpenGL task in VisualSourceRegistry" }
+            }
+            task = pendingGlTasks.poll()
+        }
+    }
+
     /**
      * Loads default bundled sources immediately and kicks off an asynchronous scan of directory sources.
      * If [async] is false (e.g. in tests or when synchronous reload is required), scans synchronously.
@@ -169,7 +186,9 @@ object VisualSourceRegistry {
         llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.loadSettings()
         if (async) {
             llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
-                scanUserSources()
+                pendingGlTasks.offer(Runnable {
+                    scanUserSources()
+                })
             })
         } else {
             llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()

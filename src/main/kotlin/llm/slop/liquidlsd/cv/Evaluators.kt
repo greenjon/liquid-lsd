@@ -256,7 +256,7 @@ object AudioFollowerTracker {
 
     fun process(id: String, input: Float, attackMs: Float, decayMs: Float): Float {
         val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
-        val state = states.computeIfAbsent(id) { FollowerState(value = input, lastTimeNs = now) }
+        val state = states[id] ?: states.computeIfAbsent(id) { FollowerState(value = input, lastTimeNs = now) }
 
         val lastTime = state.lastTimeNs
         val dtSec = if (llm.slop.liquidlsd.utils.TimeSource.isSimulated) {

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### GitHub Actions Automated Release Notes Scoping (`release.yml`, `docs/release_notes.md`, `RELEASE_NOTES.md`, `DECISIONS.md`)
+- **Scoped Release Notes Extraction**: Configured automated release note extraction in `release.yml` to extract only the notes added between `prev_tag` and `HEAD` from candidate release notes files via `git diff`. Eliminates historical accumulation where previous release notes persisted into newly published releases.
+- **Fallback to Topmost Unreleased Section**: When `prev_tag` is not available, extraction scopes strictly to the first `### ` section under `## [Unreleased]`, preventing unbounded multiversion capture.
+- **Release Documentation Consolidation**: Cleanly filed 0.9.1 feature freeze sections (Phase 1–4 Ableton Link & ISF management, PipeWire 0.3 video ingest) under `## Version 0.9.1`, synchronizing `docs/release_notes.md` and `RELEASE_NOTES.md`.
+
+### Architecture Compliance & Zero-Allocation Render Loop Optimizations (`VisualSourceRegistry.kt`, `Main.kt`, `MidiMappingManager.kt`, `ParameterResolver.kt`, `CVRegistry.kt`, `Evaluators.kt`, `Deck.kt`, `PresetManager.kt`)
+- **Thread 0 OpenGL Compilation Discipline (`VisualSourceRegistry.kt`, `Main.kt`)**: Added `pendingGlTasks` concurrent queue to `VisualSourceRegistry` and `processPendingGlTasks()` called exclusively on Thread 0 inside `Main.kt` render loop. Background source scans now delegate `Shader(...)` compilation to Thread 0, completely preventing GLFW/GL driver errors on Linux. Initial startup scans default to synchronous (`async = false`) compilation on Thread 0 before entering the render loop.
+- **Pre-Resolved Flat Array MIDI CC Updating (`MidiMappingManager.kt`, `Deck.kt`, `PresetManager.kt`)**: Replaced per-frame string parsing and recursive parameter tree traversals in `MidiMappingManager.update(mixer)` with an indexed flat `ResolvedMidiBinding` array. Resolved bindings are invalidated and rebuilt only when MIDI mappings change or when presets/sources are swapped.
+- **Concurrent Parameter Path Memoization (`ParameterResolver.kt`)**: Implemented a thread-safe `ConcurrentHashMap` path resolution cache in `ParameterResolver`, eliminating O(N) recursive tree traversals on modulators and MIDI mappings.
+- **Indexed CV Updates & Primitive Bit-Packed MIDI CC Keys (`CVRegistry.kt`)**: Maintained active non-audio CV sources in a contiguous `activeNonAudioSources` array traversed with primitive integer index bounds, avoiding per-frame map iterations. Incoming MIDI CC lookups now bit-pack channel and CC values into 64-bit primitives (`(channel.toLong() shl 32) or cc.toLong()`), removing per-frame string splitting.
+- **Zero-Allocation Audio Follower Lookup (`Evaluators.kt`)**: Guarded `AudioFollowerTracker.process` with direct state map lookup before falling back to `computeIfAbsent`, eliminating capturing lambda heap allocations in the audio evaluation pipeline.
+- **Broadcast Settings Test Determinism (`BroadcastSettings.kt`, `BroadcastSettingsTest.kt`)**: Added `BroadcastSettings.resetDefaults()` and isolated test cases to guarantee that existing user configuration files do not bleed into test assertions.
+
 ### Web Broadcast Configuration & Dynamic Menu Visibility (`BroadcastSettings.kt`, `BroadcastEngine.kt`, `SettingsPanel.kt`, `MenuBar.kt`, `Main.kt`)
 - **Removed Hardcoded Credentials**: Removed hardcoded default relay server URL (`http://spaz.org/lsd-relay`) and broadcaster secret token (`lsd25`) from `BroadcastSettings.kt`, initializing both as empty strings (`""`).
 - **Dynamic Output Menu Item**: Hid the `Output > Web Broadcast` menu item in `MenuBar.kt` when either the relay server URL or broadcaster token is not populated in Settings (`BroadcastSettings.isConfigured`).
@@ -97,6 +110,21 @@
 
 **Serialization & Protocol Safety:**
 - **`WebPresetSerializer.kt` — numeric formatting & scientific notation avoidance**: Enhanced `round4` to clamp sub-micro near-zero floats to `0.0f` to ensure standard decimal notation without scientific exponential notation for WebGL2 TV clients.
+
+---
+
+## Version 0.9.1
+
+> [!NOTE]
+> **Release 0.9.1** marks the official stable transition from `1.0.0-beta.x` to the `0.9.x` production release line. It bundles all feature-frozen capabilities including Ableton Link beat/phase/tempo synchronization, PipeWire 0.3 Linux live video sharing, ISF v2.0 visual source generator and mixer transition shaders, Spout/Syphon live video ingest, modular post-processing FX slots, multi-touch trackpad performance console, and robust automated 5-platform CI/CD packaging and smoke-testing.
+
+### 🌟 Key Stable Features & Architecture Highlights
+- **Authoritative Semantic Versioning & 0.9.x Pipeline**: Transitioned project build, runtime versioning (`AppVersion.kt`), and GitHub Actions release automation (`release.yml`) to authoritative `0.9.x` production releases.
+- **Ableton Link & Carabiner Peer Sync**: Multi-backend Ableton Link (`linux-x64`, `windows-x64`, `macos-x64`, `macos-arm64`) and TCP Carabiner synchronization with Phase 1-4 audio-to-link damping and broadcast engines.
+- **Interactive Shader Format (ISF v2.0) & Mixxx-Style Management**: Full ISF generator, transition, and effect support with background async directory scanner (`ISFScanner`), file watcher live reload (`ISFFileWatcher`), and path precedence resolution.
+- **Cross-Platform Live Video Ingest & Broadcast**: PipeWire 0.3 DMA-BUF / MemFd ingest on Linux, Spout2 on Windows, Syphon on macOS, and live WebSocket broadcasting.
+- **Modular Post-Processing & Audio Reactivity**: Dual modular FX slots, ISF multi-pass support, LFO/audio follower min/max bounds conversion, and CapLock multi-touch trackpad performance console.
+- **Automated Multi-Platform Verification**: Comprehensive 5-platform CI/CD binary packaging and smoke testing ensuring 100% reliability across Linux, macOS, and Windows.
 
 ### Phase 4: Mixxx-Style ISF Library Management, Asynchronous Scanner, File Watcher Live Reload & Preferences Pane (`ISFDirectoryModels.kt`, `ISFDirectoryManager.kt`, `ISFScanner.kt`, `ISFLibraryRegistry.kt`, `ISFFileWatcher.kt`, `SettingsPanel.kt`)
 - **Platform-Standard ISF Search Locations**: Pre-populates default search directories for macOS (`/Library/Graphics/ISF/`, `~/Library/Graphics/ISF/`), Windows (`%ProgramData%\ISF\`, `%LOCALAPPDATA%\ISF/`), Linux (`/usr/share/isf/`, `/usr/local/share/isf/`, `$XDG_DATA_HOME/isf/`), and internal application asset bundles.

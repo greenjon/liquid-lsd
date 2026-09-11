@@ -9,10 +9,22 @@ class BroadcastSettingsTest {
 
     @Test
     fun testDefaultSettings() {
-        assertEquals("", BroadcastSettings.serverUrl)
-        assertEquals("", BroadcastSettings.token)
-        assertFalse(BroadcastSettings.isConfigured)
-        assertTrue(BroadcastSettings.targetFps in 5..60)
+        val prevUrl = BroadcastSettings.serverUrl
+        val prevToken = BroadcastSettings.token
+        val prevAuto = BroadcastSettings.autoConnect
+        val prevFps = BroadcastSettings.targetFps
+        try {
+            BroadcastSettings.resetDefaults()
+            assertEquals("", BroadcastSettings.serverUrl)
+            assertEquals("", BroadcastSettings.token)
+            assertFalse(BroadcastSettings.isConfigured)
+            assertTrue(BroadcastSettings.targetFps in 5..60)
+        } finally {
+            BroadcastSettings.serverUrl = prevUrl
+            BroadcastSettings.token = prevToken
+            BroadcastSettings.autoConnect = prevAuto
+            BroadcastSettings.targetFps = prevFps
+        }
     }
 
     @Test

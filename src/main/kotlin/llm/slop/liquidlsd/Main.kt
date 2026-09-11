@@ -209,7 +209,7 @@ fun main(args: Array<String>) {
     org.lwjgl.opengl.GL15.glGenQueries(queryIds)
 
     // Load dynamic visual sources and ISF filters
-    llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll(async = true)
+    llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll(async = false)
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
     llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
     llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
@@ -418,6 +418,9 @@ fun main(args: Array<String>) {
 
             // Apply loaded presets from queues atomically on the main thread
             PresetManager.applyPendingPresets(mixer)
+
+            // Process any deferred OpenGL compilation tasks (e.g. background scanned visual sources) on Thread 0
+            llm.slop.liquidlsd.rendering.VisualSourceRegistry.processPendingGlTasks()
 
             // Update all global CV signals
             CVRegistry.updateAll()

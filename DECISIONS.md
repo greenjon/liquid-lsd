@@ -6,6 +6,32 @@
 - **Note on ARM64 macOS**: macOS ARM64 (Apple Silicon) remains fully supported. The `NSRect`/`NSSize` JNA `Structure` field-type fix (`Double` instead of `Float`) introduced in the beta 57–62 audit specifically targets ARM64 macOS correctness and must be preserved.
 - **Impact**: Audit finding #16 ("PipeWire struct offsets wrong on ARM64 Linux") is **closed as N/A** — PipeWire is Linux-only and ARM64 Linux is no longer a target. Raw byte-offset struct access in `PipeWireLibrary.kt` only needs to be correct for x86_64 Linux.
 
+## Thread 0 OpenGL Discipline & Zero-Allocation Hot-Path MIDI/CV Routing (`VisualSourceRegistry.kt`, `Main.kt`, `MidiMappingManager.kt`, `ParameterResolver.kt`, `CVRegistry.kt`, `Evaluators.kt`)
+
+- **Decision**: Strictly enforce OS Thread 0 execution for all OpenGL shader compilation, eliminate off-thread GPU calls in `VisualSourceRegistry`, and eliminate per-frame allocations across MIDI CC mapping and CV evaluation:
+  - **Thread 0 GL Task Queue in `VisualSourceRegistry`**: Replaced direct off-thread `Shader(...)` calls during asynchronous background directory scanning with `pendingGlTasks: ConcurrentLinkedQueue<() -> Unit>` dispatched via `VisualSourceRegistry.processPendingGlTasks()`, executed exclusively on OS Thread 0 inside `Main.kt` render loop. Added `loadAll(async = false)` synchronous startup mode so shaders compile deterministically on Thread 0 before the render loop begins.
+  - **Flat Array MIDI CC Resolution (`MidiMappingManager`)**: Pre-resolves parameter paths (`mixer.deckA.color.hue`, etc.) into a flat, unboxed `ResolvedMidiBinding` array whenever mappings are altered or deck sources/presets change. In `MidiMappingManager.update(mixer)`, the hot loop iterates via indexed bounds (`0 until size`) with zero string allocations, zero map lookups, and zero iterator creation per frame.
+  - **Concurrent Path Caching in `ParameterResolver`**: Added thread-safe `ConcurrentHashMap` memoization (`pathCache`) to `ParameterResolver.resolve()`, avoiding recursive tree traversals across decks and effect parameters. Invalidation hooks wired into `Deck.source` and `PresetManager`.
+  - **Indexed Active CV Sources & Long-Packed MIDI CC Keys (`CVRegistry.kt`)**: Replaced map value iteration in `CVRegistry.updateAll()` with a flat `activeNonAudioSources: Array<ActiveSourceEntry>` array traversed by index loop. Replaced `substring().split('_')` string parsing on incoming MIDI CC identifiers with a 64-bit primitive bit-packed cache key `(channel.toLong() shl 32) or cc.toLong()`.
+  - **Zero-Allocation Audio Follower State Guard (`Evaluators.kt`)**: Added explicit lookup guard `states[id]` before calling `computeIfAbsent` in `AudioFollowerTracker.process`, preventing Kotlin capturing lambda instantiations on the real-time audio evaluation path.
+- **Rationale**:
+  - Eliminates GLFW/OpenGL driver crashes and debug context faults caused by off-thread shader compilation on Linux X11/Wayland.
+  - Guarantees true zero-allocation execution during 60–120 FPS render loops, preventing JVM GC pauses from interrupting real-time VJ performance.
+
+---
+
+## Scoped Automated Release Notes Extraction for Continuous Releases (`.github/workflows/release.yml`, `docs/release_notes.md`, `RELEASE_NOTES.md`)
+
+- **Decision**: Update automated release notes extraction in `.github/workflows/release.yml` from greedy multi-version regex captures to a deterministic 3-tier scoping strategy:
+  1. **Milestone Version Match (Tier 1)**: If an explicit milestone header matching the target version exists (e.g. `## Version 0.9.1`), extract that exact block up to the next version boundary.
+  2. **Git Diff Extraction between Releases (Tier 2)**: When no milestone version header exists and a previous tag (`prev_tag`) is present, execute `git diff $prev_tag..HEAD -- $fpath` against candidate release notes files. Extract strictly the added lines (`+` lines, omitting diff markers and unreleased headers). If the diff consists of raw bullet items without an enclosing `### ` subsection header, automatically extract and prepend the active `### ` subsection header from the candidate file.
+  3. **Topmost Section Fallback (Tier 3)**: If `prev_tag` is unavailable (e.g., initial repository push or shallow clones without tag history), scope extraction strictly to the first/topmost `### ` subsection under `## [Unreleased]` rather than capturing the entire unreleased block.
+  - **Release Notes Consolidation**: Cleanly relocate released milestone features (e.g. Phase 1–4 Ableton Link and PipeWire 0.3 video ingest) under explicit version headers (`## Version 0.9.1`) so that `## [Unreleased]` contains only pending changes.
+- **Rationale**:
+  - In continuous-push continuous-delivery models with auto-incrementing patch versions (`v0.9.1`, `v0.9.2`, ...), CI workflows do not commit version bumps back to `main` to prevent infinite workflow loops.
+  - The previous regex greedily captured the entire `## [Unreleased]` section across all historical releases, causing newly published GitHub Releases to monotonically grow longer and accumulate obsolete release notes.
+  - Scoping extraction via `git diff $prev_tag..HEAD` guarantees that each published release note contains exclusively the changes introduced since the previous release tag, eliminating manual post-release edits.
+
 ---
 
 ## Zero-Copy Linux Video Sharing & Live Video Ingest via PipeWire 0.3 (`PipeWireLibrary.kt`, `PipeWireBridge.kt`, `TextureReceiver.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `TextureStreamer.kt`, `SettingsPanel.kt`)
