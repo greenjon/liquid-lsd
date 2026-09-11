@@ -25,7 +25,7 @@ Presets are plain JSON files stored in `library/presets/` (and subfolders). You 
 
 ### Copying settings between decks
 
-Right-clicking in the **VALUE** column (or in Deck Controls) gives you copy and paste options to clone parameters from one deck to another. You can also copy individual modulator cells and paste them onto other parameters — see the [Modulation](modulation.md) page for details.
+Right-clicking in the **VALUE** column (or in Deck Controls) gives you copy and paste options to clone parameters from one deck to another. You can also copy individual modulator cells and paste them onto other parameters — see the [Modulation](modulation.md) page for details. You can also use the keyboard shortcuts CTRL-c and CTRL-v to copy and paste (or Command-c and -v on Macs)
 
 ### Unsaved changes & the Auto-VJ queue
 
@@ -39,7 +39,13 @@ If Auto-VJ switches presets while a deck has unsaved changes, you can control wh
 
 ## The Library Panel
 
-Press **`Space`** (when not typing) to cycle the library panel between hidden, half-height, and full-screen. Double-clicking the library's title bar snaps it to half-height.
+The Library panel spans the left and middle columns and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
+
+- **Full Height** — The Preset Grid and Cell Config panels are hidden. Use this when you're fully focused on building or editing playlists and queues.
+- **Half Height** — The Library sits in the lower half of the workspace, with the Preset Grid and Cell Config still visible above it. Good for tweaking modulation while keeping your setlist in view.
+- **Docked** — The Library collapses to a slim toolbar. Use this during a performance when you don't need to manage playlists or queues.
+
+In Half Height mode, drag the Library's title bar to resize it freely — the height is remembered. Double-click the title bar to snap back to a 50/50 split. The window buttons on the right of the title bar also let you jump between heights directly.
 
 ### Preset Browser (All Presets)
 
@@ -93,12 +99,12 @@ The Background Queue works the same way as the main queue but drives Deck BG ind
 
 ## Drag & Drop
 
-| From | To | Result |
-|------|----|--------|
-| Preset Browser | Playlist (between items) | Inserts at that position |
-| Preset Browser | Empty space at playlist bottom | Appends to the end |
-| Playlist item | Up / down in the same playlist | Reorders |
-| Preset Browser or Playlist | Queue | Adds to the live queue |
+| From                       | To                             | Result                   |
+| -------------------------- | ------------------------------ | ------------------------ |
+| Preset Browser             | Playlist (between items)       | Inserts at that position |
+| Preset Browser             | Empty space at playlist bottom | Appends to the end       |
+| Playlist item              | Up / down in the same playlist | Reorders                 |
+| Preset Browser or Playlist | Queue                          | Adds to the live queue   |
 
 ---
 

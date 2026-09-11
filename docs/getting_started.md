@@ -13,9 +13,11 @@ Download the archive for your platform, unzip it, and launch:
   *(If macOS blocks it on first launch, right-click the file and select **Open** instead.)*
 - **Windows (x64):** Double-click `run-windows.bat`.
 - **Linux (x64 / ARM64):** Open a terminal in the folder and run:
+  
   ```bash
   ./run-linux.sh
   ```
+  
   Optional: run `./install-desktop.sh` to add Liquid LSD to your desktop app menu.
 
 > **Building from source?** See the [README](https://github.com/greenjon/liquid-lsd) for Gradle build instructions.
@@ -47,10 +49,10 @@ When the app opens, you'll see three main panels side by side:
 
 Here's what to try first:
 
-1. **Check the audio feed.** Look at the **Preset Grid** on the left — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
+1. **Check the audio feed.** Go to **File>Settings>Audio Hardware** — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
 
-2. **Click anything.** Click a row in the Preset Grid to select it. The **Cell Config** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
+2. **Click anything.** Click any cell in the Preset Grid to select it. The **Cell Config** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 
-3. **Switch modes.** Press **`F3`** to toggle between **Performance Mode** (the live view you're in now) and **Asset Management Mode**, which opens the library, playlist editor, and shader browser.
+3. **Open the Library.** Press **`Space`** (when not in a text field) to raise the Library panel into view. This is where you browse presets, build playlists, and manage your play queues. Cycle through Full Height, Half Height, and Docked to find the layout that suits what you're doing.
 
 That's it — you're in. Dig into [Your Workspace](user_guide/your_workspace.md) next to understand what you're looking at, or jump straight to [Modulation](user_guide/modulation.md) if you want to start wiring audio to visuals.

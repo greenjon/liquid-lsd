@@ -6,7 +6,7 @@ Modulation is how you make your visuals react to music. Instead of just setting 
 
 ## The CV Grid
 
-The **Preset Grid** is the left panel in Performance Mode. It's a matrix:
+The **Preset Grid** is the left panel, visible whenever the Library is in Half Height or Docked mode. It's a matrix:
 
 - **Rows** = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)
 - **Columns** = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)

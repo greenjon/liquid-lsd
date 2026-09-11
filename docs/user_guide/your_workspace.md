@@ -4,13 +4,17 @@ Liquid LSD has a lot going on, but it's organized around a handful of core ideas
 
 ---
 
-## The Two Modes
+## The Library & What It Controls
 
-Press **`F3`** at any time to switch between the two main views:
+The Library panel spans the left and middle columns of the app and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
 
-- **Performance Mode** — This is your live show layout. The CV modulation grid is on the left, parameter controls in the middle, and the master output monitor on the right. Everything you need to run a set is here.
+- **Full Height** — The Preset Grid and Cell Config panels are hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.
+- **Half Height** — The Library sits in the lower half, with the Preset Grid and Cell Config still visible above it. Good for tweaking modulation while keeping an eye on your setlist.
+- **Docked** — The Library collapses to a slim toolbar at the bottom of the screen. Use this when you don't need to manage playlists or queues and want the full workspace visible.
 
-- **Asset Management Mode** — Opens the library, preset browser, playlist editor, and shader folder browser. Use this to prepare your setlist, audition looks, and manage your files before or between sets.
+You can drag the Library's title bar up or down to resize it freely in Half Height mode — the height you set is remembered. Double-click the title bar to snap back to exactly 50/50. The standard window buttons on the right of the title bar also let you jump between heights.
+
+The Library contains your **Presets**, **Playlists**, and **Play Queues** — not shaders (those are managed separately under **Settings → Shader Locations**).
 
 ---
 
@@ -68,11 +72,9 @@ Clicking the master monitor preview jumps directly to the **MIX** tab.
 
 ---
 
-## The Library (Bottom Panel)
+## The Library
 
-Press **`Space`** (when you're not in a text field) to cycle the library panel between hidden, half-height, and full-screen. The library holds your preset browser, playlist editor, and the Auto-VJ play queue.
-
-See [Presets & Library](presets_and_library.md) for the full guide.
+The Library spans the lower portion of the left and middle columns and holds your Presets, Playlists, and Play Queues. See [Presets & Library](presets_and_library.md) for the full guide.
 
 ---
 
@@ -82,11 +84,10 @@ A few keyboard shortcuts work anywhere in the app:
 
 | Key | What it does |
 |-----|-------------|
-| `F3` | Toggle Performance / Asset Management mode |
+| `Space` | Cycle Library height: Full → Half → Docked (when cursor isn't in a text field) |
 | `F` | Fullscreen — hides the UI, pure video output |
 | `Esc` | Exit fullscreen |
 | `B` | Toggle background video rendering behind the UI |
-| `Space` | Cycle library panel size (when not typing) |
 | `Ctrl+Z` / `Ctrl+Y` | Undo / Redo (30-step history) |
 | `Ctrl+S` | Save the active deck's preset |
 | `Ctrl+R` | Start / stop recording |
