@@ -11,7 +11,6 @@ import llm.slop.liquidlsd.audio.BeatDetectionSettings
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.SignalState
 import llm.slop.liquidlsd.audio.SystemAudioVolume
-import llm.slop.liquidlsd.midi.MidiEngine
 
 /**
  * Dedicated UI component for the Audio Engine settings and real-time monitor:
@@ -105,6 +104,17 @@ object AudioEnginePanel {
             }
         }
         itemTooltip("Toggle audio capture and analysis. Disabling stops audio processing.")
+
+        ImGui.sameLine(0f, 20f)
+        val backend = audioEngine.getActiveBackendName()
+        val isAudioActive = audioEngine.isActive()
+        if (!isAudioActive) {
+            theme.bodyColored(0.9f, 0.4f, 0.4f, 1.0f, "Audio Inactive")
+        } else if (backend.contains("JACK", ignoreCase = true)) {
+            theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "Jack active")
+        } else {
+            theme.bodyColored(0.2f, 0.7f, 0.9f, 1.0f, "Java Sound Active")
+        }
 
         if (!theme.audioEngineEnabled) {
             ImGui.spacing()
@@ -212,6 +222,7 @@ object AudioEnginePanel {
 
             // Audio Backend Selection
             theme.body("Audio Backend:")
+            ImGui.sameLine()
             currentBackendIdx.set(audioEngine.backendMode.ordinal)
             ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
             if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
@@ -225,6 +236,7 @@ object AudioEnginePanel {
 
             // Hardware Input Device Selection (cached list to prevent ALSA resource leakage)
             theme.body("Input Hardware Device:")
+            ImGui.sameLine()
             val devices = audioEngine.getAvailableInputDevices()
             val deviceNames = audioEngine.getAvailableDeviceNames()
             val currentDevIdx = devices.indexOfFirst { it.name == audioEngine.selectedDeviceName }.coerceAtLeast(0)
@@ -249,6 +261,7 @@ object AudioEnginePanel {
 
             // Channel Routing Selector
             theme.body("Channel Routing:")
+            ImGui.sameLine()
             currentRoutingIdx.set(audioEngine.channelRouting.ordinal)
             ImGui.setNextItemWidth(ImGui.getContentRegionAvailX().coerceAtMost(380f))
             if (ImGui.combo("##ChannelRouting", currentRoutingIdx, channelRoutingNames)) {
@@ -260,6 +273,50 @@ object AudioEnginePanel {
 
             ImGui.spacing()
 
+            // Input Gain & System Volume
+            CustomRangeSlider.drawCompactSlider(
+                session = session,
+                label = "Input Gain",
+                currentValue = audioEngine.inputGain,
+                minLimit = 0.0f,
+                maxLimit = 10.0f,
+                defaultValue = 1.0f,
+                formatValue = { "%.2fx".format(it) },
+                idPrefix = "audio_engine_input_gain",
+                themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 0.9f),
+                showCurrentLabel = false,
+                customBoxWidth = sliderBoxW,
+                onValueChanged = { newVal ->
+                    audioEngine.inputGain = newVal
+                    theme.saveSettings()
+                }
+            )
+
+            if (SystemAudioVolume.isSupported) {
+                SystemAudioVolume.queryAsync()
+                val sysVol = SystemAudioVolume.systemInputVolume
+                val isMuted = SystemAudioVolume.isMuted
+                val label = if (isMuted) "System Volume [MUTED]" else "System Volume"
+                CustomRangeSlider.drawCompactSlider(
+                    session = session,
+                    label = label,
+                    currentValue = sysVol,
+                    minLimit = 0.0f,
+                    maxLimit = 1.0f,
+                    defaultValue = 1.0f,
+                    formatValue = { "%.2f".format(it) },
+                    idPrefix = "audio_engine_sys_vol",
+                    themeColor = if (isMuted) ImGui.colorConvertFloat4ToU32(1f, 0.3f, 0.3f, 0.9f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+                    showCurrentLabel = false,
+                    customBoxWidth = sliderBoxW,
+                    onValueChanged = { newVal ->
+                        SystemAudioVolume.updateSystemVolume(newVal)
+                    }
+                )
+            }
+
+            ImGui.spacing()
+
             // Visual Input Metering
             theme.body("Input Peak Meter (L / R):")
             drawStereoVuMeter(session, ImGui.getContentRegionAvailX().coerceAtMost(380f))
@@ -268,15 +325,9 @@ object AudioEnginePanel {
             ImGui.spacing()
 
             // Backend Status & Reconnection Options
-            val backend = audioEngine.getActiveBackendName()
-            val isAudioActive = audioEngine.isActive()
             val state = audioEngine.currentState
 
             ImGui.alignTextToFramePadding()
-            theme.body("Driver: ")
-            ImGui.sameLine()
-            theme.bodyColored(0.2f, 0.7f, 0.9f, 1.0f, backend)
-            ImGui.sameLine(0f, 20f)
             theme.body("Sync State: ")
             ImGui.sameLine()
             when (state) {
@@ -299,21 +350,15 @@ object AudioEnginePanel {
                 itemTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
             } else if (backend == "Java Sound") {
                 ImGui.spacing()
+                // TODO: make this button less annoying
+                /*
                 if (ImGui.button("${Icons.REFRESH} Switch to JACK Audio", 220f, 28f)) {
                     Thread {
                         audioEngine.tryReconnect(force = true)
                     }.start()
                 }
                 itemTooltip("Stops Java Sound and attempts to connect to a running JACK/PipeWire audio server.")
-            }
-
-            // MIDI Controllers Status
-            val midiCount = MidiEngine.getActiveDeviceCount()
-            ImGui.spacing()
-            if (midiCount == 0) {
-                theme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "MIDI: No hardware controllers detected.")
-            } else {
-                theme.captionColored(0.2f, 0.9f, 0.4f, 1.0f, "MIDI: $midiCount active MIDI controller(s) connected.")
+                */
             }
 
             ImGui.spacing()
@@ -605,48 +650,6 @@ object AudioEnginePanel {
             ImGui.separator()
             ImGui.spacing()
 
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Input Gain",
-                currentValue = audioEngine.inputGain,
-                minLimit = 0.0f,
-                maxLimit = 10.0f,
-                defaultValue = 1.0f,
-                formatValue = { "%.2fx".format(it) },
-                idPrefix = "audio_engine_input_gain",
-                themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 0.9f),
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    audioEngine.inputGain = newVal
-                    theme.saveSettings()
-                }
-            )
-
-            if (SystemAudioVolume.isSupported) {
-                SystemAudioVolume.queryAsync()
-                val sysVol = SystemAudioVolume.systemInputVolume
-                val isMuted = SystemAudioVolume.isMuted
-                val label = if (isMuted) "System Volume [MUTED]" else "System Volume"
-                CustomRangeSlider.drawCompactSlider(
-                    session = session,
-                    label = label,
-                    currentValue = sysVol,
-                    minLimit = 0.0f,
-                    maxLimit = 1.0f,
-                    defaultValue = 1.0f,
-                    formatValue = { "%.2f".format(it) },
-                    idPrefix = "audio_engine_sys_vol",
-                    themeColor = if (isMuted) ImGui.colorConvertFloat4ToU32(1f, 0.3f, 0.3f, 0.9f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
-                    showCurrentLabel = false,
-                    customBoxWidth = sliderBoxW,
-                    onValueChanged = { newVal ->
-                        SystemAudioVolume.updateSystemVolume(newVal)
-                    }
-                )
-            }
-
-            ImGui.spacing()
             drawStereoVuMeter(session)
             ImGui.spacing()
             audioEngine.rawHistory.copyTo(rawSamples)

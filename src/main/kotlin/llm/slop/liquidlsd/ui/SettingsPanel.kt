@@ -417,6 +417,13 @@ object SettingsPanel {
             }
         }
         itemTooltip("Toggle MIDI controller input and CC mapping.")
+        ImGui.sameLine(0f, 20f)
+        val midiCount = llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount()
+        if (midiCount == 0) {
+            session.uiTheme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "MIDI: No hardware controllers detected.")
+        } else {
+            session.uiTheme.captionColored(0.2f, 0.9f, 0.4f, 1.0f, "MIDI: $midiCount active MIDI controller(s) connected.")
+        }
 
         if (session.uiTheme.midiEnabled) {
             val midiDir = java.io.File("library/midi")
