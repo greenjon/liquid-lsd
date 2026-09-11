@@ -486,16 +486,18 @@ object PresetGridPanel {
         val lastColRightX = startX + labelColW + getColumnOffset(session, lastColId) + CELL
         val kebabX = lastColRightX + CELL_PAD * 0.5f
         val kebabW = getKebabWidth(session)
-        val isKebabHovered = mousePos.x >= kebabX && mousePos.x <= (kebabX + kebabW) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
         val popupId = "preset_grid_columns_popup"
         val isPopupOpen = ImGui.isPopupOpen(popupId)
+
+        ImGui.setCursorScreenPos(kebabX, startY)
+        val isKebabClicked = ImGui.invisibleButton("##grid_columns_kebab_btn", kebabW, headerH)
+        val isKebabHovered = ImGui.isItemHovered()
 
         if (isKebabHovered || isPopupOpen) {
             dl.addRectFilled(kebabX, startY, kebabX + kebabW, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
         }
 
-        ImGui.setCursorScreenPos(kebabX, startY)
-        if (ImGui.invisibleButton("##grid_columns_kebab_btn", kebabW, headerH) || (isKebabHovered && ImGui.isMouseClicked(0))) {
+        if (isKebabClicked || (isKebabHovered && ImGui.isItemClicked(0))) {
             ImGui.openPopup(popupId)
         }
 

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Settings & UI Controls (`SettingsPanel.kt`, `Main.kt`, `MenuBar.kt`, `UITheme.kt`, `AppSettings.kt`, `BrowserRowMoreButton.kt`)
+- **Settings Modal Closure Fix**: Fixed an issue where toggling "Enable MIDI" in Settings > General would immediately close the Settings modal window. Row context buttons (`BrowserRowMoreButton` and Preset Grid column kebab) now inspect ImGui widget hover states (`ImGui.isItemHovered()`) rather than raw mouse screen coordinates, preventing clicks inside modal windows from erroneously firing background row popups and closing active modals.
+- **Settings Layout & Categories Redesign**: Reorganized the Settings modal interface to promote **General** as the primary first tab. Moved parameter randomization, step sequencer, MIDI settings (and CC mappings), frameless window toggle, and SCS.3m trackpad console controls into a unified **Features** section on the General tab.
+- **Inline Trackpad Status**: Positioned the SCS.3m touchpad status readout and Polkit permission installer button inline to the right of the Enable Trackpad Console checkbox.
+- **Compact Startup & Update Dropdowns**: Constrained the **Startup Behavior** and **AutoVJ Dirty Behavior** dropdown combo boxes to 1/3 of the panel content width for improved layout symmetry.
+- **Removed Empty MIDI Tab**: Obsoleted and removed the redundant `MIDI & Controls` tab from the Settings sidebar navigation as all MIDI hardware options are now integrated into Features.
+- **Hardcoded Tap Tempo Key (`T`)**: Hardcoded global keyboard tap tempo to `T` in `Main.kt`, removing the `tapKeyTrigger` setting, enum, and UI toggle from Settings entirely.
+- **Queue Key Trigger Toggle Deprecation**: Removed the `queueKeyTrigger` dropdown combo box from the MIDI & Controls settings panel pending future UI redesign, and updated the Keyboard Shortcuts cheatsheet table accordingly.
+
 ### Test Suite Isolation & Real-Time Audio Teardown (`AudioEngineTest.kt`, `CvModulatorTest.kt`)
 - **AudioEngine Teardown & Lifecycle Isolation**: Added `@AfterTest` lifecycle teardown and `try-finally` safety in `AudioEngineTest` to immediately invoke `AudioEngine.stop()`, reset audio parameters, and close active JACK / Java Sound client threads when tests complete. Prevents background real-time audio callback threads from leaking into subsequent test suites and asynchronously clobbering CVRegistry audio signals (`audio_amp`, `audio_bass`, etc.).
 - **CV Modulator Audio Test Isolation**: Guaranteed `AudioEngine.stop()` and `AudioFollowerTracker.reset()` are called during unipolar and audio follower modulator tests in `CvModulatorTest` for test determinism.

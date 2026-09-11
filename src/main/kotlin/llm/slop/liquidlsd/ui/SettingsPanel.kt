@@ -27,20 +27,19 @@ object SettingsPanel {
     private const val STEP_PCT             = 10
 
     enum class Category(val label: String) {
+        GENERAL("General"),
         APPEARANCE("Appearance"),
         VIDEO_DISPLAY("Video & Display"),
         AUDIO_ENGINE("Audio Engine"),
         SHADER_LOCATIONS("Shader Locations"),
         BROADCAST("Web Broadcast"),
-        MIDI_CONTROL("MIDI & Controls"),
-        SHORTCUTS("Keyboard Shortcuts"),
-        GENERAL("General")
+        SHORTCUTS("Keyboard Shortcuts")
     }
 
     var isOpen: Boolean = false
         private set
 
-    var activeCategory = Category.APPEARANCE
+    var activeCategory = Category.GENERAL
         private set
 
     private var pendingPresetScale: Int? = null
@@ -134,14 +133,13 @@ object SettingsPanel {
         // Right Content Child
         if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
             when (activeCategory) {
+                Category.GENERAL          -> drawGeneralSettings(session)
                 Category.APPEARANCE       -> drawAppearance(session, currentSize, onPresetScaleChanged)
                 Category.VIDEO_DISPLAY    -> drawVideoDisplaySettings(session)
                 Category.AUDIO_ENGINE     -> drawAudioEngineSettings(session)
                 Category.SHADER_LOCATIONS -> drawShaderLocationsSettings(session)
                 Category.BROADCAST        -> drawBroadcastSettings(session, mixer)
-                Category.MIDI_CONTROL     -> drawMidiControlSettings(session)
                 Category.SHORTCUTS        -> drawShortcutsSettings(session)
-                Category.GENERAL          -> drawGeneralSettings(session)
             }
         }
         ImGui.endChild()
@@ -453,121 +451,8 @@ object SettingsPanel {
         AudioEnginePanel.drawContent(session)
     }
 
-    private fun drawMidiControlSettings(session: llm.slop.liquidlsd.SessionContext) {
-        session.uiTheme.h2("MIDI Controller & Shortcuts")
-        ImGui.separator()
-        ImGui.spacing()
-
-        val midiEnabled = ImBoolean(session.uiTheme.midiEnabled)
-        if (ImGui.checkbox("Enable MIDI", midiEnabled)) {
-            val nextVal = midiEnabled.get()
-            if (nextVal != session.uiTheme.midiEnabled) {
-                session.uiTheme.midiEnabled = nextVal
-                session.uiTheme.saveSettings()
-                if (nextVal) {
-                    llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
-                } else {
-                    llm.slop.liquidlsd.midi.MidiEngine.close()
-                }
-            }
-        }
-        itemTooltip("Toggle MIDI controller input and CC mapping.")
-
-        if (!session.uiTheme.midiEnabled) {
-            ImGui.spacing()
-            session.uiTheme.caption("MIDI is currently disabled. Enable it above to use MIDI hardware controllers and CC mapping.")
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-            session.uiTheme.h2("Keyboard Shortcuts")
-            ImGui.spacing()
-            val triggers = UITheme.QueueKeyTrigger.values()
-            val triggerNames = triggers.map { it.name }.toTypedArray()
-            val currentTriggerIdx = imgui.type.ImInt(session.uiTheme.queueKeyTrigger.ordinal)
-            if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
-                session.uiTheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
-                session.uiTheme.saveSettings()
-            }
-            return
-        }
-
-        val midiDir = java.io.File("library/midi")
-        val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
-            .map { it.nameWithoutExtension }
-            .toMutableList()
-        if (profileFiles.isEmpty()) profileFiles.add("default")
-        if (!profileFiles.contains(session.uiTheme.activeMidiProfile)) {
-            profileFiles.add(session.uiTheme.activeMidiProfile)
-        }
-
-        val currentProfileIdx = imgui.type.ImInt(profileFiles.indexOf(session.uiTheme.activeMidiProfile).coerceAtLeast(0))
-        val profileNamesArray = profileFiles.toTypedArray()
-        if (ImGui.combo("MIDI Profile", currentProfileIdx, profileNamesArray)) {
-            val nextProfile = profileNamesArray[currentProfileIdx.get()]
-            session.midiMappingManager.loadProfile(nextProfile)
-            session.uiTheme.activeMidiProfile = nextProfile
-            session.uiTheme.saveSettings()
-        }
-        itemTooltip("Select active MIDI controller CC assignment profile.")
-
-        ImGui.spacing()
-        val nextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queueNext"))
-        if (ImGui.inputInt("A/B Next CC", nextCc)) {
-            val newVal = nextCc.get().coerceIn(-1, 127)
-            session.midiMappingManager.addMapping("Global/queueNext", newVal)
-            session.midiMappingManager.saveActiveProfile()
-        }
-
-        val prevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queuePrev"))
-        if (ImGui.inputInt("A/B Prev CC", prevCc)) {
-            val newVal = prevCc.get().coerceIn(-1, 127)
-            session.midiMappingManager.addMapping("Global/queuePrev", newVal)
-            session.midiMappingManager.saveActiveProfile()
-        }
-
-        val bgNextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/bgQueueNext"))
-        if (ImGui.inputInt("BG Next CC", bgNextCc)) {
-            val newVal = bgNextCc.get().coerceIn(-1, 127)
-            session.midiMappingManager.addMapping("Global/bgQueueNext", newVal)
-            session.midiMappingManager.saveActiveProfile()
-        }
-
-        val bgPrevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev"))
-        if (ImGui.inputInt("BG Prev CC", bgPrevCc)) {
-            val newVal = bgPrevCc.get().coerceIn(-1, 127)
-            session.midiMappingManager.addMapping("Global/bgQueuePrev", newVal)
-            session.midiMappingManager.saveActiveProfile()
-        }
-
-        val tapCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/tapTempo"))
-        if (ImGui.inputInt("Tap Tempo CC", tapCc)) {
-            val newVal = tapCc.get().coerceIn(-1, 127)
-            session.midiMappingManager.addMapping("Global/tapTempo", newVal)
-            session.midiMappingManager.saveActiveProfile()
-        }
-        itemTooltip("MIDI CC assigned to tap tempo. Set to -1 to unmap.")
-
-        ImGui.spacing()
-        val triggers = UITheme.QueueKeyTrigger.values()
-        val triggerNames = triggers.map { it.name }.toTypedArray()
-        val currentTriggerIdx = imgui.type.ImInt(session.uiTheme.queueKeyTrigger.ordinal)
-        if (ImGui.combo("Keyboard Trigger", currentTriggerIdx, triggerNames)) {
-            session.uiTheme.queueKeyTrigger = triggers[currentTriggerIdx.get()]
-            session.uiTheme.saveSettings()
-        }
-
-        val tapTriggers = UITheme.TapKeyTrigger.values()
-        val tapTriggerNames = tapTriggers.map { it.displayName }.toTypedArray()
-        val currentTapIdx = imgui.type.ImInt(session.uiTheme.tapKeyTrigger.ordinal)
-        if (ImGui.combo("Tap Tempo Key", currentTapIdx, tapTriggerNames)) {
-            session.uiTheme.tapKeyTrigger = tapTriggers[currentTapIdx.get()]
-            session.uiTheme.saveSettings()
-        }
-        itemTooltip("Keyboard key for tapping in BPM tempo when not typing in text fields.")
-    }
-
     private fun drawGeneralSettings(session: llm.slop.liquidlsd.SessionContext) {
-        session.uiTheme.h2("Randomization & Features")
+        session.uiTheme.h2("Features")
         ImGui.separator()
         ImGui.spacing()
 
@@ -591,6 +476,127 @@ object SettingsPanel {
         }
         itemTooltip("Enable or disable the step sequencer modulation engine across presets and cell configuration.")
 
+        val midiEnabled = ImBoolean(session.uiTheme.midiEnabled)
+        if (ImGui.checkbox("Enable MIDI", midiEnabled)) {
+            val nextVal = midiEnabled.get()
+            if (nextVal != session.uiTheme.midiEnabled) {
+                session.uiTheme.midiEnabled = nextVal
+                session.uiTheme.saveSettings()
+                if (nextVal) {
+                    llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
+                } else {
+                    llm.slop.liquidlsd.midi.MidiEngine.close()
+                }
+            }
+        }
+        itemTooltip("Toggle MIDI controller input and CC mapping.")
+
+        if (session.uiTheme.midiEnabled) {
+            val midiDir = java.io.File("library/midi")
+            val profileFiles = (midiDir.listFiles { _, name -> name.endsWith(".json") } ?: emptyArray())
+                .map { it.nameWithoutExtension }
+                .toMutableList()
+            if (profileFiles.isEmpty()) profileFiles.add("default")
+            if (!profileFiles.contains(session.uiTheme.activeMidiProfile)) {
+                profileFiles.add(session.uiTheme.activeMidiProfile)
+            }
+
+            val currentProfileIdx = imgui.type.ImInt(profileFiles.indexOf(session.uiTheme.activeMidiProfile).coerceAtLeast(0))
+            val profileNamesArray = profileFiles.toTypedArray()
+            if (ImGui.combo("MIDI Profile", currentProfileIdx, profileNamesArray)) {
+                val nextProfile = profileNamesArray[currentProfileIdx.get()]
+                session.midiMappingManager.loadProfile(nextProfile)
+                session.uiTheme.activeMidiProfile = nextProfile
+                session.uiTheme.saveSettings()
+            }
+            itemTooltip("Select active MIDI controller CC assignment profile.")
+
+            ImGui.spacing()
+            val nextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queueNext"))
+            if (ImGui.inputInt("A/B Next CC", nextCc)) {
+                val newVal = nextCc.get().coerceIn(-1, 127)
+                session.midiMappingManager.addMapping("Global/queueNext", newVal)
+                session.midiMappingManager.saveActiveProfile()
+            }
+
+            val prevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/queuePrev"))
+            if (ImGui.inputInt("A/B Prev CC", prevCc)) {
+                val newVal = prevCc.get().coerceIn(-1, 127)
+                session.midiMappingManager.addMapping("Global/queuePrev", newVal)
+                session.midiMappingManager.saveActiveProfile()
+            }
+
+            val bgNextCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/bgQueueNext"))
+            if (ImGui.inputInt("BG Next CC", bgNextCc)) {
+                val newVal = bgNextCc.get().coerceIn(-1, 127)
+                session.midiMappingManager.addMapping("Global/bgQueueNext", newVal)
+                session.midiMappingManager.saveActiveProfile()
+            }
+
+            val bgPrevCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev"))
+            if (ImGui.inputInt("BG Prev CC", bgPrevCc)) {
+                val newVal = bgPrevCc.get().coerceIn(-1, 127)
+                session.midiMappingManager.addMapping("Global/bgQueuePrev", newVal)
+                session.midiMappingManager.saveActiveProfile()
+            }
+
+            val tapCc = imgui.type.ImInt(session.midiMappingManager.getCcForSpecial("Global/tapTempo"))
+            if (ImGui.inputInt("Tap Tempo CC", tapCc)) {
+                val newVal = tapCc.get().coerceIn(-1, 127)
+                session.midiMappingManager.addMapping("Global/tapTempo", newVal)
+                session.midiMappingManager.saveActiveProfile()
+            }
+            itemTooltip("MIDI CC assigned to tap tempo. Set to -1 to unmap.")
+        }
+
+        val framelessEnabled = ImBoolean(session.uiTheme.framelessWindow)
+        if (ImGui.checkbox("Frameless Window (Custom Title Bar) [Requires restart]", framelessEnabled)) {
+            val nextVal = framelessEnabled.get()
+            if (nextVal != session.uiTheme.framelessWindow) {
+                session.uiTheme.framelessWindow = nextVal
+                session.uiTheme.saveSettings()
+            }
+        }
+        itemTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
+
+        val trackpadEnabled = ImBoolean(session.uiTheme.trackpadConsoleEnabled)
+        if (ImGui.checkbox("Enable CapsLock Trackpad Console", trackpadEnabled)) {
+            val nextVal = trackpadEnabled.get()
+            if (nextVal != session.uiTheme.trackpadConsoleEnabled) {
+                session.uiTheme.trackpadConsoleEnabled = nextVal
+                session.uiTheme.saveSettings()
+                if (!nextVal && session.touchConsoleController.isActive) {
+                    session.touchConsoleController.toggleActive(false)
+                }
+            }
+        }
+        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Alpha faders.\nDisables cursor movement and gestures while active.")
+
+        ImGui.sameLine(0f, 15f)
+        val controller = session.touchConsoleController
+        val state = controller.backend.state
+        if (controller.isElevatingPermissions) {
+            ImGui.textDisabled("${Icons.ACTIVITY} Touchpad Status: Configuring permissions via Polkit...")
+        } else when (state) {
+            TouchBackendState.READY -> {
+                ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "${Icons.ACTIVITY} Touchpad Status: Ready (Press CapsLock to engage)")
+            }
+            TouchBackendState.PERMISSION_REQUIRED -> {
+                ImGui.textColored(1.0f, 0.6f, 0.1f, 1f, "${Icons.ALERT} Touchpad Status: Read/Write Permission Required")
+                ImGui.sameLine()
+                if (ImGui.button("Install Permissions (Polkit)")) {
+                    controller.requestPermissionElevation()
+                }
+                itemTooltip("Runs pkexec to add a uaccess udev rule for your seat user without rebooting.")
+            }
+            TouchBackendState.NO_DEVICE -> {
+                ImGui.textDisabled("Touchpad Status: No hardware trackpad detected")
+            }
+            TouchBackendState.DISABLED -> {
+                ImGui.textDisabled("Touchpad Status: Disabled on this platform")
+            }
+        }
+
         ImGui.spacing()
         session.uiTheme.h2("Startup & Updates")
         ImGui.separator()
@@ -599,6 +605,8 @@ object SettingsPanel {
         val startupBehaviors = UITheme.StartupBehavior.values()
         val startupOptions = arrayOf("Restore Previous Session", "Start Empty")
         val currentStartupIdx = imgui.type.ImInt(session.uiTheme.startupBehavior.ordinal)
+        val comboWidth = (ImGui.getContentRegionAvailX() * 0.33f).coerceAtLeast(160f)
+        ImGui.setNextItemWidth(comboWidth)
         if (ImGui.combo("Startup Behavior", currentStartupIdx, startupOptions)) {
             session.uiTheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
             session.uiTheme.saveSettings()
@@ -608,6 +616,7 @@ object SettingsPanel {
         val autoVjBehaviors = UITheme.AutoVjDirtyBehavior.values()
         val autoVjBehaviorNames = autoVjBehaviors.map { it.name }.toTypedArray()
         val currentAutoVjIdx = imgui.type.ImInt(session.uiTheme.autoVjDirtyBehavior.ordinal)
+        ImGui.setNextItemWidth(comboWidth)
         if (ImGui.combo("AutoVJ Dirty Behavior", currentAutoVjIdx, autoVjBehaviorNames)) {
             session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
             session.uiTheme.saveSettings()
@@ -657,63 +666,6 @@ object SettingsPanel {
                         llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
                     }
                 }
-            }
-        }
-
-        ImGui.spacing()
-        session.uiTheme.h2("Window Frame & Chrome")
-        ImGui.separator()
-        ImGui.spacing()
-
-        val framelessEnabled = ImBoolean(session.uiTheme.framelessWindow)
-        if (ImGui.checkbox("Frameless Window (Custom Title Bar) [Requires restart]", framelessEnabled)) {
-            val nextVal = framelessEnabled.get()
-            if (nextVal != session.uiTheme.framelessWindow) {
-                session.uiTheme.framelessWindow = nextVal
-                session.uiTheme.saveSettings()
-            }
-        }
-        itemTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
-
-        ImGui.spacing()
-        session.uiTheme.h2("Trackpad Performance Console (SCS.3m)")
-        ImGui.separator()
-        ImGui.spacing()
-
-        val trackpadEnabled = ImBoolean(session.uiTheme.trackpadConsoleEnabled)
-        if (ImGui.checkbox("Enable CapsLock Trackpad Console", trackpadEnabled)) {
-            val nextVal = trackpadEnabled.get()
-            if (nextVal != session.uiTheme.trackpadConsoleEnabled) {
-                session.uiTheme.trackpadConsoleEnabled = nextVal
-                session.uiTheme.saveSettings()
-                if (!nextVal && session.touchConsoleController.isActive) {
-                    session.touchConsoleController.toggleActive(false)
-                }
-            }
-        }
-        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Alpha faders.\nDisables cursor movement and gestures while active.")
-
-        val controller = session.touchConsoleController
-        val state = controller.backend.state
-        if (controller.isElevatingPermissions) {
-            ImGui.textDisabled("${Icons.ACTIVITY} Touchpad Status: Configuring permissions via Polkit...")
-        } else when (state) {
-            TouchBackendState.READY -> {
-                ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "${Icons.ACTIVITY} Touchpad Status: Ready (Press CapsLock to engage)")
-            }
-            TouchBackendState.PERMISSION_REQUIRED -> {
-                ImGui.textColored(1.0f, 0.6f, 0.1f, 1f, "${Icons.ALERT} Touchpad Status: Read/Write Permission Required")
-                ImGui.sameLine()
-                if (ImGui.button("Install Permissions (Polkit)")) {
-                    controller.requestPermissionElevation()
-                }
-                itemTooltip("Runs pkexec to add a uaccess udev rule for your seat user without rebooting.")
-            }
-            TouchBackendState.NO_DEVICE -> {
-                ImGui.textDisabled("Touchpad Status: No hardware trackpad detected")
-            }
-            TouchBackendState.DISABLED -> {
-                ImGui.textDisabled("Touchpad Status: Disabled on this platform")
             }
         }
     }
@@ -981,21 +933,14 @@ object SettingsPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // 5. Play Queue Navigation Triggers
-        session.uiTheme.h3("Play Queue Triggers")
+        // 5. Audio & Clock Controls
+        session.uiTheme.h3("Audio & Clock Controls")
         ImGui.spacing()
-        val triggerMode = session.uiTheme.queueKeyTrigger.name
-        val triggerDesc = when (session.uiTheme.queueKeyTrigger) {
-            UITheme.QueueKeyTrigger.ARROWS          -> "Left Arrow (Previous) / Right Arrow (Next)"
-            UITheme.QueueKeyTrigger.PAGE_UP_DOWN    -> "Page Up (Previous) / Page Down (Next)"
-            UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> "Backspace (Previous) / Spacebar (Next)"
-            UITheme.QueueKeyTrigger.NONE            -> "Disabled (No keyboard trigger active)"
-        }
         drawShortcutTable(
             session,
-            "##queue_shortcuts",
+            "##clock_shortcuts",
             listOf(
-                ShortcutItem("Active Key Trigger ($triggerMode)", triggerDesc, "Advances or steps back through active play queue (Configurable in MIDI & Controls).")
+                ShortcutItem("T", "Tap Tempo", "Taps in manual BPM tempo when not typing in text fields.")
             )
         )
     }

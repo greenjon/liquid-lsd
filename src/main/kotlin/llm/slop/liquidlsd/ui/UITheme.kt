@@ -129,14 +129,6 @@ object UITheme {
         get() = settings.midiEnabled
         set(value) { settings = settings.copy(midiEnabled = value) }
 
-    enum class QueueKeyTrigger { NONE, ARROWS, PAGE_UP_DOWN, SPACE_BACKSPACE }
-
-    enum class TapKeyTrigger(val displayName: String) {
-        T("T"),
-        PERIOD("Period (.)"),
-        NONE("None")
-    }
-
     var autoVjDirtyBehavior: AutoVjDirtyBehavior
         get() = settings.autoVjDirtyBehavior
         set(value) { settings = settings.copy(autoVjDirtyBehavior = value) }
@@ -145,14 +137,12 @@ object UITheme {
         get() = settings.activeMidiProfile
         set(value) { settings = settings.copy(activeMidiProfile = value) }
         
+    enum class QueueKeyTrigger { NONE, ARROWS, PAGE_UP_DOWN, SPACE_BACKSPACE }
+
     var queueKeyTrigger: QueueKeyTrigger
         get() = settings.queueKeyTrigger
         set(value) { settings = settings.copy(queueKeyTrigger = value) }
 
-    var tapKeyTrigger: TapKeyTrigger
-        get() = settings.tapKeyTrigger
-        set(value) { settings = settings.copy(tapKeyTrigger = value) }
-        
     var tooltipsEnabled: Boolean
         get() = settings.tooltipsEnabled
         set(value) { settings = settings.copy(tooltipsEnabled = value) }
@@ -490,10 +480,6 @@ object UITheme {
                 if (savedKeyTrigger != null) {
                     queueKeyTrigger = try { QueueKeyTrigger.valueOf(savedKeyTrigger) } catch (e: Exception) { QueueKeyTrigger.NONE }
                 }
-                val savedTapKey = props.getProperty("tapKeyTrigger")
-                if (savedTapKey != null) {
-                    tapKeyTrigger = try { TapKeyTrigger.valueOf(savedTapKey) } catch (e: Exception) { TapKeyTrigger.T }
-                }
                 val savedStartup = props.getProperty("startupBehavior")
                 if (savedStartup != null) {
                     startupBehavior = try { StartupBehavior.valueOf(savedStartup) } catch (e: Exception) { StartupBehavior.PREVIOUS_SESSION }
@@ -587,7 +573,6 @@ object UITheme {
             props.setProperty("autoVjDirtyBehavior", autoVjDirtyBehavior.name)
             props.setProperty("activeMidiProfile", activeMidiProfile)
             props.setProperty("queueKeyTrigger", queueKeyTrigger.name)
-            props.setProperty("tapKeyTrigger", tapKeyTrigger.name)
             props.setProperty("startupBehavior", startupBehavior.name)
             props.setProperty("theme", theme.name)
             props.setProperty("showMidiCol", showMidiCol.toString())

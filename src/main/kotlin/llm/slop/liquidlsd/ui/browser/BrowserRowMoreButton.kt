@@ -39,30 +39,27 @@ object BrowserRowMoreButton {
         val isPopupOpen = ImGui.isPopupOpen(popupId)
         val rowH = if (btnHeight > 0f) btnHeight else ImGui.getItemRectSizeY().coerceAtLeast(ImGui.getTextLineHeight())
 
-        val mouseX = ImGui.getMousePosX()
-        val mouseY = ImGui.getMousePosY()
         val btnMinX = ImGui.getCursorScreenPosX()
         val btnMinY = ImGui.getCursorScreenPosY()
-        val isMouseOverBtn = mouseX >= btnMinX && mouseX <= btnMinX + btnWidth && mouseY >= btnMinY && mouseY <= btnMinY + rowH
-
-        val isVisible = isRowHovered || isMouseOverBtn || isSelected || isPopupOpen
 
         ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.15f)
         ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.25f)
-
-        // Only show border outline on hover; completely transparent otherwise
-        if (isMouseOverBtn) {
-            ImGui.pushStyleColor(ImGuiCol.Border, 1f, 1f, 1f, 0.35f)
-        } else {
-            ImGui.pushStyleColor(ImGuiCol.Border, 0f, 0f, 0f, 0f)
-        }
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 0f, 0f)
 
         // Draw the button (empty text so standard button handles hit-testing, active state, styling, and borders)
         val clicked = ImGui.button("##row_more_$idSuffix", btnWidth, rowH)
         val isBtnHovered = ImGui.isItemHovered()
+
+        // Only show border outline on hover; completely transparent otherwise
+        if (isBtnHovered) {
+            ImGui.pushStyleColor(ImGuiCol.Border, 1f, 1f, 1f, 0.35f)
+        } else {
+            ImGui.pushStyleColor(ImGuiCol.Border, 0f, 0f, 0f, 0f)
+        }
+
+        val isVisible = isRowHovered || isBtnHovered || isSelected || isPopupOpen
 
         if (isVisible) {
             val dl = ImGui.getWindowDrawList()
@@ -81,10 +78,8 @@ object BrowserRowMoreButton {
             dl.addCircleFilled(cx, cy + spacing, r, dotCol)
         }
 
-        // When clicked, close any currently open popup before opening this popup,
-        // and also check isMouseClicked directly so clicking while another popup is active works immediately
-        val mouseClickedThisBtn = isMouseOverBtn && (ImGui.isMouseClicked(0) || ImGui.isMouseClicked(1))
-        if (clicked || ImGui.isItemClicked(0) || ImGui.isItemClicked(1) || mouseClickedThisBtn) {
+        val isItemRightClicked = isBtnHovered && ImGui.isItemClicked(1)
+        if (clicked || isItemRightClicked) {
             ImGui.closeCurrentPopup()
             ImGui.openPopup(popupId)
         }
@@ -96,6 +91,6 @@ object BrowserRowMoreButton {
         ImGui.popStyleVar()
         ImGui.popStyleColor(4)
 
-        return clicked || mouseClickedThisBtn
+        return clicked || isItemRightClicked
     }
 }

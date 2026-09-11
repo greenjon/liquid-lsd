@@ -315,11 +315,7 @@ fun main(args: Array<String>) {
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
         val isPlainFOrB = (mods == 0) && (key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed
         val isCapsLock = key == GLFW_KEY_CAPS_LOCK
-        val isTapTempoKey = (mods == 0) && isShortcutAllowed && when (session.uiTheme.tapKeyTrigger) {
-            UITheme.TapKeyTrigger.T -> key == GLFW_KEY_T
-            UITheme.TapKeyTrigger.PERIOD -> key == GLFW_KEY_PERIOD || key == GLFW_KEY_KP_DECIMAL
-            UITheme.TapKeyTrigger.NONE -> false
-        }
+        val isTapTempoKey = (mods == 0) && isShortcutAllowed && key == GLFW_KEY_T
         val isHotKey = isPlainFOrB || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen || isCapsLock || isTapTempoKey
 
         if (action == GLFW_PRESS) {

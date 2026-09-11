@@ -129,7 +129,7 @@ val depthCbs = cvModulatorSlider(
 
 
 ### 7. `SettingsPanel.kt` & `AudioEnginePanel.kt`
-- **Settings Category Routing**: `SettingsPanel` organizes application preferences into 7 clean categories (`APPEARANCE`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `BROADCAST`, `MIDI_CONTROL`, `SHORTCUTS`, `GENERAL`) and supports targeted opening via `SettingsPanel.open(category)`. The `APPEARANCE` category displays an informational typography hierarchy and the "Preset Name Size" slider (80%–120%).
+- **Settings Category Routing**: `SettingsPanel` organizes application preferences into 7 clean categories (`GENERAL`, `APPEARANCE`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `SHADER_LOCATIONS`, `BROADCAST`, `SHORTCUTS`) and supports targeted opening via `SettingsPanel.open(category)`. The `APPEARANCE` category displays an informational typography hierarchy and the "Preset Name Size" slider (80%–120%).
 - **Unified Modulator Control**: Enabling an engine subsystem (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) automatically determines column visibility in the Preset Grid and Cell Config panel. The Preset Grid header kebab menu (`⋮`) acts as a quick-switchboard to toggle these subsystems directly without modal navigation.
 - **Audio Engine Tab & Oscilloscopes (`AudioEnginePanel.kt`)**: The audio subsystem UI is encapsulated within `AudioEnginePanel.kt` and drawn in a balanced two-column layout:
   - **Left Column**: Backend & hardware device configuration, status readouts, reconnection triggers, tempo synchronization, manual BPM locking, Beat Tracker target band selection, detection presets (High Accuracy, Balanced, Eco), and a dual-headed interactive BPM Range (Floor/Ceiling) slider with real-time tempo indicator dot.

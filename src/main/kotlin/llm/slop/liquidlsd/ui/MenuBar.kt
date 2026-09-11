@@ -439,11 +439,7 @@ class MenuBar(
                 session.tapTempoController.tap()
             }
             if (isBpmHovered) {
-                val keyHint = when (session.uiTheme.tapKeyTrigger) {
-                    UITheme.TapKeyTrigger.T -> "Key: [T]"
-                    UITheme.TapKeyTrigger.PERIOD -> "Key: [.]"
-                    UITheme.TapKeyTrigger.NONE -> "Key: None"
-                }
+                val keyHint = "Key: [T]"
                 val bpmTip = if (isAudioDisabled) {
                     "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nClick DSP badge to open Audio Engine settings."
                 } else if (audioActive) {

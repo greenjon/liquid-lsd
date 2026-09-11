@@ -27,14 +27,19 @@ object MidiEngine {
             if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
                 initialize()
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.error(e) { "Failed to initialize MidiEngine" }
         }
     }
 
     private fun initialize() {
         synchronized(openDevices) {
-            val infos = MidiSystem.getMidiDeviceInfo()
+            val infos = try {
+                MidiSystem.getMidiDeviceInfo()
+            } catch (e: Throwable) {
+                logger.error(e) { "Failed to query MIDI device info during init" }
+                emptyArray()
+            }
             logger.info { "Found ${infos.size} MIDI devices" }
             for (info in infos) {
                 try {
@@ -47,7 +52,7 @@ object MidiEngine {
                         openDevices.add(device)
                         logger.info { "Successfully opened MIDI input device: ${info.name} - ${info.description}" }
                     }
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     logger.warn { "Could not open MIDI device: ${info.name}. Error: ${e.message}" }
                 }
             }
@@ -66,9 +71,14 @@ object MidiEngine {
             val iterator = openDevices.iterator()
             while (iterator.hasNext()) {
                 val dev = iterator.next()
-                if (!dev.isOpen) {
-                    logger.info { "Removing inactive MIDI device: ${dev.deviceInfo.name}" }
-                    try { dev.close() } catch (e: Exception) {}
+                try {
+                    if (!dev.isOpen) {
+                        logger.info { "Removing inactive MIDI device: ${dev.deviceInfo.name}" }
+                        try { dev.close() } catch (e: Throwable) {}
+                        iterator.remove()
+                    }
+                } catch (e: Throwable) {
+                    try { dev.close() } catch (_: Throwable) {}
                     iterator.remove()
                 }
             }
@@ -76,7 +86,7 @@ object MidiEngine {
             // 2. Scan for newly plugged-in devices
             val infos = try {
                 MidiSystem.getMidiDeviceInfo()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 logger.error(e) { "Failed to query MIDI device info" }
                 emptyArray()
             }
@@ -84,7 +94,11 @@ object MidiEngine {
             for (info in infos) {
                 // Check if this device is already opened
                 val alreadyOpen = openDevices.any { 
-                    it.deviceInfo.name == info.name && it.deviceInfo.description == info.description 
+                    try {
+                        it.deviceInfo.name == info.name && it.deviceInfo.description == info.description 
+                    } catch (e: Throwable) {
+                        false
+                    }
                 }
                 if (alreadyOpen) continue
 
@@ -98,7 +112,7 @@ object MidiEngine {
                         openDevices.add(device)
                         logger.info { "Successfully opened newly detected MIDI input device: ${info.name} - ${info.description}" }
                     }
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     // Log at debug so as not to spam warnings if a device is locked by another app
                     logger.debug { "Could not open newly detected MIDI device: ${info.name}. Error: ${e.message}" }
                 }
@@ -127,8 +141,8 @@ object MidiEngine {
                     if (device.isOpen) {
                         device.close()
                     }
-                } catch (e: Exception) {
-                    logger.error(e) { "Error closing MIDI device: ${device.deviceInfo.name}" }
+                } catch (e: Throwable) {
+                    logger.error(e) { "Error closing MIDI device" }
                 }
             }
             openDevices.clear()
