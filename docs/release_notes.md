@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Test Suite Isolation & Real-Time Audio Teardown (`AudioEngineTest.kt`, `CvModulatorTest.kt`)
+- **AudioEngine Teardown & Lifecycle Isolation**: Added `@AfterTest` lifecycle teardown and `try-finally` safety in `AudioEngineTest` to immediately invoke `AudioEngine.stop()`, reset audio parameters, and close active JACK / Java Sound client threads when tests complete. Prevents background real-time audio callback threads from leaking into subsequent test suites and asynchronously clobbering CVRegistry audio signals (`audio_amp`, `audio_bass`, etc.).
+- **CV Modulator Audio Test Isolation**: Guaranteed `AudioEngine.stop()` and `AudioFollowerTracker.reset()` are called during unipolar and audio follower modulator tests in `CvModulatorTest` for test determinism.
+
 ### ISF GLSL Uniform Deduplication & Directory Registry Scoping (`ISFParser.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `VisualSourceRegistry.kt`, `ISFParserTest.kt`)
 - **Automatic Standard Uniform Deduplication**: Updated `ISFParser.buildGLSLFragmentShader()` to automatically detect and strip preexisting standard uniform declarations (`TIME`, `uAlpha`, `RENDERSIZE`, `TIMEDELTA`, `FRAMEINDEX`, `DATE`, `PASSINDEX`) from shader source bodies while declaring them safely at global scope at the top. Prevents GLSL 3.30 compilation errors (`redeclared`) when shaders explicitly declare built-in uniforms.
 - **Directory & Asset Registry Separation**: Restricted `ISFFilterRegistry`, `ISFTransitionRegistry`, and `VisualSourceRegistry` from cross-scanning mismatched directory types (e.g. generator sources in `library/sources` are no longer parsed as filters or transitions, and filters/transitions in `library/filters` or `library/transitions` are not loaded as visual sources).

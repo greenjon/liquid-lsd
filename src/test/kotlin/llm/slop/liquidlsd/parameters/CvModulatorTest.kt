@@ -115,6 +115,7 @@ class CvModulatorTest {
 
     @Test
     fun testUnipolarAudioModulationEvaluation() {
+        llm.slop.liquidlsd.audio.AudioEngine.stop()
         if (!CVRegistry.exists("audio_amp")) {
             CVRegistry.register(MutableCVSource("audio_amp", 0.0f))
         }
@@ -398,6 +399,8 @@ class CvModulatorTest {
 
     @Test
     fun testAudioModulatorUnipolarScaling() {
+        llm.slop.liquidlsd.audio.AudioEngine.stop()
+        llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
         // Mock peak audio input pushed to CVRegistry
         llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
         
@@ -412,6 +415,7 @@ class CvModulatorTest {
 
     @Test
     fun testActiveModulatorsFilterBypassedBands() {
+        llm.slop.liquidlsd.audio.AudioEngine.stop()
         llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
         llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
         llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_bass", 1.0f)

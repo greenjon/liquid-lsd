@@ -1,11 +1,23 @@
 package llm.slop.liquidlsd.audio
 
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import java.nio.FloatBuffer
 
 class AudioEngineTest {
+
+    @AfterTest
+    fun tearDown() {
+        AudioEngine.stop()
+        AudioEngine.backendMode = AudioEngine.AudioBackendMode.AUTO
+        AudioEngine.channelRouting = AudioChannelRouting.MIX
+        AudioEngine.selectedDeviceName = null
+        AudioEngine.inputGain = 1.0f
+        AudioEngine.isBpmLocked = true
+        AudioEngine.manualBpm = 120.0f
+    }
 
     @Test
     fun testProcessAudioBoundsSafety() {
@@ -32,19 +44,23 @@ class AudioEngineTest {
 
     @Test
     fun testAutomaticReconnectDisabledOnStartupFailure() {
-        AudioEngine.selectDevice(null, AudioEngine.AudioBackendMode.JACK_ONLY)
-        // In headless test environments without JACK running, automatic reconnect should be disabled
-        if (!AudioEngine.isJackConnected()) {
-            assertFalse(AudioEngine.automaticReconnectEnabled, "Automatic reconnect should be disabled after startup failure")
+        try {
+            AudioEngine.selectDevice(null, AudioEngine.AudioBackendMode.JACK_ONLY)
+            // In headless test environments without JACK running, automatic reconnect should be disabled
+            if (!AudioEngine.isJackConnected()) {
+                assertFalse(AudioEngine.automaticReconnectEnabled, "Automatic reconnect should be disabled after startup failure")
 
-            // Watchdog tryReconnect without force must not re-attempt
-            AudioEngine.tryReconnect(force = false)
-            assertFalse(AudioEngine.automaticReconnectEnabled)
+                // Watchdog tryReconnect without force must not re-attempt
+                AudioEngine.tryReconnect(force = false)
+                assertFalse(AudioEngine.automaticReconnectEnabled)
 
-            // Force reconnect re-enables automatic reconnect attempt
-            AudioEngine.tryReconnect(force = true)
-            // After attempting startClient again without JACK running, it will disable again
-            assertFalse(AudioEngine.automaticReconnectEnabled)
+                // Force reconnect re-enables automatic reconnect attempt
+                AudioEngine.tryReconnect(force = true)
+                // After attempting startClient again without JACK running, it will disable again
+                assertFalse(AudioEngine.automaticReconnectEnabled)
+            }
+        } finally {
+            AudioEngine.stop()
         }
     }
 
