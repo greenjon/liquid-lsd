@@ -20,11 +20,16 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
             ImGui.spacing()
 
             for (path in unresolved) {
+                val isDescriptor = path.startsWith("Transition filter not found:") ||
+                                   path.startsWith("Deck ") ||
+                                   path.contains("filter not found:")
                 ImGui.text(path)
-                ImGui.sameLine()
-                if (ImGui.button("Locate...##$path")) {
-                    browserOpenForItem = path
-                    fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("library"))
+                if (!isDescriptor) {
+                    ImGui.sameLine()
+                    if (ImGui.button("Locate...##$path")) {
+                        browserOpenForItem = path
+                        fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("library"))
+                    }
                 }
             }
 

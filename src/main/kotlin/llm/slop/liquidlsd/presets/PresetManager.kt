@@ -62,7 +62,8 @@ object PresetManager {
 
     internal data class RestoredQueueState(
         val files: List<File>,
-        val activeIndex: Int
+        val activeIndex: Int,
+        val unresolvedPaths: List<String> = emptyList()
     )
 
     fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean {
@@ -606,7 +607,36 @@ object PresetManager {
                 paramNotes = pvDto.paramNotes
             )
             
+            val allUnresolved = mutableListOf<String>()
+
+            session.transitionSlot?.let { transDto ->
+                if (transDto.filterId.isNotBlank() && !llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.hasTransition(transDto.filterId)) {
+                    allUnresolved.add("Transition filter not found: ${transDto.filterId}")
+                }
+            }
+
+            val deckDtos = listOf("A" to session.deckA, "B" to session.deckB, "BG" to bgDto, "PV" to pvDto)
+            for ((deckName, dDto) in deckDtos) {
+                if (!dDto.isEmpty && dDto.visualSourceType.isNotBlank() && dDto.visualSourceType != "mandala" && dDto.visualSourceType != "blank") {
+                    val found = llm.slop.liquidlsd.rendering.VisualSourceRegistry.availableSources.any { it.id == dDto.visualSourceType }
+                    if (!found) {
+                        allUnresolved.add("Deck $deckName visual source not found: ${dDto.visualSourceType}")
+                    }
+                }
+                dDto.fxSlot1?.let { fx ->
+                    if (fx.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fx.filterId }) {
+                        allUnresolved.add("Deck $deckName FX1 filter not found: ${fx.filterId}")
+                    }
+                }
+                dDto.fxSlot2?.let { fx ->
+                    if (fx.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fx.filterId }) {
+                        allUnresolved.add("Deck $deckName FX2 filter not found: ${fx.filterId}")
+                    }
+                }
+            }
+
             val restoredQueue = resolveRestoredQueue(session.queue, session.activeIndex)
+            allUnresolved.addAll(restoredQueue.unresolvedPaths)
             PlayQueueManager.restoreSessionQueue(
                 restoredQueue.files,
                 restoredQueue.activeIndex,
@@ -616,6 +646,7 @@ object PresetManager {
             )
 
             val restoredBgQueue = resolveRestoredQueue(session.bgQueue, session.bgActiveIndex)
+            allUnresolved.addAll(restoredBgQueue.unresolvedPaths)
             BgQueueManager.restoreSessionQueue(
                 restoredBgQueue.files,
                 restoredBgQueue.activeIndex,
@@ -623,7 +654,9 @@ object PresetManager {
                 session.isBgRepeatEnabled,
                 session.isBgShuffleEnabled
             )
-            logger.info { "Successfully loaded session state from ${sessionFile.name}" }
+
+            sessionState = sessionState.copy(unresolvedItems = allUnresolved.distinct())
+            logger.info { "Successfully loaded session state from ${sessionFile.name} (unresolved items: ${allUnresolved.size})" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load session state, falling back to empty" }
             startEmpty(mixer)
@@ -666,14 +699,14 @@ object PresetManager {
         sessionState = sessionState.copy(unresolvedItems = unresolved)
 
         if (existingFiles.isEmpty() || savedActiveIndex < 0) {
-            return RestoredQueueState(existingFiles.map { it.second }, -1)
+            return RestoredQueueState(existingFiles.map { it.second }, -1, unresolved)
         }
 
         val rebasedActiveIndex = existingFiles.indexOfFirst { it.first >= savedActiveIndex }
             .takeIf { it >= 0 }
             ?: existingFiles.lastIndex
 
-        return RestoredQueueState(existingFiles.map { it.second }, rebasedActiveIndex)
+        return RestoredQueueState(existingFiles.map { it.second }, rebasedActiveIndex, unresolved)
     }
 
     fun startEmpty(mixer: Mixer) {

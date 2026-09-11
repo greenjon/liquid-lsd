@@ -61,17 +61,25 @@ object ISFParser {
 
         // 4. ISF Standard Built-in Uniforms
         sb.append("// ISF Standard Uniforms\n")
-        sb.append("uniform vec2 RENDERSIZE;\n")
-        sb.append("uniform float TIME;\n")
-        sb.append("uniform float TIMEDELTA;\n")
-        sb.append("uniform int FRAMEINDEX;\n")
-        sb.append("uniform vec4 DATE;\n")
-        sb.append("uniform int PASSINDEX;\n")
-        sb.append("uniform float uAlpha;\n\n")
+        val standardUniforms = listOf(
+            "vec2" to "RENDERSIZE",
+            "float" to "TIME",
+            "float" to "TIMEDELTA",
+            "int" to "FRAMEINDEX",
+            "vec4" to "DATE",
+            "int" to "PASSINDEX",
+            "float" to "uAlpha"
+        )
+        for ((type, name) in standardUniforms) {
+            sb.append("uniform $type $name;\n")
+        }
+        sb.append("\n")
 
-        // 5. User Inputs as Uniforms (only if not already declared in shader code)
+        // 5. User Inputs as Uniforms (only if not already declared in shader code or standard uniforms)
         sb.append("// ISF Input Uniforms\n")
+        val standardNames = standardUniforms.map { it.second }.toSet()
         for (input in header.INPUTS) {
+            if (input.NAME in standardNames) continue
             val uniformDecl = when (input.TYPE.lowercase()) {
                 "float" -> "uniform float ${input.NAME};"
                 "bool" -> "uniform bool ${input.NAME};"
@@ -82,7 +90,7 @@ object ISFParser {
                 else -> "uniform float ${input.NAME};"
             }
             // If the shader already explicitly wrote "uniform ... <NAME>", avoid duplicate declaration
-            val declRegex = Regex("""\buniform\s+[A-Za-z0-9_]+\s+${Regex.escape(input.NAME)}\s*;""")
+            val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(input.NAME)}\s*;""")
             if (!declRegex.containsMatchIn(stripped)) {
                 sb.append(uniformDecl).append("\n")
             }
@@ -93,20 +101,26 @@ object ISFParser {
         sb.append("// ISF Pass Targets\n")
         val passTargets = header.PASSES.mapNotNull { it.TARGET }
         for (target in passTargets) {
-            val declRegex = Regex("""\buniform\s+sampler2D\s+${Regex.escape(target)}\s*;""")
+            val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(target)}\s*;""")
             if (!declRegex.containsMatchIn(stripped)) {
                 sb.append("uniform sampler2D $target;\n")
             }
         }
         sb.append("\n")
 
-        // 6. Clean up stripped body (strip redundant #version directives and preexisting vTexCoord/out vec4)
+        // 6. Clean up stripped body (strip redundant #version directives, preexisting vTexCoord/out vec4, and duplicate standard uniforms)
         var body = stripped
         val versionDirectiveRegex = Regex("""^\s*#version\s+.*$""", RegexOption.MULTILINE)
         body = body.replace(versionDirectiveRegex, "")
 
         // If body has 'in vec2 vTexCoord;', remove it since we injected it
         body = body.replace(Regex("""^\s*in\s+vec2\s+vTexCoord\s*;""", RegexOption.MULTILINE), "")
+
+        // Strip duplicate declarations of standard uniforms from body if already declared there
+        for ((_, name) in standardUniforms) {
+            val dupRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(name)}\s*;""")
+            body = body.replace(dupRegex, "")
+        }
 
         // If body defines an explicit out vec4 (e.g. out vec4 fragColor; or out vec4 FragColor;),
         // replace its name with isf_FragColor or alias it.

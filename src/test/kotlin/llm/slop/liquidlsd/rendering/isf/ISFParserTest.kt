@@ -80,4 +80,51 @@ class ISFParserTest {
         assert(glsl.contains("uniform vec2 RENDERSIZE;"))
         assert(glsl.contains("vec2 p = isf_FragNormCoord - center;"))
     }
+
+    @Test
+    fun testBuildGLSLFragmentShaderDeduplicatesStandardUniforms() {
+        // Simulates shaders like colors/shader.frag that explicitly declare TIME, uAlpha, etc. in their GLSL body
+        val source = """
+            /*{
+                "DESCRIPTION": "Colors with explicit uniforms",
+                "INPUTS": [
+                    { "NAME": "Speed", "TYPE": "float", "DEFAULT": 0.2 },
+                    { "NAME": "uAlpha", "TYPE": "float", "DEFAULT": 1.0 }
+                ]
+            }*/
+            #version 330 core
+            in vec2 vTexCoord;
+            out vec4 fragColor;
+
+            uniform float Speed;
+            uniform float TIME;
+            uniform float uAlpha;
+            uniform vec2 RENDERSIZE;
+
+            void main() {
+                fragColor = vec4(sin(TIME * Speed), 0.0, 0.0, uAlpha);
+            }
+        """.trimIndent()
+
+        val header = ISFParser.parseHeader(source)
+        assertNotNull(header)
+        val glsl = ISFParser.buildGLSLFragmentShader(source, header)
+
+        // Ensure TIME, uAlpha, and RENDERSIZE appear EXACTLY once in the preprocessed GLSL
+        val timeOccurrences = Regex("""\buniform\s+float\s+TIME\s*;""").findAll(glsl).count()
+        assertEquals(1, timeOccurrences, "uniform float TIME; should be declared exactly once")
+
+        val uAlphaOccurrences = Regex("""\buniform\s+float\s+uAlpha\s*;""").findAll(glsl).count()
+        assertEquals(1, uAlphaOccurrences, "uniform float uAlpha; should be declared exactly once")
+
+        val renderSizeOccurrences = Regex("""\buniform\s+vec2\s+RENDERSIZE\s*;""").findAll(glsl).count()
+        assertEquals(1, renderSizeOccurrences, "uniform vec2 RENDERSIZE; should be declared exactly once")
+
+        val speedOccurrences = Regex("""\buniform\s+float\s+Speed\s*;""").findAll(glsl).count()
+        assertEquals(1, speedOccurrences, "uniform float Speed; should be declared exactly once")
+
+        // Ensure output mapping occurred
+        assert(glsl.contains("#define fragColor isf_FragColor"))
+        assert(glsl.contains("fragColor = vec4(sin(TIME * Speed), 0.0, 0.0, uAlpha);"))
+    }
 }

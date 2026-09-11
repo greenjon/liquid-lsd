@@ -67,6 +67,13 @@ object ISFFilterRegistry {
         val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
 
         for (resolved in enabledDirs) {
+            val normalizedPath = resolved.config.path.trim().replace('\\', '/').trimEnd('/')
+            if (normalizedPath == "library/sources" || normalizedPath == "library/transitions" ||
+                normalizedPath.endsWith("/sources") || normalizedPath.endsWith("/transitions")
+            ) {
+                continue
+            }
+
             val dir = File(resolved.expandedPath)
             if (!dir.exists() || !dir.isDirectory) continue
 
@@ -88,12 +95,23 @@ object ISFFilterRegistry {
     private fun registerFilterFromSource(id: String, displayName: String, source: String) {
         val header = ISFParser.parseHeader(source) ?: return
 
-        // Mutual exclusion: skip if this shader is categorised as a transition or has a progress input
+        // 1. Mutual exclusion: skip if this shader is categorised as a transition or has a progress input
         val isTransitionCategory = header.CATEGORIES?.any { it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true) } == true
         val hasProgress = header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) }
         val inTransitionRegistry = ISFTransitionRegistry.hasTransition(id)
         if (isTransitionCategory || hasProgress || inTransitionRegistry) {
             logger.debug { "Skipping ISF transition '$id' from filter registry" }
+            return
+        }
+
+        // 2. Mutual exclusion: skip if this shader is a generator/source (not a filter)
+        // A filter must receive at least one image input to process (e.g. inputImage)
+        val hasImageInput = header.INPUTS.any { it.TYPE.equals("image", ignoreCase = true) }
+        val isGeneratorCategory = header.CATEGORIES?.any {
+            it.equals("Generators", ignoreCase = true) || it.equals("Generator", ignoreCase = true) || it.equals("Source", ignoreCase = true)
+        } == true
+        if (!hasImageInput || isGeneratorCategory) {
+            logger.debug { "Skipping ISF generator/source '$id' from filter registry" }
             return
         }
 

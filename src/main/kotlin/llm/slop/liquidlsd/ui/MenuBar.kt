@@ -173,6 +173,17 @@ class MenuBar(
                     }
                 }
 
+                // ── ISF Scanner Status Pill (visible while background scan is running) ──
+                if (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.isScanning) {
+                    val progress = (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanProgress * 100f).toInt()
+                    val currentPath = llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanCurrentPath
+                    ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.45f, 0.75f, 0.9f)
+                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
+                    ImGui.button("${Icons.REFRESH} SCANNING ($progress%)")
+                    ImGui.popStyleColor(2)
+                    itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
+                }
+
                 // MIDI Map toggle button
                 val isMidiLearn = presetState.isMidiLearnMode
                 val midiEnabled = session.uiTheme.midiEnabled

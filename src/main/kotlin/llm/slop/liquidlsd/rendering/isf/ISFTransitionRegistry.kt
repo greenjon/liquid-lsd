@@ -77,6 +77,13 @@ object ISFTransitionRegistry {
         val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
 
         for (resolved in enabledDirs) {
+            val normalizedPath = resolved.config.path.trim().replace('\\', '/').trimEnd('/')
+            if (normalizedPath == "library/sources" || normalizedPath == "library/filters" ||
+                normalizedPath.endsWith("/sources") || normalizedPath.endsWith("/filters")
+            ) {
+                continue
+            }
+
             val dir = File(resolved.expandedPath)
             if (!dir.exists() || !dir.isDirectory) continue
 
@@ -87,7 +94,7 @@ object ISFTransitionRegistry {
                         val source = file.readText()
                         val id = file.nameWithoutExtension
                         val displayName = id.replace("_", " ").capitalize()
-                        registerTransitionFromSource(id, displayName, source)
+                        registerTransitionFromSource(id, displayName, source, file)
                     } catch (e: Exception) {
                         logger.error(e) { "Failed to load user transition: ${file.path}" }
                     }
@@ -95,8 +102,20 @@ object ISFTransitionRegistry {
         }
     }
 
-    private fun registerTransitionFromSource(id: String, displayName: String, source: String) {
+    private fun registerTransitionFromSource(id: String, displayName: String, source: String, file: File? = null) {
         val header = ISFParser.parseHeader(source) ?: return
+
+        // Ensure shader is actually a transition (has transition category, progress input, or transition directory)
+        val isTransitionCategory = header.CATEGORIES?.any {
+            it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true)
+        } == true
+        val hasProgress = header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) }
+        val filePathTransition = file?.absolutePath?.lowercase()?.contains("transition") == true
+
+        if (!isTransitionCategory && !hasProgress && !filePathTransition) {
+            logger.debug { "Skipping non-transition ISF shader '$id' from transition registry" }
+            return
+        }
 
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)

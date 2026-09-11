@@ -145,5 +145,8 @@ class ISFLibraryRegistryTest {
         val completed = latch.await(5, TimeUnit.SECONDS)
         assertTrue(completed)
         assertTrue(discoveredCount > 0)
+        assertFalse(ISFLibraryRegistry.isScanning)
+        assertEquals(1f, ISFLibraryRegistry.scanProgress)
+        assertEquals("", ISFLibraryRegistry.scanCurrentPath)
     }
 }

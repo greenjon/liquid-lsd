@@ -33,6 +33,14 @@ object ISFLibraryRegistry {
         }
     }
 
+    // Scanning status and progress telemetry for non-intrusive UI feedback
+    @Volatile var isScanning: Boolean = false
+        private set
+    @Volatile var scanProgress: Float = 0f
+        private set
+    @Volatile var scanCurrentPath: String = ""
+        private set
+
     // Sorted snapshot of all assets — rebuilt after each scan, never re-sorted per-frame.
     @Volatile private var cachedAssets: List<ISFAsset> = emptyList()
 
@@ -47,51 +55,62 @@ object ISFLibraryRegistry {
     fun scanLibrary(
         onProgress: (Int, Int, String) -> Unit = { _, _, _ -> }
     ): List<ISFAsset> {
-        val resolvedDirs = ISFDirectoryManager.getResolvedDirectories()
-        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
+        isScanning = true
+        scanProgress = 0f
+        scanCurrentPath = ""
+        try {
+            val resolvedDirs = ISFDirectoryManager.getResolvedDirectories()
+            val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
 
-        if (autoReloadEnabled) {
-            val dirsToWatch = enabledDirs.map { File(it.expandedPath) }
-            fileWatcher.watchDirectories(dirsToWatch)
-        }
+            if (autoReloadEnabled) {
+                val dirsToWatch = enabledDirs.map { File(it.expandedPath) }
+                fileWatcher.watchDirectories(dirsToWatch)
+            }
 
-        val rawDiscovered = mutableListOf<ISFAsset>()
-        val totalDirs = enabledDirs.size
-        var scannedCount = 0
+            val rawDiscovered = mutableListOf<ISFAsset>()
+            val totalDirs = enabledDirs.size
+            var scannedCount = 0
 
-        for (resolved in enabledDirs) {
-            scannedCount++
-            onProgress(scannedCount, totalDirs, resolved.expandedPath)
-            val dir = File(resolved.expandedPath)
-            val scannedAssets = ISFScanner.scanDirectory(dir, resolved.config.type, resolved.expandedPath)
-            rawDiscovered.addAll(scannedAssets)
-        }
+            for (resolved in enabledDirs) {
+                scannedCount++
+                scanProgress = if (totalDirs > 0) scannedCount.toFloat() / totalDirs.toFloat() else 1f
+                scanCurrentPath = resolved.expandedPath
+                onProgress(scannedCount, totalDirs, resolved.expandedPath)
+                val dir = File(resolved.expandedPath)
+                val scannedAssets = ISFScanner.scanDirectory(dir, resolved.config.type, resolved.expandedPath)
+                rawDiscovered.addAll(scannedAssets)
+            }
 
-        // Collision Resolution: Honor source priority (Custom > UserStandard > SystemStandard > BuiltIn)
-        // Group by unique shader ID
-        val winningAssets = mutableMapOf<String, ISFAsset>()
-        for (asset in rawDiscovered) {
-            val existing = winningAssets[asset.id]
-            if (existing == null) {
-                winningAssets[asset.id] = asset
-            } else {
-                // Compare priorities
-                if (asset.sourceType.priority > existing.sourceType.priority) {
+            // Collision Resolution: Honor source priority (Custom > UserStandard > SystemStandard > BuiltIn)
+            // Group by unique shader ID
+            val winningAssets = mutableMapOf<String, ISFAsset>()
+            for (asset in rawDiscovered) {
+                val existing = winningAssets[asset.id]
+                if (existing == null) {
                     winningAssets[asset.id] = asset
-                } else if (asset.sourceType.priority == existing.sourceType.priority) {
-                    // Tie-breaker: latest discovered / custom override
-                    winningAssets[asset.id] = asset
+                } else {
+                    // Compare priorities
+                    if (asset.sourceType.priority > existing.sourceType.priority) {
+                        winningAssets[asset.id] = asset
+                    } else if (asset.sourceType.priority == existing.sourceType.priority) {
+                        // Tie-breaker: latest discovered / custom override
+                        winningAssets[asset.id] = asset
+                    }
                 }
             }
+
+            assetsMap.clear()
+            assetsMap.putAll(winningAssets)
+            // Rebuild the cached sorted snapshot once per scan — zero allocation on the render thread.
+            cachedAssets = assetsMap.values.sortedBy { it.displayName }
+
+            logger.info { "ISF Library scan completed. Indexed ${assetsMap.size} unique shaders from ${enabledDirs.size} directories." }
+            return cachedAssets
+        } finally {
+            isScanning = false
+            scanProgress = 1f
+            scanCurrentPath = ""
         }
-
-        assetsMap.clear()
-        assetsMap.putAll(winningAssets)
-        // Rebuild the cached sorted snapshot once per scan — zero allocation on the render thread.
-        cachedAssets = assetsMap.values.sortedBy { it.displayName }
-
-        logger.info { "ISF Library scan completed. Indexed ${assetsMap.size} unique shaders from ${enabledDirs.size} directories." }
-        return cachedAssets
     }
 
     /**

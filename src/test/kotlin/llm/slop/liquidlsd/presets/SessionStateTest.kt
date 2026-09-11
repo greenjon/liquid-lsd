@@ -170,14 +170,47 @@ class SessionStateTest {
         presetFile.parentFile.mkdirs()
         presetFile.writeText("{}")
         
-        PresetManager.resolveRestoredQueue(
+        val result = PresetManager.resolveRestoredQueue(
             listOf("presets/MyPreset.lsd", "presets/MissingPreset.lsd"),
             savedActiveIndex = 0
         )
         
         val unresolved = PresetManager.sessionState.unresolvedItems
         assertEquals(listOf("presets/MissingPreset.lsd"), unresolved)
+        assertEquals(listOf("presets/MissingPreset.lsd"), result.unresolvedPaths)
         
         presetFile.delete()
+    }
+
+    @Test
+    fun testCombinedQueueUnresolvedItems() {
+        val root = File("library").absoluteFile
+        val mainFile = File(root, "presets/ExistingMain.lsd").apply {
+            parentFile.mkdirs()
+            writeText("{}")
+        }
+        val bgFile = File(root, "presets/ExistingBg.lsd").apply {
+            parentFile.mkdirs()
+            writeText("{}")
+        }
+
+        val resMain = PresetManager.resolveRestoredQueue(
+            listOf("presets/ExistingMain.lsd", "presets/MissingMain1.lsd"),
+            savedActiveIndex = 0
+        )
+        val resBg = PresetManager.resolveRestoredQueue(
+            listOf("presets/ExistingBg.lsd", "presets/MissingBg1.lsd"),
+            savedActiveIndex = 0
+        )
+
+        val combined = (resMain.unresolvedPaths + resBg.unresolvedPaths).distinct()
+        PresetManager.sessionState = PresetManager.sessionState.copy(unresolvedItems = combined)
+
+        assertEquals(2, PresetManager.sessionState.unresolvedItems.size)
+        assertTrue(PresetManager.sessionState.unresolvedItems.contains("presets/MissingMain1.lsd"))
+        assertTrue(PresetManager.sessionState.unresolvedItems.contains("presets/MissingBg1.lsd"))
+
+        mainFile.delete()
+        bgFile.delete()
     }
 }

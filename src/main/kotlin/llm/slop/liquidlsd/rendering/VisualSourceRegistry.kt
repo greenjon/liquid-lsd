@@ -98,54 +98,100 @@ object VisualSourceRegistry {
         }
     }
 
-    fun loadAll() {
-        disposeAll()
-        
-        val defaultSourcesDir = File("library/sources")
+    fun loadBundledSources(defaultSourcesDir: File = File("library/sources")) {
         if (!defaultSourcesDir.exists()) {
             defaultSourcesDir.mkdirs()
         }
-
         ensureDefaultSources(defaultSourcesDir)
 
-        llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.loadSettings()
-        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
-
-        val resolvedDirs = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.getResolvedDirectories()
-        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == llm.slop.liquidlsd.rendering.isf.DirectoryStatus.ACTIVE }
-
-        for (resolved in enabledDirs) {
-            val dir = File(resolved.expandedPath)
-            if (!dir.exists() || !dir.isDirectory) continue
-
-            val folders = dir.listFiles { file -> file.isDirectory } ?: emptyArray()
-            for (folder in folders) {
+        // Load bundled source folders from library/sources
+        val folders = defaultSourcesDir.listFiles { file -> file.isDirectory } ?: emptyArray()
+        for (folder in folders) {
+            if (availableSources.none { it.id == folder.name }) {
                 loadFromFolder(folder)
             }
-
-            val files = dir.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") } ?: emptyArray()
-            for (file in files) {
-                try {
-                    val source = loadFromISFFile(file)
-                    if (source != null && availableSources.none { it.id == source.id }) {
-                        availableSources.add(source)
-                        logger.info { "Loaded standalone ISF visual source: ${source.displayName} (${source.id})" }
-                    }
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to load standalone ISF source: ${file.name}" }
-                }
-            }
         }
-        
+
         // Register static native sources (ensure single instance)
         if (availableSources.none { it is ExternalVideoSource }) {
             availableSources.add(ExternalVideoSource())
         }
     }
 
+    fun scanUserSources() {
+        val resolvedDirs = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.getResolvedDirectories()
+        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == llm.slop.liquidlsd.rendering.isf.DirectoryStatus.ACTIVE }
+
+        for (resolved in enabledDirs) {
+            val normalizedPath = resolved.config.path.trim().replace('\\', '/').trimEnd('/')
+            if (normalizedPath == "library/filters" || normalizedPath == "library/transitions" ||
+                normalizedPath.endsWith("/filters") || normalizedPath.endsWith("/transitions")
+            ) {
+                continue
+            }
+
+            val dir = File(resolved.expandedPath)
+            if (!dir.exists() || !dir.isDirectory) continue
+
+            val folders = dir.listFiles { file -> file.isDirectory } ?: emptyArray()
+            for (folder in folders) {
+                if (availableSources.none { it.id == folder.name }) {
+                    loadFromFolder(folder)
+                }
+            }
+
+            val files = dir.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") } ?: emptyArray()
+            for (file in files) {
+                val sourceId = file.nameWithoutExtension
+                if (availableSources.none { it.id == sourceId }) {
+                    try {
+                        val source = loadFromISFFile(file)
+                        if (source != null && availableSources.none { it.id == source.id }) {
+                            availableSources.add(source)
+                            logger.info { "Loaded standalone ISF visual source: ${source.displayName} (${source.id})" }
+                        }
+                    } catch (e: Exception) {
+                        logger.error(e) { "Failed to load standalone ISF source: ${file.name}" }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads default bundled sources immediately and kicks off an asynchronous scan of directory sources.
+     * If [async] is false (e.g. in tests or when synchronous reload is required), scans synchronously.
+     */
+    fun loadAll(async: Boolean = false) {
+        val defaultSourcesDir = File("library/sources")
+        loadBundledSources(defaultSourcesDir)
+
+        llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.loadSettings()
+        if (async) {
+            llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
+                scanUserSources()
+            })
+        } else {
+            llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibrary()
+            scanUserSources()
+        }
+    }
+
     private fun loadFromISFFile(file: File, overrideId: String? = null): ISFVisualSource? {
         val rawSource = file.readText()
         val header = ISFParser.parseHeader(rawSource) ?: return null
+
+        // Skip filters and transitions from being loaded as visual generator sources
+        val isTransition = header.CATEGORIES?.any { it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true) } == true ||
+            header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) } ||
+            file.absolutePath.lowercase().contains("transition")
+        val isFilter = header.CATEGORIES?.any { it.equals("Filters", ignoreCase = true) || it.equals("Filter", ignoreCase = true) || it.equals("Color Adjustment", ignoreCase = true) } == true ||
+            header.INPUTS.any { it.NAME.equals("inputImage", ignoreCase = true) } ||
+            file.absolutePath.lowercase().contains("filter")
+        if (isTransition || isFilter) {
+            return null
+        }
+
         val glslSource = ISFParser.buildGLSLFragmentShader(rawSource, header)
         
         val shader = try {

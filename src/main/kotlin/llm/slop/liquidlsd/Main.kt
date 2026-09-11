@@ -209,7 +209,7 @@ fun main(args: Array<String>) {
     org.lwjgl.opengl.GL15.glGenQueries(queryIds)
 
     // Load dynamic visual sources and ISF filters
-    llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
+    llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll(async = true)
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
     llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
     llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
