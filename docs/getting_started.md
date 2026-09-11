@@ -1,83 +1,56 @@
 # Getting Started
 
-Liquid LSD comes pre-packaged with its own embedded runtime and shader libraries. No external Java installation or system dependencies are required.
-
-> **Building from source?** If you are compiling or hacking on the Kotlin/OpenGL codebase directly, see the repository README for Gradle build instructions.
+Liquid LSD comes with everything it needs bundled in — no separate Java installation required.
 
 ---
 
-## 1. Installation & Launch
+## 1. Download & Launch
 
-Download the archive for your operating system and CPU architecture, unzip it, and launch:
+Download the archive for your platform, unzip it, and launch:
 
-* **macOS (Apple Silicon / M-Series)**: 
-  Double-click `run-mac-arm.command`.
-* **macOS (Intel)**: 
-  Double-click `run-mac-intel.command`.
-  *(Note: If macOS displays a Gatekeeper warning on first launch, right-click the script and select **Open**).*
-* **Windows (x64)**: 
-  Double-click `run-windows.bat`.
-* **Linux (x64 / ARM64)**: 
-  Open a terminal inside the folder and run:
+- **macOS (Apple Silicon / M-Series):** Double-click `run-mac-arm.command`.
+- **macOS (Intel):** Double-click `run-mac-intel.command`.
+  *(If macOS blocks it on first launch, right-click the file and select **Open** instead.)*
+- **Windows (x64):** Double-click `run-windows.bat`.
+- **Linux (x64 / ARM64):** Open a terminal in the folder and run:
   ```bash
   ./run-linux.sh
+  ```
+  Optional: run `./install-desktop.sh` to add Liquid LSD to your desktop app menu.
 
-Seeing the actual directory structures clarifies the whole distribution model: you bundle a private `jre/`, which means **users don't even need to install Java (JDK 17)**. The launcher scripts handle the ZGC and platform-specific flags (`-XstartOnFirstThread`, etc.) automatically.
-
-Here is the revised, accurate **`getting_started.md`** matching the release archives:
-
-Markdown
-
-```
-# Getting Started
-
-Liquid LSD comes pre-packaged with its own embedded runtime and shader libraries. No external Java installation or system dependencies are required.
-
-> **Building from source?** If you are compiling or hacking on the Kotlin/OpenGL codebase directly, see the repository README for Gradle build instructions.
+> **Building from source?** See the [README](https://github.com/greenjon/liquid-lsd) for Gradle build instructions.
 
 ---
 
-## 1. Installation & Launch
+## 2. Route Your Audio
 
-Download the archive for your operating system and CPU architecture, unzip it, and launch:
+Liquid LSD needs to hear your music. How you connect it depends on your platform:
 
-* **macOS (Apple Silicon / M-Series)**: 
-  Double-click `run-mac-arm.command`.
-* **macOS (Intel)**: 
-  Double-click `run-mac-intel.command`.
-  *(Note: If macOS displays a Gatekeeper warning on first launch, right-click the script and select **Open**).*
-* **Windows (x64)**: 
-  Double-click `run-windows.bat`.
-* **Linux (x64 / ARM64)**: 
-  Open a terminal inside the folder and run:
-  ```bash  ./run-linux.sh
-```
+- **macOS & Windows:** Works straight away. The app picks up whatever your OS default input device is — a mic, an audio interface, or a virtual loopback driver. Just start playing music and check that the app responds.
 
-*(Optional: Run `./install-desktop.sh` to add Liquid LSD directly to your desktop environment's application menu).*
+- **Linux (PipeWire / JACK):** Connect your audio source to `lsd:input_1` and `lsd:input_2` using Helvum, qjackctl, or `jack_connect`. This gives you sub-millisecond, sample-accurate routing and is the recommended setup on Linux.
 
-## 2. Audio Routing
+- **Linux (fallback):** If PipeWire or JACK isn't running, Liquid LSD will capture from your default ALSA/PulseAudio input automatically.
 
-Liquid LSD drives visual parameters and generative shaders via real-time audio analysis. Ensure audio is routed into the app before you perform:
+---
 
-- **macOS & Windows**: Out-of-the-box system capture. The app automatically hooks into your operating system's default input device. Start playback or select your interface/virtual loopback device in OS sound settings.
+## 3. Your First 60 Seconds
 
-- **Linux (PipeWire / JACK)**: Sub-millisecond direct routing. Connect your hardware capture card or media player to `lsd:input_1` and `lsd:input_2` using Helvum, qjackctl, or `jack_connect`.
-
-- **Linux (Fallback)**: If PipeWire/JACK is not running, Liquid LSD captures audio directly from the default ALSA/Pulse device.
-
-## 3. First Launch Walkthrough
-
-Once launched, the workstation opens into three primary panels:
+When the app opens, you'll see three main panels side by side:
 
 ```
 +---------------------+-----------------------+---------------------+
 |     PRESET GRID     |      CELL CONFIG      |     MIXER / OUT     |
-| (CV Mod Matrix)     | (Parameters & LFOs)   | (Master Deck & Mon) |
+| (CV Mod Matrix)     | (Parameters & LFOs)   | (Decks & Monitor)   |
 +---------------------+-----------------------+---------------------+
 ```
 
-1. **Verify the Audio Feed**: Look at the **Preset Grid** (left). The `AUDIO` bands (`AMP`, `BASS`, `MID`, `HIGH`) and `TRIGGER` meters will pulse in real time with your audio stream.
+Here's what to try first:
 
-2. **Inspect & Tweak**: Click a cell in the grid to reveal its controls in the **Cell Config** panel (middle). Hover over parameter labels to view live engine readouts and tooltips.
+1. **Check the audio feed.** Look at the **Preset Grid** on the left — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
 
-3. **Toggle Layout**: Press **`F3`** to switch between **Performance Mode** (focused live show view) and **Asset Management Mode** (playlists, library browsers, and shader source tools).
+2. **Click anything.** Click a row in the Preset Grid to select it. The **Cell Config** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
+
+3. **Switch modes.** Press **`F3`** to toggle between **Performance Mode** (the live view you're in now) and **Asset Management Mode**, which opens the library, playlist editor, and shader browser.
+
+That's it — you're in. Dig into [Your Workspace](user_guide/your_workspace.md) next to understand what you're looking at, or jump straight to [Modulation](user_guide/modulation.md) if you want to start wiring audio to visuals.

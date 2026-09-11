@@ -1,119 +1,76 @@
-# Web Broadcasting & Retro TV Player
+# Web Broadcast
 
-Liquid LSD features a live WebSocket broadcasting subsystem that streams generative visual performance parameters from your desktop workstation to a standalone browser-based visualizer running in an interactive retro CRT TV shell.
+> **Heads up:** This is an experimental feature aimed at a pretty specific use case. To use it, you need access to a relay server and a broadcaster token. If you don't know what those are, this page probably isn't for you yet — but read on if you're curious.
 
----
-
-## 1. Overview & Architecture
-
-Live web streaming allows remote audiences to experience your visual performance directly in their web browser with zero video stream latency and full 60 FPS client-side rendering.
-
-```
-┌─────────────────────────────────┐
-│     Liquid LSD Desktop App      │
-│  - BroadcastEngine (WebSocket)  │
-│  - SettingsPanel (BROADCAST)    │
-└────────────────┬────────────────┘
-                 │ WebSocket JSON Stream (?role=broadcast&key=...)
-                 ▼
-┌─────────────────────────────────┐
-│     Node.js Relay Server        │
-│      (server/server.js)         │
-│  - Caches current preset state  │
-│  - Multi-client fan-out relay   │
-└────────────────┬────────────────┘
-                 │ WebSocket JSON Stream (?role=viewer)
-                 ▼
-┌─────────────────────────────────┐
-│       WebGL2 Web Player         │
-│  - Retro CRT TV Shell (ui.js)   │
-│  - Web Audio DSP (dsp.js)       │
-│  - Autopilot Fallback           │
-└─────────────────────────────────┘
-```
-
-Rather than transmitting a heavy, compressed pixel video feed (which consumes immense server bandwidth and suffers from encoder latency), Liquid LSD broadcasts lightweight mathematical parameter deltas. The viewer's browser executes the WebGL2 shader pipeline and audio reactivity natively on their own GPU.
+The web broadcast system lets you stream your live visual performance to anyone with a web browser, in real time. Instead of sending a video feed (which requires encoding, bandwidth, and introduces latency), Liquid LSD sends the *parameters* of your visuals — the numbers that drive the shaders. The browser re-renders the visuals locally on the viewer's own GPU. The result is zero encoding latency and full 60fps rendering on the viewer's end.
 
 ---
 
-## 2. Broadcasting from the Desktop Workstation
+## How it works
 
-### Configuration Settings
+```
+Your Liquid LSD app
+      |
+      | (lightweight parameter stream over WebSocket)
+      v
+Relay server
+      |
+      | (fanned out to all viewers)
+      v
+Each viewer's browser — renders the visuals locally using WebGL
+```
 
-Open **Settings** (`Ctrl+,` or `Cmd+,`) and navigate to the **BROADCAST** tab:
-
-| Setting | Default | Description |
-| :--- | :--- | :--- |
-| **Server URL** | `""` (Unset) | WebSocket or HTTP relay server endpoint (e.g., `ws://127.0.0.1:9004` or `wss://relay.example.com`). |
-| **Broadcaster Token** | `""` (Unset) | Shared secret key required to authenticate as the active broadcaster. |
-| **Target Rate (FPS)** | `25` | Parameter transmission rate (5–60 Hz). Higher rates provide smoother transitions but increase network packets. |
-| **Auto-Connect** | `Off` | If enabled, initiates broadcast connection automatically upon application launch (requires both URL and token). |
-
-*These settings are persisted across sessions in `lsd-settings.properties`.*
-
-### Starting & Stopping a Live Broadcast
-
-1. **Top Menu**: Select **Output → Web Broadcast** to toggle streaming. *(Note: This menu item is hidden until both the Relay Server URL and Broadcaster Token are populated in Settings).*
-2. **Title Bar HUD Indicator**:
-   - `[CONNECTING]` (Yellow): Handshaking with the WebSocket relay server.
-   - `[LIVE]` (Red pulsating pill): Actively streaming parameter deltas.
-   - `[LIVE ERR]` (Red warning): Connection lost or bad auth token.
-3. **Automatic Reconnection**: If the network or relay drops, the desktop engine automatically attempts reconnection in the background on exponential backoff without interrupting your live audio or visual rendering.
+The relay server caches the current visual state so new viewers who join mid-show get the right picture immediately.
 
 ---
 
-## 3. Web Player Controls & Retro CRT TV Experience
+## Setting it up
 
-The standalone web client (`web/index.html`) encapsulates the visualizer in an authentic retro CRT television bezel.
+Open **Settings** (`Ctrl+,`) and go to the **BROADCAST** tab:
 
-```
-┌──────────────────────────────────────────────┐
-│  ┌───────────────────────────────┐  ┌─────┐  │
-│  │                               │  │ (•) │  │ Power Switch
-│  │                               │  └─────┘  │
-│  │     WebGL2 CRT Visualizer     │           │
-│  │     (Phosphor Glow, Static)   │  ┌─────┐  │
-│  │                               │  │ (O) │  │ Rotary Volume Dial
-│  │                               │  └─────┘  │
-│  └───────────────────────────────┘           │
-│  [ SPAZ RADIO • LIVE ]                       │ Station LED Badge
-└──────────────────────────────────────────────┘
-```
+| Setting | What it does |
+|---------|-------------|
+| **Server URL** | The address of your relay server (e.g. `wss://relay.example.com`) |
+| **Broadcaster Token** | The secret key that authenticates you as the broadcaster |
+| **Target Rate** | How many parameter updates to send per second (5–60). Higher = smoother, more network traffic |
+| **Auto-Connect** | If enabled, broadcasts automatically when the app starts |
 
-### TV Shell Interactive Controls
+These settings are saved between sessions.
 
-- **Power Switch (`ui.js`, `crt_post.frag`)**:
-  - Clicking the physical power toggle satisfies modern browser autoplay policies for Web Audio when turning on, and cleanly pauses the live audio stream, suspends the `AudioContext`, and blanks the screen when turning off.
-  - **Warmup Animation**: Turning on ignites a realistic **1.5s CRT warmup animation** where a thin horizontal raster line with intense phosphor glow expands vertically until the full scanline image fills the screen.
-  - **Shutdown Beam Collapse**: Turning off plays a vintage **0.85s CRT electron beam collapse animation** across 3 physical phases:
-    1. *Vertical Collapse*: The visualizer rapidly squashes vertically into an overdriven, intensely bright horizontal line across the screen center.
-    2. *Horizontal Shrink*: The bright horizontal line pulls inward from both edges and shrinks into a pinpoint glowing white-hot phosphor dot in the center of the tube.
-    3. *Phosphor Decay*: The central dot slowly dims with authentic phosphor persistence and fades to complete darkness.
-  - **Clean Presentation When Powered On**: While running, the visualizer renders edge-to-edge with crystal clarity, without corner vignetting, interlacing/scanlines, chromatic aberration, or barrel distortion.
-- **Rotary Volume Dial (`ui.js`, `dsp.js`)**:
-  - Dragging the physical dial up or down (or touching and dragging on mobile) rotates the dial between `-150°` and `+150°`.
-  - Adjusts Web Audio volume smoothly using a squared attenuation curve ($V^2$) via `GainNode.setTargetAtTime`, ensuring natural, perceptually linear acoustic volume.
-- **Station LED Badge**:
-  - Displays `SPAZ RADIO • AUTOPILOT` when running client-side scheduled visual loops.
-  - Automatically flips to `SPAZ RADIO • LIVE` the moment a live desktop broadcaster connects.
-- **Fullscreen Mode**:
-  - Double-clicking the TV screen expands the visualizer to borderless, immersive fullscreen projection. Double-click again or press `Esc` to return to the CRT chassis.
+Once the URL and token are set, **Output → Web Broadcast** appears in the top menu. Toggle it to start or stop broadcasting.
 
 ---
 
-## 4. Web Audio DSP & 24/7 Autopilot Fallback
+## Status indicators
 
-### Live Audio Stream Integration (`dsp.js`)
-When powered on, the browser connects to the live Icecast audio stream (`https://radio.spaz.org:8060/radio.ogg`). The Web Audio DSP graph splits the incoming stream into:
-- **Sub-band Filters**: Lowpass (bass < 180 Hz), Bandpass (mid ~1 kHz), Highpass (high > 5 kHz).
-- **RMS Energy Tracking**: Continuously calculates broadband and per-band energy envelopes with peak-hold normalization.
-- **Dual-Envelope Beat Follower**: Estimates real-time BPM and beat phase ($0.0 \dots 1.0$), dynamically modulating shader uniforms in the browser.
+The title bar shows your broadcast status:
 
-### 24/7 Autopilot Scheduler (`autopilot.js`)
-When no live broadcaster is connected, the web visualizer automatically operates in **Autopilot Mode**:
-- **Independent Web Curation (`web/presets/`, `web/playlists/`)**: Web TV maintains its own self-contained preset and playlist collections decoupled from the desktop application package.
-  - Curated Foreground Playlist: `web/playlists/default.lsdset` cycles through distinct visual engines (`mandala_flow`, `spiral_drift`, `cosmic_ribbon`, `hyperspace_slice`, `attractor_flow`).
-  - Curated Background Playlist: `web/playlists/default_bg.lsdset` cycles ambient background textures (`ambient_bg`, `dark_spiral`).
-- Executes smooth Hermite crossfades between foreground decks (A/B) and dip-to-black fades for background presets based on timings defined in `web/settings.json`.
-- Modulates all parameters against the live Icecast audio stream so visuals remain dynamically audio-reactive 24/7.
-- Smoothly yields control and transitions to live visual parameters the second a broadcaster connects.
+- **[CONNECTING]** (yellow) — Handshaking with the relay.
+- **[LIVE]** (red pulsing) — Actively streaming.
+- **[LIVE ERR]** (red warning) — Connection dropped or bad token.
+
+If the connection drops, Liquid LSD reconnects automatically in the background without interrupting your audio or visuals.
+
+---
+
+## The web player
+
+The standalone browser client (`web/index.html`) presents the visualizer in a retro CRT television shell.
+
+**Power switch:** Click it to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.
+
+**Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
+
+**Fullscreen:** Double-click the TV screen to expand to full-screen. Double-click again or press `Esc` to go back to the TV shell.
+
+The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.
+
+---
+
+## Autopilot mode
+
+When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator.
+
+When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.
+
+The web presets and playlists used for Autopilot live in `web/presets/` and `web/playlists/`, separate from your desktop preset library.

@@ -28,14 +28,13 @@ nav:
   - Home: index.md
   - Getting Started: getting_started.md
   - User Guide:
-    - Core Concepts & Visual Sources: user_guide/concepts.md
-    - CV Modulation & Preset Grid: user_guide/modulation.md
-    - Documentation & Notes: user_guide/notes_and_tooltips.md
-    - Presets & MIDI Mapping: user_guide/midi_presets.md
-    - Recording, Presets & Export: user_guide/recording_and_export.md
-    - Web Broadcasting & Retro TV: user_guide/web_broadcast.md
-    - Library & Playlists: user_guide/library.md
-    - Custom Shaders & Sources: user_guide/custom_visuals.md
+    - Your Workspace: user_guide/your_workspace.md
+    - Visual Sources: user_guide/visual_sources.md
+    - Modulation: user_guide/modulation.md
+    - Presets & Library: user_guide/presets_and_library.md
+    - Output & Recording: user_guide/output_and_recording.md
+    - Performance Controls: user_guide/performance_controls.md
+    - Web Broadcast: user_guide/web_broadcast.md
   - Developer Reference:
     - Architecture Overview: developer/architecture.md
     - Real-Time Audio & DSP: developer/audio_dsp.md
