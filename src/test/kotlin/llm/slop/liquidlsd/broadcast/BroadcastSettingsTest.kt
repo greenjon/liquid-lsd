@@ -2,15 +2,45 @@ package llm.slop.liquidlsd.broadcast
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class BroadcastSettingsTest {
 
     @Test
     fun testDefaultSettings() {
-        assertTrue(BroadcastSettings.serverUrl.isNotBlank())
+        assertEquals("", BroadcastSettings.serverUrl)
+        assertEquals("", BroadcastSettings.token)
+        assertFalse(BroadcastSettings.isConfigured)
         assertTrue(BroadcastSettings.targetFps in 5..60)
-        assertEquals("lsd25", BroadcastSettings.token)
+    }
+
+    @Test
+    fun testIsConfigured() {
+        try {
+            BroadcastSettings.serverUrl = ""
+            BroadcastSettings.token = ""
+            assertFalse(BroadcastSettings.isConfigured)
+
+            BroadcastSettings.serverUrl = "ws://127.0.0.1:9004"
+            BroadcastSettings.token = ""
+            assertFalse(BroadcastSettings.isConfigured)
+
+            BroadcastSettings.serverUrl = "   "
+            BroadcastSettings.token = "valid-token"
+            assertFalse(BroadcastSettings.isConfigured)
+
+            BroadcastSettings.serverUrl = ""
+            BroadcastSettings.token = "valid-token"
+            assertFalse(BroadcastSettings.isConfigured)
+
+            BroadcastSettings.serverUrl = "ws://127.0.0.1:9004"
+            BroadcastSettings.token = "valid-token"
+            assertTrue(BroadcastSettings.isConfigured)
+        } finally {
+            BroadcastSettings.serverUrl = ""
+            BroadcastSettings.token = ""
+        }
     }
 
     @Test

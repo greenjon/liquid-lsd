@@ -94,14 +94,16 @@ class MenuBar(
                     }
                     itemTooltip("Toggle live master output recording.")
 
-                    if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
-                        if (isBroadcasting) {
-                            llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
-                        } else {
-                            llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                    if (llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured) {
+                        if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
+                            if (isBroadcasting) {
+                                llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                            } else {
+                                llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                            }
                         }
+                        itemTooltip("Connect and broadcast live session state to the Web TV client.")
                     }
-                    itemTooltip("Connect and broadcast live session state to the Web TV client.")
 
                     ImGui.separator()
                     if (ImGui.menuItem("Export Video (Offline Studio)...")) {

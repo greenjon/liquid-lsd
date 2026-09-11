@@ -44,16 +44,16 @@ Open **Settings** (`Ctrl+,` or `Cmd+,`) and navigate to the **BROADCAST** tab:
 
 | Setting | Default | Description |
 | :--- | :--- | :--- |
-| **Server URL** | `http://spaz.org/lsd-relay` | WebSocket or HTTP relay server endpoint (e.g., `ws://relay.example.com:9004` or `http://...`). |
-| **Broadcaster Token** | `lsd25` | Shared secret key required to authenticate as the active broadcaster. |
+| **Server URL** | `""` (Unset) | WebSocket or HTTP relay server endpoint (e.g., `ws://127.0.0.1:9004` or `wss://relay.example.com`). |
+| **Broadcaster Token** | `""` (Unset) | Shared secret key required to authenticate as the active broadcaster. |
 | **Target Rate (FPS)** | `25` | Parameter transmission rate (5–60 Hz). Higher rates provide smoother transitions but increase network packets. |
-| **Auto-Connect** | `Off` | If enabled, initiates broadcast connection automatically upon application launch. |
+| **Auto-Connect** | `Off` | If enabled, initiates broadcast connection automatically upon application launch (requires both URL and token). |
 
 *These settings are persisted across sessions in `lsd-settings.properties`.*
 
 ### Starting & Stopping a Live Broadcast
 
-1. **Top Menu**: Select **Output → Web Broadcast** to toggle streaming.
+1. **Top Menu**: Select **Output → Web Broadcast** to toggle streaming. *(Note: This menu item is hidden until both the Relay Server URL and Broadcaster Token are populated in Settings).*
 2. **Title Bar HUD Indicator**:
    - `[CONNECTING]` (Yellow): Handshaking with the WebSocket relay server.
    - `[LIVE]` (Red pulsating pill): Actively streaming parameter deltas.

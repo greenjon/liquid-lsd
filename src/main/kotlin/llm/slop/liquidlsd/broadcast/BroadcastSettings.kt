@@ -12,16 +12,19 @@ object BroadcastSettings {
     private val settingsFile = File("lsd-settings.properties")
 
     @Volatile
-    var serverUrl: String = "http://spaz.org/lsd-relay"
+    var serverUrl: String = ""
 
     @Volatile
-    var token: String = "lsd25"
+    var token: String = ""
 
     @Volatile
     var autoConnect: Boolean = false
 
     @Volatile
     var targetFps: Int = 25
+
+    val isConfigured: Boolean
+        get() = serverUrl.isNotBlank() && token.isNotBlank()
 
     init {
         loadSettings()
@@ -32,7 +35,7 @@ object BroadcastSettings {
         try {
             val props = Properties()
             settingsFile.inputStream().use { props.load(it) }
-            props.getProperty("broadcast.serverUrl")?.let { if (it.isNotBlank()) serverUrl = it.trim() }
+            props.getProperty("broadcast.serverUrl")?.let { serverUrl = it.trim() }
             props.getProperty("broadcast.token")?.let { token = it.trim() }
             props.getProperty("broadcast.autoConnect")?.toBooleanStrictOrNull()?.let { autoConnect = it }
             props.getProperty("broadcast.targetFps")?.toIntOrNull()?.let { targetFps = it.coerceIn(5, 60) }

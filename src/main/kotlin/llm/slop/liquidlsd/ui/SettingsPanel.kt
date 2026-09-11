@@ -706,7 +706,7 @@ object SettingsPanel {
             llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl = serverUrlBuf.get().trim()
             llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
         }
-        itemTooltip("WebSocket relay URL (e.g. ws://127.0.0.1:9000 or wss://spaz.org/lsd-relay)")
+        itemTooltip("WebSocket relay URL (e.g. ws://127.0.0.1:9004 or wss://relay.example.com)")
 
         ImGui.spacing()
 
@@ -801,6 +801,10 @@ object SettingsPanel {
             }
             ImGui.popStyleColor(2)
         } else {
+            val canConnect = llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured
+            if (!canConnect) {
+                ImGui.beginDisabled()
+            }
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.15f, 0.6f, 0.25f, 1f)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1f)
             if (ImGui.button("${Icons.ZAP} Go Live (Connect)", 200f, 32f)) {
@@ -809,6 +813,10 @@ object SettingsPanel {
                 }
             }
             ImGui.popStyleColor(2)
+            if (!canConnect) {
+                ImGui.endDisabled()
+                itemTooltip("Relay Server URL and Broadcaster Secret Token must both be configured in Settings.")
+            }
         }
 
         if (state == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED) {

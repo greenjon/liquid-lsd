@@ -73,6 +73,10 @@ object BroadcastEngine {
      */
     fun startBroadcast(mixer: Mixer) {
         if (isLive) return
+        if (!BroadcastSettings.isConfigured) {
+            logger.warn { "Cannot start broadcast: Relay Server URL and Broadcaster Token must be configured in Settings." }
+            return
+        }
         logger.info { "Starting live broadcast to ${BroadcastSettings.serverUrl}..." }
         isLive = true
         reconnectAttempt.set(0)
@@ -123,6 +127,11 @@ object BroadcastEngine {
 
     private fun connectAsync(mixer: Mixer) {
         if (!isLive) return
+        if (!BroadcastSettings.isConfigured) {
+            logger.warn { "Broadcast connection aborted: Server URL or Token not configured." }
+            stopBroadcast()
+            return
+        }
         connectionState = ConnectionState.CONNECTING
 
         ioExecutor.execute {

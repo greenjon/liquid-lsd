@@ -362,8 +362,8 @@ fun main(args: Array<String>) {
         }
     }
 
-    // Start broadcast relay if autoConnect is enabled
-    if (llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect) {
+    // Start broadcast relay if autoConnect is enabled and configured
+    if (llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect && llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured) {
         llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
     }
 

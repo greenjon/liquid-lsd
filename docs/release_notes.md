@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Web Broadcast Configuration & Dynamic Menu Visibility (`BroadcastSettings.kt`, `BroadcastEngine.kt`, `SettingsPanel.kt`, `MenuBar.kt`, `Main.kt`)
+- **Removed Hardcoded Credentials**: Removed hardcoded default relay server URL (`http://spaz.org/lsd-relay`) and broadcaster secret token (`lsd25`) from `BroadcastSettings.kt`, initializing both as empty strings (`""`).
+- **Dynamic Output Menu Item**: Hid the `Output > Web Broadcast` menu item in `MenuBar.kt` when either the relay server URL or broadcaster token is not populated in Settings (`BroadcastSettings.isConfigured`).
+- **Safeguarded Broadcast Connection**: Added checks in `BroadcastEngine.startBroadcast()`, `BroadcastEngine.connectAsync()`, `SettingsPanel.kt` (disabling "Go Live" with helpful tooltip when unconfigured), and `Main.kt` startup logic to prevent connection attempts without valid credentials.
+
 ### UI Text Formatting & Font Glyph Safety (`UITheme.kt`)
 - **Format String Corruption Fix (`UITheme.kt`)**: Replaced calls to native `ImGui.textColored(...)` in semantic text helpers (`bodyColored`, `h1Colored`, `h2Colored`, `h3Colored`, `captionColored`, `codeColored`) with explicit `PushStyleColor(ImGuiCol.Text, ...)` + unformatted `ImGui.text(text)` + `PopStyleColor()`. `ImGui.textColored` passes text strings as printf format strings (`fmt`), which caused arbitrary memory reads and corrupted text whenever strings contained `%` characters (such as the Beat Tracker confidence percentage readout `"$confPercent%"`).
 - **Caption Text Safety (`UITheme.kt`)**: Implemented `UITheme.caption(...)` via `PushStyleColor(ImGuiCol.Text, getColorU32(ImGuiCol.TextDisabled))` + `ImGui.text(text)` + `PopStyleColor()`, removing vulnerable `ImGui.textDisabled(text)` format string handling.
