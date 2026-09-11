@@ -13,7 +13,6 @@ data class AppSettings(
     val audioBpmLocked: Boolean = true,
     val audioManualBpm: Float = 120.0f,
     val clockSource: llm.slop.liquidlsd.audio.ClockSource = llm.slop.liquidlsd.audio.ClockSource.AUDIO_TRACKER,
-    val syncMode: llm.slop.liquidlsd.link.SyncMode = llm.slop.liquidlsd.link.SyncMode.DISABLED,
     val linkEnabled: Boolean = false,
     val linkQuantum: Double = 4.0,
     val linkStartStopSync: Boolean = false,

@@ -7,19 +7,15 @@ This document details tempo detection, beat clock flywheel accumulator logic, an
 ## Architecture Overview
 
 ```
-Link Sync State Machine: LinkSyncManager
+Ableton Link Session Orchestration: LinkSyncManager & AbletonLinkEngine
     │
-    ├──► SyncMode.DISABLED: Network Link disabled; internal clock source
+    ├──► AbletonLinkEngine.isEnabled == true:
+    │       ├─► Network Link active; updates/synchronizes BPM & beat timeline across Link peers
+    │       └─► Filters audio beat tracking jitter via BeatTrackToLinkDamping (Median + EMA, 0.5 BPM / 4-beat hysteresis, >= 0.5 beat phase error)
+    │       └─► Commits tempo updates and phase alignment directly to AbletonLinkEngine
     │
-    ├──► SyncMode.LINK_FOLLOWER: Link network active as follower
-    │       └─► Receives Carabiner/Link BPM & phase to drive visual engine timeline
-    │       └─► Outbound audio tempo events are suppressed
-    │
-    └──► SyncMode.AUDIO_BROADCAST: Link network active as master/broadcaster
-            └─► Local master clock driven by audio beat detector or manual tap
-            └─► Incoming Carabiner BPM updates ignored from local master clock
-            └─► Filters audio beat tracking jitter via BeatTrackToLinkDamping (Median + EMA, 0.5 BPM / 4-beat hysteresis, >= 0.5 beat phase error)
-            └─► Dispatches onTempoCommitted / onBeatAligned to AudioTempoEventSink
+    └──► AbletonLinkEngine.isEnabled == false:
+            └─► Network Link disabled; local clock sources operate independently
 
 Clock Source Selection: ClockSource (AUDIO_TRACKER | ABLETON_LINK | MANUAL_TAP)
     │

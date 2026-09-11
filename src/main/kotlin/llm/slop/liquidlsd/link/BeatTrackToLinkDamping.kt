@@ -30,8 +30,9 @@ class BeatTrackToLinkDamping(
     var sustainedBeatsThreshold: Int = 4,
     var phaseErrorThresholdBeats: Double = 0.5,
     var quantum: Double = 4.0,
-    var downstreamSink: AudioTempoEventSink? = null
-) : AudioTempoEventSink {
+    var onTempoCommitted: ((Double) -> Unit)? = null,
+    var onBeatAligned: ((Double, Long, Double) -> Unit)? = null
+) {
 
     private val logger = KotlinLogging.logger {}
 
@@ -109,11 +110,15 @@ class BeatTrackToLinkDamping(
                 pendingLogMessage.set(
                     "BeatTrackToLinkDamping: Committed outbound tempo -> %.2f BPM (delta=%.2f)".format(lastPublishedBpm, delta)
                 )
-                downstreamSink?.onTempoCommitted(lastPublishedBpm)
+                downstreamSinkOnTempoCommitted(lastPublishedBpm)
             }
         } else {
             pendingDivergenceCount = 0
         }
+    }
+
+    private fun downstreamSinkOnTempoCommitted(bpm: Double) {
+        onTempoCommitted?.invoke(bpm)
     }
 
     /**
@@ -137,14 +142,8 @@ class BeatTrackToLinkDamping(
             pendingLogMessage.set(
                 "BeatTrackToLinkDamping: Phase error %.2f beats >= %.2f threshold. Aligning.".format(phaseError, phaseErrorThresholdBeats)
             )
-            downstreamSink?.onBeatAligned(beatTime, timestampUs, q)
+            onBeatAligned?.invoke(beatTime, timestampUs, q)
         }
-    }
-
-    // AudioTempoEventSink delegation
-    override fun onTempoCommitted(bpm: Double) { processRawBpm(bpm) }
-    override fun onBeatAligned(beatTime: Double, microsecondTimestamp: Long, quantum: Double) {
-        processBeatOnset(beatTime, microsecondTimestamp, quantum)
     }
 
     /**

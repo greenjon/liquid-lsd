@@ -14,16 +14,6 @@ class BeatTrackToLinkDampingTest {
         committedBpm.set(null)
         alignedBeat.set(null)
 
-        val sink = object : AudioTempoEventSink {
-            override fun onTempoCommitted(bpm: Double) {
-                committedBpm.set(bpm)
-            }
-
-            override fun onBeatAligned(beatTime: Double, microsecondTimestamp: Long, quantum: Double) {
-                alignedBeat.set(beatTime)
-            }
-        }
-
         filter = BeatTrackToLinkDamping(
             minBpm = 60.0,
             maxBpm = 200.0,
@@ -33,7 +23,8 @@ class BeatTrackToLinkDampingTest {
             sustainedBeatsThreshold = 4,
             phaseErrorThresholdBeats = 0.5,
             quantum = 4.0,
-            downstreamSink = sink
+            onTempoCommitted = { bpm -> committedBpm.set(bpm) },
+            onBeatAligned = { beatTime, _, _ -> alignedBeat.set(beatTime) }
         )
         filter.reset(120.0)
     }

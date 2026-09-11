@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Ableton Link Sync Architecture Simplification (`LinkSyncManager.kt`, `BeatTrackToLinkDamping.kt`, `AudioEngine.kt`, `AudioEnginePanel.kt`, `MenuBar.kt`, `UITheme.kt`)
+- **Eliminated `SyncMode` State Machine**: Removed the redundant `SyncMode` enum (`DISABLED`, `LINK_FOLLOWER`, `AUDIO_BROADCAST`), mode transition lock, background coroutine jobs, and `AudioTempoEventSink` delegation interface.
+- **Direct Ableton Link State Integration**: Ableton Link synchronization is now governed directly by `AbletonLinkEngine.isEnabled`. When enabled, audio beat tracker tempo/phase updates pass through `BeatTrackToLinkDamping` signal filtering (lambda callbacks `onTempoCommitted` and `onBeatAligned`) directly to `AbletonLinkEngine`.
+- **Streamlined UI & Menus**: Removed `SyncMode` radio button controls and transmission status badges from `AudioEnginePanel`, and simplified the header status pill in `MenuBar` to clean `LINK [peers]` state indicators.
+
 ### Settings & UI Controls (`SettingsPanel.kt`, `Main.kt`, `MenuBar.kt`, `UITheme.kt`, `AppSettings.kt`, `BrowserRowMoreButton.kt`)
 - **Settings Modal Closure Fix**: Fixed an issue where toggling "Enable MIDI" in Settings > General would immediately close the Settings modal window. Row context buttons (`BrowserRowMoreButton` and Preset Grid column kebab) now inspect ImGui widget hover states (`ImGui.isItemHovered()`) rather than raw mouse screen coordinates, preventing clicks inside modal windows from erroneously firing background row popups and closing active modals.
 - **Settings Layout & Categories Redesign**: Reorganized the Settings modal interface to promote **General** as the primary first tab. Moved parameter randomization, step sequencer, MIDI settings (and CC mappings), frameless window toggle, and SCS.3m trackpad console controls into a unified **Features** section on the General tab.

@@ -220,18 +220,13 @@ class MenuBar(
                 val syncManager = llm.slop.liquidlsd.link.LinkSyncManager
                 val currentClock = AudioEngine.clockSource
 
-                if (currentClock == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK || syncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
+                if (currentClock == llm.slop.liquidlsd.audio.ClockSource.ABLETON_LINK || linkEngine.isEnabled) {
                     val peers = linkEngine.getNumPeers()
                     val peerText = if (peers == 1) "1 peer" else "$peers peers"
-                    val isTx = syncManager.isTransmitting
-                    val modeText = if (syncManager.currentMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) "LINK TX" else "LINK"
-                    val label = "${Icons.ACTIVITY} $modeText [$peerText]"
+                    val label = "${Icons.ACTIVITY} LINK [$peerText]"
 
-                    if (isTx) {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.7f, 0.3f, 1.0f) // green for transmitting
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.3f, 0.8f, 0.4f, 1.0f)
-                    } else if (peers > 0) {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan for connected follower
+                    if (peers > 0) {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan for connected
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
                     } else {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber searching
@@ -246,7 +241,7 @@ class MenuBar(
                     val backendName = linkEngine.getActiveBackendName()
                     val bpmText = syncManager.formattedActiveBpm
                     val confPercent = syncManager.confidencePercent
-                    val linkTip = "Ableton Link Sync: ${syncManager.currentMode.displayName}\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Audio & Link settings."
+                    val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Audio & Link settings."
                     itemTooltip(linkTip)
                 }
 

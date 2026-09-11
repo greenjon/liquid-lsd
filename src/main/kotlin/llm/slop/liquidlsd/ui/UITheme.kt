@@ -358,19 +358,6 @@ object UITheme {
                         AudioEngine.clockSource = llm.slop.liquidlsd.audio.ClockSource.valueOf(savedSource)
                     } catch (_: Exception) {}
                 }
-                props.getProperty("syncMode")?.let { savedModeStr ->
-                    try {
-                        val loadedMode = llm.slop.liquidlsd.link.SyncMode.valueOf(savedModeStr)
-                        // Safety requirement: AUDIO_BROADCAST is sanitized to DISABLED on launch to prevent accidental broadcast
-                        val safeStartupMode = if (loadedMode == llm.slop.liquidlsd.link.SyncMode.AUDIO_BROADCAST) {
-                            logger.info { "Sanitizing startup syncMode from AUDIO_BROADCAST to DISABLED to prevent unintended network broadcast." }
-                            llm.slop.liquidlsd.link.SyncMode.DISABLED
-                        } else {
-                            loadedMode
-                        }
-                        llm.slop.liquidlsd.link.LinkSyncManager.setSyncMode(safeStartupMode)
-                    } catch (_: Exception) {}
-                }
                 props.getBoolean("linkEnabled")?.let {
                     llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(it)
                 }
@@ -548,7 +535,6 @@ object UITheme {
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
             props.setProperty("clockSource", AudioEngine.clockSource.name)
-            props.setProperty("syncMode", llm.slop.liquidlsd.link.LinkSyncManager.currentMode.name)
             props.setProperty("linkEnabled", llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled.toString())
             props.setProperty("linkQuantum", llm.slop.liquidlsd.link.AbletonLinkEngine.quantum.toString())
             props.setProperty("linkStartStopSync", llm.slop.liquidlsd.link.AbletonLinkEngine.isStartStopSyncEnabled().toString())
