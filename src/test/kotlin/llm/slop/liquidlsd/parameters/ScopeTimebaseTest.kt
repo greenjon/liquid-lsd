@@ -85,6 +85,40 @@ class ScopeTimebaseTest {
     }
 
     @Test
+    fun `test OscilloscopeDrawer getLfoLabels displays current auto selected timebase`() {
+        val labels10s = llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels("10s")
+        assertEquals("Auto (10s)", labels10s[0])
+        assertEquals(listOf("Auto (10s)", "1s", "10s", "100s", "15m", "2.5h", "24h"), labels10s.toList())
+
+        val labels1s = llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels("1s")
+        assertEquals("Auto (1s)", labels1s[0])
+
+        val labels100s = llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels("100s")
+        assertEquals("Auto (100s)", labels100s[0])
+
+        val labels15m = llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels("15m")
+        assertEquals("Auto (15m)", labels15m[0])
+
+        val labels25h = llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels("2.5h")
+        assertEquals("Auto (2.5h)", labels25h[0])
+
+        val labels24h = llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels("24h")
+        assertEquals("Auto (24h)", labels24h[0])
+
+        // Verify end-to-end with ModulatableParameter auto timebase derivation
+        val param = ModulatableParameter(baseValue = 0.5f)
+        val (durDefault, _) = param.resolveEffectiveTimebase("lfo")
+        val autoStrDefault = ScopeTimebase.formatTimeOffset(durDefault).removePrefix("+")
+        assertEquals("Auto (10s)", llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels(autoStrDefault)[0])
+
+        // With fast LFO (0.5s -> 1s window)
+        param.modulators.add(CvModulator(id = "fast", sourceId = "lfo", genUnit = GenUnit.TIME, subdivision = 0.5f))
+        val (durFast, _) = param.resolveEffectiveTimebase("lfo")
+        val autoStrFast = ScopeTimebase.formatTimeOffset(durFast).removePrefix("+")
+        assertEquals("Auto (1s)", llm.slop.liquidlsd.ui.OscilloscopeDrawer.getLfoLabels(autoStrFast)[0])
+    }
+
+    @Test
     fun `test evaluateModulatorAtOffset future lookahead calculation`() {
         val mod = CvModulator(
             id = "test_lfo",

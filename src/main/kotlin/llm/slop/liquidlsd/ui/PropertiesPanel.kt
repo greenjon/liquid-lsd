@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.cv.CvHistoryBuffer
 import llm.slop.liquidlsd.cv.evaluateModulator
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.GenUnit
+import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
@@ -43,7 +44,13 @@ object PropertiesPanel {
         }
     }
 
-    private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, currentParamKey: String, currentCvId: String) {
+    private fun drawCvTabRow(
+        session: llm.slop.liquidlsd.SessionContext,
+        state: ParametersState,
+        currentParamKey: String,
+        currentCvId: String,
+        param: ModulatableParameter
+    ) {
         val availableTabs = mutableListOf<Pair<String, String>>()
         availableTabs.add("Value" to "value")
         if (session.uiTheme.midiEnabled) availableTabs.add("MIDI" to "midi")
@@ -81,6 +88,57 @@ object PropertiesPanel {
                 itemTooltip("Switch Properties view to $label CV modulation for parameter")
                 ImGui.popStyleColor(3)
             }
+
+            // Right-aligned [ LIVE ] / [ MUTED ] Master Cell Mute Toggle
+            val liveMods = if (currentCvId == "value" || currentCvId == "final") {
+                param.modulators
+            } else if (currentCvId == "midi") {
+                param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+            } else if (currentCvId == "audio") {
+                param.modulators.filter { llm.slop.liquidlsd.cv.isAudioSource(it.sourceId) }
+            } else {
+                param.modulators.filter { it.sourceId == currentCvId }
+            }
+
+            if (liveMods.isNotEmpty()) {
+                val isMuted = liveMods.all { it.bypassed }
+                val btnText = if (isMuted) "[ MUTED ]" else "[ LIVE ]"
+                val maxBtnW = maxOf(ImGui.calcTextSize("[ MUTED ]").x, ImGui.calcTextSize("[ LIVE ]").x)
+                val liveBtnW = (maxBtnW + 18f * fontScale).coerceAtLeast(57f)
+
+                val rightX = ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - liveBtnW
+                if (rightX > ImGui.getCursorPosX() + 4f) {
+                    ImGui.sameLine(rightX)
+                } else {
+                    ImGui.sameLine()
+                }
+
+                if (isMuted) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f))
+                } else {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.5f, 0.4f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.5f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 0.6f, 1f))
+                }
+
+                if (ImGui.button(btnText, liveBtnW, btnH)) {
+                    val targetBypassed = !isMuted
+                    val updated = param.modulators.map { mod ->
+                        if (liveMods.any { it.id == mod.id }) mod.copy(bypassed = targetBypassed) else mod
+                    }
+                    param.modulators.clear()
+                    param.modulators.addAll(updated)
+                }
+                val tip = if (currentCvId == "value" || currentCvId == "final") {
+                    if (isMuted) "Unmute all parameter modulation" else "Mute all parameter modulation"
+                } else {
+                    if (isMuted) "Unmute cell modulation (Route to Value)" else "Mute cell modulation (Preview on O-scope)"
+                }
+                itemTooltip(tip)
+                ImGui.popStyleColor(3)
+            }
         }
         ImGui.popStyleVar()
         ImGui.spacing()
@@ -114,7 +172,7 @@ object PropertiesPanel {
         val paramKey = cell.paramKey
 
         // Render top CV tab bar
-        drawCvTabRow(session, state, paramKey, cvId)
+        drawCvTabRow(session, state, paramKey, cvId, param)
 
         val themeRGB = CvTheme.getThemeColorRGB(cvId)
         val themeColor = CvTheme.getThemeColor(cvId)

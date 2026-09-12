@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Oscilloscope Controls Overlay & Tab Row Live Button Migration (`OscilloscopeDrawer.kt`, `PropertiesPanel.kt`, `ScopeTimebaseTest.kt`)
+- **Overlaid Timebase Dropdown**: Moved the timebase selector directly inside the oscilloscope canvas in the top-right corner with semi-transparent frame styling, eliminating the previous controls bar above the oscilloscope and creating a compact, hardware-like oscilloscope layout.
+- **Dynamic Auto Timebase Label**: When set to Auto, the dropdown text dynamically displays the active automatically selected time window (e.g. `Auto (10s)`, `Auto (1s)`).
+- **Streamlined Canvas Presentation**: Removed the auxiliary division label (`30m/div`) beside the dropdown for minimal, uncluttered visual presentation.
+- **Tab Row `[ LIVE ]` / `[ MUTED ]` Button**: Relocated the Master Cell Mute/Live toggle button to the top tab row (`Value`, `MIDI`, `LFO`, `SEQ`, `Audio`), aligned to the right, matching tab height and maintaining consistent button width.
+- **Zero-Allocation Render Path**: Preallocated immutable label arrays across all physical Auto duration tiers (`1s`, `10s`, `100s`, `15m`, `2.5h`, `24h`) in `OscilloscopeDrawer`, avoiding GC string and array allocations during render loops.
+
 ### Universal Shader Ecosystem Support — ISF, Shadertoy & GLSLSandbox (`ISFParser.kt`, `ISFVisualSource.kt`, `Renderer.kt`, `AudioTexture.kt`, `VisualSourceRegistry.kt`, `ISFScanner.kt`)
 - **Multi-Format Ingestion & Smart Detection**: Shaders across the live visuals ecosystem (**ISF**, **Shadertoy**, and **The Book of Shaders / GLSLSandbox**) are now automatically recognized, normalized, and cataloged without requiring manual code conversion or JSON headers.
 - **Legacy GLSL 1.20 Core 3.30 Compatibility**: Injects automatic polyfills for legacy GLSL calls (`texture2D`, `textureCube`, `texture2DRect`, `texture2DProj`) and aliases `gl_FragColor` to modern core outputs.

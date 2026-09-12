@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Oscilloscope Controls Overlay & Tab Row Live Button Migration (`OscilloscopeDrawer.kt`, `PropertiesPanel.kt`, `ScopeTimebaseTest.kt`)
+- **Overlaid Timebase Dropdown**: Moved the timebase selector directly inside the oscilloscope canvas in the top-right corner with semi-transparent frame styling, eliminating the previous controls bar above the oscilloscope and creating a compact, hardware-like oscilloscope layout.
+- **Dynamic Auto Timebase Label**: When set to Auto, the dropdown text dynamically displays the active automatically selected time window (e.g. `Auto (10s)`, `Auto (1s)`).
+- **Streamlined Canvas Presentation**: Removed the auxiliary division label (`30m/div`) beside the dropdown for minimal, uncluttered visual presentation.
+- **Tab Row `[ LIVE ]` / `[ MUTED ]` Button**: Relocated the Master Cell Mute/Live toggle button to the top tab row (`Value`, `MIDI`, `LFO`, `SEQ`, `Audio`), aligned to the right, matching tab height and maintaining consistent button width.
+- **Zero-Allocation Render Path**: Preallocated immutable label arrays across all physical Auto duration tiers (`1s`, `10s`, `100s`, `15m`, `2.5h`, `24h`) in `OscilloscopeDrawer`, avoiding GC string and array allocations during render loops.
+
 ### Properties Panel Title Bar & Typography Synchronization (`PropertiesPanel.kt`, `UIManager.kt`)
 - **Synchronized 1.5x Title Bar Height**: Configured the Properties panel window with `NoTitleBar` and `MenuBar` flags wrapped in `PanelTitleBar.withFramePadding(session)`, eliminating the default un-styled window title bar and rendering the synchronized 1.5x scaled title bar (`PanelTitleBar.calculateHeight(session)`) matching the height of the Parameters panel to the left.
 - **Consistent H3 Typography**: Aligned the `"Properties"` title text typography to use `UITheme.FontLevel.H3` and optical vertical text centering via `PanelTitleBar.draw(session, "Properties")`, guaranteeing identical font styling, weight, and visual baseline between Parameters and Properties.

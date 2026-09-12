@@ -23,8 +23,24 @@ object OscilloscopeDrawer {
     // Preallocated immutable timebase lists and label arrays to eliminate GC allocations on render path
     private val LFO_TIMEBASES = ScopeTimebase.values().toList()
     private val NON_LFO_TIMEBASES = ScopeTimebase.values().filter { it != ScopeTimebase.AUTO }
-    private val LFO_LABELS = LFO_TIMEBASES.map { it.label }.toTypedArray()
     private val NON_LFO_LABELS = NON_LFO_TIMEBASES.map { it.label }.toTypedArray()
+
+    internal val LFO_LABELS_AUTO_1S = arrayOf("Auto (1s)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+    internal val LFO_LABELS_AUTO_10S = arrayOf("Auto (10s)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+    internal val LFO_LABELS_AUTO_100S = arrayOf("Auto (100s)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+    internal val LFO_LABELS_AUTO_15M = arrayOf("Auto (15m)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+    internal val LFO_LABELS_AUTO_2_5H = arrayOf("Auto (2.5h)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+    internal val LFO_LABELS_AUTO_24H = arrayOf("Auto (24h)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+
+    internal fun getLfoLabels(autoDurationStr: String): Array<String> = when (autoDurationStr) {
+        "1s" -> LFO_LABELS_AUTO_1S
+        "10s" -> LFO_LABELS_AUTO_10S
+        "100s" -> LFO_LABELS_AUTO_100S
+        "15m" -> LFO_LABELS_AUTO_15M
+        "2.5h" -> LFO_LABELS_AUTO_2_5H
+        "24h" -> LFO_LABELS_AUTO_24H
+        else -> arrayOf("Auto ($autoDurationStr)", "1s", "10s", "100s", "15m", "2.5h", "24h")
+    }
 
     // Reusable ImInt wrapper for timebase dropdown combo to prevent per-frame allocations
     private val timebaseComboIndex = ImInt(0)
@@ -41,9 +57,6 @@ object OscilloscopeDrawer {
         val isAngle = param.isAngle
 
         val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
-
-        // 1. Top Controls Bar: Timebase Selector
-        drawControlsBar(session, param, scopeKey, totalDuration, divSec)
 
         val w = ImGui.getContentRegionAvailX()
         val h = 84f
@@ -154,6 +167,9 @@ object OscilloscopeDrawer {
         // 6. Contextual Tooltips
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, hasLfo = false)
 
+        // Top-right overlaid Timebase Selector
+        drawOverlayTimebaseDropdown(session, param, scopeKey, totalDuration, startX, startY, w)
+
         ImGui.setCursorScreenPos(startX, startY + h)
     }
 
@@ -183,9 +199,6 @@ object OscilloscopeDrawer {
         val lfoMods = if (hasLfo) activeMods.filter { isCvSourceBipolar(it.sourceId) || it.sourceId == "seq" } else emptyList()
 
         val (totalDuration, divSec) = param.resolveEffectiveTimebase(scopeKey = scopeKey, defaultWhenNoLfo = ScopeTimebase.TEN_SEC)
-
-        // Top Controls Bar
-        drawControlsBar(session, param, scopeKey, totalDuration, divSec, activeMods)
 
         val historySize = history.size
         val w = ImGui.getContentRegionAvailX()
@@ -403,33 +416,46 @@ object OscilloscopeDrawer {
         ImGui.setCursorScreenPos(startX + 6f, startY + h - captionH - 2f)
         session.uiTheme.captionColored(0.80f, 0.83f, 0.88f, 0.92f, minLabel)
 
-        // 7. Tooltips
+        // 7. Overlaid Timebase Dropdown in top-right corner
+        drawOverlayTimebaseDropdown(session, param, scopeKey, totalDuration, startX, startY, w)
+
+        // 8. Tooltips
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, hasLfo)
 
         ImGui.setCursorScreenPos(startX, startY + h)
     }
 
-    private fun drawControlsBar(
+    private fun drawOverlayTimebaseDropdown(
         session: SessionContext,
         param: ModulatableParameter,
         scopeKey: String,
         totalDuration: Float,
-        divSec: Float,
-        activeMods: List<CvModulator> = emptyList()
+        startX: Float,
+        startY: Float,
+        w: Float
     ) {
         val isLfoScope = (scopeKey == "lfo" || scopeKey == "default")
         val availableTimebases = if (isLfoScope) LFO_TIMEBASES else NON_LFO_TIMEBASES
-        val timebaseLabels = if (isLfoScope) LFO_LABELS else NON_LFO_LABELS
+        val autoDurationStr = ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")
+        val timebaseLabels = if (isLfoScope) getLfoLabels(autoDurationStr) else NON_LFO_LABELS
         val currentTimebase = param.getScopeTimebase(scopeKey)
         val currentIdx = availableTimebases.indexOf(currentTimebase).coerceAtLeast(0)
         timebaseComboIndex.set(currentIdx)
 
         val maxLabelWidth = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            timebaseLabels.maxOfOrNull { ImGui.calcTextSize(it).x } ?: 40f
+            val measuringLabels = if (isLfoScope) LFO_LABELS_AUTO_100S else NON_LFO_LABELS
+            measuringLabels.maxOfOrNull { ImGui.calcTextSize(it).x } ?: 40f
         }
-        val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 17f).coerceAtLeast(76f)
+        val comboWidth = (maxLabelWidth + ImGui.getFrameHeight() + 14f).coerceAtLeast(72f)
+
+        val comboX = startX + w - comboWidth - 10f
+        val comboY = startY + 4f
+        ImGui.setCursorScreenPos(comboX, comboY)
 
         ImGui.pushItemWidth(comboWidth)
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBg, ImGui.colorConvertFloat4ToU32(0.08f, 0.09f, 0.11f, 0.85f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBgHovered, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 0.95f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBgActive, ImGui.colorConvertFloat4ToU32(0.20f, 0.23f, 0.28f, 1.0f))
         if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", timebaseComboIndex, timebaseLabels)) {
             param.setScopeTimebase(scopeKey, availableTimebases[timebaseComboIndex.get().coerceIn(0, availableTimebases.size - 1)])
         }
@@ -439,46 +465,8 @@ object OscilloscopeDrawer {
             "Oscilloscope Time Window: Choose a fixed window (1s to 24h)."
         }
         itemTooltip(tooltip)
+        ImGui.popStyleColor(3)
         ImGui.popItemWidth()
-
-        ImGui.sameLine(0f, 7.6f)
-        val infoLabel = if (currentTimebase == ScopeTimebase.AUTO) {
-            "Auto (${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")})"
-        } else {
-            "${ScopeTimebase.formatTimeOffset(totalDuration).removePrefix("+")} (${ScopeTimebase.formatTimeOffset(divSec).removePrefix("+")}/div)"
-        }
-        session.uiTheme.captionColored(0.75f, 0.78f, 0.82f, 0.95f, infoLabel)
-
-        // Master Cell Mute / Live Toggle Button at upper-right of control bar
-        if (activeMods.isNotEmpty()) {
-            val isMuted = activeMods.all { it.bypassed }
-            val btnText = if (isMuted) "[ MUTED ]" else "[ LIVE ]"
-            val btnW = (ImGui.calcTextSize(btnText).x + 15.2f).coerceAtLeast(57f)
-            val btnH = ImGui.getFrameHeight()
-
-            ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - btnW)
-            if (isMuted) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f))
-            } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.5f, 0.4f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.5f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 0.6f, 1f))
-            }
-
-            if (ImGui.button(btnText, btnW, btnH)) {
-                val targetBypassed = !isMuted
-                val updated = param.modulators.map { mod ->
-                    if (activeMods.any { it.id == mod.id }) mod.copy(bypassed = targetBypassed) else mod
-                }
-                param.modulators.clear()
-                param.modulators.addAll(updated)
-            }
-            itemTooltip(if (isMuted) "Unmute cell modulation (Route to Value)" else "Mute cell modulation (Preview on O-scope)")
-            ImGui.popStyleColor(3)
-        }
-        ImGui.spacing()
     }
 
     private fun drawPlayhead(
@@ -538,6 +526,11 @@ object OscilloscopeDrawer {
         val io = ImGui.getIO()
         val mx = io.mousePos.x
         val my = io.mousePos.y
+
+        // Don't show canvas tooltip if hovering the overlaid timebase combo in the top-right
+        if (mx in (startX + w - 130f)..(startX + w) && my in startY..(startY + 28f)) {
+            return
+        }
 
         if (mx in startX..(startX + w) && my in startY..(startY + h)) {
             val baseKey = (startX.toInt() shl 16) xor startY.toInt()
