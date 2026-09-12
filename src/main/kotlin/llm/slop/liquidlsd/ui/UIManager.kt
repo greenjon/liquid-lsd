@@ -561,21 +561,19 @@ class UIManager(
             ImGui.setNextWindowPos(col1W, menuBarH)
             ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
             val propertiesFlags = if (sliderWasHovered) {
-                noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.MenuBar
+                noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
             } else {
-                noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.MenuBar
+                noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
             }
-            PanelTitleBar.withFramePadding(session) {
-                if (ImGui.begin("Properties", propertiesFlags)) {
-                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                    PropertiesPanel.draw(session, parametersState, currentMixer!!)
+            if (ImGui.begin("Properties", propertiesFlags)) {
+                UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                PropertiesPanel.draw(session, parametersState, currentMixer!!)
 
-                    // Static divider line between Parameters & Properties
-                    val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
-                    ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
-                }
-                ImGui.end()
+                // Static divider line between Parameters & Properties
+                val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+                ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
             }
+            ImGui.end()
         }
 
         // Horizontal Splitter / Title bar drag region (above Library when not FULL)

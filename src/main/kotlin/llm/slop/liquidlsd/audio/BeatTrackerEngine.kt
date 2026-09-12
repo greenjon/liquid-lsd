@@ -364,6 +364,14 @@ class BeatTrackerEngine(
     }
 
     /**
+     * Thread-safe, allocation-free snapshot of current FFT magnitude spectrum.
+     */
+    fun copyMagSpectrum(target: FloatArray) {
+        val count = minOf(target.size, magSpectrum.size)
+        System.arraycopy(magSpectrum, 0, target, 0, count)
+    }
+
+    /**
      * Estimates tempo using multi-band cross-spectral autocorrelation and harmonic comb filtering over history.
      */
     private fun estimateTempo(fps: Float, dt: Float, minPeriodBlocks: Int, maxPeriodBlocks: Int): Float {

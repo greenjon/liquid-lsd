@@ -122,13 +122,14 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── VisualEffect.kt         — Interface for post-processing effects
-│   ├── isf/                    — ISF specification parser, data models, ISFFilter, ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
+│   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter, multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
+│   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
 │   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + fxFBO1 + ping-pong FBOs + 2D/3D View params + FB params
 │   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers & ISF transition engine (blendFBO)
-│   ├── Renderer.kt             — Per-frame: polymorphic source drawTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> ISF transition pass / non-ISF mix -> composite -> blit
+│   ├── Renderer.kt             — Per-frame: universal uniform bridge (resolution, time, frame, date, mouse, audio) -> polymorphic source renderTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> ISF transition pass / non-ISF mix -> composite -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
-│   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D detection
-│   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging and uniform binding
+│   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D and foreign shader format detection
+│   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
 │   ├── DynamicSpiral.kt        — Specialized particle/spiral visual source
 │   ├── ExternalVideoSource.kt  — Live video ingest visual source driven by Spout/Syphon/PipeWire video streams
 │   ├── ExternalVideoDiscovery.kt — Background discovery service polling for active Spout, Syphon, and PipeWire video streams

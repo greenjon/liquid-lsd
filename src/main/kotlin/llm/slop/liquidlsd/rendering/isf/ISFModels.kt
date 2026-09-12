@@ -3,6 +3,12 @@ package llm.slop.liquidlsd.rendering.isf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
+enum class ShaderFormat {
+    ISF,
+    SHADERTOY,
+    GLSL_SANDBOX
+}
+
 @Serializable
 data class ISFInput(
     val NAME: String,

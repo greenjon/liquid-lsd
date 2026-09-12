@@ -43,60 +43,70 @@ object PropertiesPanel {
         }
     }
 
-    private fun drawCvTabRow(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, currentParamKey: String, currentCvId: String) {
-        val availableTabs = mutableListOf<Pair<String, String>>()
-        availableTabs.add("Value" to "value")
-        if (session.uiTheme.midiEnabled) availableTabs.add("MIDI" to "midi")
-        if (session.uiTheme.showLfoCol) availableTabs.add("LFO" to "lfo")
-        if (session.uiTheme.sequencerEnabled) availableTabs.add("SEQ" to "seq")
-        if (session.uiTheme.audioEngineEnabled) {
-            availableTabs.add("Audio" to "audio")
-        }
-
+    private fun drawTopHeader(session: llm.slop.liquidlsd.SessionContext, state: ParametersState?, currentParamKey: String?, currentCvId: String?) {
         val fontScale = 0.95f
         val btnH = (session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)) * 1.5f
 
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f * fontScale, 4f * fontScale)
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            availableTabs.forEachIndexed { i, (label, targetCvId) ->
-                if (i > 0) ImGui.sameLine()
-                val isActive = currentCvId == targetCvId || (targetCvId == "value" && currentCvId == "final")
-                if (isActive) {
-                    val rgb = CvTheme.getThemeColorRGB(targetCvId)
-                    val activeCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.70f, rgb[1] * 0.70f, rgb[2] * 0.70f, 1f)
-                    val hoverCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.85f, rgb[1] * 0.85f, rgb[2] * 0.85f, 1f)
-                    val pressedCol = ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, hoverCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  pressedCol)
-                } else {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-                }
-                val btnW = (ImGui.calcTextSize(label).x + 18f * fontScale).coerceAtLeast(44f * fontScale)
-                if (ImGui.button(label, btnW, btnH)) {
-                    state.selectedCell = ParameterCellId(currentParamKey, targetCvId)
-                }
-                itemTooltip("Switch Properties view to $label CV modulation for parameter")
-                ImGui.popStyleColor(3)
+        val startY = ImGui.getCursorPosY()
+        val txtH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() }
+        val textYOffset = ((btnH - txtH) * 0.5f).coerceAtLeast(0f)
+        ImGui.setCursorPosY(startY + textYOffset)
+        session.uiTheme.h3("Properties")
+        ImGui.setCursorPosY(startY)
+
+        if (state != null && currentParamKey != null && currentCvId != null) {
+            ImGui.sameLine(0f, 16f * fontScale)
+
+            val availableTabs = mutableListOf<Pair<String, String>>()
+            availableTabs.add("Value" to "value")
+            if (session.uiTheme.midiEnabled) availableTabs.add("MIDI" to "midi")
+            if (session.uiTheme.showLfoCol) availableTabs.add("LFO" to "lfo")
+            if (session.uiTheme.sequencerEnabled) availableTabs.add("SEQ" to "seq")
+            if (session.uiTheme.audioEngineEnabled) {
+                availableTabs.add("Audio" to "audio")
             }
+
+            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f * fontScale, 4f * fontScale)
+            session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                availableTabs.forEachIndexed { i, (label, targetCvId) ->
+                    if (i > 0) ImGui.sameLine()
+                    val isActive = currentCvId == targetCvId || (targetCvId == "value" && currentCvId == "final")
+                    if (isActive) {
+                        val rgb = CvTheme.getThemeColorRGB(targetCvId)
+                        val activeCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.70f, rgb[1] * 0.70f, rgb[2] * 0.70f, 1f)
+                        val hoverCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.85f, rgb[1] * 0.85f, rgb[2] * 0.85f, 1f)
+                        val pressedCol = ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, hoverCol)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  pressedCol)
+                    } else {
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+                    }
+                    val btnW = (ImGui.calcTextSize(label).x + 18f * fontScale).coerceAtLeast(44f * fontScale)
+                    if (ImGui.button(label, btnW, btnH)) {
+                        state.selectedCell = ParameterCellId(currentParamKey, targetCvId)
+                    }
+                    itemTooltip("Switch Properties view to $label CV modulation for parameter")
+                    ImGui.popStyleColor(3)
+                }
+            }
+            ImGui.popStyleVar()
         }
-        ImGui.popStyleVar()
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
     }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer) {
-        PanelTitleBar.draw(session, "Properties")
-
         val cell = state.selectedCell
         val param = state.selectedParam
 
         if (cell == null || param == null) {
             activeHistory = null
             activeCellId = null
+            drawTopHeader(session, null, null, null)
             session.uiTheme.caption("Click a parameter or cell to view its properties.")
             return
         }
@@ -106,6 +116,7 @@ object PropertiesPanel {
             state.clearSelection()
             activeHistory = null
             activeCellId = null
+            drawTopHeader(session, null, null, null)
             session.uiTheme.caption("Click a parameter or cell to view its properties.")
             return
         }
@@ -113,8 +124,8 @@ object PropertiesPanel {
         val cvId = cell.cvSourceId
         val paramKey = cell.paramKey
 
-        // Render top CV tab bar
-        drawCvTabRow(session, state, paramKey, cvId)
+        // Render top header with "Properties" title and CV tabs
+        drawTopHeader(session, state, paramKey, cvId)
 
         val themeRGB = CvTheme.getThemeColorRGB(cvId)
         val themeColor = CvTheme.getThemeColor(cvId)

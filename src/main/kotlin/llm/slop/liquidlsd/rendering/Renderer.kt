@@ -17,6 +17,9 @@ class Renderer {
     private val triPlanarShader: Shader
     private val tetraKaleidoShader: Shader
     private val view2DShader: Shader
+    val audioTexture: AudioTexture = AudioTexture()
+    private var renderFrameIndex: Int = 0
+    private var lastRenderTime: Float = 0f
 
     private var isDisposed = false
 
@@ -90,20 +93,101 @@ class Renderer {
         source.shader.bind()
         source.setupUniforms(source.shader)
 
-        // Common uniforms for all sources
+        // Common universal uniforms for all sources (ISF, Shadertoy, GLSL Sandbox, Audio)
         val aspect = targetFBO.width.toFloat() / targetFBO.height.toFloat()
+        val widthF = targetFBO.width.toFloat()
+        val heightF = targetFBO.height.toFloat()
+        val currentTime = TimeSource.getTimeSec().toFloat()
+        val deltaTime = if (lastRenderTime > 0f) currentTime - lastRenderTime else 0.01666f
+        lastRenderTime = currentTime
+        val frameIdx = renderFrameIndex++
+
+        // Dimensions & Aspect
         source.shader.setUniform("uAlpha",       source.globalAlpha.value)
-        source.shader.setUniform("uResolution",  targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        source.shader.setUniform("RENDERSIZE",   targetFBO.width.toFloat(), targetFBO.height.toFloat())
-        source.shader.setUniform("uTime",        TimeSource.getTimeSec().toFloat())
+        source.shader.setUniform("uResolution",  widthF, heightF)
+        source.shader.setUniform("RENDERSIZE",   widthF, heightF)
+        source.shader.setUniform("u_resolution", widthF, heightF)
+        source.shader.setUniform("resolution",   widthF, heightF)
+        source.shader.setUniform("iResolution",  widthF, heightF, 1.0f)
         source.shader.setUniform("uAspectRatio", aspect)
         source.shader.setUniform("uZoom",        zoom)
         source.shader.setUniform("uRotateZ",     rotZ)
+
+        // Time & Clocks
+        source.shader.setUniform("uTime",        currentTime)
+        source.shader.setUniform("TIME",         currentTime)
+        source.shader.setUniform("iTime",        currentTime)
+        source.shader.setUniform("u_time",       currentTime)
+        source.shader.setUniform("time",         currentTime)
+        source.shader.setUniform("TIMEDELTA",    deltaTime)
+        source.shader.setUniform("iTimeDelta",   deltaTime)
+        source.shader.setUniform("u_delta",      deltaTime)
+
+        // Frame Indices
+        source.shader.setUniform("FRAMEINDEX",   frameIdx)
+        source.shader.setUniform("iFrame",       frameIdx)
+        source.shader.setUniform("u_frame",      frameIdx)
+        val fps = try { imgui.ImGui.getIO().framerate } catch (_: Exception) { 60.0f }
+        source.shader.setUniform("iFrameRate",   if (fps > 0f) fps else 60.0f)
+
+        // Date derivation (zero allocation)
+        val epochMs = System.currentTimeMillis()
+        val epochSec = epochMs / 1000L
+        val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
+        val daysSinceEpoch = (epochSec / 86400L).toInt()
+        val year400 = daysSinceEpoch / 146097; val rem400 = daysSinceEpoch % 146097
+        val year100 = minOf(rem400 / 36524, 3); val rem100 = rem400 - year100 * 36524
+        val year4   = rem100 / 1461;             val rem4   = rem100 % 1461
+        val year1   = minOf(rem4 / 365, 3);      val rem1   = rem4 - year1 * 365
+        val yearNum = 1970 + year400 * 400 + year100 * 100 + year4 * 4 + year1
+        val isLeap  = (yearNum % 4 == 0 && yearNum % 100 != 0) || yearNum % 400 == 0
+        val monthStarts = if (isLeap) MONTH_STARTS_LEAP else MONTH_STARTS_NORMAL
+        var monthNum = 11
+        for (m in 0..10) { if (rem1 < monthStarts[m + 1]) { monthNum = m; break } }
+        val dayNum = rem1 - monthStarts[monthNum] + 1
+        source.shader.setUniform("DATE",  yearNum.toFloat(), (monthNum + 1).toFloat(), dayNum.toFloat(), secondsSinceMidnight)
+        source.shader.setUniform("iDate", yearNum.toFloat(), (monthNum + 1).toFloat(), dayNum.toFloat(), secondsSinceMidnight)
+
+        // Mouse & Interaction
+        var mouseX = 0f
+        var mouseY = 0f
+        var isMouseDown = false
+        try {
+            val io = imgui.ImGui.getIO()
+            mouseX = io.mousePos.x
+            mouseY = io.mousePos.y
+            isMouseDown = imgui.ImGui.isMouseDown(0)
+        } catch (_: Exception) {}
+        val glMouseY = (heightF - mouseY).coerceAtLeast(0f)
+        val normMouseX = (mouseX / widthF).coerceIn(0f, 1f)
+        val normMouseY = (glMouseY / heightF).coerceIn(0f, 1f)
+        val clickX = if (isMouseDown) mouseX else 0f
+        val clickY = if (isMouseDown) glMouseY else 0f
+        source.shader.setUniform("u_mouse", normMouseX, normMouseY)
+        source.shader.setUniform("mouse",   normMouseX, normMouseY)
+        source.shader.setUniform("iMouse",  mouseX, glMouseY, clickX, clickY)
+
+        // Real-Time Audio (VJ Standard)
+        val audioVol = llm.slop.liquidlsd.cv.CVRegistry.get("amp")
+        val audioBass = llm.slop.liquidlsd.cv.CVRegistry.get("bass")
+        val audioMid = llm.slop.liquidlsd.cv.CVRegistry.get("mid")
+        val audioTreble = llm.slop.liquidlsd.cv.CVRegistry.get("high")
+        source.shader.setUniform("audioVolume", audioVol)
+        source.shader.setUniform("audioBass",   audioBass)
+        source.shader.setUniform("audioMid",    audioMid)
+        source.shader.setUniform("audioTreble", audioTreble)
+
+        // Update Audio FFT Texture and bind to unit 5
+        audioTexture.updateFromAudioEngine(llm.slop.liquidlsd.audio.AudioEngine)
+        audioTexture.bind(5)
+        source.shader.setUniform("audioFFT", 5)
+        source.shader.setUniform("iChannel0", 5)
+
         if (hasFb) {
             source.shader.setUniform("src", 0)
         }
 
-        source.drawTopology()
+        source.renderTopology(renderTarget)
 
         source.shader.unbind()
         renderTarget.unbind()
@@ -496,7 +580,14 @@ class Renderer {
             triPlanarShader.dispose()
             tetraKaleidoShader.dispose()
             view2DShader.dispose()
+            audioTexture.dispose()
             isDisposed = true
         }
     }
+
+    companion object {
+        private val MONTH_STARTS_NORMAL = intArrayOf(0,31,59,90,120,151,181,212,243,273,304,334,365)
+        private val MONTH_STARTS_LEAP   = intArrayOf(0,31,60,91,121,152,182,213,244,274,305,335,366)
+    }
 }
+

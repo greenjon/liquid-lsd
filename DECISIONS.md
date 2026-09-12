@@ -1,3 +1,36 @@
+## Universal Shader Pipeline & Compatibility Bridge (`ISFParser.kt`, `ISFVisualSource.kt`, `Renderer.kt`, `AudioTexture.kt`)
+
+- **Decision**: Expand shader support from strictly formatted ISF files to a universal ingestion and uniform bridge pipeline supporting **ISF**, **Shadertoy**, and **The Book of Shaders / GLSLSandbox**:
+  - **Universal Format Detection & Normalization**:
+    - Scans for `/*{ ... }*/` (ISF), `void mainImage(...)` (Shadertoy), or `void main(...)` (GLSLSandbox).
+    - For Shadertoy shaders, automatically appends a bridge shim `void main() { mainImage(isf_FragColor, gl_FragCoord.xy); }` and aliases output colors.
+    - Synthesizes fallback `ISFHeader` instances with appropriate categories so Shadertoy and Sandbox shaders catalog seamlessly into the Visual Source library.
+  - **Legacy GLSL 1.20 Core 3.30 Polyfills**:
+    - Injects `#define texture2D texture`, `#define textureCube texture`, `#define texture2DRect(s, c) texture(s, (c) / RENDERSIZE)`, and `#define gl_FragColor isf_FragColor`.
+  - **Complete ISF Macro Definitions**:
+    - Injects `IMG_THIS_PIXEL`, `IMG_THIS_NORM_PIXEL`, and `IMG_SIZE` alongside `IMG_NORM_PIXEL` and `IMG_PIXEL`.
+  - **Unified Uniform Bridge (Host Dispatcher)**:
+    - Pre-injects and binds unified uniform sets on every frame in `Renderer.kt`:
+      - Resolution: `RENDERSIZE`, `iResolution` (vec3), `u_resolution`, `resolution`
+      - Clocks & Time: `TIME`, `iTime`, `u_time`, `time`, `TIMEDELTA`, `iTimeDelta`, `u_delta`
+      - Frame & FrameRate: `FRAMEINDEX`, `iFrame`, `u_frame`, `iFrameRate`
+      - Date: `DATE`, `iDate` (year, month, day, seconds since midnight)
+      - Interaction: `iMouse` (vec4 with click coordinates), `u_mouse` / `mouse` (normalized vec2)
+      - Real-time Audio: `audioVolume`, `audioBass`, `audioMid`, `audioTreble` from `CVRegistry`
+  - **Live Audio FFT Texture (`AudioTexture.kt`)**:
+    - Allocates a dedicated `512 x 2` floating-point OpenGL texture (`GL_R32F`).
+    - Row 0 (`y = 0.25`): 512 normalized frequency spectrum bins (FFT) from `BeatTrackerEngine.magSpectrum`.
+    - Row 1 (`y = 0.75`): 512 normalized waveform samples from live audio stream (`AudioEngine.mixedBuffer`).
+    - Bound to `audioFFT` and `iChannel0` (texture unit 5) on Thread 0 with zero audio callback thread overhead.
+  - **Multi-Pass Visual Generators (`ISFVisualSource.kt`)**:
+    - Extends multi-pass ping-pong FBO execution to visual generators, matching the capabilities of `ISFFilter.kt`.
+    - Supports pass target textures, dimension expressions (`$WIDTH/2.0`, `$HEIGHT/2.0`), persistent ping-pong history FBOs, and 32-bit floating point passes (`FLOAT: true`).
+- **Rationale**:
+  - Live VJ and visual artists draw heavily from Shadertoy, GLSLSandbox, and Book of Shaders alongside ISF. Requiring manual code conversion was a significant barrier to entry.
+  - Providing an automatic injection and normalization pipeline allows foreign shaders to run out of the box with zero manual editing while reacting directly to the audio engine and user interaction.
+
+---
+
 ## Contextual In-Properties MIDI Learn (`PropertiesPanel.kt`, `MidiModulatorSection.kt`, `ParametersState.kt`)
 
 - **Decision**: Replace the global modal `MIDI Map` toggle in the main menu bar with targeted, inline MIDI Learn controls located directly inside the **Properties** panel (`PropertiesPanel.kt`, `MidiModulatorSection.kt`):

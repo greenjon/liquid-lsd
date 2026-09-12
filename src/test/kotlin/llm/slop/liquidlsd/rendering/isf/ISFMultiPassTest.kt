@@ -49,6 +49,41 @@ class ISFMultiPassTest {
     }
 
     @Test
+    fun `test ISFVisualSource multi-pass passBindings and parameters`() {
+        val source = """
+            /*{
+                "DESCRIPTION": "Reaction Diffusion Generator",
+                "PASSES": [
+                    { "TARGET": "bufferA", "PERSISTENT": true, "FLOAT": true },
+                    { "TARGET": "bufferB", "FLOAT": true },
+                    {}
+                ]
+            }*/
+            void main() {
+                gl_FragColor = vec4(1.0);
+            }
+        """.trimIndent()
+
+        val header = ISFParser.parseHeader(source)!!
+        assertEquals(3, header.PASSES.size)
+        val shader = mockk<Shader>(relaxed = true)
+        val isfSource = ISFVisualSource(
+            id = "rd_gen",
+            displayName = "Reaction Diffusion",
+            shader = shader,
+            header = header,
+            parameters = LinkedHashMap()
+        )
+
+        assertNotNull(isfSource)
+        assertEquals("rd_gen", isfSource.id)
+        assertEquals(3, isfSource.header.PASSES.size)
+        assertEquals("bufferA", isfSource.header.PASSES[0].TARGET)
+        assertTrue(isfSource.header.PASSES[0].PERSISTENT)
+        assertTrue(isfSource.header.PASSES[0].FLOAT)
+    }
+
+    @Test
     fun `test Deck parameter path registration with Dual FX slots`() {
         val mockSource = mockk<VisualSource>(relaxed = true)
         val shader1 = mockk<Shader>(relaxed = true)

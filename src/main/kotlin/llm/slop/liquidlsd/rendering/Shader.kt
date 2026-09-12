@@ -121,10 +121,7 @@ class Shader(vertexSource: String, fragmentSource: String) {
                 location = glGetUniformLocation(programId, "$name[0]")
             }
             if (location == -1) {
-                val isStandardSystemUniform = name == "uTime" || name == "uAlpha" || name == "uResolution" ||
-                        name == "TIME" || name == "TIMEDELTA" || name == "FRAMEINDEX" || name == "DATE" || 
-                        name == "RENDERSIZE" || name == "uAspectRatio" || name == "uZoom" || name == "uRotateZ"
-                if (!isStandardSystemUniform) {
+                if (name !in SYSTEM_UNIFORMS) {
                     logger.warn { "Uniform '$name' not found in shader program $programId" }
                 }
             }
@@ -179,6 +176,17 @@ class Shader(vertexSource: String, fragmentSource: String) {
 
 
     companion object {
+        val SYSTEM_UNIFORMS: Set<String> = setOf(
+            "uTime", "uAlpha", "uResolution", "TIME", "TIMEDELTA", "FRAMEINDEX", "DATE",
+            "RENDERSIZE", "uAspectRatio", "uZoom", "uRotateZ", "PASSINDEX", "src",
+            "iResolution", "u_resolution", "resolution",
+            "iTime", "u_time", "time", "iTimeDelta", "u_delta",
+            "iFrame", "u_frame", "iFrameRate", "iDate",
+            "iMouse", "u_mouse", "mouse",
+            "audioVolume", "audioBass", "audioMid", "audioTreble",
+            "audioFFT", "iChannel0", "iChannel1", "iChannel2", "iChannel3",
+            "iChannelResolution", "iChannelTime"
+        )
         /**
          * Load a shader from resource files
          */

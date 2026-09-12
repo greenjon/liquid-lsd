@@ -198,7 +198,9 @@ object VisualSourceRegistry {
 
     private fun loadFromISFFile(file: File, overrideId: String? = null): ISFVisualSource? {
         val rawSource = file.readText()
-        val header = ISFParser.parseHeader(rawSource) ?: return null
+        val format = ISFParser.detectFormat(rawSource)
+        val header = ISFParser.parseHeader(rawSource)
+            ?: ISFParser.createDefaultHeader(file.nameWithoutExtension.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }, format)
 
         // Skip filters and transitions from being loaded as visual generator sources
         val isTransition = header.CATEGORIES?.any { it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true) } == true ||

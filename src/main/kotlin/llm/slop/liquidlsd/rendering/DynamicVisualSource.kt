@@ -100,6 +100,15 @@ open class DynamicVisualSource(
         Geometry.drawFullscreenQuad()
     }
 
+    /**
+     * Executes rendering into [targetFBO]. Shaders that support multi-pass
+     * execution (such as multi-pass ISF sources) can override this to manage
+     * intermediate pass targets before rendering the final pass to [targetFBO].
+     */
+    open fun renderTopology(targetFBO: FBO) {
+        drawTopology()
+    }
+
     override fun dispose() {
         fb1?.dispose()
         fb2?.dispose()

@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Universal Shader Ecosystem Support — ISF, Shadertoy & GLSLSandbox (`ISFParser.kt`, `ISFVisualSource.kt`, `Renderer.kt`, `AudioTexture.kt`, `VisualSourceRegistry.kt`, `ISFScanner.kt`)
+- **Multi-Format Ingestion & Smart Detection**: Shaders across the live visuals ecosystem (**ISF**, **Shadertoy**, and **The Book of Shaders / GLSLSandbox**) are now automatically recognized, normalized, and cataloged without requiring manual code conversion or JSON headers.
+- **Legacy GLSL 1.20 Core 3.30 Compatibility**: Injects automatic polyfills for legacy GLSL calls (`texture2D`, `textureCube`, `texture2DRect`, `texture2DProj`) and aliases `gl_FragColor` to modern core outputs.
+- **Complete ISF Macro Suite**: Added built-in macros `IMG_THIS_PIXEL`, `IMG_THIS_NORM_PIXEL`, and `IMG_SIZE` alongside existing `IMG_NORM_PIXEL` and `IMG_PIXEL`.
+- **Automatic Shadertoy Entry Point Shim**: Shaders featuring `void mainImage(...)` automatically receive entry-point bridging to `void main()` writing to normalized fragment coordinates.
+- **Unified Uniform Bridge**: Pre-injects and binds unified uniform sets on every frame in `Renderer.kt`:
+  - Resolution: `RENDERSIZE`, `iResolution` (vec3), `u_resolution`, `resolution`
+  - Clocks & Time: `TIME`, `iTime`, `u_time`, `time`, `TIMEDELTA`, `iTimeDelta`, `u_delta`
+  - Frame & FrameRate: `FRAMEINDEX`, `iFrame`, `u_frame`, `iFrameRate`
+  - Calendar / Clock: `DATE`, `iDate` (year, month, day, seconds since midnight)
+  - Interactive Mouse: `iMouse` (vec4 with pixel coordinates and click drag status), `u_mouse` / `mouse` (normalized vec2)
+  - Audio Scalars: `audioVolume`, `audioBass`, `audioMid`, `audioTreble` from `CVRegistry`
+- **Real-Time Audio FFT & Waveform Texture (`AudioTexture.kt`)**: Implemented a dedicated 512x2 floating-point texture (`GL_R32F`) updating live from `AudioEngine` (Row 0: 512 FFT magnitude bins; Row 1: 512 waveform samples) bound to `audioFFT` and `iChannel0` with zero audio thread allocation.
+- **Multi-Pass Visual Generators (`ISFVisualSource.kt`)**: Extended full multi-pass ping-pong FBO rendering to visual generators, supporting offscreen pass targets, dimension expressions (`$WIDTH/2.0`, `$HEIGHT/2.0`), persistent history buffers, and 32-bit floating point passes (`FLOAT: true`).
+
+### Properties Panel Title Bar & Typography Synchronization (`PropertiesPanel.kt`, `UIManager.kt`)
+- **Synchronized 1.5x Title Bar Height**: Configured the Properties panel window with `NoTitleBar` and `MenuBar` flags wrapped in `PanelTitleBar.withFramePadding(session)`, eliminating the default un-styled window title bar and rendering the synchronized 1.5x scaled title bar (`PanelTitleBar.calculateHeight(session)`) matching the height of the Parameters panel to the left.
+- **Consistent H3 Typography**: Aligned the `"Properties"` title text typography to use `UITheme.FontLevel.H3` and optical vertical text centering via `PanelTitleBar.draw(session, "Properties")`, guaranteeing identical font styling, weight, and visual baseline between Parameters and Properties.
+
 ### Keyboard Shortcuts Overhaul, Grid Layout, Rebinding & Collision Detection (`SettingsPanel.kt`, `ShortcutManager.kt`, `KeyCombination.kt`, `ShortcutAction.kt`, `Main.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`)
 - **Centralized `ShortcutManager` Engine**: Decoupled hardcoded GLFW keyboard shortcuts across `Main.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`, and `UIManager.kt` into a centralized `ShortcutManager` service with persistent keybindings storage (`~/.liquidlsd/keybindings.json`).
 - **Swapped 2-Column Grid Layout in Settings**: Redesigned **Settings → Keyboard Shortcuts** table to place **Action Names & Detailed Descriptions on the Left** and **Shortcut Key Badges & Rebind Controls on the Right**.

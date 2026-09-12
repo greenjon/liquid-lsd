@@ -164,6 +164,7 @@ object AudioEngine {
     private val lowBuffer   = FloatArray(16384)
     private val midBuffer   = FloatArray(16384)
     private val highBuffer  = FloatArray(16384)
+    private val waveformHistory = llm.slop.liquidlsd.cv.CvHistoryBuffer(512)
 
     // ── Flywheel state ──────────────────────────────────────────────────────
     private var totalSamplesProcessed = 0L
@@ -540,6 +541,12 @@ object AudioEngine {
         // Tap live audio stream for real-time video recording (zero allocation)
         llm.slop.liquidlsd.export.RealtimeRecorder.pushAudioArray(mixedBuffer, 0, safeFrames, sampleRate)
 
+        // Tap live audio waveform for universal shader audio texture (zero allocation)
+        val waveFrames = minOf(safeFrames, 512)
+        for (i in 0 until waveFrames) {
+            waveformHistory.add(mixedBuffer[i])
+        }
+
         // 4. RMS amplitudes per band
         val amp  = extractor.calculateRms(mixedBuffer, safeFrames)
         val bass = extractor.calculateRms(lowBuffer,  safeFrames)
@@ -655,6 +662,15 @@ object AudioEngine {
 
         val callbackNanos = System.nanoTime() - currentTime
         callbackLatencyNanos.set(callbackNanos)
+    }
+
+    /**
+     * Copies the latest FFT magnitude spectrum and waveform samples into preallocated arrays.
+     * Thread-safe and zero-allocation for use by AudioTexture on Thread 0.
+     */
+    fun copyAudioTextureData(fftTarget: FloatArray, waveformTarget: FloatArray) {
+        beatDetector.engine.copyMagSpectrum(fftTarget)
+        waveformHistory.copyTo(waveformTarget)
     }
 
     /**

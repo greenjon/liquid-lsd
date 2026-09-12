@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Properties Panel Title Bar & Typography Synchronization (`PropertiesPanel.kt`, `UIManager.kt`)
+- **Synchronized 1.5x Title Bar Height**: Configured the Properties panel window with `NoTitleBar` and `MenuBar` flags wrapped in `PanelTitleBar.withFramePadding(session)`, eliminating the default un-styled window title bar and rendering the synchronized 1.5x scaled title bar (`PanelTitleBar.calculateHeight(session)`) matching the height of the Parameters panel to the left.
+- **Consistent H3 Typography**: Aligned the `"Properties"` title text typography to use `UITheme.FontLevel.H3` and optical vertical text centering via `PanelTitleBar.draw(session, "Properties")`, guaranteeing identical font styling, weight, and visual baseline between Parameters and Properties.
+
 ### Keyboard Shortcuts Overhaul, Grid Layout, Rebinding & Collision Detection (`SettingsPanel.kt`, `ShortcutManager.kt`, `KeyCombination.kt`, `ShortcutAction.kt`, `Main.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`)
 - **Centralized `ShortcutManager` Engine**: Decoupled hardcoded GLFW keyboard shortcuts across `Main.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`, and `UIManager.kt` into a centralized `ShortcutManager` service with persistent keybindings storage (`~/.liquidlsd/keybindings.json`).
 - **Swapped 2-Column Grid Layout in Settings**: Redesigned **Settings → Keyboard Shortcuts** table to place **Action Names & Detailed Descriptions on the Left** and **Shortcut Key Badges & Rebind Controls on the Right**.

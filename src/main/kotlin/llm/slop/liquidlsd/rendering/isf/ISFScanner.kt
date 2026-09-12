@@ -59,20 +59,21 @@ object ISFScanner {
             return null
         }
 
+        val format = ISFParser.detectFormat(rawSource)
         val header = try {
             ISFParser.parseHeader(rawSource)
         } catch (e: Exception) {
             logger.warn(e) { "Encountered malformed or truncated ISF header in ${file.name}; skipping header parsing." }
             null
-        }
+        } ?: ISFParser.createDefaultHeader(file.nameWithoutExtension.replace("_", " ").capitalize(), format)
 
         val filenameId = file.nameWithoutExtension.lowercase().replace(Regex("[^a-z0-9_]"), "_")
-        val jsonName = header?.DESCRIPTION // or name if available in header
+        val jsonName = header.DESCRIPTION
         val displayName = jsonName ?: file.nameWithoutExtension.replace("_", " ").capitalize()
         val id = filenameId
 
         // Determine category
-        val categories = header?.CATEGORIES
+        val categories = header.CATEGORIES
         val parentFolder = file.parentFile?.name ?: "General"
         val category = if (!categories.isNullOrEmpty()) {
             categories.first()
