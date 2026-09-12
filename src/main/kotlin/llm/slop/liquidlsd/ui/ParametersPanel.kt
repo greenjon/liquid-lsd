@@ -135,31 +135,10 @@ object ParametersPanel {
         val isDeckEmpty = activeDeck?.isEmpty == true
 
         // ── Title Bar: "Parameters" title with Video Source tab beside it in Window MenuBar ──
-        if (ImGui.beginMenuBar()) {
-            val baseFrameH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }
-            val menuBarH = baseFrameH * 1.5f
-            val fontSize = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFontSize() }
-            val padY = ((menuBarH - fontSize) * 0.5f).coerceAtLeast(0f)
-            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), padY)
-            try {
-                val btnH = (menuBarH - 6f).coerceAtLeast(24f)
-                val yOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
-
-                var txtH = 0f
-                session.uiTheme.withFont(UITheme.FontLevel.H3) { txtH = ImGui.getTextLineHeight() }
-                ImGui.setCursorPosY(yOffset + (btnH - txtH) * 0.5f)
-                session.uiTheme.h3("Parameters")
-
-                if (activeDeck != null) {
-                    ImGui.sameLine(0f, TITLE_BAR_SPACING)
-                    ImGui.setCursorPosY(yOffset)
-                    ParametersTabs.drawSourceTab(session, state, mixer, btnH = btnH, deckPresetController = deckPresetController)
-                }
-            } finally {
-                ImGui.popStyleVar()
+        PanelTitleBar.draw(session, "Parameters", TITLE_BAR_SPACING) { _, btnH, _ ->
+            if (activeDeck != null) {
+                ParametersTabs.drawSourceTab(session, state, mixer, btnH = btnH, deckPresetController = deckPresetController)
             }
-
-            ImGui.endMenuBar()
         }
 
         // ── Main Parameters Table (Left Side Tabs + Right Grid Area) ─────────────────

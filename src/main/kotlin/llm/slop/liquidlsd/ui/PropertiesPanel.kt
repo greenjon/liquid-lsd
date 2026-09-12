@@ -89,6 +89,8 @@ object PropertiesPanel {
     }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer) {
+        PanelTitleBar.draw(session, "Properties")
+
         val cell = state.selectedCell
         val param = state.selectedParam
 

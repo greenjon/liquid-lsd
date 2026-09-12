@@ -117,4 +117,37 @@ class WindowLayoutSafetyTest {
         assertEquals(UITheme.LibraryMode.HIDE, session.uiTheme.libraryMode)
         assertTrue(LibraryPanel.isLibraryExpanding)
     }
+
+    @Test
+    fun testPanelTitleBarCenteringMath() {
+        assertEquals(1.5f, PanelTitleBar.HEIGHT_SCALE, "HEIGHT_SCALE should be 1.5f")
+        assertEquals(3.0f, PanelTitleBar.TEXT_Y_OPTICAL_OFFSET, "TEXT_Y_OPTICAL_OFFSET should be 3.0f")
+
+        val simulatedTitleBarHeights = listOf(28f, 30f, 31.5f, 33f, 36f, 42f)
+        val simulatedH3FontHeights = listOf(14f, 15f, 16f, 18f)
+
+        for (menuBarH in simulatedTitleBarHeights) {
+            val btnH = (menuBarH - 6f).coerceAtLeast(22f)
+            val btnYOffset = ((menuBarH - btnH) * 0.5f).coerceAtLeast(0f)
+
+            // Button bounds check: button must not overflow menu bar top or bottom
+            assertTrue(btnYOffset >= 0f, "Button Y offset must be non-negative: $btnYOffset")
+            assertTrue(btnYOffset + btnH <= menuBarH, "Button must not extend beyond menu bar bottom ($menuBarH): ${btnYOffset + btnH}")
+
+            for (txtH in simulatedH3FontHeights) {
+                val textYOffset = (((menuBarH - txtH) * 0.5f) - PanelTitleBar.TEXT_Y_OPTICAL_OFFSET).coerceAtLeast(0f)
+                val textBottom = textYOffset + txtH
+
+                // Text bounds check: text must not overflow menu bar top or bottom
+                assertTrue(textYOffset >= 0f, "Text Y offset must be non-negative: $textYOffset")
+                assertTrue(textBottom <= menuBarH, "Text must not be cut off at bottom ($menuBarH): $textBottom")
+
+                // Ensure top padding is less than or equal to bottom padding so text never sits too low with excess space above
+                val topPadding = textYOffset
+                val bottomPadding = menuBarH - textBottom
+                assertTrue(topPadding <= bottomPadding, "Top padding ($topPadding) should not exceed bottom padding ($bottomPadding)")
+            }
+        }
+    }
 }
+

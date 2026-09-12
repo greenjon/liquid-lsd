@@ -543,35 +543,33 @@ class UIManager(
             ImGui.setNextWindowPos(0f, menuBarH)
             ImGui.setNextWindowSize(col1W.coerceAtLeast(1f), topH)
             val parametersFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
-            val baseFrameH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }
-            val targetParamHeaderH = baseFrameH * 1.5f
-            val paramFontSize = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFontSize() }
-            val paramPadY = ((targetParamHeaderH - paramFontSize) * 0.5f).coerceAtLeast(0f)
-            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), paramPadY)
-            if (ImGui.begin("Parameters", parametersFlags)) {
-                UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                ParametersPanel.draw(session, currentMixer!!, parametersState, deckPresetController)
+            PanelTitleBar.withFramePadding(session) {
+                if (ImGui.begin("Parameters", parametersFlags)) {
+                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                    ParametersPanel.draw(session, currentMixer!!, parametersState, deckPresetController)
+                }
+                ImGui.end()
             }
-            ImGui.end()
-            ImGui.popStyleVar()
 
             // Column 2: Properties
             ImGui.setNextWindowPos(col1W, menuBarH)
             ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
             val propertiesFlags = if (sliderWasHovered) {
-                noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar
+                noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.MenuBar
             } else {
-                noDecorate or ImGuiWindowFlags.NoScrollbar
+                noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.MenuBar
             }
-            if (ImGui.begin("Properties", propertiesFlags)) {
-                UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                PropertiesPanel.draw(session, parametersState, currentMixer!!)
+            PanelTitleBar.withFramePadding(session) {
+                if (ImGui.begin("Properties", propertiesFlags)) {
+                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                    PropertiesPanel.draw(session, parametersState, currentMixer!!)
 
-                // Static divider line between Parameters & Properties
-                val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
-                ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
+                    // Static divider line between Parameters & Properties
+                    val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+                    ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
+                }
+                ImGui.end()
             }
-            ImGui.end()
         }
 
         // Horizontal Splitter / Title bar drag region (above Library when not FULL)

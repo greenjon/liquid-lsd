@@ -154,6 +154,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
 │   ├── ParametersPanel.kt      — Parameter matrix with tabs, source dropdown, and modulator columns
 │   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
+│   ├── PanelTitleBar.kt        — Synchronized 1.5x title bar renderer and optical text centering for Parameters & Properties
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
 │   ├── SettingsPanel.kt        — App configuration & tabbed preferences modal
