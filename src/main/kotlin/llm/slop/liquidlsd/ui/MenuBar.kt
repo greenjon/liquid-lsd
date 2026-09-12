@@ -5,7 +5,6 @@ import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.presets.PresetManager
 import mu.KotlinLogging
-import llm.slop.liquidlsd.midi.MidiEngine
 import llm.slop.liquidlsd.audio.AudioEngine
 
 class MenuBar(
@@ -202,31 +201,7 @@ class MenuBar(
                         itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
                     }
 
-                    // MIDI Map toggle button
-                    val isMidiLearn = parametersState.isMidiLearnMode
-                    val midiEnabled = session.uiTheme.midiEnabled
-                    if (isMidiLearn) {
-                        ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
-                    }
-                    if (ImGui.menuItem("MIDI Map", "", isMidiLearn, midiEnabled)) {
-                        parametersState.isMidiLearnMode = !isMidiLearn
-                        if (!parametersState.isMidiLearnMode) {
-                            parametersState.midiLearnTarget = null
-                        } else {
-                            if (MidiEngine.getActiveDeviceCount() == 0) {
-                                popupManager.pendingOpenMidiWarningPopup = true
-                            }
-                        }
-                    }
-                    val midiTip = if (midiEnabled) {
-                        "Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it."
-                    } else {
-                        "MIDI is disabled in Settings. Enable MIDI in Settings -> MIDI & Controls to use MIDI Learn."
-                    }
-                    itemTooltip(midiTip)
-                    if (isMidiLearn) {
-                        ImGui.popStyleColor()
-                    }
+                    // (MIDI Map is handled in-context inside Properties / CellConfigPanel)
 
                     if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
                         ColorTunerPanel.toggle()

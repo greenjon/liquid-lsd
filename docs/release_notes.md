@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Contextual In-Properties MIDI Learn (`PropertiesPanel.kt`, `MidiModulatorSection.kt`, `ParametersState.kt`, `ParametersRenderer.kt`, `MenuBar.kt`, `UIManager.kt`, `MixerPanel.kt`)
+- **Elimination of Global Modal MIDI Map Mode**: Removed the `MIDI Map` toggle item from the main menu bar (`MenuBar.kt`) and removed the global `isMidiLearnMode` boolean state from `ParametersState.kt`.
+- **Inline `[ Learn MIDI ]` Controls**:
+  - Unbound MIDI cells in the Properties panel (`PropertiesPanel.kt`) now feature a prominent `[ Learn MIDI ]` button alongside explicit instructions.
+  - Clicking `Learn MIDI` updates the button locally to `[ ⏳ Waiting for MIDI CC... (Click to Cancel) ]` with Orchid active styling.
+  - Automatically disengages after 15 seconds of inactivity or upon selecting a different cell/tab.
+- **In-Context Re-Learn & Unbind**: Bound MIDI parameters in `MidiModulatorSection.kt` render `[ Re-Learn MIDI ]` and `[ Unbind MIDI ]` controls directly above DC Offset and Depth sliders.
+- **Matrix Target Highlighting**: The active learning parameter cell in the Parameters matrix displays a glowing cyan border outline while listening for incoming MIDI CC messages.
+
 ### First-Class External Video Feeds in Universal Shader Picker (`ShaderPickerPopup.kt`, `ParametersTabs.kt`, `ExternalVideoSource.kt`, `ExternalVideoSourceTest.kt`)
 - **Direct Stream Selection in Universal Shader Picker**: Discovered external video streams (PipeWire, Spout2, Syphon) are now listed directly within `ShaderPickerPopup` alongside procedural sources under a dedicated `External Sources` category pill positioned immediately beside `All`.
 - **Live Stream Visual Distinction**: External stream rows in the picker table are accented in emerald green and badged with the Lucide live activity icon (`Icons.ACTIVITY`), clearly distinguishing live video feeds from compiled GLSL shaders.

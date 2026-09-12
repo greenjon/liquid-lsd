@@ -211,6 +211,11 @@ class UIManager(
         if (!session.uiTheme.midiEnabled) {
             llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.clear()
         } else {
+            // Check for MIDI learn auto-timeout (15 seconds)
+            if (parametersState.midiLearnTarget != null && System.currentTimeMillis() - parametersState.midiLearnStartTimeMs > 15000L) {
+                parametersState.midiLearnTarget = null
+            }
+
             while (true) {
                 val event = llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.poll() ?: break
                 val (channel, cc) = event
@@ -382,9 +387,10 @@ class UIManager(
                 ImGui.openPopup("Exit Liquid LSD?##confirm")
                 popupManager.pendingOpenExitPopup = false
             }
-            if (popupManager.pendingOpenMidiWarningPopup) {
+            if (popupManager.pendingOpenMidiWarningPopup || PopupManager.globalPendingMidiWarning) {
                 ImGui.openPopup("No MIDI Devices Connected##midi_warning")
                 popupManager.pendingOpenMidiWarningPopup = false
+                PopupManager.globalPendingMidiWarning = false
             }
 
             drawLayout(mixer, displayWidth, displayHeight)

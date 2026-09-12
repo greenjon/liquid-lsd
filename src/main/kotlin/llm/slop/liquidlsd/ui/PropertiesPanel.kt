@@ -161,12 +161,30 @@ object PropertiesPanel {
         if (isVirtual && cvId == "midi") {
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("No MIDI mapping on this parameter.")
+            session.uiTheme.caption("No MIDI controller bound to this parameter.")
             ImGui.spacing()
-            session.uiTheme.caption("To map a controller:")
-            session.uiTheme.caption("1. Enable [MIDI Map] in the main menu bar.")
-            session.uiTheme.caption("2. Click this cell (which will highlight in cyan).")
-            session.uiTheme.caption("3. Turn a knob or move a fader on your MIDI controller.")
+            session.uiTheme.caption("To connect a MIDI controller, click 'Learn MIDI' and move a knob, fader, or button on your device:")
+            ImGui.spacing()
+
+            val currentTarget = state.midiLearnTarget
+            val isThisCellLearning = currentTarget is MidiLearnTarget.GridCell && currentTarget.cellId == cell
+
+            if (isThisCellLearning) {
+                imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
+                imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
+                if (imgui.ImGui.button("${Icons.REFRESH} Waiting for MIDI CC... (Click to Cancel)##midi_learn")) {
+                    state.midiLearnTarget = null
+                }
+                imgui.ImGui.popStyleColor(2)
+            } else {
+                if (imgui.ImGui.button("Learn MIDI##midi_learn")) {
+                    state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
+                    state.midiLearnStartTimeMs = System.currentTimeMillis()
+                    if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
+                        PopupManager.globalPendingMidiWarning = true
+                    }
+                }
+            }
             return
         }
 
@@ -323,10 +341,16 @@ object PropertiesPanel {
                             // Draw dedicated MIDI CC controller controls
                             MidiModulatorSection.draw(
                                 session = session,
+                                state = state,
+                                cell = cell,
                                 param = param,
                                 existing = existing,
                                 themeColor = currentThemeColor,
-                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
+                                onUnbind = {
+                                    ParametersUndo.pushUndoState(state, mixer)
+                                    param.modulators.removeAll { it.sourceId.startsWith("midi_cc_") }
+                                }
                             )
                         }
                         existing.sourceId == "seq" -> {

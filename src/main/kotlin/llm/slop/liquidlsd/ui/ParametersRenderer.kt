@@ -323,20 +323,16 @@ object ParametersRenderer {
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {
             val details = if (hasMidiMod || isMidiBypassed) {
                 val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
-                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings. Middle-click to toggle bypass."
-            } else if (state.isMidiLearnMode) {
-                "MIDI Learn active. Click this cell, then move/turn a control on your controller to bind it."
+                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings in Properties. Middle-click to toggle bypass."
+            } else if (isMidiTarget) {
+                "Waiting for MIDI CC... Move a knob or fader on your controller."
             } else {
-                "No MIDI mapping. Click to view CC mapping options (MIDI Map mode)."
+                "No MIDI mapping. Click to configure MIDI learn & settings in Properties."
             }
             showTooltip(details, (midiX.toInt() shl 16) xor (midiY.toInt() and 0xFFFF))
         }
         if (ImGui.isItemClicked(0)) {
-            if (state.isMidiLearnMode) {
-                state.midiLearnTarget = MidiLearnTarget.GridCell(midiCellId, param)
-            } else {
-                state.select(midiCellId, param)
-            }
+            state.select(midiCellId, param)
         }
         if (ImGui.isItemClicked(2)) {
             state.select(midiCellId, param)
@@ -468,11 +464,7 @@ object ParametersRenderer {
             showTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate properties.", (x.toInt() shl 16) xor (y.toInt() and 0xFFFF))
         }
         if (ImGui.isItemClicked(0)) {
-            if (state.isMidiLearnMode) {
-                state.midiLearnTarget = MidiLearnTarget.GridCell(cellId, param)
-            } else {
-                state.select(cellId, param)
-            }
+            state.select(cellId, param)
         }
         if (ImGui.isItemClicked(2)) {
             state.select(cellId, param)

@@ -1,3 +1,19 @@
+## Contextual In-Properties MIDI Learn (`PropertiesPanel.kt`, `MidiModulatorSection.kt`, `ParametersState.kt`)
+
+- **Decision**: Replace the global modal `MIDI Map` toggle in the main menu bar with targeted, inline MIDI Learn controls located directly inside the **Properties** panel (`PropertiesPanel.kt`, `MidiModulatorSection.kt`):
+  - **Removal of Global Learn Mode**: Removed the `MIDI Map` toggle button from `MenuBar.kt` and `isMidiLearnMode` global boolean state from `ParametersState.kt`.
+  - **Inline `[ Learn MIDI ]` Controls**:
+    - Unbound MIDI cells in the Properties panel feature a prominent `[ Learn MIDI ]` button alongside instructional text.
+    - When clicked, the button updates locally to `[ ⏳ Waiting for MIDI CC... (Click to Cancel) ]` with an Orchid active tint.
+    - Active learn mode automatically disengages after 15 seconds of inactivity or upon selecting another cell/tab.
+  - **In-Context Re-Learn & Unbind**: Mapped MIDI parameters in `MidiModulatorSection.kt` render `[ Re-Learn MIDI ]` and `[ Unbind MIDI ]` controls directly above DC Offset and Depth sliders.
+  - **Focused Target Highlighting**: The active learning parameter cell in the Parameters matrix displays a glowing cyan border outline while listening for incoming MIDI CCs.
+- **Rationale**:
+  - Global modal toggles induce severe "mode errors", where users forget that Learn Mode is enabled and inadvertently rebind controls when tweaking hardware later.
+  - Locating Learn Mode directly within the Properties panel streamlines the mapping workflow to 2 local clicks, provides clear state feedback, and keeps the top menu bar clean.
+
+---
+
 ## First-Class External Video Feeds in Universal Shader Picker (`ShaderPickerPopup.kt`, `ParametersTabs.kt`, `ExternalVideoSource.kt`)
 
 - **Decision**: Promote external video feeds (PipeWire, Spout2, Syphon) to first-class visual sources within the Universal Shader Picker, eliminating conditional UI dropdowns in parameter tabs:

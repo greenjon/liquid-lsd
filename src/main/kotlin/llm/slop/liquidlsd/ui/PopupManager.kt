@@ -12,6 +12,10 @@ class PopupManager(
     private val onTriggerExit: () -> Unit,
     private val onSaveDeck: (String, Deck, Boolean) -> Unit
 ) {
+    companion object {
+        var globalPendingMidiWarning = false
+    }
+
     var pendingOpenExitPopup = false
     var pendingOpenMidiWarningPopup = false
 

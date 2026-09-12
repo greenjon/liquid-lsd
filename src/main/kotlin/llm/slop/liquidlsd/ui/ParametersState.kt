@@ -43,9 +43,9 @@ class ParametersState {
         return if (undoStack.isNotEmpty()) undoStack.removeLast() else null
     }
 
-    /** MIDI Learn mode toggle and active learn target */
-    var isMidiLearnMode: Boolean = false
+    /** Active MIDI Learn target and start timestamp */
     var midiLearnTarget: MidiLearnTarget? = null
+    var midiLearnStartTimeMs: Long = 0L
 
     var activeTopTab: String = "Deck A"
     var activeDeckASubTab: String = "SRC"
@@ -63,11 +63,15 @@ class ParametersState {
     }
 
     fun select(cellId: ParameterCellId, param: ModulatableParameter) {
+        if (selectedCell != cellId) {
+            midiLearnTarget = null
+        }
         selectedCell = cellId
         selectedParam = param
     }
 
     fun clearSelection() {
+        midiLearnTarget = null
         selectedCell = null
         selectedParam = null
     }

@@ -360,11 +360,7 @@ class MixerPanel(
             it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
         } ?: false
 
-        if (parametersState.isMidiLearnMode) {
-            if (ImGui.isItemClicked(0)) {
-                parametersState.midiLearnTarget = MidiLearnTarget.BaseValueSlider(paramKey, "Crossfader", mixer.crossfade, -1f, 1f)
-            }
-        } else if (mouseDown) {
+        if (mouseDown) {
             mixer.onCrossfadeManualTakeover()
             val mouseX = ImGui.getIO().mousePos.x
             val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
@@ -443,8 +439,6 @@ class MixerPanel(
         // Hover / Active / MIDI learn highlight
         if (isTarget) {
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f), 4f, 0, 1.5f)
-        } else if (parametersState.isMidiLearnMode) {
-            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0.8f, 0.5f, 0f, 0.4f), 4f, 0, 1f)
         } else if (isTrackHovered || isTrackActive) {
             val borderCol = if (isTrackActive) {
                 ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f)

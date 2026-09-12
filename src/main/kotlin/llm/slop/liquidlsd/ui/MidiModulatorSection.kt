@@ -13,10 +13,13 @@ object MidiModulatorSection {
 
     fun draw(
         session: SessionContext,
+        state: ParametersState,
+        cell: ParameterCellId,
         param: ModulatableParameter,
         existing: CvModulator,
         themeColor: Int,
-        onReplace: (CvModulator) -> Unit
+        onReplace: (CvModulator) -> Unit,
+        onUnbind: () -> Unit
     ) {
         // Channel & CC info readout
         val parts = existing.sourceId.removePrefix("midi_cc_").split('_')
@@ -26,6 +29,32 @@ object MidiModulatorSection {
             val liveVal = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(ch, cc)
 
             session.uiTheme.caption("Assigned MIDI Target: Channel ${ch + 1}, CC $cc (Live: ${"%.2f".format(liveVal)})")
+            ImGui.spacing()
+
+            // Re-Learn & Unbind action controls
+            val currentTarget = state.midiLearnTarget
+            val isThisCellLearning = currentTarget is MidiLearnTarget.GridCell && currentTarget.cellId == cell
+
+            if (isThisCellLearning) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
+                if (ImGui.button("${Icons.REFRESH} Waiting for MIDI CC... (Click to Cancel)##midi_relearn")) {
+                    state.midiLearnTarget = null
+                }
+                ImGui.popStyleColor(2)
+            } else {
+                if (ImGui.button("Re-Learn MIDI##midi_relearn")) {
+                    state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
+                    state.midiLearnStartTimeMs = System.currentTimeMillis()
+                    if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
+                        PopupManager.globalPendingMidiWarning = true
+                    }
+                }
+                ImGui.sameLine()
+                if (ImGui.button("Unbind MIDI##midi_unbind")) {
+                    onUnbind()
+                }
+            }
             ImGui.spacing()
         }
 
