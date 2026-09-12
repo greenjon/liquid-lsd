@@ -59,7 +59,7 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 2. **Dual FX Serial Processing Stage**:
    - **FX Slot 1 (Color / Degradation)**: If active and `dryWet > 0.0`, processes `cleanFBO` texture into `fxFBO1`. For multi-pass ISF filters (`header.PASSES`), intermediate target FBOs and ping-pong history pairs are bound sequentially. Hardware dry/wet blending is performed using `glBlendColor(..., 1.0 - dryWet)` to mix `cleanFBO` into `fxFBO1`. Outputs `texAfterFx1`.
    - **FX Slot 2 (Spatial / Distortion)**: If active and `dryWet > 0.0`, processes `texAfterFx1` into `fxFBO2` (with multi-pass support and hardware `glBlendColor` mix). Outputs `uTextureLive`.
-3. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, live input texture (`uTextureLive`), and evaluated feedback parameters (**Decay**, **Gain**, **Zoom**, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
+3. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, live input texture (`uTextureLive`), and evaluated feedback parameters (**Decay**, **Gain**, **FB Zoom** via `uFbZoom` to maintain isolation from vertex view zoom, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
 4. **Buffer Swap**: Swaps the read and write feedback FBO references.
 5. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.
 

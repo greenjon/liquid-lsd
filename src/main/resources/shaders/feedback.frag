@@ -7,7 +7,7 @@ uniform sampler2D uTextureHistory;
 
 uniform float uDecay;
 uniform float uGain;
-uniform float uZoom;
+uniform float uFbZoom;
 uniform float uRotate;
 uniform float uHueShift;
 uniform float uBlur;
@@ -68,7 +68,7 @@ void main() {
     }
     
     // Zoom factor (positive zooms in)
-    uv *= (1.0 - uZoom);
+    uv *= (1.0 - uFbZoom);
 
     // Rotation factor (radians)
     float cosRot = cos(uRotate);

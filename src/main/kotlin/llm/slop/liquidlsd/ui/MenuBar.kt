@@ -20,283 +20,302 @@ class MenuBar(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.beginMainMenuBar()) {
-                // ── App Brand / Logo ─────────────────────────────────────────────────
-                session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                    ImGui.textColored(0.2f, 0.8f, 1.0f, 1.0f, "${Icons.ACTIVITY} Liquid LSD")
-                }
-                ImGui.sameLine(0f, 10f)
+    companion object {
+        fun calculateHeight(session: llm.slop.liquidlsd.SessionContext): Float {
+            val baseH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }
+            return baseH * 1.5f
+        }
 
-                if (ImGui.beginMenu("File")) {
-                    if (ImGui.beginMenu("New Preset")) {
-                        if (ImGui.menuItem("To Deck A")) {
-                            UIManager.newPresetSafely(mixer, mixer.deckA)
+        fun calculateFramePaddingY(session: llm.slop.liquidlsd.SessionContext): Float {
+            val targetH = calculateHeight(session)
+            val fontSize = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFontSize() }
+            return ((targetH - fontSize) * 0.5f).coerceAtLeast(0f)
+        }
+    }
+
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        val padY = calculateFramePaddingY(session)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), padY)
+        try {
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.beginMainMenuBar()) {
+                    // ── App Brand / Logo ─────────────────────────────────────────────────
+                    session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                        ImGui.textColored(0.2f, 0.8f, 1.0f, 1.0f, "${Icons.ACTIVITY} Liquid LSD")
+                    }
+                    ImGui.sameLine(0f, 10f)
+
+                    if (ImGui.beginMenu("File")) {
+                        if (ImGui.beginMenu("New Preset")) {
+                            if (ImGui.menuItem("To Deck A")) {
+                                UIManager.newPresetSafely(mixer, mixer.deckA)
+                            }
+                            if (ImGui.menuItem("To Deck B")) {
+                                UIManager.newPresetSafely(mixer, mixer.deckB)
+                            }
+                            if (ImGui.menuItem("To Deck BG")) {
+                                UIManager.newPresetSafely(mixer, mixer.deckBG)
+                            }
+                            if (ImGui.menuItem("To Deck PV")) {
+                                UIManager.newPresetSafely(mixer, mixer.deckPV)
+                            }
+                            ImGui.endMenu()
                         }
-                        if (ImGui.menuItem("To Deck B")) {
-                            UIManager.newPresetSafely(mixer, mixer.deckB)
+                        if (ImGui.menuItem("Restore Factory Presets...")) {
+                            popupManager.pendingOpenRestoreDefaultsPopup = true
                         }
-                        if (ImGui.menuItem("To Deck BG")) {
-                            UIManager.newPresetSafely(mixer, mixer.deckBG)
+                        itemTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
+                        ImGui.separator()
+                        if (ImGui.menuItem("Settings...")) {
+                            onOpenSettings()
                         }
-                        if (ImGui.menuItem("To Deck PV")) {
-                            UIManager.newPresetSafely(mixer, mixer.deckPV)
+                        itemTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
+                        ImGui.separator()
+                        if (ImGui.menuItem("Exit")) {
+                            logger.info { "Exit clicked" }
+                            onTriggerExitFlow()
                         }
                         ImGui.endMenu()
                     }
-                    if (ImGui.menuItem("Restore Factory Presets...")) {
-                        popupManager.pendingOpenRestoreDefaultsPopup = true
-                    }
-                    itemTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
-                    ImGui.separator()
-                    if (ImGui.menuItem("Settings...")) {
-                        onOpenSettings()
-                    }
-                    itemTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
-                    ImGui.separator()
-                    if (ImGui.menuItem("Exit")) {
-                        logger.info { "Exit clicked" }
-                        onTriggerExitFlow()
-                    }
-                    ImGui.endMenu()
-                }
 
-                // ── Output Menu ──────────────────────────────────────────────────────
-                val isOutOpen = isOutputWindowOpen()
-                val isRec = llm.slop.liquidlsd.export.RealtimeRecorder.isRecording
-                val broadcastState = llm.slop.liquidlsd.broadcast.BroadcastEngine.connectionState
-                val isBroadcasting = broadcastState == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED ||
-                    broadcastState == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING
+                    // ── Output Menu ──────────────────────────────────────────────────────
+                    val isOutOpen = isOutputWindowOpen()
+                    val isRec = llm.slop.liquidlsd.export.RealtimeRecorder.isRecording
+                    val broadcastState = llm.slop.liquidlsd.broadcast.BroadcastEngine.connectionState
+                    val isBroadcasting = broadcastState == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED ||
+                        broadcastState == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING
 
-                if (ImGui.beginMenu("Output")) {
-                    if (ImGui.menuItem("Secondary Output Window", "", isOutOpen)) {
-                        onToggleOutputWindow()
-                    }
-                    itemTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
-
-                    if (ImGui.menuItem("Record Master Output (REC)", "Ctrl+R", isRec)) {
-                        if (isRec) {
-                            llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
-                        } else {
-                            val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
-                            val recDir = session.uiTheme.getDefaultVideosDirectory()
-                            val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
-                            llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
-                                outputFile = outFile,
-                                width = mixer.width,
-                                height = mixer.height,
-                                fps = session.uiTheme.recordingFps,
-                                bitrateMbps = session.uiTheme.recordingBitrateMbps,
-                                includeAudio = session.uiTheme.recordingIncludeAudio
-                            )
+                    if (ImGui.beginMenu("Output")) {
+                        if (ImGui.menuItem("Secondary Output Window", "", isOutOpen)) {
+                            onToggleOutputWindow()
                         }
-                    }
-                    itemTooltip("Toggle live master output recording.")
+                        itemTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
 
-                    if (llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured) {
-                        if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
-                            if (isBroadcasting) {
-                                llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                        if (ImGui.menuItem("Record Master Output (REC)", "Ctrl+R", isRec)) {
+                            if (isRec) {
+                                llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                             } else {
-                                llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                                val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
+                                val recDir = session.uiTheme.getDefaultVideosDirectory()
+                                val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
+                                llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
+                                    outputFile = outFile,
+                                    width = mixer.width,
+                                    height = mixer.height,
+                                    fps = session.uiTheme.recordingFps,
+                                    bitrateMbps = session.uiTheme.recordingBitrateMbps,
+                                    includeAudio = session.uiTheme.recordingIncludeAudio
+                                )
                             }
                         }
-                        itemTooltip("Connect and broadcast live session state to the Web TV client.")
+                        itemTooltip("Toggle live master output recording.")
+
+                        if (llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured) {
+                            if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
+                                if (isBroadcasting) {
+                                    llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                                } else {
+                                    llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                                }
+                            }
+                            itemTooltip("Connect and broadcast live session state to the Web TV client.")
+                        }
+
+                        ImGui.separator()
+                        if (ImGui.menuItem("Export Video (Offline Studio)...")) {
+                            VideoExportModal.open()
+                        }
+                        itemTooltip("Render high-quality offline video with precise per-frame timing.")
+                        ImGui.endMenu()
                     }
 
-                    ImGui.separator()
-                    if (ImGui.menuItem("Export Video (Offline Studio)...")) {
-                        VideoExportModal.open()
-                    }
-                    itemTooltip("Render high-quality offline video with precise per-frame timing.")
-                    ImGui.endMenu()
-                }
+                    // ── Live Video Recording HUD (visible only when actively recording) ──
+                    if (isRec) {
+                        val elapsed = llm.slop.liquidlsd.export.RealtimeRecorder.elapsedSeconds.toInt()
+                        val mins = elapsed / 60
+                        val secs = elapsed % 60
+                        val sizeMb = llm.slop.liquidlsd.export.RealtimeRecorder.fileSizeBytes / (1024f * 1024f)
+                        val dropped = llm.slop.liquidlsd.export.RealtimeRecorder.droppedFramesCount
+                        val dropPct = llm.slop.liquidlsd.export.RealtimeRecorder.droppedPercentage
 
-                // ── Live Video Recording HUD (visible only when actively recording) ──
-                if (isRec) {
-                    val elapsed = llm.slop.liquidlsd.export.RealtimeRecorder.elapsedSeconds.toInt()
-                    val mins = elapsed / 60
-                    val secs = elapsed % 60
-                    val sizeMb = llm.slop.liquidlsd.export.RealtimeRecorder.fileSizeBytes / (1024f * 1024f)
-                    val dropped = llm.slop.liquidlsd.export.RealtimeRecorder.droppedFramesCount
-                    val dropPct = llm.slop.liquidlsd.export.RealtimeRecorder.droppedPercentage
-
-                    ImGui.pushStyleColor(ImGuiCol.Button, 0.85f, 0.15f, 0.15f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.95f, 0.25f, 0.25f, 1.0f)
-                    if (ImGui.button("REC %02d:%02d (%.1fMB)".format(mins, secs, sizeMb))) {
-                        llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
-                    }
-                    ImGui.popStyleColor(2)
-                    itemTooltip("Click to stop recording and finalize video file.")
-
-                    ImGui.sameLine(0f, 4f)
-                    if (dropped > 0) {
-                        ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.35f, 0.35f, 1.0f)
-                    } else {
-                        ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.95f, 0.45f, 1.0f)
-                    }
-                    ImGui.text("Drop: %d (%.1f%%)".format(dropped, dropPct))
-                    ImGui.popStyleColor()
-                    itemTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
-                }
-
-                // ── Web Broadcast Status Pill (visible only when active/connecting/error) ─
-                when (broadcastState) {
-                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.65f, 0.25f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1.0f)
-                        if (ImGui.button("${Icons.ACTIVITY} LIVE")) {
-                            llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.85f, 0.15f, 0.15f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.95f, 0.25f, 0.25f, 1.0f)
+                        if (ImGui.button("REC %02d:%02d (%.1fMB)".format(mins, secs, sizeMb))) {
+                            llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                         }
                         ImGui.popStyleColor(2)
-                        itemTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
+                        itemTooltip("Click to stop recording and finalize video file.")
+
+                        ImGui.sameLine(0f, 4f)
+                        if (dropped > 0) {
+                            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.35f, 0.35f, 1.0f)
+                        } else {
+                            ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.95f, 0.45f, 1.0f)
+                        }
+                        ImGui.text("Drop: %d (%.1f%%)".format(dropped, dropPct))
+                        ImGui.popStyleColor()
+                        itemTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
                     }
-                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.7f, 0.15f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.8f, 0.25f, 1.0f)
-                        if (ImGui.button("${Icons.REFRESH} CONNECTING")) {
-                            llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+
+                    // ── Web Broadcast Status Pill (visible only when active/connecting/error) ─
+                    when (broadcastState) {
+                        llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
+                            ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.65f, 0.25f, 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1.0f)
+                            if (ImGui.button("${Icons.ACTIVITY} LIVE")) {
+                                llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                            }
+                            ImGui.popStyleColor(2)
+                            itemTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
+                        }
+                        llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
+                            ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.7f, 0.15f, 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.8f, 0.25f, 1.0f)
+                            if (ImGui.button("${Icons.REFRESH} CONNECTING")) {
+                                llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
+                            }
+                            ImGui.popStyleColor(2)
+                            itemTooltip("Connecting to relay server...\nClick to cancel.")
+                        }
+                        llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
+                            ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1.0f)
+                            if (ImGui.button("${Icons.ALERT} LIVE ERR")) {
+                                llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+                            }
+                            ImGui.popStyleColor(2)
+                            itemTooltip("Broadcast error: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Failed"}\nClick to retry.")
+                        }
+                        llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
+                            // Inactive: hidden from top-level bar to reduce clutter
+                        }
+                    }
+
+                    // ── ISF Scanner Status Pill (visible while background scan is running) ──
+                    if (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.isScanning) {
+                        val progress = (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanProgress * 100f).toInt()
+                        val currentPath = llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanCurrentPath
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.45f, 0.75f, 0.9f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
+                        ImGui.button("${Icons.REFRESH} SCANNING ($progress%)")
+                        ImGui.popStyleColor(2)
+                        itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
+                    }
+
+                    // MIDI Map toggle button
+                    val isMidiLearn = parametersState.isMidiLearnMode
+                    val midiEnabled = session.uiTheme.midiEnabled
+                    if (isMidiLearn) {
+                        ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
+                    }
+                    if (ImGui.menuItem("MIDI Map", "", isMidiLearn, midiEnabled)) {
+                        parametersState.isMidiLearnMode = !isMidiLearn
+                        if (!parametersState.isMidiLearnMode) {
+                            parametersState.midiLearnTarget = null
+                        } else {
+                            if (MidiEngine.getActiveDeviceCount() == 0) {
+                                popupManager.pendingOpenMidiWarningPopup = true
+                            }
+                        }
+                    }
+                    val midiTip = if (midiEnabled) {
+                        "Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it."
+                    } else {
+                        "MIDI is disabled in Settings. Enable MIDI in Settings -> MIDI & Controls to use MIDI Learn."
+                    }
+                    itemTooltip(midiTip)
+                    if (isMidiLearn) {
+                        ImGui.popStyleColor()
+                    }
+
+                    if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
+                        ColorTunerPanel.toggle()
+                    }
+                    itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
+
+                    // ── Clock Source & Ableton Link Status Pill ─────────────────────
+                    val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
+                    val syncManager = llm.slop.liquidlsd.link.LinkSyncManager
+                    val currentClock = AudioEngine.clockSource
+
+                    if (linkEngine.isEnabled) {
+                        val peers = linkEngine.getNumPeers()
+                        val peerText = if (peers == 1) "1 peer" else "$peers peers"
+                        val label = "${Icons.ACTIVITY} LINK [$peerText]"
+
+                        if (peers > 0) {
+                            ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan for connected
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
+                        } else {
+                            ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber searching
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.65f, 0.25f, 1.0f)
+                        }
+
+                        if (ImGui.button(label)) {
+                            SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
                         }
                         ImGui.popStyleColor(2)
-                        itemTooltip("Connecting to relay server...\nClick to cancel.")
+
+                        val backendName = linkEngine.getActiveBackendName()
+                        val bpmText = syncManager.formattedActiveBpm
+                        val confPercent = syncManager.confidencePercent
+                        val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Tempo & Link deck."
+                        itemTooltip(linkTip)
                     }
-                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1.0f)
-                        if (ImGui.button("${Icons.ALERT} LIVE ERR")) {
-                            llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
+
+                    if (ImGui.beginMenu("Clock: ${currentClock.displayName}")) {
+                        for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
+                            val isSelected = (source == currentClock)
+                            if (ImGui.menuItem(source.displayName, "", isSelected)) {
+                                AudioEngine.clockSource = source
+                                session.uiTheme.saveSettings()
+                            }
                         }
-                        ImGui.popStyleColor(2)
-                        itemTooltip("Broadcast error: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Failed"}\nClick to retry.")
-                    }
-                    llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
-                        // Inactive: hidden from top-level bar to reduce clutter
-                    }
-                }
-
-                // ── ISF Scanner Status Pill (visible while background scan is running) ──
-                if (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.isScanning) {
-                    val progress = (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanProgress * 100f).toInt()
-                    val currentPath = llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanCurrentPath
-                    ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.45f, 0.75f, 0.9f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
-                    ImGui.button("${Icons.REFRESH} SCANNING ($progress%)")
-                    ImGui.popStyleColor(2)
-                    itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
-                }
-
-                // MIDI Map toggle button
-                val isMidiLearn = parametersState.isMidiLearnMode
-                val midiEnabled = session.uiTheme.midiEnabled
-                if (isMidiLearn) {
-                    ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f) // orange
-                }
-                if (ImGui.menuItem("MIDI Map", "", isMidiLearn, midiEnabled)) {
-                    parametersState.isMidiLearnMode = !isMidiLearn
-                    if (!parametersState.isMidiLearnMode) {
-                        parametersState.midiLearnTarget = null
-                    } else {
-                        if (MidiEngine.getActiveDeviceCount() == 0) {
-                            popupManager.pendingOpenMidiWarningPopup = true
-                        }
-                    }
-                }
-                val midiTip = if (midiEnabled) {
-                    "Toggle MIDI Learn mode. Click a control, then move a knob/fader on your controller to bind it."
-                } else {
-                    "MIDI is disabled in Settings. Enable MIDI in Settings -> MIDI & Controls to use MIDI Learn."
-                }
-                itemTooltip(midiTip)
-                if (isMidiLearn) {
-                    ImGui.popStyleColor()
-                }
-
-                if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
-                    ColorTunerPanel.toggle()
-                }
-                itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
-
-                // ── Clock Source & Ableton Link Status Pill ─────────────────────
-                val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
-                val syncManager = llm.slop.liquidlsd.link.LinkSyncManager
-                val currentClock = AudioEngine.clockSource
-
-                if (linkEngine.isEnabled) {
-                    val peers = linkEngine.getNumPeers()
-                    val peerText = if (peers == 1) "1 peer" else "$peers peers"
-                    val label = "${Icons.ACTIVITY} LINK [$peerText]"
-
-                    if (peers > 0) {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan for connected
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
-                    } else {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber searching
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.65f, 0.25f, 1.0f)
-                    }
-
-                    if (ImGui.button(label)) {
-                        SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
-                    }
-                    ImGui.popStyleColor(2)
-
-                    val backendName = linkEngine.getActiveBackendName()
-                    val bpmText = syncManager.formattedActiveBpm
-                    val confPercent = syncManager.confidencePercent
-                    val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Tempo & Link deck."
-                    itemTooltip(linkTip)
-                }
-
-                if (ImGui.beginMenu("Clock: ${currentClock.displayName}")) {
-                    for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
-                        val isSelected = (source == currentClock)
-                        if (ImGui.menuItem(source.displayName, "", isSelected)) {
-                            AudioEngine.clockSource = source
+                        ImGui.separator()
+                        val linkItemLabel = if (linkEngine.isEnabled) "Disable Ableton Link" else "Enable Ableton Link"
+                        if (ImGui.menuItem(linkItemLabel, "", linkEngine.isEnabled)) {
+                            linkEngine.setEnabled(!linkEngine.isEnabled)
                             session.uiTheme.saveSettings()
                         }
+                        if (ImGui.menuItem("Configure Tempo & Link...")) {
+                            SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+                        }
+                        ImGui.endMenu()
                     }
-                    ImGui.separator()
-                    val linkItemLabel = if (linkEngine.isEnabled) "Disable Ableton Link" else "Enable Ableton Link"
-                    if (ImGui.menuItem(linkItemLabel, "", linkEngine.isEnabled)) {
-                        linkEngine.setEnabled(!linkEngine.isEnabled)
-                        session.uiTheme.saveSettings()
+                    itemTooltip("Select timing and beat clock synchronization source.")
+
+                    if (ImGui.beginMenu("Help")) {
+                        if (ImGui.menuItem("Documentation")) {
+                            DocManager.openDocumentation()
+                        }
+                        if (ImGui.menuItem("Check for Updates...")) {
+                            AboutModal.open()
+                            llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                        }
+                        itemTooltip("Check GitHub releases for the latest version of Liquid LSD.")
+                        ImGui.separator()
+                        val tooltipsEnabled = session.uiTheme.tooltipsEnabled
+                        if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
+                            session.uiTheme.tooltipsEnabled = !tooltipsEnabled
+                            session.uiTheme.saveSettings()
+                        }
+                        itemTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
+                        ImGui.separator()
+                        if (ImGui.menuItem("About Liquid LSD")) {
+                            AboutModal.open()
+                        }
+                        itemTooltip("View version details, check for updates, and visit GitHub.")
+                        ImGui.endMenu()
                     }
-                    if (ImGui.menuItem("Configure Tempo & Link...")) {
-                        SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
-                    }
-                    ImGui.endMenu()
+
+                    // ── Right-aligned performance stats & window controls ────────────────
+                    drawPerformanceStatsAndControls(session)
+
+                    ImGui.endMainMenuBar()
                 }
-                itemTooltip("Select timing and beat clock synchronization source.")
-
-                if (ImGui.beginMenu("Help")) {
-                    if (ImGui.menuItem("Documentation")) {
-                        DocManager.openDocumentation()
-                    }
-                    if (ImGui.menuItem("Check for Updates...")) {
-                        AboutModal.open()
-                        llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
-                    }
-                    itemTooltip("Check GitHub releases for the latest version of Liquid LSD.")
-                    ImGui.separator()
-                    val tooltipsEnabled = session.uiTheme.tooltipsEnabled
-                    if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
-                        session.uiTheme.tooltipsEnabled = !tooltipsEnabled
-                        session.uiTheme.saveSettings()
-                    }
-                    itemTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
-                    ImGui.separator()
-                    if (ImGui.menuItem("About Liquid LSD")) {
-                        AboutModal.open()
-                    }
-                    itemTooltip("View version details, check for updates, and visit GitHub.")
-                    ImGui.endMenu()
-                }
-
-                // ── Right-aligned performance stats & window controls ────────────────
-                drawPerformanceStatsAndControls(session)
-
-                ImGui.endMainMenuBar()
             }
+        } finally {
+            ImGui.popStyleVar()
         }
     }
 

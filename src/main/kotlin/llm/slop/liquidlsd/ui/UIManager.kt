@@ -457,7 +457,7 @@ class UIManager(
          * and the top edge of the workspace panels (Parameters, Properties, Mixer).
          * Provides a subtle visual separator between the application header and performance panels.
          */
-        const val TITLE_BAR_PANEL_GAP = 1.0f
+        const val TITLE_BAR_PANEL_GAP = 2.0f
 
         fun triggerDeckDragDrop(file: File, deck: Deck, isDeckA: Boolean, mixer: Mixer) {
             val ui = instance ?: return
@@ -484,7 +484,7 @@ class UIManager(
     private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
         val safeW = displayWidth.coerceAtLeast(100f)
         val safeH = displayHeight.coerceAtLeast(100f)
-        val titleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }
+        val titleBarH = MenuBar.calculateHeight(session)
         val menuBarH = titleBarH + TITLE_BAR_PANEL_GAP
         val contentH = (safeH - menuBarH).coerceAtLeast(50f)
         val noDecorate = ImGuiWindowFlags.NoResize or
@@ -543,11 +543,17 @@ class UIManager(
             ImGui.setNextWindowPos(0f, menuBarH)
             ImGui.setNextWindowSize(col1W.coerceAtLeast(1f), topH)
             val parametersFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
+            val baseFrameH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }
+            val targetParamHeaderH = baseFrameH * 1.5f
+            val paramFontSize = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFontSize() }
+            val paramPadY = ((targetParamHeaderH - paramFontSize) * 0.5f).coerceAtLeast(0f)
+            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), paramPadY)
             if (ImGui.begin("Parameters", parametersFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                 ParametersPanel.draw(session, currentMixer!!, parametersState, deckPresetController)
             }
             ImGui.end()
+            ImGui.popStyleVar()
 
             // Column 2: Properties
             ImGui.setNextWindowPos(col1W, menuBarH)

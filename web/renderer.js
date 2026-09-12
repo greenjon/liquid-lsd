@@ -299,7 +299,7 @@ async function init() {
 
   const feedbackUniforms = getUniformLocations(gl, feedbackProgram, [
     'uTextureLive', 'uTextureHistory',
-    'uDecay', 'uGain', 'uZoom', 'uRotate',
+    'uDecay', 'uGain', 'uFbZoom', 'uRotate',
     'uHueShift', 'uBlur', 'uChroma',
     'uFeedbackMode', 'uKaleido'
   ]);
@@ -614,7 +614,7 @@ async function init() {
     const fb = deckData?.feedback || {};
     gl.uniform1f(feedbackUniforms.uDecay,        evalP(fb.decay || fb.fbDecay, 0.04));
     gl.uniform1f(feedbackUniforms.uGain,         evalP(fb.gain || fb.fbGain, 0.96));
-    gl.uniform1f(feedbackUniforms.uZoom,         evalP(fb.zoom || fb.fbZoom, 0.005));
+    gl.uniform1f(feedbackUniforms.uFbZoom,       evalP(fb.zoom || fb.fbZoom, 0.005));
     gl.uniform1f(feedbackUniforms.uRotate,       evalP(fb.rotate || fb.fbRotate, 0.008));
     gl.uniform1f(feedbackUniforms.uHueShift,     evalP(fb.hueShift || fb.fbHueShift, 0.001));
     gl.uniform1f(feedbackUniforms.uBlur,         evalP(fb.blur || fb.fbBlur, 0.0));

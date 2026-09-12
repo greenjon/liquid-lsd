@@ -23,8 +23,26 @@ class Renderer {
     init {
         // Load the shaders
         feedbackShader = Shader.fromResources("shaders/blit.vert", "shaders/feedback.frag")
+        feedbackShader.bind()
+        feedbackShader.setUniform("uZoom", 1.0f)
+        feedbackShader.setUniform("uRotateZ", 0.0f)
+        feedbackShader.setUniform("uAspectRatio", 1.0f)
+        feedbackShader.unbind()
+
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
+        mixerShader.bind()
+        mixerShader.setUniform("uZoom", 1.0f)
+        mixerShader.setUniform("uRotateZ", 0.0f)
+        mixerShader.setUniform("uAspectRatio", 1.0f)
+        mixerShader.unbind()
+
         blitShader = Shader.fromResources("shaders/blit.vert", "shaders/blit.frag")
+        blitShader.bind()
+        blitShader.setUniform("uZoom", 1.0f)
+        blitShader.setUniform("uRotateZ", 0.0f)
+        blitShader.setUniform("uAspectRatio", 1.0f)
+        blitShader.unbind()
+
         triPlanarShader = Shader.fromResources("shaders/tri_planar.vert", "shaders/tri_planar.frag")
         tetraKaleidoShader = Shader.fromResources("shaders/tetra_kaleido.vert", "shaders/tetra_kaleido.frag")
         view2DShader = Shader.fromResources("shaders/blit.vert", "shaders/view2d.frag")
@@ -321,7 +339,7 @@ class Renderer {
         val decayVal = invS * invS * invS  // cubic decay curve, avoids Math.pow + double conversion
         feedbackShader.setUniform("uDecay", decayVal)
         feedbackShader.setUniform("uGain", deck.fbGain.value)
-        feedbackShader.setUniform("uZoom", deck.fbZoom.value)
+        feedbackShader.setUniform("uFbZoom", deck.fbZoom.value)
         feedbackShader.setUniform("uRotate", deck.fbRotate.value)
         feedbackShader.setUniform("uHueShift", deck.fbHueShift.value)
         feedbackShader.setUniform("uBlur", deck.fbBlur.value)

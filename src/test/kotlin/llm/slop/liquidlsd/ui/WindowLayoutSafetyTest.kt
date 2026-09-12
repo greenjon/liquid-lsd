@@ -9,13 +9,13 @@ class WindowLayoutSafetyTest {
 
     @Test
     fun testTitleBarPanelGap() {
-        assertEquals(1.0f, UIManager.TITLE_BAR_PANEL_GAP, "TITLE_BAR_PANEL_GAP should be 1.0f")
+        assertEquals(2.0f, UIManager.TITLE_BAR_PANEL_GAP, "TITLE_BAR_PANEL_GAP should be 2.0f")
 
         // Check layout formula with various simulated title bar heights
         for (testTitleBarH in listOf(15f, 21f, 28f, 30f, 31f, 32f, 36f, 48f)) {
             val menuBarH = testTitleBarH + UIManager.TITLE_BAR_PANEL_GAP
             val gap = menuBarH - testTitleBarH
-            assertEquals(1.0f, gap, "Gap between title bar bottom and panel top must remain consistently 1.0f at height $testTitleBarH")
+            assertEquals(2.0f, gap, "Gap between title bar bottom and panel top must remain consistently 2.0f at height $testTitleBarH")
         }
     }
 

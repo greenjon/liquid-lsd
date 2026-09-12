@@ -54,7 +54,7 @@ object PropertiesPanel {
         }
 
         val fontScale = 0.95f
-        val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
+        val btnH = (session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)) * 1.5f
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f * fontScale, 4f * fontScale)
         session.uiTheme.withFont(UITheme.FontLevel.H3) {

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Menu Bar, Spacer, and Panel Header Height Expansion (`MenuBar.kt`, `UIManager.kt`, `ParametersPanel.kt`, `PropertiesPanel.kt`, `WindowLayoutSafetyTest.kt`)
+- **Main Menu Bar 50% Taller**: Dynamically scaled the main menu bar height by 1.5x via `MenuBar.calculateHeight(session)` and `MenuBar.calculateFramePaddingY(session)`. All child elements, recording badges, ISF status pills, Ableton Link pills, drag regions, and window controls are vertically centered.
+- **Top Spacer 100% Taller**: Doubled `UIManager.TITLE_BAR_PANEL_GAP` from `1.0f` to `2.0f`, establishing a clean 2 px visual divider separating the top menu bar from the workspace panels.
+- **Left Panel (Parameters) & Middle Panel (Properties) Headers 50% Taller**: Expanded the Parameters window menu bar and column header row by 1.5x, and scaled the Properties CV tab buttons (`drawCvTabRow`) by 1.5x for improved touch/click hit targets and visual harmony across the primary workspace columns.
+
 ### Suite C UI Panel Migration — Phase 3: Parameters Panel (`ParametersPanel.kt`, `ParametersState.kt`, `ParametersRenderer.kt`, `ParametersTabs.kt`, `ParametersKeyboard.kt`, `ParametersUndo.kt`, `UIManager.kt`, `DeckControlPanel.kt`, `DeckPresetController.kt`, `MixerPanel.kt`, `PropertiesPanel.kt`, `LibraryPanel.kt`, `SettingsPanel.kt`)
 - **Panel Renaming (`Preset Grid` → `Parameters`)**: Renamed Column 1 (the left parameter matrix, modulation routing grid, and deck/mixer tabs) to **`Parameters`**, completing Phase 3 and the overall migration to the Suite C panel architecture (`Parameters`, `Properties`, `Mixer`, `Library`).
 - **Codebase Cleanliness & Zero-Trace Migration**: Renamed all source files, classes, models, and tests:
@@ -33,6 +38,7 @@
   - For finite visual objects (e.g. Mandala), scaling down renders the centered object cleanly surrounded by transparent black space, allowing downstream feedback loops and spatial effects to expand and fill the entire screen.
   - When rotating in the Z axis (`Rotate Z`), patterns rotate smoothly without revealing spinning rectangular boundaries or cropped corners.
 - **Zero Tiling / Quad Borders**: Eliminated texture card wrapping and tiling heuristics. Dynamic 2D sources render directly to `cleanFBO` with `uZoom`, `uRotateZ`, and `uAspectRatio` injected into `blit.vert` and `mandala/shader.vert`.
+- **Feedback Zoom Disambiguation (`feedback.frag`, `Renderer.kt`, `web/renderer.js`)**: Disambiguated the feedback zoom uniform from vertex-stage 2D view zoom by renaming it to `uFbZoom`. Resolves a critical bug where setting `FB Zoom` to small positive values (e.g. `0.001`) inadvertently triggered camera zoom in `blit.vert`, instantly shrinking the quad UVs 1000× to a pinprick. Explicitly initialized fullscreen quad passes (`feedbackShader`, `mixerShader`, `blitShader`) with identity vertex uniforms.
 
 ### GitHub Actions Automated Release Notes Scoping (`release.yml`, `docs/release_notes.md`, `RELEASE_NOTES.md`, `DECISIONS.md`)
 - **Scoped Release Notes Extraction**: Configured automated release note extraction in `release.yml` to extract only the notes added between `prev_tag` and `HEAD` from candidate release notes files via `git diff`. Eliminates historical accumulation where previous release notes persisted into newly published releases.

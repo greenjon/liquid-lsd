@@ -29,6 +29,7 @@
   - **Vertex-Space Coordinate Transformation (`blit.vert`)**: Injected `uZoom`, `uRotateZ`, and `uAspectRatio` into `blit.vert` (and `mandala/shader.vert`), centering transformations at `(0.5, 0.5)` with isotropic aspect-ratio compensation.
   - **Full-Screen Continuous Evaluation**: For infinite procedural patterns (such as ISF shaders like "Brick Pattern", fractal noise, plasma), zooming out evaluates mathematical equations over a broader coordinate domain, filling the entire display with more pattern elements without rectangular boundaries or black letterboxing. For finite centered sources (e.g. Mandala, particles), scaling down leaves transparent black space around the object, allowing downstream feedback trails and spatial effects to radiate outward unimpeded across the full screen.
   - **No Tiling or Border Cards**: Replaced post-process texture quad blitting and discarded mirror/repeat tiling heuristics, preventing visible rotation corners or artificial quad edges.
+  - **Feedback Shader Uniform Disambiguation (`uFbZoom`)**: Renamed feedback zoom in `feedback.frag` from `uZoom` to `uFbZoom`. Because `feedbackShader` links with `shaders/blit.vert` (which declares `uZoom` for 2D view transformations), passing `deck.fbZoom` into `uZoom` caused `blit.vert` to interpret small positive feedback zoom values (e.g. 0.001) as camera zoom, immediately shrinking the quad coordinates 1000× to a pinprick. Disambiguating the uniform to `uFbZoom` and explicitly initializing `feedbackShader`, `mixerShader`, and `blitShader` with identity vertex uniforms (`uZoom = 1.0f`, `uRotateZ = 0.0f`) guarantees post-processing passes remain completely isolated from source view transformations.
 - **Rationale**:
   - Blitting an already-rendered 16:9 frame (`rawSource2DFBO` -> `view2d.frag`) treats every procedural graphic like a flat rectangular photograph, creating an isolated floating box when zoomed out and spinning rectangular corners when rotated.
   - Applying transforms directly in vertex space evaluates shaders natively across the entire screen canvas at native resolution.
@@ -149,14 +150,16 @@
   - Preserves deck preset boundaries: channel faders are console properties that do not transfer when copying or swapping patches.
   - Enhances spatial ergonomics during live performance.
 
-## Title Bar to Panel Layout Spacing & Gap Standardization (`UIManager.kt`, `WindowLayoutSafetyTest.kt`)
+## Title Bar to Panel Layout Spacing & Gap Standardization (`UIManager.kt`, `MenuBar.kt`, `ParametersPanel.kt`, `PropertiesPanel.kt`, `WindowLayoutSafetyTest.kt`)
 
-- **Decision**: Replace legacy magic clamp (`.coerceAtLeast(32f)`) on menu bar height with an explicit, named constant `TITLE_BAR_PANEL_GAP = 1.0f`:
-  - **Identified Root Cause**: In `UIManager.drawLayout()`, panel placement was originally computed using `session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getFrameHeight() }.coerceAtLeast(32f)`. Because Dear ImGui's `beginMainMenuBar()` sets window height strictly to `getFrameHeight()`, whenever `getFrameHeight()` was below 32px (e.g. at default UI scaling after font metric updates in imgui-java 1.86.12), the workspace panels were shifted down to Y = 32px, creating an accidental black gap of `32px - getFrameHeight()`. Increasing UI scale caused `getFrameHeight()` to approach 32px, making the gap shrink and vanish.
-  - **Explicit 1 px Gap Constant**: Introduced `UIManager.TITLE_BAR_PANEL_GAP = 1.0f` to specify the vertical gap between the top title/menu bar and the workspace panels (Preset Grid, Cell Config, Mixer/Monitor). The panel starting Y position is now calculated directly as `titleBarH + TITLE_BAR_PANEL_GAP`.
+- **Decision**: Standardize menu bar and panel header heights with proportional 50% height expansions and an explicit 2.0 px separator gap:
+  - **Explicit 2 px Gap Constant**: Maintained `UIManager.TITLE_BAR_PANEL_GAP = 2.0f` (expanded 100% from 1.0f to 2.0f) to specify the vertical spacer gap between the top title/menu bar and the workspace panels (Parameters, Properties, Mixer). The panel starting Y position is calculated directly as `titleBarH + TITLE_BAR_PANEL_GAP`.
+  - **50% Taller Main Menu Bar**: Main menu bar height is dynamically scaled to $1.5 \times$ base frame height via `MenuBar.calculateHeight(session)` and `MenuBar.calculateFramePaddingY(session)`. Menu items, recording pills, drag regions, and window controls vertically center within the taller bar.
+  - **50% Taller Workspace Panel Headers**: Left panel (`Parameters`) menu bar and column headers and middle panel (`Properties`) CV tab row buttons (`drawCvTabRow`) are expanded to $1.5 \times$ base height for improved visual balance and click ergonomics.
 - **Rationale**:
   - Eliminates hardcoded magic numbers and ensures layout intent is cleanly named and configurable.
-  - Guarantees a consistent, intentional 1 px visual separation across all display resolutions and font scales without disappearing or expanding unpredictably during zoom.
+  - Guarantees a consistent, intentional 2 px visual separation across all display resolutions and font scales without disappearing or expanding unpredictably during zoom.
+  - Gives the top application chrome and workspace inspectors ample breathing room and larger, touch-friendly hitboxes.
 
 ## Unification of Modulator Engine States and Preset Grid Column Visibility (`UITheme.kt`, `SettingsPanel.kt`, `PresetGridPanel.kt`, `CellConfigPanel.kt`, `PresetDependencyAnalyzer.kt`)
 
