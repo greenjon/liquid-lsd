@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### First-Class External Video Feeds in Universal Shader Picker (`ShaderPickerPopup.kt`, `ParametersTabs.kt`, `ExternalVideoSource.kt`, `ExternalVideoSourceTest.kt`)
+- **Direct Stream Selection in Universal Shader Picker**: Discovered external video streams (PipeWire, Spout2, Syphon) are now listed directly within `ShaderPickerPopup` alongside procedural sources under a dedicated `External Sources` category pill positioned immediately beside `All`.
+- **Live Stream Visual Distinction**: External stream rows in the picker table are accented in emerald green and badged with the Lucide live activity icon (`Icons.ACTIVITY`), clearly distinguishing live video feeds from compiled GLSL shaders.
+- **Dynamic Header Source Button Display**: Selecting an external feed directly updates the deck header button to reflect the stream's name (e.g. `[OBS-Camera ▾]`), providing instant situational awareness during live performances.
+- **Elimination of Conditional UI Layout Shifts**: Removed the conditional "Server" combo dropdown that previously appeared inside the Parameters `SRC` tab only for `ExternalVideoSource`, establishing a permanent, non-shifting layout containing only parameter sliders (`Gain`).
+- **CV Parameter Routing Stability**: The canonical parameter modulation path remains stable (`Deck A/External Video/Gain`), ensuring existing presets and CV modulation assignments persist cleanly regardless of stream name or server reconnections.
+
 ### Menu Bar, Spacer, and Panel Header Height Expansion (`MenuBar.kt`, `UIManager.kt`, `ParametersPanel.kt`, `PropertiesPanel.kt`, `WindowLayoutSafetyTest.kt`)
 - **Main Menu Bar 50% Taller**: Dynamically scaled the main menu bar height by 1.5x via `MenuBar.calculateHeight(session)` and `MenuBar.calculateFramePaddingY(session)`. All child elements, recording badges, ISF status pills, Ableton Link pills, drag regions, and window controls are vertically centered.
 - **Top Spacer 100% Taller**: Doubled `UIManager.TITLE_BAR_PANEL_GAP` from `1.0f` to `2.0f`, establishing a clean 2 px visual divider separating the top menu bar from the workspace panels.

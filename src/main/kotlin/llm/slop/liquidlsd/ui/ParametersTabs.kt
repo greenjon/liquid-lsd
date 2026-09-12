@@ -240,7 +240,13 @@ object ParametersTabs {
             if (ImGui.button(displayLabel, btnW, subTabH)) {
                 val deckLabel = state.activeTopTab
                 ShaderPickerPopup.show("Select Source for $deckLabel", ShaderPickerPopup.PickerType.SOURCE) { newSourceId ->
-                    val newSource = VisualSourceRegistry.availableSources.find { it.id == newSourceId }
+                    if (newSourceId == null) return@show
+                    val newSource = if (newSourceId.startsWith("ext_video:")) {
+                        val serverName = newSourceId.removePrefix("ext_video:")
+                        llm.slop.liquidlsd.rendering.ExternalVideoSource(serverName = serverName)
+                    } else {
+                        VisualSourceRegistry.availableSources.find { it.id == newSourceId }
+                    }
                     if (newSource != null) {
                         if (deckPresetController != null) {
                             deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
@@ -440,31 +446,7 @@ object ParametersTabs {
             }
         } else if (activeSource is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
             drawSubGroupContent(session, deckLabel, "SRC", state) {
-                val available = llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.availableServers.value
-                val current = activeSource.serverName
-                val preview = if (current.isBlank()) "Select Server..." else current
-                
-                imgui.ImGui.text("Server")
-                imgui.ImGui.sameLine()
-                if (imgui.ImGui.beginCombo("##server_$deckLabel", preview)) {
-                    if (imgui.ImGui.selectable("None / Disconnect", current.isBlank())) {
-                        activeSource.serverName = ""
-                        onPushUndo()
-                    }
-                    for (srv in available) {
-                        val isSelected = (srv == current)
-                        if (imgui.ImGui.selectable(srv, isSelected)) {
-                            activeSource.serverName = srv
-                            onPushUndo()
-                        }
-                        if (isSelected) {
-                            imgui.ImGui.setItemDefaultFocus()
-                        }
-                    }
-                    imgui.ImGui.endCombo()
-                }
-
-                ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/${activeSource.displayName}/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/External Video/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
             drawSubGroupContent(session, deckLabel, "FX", state) {

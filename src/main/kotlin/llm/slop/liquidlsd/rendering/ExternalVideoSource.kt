@@ -10,7 +10,8 @@ class ExternalVideoSource(
     var serverName: String = ""
 ) : VisualSource {
     
-    override val displayName = "External Video"
+    override val displayName: String
+        get() = if (serverName.isNotBlank()) serverName else "External Video"
     
     override val categories: List<String>
         get() = listOf("Input", "Video")
@@ -24,7 +25,7 @@ class ExternalVideoSource(
 
     override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
         val list = mutableListOf<Pair<String, ModulatableParameter>>()
-        list.add("$prefix/$displayName/Gain" to globalAlpha)
+        list.add("$prefix/External Video/Gain" to globalAlpha)
         return list
     }
 

@@ -1,3 +1,17 @@
+## First-Class External Video Feeds in Universal Shader Picker (`ShaderPickerPopup.kt`, `ParametersTabs.kt`, `ExternalVideoSource.kt`)
+
+- **Decision**: Promote external video feeds (PipeWire, Spout2, Syphon) to first-class visual sources within the Universal Shader Picker, eliminating conditional UI dropdowns in parameter tabs:
+  - **Direct Stream Selection in Picker**: Dynamic external video streams discovered via `ExternalVideoDiscovery` are presented directly in `ShaderPickerPopup` alongside procedural generators under an `External Sources` category pill positioned immediately beside `All`.
+  - **Live Visual Distinction**: External video rows are styled with an emerald green text accent and the Lucide live activity icon (`Icons.ACTIVITY`), clearly distinguishing live hardware/software inputs from compiled GLSL shaders.
+  - **Dynamic Deck Header Display**: Selecting a stream dynamically updates the deck header source button to show the feed name (e.g. `[OBS-Camera ▾]`) via dynamic `ExternalVideoSource.displayName`.
+  - **Elimination of Conditional Parameter Controls**: Removed the conditional "Server" combo dropdown that previously appeared inside the Parameters `SRC` tab only for `ExternalVideoSource`, establishing a permanent, non-shifting layout where only parameter sliders (e.g. `Gain`) are rendered.
+  - **CV Routing Path Stability**: Canonical parameter modulation routing paths remain stable (`Deck A/External Video/Gain`) regardless of stream name or server reconnections.
+- **Rationale**:
+  - The previous workflow required a disjointed two-step selection process (pick generic "External Video" in modal, then look for a conditional dropdown in parameter tabs) that induced noticeable layout shift.
+  - Treating live external streams identically to procedural shaders unifies the mental model and provides immediate situational awareness for live VJ performances.
+
+---
+
 ## Suite C UI Panel Architecture Migration (`Parameters`, `Properties`, `Mixer`, `Library`)
 
 - **Decision**: Migrate all four primary workspace UI panels to the intuitive "Suite C" naming conventions across three phased refactors with complete zero-trace codebase migration:

@@ -36,7 +36,13 @@ object ShaderPickerPopup {
     private val filteredItems = mutableListOf<ShaderItem>()
     private val categories = mutableListOf<String>()
 
-    data class ShaderItem(val id: String, val displayName: String, val categories: List<String>, val type: String) {
+    data class ShaderItem(
+        val id: String,
+        val displayName: String,
+        val categories: List<String>,
+        val type: String,
+        val isExternal: Boolean = false
+    ) {
         // Pre-joined at construction time — zero allocation when the table row renders
         val categoriesLabel: String = categories.joinToString(", ")
     }
@@ -70,7 +76,49 @@ object ShaderPickerPopup {
         val searchText = searchBuf.get().lowercase()
         
         if (pickerType == PickerType.SOURCE) {
+            // ── Dynamic External Video Feeds ──
+            tempCats.add("External Sources")
+            val externalServers = llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.availableServers.value
+            if (externalServers.isNotEmpty()) {
+                externalServers.forEach { srv ->
+                    val matchesSearch = srv.lowercase().contains(searchText) || "external".contains(searchText) || "video".contains(searchText)
+                    val matchesCategory = selectedCategory == "All" || selectedCategory == "External Sources"
+                    if (matchesSearch && matchesCategory) {
+                        filteredItems.add(
+                            ShaderItem(
+                                id = "ext_video:$srv",
+                                displayName = srv,
+                                categories = listOf("External Sources"),
+                                type = "Live Video",
+                                isExternal = true
+                            )
+                        )
+                    }
+                }
+            } else {
+                val fallbackName = "External Video (No streams active)"
+                val matchesSearch = fallbackName.lowercase().contains(searchText) || "external".contains(searchText)
+                val matchesCategory = selectedCategory == "All" || selectedCategory == "External Sources"
+                if (matchesSearch && matchesCategory) {
+                    filteredItems.add(
+                        ShaderItem(
+                            id = "ext_video:",
+                            displayName = fallbackName,
+                            categories = listOf("External Sources"),
+                            type = "Live Video",
+                            isExternal = true
+                        )
+                    )
+                }
+            }
+
+            // ── Static Visual Sources ──
             VisualSourceRegistry.availableSources.forEach { source ->
+                if (source is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
+                    // Handled above as dynamic external items
+                    return@forEach
+                }
+
                 source.categories.forEach { tempCats.add(it) }
                 
                 val matchesSearch = source.displayName.lowercase().contains(searchText) || source.id.lowercase().contains(searchText)
@@ -111,8 +159,13 @@ object ShaderPickerPopup {
             categories.removeAt(allIdx)
             categories.add(0, "All")
         }
+        val extIdx = categories.indexOf("External Sources")
+        if (extIdx > 1) {
+            categories.removeAt(extIdx)
+            categories.add(1, "External Sources")
+        }
         
-        filteredItems.sortBy { it.displayName }
+        filteredItems.sortBy { it.displayName.lowercase() }
     }
 
     fun draw(session: SessionContext) {
@@ -198,9 +251,16 @@ object ShaderPickerPopup {
                     
                     // Col 0: Name
                     ImGui.tableSetColumnIndex(0)
-                    if (ImGui.selectable(item.displayName, false, ImGuiSelectableFlags.SpanAllColumns or ImGuiSelectableFlags.AllowDoubleClick)) {
+                    val itemLabel = if (item.isExternal) "${Icons.ACTIVITY}  ${item.displayName}" else item.displayName
+                    if (item.isExternal) {
+                        ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.85f, 0.45f, 1.0f)
+                    }
+                    if (ImGui.selectable(itemLabel, false, ImGuiSelectableFlags.SpanAllColumns or ImGuiSelectableFlags.AllowDoubleClick)) {
                         onSelect?.invoke(item.id)
                         ImGui.closeCurrentPopup()
+                    }
+                    if (item.isExternal) {
+                        ImGui.popStyleColor(1)
                     }
                     if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
                          onSelect?.invoke(item.id)
@@ -210,7 +270,11 @@ object ShaderPickerPopup {
                     // Col 1: Categories (pre-joined at updateItems() time, zero allocation here)
                     ImGui.tableSetColumnIndex(1)
                     session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                        ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categoriesLabel)
+                        if (item.isExternal) {
+                            ImGui.textColored(0.2f, 0.85f, 0.45f, 0.9f, item.categoriesLabel)
+                        } else {
+                            ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categoriesLabel)
+                        }
                     }
 
                     // Col 2: Action Button

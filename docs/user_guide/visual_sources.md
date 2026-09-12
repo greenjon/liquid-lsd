@@ -142,10 +142,12 @@ If you're writing or tweaking shaders while the app is running, just save your f
 
 ## External Video Input
 
-You can also use a live video feed from another app as a deck source. In the target deck's **SRC** tab, set the source to **External Video** and pick from the available streams:
+You can also use a live video feed from another app as a deck source. External video streams appear directly inside the **Shader Picker** alongside procedural generators:
 
 - **macOS:** Syphon servers
 - **Windows:** Spout2 senders
-- **Linux:** PipeWire video nodes (webcams, OBS virtual cameras, etc.)
+- **Linux:** PipeWire video nodes (webcams, OBS virtual cameras, desktop capture, etc.)
 
-The incoming video runs through the full deck pipeline — you get 3D transforms, effect slots, audio-reactive modulation, and the feedback loop, all applied to the external feed.
+Click the source selector button in the deck header (e.g. `[Mandala ▾]`), select the **External Sources** category pill (positioned immediately beside **All**), and click your stream (highlighted in emerald green with a live activity icon). Once selected, the deck header button directly displays the name of the active stream (e.g. `[OBS-Camera ▾]`).
+
+The incoming video runs through the full deck pipeline — you get 3D transforms, dual effect slots, audio-reactive modulation, and the feedback loop, all applied to the external feed.
