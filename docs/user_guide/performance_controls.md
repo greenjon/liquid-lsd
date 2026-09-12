@@ -57,7 +57,7 @@ When all fingers lift from a strip, the level stays frozen where you left it.
 
 On Linux, the trackpad surface reads raw multi-touch input directly. This requires read/write permission on the input device.
 
-If the permission isn't set up, you'll see a **Touchpad Status: Read/Write Permission Required** message in **Settings → Window Frame & Chrome**, with an **[Install Permissions (Polkit)]** button. Clicking it installs the necessary udev rule using `pkexec` — no reboot required. If you used the desktop installer script (`./scripts/install_desktop.sh`), this was done automatically.
+If the permission isn't set up, you'll see a **Touchpad Status: Read/Write Permission Required** message in **Preferences → General (Window Frame & Chrome)**, with an **[Install Permissions (Polkit)]** button. Clicking it installs the necessary udev rule using `pkexec` — no reboot required. If you used the desktop installer script (`./scripts/install_desktop.sh`), this was done automatically.
 
 On macOS, native trackpad support works without any extra setup.
 

@@ -7,6 +7,7 @@ package llm.slop.liquidlsd.ui
  */
 object Icons {
     const val SETTINGS    = "\ue154" // settings
+    const val PREFERENCES = SETTINGS // preferences
     const val POWER       = "\ue140" // power
     const val TRASH       = "\ue18e" // trash-2
     const val DICES       = "\ue28b" // dice-5

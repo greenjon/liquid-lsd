@@ -317,13 +317,19 @@ fun main(args: Array<String>) {
         val isIncPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_inc", key, mods) ||
                 ((mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_EQUAL || key == GLFW_KEY_KP_ADD))
         val isRecordHotKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.record_output", key, mods)
+        val isPreferencesKey = isShortcutAllowed && (
+            llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preferences", key, mods) ||
+            ((mods and (GLFW_MOD_CONTROL or GLFW_MOD_SUPER)) != 0 && key == GLFW_KEY_P)
+        )
         val isCapsLock = key == GLFW_KEY_CAPS_LOCK
         val isTapTempoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("clock.tap_tempo", key, mods)
 
-        val isHotKey = isFullscreenKey || isExitFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isCapsLock || isTapTempoKey
+        val isHotKey = isFullscreenKey || isExitFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isPreferencesKey || isCapsLock || isTapTempoKey
 
         if (action == GLFW_PRESS) {
-            if (isTapTempoKey) {
+            if (isPreferencesKey) {
+                uiManager.openPreferences()
+            } else if (isTapTempoKey) {
                 session.tapTempoController.tap()
             } else if (isCapsLock) {
                 session.touchConsoleController.toggleActive()
@@ -355,7 +361,7 @@ fun main(args: Array<String>) {
                 logger.info { "Clean mode exited via ESC: ${UITheme.cleanModeEnabled}" }
             } else if (isBgVideoKey) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
-                UITheme.saveSettings()
+                UITheme.savePreferences()
                 logger.info { "Background video toggled: ${UITheme.backgroundVideoEnabled}" }
             }
         }
@@ -365,7 +371,7 @@ fun main(args: Array<String>) {
     }
 
     // Start broadcast relay if autoConnect is enabled and configured
-    if (llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect && llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured) {
+    if (llm.slop.liquidlsd.broadcast.BroadcastPreferences.autoConnect && llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured) {
         llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
     }
 

@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.Deck
-import llm.slop.liquidlsd.ui.AppSettings
+import llm.slop.liquidlsd.ui.AppPreferences
 import llm.slop.liquidlsd.ui.UITheme
 import kotlin.test.Test
 import kotlin.test.assertEquals

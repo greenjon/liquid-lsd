@@ -115,7 +115,7 @@ LFO 2 modulates LFO 1 to add movement and complexity:
 
 The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.
 
-> **Note:** The sequencer is disabled by default. Enable it in **Settings → General** or **Settings → Parameters & Modulation Matrix**.
+> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** or **Preferences → Parameters & Modulation Matrix**.
 
 ### The step grid
 
@@ -185,4 +185,4 @@ Middle-click any slider or value cell to reset to factory default.
 
 **Right-click** any parameter row for a context menu with copy, paste, reset, mute, and note-editing options.
 
-See **Settings → Keyboard Shortcuts** for a full grouped list of all shortcuts in the app.
+See **Preferences → Keyboard Shortcuts** for a full grouped list of all shortcuts in the app.

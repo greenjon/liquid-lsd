@@ -12,13 +12,13 @@ import imgui.flag.ImGuiTableColumnFlags
 import llm.slop.liquidlsd.input.TouchBackendState
 
 /**
- * Modal settings overlay with a left vertical navigation bar.
+ * Modal preferences overlay with a left vertical navigation bar.
  * Call [open] when the menu item is clicked.
  * Call [draw] once per frame inside the active ImGui frame.
  */
-object SettingsPanel {
+object PreferencesPanel {
 
-    private const val POPUP_ID  = "Settings##modal"
+    private const val POPUP_ID  = "Preferences##modal"
     private const val MODAL_W   = 1000f
 
     // Library preset name scale model: Range 80%–120% in 10% steps.
@@ -63,8 +63,8 @@ object SettingsPanel {
         val defaultW = MODAL_W.coerceIn(minW, displayW * 0.98f)
         val defaultH = 520f.coerceIn(minH, displayH * 0.90f)
 
-        val targetW = if (session.uiTheme.settingsWidth > 100f) session.uiTheme.settingsWidth.coerceIn(minW, displayW * 0.98f) else defaultW
-        val targetH = if (session.uiTheme.settingsHeight > 100f) session.uiTheme.settingsHeight.coerceIn(minH, displayH * 0.98f) else defaultH
+        val targetW = if (session.uiTheme.preferencesWidth > 100f) session.uiTheme.preferencesWidth.coerceIn(minW, displayW * 0.98f) else defaultW
+        val targetH = if (session.uiTheme.preferencesHeight > 100f) session.uiTheme.preferencesHeight.coerceIn(minH, displayH * 0.98f) else defaultH
 
         ImGui.setNextWindowPos(
             displayW * 0.5f, displayH * 0.5f,
@@ -83,11 +83,11 @@ object SettingsPanel {
 
         val currentWinW = ImGui.getWindowWidth()
         val currentWinH = ImGui.getWindowHeight()
-        if (kotlin.math.abs(currentWinW - session.uiTheme.settingsWidth) > 1f ||
-            kotlin.math.abs(currentWinH - session.uiTheme.settingsHeight) > 1f) {
-            session.uiTheme.settingsWidth = currentWinW
-            session.uiTheme.settingsHeight = currentWinH
-            session.uiTheme.saveSettings()
+        if (kotlin.math.abs(currentWinW - session.uiTheme.preferencesWidth) > 1f ||
+            kotlin.math.abs(currentWinH - session.uiTheme.preferencesHeight) > 1f) {
+            session.uiTheme.preferencesWidth = currentWinW
+            session.uiTheme.preferencesHeight = currentWinH
+            session.uiTheme.savePreferences()
         }
 
         val sidebarW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -108,7 +108,7 @@ object SettingsPanel {
         val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(50f)
 
         // Left Sidebar Child
-        if (ImGui.beginChild("##settings_sidebar", sidebarW, contentH, true)) {
+        if (ImGui.beginChild("##preferences_sidebar", sidebarW, contentH, true)) {
             Category.values().forEach { cat ->
                 val selected = activeCategory == cat
                 if (selected) {
@@ -134,15 +134,15 @@ object SettingsPanel {
         ImGui.sameLine()
 
         // Right Content Child
-        if (ImGui.beginChild("##settings_content", rightContentW, contentH, true)) {
+        if (ImGui.beginChild("##preferences_content", rightContentW, contentH, true)) {
             when (activeCategory) {
-                Category.GENERAL          -> drawGeneralSettings(session, currentSize, onPresetScaleChanged)
-                Category.VIDEO_DISPLAY    -> drawVideoDisplaySettings(session)
-                Category.TEMPO_SYNC       -> drawTempoSyncSettings(session)
-                Category.AUDIO_ENGINE     -> drawAudioEngineSettings(session)
-                Category.SHADER_LOCATIONS -> drawShaderLocationsSettings(session)
-                Category.BROADCAST        -> drawBroadcastSettings(session, mixer)
-                Category.SHORTCUTS        -> drawShortcutsSettings(session)
+                Category.GENERAL          -> drawGeneralPreferences(session, currentSize, onPresetScaleChanged)
+                Category.VIDEO_DISPLAY    -> drawVideoDisplayPreferences(session)
+                Category.TEMPO_SYNC       -> drawTempoSyncPreferences(session)
+                Category.AUDIO_ENGINE     -> drawAudioEnginePreferences(session)
+                Category.SHADER_LOCATIONS -> drawShaderLocationsPreferences(session)
+                Category.BROADCAST        -> drawBroadcastPreferences(session, mixer)
+                Category.SHORTCUTS        -> drawShortcutsPreferences(session)
             }
         }
         ImGui.endChild()
@@ -168,7 +168,7 @@ object SettingsPanel {
 
     private fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 
-    private fun drawVideoDisplaySettings(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawVideoDisplayPreferences(session: llm.slop.liquidlsd.SessionContext) {
         session.uiTheme.h2("Render Resolution")
         ImGui.sameLine(0f, 15f)
         session.uiTheme.caption("Internal render resolution for Decks, Mixer, and Video Output:")
@@ -187,7 +187,7 @@ object SettingsPanel {
                 session.uiTheme.customRenderWidth = nextPreset.width
                 session.uiTheme.customRenderHeight = nextPreset.height
             }
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("Select internal target rendering resolution. Lower resolutions (e.g. 720p or 540p) significantly reduce GPU load on heavy raymarch shaders.")
 
@@ -196,12 +196,12 @@ object SettingsPanel {
             val customW = imgui.type.ImInt(session.uiTheme.customRenderWidth)
             if (ImGui.inputInt("Custom Width", customW)) {
                 session.uiTheme.customRenderWidth = customW.get().coerceIn(128, 7680)
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
             val customH = imgui.type.ImInt(session.uiTheme.customRenderHeight)
             if (ImGui.inputInt("Custom Height", customH)) {
                 session.uiTheme.customRenderHeight = customH.get().coerceIn(128, 4320)
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
         }
 
@@ -217,7 +217,7 @@ object SettingsPanel {
         ImGui.setNextItemWidth(displayScaleComboW)
         if (ImGui.combo("##Output Scaling", currentScaleIdx, scaleModeNames)) {
             session.uiTheme.outputScaleMode = scaleModes[currentScaleIdx.get()]
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("How output is scaled when target screen aspect ratio differs from render resolution: Fit (Letterbox/Pillarbox), Fill (Crop), or Stretch.")
 
@@ -229,14 +229,14 @@ object SettingsPanel {
         val bgVideoEnabled = ImBoolean(session.uiTheme.backgroundVideoEnabled)
         if (ImGui.checkbox("Background Video", bgVideoEnabled)) {
             session.uiTheme.backgroundVideoEnabled = bgVideoEnabled.get()
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("Render master output video behind the semi-transparent interface (Hotkey: B).")
 
         val fpsCapVal = ImBoolean(session.uiTheme.maxFps <= 30)
         if (ImGui.checkbox("Cap UI to 30 FPS", fpsCapVal)) {
             session.uiTheme.maxFps = if (fpsCapVal.get()) 30 else 60
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("Limit frame rate to 30 FPS to conserve power.")
 
@@ -270,7 +270,7 @@ object SettingsPanel {
                 val enabled = ImBoolean(config.isEnabled)
                 if (ImGui.checkbox("##enable_${endpoint.name}", enabled)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(isEnabled = enabled.get()))
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
                 
                 ImGui.tableNextColumn()
@@ -278,7 +278,7 @@ object SettingsPanel {
                 ImGui.setNextItemWidth(-1f)
                 if (ImGui.inputText("##name_${endpoint.name}", nameInput)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(customName = nameInput.get()))
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
                 
                 ImGui.tableNextColumn()
@@ -288,7 +288,7 @@ object SettingsPanel {
                 ImGui.setNextItemWidth(-1f)
                 if (ImGui.combo("##res_${endpoint.name}", currentResIdx, resModeNames)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(resolutionMode = resModes[currentResIdx.get()]))
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
                 if (config.resolutionMode != llm.slop.liquidlsd.rendering.OutputResolutionMode.SYNC_MASTER && config.resolutionMode != llm.slop.liquidlsd.rendering.OutputResolutionMode.RES_540P) {
                     itemTooltip("${Icons.ALERT} High resolution outputs significantly impact GPU performance!")
@@ -301,7 +301,7 @@ object SettingsPanel {
                 ImGui.setNextItemWidth(-1f)
                 if (ImGui.combo("##scale_${endpoint.name}", currentScaleIdx, scaleModeNames)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(scalingMode = scaleModes[currentScaleIdx.get()]))
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
 
                 ImGui.tableNextColumn()
@@ -328,19 +328,19 @@ object SettingsPanel {
         val dirInput = imgui.type.ImString(currentRecDir, 512)
         if (ImGui.inputText("##RecDir", dirInput)) {
             session.uiTheme.recordingDirectory = dirInput.get().trim()
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         ImGui.sameLine()
         if (ImGui.button("Reset to Default##RecDir")) {
             session.uiTheme.recordingDirectory = ""
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("Reset recording output folder to standard system Videos directory: $defaultDir")
 
         val recAudioVal = ImBoolean(session.uiTheme.recordingIncludeAudio)
         if (ImGui.checkbox("Record with Audio Muxing", recAudioVal)) {
             session.uiTheme.recordingIncludeAudio = recAudioVal.get()
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
 
@@ -353,13 +353,13 @@ object SettingsPanel {
             maxLimit = 50f,
             defaultValue = 16f,
             formatValue = { "${it.toInt()} Mbps" },
-            idPrefix = "settings_video_bitrate",
+            idPrefix = "preferences_video_bitrate",
             themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
             showCurrentLabel = false,
             customBoxWidth = sliderBoxW,
             onValueChanged = { newVal ->
                 session.uiTheme.recordingBitrateMbps = newVal.toInt()
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
         )
 
@@ -372,19 +372,19 @@ object SettingsPanel {
         ImGui.setNextItemWidth(recordingFpsComboW)
         if (ImGui.combo("##Recording Framerate", fpsIdx, fpsOptions)) {
             session.uiTheme.recordingFps = if (fpsIdx.get() == 0) 30 else 60
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
     }
 
-    private fun drawTempoSyncSettings(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawTempoSyncPreferences(session: llm.slop.liquidlsd.SessionContext) {
         TempoSyncPanel.drawContent(session)
     }
 
-    private fun drawAudioEngineSettings(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawAudioEnginePreferences(session: llm.slop.liquidlsd.SessionContext) {
         AudioEnginePanel.drawContent(session)
     }
 
-    private fun drawGeneralSettings(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onPresetScaleChanged: (Int) -> Unit) {
+    private fun drawGeneralPreferences(session: llm.slop.liquidlsd.SessionContext, currentSize: Float, onPresetScaleChanged: (Int) -> Unit) {
         session.uiTheme.h2("Features")
         ImGui.separator()
         ImGui.spacing()
@@ -394,7 +394,7 @@ object SettingsPanel {
             val nextVal = randEnabled.get()
             if (nextVal != session.uiTheme.randomizationEnabled) {
                 session.uiTheme.randomizationEnabled = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
         }
         itemTooltip("Toggle parameter and modulator randomization controls.")
@@ -404,7 +404,7 @@ object SettingsPanel {
             val nextVal = seqEnabled.get()
             if (nextVal != session.uiTheme.sequencerEnabled) {
                 session.uiTheme.sequencerEnabled = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
         }
         itemTooltip("Enable or disable the step sequencer modulation engine across presets and parameter properties.")
@@ -414,7 +414,7 @@ object SettingsPanel {
             val nextVal = midiEnabled.get()
             if (nextVal != session.uiTheme.midiEnabled) {
                 session.uiTheme.midiEnabled = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
                 if (nextVal) {
                     llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
                 } else {
@@ -447,7 +447,7 @@ object SettingsPanel {
                 val nextProfile = profileNamesArray[currentProfileIdx.get()]
                 session.midiMappingManager.loadProfile(nextProfile)
                 session.uiTheme.activeMidiProfile = nextProfile
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
             itemTooltip("Select active MIDI controller CC assignment profile.")
 
@@ -494,7 +494,7 @@ object SettingsPanel {
             val nextVal = framelessEnabled.get()
             if (nextVal != session.uiTheme.framelessWindow) {
                 session.uiTheme.framelessWindow = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
         }
         itemTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
@@ -504,7 +504,7 @@ object SettingsPanel {
             val nextVal = trackpadEnabled.get()
             if (nextVal != session.uiTheme.trackpadConsoleEnabled) {
                 session.uiTheme.trackpadConsoleEnabled = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
                 if (!nextVal && session.touchConsoleController.isActive) {
                     session.touchConsoleController.toggleActive(false)
                 }
@@ -543,14 +543,14 @@ object SettingsPanel {
             val nextVal = updatesOnStartup.get()
             if (nextVal != session.uiTheme.checkUpdatesOnStartup) {
                 session.uiTheme.checkUpdatesOnStartup = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
         }
         itemTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
 
         ImGui.sameLine(0f, 15f)
         val checking = llm.slop.liquidlsd.update.UpdateChecker.isChecking
-        val checkBtnLabel = if (checking) "${Icons.REFRESH} Checking..." else "${Icons.REFRESH} Check for Updates Now##settings_check_now"
+        val checkBtnLabel = if (checking) "${Icons.REFRESH} Checking..." else "${Icons.REFRESH} Check for Updates Now##preferences_check_now"
         if (ImGui.button(checkBtnLabel, 180f, 0f)) {
             if (!checking) {
                 llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
@@ -565,7 +565,7 @@ object SettingsPanel {
                 ImGui.alignTextToFramePadding()
                 ImGui.textColored(0.3f, 0.9f, 0.4f, 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
                 ImGui.sameLine()
-                if (ImGui.button("View Update##settings_update", 120f, 0f)) {
+                if (ImGui.button("View Update##preferences_update", 120f, 0f)) {
                     UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
                 }
             }
@@ -596,7 +596,7 @@ object SettingsPanel {
         ImGui.setNextItemWidth(comboWidth)
         if (ImGui.combo("Startup Behavior", currentStartupIdx, startupOptions)) {
             session.uiTheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
 
         ImGui.spacing()
@@ -606,7 +606,7 @@ object SettingsPanel {
         ImGui.setNextItemWidth(comboWidth)
         if (ImGui.combo("AutoVJ Dirty Behavior", currentAutoVjIdx, autoVjBehaviorNames)) {
             session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
 
         ImGui.spacing()
@@ -627,7 +627,7 @@ object SettingsPanel {
         if (ImGui.combo("##ui_theme", currentThemeIdx, themeNames)) {
             val nextTheme = themes[currentThemeIdx.get()]
             session.uiTheme.theme = nextTheme
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
         }
         itemTooltip("Select the user interface color palette theme.")
         ImGui.spacing()
@@ -684,11 +684,11 @@ object SettingsPanel {
         }
     }
 
-    private val serverUrlBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl, 256)
-    private val tokenBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastSettings.token, 128)
+    private val serverUrlBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastPreferences.serverUrl, 256)
+    private val tokenBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastPreferences.token, 128)
     private var showToken = false
 
-    private fun drawBroadcastSettings(session: llm.slop.liquidlsd.SessionContext, mixer: llm.slop.liquidlsd.rendering.Mixer?) {
+    private fun drawBroadcastPreferences(session: llm.slop.liquidlsd.SessionContext, mixer: llm.slop.liquidlsd.rendering.Mixer?) {
         val theme = session.uiTheme
         theme.h2("Web Broadcast Relay")
         ImGui.separator()
@@ -699,12 +699,12 @@ object SettingsPanel {
 
         // Server URL
         theme.caption("RELAY SERVER URL")
-        if (serverUrlBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl) {
-            serverUrlBuf.set(llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl)
+        if (serverUrlBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastPreferences.serverUrl) {
+            serverUrlBuf.set(llm.slop.liquidlsd.broadcast.BroadcastPreferences.serverUrl)
         }
         if (ImGui.inputText("##broadcast_url", serverUrlBuf)) {
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.serverUrl = serverUrlBuf.get().trim()
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.serverUrl = serverUrlBuf.get().trim()
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
         }
         itemTooltip("WebSocket relay URL (e.g. ws://127.0.0.1:9004 or wss://relay.example.com)")
 
@@ -712,13 +712,13 @@ object SettingsPanel {
 
         // Secret Token
         theme.caption("BROADCASTER SECRET TOKEN")
-        if (tokenBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastSettings.token) {
-            tokenBuf.set(llm.slop.liquidlsd.broadcast.BroadcastSettings.token)
+        if (tokenBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastPreferences.token) {
+            tokenBuf.set(llm.slop.liquidlsd.broadcast.BroadcastPreferences.token)
         }
         val tokenFlags = if (showToken) 0 else imgui.flag.ImGuiInputTextFlags.Password
         if (ImGui.inputText("##broadcast_token", tokenBuf, tokenFlags)) {
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.token = tokenBuf.get().trim()
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.token = tokenBuf.get().trim()
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
         }
         ImGui.sameLine()
         val eyeLabel = if (showToken) "Hide" else "Show"
@@ -733,18 +733,18 @@ object SettingsPanel {
         CustomRangeSlider.drawCompactSlider(
             session = session,
             label = "Rate Limit",
-            currentValue = llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps.toFloat(),
+            currentValue = llm.slop.liquidlsd.broadcast.BroadcastPreferences.targetFps.toFloat(),
             minLimit = 5f,
             maxLimit = 60f,
             defaultValue = 30f,
             formatValue = { "${it.toInt()} Hz" },
-            idPrefix = "settings_broadcast_target_fps",
+            idPrefix = "preferences_broadcast_target_fps",
             themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
             showCurrentLabel = false,
             customBoxWidth = sliderBoxW,
             onValueChanged = { newVal ->
-                llm.slop.liquidlsd.broadcast.BroadcastSettings.targetFps = newVal.toInt()
-                llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+                llm.slop.liquidlsd.broadcast.BroadcastPreferences.targetFps = newVal.toInt()
+                llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
             }
         )
         itemTooltip("Maximum rate to dispatch parameter delta packets to the relay.")
@@ -752,10 +752,10 @@ object SettingsPanel {
         ImGui.spacing()
 
         // Auto-connect checkbox
-        val autoConn = ImBoolean(llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect)
+        val autoConn = ImBoolean(llm.slop.liquidlsd.broadcast.BroadcastPreferences.autoConnect)
         if (ImGui.checkbox("Auto-connect on launch", autoConn)) {
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.autoConnect = autoConn.get()
-            llm.slop.liquidlsd.broadcast.BroadcastSettings.saveSettings()
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.autoConnect = autoConn.get()
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
         }
 
         ImGui.spacing()
@@ -801,7 +801,7 @@ object SettingsPanel {
             }
             ImGui.popStyleColor(2)
         } else {
-            val canConnect = llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured
+            val canConnect = llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured
             if (!canConnect) {
                 ImGui.beginDisabled()
             }
@@ -815,7 +815,7 @@ object SettingsPanel {
             ImGui.popStyleColor(2)
             if (!canConnect) {
                 ImGui.endDisabled()
-                itemTooltip("Relay Server URL and Broadcaster Secret Token must both be configured in Settings.")
+                itemTooltip("Relay Server URL and Broadcaster Secret Token must both be configured in Preferences.")
             }
         }
 
@@ -948,7 +948,7 @@ object SettingsPanel {
         }
     }
 
-    private fun drawShortcutsSettings(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawShortcutsPreferences(session: llm.slop.liquidlsd.SessionContext) {
         session.uiTheme.h2("Keyboard Shortcuts & Input Settings")
         ImGui.separator()
         ImGui.spacing()
@@ -1003,7 +1003,7 @@ object SettingsPanel {
 
     private var customFolderPathBuf: ImString? = null
 
-    private fun drawShaderLocationsSettings(session: llm.slop.liquidlsd.SessionContext) {
+    private fun drawShaderLocationsPreferences(session: llm.slop.liquidlsd.SessionContext) {
         session.uiTheme.h2("ISF Shader Locations & Libraries")
         ImGui.separator()
         ImGui.spacing()
@@ -1121,3 +1121,6 @@ object SettingsPanel {
         }
     }
 }
+
+typealias SettingsPanel = PreferencesPanel
+

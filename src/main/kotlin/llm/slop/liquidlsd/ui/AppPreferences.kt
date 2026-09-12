@@ -3,7 +3,7 @@ package llm.slop.liquidlsd.ui
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioTarget
 
-data class AppSettings(
+data class AppPreferences(
     val presetNameScalePercent: Int = 100,
     val audioEngineEnabled: Boolean = true,
     val audioBackend: AudioEngine.AudioBackendMode = AudioEngine.AudioBackendMode.AUTO,
@@ -55,12 +55,17 @@ data class AppSettings(
     val recordingIncludeAudio: Boolean = true,
     val recordingBitrateMbps: Int = 12,
     val recordingFps: Int = 60,
-    val settingsWidth: Float = 640f,
-    val settingsHeight: Float = 520f,
+    val preferencesWidth: Float = 640f,
+    val preferencesHeight: Float = 520f,
     val framelessWindow: Boolean = true,
     val trackpadConsoleEnabled: Boolean = true,
     val checkUpdatesOnStartup: Boolean = true,
     val ignoredUpdateVersion: String = "",
     val videoOutputConfigs: Map<llm.slop.liquidlsd.rendering.VideoOutputEndpoint, llm.slop.liquidlsd.rendering.VideoOutputConfig> = 
         llm.slop.liquidlsd.rendering.VideoOutputEndpoint.values().associateWith { llm.slop.liquidlsd.rendering.VideoOutputConfig() }
-)
+) {
+    val settingsWidth: Float get() = preferencesWidth
+    val settingsHeight: Float get() = preferencesHeight
+}
+
+typealias AppSettings = AppPreferences

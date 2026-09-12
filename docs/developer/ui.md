@@ -128,21 +128,21 @@ val depthCbs = cvModulatorSlider(
 
 
 
-### 7. `SettingsPanel.kt` & `ShortcutManager.kt` Architecture
-- **Settings Category Routing**: `SettingsPanel` organizes application preferences into 7 clean categories (`GENERAL`, `VIDEO_DISPLAY`, `TEMPO_SYNC`, `AUDIO_ENGINE`, `SHADER_LOCATIONS`, `BROADCAST`, `SHORTCUTS`) and supports targeted opening via `SettingsPanel.open(category)`.
+### 7. `PreferencesPanel.kt` & `ShortcutManager.kt` Architecture
+- **Preferences Category Routing**: `PreferencesPanel` organizes application preferences into 7 clean categories (`GENERAL`, `VIDEO_DISPLAY`, `TEMPO_SYNC`, `AUDIO_ENGINE`, `SHADER_LOCATIONS`, `BROADCAST`, `SHORTCUTS`) and supports targeted opening via `PreferencesPanel.open(category)`.
 - **Keyboard Shortcuts Overhaul (`ShortcutManager.kt`)**: Keyboard shortcut definitions, custom keybindings, and collision detection are centralized within `llm.slop.liquidlsd.ui.shortcuts`:
   - **`KeyCombination`**: Data model representing primary GLFW keys and modifier bitmasks (`Ctrl`, `Shift`, `Alt`, `Super`/`Cmd`) with human-readable string formatting.
   - **`ShortcutAction` & `ShortcutCategory`**: Defines action ID, category, name, detailed description, default key, current key, and collision exception rules.
   - **`ShortcutManager`**: Manages action registration, persistent JSON serialization (`~/.liquidlsd/keybindings.json`), key matching, and scope-aware collision detection.
-  - **Settings Grid UI**: `SettingsPanel.kt` renders a 2-column grid layout with **Action & Description on the Left** and **Shortcut Key Badges & Rebind Controls on the Right**. Features live search filtering (`Icons.SEARCH`), interactive key recording modal, conflict warning alerts (`Icons.ALERT`), conflict tooltips, key swapping, and factory default resets (`Icons.REFRESH`).
+  - **Preferences Grid UI**: `PreferencesPanel.kt` renders a 2-column grid layout with **Action & Description on the Left** and **Shortcut Key Badges & Rebind Controls on the Right**. Features live search filtering (`Icons.SEARCH`), interactive key recording modal, conflict warning alerts (`Icons.ALERT`), conflict tooltips, key swapping, and factory default resets (`Icons.REFRESH`).
 - **Unified Modulator Control**: Enabling an engine subsystem (`audioEngineEnabled`, `midiEnabled`, `sequencerEnabled`) automatically determines column visibility in the Parameters and Properties panel. The Parameters header kebab menu (`⋮`) acts as a quick-switchboard to toggle these subsystems directly without modal navigation.
 - **Audio Engine Tab & Oscilloscopes (`AudioEnginePanel.kt`)**: The audio subsystem UI is encapsulated within `AudioEnginePanel.kt` and drawn in a balanced two-column layout:
   - **Left Column**: Backend, input hardware device, channel routing dropdowns positioned inline on the same line as their text labels; Input Gain and System Volume sliders located below Channel Routing; Input Peak Meter, sync state, and beat synchronization / detection controls (manual BPM locking, Beat Tracker target band, detection presets, dual-headed BPM range slider). Colored backend status ("Jack active", "Java Sound Active", or "Audio Inactive") is displayed inline to the right of the "Enable Audio Engine" checkbox.
   - **Right Column**: Raw Audio Buffer oscilloscope and all sound-derived Control Voltage (CV) oscilloscopes stacked vertically.
-  - MIDI controller detection status readout is located under Settings > General inline to the right of the "Enable MIDI" checkbox.
-- **Audio Engine Quick Access**: Clicking the real-time BPM or DSP latency metric in the top performance stats bar (or opening `File > Settings... > Audio Engine`) navigates directly to the `AUDIO_ENGINE` category.
+  - MIDI controller detection status readout is located under Preferences > General inline to the right of the "Enable MIDI" checkbox.
+- **Audio Engine Quick Access**: Clicking the real-time BPM or DSP latency metric in the top performance stats bar (or opening `File > Preferences... > Audio Engine`, or pressing `Ctrl+P` / `Cmd+P`) navigates directly to the `AUDIO_ENGINE` category.
 - **Title Bar & Menu Bar Architecture (`MenuBar.kt`)**: The main menu bar consolidates application actions into clean top-level menus:
-  - `File`: Preset creation (`New Preset`), `Settings...`, and `Exit`.
+  - `File`: Preset creation (`New Preset`), `Preferences...` (`Ctrl+P` / `Cmd+P`), and `Exit`.
   - `Output`: `Secondary Output Window`, `Record Master Output (REC)`, `Web Broadcast`, and `Export Video (Offline Studio)...`.
   - `Help`: `Documentation` and `Show Tooltips` toggle.
   - Contextual HUD status badges for recording (`REC mm:ss`, dropped frames counter) and Web Broadcast (`LIVE`, `CONNECTING`, `LIVE ERR`) appear dynamically on the title bar only when active.

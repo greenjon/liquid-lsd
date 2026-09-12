@@ -65,7 +65,7 @@ class WindowLayoutSafetyTest {
     }
 
     @Test
-    fun testSettingsPanelHeightClampingOnSmallDisplays() {
+    fun testPreferencesPanelHeightClampingOnSmallDisplays() {
         val testHeights = listOf(0f, 50f, 100f, 200f, 300f, 380f, 400f, 600f, 1080f)
         for (displayH in testHeights) {
             val desiredH = 330f

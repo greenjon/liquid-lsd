@@ -103,7 +103,7 @@ object UpdatePromptModal {
             ImGui.sameLine()
             if (ImGui.button("Skip Version", 120f, 32f)) {
                 session.uiTheme.ignoredUpdateVersion = release.tagName
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
                 latestRelease = null
                 ImGui.closeCurrentPopup()
             }

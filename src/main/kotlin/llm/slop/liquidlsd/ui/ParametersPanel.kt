@@ -544,7 +544,7 @@ object ParametersPanel {
             if (ImGui.checkbox("MIDI Column##grid_col_kebab", midiVal)) {
                 val nextVal = midiVal.get()
                 session.uiTheme.midiEnabled = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
                 if (nextVal) {
                     llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()
                 } else {
@@ -564,7 +564,7 @@ object ParametersPanel {
             val lfoVal = imgui.type.ImBoolean(session.uiTheme.showLfoCol)
             if (ImGui.checkbox("LFO Column##grid_col_kebab", lfoVal)) {
                 session.uiTheme.showLfoCol = lfoVal.get()
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
             if (deckDeps.usesLfo) {
                 ImGui.sameLine()
@@ -579,7 +579,7 @@ object ParametersPanel {
             val seqVal = imgui.type.ImBoolean(session.uiTheme.sequencerEnabled)
             if (ImGui.checkbox("Step Sequencer (SEQ)##grid_col_kebab", seqVal)) {
                 session.uiTheme.sequencerEnabled = seqVal.get()
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
             }
             if (deckDeps.usesSeq) {
                 ImGui.sameLine()
@@ -595,7 +595,7 @@ object ParametersPanel {
             if (ImGui.checkbox("Audio Engine (AUD)##grid_col_kebab", audioVal)) {
                 val nextVal = audioVal.get()
                 session.uiTheme.audioEngineEnabled = nextVal
-                session.uiTheme.saveSettings()
+                session.uiTheme.savePreferences()
                 if (nextVal) {
                     session.audioEngine.start()
                 } else {
@@ -634,7 +634,7 @@ object ParametersPanel {
                     if (deckDeps.usesRandomization) {
                         session.uiTheme.randomizationEnabled = true
                     }
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
             }
 

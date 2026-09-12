@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Transition Settings to Preferences Across UI, Storage & Shortcuts (`PreferencesPanel.kt`, `AppPreferences.kt`, `BroadcastPreferences.kt`, `UITheme.kt`, `MenuBar.kt`, `ShortcutManager.kt`)
+- **UI Nomenclature**: Standardized all user-facing dialogs, menus, and HUD tooltips from "Settings" to "Preferences". The top menu bar now provides `File > Preferences...` and telemetry quick-launch actions open Preferences categories directly.
+- **Dedicated Global Shortcut**: Added `Ctrl+P` (Windows/Linux) and `Cmd+P` (macOS) shortcut (`global.preferences`) to immediately open the Preferences dialog from anywhere in the application.
+- **Model & Class Refactoring**:
+  - Renamed `AppSettings` to `AppPreferences`, preserving `typealias AppSettings = AppPreferences` for backward compatibility.
+  - Renamed `BroadcastSettings` to `BroadcastPreferences`, with `typealias BroadcastSettings = BroadcastPreferences`.
+  - Renamed `SettingsPanel` to `PreferencesPanel`, with `typealias SettingsPanel = PreferencesPanel`.
+- **Transparent Configuration Migration**:
+  - Application configuration is now persisted to `lsd-preferences.properties` instead of `lsd-settings.properties`.
+  - Seamless fallback: `loadPreferences()` automatically inspects `lsd-preferences.properties` first, gracefully falling back to legacy `lsd-settings.properties` if present to guarantee no user settings are lost.
+  - Preserved deprecated compatibility wrappers `saveSettings()` and `loadSettings()` delegating to `savePreferences()` and `loadPreferences()`.
+- **Test Suite Modernization**: Replaced legacy settings tests with `PreferencesDefaultsTest`, `BroadcastPreferencesTest`, and `AudioEnginePreferencesTest`, adding comprehensive tests for `lsd-preferences.properties` persistence and legacy fallback loading.
+
 ### Oscilloscope Controls Overlay & Tab Row Live Button Migration (`OscilloscopeDrawer.kt`, `PropertiesPanel.kt`, `ScopeTimebaseTest.kt`)
 - **Overlaid Timebase Dropdown**: Moved the timebase selector directly inside the oscilloscope canvas in the top-right corner with semi-transparent frame styling, eliminating the previous controls bar above the oscilloscope and creating a compact, hardware-like oscilloscope layout.
 - **Dynamic Auto Timebase Label**: When set to Auto, the dropdown text dynamically displays the active automatically selected time window (e.g. `Auto (10s)`, `Auto (1s)`).

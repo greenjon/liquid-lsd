@@ -37,7 +37,9 @@ object UITheme {
 
     private val logger = KotlinLogging.logger {}
 
-    private val settingsFile = File("lsd-settings.properties")
+    private val preferencesFile = File("lsd-preferences.properties")
+    private val legacySettingsFile = File("lsd-settings.properties")
+    private val settingsFile get() = preferencesFile
 
     // -- Semantic Levels -------------------------------------------------------
 
@@ -89,7 +91,11 @@ object UITheme {
     val baseSize: Float get() = BASE_SIZE
 
     @Volatile
-    var settings = AppSettings()
+    var preferences = AppPreferences()
+
+    var settings: AppPreferences
+        get() = preferences
+        set(value) { preferences = value }
 
     var theme: Theme
         get() = settings.theme
@@ -228,13 +234,21 @@ object UITheme {
         get() = settings.recordingFps
         set(value) { settings = settings.copy(recordingFps = if (value == 30) 30 else 60) }
 
+    var preferencesWidth: Float
+        get() = preferences.preferencesWidth
+        set(value) { preferences = preferences.copy(preferencesWidth = value.coerceIn(400f, 3840f)) }
+
+    var preferencesHeight: Float
+        get() = preferences.preferencesHeight
+        set(value) { preferences = preferences.copy(preferencesHeight = value.coerceIn(300f, 2160f)) }
+
     var settingsWidth: Float
-        get() = settings.settingsWidth
-        set(value) { settings = settings.copy(settingsWidth = value.coerceIn(400f, 3840f)) }
+        get() = preferencesWidth
+        set(value) { preferencesWidth = value }
 
     var settingsHeight: Float
-        get() = settings.settingsHeight
-        set(value) { settings = settings.copy(settingsHeight = value.coerceIn(300f, 2160f)) }
+        get() = preferencesHeight
+        set(value) { preferencesHeight = value }
 
     var framelessWindow: Boolean
         get() = settings.framelessWindow
@@ -294,19 +308,26 @@ object UITheme {
         get() = if (renderWidth > 0) renderHeight.toFloat() / renderWidth.toFloat() else 9f / 16f
 
     init {
-        loadSettings()
+        loadPreferences()
     }
+
+    fun loadSettings() = loadPreferences()
 
     private fun Properties.getBoolean(key: String): Boolean? {
         val raw = getProperty(key)?.trim() ?: return null
         return raw.toBooleanStrictOrNull() ?: raw.toBoolean()
     }
 
-    private fun loadSettings() {
+    fun loadPreferences() {
         try {
-            if (settingsFile.exists()) {
+            val fileToRead = when {
+                preferencesFile.exists() -> preferencesFile
+                legacySettingsFile.exists() -> legacySettingsFile
+                else -> null
+            }
+            if (fileToRead != null) {
                 val props = Properties()
-                settingsFile.inputStream().use { props.load(it) }
+                fileToRead.inputStream().use { props.load(it) }
                 val savedPresetScale = props.getProperty("presetNameScalePercent")?.toIntOrNull()
                 if (savedPresetScale != null) {
                     presetNameScalePercent = (kotlin.math.round(savedPresetScale / 10f) * 10).toInt().coerceIn(80, 120)
@@ -498,8 +519,10 @@ object UITheme {
                 props.getBoolean("recordingIncludeAudio")?.let { recordingIncludeAudio = it }
                 props.getProperty("recordingBitrateMbps")?.toIntOrNull()?.let { recordingBitrateMbps = it }
                 props.getProperty("recordingFps")?.toIntOrNull()?.let { recordingFps = it }
-                props.getProperty("settingsWidth")?.toFloatOrNull()?.let { settingsWidth = it.coerceIn(400f, 3840f) }
-                props.getProperty("settingsHeight")?.toFloatOrNull()?.let { settingsHeight = it.coerceIn(300f, 2160f) }
+                val savedWidth = props.getProperty("preferencesWidth") ?: props.getProperty("settingsWidth")
+                savedWidth?.toFloatOrNull()?.let { preferencesWidth = it.coerceIn(400f, 3840f) }
+                val savedHeight = props.getProperty("preferencesHeight") ?: props.getProperty("settingsHeight")
+                savedHeight?.toFloatOrNull()?.let { preferencesHeight = it.coerceIn(300f, 2160f) }
                 props.getBoolean("framelessWindow")?.let { framelessWindow = it }
                 props.getBoolean("trackpadConsoleEnabled")?.let { trackpadConsoleEnabled = it }
                 props.getProperty("checkUpdatesOnStartup")?.let { checkUpdatesOnStartup = it.toBoolean() }
@@ -507,26 +530,28 @@ object UITheme {
                 
                 props.getProperty("videoOutputConfigs")?.let { json ->
                     try {
-                        videoOutputConfigs = Json.decodeFromString(json)
-                        logger.info { "Loaded videoOutputConfigs from settings file" }
+                        videoOutputConfigs = Json.decodeFromString<Map<VideoOutputEndpoint, VideoOutputConfig>>(json)
+                        logger.info { "Loaded videoOutputConfigs from preferences file" }
                     } catch (e: Exception) {
                         logger.warn(e) { "Failed to parse videoOutputConfigs JSON" }
                     }
                 }
             } else {
-                logger.info { "No settings file found, using defaults: fixed UI 95%, presetNameScalePercent: $presetNameScalePercent%, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
+                logger.info { "No preferences file found, using defaults: fixed UI 95%, presetNameScalePercent: $presetNameScalePercent%, audioEngineEnabled: $audioEngineEnabled, backgroundVideoEnabled: $backgroundVideoEnabled, tooltipsEnabled: $tooltipsEnabled, maxFps: $maxFps, framelessWindow: $framelessWindow" }
             }
         } catch (e: Exception) {
-            logger.warn(e) { "Failed to load settings, using defaults" }
+            logger.warn(e) { "Failed to load preferences, using defaults" }
         }
     }
 
-    fun saveSettings() {
+    fun saveSettings() = savePreferences()
+
+    fun savePreferences() {
         try {
             val props = Properties()
-            if (settingsFile.exists()) {
-                settingsFile.inputStream().use { props.load(it) }
-            }
+            val fileToRead = if (preferencesFile.exists()) preferencesFile else if (legacySettingsFile.exists()) legacySettingsFile else null
+            fileToRead?.inputStream()?.use { props.load(it) }
+
             props.setProperty("presetNameScalePercent", presetNameScalePercent.toString())
             props.setProperty("audioEngineEnabled", audioEngineEnabled.toString())
             props.setProperty("audioBackend", AudioEngine.backendMode.name)
@@ -578,8 +603,10 @@ object UITheme {
             props.setProperty("recordingIncludeAudio", recordingIncludeAudio.toString())
             props.setProperty("recordingBitrateMbps", recordingBitrateMbps.toString())
             props.setProperty("recordingFps", recordingFps.toString())
-            props.setProperty("settingsWidth", settingsWidth.toString())
-            props.setProperty("settingsHeight", settingsHeight.toString())
+            props.setProperty("preferencesWidth", preferencesWidth.toString())
+            props.setProperty("preferencesHeight", preferencesHeight.toString())
+            props.setProperty("settingsWidth", preferencesWidth.toString())
+            props.setProperty("settingsHeight", preferencesHeight.toString())
             props.setProperty("framelessWindow", framelessWindow.toString())
             props.setProperty("trackpadConsoleEnabled", trackpadConsoleEnabled.toString())
             props.setProperty("checkUpdatesOnStartup", checkUpdatesOnStartup.toString())
@@ -591,17 +618,17 @@ object UITheme {
                 logger.error(e) { "Failed to serialize videoOutputConfigs to JSON" }
             }
             
-            val tmpFile = File("${settingsFile.absolutePath}.tmp")
-            tmpFile.outputStream().use { props.store(it, "Liquid LSD Settings") }
+            val tmpFile = File("${preferencesFile.absolutePath}.tmp")
+            tmpFile.outputStream().use { props.store(it, "Liquid LSD Preferences") }
             java.nio.file.Files.move(
                 tmpFile.toPath(),
-                settingsFile.toPath(),
+                preferencesFile.toPath(),
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING,
                 java.nio.file.StandardCopyOption.ATOMIC_MOVE
             )
-            logger.info { "Saved settings to file" }
+            logger.info { "Saved preferences to file" }
         } catch (e: Exception) {
-            logger.error(e) { "Failed to save settings" }
+            logger.error(e) { "Failed to save preferences" }
         }
     }
 

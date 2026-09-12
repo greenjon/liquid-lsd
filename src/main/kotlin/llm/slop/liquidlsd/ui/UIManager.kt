@@ -52,10 +52,15 @@ class UIManager(
     // Store rebuild request flag here; it is consumed at the top of the next render().
     private var pendingFontRebuild = false
 
-    // Set to true for one frame when the Settings menu item is clicked; consumed
+    // Set to true for one frame when the Preferences menu item is clicked; consumed
     // immediately after endMainMenuBar so openPopup runs at root ID-stack level.
-    private var pendingOpenSettings = false
-    private var pendingOpenSettingsCategory: SettingsPanel.Category? = null
+    private var pendingOpenPreferences = false
+    private var pendingOpenPreferencesCategory: PreferencesPanel.Category? = null
+
+    fun openPreferences(category: PreferencesPanel.Category? = null) {
+        pendingOpenPreferences = true
+        pendingOpenPreferencesCategory = category
+    }
 
     private val splitterManager = SplitterManager()
 
@@ -74,13 +79,11 @@ class UIManager(
         popupManager = popupManager,
         parametersState = parametersState,
         onTriggerExitFlow = { triggerExitFlow() },
-        onOpenSettings = {
-            pendingOpenSettings = true
-            pendingOpenSettingsCategory = null
+        onOpenPreferences = {
+            openPreferences(null)
         },
         onOpenAudioEngineMonitor = {
-            pendingOpenSettings = true
-            pendingOpenSettingsCategory = SettingsPanel.Category.AUDIO_ENGINE
+            openPreferences(PreferencesPanel.Category.AUDIO_ENGINE)
         },
         onToggleOutputWindow = onToggleOutputWindow,
         isOutputWindowOpen = isOutputWindowOpen,
@@ -311,7 +314,7 @@ class UIManager(
                 if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
                     session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                     LibraryPanel.isLibraryExpanding = true
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
                 llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
             }
@@ -377,10 +380,10 @@ class UIManager(
 
         if (!session.uiTheme.cleanModeEnabled) {
             menuBar.draw(session, mixer)
-            if (pendingOpenSettings) {
-                SettingsPanel.open(pendingOpenSettingsCategory)
-                pendingOpenSettings = false
-                pendingOpenSettingsCategory = null
+            if (pendingOpenPreferences) {
+                PreferencesPanel.open(pendingOpenPreferencesCategory)
+                pendingOpenPreferences = false
+                pendingOpenPreferencesCategory = null
             }
 
             if (popupManager.pendingOpenExitPopup) {
@@ -395,7 +398,7 @@ class UIManager(
 
             drawLayout(mixer, displayWidth, displayHeight)
 
-            SettingsPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newPct ->
+            PreferencesPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newPct ->
                 applyPresetNameScale(newPct)
             }
 
@@ -434,11 +437,11 @@ class UIManager(
         if (clamped != session.uiTheme.presetNameScalePercent) {
             session.uiTheme.presetNameScalePercent = clamped
             pendingFontRebuild = true
-            if (SettingsPanel.isOpen) {
-                pendingOpenSettings = true
-                pendingOpenSettingsCategory = SettingsPanel.activeCategory
+            if (PreferencesPanel.isOpen) {
+                pendingOpenPreferences = true
+                pendingOpenPreferencesCategory = PreferencesPanel.activeCategory
             }
-            session.uiTheme.saveSettings()
+            session.uiTheme.savePreferences()
             logger.info { "User preset name scale changed to: $clamped%, scheduling font rebuild" }
         }
     }
@@ -606,7 +609,7 @@ class UIManager(
                                 theme.libraryMode = UITheme.LibraryMode.HALF
                                 LibraryPanel.isLibraryExpanding = true
                                 theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
-                                theme.saveSettings()
+                                theme.savePreferences()
                             }
                         } else {
                             val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
@@ -621,7 +624,7 @@ class UIManager(
                                 theme.libraryRatio = newR
                                 theme.lastCustomLibraryRatio = newR
                             }
-                            theme.saveSettings()
+                            theme.savePreferences()
                         }
                     },
                     onDoubleClick = {
@@ -629,7 +632,7 @@ class UIManager(
                         LibraryPanel.isLibraryExpanding = true
                         theme.libraryRatio = 0.50f
                         theme.lastCustomLibraryRatio = 0.50f
-                        theme.saveSettings()
+                        theme.savePreferences()
                     }
                 )
             }

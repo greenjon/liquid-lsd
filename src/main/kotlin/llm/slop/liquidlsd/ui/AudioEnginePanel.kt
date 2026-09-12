@@ -20,7 +20,7 @@ import llm.slop.liquidlsd.audio.SystemAudioVolume
  * - Input gain and system recording volume controls.
  * - Raw audio buffer oscilloscope and sound-derived Control Voltage (CV) oscilloscopes.
  *
- * Rendered within the "Audio Engine" category of [SettingsPanel].
+ * Rendered within the "Audio Engine" category of [PreferencesPanel].
  */
 object AudioEnginePanel {
 
@@ -74,14 +74,14 @@ object AudioEnginePanel {
     )
 
     /**
-     * Opens the Settings modal focused directly on the Audio Engine tab.
+     * Opens the Preferences modal focused directly on the Audio Engine tab.
      */
     fun open() {
-        SettingsPanel.open(SettingsPanel.Category.AUDIO_ENGINE)
+        PreferencesPanel.open(PreferencesPanel.Category.AUDIO_ENGINE)
     }
 
     /**
-     * Renders the complete Audio Engine settings and real-time monitor content inside [SettingsPanel].
+     * Renders the complete Audio Engine preferences and real-time monitor content inside [PreferencesPanel].
      */
     fun drawContent(session: llm.slop.liquidlsd.SessionContext) {
         val theme = session.uiTheme
@@ -99,7 +99,7 @@ object AudioEnginePanel {
             val nextVal = isAudioEnabled.get()
             if (nextVal != theme.audioEngineEnabled) {
                 theme.audioEngineEnabled = nextVal
-                theme.saveSettings()
+                theme.savePreferences()
                 if (nextVal) audioEngine.start() else audioEngine.stop()
             }
         }
@@ -147,7 +147,7 @@ object AudioEnginePanel {
             if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
                 val nextBackend = backendModes[currentBackendIdx.get()]
                 audioEngine.selectDevice(audioEngine.selectedDeviceName, nextBackend)
-                theme.saveSettings()
+                theme.savePreferences()
             }
             itemTooltip("Select audio capture backend (JACK for low-latency Linux, Java Sound for cross-platform).")
 
@@ -166,7 +166,7 @@ object AudioEnginePanel {
                 val chosenDevice = devices.getOrNull(currentDeviceIdx.get())
                 if (chosenDevice != null) {
                     audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
-                    theme.saveSettings()
+                    theme.savePreferences()
                 }
             }
             itemTooltip("Select the audio input capture device.")
@@ -186,7 +186,7 @@ object AudioEnginePanel {
             if (ImGui.combo("##ChannelRouting", currentRoutingIdx, channelRoutingNames)) {
                 val chosenRouting = channelRoutings[currentRoutingIdx.get()]
                 audioEngine.channelRouting = chosenRouting
-                theme.saveSettings()
+                theme.savePreferences()
             }
             itemTooltip("Select audio channel routing: Mix (L + R) with -6dB attenuation to prevent clipping, Left Only, or Right Only.")
 
@@ -207,7 +207,7 @@ object AudioEnginePanel {
                 customBoxWidth = sliderBoxW,
                 onValueChanged = { newVal ->
                     audioEngine.inputGain = newVal
-                    theme.saveSettings()
+                    theme.savePreferences()
                 }
             )
 
@@ -310,8 +310,8 @@ object AudioEnginePanel {
             theme.captionColored(0.7f, 0.75f, 0.8f, 1.0f, "(${currentClock.displayName} • $linkStatusText)")
 
             ImGui.spacing()
-            if (ImGui.button("${Icons.SETTINGS} Configure Tempo & Link Deck ->", 260f, 30f)) {
-                SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+            if (ImGui.button("${Icons.PREFERENCES} Configure Tempo & Link Deck ->", 260f, 30f)) {
+                PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             }
             itemTooltip("Open master tempo deck to adjust BPM slider, tap tempo, beat tracking, or Ableton Link.")
 

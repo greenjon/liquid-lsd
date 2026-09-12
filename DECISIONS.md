@@ -1,3 +1,29 @@
+## Transition from Settings to Preferences (`AppPreferences.kt`, `BroadcastPreferences.kt`, `PreferencesPanel.kt`, `UITheme.kt`, `MenuBar.kt`, `lsd-preferences.properties`)
+
+- **Decision**: Standardize all user-facing configuration, persistence layers, modal dialogs, and internal models from "Settings" to "Preferences":
+  - **User-Facing UI & Shortcuts**:
+    - Renamed top menu bar entry from `Settings...` to `Preferences...` under `File` and header telemetry quick-launchers.
+    - Added global shortcut `Ctrl+P` / `Cmd+P` (`global.preferences`) to immediately open the Preferences modal.
+    - Updated modal title to `"Preferences"` (`"Preferences##modal"`), internal child window IDs, and tooltips.
+    - Added `Icons.PREFERENCES` in `Icons.kt` (aliased to Lucide slider settings icon).
+  - **Data Models & State Storage**:
+    - Renamed data model `AppSettings` to `AppPreferences`, with `typealias AppSettings = AppPreferences` for backward compatibility.
+    - Renamed `BroadcastSettings` to `BroadcastPreferences`, with `typealias BroadcastSettings = BroadcastPreferences`.
+    - Renamed `SettingsPanel` to `PreferencesPanel`, with `typealias SettingsPanel = PreferencesPanel`.
+    - Renamed modal sizing state variables `settingsWidth`/`settingsHeight` to `preferencesWidth`/`preferencesHeight` in `UITheme`.
+  - **Configuration File Migration & Fallback**:
+    - Primary configuration file is now `lsd-preferences.properties`.
+    - Seamless migration: `UITheme.loadPreferences()` and `BroadcastPreferences.loadPreferences()` automatically inspect `lsd-preferences.properties` first; if absent, they fall back to legacy `lsd-settings.properties`.
+    - When preferences are saved via `savePreferences()`, they are written to `lsd-preferences.properties`.
+    - `saveSettings()` and `loadSettings()` remain as deprecated aliases to prevent breaking any legacy call sites.
+  - **Test Suites**:
+    - Replaced `SettingsDefaultsTest`, `BroadcastSettingsTest`, and `AudioEngineSettingsTest` with `PreferencesDefaultsTest`, `BroadcastPreferencesTest`, and `AudioEnginePreferencesTest`. Added test coverage explicitly verifying roundtrip persistence to `lsd-preferences.properties` and transparent fallback from `lsd-settings.properties`.
+- **Rationale**:
+  - In modern desktop GUI conventions (macOS, GNOME, IntelliJ, VS Code, Ableton Live), application-wide user configuration is consistently termed "Preferences" (with shortcut `Cmd+,` / `Ctrl+,`), whereas "Settings" is typically reserved for system-level controls, project-specific properties, or build tools (e.g. `settings.gradle.kts`).
+  - Transitioning cleanly both in UI and under the hood prevents confusing dissonance where UI labels say "Preferences" while code and config files say "Settings", while backward-compatible typealiases and fallback loading guarantee existing user setups are preserved without disruption.
+
+---
+
 ## Universal Shader Pipeline & Compatibility Bridge (`ISFParser.kt`, `ISFVisualSource.kt`, `Renderer.kt`, `AudioTexture.kt`)
 
 - **Decision**: Expand shader support from strictly formatted ISF files to a universal ingestion and uniform bridge pipeline supporting **ISF**, **Shadertoy**, and **The Book of Shaders / GLSLSandbox**:

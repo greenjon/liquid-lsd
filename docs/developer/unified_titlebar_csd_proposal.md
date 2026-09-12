@@ -38,9 +38,9 @@ The architecture combines a cross-platform custom window implementation with a p
 ## Component Architecture & Proposed Changes
 
 ### 1. Configuration & Persistence (`UITheme.kt`)
-- Add `framelessWindow: Boolean = true` to `AppSettings`.
-- Implement serialization/deserialization in `loadSettings()` and `saveSettings()`.
-- Add `SettingsPanel` toggle under General / Display: *"Frameless Window (Custom Title Bar) [Requires restart]"*.
+- Add `framelessWindow: Boolean = true` to `AppPreferences`.
+- Implement serialization/deserialization in `loadPreferences()` and `savePreferences()`.
+- Add `PreferencesPanel` toggle under General / Display: *"Frameless Window (Custom Title Bar) [Requires restart]"*.
 
 ### 2. Window Lifecycle (`Main.kt`)
 - Query `UITheme.settings.framelessWindow` before calling `glfwCreateWindow()`.

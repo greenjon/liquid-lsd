@@ -10,15 +10,24 @@ import java.io.File
 class UIThemeTest {
 
     @Test
-    fun testSettingsSaveAndLoadRoundTrip() {
-        val settingsFile = File("lsd-settings.properties")
-        val backupFile = File("lsd-settings.properties.bak")
+    fun testPreferencesSaveAndLoadRoundTrip() {
+        val preferencesFile = File("lsd-preferences.properties")
+        val backupFile = File("lsd-preferences.properties.bak")
+        val legacySettingsFile = File("lsd-settings.properties")
+        val legacyBackupFile = File("lsd-settings.properties.bak")
         
-        // Backup existing settings file if present
-        var hadBackup = false
-        if (settingsFile.exists()) {
-            settingsFile.copyTo(backupFile, overwrite = true)
-            hadBackup = true
+        var hadPrefBackup = false
+        if (preferencesFile.exists()) {
+            preferencesFile.copyTo(backupFile, overwrite = true)
+            hadPrefBackup = true
+            preferencesFile.delete()
+        }
+
+        var hadLegacyBackup = false
+        if (legacySettingsFile.exists()) {
+            legacySettingsFile.copyTo(legacyBackupFile, overwrite = true)
+            hadLegacyBackup = true
+            legacySettingsFile.delete()
         }
 
         try {
@@ -34,12 +43,12 @@ class UIThemeTest {
             UITheme.customRenderWidth = 1600
             UITheme.customRenderHeight = 1200
             UITheme.outputScaleMode = UITheme.OutputScaleMode.FILL
-            UITheme.settingsWidth = 750f
-            UITheme.settingsHeight = 600f
+            UITheme.preferencesWidth = 750f
+            UITheme.preferencesHeight = 600f
 
             // Save to disk
-            UITheme.saveSettings()
-            assertTrue(settingsFile.exists(), "Settings file should be written")
+            UITheme.savePreferences()
+            assertTrue(preferencesFile.exists(), "Preferences file should be written")
 
             // Reset values to defaults in memory
             UITheme.presetNameScalePercent = 100
@@ -54,13 +63,11 @@ class UIThemeTest {
             UITheme.customRenderWidth = 1920
             UITheme.customRenderHeight = 1080
             UITheme.outputScaleMode = UITheme.OutputScaleMode.FIT
-            UITheme.settingsWidth = 640f
-            UITheme.settingsHeight = 520f
+            UITheme.preferencesWidth = 640f
+            UITheme.preferencesHeight = 520f
 
-            // Reload via reflection
-            val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-            loadMethod.isAccessible = true
-            loadMethod.invoke(UITheme)
+            // Reload preferences
+            UITheme.loadPreferences()
 
             // Assert restored values match what was saved
             assertEquals(110, UITheme.presetNameScalePercent)
@@ -78,20 +85,86 @@ class UIThemeTest {
             assertEquals(UITheme.OutputScaleMode.FILL, UITheme.outputScaleMode)
             assertEquals(1600, UITheme.renderWidth)
             assertEquals(1200, UITheme.renderHeight)
-            assertEquals(750f, UITheme.settingsWidth)
-            assertEquals(600f, UITheme.settingsHeight)
+            assertEquals(750f, UITheme.preferencesWidth)
+            assertEquals(600f, UITheme.preferencesHeight)
 
         } finally {
-            // Restore original settings file if backed up, or delete test file
-            if (hadBackup && backupFile.exists()) {
-                backupFile.copyTo(settingsFile, overwrite = true)
+            if (hadPrefBackup && backupFile.exists()) {
+                backupFile.copyTo(preferencesFile, overwrite = true)
                 backupFile.delete()
             } else {
-                settingsFile.delete()
+                preferencesFile.delete()
             }
-            val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-            loadMethod.isAccessible = true
-            loadMethod.invoke(UITheme)
+
+            if (hadLegacyBackup && legacyBackupFile.exists()) {
+                legacyBackupFile.copyTo(legacySettingsFile, overwrite = true)
+                legacyBackupFile.delete()
+            } else {
+                legacySettingsFile.delete()
+            }
+
+            UITheme.loadPreferences()
+        }
+    }
+
+    @Test
+    fun testFallbackLoadingFromLegacySettings() {
+        val preferencesFile = File("lsd-preferences.properties")
+        val backupFile = File("lsd-preferences.properties.bak")
+        val legacySettingsFile = File("lsd-settings.properties")
+        val legacyBackupFile = File("lsd-settings.properties.bak")
+
+        var hadPrefBackup = false
+        if (preferencesFile.exists()) {
+            preferencesFile.copyTo(backupFile, overwrite = true)
+            hadPrefBackup = true
+            preferencesFile.delete()
+        }
+
+        var hadLegacyBackup = false
+        if (legacySettingsFile.exists()) {
+            legacySettingsFile.copyTo(legacyBackupFile, overwrite = true)
+            hadLegacyBackup = true
+            legacySettingsFile.delete()
+        }
+
+        try {
+            legacySettingsFile.writeText(
+                """
+                maxFps=60
+                cleanModeEnabled=true
+                settingsWidth=820.0
+                settingsHeight=620.0
+                """.trimIndent()
+            )
+
+            UITheme.maxFps = 30
+            UITheme.cleanModeEnabled = false
+            UITheme.preferencesWidth = 640f
+            UITheme.preferencesHeight = 520f
+
+            UITheme.loadPreferences()
+
+            assertEquals(60, UITheme.maxFps)
+            assertTrue(UITheme.cleanModeEnabled)
+            assertEquals(820f, UITheme.preferencesWidth)
+            assertEquals(620f, UITheme.preferencesHeight)
+        } finally {
+            if (hadPrefBackup && backupFile.exists()) {
+                backupFile.copyTo(preferencesFile, overwrite = true)
+                backupFile.delete()
+            } else {
+                preferencesFile.delete()
+            }
+
+            if (hadLegacyBackup && legacyBackupFile.exists()) {
+                legacyBackupFile.copyTo(legacySettingsFile, overwrite = true)
+                legacyBackupFile.delete()
+            } else {
+                legacySettingsFile.delete()
+            }
+
+            UITheme.loadPreferences()
         }
     }
 
@@ -216,10 +289,10 @@ class UIThemeTest {
     }
 
     @Test
-    fun testSettingsCategories() {
-        val categories = SettingsPanel.Category.values()
-        assertTrue(categories.contains(SettingsPanel.Category.SHORTCUTS))
-        assertEquals("Keyboard Shortcuts", SettingsPanel.Category.SHORTCUTS.label)
+    fun testPreferencesCategories() {
+        val categories = PreferencesPanel.Category.values()
+        assertTrue(categories.contains(PreferencesPanel.Category.SHORTCUTS))
+        assertEquals("Keyboard Shortcuts", PreferencesPanel.Category.SHORTCUTS.label)
     }
 
     @Test

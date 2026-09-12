@@ -198,7 +198,7 @@ object PresetDependencyAnalyzer {
             issues.add(
                 DependencyIssue(
                     title = "Audio Engine Disabled",
-                    description = "Audio modulators are inactive (0.0). Enable in Settings > Audio Engine.",
+                    description = "Audio modulators are inactive (0.0). Enable in Preferences > Audio Engine.",
                     severity = DependencySeverity.WARNING,
                     affectedColumn = "audio",
                     isAudioEngineIssue = true
@@ -211,7 +211,7 @@ object PresetDependencyAnalyzer {
             issues.add(
                 DependencyIssue(
                     title = "MIDI Disabled",
-                    description = "Preset uses MIDI CC modulation, but MIDI is disabled in Settings.",
+                    description = "Preset uses MIDI CC modulation, but MIDI is disabled in Preferences.",
                     severity = DependencySeverity.WARNING,
                     affectedColumn = "midi"
                 )
@@ -223,7 +223,7 @@ object PresetDependencyAnalyzer {
             issues.add(
                 DependencyIssue(
                     title = "Sequencer Disabled",
-                    description = "Preset uses Step Sequencer modulation, but Sequencer is disabled in Settings.",
+                    description = "Preset uses Step Sequencer modulation, but Sequencer is disabled in Preferences.",
                     severity = DependencySeverity.WARNING,
                     affectedColumn = "seq"
                 )
@@ -247,7 +247,7 @@ object PresetDependencyAnalyzer {
             issues.add(
                 DependencyIssue(
                     title = "Randomization Disabled",
-                    description = "Preset uses parameter randomization, but Randomization is disabled in Settings.",
+                    description = "Preset uses parameter randomization, but Randomization is disabled in Preferences.",
                     severity = DependencySeverity.INFO
                 )
             )

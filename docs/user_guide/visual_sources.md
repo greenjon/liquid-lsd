@@ -132,7 +132,7 @@ Liquid LSD also scans these locations at startup:
 
 ### Adding custom folders
 
-Go to **Settings → Shader Locations** to add any folder at runtime — handy for USB drives or git repos full of shaders. The status column shows whether each folder is active, missing (e.g. a USB stick that's not plugged in), or unreadable. Hit **Rescan Now** to pick up new files without restarting.
+Go to **Preferences → Shader Locations** to add any folder at runtime — handy for USB drives or git repos full of shaders. The status column shows whether each folder is active, missing (e.g. a USB stick that's not plugged in), or unreadable. Hit **Rescan Now** to pick up new files without restarting.
 
 ### Live coding
 

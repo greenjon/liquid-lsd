@@ -53,7 +53,7 @@ object LibraryPanel {
             }
         }
         session.uiTheme.libraryMode = next
-        session.uiTheme.saveSettings()
+        session.uiTheme.savePreferences()
     }
 
     private var lastKnownSignature: String = ""
@@ -216,7 +216,7 @@ object LibraryPanel {
                         session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
                         isLibraryExpanding = true
                     }
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
                 itemTooltip(if (isHidden) "Restore Library" else "Minimize Library to bottom bar")
 
@@ -235,7 +235,7 @@ object LibraryPanel {
                         session.uiTheme.libraryMode = UITheme.LibraryMode.FULL
                         isLibraryExpanding = false
                     }
-                    session.uiTheme.saveSettings()
+                    session.uiTheme.savePreferences()
                 }
                 itemTooltip(if (isFull) "Restore Library (Half size)" else "Maximize Library (Full size)")
             }

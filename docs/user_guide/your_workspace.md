@@ -14,7 +14,7 @@ The Library panel spans the left and middle columns of the app and has three hei
 
 You can drag the Library's title bar up or down to resize it freely in Half Height mode — the height you set is remembered. Double-click the title bar to snap back to exactly 50/50. The standard window buttons on the right of the title bar also let you jump between heights.
 
-The Library contains your **Presets**, **Playlists**, and **Play Queues** — not shaders (those are managed separately under **Settings → Shader Locations**).
+The Library contains your **Presets**, **Playlists**, and **Play Queues** — not shaders (those are managed separately under **Preferences → Shader Locations**).
 
 ---
 
@@ -91,5 +91,5 @@ A few keyboard shortcuts work anywhere in the app:
 | `Ctrl+Z` / `Ctrl+Y` | Undo / Redo (30-step history) |
 | `Ctrl+S` | Save the active deck's preset |
 | `Ctrl+R` | Start / stop recording |
-| `Ctrl+,` | Open Settings |
+| `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to preset search |

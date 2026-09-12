@@ -8,10 +8,10 @@ This page covers everything about where your visuals go: sending them to project
 
 The simplest way to output: press **`F`** to go fullscreen. The UI disappears and the master output fills the screen. Press **`Esc`** to come back.
 
-For a second display or projector, use **Settings → Video & Display** to configure a secondary output window you can drag to the projector screen and go fullscreen there independently.
+For a second display or projector, use **Preferences → Video & Display** to configure a secondary output window you can drag to the projector screen and go fullscreen there independently.
 
 **Output scaling:**
-- If your shaders are demanding and your GPU is struggling (especially on a laptop), lower the internal render resolution in **Settings → Video & Display**. Dropping from 1080p to 720p or 540p cuts GPU load significantly while the output still fills the screen.
+- If your shaders are demanding and your GPU is struggling (especially on a laptop), lower the internal render resolution in **Preferences → Video & Display**. Dropping from 1080p to 720p or 540p cuts GPU load significantly while the output still fills the screen.
 - Use **Fit / Fill / Stretch** to handle non-standard aspect ratios — useful for LED walls or vintage 4:3 projectors.
 
 ---
@@ -20,7 +20,7 @@ For a second display or projector, use **Settings → Video & Display** to confi
 
 Liquid LSD can share its video feeds live to other VJ apps, media servers, and streaming tools — without any encoding overhead or latency.
 
-Go to **Settings → Video Sharing Matrix** and toggle which feeds you want to share:
+Go to **Preferences → Video Sharing Matrix** and toggle which feeds you want to share:
 
 - **Deck A, Deck B, Deck BG, Deck PV (Preview), Master Output** — enable any combination.
 - Set a custom stream name for each (e.g. `LiquidLSD-Master`, `MainStage-Feed`).
@@ -35,7 +35,7 @@ The sharing method depends on your platform:
 
 **On Linux with OBS:** Add a **PipeWire Screen Capture** source and select the Liquid LSD video node. Use `qpwgraph` or `Helvum` to inspect and route video nodes.
 
-**Status:** Check the **Settings → Video Sharing** panel for a live status indicator showing which sharing method is active and whether it's working.
+**Status:** Check the **Preferences → Video Sharing** panel for a live status indicator showing which sharing method is active and whether it's working.
 
 ---
 
@@ -74,6 +74,6 @@ A progress bar shows render percentage, elapsed time, estimated time remaining, 
 
 ---
 
-## Hardware Settings & Persistence
-
-Your audio routing, MIDI bindings, display preferences, and broadcast settings all save automatically to `lsd-settings.properties` in the app folder. You don't need to reconfigure anything between sessions.
+## Hardware Preferences & Persistence
+ 
+Your audio routing, MIDI bindings, display preferences, and broadcast preferences all save automatically to `lsd-preferences.properties` in the app folder (with automatic backward compatibility for existing `lsd-settings.properties` files). You don't need to reconfigure anything between sessions.

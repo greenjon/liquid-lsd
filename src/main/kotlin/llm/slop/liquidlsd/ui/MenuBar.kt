@@ -11,7 +11,7 @@ class MenuBar(
     private val popupManager: PopupManager,
     private val parametersState: ParametersState,
     private val onTriggerExitFlow: () -> Unit,
-    private val onOpenSettings: () -> Unit,
+    private val onOpenPreferences: () -> Unit,
     private val onOpenAudioEngineMonitor: () -> Unit,
     private val onToggleOutputWindow: () -> Unit = {},
     private val isOutputWindowOpen: () -> Boolean = { false },
@@ -65,10 +65,10 @@ class MenuBar(
                         }
                         itemTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
                         ImGui.separator()
-                        if (ImGui.menuItem("Settings...")) {
-                            onOpenSettings()
+                        if (ImGui.menuItem("Preferences...", "Ctrl+P")) {
+                            onOpenPreferences()
                         }
-                        itemTooltip("Configure interface scaling, JACK settings, startup behavior, and MIDI profiles.")
+                        itemTooltip("Configure interface scaling, JACK preferences, startup behavior, and MIDI profiles.")
                         ImGui.separator()
                         if (ImGui.menuItem("Exit")) {
                             logger.info { "Exit clicked" }
@@ -109,7 +109,7 @@ class MenuBar(
                         }
                         itemTooltip("Toggle live master output recording.")
 
-                        if (llm.slop.liquidlsd.broadcast.BroadcastSettings.isConfigured) {
+                        if (llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured) {
                             if (ImGui.menuItem("Web Broadcast", "", isBroadcasting)) {
                                 if (isBroadcasting) {
                                     llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
@@ -227,7 +227,7 @@ class MenuBar(
                         }
 
                         if (ImGui.button(label)) {
-                            SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+                            PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                         }
                         ImGui.popStyleColor(2)
 
@@ -243,17 +243,17 @@ class MenuBar(
                             val isSelected = (source == currentClock)
                             if (ImGui.menuItem(source.displayName, "", isSelected)) {
                                 AudioEngine.clockSource = source
-                                session.uiTheme.saveSettings()
+                                session.uiTheme.savePreferences()
                             }
                         }
                         ImGui.separator()
                         val linkItemLabel = if (linkEngine.isEnabled) "Disable Ableton Link" else "Enable Ableton Link"
                         if (ImGui.menuItem(linkItemLabel, "", linkEngine.isEnabled)) {
                             linkEngine.setEnabled(!linkEngine.isEnabled)
-                            session.uiTheme.saveSettings()
+                            session.uiTheme.savePreferences()
                         }
                         if (ImGui.menuItem("Configure Tempo & Link...")) {
-                            SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+                            PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                         }
                         ImGui.endMenu()
                     }
@@ -272,7 +272,7 @@ class MenuBar(
                         val tooltipsEnabled = session.uiTheme.tooltipsEnabled
                         if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
                             session.uiTheme.tooltipsEnabled = !tooltipsEnabled
-                            session.uiTheme.saveSettings()
+                            session.uiTheme.savePreferences()
                         }
                         itemTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
                         ImGui.separator()
@@ -396,9 +396,9 @@ class MenuBar(
 
                 ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - 3.8f, textH)
                 if (ImGui.isItemClicked()) {
-                    SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+                    PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                 }
-                val beatTip = "Beat Phase (4/4 Bar Sync)\nClick to open Tempo & Sync settings."
+                val beatTip = "Beat Phase (4/4 Bar Sync)\nClick to open Tempo & Sync preferences."
                 itemTooltip(beatTip)
                 ImGui.sameLine(0f, 3.8f)
             }
@@ -433,16 +433,16 @@ class MenuBar(
                 session.tapTempoController.tap()
             }
             if (isBpmRightClicked) {
-                SettingsPanel.open(SettingsPanel.Category.TEMPO_SYNC)
+                PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             }
             if (isBpmHovered) {
                 val keyHint = "Key: [T]"
                 val bpmTip = if (isAudioDisabled) {
-                    "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync settings."
+                    "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync preferences."
                 } else if (audioActive) {
-                    "Audio Engine BPM\nClick to tap tempo ($keyHint) to nudge audio tracker.\nRight-click to open Tempo & Sync settings."
+                    "Audio Engine BPM\nClick to tap tempo ($keyHint) to nudge audio tracker.\nRight-click to open Tempo & Sync preferences."
                 } else {
-                    "Audio Engine BPM (Engine Inactive)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync settings."
+                    "Audio Engine BPM (Engine Inactive)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync preferences."
                 }
                 showTooltip(bpmTip, "bpm_tap_tooltip".hashCode())
             }
@@ -474,11 +474,11 @@ class MenuBar(
             }
             if (isDspHovered) {
                 val dspTip = if (showAudio) {
-                    "Audio callback DSP execution time\nClick to open Audio Engine settings."
+                    "Audio callback DSP execution time\nClick to open Audio Engine preferences."
                 } else if (isAudioDisabled) {
-                    "Audio engine is disabled.\nClick to open Audio Engine settings."
+                    "Audio engine is disabled.\nClick to open Audio Engine preferences."
                 } else {
-                    "Audio engine is inactive.\nClick to open Audio Engine settings."
+                    "Audio engine is inactive.\nClick to open Audio Engine preferences."
                 }
                 showTooltip(dspTip, "dsp_badge_tooltip".hashCode())
             }

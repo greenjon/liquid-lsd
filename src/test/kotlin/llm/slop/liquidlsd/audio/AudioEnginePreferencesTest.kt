@@ -8,30 +8,44 @@ import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class AudioEngineSettingsTest {
+class AudioEnginePreferencesTest {
 
-    private val settingsFile = File("lsd-settings.properties")
-    private var originalBackup: String? = null
+    private val preferencesFile = File("lsd-preferences.properties")
+    private val legacySettingsFile = File("lsd-settings.properties")
+    private var originalPrefBackup: String? = null
+    private var originalSettingsBackup: String? = null
 
     @BeforeEach
     fun setUp() {
-        if (settingsFile.exists()) {
-            originalBackup = settingsFile.readText()
-            settingsFile.delete()
+        if (preferencesFile.exists()) {
+            originalPrefBackup = preferencesFile.readText()
+            preferencesFile.delete()
+        }
+        if (legacySettingsFile.exists()) {
+            originalSettingsBackup = legacySettingsFile.readText()
+            legacySettingsFile.delete()
         }
     }
 
     @AfterEach
     fun tearDown() {
-        if (originalBackup != null) {
-            settingsFile.writeText(originalBackup!!)
-        } else if (settingsFile.exists()) {
-            settingsFile.delete()
+        if (originalPrefBackup != null) {
+            preferencesFile.writeText(originalPrefBackup!!)
+        } else if (preferencesFile.exists()) {
+            preferencesFile.delete()
         }
+
+        if (originalSettingsBackup != null) {
+            legacySettingsFile.writeText(originalSettingsBackup!!)
+        } else if (legacySettingsFile.exists()) {
+            legacySettingsFile.delete()
+        }
+
+        UITheme.loadPreferences()
     }
 
     @Test
-    fun testAudioEngineSettingsSaveAndLoad() {
+    fun testAudioEnginePreferencesSaveAndLoad() {
         // Configure specific custom audio settings
         UITheme.audioEngineEnabled = false
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.JAVASOUND_ONLY
@@ -51,8 +65,8 @@ class AudioEngineSettingsTest {
         )
 
         // Save to file
-        UITheme.saveSettings()
-        assertTrue(settingsFile.exists(), "Settings file should have been created")
+        UITheme.savePreferences()
+        assertTrue(preferencesFile.exists(), "Preferences file should have been created")
 
         // Reset to different defaults
         UITheme.audioEngineEnabled = true
@@ -64,12 +78,10 @@ class AudioEngineSettingsTest {
         AudioEngine.manualBpm = 120.0f
         AudioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
 
-        // Load settings using reflection or recreating/re-invoking loadSettings
-        val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-        loadMethod.isAccessible = true
-        loadMethod.invoke(UITheme)
+        // Load preferences
+        UITheme.loadPreferences()
 
-        // Verify all settings were restored correctly
+        // Verify all preferences were restored correctly
         assertEquals(false, UITheme.audioEngineEnabled)
         assertEquals(AudioEngine.AudioBackendMode.JAVASOUND_ONLY, AudioEngine.backendMode)
         assertEquals(AudioChannelRouting.RIGHT_ONLY, AudioEngine.channelRouting)
@@ -86,12 +98,12 @@ class AudioEngineSettingsTest {
 
     @Test
     fun testPreservesExistingExternalPropertiesWhenSaving() {
-        // Pre-populate settings file with broadcast and custom properties
-        settingsFile.writeText("broadcastServerUrl=wss://example.com/live\nbroadcastAutoConnect=true\n")
+        // Pre-populate preferences file with broadcast and custom properties
+        preferencesFile.writeText("broadcastServerUrl=wss://example.com/live\nbroadcastAutoConnect=true\n")
 
-        UITheme.saveSettings()
+        UITheme.savePreferences()
 
-        val savedContent = settingsFile.readText()
+        val savedContent = preferencesFile.readText()
         assertTrue(savedContent.contains("broadcastServerUrl=wss\\://example.com/live") || savedContent.contains("broadcastServerUrl=wss://example.com/live"), "Existing broadcast URL should be preserved")
         assertTrue(savedContent.contains("broadcastAutoConnect=true"), "Existing broadcast auto-connect should be preserved")
         assertTrue(savedContent.contains("audioBackend="), "New audio properties should be appended")
@@ -114,19 +126,16 @@ class AudioEngineSettingsTest {
         val afterBeats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
         assertTrue(afterBeats >= initialBeats, "Beat count should advance monotonically after manual BPM change")
 
-        UITheme.saveSettings()
+        UITheme.savePreferences()
 
         // Reset
         AudioEngine.manualBpm = 120.0f
         AudioEngine.setBpmDirectly(120.0f)
 
-        val loadMethod = UITheme::class.java.getDeclaredMethod("loadSettings")
-        loadMethod.isAccessible = true
-        loadMethod.invoke(UITheme)
+        UITheme.loadPreferences()
 
         assertEquals(false, UITheme.audioEngineEnabled)
         assertEquals(135.0f, AudioEngine.manualBpm, 0.001f)
         assertEquals(135.0f, AudioEngine.getEstimatedBpm())
     }
 }
-

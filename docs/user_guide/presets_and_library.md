@@ -29,7 +29,7 @@ Right-clicking in the **VALUE** column (or in Deck Controls) gives you copy and 
 
 ### Unsaved changes & the Auto-VJ queue
 
-If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in **Settings → General**:
+If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in **Preferences → General**:
 
 - **Skip** — Don't load the next preset until changes are saved or discarded.
 - **Auto-Save** — Automatically save the current state before switching.
@@ -110,7 +110,7 @@ The Background Queue works the same way as the main queue but drives Deck BG ind
 
 ## MIDI Mapping
 
-> MIDI is disabled by default. Enable it in **Settings → MIDI & Controls**.
+> MIDI is disabled by default. Enable it in **Preferences → General** or via the Parameters header menu.
 
 Liquid LSD keeps hardware controller maps separate from visual presets, so you can swap physical controllers without touching your preset files.
 

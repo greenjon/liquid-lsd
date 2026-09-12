@@ -73,11 +73,11 @@ object BroadcastEngine {
      */
     fun startBroadcast(mixer: Mixer) {
         if (isLive) return
-        if (!BroadcastSettings.isConfigured) {
-            logger.warn { "Cannot start broadcast: Relay Server URL and Broadcaster Token must be configured in Settings." }
+        if (!BroadcastPreferences.isConfigured) {
+            logger.warn { "Cannot start broadcast: Relay Server URL and Broadcaster Token must be configured in Preferences." }
             return
         }
-        logger.info { "Starting live broadcast to ${BroadcastSettings.serverUrl}..." }
+        logger.info { "Starting live broadcast to ${BroadcastPreferences.serverUrl}..." }
         isLive = true
         reconnectAttempt.set(0)
         lastError = null
@@ -127,7 +127,7 @@ object BroadcastEngine {
 
     private fun connectAsync(mixer: Mixer) {
         if (!isLive) return
-        if (!BroadcastSettings.isConfigured) {
+        if (!BroadcastPreferences.isConfigured) {
             logger.warn { "Broadcast connection aborted: Server URL or Token not configured." }
             stopBroadcast()
             return
@@ -136,7 +136,7 @@ object BroadcastEngine {
 
         ioExecutor.execute {
             try {
-                val uri = sanitizeWebSocketUri(BroadcastSettings.serverUrl, BroadcastSettings.token)
+                val uri = sanitizeWebSocketUri(BroadcastPreferences.serverUrl, BroadcastPreferences.token)
                 lastConnectedUrl = uri.toString()
                 logger.info { "Connecting WebSocket to $uri..." }
 
@@ -267,7 +267,7 @@ object BroadcastEngine {
         if (!isLive || connectionState != ConnectionState.CONNECTED) return
 
         val now = System.nanoTime()
-        val targetIntervalNanos = 1_000_000_000L / BroadcastSettings.targetFps.coerceIn(5, 60)
+        val targetIntervalNanos = 1_000_000_000L / BroadcastPreferences.targetFps.coerceIn(5, 60)
         if (now - lastTickTimeNanos < targetIntervalNanos) return
         lastTickTimeNanos = now
 

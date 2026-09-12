@@ -39,6 +39,7 @@ library/last_session.json
 library/*
 !library/sources/
 lsd-settings.properties
+lsd-preferences.properties
 imgui.ini
 
 # Native libraries

@@ -26,7 +26,7 @@ The relay server caches the current visual state so new viewers who join mid-sho
 
 ## Setting it up
 
-Open **Settings** (`Ctrl+,`) and go to the **BROADCAST** tab:
+Open **Preferences** (`Ctrl+P` / `Cmd+P`) and go to the **BROADCAST** tab:
 
 | Setting | What it does |
 |---------|-------------|
@@ -35,7 +35,7 @@ Open **Settings** (`Ctrl+,`) and go to the **BROADCAST** tab:
 | **Target Rate** | How many parameter updates to send per second (5–60). Higher = smoother, more network traffic |
 | **Auto-Connect** | If enabled, broadcasts automatically when the app starts |
 
-These settings are saved between sessions.
+These preferences are saved between sessions in `lsd-preferences.properties`.
 
 Once the URL and token are set, **Output → Web Broadcast** appears in the top menu. Toggle it to start or stop broadcasting.
 

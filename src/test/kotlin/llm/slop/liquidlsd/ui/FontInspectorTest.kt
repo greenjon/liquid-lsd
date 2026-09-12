@@ -30,6 +30,7 @@ class FontInspectorTest {
         println("Checking specific codepoints from staged Icons.kt...")
         val codepointsToCheck = mapOf(
             "SETTINGS" to 0xe154,
+            "PREFERENCES" to 0xe154,
             "POWER" to 0xe140,
             "TRASH" to 0xe18e,
             "DICES" to 0xe2c5,

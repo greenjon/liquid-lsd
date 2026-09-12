@@ -72,7 +72,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── NoOpLinkBackend.kt      — Disconnected fallback backend
 ├── broadcast/
 │   ├── BroadcastEngine.kt      — Live WebSocket relay client, throttled delta streaming, auto-reconnect
-│   ├── BroadcastSettings.kt    — Broadcast configuration and persistence (lsd-settings.properties)
+│   ├── BroadcastPreferences.kt — Broadcast configuration and persistence (lsd-preferences.properties with legacy fallback)
 │   └── WebPresetSerializer.kt  — Converts desktop Deck/Mixer state to WebGL2 TV JSON schema
 ├── cv/
 │   ├── CVRegistry.kt           — Singleton: all CV sources, beat sync, histories
@@ -146,6 +146,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VideoOutputSettings.kt  — Video output endpoints, resolution overrides, scaling modes, and stream configurations
 │   └── ViewportHelper.kt       — Output scaling modes
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
+│   ├── AppPreferences.kt       — App preferences data model, persistent layout & feature toggles
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
 │   ├── MenuBar.kt              — Unified header bar, navigation menus, telemetry HUD & window controls
 │   ├── ShaderPickerPopup.kt    — High-performance category-based shader & source selector
@@ -158,8 +159,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── PanelTitleBar.kt        — Synchronized 1.5x title bar renderer and optical text centering for Parameters & Properties
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
-│   ├── SettingsPanel.kt        — App configuration & tabbed preferences modal
-│   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Settings tab drawer)
+│   ├── PreferencesPanel.kt     — App configuration & tabbed preferences modal
+│   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Preferences tab drawer)
 │   ├── ColorTunerPanel.kt      — Interactive theme editor
 │   ├── DeckControlPanel.kt     — Individual deck preview monitor, toolbar, inside-clustered badge/die overlays, and vertical channel level fader
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader

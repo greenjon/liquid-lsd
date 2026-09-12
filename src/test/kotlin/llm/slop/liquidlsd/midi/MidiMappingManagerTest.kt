@@ -26,35 +26,49 @@ class MidiMappingManagerTest {
     }
 
     @Test
-    fun testLoadSettingsAppliesMidiProfile() {
+    fun testLoadPreferencesAppliesMidiProfile() {
+        val preferencesFile = File("lsd-preferences.properties")
+        val prefBackupFile = File("lsd-preferences.properties.bak")
         val settingsFile = File("lsd-settings.properties")
-        val backupFile = File("lsd-settings.properties.bak")
-        var hadBackup = false
+        val settingsBackupFile = File("lsd-settings.properties.bak")
+
+        var hadPrefBackup = false
+        if (preferencesFile.exists()) {
+            preferencesFile.copyTo(prefBackupFile, overwrite = true)
+            hadPrefBackup = true
+            preferencesFile.delete()
+        }
+
+        var hadSettingsBackup = false
         if (settingsFile.exists()) {
-            settingsFile.copyTo(backupFile, overwrite = true)
-            hadBackup = true
+            settingsFile.copyTo(settingsBackupFile, overwrite = true)
+            hadSettingsBackup = true
+            settingsFile.delete()
         }
 
         try {
-            settingsFile.writeText("activeMidiProfile=test_profile\n")
-            // Use reflection to call private loadSettings if it is private
-            val method = llm.slop.liquidlsd.ui.UITheme::class.java.getDeclaredMethod("loadSettings")
-            method.isAccessible = true
-            method.invoke(llm.slop.liquidlsd.ui.UITheme)
+            preferencesFile.writeText("activeMidiProfile=test_profile\n")
+            llm.slop.liquidlsd.ui.UITheme.loadPreferences()
 
             MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
 
             assertEquals("test_profile", MidiMappingManager.activeProfileName)
         } finally {
-            if (hadBackup && backupFile.exists()) {
-                backupFile.copyTo(settingsFile, overwrite = true)
-                backupFile.delete()
+            if (hadPrefBackup && prefBackupFile.exists()) {
+                prefBackupFile.copyTo(preferencesFile, overwrite = true)
+                prefBackupFile.delete()
+            } else {
+                preferencesFile.delete()
+            }
+
+            if (hadSettingsBackup && settingsBackupFile.exists()) {
+                settingsBackupFile.copyTo(settingsFile, overwrite = true)
+                settingsBackupFile.delete()
             } else {
                 settingsFile.delete()
             }
-            val method = llm.slop.liquidlsd.ui.UITheme::class.java.getDeclaredMethod("loadSettings")
-            method.isAccessible = true
-            method.invoke(llm.slop.liquidlsd.ui.UITheme)
+
+            llm.slop.liquidlsd.ui.UITheme.loadPreferences()
         }
     }
 }

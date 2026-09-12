@@ -85,4 +85,10 @@ class ShortcutManagerTest {
         assertTrue(ShortcutManager.matchesKey(id1, GLFW_KEY_1))
         assertTrue(ShortcutManager.matchesKey(id2, GLFW_KEY_2))
     }
+
+    @Test
+    fun testPreferencesShortcutDefault() {
+        assertTrue(ShortcutManager.matchesKey("global.preferences", GLFW_KEY_P, GLFW_MOD_CONTROL))
+        assertFalse(ShortcutManager.matchesKey("global.preferences", GLFW_KEY_COMMA, GLFW_MOD_CONTROL))
+    }
 }
