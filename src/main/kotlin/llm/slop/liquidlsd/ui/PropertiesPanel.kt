@@ -142,8 +142,6 @@ object PropertiesPanel {
         }
         ImGui.popStyleVar()
         ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
     }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer) {
@@ -174,7 +172,6 @@ object PropertiesPanel {
         // Render top CV tab bar
         drawCvTabRow(session, state, paramKey, cvId, param)
 
-        val themeRGB = CvTheme.getThemeColorRGB(cvId)
         val themeColor = CvTheme.getThemeColor(cvId)
 
         val deck = when {
@@ -210,10 +207,6 @@ object PropertiesPanel {
             ValueParamSection.draw(session, state, param, paramKey, themeColor, dynamicSource)
             return
         }
-
-        session.uiTheme.h2Colored(themeRGB[0], themeRGB[1], themeRGB[2], 1.0f, paramKey.replace("/", " | "))
-        ImGui.separator()
-        ImGui.spacing()
 
         val isVirtual = activeMods.isEmpty()
         if (isVirtual && cvId == "midi") {

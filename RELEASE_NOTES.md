@@ -7,6 +7,7 @@
 - **Dynamic Auto Timebase Label**: When set to Auto, the dropdown text dynamically displays the active automatically selected time window (e.g. `Auto (10s)`, `Auto (1s)`).
 - **Streamlined Canvas Presentation**: Removed the auxiliary division label (`30m/div`) beside the dropdown for minimal, uncluttered visual presentation.
 - **Tab Row `[ LIVE ]` / `[ MUTED ]` Button**: Relocated the Master Cell Mute/Live toggle button to the top tab row (`Value`, `MIDI`, `LFO`, `SEQ`, `Audio`), aligned to the right, matching tab height and maintaining consistent button width.
+- **Streamlined Tab-to-Scope Header**: Removed the redundant parameter path header row (`Deck A | ...`), the separator line beneath the tab bar, and the separator line beneath the header row, maximizing vertical screen real estate for the oscilloscope and modulator controls.
 - **Zero-Allocation Render Path**: Preallocated immutable label arrays across all physical Auto duration tiers (`1s`, `10s`, `100s`, `15m`, `2.5h`, `24h`) in `OscilloscopeDrawer`, avoiding GC string and array allocations during render loops.
 
 ### Universal Shader Ecosystem Support — ISF, Shadertoy & GLSLSandbox (`ISFParser.kt`, `ISFVisualSource.kt`, `Renderer.kt`, `AudioTexture.kt`, `VisualSourceRegistry.kt`, `ISFScanner.kt`)

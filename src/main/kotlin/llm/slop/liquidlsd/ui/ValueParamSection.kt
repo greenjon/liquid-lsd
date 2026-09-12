@@ -40,9 +40,6 @@ object ValueParamSection {
         source: DynamicVisualSource?
     ) {
         val mandala = source as? Mandala
-        session.uiTheme.h2Colored(0.4f, 0.9f, 1.0f, 1.0f, paramKey.replace("/", " | "))
-        ImGui.separator()
-        ImGui.spacing()
 
         // Live value text readout
         val isMixerMode = paramKey == "Mixer/mode"
