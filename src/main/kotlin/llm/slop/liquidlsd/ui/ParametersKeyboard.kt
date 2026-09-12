@@ -39,8 +39,15 @@ object ParametersKeyboard {
         val isCmd = io.keySuper
         val modActive = isCtrl || isCmd
 
+        val currentMods = (if (isCtrl || isCmd) org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL else 0) or (if (isShift) org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT else 0)
+
+        val isSaveAs = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("parameters.save_deck_as", GLFW_KEY_S, currentMods) ||
+                (modActive && isShift && ImGui.isKeyPressed(GLFW_KEY_S, false))
+        val isSave = !isSaveAs && (llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("parameters.save_deck", GLFW_KEY_S, currentMods) ||
+                (modActive && !isShift && ImGui.isKeyPressed(GLFW_KEY_S, false)))
+
         // Save: Ctrl+S / Cmd+S, Save As: Shift+Ctrl+S / Shift+Cmd+S
-        if (modActive && ImGui.isKeyPressed(GLFW_KEY_S, false)) {
+        if (isSave || isSaveAs) {
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
@@ -50,7 +57,7 @@ object ParametersKeyboard {
             }
             if (activeDeck != null && !activeDeck.isEmpty) {
                 val isDeckA = state.activeTopTab == "Deck A"
-                deckPresetController?.handleSaveDeck(mixer, activeDeck, isDeckA, isSaveAs = isShift)
+                deckPresetController?.handleSaveDeck(mixer, activeDeck, isDeckA, isSaveAs = isSaveAs)
             }
         }
         

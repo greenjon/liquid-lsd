@@ -303,32 +303,34 @@ fun main(args: Array<String>) {
         secondaryWindow = createSecondaryWindow(window)
     }
 
-    // Setup key callback chaining to allow "f", "b", ESC, CTRL-, CTRL=, and CTRL-R controls
+    // Setup key callback chaining to allow configurable shortcuts via ShortcutManager
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
-        val isMinus = key == GLFW_KEY_MINUS || key == GLFW_KEY_KP_SUBTRACT
-        val isEqual = key == GLFW_KEY_EQUAL || key == GLFW_KEY_KP_ADD
-        val isFontSizeHotKey = (mods and GLFW_MOD_CONTROL) != 0 && (isMinus || isEqual)
-        val isRecordHotKey = (mods and GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_R
-        val isEscapeFullscreen = key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled
         val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
-        val isPlainFOrB = (mods == 0) && (key == GLFW_KEY_F || key == GLFW_KEY_B) && isShortcutAllowed
+
+        val isFullscreenKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.fullscreen", key, mods)
+        val isExitFullscreenKey = UITheme.cleanModeEnabled && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.exit_fullscreen", key, mods)
+        val isBgVideoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.bg_video", key, mods)
+        val isDecPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_dec", key, mods) ||
+                ((mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_KP_SUBTRACT))
+        val isIncPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_inc", key, mods) ||
+                ((mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_EQUAL || key == GLFW_KEY_KP_ADD))
+        val isRecordHotKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.record_output", key, mods)
         val isCapsLock = key == GLFW_KEY_CAPS_LOCK
-        val isTapTempoKey = (mods == 0) && isShortcutAllowed && key == GLFW_KEY_T
-        val isHotKey = isPlainFOrB || isFontSizeHotKey || isRecordHotKey || isEscapeFullscreen || isCapsLock || isTapTempoKey
+        val isTapTempoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("clock.tap_tempo", key, mods)
+
+        val isHotKey = isFullscreenKey || isExitFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isCapsLock || isTapTempoKey
 
         if (action == GLFW_PRESS) {
             if (isTapTempoKey) {
                 session.tapTempoController.tap()
             } else if (isCapsLock) {
                 session.touchConsoleController.toggleActive()
-            } else if (isFontSizeHotKey) {
-                if (isMinus) {
-                    uiManager.adjustPresetNameScale(-1f)
-                } else if (isEqual) {
-                    uiManager.adjustPresetNameScale(1f)
-                }
+            } else if (isDecPresetSizeKey) {
+                uiManager.adjustPresetNameScale(-1f)
+            } else if (isIncPresetSizeKey) {
+                uiManager.adjustPresetNameScale(1f)
             } else if (isRecordHotKey) {
                 if (llm.slop.liquidlsd.export.RealtimeRecorder.isRecording) {
                     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
@@ -345,13 +347,13 @@ fun main(args: Array<String>) {
                         includeAudio = UITheme.recordingIncludeAudio
                     )
                 }
-            } else if (isPlainFOrB && key == GLFW_KEY_F) {
+            } else if (isFullscreenKey) {
                 UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled
                 logger.info { "Clean mode toggled: ${UITheme.cleanModeEnabled}" }
-            } else if (key == GLFW_KEY_ESCAPE && UITheme.cleanModeEnabled) {
+            } else if (isExitFullscreenKey) {
                 UITheme.cleanModeEnabled = false
                 logger.info { "Clean mode exited via ESC: ${UITheme.cleanModeEnabled}" }
-            } else if (isPlainFOrB && key == GLFW_KEY_B) {
+            } else if (isBgVideoKey) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
                 UITheme.saveSettings()
                 logger.info { "Background video toggled: ${UITheme.backgroundVideoEnabled}" }

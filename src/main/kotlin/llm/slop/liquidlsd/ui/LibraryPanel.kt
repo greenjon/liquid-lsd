@@ -281,42 +281,45 @@ object LibraryPanel {
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
 
-        // Global library keyboard shortcuts: 1-4 (Decks), Q / Shift+Q (Queues), Up/Down (Navigation)
+        // Global library keyboard shortcuts dynamically mapped via ShortcutManager
         val activeFile = getActiveSelectedFile(session)
         val io = ImGui.getIO()
-        if (!io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_1, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_1, false)) {
-                if (activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
-                    shouldReclaimFocus = true
-                }
-            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_2, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_2, false)) {
-                if (activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
-                    shouldReclaimFocus = true
-                }
-            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_3, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_3, false)) {
-                if (activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
-                    shouldReclaimFocus = true
-                }
-            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_4, false) || ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_4, false)) {
-                if (activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
-                    shouldReclaimFocus = true
-                }
-            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_Q, false)) {
-                if (activeFile != null && activeFile.exists()) {
-                    if (io.keyShift) {
-                        llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(activeFile)
-                    } else {
-                        session.playQueueManager.appendToQueue(activeFile)
-                    }
-                    shouldReclaimFocus = true
-                }
-            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_UP, false)) {
+        if (!io.wantTextInput) {
+            val isLoadA = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.load_deck_a", org.lwjgl.glfw.GLFW.GLFW_KEY_1) ||
+                    (!io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_1, false))
+            val isLoadB = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.load_deck_b", org.lwjgl.glfw.GLFW.GLFW_KEY_2) ||
+                    (!io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_2, false))
+            val isLoadBG = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.load_deck_bg", org.lwjgl.glfw.GLFW.GLFW_KEY_3) ||
+                    (!io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_3, false))
+            val isLoadPV = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.load_deck_pv", org.lwjgl.glfw.GLFW.GLFW_KEY_4) ||
+                    (!io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_KP_4, false))
+            val isQueueAB = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.queue_ab", org.lwjgl.glfw.GLFW.GLFW_KEY_Q)
+            val isQueueBG = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.queue_bg", org.lwjgl.glfw.GLFW.GLFW_KEY_Q, org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT)
+            val isNavUp = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("library.navigate", org.lwjgl.glfw.GLFW.GLFW_KEY_UP) ||
+                    (!io.keyCtrl && !io.keyAlt && !io.keySuper && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_UP, false))
+            val isNavDown = (!io.keyCtrl && !io.keyAlt && !io.keySuper && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN, false))
+
+            if (isLoadA && activeFile != null && activeFile.exists()) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
+                shouldReclaimFocus = true
+            } else if (isLoadB && activeFile != null && activeFile.exists()) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
+                shouldReclaimFocus = true
+            } else if (isLoadBG && activeFile != null && activeFile.exists()) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
+                shouldReclaimFocus = true
+            } else if (isLoadPV && activeFile != null && activeFile.exists()) {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
+                shouldReclaimFocus = true
+            } else if (isQueueBG && activeFile != null && activeFile.exists()) {
+                llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(activeFile)
+                shouldReclaimFocus = true
+            } else if (isQueueAB && activeFile != null && activeFile.exists()) {
+                session.playQueueManager.appendToQueue(activeFile)
+                shouldReclaimFocus = true
+            } else if (isNavUp) {
                 navigateSelection(-1, session, mixer)
-            } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN, false)) {
+            } else if (isNavDown) {
                 navigateSelection(1, session, mixer)
             }
         }

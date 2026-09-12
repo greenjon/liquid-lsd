@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Keyboard Shortcuts Overhaul, Grid Layout, Rebinding & Collision Detection (`SettingsPanel.kt`, `ShortcutManager.kt`, `KeyCombination.kt`, `ShortcutAction.kt`, `Main.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`)
+- **Centralized `ShortcutManager` Engine**: Decoupled hardcoded GLFW keyboard shortcuts across `Main.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`, and `UIManager.kt` into a centralized `ShortcutManager` service with persistent keybindings storage (`~/.liquidlsd/keybindings.json`).
+- **Swapped 2-Column Grid Layout in Settings**: Redesigned **Settings → Keyboard Shortcuts** table to place **Action Names & Detailed Descriptions on the Left** and **Shortcut Key Badges & Rebind Controls on the Right**.
+- **Live Search & Filtering Bar**: Added search filter bar (`Icons.SEARCH`) allowing instant filtering of shortcuts by action name, description, category, or current keypress combination.
+- **Interactive Key Combination Rebinding**: Clicking any shortcut key badge opens an interactive recording modal allowing users to press any custom key combination (with full modifier support: `Ctrl`, `Shift`, `Alt`, `Super`/`Cmd`), cancel (`Esc`), or unbind (`Backspace`/`Delete`).
+- **Scope-Aware Collision Detection**: Automatically detects duplicate keybindings across `GLOBAL` and context-specific scopes. Displays amber warning highlights, conflict badges (`Icons.ALERT`), conflict tooltips, and quick resolution options (`Swap` keybindings, `Reset` to default).
+
 ### Contextual In-Properties MIDI Learn (`PropertiesPanel.kt`, `MidiModulatorSection.kt`, `ParametersState.kt`, `ParametersRenderer.kt`, `MenuBar.kt`, `UIManager.kt`, `MixerPanel.kt`)
 - **Elimination of Global Modal MIDI Map Mode**: Removed the `MIDI Map` toggle item from the main menu bar (`MenuBar.kt`) and removed the global `isMidiLearnMode` boolean state from `ParametersState.kt`.
 - **Inline `[ Learn MIDI ]` Controls**:
