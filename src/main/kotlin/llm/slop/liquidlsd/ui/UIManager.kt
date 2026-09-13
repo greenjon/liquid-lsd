@@ -139,6 +139,8 @@ class UIManager(
             setPopupRounding(4.0f)
             setScrollbarSize(10.0f)
             setScrollbarRounding(5.0f)
+            setSeparatorSize(1.0f)
+            setSeparatorTextBorderSize(1.0f)
         }
 
         // Scale style sizes proportionally to the loaded baseSize relative to the baseline of 15f
@@ -348,8 +350,8 @@ class UIManager(
         var keyDelta = 0
         if (!ImGui.getIO().wantTextInput) {
 
-            val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_F, false)
-            val isSlash = ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_SLASH, false)
+            val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
+            val isSlash = ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
             if (isCtrlF || isSlash) {
                 if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
                     session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
@@ -408,6 +410,7 @@ class UIManager(
         }
 
         imguiGlfw.newFrame()
+        imguiGl3.newFrame()
         for (i in 0..4) {
             if (pendingMousePress[i]) {
                 ImGui.getIO().setMouseDown(i, true)

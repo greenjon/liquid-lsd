@@ -11,11 +11,8 @@ import kotlin.math.roundToInt
  */
 class Renderer {
 
-    private val feedbackShader: Shader
     private val mixerShader: Shader
     val blitShader: Shader
-    private val triPlanarShader: Shader
-    private val tetraKaleidoShader: Shader
     private val view2DShader: Shader
     val audioTexture: AudioTexture = AudioTexture()
     private var renderFrameIndex: Int = 0
@@ -25,13 +22,6 @@ class Renderer {
 
     init {
         // Load the shaders
-        feedbackShader = Shader.fromResources("shaders/blit.vert", "shaders/feedback.frag")
-        feedbackShader.bind()
-        feedbackShader.setUniform("uZoom", 1.0f)
-        feedbackShader.setUniform("uRotateZ", 0.0f)
-        feedbackShader.setUniform("uAspectRatio", 1.0f)
-        feedbackShader.unbind()
-
         mixerShader = Shader.fromResources("shaders/blit.vert", "shaders/mixer.frag")
         mixerShader.bind()
         mixerShader.setUniform("uZoom", 1.0f)
@@ -46,8 +36,6 @@ class Renderer {
         blitShader.setUniform("uAspectRatio", 1.0f)
         blitShader.unbind()
 
-        triPlanarShader = Shader.fromResources("shaders/tri_planar.vert", "shaders/tri_planar.frag")
-        tetraKaleidoShader = Shader.fromResources("shaders/tetra_kaleido.vert", "shaders/tetra_kaleido.frag")
         view2DShader = Shader.fromResources("shaders/blit.vert", "shaders/view2d.frag")
     }
 
@@ -246,88 +234,9 @@ class Renderer {
             return
         }
         // 1. Render clean source image
-        val is3D = !deck.source.is3D && deck.view3DMode.value >= 0.5f
-        if (!is3D) {
-            // Render 2D source directly into cleanFBO with viewZoom and viewRotateZ coordinate scaling.
-            // Native 3D sources handle their own camera Zoom and 3D rotation internally (pass 1.0 zoom, 0.0 rotZ).
-            val zoom = if (deck.source.is3D) 1.0f else deck.viewZoom.value
-            val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
-            render(deck.source, deck.cleanFBO, zoom, rotZ)
-        } else {
-            // Render 2D source into rawSourceFBO (square 1:1, unscaled)
-            render(deck.source, deck.rawSourceFBO, 1.0f, 0.0f)
-
-            // Render 3D Tri-Planar projection onto cleanFBO
-            deck.cleanFBO.bind()
-            glClearColor(0f, 0f, 0f, 0f)
-            glClear(GL_COLOR_BUFFER_BIT)
-
-            val isAdditive = deck.viewBlendMode.value >= 0.5f
-            glEnable(GL_BLEND)
-            if (isAdditive) {
-                glBlendFunc(GL_ONE, GL_ONE)
-            } else {
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            }
-
-            val modeVal = deck.view3DMode.value.roundToInt()
-            val aspect = deck.cleanFBO.width.toFloat() / deck.cleanFBO.height.toFloat()
-
-            if (modeVal == 4) {
-                // Mode 4: Tetrahedral Kaleidoscope (24-Chamber Space Folding)
-                tetraKaleidoShader.bind()
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, deck.rawSourceFBO.texture)
-                tetraKaleidoShader.setUniform("uTexture", 0)
-
-                tetraKaleidoShader.setUniform("uPitch", deck.viewRotateX.value)
-                tetraKaleidoShader.setUniform("uYaw", deck.viewRotateY.value)
-                tetraKaleidoShader.setUniform("uRoll", deck.viewRotateZ.value)
-                tetraKaleidoShader.setUniform("uZoom", deck.viewZoom.value)
-                tetraKaleidoShader.setUniform("uPersp", deck.viewPersp.value)
-                tetraKaleidoShader.setUniform("uSeparation", deck.viewSeparation.value)
-                tetraKaleidoShader.setUniform("uDepthDim", deck.viewDepthDim.value)
-                tetraKaleidoShader.setUniform("uAlpha", deck.source.globalAlpha.value)
-                tetraKaleidoShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
-                tetraKaleidoShader.setUniform("uAspectRatio", aspect)
-                tetraKaleidoShader.setUniform("uRoundness", deck.viewRoundness.value)
-
-                Geometry.drawFullscreenQuad()
-
-                tetraKaleidoShader.unbind()
-                deck.cleanFBO.unbind()
-                glActiveTexture(GL_TEXTURE0)
-            } else {
-                // Modes 1..3: Tri-Planar / Cube Cage / Hex-Planar instanced planes
-                triPlanarShader.bind()
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, deck.rawSourceFBO.texture)
-                triPlanarShader.setUniform("uTexture", 0)
-
-                triPlanarShader.setUniform("uPitch", deck.viewRotateX.value)
-                triPlanarShader.setUniform("uYaw", deck.viewRotateY.value)
-                triPlanarShader.setUniform("uRoll", deck.viewRotateZ.value)
-                triPlanarShader.setUniform("uZoom", deck.viewZoom.value)
-                triPlanarShader.setUniform("uPersp", deck.viewPersp.value)
-                triPlanarShader.setUniform("uSeparation", deck.viewSeparation.value)
-                triPlanarShader.setUniform("uDepthDim", deck.viewDepthDim.value)
-                triPlanarShader.setUniform("uAlpha", deck.source.globalAlpha.value)
-                triPlanarShader.setUniform("uBlendAdditive", if (isAdditive) 1.0f else 0.0f)
-                triPlanarShader.setUniform("uAspectRatio", aspect)
-                triPlanarShader.setUniform("uRoundness", deck.viewRoundness.value)
-                triPlanarShader.setUniform("u3DMode", modeVal)
-
-                val numInstances = if (modeVal == 3 || modeVal == 2) 6 else 3
-
-                glBindVertexArray(Geometry.getFullscreenQuad())
-                glDrawArraysInstanced(GL_TRIANGLES, 0, 6, numInstances)
-                glBindVertexArray(0)
-
-                triPlanarShader.unbind()
-                deck.cleanFBO.unbind()
-                glActiveTexture(GL_TEXTURE0)
-            }
-        }
+        val zoom = if (deck.source.is3D) 1.0f else deck.viewZoom.value
+        val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
+        render(deck.source, deck.cleanFBO, zoom, rotZ)
 
         // --- Dual FX Filter Stages ---
         // Stage 1: FX Slot 1 (Color / Degradation)
@@ -364,7 +273,7 @@ class Renderer {
 
         // Stage 2: FX Slot 2 (Spatial / Distortion)
         val fx2 = deck.fxSlot2
-        val liveTexture = if (fx2 != null && fx2.enabled && fx2.dryWet.value > 0.0f) {
+        if (fx2 != null && fx2.enabled && fx2.dryWet.value > 0.0f) {
             deck.fxFBO2.bind()
             glClearColor(0f, 0f, 0f, 0f)
             glClear(GL_COLOR_BUFFER_BIT)
@@ -389,85 +298,24 @@ class Renderer {
             }
 
             deck.fxFBO2.unbind()
-            deck.fxFBO2.texture
-        } else {
-            texAfterFx1
         }
-
-        // 2. Blend clean image and current history into next history FBO
-        val nextHistoryFBO = deck.getNextHistoryFBO()
-        nextHistoryFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        // Disable GL blending so the feedback shader can perform its custom max blending
-        // without the GPU applying compounding alpha multiplication on top.
-        glDisable(GL_BLEND)
-
-        feedbackShader.bind()
-
-        // Bind clean source texture to Unit 0
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, liveTexture)
-        feedbackShader.setUniform("uTextureLive", 0)
-
-        // Bind current history texture to Unit 1
-        glActiveTexture(GL_TEXTURE1)
-        glBindTexture(GL_TEXTURE_2D, deck.getCurrentHistoryFBO().texture)
-        feedbackShader.setUniform("uTextureHistory", 1)
-
-        // Set feedback parameters (map feedback strength S to decay using a cubic curve)
-        val s = deck.fbDecay.value
-        val invS = 1.0f - s
-        val decayVal = invS * invS * invS  // cubic decay curve, avoids Math.pow + double conversion
-        feedbackShader.setUniform("uDecay", decayVal)
-        feedbackShader.setUniform("uGain", deck.fbGain.value)
-        feedbackShader.setUniform("uFbZoom", deck.fbZoom.value)
-        feedbackShader.setUniform("uRotate", deck.fbRotate.value)
-        feedbackShader.setUniform("uHueShift", deck.fbHueShift.value)
-        feedbackShader.setUniform("uBlur", deck.fbBlur.value)
-        feedbackShader.setUniform("uChroma", deck.fbChroma.value)
-        feedbackShader.setUniform("uFeedbackMode", deck.fbMode.value)
-        feedbackShader.setUniform("uKaleido", deck.fbKaleido.value)
-
-        // Composite feedback onto fullscreen quad
-        Geometry.drawFullscreenQuad()
-
-        feedbackShader.unbind()
-        nextHistoryFBO.unbind()
-
-        // Re-enable blending for subsequent rendering passes
-        glEnable(GL_BLEND)
-
-        // Reset active texture unit to Unit 0 to avoid side effects
-        glActiveTexture(GL_TEXTURE0)
-
-        // Swap ping-pong indices so currentHistory points to the frame we just rendered
-        deck.swapFeedbackBuffers()
     }
 
     /**
      * Composites Deck A and Deck B outputs into the Mixer's master output FBO.
      */
     fun renderMixer(mixer: Mixer) {
-        mixer.masterFBO.bind()
-
-        glClearColor(0f, 0f, 0f, 1f)
-        glClear(GL_COLOR_BUFFER_BIT)
-
-        glDisable(GL_BLEND)
-
-        val activeTransition = mixer.transitionFilter?.takeIf { it.enabled }
+        val activeTransition = mixer.transitionFilter
         val progress = (mixer.crossfade.value + 1.0f) / 2.0f
 
-        if (activeTransition != null) {
-            // Pass 1: Render ISF Transition Shader into intermediate blendFBO
-            mixer.blendFBO.bind()
-            glViewport(0, 0, mixer.width, mixer.height)
-            glClearColor(0f, 0f, 0f, 0f)
-            glClear(GL_COLOR_BUFFER_BIT)
+        // Pass 1: Render ISF Transition Shader into intermediate blendFBO
+        mixer.blendFBO.bind()
+        glViewport(0, 0, mixer.width, mixer.height)
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glDisable(GL_BLEND)
 
+        if (activeTransition != null && activeTransition.enabled) {
             activeTransition.renderTransition(
                 startTexture = mixer.deckA.getOutputTexture(),
                 endTexture = mixer.deckB.getOutputTexture(),
@@ -475,75 +323,47 @@ class Renderer {
                 width = mixer.width,
                 height = mixer.height
             )
-
-            // Pass 2: Composite blended result with Deck BG, level multipliers, bloom & master alpha
-            mixer.masterFBO.bind()
-            glViewport(0, 0, mixer.width, mixer.height)
-            glClearColor(0f, 0f, 0f, 1f)
-            glClear(GL_COLOR_BUFFER_BIT)
-
-            mixerShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, mixer.blendFBO.texture)
-            mixerShader.setUniform("uTex1", 0)
-
-            glActiveTexture(GL_TEXTURE1)
-            glBindTexture(GL_TEXTURE_2D, mixer.deckB.getOutputTexture())
-            mixerShader.setUniform("uTex2", 1)
-
-            glActiveTexture(GL_TEXTURE2)
-            glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
-            mixerShader.setUniform("uTexBG", 2)
-
-            mixerShader.setUniform("uMode", 4) // XFADE
-            mixerShader.setUniform("uBalance", 0.0f) // 100% blendFBO
-            mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
-            mixerShader.setUniform("uBgAlpha", 1.0f)
-            mixerShader.setUniform("uBloom", mixer.bloom.value)
-            mixerShader.setUniform("uLevelA", mixer.levelA)
-            mixerShader.setUniform("uLevelB", mixer.levelB)
-            mixerShader.setUniform("uLevelBG", mixer.levelBG)
-            mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
-
-            Geometry.drawFullscreenQuad()
-            mixerShader.unbind()
         } else {
-            // Fallback non-ISF mixer: Built-in blend modes pass
-            mixerShader.bind()
-
-            // Bind Deck A output texture to Unit 0
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, mixer.deckA.getOutputTexture())
-            mixerShader.setUniform("uTex1", 0)
-
-            // Bind Deck B output texture to Unit 1
-            glActiveTexture(GL_TEXTURE1)
-            glBindTexture(GL_TEXTURE_2D, mixer.deckB.getOutputTexture())
-            mixerShader.setUniform("uTex2", 1)
-
-            // Bind Deck BG output texture to Unit 2
-            glActiveTexture(GL_TEXTURE2)
-            glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
-            mixerShader.setUniform("uTexBG", 2)
-
-            // Set mix uniforms
-            mixerShader.setUniform("uMode", mixer.mode.value.toInt())
-            mixerShader.setUniform("uBalance", progress)
-            mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
-            mixerShader.setUniform("uBgAlpha", 1.0f)
-            mixerShader.setUniform("uBloom", mixer.bloom.value)
-            mixerShader.setUniform("uLevelA", mixer.levelA)
-            mixerShader.setUniform("uLevelB", mixer.levelB)
-            mixerShader.setUniform("uLevelBG", mixer.levelBG)
-            mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
-
-            // Blit mixed output
-            Geometry.drawFullscreenQuad()
-
-            mixerShader.unbind()
+            val defaultTrans = llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition("linear_crossfade")
+            defaultTrans?.renderTransition(
+                startTexture = mixer.deckA.getOutputTexture(),
+                endTexture = mixer.deckB.getOutputTexture(),
+                progressValue = progress,
+                width = mixer.width,
+                height = mixer.height
+            )
+            defaultTrans?.dispose()
         }
 
+        mixer.blendFBO.unbind()
+
+        // Pass 2: Composite blended result with Deck BG, bloom & master alpha
+        mixer.masterFBO.bind()
+        glViewport(0, 0, mixer.width, mixer.height)
+        glClearColor(0f, 0f, 0f, 1f)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glDisable(GL_BLEND)
+
+        mixerShader.bind()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, mixer.blendFBO.texture)
+        mixerShader.setUniform("uTex1", 0)
+
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
+        mixerShader.setUniform("uTexBG", 1)
+
+        mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
+        mixerShader.setUniform("uBgAlpha", 1.0f)
+        mixerShader.setUniform("uBloom", mixer.bloom.value)
+        mixerShader.setUniform("uLevelBG", mixer.levelBG)
+        mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
+
+        Geometry.drawFullscreenQuad()
+
+        mixerShader.unbind()
         mixer.masterFBO.unbind()
+        glActiveTexture(GL_TEXTURE0)
     }
 
     /**
@@ -574,11 +394,8 @@ class Renderer {
      */
     fun dispose() {
         if (!isDisposed) {
-            feedbackShader.dispose()
             mixerShader.dispose()
             blitShader.dispose()
-            triPlanarShader.dispose()
-            tetraKaleidoShader.dispose()
             view2DShader.dispose()
             audioTexture.dispose()
             isDisposed = true

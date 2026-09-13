@@ -248,6 +248,7 @@ object ParametersPanel {
                 }
             }
             val childMaxY = ImGui.getCursorScreenPosY()
+            ImGui.dummy(0f, 0f)
             ImGui.endChild()
 
             ImGui.endTable()

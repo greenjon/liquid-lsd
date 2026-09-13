@@ -200,6 +200,7 @@ class ISFFilter(
         } else {
             // Restore FBO ID later since we bind our own pass targets
             val currentFbo = glGetInteger(GL_FRAMEBUFFER_BINDING)
+            glDisable(GL_BLEND)
 
             for ((passIdx, pass) in header.PASSES.withIndex()) {
                 val isFinalPass = (passIdx == header.PASSES.size - 1)
@@ -406,6 +407,13 @@ class ISFFilter(
         dryWet.reset()
         parameters.values.forEach { it.reset() }
         frameIndex = 0
+        passHistoryFBOs.values.forEach { (fbo1, fbo2) ->
+            fbo1.clear(0f, 0f, 0f, 0f)
+            fbo2.clear(0f, 0f, 0f, 0f)
+        }
+        passFBOs.values.forEach { fbo ->
+            fbo.clear(0f, 0f, 0f, 0f)
+        }
     }
 
     override fun dispose() {

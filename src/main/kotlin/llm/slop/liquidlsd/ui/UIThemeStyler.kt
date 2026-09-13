@@ -291,6 +291,8 @@ object UIThemeStyler {
         to.setDisplayWindowPadding(from.getDisplayWindowPaddingX(), from.getDisplayWindowPaddingY())
         to.setDisplaySafeAreaPadding(from.getDisplaySafeAreaPaddingX(), from.getDisplaySafeAreaPaddingY())
         to.setMouseCursorScale(from.getMouseCursorScale())
+        to.setSeparatorSize(from.getSeparatorSize().coerceAtLeast(1.0f))
+        to.setSeparatorTextBorderSize(from.getSeparatorTextBorderSize().coerceAtLeast(1.0f))
     }
 
     fun scaleStyleFromDefault(defaultStyle: ImGuiStyle, newSize: Float) {
@@ -306,6 +308,12 @@ object UIThemeStyler {
         }
         if (style.grabMinSize <= 0.0f) {
             style.grabMinSize = 1.0f
+        }
+        if (style.separatorSize <= 0.0f) {
+            style.separatorSize = 1.0f
+        }
+        if (style.separatorTextBorderSize <= 0.0f) {
+            style.separatorTextBorderSize = 1.0f
         }
     }
 }

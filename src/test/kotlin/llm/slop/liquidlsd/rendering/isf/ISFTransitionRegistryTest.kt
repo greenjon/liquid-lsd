@@ -9,6 +9,10 @@ class ISFTransitionRegistryTest {
     fun `test bundled transition shaders parsing`() {
         val transitionNames = listOf(
             "linear_crossfade",
+            "additive_blend",
+            "screen_blend",
+            "multiply_blend",
+            "max_blend",
             "wipe_horizontal",
             "wipe_vertical",
             "radial_wipe",

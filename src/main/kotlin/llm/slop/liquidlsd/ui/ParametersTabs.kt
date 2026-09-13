@@ -419,26 +419,24 @@ object ParametersTabs {
                 if (!activeSource.is3D) {
                     ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    ParametersRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-                    val modeVal = deck.view3DMode.value
-                    if (modeVal >= 0.5f) {
-                        ParametersRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    val fx2 = deck.fxSlot2
+                    if (fx2 != null && fx2.id == "3d_elevation") {
+                        imgui.ImGui.spacing()
+                        imgui.ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, "3D Projection Active (FX Slot 2)")
+                    } else if (fx2 == null) {
+                        imgui.ImGui.spacing()
+                        if (imgui.ImGui.button("+ Enable 3D Projection##view_3d_$deckLabel")) {
+                            deck.fxSlot2 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
+                            onPushUndo()
+                        }
+                        itemTooltip("Elevate this 2D visual source into 3D space via FX Slot 2.")
                     }
 
                     transformParams.forEach { (name, param) ->
                         ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     }
                 } else {
-                    // For native 3D sources: 3D Mode is not applicable (only used for elevating 2D to 3D).
-                    // The source's own camera/transform parameters (Zoom, Rotate X, Rotate Y, Rotate Z)
-                    // are shown directly under the View tab with canonical source parameter routing.
                     transformParams.forEach { (name, param) ->
                         ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     }
@@ -458,17 +456,18 @@ object ParametersTabs {
                 if (!activeSource.is3D) {
                     ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    ParametersRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-                    val modeVal = deck.view3DMode.value
-                    if (modeVal >= 0.5f) {
-                        ParametersRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    val fx2 = deck.fxSlot2
+                    if (fx2 != null && fx2.id == "3d_elevation") {
+                        imgui.ImGui.spacing()
+                        imgui.ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, "3D Projection Active (FX Slot 2)")
+                    } else if (fx2 == null) {
+                        imgui.ImGui.spacing()
+                        if (imgui.ImGui.button("+ Enable 3D Projection##view_3d_ext_$deckLabel")) {
+                            deck.fxSlot2 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
+                            onPushUndo()
+                        }
+                        itemTooltip("Elevate this 2D visual source into 3D space via FX Slot 2.")
                     }
                 }
             }
@@ -482,17 +481,18 @@ object ParametersTabs {
                 if (!activeSource.is3D) {
                     ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    ParametersRenderer.drawParamRow(session, "3D Mode", "$deckLabel/View/3DMode", deck.view3DMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-                    val modeVal = deck.view3DMode.value
-                    if (modeVal >= 0.5f) {
-                        ParametersRenderer.drawParamRow(session, "Rotate X", "$deckLabel/View/RotateX", deck.viewRotateX, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Rotate Y", "$deckLabel/View/RotateY", deck.viewRotateY, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "3D Persp", "$deckLabel/View/Persp", deck.viewPersp, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Depth Dim", "$deckLabel/View/DepthDim", deck.viewDepthDim, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Separation", "$deckLabel/View/Separation", deck.viewSeparation, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Blend Mode", "$deckLabel/View/BlendMode", deck.viewBlendMode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                        ParametersRenderer.drawParamRow(session, "Roundness", "$deckLabel/View/Roundness", deck.viewRoundness, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    val fx2 = deck.fxSlot2
+                    if (fx2 != null && fx2.id == "3d_elevation") {
+                        imgui.ImGui.spacing()
+                        imgui.ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, "3D Projection Active (FX Slot 2)")
+                    } else if (fx2 == null) {
+                        imgui.ImGui.spacing()
+                        if (imgui.ImGui.button("+ Enable 3D Projection##view_3d_other_$deckLabel")) {
+                            deck.fxSlot2 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
+                            onPushUndo()
+                        }
+                        itemTooltip("Elevate this 2D visual source into 3D space via FX Slot 2.")
                     }
                 }
             }
@@ -594,18 +594,6 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX2/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         }
-        ImGui.separator()
-
-        // --- Feedback & Optics ---
-        ParametersRenderer.drawParamRow(session, "Feedback",     "$deckLabel/FB/Decay",    deck.fbDecay,    state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Gain",      "$deckLabel/FB/Gain",     deck.fbGain,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Zoom",      "$deckLabel/FB/Zoom",     deck.fbZoom,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Rotate",    "$deckLabel/FB/Rotate",   deck.fbRotate,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Hue Shift", "$deckLabel/FB/HueShift", deck.fbHueShift, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Blur",      "$deckLabel/FB/Blur",     deck.fbBlur,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Chroma",    "$deckLabel/FB/Chroma",   deck.fbChroma,   state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Mode",      "$deckLabel/FB/Mode",     deck.fbMode,     state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "FB Kaleido",   "$deckLabel/FB/Kaleido",  deck.fbKaleido,  state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
     }
 }
 

@@ -17,15 +17,20 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                  │                  │                  │
               cleanFBO           cleanFBO           cleanFBO
                  │                  │                  │
-            [FX Slot 1]        [FX Slot 1]        [FX Slot 1]
+          [FX Slot 1: ISF]   [FX Slot 1: ISF]   [FX Slot 1: ISF]
                  │                  │                  │
-            [FX Slot 2]        [FX Slot 2]        [FX Slot 2]
-                 │                  │                  │
-           feedback.frag      feedback.frag      feedback.frag
-                 └──────────────────┼──────────────────┘
+          [FX Slot 2: ISF]   [FX Slot 2: ISF]   [FX Slot 2: ISF]
+                 │                  └────────┬─────────┘
+                 │                           │
+                 │                ISF Transition Filter
+                 │             (e.g. crossfade, additive,
+                 │                screen, multiply, max)
+                 │                           │
+                 └──────────────────┬────────┘
+                                    │
                                  Mixer.kt
                                 mixer.frag
-                          (Composite: (A+B) over BG)
+                   (Composite: Transition Output over BG)
                                     │
                                masterFBO ──► screen
 
@@ -124,9 +129,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VisualEffect.kt         — Interface for post-processing effects
 │   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter, multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
-│   ├── Deck.kt                 — VisualSource + rawSource2DFBO + rawSourceFBO + cleanFBO + fxFBO1 + ping-pong FBOs + 2D/3D View params + FB params
-│   ├── Mixer.kt                — Blends Deck A+B over BG -> masterFBO with channel level multipliers & ISF transition engine (blendFBO)
-│   ├── Renderer.kt             — Per-frame: universal uniform bridge (resolution, time, frame, date, mouse, audio) -> polymorphic source renderTopology() -> 2D view transform / 3D Tri-Planar & Hex-Planar projection / Tetrahedral Kaleidoscope (2D sources only) -> feedback -> ISF transition pass / non-ISF mix -> composite -> blit
+│   ├── Deck.kt                 — VisualSource + cleanFBO + fxFBO1 + fxFBO2 (modular ISF FX chain) + 2D View params
+│   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with channel level multipliers & ISF transition engine (blendFBO)
+│   ├── Renderer.kt             — Per-frame: universal uniform bridge (resolution, time, frame, date, mouse, audio) -> polymorphic source renderTopology() -> 2D view transform -> FX Slot 1 -> FX Slot 2 -> ISF transition pass (A/B) -> Deck BG composite -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D and foreign shader format detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
@@ -321,7 +326,25 @@ Transforms the laptop trackpad into an absolute 4-zone performance surface when 
   - 1 image input: Filter / FX (`ISFAssetType.FILTER` $\to$ `ISFFilterRegistry`)
   - 2+ image inputs (or transition `progress` input): Mixer Transition (`ISFAssetType.TRANSITION` $\to$ `ISFTransitionRegistry`)
 - **Preserved Folder Hierarchies & Tags**: Retains relative subfolder paths in `ISFAsset.folderPath` and tags in `categories`. `ShaderPickerPopup` provides both a collapsible folder tree view (`Icons.FOLDER`) and flat table view (`Icons.LAYOUT_FULL`) with zero per-frame render thread allocations.
-- **Relative Asset Resolution (`IMPORTED`)**: Shaders remain in their original directories during execution. Declared static assets in `IMPORTED` (LUTs, noise maps, audio textures) are resolved relative to the shader's directory (`baseDir`), injected as `uniform sampler2D` in `ISFParser`, and loaded into 2D OpenGL textures on Thread 0 via `ISFTextureLoader`.
+## 100% ISF Pipeline & Modular Effects Engine
+
+All post-processing effects, 2D-to-3D projection geometry, and mixer transitions run as modular Interactive Shader Format (ISF) effects:
+- **Modular Feedback (`default_filters/feedback.fs`)**:
+  - Replaces monolithic hardcoded `feedback.frag` with an ISF multi-pass persistent history buffer filter.
+  - Exactly preserves the legacy cubic decay curve ($s \to (1 - s)^3$) and 9-parameter feedback optics (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`).
+  - History buffers clear to zero on filter reset or preset loading (`ISFFilter.reset()`) to eliminate ghost frames.
+- **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**:
+  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders.
+  - Implements Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding via raymarching in FX Slot 2.
+- **Pure ISF Mixer Transitions**:
+  - Eliminates hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
+  - All Deck A $\leftrightarrow$ Deck B transitions execute via `ISFFilter` taking `startImage`, `endImage`, and `progress` ($0 \dots 1$).
+  - Bundled transitions: `linear_crossfade`, `additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, along with geometric wipes and glitch transitions.
+- **Preserved Deck BG Compositing**:
+  - Deck BG is composited behind the active A/B transition output in a streamlined `mixer.frag` pass with bloom, levels, and master alpha:
+    $$\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$$
+- **Simplified FBO Footprint**:
+  - Removed obsolete `rawSourceFBO`, `rawSource2DFBO`, `fb1`, and `fb2` ping-pong buffers from `Deck.kt`, saving 16 full-resolution FBOs across the 4 decks and dramatically reducing GPU memory usage.
 
 ## Version & Update Engine (`update`)
 

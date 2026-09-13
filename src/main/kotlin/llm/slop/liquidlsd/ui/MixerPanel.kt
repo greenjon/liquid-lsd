@@ -243,6 +243,7 @@ class MixerPanel(
         drawDeckControls(mixer, "Deck PV", mixer.deckPV, halfW, subH, false)
         
         ImGui.setCursorScreenPos(startX, row2Y + subH + 4f)
+        ImGui.dummy(0f, 0f)
     }
 
     private fun drawCrossfaderSlider(

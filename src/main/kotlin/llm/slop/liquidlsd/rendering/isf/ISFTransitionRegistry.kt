@@ -11,6 +11,10 @@ object ISFTransitionRegistry {
     private val transitions = ConcurrentHashMap<String, ISFFilter>()
     private val bundledTransitions = listOf(
         "linear_crossfade",
+        "additive_blend",
+        "screen_blend",
+        "multiply_blend",
+        "max_blend",
         "wipe_horizontal",
         "wipe_vertical",
         "radial_wipe",

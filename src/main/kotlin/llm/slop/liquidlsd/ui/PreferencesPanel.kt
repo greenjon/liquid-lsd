@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCond
+import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImBoolean
@@ -817,16 +818,17 @@ object PreferencesPanel {
 
                     if (isFocused) {
                         val io = ImGui.getIO()
-                        if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE, false)) {
+                        if (ImGui.isKeyPressed(ImGuiKey.Escape, false)) {
                             buf.set(displayKey)
-                        } else if (ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE, false) && buf.get().isEmpty()) {
+                        } else if (ImGui.isKeyPressed(ImGuiKey.Backspace, false) && buf.get().isEmpty()) {
                             llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.updateKeyBinding(action.id, null)
                             buf.set("None")
                         } else {
                             var capturedKey = 0
                             for (k in 32..348) {
                                 if (k in 256..257 || k in 340..347) continue // Skip modifiers like Left/Right Ctrl, Shift, Alt, Super
-                                if (ImGui.isKeyPressed(k, false)) {
+                                val imguiKey = llm.slop.liquidlsd.ui.shortcuts.KeyCombination.glfwKeyToImGuiKey(k)
+                                if (imguiKey != ImGuiKey.None && ImGui.isKeyPressed(imguiKey, false)) {
                                     capturedKey = k
                                     break
                                 }

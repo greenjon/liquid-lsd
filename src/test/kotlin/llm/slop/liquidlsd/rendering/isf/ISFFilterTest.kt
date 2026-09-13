@@ -101,11 +101,11 @@ class ISFFilterTest {
 
         val header = ISFParser.parseHeader(source)
         assertNotNull(header, "3d_elevation.fs header should parse successfully")
-        assertEquals(9, header?.INPUTS?.size, "3d_elevation should have 9 inputs")
+        assertEquals(10, header?.INPUTS?.size, "3d_elevation should have 10 inputs")
 
         val shader = mockk<Shader>(relaxed = true)
         val filter = ISFFilter("3d_elevation", "3D Elevation", header!!, shader)
-        assertEquals(8, filter.parameters.size) // 9 inputs - 1 image input = 8 parameters
+        assertEquals(9, filter.parameters.size) // 10 inputs - 1 image input = 9 parameters
         assertTrue(filter.parameters.containsKey("mode3D"))
         assertTrue(filter.parameters.containsKey("pitch"))
         assertTrue(filter.parameters.containsKey("yaw"))
@@ -114,5 +114,6 @@ class ISFFilterTest {
         assertTrue(filter.parameters.containsKey("separation"))
         assertTrue(filter.parameters.containsKey("perspective"))
         assertTrue(filter.parameters.containsKey("depthDim"))
+        assertTrue(filter.parameters.containsKey("roundness"))
     }
 }

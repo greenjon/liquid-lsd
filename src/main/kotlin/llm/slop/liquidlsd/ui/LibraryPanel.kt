@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
@@ -292,7 +293,7 @@ object LibraryPanel {
             val isQueueAB = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.queue_ab")
             val isQueueBG = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.queue_bg")
             val isNavUp = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.navigate")
-            val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN, false)
+            val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(ImGuiKey.DownArrow, false)
 
             if (isLoadA && activeFile != null && activeFile.exists()) {
                 BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)

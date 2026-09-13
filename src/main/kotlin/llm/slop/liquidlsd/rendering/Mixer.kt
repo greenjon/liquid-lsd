@@ -24,19 +24,28 @@ class Mixer(
     // FBO for intermediate transition rendering pass when an ISF transition is active
     var blendFBO = FBO(width, height)
 
-    // Optional ISF transition filter for custom transition crossfading
+    // Active ISF transition filter for crossfading
     var transitionFilter: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
+    private var lastMode: Int = 4
+
 
     /**
-     * Sets or clears the active ISF transition filter.
-     * Passing null or an empty string resets to the built-in non-ISF mixer blend modes.
+     * Sets the active ISF transition filter.
+     * Passing null or an empty string resets to the default linear crossfade transition.
      */
     fun setTransition(id: String?) {
         transitionFilter?.dispose()
-        transitionFilter = if (!id.isNullOrBlank()) {
-            llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition(id)
-        } else {
-            null
+        val transId = if (!id.isNullOrBlank()) id else "linear_crossfade"
+        val filter = llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition(transId)
+            ?: llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition("linear_crossfade")
+        transitionFilter = filter
+
+        when (filter?.id) {
+            "additive_blend" -> { mode.baseValue = 0.0f; lastMode = 0 }
+            "screen_blend" -> { mode.baseValue = 1.0f; lastMode = 1 }
+            "multiply_blend" -> { mode.baseValue = 2.0f; lastMode = 2 }
+            "max_blend" -> { mode.baseValue = 3.0f; lastMode = 3 }
+            "linear_crossfade" -> { mode.baseValue = 4.0f; lastMode = 4 }
         }
     }
 
@@ -66,6 +75,10 @@ class Mixer(
     val masterAlpha = ModulatableParameter(1.0f) // Master output gain
     val bloom = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val xfadeSpeed = ModulatableParameter(5.0f, minClamp = 0.1f, maxClamp = 30.0f)
+ 
+    init {
+        setTransition("linear_crossfade")
+    }
 
     // Channel level multiplier faders (0.0 to 1.0, non-modulatable, console channel strip isolation)
     var levelA: Float = 1.0f
@@ -274,6 +287,20 @@ class Mixer(
 
         crossfade.evaluate()
         mode.evaluate()
+        val currentMode = mode.value.toInt()
+        if (currentMode != lastMode) {
+            lastMode = currentMode
+            val transitionId = when (currentMode) {
+                0 -> "additive_blend"
+                1 -> "screen_blend"
+                2 -> "multiply_blend"
+                3 -> "max_blend"
+                else -> "linear_crossfade"
+            }
+            if (transitionFilter?.id != transitionId) {
+                setTransition(transitionId)
+            }
+        }
         masterAlpha.evaluate()
         bloom.evaluate()
         xfadeSpeed.evaluate()

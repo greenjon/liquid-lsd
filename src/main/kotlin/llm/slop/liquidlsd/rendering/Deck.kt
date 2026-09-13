@@ -36,41 +36,19 @@ class Deck(
     var fxSlot2: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
     var fxFBO2 = FBO(width, height)
 
-    // FBO for capturing raw 2D source output before 3D view transformation (square 1:1 aspect for orthogonal planes)
-    var rawSourceFBO = FBO(height, height)
-
-    // FBO for capturing raw 2D source output before 2D view transformation (Zoom, Rotate Z)
-    var rawSource2DFBO = FBO(width, height)
-
-    // Ping-pong feedback FBOs
-    var fb1 = FBO(width, height)
-    var fb2 = FBO(width, height)
-    private var fbIndex = 0
-
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
         width = newWidth
         height = newHeight
         cleanFBO.dispose()
-        rawSourceFBO.dispose()
-        rawSource2DFBO.dispose()
-        fb1.dispose()
-        fb2.dispose()
         fxFBO1.dispose()
         fxFBO2.dispose()
         cleanFBO = FBO(width, height)
-        rawSourceFBO = FBO(height, height)
-        rawSource2DFBO = FBO(width, height)
-        fb1 = FBO(width, height)
-        fb2 = FBO(width, height)
         fxFBO1 = FBO(width, height)
         fxFBO2 = FBO(width, height)
-        fb1.clear(0f, 0f, 0f, 0f)
-        fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        rawSourceFBO.clear(0f, 0f, 0f, 0f)
-        rawSource2DFBO.clear(0f, 0f, 0f, 0f)
-        fbIndex = 0
+        fxFBO1.clear(0f, 0f, 0f, 0f)
+        fxFBO2.clear(0f, 0f, 0f, 0f)
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
                 src.fb1?.dispose()
@@ -114,11 +92,9 @@ class Deck(
 
     init {
         // Clear all FBOs at startup to prevent reading uninitialized GPU memory
-        fb1.clear(0f, 0f, 0f, 0f)
-        fb2.clear(0f, 0f, 0f, 0f)
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        rawSourceFBO.clear(0f, 0f, 0f, 0f)
-        rawSource2DFBO.clear(0f, 0f, 0f, 0f)
+        fxFBO1.clear(0f, 0f, 0f, 0f)
+        fxFBO2.clear(0f, 0f, 0f, 0f)
         
         val initialId = (initialSource as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
@@ -161,14 +137,10 @@ class Deck(
         fbKaleido.reset()
         source.clear()
 
-        // Clear FBOs to prevent rendering stale feedback
-        fb1.clear(0f, 0f, 0f, 0f)
-        fb2.clear(0f, 0f, 0f, 0f)
+        // Clear active FBOs
+        cleanFBO.clear(0f, 0f, 0f, 0f)
         fxFBO1.clear(0f, 0f, 0f, 0f)
         fxFBO2.clear(0f, 0f, 0f, 0f)
-        cleanFBO.clear(0f, 0f, 0f, 0f)
-        rawSourceFBO.clear(0f, 0f, 0f, 0f)
-        rawSource2DFBO.clear(0f, 0f, 0f, 0f)
         morphController.initFromCurrentState()
     }
 
@@ -219,25 +191,18 @@ class Deck(
     val morphController = DeckMorphController(::getAllRandomizableParameters)
 
     /**
-     * Retrieves the current history FBO (from the last frame).
+     * Retrieves the final output texture of the Deck (the active stage texture).
      */
-    fun getCurrentHistoryFBO(): FBO = if (fbIndex == 0) fb1 else fb2
-
-    /**
-     * Retrieves the final output texture of the Deck (the current history FBO texture).
-     */
-    fun getOutputTexture(): Int = getCurrentHistoryFBO().texture
-
-    /**
-     * Retrieves the target FBO for the new feedback combination.
-     */
-    fun getNextHistoryFBO(): FBO = if (fbIndex == 0) fb2 else fb1
-
-    /**
-     * Swaps the feedback FBO ping-pong index.
-     */
-    fun swapFeedbackBuffers() {
-        fbIndex = 1 - fbIndex
+    fun getOutputTexture(): Int {
+        val fx2 = fxSlot2
+        if (fx2 != null && fx2.enabled && fx2.dryWet.value > 0.0f) {
+            return fxFBO2.texture
+        }
+        val fx1 = fxSlot1
+        if (fx1 != null && fx1.enabled && fx1.dryWet.value > 0.0f) {
+            return fxFBO1.texture
+        }
+        return cleanFBO.texture
     }
 
     /**
@@ -281,10 +246,6 @@ class Deck(
      */
     fun dispose() {
         cleanFBO.dispose()
-        rawSourceFBO.dispose()
-        rawSource2DFBO.dispose()
-        fb1.dispose()
-        fb2.dispose()
         fxFBO1.dispose()
         fxFBO2.dispose()
         fxSlot1?.dispose()

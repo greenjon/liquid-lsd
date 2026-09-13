@@ -1,5 +1,5 @@
 /*{
-    "DESCRIPTION": "Elevates 2D visual sources into 3D space across Tri-Axial (3-Plane), Cube Cage (6-Plane), and Hex-Planar (6-Plane) projections",
+    "DESCRIPTION": "Elevates 2D visual sources into 3D space across Tri-Axial (3-Plane), Cube Cage (6-Plane), Hex-Planar (6-Plane), and Tetrahedral Kaleidoscope (24-Chamber) projections",
     "CREDIT": "Liquid LSD Engine",
     "CATEGORIES": ["3D", "Distortion", "Geometry"],
     "INPUTS": [
@@ -12,8 +12,8 @@
             "LABEL": "3D Mode",
             "TYPE": "long",
             "DEFAULT": 0,
-            "VALUES": [0, 1, 2],
-            "LABELS": ["Tri-Axial (3-Plane)", "Cube Cage (6-Plane)", "Hex-Planar (6-Plane)"]
+            "VALUES": [0, 1, 2, 3],
+            "LABELS": ["Tri-Axial (3-Plane)", "Cube Cage (6-Plane)", "Hex-Planar (6-Plane)", "Tetrahedral (24-Chamber)"]
         },
         {
             "NAME": "pitch",
@@ -68,6 +68,14 @@
             "LABEL": "Depth Falloff",
             "TYPE": "float",
             "DEFAULT": 0.5,
+            "MIN": 0.0,
+            "MAX": 1.0
+        },
+        {
+            "NAME": "roundness",
+            "LABEL": "Roundness",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
             "MIN": 0.0,
             "MAX": 1.0
         }
@@ -157,6 +165,65 @@ void getPlane(int idx, int mode, float sep, out Plane p) {
 }
 
 void main() {
+    int intMode = int(mode3D);
+
+    if (intMode == 3) {
+        // Mode 3: Tetrahedral Kaleidoscope (24-Chamber Space Folding)
+        vec2 aspectVec = vec2(RENDERSIZE.x / max(1.0, RENDERSIZE.y), 1.0);
+        vec2 p2 = (isf_FragNormCoord - vec2(0.5)) * 2.0;
+        p2.x *= aspectVec.x;
+
+        float fov = 0.5 + perspective * 1.0;
+        vec3 ray = normalize(vec3(p2 / max(0.01, zoom * fov), -1.0));
+
+        mat3 rot = rotationMatrixY(yaw) * rotationMatrixX(pitch) * rotationMatrixZ(roll);
+        vec3 p = rot * ray;
+
+        for (int i = 0; i < 4; i++) {
+            if (p.x + p.y < 0.0) p.xy = -p.yx;
+            if (p.x + p.z < 0.0) p.xz = -p.zx;
+            if (p.y + p.z < 0.0) p.yz = -p.zy;
+            if (p.x < p.y) p.xy = p.yx;
+            if (p.y < p.z) p.yz = p.zy;
+            if (p.x < p.y) p.xy = p.yx;
+        }
+
+        float px = max(0.001, p.x);
+        vec2 proj = vec2(p.y, p.z) / px;
+        float cellScale = 1.0 + separation * 2.5;
+        vec2 pCell = proj * cellScale;
+
+        float squareDist = max(abs(pCell.x), abs(pCell.y));
+        float circleDist = length(pCell);
+        float shapeDist = mix(squareDist, circleDist, roundness);
+        float borderFade = smoothstep(1.0, 0.96, shapeDist);
+
+        vec2 sampleUV = vec2(0.5) + pCell * 0.5;
+
+        float dist = 1.0 / px;
+        float depthFactor = 1.0 - (dist - 1.0) * 0.8 * depthDim;
+        float minDim = max(0.02, 1.0 - depthDim);
+        float atten = clamp(depthFactor, minDim, 1.0 + depthDim * 0.5);
+
+        vec4 texColor = IMG_NORM_PIXEL(inputImage, clamp(sampleUV, 0.0, 1.0));
+
+        float lum = max(texColor.r, max(texColor.g, texColor.b));
+        float lumFactor = smoothstep(0.015, 0.08, lum);
+        float alphaFromLum = lumFactor * clamp(lum * 1.5, 0.0, 1.0);
+        float baseAlpha = (texColor.a < 0.999) ? min(texColor.a, alphaFromLum) : alphaFromLum;
+        float effectiveAlpha = baseAlpha * borderFade;
+
+        if (effectiveAlpha < 0.002 || lum < 0.01 || borderFade <= 0.001) {
+            gl_FragColor = vec4(0.0);
+            return;
+        }
+
+        vec3 rgb = texColor.rgb * atten * borderFade * lumFactor;
+        gl_FragColor = vec4(rgb, effectiveAlpha);
+        return;
+    }
+
+    // Modes 0..2: Tri-Axial, Cube Cage, Hex-Planar
     vec2 aspectVec = vec2(RENDERSIZE.x / max(1.0, RENDERSIZE.y), 1.0);
     vec2 st = (isf_FragNormCoord - vec2(0.5)) * aspectVec;
 
@@ -171,7 +238,6 @@ void main() {
     vec3 rdView = normalize(vec3(st * fovScale, -camDist));
     vec3 rd = invRot * rdView;
 
-    int intMode = int(mode3D);
     int numPlanes = (intMode == 0) ? 3 : 6;
 
     // Hit collection arrays
@@ -198,6 +264,11 @@ void main() {
         float v = dot(localP, pl.vDir);
 
         if (abs(u) <= 1.0 && abs(v) <= 1.0) {
+            float squareDist = max(abs(u), abs(v));
+            float circleDist = length(vec2(u, v));
+            float shapeDist = mix(squareDist, circleDist, roundness);
+            float borderFade = smoothstep(1.0, 0.96, shapeDist);
+
             vec2 texCoord = vec2(u, v) * 0.5 + vec2(0.5);
             vec4 texColor = IMG_NORM_PIXEL(inputImage, texCoord);
 
@@ -205,15 +276,16 @@ void main() {
             float lumFactor = smoothstep(0.015, 0.08, lum);
             float alphaFromLum = lumFactor * clamp(lum * 1.5, 0.0, 1.0);
             float baseAlpha = (texColor.a < 0.999) ? min(texColor.a, alphaFromLum) : alphaFromLum;
+            float effectiveAlpha = baseAlpha * borderFade;
 
-            if (baseAlpha > 0.002 && lum > 0.01) {
+            if (effectiveAlpha > 0.002 && lum > 0.01 && borderFade > 0.001) {
                 // Depth attenuation
                 vec3 worldHit = rot * hitPos;
                 float depthFactor = 1.0 + (worldHit.z * 0.6) * depthDim;
                 float minDim = max(0.02, 1.0 - depthDim);
                 float atten = clamp(depthFactor, minDim, 1.0 + depthDim * 0.5);
 
-                vec4 finalColor = vec4(texColor.rgb * atten * lumFactor, baseAlpha);
+                vec4 finalColor = vec4(texColor.rgb * atten * lumFactor * borderFade, effectiveAlpha);
 
                 hitT[hitCount] = t;
                 hitColor[hitCount] = finalColor;

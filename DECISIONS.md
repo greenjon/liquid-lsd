@@ -1,3 +1,33 @@
+## 100% ISF Pipeline Migration — Deprecating Hard-Wired FX & Mixer (`Renderer.kt`, `Deck.kt`, `Mixer.kt`, `ISFFilter.kt`, `ISFTransitionRegistry.kt`, `PresetModels.kt`, `default_filters/`, `default_transitions/`)
+
+- **Decision**: Fully eliminate hardcoded post-processing shaders, 2D-to-3D projection geometry passes, and hardwired mixer blend modes, replacing them with a 100% modular Interactive Shader Format (ISF) pipeline:
+  - **Modular Feedback with Exact Math Parity (`default_filters/feedback.fs`)**:
+    - Replaced hardwired `feedback.frag` with native multi-pass persistent history buffers in ISF.
+    - Calibrated with exact parity for all 9 parameters (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`).
+    - Matched the exact cubic decay curve: $\text{invS} = 1.0 - \text{fbDecay}$, $\text{decayVal} = \text{invS}^3$, $\text{history.rgb} *= \text{fbGain} \times (1.0 - \text{decayVal})$, $\text{history.a} = \text{clamp}(\text{history.a} - \text{decayVal}, 0.0, 1.0)$.
+    - Updated `ISFFilter.reset()` to explicitly clear persistent history FBOs to transparent black `(0, 0, 0, 0)` upon reset or preset load, eliminating ghost frames.
+  - **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**:
+    - Replaced monolithic `tri_planar.vert/frag` and `tetra_kaleido.vert/frag` with raymarched ISF shaders assigned to FX Slot 2.
+    - Supports Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding with continuous roundness control.
+  - **100% ISF Transitions & Bundled Blend Shaders**:
+    - Replaced hardwired blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag` with pure ISF transition shaders taking `startImage`, `endImage`, and `progress`.
+    - Bundled high-performance ISF transitions: `linear_crossfade.fs`, `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, `max_blend.fs`.
+    - Standardized `Mixer.transitionFilter` to default to `"linear_crossfade"`, keeping `mixer.mode` and `mixer.transitionFilter` automatically synchronized.
+  - **Preserved Deck BG Compositing**:
+    - Maintained the architectural compositing model: $\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$.
+    - Streamlined `mixer.frag` to composite transition output over Deck BG with bloom, levels, and master alpha.
+  - **Massive GPU Memory Footprint Reduction**:
+    - Removed obsolete `rawSourceFBO`, `rawSource2DFBO`, `fb1`, and `fb2` ping-pong framebuffers from `Deck.kt`.
+    - Eliminated 16 full-resolution / square FBO allocations across the 4 decks (Deck A, B, BG, PV), saving hundreds of megabytes of VRAM.
+  - **Backward-Compatible Preset Migration (`PresetModels.kt`)**:
+    - Presets with legacy `view3DMode` or `fbDecay` automatically instantiate `3d_elevation` in `fxSlot2` and `feedback` in `fxSlot1` during `Deck.applyDto()`.
+- **Rationale**:
+  - Unifies all visual manipulation under the extensible ISF ecosystem.
+  - Greatly simplifies the core OpenGL render loop in `Renderer.kt`, reducing maintenance burden and bug surface.
+  - Preserves 100% fidelity and feel of the cherished feedback system while making it modulatable, swappable, and order-flexible.
+
+---
+
 ## Master Project Roadmap Consolidation (`ROADMAP.md`, `.planning/STATE.md`)
 
 - **Decision**: Establish a single authoritative master roadmap in `ROADMAP.md` at the repository root, consolidating historical roadmaps, developer proposals (`interop_roadmap.md`, `unified_control_mapping.md`, `mandala_future_roadmap.md`, `continuous_random_morphing_proposal.md`), and TODO items:
@@ -32,9 +62,15 @@
     - Updated `ImGui.pushFont(font, 0f)` in `UITheme.kt` to satisfy the new dynamic font scaling signature.
     - Standardized `addRectFilledMultiColor` in `UIThemeStyler.kt` to 32-bit `Int` colors.
     - Removed deprecated `tabMinWidthForCloseButton` style copying.
+  - **Runtime Assertion & Lifecycle Fixes**:
+    - **Raw GLFW Keycode Eradication**: Fixed `UIManager.kt` (Ctrl+F / Slash), `LibraryPanel.kt` (Down arrow), and `PreferencesPanel.kt` (Escape, Backspace, and key capture loop) to use `ImGuiKey` constants and `KeyCombination.glfwKeyToImGuiKey()`, preventing `IsNamedKey(key)` assertions.
+    - **Renderer Backend Frame Integration**: Added `imguiGl3.newFrame()` in `UIManager.render()` to initialize the font texture atlas and avoid renderer backend assertion crashes.
+    - **Window Boundary Extension Compliance**: Added `ImGui.dummy(0f, 0f)` after cursor repositioning in `ParametersPanel.kt` and `MixerPanel.kt` to conform with Dear ImGui 1.90+ boundary extension rules.
+    - **Separator Size Underflow Prevention**: Guarded `separatorSize` and `separatorTextBorderSize` with `.coerceAtLeast(1.0f)` in `UIThemeStyler.scaleStyleFromDefault()` to prevent integer truncation to `0.0f` from failing `thickness > 0.0f` inside `ImGui.separator()`.
+    - **Mixer Initialization Ordering**: Moved `Mixer.init` block below `mode` property definition to avoid startup `NullPointerException` on `mode.setBaseValue()`.
 - **Rationale**:
   - Positions the desktop UI on modern Dear ImGui 1.92, unlocking dynamic font scaling, upgraded table layouts, and native multi-selection primitives.
-  - Fixes stale Gradle cache locking issues and ensures keyboard shortcuts work reliably at runtime.
+  - Fixes stale Gradle cache locking issues, ensures keyboard shortcuts work reliably at runtime, and guarantees stability across all UI panels.
 
 ---
 

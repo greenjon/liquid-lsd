@@ -26,7 +26,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Video Recording & Export** | `export/*`, `VideoExportModal` | **COMPLETE** | High-performance asynchronous GPU-to-CPU PBO readback pipeline (`PboReadbackPipeline`). |
 | **Preset Tags & Search** | `browser/*`, `PresetModels` | **COMPLETE** | Preset tags in JSON, inline tag editor in browser context menu, tag search in Library. |
 | **TouchOSC & Open Sound Control** | `osc/*`, `ui/*` | **PENDING** | Native UDP OSC 1.0 engine, TouchOSC layout mapping, XY pads, OSC Learn, bidirectional feedback. |
-| **100% ISF Pipeline Migration** | `rendering/*`, `shaders/*`, `isf/*` | **PENDING** | Migrate feedback, 2D-to-3D, & mixer to ISF; deprecate and remove legacy hard-wired shaders. |
+| **100% ISF Pipeline Migration** | `rendering/*`, `shaders/*`, `isf/*` | **COMPLETE** | Migrate feedback, 2D-to-3D, & mixer to ISF; deprecate and remove legacy hard-wired shaders. |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
@@ -68,25 +68,25 @@ Enable wireless and wired control from mobile devices and tablets running TouchO
 
 ### Milestone 2: 100% ISF Pipeline Migration — Deprecating Hard-Wired FX & Mixer
 > **Target Areas**: `Renderer.kt`, `Deck.kt`, `Mixer.kt`, `shaders/`, `library/filters/`, `library/transitions/`  
-> **Status**: Planned / Architectural Overhaul  
+> **Status**: COMPLETE  
 > **Objective**: Make all legacy hard-wired FX, 2D-to-3D projection shaders, and hard-coded mixer blend modes redundant by porting them completely to the open Interactive Shader Format (ISF), then removing the legacy code paths while preserving Deck BG compositing.
 
-- [ ] **Port Legacy Feedback Loop (`feedback.frag`) to Native Modular ISF**:
+- [x] **Port Legacy Feedback Loop (`feedback.frag`) to Native Modular ISF**:
   - Re-architect the monolithic `feedback.frag` pass into clean, modular ISF effect(s) with multi-pass persistent history buffers.
   - Encapsulate feedback decay, gain, zoom (`uFbZoom`), rotation, hue shift, directional/radial blur, chromatic aberration, and kaleidoscopic folding as standard ISF inputs.
   - Run feedback through the modular deck FX chain instead of a rigid hardwired render pass in `Renderer.kt`.
-- [ ] **Convert 2D-to-3D Projection Methods to Modular ISF Shaders**:
+- [x] **Convert 2D-to-3D Projection Methods to Modular ISF Shaders**:
   - Port `tri_planar.vert`/`frag` (Tri-Planar, Cube Cage, Hex-Planar instanced planes) and `tetra_kaleido.vert`/`frag` (Tetrahedral 24-chamber Coxeter space folding) to standard ISF shaders.
   - Route them through **Slot 2: Spatial / Distortion**, eliminating the custom hard-wired 3D branches and intermediate `rawSourceFBO` in `Renderer.kt`.
-- [ ] **100% ISF Mixer Transitions (Deck A $\leftrightarrow$ Deck B)**:
+- [x] **100% ISF Mixer Transitions (Deck A $\leftrightarrow$ Deck B)**:
   - Eliminate hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
   - All transitions between Deck A and Deck B become pure ISF transitions (`ISFAssetType.TRANSITION`) taking `startImage` (Deck A), `endImage` (Deck B), and `progress` ($0.0 \dots 1.0$).
   - Standard crossfade and blend modes ship as bundled, high-performance ISF transition shaders (`linear_crossfade.fs`, `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, `max_blend.fs`, alongside wipes, glitch, and morphs).
-- [ ] **Preserve Deck BG Layering**:
+- [x] **Preserve Deck BG Layering**:
   - Maintain the architectural compositing model where **Deck BG is rendered behind Decks A and B**:
     $$\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$$
   - Streamline the final master compositing pass to cleanly blend Deck BG behind the active A/B transition output with bloom, levels, and master alpha.
-- [ ] **Deprecation & Removal of Legacy Hard-Wired Code**:
+- [x] **Deprecation & Removal of Legacy Hard-Wired Code**:
   - Remove `feedback.frag`, `feedbackShader`, `tri_planar.*`, `tetra_kaleido.*`, and legacy fallback blend code from `mixer.frag`.
   - Remove obsolete FBO allocations (`rawSourceFBO`, legacy ping-pong buffers in `Deck.kt`).
   - Clean up `Renderer.renderDeck` and `Renderer.renderMixer` into unified, lightweight ISF execution pipelines.

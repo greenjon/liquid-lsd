@@ -12,8 +12,6 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.models.toDto
 
-import org.lwjgl.glfw.GLFW.GLFW_KEY_S
-
 object ParametersKeyboard {
     fun getModsForCell(param: ModulatableParameter, cvSourceId: String): List<CvModulator> {
         return when (cvSourceId) {

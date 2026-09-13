@@ -605,6 +605,47 @@ fun Deck.applyDto(dto: DeckPresetDto) {
             fxSlot2 = fx
         }
     }
+
+    // Auto-migration: If legacy preset contained feedback parameters and FX Slot 1 is empty, migrate to feedback filter
+    if (fxSlot1 == null && dto.feedbackParameters["fbDecay"]?.let { it.baseValue > 0.001f || it.modulators.isNotEmpty() } == true) {
+        val fb = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("feedback")
+        if (fb != null) {
+            dto.feedbackParameters["fbDecay"]?.let { fb.parameters["fbDecay"]?.applyDto(it) }
+            dto.feedbackParameters["fbGain"]?.let { fb.parameters["fbGain"]?.applyDto(it) }
+            dto.feedbackParameters["fbZoom"]?.let { fb.parameters["fbZoom"]?.applyDto(it) }
+            dto.feedbackParameters["fbRotate"]?.let { fb.parameters["fbRotate"]?.applyDto(it) }
+            dto.feedbackParameters["fbHueShift"]?.let { fb.parameters["fbHueShift"]?.applyDto(it) }
+            dto.feedbackParameters["fbBlur"]?.let { fb.parameters["fbBlur"]?.applyDto(it) }
+            dto.feedbackParameters["fbChroma"]?.let { fb.parameters["fbChroma"]?.applyDto(it) }
+            dto.feedbackParameters["fbMode"]?.let { fb.parameters["fbMode"]?.applyDto(it) }
+            dto.feedbackParameters["fbKaleido"]?.let { fb.parameters["fbKaleido"]?.applyDto(it) }
+            fxSlot1 = fb
+        }
+    }
+
+    // Auto-migration: If legacy preset had view3DMode >= 0.5f and FX Slot 2 is empty, migrate to 3d_elevation filter
+    val legacy3DMode = dto.viewParameters["view3DMode"]?.baseValue ?: 0.0f
+    if (fxSlot2 == null && legacy3DMode >= 0.5f) {
+        val elev = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
+        if (elev != null) {
+            val intMode = when {
+                legacy3DMode >= 3.5f -> 3f // Tetrahedral
+                legacy3DMode >= 2.5f -> 2f // Hex-Planar
+                legacy3DMode >= 1.5f -> 1f // Cube Cage
+                else -> 0f                 // Tri-Axial
+            }
+            elev.parameters["mode3D"]?.baseValue = intMode
+            dto.viewParameters["viewRotateX"]?.let { elev.parameters["pitch"]?.applyDto(it) }
+            dto.viewParameters["viewRotateY"]?.let { elev.parameters["yaw"]?.applyDto(it) }
+            dto.viewParameters["viewRotateZ"]?.let { elev.parameters["roll"]?.applyDto(it) }
+            dto.viewParameters["viewZoom"]?.let { elev.parameters["zoom"]?.applyDto(it) }
+            dto.viewParameters["viewSeparation"]?.let { elev.parameters["separation"]?.applyDto(it) }
+            dto.viewParameters["viewPersp"]?.let { elev.parameters["perspective"]?.applyDto(it) }
+            dto.viewParameters["viewDepthDim"]?.let { elev.parameters["depthDim"]?.applyDto(it) }
+            dto.viewParameters["viewRoundness"]?.let { elev.parameters["roundness"]?.applyDto(it) }
+            fxSlot2 = elev
+        }
+    }
     
     // Apply global parameters
     source.globalAlpha.reset()

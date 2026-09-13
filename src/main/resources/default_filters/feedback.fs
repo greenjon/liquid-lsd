@@ -11,7 +11,7 @@
             "NAME": "fbDecay",
             "LABEL": "Decay",
             "TYPE": "float",
-            "DEFAULT": 0.15,
+            "DEFAULT": 0.0,
             "MIN": 0.0,
             "MAX": 1.0
         },
@@ -19,7 +19,7 @@
             "NAME": "fbGain",
             "LABEL": "Gain",
             "TYPE": "float",
-            "DEFAULT": 0.98,
+            "DEFAULT": 1.0,
             "MIN": 0.0,
             "MAX": 2.0
         },
@@ -28,8 +28,8 @@
             "LABEL": "Zoom",
             "TYPE": "float",
             "DEFAULT": 0.0,
-            "MIN": -0.5,
-            "MAX": 0.5
+            "MIN": -1.0,
+            "MAX": 1.0
         },
         {
             "NAME": "fbRotate",
@@ -75,8 +75,8 @@
             "NAME": "fbKaleido",
             "LABEL": "Kaleidoscope Segments",
             "TYPE": "float",
-            "DEFAULT": 0.0,
-            "MIN": 0.0,
+            "DEFAULT": 1.0,
+            "MIN": 1.0,
             "MAX": 12.0
         }
     ],
@@ -170,9 +170,11 @@ void main() {
             historyColor = sampleHistory(uv + vec2(0.5));
         }
 
-        // Apply decay and gain (scale RGB and alpha proportionally)
-        historyColor.rgb *= fbGain * (1.0 - fbDecay);
-        historyColor.a = clamp(historyColor.a - fbDecay, 0.0, 1.0);
+        // Exact cubic decay curve mapping: invS = 1 - fbDecay, decayVal = invS^3
+        float invS = 1.0 - clamp(fbDecay, 0.0, 1.0);
+        float decayVal = invS * invS * invS;
+        historyColor.rgb *= fbGain * (1.0 - decayVal);
+        historyColor.a = clamp(historyColor.a - decayVal, 0.0, 1.0);
 
         // Apply hue shift to history
         if (fbHueShift != 0.0 && historyColor.a > 0.0) {
