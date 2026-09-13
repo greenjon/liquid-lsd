@@ -69,7 +69,7 @@ object ISFScanner {
 
         val filenameId = file.nameWithoutExtension.lowercase().replace(Regex("[^a-z0-9_]"), "_")
         val jsonName = header.DESCRIPTION
-        val displayName = jsonName ?: file.nameWithoutExtension.replace("_", " ").capitalize()
+        val displayName = jsonName?.takeIf { it.isNotBlank() } ?: file.nameWithoutExtension.replace("_", " ").capitalize()
         val id = filenameId
 
         // Determine relative folder hierarchy from scanned root

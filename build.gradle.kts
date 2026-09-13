@@ -80,7 +80,21 @@ application {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        if (!project.hasProperty("testISF")) {
+            excludeTags("isf-library")
+        }
+    }
+}
+
+val testISFLibrary = tasks.register<Test>("testISFLibrary") {
+    group = "verification"
+    description = "Runs the comprehensive ISF user library test suite against ~/.local/share/isf"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("isf-library")
+    }
 }
 
 kotlin {

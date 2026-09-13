@@ -168,7 +168,9 @@ class ISFFilter(
         for (i in 0 until filterParamBindings.size) {
             val binding = filterParamBindings[i]
             when (binding.type) {
-                "float", "long", "bool" -> shader.setUniform(binding.name, binding.param.value)
+                "float" -> shader.setUniform(binding.name, binding.param.value)
+                "long", "int" -> shader.setUniform(binding.name, binding.param.value.toInt())
+                "bool" -> shader.setUniform(binding.name, if (binding.param.value > 0.5f) 1 else 0)
                 "point2d" -> shader.setUniform(binding.name, binding.param.value, 0f) 
                 "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
             }
@@ -309,7 +311,9 @@ class ISFFilter(
         for (i in 0 until transitionParamBindings.size) {
             val binding = transitionParamBindings[i]
             when (binding.type) {
-                "float", "long", "bool" -> shader.setUniform(binding.name, binding.param.value)
+                "float" -> shader.setUniform(binding.name, binding.param.value)
+                "long", "int" -> shader.setUniform(binding.name, binding.param.value.toInt())
+                "bool" -> shader.setUniform(binding.name, if (binding.param.value > 0.5f) 1 else 0)
                 "point2d" -> shader.setUniform(binding.name, binding.param.value, 0f) 
                 "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
             }

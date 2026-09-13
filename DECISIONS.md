@@ -1,3 +1,22 @@
+## ImGui Launchpad Popup Safety, Relaxed GLSL Extensions & Scoped Directory Scanning (`ParametersPanel.kt`, `VisualSourceRegistry.kt`, `DynamicVisualSource.kt`, `ISFParser.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`)
+
+- **Decision**:
+  - **Sanitized Visual Source & Preset Labels**:
+    - Guarded `ImGui.menuItem` in `ParametersPanel.drawLaunchpad` by appending disambiguated unique IDs (`"$label##launchpad_src_${source.id}"` and `"$label##launchpad_preset_${asset.path}"`) and falling back to IDs when display names are empty or blank (`label.ifBlank { id }`).
+    - Enforced `displayName = displayName.ifBlank { id }` in `DynamicVisualSource` and `VisualSourceRegistry.loadFromISFFile` to prevent empty string labels from propagating into ImGui windows, which triggers the assertion `id != window->ID`.
+  - **Relaxed GLSL Type Checking via Pragmas (`ISFParser.kt`)**:
+    - Injected `#extension GL_ARB_gpu_shader5 : enable` and `#extension GL_EXT_gpu_shader4 : enable` into preprocessed fragment and vertex shader headers.
+    - Resolves GLSL 3.30 Core strict signed/unsigned int equality checks and bitwise operator restrictions in complex legacy ISF shaders (e.g. `Tiny Date Time Overlay.fs` and `Random Characters.fs`), raising offscreen driver compilation pass rate to 99.7% (326/327 shaders).
+  - **Scoped Directory Scans & Streamlined Startup Logging**:
+    - Restricted `ISFFilterRegistry.scanUserFilters` and `ISFTransitionRegistry.scanUserTransitions` to exclude generator directories (`library/sources`), and restricted `VisualSourceRegistry.scanUserSources` to exclude filter/transition directories (`library/filters`, `library/transitions`).
+    - Changed compilation failure logging in registries from dumping entire multi-line Java exception stack traces (`logger.error(e)`) to single-line summaries at `logger.warn`, with full traces deferred to `logger.debug`.
+- **Rationale**:
+  - Empty string menu items at the root of an ImGui popup hash to `window->ID`, violating ImGui ID stack invariants and immediately crashing the JVM process.
+  - Legacy ISF shaders written on macOS or WebGL frequently mix `int` and `uint` without explicit `u` suffixes or casts; enabling `GL_ARB_gpu_shader5` and `GL_EXT_gpu_shader4` allows compliant modern drivers to compile them seamlessly.
+  - Eagerly compiling foreign or mismatched shaders at startup flooded the console with unnecessary stack traces, alarming users even when the app was operating normally.
+
+---
+
 ## Multi-Type MIDI Subsystem, Soft Takeover, Relative Rotary Decoding, and MIDI Controls Manager (`MidiEngine.kt`, `MidiMappingManager.kt`, `PreferencesPanel.kt`, `UIManager.kt`, `CVRegistry.kt`)
 
 - **Decision**: Overhaul the MIDI subsystem from CC-only polling into a high-performance, multi-type event and state architecture spanning Phases 1A, 1B, 2, and 3:

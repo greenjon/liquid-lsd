@@ -45,7 +45,7 @@ data class SourceMeta(
  */
 open class DynamicVisualSource(
     override val id: String,
-    override val displayName: String,
+    displayName: String,
     val shader: Shader,
     override val parameters: LinkedHashMap<String, ModulatableParameter>,
     override val globalAlpha: ModulatableParameter = ModulatableParameter(1.0f),
@@ -55,6 +55,8 @@ open class DynamicVisualSource(
     override val categories: List<String> = emptyList(),
     override val folderPath: String = ""
 ) : VisualSource {
+
+    override val displayName: String = displayName.ifBlank { id }
 
     var fb1: FBO? = null
     var fb2: FBO? = null

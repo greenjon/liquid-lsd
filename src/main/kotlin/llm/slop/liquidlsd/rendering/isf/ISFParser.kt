@@ -80,7 +80,9 @@ object ISFParser {
         val sb = StringBuilder()
 
         // 1. Version header
-        sb.append("#version 330 core\n\n")
+        sb.append("#version 330 core\n")
+        sb.append("#extension GL_ARB_gpu_shader5 : enable\n")
+        sb.append("#extension GL_EXT_gpu_shader4 : enable\n\n")
 
         // 2. Vertex attribute inputs and Fragment output
         sb.append("// Inputs from blit.vert vertex shader\n")
@@ -98,6 +100,8 @@ object ISFParser {
         // 4. ISF Standard Macro Definitions & Compatibility
         sb.append("// ISF Built-in Macros & Compatibility\n")
         sb.append("#define isf_FragNormCoord vTexCoord\n")
+        sb.append("#define vv_FragNormCoord vTexCoord\n")
+        sb.append("#define vv_FragCoord gl_FragCoord\n")
         sb.append("#define IMG_NORM_PIXEL(sampler, coord) texture(sampler, (coord))\n")
         sb.append("#define IMG_PIXEL(sampler, coord) texture(sampler, (coord) / RENDERSIZE)\n")
         sb.append("#define IMG_THIS_PIXEL(sampler) texture(sampler, gl_FragCoord.xy / RENDERSIZE)\n")
@@ -106,6 +110,13 @@ object ISFParser {
 
         // 5. Universal Standard Built-in Uniforms (ISF, Shadertoy, Book of Shaders / GLSLSandbox, Audio)
         sb.append("// Universal Standard Uniforms\n")
+        val passTargets = header.PASSES.mapNotNull { it.TARGET }.toSet()
+        val importedNames = header.getImportedAssets().map { it.name }.toSet()
+        val samplerInputs = header.INPUTS.filter {
+            it.TYPE.lowercase() in setOf("image", "audio", "audiofft")
+        }.map { it.NAME }.toSet()
+        val samplerTargets = passTargets + importedNames + samplerInputs
+
         val standardUniforms = listOf(
             // Resolution
             "vec2" to "RENDERSIZE",
@@ -145,6 +156,7 @@ object ISFParser {
             "sampler2D" to "iChannel3"
         )
         for ((type, name) in standardUniforms) {
+            if (name in samplerTargets) continue
             sb.append("uniform $type $name;\n")
         }
         sb.append("uniform vec3 iChannelResolution[4];\n")
@@ -154,14 +166,19 @@ object ISFParser {
         sb.append("// ISF Input Uniforms\n")
         val standardNames = standardUniforms.map { it.second }.toSet()
         for (input in header.INPUTS) {
-            if (input.NAME in standardNames) continue
+            if (input.NAME in standardNames && input.NAME !in samplerTargets) continue
             val uniformDecl = when (input.TYPE.lowercase()) {
                 "float" -> "uniform float ${input.NAME};"
-                "bool" -> "uniform bool ${input.NAME};"
-                "long" -> "uniform float ${input.NAME};"
+                "bool", "event" -> "uniform bool ${input.NAME};"
+                "long", "int" -> "uniform int ${input.NAME};"
                 "color" -> "uniform vec4 ${input.NAME};"
                 "point2d" -> "uniform vec2 ${input.NAME};"
-                "image" -> "uniform sampler2D ${input.NAME};"
+                "image", "audio", "audiofft" -> {
+                    "uniform sampler2D ${input.NAME};\n" +
+                    "uniform vec4 _${input.NAME}_imgRect;\n" +
+                    "uniform vec2 _${input.NAME}_imgSize;\n" +
+                    "uniform bool _${input.NAME}_flip;"
+                }
                 else -> "uniform float ${input.NAME};"
             }
             val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(input.NAME)}\s*;""")
@@ -173,7 +190,6 @@ object ISFParser {
 
         // 7. Pass Targets as Uniforms
         sb.append("// ISF Pass Targets\n")
-        val passTargets = header.PASSES.mapNotNull { it.TARGET }
         for (target in passTargets) {
             val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(target)}\s*;""")
             if (!declRegex.containsMatchIn(stripped)) {
@@ -193,7 +209,6 @@ object ISFParser {
             }
         }
         sb.append("\n")
-
 
         // 8. Clean up stripped body (strip redundant #version directives, precision qualifiers, preexisting vTexCoord/out vec4, and duplicate standard uniforms)
         var body = stripped
@@ -232,6 +247,85 @@ object ISFParser {
             sb.append("}\n")
         }
 
+        return sb.toString()
+    }
+
+    /**
+     * Preprocesses a paired ISF vertex shader (.vs / .vert) by injecting layout attributes,
+     * ISF vertex macros, standard uniforms, declared input uniforms, and adapting for GLSL 3.30 Core.
+     */
+    fun buildGLSLVertexShader(
+        rawVsSource: String,
+        header: ISFHeader = parseHeader(rawVsSource) ?: createDefaultHeader("VertexShader", ShaderFormat.ISF)
+    ): String {
+        val stripped = stripHeader(rawVsSource)
+        val sb = StringBuilder()
+
+        // 1. Version header
+        sb.append("#version 330 core\n")
+        sb.append("#extension GL_ARB_gpu_shader5 : enable\n")
+        sb.append("#extension GL_EXT_gpu_shader4 : enable\n\n")
+
+        // 2. Vertex attribute inputs and coordinate outputs
+        sb.append("// Inputs from quad blit\n")
+        sb.append("layout(location = 0) in vec2 aPosition;\n")
+        sb.append("layout(location = 1) in vec2 aTexCoord;\n")
+        sb.append("out vec2 vTexCoord;\n\n")
+
+        // 3. ISF Compatibility macros
+        sb.append("// ISF Vertex Built-in Macros & Compatibility\n")
+        sb.append("#define isf_FragNormCoord vTexCoord\n")
+        sb.append("#define vv_FragNormCoord vTexCoord\n")
+        sb.append("#define isf_vertShaderInit() do { gl_Position = vec4(aPosition, 0.0, 1.0); vTexCoord = aTexCoord; } while(false)\n\n")
+
+        // 4. Standard uniforms
+        sb.append("// Standard Uniforms\n")
+        val standardUniforms = listOf(
+            "vec2" to "RENDERSIZE",
+            "float" to "TIME",
+            "float" to "TIMEDELTA",
+            "int" to "FRAMEINDEX",
+            "int" to "PASSINDEX"
+        )
+        for ((type, name) in standardUniforms) {
+            sb.append("uniform $type $name;\n")
+        }
+        sb.append("\n")
+
+        // 5. Input uniforms declared in header
+        sb.append("// ISF Input Uniforms\n")
+        val standardNames = standardUniforms.map { it.second }.toSet()
+        for (input in header.INPUTS) {
+            if (input.NAME in standardNames) continue
+            val uniformDecl = when (input.TYPE.lowercase()) {
+                "float" -> "uniform float ${input.NAME};"
+                "bool", "event" -> "uniform bool ${input.NAME};"
+                "long", "int" -> "uniform int ${input.NAME};"
+                "color" -> "uniform vec4 ${input.NAME};"
+                "point2d" -> "uniform vec2 ${input.NAME};"
+                else -> null
+            }
+            if (uniformDecl != null) {
+                val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(input.NAME)}\s*;""")
+                if (!declRegex.containsMatchIn(stripped)) {
+                    sb.append(uniformDecl).append("\n")
+                }
+            }
+        }
+        sb.append("\n")
+
+        // 6. Clean body
+        var body = stripped
+        val versionDirectiveRegex = Regex("""^\s*#version\s+.*$""", RegexOption.MULTILINE)
+        body = body.replace(versionDirectiveRegex, "")
+        body = body.replace(Regex("""^\s*precision\s+(highp|mediump|lowp)\s+(float|int)\s*;""", RegexOption.MULTILINE), "")
+
+        for ((_, name) in standardUniforms) {
+            val dupRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(name)}\s*(?:\[\s*\d*\s*\]\s*)?;""")
+            body = body.replace(dupRegex, "")
+        }
+
+        sb.append(body)
         return sb.toString()
     }
 }

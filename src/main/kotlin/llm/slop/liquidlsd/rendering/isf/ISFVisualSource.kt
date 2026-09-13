@@ -81,13 +81,13 @@ class ISFVisualSource(
 
         class BoolInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
             override fun apply(shader: Shader) {
-                shader.setUniform(name, if ((param?.value ?: 0f) > 0.5f) 1.0f else 0.0f)
+                shader.setUniform(name, if ((param?.value ?: 0f) > 0.5f) 1 else 0)
             }
         }
 
         class LongInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
             override fun apply(shader: Shader) {
-                shader.setUniform(name, param?.value ?: 0f)
+                shader.setUniform(name, (param?.value ?: 0f).toInt())
             }
         }
 

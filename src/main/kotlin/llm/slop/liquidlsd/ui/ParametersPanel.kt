@@ -721,7 +721,8 @@ object ParametersPanel {
                 }
 
                 for (source in VisualSourceRegistry.availableSources) {
-                    if (ImGui.menuItem(source.displayName)) {
+                    val label = source.displayName.ifBlank { source.id }
+                    if (ImGui.menuItem("$label##launchpad_src_${source.id}")) {
                         changeSource(source)
                     }
                 }
@@ -750,13 +751,14 @@ object ParametersPanel {
                     ImGui.textDisabled("No presets found.")
                 } else {
                     for (asset in presetFiles.sortedBy { it.name }) {
-                        if (ImGui.menuItem(asset.displayName)) {
+                        val label = asset.displayName.ifBlank { asset.name }
+                        if (ImGui.menuItem("$label##launchpad_preset_${asset.path}")) {
                             session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = isDeckA, isDeckBG = isDeckBG, isDeckPV = isDeckPV)
                         }
                     }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Open Library Panel...")) {
+                if (ImGui.menuItem("Open Library Panel...##launchpad_open_lib")) {
                     session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                 }
                 ImGui.endPopup()

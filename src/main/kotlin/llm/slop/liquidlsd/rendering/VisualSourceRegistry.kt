@@ -120,7 +120,12 @@ object VisualSourceRegistry {
 
     fun scanUserSources() {
         val resolvedDirs = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.getResolvedDirectories()
-        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == llm.slop.liquidlsd.rendering.isf.DirectoryStatus.ACTIVE }
+        val enabledDirs = resolvedDirs.filter { 
+            it.config.isEnabled && 
+            it.status == llm.slop.liquidlsd.rendering.isf.DirectoryStatus.ACTIVE &&
+            it.config.path != "library/filters" &&
+            it.config.path != "library/transitions"
+        }
 
         for (resolved in enabledDirs) {
             val dir = File(resolved.expandedPath)
@@ -149,7 +154,8 @@ object VisualSourceRegistry {
                             logger.info { "Loaded standalone ISF visual source: ${source.displayName} (${source.id})" }
                         }
                     } catch (e: Exception) {
-                        logger.error(e) { "Failed to load standalone ISF source: ${file.name}" }
+                        logger.warn { "Failed to load standalone ISF source '${file.name}': ${e.message?.lines()?.firstOrNull() ?: e.toString()}" }
+                        logger.debug(e) { "Full stack trace for '${file.name}'" }
                     }
                 }
             }
@@ -211,11 +217,20 @@ object VisualSourceRegistry {
         }
 
         val glslSource = ISFParser.buildGLSLFragmentShader(rawSource, header)
+        val pairedVert = file.parentFile?.listFiles { f ->
+            f.isFile && f.nameWithoutExtension == file.nameWithoutExtension && f.extension.lowercase() in setOf("vs", "vert")
+        }?.firstOrNull()
+        val vertSource = if (pairedVert != null) {
+            ISFParser.buildGLSLVertexShader(pairedVert.readText(), header)
+        } else {
+            vertexShaderSource
+        }
         
         val shader = try {
-            Shader(vertexShaderSource, glslSource)
+            Shader(vertSource, glslSource)
         } catch (e: Exception) {
-            logger.error(e) { "Failed to compile ISF shader for '${file.name}'. Using error fallback." }
+            logger.warn { "Failed to compile ISF shader for '${file.name}'. Using error fallback: ${e.message?.lines()?.firstOrNull() ?: e.toString()}" }
+            logger.debug(e) { "Full compilation stack trace for '${file.name}'" }
             Shader(vertexShaderSource, errorFragmentShaderSource)
         }
 
@@ -237,9 +252,12 @@ object VisualSourceRegistry {
             .filter { it.isNotBlank() }
             .distinct()
         
+        val parsedDisplayName = header.DESCRIPTION?.takeIf { it.isNotBlank() }
+            ?: sourceId.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
         return ISFVisualSource(
             id = sourceId,
-            displayName = header.DESCRIPTION ?: sourceId,
+            displayName = parsedDisplayName.ifBlank { sourceId },
             shader = shader,
             header = header,
             parameters = parameters,

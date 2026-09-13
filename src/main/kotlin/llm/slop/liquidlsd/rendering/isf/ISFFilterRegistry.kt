@@ -64,7 +64,12 @@ object ISFFilterRegistry {
         }
 
         val resolvedDirs = ISFDirectoryManager.getResolvedDirectories()
-        val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
+        val enabledDirs = resolvedDirs.filter { 
+            it.config.isEnabled && 
+            it.status == DirectoryStatus.ACTIVE &&
+            it.config.path != "library/sources" &&
+            it.config.path != "library/transitions"
+        }
 
         for (resolved in enabledDirs) {
             val dir = File(resolved.expandedPath)
@@ -76,10 +81,11 @@ object ISFFilterRegistry {
                     try {
                         val source = file.readText()
                         val id = file.nameWithoutExtension
-                        val displayName = id.replace("_", " ").capitalize()
+                        val displayName = id.replace("_", " ").capitalize().ifBlank { id }
                         registerFilterFromSource(id, displayName, source, file = file, directoryRoot = dir)
                     } catch (e: Exception) {
-                        logger.error(e) { "Failed to load user filter: ${file.path}" }
+                        logger.warn { "Failed to load user filter '${file.path}': ${e.message?.lines()?.firstOrNull() ?: e.toString()}" }
+                        logger.debug(e) { "Full stack trace for '${file.path}'" }
                     }
                 }
         }
@@ -122,15 +128,25 @@ object ISFFilterRegistry {
             .distinct()
             .ifEmpty { listOf("Color Adjustment") }
 
+        val parsedDisplayName = (header.DESCRIPTION?.takeIf { it.isNotBlank() } ?: displayName).ifBlank { id }
+
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)
             val blitVert = ISFFilterRegistry::class.java.classLoader.getResourceAsStream("shaders/blit.vert")
                 ?.bufferedReader()?.use { it.readText() } ?: throw RuntimeException("blit.vert not found")
+            val pairedVert = file?.parentFile?.listFiles { f ->
+                f.isFile && f.nameWithoutExtension == file.nameWithoutExtension && f.extension.lowercase() in setOf("vs", "vert")
+            }?.firstOrNull()
+            val vertSource = if (pairedVert != null) {
+                ISFParser.buildGLSLVertexShader(pairedVert.readText(), header)
+            } else {
+                blitVert
+            }
             
-            val shader = Shader(blitVert, glsl)
+            val shader = Shader(vertSource, glsl)
             val filter = ISFFilter(
                 id = id,
-                displayName = displayName,
+                displayName = parsedDisplayName,
                 header = header,
                 shader = shader,
                 ownsShader = true,
@@ -139,9 +155,10 @@ object ISFFilterRegistry {
                 baseDir = file?.parentFile
             )
             filters[id] = filter
-            logger.debug { "Registered ISF filter: $id ($displayName)" }
+            logger.debug { "Registered ISF filter: $id ($parsedDisplayName)" }
         } catch (e: Exception) {
-            logger.error(e) { "Failed to compile ISF filter $id" }
+            logger.warn { "Failed to compile ISF filter '$id': ${e.message?.lines()?.firstOrNull() ?: e.toString()}" }
+            logger.debug(e) { "Full compilation stack trace for ISF filter '$id'" }
         }
     }
 
