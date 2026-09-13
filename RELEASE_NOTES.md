@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fix Audio Device Disappearance & WirePlumber Link Negotiation Races (`JavaSoundClient.kt`, `JackClient.kt`, `AudioEngine.kt`, `MidiJackWatchdog.kt`, `AudioEnginePanel.kt`)
+- **Suppressed Playback Device Probing Storms**: Screened out playback-only soundcards (HDMI, analog speakers, headphones, digital sinks) before querying JavaSound/ALSA lines in `JavaSoundClient.kt`. This eliminates microsecond `snd_pcm_open`/`close` probes on the internal speaker (`hw:0,0`), preventing WirePlumber link negotiation crashes (`proxy destroyed / link failed`) and avoiding GNOME Settings dropping the laptop speaker.
+- **Hardware Device Caching**: Cached discovered input devices in memory; re-probing only occurs when explicitly clicking Refresh in preferences.
+- **JACK Mode Isolation**: When running under JACK / PipeWire, `getAvailableInputDevices()` returns a virtual `"JACK System Capture"` representation and suppresses all JavaSound ALSA hardware scans.
+- **Coordinated Audio Teardown**: In `JavaSoundClient.stop()`, audio capture is paused and flushed, the reader thread is joined with a timeout (`thread.join(1000)`), and the native handle is closed only once confirmed idle. In `JackClient.stop()`, all active links are disconnected via `jack.disconnect()` before client deactivation and closure.
+- **Settling Cooldown & No-Op Switching**: Enforced a 150ms settling cooldown between `stop()` and `startClient()` during audio transitions to allow WirePlumber to finish graph cleanup, and short-circuited no-op device selections.
+- **Watchdog Reconnect Throttling**: Limited consecutive automatic audio reconnection attempts in `MidiJackWatchdog.kt` to 3 before pausing to prevent rapid cyclic stream recreation.
+
 ### 100% ISF Pipeline Migration — Deprecating Hard-Wired FX & Mixer (`Renderer.kt`, `Deck.kt`, `Mixer.kt`, `ISFFilter.kt`, `ISFTransitionRegistry.kt`, `PresetModels.kt`, `default_filters/`, `default_transitions/`)
 - **100% Modular Feedback Effect (`default_filters/feedback.fs`)**: Replaced monolithic hardcoded `feedback.frag` with native ISF multi-pass persistent history buffers. Calibrated with 100% mathematical fidelity to the legacy cubic decay curve ($s \to (1 - s)^3$) and all 9 parameters (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`). Added buffer zeroing on reset to prevent ghosting between presets.
 - **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**: Replaced legacy `tri_planar.*` and `tetra_kaleido.*` geometry shaders with an ISF raymarched shader in FX Slot 2. Supports Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding with continuous roundness control.

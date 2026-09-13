@@ -71,4 +71,15 @@ class JavaSoundClientTest {
         assertEquals(-1.0f, leftArray[1])
         assertEquals(0.5f, rightArray[1])
     }
+
+    @Test
+    fun testStopIdempotentAndSafe() {
+        val client = JavaSoundClient(null) { _, _, _, _ -> }
+        // Stopping a client that hasn't started should be completely safe and no-op
+        client.stop()
+        kotlin.test.assertFalse(client.isConnected)
+        // Repeated stops must remain idempotent
+        client.stop()
+        kotlin.test.assertFalse(client.isConnected)
+    }
 }

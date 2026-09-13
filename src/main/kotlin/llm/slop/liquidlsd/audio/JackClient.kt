@@ -147,6 +147,7 @@ class JackClient(
 
     /**
      * Auto-connects our input ports to physical system capture ports.
+     * Prioritizes ports matching "capture" to prevent connecting to playback monitor ports.
      */
     private fun autoConnectInput() {
         val c = client ?: return
@@ -154,21 +155,33 @@ class JackClient(
         val portR = inputPortR ?: return
         try {
             val jack = Jack.getInstance()
-            val systemPorts = jack.getPorts(
+            val rawSystemPorts = jack.getPorts(
                 c,
                 null,
                 JackPortType.AUDIO,
                 EnumSet.of(JackPortFlags.JackPortIsPhysical, JackPortFlags.JackPortIsOutput)
             )
-            if (systemPorts != null && systemPorts.isNotEmpty()) {
-                jack.connect(c, systemPorts[0], portL.name)
-                logger.info { "Auto-connected JACK left input to system port: ${systemPorts[0]}" }
-                if (systemPorts.size > 1) {
-                    jack.connect(c, systemPorts[1], portR.name)
-                    logger.info { "Auto-connected JACK right input to system port: ${systemPorts[1]}" }
-                } else {
-                    jack.connect(c, systemPorts[0], portR.name)
-                    logger.info { "Auto-connected single JACK capture port to both channels: ${systemPorts[0]}" }
+            if (rawSystemPorts != null && rawSystemPorts.isNotEmpty()) {
+                val capturePorts = rawSystemPorts.filter { it.contains("capture", ignoreCase = true) }
+                val targetPorts: List<String> = if (capturePorts.isNotEmpty()) capturePorts else rawSystemPorts.toList()
+
+                try {
+                    jack.connect(c, targetPorts[0], portL.name)
+                    logger.info { "Auto-connected JACK left input to system port: ${targetPorts[0]}" }
+                } catch (e: Exception) {
+                    logger.debug { "Left port already connected or connection skipped: ${e.message}" }
+                }
+
+                try {
+                    if (targetPorts.size > 1) {
+                        jack.connect(c, targetPorts[1], portR.name)
+                        logger.info { "Auto-connected JACK right input to system port: ${targetPorts[1]}" }
+                    } else {
+                        jack.connect(c, targetPorts[0], portR.name)
+                        logger.info { "Auto-connected single JACK capture port to both channels: ${targetPorts[0]}" }
+                    }
+                } catch (e: Exception) {
+                    logger.debug { "Right port already connected or connection skipped: ${e.message}" }
                 }
             } else {
                 logger.warn { "No physical capture ports found to connect." }
@@ -179,7 +192,7 @@ class JackClient(
     }
 
     /**
-     * Stops the JACK client session.
+     * Stops the JACK client session with clean port disconnection and deactivation.
      */
     fun stop() {
         try {
@@ -187,12 +200,30 @@ class JackClient(
         } catch (e: Exception) {
             // Ignore
         }
-        try {
-            logger.info { "Stopping JACK client..." }
-            client?.deactivate()
-            client?.close()
-        } catch (e: Exception) {
-            // Ignore
+        val c = client
+        val pL = inputPortL
+        val pR = inputPortR
+        if (c != null) {
+            try {
+                logger.info { "Stopping JACK client..." }
+                val jack = Jack.getInstance()
+                // Cleanly disconnect input ports to let WirePlumber / JACK release link graph entries
+                try {
+                    pL?.connections?.forEach { conn ->
+                        jack.disconnect(c, conn, pL.name)
+                    }
+                    pR?.connections?.forEach { conn ->
+                        jack.disconnect(c, conn, pR.name)
+                    }
+                } catch (e: Exception) {
+                    logger.debug { "Ignored error during port disconnection: ${e.message}" }
+                }
+
+                c.deactivate()
+                c.close()
+            } catch (e: Exception) {
+                logger.warn(e) { "Error closing JACK client" }
+            }
         }
         client = null
         inputPortL = null

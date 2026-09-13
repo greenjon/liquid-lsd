@@ -154,27 +154,34 @@ object AudioEnginePanel {
             ImGui.spacing()
 
             // Hardware Input Device Selection (cached list to prevent ALSA resource leakage)
+            val isJackActive = audioEngine.backendMode == AudioEngine.AudioBackendMode.JACK_ONLY ||
+                    (audioEngine.backendMode == AudioEngine.AudioBackendMode.AUTO && audioEngine.isJackConnected())
             theme.body("Input Hardware Device:")
             ImGui.sameLine()
-            val devices = audioEngine.getAvailableInputDevices()
-            val deviceNames = audioEngine.getAvailableDeviceNames()
-            val currentDevIdx = devices.indexOfFirst { it.name == audioEngine.selectedDeviceName }.coerceAtLeast(0)
-            currentDeviceIdx.set(currentDevIdx)
-            val refreshBtnW = 32f
-            ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - refreshBtnW - 8f).coerceAtLeast(100f))
-            if (ImGui.combo("##InputDevice", currentDeviceIdx, deviceNames)) {
-                val chosenDevice = devices.getOrNull(currentDeviceIdx.get())
-                if (chosenDevice != null) {
-                    audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
-                    theme.savePreferences()
+            if (isJackActive) {
+                ImGui.textDisabled("Managed by JACK / PipeWire (System Capture)")
+                itemTooltip("Audio input capture is managed directly through the PipeWire / JACK graph.")
+            } else {
+                val devices = audioEngine.getAvailableInputDevices()
+                val deviceNames = audioEngine.getAvailableDeviceNames()
+                val currentDevIdx = devices.indexOfFirst { it.name == audioEngine.selectedDeviceName }.coerceAtLeast(0)
+                currentDeviceIdx.set(currentDevIdx)
+                val refreshBtnW = 32f
+                ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - refreshBtnW - 8f).coerceAtLeast(100f))
+                if (ImGui.combo("##InputDevice", currentDeviceIdx, deviceNames)) {
+                    val chosenDevice = devices.getOrNull(currentDeviceIdx.get())
+                    if (chosenDevice != null) {
+                        audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
+                        theme.savePreferences()
+                    }
                 }
+                itemTooltip("Select the audio input capture device.")
+                ImGui.sameLine()
+                if (ImGui.button("${Icons.REFRESH}##refreshDevices")) {
+                    audioEngine.refreshInputDevices()
+                }
+                itemTooltip("Rescan for newly connected audio input hardware.")
             }
-            itemTooltip("Select the audio input capture device.")
-            ImGui.sameLine()
-            if (ImGui.button("${Icons.REFRESH}##refreshDevices")) {
-                audioEngine.refreshInputDevices()
-            }
-            itemTooltip("Rescan for newly connected audio input hardware.")
 
             ImGui.spacing()
 

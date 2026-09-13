@@ -41,10 +41,29 @@ class JavaSoundClient(
             var targetLine: TargetDataLine? = null
             for (fmt in formatsToTry) {
                 val info = DataLine.Info(TargetDataLine::class.java, fmt)
-                targetLine = findTargetDataLine(info, deviceName)
-                if (targetLine != null) {
-                    logger.info { "Found compatible TargetDataLine: ${fmt.sampleRate}Hz, ${fmt.channels}ch" }
+                val candidateLine = findTargetDataLine(info, deviceName) ?: continue
+
+                val channels = candidateLine.format.channels
+                val bufferFrames = 512 // 512 frames per read chunk (~11.6ms at 44.1kHz)
+                val bytesPerFrame = channels * 2
+                val bufferSizeBytes = bufferFrames * bytesPerFrame
+
+                try {
+                    try {
+                        candidateLine.open(candidateLine.format, bufferSizeBytes * 2) // buffer size in bytes
+                    } catch (e: LineUnavailableException) {
+                        logger.warn { "Failed to open TargetDataLine with buffer size ${bufferSizeBytes * 2}: ${e.message}. Trying default buffer size." }
+                        candidateLine.open(candidateLine.format)
+                    }
+                    candidateLine.start()
+                    targetLine = candidateLine
+                    logger.info { "Found and opened compatible TargetDataLine: ${fmt.sampleRate}Hz, ${fmt.channels}ch" }
                     break
+                } catch (e: Exception) {
+                    logger.warn { "Failed to open candidate TargetDataLine for format $fmt: ${e.message}" }
+                    try {
+                        candidateLine.close()
+                    } catch (_: Exception) {}
                 }
             }
 
@@ -54,18 +73,10 @@ class JavaSoundClient(
             }
 
             val channels = targetLine.format.channels
-            val bufferFrames = 512 // 512 frames per read chunk (~11.6ms at 44.1kHz)
+            val bufferFrames = 512
             val bytesPerFrame = channels * 2
             val bufferSizeBytes = bufferFrames * bytesPerFrame
 
-            try {
-                targetLine.open(targetLine.format, bufferSizeBytes * 2) // buffer size in bytes
-            } catch (e: LineUnavailableException) {
-                logger.warn { "Failed to open TargetDataLine with buffer size ${bufferSizeBytes * 2}: ${e.message}. Trying default buffer size." }
-                targetLine.open(targetLine.format)
-            }
-            
-            targetLine.start()
             line = targetLine
             isConnected = true
             running = true
@@ -103,7 +114,9 @@ class JavaSoundClient(
                         onProcess(leftBuffer, rightBuffer, framesRead, sampleRate)
                     }
                 } catch (e: Exception) {
-                    logger.error(e) { "Error in Java Sound capture loop" }
+                    if (running) {
+                        logger.error(e) { "Error in Java Sound capture loop" }
+                    }
                     isConnected = false
                 }
             }, "JavaSoundClient-Capture").apply { isDaemon = true }
@@ -127,6 +140,9 @@ class JavaSoundClient(
 
         val mixers = AudioSystem.getMixerInfo()
         for (mixerInfo in mixers) {
+            if (isLikelyPlaybackOnly(mixerInfo)) {
+                continue
+            }
             if (preferredDeviceName != null && !mixerInfo.name.contains(preferredDeviceName, ignoreCase = true) && !mixerInfo.description.contains(preferredDeviceName, ignoreCase = true)) {
                 continue
             }
@@ -149,56 +165,104 @@ class JavaSoundClient(
     }
 
     /**
-     * Stops capture and releases system resources.
+     * Stops capture and releases system resources cleanly.
+     * Uses coordinated teardown to prevent WirePlumber / ALSA link dropouts:
+     * 1. Pauses/stops line capture and flushes buffers.
+     * 2. Waits for reader thread to exit its read loop.
+     * 3. Closes native line handle only once confirmed idle.
      */
     fun stop() {
+        if (!running && line == null && thread == null) return
         running = false
         isConnected = false
-        try {
-            thread?.interrupt()
-            thread = null
-        } catch (e: Exception) {
-            // Ignore
-        }
+
+        // 1. Stop capture and flush line
         try {
             line?.stop()
-            line?.close()
-            line = null
+            line?.flush()
         } catch (e: Exception) {
-            // Ignore
+            logger.debug { "Error stopping TargetDataLine: ${e.message}" }
+        }
+
+        // 2. Interrupt and wait for reader thread to terminate
+        try {
+            thread?.interrupt()
+            thread?.join(1000)
+        } catch (e: Exception) {
+            logger.debug { "Error waiting for capture thread to join: ${e.message}" }
+        } finally {
+            thread = null
+        }
+
+        // 3. Cleanly close native line handle now that the reader thread is confirmed idle
+        try {
+            line?.close()
+        } catch (e: Exception) {
+            logger.debug { "Error closing TargetDataLine: ${e.message}" }
+        } finally {
+            line = null
         }
     }
 
     companion object {
+        @Volatile
+        private var cachedInputDevices: List<AudioInputDevice>? = null
+
         /**
-         * Returns list of available input devices from Java Sound mixers.
+         * Identifies hardware mixers that are strictly audio output / playback devices.
+         * Probing these on Linux opens PCM playback handles, which interrupts WirePlumber
+         * link negotiation and causes internal laptop speakers to disappear.
          */
-        fun getAvailableInputDevices(): List<AudioInputDevice> {
+        private fun isLikelyPlaybackOnly(mixerInfo: Mixer.Info): Boolean {
+            val text = "${mixerInfo.name} ${mixerInfo.description}".lowercase()
+            val playbackKeywords = listOf("speaker", "headphone", "hdmi", "output", "playback", "sink", "spdif", "iec958")
+            val isPlaybackMatch = playbackKeywords.any { text.contains(it) }
+            val isCaptureMatch = text.contains("capture") || text.contains("input") || text.contains("mic")
+            return isPlaybackMatch && !isCaptureMatch
+        }
+
+        /**
+         * Returns list of available input devices from Java Sound mixers with caching and playback filtering.
+         */
+        fun getAvailableInputDevices(forceRefresh: Boolean = false): List<AudioInputDevice> {
+            if (!forceRefresh && cachedInputDevices != null) {
+                return cachedInputDevices!!
+            }
+
             val devices = mutableListOf<AudioInputDevice>()
             devices.add(AudioInputDevice("default", "System Default", "Default system capture device", isDefault = true))
 
             val dummyFormat = AudioFormat(44100f, 16, 1, true, false)
             val info = DataLine.Info(TargetDataLine::class.java, dummyFormat)
 
-            val mixers = AudioSystem.getMixerInfo()
-            for ((index, mixerInfo) in mixers.withIndex()) {
-                try {
-                    val mixer = AudioSystem.getMixer(mixerInfo)
-                    val targetLineInfos = mixer.targetLineInfo
-                    if (targetLineInfos.isNotEmpty()) {
-                        // Has input/capture lines
-                        devices.add(
-                            AudioInputDevice(
-                                id = "javasound_$index",
-                                name = mixerInfo.name,
-                                description = "${mixerInfo.description} (${mixerInfo.vendor})"
-                            )
-                        )
+            try {
+                val mixers = AudioSystem.getMixerInfo()
+                for ((index, mixerInfo) in mixers.withIndex()) {
+                    if (isLikelyPlaybackOnly(mixerInfo)) {
+                        continue
                     }
-                } catch (e: Exception) {
-                    // Ignore
+                    try {
+                        val mixer = AudioSystem.getMixer(mixerInfo)
+                        val targetLineInfos = mixer.targetLineInfo
+                        if (targetLineInfos.isNotEmpty()) {
+                            // Has input/capture lines
+                            devices.add(
+                                AudioInputDevice(
+                                    id = "javasound_$index",
+                                    name = mixerInfo.name,
+                                    description = "${mixerInfo.description} (${mixerInfo.vendor})"
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Ignore incompatible mixers
+                    }
                 }
+            } catch (e: Exception) {
+                logger.warn(e) { "Error querying Java Sound input devices" }
             }
+
+            cachedInputDevices = devices
             return devices
         }
 

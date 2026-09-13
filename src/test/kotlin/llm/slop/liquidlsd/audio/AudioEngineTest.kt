@@ -227,4 +227,23 @@ class AudioEngineTest {
         kotlin.test.assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
         kotlin.test.assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
     }
+
+    @Test
+    fun testJackOnlyModeReturnsVirtualJackDevice() {
+        AudioEngine.backendMode = AudioEngine.AudioBackendMode.JACK_ONLY
+        val devices = AudioEngine.getAvailableInputDevices(forceRefresh = true)
+        kotlin.test.assertEquals(1, devices.size)
+        kotlin.test.assertEquals("jack_default", devices[0].id)
+        kotlin.test.assertEquals("JACK System Capture", devices[0].name)
+    }
+
+    @Test
+    fun testSelectDeviceNoOpWhenUnchanged() {
+        AudioEngine.selectedDeviceName = "TestDevice"
+        AudioEngine.backendMode = AudioEngine.AudioBackendMode.JAVASOUND_ONLY
+        // When already configured and not active (or active with identical settings), selectDevice must not error
+        AudioEngine.selectDevice("TestDevice", AudioEngine.AudioBackendMode.JAVASOUND_ONLY)
+        kotlin.test.assertEquals("TestDevice", AudioEngine.selectedDeviceName)
+        kotlin.test.assertEquals(AudioEngine.AudioBackendMode.JAVASOUND_ONLY, AudioEngine.backendMode)
+    }
 }

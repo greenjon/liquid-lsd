@@ -339,8 +339,17 @@ object AudioEngine {
     private var cachedDeviceNames: Array<String> = emptyArray()
 
     fun getAvailableInputDevices(forceRefresh: Boolean = false): List<AudioInputDevice> {
-        if (forceRefresh || cachedInputDevices.isEmpty()) {
-            val devices = JavaSoundClient.getAvailableInputDevices()
+        // In JACK mode, PipeWire/JACK directly manages physical capture ports.
+        // Avoid probing JavaSound ALSA mixers to prevent WirePlumber link negotiation storms.
+        if (backendMode == AudioBackendMode.JACK_ONLY || (backendMode == AudioBackendMode.AUTO && isJackConnected())) {
+            val jackDevice = listOf(AudioInputDevice("jack_default", "JACK System Capture", "Physical audio capture inputs (PipeWire/JACK)", isDefault = true))
+            cachedInputDevices = jackDevice
+            cachedDeviceNames = jackDevice.map { it.name }.toTypedArray()
+            return jackDevice
+        }
+
+        if (forceRefresh || cachedInputDevices.isEmpty() || cachedInputDevices.firstOrNull()?.id == "jack_default") {
+            val devices = JavaSoundClient.getAvailableInputDevices(forceRefresh)
             cachedInputDevices = devices
             cachedDeviceNames = devices.map { it.name }.toTypedArray()
         }
@@ -359,9 +368,16 @@ object AudioEngine {
     }
 
     fun selectDevice(deviceName: String?, backend: AudioBackendMode = backendMode) {
+        if (selectedDeviceName == deviceName && backendMode == backend && isActive()) {
+            return // Avoid redundant audio stream teardown & reconnection
+        }
         selectedDeviceName = deviceName
         backendMode = backend
         stop()
+        // Allow WirePlumber / ALSA drivers a settling cooldown to finish link graph teardown
+        try {
+            Thread.sleep(150)
+        } catch (_: InterruptedException) {}
         startClient()
     }
 
@@ -411,6 +427,12 @@ object AudioEngine {
         }
 
         if (!jackStarted && backendMode != AudioBackendMode.JACK_ONLY) {
+            // Settle brief period if JACK failed, ensuring WirePlumber graph cleanup before JavaSound ALSA starts
+            if (backendMode != AudioBackendMode.JAVASOUND_ONLY) {
+                try {
+                    Thread.sleep(150)
+                } catch (_: InterruptedException) {}
+            }
             logger.info { "Starting Java Sound client (device: ${selectedDeviceName ?: "Default"})..." }
             javaSoundClient = JavaSoundClient(selectedDeviceName) { bufL, bufR, nframes, sampleRate ->
                 processAudio(bufL, bufR, nframes, sampleRate)
@@ -435,6 +457,9 @@ object AudioEngine {
         }
         logger.info { "Watchdog attempting JACK reconnection..." }
         stop()
+        try {
+            Thread.sleep(150)
+        } catch (_: InterruptedException) {}
         startClient()
     }
 

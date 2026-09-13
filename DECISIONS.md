@@ -1,3 +1,20 @@
+## WirePlumber Link Negotiation Safety, Playback Probe Filtering & Coordinated Teardown (`JavaSoundClient.kt`, `JackClient.kt`, `AudioEngine.kt`, `MidiJackWatchdog.kt`, `AudioEnginePanel.kt`)
+
+- **Decision**: Harden audio client initialization, device enumeration, and teardown lifecycles across JACK and JavaSound to eliminate PipeWire/WirePlumber link negotiation races:
+  - **Playback Sink Probe Suppression (`JavaSoundClient.kt`)**: Filtered out all playback-only soundcards (matching keywords `speaker`, `headphone`, `hdmi`, `output`, `sink`, `spdif`, `iec958`) in `isLikelyPlaybackOnly()` prior to calling `AudioSystem.getMixer(mixerInfo)` or querying lines. This stops ALSA from opening/closing temporary playback handles on the internal laptop speaker (`hw:0,0`), preventing WirePlumber from aborting link hooks with `proxy destroyed` and dropping analog speakers from GNOME Settings.
+  - **Device List Caching (`JavaSoundClient.kt`, `AudioEngine.kt`)**: Discovered input devices are cached in memory and re-scanned only on explicit user request (`refreshInputDevices()`).
+  - **JACK Mode Isolation (`AudioEngine.kt`, `AudioEnginePanel.kt`)**: When running in `JACK_ONLY` mode or when JACK is connected, device enumeration returns a virtual `"JACK System Capture"` handle and bypasses JavaSound ALSA hardware scans entirely.
+  - **Coordinated Audio Teardown**:
+    - `JavaSoundClient.stop()`: Stops/flushes the line, interrupts the reader thread, waits for it to cleanly exit via `thread.join(1000)`, and only then destroys the native handle `line.close()`.
+    - `JackClient.stop()`: Iterates through `port.connections` and disconnects all active links via `jack.disconnect()` before deactivating and closing the client.
+  - **Settling Cooldown & Redundant Restart Suppression (`AudioEngine.kt`)**: `selectDevice()` short-circuits if arguments match current state. When switching devices or backends, a 150ms settling delay is enforced between `stop()` and `startClient()` to allow WirePlumber to finish graph cleanup before the new node appears.
+  - **Watchdog Reconnect Throttling (`MidiJackWatchdog.kt`)**: Reconnection attempts are capped to 3 consecutive failures before entering a paused state until manual intervention or settings toggle.
+- **Rationale**:
+  - Resolves laptop speaker disappearance and route fallback to HDMI in PipeWire/WirePlumber environments.
+  - Protects real-time OS audio graph integrity and prevents audio thread xruns or driver faults during device transitions.
+
+---
+
 ## 100% ISF Pipeline Migration — Deprecating Hard-Wired FX & Mixer (`Renderer.kt`, `Deck.kt`, `Mixer.kt`, `ISFFilter.kt`, `ISFTransitionRegistry.kt`, `PresetModels.kt`, `default_filters/`, `default_transitions/`)
 
 - **Decision**: Fully eliminate hardcoded post-processing shaders, 2D-to-3D projection geometry passes, and hardwired mixer blend modes, replacing them with a 100% modular Interactive Shader Format (ISF) pipeline:

@@ -21,10 +21,14 @@ object MidiJackWatchdog {
     @Volatile
     var isJackReconnectActive = true
 
+    private var consecutiveReconnectAttempts = 0
+    private const val MAX_AUTOMATIC_RECONNECT_ATTEMPTS = 3
+
     @Synchronized
     fun start() {
         if (running) return
         running = true
+        consecutiveReconnectAttempts = 0
         thread = Thread {
             logger.info { "Starting MidiJackWatchdog background daemon..." }
             while (running) {
@@ -35,11 +39,20 @@ object MidiJackWatchdog {
                     }
 
                     // 2. Re-establish connection to JACK server
-                    if (isJackReconnectActive && UITheme.audioEngineEnabled && !AudioEngine.isActive()) {
-                        if (AudioEngine.presetIOInFlight.get()) {
-                            logger.warn { "Watchdog skipping JACK reconnect because Preset I/O is in flight." }
+                    if (isJackReconnectActive && UITheme.audioEngineEnabled) {
+                        if (AudioEngine.isActive()) {
+                            consecutiveReconnectAttempts = 0
+                        } else if (!AudioEngine.presetIOInFlight.get()) {
+                            if (consecutiveReconnectAttempts < MAX_AUTOMATIC_RECONNECT_ATTEMPTS) {
+                                consecutiveReconnectAttempts++
+                                logger.info { "Watchdog attempting audio reconnection (attempt $consecutiveReconnectAttempts of $MAX_AUTOMATIC_RECONNECT_ATTEMPTS)..." }
+                                AudioEngine.tryReconnect()
+                            } else if (consecutiveReconnectAttempts == MAX_AUTOMATIC_RECONNECT_ATTEMPTS) {
+                                consecutiveReconnectAttempts++
+                                logger.warn { "Watchdog paused automatic audio reconnect after $MAX_AUTOMATIC_RECONNECT_ATTEMPTS attempts to prevent link thrashing. Use manual retry in settings." }
+                            }
                         } else {
-                            AudioEngine.tryReconnect()
+                            logger.warn { "Watchdog skipping JACK reconnect because Preset I/O is in flight." }
                         }
                     }
 

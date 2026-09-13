@@ -26,12 +26,22 @@ Liquid LSD supports two complementary audio client implementations managed by [`
 - Uses JNAJack native C bindings to interface directly with the JACK or PipeWire-JACK server.
 - Registers client input ports (`lsd:input_1`, `lsd:input_2`).
 - Operates inside an OS real-time thread callback (`process(client, nframes)`). Strict OS priority rules apply: any heap allocation or blocking call triggers immediate xruns (audio dropouts) or server disconnection.
-- **Watchdog & Failure Handling**: If JACK startup fails on launch (native library missing or server connection unavailable), automatic background reconnect attempts are suppressed to prevent watchdog log spam on systems where JACK is not running. Manual reconnection remains available on demand from the Audio Engine panel (`tryReconnect(force = true)`).
+- **Capture Port Auto-Connecting**: `autoConnectInput()` specifically filters physical ports targeting `"capture"` endpoints, preventing accidental connections to output sink monitor ports in PipeWire environments.
+- **Clean Port Disconnection on Teardown**: In `stop()`, input ports disconnect all active links via `jack.disconnect()` before invoking `client.deactivate()` and `client.close()`, ensuring WirePlumber cleanly removes link graph policies without throwing `proxy destroyed` errors.
+- **Watchdog & Failure Handling**: If JACK startup fails on launch (native library missing or server connection unavailable), automatic background reconnect attempts are throttled and suppressed to prevent watchdog log spam on systems where JACK is not running. Manual reconnection remains available on demand from the Audio Engine panel (`tryReconnect(force = true)`).
 
 ### 2. `JavaSoundClient.kt` (macOS, Windows, Standalone Linux)
 - Uses Java Sound `TargetDataLine` to capture system input audio (PCM 16-bit signed, mono/stereo 44.1kHz/48kHz).
 - Runs inside a dedicated daemon thread loop.
 - **Zero-Allocation Conversion**: Conversion from raw PCM byte arrays to normalized `FloatBuffer` arrays uses pre-allocated byte buffers (`byteBuffer`, `floatBuffer`), preventing JVM Garbage Collection (GC) pauses from causing visual micro-stuttering.
+- **Playback-Only Mixer Filtering & Device Caching**: Before querying lines via ALSA, `isLikelyPlaybackOnly()` screens out mixers matching playback keywords (`speaker`, `headphone`, `hdmi`, `output`, `sink`, `spdif`). This prevents ALSA from opening/closing temporary PCM playback handles on the internal laptop speaker, which previously interrupted WirePlumber link negotiation and dropped internal speakers from GNOME Settings. Discovered devices are cached in `cachedInputDevices`.
+- **Coordinated Teardown**: In `stop()`, capture is paused and flushed (`line.stop()`, `line.flush()`), the reader thread is joined with a timeout (`thread.join(1000)`), and the native `TargetDataLine` is closed only once the thread is confirmed idle. This eliminates native handle destruction mid-read.
+- **Safe Format Probing**: Candidate lines that fail to open during format negotiation are closed immediately to prevent ALSA resource leakage.
+
+### 3. Audio Lifecycle & WirePlumber Cooldown (`AudioEngine.kt`)
+- **Settling Cooldown**: When switching devices or backends, a 150ms settling cooldown is introduced between `stop()` and `startClient()` to allow WirePlumber and ALSA kernel drivers to complete asynchronous link graph cleanup.
+- **No-Op Redundant Switching**: `selectDevice()` immediately short-circuits if the requested device, backend, and active state are already matching.
+- **JACK Mode Isolation**: When running under JACK / PipeWire, `getAvailableInputDevices()` returns a virtual `"JACK System Capture"` representation and bypasses JavaSound ALSA hardware scans entirely.
 
 ---
 
