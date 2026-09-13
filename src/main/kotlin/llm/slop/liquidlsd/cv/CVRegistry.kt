@@ -29,6 +29,7 @@ object CVRegistry {
     private var activeNonAudioSources: Array<ActiveSourceEntry> = emptyArray()
 
     private val parsedMidiCc = ConcurrentHashMap<String, Long>()
+    private val parsedMidiNote = ConcurrentHashMap<String, Long>()
 
     private fun getMidiChannelAndCc(id: String): Long {
         val cached = parsedMidiCc[id]
@@ -42,6 +43,21 @@ object CVRegistry {
             (channel.toLong() shl 32) or (cc.toLong() and 0xffffffffL)
         } else 0L
         parsedMidiCc[id] = packed
+        return packed
+    }
+
+    private fun getMidiChannelAndNote(id: String): Long {
+        val cached = parsedMidiNote[id]
+        if (cached != null) return cached
+
+        val prefixLen = 10 // "midi_note_".length
+        val underIdx = id.indexOf('_', prefixLen)
+        val packed = if (underIdx > prefixLen) {
+            val channel = id.substring(prefixLen, underIdx).toIntOrNull() ?: 0
+            val note = id.substring(underIdx + 1).toIntOrNull() ?: 0
+            (channel.toLong() shl 32) or (note.toLong() and 0xffffffffL)
+        } else 0L
+        parsedMidiNote[id] = packed
         return packed
     }
 
@@ -185,6 +201,13 @@ object CVRegistry {
             val channel = (packed ushr 32).toInt()
             val cc = packed.toInt()
             return llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
+        }
+        if (id.startsWith("midi_note_")) {
+            if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0f
+            val packed = getMidiChannelAndNote(id)
+            val channel = (packed ushr 32).toInt()
+            val note = packed.toInt()
+            return llm.slop.liquidlsd.midi.MidiEngine.getNoteValue(channel, note)
         }
         return sources[id]?.value ?: 0f
     }

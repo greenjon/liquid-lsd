@@ -2,8 +2,25 @@ package llm.slop.liquidlsd.midi
 
 import javax.sound.midi.*
 import mu.KotlinLogging
+import kotlinx.serialization.Serializable
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicIntegerArray
+
+@Serializable
+enum class MidiMessageType {
+    CC,
+    NOTE,
+    PITCH_BEND
+}
+
+data class MidiEvent(
+    val channel: Int,           // 0..15
+    val type: MidiMessageType,  // CC, NOTE, PITCH_BEND
+    val index: Int,             // CC# (0..127), Note# (0..127), or 0 for Pitch Bend
+    val rawValue: Int,          // 0..127, or 0..16383 for Pitch Bend
+    val normalizedValue: Float, // 0.0..1.0, or -1.0..1.0 for Pitch Bend
+    val timestampMs: Long = System.currentTimeMillis()
+)
 
 object MidiEngine {
     private val logger = KotlinLogging.logger {}
@@ -12,13 +29,18 @@ object MidiEngine {
     // Using atomic storage prevents data races between the MIDI receiver thread (writer)
     // and the render thread (reader) without requiring any locking.
     private val ccValues = AtomicIntegerArray(16 * 128)
+    private val noteValues = AtomicIntegerArray(16 * 128)
+    private val pitchBendValues = AtomicIntegerArray(16) // 1 per channel
 
-    // Callback hook for MIDI Learn Mode — REMOVED.
-    // All MIDI events (including learn events) are routed through the thread-safe
-    // receivedCcEvents queue below and processed on the render thread by UIManager.
-
-    // Thread-safe queue to pass MIDI events to the main render thread
+    // Thread-safe queue to pass typed MIDI events to the main render thread
+    val receivedEvents = ConcurrentLinkedQueue<MidiEvent>()
+    // Maintained for backward compatibility
     val receivedCcEvents = ConcurrentLinkedQueue<Pair<Int, Int>>()
+
+    // Thread-safe circular buffer for live monitoring / sniffer UI
+    private const val MAX_RECENT_EVENTS = 32
+    private val recentEventsLock = Any()
+    private val recentEventsList = java.util.ArrayDeque<MidiEvent>(MAX_RECENT_EVENTS)
 
     private val openDevices = mutableListOf<MidiDevice>()
 
@@ -127,10 +149,53 @@ object MidiEngine {
         }
     }
 
+    fun getConnectedDeviceNames(): List<String> {
+        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return emptyList()
+        return synchronized(openDevices) {
+            openDevices.map { 
+                try { it.deviceInfo.name ?: "Unknown" } catch (e: Throwable) { "Unknown" }
+            }
+        }
+    }
+
     fun getCcValue(channel: Int, cc: Int): Float {
         if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
         val idx = (channel.coerceIn(0, 15) * 128) + cc.coerceIn(0, 127)
         return Float.fromBits(ccValues.get(idx))
+    }
+
+    fun getNoteValue(channel: Int, note: Int): Float {
+        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
+        val idx = (channel.coerceIn(0, 15) * 128) + note.coerceIn(0, 127)
+        return Float.fromBits(noteValues.get(idx))
+    }
+
+    fun getPitchBendValue(channel: Int): Float {
+        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
+        return Float.fromBits(pitchBendValues.get(channel.coerceIn(0, 15)))
+    }
+
+    fun getNormalizedValue(channel: Int, type: MidiMessageType, index: Int): Float {
+        return when (type) {
+            MidiMessageType.CC -> getCcValue(channel, index)
+            MidiMessageType.NOTE -> getNoteValue(channel, index)
+            MidiMessageType.PITCH_BEND -> getPitchBendValue(channel)
+        }
+    }
+
+    fun getRecentEvents(): List<MidiEvent> {
+        synchronized(recentEventsLock) {
+            return recentEventsList.toList()
+        }
+    }
+
+    private fun recordRecentEvent(event: MidiEvent) {
+        synchronized(recentEventsLock) {
+            if (recentEventsList.size >= MAX_RECENT_EVENTS) {
+                recentEventsList.removeFirst()
+            }
+            recentEventsList.addLast(event)
+        }
     }
 
     fun close() {
@@ -147,29 +212,66 @@ object MidiEngine {
             }
             openDevices.clear()
         }
+        receivedEvents.clear()
         receivedCcEvents.clear()
+        synchronized(recentEventsLock) {
+            recentEventsList.clear()
+        }
     }
 
     private class MidiInputReceiver : Receiver {
         override fun send(message: MidiMessage?, timeStamp: Long) {
-            if (message is ShortMessage) {
-                if (message.command == ShortMessage.CONTROL_CHANGE) {
-                    val channel = message.channel // 0-15
-                    val cc = message.data1 // CC number (0-127)
-                    val value = message.data2 // Value (0-127)
-                    val normalizedValue = value.toFloat() / 127.0f
+            if (message !is ShortMessage) return
+            val channel = message.channel.coerceIn(0, 15)
+
+            when (message.command) {
+                ShortMessage.CONTROL_CHANGE -> {
+                    val cc = message.data1.coerceIn(0, 127)
+                    val rawVal = message.data2.coerceIn(0, 127)
+                    val normalizedValue = rawVal.toFloat() / 127.0f
 
                     val idx = (channel * 128) + cc
-                    if (idx in 0 until ccValues.length()) {
-                        ccValues.set(idx, normalizedValue.toBits())
-                    }
+                    ccValues.set(idx, normalizedValue.toBits())
 
-                    // Queue event for main thread polling
+                    val event = MidiEvent(channel, MidiMessageType.CC, cc, rawVal, normalizedValue)
+                    receivedEvents.offer(event)
                     receivedCcEvents.offer(channel to cc)
+                    recordRecentEvent(event)
+                }
+                ShortMessage.NOTE_ON -> {
+                    val note = message.data1.coerceIn(0, 127)
+                    val velocity = message.data2.coerceIn(0, 127)
+                    val normalizedValue = if (velocity > 0) velocity.toFloat() / 127.0f else 0.0f
 
-                    // MIDI Learn routing: the render thread drains receivedCcEvents
-                    // each frame (in UIManager.render) and handles all state mutations
-                    // there. No direct callback into render-thread state from here.
+                    val idx = (channel * 128) + note
+                    noteValues.set(idx, normalizedValue.toBits())
+
+                    val event = MidiEvent(channel, MidiMessageType.NOTE, note, velocity, normalizedValue)
+                    receivedEvents.offer(event)
+                    recordRecentEvent(event)
+                }
+                ShortMessage.NOTE_OFF -> {
+                    val note = message.data1.coerceIn(0, 127)
+                    val velocity = message.data2.coerceIn(0, 127)
+
+                    val idx = (channel * 128) + note
+                    noteValues.set(idx, 0.0f.toBits())
+
+                    val event = MidiEvent(channel, MidiMessageType.NOTE, note, 0, 0.0f)
+                    receivedEvents.offer(event)
+                    recordRecentEvent(event)
+                }
+                ShortMessage.PITCH_BEND -> {
+                    val lsb = message.data1.coerceIn(0, 127)
+                    val msb = message.data2.coerceIn(0, 127)
+                    val raw = (msb shl 7) or lsb // 0..16383, center 8192
+                    val normalizedValue = ((raw - 8192).toFloat() / 8192.0f).coerceIn(-1.0f, 1.0f)
+
+                    pitchBendValues.set(channel, normalizedValue.toBits())
+
+                    val event = MidiEvent(channel, MidiMessageType.PITCH_BEND, 0, raw, normalizedValue)
+                    receivedEvents.offer(event)
+                    recordRecentEvent(event)
                 }
             }
         }

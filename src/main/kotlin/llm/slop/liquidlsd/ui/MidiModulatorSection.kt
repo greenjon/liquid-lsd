@@ -21,14 +21,21 @@ object MidiModulatorSection {
         onReplace: (CvModulator) -> Unit,
         onUnbind: () -> Unit
     ) {
-        // Channel & CC info readout
-        val parts = existing.sourceId.removePrefix("midi_cc_").split('_')
+        // Channel & CC/Note info readout
+        val isNote = existing.sourceId.startsWith("midi_note_")
+        val prefix = if (isNote) "midi_note_" else "midi_cc_"
+        val parts = existing.sourceId.removePrefix(prefix).split('_')
         if (parts.size >= 2) {
             val ch = parts[0].toIntOrNull() ?: 0
-            val cc = parts[1].toIntOrNull() ?: 0
-            val liveVal = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(ch, cc)
+            val idx = parts[1].toIntOrNull() ?: 0
+            val liveVal = if (isNote) {
+                llm.slop.liquidlsd.midi.MidiEngine.getNoteValue(ch, idx)
+            } else {
+                llm.slop.liquidlsd.midi.MidiEngine.getCcValue(ch, idx)
+            }
+            val typeStr = if (isNote) "Note" else "CC"
 
-            session.uiTheme.caption("Assigned MIDI Target: Channel ${ch + 1}, CC $cc (Live: ${"%.2f".format(liveVal)})")
+            session.uiTheme.caption("Assigned MIDI Target: Channel ${ch + 1}, $typeStr $idx (Live: ${"%.2f".format(liveVal)})")
             ImGui.spacing()
 
             // Re-Learn & Unbind action controls
@@ -38,7 +45,7 @@ object MidiModulatorSection {
             if (isThisCellLearning) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
-                if (ImGui.button("${Icons.REFRESH} Waiting for MIDI CC... (Click to Cancel)##midi_relearn")) {
+                if (ImGui.button("${Icons.REFRESH} Waiting for MIDI Note/CC... (Click to Cancel)##midi_relearn")) {
                     state.midiLearnTarget = null
                 }
                 ImGui.popStyleColor(2)

@@ -304,7 +304,7 @@ object ParametersRenderer {
         val midiCellId = ParameterCellId(paramKey, "midi")
         val isMidiSelected = state.selectedCell == midiCellId
 
-        val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+        val midiMods = param.modulators.filter { it.sourceId.startsWith("midi_cc_") || it.sourceId.startsWith("midi_note_") }
         val hasMidiMod = midiMods.any { mod ->
             val isAllowed = param.modulatorFilter?.invoke(mod) ?: true
             isAllowed && !mod.bypassed
@@ -322,10 +322,13 @@ object ParametersRenderer {
         val isCellHovered = ImGui.isItemHovered()
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {
             val details = if (hasMidiMod || isMidiBypassed) {
-                val ccList = midiMods.joinToString(", ") { it.sourceId.removePrefix("midi_cc_") }
-                "Mapped to MIDI CC: $ccList\nClick to edit MIDI settings in Properties. Middle-click to toggle bypass."
+                val targets = midiMods.joinToString(", ") {
+                    if (it.sourceId.startsWith("midi_note_")) "Note " + it.sourceId.removePrefix("midi_note_")
+                    else "CC " + it.sourceId.removePrefix("midi_cc_")
+                }
+                "Mapped to MIDI: $targets\nClick to edit MIDI settings in Properties. Middle-click to toggle bypass."
             } else if (isMidiTarget) {
-                "Waiting for MIDI CC... Move a knob or fader on your controller."
+                "Waiting for MIDI Note/CC... Move a knob, fader, or press a pad."
             } else {
                 "No MIDI mapping. Click to configure MIDI learn & settings in Properties."
             }
@@ -341,7 +344,7 @@ object ParametersRenderer {
                 val allBypassed = midiMods.all { it.bypassed }
                 val targetBypassed = !allBypassed
                 val updated = param.modulators.map {
-                    if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = targetBypassed) else it
+                    if (it.sourceId.startsWith("midi_cc_") || it.sourceId.startsWith("midi_note_")) it.copy(bypassed = targetBypassed) else it
                 }
                 param.modulators.clear()
                 param.modulators.addAll(updated)
@@ -356,7 +359,7 @@ object ParametersRenderer {
                 if (ImGui.menuItem(if (isMidiBypassed) "Unmute MIDI Modulator" else "Mute MIDI Modulator")) {
                     onPushUndo()
                     val updated = param.modulators.map {
-                        if (it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = !it.bypassed) else it
+                        if (it.sourceId.startsWith("midi_cc_") || it.sourceId.startsWith("midi_note_")) it.copy(bypassed = !it.bypassed) else it
                     }
                     param.modulators.clear()
                     param.modulators.addAll(updated)

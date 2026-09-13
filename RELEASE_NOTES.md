@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Comprehensive Multi-Type MIDI Subsystem, Soft Takeover, Relative Rotary Decoding & Preferences MIDI Controls Manager (`MidiEngine.kt`, `MidiMappingManager.kt`, `PreferencesPanel.kt`, `UIManager.kt`, `CVRegistry.kt`, `MidiModulatorSection.kt`, `ParametersRenderer.kt`)
+- **Multi-Message MIDI Engine**: Expanded `MidiEngine` to capture `NOTE_ON`, `NOTE_OFF`, `CONTROL_CHANGE`, and `PITCH_BEND` events. Implemented lock-free atomic array storage for 16 channels of 128 CCs, 16 channels of 128 Notes, and 16 channels of 14-bit Pitch Bend values.
+- **Live MIDI Monitor (Sniffer)**: Built a real-time packet monitor and history sniffer displaying incoming timestamps, channels, types, indices, raw values, and normalized progress bars directly in the Preferences UI.
+- **Dedicated "MIDI Controls" Tab in Preferences**: Moved MIDI settings out of the Audio Hardware section into a dedicated `Category.MIDI_CONTROLLER` tab in `PreferencesPanel`, complete with hardware status, device enumeration, hotplug rescan, profile management (new/save/delete), global performance action triggers, and a searchable parameter mappings table.
+- **Intelligent Signal Classification & Learn Pipeline**: MIDI Learn inspects incoming streams to automatically infer whether a control is a discrete button/pad (`BUTTON_NOTE`), continuous pot/slider (`CONTINUOUS_CC`), endless rotary encoder (`ROTARY_*`), or pitch bend, while allowing full user overrides.
+- **Continuous Control Shaping & Slew Filter**: Added editable Min/Max numeric range clamping, Invert boolean, and an exponential Slew smoothing filter ($0 \dots 250\,\text{ms}$) to eliminate 7-bit zipper noise and discrete stepping on shader uniforms.
+- **Soft Takeover (Pickup)**: Introduced Soft Takeover mode to eliminate jarring parameter jumps when switching presets. Parameter values remain untouched until the physical control moves across the stored software value, with live telemetry and visual pickup status cues.
+- **Relative Rotary Encoders**: Full decoding support for the three dominant endless encoder standards: Binary Offset (64-centric), Signed Bit (1-centric), and Two's Complement (1-centric), with configurable step size scaling.
+- **Discrete Trigger Modes**: Added Toggle (latched), Momentary (active only while depressed), Step Increment, and Step Decrement modes for buttons and pads.
+- **Modulation Matrix Note Integration**: Expanded `CVRegistry` and `ParametersRenderer` to support `midi_note_<channel>_<note>` modulators alongside `midi_cc_<channel>_<cc>`.
+- **Full Backward Compatibility**: All new fields in `MidiControlMapping` default seamlessly, ensuring existing `library/midi/*.json` profile files load without error or data loss.
+
 ### Flexible ISF Shader Management, Role Auto-Detection & Folder Hierarchy (`ISFScanner.kt`, `ISFModels.kt`, `ISFParser.kt`, `ISFTextureLoader.kt`, `ISFVisualSource.kt`, `ISFFilter.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ShaderPickerPopup.kt`)
 - **JSON Input Role Auto-Detection**: Eliminated rigid directory requirements (such as forcing shaders into specific `Generators/`, `Filters/`, or `Transitions/` folders). The scanner inspects the declared `INPUTS` in the shader's JSON header:
   - **0 image inputs** $\to$ Auto-classified as **Generator** (`ISFAssetType.GENERATOR` / `VisualSourceRegistry`).

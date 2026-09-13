@@ -26,6 +26,10 @@ import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.presets.PlayQueueManager
+import llm.slop.liquidlsd.midi.MidiEngine
+import llm.slop.liquidlsd.midi.MidiMessageType
+import llm.slop.liquidlsd.midi.MidiInputType
+import llm.slop.liquidlsd.midi.TriggerMode
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -212,7 +216,8 @@ class UIManager(
         var midiCcDelta = 0
         var bgMidiCcDelta = 0
         if (!session.uiTheme.midiEnabled) {
-            llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.clear()
+            MidiEngine.receivedEvents.clear()
+            MidiEngine.receivedCcEvents.clear()
         } else {
             // Check for MIDI learn auto-timeout (15 seconds)
             if (parametersState.midiLearnTarget != null && System.currentTimeMillis() - parametersState.midiLearnStartTimeMs > 15000L) {
@@ -220,18 +225,40 @@ class UIManager(
             }
 
             while (true) {
-                val event = llm.slop.liquidlsd.midi.MidiEngine.receivedCcEvents.poll() ?: break
-                val (channel, cc) = event
+                val event = MidiEngine.receivedEvents.poll() ?: break
                 val target = parametersState.midiLearnTarget
                 if (target != null) {
-                    val midiId = "midi_cc_${channel}_${cc}"
+                    val inputType = when (event.type) {
+                        MidiMessageType.NOTE -> MidiInputType.BUTTON_NOTE
+                        MidiMessageType.PITCH_BEND -> MidiInputType.PITCH_BEND
+                        MidiMessageType.CC -> when {
+                            event.rawValue == 63 || event.rawValue == 65 -> MidiInputType.ROTARY_BINARY_OFFSET
+                            else -> MidiInputType.CONTINUOUS_CC
+                        }
+                    }
+                    val triggerMode = if (event.type == MidiMessageType.NOTE) TriggerMode.MOMENTARY else TriggerMode.TOGGLE
+
                     when (target) {
                         is MidiLearnTarget.BaseValueSlider -> {
-                            session.midiMappingManager.addMapping(target.paramKey, cc, channel, target.min, target.max)
+                            session.midiMappingManager.addMapping(
+                                parameterPath = target.paramKey,
+                                cc = event.index,
+                                channel = event.channel,
+                                minVal = target.min,
+                                maxVal = target.max,
+                                messageType = event.type,
+                                inputType = inputType,
+                                triggerMode = triggerMode
+                            )
                             session.midiMappingManager.saveActiveProfile()
                         }
                         is MidiLearnTarget.GridCell -> {
-                            val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") }
+                            val midiId = if (event.type == MidiMessageType.NOTE) {
+                                "midi_note_${event.channel}_${event.index}"
+                            } else {
+                                "midi_cc_${event.channel}_${event.index}"
+                            }
+                            val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") || it.sourceId.startsWith("midi_note_") }
                             target.param.modulators.removeAll(existingMods)
                             val exists = target.param.modulators.any { it.sourceId == midiId }
                             if (!exists) {
@@ -244,14 +271,27 @@ class UIManager(
                                 )
                             }
                         }
+                        is MidiLearnTarget.GlobalAction -> {
+                            session.midiMappingManager.addMapping(
+                                parameterPath = target.actionKey,
+                                cc = event.index,
+                                channel = event.channel,
+                                minVal = 0f,
+                                maxVal = 1f,
+                                messageType = event.type,
+                                inputType = inputType,
+                                triggerMode = TriggerMode.TOGGLE
+                            )
+                            session.midiMappingManager.saveActiveProfile()
+                        }
                     }
                     parametersState.midiLearnTarget = null
                 } else {
+                    // Global Actions
                     val nextCc = session.midiMappingManager.getCcForSpecial("Global/queueNext")
                     val nextCh = session.midiMappingManager.getChannelForSpecial("Global/queueNext")
-                    if (nextCc != -1 && cc == nextCc && channel == nextCh) {
-                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                        val isHigh = valNow > 0.5f
+                    if (nextCc != -1 && event.index == nextCc && event.channel == nextCh) {
+                        val isHigh = event.normalizedValue > 0.5f
                         if (isHigh && !lastNextMidiCcHigh) {
                             midiCcDelta += 1
                         }
@@ -259,9 +299,8 @@ class UIManager(
                     }
                     val prevCc = session.midiMappingManager.getCcForSpecial("Global/queuePrev")
                     val prevCh = session.midiMappingManager.getChannelForSpecial("Global/queuePrev")
-                    if (prevCc != -1 && cc == prevCc && channel == prevCh) {
-                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                        val isHigh = valNow > 0.5f
+                    if (prevCc != -1 && event.index == prevCc && event.channel == prevCh) {
+                        val isHigh = event.normalizedValue > 0.5f
                         if (isHigh && !lastPrevMidiCcHigh) {
                             midiCcDelta -= 1
                         }
@@ -269,9 +308,8 @@ class UIManager(
                     }
                     val bgNextCc = session.midiMappingManager.getCcForSpecial("Global/bgQueueNext")
                     val bgNextCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueueNext")
-                    if (bgNextCc != -1 && cc == bgNextCc && channel == bgNextCh) {
-                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                        val isHigh = valNow > 0.5f
+                    if (bgNextCc != -1 && event.index == bgNextCc && event.channel == bgNextCh) {
+                        val isHigh = event.normalizedValue > 0.5f
                         if (isHigh && !lastBgNextMidiCcHigh) {
                             bgMidiCcDelta += 1
                         }
@@ -279,9 +317,8 @@ class UIManager(
                     }
                     val bgPrevCc = session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev")
                     val bgPrevCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueuePrev")
-                    if (bgPrevCc != -1 && cc == bgPrevCc && channel == bgPrevCh) {
-                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                        val isHigh = valNow > 0.5f
+                    if (bgPrevCc != -1 && event.index == bgPrevCc && event.channel == bgPrevCh) {
+                        val isHigh = event.normalizedValue > 0.5f
                         if (isHigh && !lastBgPrevMidiCcHigh) {
                             bgMidiCcDelta -= 1
                         }
@@ -289,16 +326,19 @@ class UIManager(
                     }
                     val tapCc = session.midiMappingManager.getCcForSpecial("Global/tapTempo")
                     val tapCh = session.midiMappingManager.getChannelForSpecial("Global/tapTempo")
-                    if (tapCc != -1 && cc == tapCc && channel == tapCh) {
-                        val valNow = llm.slop.liquidlsd.midi.MidiEngine.getCcValue(channel, cc)
-                        val isHigh = valNow > 0.5f
+                    if (tapCc != -1 && event.index == tapCc && event.channel == tapCh) {
+                        val isHigh = event.normalizedValue > 0.5f
                         if (isHigh && !lastTapMidiCcHigh) {
                             session.tapTempoController.tap()
                         }
                         lastTapMidiCcHigh = isHigh
                     }
+
+                    // Forward to parameter bindings (rotary deltas, buttons, continuous takeover)
+                    session.midiMappingManager.onMidiEvent(event, mixer)
                 }
             }
+            MidiEngine.receivedCcEvents.clear()
         }
 
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
@@ -398,9 +438,15 @@ class UIManager(
 
             drawLayout(mixer, displayWidth, displayHeight)
 
-            PreferencesPanel.draw(session, session.uiTheme.baseSize, displayWidth, displayHeight, mixer) { newPct ->
-                applyPresetNameScale(newPct)
-            }
+            PreferencesPanel.draw(
+                session = session,
+                currentSize = session.uiTheme.baseSize,
+                displayW = displayWidth,
+                displayH = displayHeight,
+                mixer = mixer,
+                onPresetScaleChanged = { newPct -> applyPresetNameScale(newPct) },
+                parametersState = parametersState
+            )
 
             VideoExportModal.draw(session, mixer, renderer, displayWidth, displayHeight)
 

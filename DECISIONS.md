@@ -1,3 +1,35 @@
+## Multi-Type MIDI Subsystem, Soft Takeover, Relative Rotary Decoding, and MIDI Controls Manager (`MidiEngine.kt`, `MidiMappingManager.kt`, `PreferencesPanel.kt`, `UIManager.kt`, `CVRegistry.kt`)
+
+- **Decision**: Overhaul the MIDI subsystem from CC-only polling into a high-performance, multi-type event and state architecture spanning Phases 1A, 1B, 2, and 3:
+  - **Multi-Message Capture (`MidiEngine.kt`)**:
+    - Expanded Java Sound input receiver to capture `ShortMessage.CONTROL_CHANGE`, `NOTE_ON`, `NOTE_OFF`, and `PITCH_BEND`.
+    - Maintained zero-allocation thread-safe state via `AtomicIntegerArray` storage for 16 channels of 128 CCs, 16 channels of 128 Notes, and 16 channels of 14-bit Pitch Bend values.
+    - Unified incoming event queue (`receivedEvents: ConcurrentLinkedQueue<MidiEvent>`) and a rolling 32-event thread-safe buffer (`recentEventsList`) for live input sniffing.
+  - **Intelligent Signal Classification & Learn Pipeline (`UIManager.kt`, `MidiMappingManager.kt`)**:
+    - During MIDI Learn, incoming streams are automatically classified into:
+      - `BUTTON_NOTE` for pads/keys (defaulting to Momentary mode).
+      - `CONTINUOUS_CC` for pots and faders ($0 \dots 127$).
+      - `ROTARY_*` when receiving relative delta packets ($63/65$ or $1/127$).
+      - `PITCH_BEND` for 14-bit center-sprung bipolar inputs.
+    - Support mapping directly to Base Value sliders, Modulation Matrix cells (`midi_cc_` and `midi_note_`), and Global Performance Actions.
+  - **Contextual Fine-Tuning (Continuous & Discrete Modes)**:
+    - Continuous: Min/Max numerical travel clamping, Invert boolean, and an exponential Slew smoothing filter ($0 \dots 250\,\text{ms}$) to eliminate 7-bit zipper noise on shader uniforms.
+    - Discrete: Trigger modes for Momentary (hold-to-activate), Latched Toggle, Step Increment, and Step Decrement.
+  - **Hardware Desync & Relative Rotary Decoding (Edge-Case Handling)**:
+    - *Soft Takeover (Pickup)*: Prevents parameter jumps when changing presets by delaying value updates until the physical control crosses or reaches the stored software value. The UI indicates `Awaiting Pickup` alongside live physical position telemetry.
+    - *Relative Encoders*: Implemented decoding for the three dominant rotary standards: `ROTARY_BINARY_OFFSET` (64-centric), `ROTARY_SIGNED_BIT` (1-centric), and `ROTARY_TWOS_COMP` (1-centric), with configurable step size scaling.
+  - **Dedicated MIDI Controls Manager (`PreferencesPanel.kt`)**:
+    - Added a dedicated `Category.MIDI_CONTROLLER("MIDI Controls")` tab in Preferences.
+    - Includes controller hardware status, plug-and-play rescan, profile management (create/save/delete/switch), live packet sniffer table, global action learn buttons, and a filterable, inline-editable parameter mappings table.
+  - **Backwards Compatibility**:
+    - Default arguments on `MidiControlMapping` ensure full backward compatibility with legacy `library/midi/*.json` files.
+- **Rationale**:
+  - Live visual performance demands instant, jitter-free physical control without jarring parameter jumps when switching presets.
+  - Endless rotary encoders and performance pads previously could not be utilized properly due to CC-only absolute assumptions.
+  - Relocating MIDI from the cramped Audio Hardware section to a dedicated Preferences tab provides the visual real-estate needed for real-time packet inspection and deep mapping customization.
+
+---
+
 ## Transition from Settings to Preferences (`AppPreferences.kt`, `BroadcastPreferences.kt`, `PreferencesPanel.kt`, `UITheme.kt`, `MenuBar.kt`, `lsd-preferences.properties`)
 
 - **Decision**: Standardize all user-facing configuration, persistence layers, modal dialogs, and internal models from "Settings" to "Preferences":
