@@ -40,6 +40,8 @@ If you're building on or contributing to Liquid LSD, the developer docs cover th
 - [UI Architecture](developer/ui.md)
 - [Preset Storage & Queues](developer/preset_management.md)
 - [Operations & Tuning](developer/ops_tuning.md)
+- [Build for ARM64 Linux](developer/build_arm64_linux.md)
+- [RFC: Modular Video Rack Proposal](developer/modular_video_rack_proposal.md)
 
 ---
 

@@ -1,3 +1,22 @@
+## Master Project Roadmap Consolidation (`ROADMAP.md`, `.planning/STATE.md`)
+
+- **Decision**: Establish a single authoritative master roadmap in `ROADMAP.md` at the repository root, consolidating historical roadmaps, developer proposals (`interop_roadmap.md`, `unified_control_mapping.md`, `mandala_future_roadmap.md`, `continuous_random_morphing_proposal.md`), and TODO items:
+  - Cataloged and archived completed milestones: Core Dual-Deck Engine, Suite C UI Modernization, Universal Shader & ISF Ecosystem, Stage Video Interoperability (Spout/Syphon/PipeWire), Ableton Link Synchronization, Advanced MIDI & Controller Engine, Continuous Random Morphing, Unified Window CSD, Preset Tags & Search, and Dear ImGui 1.92.
+  - Formally retired legacy TODO items: `glGetDebugMessageLog` profiling (superseded by active `GLDebug.setupDebugCallback()` with `glDebugMessageCallback()`) and frame budget monitoring (active via MenuBar telemetry HUD).
+  - Defined active and upcoming milestones for the path to v1.0:
+    - **Milestone 1**: TouchOSC & Open Sound Control (`OscCodec`, `OscEngine`, TouchOSC layouts, bidirectional feedback).
+    - **Milestone 2**: 100% ISF Pipeline Migration (Feedback FX, 2D-to-3D & Pure ISF Mixer).
+    - **Milestone 3**: Unified Control Mapping & Hardware Profiles (`CommandRegistry`, `library/mappings/`).
+    - **Milestone 4**: Session Scratchpad & Live Notes (`~/.liquid-lsd/scratchpad.txt`).
+    - **Milestone 5**: Mandala Visual Generator v2+ Recipe Vault & Geometric Tagging.
+    - **Milestone 6**: Modular Video Rack Architecture (`modular_video_rack_proposal.md`).
+  - Linked `.planning/STATE.md` and cleared the long-standing blocker regarding missing roadmap tracking.
+- **Rationale**:
+  - Eliminates fragmentation between disconnected markdown documents and historical scratchpads.
+  - Provides contributors and performers with immediate clarity on completed capabilities, active development tracks, and future architectural direction.
+
+---
+
 ## Modernization Upgrade to Dear ImGui 1.92 (`imgui-java` 1.92.7.1) (`build.gradle.kts`, `KeyCombination.kt`, `ShortcutManager.kt`, `UIManager.kt`, `UITheme.kt`, `UIThemeStyler.kt`, `ParametersKeyboardTest.kt`)
 
 - **Decision**: Complete Phase 2 modernization of `io.github.spair:imgui-java` from `1.86.12` to `1.92.7.1` (tracking Dear ImGui 1.92):
@@ -200,7 +219,7 @@
 ## Platform Target: Linux ARM64 Dropped
 
 - **Decision**: Linux ARM64 (aarch64) is **no longer a supported build target** as of 2026-09-10.
-- **Reason**: A required native module dependency does not provide an ARM64 Linux binary and cannot be compiled for that architecture. The exact module was not documented at the time of the decision.
+- **Reason**: Upstream `io.github.spair:imgui-java` does not publish an ARM64 Linux native binary (`libimgui-java64.so`), and upstream issue [#105](https://github.com/SpaiR/imgui-java/issues/105) remains open. A roadmap milestone and step-by-step restoration guide using GitHub Actions native ARM runners is documented in [`docs/developer/build_arm64_linux.md`](docs/developer/build_arm64_linux.md).
 - **Remaining targets**: Linux x64, macOS x64, macOS ARM64 (Apple Silicon), Windows x64.
 - **Note on ARM64 macOS**: macOS ARM64 (Apple Silicon) remains fully supported. The `NSRect`/`NSSize` JNA `Structure` field-type fix (`Double` instead of `Float`) introduced in the beta 57–62 audit specifically targets ARM64 macOS correctness and must be preserved.
 - **Impact**: Audit finding #16 ("PipeWire struct offsets wrong on ARM64 Linux") is **closed as N/A** — PipeWire is Linux-only and ARM64 Linux is no longer a target. Raw byte-offset struct access in `PipeWireLibrary.kt` only needs to be correct for x86_64 Linux.
