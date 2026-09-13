@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fix Properties Panel Disappearing When Library Is Half-Visible (`ShortcutManager.kt`, `LibraryPanel.kt`, `ParametersKeyboard.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`)
+- **Fixed Properties Selection Loss**: Resolved an issue where selecting a parameter cell in `ParametersPanel` briefly showed controls in `PropertiesPanel` before immediately disappearing when the Library panel was in half-visible (`HALF`) mode.
+- **Root Cause & `ShortcutManager.isTriggered()`**: In `LibraryPanel.kt`, `ShortcutManager.matchesKey("library.load_deck_a", GLFW_KEY_1)` was being invoked without verifying if the key was actually pressed via ImGui. Because `library.load_deck_a` is bound to key `1` by default, `isLoadA` evaluated to `true` on every frame while the Library was visible, repeatedly loading the selected preset into Deck A at 60 FPS. This recreated Deck A's parameters each frame, causing `PropertiesPanel` to detect stale parameter references and reset the selection. Added `ShortcutManager.isTriggered(actionId)` to properly check active ImGui modifier state and `ImGui.isKeyPressed()`.
+- **ParametersKeyboard Shortcut Guards**: Updated `parameters.save_deck` and `parameters.save_deck_as` in `ParametersKeyboard.kt` to use `ShortcutManager.isTriggered()` to prevent spurious triggers when modifier keys are held.
+- **Child Window Focus Guard**: Guarded ImGui focus-driven auto-selection checks (`ImGui.isItemFocused()`) in all four Library browser panels (`PresetListPanel`, `PlaylistEditorPanel`, `QueueActionsPanel`, `BgQueueActionsPanel`) to verify that the child window itself has active focus (`ImGui.isWindowFocused(ChildWindows)`) and matches `LibraryPanel.activeSelectionSource`.
+
 ### Comprehensive Multi-Type MIDI Subsystem, Soft Takeover, Relative Rotary Decoding & Preferences MIDI Controls Manager (`MidiEngine.kt`, `MidiMappingManager.kt`, `PreferencesPanel.kt`, `UIManager.kt`, `CVRegistry.kt`, `MidiModulatorSection.kt`, `ParametersRenderer.kt`)
 - **Multi-Message MIDI Engine**: Expanded `MidiEngine` to capture `NOTE_ON`, `NOTE_OFF`, `CONTROL_CHANGE`, and `PITCH_BEND` events. Implemented lock-free atomic array storage for 16 channels of 128 CCs, 16 channels of 128 Notes, and 16 channels of 14-bit Pitch Bend values.
 - **Live MIDI Monitor (Sniffer)**: Built a real-time packet monitor and history sniffer displaying incoming timestamps, channels, types, indices, raw values, and normalized progress bars directly in the Preferences UI.

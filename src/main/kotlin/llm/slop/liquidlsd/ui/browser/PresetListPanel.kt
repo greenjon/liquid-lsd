@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiFocusedFlags
 import imgui.flag.ImGuiKey
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
@@ -177,7 +178,9 @@ object PresetListPanel {
             }
 
             val io = ImGui.getIO()
-            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+            val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
+            val canAutoSelect = isWindowFocused && (LibraryPanel.activeSelectionSource == null || LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PRESETS)
+            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
 

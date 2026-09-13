@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
+import imgui.flag.ImGuiFocusedFlags
 import imgui.flag.ImGuiKey
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
@@ -247,7 +248,9 @@ object PlaylistEditorPanel {
             }
 
             val io = ImGui.getIO()
-            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+            val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
+            val canAutoSelect = isWindowFocused && LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PLAYLIST
+            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }
 

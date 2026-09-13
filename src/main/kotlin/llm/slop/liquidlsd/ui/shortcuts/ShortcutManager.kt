@@ -124,6 +124,68 @@ object ShortcutManager {
         return key.keyCode == keyCode && key.modifiers == modifiers
     }
 
+    /**
+     * Checks if the shortcut action was triggered in ImGui during the current frame.
+     * Evaluates modifier keys (Ctrl/Cmd, Shift, Alt) against ImGui.getIO() and verifies
+     * that the primary key (or keypad equivalent) was pressed via ImGui.isKeyPressed().
+     */
+    fun isTriggered(actionId: String): Boolean {
+        val action = actions[actionId] ?: return false
+        val key = action.currentKey ?: return false
+        if (key.isEmpty) return false
+
+        try {
+            if (!imgui.ImGui.getCurrentContext().isValidPtr()) {
+                return false
+            }
+        } catch (e: Throwable) {
+            return false
+        }
+
+        val io = try {
+            imgui.ImGui.getIO()
+        } catch (e: Throwable) {
+            return false
+        }
+        if (io.wantTextInput) return false
+
+        val wantCtrl = key.isCtrl || key.isSuper
+        val hasCtrl = io.keyCtrl || io.keySuper
+        if (wantCtrl != hasCtrl) return false
+        if (key.isShift != io.keyShift) return false
+        if (key.isAlt != io.keyAlt) return false
+
+        var pressed = try {
+            imgui.ImGui.isKeyPressed(key.keyCode, false)
+        } catch (e: Throwable) {
+            false
+        }
+
+        if (!pressed) {
+            val kpCode = when (key.keyCode) {
+                GLFW_KEY_0 -> GLFW_KEY_KP_0
+                GLFW_KEY_1 -> GLFW_KEY_KP_1
+                GLFW_KEY_2 -> GLFW_KEY_KP_2
+                GLFW_KEY_3 -> GLFW_KEY_KP_3
+                GLFW_KEY_4 -> GLFW_KEY_KP_4
+                GLFW_KEY_5 -> GLFW_KEY_KP_5
+                GLFW_KEY_6 -> GLFW_KEY_KP_6
+                GLFW_KEY_7 -> GLFW_KEY_KP_7
+                GLFW_KEY_8 -> GLFW_KEY_KP_8
+                GLFW_KEY_9 -> GLFW_KEY_KP_9
+                else -> null
+            }
+            if (kpCode != null) {
+                pressed = try {
+                    imgui.ImGui.isKeyPressed(kpCode, false)
+                } catch (e: Throwable) {
+                    false
+                }
+            }
+        }
+        return pressed
+    }
+
     fun saveKeybindings() {
         try {
             val sb = StringBuilder()

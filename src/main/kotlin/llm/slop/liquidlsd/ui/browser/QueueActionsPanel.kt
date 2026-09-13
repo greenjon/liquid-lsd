@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiFocusedFlags
 import imgui.flag.ImGuiKey
 import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
@@ -161,7 +162,9 @@ object QueueActionsPanel {
             }
 
             val io = ImGui.getIO()
-            if (ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+            val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
+            val canAutoSelect = isWindowFocused && LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.QUEUE_AB
+            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }
 

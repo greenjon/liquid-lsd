@@ -39,12 +39,8 @@ object ParametersKeyboard {
         val isCmd = io.keySuper
         val modActive = isCtrl || isCmd
 
-        val currentMods = (if (isCtrl || isCmd) org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL else 0) or (if (isShift) org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT else 0)
-
-        val isSaveAs = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("parameters.save_deck_as", GLFW_KEY_S, currentMods) ||
-                (modActive && isShift && ImGui.isKeyPressed(GLFW_KEY_S, false))
-        val isSave = !isSaveAs && (llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("parameters.save_deck", GLFW_KEY_S, currentMods) ||
-                (modActive && !isShift && ImGui.isKeyPressed(GLFW_KEY_S, false)))
+        val isSaveAs = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("parameters.save_deck_as")
+        val isSave = !isSaveAs && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("parameters.save_deck")
 
         // Save: Ctrl+S / Cmd+S, Save As: Shift+Ctrl+S / Shift+Cmd+S
         if (isSave || isSaveAs) {

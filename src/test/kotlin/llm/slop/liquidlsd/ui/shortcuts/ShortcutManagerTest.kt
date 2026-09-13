@@ -91,4 +91,21 @@ class ShortcutManagerTest {
         assertTrue(ShortcutManager.matchesKey("global.preferences", GLFW_KEY_P, GLFW_MOD_CONTROL))
         assertFalse(ShortcutManager.matchesKey("global.preferences", GLFW_KEY_COMMA, GLFW_MOD_CONTROL))
     }
+
+    @Test
+    fun testIsTriggeredGracefulHandlingInHeadlessEnvironment() {
+        // In unit test environment without active ImGui frame, isTriggered should safely return false without exception
+        assertFalse(ShortcutManager.isTriggered("library.load_deck_a"))
+        assertFalse(ShortcutManager.isTriggered("non_existent_action"))
+    }
+
+    @Test
+    fun testLibraryActionDefaults() {
+        assertTrue(ShortcutManager.matchesKey("library.load_deck_a", GLFW_KEY_1))
+        assertTrue(ShortcutManager.matchesKey("library.load_deck_b", GLFW_KEY_2))
+        assertTrue(ShortcutManager.matchesKey("library.load_deck_bg", GLFW_KEY_3))
+        assertTrue(ShortcutManager.matchesKey("library.load_deck_pv", GLFW_KEY_4))
+        assertTrue(ShortcutManager.matchesKey("library.queue_ab", GLFW_KEY_Q))
+        assertTrue(ShortcutManager.matchesKey("library.queue_bg", GLFW_KEY_Q, GLFW_MOD_SHIFT))
+    }
 }
