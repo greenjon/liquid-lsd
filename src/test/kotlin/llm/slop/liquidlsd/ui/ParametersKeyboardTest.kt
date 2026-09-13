@@ -7,7 +7,6 @@ import io.mockk.verify
 import io.mockk.every
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
-import org.lwjgl.glfw.GLFW.GLFW_KEY_S
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -46,16 +45,20 @@ class ParametersKeyboardTest {
         val io = ImGui.getIO()
         io.setDisplaySize(800f, 600f)
         io.setDeltaTime(1f / 60f)
+        if (ctrl) io.addKeyEvent(ImGuiKey.ImGuiMod_Ctrl, true)
+        if (shift) io.addKeyEvent(ImGuiKey.ImGuiMod_Shift, true)
         io.keyCtrl = ctrl
         io.keyShift = shift
-        io.setKeysDown(key, true)
+        io.addKeyEvent(key, true)
         ImGui.newFrame()
 
         try {
             block()
         } finally {
             ImGui.render()
-            io.setKeysDown(key, false)
+            io.addKeyEvent(key, false)
+            if (ctrl) io.addKeyEvent(ImGuiKey.ImGuiMod_Ctrl, false)
+            if (shift) io.addKeyEvent(ImGuiKey.ImGuiMod_Shift, false)
             io.keyCtrl = false
             io.keyShift = false
         }
@@ -66,7 +69,7 @@ class ParametersKeyboardTest {
         val state = ParametersState()
         state.activeTopTab = "Deck A"
 
-        simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = false) {
+        simulateFrameWithKeys(ImGuiKey.S, ctrl = true, shift = false) {
             ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
@@ -86,7 +89,7 @@ class ParametersKeyboardTest {
         val state = ParametersState()
         state.activeTopTab = "Deck B"
 
-        simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = true) {
+        simulateFrameWithKeys(ImGuiKey.S, ctrl = true, shift = true) {
             ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
@@ -106,7 +109,7 @@ class ParametersKeyboardTest {
         val state = ParametersState()
         state.activeTopTab = "Mixer"
 
-        simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = false) {
+        simulateFrameWithKeys(ImGuiKey.S, ctrl = true, shift = false) {
             ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,
@@ -127,7 +130,7 @@ class ParametersKeyboardTest {
         state.activeTopTab = "Deck A"
         every { deckA.isEmpty } returns true
 
-        simulateFrameWithKeys(GLFW_KEY_S, ctrl = true, shift = false) {
+        simulateFrameWithKeys(ImGuiKey.S, ctrl = true, shift = false) {
             ParametersKeyboard.handleKeyboardShortcuts(
                 state = state,
                 mixer = mixer,

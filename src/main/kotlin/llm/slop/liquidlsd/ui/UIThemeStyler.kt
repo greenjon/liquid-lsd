@@ -250,8 +250,8 @@ object UIThemeStyler {
             return ImColor.rgba(r, g, b, alpha)
         }
 
-        val leftCol = getNeonBgColor((posX / displayWidth).coerceIn(0f, 1f)).toLong() and 0xFFFFFFFFL
-        val rightCol = getNeonBgColor(((posX + panelW) / displayWidth).coerceIn(0f, 1f)).toLong() and 0xFFFFFFFFL
+        val leftCol = getNeonBgColor((posX / displayWidth).coerceIn(0f, 1f))
+        val rightCol = getNeonBgColor(((posX + panelW) / displayWidth).coerceIn(0f, 1f))
 
         dl.addRectFilledMultiColor(posX, posY, posX + panelW, posY + panelH, leftCol, rightCol, rightCol, leftCol)
     }
@@ -285,7 +285,6 @@ object UIThemeStyler {
         to.setLogSliderDeadzone(from.getLogSliderDeadzone())
         to.setTabRounding(from.getTabRounding())
         to.setTabBorderSize(from.getTabBorderSize())
-        to.setTabMinWidthForCloseButton(from.getTabMinWidthForCloseButton())
         to.setColorButtonPosition(from.getColorButtonPosition())
         to.setButtonTextAlign(from.getButtonTextAlignX(), from.getButtonTextAlignY())
         to.setSelectableTextAlign(from.getSelectableTextAlignX(), from.getSelectableTextAlignY())

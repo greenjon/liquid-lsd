@@ -787,7 +787,7 @@ object UITheme {
     inline fun <T> withFont(level: FontLevel, block: () -> T): T {
         val font = fontFor(level)
         val pushed = font != null && font.ptr != 0L
-        if (pushed) ImGui.pushFont(font)
+        if (pushed) ImGui.pushFont(font, 0f)
         try {
             return block()
         } finally {

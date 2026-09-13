@@ -25,19 +25,19 @@ During our investigation of all published `io.github.spair:imgui-java` artifacts
 
 ## Two-Phase Upgrade Strategy
 
-| Metric | Phase 1: Target `1.86.12` (Current) | Phase 2: Target `1.92.x` (Roadmap) |
+| Metric | Phase 1: Target `1.86.12` | Phase 2: Target `1.92.7.1` (Current) |
 | :--- | :--- | :--- |
 | **macOS ARM64 Support** | **Full** (Universal `x86_64` + `arm64`) | **Full** (Universal `x86_64` + `arm64`) |
 | **Linux ARM64 Support** | No (Upstream limitation) | No (Upstream limitation) |
-| **Breaking API Changes** | **0** (Drop-in compatible) | **7 distinct categories** across 9 files |
-| **Regression Risk** | **Zero** | Medium (Requires visual regression audit) |
-| **Scope of Work** | Version bump in `build.gradle.kts` | Multi-panel refactoring & style verification |
+| **Breaking API Changes** | **0** (Drop-in compatible) | **Implemented** across UI codebase |
+| **Regression Risk** | **Zero** | Verified via test suite & styling fixes |
+| **Status** | Completed | **Completed & Active** |
 
 ### Phase 1: Stable Adoption (`1.86.12`)
 We adopted `1.86.12` to immediately provide native Apple Silicon execution and unblock macOS ARM64 binary smoke testing without introducing source code churn, behavioural drift, or UI regression.
 
-### Phase 2: Modernization Roadmap (`1.92.7.1`)
-When scheduling the Phase 2 upgrade to the latest release, developers must implement the breaking changes documented below.
+### Phase 2: Modernization (`1.92.7.1`)
+Adopted `1.92.7.1` to modernize Dear ImGui, upgrading the keyboard input system to the New Key API, switching to 64-bit texture handles, modernizing backend lifecycle methods, supporting dynamic font scaling, and enabling native multi-selection primitives.
 
 ---
 

@@ -47,7 +47,7 @@ class MixerPanel(
         dlMaster.addRectFilled(imgScreenX, imgScreenY, imgScreenX + availW, imgScreenY + masterH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
-        ImGui.image(mixer.masterFBO.texture, availW, masterH, 0f, 1f, 1f, 0f)
+        ImGui.image(mixer.masterFBO.texture.toLong(), availW, masterH, 0f, 1f, 1f, 0f)
 
         val overlayW = 60f
         val monitorBtnW = (availW - overlayW).coerceAtLeast(1f)

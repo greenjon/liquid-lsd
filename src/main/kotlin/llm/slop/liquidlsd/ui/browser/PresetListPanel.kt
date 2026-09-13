@@ -91,7 +91,7 @@ object PresetListPanel {
         }
         ImGui.inputTextWithHint("##presetSearch", "Search presets & tags... (Ctrl+F)", searchBuffer)
         if (ImGui.isItemActive()) {
-            if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Escape))) {
+            if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
                 searchBuffer.set("")
                 LibraryPanel.shouldReclaimFocus = true
             }
@@ -289,8 +289,8 @@ object PresetListPanel {
         val io = ImGui.getIO()
         val selected = selectedAsset
         if (selected != null && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
+                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
                 BrowserPopupHandler.deleteTarget = selected
                 BrowserPopupHandler.pendingOpenDeletePopup = true
             }

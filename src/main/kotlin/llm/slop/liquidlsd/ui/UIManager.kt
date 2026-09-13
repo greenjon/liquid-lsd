@@ -360,22 +360,22 @@ class UIManager(
             }
 
             if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
-                if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Space))) {
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) {
                     LibraryPanel.cycleMode(session)
                 }
             }
             when (session.uiTheme.queueKeyTrigger) {
                 UITheme.QueueKeyTrigger.ARROWS -> {
-                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.LeftArrow))) keyDelta -= 1
-                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.RightArrow))) keyDelta += 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.LeftArrow)) keyDelta -= 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.RightArrow)) keyDelta += 1
                 }
                 UITheme.QueueKeyTrigger.PAGE_UP_DOWN -> {
-                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.PageUp))) keyDelta -= 1
-                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.PageDown))) keyDelta += 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageUp)) keyDelta -= 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageDown)) keyDelta += 1
                 }
                 UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> {
-                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Backspace))) keyDelta -= 1
-                    if (ImGui.isKeyPressed(ImGui.getKeyIndex(imgui.flag.ImGuiKey.Space))) keyDelta += 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Backspace)) keyDelta -= 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) keyDelta += 1
                 }
                 else -> {}
             }
@@ -402,7 +402,8 @@ class UIManager(
         if (pendingFontRebuild) {
             pendingFontRebuild = false
             session.uiTheme.rebuildFonts(ImGui.getIO())
-            imguiGl3.updateFontsTexture()
+            imguiGl3.destroyFontsTexture()
+            imguiGl3.createFontsTexture()
             logger.info { "Preset font size applied (presetNameScalePercent=${session.uiTheme.presetNameScalePercent}%)" }
         }
 
@@ -709,8 +710,8 @@ class UIManager(
         prevMouseButtonCallback?.free()
         windowFrameController.destroy()
         defaultStyle.destroy()
-        imguiGl3.dispose()
-        imguiGlfw.dispose()
+        imguiGl3.shutdown()
+        imguiGlfw.shutdown()
         ImGui.destroyContext()
     }
 }

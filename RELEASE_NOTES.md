@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Modernization Upgrade to Dear ImGui 1.92 (`build.gradle.kts`, `KeyCombination.kt`, `ShortcutManager.kt`, `UIManager.kt`, `UITheme.kt`, `UIThemeStyler.kt`, `ParametersKeyboardTest.kt`)
+- **Dear ImGui 1.92.7.1 Upgrade**: Upgraded `io.github.spair:imgui-java` from `1.86.12` to `1.92.7.1`, bringing the desktop UI to the latest ImGui release.
+- **New Key & Navigation Input API**: Replaced obsolete `ImGui.getKeyIndex(ImGuiKey.*)` with direct `ImGuiKey` constants and implemented `KeyCombination.glfwKeyToImGuiKey()` to map GLFW keycodes to ImGuiKey codes in `ShortcutManager.isTriggered`.
+- **64-bit Texture Handles**: Converted OpenGL texture handles passed to `ImGui.image(...)` to `Long` (`.toLong()`) across deck control, mixer, and video export modals.
+- **Backend Lifecycle & Font Rebuilding**: Updated backend methods (`dispose()` to `shutdown()`) and replaced deprecated font update methods with discrete `destroyFontsTexture()` and `createFontsTexture()` calls, along with dynamic font scaling support (`ImGui.pushFont(font, 0f)`).
+
 ### Fix Visual Source Selection Crash, GLSL Relaxed Typing & Clean Startup Logging (`ParametersPanel.kt`, `VisualSourceRegistry.kt`, `DynamicVisualSource.kt`, `ISFParser.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`)
 - **Resolved ImGui Launchpad Assertion Crash**: Fixed a JVM assertion crash (`id != window->ID`) when opening the "Select Visual Source" or "Load Preset" menus from an empty deck launchpad. Empty or blank ISF `DESCRIPTION` fields now fall back to title-cased filenames in `VisualSourceRegistry.kt` and `DynamicVisualSource.kt`, and all launchpad `ImGui.menuItem` calls now enforce `label.ifBlank { id }` and include unique `##` identifiers to avoid empty IDs and label collisions.
 - **Relaxed GLSL Typing via GL_ARB_gpu_shader5 (`ISFParser.kt`)**: Injected `#extension GL_ARB_gpu_shader5 : enable` and `#extension GL_EXT_gpu_shader4 : enable` into preprocessed ISF fragment and vertex shaders. Enables implicit type conversions between `int` and `uint`, bitwise shifts, and mixed equality checks, successfully compiling complex shaders such as `Tiny Date Time Overlay.fs` and `Random Characters.fs`.

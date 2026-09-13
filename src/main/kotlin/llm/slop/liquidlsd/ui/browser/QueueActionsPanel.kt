@@ -266,8 +266,8 @@ object QueueActionsPanel {
         // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
         val io = ImGui.getIO()
         if (selectedIndex in session.playQueueManager.queue.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false) ||
-                ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false)) {
+            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
+                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
                 removeFromQueueIndex = selectedIndex
             }
         }

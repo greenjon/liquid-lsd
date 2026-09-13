@@ -58,7 +58,7 @@ object ParametersKeyboard {
         }
         
         // Undo: Ctrl+Z / Cmd+Z
-        if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Z), false)) {
+        if (modActive && ImGui.isKeyPressed(ImGuiKey.Z, false)) {
             if (isShift) {
                 // Currently no redo queue is tracked by ParametersUndo.kt but we swallow the key
             } else {
@@ -67,7 +67,7 @@ object ParametersKeyboard {
         }
         
         // Copy: Ctrl+C / Cmd+C
-        if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.C), false)) {
+        if (modActive && ImGui.isKeyPressed(ImGuiKey.C, false)) {
             val cell = state.selectedCell
             if (cell != null) {
                 val p = ParameterResolver.findParameterByPath(mixer, cell.paramKey)
@@ -99,7 +99,7 @@ object ParametersKeyboard {
         }
         
         // Paste: Ctrl+V / Cmd+V
-        if (modActive && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.V), false)) {
+        if (modActive && ImGui.isKeyPressed(ImGuiKey.V, false)) {
             val cellData = ClipboardManager.cellClipboard
             val rowData = ClipboardManager.rowClipboard
             
@@ -129,8 +129,8 @@ object ParametersKeyboard {
         }
         
         // Delete / Backspace: Reset parameter or clear cell modulators
-        if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Backspace), false) ||
-            ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete), false)) {
+        if (ImGui.isKeyPressed(ImGuiKey.Backspace, false) ||
+            ImGui.isKeyPressed(ImGuiKey.Delete, false)) {
             
             val cell = state.selectedCell
             if (cell != null) {

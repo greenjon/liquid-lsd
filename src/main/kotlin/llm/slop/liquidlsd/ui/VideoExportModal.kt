@@ -121,7 +121,7 @@ object VideoExportModal {
             val previewAspect = 16f / 9f
             val previewW = 340f
             val previewH = previewW / previewAspect
-            ImGui.image(prog.previewTextureId, previewW, previewH)
+            ImGui.image(prog.previewTextureId.toLong(), previewW, previewH)
         }
 
         ImGui.spacing()

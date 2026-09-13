@@ -1,3 +1,24 @@
+## Modernization Upgrade to Dear ImGui 1.92 (`imgui-java` 1.92.7.1) (`build.gradle.kts`, `KeyCombination.kt`, `ShortcutManager.kt`, `UIManager.kt`, `UITheme.kt`, `UIThemeStyler.kt`, `ParametersKeyboardTest.kt`)
+
+- **Decision**: Complete Phase 2 modernization of `io.github.spair:imgui-java` from `1.86.12` to `1.92.7.1` (tracking Dear ImGui 1.92):
+  - **New Key & Navigation Input API**:
+    - Replaced obsolete `ImGui.getKeyIndex(ImGuiKey.*)` with direct `ImGuiKey` constants across `ParametersKeyboard.kt`, `UIManager.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, and `BgQueueActionsPanel.kt`.
+    - Added comprehensive `KeyCombination.glfwKeyToImGuiKey(glfwKey: Int): Int` mapping to translate GLFW keycodes to `ImGuiKey` codes in `ShortcutManager.isTriggered`. This ensures shortcuts trigger correctly through the 1.92 input pipeline without test mocking hacks.
+  - **64-bit Texture Handles**:
+    - Converted OpenGL texture handles passed to `ImGui.image(...)` to `Long` (`.toLong()`) in `DeckControlPanel.kt`, `MixerPanel.kt`, and `VideoExportModal.kt`.
+  - **Backend Lifecycle & Font Rebuilding**:
+    - Updated `imGuiGlfw.dispose()` and `imguiGl3.dispose()` to standard `shutdown()` in `UIManager.kt`.
+    - Replaced removed `imguiGl3.updateFontsTexture()` with discrete `imguiGl3.destroyFontsTexture()` and `imguiGl3.createFontsTexture()` calls.
+  - **Font Push & Style Modernization**:
+    - Updated `ImGui.pushFont(font, 0f)` in `UITheme.kt` to satisfy the new dynamic font scaling signature.
+    - Standardized `addRectFilledMultiColor` in `UIThemeStyler.kt` to 32-bit `Int` colors.
+    - Removed deprecated `tabMinWidthForCloseButton` style copying.
+- **Rationale**:
+  - Positions the desktop UI on modern Dear ImGui 1.92, unlocking dynamic font scaling, upgraded table layouts, and native multi-selection primitives.
+  - Fixes stale Gradle cache locking issues and ensures keyboard shortcuts work reliably at runtime.
+
+---
+
 ## ImGui Launchpad Popup Safety, Relaxed GLSL Extensions & Scoped Directory Scanning (`ParametersPanel.kt`, `VisualSourceRegistry.kt`, `DynamicVisualSource.kt`, `ISFParser.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`)
 
 - **Decision**:

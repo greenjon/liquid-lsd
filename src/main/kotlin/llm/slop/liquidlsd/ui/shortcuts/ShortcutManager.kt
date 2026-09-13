@@ -155,29 +155,32 @@ object ShortcutManager {
         if (key.isShift != io.keyShift) return false
         if (key.isAlt != io.keyAlt) return false
 
+        val imguiKey = key.imguiKey
+        if (imguiKey == imgui.flag.ImGuiKey.None) return false
+
         var pressed = try {
-            imgui.ImGui.isKeyPressed(key.keyCode, false)
+            imgui.ImGui.isKeyPressed(imguiKey, false)
         } catch (e: Throwable) {
             false
         }
 
         if (!pressed) {
-            val kpCode = when (key.keyCode) {
-                GLFW_KEY_0 -> GLFW_KEY_KP_0
-                GLFW_KEY_1 -> GLFW_KEY_KP_1
-                GLFW_KEY_2 -> GLFW_KEY_KP_2
-                GLFW_KEY_3 -> GLFW_KEY_KP_3
-                GLFW_KEY_4 -> GLFW_KEY_KP_4
-                GLFW_KEY_5 -> GLFW_KEY_KP_5
-                GLFW_KEY_6 -> GLFW_KEY_KP_6
-                GLFW_KEY_7 -> GLFW_KEY_KP_7
-                GLFW_KEY_8 -> GLFW_KEY_KP_8
-                GLFW_KEY_9 -> GLFW_KEY_KP_9
+            val kpKey = when (key.keyCode) {
+                GLFW_KEY_0 -> imgui.flag.ImGuiKey.Keypad0
+                GLFW_KEY_1 -> imgui.flag.ImGuiKey.Keypad1
+                GLFW_KEY_2 -> imgui.flag.ImGuiKey.Keypad2
+                GLFW_KEY_3 -> imgui.flag.ImGuiKey.Keypad3
+                GLFW_KEY_4 -> imgui.flag.ImGuiKey.Keypad4
+                GLFW_KEY_5 -> imgui.flag.ImGuiKey.Keypad5
+                GLFW_KEY_6 -> imgui.flag.ImGuiKey.Keypad6
+                GLFW_KEY_7 -> imgui.flag.ImGuiKey.Keypad7
+                GLFW_KEY_8 -> imgui.flag.ImGuiKey.Keypad8
+                GLFW_KEY_9 -> imgui.flag.ImGuiKey.Keypad9
                 else -> null
             }
-            if (kpCode != null) {
+            if (kpKey != null) {
                 pressed = try {
-                    imgui.ImGui.isKeyPressed(kpCode, false)
+                    imgui.ImGui.isKeyPressed(kpKey, false)
                 } catch (e: Throwable) {
                     false
                 }

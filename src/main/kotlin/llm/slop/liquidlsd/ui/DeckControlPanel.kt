@@ -76,7 +76,7 @@ class DeckControlPanel(
         dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
 
         ImGui.setCursorScreenPos(imgX, imgY)
-        ImGui.image(deck.getOutputTexture(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
+        ImGui.image(deck.getOutputTexture().toLong(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)
 
         val isLeftCol = label == "Deck A" || label == "Deck BG"
         val overlayW = 60f

@@ -22,8 +22,8 @@ repositories {
 }
 
 val lwjglVersion = "3.3.3"
-// imgui-java: current is 1.86.12 (universal macOS arm64/x64). Roadmap target: 1.92.7.1 (see docs/developer/imgui_upgrade_guide.md).
-val imguiVersion = "1.86.12"
+// imgui-java: 1.92.7.1 (Dear ImGui 1.92, universal macOS arm64/x64). See docs/developer/imgui_upgrade_guide.md.
+val imguiVersion = "1.92.7.1"
 
 dependencies {
     // Kotlin
