@@ -67,13 +67,6 @@ object ISFFilterRegistry {
         val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
 
         for (resolved in enabledDirs) {
-            val normalizedPath = resolved.config.path.trim().replace('\\', '/').trimEnd('/')
-            if (normalizedPath == "library/sources" || normalizedPath == "library/transitions" ||
-                normalizedPath.endsWith("/sources") || normalizedPath.endsWith("/transitions")
-            ) {
-                continue
-            }
-
             val dir = File(resolved.expandedPath)
             if (!dir.exists() || !dir.isDirectory) continue
 
@@ -84,7 +77,7 @@ object ISFFilterRegistry {
                         val source = file.readText()
                         val id = file.nameWithoutExtension
                         val displayName = id.replace("_", " ").capitalize()
-                        registerFilterFromSource(id, displayName, source)
+                        registerFilterFromSource(id, displayName, source, file = file, directoryRoot = dir)
                     } catch (e: Exception) {
                         logger.error(e) { "Failed to load user filter: ${file.path}" }
                     }
@@ -92,28 +85,42 @@ object ISFFilterRegistry {
         }
     }
 
-    private fun registerFilterFromSource(id: String, displayName: String, source: String) {
+    private fun registerFilterFromSource(
+        id: String,
+        displayName: String,
+        source: String,
+        file: File? = null,
+        directoryRoot: File? = null
+    ) {
         val header = ISFParser.parseHeader(source) ?: return
 
-        // 1. Mutual exclusion: skip if this shader is categorised as a transition or has a progress input
-        val isTransitionCategory = header.CATEGORIES?.any { it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true) } == true
-        val hasProgress = header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) }
-        val inTransitionRegistry = ISFTransitionRegistry.hasTransition(id)
-        if (isTransitionCategory || hasProgress || inTransitionRegistry) {
-            logger.debug { "Skipping ISF transition '$id' from filter registry" }
+        // Auto-detect role: Filters require exactly 1 image input
+        val imageInputs = header.INPUTS.filter { it.TYPE.equals("image", ignoreCase = true) }
+        if (imageInputs.size != 1) {
             return
         }
 
-        // 2. Mutual exclusion: skip if this shader is a generator/source (not a filter)
-        // A filter must receive at least one image input to process (e.g. inputImage)
-        val hasImageInput = header.INPUTS.any { it.TYPE.equals("image", ignoreCase = true) }
-        val isGeneratorCategory = header.CATEGORIES?.any {
-            it.equals("Generators", ignoreCase = true) || it.equals("Generator", ignoreCase = true) || it.equals("Source", ignoreCase = true)
-        } == true
-        if (!hasImageInput || isGeneratorCategory) {
-            logger.debug { "Skipping ISF generator/source '$id' from filter registry" }
+        // Mutual exclusion: skip if this shader is explicitly marked with a progress input for transitions
+        val hasProgress = header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) }
+        if (hasProgress) {
             return
         }
+
+        val relFolder = if (directoryRoot != null && file != null) {
+            try {
+                file.relativeToOrNull(directoryRoot)?.parent?.replace('\\', '/') ?: ""
+            } catch (_: Exception) {
+                ""
+            }
+        } else {
+            ""
+        }
+        val folderSegments = if (relFolder.isNotBlank()) relFolder.split("/").filter { it.isNotBlank() } else emptyList()
+        val headerCategories = header.CATEGORIES ?: emptyList()
+        val allCategories = (headerCategories + folderSegments + (if (relFolder.isNotBlank()) listOf(relFolder) else emptyList()))
+            .filter { it.isNotBlank() }
+            .distinct()
+            .ifEmpty { listOf("Color Adjustment") }
 
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)
@@ -121,13 +128,23 @@ object ISFFilterRegistry {
                 ?.bufferedReader()?.use { it.readText() } ?: throw RuntimeException("blit.vert not found")
             
             val shader = Shader(blitVert, glsl)
-            val filter = ISFFilter(id, displayName, header, shader)
+            val filter = ISFFilter(
+                id = id,
+                displayName = displayName,
+                header = header,
+                shader = shader,
+                ownsShader = true,
+                categories = allCategories,
+                folderPath = relFolder,
+                baseDir = file?.parentFile
+            )
             filters[id] = filter
             logger.debug { "Registered ISF filter: $id ($displayName)" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to compile ISF filter $id" }
         }
     }
+
 
     fun createFilter(id: String): ISFFilter? {
         return filters[id]?.clone()

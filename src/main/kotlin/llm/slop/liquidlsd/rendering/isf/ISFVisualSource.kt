@@ -19,8 +19,12 @@ class ISFVisualSource(
     hasFeedback: Boolean = false,
     ownsShader: Boolean = false,
     is3D: Boolean = header.is3D || (parameters.containsKey("Rotate X") && parameters.containsKey("Rotate Y")),
-    override val categories: List<String> = header.CATEGORIES ?: emptyList()
-) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D, categories = categories) {
+    override val categories: List<String> = header.CATEGORIES ?: emptyList(),
+    override val folderPath: String = "",
+    val baseDir: java.io.File? = null,
+    val importedTextures: Map<String, Int> = emptyMap(),
+    val ownsTextures: Boolean = false
+) : DynamicVisualSource(id, displayName, shader, parameters, hasFeedback = hasFeedback, ownsShader = ownsShader, is3D = is3D, categories = categories, folderPath = folderPath) {
 
     private var frameIndex = 0
     private var lastTime = TimeSource.getTimeSec().toFloat()
@@ -31,8 +35,38 @@ class ISFVisualSource(
     private var passWidth = 0
     private var passHeight = 0
 
+    private class ImportedTextureBinding(val uniformName: String, val textureId: Int)
+    val activeImportedTextures: Map<String, Int>
+    private val importedBindings: Array<ImportedTextureBinding>
+    private val shouldDisposeTextures: Boolean
+
+    init {
+        if (importedTextures.isNotEmpty()) {
+            activeImportedTextures = importedTextures
+            shouldDisposeTextures = ownsTextures
+        } else if (baseDir != null) {
+            val loaded = mutableMapOf<String, Int>()
+            for (imported in header.getImportedAssets()) {
+                val assetFile = java.io.File(baseDir, imported.path)
+                val texId = ISFTextureLoader.loadTexture(assetFile)
+                if (texId > 0) {
+                    loaded[imported.name] = texId
+                }
+            }
+            activeImportedTextures = loaded
+            shouldDisposeTextures = ownsShader || loaded.isNotEmpty()
+        } else {
+            activeImportedTextures = emptyMap()
+            shouldDisposeTextures = false
+        }
+        importedBindings = activeImportedTextures.map { (name, texId) ->
+            ImportedTextureBinding(name, texId)
+        }.toTypedArray()
+    }
+
     private class PassBinding(val target: String, val isPersistent: Boolean)
     private val passBindings: Array<PassBinding> = header.PASSES.mapNotNull { pass ->
+
         pass.TARGET?.let { PassBinding(it, pass.PERSISTENT) }
     }.toTypedArray()
 
@@ -138,7 +172,18 @@ class ISFVisualSource(
         if (header.PASSES.isEmpty()) {
             shader.setUniform("PASSINDEX", 0)
             shader.setUniform("RENDERSIZE", targetFBO.width.toFloat(), targetFBO.height.toFloat())
+            var texUnit = 0
+            for (i in 0 until importedBindings.size) {
+                val b = importedBindings[i]
+                if (b.textureId != 0) {
+                    glActiveTexture(GL_TEXTURE0 + texUnit)
+                    glBindTexture(GL_TEXTURE_2D, b.textureId)
+                    shader.setUniform(b.uniformName, texUnit)
+                    texUnit++
+                }
+            }
             Geometry.drawFullscreenQuad()
+            if (texUnit > 0) glActiveTexture(GL_TEXTURE0)
             return
         }
 
@@ -190,6 +235,16 @@ class ISFVisualSource(
                 }
             }
 
+            for (i in 0 until importedBindings.size) {
+                val b = importedBindings[i]
+                if (b.textureId != 0) {
+                    glActiveTexture(GL_TEXTURE0 + texUnit)
+                    glBindTexture(GL_TEXTURE_2D, b.textureId)
+                    shader.setUniform(b.uniformName, texUnit)
+                    texUnit++
+                }
+            }
+
             Geometry.drawFullscreenQuad()
 
             // Swap ping-pong persistent buffers
@@ -206,6 +261,7 @@ class ISFVisualSource(
         glViewport(0, 0, width, height)
         glActiveTexture(GL_TEXTURE0)
     }
+
 
     private fun resolveDimension(expr: String?, baseDim: Int): Int {
         if (expr == null) return baseDim
@@ -262,6 +318,11 @@ class ISFVisualSource(
             it.second.dispose()
         }
         passHistoryFBOs.clear()
+        if (shouldDisposeTextures) {
+            for (b in importedBindings) {
+                ISFTextureLoader.disposeTexture(b.textureId)
+            }
+        }
     }
 
     override fun clear() {
@@ -349,8 +410,13 @@ class ISFVisualSource(
             hasFeedback = this.hasFeedback,
             ownsShader = false,
             is3D = this.is3D,
-            categories = this.categories
+            categories = this.categories,
+            folderPath = this.folderPath,
+            baseDir = this.baseDir,
+            importedTextures = this.activeImportedTextures,
+            ownsTextures = false
         )
     }
 }
+
 

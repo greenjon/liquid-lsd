@@ -72,22 +72,36 @@ object ISFScanner {
         val displayName = jsonName ?: file.nameWithoutExtension.replace("_", " ").capitalize()
         val id = filenameId
 
-        // Determine category
-        val categories = header.CATEGORIES
-        val parentFolder = file.parentFile?.name ?: "General"
-        val category = if (!categories.isNullOrEmpty()) {
-            categories.first()
-        } else {
-            parentFolder.replace("_", " ").capitalize()
+        // Determine relative folder hierarchy from scanned root
+        val directoryFile = File(directoryPath)
+        val relFolder = try {
+            file.relativeToOrNull(directoryFile)?.parent?.replace('\\', '/') ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+        val folderSegments = if (relFolder.isNotBlank()) relFolder.split("/").filter { it.isNotBlank() } else emptyList()
+
+        // Determine category and categories list
+        val headerCategories = header.CATEGORIES ?: emptyList()
+        val allCategories = (headerCategories + folderSegments + (if (relFolder.isNotBlank()) listOf(relFolder) else emptyList()))
+            .filter { it.isNotBlank() }
+            .distinct()
+
+        val category = when {
+            headerCategories.isNotEmpty() -> headerCategories.first()
+            folderSegments.isNotEmpty() -> folderSegments.last().replace("_", " ").capitalize()
+            else -> file.parentFile?.name?.replace("_", " ")?.capitalize() ?: "General"
         }
 
-        // Determine asset type
-        val lowerPath = file.absolutePath.lowercase()
-        val lowerCategories = categories?.joinToString(" ") { it.lowercase() } ?: ""
-        val assetType = when {
-            lowerPath.contains("transition") || lowerCategories.contains("transition") -> ISFAssetType.TRANSITION
-            lowerPath.contains("filter") || lowerPath.contains("effect") || lowerCategories.contains("filter") || lowerCategories.contains("effect") -> ISFAssetType.FILTER
-            else -> ISFAssetType.GENERATOR
+        // Determine asset type via JSON INPUTS image count:
+        // 0 image inputs = Generator (visual source)
+        // 1 image input  = Filter (FX)
+        // 2+ image inputs = Transition
+        val imageInputs = header.INPUTS.filter { it.TYPE.equals("image", ignoreCase = true) }
+        val assetType = when (imageInputs.size) {
+            0 -> ISFAssetType.GENERATOR
+            1 -> ISFAssetType.FILTER
+            else -> ISFAssetType.TRANSITION
         }
 
         // Look for paired vertex shader (.vs or .vert)
@@ -109,7 +123,9 @@ object ISFScanner {
             category = category,
             type = assetType,
             sourceType = sourceType,
-            sourceDirectoryPath = directoryPath
+            sourceDirectoryPath = directoryPath,
+            folderPath = relFolder,
+            categories = allCategories
         )
     }
 }

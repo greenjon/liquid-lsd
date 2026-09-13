@@ -182,6 +182,19 @@ object ISFParser {
         }
         sb.append("\n")
 
+        // 7b. Imported Textures as Uniforms (LUTs, noise maps, static assets)
+        sb.append("// ISF Imported Assets\n")
+        val importedAssets = header.getImportedAssets()
+        for (imported in importedAssets) {
+            if (imported.name in standardNames || passTargets.contains(imported.name)) continue
+            val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(imported.name)}\s*;""")
+            if (!declRegex.containsMatchIn(stripped)) {
+                sb.append("uniform sampler2D ${imported.name};\n")
+            }
+        }
+        sb.append("\n")
+
+
         // 8. Clean up stripped body (strip redundant #version directives, precision qualifiers, preexisting vTexCoord/out vec4, and duplicate standard uniforms)
         var body = stripped
         val versionDirectiveRegex = Regex("""^\s*#version\s+.*$""", RegexOption.MULTILINE)

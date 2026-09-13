@@ -61,5 +61,8 @@ data class ISFAsset(
     val category: String,
     val type: ISFAssetType,
     val sourceType: DirectorySourceType,
-    val sourceDirectoryPath: String
+    val sourceDirectoryPath: String,
+    val folderPath: String = "",
+    val categories: List<String> = listOf(category)
 )
+

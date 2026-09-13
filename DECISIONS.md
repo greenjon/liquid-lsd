@@ -200,6 +200,24 @@
   - Eliminates the maintenance burden of separate `meta.json` sidecar files for new and imported shaders while preserving legacy source compatibility.
   - Provides a robust foundation for Phase 2.1 migration and future modular effect chains.
 
+## Flexible ISF Directory Role Auto-Detection, Folder Hierarchy Preservation, and Relative Asset Resolution (`ISFScanner.kt`, `ISFParser.kt`, `ISFModels.kt`, `ISFTextureLoader.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ShaderPickerPopup.kt`)
+
+- **Decision**: Remove hardcoded folder naming requirements (`/sources`, `/filters`, `/transitions`), auto-detect shader roles purely from JSON `INPUTS` image counts, preserve subfolder structures in metadata and UI, and resolve local relative assets (`IMPORTED`):
+  - **Auto-Detect Role via JSON `INPUTS`**: Instead of path-based keyword filtering (`lowerPath.contains("filter")` or directory exclusions), scanned shaders are classified by their declared image inputs count:
+    - 0 image inputs: Visual Generator Source (`ISFAssetType.GENERATOR` $\to$ `VisualSourceRegistry`)
+    - 1 image input: Deck FX Filter (`ISFAssetType.FILTER` $\to$ `ISFFilterRegistry`)
+    - 2+ image inputs (or transition `progress` parameter): Mixer Transition (`ISFAssetType.TRANSITION` $\to$ `ISFTransitionRegistry`)
+  - **Preserve Folder Hierarchies as Categories & UI Folders**: Captures the relative directory path from the scanned root in `ISFAsset.folderPath` and injects path hierarchy segments into `categories`. `ShaderPickerPopup` features a dual-mode browser:
+    - Collapsible Folder Tree view (`Icons.FOLDER`): Groups shaders in expandable folder nodes matching the pack hierarchy on disk.
+    - Flat List view (`Icons.LAYOUT_FULL`): Fast table view displaying folder tags in the Categories column.
+    - Zero per-frame allocations during UI rendering via pre-cached grouping in `updateItems()`.
+  - **Respect Relative Assets (`IMPORTED`)**: Shaders remain in their original directories during execution. Declared static assets in `IMPORTED` (supporting both JSON Object and JSON Array schemas) have their paths resolved relative to the shader file (`baseDir`), uniforms are injected into GLSL (`uniform sampler2D`), and OpenGL 2D textures are loaded on Thread 0 via `ISFTextureLoader`. Pre-bound texture units ensure zero allocation per frame.
+- **Rationale**:
+  - Users can point Liquid LSD to any existing shader pack or folder without reorganizing or renaming files into rigid folder silos.
+  - Subfolder pack organization remains intact in the UI.
+  - ISF shaders referencing external noise textures, lookup tables, and audio maps work out-of-the-box.
+
+
 ## Fixed 95% Global UI Scale, Removal of Grid Cell Ratio, and Dedicated Library Preset Sizing (`UITheme.kt`, `AppSettings.kt`, `SettingsPanel.kt`, `GridMetrics.kt`, `UIManager.kt`, `PresetListPanel.kt`)
 
 - **Decision**: Permanently fix the global UI scale at 95% across all panels and controls, remove arbitrary runtime UI scaling and the non-functional `gridCellRatio`, and introduce a dedicated, bounded user control (80%–120%) exclusively for preset name sizing in the Library:

@@ -314,7 +314,17 @@ Transforms the laptop trackpad into an absolute 4-zone performance surface when 
   - **macOS**: Cocoa `NSTouch` indirect touch events.
   - **Thread-Safety**: Low-latency lock-free event queue drained strictly on Thread 0 once per frame.
 
+## Flexible ISF Directory Architecture, Role Auto-Detection & Asset Resolution
+
+- **Role Auto-Detection via JSON `INPUTS`**: Removes rigid folder requirements (`library/sources`, `library/filters`, `library/transitions`). Any directory registered in `ISFDirectoryManager` is scanned recursively, classifying shaders by image input count:
+  - 0 image inputs: Generator / Visual Source (`ISFAssetType.GENERATOR` $\to$ `VisualSourceRegistry`)
+  - 1 image input: Filter / FX (`ISFAssetType.FILTER` $\to$ `ISFFilterRegistry`)
+  - 2+ image inputs (or transition `progress` input): Mixer Transition (`ISFAssetType.TRANSITION` $\to$ `ISFTransitionRegistry`)
+- **Preserved Folder Hierarchies & Tags**: Retains relative subfolder paths in `ISFAsset.folderPath` and tags in `categories`. `ShaderPickerPopup` provides both a collapsible folder tree view (`Icons.FOLDER`) and flat table view (`Icons.LAYOUT_FULL`) with zero per-frame render thread allocations.
+- **Relative Asset Resolution (`IMPORTED`)**: Shaders remain in their original directories during execution. Declared static assets in `IMPORTED` (LUTs, noise maps, audio textures) are resolved relative to the shader's directory (`baseDir`), injected as `uniform sampler2D` in `ISFParser`, and loaded into 2D OpenGL textures on Thread 0 via `ISFTextureLoader`.
+
 ## Version & Update Engine (`update`)
+
 
 - **Authoritative Version Resolution (`AppVersion.kt`)**: Dynamically resolves the runtime version from JAR manifest attributes (`Implementation-Version`), packaged classpath `/version.txt`, or fallback default.
 - **Semantic Versioning (`SemVer.kt`)**: Zero-dependency parser and comparator implementing SemVer 2.0.0 precedence rules (supporting numeric major/minor/patch, release vs pre-release precedence, dot-separated pre-release tokens, and snapshot identifiers).

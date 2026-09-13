@@ -149,4 +149,142 @@ class ISFLibraryRegistryTest {
         assertEquals(1f, ISFLibraryRegistry.scanProgress)
         assertEquals("", ISFLibraryRegistry.scanCurrentPath)
     }
+
+    @Test
+    fun testRoleAutoDetectionViaJsonInputs() {
+        val rootDir = File(tempDir, "mixed_shaders").apply { mkdirs() }
+        val fxFolder = File(rootDir, "FX").apply { mkdirs() }
+        val genFolder = File(rootDir, "Generators").apply { mkdirs() }
+
+        // A generator (0 image inputs) placed inside an FX folder must be detected as GENERATOR
+        val genFile = File(fxFolder, "plasma_gen.fs").apply {
+            writeText("""
+                /*{
+                    "DESCRIPTION": "Plasma Generator in FX folder",
+                    "INPUTS": [
+                        { "NAME": "speed", "TYPE": "float", "DEFAULT": 1.0 }
+                    ]
+                }*/
+                void main() { gl_FragColor = vec4(1.0); }
+            """.trimIndent())
+        }
+
+        // A filter (1 image input) placed inside a Generators folder must be detected as FILTER
+        val filterFile = File(genFolder, "color_filter.fs").apply {
+            writeText("""
+                /*{
+                    "DESCRIPTION": "Color Filter in Generators folder",
+                    "INPUTS": [
+                        { "NAME": "inputImage", "TYPE": "image" },
+                        { "NAME": "intensity", "TYPE": "float", "DEFAULT": 0.5 }
+                    ]
+                }*/
+                void main() { gl_FragColor = vec4(1.0); }
+            """.trimIndent())
+        }
+
+        // A transition (2 image inputs) placed inside a generic folder must be detected as TRANSITION
+        val transFile = File(rootDir, "cross_fade.fs").apply {
+            writeText("""
+                /*{
+                    "DESCRIPTION": "Cross Fade",
+                    "INPUTS": [
+                        { "NAME": "startImage", "TYPE": "image" },
+                        { "NAME": "endImage", "TYPE": "image" },
+                        { "NAME": "progress", "TYPE": "float", "DEFAULT": 0.5 }
+                    ]
+                }*/
+                void main() { gl_FragColor = vec4(1.0); }
+            """.trimIndent())
+        }
+
+        val assetGen = ISFScanner.parseShaderFile(genFile, DirectorySourceType.CUSTOM, rootDir.absolutePath)
+        val assetFilter = ISFScanner.parseShaderFile(filterFile, DirectorySourceType.CUSTOM, rootDir.absolutePath)
+        val assetTrans = ISFScanner.parseShaderFile(transFile, DirectorySourceType.CUSTOM, rootDir.absolutePath)
+
+        assertNotNull(assetGen)
+        assertNotNull(assetFilter)
+        assertNotNull(assetTrans)
+
+        assertEquals(ISFAssetType.GENERATOR, assetGen.type)
+        assertEquals(ISFAssetType.FILTER, assetFilter.type)
+        assertEquals(ISFAssetType.TRANSITION, assetTrans.type)
+    }
+
+    @Test
+    fun testPreserveFolderHierarchyAsCategories() {
+        val rootDir = File(tempDir, "pack_root").apply { mkdirs() }
+        val nestedDir = File(rootDir, "ArtistPack/Psychedelic/3D").apply { mkdirs() }
+        val shaderFile = File(nestedDir, "hyper_cube.fs").apply {
+            writeText("""
+                /*{
+                    "DESCRIPTION": "Hyper Cube",
+                    "INPUTS": []
+                }*/
+                void main() { gl_FragColor = vec4(1.0); }
+            """.trimIndent())
+        }
+
+        val asset = ISFScanner.parseShaderFile(shaderFile, DirectorySourceType.CUSTOM, rootDir.absolutePath)
+        assertNotNull(asset)
+
+        assertEquals("ArtistPack/Psychedelic/3D", asset.folderPath)
+        assertTrue(asset.categories.contains("ArtistPack"))
+        assertTrue(asset.categories.contains("Psychedelic"))
+        assertTrue(asset.categories.contains("3D"))
+        assertTrue(asset.categories.contains("ArtistPack/Psychedelic/3D"))
+    }
+
+    @Test
+    fun testImportedAssetsParsingAndGLSLUniforms() {
+        val shaderSourceObj = """
+            /*{
+                "DESCRIPTION": "Shader with Object IMPORTED",
+                "INPUTS": [
+                    { "NAME": "speed", "TYPE": "float" }
+                ],
+                "IMPORTED": {
+                    "noiseTex": { "PATH": "textures/noise.png" },
+                    "lutTex": "lut.png"
+                }
+            }*/
+            void main() {
+                vec4 n = texture(noiseTex, vec2(0.5));
+                gl_FragColor = n;
+            }
+        """.trimIndent()
+
+        val headerObj = ISFParser.parseHeader(shaderSourceObj)
+        assertNotNull(headerObj)
+        val assetsObj = headerObj.getImportedAssets()
+        assertEquals(2, assetsObj.size)
+        assertTrue(assetsObj.any { it.name == "noiseTex" && it.path == "textures/noise.png" })
+        assertTrue(assetsObj.any { it.name == "lutTex" && it.path == "lut.png" })
+
+        val glslObj = ISFParser.buildGLSLFragmentShader(shaderSourceObj, headerObj)
+        assertTrue(glslObj.contains("uniform sampler2D noiseTex;"))
+        assertTrue(glslObj.contains("uniform sampler2D lutTex;"))
+
+        val shaderSourceArr = """
+            /*{
+                "DESCRIPTION": "Shader with Array IMPORTED",
+                "INPUTS": [],
+                "IMPORTED": [
+                    { "NAME": "audioMap", "PATH": "audio.png" }
+                ]
+            }*/
+            void main() {}
+        """.trimIndent()
+
+        val headerArr = ISFParser.parseHeader(shaderSourceArr)
+        assertNotNull(headerArr)
+        val assetsArr = headerArr.getImportedAssets()
+        assertEquals(1, assetsArr.size)
+        assertEquals("audioMap", assetsArr[0].name)
+        assertEquals("audio.png", assetsArr[0].path)
+
+        val glslArr = ISFParser.buildGLSLFragmentShader(shaderSourceArr, headerArr)
+        assertTrue(glslArr.contains("uniform sampler2D audioMap;"))
+    }
 }
+

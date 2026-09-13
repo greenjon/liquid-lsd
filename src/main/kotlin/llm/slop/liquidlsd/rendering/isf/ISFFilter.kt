@@ -14,7 +14,11 @@ class ISFFilter(
     val header: ISFHeader,
     val shader: Shader,
     val ownsShader: Boolean = true,
-    override val categories: List<String> = header.CATEGORIES.takeIf { it != null && it.isNotEmpty() } ?: listOf("Color Adjustment")
+    override val categories: List<String> = header.CATEGORIES.takeIf { it != null && it.isNotEmpty() } ?: listOf("Color Adjustment"),
+    override val folderPath: String = "",
+    val baseDir: java.io.File? = null,
+    val importedTextures: Map<String, Int> = emptyMap(),
+    val ownsTextures: Boolean = false
 ) : VisualEffect {
 
     override val parameters = mutableMapOf<String, ModulatableParameter>()
@@ -34,6 +38,11 @@ class ISFFilter(
     private var deckWidth = 0
     private var deckHeight = 0
 
+    private class ImportedTextureBinding(val uniformName: String, val textureId: Int)
+    val activeImportedTextures: Map<String, Int>
+    private val importedBindings: Array<ImportedTextureBinding>
+    private val shouldDisposeTextures: Boolean
+
     private class PassBinding(val target: String, val isPersistent: Boolean)
     private val passBindings: Array<PassBinding> = header.PASSES.mapNotNull { pass ->
         pass.TARGET?.let { PassBinding(it, pass.PERSISTENT) }
@@ -45,8 +54,31 @@ class ISFFilter(
     private val cachedParams: Array<ModulatableParameter>
 
     init {
+        if (importedTextures.isNotEmpty()) {
+            activeImportedTextures = importedTextures
+            shouldDisposeTextures = ownsTextures
+        } else if (baseDir != null) {
+            val loaded = mutableMapOf<String, Int>()
+            for (imported in header.getImportedAssets()) {
+                val assetFile = java.io.File(baseDir, imported.path)
+                val texId = ISFTextureLoader.loadTexture(assetFile)
+                if (texId > 0) {
+                    loaded[imported.name] = texId
+                }
+            }
+            activeImportedTextures = loaded
+            shouldDisposeTextures = ownsShader || loaded.isNotEmpty()
+        } else {
+            activeImportedTextures = emptyMap()
+            shouldDisposeTextures = false
+        }
+        importedBindings = activeImportedTextures.map { (name, texId) ->
+            ImportedTextureBinding(name, texId)
+        }.toTypedArray()
+
         // Find the primary image input
         inputImageName = header.INPUTS.find { it.TYPE.lowercase() == "image" }?.NAME
+
 
         // Pre-resolve transition image names
         val imageInputs = header.INPUTS.filter { it.TYPE.lowercase() == "image" }
@@ -145,12 +177,24 @@ class ISFFilter(
         if (header.PASSES.isEmpty()) {
             shader.setUniform("PASSINDEX", 0)
             shader.setUniform("RENDERSIZE", width.toFloat(), height.toFloat())
+            var texUnit = 0
             if (inputImageName != null) {
                 glActiveTexture(GL_TEXTURE0)
                 glBindTexture(GL_TEXTURE_2D, inputTexture)
                 shader.setUniform(inputImageName, 0)
+                texUnit = 1
+            }
+            for (i in 0 until importedBindings.size) {
+                val b = importedBindings[i]
+                if (b.textureId != 0) {
+                    glActiveTexture(GL_TEXTURE0 + texUnit)
+                    glBindTexture(GL_TEXTURE_2D, b.textureId)
+                    shader.setUniform(b.uniformName, texUnit)
+                    texUnit++
+                }
             }
             Geometry.drawFullscreenQuad()
+            if (texUnit > 0) glActiveTexture(GL_TEXTURE0)
         } else {
             // Restore FBO ID later since we bind our own pass targets
             val currentFbo = glGetInteger(GL_FRAMEBUFFER_BINDING)
@@ -206,7 +250,19 @@ class ISFFilter(
                     }
                 }
 
+                // Bind imported assets
+                for (i in 0 until importedBindings.size) {
+                    val b = importedBindings[i]
+                    if (b.textureId != 0) {
+                        glActiveTexture(GL_TEXTURE0 + texUnit)
+                        glBindTexture(GL_TEXTURE_2D, b.textureId)
+                        shader.setUniform(b.uniformName, texUnit)
+                        texUnit++
+                    }
+                }
+
                 Geometry.drawFullscreenQuad()
+
 
                 // Swap ping pong buffers if persistent
                 if (pass.PERSISTENT && targetName != null) {
@@ -271,6 +327,17 @@ class ISFFilter(
         glBindTexture(GL_TEXTURE_2D, endTexture)
         shader.setUniform(transitionEndName, 1)
 
+        var transTexUnit = 2
+        for (i in 0 until importedBindings.size) {
+            val b = importedBindings[i]
+            if (b.textureId != 0) {
+                glActiveTexture(GL_TEXTURE0 + transTexUnit)
+                glBindTexture(GL_TEXTURE_2D, b.textureId)
+                shader.setUniform(b.uniformName, transTexUnit)
+                transTexUnit++
+            }
+        }
+
         Geometry.drawFullscreenQuad()
 
         shader.unbind()
@@ -309,7 +376,18 @@ class ISFFilter(
     }
 
     override fun clone(): ISFFilter {
-        val copy = ISFFilter(id, displayName, header, shader, ownsShader = false, categories = this.categories)
+        val copy = ISFFilter(
+            id = id,
+            displayName = displayName,
+            header = header,
+            shader = shader,
+            ownsShader = false,
+            categories = this.categories,
+            folderPath = this.folderPath,
+            baseDir = this.baseDir,
+            importedTextures = this.activeImportedTextures,
+            ownsTextures = false
+        )
         copy.enabled = this.enabled
         copy.dryWet.baseValue = this.dryWet.baseValue
         // Note: modulators are not cloned here as they are managed by the Preset/Deck logic
@@ -330,6 +408,11 @@ class ISFFilter(
         if (ownsShader) {
             shader.dispose()
         }
+        if (shouldDisposeTextures) {
+            for (b in importedBindings) {
+                ISFTextureLoader.disposeTexture(b.textureId)
+            }
+        }
         passFBOs.values.forEach { it.dispose() }
         passFBOs.clear()
         passHistoryFBOs.values.forEach { 
@@ -338,6 +421,7 @@ class ISFFilter(
         }
         passHistoryFBOs.clear()
     }
+
 
     override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
         val list = mutableListOf<Pair<String, ModulatableParameter>>()

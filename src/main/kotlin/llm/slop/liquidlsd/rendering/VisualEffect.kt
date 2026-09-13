@@ -11,6 +11,9 @@ interface VisualEffect : ParameterOwner {
     val displayName: String
     val categories: List<String>
         get() = emptyList()
+    val folderPath: String
+        get() = ""
+
     val parameters: Map<String, ModulatableParameter>
     val dryWet: ModulatableParameter
     var enabled: Boolean

@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Flexible ISF Shader Management, Role Auto-Detection & Folder Hierarchy (`ISFScanner.kt`, `ISFModels.kt`, `ISFParser.kt`, `ISFTextureLoader.kt`, `ISFVisualSource.kt`, `ISFFilter.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ShaderPickerPopup.kt`)
+- **JSON Input Role Auto-Detection**: Eliminated rigid directory requirements (such as forcing shaders into specific `Generators/`, `Filters/`, or `Transitions/` folders). The scanner inspects the declared `INPUTS` in the shader's JSON header:
+  - **0 image inputs** $\to$ Auto-classified as **Generator** (`ISFAssetType.GENERATOR` / `VisualSourceRegistry`).
+  - **1 image input** (`inputImage`) $\to$ Auto-classified as **Filter** (`ISFAssetType.FILTER` / `ISFFilterRegistry`).
+  - **2+ image inputs** (`startImage`, `endImage`) or presence of a `progress` float $\to$ Auto-classified as **Transition** (`ISFAssetType.TRANSITION` / `ISFTransitionRegistry`).
+- **Preserved Folder Hierarchies as Categories**:
+  - Automatically captures user subfolder structures (e.g. `Packs/Retro/Noise`) and attaches them to `folderPath` and shader category tags.
+  - Recursively scans directory trees without requiring root-level flattening.
+- **Hierarchical UI Browser & View Modes**:
+  - `ShaderPickerPopup` now provides a dual view mode toggle: **Folders** (`Icons.FOLDER`) and **Flat** (`Icons.LAYOUT_FULL`).
+  - **Folders Mode**: Renders collapsible, organized tree nodes (`ImGui.treeNodeEx`) matching the user's filesystem structure, with auto-expansion when searching.
+  - **Flat Mode**: Displays a high-density 3-column table with category badges.
+- **Relative Asset Resolution for `IMPORTED` Textures (`ISFTextureLoader.kt`)**:
+  - Fully parses ISF `IMPORTED` asset declarations in both JSON dictionary and array schemas.
+  - Loads referenced local assets (noise textures, lookup tables, image masks) relative to the shader file's original directory using thread-safe STBImage loading on Thread 0.
+  - Injects `uniform sampler2D <name>;` into generated GLSL.
+  - Binds imported textures across sequential texture units in `ISFVisualSource` and `ISFFilter` with zero per-frame heap allocations during render loops.
+
 ### Transition Settings to Preferences Across UI, Storage & Shortcuts (`PreferencesPanel.kt`, `AppPreferences.kt`, `BroadcastPreferences.kt`, `UITheme.kt`, `MenuBar.kt`, `ShortcutManager.kt`)
 - **UI Nomenclature**: Standardized all user-facing dialogs, menus, and HUD tooltips from "Settings" to "Preferences". The top menu bar now provides `File > Preferences...` and telemetry quick-launch actions open Preferences categories directly.
 - **Dedicated Global Shortcut**: Added `Ctrl+P` (Windows/Linux) and `Cmd+P` (macOS) shortcut (`global.preferences`) to immediately open the Preferences dialog from anywhere in the application.

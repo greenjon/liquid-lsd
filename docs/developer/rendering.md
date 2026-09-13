@@ -244,3 +244,29 @@ To ensure continuous parity between desktop visual sources and the browser-based
 - For procedural geometry and math modules (`Icosahedron.kt` $\rightarrow$ `web/icosahedron_math.js`, `Evaluators.kt` $\rightarrow$ `web/evaluator.js`), `web/sync_manifest.json` tracks SHA-256 hashes.
 - Whenever a desktop Kotlin algorithm is modified, running `./scripts/sync_web.py --check` or `./gradlew checkWebSync` alerts the developer to review and update the JavaScript equivalent. Once verified, `./scripts/sync_web.py --mark-synced <target>` records the updated hash.
 
+---
+
+## Flexible ISF Directory Architecture, Role Auto-Detection & Asset Resolution
+
+Liquid LSD scans arbitrary user-specified directories for Interactive Shader Format (ISF) assets without forcing files into rigid `Generators/`, `Filters/`, or `Transitions/` folders.
+
+### 1. Role Auto-Detection via JSON `INPUTS`
+Shaders are classified dynamically by parsing their ISF JSON header and inspecting image inputs:
+- **0 Image Inputs**: Auto-detected as **Generator** (`ISFAssetType.GENERATOR`), loaded into `VisualSourceRegistry`.
+- **1 Image Input**: Auto-detected as **Filter** (`ISFAssetType.FILTER`), loaded into `ISFFilterRegistry`.
+- **2+ Image Inputs** (or 1 image input with explicit `progress` transition parameter): Auto-detected as **Transition** (`ISFAssetType.TRANSITION`), loaded into `ISFTransitionRegistry`.
+
+### 2. Folder Hierarchy Preservation
+- Relative subfolder structures (e.g., `PackName/Subfolder/shader.fs`) are captured in `ISFAsset.folderPath` and mirrored into `categories` tags.
+- The UI shader browser (`ShaderPickerPopup`) provides a dual-mode interface:
+  - **Collapsible Folder Tree Mode** (`Icons.FOLDER`): Groups shaders by their subfolder structure in expandable tree nodes.
+  - **Flat List Mode** (`Icons.LAYOUT_FULL`): Fast 3-column table showing folder tags in the Categories column.
+  - Category pill filter row incorporates top-level folder names and custom tags.
+
+### 3. Respecting Relative Assets (`IMPORTED`)
+- Shaders remain in their original directories during execution.
+- Shaders declaring static lookup tables, noise textures, or auxiliary assets in `IMPORTED` (using either JSON Object or JSON Array syntax) have their paths resolved relative to the shader's parent folder (`baseDir`).
+- `ISFParser.buildGLSLFragmentShader` automatically injects `uniform sampler2D <name>;` declarations for all declared imported textures.
+- `ISFTextureLoader` decodes image files into OpenGL 2D textures on Thread 0 via STBImage (`stbi_load`). During execution, pre-resolved texture units are bound with zero allocations per frame on the render thread.
+
+

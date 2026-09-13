@@ -28,6 +28,13 @@ interface VisualSource : ParameterOwner {
         get() = emptyList()
 
     /**
+     * Preserved relative folder hierarchy path (e.g. "PackName/Subfolder") from source directory.
+     */
+    val folderPath: String
+        get() = ""
+
+
+    /**
      * Map of parameter names to their modulatable counterparts.
      */
     val parameters: Map<String, ModulatableParameter>

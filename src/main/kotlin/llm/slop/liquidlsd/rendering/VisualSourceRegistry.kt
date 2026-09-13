@@ -123,29 +123,27 @@ object VisualSourceRegistry {
         val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == llm.slop.liquidlsd.rendering.isf.DirectoryStatus.ACTIVE }
 
         for (resolved in enabledDirs) {
-            val normalizedPath = resolved.config.path.trim().replace('\\', '/').trimEnd('/')
-            if (normalizedPath == "library/filters" || normalizedPath == "library/transitions" ||
-                normalizedPath.endsWith("/filters") || normalizedPath.endsWith("/transitions")
-            ) {
-                continue
-            }
-
             val dir = File(resolved.expandedPath)
             if (!dir.exists() || !dir.isDirectory) continue
 
+            // 1. Check legacy source folders with meta.json (immediate subfolders)
             val folders = dir.listFiles { file -> file.isDirectory } ?: emptyArray()
             for (folder in folders) {
-                if (availableSources.none { it.id == folder.name }) {
+                if (File(folder, "meta.json").exists() && availableSources.none { it.id == folder.name }) {
                     loadFromFolder(folder)
                 }
             }
 
-            val files = dir.listFiles { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") } ?: emptyArray()
+            // 2. Recursively scan all ISF shader files in this directory
+            val files = dir.walkTopDown()
+                .filter { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }
+                .toList()
+
             for (file in files) {
                 val sourceId = file.nameWithoutExtension
                 if (availableSources.none { it.id == sourceId }) {
                     try {
-                        val source = loadFromISFFile(file)
+                        val source = loadFromISFFile(file, directoryRoot = dir)
                         if (source != null && availableSources.none { it.id == source.id }) {
                             availableSources.add(source)
                             logger.info { "Loaded standalone ISF visual source: ${source.displayName} (${source.id})" }
@@ -196,20 +194,19 @@ object VisualSourceRegistry {
         }
     }
 
-    private fun loadFromISFFile(file: File, overrideId: String? = null): ISFVisualSource? {
+    private fun loadFromISFFile(
+        file: File,
+        overrideId: String? = null,
+        directoryRoot: File? = null
+    ): ISFVisualSource? {
         val rawSource = file.readText()
         val format = ISFParser.detectFormat(rawSource)
         val header = ISFParser.parseHeader(rawSource)
             ?: ISFParser.createDefaultHeader(file.nameWithoutExtension.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }, format)
 
-        // Skip filters and transitions from being loaded as visual generator sources
-        val isTransition = header.CATEGORIES?.any { it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true) } == true ||
-            header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) } ||
-            file.absolutePath.lowercase().contains("transition")
-        val isFilter = header.CATEGORIES?.any { it.equals("Filters", ignoreCase = true) || it.equals("Filter", ignoreCase = true) || it.equals("Color Adjustment", ignoreCase = true) } == true ||
-            header.INPUTS.any { it.NAME.equals("inputImage", ignoreCase = true) } ||
-            file.absolutePath.lowercase().contains("filter")
-        if (isTransition || isFilter) {
+        // Auto-detect role: Visual generator sources require exactly 0 image inputs
+        val imageInputs = header.INPUTS.filter { it.TYPE.equals("image", ignoreCase = true) }
+        if (imageInputs.isNotEmpty()) {
             return null
         }
 
@@ -224,6 +221,21 @@ object VisualSourceRegistry {
 
         val parameters = ISFVisualSource.createParameters(header)
         val sourceId = overrideId ?: file.nameWithoutExtension
+
+        val relFolder = if (directoryRoot != null) {
+            try {
+                file.relativeToOrNull(directoryRoot)?.parent?.replace('\\', '/') ?: ""
+            } catch (_: Exception) {
+                ""
+            }
+        } else {
+            ""
+        }
+        val folderSegments = if (relFolder.isNotBlank()) relFolder.split("/").filter { it.isNotBlank() } else emptyList()
+        val headerCategories = header.CATEGORIES ?: emptyList()
+        val allCategories = (headerCategories + folderSegments + (if (relFolder.isNotBlank()) listOf(relFolder) else emptyList()))
+            .filter { it.isNotBlank() }
+            .distinct()
         
         return ISFVisualSource(
             id = sourceId,
@@ -231,9 +243,13 @@ object VisualSourceRegistry {
             shader = shader,
             header = header,
             parameters = parameters,
-            ownsShader = true
+            ownsShader = true,
+            categories = allCategories,
+            folderPath = relFolder,
+            baseDir = file.parentFile
         )
     }
+
 
     private fun loadFromFolder(folder: File) {
         val metaFile = File(folder, "meta.json")

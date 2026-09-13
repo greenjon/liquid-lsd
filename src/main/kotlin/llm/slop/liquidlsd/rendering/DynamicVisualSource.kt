@@ -52,8 +52,10 @@ open class DynamicVisualSource(
     val hasFeedback: Boolean = false,
     val ownsShader: Boolean = false, // Only the master instances in the registry own the shader
     override val is3D: Boolean = false,
-    override val categories: List<String> = emptyList()
+    override val categories: List<String> = emptyList(),
+    override val folderPath: String = ""
 ) : VisualSource {
+
     var fb1: FBO? = null
     var fb2: FBO? = null
     var fbIndex: Int = 0
@@ -138,8 +140,10 @@ open class DynamicVisualSource(
             hasFeedback = this.hasFeedback,
             ownsShader = false, // Cloned instances do not own the shared shader
             is3D = this.is3D,
-            categories = this.categories
+            categories = this.categories,
+            folderPath = this.folderPath
         )
+
     }
 
     override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {

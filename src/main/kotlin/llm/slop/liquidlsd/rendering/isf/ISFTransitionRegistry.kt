@@ -73,17 +73,11 @@ object ISFTransitionRegistry {
             defaultDir.mkdirs()
         }
 
+
         val resolvedDirs = ISFDirectoryManager.getResolvedDirectories()
         val enabledDirs = resolvedDirs.filter { it.config.isEnabled && it.status == DirectoryStatus.ACTIVE }
 
         for (resolved in enabledDirs) {
-            val normalizedPath = resolved.config.path.trim().replace('\\', '/').trimEnd('/')
-            if (normalizedPath == "library/sources" || normalizedPath == "library/filters" ||
-                normalizedPath.endsWith("/sources") || normalizedPath.endsWith("/filters")
-            ) {
-                continue
-            }
-
             val dir = File(resolved.expandedPath)
             if (!dir.exists() || !dir.isDirectory) continue
 
@@ -94,7 +88,7 @@ object ISFTransitionRegistry {
                         val source = file.readText()
                         val id = file.nameWithoutExtension
                         val displayName = id.replace("_", " ").capitalize()
-                        registerTransitionFromSource(id, displayName, source, file)
+                        registerTransitionFromSource(id, displayName, source, file = file, directoryRoot = dir)
                     } catch (e: Exception) {
                         logger.error(e) { "Failed to load user transition: ${file.path}" }
                     }
@@ -102,20 +96,37 @@ object ISFTransitionRegistry {
         }
     }
 
-    private fun registerTransitionFromSource(id: String, displayName: String, source: String, file: File? = null) {
+    private fun registerTransitionFromSource(
+        id: String,
+        displayName: String,
+        source: String,
+        file: File? = null,
+        directoryRoot: File? = null
+    ) {
         val header = ISFParser.parseHeader(source) ?: return
 
-        // Ensure shader is actually a transition (has transition category, progress input, or transition directory)
-        val isTransitionCategory = header.CATEGORIES?.any {
-            it.equals("Transitions", ignoreCase = true) || it.equals("Transition", ignoreCase = true)
-        } == true
+        // Auto-detect role: Transitions require 2+ image inputs, or progress input with at least 1 image input
+        val imageInputs = header.INPUTS.filter { it.TYPE.equals("image", ignoreCase = true) }
         val hasProgress = header.INPUTS.any { it.NAME.equals("progress", ignoreCase = true) }
-        val filePathTransition = file?.absolutePath?.lowercase()?.contains("transition") == true
-
-        if (!isTransitionCategory && !hasProgress && !filePathTransition) {
-            logger.debug { "Skipping non-transition ISF shader '$id' from transition registry" }
+        if (imageInputs.size < 2 && !(imageInputs.isNotEmpty() && hasProgress)) {
             return
         }
+
+        val relFolder = if (directoryRoot != null && file != null) {
+            try {
+                file.relativeToOrNull(directoryRoot)?.parent?.replace('\\', '/') ?: ""
+            } catch (_: Exception) {
+                ""
+            }
+        } else {
+            ""
+        }
+        val folderSegments = if (relFolder.isNotBlank()) relFolder.split("/").filter { it.isNotBlank() } else emptyList()
+        val headerCategories = header.CATEGORIES ?: emptyList()
+        val allCategories = (headerCategories + folderSegments + (if (relFolder.isNotBlank()) listOf(relFolder) else emptyList()))
+            .filter { it.isNotBlank() }
+            .distinct()
+            .ifEmpty { listOf("Transitions") }
 
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)
@@ -129,7 +140,9 @@ object ISFTransitionRegistry {
                 header = header,
                 shader = shader,
                 ownsShader = true,
-                categories = header.CATEGORIES.takeIf { !it.isNullOrEmpty() } ?: listOf("Transitions")
+                categories = allCategories,
+                folderPath = relFolder,
+                baseDir = file?.parentFile
             )
             transitions[id] = filter
             logger.debug { "Registered ISF transition: $id ($displayName)" }
@@ -137,6 +150,7 @@ object ISFTransitionRegistry {
             logger.error(e) { "Failed to compile ISF transition $id" }
         }
     }
+
 
     fun createTransition(id: String): ISFFilter? {
         return transitions[id]?.clone()
