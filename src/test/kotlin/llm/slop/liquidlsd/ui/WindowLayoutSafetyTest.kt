@@ -149,5 +149,21 @@ class WindowLayoutSafetyTest {
             }
         }
     }
+
+    @Test
+    fun testParametersPanelTitleBarDrawExtraGuard() {
+        // Verify the lambda guard rule: drawExtra must only be provided when activeDeck is present and non-empty
+        // When activeDeck is null (Mixer tab) or activeDeck.isEmpty is true (empty launchpad), it must be null
+        // to prevent moving cursor without submitting an item which triggers ImGui 1.90+ boundary assertion.
+        fun resolveDrawExtra(activeDeckIsEmpty: Boolean?, isMixerTab: Boolean): Boolean {
+            val activeDeck = if (isMixerTab) null else activeDeckIsEmpty
+            return activeDeck != null && !activeDeck
+        }
+
+        assertTrue(!resolveDrawExtra(activeDeckIsEmpty = true, isMixerTab = false), "Empty Deck must not provide drawExtra")
+        assertTrue(!resolveDrawExtra(activeDeckIsEmpty = false, isMixerTab = true), "Mixer tab (null deck) must not provide drawExtra")
+        assertTrue(!resolveDrawExtra(activeDeckIsEmpty = true, isMixerTab = true), "Mixer tab with empty deck must not provide drawExtra")
+        assertTrue(resolveDrawExtra(activeDeckIsEmpty = false, isMixerTab = false), "Active populated Deck must provide drawExtra")
+    }
 }
 

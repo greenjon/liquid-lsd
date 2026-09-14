@@ -301,6 +301,8 @@ class Renderer {
         }
     }
 
+    private var fallbackTransition: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
+
     /**
      * Composites Deck A and Deck B outputs into the Mixer's master output FBO.
      */
@@ -324,15 +326,16 @@ class Renderer {
                 height = mixer.height
             )
         } else {
-            val defaultTrans = llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition("linear_crossfade")
-            defaultTrans?.renderTransition(
+            val fallback = fallbackTransition ?: llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition("linear_crossfade")?.also {
+                fallbackTransition = it
+            }
+            fallback?.renderTransition(
                 startTexture = mixer.deckA.getOutputTexture(),
                 endTexture = mixer.deckB.getOutputTexture(),
                 progressValue = progress,
                 width = mixer.width,
                 height = mixer.height
             )
-            defaultTrans?.dispose()
         }
 
         mixer.blendFBO.unbind()
@@ -353,11 +356,15 @@ class Renderer {
         glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
         mixerShader.setUniform("uTexBG", 1)
 
+        mixerShader.setUniform("uMode", -1)
+        mixerShader.setUniform("uProgress", progress)
+        mixerShader.setUniform("uLevelA", mixer.levelA)
+        mixerShader.setUniform("uLevelB", mixer.levelB)
+        mixerShader.setUniform("uLevelBG", mixer.levelBG)
+        mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
         mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
         mixerShader.setUniform("uBgAlpha", 1.0f)
         mixerShader.setUniform("uBloom", mixer.bloom.value)
-        mixerShader.setUniform("uLevelBG", mixer.levelBG)
-        mixerShader.setUniform("uMasterLevel", mixer.masterLevel)
 
         Geometry.drawFullscreenQuad()
 
@@ -394,6 +401,8 @@ class Renderer {
      */
     fun dispose() {
         if (!isDisposed) {
+            fallbackTransition?.dispose()
+            fallbackTransition = null
             mixerShader.dispose()
             blitShader.dispose()
             view2DShader.dispose()

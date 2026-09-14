@@ -57,4 +57,17 @@ class MixerTransitionTest {
         mixer.setTransition(null)
         assertNull(mixer.transitionFilter)
     }
+
+    @Test
+    fun `test mixer frag has dual mode isf composite support`() {
+        val stream = javaClass.classLoader.getResourceAsStream("shaders/mixer.frag")
+        assertNotNull(stream, "shaders/mixer.frag must exist")
+        val source = stream!!.bufferedReader().use { it.readText() }
+
+        assertTrue(source.contains("uMode = -1"), "mixer.frag must declare uMode = -1 for ISF composite mode")
+        assertTrue(source.contains("uProgress"), "mixer.frag must declare uProgress uniform")
+        assertTrue(source.contains("uLevelA = 1.0"), "mixer.frag must declare uLevelA default 1.0")
+        assertTrue(source.contains("uLevelB = 1.0"), "mixer.frag must declare uLevelB default 1.0")
+        assertTrue(source.contains("if (uMode < 0)"), "mixer.frag must support uMode < 0 pure ISF composite branch")
+    }
 }

@@ -30,9 +30,11 @@
     - Replaced hardwired blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag` with pure ISF transition shaders taking `startImage`, `endImage`, and `progress`.
     - Bundled high-performance ISF transitions: `linear_crossfade.fs`, `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, `max_blend.fs`.
     - Standardized `Mixer.transitionFilter` to default to `"linear_crossfade"`, keeping `mixer.mode` and `mixer.transitionFilter` automatically synchronized.
-  - **Preserved Deck BG Compositing**:
+  - **Preserved Deck BG Compositing & Dual-Mode Transition Shading (`mixer.frag`, `Renderer.kt`)**:
     - Maintained the architectural compositing model: $\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$.
-    - Streamlined `mixer.frag` to composite transition output over Deck BG with bloom, levels, and master alpha.
+    - Streamlined `mixer.frag` to support dual-mode compositing: pure ISF composite mode (`uMode < 0`) that samples `uTex1` (`blendFBO`) scaled by crossfade-interpolated channel level faders (`mix(uLevelA, uLevelB, uProgress)`), while preserving legacy dual-texture blend modes (`uMode >= 0`) for WebGL and fallback rendering.
+    - Added default initial values to all uniforms in `mixer.frag` (`uLevelA = 1.0`, `uLevelB = 1.0`, etc.) to prevent uninitialized OpenGL zero-gain states.
+    - Cached `fallbackTransition` in `Renderer.kt` to ensure zero allocations on the render loop when no transition filter is active.
   - **Massive GPU Memory Footprint Reduction**:
     - Removed obsolete `rawSourceFBO`, `rawSource2DFBO`, `fb1`, and `fb2` ping-pong framebuffers from `Deck.kt`.
     - Eliminated 16 full-resolution / square FBO allocations across the 4 decks (Deck A, B, BG, PV), saving hundreds of megabytes of VRAM.

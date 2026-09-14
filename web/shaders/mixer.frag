@@ -3,20 +3,27 @@ precision highp float;
 in vec2 vTexCoord;
 out vec4 fragColor;
 
-uniform sampler2D uTex1;
-uniform sampler2D uTex2;
-uniform sampler2D uTexBG;
-uniform int uMode; // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
-uniform float uBalance; // 0.0 = Tex1 (Deck A), 1.0 = Tex2 (Deck B)
-uniform float uAlpha; // Master output alpha / gain
-uniform float uBgAlpha; // Background layer alpha multiplier
-uniform float uBloom; // 0.0 = no bloom, 1.0 = full bloom
-uniform float uLevelA; // Deck A channel level multiplier
-uniform float uLevelB; // Deck B channel level multiplier
-uniform float uLevelBG; // Deck BG channel level multiplier
-uniform float uMasterLevel; // Master channel level multiplier
+uniform sampler2D uTex1; // Transition output (ISF mode) or Deck A (legacy mode)
+uniform sampler2D uTex2; // Deck B (legacy dual-input mode)
+uniform sampler2D uTexBG; // Deck BG layer
+uniform int uMode = -1; // -1 = Pure ISF Transition composite, 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
+uniform float uBalance = 0.5; // 0.0 = Tex1 (Deck A), 1.0 = Tex2 (Deck B) (legacy mode)
+uniform float uProgress = 0.5; // 0.0 = Deck A, 1.0 = Deck B (ISF transition mode)
+uniform float uAlpha = 1.0; // Master output alpha / gain
+uniform float uBgAlpha = 1.0; // Background layer alpha multiplier
+uniform float uBloom = 0.0; // 0.0 = no bloom, 1.0 = full bloom
+uniform float uLevelA = 1.0; // Deck A channel level multiplier
+uniform float uLevelB = 1.0; // Deck B channel level multiplier
+uniform float uLevelBG = 1.0; // Deck BG channel level multiplier
+uniform float uMasterLevel = 1.0; // Master channel level multiplier
 
 vec4 sampleBlended(vec2 uv) {
+    if (uMode < 0) {
+        // Pure ISF Transition mode: uTex1 is already the blended foreground (blendFBO)
+        float fgLevel = mix(uLevelA, uLevelB, clamp(uProgress, 0.0, 1.0));
+        return texture(uTex1, uv) * fgLevel;
+    }
+
     vec4 color1 = texture(uTex1, uv) * uLevelA;
     vec4 color2 = texture(uTex2, uv) * uLevelB;
     float t = clamp(uBalance, 0.0, 1.0);

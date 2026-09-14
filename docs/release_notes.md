@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fix Main Video Output for ISF Transitions in Mixer Compositing Pipeline (`mixer.frag`, `Renderer.kt`, `web/shaders/mixer.frag`, `MixerTransitionTest.kt`)
+- **Restored Main Video Output for ISF Transitions**: Fixed an issue where selecting ISF transitions resulted in a black main output while `Deck BG` continued rendering. In `mixer.frag`, implemented pure ISF transition composite mode (`uMode < 0`) that samples `uTex1` (the blended transition FBO) scaled by crossfade-interpolated channel level faders (`mix(uLevelA, uLevelB, uProgress)`), while preserving legacy dual-texture blend modes (`uMode >= 0`) for WebGL and fallback compatibility.
+- **Defensive Uniform Initialization**: Added explicit GLSL default initializers (`uLevelA = 1.0`, `uLevelB = 1.0`, `uLevelBG = 1.0`, `uMasterLevel = 1.0`, `uProgress = 0.5`, `uMode = -1`) to guard against uninitialized zero-gain states.
+- **Zero-Allocation Fallback Transition Caching**: Cached `fallbackTransition` inside `Renderer.kt` so falling back to linear crossfade when no transition is active does not allocate or dispose `ISFFilter` instances on the render thread.
+- **WebGL Parity**: Synchronized `web/shaders/mixer.frag` via `syncWeb` with matching dual-mode composite support.
+
+### Fix Dear ImGui MenuBar Boundary Assertion Crash (`PanelTitleBar.kt`, `ParametersPanel.kt`, `WindowLayoutSafetyTest.kt`)
+- **Guarded Title Bar `drawExtra` Lambda**: In `ParametersPanel.kt`, only supply the source tab trailing lambda to `PanelTitleBar.draw` when `activeDeck` is non-null and not empty (`activeDeck != null && !activeDeck.isEmpty`). Passing `null` prevents spurious cursor movements via `ImGui.sameLine()` and `ImGui.setCursorPosY()` when viewing the Mixer tab or an empty deck launchpad.
+- **Defensive MenuBar Boundary Dummy**: Added `ImGui.dummy(0f, 0f)` inside `PanelTitleBar.draw()` immediately after invoking `drawExtra()`. This resets ImGui's internal `window->DC.IsSetPos` flag and ensures window boundaries are always closed cleanly, preventing Dear ImGui 1.90+ assertions (`Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries`) from triggering inside `ImGui.endMenuBar()`.
+
+
 ### Modernization Upgrade to Dear ImGui 1.92 (`build.gradle.kts`, `KeyCombination.kt`, `ShortcutManager.kt`, `UIManager.kt`, `UITheme.kt`, `UIThemeStyler.kt`, `ParametersKeyboardTest.kt`)
 - **Dear ImGui 1.92.7.1 Upgrade**: Upgraded `io.github.spair:imgui-java` from `1.86.12` to `1.92.7.1`, bringing the desktop UI to the latest ImGui release.
 - **New Key & Navigation Input API**: Replaced obsolete `ImGui.getKeyIndex(ImGuiKey.*)` with direct `ImGuiKey` constants and implemented `KeyCombination.glfwKeyToImGuiKey()` to map GLFW keycodes to ImGuiKey codes in `ShortcutManager.isTriggered`. Fixed remaining raw GLFW keycodes in `UIManager.kt`, `LibraryPanel.kt`, and `PreferencesPanel.kt` to prevent `IsNamedKey` assertion failures.

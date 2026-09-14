@@ -90,6 +90,7 @@ object PanelTitleBar {
                 ImGui.sameLine(0f, extraSpacing)
                 ImGui.setCursorPosY(btnYOffset)
                 drawExtra(menuBarH, btnH, btnYOffset)
+                ImGui.dummy(0f, 0f)
             }
 
             ImGui.endMenuBar()

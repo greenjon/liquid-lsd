@@ -135,11 +135,12 @@ object ParametersPanel {
         val isDeckEmpty = activeDeck?.isEmpty == true
 
         // ── Title Bar: "Parameters" title with Video Source tab beside it in Window MenuBar ──
-        PanelTitleBar.draw(session, "Parameters", TITLE_BAR_SPACING) { _, btnH, _ ->
-            if (activeDeck != null) {
+        val drawSourceTabLambda: ((Float, Float, Float) -> Unit)? = if (activeDeck != null && !activeDeck.isEmpty) {
+            { _, btnH, _ ->
                 ParametersTabs.drawSourceTab(session, state, mixer, btnH = btnH, deckPresetController = deckPresetController)
             }
-        }
+        } else null
+        PanelTitleBar.draw(session, "Parameters", TITLE_BAR_SPACING, drawSourceTabLambda)
 
         // ── Main Parameters Table (Left Side Tabs + Right Grid Area) ─────────────────
         val sideTabWidth = ParametersTabs.calculateLeftTabsWidth(session)

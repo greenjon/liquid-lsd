@@ -340,9 +340,11 @@ All post-processing effects, 2D-to-3D projection geometry, and mixer transitions
   - Eliminates hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
   - All Deck A $\leftrightarrow$ Deck B transitions execute via `ISFFilter` taking `startImage`, `endImage`, and `progress` ($0 \dots 1$).
   - Bundled transitions: `linear_crossfade`, `additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, along with geometric wipes and glitch transitions.
-- **Preserved Deck BG Compositing**:
+- **Preserved Deck BG Compositing & Dual-Mode Transition Shading**:
   - Deck BG is composited behind the active A/B transition output in a streamlined `mixer.frag` pass with bloom, levels, and master alpha:
     $$\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$$
+  - `mixer.frag` operates in dual mode: pure ISF composite mode (`uMode < 0`) where `uTex1` (`blendFBO`) is modulated by crossfade channel levels (`mix(uLevelA, uLevelB, uProgress)`), and legacy dual-input mode (`uMode >= 0`) for WebGL / non-ISF fallback rendering.
+  - Zero-allocation fallback: `Renderer.kt` caches an instance of `linear_crossfade` so unassigned transition states never allocate or destroy filters during frame rendering.
 - **Simplified FBO Footprint**:
   - Removed obsolete `rawSourceFBO`, `rawSource2DFBO`, `fb1`, and `fb2` ping-pong buffers from `Deck.kt`, saving 16 full-resolution FBOs across the 4 decks and dramatically reducing GPU memory usage.
 
