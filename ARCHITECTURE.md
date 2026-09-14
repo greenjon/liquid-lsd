@@ -135,12 +135,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D and foreign shader format detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
-│   ├── DynamicSpiral.kt        — Specialized particle/spiral visual source
 │   ├── ExternalVideoSource.kt  — Live video ingest visual source driven by Spout/Syphon/PipeWire video streams
 │   ├── ExternalVideoDiscovery.kt — Background discovery service polling for active Spout, Syphon, and PipeWire video streams
 │   ├── HyperMesh.kt            — Real-time 4D Polychoron (600-cell & 120-cell) visual source with Hopf fibration
-│   ├── Icosahedron.kt          — 32-Stellation icosahedral manifold visual source
-│   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
+│   │   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
 │   ├── Shader.kt               — GLSL shader compilation/management
 │   ├── Geometry.kt             — Vertex buffers, basic shapes
 │   ├── FBO.kt                  — OpenGL framebuffer wrapper
@@ -290,7 +288,7 @@ The WebGL2 standalone player replicates the core desktop multi-pass pipeline and
 
 ## Desktop-to-Web Sync & Drift Tracking Subsystem
 
-- **Sync Manifest (`web/sync_manifest.json`)**: Authoritative mapping of desktop assets, GLSL 3.3 Core shaders (`src/main/resources/shaders/`, `library/sources/`), and algorithmic math files (`Icosahedron.kt`, `Evaluators.kt`, `WebPresetSerializer.kt`) to their WebGL2 / ES module equivalents.
+- **Sync Manifest (`web/sync_manifest.json`)**: Authoritative mapping of desktop assets, GLSL 3.3 Core shaders (`src/main/resources/shaders/`, `library/sources/`), and algorithmic math files (`Evaluators.kt`, `WebPresetSerializer.kt`) to their WebGL2 / ES module equivalents.
 - **Sync Engine (`scripts/sync_web.py`)**: Zero-dependency Python CLI tool providing:
   - `--check`: Compares actual web files vs transpiled desktop sources and SHA-256 hashes, producing a formatted status report. Returns exit code 1 if drift exists.
   - `--apply`: Automatically transpiles desktop `#version 330 core` shaders into WebGL2 `#version 300 es` (`precision highp float;`) and writes them directly to `web/shaders/`.

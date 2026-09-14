@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Pure ISF v2.0 Standardization & Removal of Legacy Custom Video Sources (`library/sources/`)
+- **ISF v2.0 Shader Migration**: Removed legacy non-ISF custom video source folders (`attractor_feedback`, `chladni`, `colors`, `gyroid`, `hyper_mesh`, `hyper_slice`, and `brick`) relying on proprietary `meta.json` manifests, advancing the system's architecture toward pure ISF v2.0 shader standardization and away from custom video source formats.
+- **Native ISF Generator (`dynamic_spiral.fs`)**: Converted Dynamic Spiral from a custom Kotlin class (`DynamicSpiral.kt`) to a standalone ISF v2.0 shader file with an embedded JSON header and standard GLSL 3.30 uniform inputs.
+- **GLSL Phase Integration**: Shifted time and shear phase integration to GLSL expressions (`TIME * Speed`), eliminating CPU-side phase accumulators and custom uniform overrides while preserving smooth particle motion and color sweeps.
+- **Codebase Clean-up**: Removed `DynamicSpiral.kt`, `meta.json`, and `shader.frag`. Simplified source instantiation logic in `VisualSourceRegistry.kt` and `WebPresetSerializer.kt`.
+- **Web Pipeline Parity**: Synchronized WebGL ES 3.0 shader (`web/shaders/dynamic_spiral.frag`) and updated sync manifest hashes (`web/sync_manifest.json`).
+
 ### Correct Lucide Icon Font Scoping & Modern ImGui Icon Alignment (`Icons.kt`, `BrowserActionToolbar.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `DeckControlPanel.kt`, `MixerPanel.kt`, `ModulatorHeaderRow.kt`, `ParametersTabs.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `Lfo2Section.kt`)
 - **Accurate Lucide PUA Codepoint Mappings (`Icons.kt`)**: Updated `Icons.LOCK` (`\ue10a`) to standard Lucide closed padlock PUA codepoint, and `Icons.CHEVRON_UP` (`\ue071`) to standard Lucide chevron-up codepoint.
 - **Explicit Font Scoping for UI Icon Buttons**: Wrapped all icon-bearing button calls (`Icons.PLUS`, `Icons.POWER`, `Icons.LOCK`, `Icons.REPEAT`, `Icons.SHUFFLE`, `Icons.PLAY`, `Icons.PAUSE`, `Icons.DICES`, `Icons.TRASH`, `Icons.MORE_VERTICAL`, `Icons.CHEVRON_DOWN`) inside `session.uiTheme.withFont(UITheme.FontLevel.BODY)` (or `H3`), ensuring Dear ImGui's font stack has the merged Lucide PUA glyph atlas active when calculating text metrics and drawing buttons.

@@ -17,20 +17,12 @@ class Source3DModeTest {
     }
 
     private val expected3DSources = setOf(
-        "icosahedron",
-        "icosa-v3",
-        "hyper_mesh",
-        "icosa_dodeca",
-        "chladni",
-        "gyroid",
-        "hyper_slice"
+        "icosa_h3"
     )
 
     private val expected2DSources = setOf(
         "mandala",
-        "colors",
-        "dynamic_spiral",
-        "attractor_feedback"
+        "dynamic_spiral"
     )
 
     @Test

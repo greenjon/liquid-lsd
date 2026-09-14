@@ -207,7 +207,7 @@ void main() {
         float squareDist = max(abs(pCell.x), abs(pCell.y));
         float circleDist = length(pCell);
         float shapeDist = mix(squareDist, circleDist, roundness);
-        float borderFade = smoothstep(1.0, 0.96, shapeDist);
+        float borderFade = 1.0 - smoothstep(0.96, 1.0, shapeDist);
 
         if (borderFade <= 0.001) {
             gl_FragColor = vec4(0.0);
@@ -255,7 +255,12 @@ void main() {
     vec3 pZero = vec3((ndc.x * aspect) / safeZoom, ndc.y / safeZoom, 0.0);
 
     // Camera setup: smooth transition from Orthographic (persp=0) to Perspective (persp=1)
-    float camDist = 2.5;
+    // Camera must stay farther out than the furthest plane it can ever face, or that plane
+    // clips out of view (ray origin ends up past it, t <= 0). Cube Cage planes sit at
+    // baseOffset(1.0) + separation, which can reach 3.0 at max separation (2.0) — beyond the
+    // default 2.5 camera distance — so grow camDist to keep a safety margin in that case.
+    float camPlaneOffset = ((intMode == 2) ? 1.0 : 0.0) + separation;
+    float camDist = max(2.5, camPlaneOffset + 0.75);
     vec3 roView, rdView;
     if (perspective < 0.001) {
         roView = vec3(pZero.xy, camDist);
@@ -301,7 +306,7 @@ void main() {
             float squareDist = max(abs(u), abs(v));
             float circleDist = length(vec2(u, v));
             float shapeDist = mix(squareDist, circleDist, roundness);
-            float borderFade = smoothstep(1.0, 0.96, shapeDist);
+            float borderFade = 1.0 - smoothstep(0.96, 1.0, shapeDist);
             if (borderFade <= 0.001) continue;
 
             // Correct texture coordinates for inputImage aspect ratio (e.g. 16:9), preserving isotropic circular geometry

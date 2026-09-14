@@ -148,9 +148,9 @@ class PresetDirtyLoadingTest {
     fun testSanitizePresetDtoFillsMissingAndStripsLegacy() {
         val rawLegacyDto = DeckPresetDto(
             name = "legacy_test",
-            visualSourceType = "icosa_dodeca",
+            visualSourceType = "mandala",
             parameters = mapOf(
-                "Morph" to ParameterDto(0.5f, 0.0f, 1.0f, false, emptyList()),
+                "Thickness" to ParameterDto(0.5f, 0.0f, 1.0f, false, emptyList()),
                 "ObsoleteKey" to ParameterDto(1.0f, 0.0f, 1.0f, false, emptyList())
             ),
             feedbackParameters = mapOf(
@@ -163,11 +163,11 @@ class PresetDirtyLoadingTest {
         assertTrue(wasMigrated, "Legacy preset must be flagged as migrated")
         assertFalse(sanitized.parameters.containsKey("ObsoleteKey"), "Obsolete keys must be removed")
         assertFalse(sanitized.feedbackParameters.containsKey("legacyFeedback"), "Legacy feedback keys must be removed")
-        assertTrue(sanitized.parameters.containsKey("Stellation"), "Missing Stellation parameter must be populated")
-        assertTrue(sanitized.parameters.containsKey("Support H"), "Missing Support H parameter must be populated")
+        assertTrue(sanitized.parameters.containsKey("L1"), "Missing L1 parameter must be populated")
+        assertTrue(sanitized.parameters.containsKey("L2"), "Missing L2 parameter must be populated")
         assertTrue(sanitized.feedbackParameters.containsKey("fbDecay"), "Missing fbDecay must be populated")
         assertTrue(sanitized.feedbackParameters.containsKey("fbKaleido"), "Missing fbKaleido must be populated")
-        assertEquals(0.5f, sanitized.parameters["Morph"]?.baseValue, "Existing parameter values must be preserved")
+        assertEquals(0.5f, sanitized.parameters["Thickness"]?.baseValue, "Existing parameter values must be preserved")
         assertEquals(1.0f, sanitized.globalAlpha?.baseValue, "Default globalAlpha must be populated")
     }
 

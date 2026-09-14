@@ -28,52 +28,16 @@
       "description": "Master deck mixer & crossfader compositing shader"
     },
     {
-      "desktop": "library/sources/attractor_feedback/shader.frag",
-      "web": "web/shaders/attractor_feedback.frag",
-      "mode": "auto_shader",
-      "description": "Clifford / Lorenz strange attractor feedback visualizer"
-    },
-    {
-      "desktop": "library/sources/chladni/shader.frag",
-      "web": "web/shaders/chladni.frag",
-      "mode": "auto_shader",
-      "description": "Acoustic Chladni resonance plate simulation"
-    },
-    {
-      "desktop": "library/sources/dynamic_spiral/shader.frag",
+      "desktop": "library/sources/dynamic_spiral/dynamic_spiral.fs",
       "web": "web/shaders/dynamic_spiral.frag",
       "mode": "auto_shader",
       "description": "Dynamic logarithmic spiral visualizer"
     },
     {
-      "desktop": "library/sources/gyroid/shader.frag",
-      "web": "web/shaders/gyroid.frag",
+      "desktop": "library/sources/icosa_h3/icosa_h3.fs",
+      "web": "web/shaders/icosa_h3.frag",
       "mode": "auto_shader",
-      "description": "Triply periodic minimal surface gyroid raymarcher"
-    },
-    {
-      "desktop": "library/sources/hyper_slice/shader.frag",
-      "web": "web/shaders/hyper_slice.frag",
-      "mode": "auto_shader",
-      "description": "4D hyper-slice polytope projection visualizer"
-    },
-    {
-      "desktop": "library/sources/icosa-v3/shader.frag",
-      "web": "web/shaders/icosa_v3.frag",
-      "mode": "auto_shader",
-      "description": "Icosahedral symmetry V3 visualizer"
-    },
-    {
-      "desktop": "library/sources/icosa_dodeca/shader.frag",
-      "web": "web/shaders/icosa_dodeca.frag",
-      "mode": "auto_shader",
-      "description": "Icosidodecahedral dual polyhedron visualizer"
-    },
-    {
-      "desktop": "library/sources/icosahedron/shader.frag",
-      "web": "web/shaders/icosahedron.frag",
-      "mode": "auto_shader",
-      "description": "Du Val stellation and 60-plane icosahedron raymarcher"
+      "description": "Icosahedral H3 Coxeter raymarcher: duality morph crossfaded with spike/blocker stellation CSG"
     },
     {
       "desktop": "library/sources/mandala/shader.frag",
@@ -90,13 +54,6 @@
   ],
   "monitored_sources": [
     {
-      "desktop": "src/main/kotlin/llm/slop/liquidlsd/rendering/Icosahedron.kt",
-      "web": "web/icosahedron_math.js",
-      "mode": "manual_review",
-      "description": "Icosahedral projection and Du Val 60-orbit vectors parity",
-      "last_synced_hash": "c87a360e6b95057d1d76dc2ff149082336b20ac611bdbfbd15cbffb5c2e11a02"
-    },
-    {
       "desktop": "src/main/kotlin/llm/slop/liquidlsd/cv/Evaluators.kt",
       "web": "web/evaluator.js",
       "mode": "manual_review",
@@ -108,7 +65,7 @@
       "web": "web/renderer.js",
       "mode": "manual_review",
       "description": "JSON preset serialization schema & dead reckoning state sync",
-      "last_synced_hash": "10db1914b8082e592e56754c24db5b0009b1c8460df2329c6e636dd6b795ad96"
+      "last_synced_hash": "50a9cc18a4f646fba4532f881842e65355816fe8ab1eaf6a535175b251550de3"
     }
   ]
 }

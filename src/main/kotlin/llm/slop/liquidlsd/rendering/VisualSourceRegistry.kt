@@ -51,16 +51,8 @@ object VisualSourceRegistry {
     }
 
     private val DEFAULT_SOURCE_IDS = listOf(
-        "attractor_feedback",
-        "chladni",
-        "colors",
         "dynamic_spiral",
-        "gyroid",
-        "hyper_mesh",
-        "hyper_slice",
-        "icosa-v3",
-        "icosa_dodeca",
-        "icosahedron",
+        "icosa_h3",
         "mandala"
     )
 
@@ -346,38 +338,6 @@ object VisualSourceRegistry {
                     ownsShader = true,
                     recipe = initialRecipe,
                     categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "Geometric")
-                )
-            } else if (meta.id == "dynamic_spiral") {
-                DynamicSpiral(
-                    id = meta.id,
-                    displayName = meta.name,
-                    shader = shader,
-                    parameters = parameters,
-                    hasFeedback = meta.feedback,
-                    ownsShader = true,
-                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "Organic", "Liquid")
-                )
-            } else if (meta.id == "hyper_mesh") {
-                HyperMesh(
-                    id = meta.id,
-                    displayName = meta.name,
-                    shader = shader,
-                    parameters = parameters,
-                    hasFeedback = meta.feedback,
-                    ownsShader = true,
-                    is3D = isSource3D,
-                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "3D", "Geometric", "Fractal")
-                )
-            } else if (meta.id == "icosahedron") {
-                Icosahedron(
-                    id = meta.id,
-                    displayName = meta.name,
-                    shader = shader,
-                    parameters = parameters,
-                    hasFeedback = meta.feedback,
-                    ownsShader = true,
-                    is3D = isSource3D,
-                    categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "3D", "Geometric")
                 )
             } else {
                 DynamicVisualSource(

@@ -50,9 +50,6 @@ object WebPresetSerializer {
                 put("b", JsonPrimitive(src.recipe.b))
                 put("c", JsonPrimitive(src.recipe.c))
                 put("d", JsonPrimitive(src.recipe.d))
-            } else if (src is DynamicSpiral) {
-                put("integratedTime", JsonPrimitive(round4(src.integratedTime)))
-                put("integratedShear", JsonPrimitive(round4(src.integratedShear)))
             }
             put("feedback", fb)
         }

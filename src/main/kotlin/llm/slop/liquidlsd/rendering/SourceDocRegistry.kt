@@ -22,10 +22,9 @@ object SourceDocRegistry {
                 " modes; Thickness and Wall Width control line weight.",
         "attractor_feedback" to "Two-layer strange-attractor system with cross-modulated" +
                 " Jacobian and variance coefficients. High Persistence burns in trails.",
-        "icosa_dodeca" to "Continuous H3 Coxeter symmetry morph between Icosahedron and Dodecahedron, with" +
-                " Great Kepler-Poinsot Stellations, kaleidoscopic chamber coloring, and crystal reveal.",
-        "icosahedron" to "Continuous 2D Du Val manifold covering all 32 achiral stellations of the icosahedron," +
-                " driven by real-time H3 normal vector generation and 60-element icosahedral orbit evaluation.",
+        "icosa_h3" to "Icosahedral H3 Coxeter raymarcher combining a continuous Icosahedron/Dodecahedron" +
+                " duality morph (with Kepler-Poinsot stellations and truncation/cantellation duals) crossfaded" +
+                " against an independent spike-and-blocker stellation CSG, with facet-family aware coloring.",
         "hyper_mesh" to "Real-time 4D Polychoron (600-cell & 120-cell) with XW/YW/ZW hyper-rotations," +
                 " 4D perspective/stereographic projection, Hopf fibration coloring, and GPU tube rendering.",
         "hyper_slice" to "Raymarched 3D cross-section MRI scan through 4D 600-cell and 120-cell polychora" +
@@ -121,36 +120,27 @@ object SourceDocRegistry {
         "attractor_feedback/Var Coef 1" to "Variance coefficient for attractor layer 1.",
         "attractor_feedback/Jacobian 1" to "Jacobian strength for layer 1.",
 
-        // Icosa-Dodeca
-        "icosa_dodeca/Morph" to "Continuous 4-stage cyclic H3 Coxeter morph: 0.0–0.25 (Icosahedron → Dodecahedron), 0.25–0.50 (Dodecahedron → Great Stellated Dodecahedron), 0.50–0.75 (Great Stellated Dodecahedron → Great Icosahedron), 0.75–1.00 (Great Icosahedron → Icosahedron).",
-        "icosa_dodeca/Stellation" to "Manual boost/override for CSG stellation star spike depth.",
-        "icosa_dodeca/Support H" to "Wythoff facet cutting: negative values truncate vertices (e.g. -0.15 for Buckyball), positive values bevel/cantellate edges.",
-        "icosa_dodeca/Color Method" to "Coloring algorithm: 0 = H3 Chamber & Angular Sectors, 1 = Radial Depth Gradient, 2 = Facet Normal Spectrum.",
-        "icosa_dodeca/Hue Offset" to "Rotates the base hue of the color palette.",
-        "icosa_dodeca/Saturation" to "Color saturation of faces and edges.",
-        "icosa_dodeca/Brightness" to "Overall luminance multiplier for surface coloring.",
-        "icosa_dodeca/Opacity" to "Face opacity. Sweet spot is 0.6–0.8 for crystal reveal: semi-transparent faces illuminate inner self-intersecting facets without clutter.",
-        "icosa_dodeca/Edge Thickness" to "Line thickness of wireframe edges.",
-        "icosa_dodeca/Edge Brightness" to "Brightness and contrast of the complementary wireframe edge lines.",
-        "icosa_dodeca/Zoom" to "Camera zoom distance.",
-        "icosa_dodeca/Rotate X" to "Pitch rotation angle around the X axis.",
-        "icosa_dodeca/Rotate Y" to "Yaw rotation angle around the Y axis.",
-        "icosa_dodeca/Rotate Z" to "Roll rotation angle around the Z axis.",
-
-        // Icosahedron (32-Stellation Du Val Manifold)
-        "icosahedron/Control X" to "Continuous density layer selector (X axis): sweeps through the 32 achiral stellations along the Du Val poset branch.",
-        "icosahedron/Control Y" to "Interpolation factor (Y axis) between 3-fold face pole and 5-fold face pole for real-time H3 normal generator vector.",
-        "icosahedron/Color Method" to "Coloring algorithm: 0 = Chamber Sectors, 1 = Depth Gradient, 2 = Normal Spectrum.",
-        "icosahedron/Hue Offset" to "Rotates the base hue of the color palette.",
-        "icosahedron/Saturation" to "Color saturation of faces and edges.",
-        "icosahedron/Brightness" to "Overall luminance multiplier for surface coloring.",
-        "icosahedron/Opacity" to "Face opacity for semi-transparent multi-layer crystal raymarching.",
-        "icosahedron/Edge Thickness" to "Line thickness of wireframe edges.",
-        "icosahedron/Edge Brightness" to "Brightness and contrast of the wireframe edges.",
-        "icosahedron/Zoom" to "Camera zoom distance.",
-        "icosahedron/Rotate X" to "Pitch rotation angle around the X axis.",
-        "icosahedron/Rotate Y" to "Yaw rotation angle around the Y axis.",
-        "icosahedron/Rotate Z" to "Roll rotation angle around the Z axis.",
+        // Icosa-H3 (combined Icosahedron/Dodecahedron duality morph + spike/blocker stellation CSG)
+        "icosa_h3/Morph" to "Continuous 4-stage cyclic H3 Coxeter morph: 0.0–0.25 (Icosahedron → Dodecahedron), 0.25–0.50 (Dodecahedron → Great Stellated Dodecahedron), 0.50–0.75 (Great Stellated Dodecahedron → Great Icosahedron), 0.75–1.00 (Great Icosahedron → Icosahedron).",
+        "icosa_h3/StellationBoost" to "Manual boost/override for the duality-morph stellation spike depth.",
+        "icosa_h3/SpikeMode" to "Crossfades the geometry from the smooth duality-morph facets (0.0) to an independent spike-and-blocker stellation CSG (1.0).",
+        "icosa_h3/SpikePhase" to "Sweeps the spike family's pole around the 3-fold/5-fold arc, independent of Morph.",
+        "icosa_h3/SpikeSharpness" to "Tilts the spike facets from flat (0.0) to fully extruded pyramid spikes (1.0). Only affects the spike family (see Spike Mode).",
+        "icosa_h3/BlockerSize" to "Size of the plane that chops the spike tips. Larger values leave more of the spike intact.",
+        "icosa_h3/SupportH" to "Wythoff facet cutting on the duality-morph family: negative values truncate vertices (e.g. -0.15 for Buckyball), positive values bevel/cantellate edges.",
+        "icosa_h3/ColorMode" to "Coloring algorithm: 0 = Facet Family (distinct hue per active half-space), 1 = H3 Chamber & Angular Sectors, 2 = Radial Depth Gradient, 3 = Facet Normal Spectrum, 4 = Iridescent Fresnel (animated view-angle shimmer).",
+        "icosa_h3/HueOffset" to "Rotates the base hue of the color palette.",
+        "icosa_h3/HueAnimSpeed" to "Slowly drifts the hue offset over time. 0 = static.",
+        "icosa_h3/Saturation" to "Color saturation of faces and edges.",
+        "icosa_h3/Brightness" to "Overall luminance multiplier for surface coloring.",
+        "icosa_h3/Opacity" to "Face opacity. Sweet spot is 0.6–0.8 for crystal reveal: semi-transparent faces illuminate inner self-intersecting facets without clutter.",
+        "icosa_h3/EdgeThickness" to "Line thickness of wireframe edges.",
+        "icosa_h3/EdgeBrightness" to "Brightness and contrast of the complementary wireframe edge lines.",
+        "icosa_h3/RimGlow" to "Fresnel rim-light intensity added around silhouette edges for extra depth.",
+        "icosa_h3/Zoom" to "Camera zoom distance.",
+        "icosa_h3/RotateX" to "Pitch rotation angle around the X axis.",
+        "icosa_h3/RotateY" to "Yaw rotation angle around the Y axis.",
+        "icosa_h3/RotateZ" to "Roll rotation angle around the Z axis.",
 
         // 4D Hyper-Mesh (600-cell & 120-cell)
         "hyper_mesh/Rotate XW" to "Primary 4D hyper-rotation through the XW plane (continuous inside-out cell inversion).",

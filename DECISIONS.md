@@ -1,3 +1,27 @@
+## Standardization on Pure ISF v2.0 Shaders & Removal of Legacy Custom Sources (`library/sources/`)
+
+- **Decision**: Removed non-ISF legacy source folders (`attractor_feedback`, `chladni`, `colors`, `gyroid`, `hyper_mesh`, `hyper_slice`, and `brick`) relying on proprietary `meta.json` + `shader.frag` manifests in favor of standard Interactive Shader Format (ISF v2.0) files (`.fs`):
+  - **Single Source Architecture**: All procedural and particle generators now operate through unified ISF v2.0 `.fs` shader files with embedded JSON headers, standardized inputs, and native GLSL uniform bindings.
+  - **Eliminated Proprietary Manifests**: Replaced custom `meta.json` parameter descriptors with standard ISF `INPUTS` definitions.
+- **Rationale**:
+  - Another major step toward full ISF v2.0 standardization and away from custom, proprietary video source wrappers.
+  - Improves ecosystem portability across industry-standard VJ tools (Resolume, VDMX, ISF Editor, MadMapper) and simplifies shader authoring and live-reloading.
+
+---
+
+## Convert Dynamic Spiral to Pure ISF v2.0 Shader (`library/sources/dynamic_spiral/dynamic_spiral.fs`, `VisualSourceRegistry.kt`, `WebPresetSerializer.kt`)
+
+- **Decision**: Refactored `Dynamic Spiral` from a Kotlin-backed custom visual source (`DynamicSpiral.kt` + `meta.json` + `shader.frag`) into a pure, standalone ISF v2.0 visual generator shader (`library/sources/dynamic_spiral/dynamic_spiral.fs`):
+  - **ISF v2.0 Shader Standard**: Encapsulated shader metadata and all 12 parameters (`MaxPoints`, `Scale`, `Damping`, `WaveFreq`, `WaveAmp`, `Shear`, `Speed`, `DotSize`, `Glow`, `HueOffset`, `HueSweep`, `TrailDecay`) directly inside the ISF JSON comment header block.
+  - **Time & Phase Integration**: Integrated `TIME * Speed` and `TIME * Speed * Shear` directly within GLSL, eliminating CPU-side phase accumulation while maintaining smooth particle motion and color sweep cycles.
+  - **Codebase Simplification**: Deleted `DynamicSpiral.kt`, `meta.json`, and `shader.frag`. Replaced hardcoded class branch checks in `VisualSourceRegistry.kt` and `WebPresetSerializer.kt` with standard `ISFVisualSource` / `DynamicVisualSource` polymorphism.
+  - **Cross-Platform & Web Parity**: Synchronized transpiled GLSL ES 3.0 WebGL shader (`web/shaders/dynamic_spiral.frag`) and updated sync manifest (`web/sync_manifest.json`).
+- **Rationale**:
+  - Removes bespoke Java/Kotlin class overhead for standard fragment-shader particle generators.
+  - Makes `Dynamic Spiral` 100% portable across standard ISF hosts (Resolume, VDMX, ISF Editor, MadMapper) and hot-reloadable on file save.
+
+---
+
 ## Restoring All 4 Distinct 3D Elevation Projection Modes (`3d_elevation.fs`, `ISFFilter.kt`, `PresetModels.kt`, `ValueParamSection.kt`)
 
 - **Decision**: Restructure and fully expose the four distinct geometric elevation projection modes in `3d_elevation.fs` with calibrated math, enum-safe clamp ranges, and dedicated UI selection:

@@ -2,7 +2,6 @@ import { cvState, tick } from './dsp.js';
 import { powerState } from './ui.js';
 import { autopilotState, tickAutopilot, startAutopilot } from './autopilot.js';
 import { evaluateParameter } from './evaluator.js';
-import { generateH3Normals } from './icosahedron_math.js';
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -168,9 +167,7 @@ async function init() {
     chladniFragSrc,
     gyroidFragSrc,
     hyperSliceFragSrc,
-    icosahedronFragSrc,
-    icosaDodecaFragSrc,
-    icosaV3FragSrc,
+    icosaH3FragSrc,
     feedbackFragSrc,
     mixerFragSrc,
     crtFragSrc
@@ -184,9 +181,7 @@ async function init() {
     loadText('shaders/chladni.frag'),
     loadText('shaders/gyroid.frag'),
     loadText('shaders/hyper_slice.frag'),
-    loadText('shaders/icosahedron.frag'),
-    loadText('shaders/icosa_dodeca.frag'),
-    loadText('shaders/icosa_v3.frag'),
+    loadText('shaders/icosa_h3.frag'),
     loadText('shaders/feedback.frag'),
     loadText('shaders/mixer.frag'),
     loadText('shaders/crt_post.frag')
@@ -199,9 +194,7 @@ async function init() {
   const chladniProgram     = createProgram(gl, blitVertSrc, chladniFragSrc);
   const gyroidProgram      = createProgram(gl, blitVertSrc, gyroidFragSrc);
   const hyperSliceProgram  = createProgram(gl, blitVertSrc, hyperSliceFragSrc);
-  const icosahedronProgram = createProgram(gl, blitVertSrc, icosahedronFragSrc);
-  const icosaDodecaProgram = createProgram(gl, blitVertSrc, icosaDodecaFragSrc);
-  const icosaV3Program     = createProgram(gl, blitVertSrc, icosaV3FragSrc);
+  const icosaH3Program     = createProgram(gl, blitVertSrc, icosaH3FragSrc);
   const feedbackProgram    = createProgram(gl, blitVertSrc, feedbackFragSrc);
   const mixerProgram       = createProgram(gl, blitVertSrc, mixerFragSrc);
   const blitProgram        = createProgram(gl, blitVertSrc, blitFragSrc);
@@ -262,37 +255,14 @@ async function init() {
         'uEdgeThickness', 'uEdgeBrightness', 'uGlow', 'uAlpha', 'uResolution', 'uTime'
       ])
     },
-    icosahedron: {
-      prog: icosahedronProgram,
-      locs: getUniformLocations(gl, icosahedronProgram, [
-        'uControlX', 'uControlY', 'uColorMethod', 'uHueOffset', 'uSaturation', 'uBrightness',
-        'uOpacity', 'uEdgeThickness', 'uEdgeBrightness', 'uZoom',
-        'uRotateX', 'uRotateY', 'uRotateZ', 'uSupportH', 'uAlpha', 'uResolution', 'uTime',
-        'uH3Normals', 'uPlaneCount'
-      ])
-    },
-    icosa_dodeca: {
-      prog: icosaDodecaProgram,
-      locs: getUniformLocations(gl, icosaDodecaProgram, [
-        'uMorph', 'uStellation', 'uSupportH', 'uColorMethod', 'uHueOffset', 'uSaturation',
-        'uBrightness', 'uOpacity', 'uEdgeThickness', 'uEdgeBrightness', 'uZoom',
-        'uRotateX', 'uRotateY', 'uRotateZ', 'uAlpha', 'uResolution', 'uTime'
-      ])
-    },
-    'icosa-v3': {
-      prog: icosaV3Program,
-      locs: getUniformLocations(gl, icosaV3Program, [
-        'uControlX', 'uStellationSpike', 'uBlockerSize', 'uColorMethod', 'uHueOffset',
+    icosa_h3: {
+      prog: icosaH3Program,
+      locs: getUniformLocations(gl, icosaH3Program, [
+        'uMorph', 'uStellationBoost', 'uSpikeMode', 'uSpikePhase', 'uSpikeSharpness',
+        'uBlockerSize', 'uSupportH', 'uColorMode', 'uHueOffset', 'uHueAnimSpeed',
         'uSaturation', 'uBrightness', 'uOpacity', 'uEdgeThickness', 'uEdgeBrightness',
-        'uZoom', 'uRotateX', 'uRotateY', 'uRotateZ', 'uSupportH', 'uAlpha', 'uResolution', 'uTime'
-      ])
-    },
-    icosa_v3: {
-      prog: icosaV3Program,
-      locs: getUniformLocations(gl, icosaV3Program, [
-        'uControlX', 'uStellationSpike', 'uBlockerSize', 'uColorMethod', 'uHueOffset',
-        'uSaturation', 'uBrightness', 'uOpacity', 'uEdgeThickness', 'uEdgeBrightness',
-        'uZoom', 'uRotateX', 'uRotateY', 'uRotateZ', 'uSupportH', 'uAlpha', 'uResolution', 'uTime'
+        'uRimGlow', 'uZoom', 'uRotateX', 'uRotateY', 'uRotateZ',
+        'uAlpha', 'uResolution', 'uTime'
       ])
     }
   };
@@ -529,68 +499,30 @@ async function init() {
         gl.uniform1f(locs.uEdgeBrightness, evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.0));
         gl.uniform1f(locs.uGlow,           evalP(deckData.Glow || deckData.glow, 1.0));
 
-      } else if (srcType === 'icosahedron') {
-        const cY = evalP(deckData['Control Y'] || deckData.controlY, 0.0);
-        const { planeCount, normals } = generateH3Normals(cY);
-
-        gl.uniform2f(locs.uResolution,     curWidth, curHeight);
-        gl.uniform1f(locs.uTime,           elapsedTime);
-        gl.uniform1f(locs.uAlpha,          1.0);
-        gl.uniform1f(locs.uControlX,       evalP(deckData['Control X'] || deckData.controlX, 0.0));
-        gl.uniform1f(locs.uControlY,       cY);
-        gl.uniform1f(locs.uColorMethod,    evalP(deckData['Color Method'] || deckData.colorMethod, 0.0));
-        gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
-        gl.uniform1f(locs.uSaturation,     evalP(deckData.Saturation || deckData.saturation, 1.0));
-        gl.uniform1f(locs.uBrightness,     evalP(deckData.Brightness || deckData.brightness, 1.0));
-        gl.uniform1f(locs.uOpacity,        evalP(deckData.Opacity || deckData.opacity, 0.8));
-        gl.uniform1f(locs.uEdgeThickness,  evalP(deckData['Edge Thickness'] || deckData.edgeThickness, 0.02));
-        gl.uniform1f(locs.uEdgeBrightness, evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.0));
-        gl.uniform1f(locs.uZoom,           evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uRotateX,        evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,        evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,        evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
-        gl.uniform1f(locs.uSupportH,       evalP(deckData['Support H'] || deckData.supportH, 0.82));
-        gl.uniform1i(locs.uPlaneCount,     planeCount);
-        gl.uniform3fv(locs.uH3Normals,     normals);
-
-      } else if (srcType === 'icosa_dodeca') {
-        gl.uniform2f(locs.uResolution,     curWidth, curHeight);
-        gl.uniform1f(locs.uTime,           elapsedTime);
-        gl.uniform1f(locs.uAlpha,          1.0);
-        gl.uniform1f(locs.uMorph,          evalP(deckData.Morph || deckData.morph, 0.0));
-        gl.uniform1f(locs.uStellation,     evalP(deckData.Stellation || deckData.stellation, 0.0));
-        gl.uniform1f(locs.uSupportH,       evalP(deckData['Support H'] || deckData.supportH, 0.0));
-        gl.uniform1f(locs.uColorMethod,    evalP(deckData['Color Method'] || deckData.colorMethod, 0.0));
-        gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
-        gl.uniform1f(locs.uSaturation,     evalP(deckData.Saturation || deckData.saturation, 1.0));
-        gl.uniform1f(locs.uBrightness,     evalP(deckData.Brightness || deckData.brightness, 1.0));
-        gl.uniform1f(locs.uOpacity,        evalP(deckData.Opacity || deckData.opacity, 0.8));
-        gl.uniform1f(locs.uEdgeThickness,  evalP(deckData['Edge Thickness'] || deckData.edgeThickness, 0.02));
-        gl.uniform1f(locs.uEdgeBrightness, evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.0));
-        gl.uniform1f(locs.uZoom,           evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uRotateX,        evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,        evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,        evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
-
-      } else if (srcType === 'icosa_v3' || srcType === 'icosa-v3') {
-        gl.uniform2f(locs.uResolution,      curWidth, curHeight);
-        gl.uniform1f(locs.uTime,            elapsedTime);
-        gl.uniform1f(locs.uAlpha,           1.0);
-        gl.uniform1f(locs.uControlX,        evalP(deckData['Control X'] || deckData.controlX, 0.0));
-        gl.uniform1f(locs.uStellationSpike, evalP(deckData['Stellation Spike'] || deckData.stellationSpike, 0.0));
-        gl.uniform1f(locs.uBlockerSize,     evalP(deckData['Blocker Size'] || deckData.blockerSize, 0.0));
-        gl.uniform1f(locs.uColorMethod,     evalP(deckData['Color Method'] || deckData.colorMethod, 0.0));
-        gl.uniform1f(locs.uHueOffset,       evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
-        gl.uniform1f(locs.uSaturation,      evalP(deckData.Saturation || deckData.saturation, 1.0));
-        gl.uniform1f(locs.uBrightness,      evalP(deckData.Brightness || deckData.brightness, 1.0));
-        gl.uniform1f(locs.uOpacity,         evalP(deckData.Opacity || deckData.opacity, 0.8));
-        gl.uniform1f(locs.uEdgeThickness,   evalP(deckData['Edge Thickness'] || deckData.edgeThickness, 0.02));
-        gl.uniform1f(locs.uEdgeBrightness,  evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.0));
-        gl.uniform1f(locs.uZoom,            evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uRotateX,         evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,         evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,         evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
-        gl.uniform1f(locs.uSupportH,        evalP(deckData['Support H'] || deckData.supportH, 0.82));
+      } else if (srcType === 'icosa_h3') {
+        gl.uniform2f(locs.uResolution,       curWidth, curHeight);
+        gl.uniform1f(locs.uTime,             elapsedTime);
+        gl.uniform1f(locs.uAlpha,            1.0);
+        gl.uniform1f(locs.uMorph,            evalP(deckData.Morph || deckData.morph, 0.0));
+        gl.uniform1f(locs.uStellationBoost,  evalP(deckData['Stellation Boost'] || deckData.stellationBoost, 0.0));
+        gl.uniform1f(locs.uSpikeMode,        evalP(deckData['Spike Mode'] || deckData.spikeMode, 0.0));
+        gl.uniform1f(locs.uSpikePhase,       evalP(deckData['Spike Phase'] || deckData.spikePhase, 0.0));
+        gl.uniform1f(locs.uSpikeSharpness,   evalP(deckData['Spike Sharpness'] || deckData.spikeSharpness, 0.6));
+        gl.uniform1f(locs.uBlockerSize,      evalP(deckData['Blocker Size'] || deckData.blockerSize, 0.4));
+        gl.uniform1f(locs.uSupportH,         evalP(deckData['Support H'] || deckData.supportH, 0.0));
+        gl.uniform1f(locs.uColorMode,        evalP(deckData['Color Mode'] || deckData.colorMode, 0.0));
+        gl.uniform1f(locs.uHueOffset,        evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
+        gl.uniform1f(locs.uHueAnimSpeed,     evalP(deckData['Hue Anim Speed'] || deckData.hueAnimSpeed, 0.0));
+        gl.uniform1f(locs.uSaturation,       evalP(deckData.Saturation || deckData.saturation, 0.85));
+        gl.uniform1f(locs.uBrightness,       evalP(deckData.Brightness || deckData.brightness, 0.95));
+        gl.uniform1f(locs.uOpacity,          evalP(deckData.Opacity || deckData.opacity, 0.75));
+        gl.uniform1f(locs.uEdgeThickness,    evalP(deckData['Edge Thickness'] || deckData.edgeThickness, 0.025));
+        gl.uniform1f(locs.uEdgeBrightness,   evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.2));
+        gl.uniform1f(locs.uRimGlow,          evalP(deckData['Rim Glow'] || deckData.rimGlow, 0.6));
+        gl.uniform1f(locs.uZoom,             evalP(deckData.Zoom || deckData.zoom, 1.0));
+        gl.uniform1f(locs.uRotateX,          evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
+        gl.uniform1f(locs.uRotateY,          evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
+        gl.uniform1f(locs.uRotateZ,          evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
       }
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
