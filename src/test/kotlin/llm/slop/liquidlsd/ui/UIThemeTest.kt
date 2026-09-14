@@ -9,13 +9,15 @@ import java.io.File
 
 class UIThemeTest {
 
+    // --- UI Theme Preferences & Scaling ---
+
     @Test
     fun testPreferencesSaveAndLoadRoundTrip() {
         val preferencesFile = File("lsd-preferences.properties")
         val backupFile = File("lsd-preferences.properties.bak")
         val legacySettingsFile = File("lsd-settings.properties")
         val legacyBackupFile = File("lsd-settings.properties.bak")
-        
+
         var hadPrefBackup = false
         if (preferencesFile.exists()) {
             preferencesFile.copyTo(backupFile, overwrite = true)
@@ -168,6 +170,8 @@ class UIThemeTest {
         }
     }
 
+    // --- Color Tuner & Palettes ---
+
     @Test
     fun testColorTunerPanelOpenToggle() {
         ColorTunerPanel.isOpen = false
@@ -251,6 +255,8 @@ class UIThemeTest {
         }
     }
 
+    // --- UI Layout & Component Elements ---
+
     @Test
     fun testFontSizeBoundaries() {
         // Preset name scale range: 80%–120%
@@ -289,6 +295,14 @@ class UIThemeTest {
     }
 
     @Test
+    fun testWaveShapeEnumEntries() {
+        assertEquals(
+            listOf("SINE", "RAMP_UP", "RAMP_DOWN", "TRIANGLE", "SQUARE", "RANDOM", "SQUARE_10", "SQUARE_90"),
+            WaveShape.entries.map { it.name }
+        )
+    }
+
+    @Test
     fun testPreferencesCategories() {
         val categories = PreferencesPanel.Category.values()
         assertTrue(categories.contains(PreferencesPanel.Category.SHORTCUTS))
@@ -298,8 +312,6 @@ class UIThemeTest {
     @Test
     fun testImGuiKeys() {
         val fields = imgui.flag.ImGuiKey::class.java.fields
-        println("ImGuiKey fields: " + fields.map { it.name }.joinToString(", "))
         assertTrue(fields.isNotEmpty(), "ImGuiKey fields should not be empty")
     }
 }
-

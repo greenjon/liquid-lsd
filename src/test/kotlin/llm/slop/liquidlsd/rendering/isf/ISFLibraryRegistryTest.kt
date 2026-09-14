@@ -34,7 +34,7 @@ class ISFLibraryRegistryTest {
     @Test
     fun testScanDirectoryAndSafeParsing() {
         val shaderDir = File(tempDir, "shaders").apply { mkdirs() }
-        val shaderFile = File(shaderDir, "test_plasma.fs").apply {
+        File(shaderDir, "test_plasma.fs").apply {
             writeText(
                 """
                 /*{
@@ -51,7 +51,6 @@ class ISFLibraryRegistryTest {
             )
         }
 
-        // Add directory to manager
         ISFDirectoryManager.resetToDefaults()
         ISFDirectoryManager.addCustomDirectory(shaderDir.absolutePath)
 
@@ -60,9 +59,43 @@ class ISFLibraryRegistryTest {
     }
 
     @Test
+    fun testBundledTransitionShadersParsing() {
+        val transitionNames = listOf(
+            "linear_crossfade",
+            "additive_blend",
+            "screen_blend",
+            "multiply_blend",
+            "max_blend",
+            "wipe_horizontal",
+            "wipe_vertical",
+            "radial_wipe",
+            "glitch_transition",
+            "luma_wipe",
+            "zoom_fade"
+        )
+
+        for (name in transitionNames) {
+            val path = "default_transitions/$name.fs"
+            val stream = javaClass.classLoader.getResourceAsStream(path)
+            assertNotNull(stream, "Bundled transition $path must exist")
+
+            val source = stream.bufferedReader().use { it.readText() }
+            val header = ISFParser.parseHeader(source)
+            assertNotNull(header, "ISF header for $name should parse successfully")
+
+            val inputs = header.INPUTS
+            val imageInputs = inputs.filter { it.TYPE.lowercase() == "image" }
+            assertEquals(2, imageInputs.size, "Transition $name should define 2 image inputs (startImage and endImage)")
+
+            val hasProgress = inputs.any { it.NAME.equals("progress", ignoreCase = true) }
+            assertTrue(hasProgress, "Transition $name should contain a 'progress' input")
+        }
+    }
+
+    @Test
     fun testMalformedHeaderResilience() {
         val shaderDir = File(tempDir, "broken").apply { mkdirs() }
-        val brokenFile = File(shaderDir, "bad_shader.fs").apply {
+        File(shaderDir, "bad_shader.fs").apply {
             writeText(
                 """
                 /*{
@@ -79,7 +112,6 @@ class ISFLibraryRegistryTest {
         ISFDirectoryManager.resetToDefaults()
         ISFDirectoryManager.addCustomDirectory(shaderDir.absolutePath)
 
-        // Should not throw exception
         val assets = ISFLibraryRegistry.scanLibrary()
         assertTrue(assets.any { it.id == "bad_shader" })
     }
@@ -89,7 +121,6 @@ class ISFLibraryRegistryTest {
         val systemDir = File(tempDir, "system_shaders").apply { mkdirs() }
         val customDir = File(tempDir, "custom_shaders").apply { mkdirs() }
 
-        // Same shader ID "shared_shader" in both directories
         File(systemDir, "shared_shader.fs").writeText(
             """
             /*{ "DESCRIPTION": "System Version" }*/
@@ -104,17 +135,9 @@ class ISFLibraryRegistryTest {
         """.trimIndent()
         )
 
-        // Register both: SystemStandard (priority 2) and Custom (priority 4)
-        ISFDirectoryManager.resetToDefaults()
-        ISFDirectoryManager.addCustomDirectory(customDir.absolutePath) // Custom
-        // Also add systemDir as system standard
-        val currentConfigs = ISFDirectoryManager.getRegisteredDirectories().toMutableList()
-        currentConfigs.add(DirectorySourceConfig(systemDir.absolutePath, DirectorySourceType.SYSTEM_STANDARD, true))
-        // Force update config via manager by resetting or saving custom config
         ISFDirectoryManager.resetToDefaults()
         ISFDirectoryManager.addCustomDirectory(customDir.absolutePath)
 
-        // Let's test precedence directly using ISFScanner or mock resolved dirs
         val assetSystem = ISFScanner.parseShaderFile(File(systemDir, "shared_shader.fs"), DirectorySourceType.SYSTEM_STANDARD, systemDir.absolutePath)
         val assetCustom = ISFScanner.parseShaderFile(File(customDir, "shared_shader.fs"), DirectorySourceType.CUSTOM, customDir.absolutePath)
         assertNotNull(assetSystem)
@@ -156,7 +179,6 @@ class ISFLibraryRegistryTest {
         val fxFolder = File(rootDir, "FX").apply { mkdirs() }
         val genFolder = File(rootDir, "Generators").apply { mkdirs() }
 
-        // A generator (0 image inputs) placed inside an FX folder must be detected as GENERATOR
         val genFile = File(fxFolder, "plasma_gen.fs").apply {
             writeText("""
                 /*{
@@ -169,7 +191,6 @@ class ISFLibraryRegistryTest {
             """.trimIndent())
         }
 
-        // A filter (1 image input) placed inside a Generators folder must be detected as FILTER
         val filterFile = File(genFolder, "color_filter.fs").apply {
             writeText("""
                 /*{
@@ -183,7 +204,6 @@ class ISFLibraryRegistryTest {
             """.trimIndent())
         }
 
-        // A transition (2 image inputs) placed inside a generic folder must be detected as TRANSITION
         val transFile = File(rootDir, "cross_fade.fs").apply {
             writeText("""
                 /*{
@@ -287,4 +307,3 @@ class ISFLibraryRegistryTest {
         assertTrue(glslArr.contains("uniform sampler2D audioMap;"))
     }
 }
-

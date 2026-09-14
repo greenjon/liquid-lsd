@@ -4,10 +4,51 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
 class MidiMappingManagerTest {
+
+    // --- MIDI Engine Events & Types ---
+
+    @Test
+    fun testMidiMessageTypeEnum() {
+        assertEquals(MidiMessageType.CC, MidiMessageType.valueOf("CC"))
+        assertEquals(MidiMessageType.NOTE, MidiMessageType.valueOf("NOTE"))
+        assertEquals(MidiMessageType.PITCH_BEND, MidiMessageType.valueOf("PITCH_BEND"))
+    }
+
+    @Test
+    fun testMidiEventCreationAndStorage() {
+        val event = MidiEvent(
+            channel = 0,
+            type = MidiMessageType.NOTE,
+            index = 60,
+            rawValue = 100,
+            normalizedValue = 100f / 127f
+        )
+        assertEquals(0, event.channel)
+        assertEquals(MidiMessageType.NOTE, event.type)
+        assertEquals(60, event.index)
+        assertEquals(100, event.rawValue)
+        assertTrue(event.normalizedValue > 0.78f && event.normalizedValue < 0.79f)
+    }
+
+    @Test
+    fun testNormalizedValueAccessors() {
+        llm.slop.liquidlsd.ui.UITheme.midiEnabled = true
+        val valCc = MidiEngine.getNormalizedValue(0, MidiMessageType.CC, 10)
+        assertEquals(0.0f, valCc)
+
+        val valNote = MidiEngine.getNormalizedValue(0, MidiMessageType.NOTE, 60)
+        assertEquals(0.0f, valNote)
+
+        val valPb = MidiEngine.getNormalizedValue(0, MidiMessageType.PITCH_BEND, 0)
+        assertEquals(0.0f, valPb)
+    }
+
+    // --- MIDI Profiles & Path Security ---
 
     @Test
     fun testSanitiseProfileNameRejectsPathTraversal() {
@@ -20,7 +61,6 @@ class MidiMappingManagerTest {
     @Test
     fun testMidiProfileFileStaysUnderMidiDirectory() {
         val midiDir = createTempDirectory().toFile()
-        // Wait, midiProfileFile now throws if it's invalid so this test might need adjustment
         val throws = runCatching { midiProfileFile(midiDir, "../outside") }.isFailure
         assertTrue(throws)
     }
@@ -72,6 +112,8 @@ class MidiMappingManagerTest {
         }
     }
 
+    // --- Rotary Encoders & Delta Decoding ---
+
     @Test
     fun testRotaryDeltaDecoding() {
         // Binary offset: 64 is center
@@ -113,7 +155,7 @@ class MidiMappingManagerTest {
         val decoded = json.decodeFromString<MidiMappingProfile>(legacyJson)
         assertEquals("legacy_profile", decoded.profileName)
         val mapping = decoded.mappings["Mixer/crossfade"]
-        kotlin.test.assertNotNull(mapping)
+        assertNotNull(mapping)
         assertEquals(10, mapping.cc)
         assertEquals(0, mapping.channel)
         assertEquals(-1.0f, mapping.minVal)

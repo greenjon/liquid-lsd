@@ -2,8 +2,9 @@ package llm.slop.liquidlsd.audio
 
 import kotlin.test.AfterTest
 import kotlin.test.Test
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import java.nio.FloatBuffer
 
 class AudioEngineTest {
@@ -11,24 +12,28 @@ class AudioEngineTest {
     @AfterTest
     fun tearDown() {
         AudioEngine.stop()
+        AudioEngine.clockSource = ClockSource.MANUAL
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.AUTO
         AudioEngine.channelRouting = AudioChannelRouting.MIX
         AudioEngine.selectedDeviceName = null
         AudioEngine.inputGain = 1.0f
         AudioEngine.isBpmLocked = true
         AudioEngine.manualBpm = 120.0f
+        AudioEngine.setBpmDirectly(120.0f)
     }
+
+    // --- Audio Processing & Buffer Safety ---
 
     @Test
     fun testProcessAudioBoundsSafety() {
         val maxFrames = 16384
-        
+
         val buf1 = FloatBuffer.allocate(0)
         AudioEngine.processAudio(buf1, 0, 44100f)
-        
+
         val buf2 = FloatBuffer.allocate(1024)
         AudioEngine.processAudio(buf2, 1024, 44100f)
-        
+
         val buf3 = FloatBuffer.allocate(maxFrames * 2)
         AudioEngine.processAudio(buf3, maxFrames * 2, 44100f)
     }
@@ -37,7 +42,7 @@ class AudioEngineTest {
     fun testWatchdogSkipsReconnectWhenPresetIOInFlight() {
         AudioEngine.presetIOInFlight.set(true)
         assertTrue(AudioEngine.presetIOInFlight.get())
-        
+
         AudioEngine.presetIOInFlight.set(false)
         assertFalse(AudioEngine.presetIOInFlight.get())
     }
@@ -92,8 +97,8 @@ class AudioEngineTest {
         AudioEngine.processAudio(buf, 512, 44100f)
 
         // Verify phase nudge is consumed/suppressed without slewing
-        kotlin.test.assertEquals(-1.0, AudioEngine.beatDetector.pendingPhaseNudge)
-        kotlin.test.assertEquals(128.0f, AudioEngine.getEstimatedBpm())
+        assertEquals(-1.0, AudioEngine.beatDetector.pendingPhaseNudge)
+        assertEquals(128.0f, AudioEngine.getEstimatedBpm())
     }
 
     @Test
@@ -130,7 +135,7 @@ class AudioEngineTest {
             val flux = if (isOnset) 1.0f else 0.01f
             val bpm = detector.processBlock(flux, flux, flux, flux, sampleRate, nframes, flux)
             if (!detector.isTempoLocked) {
-                kotlin.test.assertEquals(120.0f, bpm, 0.01f, "BPM must hold 120.0 until locked")
+                assertEquals(120.0f, bpm, 0.01f, "BPM must hold 120.0 until locked")
             }
         }
     }
@@ -148,6 +153,8 @@ class AudioEngineTest {
             prev = current
         }
     }
+
+    // --- Stereo Routing & Gain Operations ---
 
     @Test
     fun testStereoRoutingMixDownmixAndHeadroom() {
@@ -168,9 +175,9 @@ class AudioEngineTest {
 
         // In MIX mode, (1.0 + 1.0) * 0.5 = 1.0 -> 0 dBFS, zero clipping
         val sample = AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1)
-        kotlin.test.assertEquals(1.0f, sample, 0.001f, "MIX of dual 1.0 in-phase signals must sum to exactly 1.0 (no clipping)")
-        kotlin.test.assertEquals(1.0f, AudioEngine.meterPeakL, 0.001f)
-        kotlin.test.assertEquals(1.0f, AudioEngine.meterPeakR, 0.001f)
+        assertEquals(1.0f, sample, 0.001f, "MIX of dual 1.0 in-phase signals must sum to exactly 1.0 (no clipping)")
+        assertEquals(1.0f, AudioEngine.meterPeakL, 0.001f)
+        assertEquals(1.0f, AudioEngine.meterPeakR, 0.001f)
 
         // Case 2: Signal on Left only, silent on Right
         for (i in 0 until nframes) {
@@ -180,9 +187,9 @@ class AudioEngineTest {
         AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
         // In MIX mode with Right dead: (0.8 + 0.0) * 0.5 = 0.4 (-6 dB attenuation)
         val sample2 = AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1)
-        kotlin.test.assertEquals(0.4f, sample2, 0.001f, "MIX of 0.8L and 0.0R must be 0.4 (-6dB)")
-        kotlin.test.assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
-        kotlin.test.assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
+        assertEquals(0.4f, sample2, 0.001f, "MIX of 0.8L and 0.0R must be 0.4 (-6dB)")
+        assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
+        assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
     }
 
     @Test
@@ -200,16 +207,16 @@ class AudioEngineTest {
         // Test LEFT_ONLY
         AudioEngine.channelRouting = AudioChannelRouting.LEFT_ONLY
         AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
-        kotlin.test.assertEquals(0.75f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "LEFT_ONLY must route Left channel at full level")
+        assertEquals(0.75f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "LEFT_ONLY must route Left channel at full level")
 
         // Test RIGHT_ONLY
         AudioEngine.channelRouting = AudioChannelRouting.RIGHT_ONLY
         AudioEngine.processAudio(bufL, bufR, nframes, 44100f)
-        kotlin.test.assertEquals(0.25f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "RIGHT_ONLY must route Right channel at full level")
+        assertEquals(0.25f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "RIGHT_ONLY must route Right channel at full level")
 
         // Meters must still show true physical levels for both channels regardless of routing
-        kotlin.test.assertEquals(0.75f, AudioEngine.meterPeakL, 0.001f)
-        kotlin.test.assertEquals(0.25f, AudioEngine.meterPeakR, 0.001f)
+        assertEquals(0.75f, AudioEngine.meterPeakL, 0.001f)
+        assertEquals(0.25f, AudioEngine.meterPeakR, 0.001f)
     }
 
     @Test
@@ -223,18 +230,18 @@ class AudioEngineTest {
         for (i in 0 until nframes) buf.put(i, 0.8f)
 
         AudioEngine.processAudio(buf, nframes, 44100f)
-        kotlin.test.assertEquals(0.8f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "Single-channel mono in MIX mode must preserve unity gain")
-        kotlin.test.assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
-        kotlin.test.assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
+        assertEquals(0.8f, AudioEngine.rawHistory.getAt(AudioEngine.rawHistory.size - 1), 0.001f, "Single-channel mono in MIX mode must preserve unity gain")
+        assertEquals(0.8f, AudioEngine.meterPeakL, 0.001f)
+        assertEquals(0.0f, AudioEngine.meterPeakR, 0.001f)
     }
 
     @Test
     fun testJackOnlyModeReturnsVirtualJackDevice() {
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.JACK_ONLY
         val devices = AudioEngine.getAvailableInputDevices(forceRefresh = true)
-        kotlin.test.assertEquals(1, devices.size)
-        kotlin.test.assertEquals("jack_default", devices[0].id)
-        kotlin.test.assertEquals("JACK System Capture", devices[0].name)
+        assertEquals(1, devices.size)
+        assertEquals("jack_default", devices[0].id)
+        assertEquals("JACK System Capture", devices[0].name)
     }
 
     @Test
@@ -243,7 +250,74 @@ class AudioEngineTest {
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.JAVASOUND_ONLY
         // When already configured and not active (or active with identical settings), selectDevice must not error
         AudioEngine.selectDevice("TestDevice", AudioEngine.AudioBackendMode.JAVASOUND_ONLY)
-        kotlin.test.assertEquals("TestDevice", AudioEngine.selectedDeviceName)
-        kotlin.test.assertEquals(AudioEngine.AudioBackendMode.JAVASOUND_ONLY, AudioEngine.backendMode)
+        assertEquals("TestDevice", AudioEngine.selectedDeviceName)
+        assertEquals(AudioEngine.AudioBackendMode.JAVASOUND_ONLY, AudioEngine.backendMode)
+    }
+
+    // --- Manual Tempo, Tapping & Clock Operations ---
+
+    @Test
+    fun testRegisterTapInLockedMode() {
+        AudioEngine.isBpmLocked = true
+        AudioEngine.manualBpm = 120.0f
+        AudioEngine.setBpmDirectly(120.0f)
+
+        AudioEngine.registerTap(135.0f, System.nanoTime())
+        assertEquals(135.0f, AudioEngine.manualBpm)
+        assertEquals(135.0f, AudioEngine.getEstimatedBpm())
+    }
+
+    @Test
+    fun testRegisterTapInUnlockedMode() {
+        AudioEngine.isBpmLocked = false
+        AudioEngine.registerTap(142.0f, System.nanoTime())
+
+        assertEquals(142.0f, AudioEngine.getEstimatedBpm())
+        assertEquals(142.0f, AudioEngine.beatDetector.engine.currentBpm)
+        assertEquals(0.0, AudioEngine.beatDetector.pendingPhaseNudge)
+    }
+
+    @Test
+    fun testNudgeAndHalveDoubleTempo() {
+        AudioEngine.clockSource = ClockSource.MANUAL
+        AudioEngine.setBpmDirectly(120.0f)
+        assertEquals(120.0f, AudioEngine.manualBpm)
+
+        AudioEngine.nudgeTempo(0.5f)
+        assertEquals(120.5f, AudioEngine.manualBpm)
+
+        AudioEngine.nudgeTempo(-1.0f)
+        assertEquals(119.5f, AudioEngine.manualBpm)
+
+        AudioEngine.setBpmDirectly(130.0f)
+        AudioEngine.halveTempo()
+        assertEquals(65.0f, AudioEngine.manualBpm)
+
+        AudioEngine.doubleTempo()
+        assertEquals(130.0f, AudioEngine.manualBpm)
+
+        // Clamping check
+        AudioEngine.setBpmDirectly(230.0f)
+        AudioEngine.doubleTempo()
+        assertEquals(240.0f, AudioEngine.manualBpm)
+    }
+
+    @Test
+    fun testResyncDownbeat() {
+        AudioEngine.clockSource = ClockSource.MANUAL
+        AudioEngine.setBpmDirectly(120.0f)
+        AudioEngine.resyncDownbeat()
+
+        val beats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
+        assertTrue(beats >= 0.0)
+    }
+
+    @Test
+    fun testClockSourceFromString() {
+        assertEquals(ClockSource.MANUAL, ClockSource.fromString("MANUAL"))
+        assertEquals(ClockSource.MANUAL, ClockSource.fromString("MANUAL_TAP"))
+        assertEquals(ClockSource.MANUAL, ClockSource.fromString("ABLETON_LINK"))
+        assertEquals(ClockSource.AUDIO_TRACKER, ClockSource.fromString("AUDIO_TRACKER"))
+        assertEquals(ClockSource.AUDIO_TRACKER, ClockSource.fromString("UNKNOWN_VALUE"))
     }
 }
