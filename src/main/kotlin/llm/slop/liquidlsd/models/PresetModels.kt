@@ -234,6 +234,8 @@ data class DeckPresetDto(
     val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
     val fxSlot1: FXSlotDto? = null,
     val fxSlot2: FXSlotDto? = null,
+    val fxSlot3: FXSlotDto? = null,
+    val fxSlot4: FXSlotDto? = null,
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
@@ -465,24 +467,17 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         "viewRoundness" to viewRoundness.toDto()
     )
 
-    val fx1 = fxSlot1?.takeIf { it.id.isNotEmpty() }?.let { fx ->
-        FXSlotDto(
-            filterId = fx.id,
-            enabled = fx.enabled,
-            dryWet = fx.dryWet.toDto(),
-            parameters = fx.parameters.mapValues { it.value.toDto() }
-        )
+    val fxSlotDtos = fxSlots.map { fx ->
+        fx?.takeIf { it.id.isNotEmpty() }?.let {
+            FXSlotDto(
+                filterId = it.id,
+                enabled = it.enabled,
+                dryWet = it.dryWet.toDto(),
+                parameters = it.parameters.mapValues { p -> p.value.toDto() }
+            )
+        }
     }
 
-    val fx2 = fxSlot2?.takeIf { it.id.isNotEmpty() }?.let { fx ->
-        FXSlotDto(
-            filterId = fx.id,
-            enabled = fx.enabled,
-            dryWet = fx.dryWet.toDto(),
-            parameters = fx.parameters.mapValues { it.value.toDto() }
-        )
-    }
-    
     return DeckPresetDto(
         name = name,
         tags = tags,
@@ -491,8 +486,10 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
-        fxSlot1 = fx1,
-        fxSlot2 = fx2,
+        fxSlot1 = fxSlotDtos.getOrNull(0),
+        fxSlot2 = fxSlotDtos.getOrNull(1),
+        fxSlot3 = fxSlotDtos.getOrNull(2),
+        fxSlot4 = fxSlotDtos.getOrNull(3),
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty
     )
@@ -576,80 +573,24 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
     dto.feedbackParameters["fbKaleido"]?.let { fbKaleido.applyDto(it) }
 
-    // Apply FX Slot 1
-    fxSlot1?.dispose()
-    fxSlot1 = null
-    dto.fxSlot1?.let { fxDto ->
-        val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
-        if (fx != null) {
-            fx.enabled = fxDto.enabled
-            fx.dryWet.applyDto(fxDto.dryWet)
-            for ((key, paramDto) in fxDto.parameters) {
-                fx.parameters[key]?.applyDto(paramDto)
+    // Apply FX Slots
+    val fxSlotDtos = listOf(dto.fxSlot1, dto.fxSlot2, dto.fxSlot3, dto.fxSlot4)
+    for (i in fxSlots.indices) {
+        fxSlots[i]?.dispose()
+        fxSlots[i] = null
+        fxSlotDtos.getOrNull(i)?.let { fxDto ->
+            val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
+            if (fx != null) {
+                fx.enabled = fxDto.enabled
+                fx.dryWet.applyDto(fxDto.dryWet)
+                for ((key, paramDto) in fxDto.parameters) {
+                    fx.parameters[key]?.applyDto(paramDto)
+                }
+                fxSlots[i] = fx
             }
-            fxSlot1 = fx
         }
     }
 
-    // Apply FX Slot 2
-    fxSlot2?.dispose()
-    fxSlot2 = null
-    dto.fxSlot2?.let { fxDto ->
-        val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
-        if (fx != null) {
-            fx.enabled = fxDto.enabled
-            fx.dryWet.applyDto(fxDto.dryWet)
-            for ((key, paramDto) in fxDto.parameters) {
-                fx.parameters[key]?.applyDto(paramDto)
-            }
-            fxSlot2 = fx
-        }
-    }
-
-    // Auto-migration: If legacy preset contained feedback parameters and FX Slot 1 is empty, migrate to feedback filter
-    if (fxSlot1 == null && dto.feedbackParameters["fbDecay"]?.let { it.baseValue > 0.001f || it.modulators.isNotEmpty() } == true) {
-        val fb = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("feedback")
-        if (fb != null) {
-            dto.feedbackParameters["fbDecay"]?.let { fb.parameters["fbDecay"]?.applyDto(it) }
-            dto.feedbackParameters["fbGain"]?.let { fb.parameters["fbGain"]?.applyDto(it) }
-            dto.feedbackParameters["fbZoom"]?.let { fb.parameters["fbZoom"]?.applyDto(it) }
-            dto.feedbackParameters["fbRotate"]?.let { fb.parameters["fbRotate"]?.applyDto(it) }
-            dto.feedbackParameters["fbHueShift"]?.let { fb.parameters["fbHueShift"]?.applyDto(it) }
-            dto.feedbackParameters["fbBlur"]?.let { fb.parameters["fbBlur"]?.applyDto(it) }
-            dto.feedbackParameters["fbChroma"]?.let { fb.parameters["fbChroma"]?.applyDto(it) }
-            dto.feedbackParameters["fbMode"]?.let { fb.parameters["fbMode"]?.applyDto(it) }
-            dto.feedbackParameters["fbKaleido"]?.let { fb.parameters["fbKaleido"]?.applyDto(it) }
-            fxSlot1 = fb
-        }
-    }
-
-    // Auto-migration: If legacy preset had view3DMode >= 0.5f and FX Slot 2 is empty, migrate to 3d_elevation filter
-    val legacy3DMode = dto.viewParameters["view3DMode"]?.baseValue ?: 0.0f
-    if (fxSlot2 == null && legacy3DMode >= 0.5f) {
-        val elev = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
-        if (elev != null) {
-            val intMode = when {
-                legacy3DMode >= 3.5f -> 3f // Tetrahedral
-                legacy3DMode >= 2.5f -> 1f // Hex-Planar (legacy 3)
-                legacy3DMode >= 1.5f -> 2f // Cube Cage (legacy 2)
-                else -> 0f                 // Tri-Axial (legacy 1)
-            }
-            elev.parameters["mode3D"]?.baseValue = intMode
-            dto.viewParameters["viewRotateX"]?.let { elev.parameters["pitch"]?.applyDto(it) }
-            dto.viewParameters["viewRotateY"]?.let { elev.parameters["yaw"]?.applyDto(it) }
-            dto.viewParameters["viewRotateZ"]?.let { elev.parameters["roll"]?.applyDto(it) }
-            dto.viewParameters["viewZoom"]?.let { elev.parameters["zoom"]?.applyDto(it) }
-            dto.viewParameters["viewSeparation"]?.let { elev.parameters["separation"]?.applyDto(it) }
-            dto.viewParameters["viewPersp"]?.let { elev.parameters["perspective"]?.applyDto(it) }
-            dto.viewParameters["viewDepthDim"]?.let { elev.parameters["depthDim"]?.applyDto(it) }
-            dto.viewParameters["viewBlendMode"]?.let { elev.parameters["blendMode"]?.applyDto(it) }
-            dto.viewParameters["viewRoundness"]?.let { elev.parameters["roundness"]?.applyDto(it) }
-            viewZoom.reset()
-            viewRotateZ.reset()
-            fxSlot2 = elev
-        }
-    }
-    
     // Apply global parameters
     source.globalAlpha.reset()
     dto.globalAlpha?.let { source.globalAlpha.applyDto(it) }

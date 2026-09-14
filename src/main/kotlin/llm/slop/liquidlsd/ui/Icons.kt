@@ -9,14 +9,17 @@ object Icons {
     const val SETTINGS    = "\ue154" // settings
     const val PREFERENCES = SETTINGS // preferences
     const val POWER       = "\ue140" // power
+    const val POWER_OFF   = "\ue209" // power-off
     const val TRASH       = "\ue18e" // trash-2
-    const val DICES       = "\ue28b" // dice-5
+    const val DICES       = "\ue2c5" // dices
     const val FOLDER      = "\ue0d7" // folder
+    const val FOLDER_PLUS = "\ue0d9" // folder-plus
     const val FILE        = "\ue0c0" // file
+    const val FILE_PLUS   = "\ue0c9" // file-plus
     const val ACTIVITY    = "\ue038" // activity
     const val ZAP         = "\ue1b4" // zap
-    const val CHEVRON_UP    = "\ue071" // chevron-up
-    const val CHEVRON_DOWN  = "\ue06c" // chevron-down
+    const val CHEVRON_UP    = "\ue070" // chevron-up
+    const val CHEVRON_DOWN  = "\ue06d" // chevron-down
     const val SEARCH      = "\ue151" // search
     const val REFRESH     = "\ue145" // refresh-cw
     const val PLUS        = "\ue13d" // plus
@@ -26,7 +29,8 @@ object Icons {
     const val ALERT       = "\ue193" // alert-triangle
     const val INFO        = "\ue0f9" // info
     const val SAVE        = "\ue14d" // save
-    const val DOWNLOAD    = "\ue0af" // download
+    const val DOWNLOAD    = "\ue0b2" // download
+    const val DISC        = "\ue0af" // disc
     const val EJECT       = "\ue45d" // unplug
     const val UPLOAD      = "\ue19e" // upload / load
     const val LAYOUT_FULL = "\ue377" // rectangle-vertical
@@ -37,9 +41,11 @@ object Icons {
     const val SHUFFLE     = "\ue15e" // shuffle
     const val MORE_HORIZONTAL = "\ue0b6" // ellipsis
     const val MORE_VERTICAL   = "\ue0b7" // ellipsis-vertical
-    const val NOTE            = "\ue132" // pencil
-    const val LOCK            = "\ue10a" // lock
+    const val NOTE            = "\ue1f9" // pencil
+    const val LOCK            = "\ue10b" // lock
     const val UNLOCK          = "\ue10c" // lock-open / unlock
+    const val VOLUME          = "\ue1a9" // volume
+    const val VOLUME_X        = "\ue1ac" // volume-x
     const val BOT             = "\ue1bb" // bot
     const val BOT_OFF         = "\ue5e0" // bot-off
     const val X               = "\ue1b2" // x / close
@@ -55,7 +61,7 @@ object Icons {
 
     // Asymmetry alignments
     const val ALIGN_LEFT_LINE   = "\ue457" // arrow-left-to-line
-    const val ALIGN_CENTER_LINE = "\ue5cf" // fold-horizontal
+    const val ALIGN_CENTER_LINE = "\ue43b" // fold-horizontal
     const val ALIGN_RIGHT_LINE  = "\ue459" // arrow-right-to-line
 }
 

@@ -632,14 +632,9 @@ object PresetManager {
                         allUnresolved.add("Deck $deckName visual source not found: ${dDto.visualSourceType}")
                     }
                 }
-                dDto.fxSlot1?.let { fx ->
-                    if (fx.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fx.filterId }) {
-                        allUnresolved.add("Deck $deckName FX1 filter not found: ${fx.filterId}")
-                    }
-                }
-                dDto.fxSlot2?.let { fx ->
-                    if (fx.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fx.filterId }) {
-                        allUnresolved.add("Deck $deckName FX2 filter not found: ${fx.filterId}")
+                listOf("FX1" to dDto.fxSlot1, "FX2" to dDto.fxSlot2, "FX3" to dDto.fxSlot3, "FX4" to dDto.fxSlot4).forEach { (label, fx) ->
+                    if (fx != null && fx.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fx.filterId }) {
+                        allUnresolved.add("Deck $deckName $label filter not found: ${fx.filterId}")
                     }
                 }
             }

@@ -26,8 +26,13 @@ object ParametersTabs {
     var activeBtnMaxY: Float = 0f
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
-    private val fx1EnabledBuf = imgui.type.ImBoolean()
-    private val fx2EnabledBuf = imgui.type.ImBoolean()
+    private val fxSlotEnabledBufs = Array(Deck.FX_SLOT_COUNT) { imgui.type.ImBoolean() }
+    private val fxSlotPickerTypes = listOf(
+        ShaderPickerPopup.PickerType.FX_SLOT_1,
+        ShaderPickerPopup.PickerType.FX_SLOT_2,
+        ShaderPickerPopup.PickerType.FX_SLOT_3,
+        ShaderPickerPopup.PickerType.FX_SLOT_4
+    )
 
     fun getDeckColor(tab: String, alpha: Float = 1f): Int {
         val rgb = when (tab) {
@@ -489,88 +494,64 @@ object ParametersTabs {
     ) {
         var row = 0
 
-        // --- Slot 1: Color / Degradation ---
-        val fx1 = deck.fxSlot1
-        val filterName1 = fx1?.displayName ?: "None"
+        for (i in deck.fxSlots.indices) {
+            val slotNum = i + 1
+            val fx = deck.fxSlots[i]
+            val filterName = fx?.displayName ?: "None"
+            val collapseKey = "$deckLabel/FX$slotNum"
+            val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
 
-        ImGui.textDisabled("Slot 1")
-        ImGui.sameLine()
-        ImGui.setNextItemWidth(labelColW - 60f)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("$filterName1  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
-                ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
-                    if (newFilterId == null) {
-                        deck.fxSlot1?.dispose()
-                        deck.fxSlot1 = null
-                        onPushUndo()
-                    } else {
-                        val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                        if (filter != null) {
-                            deck.fxSlot1?.dispose()
-                            deck.fxSlot1 = filter
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_$deckLabel")) {
+                    state.fxSlotCollapsed[collapseKey] = !isCollapsed
+                }
+            }
+            itemTooltip(if (isCollapsed) "Expand Slot $slotNum." else "Collapse Slot $slotNum.")
+            ImGui.sameLine()
+
+            ImGui.textDisabled("Slot $slotNum")
+            ImGui.sameLine()
+            ImGui.setNextItemWidth(labelColW - 60f)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$deckLabel", labelColW - 60f, 0f)) {
+                    ShaderPickerPopup.show("Select FX Slot $slotNum for $deckLabel", fxSlotPickerTypes[i]) { newFilterId ->
+                        if (newFilterId == null) {
+                            deck.fxSlots[i]?.dispose()
+                            deck.fxSlots[i] = null
                             onPushUndo()
+                        } else {
+                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                            if (filter != null) {
+                                deck.fxSlots[i]?.dispose()
+                                deck.fxSlots[i] = filter
+                                onPushUndo()
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if (fx1 != null) {
-            ImGui.sameLine()
-            fx1EnabledBuf.set(fx1.enabled)
-            if (ImGui.checkbox("##fx1_enabled_$deckLabel", fx1EnabledBuf)) {
-                fx1.enabled = fx1EnabledBuf.get()
-                onPushUndo()
-            }
-            itemTooltip("Bypass Slot 1 filter.")
+            if (fx != null) {
+                ImGui.sameLine()
+                val enabledBuf = fxSlotEnabledBufs[i]
+                enabledBuf.set(fx.enabled)
+                if (ImGui.checkbox("##fx${slotNum}_enabled_$deckLabel", enabledBuf)) {
+                    fx.enabled = enabledBuf.get()
+                    onPushUndo()
+                }
+                itemTooltip("Bypass Slot $slotNum filter.")
 
-            ParametersRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX1/DryWet", fx1.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                if (!isCollapsed) {
+                    ParametersRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-            fx1.parameters.forEach { (name, param) ->
-                ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX1/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-        }
-        ImGui.separator()
-
-        // --- Slot 2: Spatial / Distortion ---
-        val fx2 = deck.fxSlot2
-        val filterName2 = fx2?.displayName ?: "None"
-
-        ImGui.textDisabled("Slot 2")
-        ImGui.sameLine()
-        ImGui.setNextItemWidth(labelColW - 60f)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("$filterName2  ${Icons.CHEVRON_DOWN}##fx2_selector_$deckLabel", labelColW - 60f, 0f)) {
-                ShaderPickerPopup.show("Select FX Slot 2 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_2) { newFilterId ->
-                    if (newFilterId == null) {
-                        deck.fxSlot2?.dispose()
-                        deck.fxSlot2 = null
-                        onPushUndo()
-                    } else {
-                        val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                        if (filter != null) {
-                            deck.fxSlot2?.dispose()
-                            deck.fxSlot2 = filter
-                            onPushUndo()
-                        }
+                    fx.parameters.forEach { (name, param) ->
+                        ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                     }
                 }
             }
-        }
 
-        if (fx2 != null) {
-            ImGui.sameLine()
-            fx2EnabledBuf.set(fx2.enabled)
-            if (ImGui.checkbox("##fx2_enabled_$deckLabel", fx2EnabledBuf)) {
-                fx2.enabled = fx2EnabledBuf.get()
-                onPushUndo()
-            }
-            itemTooltip("Bypass Slot 2 filter.")
-
-            ParametersRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX2/DryWet", fx2.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-            fx2.parameters.forEach { (name, param) ->
-                ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX2/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            if (i < deck.fxSlots.lastIndex) {
+                ImGui.separator()
             }
         }
     }

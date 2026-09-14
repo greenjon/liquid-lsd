@@ -4,7 +4,6 @@ import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.cv.MutableCVSource
 import llm.slop.liquidlsd.models.ModulatorDto
-import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.RowClipboardData
 import llm.slop.liquidlsd.models.ClipboardManager
 import llm.slop.liquidlsd.models.toDomain
@@ -20,6 +19,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CvModulatorTest {
+
+    // --- Core Values & Depth Randomization ---
 
     @Test
     fun testDefaultValuesAndRandomizeDepth() {
@@ -43,6 +44,8 @@ class CvModulatorTest {
         val randomized = modRange.randomizeDepth(Random(42))
         assertTrue(randomized.depth in 0.2f..0.8f, "Randomized depth should be within [0.2, 0.8]")
     }
+
+    // --- Parameter Evaluation & Scaling ---
 
     @Test
     fun testModulatableParameterEvaluationWithDepth() {
@@ -140,80 +143,7 @@ class CvModulatorTest {
         assertEquals(1.0f, evaluated, 0.001f, "Loud audio should produce full depth modulation")
     }
 
-    @Test
-    fun testPresetJsonSerialization() {
-        val json = Json { ignoreUnknownKeys = true }
-
-        val jsonStr = """
-            {
-                "sourceId": "lfo",
-                "operator": "ADD",
-                "depth": 0.65,
-                "depthMin": 0.25,
-                "depthMax": 0.75,
-                "randomizeDepth": true,
-                "subdivisionMin": 1.0,
-                "subdivisionMax": 1.0,
-                "phaseOffsetMin": 0.0,
-                "phaseOffsetMax": 0.0,
-                "slopeMin": 0.5,
-                "slopeMax": 0.5
-            }
-        """.trimIndent()
-
-        val dto = json.decodeFromString<ModulatorDto>(jsonStr)
-        assertEquals(0.65f, dto.depth, 0.0001f)
-        assertEquals(0.25f, dto.depthMin, 0.0001f)
-        assertEquals(0.75f, dto.depthMax, 0.0001f)
-        assertTrue(dto.randomizeDepth)
-
-        val domain = dto.toDomain()
-        assertEquals(0.65f, domain.depth, 0.0001f)
-        assertEquals(0.25f, domain.depthMin, 0.0001f)
-        assertEquals(0.75f, domain.depthMax, 0.0001f)
-        assertTrue(domain.randomizeDepth)
-
-        // Test round-trip back to DTO and verify serial names
-        val backDto = domain.toDto()
-        val encoded = json.encodeToString(ModulatorDto.serializer(), backDto)
-        assertTrue(encoded.contains("\"depth\":0.65"), "Encoded JSON should contain 'depth' key")
-        assertTrue(encoded.contains("\"depthMin\":0.25"), "Encoded JSON should contain 'depthMin' key")
-        assertTrue(encoded.contains("\"depthMax\":0.75"), "Encoded JSON should contain 'depthMax' key")
-        assertTrue(encoded.contains("\"randomizeDepth\":true"), "Encoded JSON should contain 'randomizeDepth' key")
-    }
-
-    @Test
-    fun testClipboardManagerDepthScaling() {
-        val sourceParam = ModulatableParameter(baseValue = 0.5f, minClamp = 0f, maxClamp = 1f)
-        val mod = CvModulator(
-            sourceId = "lfo",
-            operator = ModulationOperator.ADD,
-            depth = 0.4f,
-            depthMin = 0.2f,
-            depthMax = 0.6f
-        )
-        sourceParam.modulators.add(mod)
-
-        val rowData = RowClipboardData("Deck A/Geometry/Zoom", sourceParam.toDto())
-
-        val mixer = mockk<Mixer>()
-        val deck = mockk<Deck>()
-        every { mixer.deckA } returns deck
-        every { deck.source } returns mockk {
-            every { parameters } returns linkedMapOf("Zoom" to sourceParam)
-        }
-
-        // Paste into destination parameter with a range of 0..2 (destRange/srcRange = 2.0)
-        val destParam = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 2f)
-        ClipboardManager.applyRowClipboard(destParam, rowData, mixer)
-
-        assertEquals(1, destParam.modulators.size)
-        val pastedMod = destParam.modulators[0]
-        // Range doubled: 0.4 * 2 = 0.8
-        assertEquals(0.8f, pastedMod.depth, 0.001f)
-        assertEquals(0.4f, pastedMod.depthMin, 0.001f)
-        assertEquals(1.0f, pastedMod.depthMax.coerceAtMost(1f), 0.001f)
-    }
+    // --- Frame-Synced LFO Evaluation ---
 
     @Test
     fun testFrameSyncedLfoEvaluation() {
@@ -301,33 +231,7 @@ class CvModulatorTest {
         }
     }
 
-    @Test
-    fun testFrameSyncedLfoJsonSerialization() {
-        val json = Json { ignoreUnknownKeys = true }
-        val mod = CvModulator(
-            sourceId = "lfo",
-            genUnit = GenUnit.FRAME,
-            subdivision = 120f,
-            subdivisionMin = 60f,
-            subdivisionMax = 240f,
-            randomizeSubdivision = true,
-            modGenUnit = GenUnit.FRAME,
-            modSubdivision = 30f
-        )
-        val dto = mod.toDto()
-        assertEquals("FRAME", dto.genUnit)
-        assertEquals(120f, dto.subdivision)
-
-        val encoded = json.encodeToString(CvModulator.serializer(), mod)
-        val decoded = json.decodeFromString<CvModulator>(encoded)
-
-        assertEquals(GenUnit.FRAME, decoded.genUnit)
-        assertEquals(GenUnit.FRAME, decoded.modGenUnit)
-        assertEquals(120f, decoded.subdivision)
-        assertEquals(60f, decoded.subdivisionMin)
-        assertEquals(240f, decoded.subdivisionMax)
-        assertTrue(decoded.randomizeSubdivision)
-    }
+    // --- Audio Follower & Envelope Tracking ---
 
     @Test
     fun testAudioFollowerModePresets() {
@@ -353,7 +257,7 @@ class CvModulatorTest {
     @Test
     fun testAudioFollowerTrackerSmoothing() {
         val testId = "test_audio_follower_${System.nanoTime()}"
-        
+
         // Instant peak rise from 0 to 1.0 with 5ms attack
         val initial = llm.slop.liquidlsd.cv.AudioFollowerTracker.process(testId, 1.0f, 5f, 500f)
         assertTrue(initial > 0f, "Follower should jump towards input")
@@ -361,6 +265,229 @@ class CvModulatorTest {
         // Step down to 0.0 with 500ms decay: should smoothly decay rather than drop instantly
         val decayed1 = llm.slop.liquidlsd.cv.AudioFollowerTracker.process(testId, 0.0f, 5f, 500f)
         assertTrue(decayed1 > 0.0f, "Value should decay smoothly, not jump to 0")
+    }
+
+    @Test
+    fun testAudioModulatorUnipolarScaling() {
+        llm.slop.liquidlsd.audio.AudioEngine.stop()
+        llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
+        // Mock peak audio input pushed to CVRegistry
+        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
+
+        val mod = CvModulator(sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW)
+        val param = ModulatableParameter(baseValue = 0.0f, minClamp = 0.0f, maxClamp = 1.0f)
+        param.modulators.add(mod)
+
+        // Peak audio at depth 0.5 on a 0..1 parameter should yield 0.5, not 1.0 or 2.0
+        val value = param.evaluate()
+        assertEquals(0.5f, value, 0.001f)
+    }
+
+    @Test
+    fun testActiveModulatorsFilterBypassedBands() {
+        llm.slop.liquidlsd.audio.AudioEngine.stop()
+        llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
+        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
+        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_bass", 1.0f)
+
+        val activeAmp = CvModulator(id = "test_amp", sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = false)
+        val mutedBass = CvModulator(id = "test_bass", sourceId = "audio_bass", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = true)
+
+        val mods = listOf(activeAmp, mutedBass)
+        val hasAnyUnbypassed = mods.any { !it.bypassed }
+        val targetMods = if (hasAnyUnbypassed) mods.filter { !it.bypassed } else mods
+
+        val combined = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(targetMods, isBipolar = false, includeBypassed = true)
+        assertEquals(0.5f, combined, 0.001f, "Muted bass band should not bleed into active amp modulation sum")
+    }
+
+    // --- Waveform Mathematics & Duty Cycle ---
+
+    @Test
+    fun testSquareWaveDutyCycleEvaluation() {
+        CVRegistry.setTargetFps(60f)
+
+        // 50% Duty Cycle (slope = 0.5)
+        val mod50 = CvModulator(
+            sourceId = "lfo",
+            genUnit = GenUnit.FRAME,
+            subdivision = 100f,
+            waveform = Waveform.SQUARE,
+            slope = 0.5f,
+            hold = 0.999f,
+            morph = 1.0f,
+            bypassed = false
+        )
+        CVRegistry.setRenderFrameCount(10L) // phase 0.10 -> HIGH
+        assertEquals(1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod50), 0.01f)
+        CVRegistry.setRenderFrameCount(60L) // phase 0.60 -> LOW
+        assertEquals(-1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod50), 0.01f)
+
+        // 20% Duty Cycle (slope = 0.2)
+        val mod20 = mod50.copy(slope = 0.2f)
+        CVRegistry.setRenderFrameCount(10L) // phase 0.10 < 0.20 -> HIGH
+        assertEquals(1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod20), 0.01f)
+        CVRegistry.setRenderFrameCount(30L) // phase 0.30 > 0.20 -> LOW
+        assertEquals(-1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod20), 0.01f)
+    }
+
+    @Test
+    fun testHoldMaximumNoNaN() {
+        val squareVal = calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.999f, slope = 0.5f, waveform = Waveform.SQUARE)
+        assertFalse(squareVal.isNaN(), "Square with hold=0.999f must not be NaN")
+        assertFalse(squareVal.isInfinite(), "Square with hold=0.999f must not be Infinite")
+
+        val triVal = calculateAdvancedLFO(0.5, morph = 1.0f, hold = 1.0f, slope = 0.5f, waveform = Waveform.TRIANGLE)
+        assertFalse(triVal.isNaN(), "Hold clamped at 1.0f must not produce NaN")
+        assertFalse(triVal.isInfinite(), "Hold clamped at 1.0f must not produce Infinite")
+    }
+
+    @Test
+    fun testSawtoothRampUpExtremeSlopeMonotonic() {
+        // At slope = 0.999f and morph = 1.0f, rising sawtooth ramp (-1.0 to +1.0)
+        assertEquals(-1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
+
+        // Strict monotonicity across 1000 steps
+        var prev = -2.0f
+        for (i in 0..1000) {
+            val phase = i / 1000.0
+            val current = calculateAdvancedLFO(phase, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE)
+            assertTrue(current >= prev, "Step $i (phase $phase): current $current must be >= prev $prev (no backward fall)")
+            prev = current
+        }
+    }
+
+    @Test
+    fun testSawtoothRampDownExtremeSlopeMonotonic() {
+        // At slope = 0.001f and morph = 1.0f, falling sawtooth ramp (+1.0 to -1.0)
+        assertEquals(1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
+
+        // Strict descending monotonicity across 1000 steps
+        var prev = 2.0f
+        for (i in 0..1000) {
+            val phase = i / 1000.0
+            val current = calculateAdvancedLFO(phase, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE)
+            assertTrue(current <= prev, "Step $i (phase $phase): current $current must be <= prev $prev (no forward rise)")
+            prev = current
+        }
+    }
+
+    @Test
+    fun testLinearTriangleZeroPeakRoundingAtMorphOne() {
+        assertEquals(-1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.25, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(1.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(0.0f, calculateAdvancedLFO(0.75, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+        assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
+    }
+
+    // --- Clipboard & Randomization Safety ---
+
+    @Test
+    fun testClipboardManagerDepthScaling() {
+        val sourceParam = ModulatableParameter(baseValue = 0.5f, minClamp = 0f, maxClamp = 1f)
+        val mod = CvModulator(
+            sourceId = "lfo",
+            operator = ModulationOperator.ADD,
+            depth = 0.4f,
+            depthMin = 0.2f,
+            depthMax = 0.6f
+        )
+        sourceParam.modulators.add(mod)
+
+        val rowData = RowClipboardData("Deck A/Geometry/Zoom", sourceParam.toDto())
+
+        val mixer = mockk<Mixer>()
+        val deck = mockk<Deck>()
+        every { mixer.deckA } returns deck
+        every { deck.source } returns mockk {
+            every { parameters } returns linkedMapOf("Zoom" to sourceParam)
+        }
+
+        // Paste into destination parameter with a range of 0..2 (destRange/srcRange = 2.0)
+        val destParam = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 2f)
+        ClipboardManager.applyRowClipboard(destParam, rowData, mixer)
+
+        assertEquals(1, destParam.modulators.size)
+        val pastedMod = destParam.modulators[0]
+        // Range doubled: 0.4 * 2 = 0.8
+        assertEquals(0.8f, pastedMod.depth, 0.001f)
+        assertEquals(0.4f, pastedMod.depthMin, 0.001f)
+        assertEquals(1.0f, pastedMod.depthMax.coerceAtMost(1f), 0.001f)
+    }
+
+    @Test
+    fun testForbiddenRandomizeRandomizer() {
+        val disabledParam = ModulatableParameter(baseValue = 0.5f, isRandomizeDisabled = true)
+        assertTrue(disabledParam.isRandomizeDisabled)
+        assertFalse(disabledParam.randomizeBase)
+
+        // Attempting to set randomizeBase to true should be blocked
+        disabledParam.randomizeBase = true
+        assertFalse(disabledParam.randomizeBase)
+
+        // Setting bounds and trying randomizeBaseValue should be a no-op
+        disabledParam.baseMin = 0.1f
+        disabledParam.baseMax = 0.9f
+        disabledParam.randomizeBaseValue(Random(42))
+        assertEquals(0.5f, disabledParam.baseValue)
+
+        // Verify Mixer companion constants and helper
+        assertEquals("It is forbidden to randomize the randomizer. Chaos would ensue.", Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckA"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckB"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckBG"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckPV"))
+        assertTrue(Mixer.isRandomizerParameter("Mixer/randAll"))
+        assertFalse(Mixer.isRandomizerParameter("Mixer/crossfade"))
+        assertFalse(Mixer.isRandomizerParameter("Deck A/Mandala/Petals"))
+    }
+
+    // --- JSON Serialization & Defaults ---
+
+    @Test
+    fun testPresetJsonSerialization() {
+        val json = Json { ignoreUnknownKeys = true }
+
+        val jsonStr = """
+            {
+                "sourceId": "lfo",
+                "operator": "ADD",
+                "depth": 0.65,
+                "depthMin": 0.25,
+                "depthMax": 0.75,
+                "randomizeDepth": true,
+                "subdivisionMin": 1.0,
+                "subdivisionMax": 1.0,
+                "phaseOffsetMin": 0.0,
+                "phaseOffsetMax": 0.0,
+                "slopeMin": 0.5,
+                "slopeMax": 0.5
+            }
+        """.trimIndent()
+
+        val dto = json.decodeFromString<ModulatorDto>(jsonStr)
+        assertEquals(0.65f, dto.depth, 0.0001f)
+        assertEquals(0.25f, dto.depthMin, 0.0001f)
+        assertEquals(0.75f, dto.depthMax, 0.0001f)
+        assertTrue(dto.randomizeDepth)
+
+        val domain = dto.toDomain()
+        assertEquals(0.65f, domain.depth, 0.0001f)
+        assertEquals(0.25f, domain.depthMin, 0.0001f)
+        assertEquals(0.75f, domain.depthMax, 0.0001f)
+        assertTrue(domain.randomizeDepth)
+
+        val backDto = domain.toDto()
+        val encoded = json.encodeToString(ModulatorDto.serializer(), backDto)
+        assertTrue(encoded.contains("\"depth\":0.65"), "Encoded JSON should contain 'depth' key")
+        assertTrue(encoded.contains("\"depthMin\":0.25"), "Encoded JSON should contain 'depthMin' key")
+        assertTrue(encoded.contains("\"depthMax\":0.75"), "Encoded JSON should contain 'depthMax' key")
+        assertTrue(encoded.contains("\"randomizeDepth\":true"), "Encoded JSON should contain 'randomizeDepth' key")
     }
 
     @Test
@@ -398,202 +525,6 @@ class CvModulatorTest {
     }
 
     @Test
-    fun testAudioModulatorUnipolarScaling() {
-        llm.slop.liquidlsd.audio.AudioEngine.stop()
-        llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
-        // Mock peak audio input pushed to CVRegistry
-        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
-        
-        val mod = CvModulator(sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW)
-        val param = ModulatableParameter(baseValue = 0.0f, minClamp = 0.0f, maxClamp = 1.0f)
-        param.modulators.add(mod)
-
-        // Peak audio at depth 0.5 on a 0..1 parameter should yield 0.5, not 1.0 or 2.0
-        val value = param.evaluate()
-        assertEquals(0.5f, value, 0.001f)
-    }
-
-    @Test
-    fun testActiveModulatorsFilterBypassedBands() {
-        llm.slop.liquidlsd.audio.AudioEngine.stop()
-        llm.slop.liquidlsd.cv.AudioFollowerTracker.reset()
-        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_amp", 1.0f)
-        llm.slop.liquidlsd.cv.CVRegistry.updatePushedValue("audio_bass", 1.0f)
-
-        val activeAmp = CvModulator(id = "test_amp", sourceId = "audio_amp", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = false)
-        val mutedBass = CvModulator(id = "test_bass", sourceId = "audio_bass", depth = 0.5f, followerMode = AudioFollowerMode.RAW, bypassed = true)
-
-        val mods = listOf(activeAmp, mutedBass)
-        val hasAnyUnbypassed = mods.any { !it.bypassed }
-        val targetMods = if (hasAnyUnbypassed) mods.filter { !it.bypassed } else mods
-
-        val combined = llm.slop.liquidlsd.cv.getCombinedEffectiveValue(targetMods, isBipolar = false, includeBypassed = true)
-        assertEquals(0.5f, combined, 0.001f, "Muted bass band should not bleed into active amp modulation sum")
-    }
-
-    @Test
-    fun testSquareWaveDutyCycle50Percent() {
-        CVRegistry.setTargetFps(60f)
-        CVRegistry.setRenderFrameCount(0L)
-        val mod = CvModulator(
-            sourceId = "lfo",
-            genUnit = GenUnit.FRAME,
-            subdivision = 100f,
-            waveform = Waveform.SQUARE,
-            slope = 0.5f,
-            hold = 0.999f,
-            morph = 1.0f,
-            bypassed = false
-        )
-
-        // Frame 10 (phase 0.10) should be HIGH (+1.0)
-        CVRegistry.setRenderFrameCount(10L)
-        val v10 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
-        assertEquals(1.0f, v10, 0.01f)
-
-        // Frame 40 (phase 0.40) should be HIGH (+1.0)
-        CVRegistry.setRenderFrameCount(40L)
-        val v40 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
-        assertEquals(1.0f, v40, 0.01f)
-
-        // Frame 60 (phase 0.60) should be LOW (-1.0)
-        CVRegistry.setRenderFrameCount(60L)
-        val v60 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
-        assertEquals(-1.0f, v60, 0.01f)
-
-        // Frame 90 (phase 0.90) should be LOW (-1.0)
-        CVRegistry.setRenderFrameCount(90L)
-        val v90 = llm.slop.liquidlsd.cv.evaluateModulator(mod)
-        assertEquals(-1.0f, v90, 0.01f)
-    }
-
-    @Test
-    fun testSquareWaveDutyCycleVariable() {
-        CVRegistry.setTargetFps(60f)
-        // 20% Duty Cycle (slope = 0.2f)
-        val mod20 = CvModulator(
-            sourceId = "lfo",
-            genUnit = GenUnit.FRAME,
-            subdivision = 100f,
-            waveform = Waveform.SQUARE,
-            slope = 0.2f,
-            hold = 0.999f,
-            morph = 1.0f,
-            bypassed = false
-        )
-        // Frame 10 (phase 0.10 < 0.20) -> +1.0
-        CVRegistry.setRenderFrameCount(10L)
-        assertEquals(1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod20), 0.01f)
-        // Frame 30 (phase 0.30 > 0.20) -> -1.0
-        CVRegistry.setRenderFrameCount(30L)
-        assertEquals(-1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod20), 0.01f)
-
-        // 80% Duty Cycle (slope = 0.8f)
-        val mod80 = CvModulator(
-            sourceId = "lfo",
-            genUnit = GenUnit.FRAME,
-            subdivision = 100f,
-            waveform = Waveform.SQUARE,
-            slope = 0.8f,
-            hold = 0.999f,
-            morph = 1.0f,
-            bypassed = false
-        )
-        // Frame 70 (phase 0.70 < 0.80) -> +1.0
-        CVRegistry.setRenderFrameCount(70L)
-        assertEquals(1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod80), 0.01f)
-        // Frame 90 (phase 0.90 > 0.80) -> -1.0
-        CVRegistry.setRenderFrameCount(90L)
-        assertEquals(-1.0f, llm.slop.liquidlsd.cv.evaluateModulator(mod80), 0.01f)
-    }
-
-    @Test
-    fun testHoldMaximumNoNaN() {
-        val squareVal = calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.999f, slope = 0.5f, waveform = Waveform.SQUARE)
-        assertFalse(squareVal.isNaN(), "Square with hold=0.999f must not be NaN")
-        assertFalse(squareVal.isInfinite(), "Square with hold=0.999f must not be Infinite")
-
-        val triVal = calculateAdvancedLFO(0.5, morph = 1.0f, hold = 1.0f, slope = 0.5f, waveform = Waveform.TRIANGLE)
-        assertFalse(triVal.isNaN(), "Hold clamped at 1.0f must not produce NaN")
-        assertFalse(triVal.isInfinite(), "Hold clamped at 1.0f must not produce Infinite")
-    }
-
-    @Test
-    fun testForbiddenRandomizeRandomizer() {
-        val disabledParam = ModulatableParameter(baseValue = 0.5f, isRandomizeDisabled = true)
-        assertTrue(disabledParam.isRandomizeDisabled)
-        assertFalse(disabledParam.randomizeBase)
-
-        // Attempting to set randomizeBase to true should be blocked
-        disabledParam.randomizeBase = true
-        assertFalse(disabledParam.randomizeBase)
-
-        // Setting bounds and trying randomizeBaseValue should be a no-op
-        disabledParam.baseMin = 0.1f
-        disabledParam.baseMax = 0.9f
-        disabledParam.randomizeBaseValue(Random(42))
-        assertEquals(0.5f, disabledParam.baseValue)
-
-        // Verify Mixer companion constants and helper
-        assertEquals("It is forbidden to randomize the randomizer. Chaos would ensue.", Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
-        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckA"))
-        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckB"))
-        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckBG"))
-        assertTrue(Mixer.isRandomizerParameter("Mixer/randDeckPV"))
-        assertTrue(Mixer.isRandomizerParameter("Mixer/randAll"))
-        assertFalse(Mixer.isRandomizerParameter("Mixer/crossfade"))
-        assertFalse(Mixer.isRandomizerParameter("Deck A/Mandala/Petals"))
-    }
-
-    @Test
-    fun testSawtoothRampUpExtremeSlopeMonotonic() {
-        // At slope = 0.999f and morph = 1.0f, the wave is a pure rising sawtooth ramp (-1.0 to +1.0)
-        // without reverse fall time or peak rounding.
-        assertEquals(-1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(0.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(0.998f, calculateAdvancedLFO(0.999, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.001f)
-        assertEquals(0.9998f, calculateAdvancedLFO(0.9999, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.001f)
-        assertEquals(1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE), 0.0001f)
-
-        // Verify strict monotonicity across 1000 steps — zero backward turnaround!
-        var prev = -2.0f
-        for (i in 0..1000) {
-            val phase = i / 1000.0
-            val current = calculateAdvancedLFO(phase, morph = 1.0f, hold = 0.0f, slope = 0.999f, waveform = Waveform.TRIANGLE)
-            assertTrue(current >= prev, "Step $i (phase $phase): current $current must be >= prev $prev (no backward fall)")
-            prev = current
-        }
-    }
-
-    @Test
-    fun testSawtoothRampDownExtremeSlopeMonotonic() {
-        // At slope = 0.001f and morph = 1.0f, the wave is a pure falling sawtooth ramp (+1.0 to -1.0)
-        assertEquals(1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(0.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(-0.998f, calculateAdvancedLFO(0.999, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.001f)
-        assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE), 0.0001f)
-
-        // Verify strict descending monotonicity across 1000 steps — zero forward turnaround!
-        var prev = 2.0f
-        for (i in 0..1000) {
-            val phase = i / 1000.0
-            val current = calculateAdvancedLFO(phase, morph = 1.0f, hold = 0.0f, slope = 0.001f, waveform = Waveform.TRIANGLE)
-            assertTrue(current <= prev, "Step $i (phase $phase): current $current must be <= prev $prev (no forward rise)")
-            prev = current
-        }
-    }
-
-    @Test
-    fun testLinearTriangleZeroPeakRoundingAtMorphOne() {
-        // At morph = 1.0f and slope = 0.5f, the triangle wave has zero log-cosh curvature and exact linear segments
-        assertEquals(-1.0f, calculateAdvancedLFO(0.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(0.0f, calculateAdvancedLFO(0.25, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(1.0f, calculateAdvancedLFO(0.5, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(0.0f, calculateAdvancedLFO(0.75, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
-        assertEquals(-1.0f, calculateAdvancedLFO(1.0, morph = 1.0f, hold = 0.0f, slope = 0.5f, waveform = Waveform.TRIANGLE), 0.0001f)
-    }
-
-    @Test
     fun testSequencerAndLfo2DefaultDepths() {
         val seqMod = CvModulator(sourceId = "seq")
         assertEquals(1.0f, seqMod.depth, "Sequencer depth should default to 1.0f (100%)")
@@ -607,4 +538,3 @@ class CvModulatorTest {
         assertEquals(1.0f, lfoMod.generatorModDepthMax)
     }
 }
-

@@ -51,8 +51,9 @@ object Lfo2Section {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
         
+        val powerIcon = if (lfo2Bypassed) Icons.POWER_OFF else Icons.POWER
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.POWER}##bypass_lfo2_$idx", btnWidth, btnHeight)) {
+            if (ImGui.button("$powerIcon##bypass_lfo2_$idx", btnWidth, btnHeight)) {
                 val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
                 val nextDepth = if (lfo2Bypassed && existing.generatorModDepth == 0.0f) 1.0f else existing.generatorModDepth
                 onReplace(existing.copy(

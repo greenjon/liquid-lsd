@@ -238,66 +238,41 @@ class Renderer {
         val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
         render(deck.source, deck.cleanFBO, zoom, rotZ)
 
-        // --- Dual FX Filter Stages ---
-        // Stage 1: FX Slot 1 (Color / Degradation)
-        val fx1 = deck.fxSlot1
-        val texAfterFx1 = if (fx1 != null && fx1.enabled && fx1.dryWet.value > 0.0f) {
-            deck.fxFBO1.bind()
+        // --- Chained FX Filter Stages ---
+        // Each enabled slot's output feeds the next slot's input.
+        var currentTex = deck.cleanFBO.texture
+        for (i in deck.fxSlots.indices) {
+            val fx = deck.fxSlots[i] ?: continue
+            if (!fx.enabled || fx.dryWet.value <= 0.0f) continue
+
+            val fxFBO = deck.fxFBOs[i]
+            val dryTex = currentTex
+
+            fxFBO.bind()
             glClearColor(0f, 0f, 0f, 0f)
             glClear(GL_COLOR_BUFFER_BIT)
             glDisable(GL_BLEND)
 
-            fx1.render(deck.cleanFBO.texture, deck.fxFBO1.width, deck.fxFBO1.height)
+            fx.render(dryTex, fxFBO.width, fxFBO.height)
 
-            val dryWet = fx1.dryWet.value
+            val dryWet = fx.dryWet.value
             if (dryWet < 1.0f) {
-                // Blend dry (cleanFBO) with wet (fxFBO1)
+                // Blend dry (previous stage's output) with wet (this stage's FBO)
                 glEnable(GL_BLEND)
                 glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
                 glBlendColor(0f, 0f, 0f, 1.0f - dryWet) // dry amount
 
                 blitShader.bind()
                 glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, deck.cleanFBO.texture)
+                glBindTexture(GL_TEXTURE_2D, dryTex)
                 blitShader.setUniform("uTexture", 0)
                 Geometry.drawFullscreenQuad()
                 blitShader.unbind()
                 glDisable(GL_BLEND)
             }
 
-            deck.fxFBO1.unbind()
-            deck.fxFBO1.texture
-        } else {
-            deck.cleanFBO.texture
-        }
-
-        // Stage 2: FX Slot 2 (Spatial / Distortion)
-        val fx2 = deck.fxSlot2
-        if (fx2 != null && fx2.enabled && fx2.dryWet.value > 0.0f) {
-            deck.fxFBO2.bind()
-            glClearColor(0f, 0f, 0f, 0f)
-            glClear(GL_COLOR_BUFFER_BIT)
-            glDisable(GL_BLEND)
-
-            fx2.render(texAfterFx1, deck.fxFBO2.width, deck.fxFBO2.height)
-
-            val dryWet = fx2.dryWet.value
-            if (dryWet < 1.0f) {
-                // Blend dry (texAfterFx1) with wet (fxFBO2)
-                glEnable(GL_BLEND)
-                glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
-                glBlendColor(0f, 0f, 0f, 1.0f - dryWet) // dry amount
-
-                blitShader.bind()
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, texAfterFx1)
-                blitShader.setUniform("uTexture", 0)
-                Geometry.drawFullscreenQuad()
-                blitShader.unbind()
-                glDisable(GL_BLEND)
-            }
-
-            deck.fxFBO2.unbind()
+            fxFBO.unbind()
+            currentTex = fxFBO.texture
         }
     }
 

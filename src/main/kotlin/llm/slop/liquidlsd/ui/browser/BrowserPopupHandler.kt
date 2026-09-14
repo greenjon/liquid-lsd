@@ -21,6 +21,7 @@ object BrowserPopupHandler {
     var deleteTarget: AssetItem? = null
     var pendingOpenRenamePopup = false
     var pendingOpenDeletePopup = false
+    var pendingOpenNewPlaylistPopup = false
     
     val renameBuffer = ImString(256)
     val newPlaylistNameBuffer = ImString(256)

@@ -114,8 +114,7 @@ class ISFMultiPassTest {
 
         val deck = mockk<Deck>(relaxed = true)
         every { deck.source } returns mockSource
-        every { deck.fxSlot1 } returns fx1
-        every { deck.fxSlot2 } returns fx2
+        every { deck.fxSlots } returns arrayOf(fx1, fx2, null, null)
         every { deck.getParameterPaths(any()) } answers { callOriginal() }
 
         val paths = deck.getParameterPaths("Deck A").map { it.first }
@@ -162,8 +161,7 @@ class ISFMultiPassTest {
 
         val deck = mockk<Deck>(relaxed = true)
         every { deck.source } returns mockSource
-        every { deck.fxSlot1 } returns fx1
-        every { deck.fxSlot2 } returns fx2
+        every { deck.fxSlots } returns arrayOf(fx1, fx2, null, null)
         every { deck.fbDecay } returns ModulatableParameter(0.5f)
         every { deck.fbGain } returns ModulatableParameter(1.0f)
         every { deck.fbZoom } returns ModulatableParameter(0.0f)

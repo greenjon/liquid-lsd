@@ -17,9 +17,7 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                  │                  │                  │
               cleanFBO           cleanFBO           cleanFBO
                  │                  │                  │
-          [FX Slot 1: ISF]   [FX Slot 1: ISF]   [FX Slot 1: ISF]
-                 │                  │                  │
-          [FX Slot 2: ISF]   [FX Slot 2: ISF]   [FX Slot 2: ISF]
+          [FX Slots 1-4: ISF] [FX Slots 1-4: ISF] [FX Slots 1-4: ISF]
                  │                  └────────┬─────────┘
                  │                           │
                  │                ISF Transition Filter
@@ -129,9 +127,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VisualEffect.kt         — Interface for post-processing effects
 │   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter, multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
-│   ├── Deck.kt                 — VisualSource + cleanFBO + fxFBO1 + fxFBO2 (modular ISF FX chain) + 2D View params
+│   ├── Deck.kt                 — VisualSource + cleanFBO + fxSlots[4]/fxFBOs[4] (modular chained ISF FX pipeline) + 2D View params
 │   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with channel level multipliers & ISF transition engine (blendFBO)
-│   ├── Renderer.kt             — Per-frame: universal uniform bridge (resolution, time, frame, date, mouse, audio) -> polymorphic source renderTopology() -> 2D view transform -> FX Slot 1 -> FX Slot 2 -> ISF transition pass (A/B) -> Deck BG composite -> blit
+│   ├── Renderer.kt             — Per-frame: universal uniform bridge (resolution, time, frame, date, mouse, audio) -> polymorphic source renderTopology() -> 2D view transform -> chained FX Slots 1-4 -> ISF transition pass (A/B) -> Deck BG composite -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D and foreign shader format detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
@@ -332,10 +330,10 @@ All post-processing effects, 2D-to-3D projection geometry, and mixer transitions
   - Exactly preserves the legacy cubic decay curve ($s \to (1 - s)^3$) and 9-parameter feedback optics (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`).
   - History buffers clear to zero on filter reset or preset loading (`ISFFilter.reset()`) to eliminate ghost frames.
 - **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**:
-  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders with a raymarched ISF filter in FX Slot 2.
+  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders with a raymarched ISF filter, conventionally loaded into FX Slot 2 (any of the 4 slots works).
   - Implements Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding via analytic inverse camera raymarching with exact 1:1 scale normalization matching 2D mode height at $z = 0$.
   - Supports dual blend modes (`blendMode`): luminous additive energy synthesis (`glBlendFunc(GL_ONE, GL_ONE)` equivalent) and premultiplied alpha over.
-  - All 10 parameters are directly accessible and modulatable in FX Slot 2 under the Deck "FX" tab.
+  - All 10 parameters are directly accessible and modulatable under the Deck "FX" tab, in whichever slot the filter is loaded.
 - **Pure ISF Mixer Transitions**:
   - Eliminates hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
   - All Deck A $\leftrightarrow$ Deck B transitions execute via `ISFFilter` taking `startImage`, `endImage`, and `progress` ($0 \dots 1$).

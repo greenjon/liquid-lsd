@@ -29,26 +29,20 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
-    // ISF Filter Slot 1 & Slot 2
-    var fxSlot1: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
-    var fxFBO1 = FBO(width, height)
-
-    var fxSlot2: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
-    var fxFBO2 = FBO(width, height)
+    // ISF Filter Slots (chained in order: slot 0's output feeds slot 1's input, etc.)
+    val fxSlots = arrayOfNulls<llm.slop.liquidlsd.rendering.isf.ISFFilter>(FX_SLOT_COUNT)
+    var fxFBOs = Array(FX_SLOT_COUNT) { FBO(width, height) }
 
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
         width = newWidth
         height = newHeight
         cleanFBO.dispose()
-        fxFBO1.dispose()
-        fxFBO2.dispose()
+        fxFBOs.forEach { it.dispose() }
         cleanFBO = FBO(width, height)
-        fxFBO1 = FBO(width, height)
-        fxFBO2 = FBO(width, height)
+        fxFBOs = Array(FX_SLOT_COUNT) { FBO(width, height) }
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        fxFBO1.clear(0f, 0f, 0f, 0f)
-        fxFBO2.clear(0f, 0f, 0f, 0f)
+        fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
                 src.fb1?.dispose()
@@ -87,15 +81,14 @@ class Deck(
     val fbKaleido = ModulatableParameter(1.0f, minClamp = 1f, maxClamp = 12f)
 
     companion object {
-        // Registration moved to getParameterPaths
+        const val FX_SLOT_COUNT = 4
     }
 
     init {
         // Clear all FBOs at startup to prevent reading uninitialized GPU memory
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        fxFBO1.clear(0f, 0f, 0f, 0f)
-        fxFBO2.clear(0f, 0f, 0f, 0f)
-        
+        fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+
         val initialId = (initialSource as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
             .filter { it.id != initialId }
@@ -108,8 +101,7 @@ class Deck(
 
     fun reset() {
         isEmpty = true
-        fxSlot1?.reset()
-        fxSlot2?.reset()
+        fxSlots.forEach { it?.reset() }
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -139,8 +131,7 @@ class Deck(
 
         // Clear active FBOs
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        fxFBO1.clear(0f, 0f, 0f, 0f)
-        fxFBO2.clear(0f, 0f, 0f, 0f)
+        fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
         morphController.initFromCurrentState()
     }
 
@@ -152,20 +143,14 @@ class Deck(
         allParams.addAll(this.source.parameters.values)
         allParams.add(this.source.globalAlpha)
         
-        fxSlot1?.let { fx ->
-            if (fx.enabled) {
+        fxSlots.forEach { fx ->
+            if (fx != null && fx.enabled) {
                 allParams.add(fx.dryWet)
                 allParams.addAll(fx.parameters.values)
             }
         }
-        
-        fxSlot2?.let { fx ->
-            if (fx.enabled) {
-                allParams.add(fx.dryWet)
-                allParams.addAll(fx.parameters.values)
-            }
-        }
-        
+
+
         allParams.add(this.view3DMode)
         allParams.add(this.viewZoom)
         allParams.add(this.viewRotateX)
@@ -194,13 +179,11 @@ class Deck(
      * Retrieves the final output texture of the Deck (the active stage texture).
      */
     fun getOutputTexture(): Int {
-        val fx2 = fxSlot2
-        if (fx2 != null && fx2.enabled && fx2.dryWet.value > 0.0f) {
-            return fxFBO2.texture
-        }
-        val fx1 = fxSlot1
-        if (fx1 != null && fx1.enabled && fx1.dryWet.value > 0.0f) {
-            return fxFBO1.texture
+        for (i in fxSlots.indices.reversed()) {
+            val fx = fxSlots[i]
+            if (fx != null && fx.enabled && fx.dryWet.value > 0.0f) {
+                return fxFBOs[i].texture
+            }
         }
         return cleanFBO.texture
     }
@@ -210,8 +193,7 @@ class Deck(
      */
     fun update() {
         source.update()
-        fxSlot1?.update()
-        fxSlot2?.update()
+        fxSlots.forEach { it?.update() }
         view3DMode.evaluate()
         viewZoom.evaluate()
         viewRotateX.evaluate()
@@ -246,10 +228,8 @@ class Deck(
      */
     fun dispose() {
         cleanFBO.dispose()
-        fxFBO1.dispose()
-        fxFBO2.dispose()
-        fxSlot1?.dispose()
-        fxSlot2?.dispose()
+        fxFBOs.forEach { it.dispose() }
+        fxSlots.forEach { it?.dispose() }
         // Note: `source` is always one of the entries in `availableSources`, so the
         // forEach below already disposes it. Do NOT call source.dispose() here — that
         // would double-free the active source's GPU objects.
@@ -263,8 +243,9 @@ class Deck(
         list.addAll(source.getParameterPaths(prefix))
 
         // Add FX parameters
-        fxSlot1?.getParameterPaths("$prefix/FX1")?.let { list.addAll(it) }
-        fxSlot2?.getParameterPaths("$prefix/FX2")?.let { list.addAll(it) }
+        fxSlots.forEachIndexed { i, fx ->
+            fx?.getParameterPaths("$prefix/FX${i + 1}")?.let { list.addAll(it) }
+        }
 
         // Add Deck's View parameters
         list.add("$prefix/View/3DMode" to view3DMode)

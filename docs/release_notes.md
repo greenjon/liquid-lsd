@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Removal of Obsolete Legacy Preset Auto-Migration & Preset Loading Test Fix (`PresetModels.kt`, `PresetDirtyLoadingTest.kt`)
+- **Removal of Legacy Preset Auto-Migration (`PresetModels.kt`)**: Removed obsolete auto-migration logic in `Deck.applyDto` that conditionally injected legacy feedback and 3D parameters into empty FX slots.
+- **Preset Load Test Reliability (`PresetDirtyLoadingTest.kt`)**: Eliminated potential array index out-of-bounds exceptions when loading deck presets on mock decks during automated testing.
+
 ### Pure ISF v2.0 Standardization & Removal of Legacy Custom Video Sources (`library/sources/`)
 - **ISF v2.0 Shader Migration**: Removed legacy non-ISF custom video source folders (`attractor_feedback`, `chladni`, `colors`, `gyroid`, `hyper_mesh`, `hyper_slice`, and `brick`) relying on proprietary `meta.json` manifests, advancing the system's architecture toward pure ISF v2.0 shader standardization and away from custom video source formats.
 - **Native ISF Generator (`dynamic_spiral.fs`)**: Converted Dynamic Spiral from a custom Kotlin class (`DynamicSpiral.kt`) to a standalone ISF v2.0 shader file with an embedded JSON header and standard GLSL 3.30 uniform inputs.
@@ -10,10 +14,19 @@
 - **Web Pipeline Parity**: Synchronized WebGL ES 3.0 shader (`web/shaders/dynamic_spiral.frag`) and updated sync manifest hashes (`web/sync_manifest.json`).
 
 ### Correct Lucide Icon Font Scoping & Modern ImGui Icon Alignment (`Icons.kt`, `BrowserActionToolbar.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `DeckControlPanel.kt`, `MixerPanel.kt`, `ModulatorHeaderRow.kt`, `ParametersTabs.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `Lfo2Section.kt`)
-- **Accurate Lucide PUA Codepoint Mappings (`Icons.kt`)**: Updated `Icons.LOCK` (`\ue10a`) to standard Lucide closed padlock PUA codepoint, and `Icons.CHEVRON_UP` (`\ue071`) to standard Lucide chevron-up codepoint.
-- **Explicit Font Scoping for UI Icon Buttons**: Wrapped all icon-bearing button calls (`Icons.PLUS`, `Icons.POWER`, `Icons.LOCK`, `Icons.REPEAT`, `Icons.SHUFFLE`, `Icons.PLAY`, `Icons.PAUSE`, `Icons.DICES`, `Icons.TRASH`, `Icons.MORE_VERTICAL`, `Icons.CHEVRON_DOWN`) inside `session.uiTheme.withFont(UITheme.FontLevel.BODY)` (or `H3`), ensuring Dear ImGui's font stack has the merged Lucide PUA glyph atlas active when calculating text metrics and drawing buttons.
-- **Playlist Header Kebab & Popup Fix (`PlaylistEditorPanel.kt`)**: Fixed playlist header action button to use vertical kebab icon (`Icons.MORE_VERTICAL`) and positioned `ImGui.beginPopup("playlist_header_more_menu")` immediately after `openPopup`, restoring popup triggering in Dear ImGui 1.92.
-- **Unified Custom Icon Button Alignment (`DeckControlPanel.kt`, `MixerPanel.kt`)**: Refactored `drawIconButton` in `DeckControlPanel.kt` to use native `ImGui.button`, eliminating manual draw list text offset drift and ensuring perfect icon centering and border rendering across deck save and eject buttons.
+- **Accurate Lucide PUA Codepoint Mappings (`Icons.kt`)**: Audited and corrected codepoint drift against `lucide.ttf`:
+  - `Icons.LOCK`: Switched to `\ue10b` (lock padlock, was loader-2).
+  - `Icons.CHEVRON_DOWN`: Switched to `\ue06d` (chevron-down, was checkmark).
+  - `Icons.CHEVRON_UP`: Switched to `\ue070` (chevron-up, was chevrons-down).
+  - `Icons.DOWNLOAD`: Switched to `\ue0b2` (download, was disc).
+  - `Icons.NOTE`: Switched to `\ue1f9` (pencil, was percent).
+  - `Icons.ALIGN_CENTER_LINE`: Switched to `\ue43b` (fold-horizontal, was proportions).
+  - `Icons.DICES`: Switched to `\ue2c5` (dices, was dice-5).
+  - Added `POWER_OFF` (`\ue209`), `VOLUME` (`\ue1a9`), `VOLUME_X` (`\ue1ac`), `FILE_PLUS` (`\ue0c9`), and `FOLDER_PLUS` (`\ue0d9`).
+- **Deck Control Button Labels Fixed (`DeckControlPanel.kt`)**: Fixed swapped `id` and `icon` arguments in `drawIconButton()` calls, restoring visibility for Save and Eject buttons on all decks.
+- **Dynamic On/Mute Modulator Icon (`ModulatorHeaderRow.kt`, `Lfo2Section.kt`)**: Modulator on/mute buttons now dynamically render `Icons.POWER` when enabled and `Icons.POWER_OFF` when bypassed.
+- **Playlist Editor Popup Scoping & Creation Modal (`PlaylistEditorPanel.kt`, `BrowserPopupHandler.kt`, `LibraryPanel.kt`)**: Added `pendingOpenNewPlaylistPopup` so clicking "+ New Playlist" from inside child panels properly triggers the root modal popup in Dear ImGui 1.92.
+- **Explicit Font Scoping for UI Icon Buttons**: Ensured all icon-bearing button calls have font levels pushed appropriately so the merged Lucide PUA glyph atlas is active when calculating text metrics and drawing buttons.
 
 ### Restore All 4 Distinct 3D Elevation Projection Modes (`3d_elevation.fs`, `ISFFilter.kt`, `PresetModels.kt`, `ValueParamSection.kt`, `ISFFilterTest.kt`)
 - **Restored All 4 Distinct Projection Modes**: Fully restored and calibrated all 4 geometric elevation modes in `3d_elevation.fs`:

@@ -1,3 +1,28 @@
+## Lucide Icon PUA Codepoints & Dear ImGui 1.92 Font & Popup Scoping (`Icons.kt`, `DeckControlPanel.kt`, `PlaylistEditorPanel.kt`, `ModulatorHeaderRow.kt`, `Lfo2Section.kt`)
+
+- **Decision**: Aligned all `Icons.*` constants in `Icons.kt` with the verified Fontello Private Use Area (PUA) glyph mapping from `src/main/resources/fonts/lucide.ttf`, resolved popup modal scoping across ImGui child windows, and fixed inverted button arguments:
+  - **Codepoint Verification**: Replaced drift codepoints with exact glyph matches extracted via `fontTools`:
+    - `Icons.LOCK`: Updated from `\ue10a` (loader-2 circle) to `\ue10b` (lock padlock).
+    - `Icons.CHEVRON_DOWN`: Updated from `\ue06c` (check mark) to `\ue06d` (chevron-down).
+    - `Icons.CHEVRON_UP`: Updated from `\ue071` (chevrons-down) to `\ue070` (chevron-up).
+    - `Icons.DOWNLOAD`: Updated from `\ue0af` (disc) to `\ue0b2` (download), preserving `Icons.DISC` as `\ue0af`.
+    - `Icons.NOTE`: Updated from `\ue132` (percent) to `\ue1f9` (pencil).
+    - `Icons.ALIGN_CENTER_LINE`: Updated from `\ue5cf` (proportions) to `\ue43b` (fold-horizontal).
+    - `Icons.DICES`: Updated from `\ue28b` (dice-5) to `\ue2c5` (dices).
+    - Added missing semantic constants: `POWER_OFF = "\ue209"`, `VOLUME = "\ue1a9"`, `VOLUME_X = "\ue1ac"`, `FILE_PLUS = "\ue0c9"`, `FOLDER_PLUS = "\ue0d9"`.
+  - **Modal Scoping Across ImGui Child Windows**:
+    - In Dear ImGui 1.92, child window popups cannot open parent-window modals (`NewPlaylistPopup`) via direct `ImGui.openPopup()` calls inside child scopes without root context mismatch.
+    - Added `BrowserPopupHandler.pendingOpenNewPlaylistPopup` flag, consumed in `LibraryPanel.kt` at the root window scope alongside rename and delete confirmation modals.
+  - **Dynamic State Icons**:
+    - In `ModulatorHeaderRow.kt` and `Lfo2Section.kt`, updated modulator on/bypass toggle to dynamically render `Icons.POWER` when active and `Icons.POWER_OFF` when bypassed/muted.
+  - **Button Argument Order**:
+    - In `DeckControlPanel.kt`, swapped inverted `id` and `icon` arguments passed to `drawIconButton()`, which previously rendered buttons with label `"##btn_Save_$tag\ue14d"`, making them completely blank.
+- **Rationale**:
+  - Eliminates visual glitches (wrong glyphs, checkmarks in dropdowns, blank save/eject buttons, unresponsive modal popups).
+  - Guarantees 100% fidelity between UI buttons and embedded font glyphs.
+
+---
+
 ## Standardization on Pure ISF v2.0 Shaders & Removal of Legacy Custom Sources (`library/sources/`)
 
 - **Decision**: Removed non-ISF legacy source folders (`attractor_feedback`, `chladni`, `colors`, `gyroid`, `hyper_mesh`, `hyper_slice`, and `brick`) relying on proprietary `meta.json` + `shader.frag` manifests in favor of standard Interactive Shader Format (ISF v2.0) files (`.fs`):

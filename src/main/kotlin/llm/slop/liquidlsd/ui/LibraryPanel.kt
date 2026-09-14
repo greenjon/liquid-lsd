@@ -329,6 +329,10 @@ object LibraryPanel {
             ImGui.openPopup("ConfirmDeleteAssetPopup")
             BrowserPopupHandler.pendingOpenDeletePopup = false
         }
+        if (BrowserPopupHandler.pendingOpenNewPlaylistPopup) {
+            ImGui.openPopup("NewPlaylistPopup")
+            BrowserPopupHandler.pendingOpenNewPlaylistPopup = false
+        }
         BrowserPopupHandler.drawRenameAssetPopup()
         BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
         BrowserPopupHandler.drawNewPlaylistPopup()

@@ -97,8 +97,9 @@ object ModulatorHeaderRow {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
         
+        val powerIcon = if (bypassed) Icons.POWER_OFF else Icons.POWER
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.POWER}##bypass_bar_$idx", btnWidth, btnHeight)) {
+            if (ImGui.button("$powerIcon##bypass_bar_$idx", btnWidth, btnHeight)) {
                 onReplace(existing.copy(bypassed = !bypassed))
             }
         }

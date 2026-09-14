@@ -22,7 +22,7 @@ import llm.slop.liquidlsd.SessionContext
 object ShaderPickerPopup {
     private const val POPUP_ID = "Shader Picker###shader_picker_popup"
     
-    enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2, MIXER_TRANSITION }
+    enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2, FX_SLOT_3, FX_SLOT_4, MIXER_TRANSITION }
     
     private var pendingOpen = false
     private var pickerType = PickerType.SOURCE
@@ -64,6 +64,8 @@ object ShaderPickerPopup {
         this.selectedCategory = when(type) {
             PickerType.FX_SLOT_1 -> "Color Adjustment"
             PickerType.FX_SLOT_2 -> "Distortion"
+            PickerType.FX_SLOT_3 -> "All"
+            PickerType.FX_SLOT_4 -> "All"
             PickerType.MIXER_TRANSITION -> "Transitions"
             else -> "All"
         }

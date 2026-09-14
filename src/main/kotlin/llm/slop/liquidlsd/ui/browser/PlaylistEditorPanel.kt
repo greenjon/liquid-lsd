@@ -82,7 +82,7 @@ object PlaylistEditorPanel {
         // [ + ] Create New Playlist button
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("${Icons.PLUS}##createNewPlaylistBtn", btnSize, btnSize)) {
-                ImGui.openPopup("NewPlaylistPopup")
+                BrowserPopupHandler.pendingOpenNewPlaylistPopup = true
             }
         }
         itemTooltip("Create new playlist.")
@@ -190,7 +190,7 @@ object PlaylistEditorPanel {
         val btnWidth = ImGui.calcTextSize(btnText).x + 30f
         ImGui.setCursorPosX((ImGui.getWindowWidth() - btnWidth) * 0.5f)
         if (ImGui.button(btnText, btnWidth, 0f)) {
-            ImGui.openPopup("NewPlaylistPopup")
+            BrowserPopupHandler.pendingOpenNewPlaylistPopup = true
         }
     }
 

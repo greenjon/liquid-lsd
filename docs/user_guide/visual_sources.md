@@ -1,6 +1,6 @@
 # Visual Sources
 
-Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has two effect slots and a feedback loop for building up trails and texture.
+Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has four effect slots and a feedback loop for building up trails and texture.
 
 ---
 
@@ -18,7 +18,7 @@ To remove the current source, click **Detach** or **None**.
 
 The most flexible built-in source. The Mandala engine generates intricate symmetrical geometry using around 300 curated harmonic ratios — basically: pick a harmonic ratio and it figures out the geometry. Built-in size normalization means the outer boundary stays stable and fills your vertical frame cleanly no matter how hard you push the parameters.
 
-**3D modes** (available via the 3D Elevation filter in FX Slot 2): Mandala visuals can be wrapped spherically, projected inside a cube cage, mapped onto six intersecting planes, or unfolded into a 24-chamber kaleidoscope. These apply to any 2D source, not just Mandala.
+**3D modes** (available via the 3D Elevation filter in any FX slot): Mandala visuals can be wrapped spherically, projected inside a cube cage, mapped onto six intersecting planes, or unfolded into a 24-chamber kaleidoscope. These apply to any 2D source, not just Mandala.
 
 **Good starting point:** Load a factory Mandala preset and use bass audio to drive the Lobes parameter. Even a single connection is immediately impressive.
 
@@ -67,18 +67,19 @@ Every deck has a **View** tab that applies to whatever source is loaded. You can
 
 For **native 3D sources** (e.g. Gyroid, Hyper-Mesh, Icosahedron), the View tab automatically exposes the generator's internal camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and zoom controls.
 
-To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the **3D Elevation** filter in **FX Slot 2** under the **FX** tab.
+To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the **3D Elevation** filter in any FX slot under the **FX** tab.
 
 ---
 
-## Effect Slots (FX1 & FX2)
+## Effect Slots (FX1–FX4)
 
-Each deck has two chained post-processing slots that run after the source and before the feedback loop:
+Each deck has four chained post-processing slots that run after the source and before the feedback loop:
 
 - **FX Slot 1** — Typically used for color processing: grading, inversion, posterization, luma keying, degradation.
 - **FX Slot 2** — Typically used for spatial effects: bloom, chromatic aberration, digital glitch, plane elevation.
+- **FX Slot 3 & FX Slot 4** — Additional chained slots for stacking further processing.
 
-The order is intentional but not enforced — you can put anything in either slot. Each slot has an independent bypass toggle and a Dry/Wet blend knob. Bypassed slots add zero overhead.
+The order is intentional but not enforced — you can put anything in any slot. Each slot has an independent bypass toggle and a Dry/Wet blend knob. Bypassed slots add zero overhead.
 
 ---
 

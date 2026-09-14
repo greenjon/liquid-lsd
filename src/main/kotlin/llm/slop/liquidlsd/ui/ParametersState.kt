@@ -29,6 +29,9 @@ class ParametersState {
     /** Tracks the height of subgroup panels for background drawing. */
     val subgroupHeight = mutableMapOf<String, Float>()
 
+    /** Tracks which FX slot accordion sections are collapsed, keyed by "$deckLabel/FX$slotNum". */
+    val fxSlotCollapsed = mutableMapOf<String, Boolean>()
+
     /** History stack for undo support. */
     private val undoStack = mutableListOf<ParametersUndoSnapshot>()
     private val maxUndoDepth = 30
