@@ -109,6 +109,22 @@ If no preset is loaded yet (the deck is in an unsaved state), the label shows `U
 
 ---
 
+## FX Chain & Slot Management
+
+In the **Parameters** panel under the **`FX`** subtab, each deck provides a 4-slot modular ISF effects processor:
+
+- **FX Chain Header Kebab (`⋮`)**:
+  - **Save Chain As...**: Saves all 4 slots into an `.lsdfxchain` file in `library/fx_chains/`.
+  - **Copy Chain / Paste Chain**: Copies or pastes all 4 slots across decks.
+  - **Clear All Slots**: Disposes and empties all 4 slots on the active deck.
+- **Per-Slot Kebab (`⋮`)**:
+  - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, and parameters into an `.lsdfx` file in `library/fx/`.
+  - **Copy Slot / Paste Slot**: Copies or pastes individual slot configurations across slots or decks.
+  - **Reset Slot**: Clears the slot filter and resets parameters.
+- **Drag-and-Drop Targets**: Drag `.lsdfx` or `.lsdfxchain` files from the Library directly onto any slot to instantly swap or update effects.
+
+---
+
 ## MIDI Hardware & Control Mappings
 
 Liquid LSD includes an intelligent, multi-type MIDI subsystem for connecting hardware controllers (DJ controllers, fader banks, rotary knobs, pads, foot switches, and keyboards).

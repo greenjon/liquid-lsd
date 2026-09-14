@@ -1,7 +1,11 @@
 package llm.slop.liquidlsd.rendering
 
+import llm.slop.liquidlsd.models.FXChainDto
+import llm.slop.liquidlsd.models.FXPresetDto
+import llm.slop.liquidlsd.models.FXSlotDto
+import llm.slop.liquidlsd.models.applyDto
+import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
-
 import llm.slop.liquidlsd.parameters.ParameterOwner
 
 /**
@@ -271,5 +275,60 @@ class Deck(
         list.add("$prefix/FB/Kaleido" to fbKaleido)
         
         return list
+    }
+
+    fun toFxSlotDto(slotIndex: Int): FXSlotDto? {
+        val fx = fxSlots.getOrNull(slotIndex) ?: return null
+        if (fx.id.isEmpty()) return null
+        return FXSlotDto(
+            filterId = fx.id,
+            enabled = fx.enabled,
+            dryWet = fx.dryWet.toDto(),
+            parameters = fx.parameters.mapValues { p -> p.value.toDto() }
+        )
+    }
+
+    fun applyFxSlot(slotIndex: Int, dto: FXSlotDto) {
+        if (slotIndex !in fxSlots.indices) return
+        fxSlots[slotIndex]?.dispose()
+        fxSlots[slotIndex] = null
+
+        if (dto.filterId.isNotBlank()) {
+            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(dto.filterId)
+            if (filter != null) {
+                filter.enabled = dto.enabled
+                filter.dryWet.applyDto(dto.dryWet)
+                for ((key, paramDto) in dto.parameters) {
+                    filter.parameters[key]?.applyDto(paramDto)
+                }
+                fxSlots[slotIndex] = filter
+            }
+        }
+    }
+
+    fun clearFxSlot(slotIndex: Int) {
+        if (slotIndex in fxSlots.indices) {
+            fxSlots[slotIndex]?.dispose()
+            fxSlots[slotIndex] = null
+        }
+    }
+
+    fun applyFxChain(dto: FXChainDto) {
+        for (i in fxSlots.indices) {
+            clearFxSlot(i)
+            val slotDto = dto.slots.getOrNull(i)
+            if (slotDto != null && slotDto.filterId.isNotBlank()) {
+                applyFxSlot(i, slotDto)
+            }
+        }
+    }
+
+    fun toFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto {
+        val slotsList = (0 until FX_SLOT_COUNT).map { toFxSlotDto(it) }
+        return FXChainDto(
+            name = name,
+            tags = tags,
+            slots = slotsList
+        )
     }
 }

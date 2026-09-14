@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Per-Slot FX Presets & 4-Slot FX Chains (`FXPresetModels.kt`, `ParametersTabs.kt`, `FXPresetListPanel.kt`, `FXChainListPanel.kt`, `LibraryPanel.kt`, `SavePresetModal.kt`, `PresetManager.kt`, `FileSystemManager.kt`)
+- **Per-Slot FX Presets (`.lsdfx`)**: Individual slot FX configurations (filter ID, bypass, dry/wet, and parameters) can now be saved into `.lsdfx` files under `library/fx/` and loaded directly onto any deck slot.
+- **4-Slot FX Chains (`.lsdfxchain`)**: Full 4-slot FX chains can be captured and saved into `.lsdfxchain` files under `library/fx_chains/` to instantly recall complete effect pipelines.
+- **Parameters Panel Kebab Menus & Drag-and-Drop**:
+  - **FX Chain Header Bar**: Added a compact header bar above the FX slot list with an options kebab menu (`Save Chain As...`, `Copy Chain`, `Paste Chain`, `Clear All Slots`).
+  - **Per-Slot Kebabs**: Each slot features an options kebab menu (`Save Slot Preset As...`, `Copy Slot`, `Paste Slot`, `Reset Slot`).
+  - **Drag-and-Drop Targets**: Drag `.lsdfx` or `.lsdfxchain` files directly from the Library onto any slot to update or swap effects with undo support.
+- **Library Mode Toggle (`[ Presets ]` / `[ FX ]`)**: Added a segmented mode toggle in the Library menu bar to swap Columns 1 & 2 between Presets/Playlists and FX Presets/FX Chains while anchoring Columns 3 & 4 (BG Queue & Play Queue).
+- **Hybrid Toolbar & Smart Overwrite Prompt**: Single FX preset load buttons (`[A]`, `[B]`, `[BG]`, `[PV]`) route into the first vacant slot on a deck, prompting with a slot overwrite selector when all 4 slots are full.
+
 ### Fix ImGui 1.92 Icon Font Atlas Glyph Corruption via Inter PUA Cmap Stripping & Dynamic Icon Ranges (`UITheme.kt`, `Icons.kt`, TTF Assets)
 - **Inter PUA Cmap Stripping**: Stripped stray Private Use Area (`E000–F8FF`) OpenType stylistic-alternate cmap entries (e.g., `"G.1"`) from bundled Inter TTF font files (`Inter-Regular.ttf`, `Inter-Medium.ttf`, `Inter-Bold.ttf`). Left in place, those entries collided with Lucide merged icon glyphs at the same codepoints, causing icon corruption and glyph aliasing onto unrelated digits in Dear ImGui 1.92.
 - **Dynamic Icon Range Generation (`UITheme.kt`)**: Replaced the static full-block `E000–E7FF` (2048 codepoints) range with a dynamic `ICON_RANGE` built via reflection over `Icons.kt` fields, baking only referenced icon codepoints to optimize font atlas memory.

@@ -96,7 +96,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── NoOpTouchBackend.kt     — Safe fallback
 ├── models/
 │   ├── PresetModels.kt         — Data models + DTOs for preset serialization
-│   └── ClipboardManager.kt     — Copy/paste for preset elements
+│   ├── FXPresetModels.kt       — Data models for per-slot (.lsdfx) and FX chain (.lsdfxchain) serialization
+│   └── ClipboardManager.kt     — Copy/paste for preset, slot, and chain elements
 ├── notes/
 │   └── NotesManager.kt         — 3-tier notes persistence manager (global source notes, preset notes, param notes)
 ├── parameters/
@@ -242,7 +243,8 @@ The project includes an official application icon featuring an audio-reactive ps
 - **Deck PV preview** — third deck runs the full render pipeline but is excluded from `Mixer` output; used for preset authoring while A/B perform live
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `DynamicSpiral` all satisfy the interface
 - **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `library/sources/`)
-- **Thread safety** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events
+- **Per-Slot FX Presets & FX Chains** — Modular `.lsdfx` (stored in `library/fx/`) and `.lsdfxchain` (stored in `library/fx_chains/`) serialized DTOs for saving and recalling single slot effects or 4-slot FX chains.
+- **Thread safety & OpenGL Thread 0 Discipline** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events, and strict Main OS Thread (Thread 0) execution for all GLFW window polling, OpenGL context operations, and ISFFilter creation/disposal.
 - **Blank startup state** — Decks default to empty (`isEmpty = true`); on initial application launch without a prior session file, all four decks start with clean blank screens and Launchpad controls rather than pre-populated visual sources
 - **Serializable presets** — `CvModulator` is `@Serializable`; clean, direct serialization without legacy aliases
 

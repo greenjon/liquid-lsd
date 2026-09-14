@@ -9,7 +9,7 @@ import java.io.File
 
 /**
  * Stateful singleton that renders a clean ImGui popup modal for saving, renaming,
- * editing metadata, or cloning deck presets.
+ * editing metadata, or cloning deck presets, FX slot presets, and FX chains.
  * Accepts a preset name and comma-separated tags with universal overwrite protection.
  */
 object SavePresetModal {
@@ -19,6 +19,8 @@ object SavePresetModal {
     private var titleText = "Save Preset As"
     private var confirmButtonLabel = "Save"
     private var originalPath: String? = null
+    private var targetDirectory: File? = null
+    private var fileExtension: String = "lsd"
 
     private val nameBuffer = ImString(BUFFER_SIZE)
     private val tagsBuffer = ImString(BUFFER_SIZE)
@@ -36,7 +38,9 @@ object SavePresetModal {
      * @param confirmLabel Text label for the confirmation button.
      * @param defaultName Initial name to populate in the text field.
      * @param defaultTags Initial list of tags to populate in the tags text field.
-     * @param originalPath Optional path of the current preset file being edited/renamed (to avoid self-overwrite warnings).
+     * @param originalPath Optional path of the current preset file being edited/renamed.
+     * @param targetDir Directory where the preset will be saved (defaults to presets root).
+     * @param extension Extension for the preset file (defaults to "lsd").
      * @param onSave Callback executed when the user confirms saving.
      */
     fun request(
@@ -45,18 +49,22 @@ object SavePresetModal {
         defaultName: String = "",
         defaultTags: List<String> = emptyList(),
         originalPath: String? = null,
+        targetDir: File? = null,
+        extension: String = "lsd",
         onSave: (name: String, tags: List<String>) -> Unit
     ) {
         titleText = title
         confirmButtonLabel = confirmLabel
         this.originalPath = originalPath
+        this.targetDirectory = targetDir
+        this.fileExtension = extension
 
         nameBuffer.set(defaultName)
         tagsBuffer.set(defaultTags.joinToString(", "))
         onSaveCallback = onSave
 
         showOverwriteWarning = false
-        lastCheckedName = defaultName.removeSuffix(".lsd").trim()
+        lastCheckedName = defaultName.removeSuffix(".$extension").removeSuffix(".lsd").trim()
         pendingOpen = true
     }
 
@@ -88,7 +96,7 @@ object SavePresetModal {
         val nameChanged = ImGui.inputText("##savePresetName", nameBuffer)
         ImGui.popItemWidth()
 
-        val currentName = nameBuffer.get().removeSuffix(".lsd").trim()
+        val currentName = nameBuffer.get().removeSuffix(".$fileExtension").removeSuffix(".lsd").trim()
         if (nameChanged && currentName != lastCheckedName) {
             showOverwriteWarning = false
             lastCheckedName = currentName
@@ -104,7 +112,7 @@ object SavePresetModal {
         if (showOverwriteWarning) {
             ImGui.spacing()
             ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.25f, 1.0f) // Warning Amber
-            ImGui.textWrapped("\u26A0 File '$currentName.lsd' already exists. Overwrite?")
+            ImGui.textWrapped("\u26A0 File '$currentName.$fileExtension' already exists. Overwrite?")
             ImGui.popStyleColor()
         }
 
@@ -117,8 +125,8 @@ object SavePresetModal {
 
         if (ImGui.button("$btnLabel##confirmSavePreset", btnW, 0f)) {
             if (currentName.isNotEmpty()) {
-                val presetsDir = FileSystemManager.getPresetsRoot()
-                val targetFile = File(presetsDir, "$currentName.lsd")
+                val dir = targetDirectory ?: FileSystemManager.getPresetsRoot()
+                val targetFile = File(dir, "$currentName.$fileExtension")
 
                 val isSameAsOriginal = originalPath?.let { orig ->
                     try {

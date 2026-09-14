@@ -3,11 +3,11 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
+import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.ParametersState
-import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.itemTooltip
 import java.io.File
 
@@ -32,6 +32,37 @@ object BrowserActionToolbar {
     var isAuditionLocked: Boolean = false
     var latchedDeckTarget: DeckAuditionTarget? = null
 
+    private var pendingOverwriteDeck: Deck? = null
+    private var pendingOverwriteDeckLabel: String = ""
+    private var pendingFxFile: File? = null
+
+    private fun handleDeckLoad(session: SessionContext, mixer: Mixer, deckIndex: Int, deck: Deck, deckLabel: String, selectedFile: File) {
+        val ext = selectedFile.extension.lowercase()
+        when (ext) {
+            "lsdfxchain" -> {
+                session.presetManager.loadFxChainAsync(selectedFile).thenAccept { chainDto ->
+                    deck.applyFxChain(chainDto)
+                }
+            }
+            "lsdfx" -> {
+                val vacantIndex = (0 until Deck.FX_SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
+                if (vacantIndex != null) {
+                    session.presetManager.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
+                        deck.applyFxSlot(vacantIndex, presetDto.slot)
+                    }
+                } else {
+                    pendingOverwriteDeck = deck
+                    pendingOverwriteDeckLabel = deckLabel
+                    pendingFxFile = selectedFile
+                    ImGui.openPopup("OverwriteSlotPopup")
+                }
+            }
+            else -> {
+                BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, deckIndex)
+            }
+        }
+    }
+
     fun draw(
         session: SessionContext,
         mixer: Mixer,
@@ -44,6 +75,9 @@ object BrowserActionToolbar {
         val btnH = if (btnHeight > 0f) btnHeight else ImGui.getFrameHeight()
         val btnW = calculateButtonWidth(btnH)
 
+        val ext = selectedFile?.extension?.lowercase() ?: ""
+        val isFxItem = ext == "lsdfx" || ext == "lsdfxchain"
+
         session.uiTheme.withFont(llm.slop.liquidlsd.ui.UITheme.FontLevel.BODY) {
             // 0. [ LOCK / PADLOCK ]
             val lockColor = BrowserDeckButtons.colorLock()
@@ -52,10 +86,9 @@ object BrowserActionToolbar {
             if (ImGui.button("$lockIcon##toolbar_lock", btnW, btnH)) {
                 isAuditionLocked = !isAuditionLocked
                 if (isAuditionLocked) {
-                    // Auto-latch to PV when turned ON
                     latchedDeckTarget = DeckAuditionTarget.DECK_PV
                     if (selectedFile != null) {
-                        BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 4)
+                        handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", selectedFile)
                     }
                 } else {
                     latchedDeckTarget = null
@@ -80,14 +113,14 @@ object BrowserActionToolbar {
                 if (isAuditionLocked) {
                     latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_A) null else DeckAuditionTarget.DECK_A
                     if (latchedDeckTarget == DeckAuditionTarget.DECK_A && selectedFile != null) {
-                        BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 1)
+                        handleDeckLoad(session, mixer, 1, mixer.deckA, "Deck A", selectedFile)
                     }
                 } else if (selectedFile != null) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 1)
+                    handleDeckLoad(session, mixer, 1, mixer.deckA, "Deck A", selectedFile)
                 }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck A." else "Load selected preset to Deck A (Hotkey: 1).")
+            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck A." else "Load selected item to Deck A (Hotkey: 1).")
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 6f)
@@ -100,14 +133,14 @@ object BrowserActionToolbar {
                 if (isAuditionLocked) {
                     latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_B) null else DeckAuditionTarget.DECK_B
                     if (latchedDeckTarget == DeckAuditionTarget.DECK_B && selectedFile != null) {
-                        BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 2)
+                        handleDeckLoad(session, mixer, 2, mixer.deckB, "Deck B", selectedFile)
                     }
                 } else if (selectedFile != null) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 2)
+                    handleDeckLoad(session, mixer, 2, mixer.deckB, "Deck B", selectedFile)
                 }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck B." else "Load selected preset to Deck B (Hotkey: 2).")
+            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck B." else "Load selected item to Deck B (Hotkey: 2).")
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 6f)
@@ -120,14 +153,14 @@ object BrowserActionToolbar {
                 if (isAuditionLocked) {
                     latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_BG) null else DeckAuditionTarget.DECK_BG
                     if (latchedDeckTarget == DeckAuditionTarget.DECK_BG && selectedFile != null) {
-                        BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 3)
+                        handleDeckLoad(session, mixer, 3, mixer.deckBG, "Deck BG", selectedFile)
                     }
                 } else if (selectedFile != null) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 3)
+                    handleDeckLoad(session, mixer, 3, mixer.deckBG, "Deck BG", selectedFile)
                 }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck BG." else "Load selected preset to Deck BG / Background (Hotkey: 3).")
+            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck BG." else "Load selected item to Deck BG (Hotkey: 3).")
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 6f)
@@ -140,43 +173,64 @@ object BrowserActionToolbar {
                 if (isAuditionLocked) {
                     latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_PV) null else DeckAuditionTarget.DECK_PV
                     if (latchedDeckTarget == DeckAuditionTarget.DECK_PV && selectedFile != null) {
-                        BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 4)
+                        handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", selectedFile)
                     }
                 } else if (selectedFile != null) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, selectedFile, 4)
+                    handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", selectedFile)
                 }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck PV." else "Preview selected preset on Deck PV (Hotkey: 4).")
+            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck PV." else "Preview selected item on Deck PV (Hotkey: 4).")
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 14f)
 
-            // 5. [ Q ] (Disabled/dimmed if already from Play Queue A/B or no selection)
-            val canQueueAB = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_AB
+            // 5. [ Q ] (Disabled for FX items or when already in Play Queue A/B)
+            val canQueueAB = hasSelection && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_AB
             val alphaQ = if (canQueueAB) 1f else 0.35f
             BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), alphaQ)
             if (ImGui.button("Q##toolbar_deck_q", btnW, btnH) && canQueueAB) {
                 session.playQueueManager.appendToQueue(selectedFile)
                 LibraryPanel.shouldReclaimFocus = true
             }
-            val qTip = if (source == LibraryPanel.SelectionSource.QUEUE_AB) "Preset is already in the A/B Play Queue (Hotkey: Q)." else "Add selected preset to the A/B Play Queue (Hotkey: Q)."
+            val qTip = if (isFxItem) "Queueing is for full visual presets." else if (source == LibraryPanel.SelectionSource.QUEUE_AB) "Preset is already in the A/B Play Queue." else "Add selected preset to the A/B Play Queue (Hotkey: Q)."
             itemTooltip(qTip)
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 6f)
 
-            // 6. [ BGQ ] (Disabled/dimmed if already from BG Queue or no selection)
-            val canQueueBG = hasSelection && source != LibraryPanel.SelectionSource.QUEUE_BG
+            // 6. [ BGQ ] (Disabled for FX items or when already in BG Queue)
+            val canQueueBG = hasSelection && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_BG
             val alphaBGQ = if (canQueueBG) 1f else 0.35f
             BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), alphaBGQ)
             if (ImGui.button("BGQ##toolbar_deck_bgq", btnW, btnH) && canQueueBG) {
                 BgQueueManager.appendToQueue(selectedFile)
                 LibraryPanel.shouldReclaimFocus = true
             }
-            val bgqTip = if (source == LibraryPanel.SelectionSource.QUEUE_BG) "Preset is already in the Background Queue (Hotkey: Shift+Q)." else "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
+            val bgqTip = if (isFxItem) "Queueing is for full visual presets." else if (source == LibraryPanel.SelectionSource.QUEUE_BG) "Preset is already in the Background Queue." else "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
             itemTooltip(bgqTip)
             BrowserDeckButtons.pop()
+
+            // Overwrite Slot Selection Popup
+            if (ImGui.beginPopup("OverwriteSlotPopup")) {
+                val deck = pendingOverwriteDeck
+                val file = pendingFxFile
+                ImGui.textDisabled("${pendingOverwriteDeckLabel} FX slots are full. Select slot to overwrite:")
+                ImGui.separator()
+                if (deck != null && file != null && file.exists()) {
+                    for (s in 0 until Deck.FX_SLOT_COUNT) {
+                        val slotNum = s + 1
+                        val fx = deck.fxSlots[s]
+                        val label = if (fx != null) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
+                        if (ImGui.menuItem(label)) {
+                            session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                                deck.applyFxSlot(s, presetDto.slot)
+                            }
+                        }
+                    }
+                }
+                ImGui.endPopup()
+            }
         }
     }
 }

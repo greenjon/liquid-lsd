@@ -7,6 +7,16 @@ import llm.slop.liquidlsd.rendering.Mixer
 object ClipboardManager {
     var cellClipboard: CellClipboardData? = null
     var rowClipboard: RowClipboardData? = null
+    var fxSlotClipboard: FXSlotDto? = null
+    var fxChainClipboard: FXChainDto? = null
+
+    fun copyFxSlot(slot: FXSlotDto) {
+        fxSlotClipboard = slot
+    }
+
+    fun copyFxChain(chain: FXChainDto) {
+        fxChainClipboard = chain
+    }
 
     private val GENERATORS = listOf("beatPhase", "lfo", "sampleAndHold")
 

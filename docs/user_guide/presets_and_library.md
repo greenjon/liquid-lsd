@@ -47,6 +47,17 @@ The Library panel spans the left and middle columns and has three height modes. 
 
 In Half Height mode, drag the Library's title bar to resize it freely — the height is remembered. Double-click the title bar to snap back to a 50/50 split. The window buttons on the right of the title bar also let you jump between heights directly.
 
+### Library View Mode (`[ Presets ]` / `[ FX ]`)
+
+Toggle between full visual presets and FX presets using the segmented mode button in the top-left of the Library menu bar:
+
+- **`[ Presets ]` Mode**:
+  - **Column 1 (Presets Pool)**: Shows all full visual deck presets (`.lsd`) in `library/presets/`.
+  - **Column 2 (Playlists Editor)**: Setlists (`.lsdset`) in `library/playlists/`.
+- **`[ FX ]` Mode**:
+  - **Column 1 (FX Presets)**: Individual single-slot FX presets (`.lsdfx`) in `library/fx/`.
+  - **Column 2 (FX Chains)**: 4-slot FX chain presets (`.lsdfxchain`) in `library/fx_chains/`.
+
 ### Preset Browser (All Presets)
 
 The left column shows every preset saved in `library/presets/`. 
@@ -56,6 +67,19 @@ The left column shows every preset saved in `library/presets/`.
 - **Number keys 1–4** — Route the selected preset to Deck A, B, BG, or PV respectively.
 - **Right-click or ⋮** — Rename, retag, duplicate, add to a queue, or delete.
 - **`[!]` badge** — Appears when a preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.
+
+### FX Presets (`.lsdfx`) & FX Chains (`.lsdfxchain`)
+
+When viewing `[ FX ]` mode in the Library:
+
+- **Single FX Presets (`.lsdfx`)**:
+  - **Drag-and-Drop**: Drag directly onto Slot 1, 2, 3, or 4 in the Parameters panel `FX` subtab.
+  - **Toolbar `[A]`, `[B]`, `[BG]`, `[PV]`**: Loads into the **first vacant slot** on that deck. If all 4 slots are occupied, a prompt appears asking which slot (1–4) to overwrite.
+  - **Right-click menu**: Choose `Load to > Deck [A|B|BG|PV] > Slot [1|2|3|4]`.
+  - **Double-click**: Loads into the active deck's first vacant slot.
+- **FX Chains (`.lsdfxchain`)**:
+  - Captures or loads a complete 4-slot FX pipeline.
+  - Loading an FX chain replaces all 4 slots on the target deck.
 
 ### Audition Latch
 
@@ -105,6 +129,8 @@ The Background Queue works the same way as the main queue but drives Deck BG ind
 | Preset Browser             | Empty space at playlist bottom | Appends to the end       |
 | Playlist item              | Up / down in the same playlist | Reorders                 |
 | Preset Browser or Playlist | Queue                          | Adds to the live queue   |
+| FX Preset (`.lsdfx`)       | FX Slot 1–4 in Parameters      | Loads into target slot   |
+| FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters  | Overwrites 4-slot chain  |
 
 ---
 

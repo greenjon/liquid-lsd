@@ -130,6 +130,8 @@ object BrowserPopupHandler {
                 AssetType.PRESET -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
+                AssetType.FX_PRESET -> "FX Preset"
+                AssetType.FX_CHAIN -> "FX Chain"
             }
             
             ImGui.text("Rename $typeStr to:")
@@ -179,6 +181,8 @@ object BrowserPopupHandler {
                 AssetType.PRESET -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
+                AssetType.FX_PRESET -> "FX Preset"
+                AssetType.FX_CHAIN -> "FX Chain"
             }
             
             ImGui.text("Delete $typeStr '${target.name}'?")

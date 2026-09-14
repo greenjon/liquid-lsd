@@ -374,6 +374,50 @@ object PresetManager {
         }
     }
 
+    fun saveFxPresetAsync(file: File, name: String, slotDto: FXSlotDto, tags: List<String> = emptyList()) {
+        CompletableFuture.runAsync({
+            try {
+                logger.info { "Saving FX preset to ${file.absolutePath}..." }
+                val dto = FXPresetDto(name = name, tags = tags, slot = slotDto)
+                file.parentFile?.mkdirs()
+                file.writeText(json.encodeToString(dto))
+                logger.info { "FX preset saved successfully to ${file.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to save FX preset to ${file.absolutePath}" }
+            }
+        }, presetIoExecutor)
+    }
+
+    fun loadFxPresetAsync(file: File): CompletableFuture<FXPresetDto> {
+        return CompletableFuture.supplyAsync({
+            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
+            val content = file.readText()
+            json.decodeFromString<FXPresetDto>(content)
+        }, presetIoExecutor)
+    }
+
+    fun saveFxChainAsync(file: File, name: String, chainDto: FXChainDto, tags: List<String> = emptyList()) {
+        CompletableFuture.runAsync({
+            try {
+                logger.info { "Saving FX chain to ${file.absolutePath}..." }
+                val dto = chainDto.copy(name = name, tags = tags)
+                file.parentFile?.mkdirs()
+                file.writeText(json.encodeToString(dto))
+                logger.info { "FX chain saved successfully to ${file.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to save FX chain to ${file.absolutePath}" }
+            }
+        }, presetIoExecutor)
+    }
+
+    fun loadFxChainAsync(file: File): CompletableFuture<FXChainDto> {
+        return CompletableFuture.supplyAsync({
+            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
+            val content = file.readText()
+            json.decodeFromString<FXChainDto>(content)
+        }, presetIoExecutor)
+    }
+
     fun applyPendingPresets(mixer: Mixer) {
         var appliedAny = false
         // Poll deck A preset queue

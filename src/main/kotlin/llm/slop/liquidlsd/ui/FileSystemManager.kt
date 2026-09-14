@@ -2,6 +2,8 @@ package llm.slop.liquidlsd.ui
 
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.FXChainDto
+import llm.slop.liquidlsd.models.FXPresetDto
 import llm.slop.liquidlsd.presets.PlaylistParser
 import mu.KotlinLogging
 import java.io.File
@@ -23,6 +25,8 @@ object FileSystemManager {
     
     private const val PRESETS_ROOT = "library/presets"
     private const val PLAYLISTS_ROOT = "library/playlists"
+    private const val FX_ROOT = "library/fx"
+    private const val FX_CHAINS_ROOT = "library/fx_chains"
     private const val SCAN_CACHE_TTL_MS = 1_000L
 
     private data class ScanCacheEntry(
@@ -90,7 +94,7 @@ object FileSystemManager {
     private fun directorySignature(directory: File): String = getDirectorySignature(directory)
 
     private fun managedRootPaths(): List<Path> {
-        return listOf(getPresetsRoot(), getPlaylistsRoot())
+        return listOf(getPresetsRoot(), getPlaylistsRoot(), getFxPresetsRoot(), getFxChainsRoot())
             .map { it.canonicalFile.toPath() }
     }
 
@@ -174,6 +178,88 @@ object FileSystemManager {
         return items
     }
 
+    internal fun getFxPresetTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        return try {
+            val dto = json.decodeFromString<FXPresetDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    internal fun getFxChainTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        return try {
+            val dto = json.decodeFromString<FXChainDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun scanAllFxPresets(): List<AssetItem> {
+        val root = getFxPresetsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_FX_PRESETS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdfx" }
+            .map { file ->
+                val tags = getFxPresetTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.FX_PRESET,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
+    fun scanAllFxChains(): List<AssetItem> {
+        val root = getFxChainsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_FX_CHAINS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdfxchain" }
+            .map { file ->
+                val tags = getFxChainTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.FX_CHAIN,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
     fun scanDirectory(directory: File): List<AssetItem> {
         if (!directory.exists() || !directory.isDirectory) {
             return emptyList()
@@ -222,6 +308,22 @@ object FileSystemManager {
                         errorMessage = "Validating..."
                     ))
                 }
+                ext == "lsdfx" -> {
+                    val tags = getFxPresetTags(file)
+                    items.add(AssetItem(
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.FX_PRESET,
+                        isValid = true,
+                        tags = tags
+                    ))
+                }
+                ext == "lsdfxchain" -> {
+                    val tags = getFxChainTags(file)
+                    items.add(AssetItem(
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.FX_CHAIN,
+                        isValid = true,
+                        tags = tags
+                    ))
+                }
             }
         }
         return items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
@@ -265,6 +367,26 @@ object FileSystemManager {
                                 type = AssetType.PLAYLIST,
                                 isValid = validation.first,
                                 errorMessage = validation.second
+                            ))
+                        }
+                        ext == "lsdfx" -> {
+                            val tags = getFxPresetTags(file)
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.nameWithoutExtension,
+                                type = AssetType.FX_PRESET,
+                                isValid = validatePresetFile(file),
+                                tags = tags
+                            ))
+                        }
+                        ext == "lsdfxchain" -> {
+                            val tags = getFxChainTags(file)
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.nameWithoutExtension,
+                                type = AssetType.FX_CHAIN,
+                                isValid = validatePresetFile(file),
+                                tags = tags
                             ))
                         }
                     }
@@ -479,13 +601,34 @@ object FileSystemManager {
         }
         return root
     }
-    
 
     /**
      * Gets the root directory for playlists.
      */
     fun getPlaylistsRoot(): File {
         val root = File(PLAYLISTS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for FX presets (.lsdfx).
+     */
+    fun getFxPresetsRoot(): File {
+        val root = File(FX_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for FX chain presets (.lsdfxchain).
+     */
+    fun getFxChainsRoot(): File {
+        val root = File(FX_CHAINS_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }

@@ -8,6 +8,8 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
+import llm.slop.liquidlsd.ui.browser.FXChainListPanel
+import llm.slop.liquidlsd.ui.browser.FXPresetListPanel
 import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
@@ -17,6 +19,11 @@ import java.io.File
 object LibraryPanel {
     private val logger = KotlinLogging.logger {}
 
+    enum class LibraryViewMode {
+        PRESETS,
+        FX
+    }
+
     enum class SelectionSource {
         PRESETS,
         PLAYLIST,
@@ -24,6 +31,7 @@ object LibraryPanel {
         QUEUE_BG
     }
 
+    var viewMode: LibraryViewMode = LibraryViewMode.PRESETS
     var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
     internal var activePlaylistData: PlaylistManager.Playlist? = null
@@ -62,8 +70,20 @@ object LibraryPanel {
 
     fun getActiveSelectedFile(session: SessionContext): File? {
         return when (activeSelectionSource) {
-            SelectionSource.PRESETS -> PresetListPanel.selectedAsset?.let { File(it.path) }
-            SelectionSource.PLAYLIST -> PlaylistEditorPanel.getSelectedPresetFile()
+            SelectionSource.PRESETS -> {
+                if (viewMode == LibraryViewMode.FX) {
+                    FXPresetListPanel.selectedAsset?.let { File(it.path) }
+                } else {
+                    PresetListPanel.selectedAsset?.let { File(it.path) }
+                }
+            }
+            SelectionSource.PLAYLIST -> {
+                if (viewMode == LibraryViewMode.FX) {
+                    FXChainListPanel.selectedAsset?.let { File(it.path) }
+                } else {
+                    PlaylistEditorPanel.getSelectedPresetFile()
+                }
+            }
             SelectionSource.QUEUE_AB -> {
                 val idx = QueueActionsPanel.selectedIndex
                 if (idx in session.playQueueManager.queue.indices) session.playQueueManager.queue[idx] else null
@@ -126,6 +146,8 @@ object LibraryPanel {
     fun clearAllSelection() {
         activeSelectionSource = null
         PresetListPanel.selectedAsset = null
+        FXPresetListPanel.selectedAsset = null
+        FXChainListPanel.selectedAsset = null
         PlaylistEditorPanel.selectedPresetIndex = -1
         QueueActionsPanel.selectedIndex = -1
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
@@ -167,6 +189,8 @@ object LibraryPanel {
         lastAutoRefreshTimeMs = System.currentTimeMillis()
         FileSystemManager.scanAllPresets()
         FileSystemManager.scanAllPlaylists()
+        FileSystemManager.scanAllFxPresets()
+        FileSystemManager.scanAllFxChains()
     }
 
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState) {
@@ -179,11 +203,40 @@ object LibraryPanel {
             val bottomSpacing = 2.5f
             val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
+            // Left Mode Toggle: [ Presets ] / [ FX ]
+            ImGui.setCursorPosX(8f)
+            ImGui.setCursorPosY(yOffset)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                val isPresets = viewMode == LibraryViewMode.PRESETS
+                val btnWMode = 54f
+                if (isPresets) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.8f))
+                } else {
+                    ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f))
+                }
+                if (ImGui.button("Presets##mode_presets", btnWMode, btnH)) {
+                    viewMode = LibraryViewMode.PRESETS
+                }
+                ImGui.popStyleColor()
+
+                ImGui.sameLine(0f, 2f)
+
+                if (!isPresets) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.8f))
+                } else {
+                    ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f))
+                }
+                if (ImGui.button("FX##mode_fx", btnWMode, btnH)) {
+                    viewMode = LibraryViewMode.FX
+                }
+                ImGui.popStyleColor()
+            }
+
             // Centered Action Toolbar
             val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.calculateToolbarWidth(btnH)
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
             val windowBtnsW = (windowBtnW * 2f) + 4f
-            val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceIn(8f, (safeW - totalToolbarW - windowBtnsW - 8f).coerceAtLeast(8f))
+            val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceIn(120f, (safeW - totalToolbarW - windowBtnsW - 8f).coerceAtLeast(120f))
 
             ImGui.setCursorPosX(targetCenterX)
             ImGui.setCursorPosY(yOffset)
@@ -255,19 +308,35 @@ object LibraryPanel {
 
         val outerFlags = imgui.flag.ImGuiWindowFlags.NoScrollbar or imgui.flag.ImGuiWindowFlags.NoScrollWithMouse
 
-        // Column 1: Presets Library
-        ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true, outerFlags)
-        ImGui.setScrollX(0f)
-        PresetListPanel.draw(session, mixer, parametersState)
-        ImGui.endChild()
-        ImGui.sameLine()
+        if (viewMode == LibraryViewMode.PRESETS) {
+            // Column 1: Presets Library
+            ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true, outerFlags)
+            ImGui.setScrollX(0f)
+            PresetListPanel.draw(session, mixer, parametersState)
+            ImGui.endChild()
+            ImGui.sameLine()
 
-        // Column 2: Playlist Editor
-        ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true, outerFlags)
-        ImGui.setScrollX(0f)
-        PlaylistEditorPanel.draw(session, mixer)
-        ImGui.endChild()
-        ImGui.sameLine()
+            // Column 2: Playlist Editor
+            ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true, outerFlags)
+            ImGui.setScrollX(0f)
+            PlaylistEditorPanel.draw(session, mixer)
+            ImGui.endChild()
+            ImGui.sameLine()
+        } else {
+            // Column 1: FX Presets List
+            ImGui.beginChild("LibraryFXPresetsList", colWidth, contentH, true, outerFlags)
+            ImGui.setScrollX(0f)
+            FXPresetListPanel.draw(session, mixer, parametersState)
+            ImGui.endChild()
+            ImGui.sameLine()
+
+            // Column 2: FX Chains List
+            ImGui.beginChild("LibraryFXChainsList", colWidth, contentH, true, outerFlags)
+            ImGui.setScrollX(0f)
+            FXChainListPanel.draw(session, mixer)
+            ImGui.endChild()
+            ImGui.sameLine()
+        }
 
         // Column 3: Background Queue (BG)
         ImGui.beginChild("LibraryBgQueue", colWidth, contentH, true, outerFlags)
@@ -347,34 +416,68 @@ object LibraryPanel {
     fun navigateSelection(delta: Int, session: SessionContext, mixer: Mixer) {
         when (activeSelectionSource) {
             SelectionSource.PRESETS -> {
-                val list = PresetListPanel.filteredPresets
-                if (list.isNotEmpty()) {
-                    val currentIdx = list.indexOfFirst { it.path == PresetListPanel.selectedAsset?.path }
-                    val targetIdx = if (currentIdx < 0) {
-                        if (delta > 0) 0 else list.lastIndex
-                    } else {
-                        (currentIdx + delta).coerceIn(0, list.lastIndex)
+                if (viewMode == LibraryViewMode.FX) {
+                    val list = FXPresetListPanel.filteredPresets
+                    if (list.isNotEmpty()) {
+                        val currentIdx = list.indexOfFirst { it.path == FXPresetListPanel.selectedAsset?.path }
+                        val targetIdx = if (currentIdx < 0) {
+                            if (delta > 0) 0 else list.lastIndex
+                        } else {
+                            (currentIdx + delta).coerceIn(0, list.lastIndex)
+                        }
+                        if (targetIdx != currentIdx) {
+                            FXPresetListPanel.selectedAsset = list[targetIdx]
+                            shouldScrollToSelection = true
+                            shouldReclaimFocus = true
+                        }
                     }
-                    if (targetIdx != currentIdx) {
-                        selectPreset(list[targetIdx], session, mixer)
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
+                } else {
+                    val list = PresetListPanel.filteredPresets
+                    if (list.isNotEmpty()) {
+                        val currentIdx = list.indexOfFirst { it.path == PresetListPanel.selectedAsset?.path }
+                        val targetIdx = if (currentIdx < 0) {
+                            if (delta > 0) 0 else list.lastIndex
+                        } else {
+                            (currentIdx + delta).coerceIn(0, list.lastIndex)
+                        }
+                        if (targetIdx != currentIdx) {
+                            selectPreset(list[targetIdx], session, mixer)
+                            shouldScrollToSelection = true
+                            shouldReclaimFocus = true
+                        }
                     }
                 }
             }
             SelectionSource.PLAYLIST -> {
-                val playlist = activePlaylistData
-                if (playlist != null && playlist.presets.isNotEmpty()) {
-                    val currentIdx = PlaylistEditorPanel.selectedPresetIndex
-                    val targetIdx = if (currentIdx < 0) {
-                        if (delta > 0) 0 else playlist.presets.lastIndex
-                    } else {
-                        (currentIdx + delta).coerceIn(0, playlist.presets.lastIndex)
+                if (viewMode == LibraryViewMode.FX) {
+                    val list = FXChainListPanel.filteredChains
+                    if (list.isNotEmpty()) {
+                        val currentIdx = list.indexOfFirst { it.path == FXChainListPanel.selectedAsset?.path }
+                        val targetIdx = if (currentIdx < 0) {
+                            if (delta > 0) 0 else list.lastIndex
+                        } else {
+                            (currentIdx + delta).coerceIn(0, list.lastIndex)
+                        }
+                        if (targetIdx != currentIdx) {
+                            FXChainListPanel.selectedAsset = list[targetIdx]
+                            shouldScrollToSelection = true
+                            shouldReclaimFocus = true
+                        }
                     }
-                    if (targetIdx != currentIdx) {
-                        selectPlaylistPreset(targetIdx, session, mixer)
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
+                } else {
+                    val playlist = activePlaylistData
+                    if (playlist != null && playlist.presets.isNotEmpty()) {
+                        val currentIdx = PlaylistEditorPanel.selectedPresetIndex
+                        val targetIdx = if (currentIdx < 0) {
+                            if (delta > 0) 0 else playlist.presets.lastIndex
+                        } else {
+                            (currentIdx + delta).coerceIn(0, playlist.presets.lastIndex)
+                        }
+                        if (targetIdx != currentIdx) {
+                            selectPlaylistPreset(targetIdx, session, mixer)
+                            shouldScrollToSelection = true
+                            shouldReclaimFocus = true
+                        }
                     }
                 }
             }
@@ -411,15 +514,31 @@ object LibraryPanel {
                 }
             }
             null -> {
-                val list = PresetListPanel.filteredPresets
-                if (list.isNotEmpty()) {
-                    selectPreset(list.first(), session, mixer)
-                    shouldScrollToSelection = true
-                    shouldReclaimFocus = true
+                if (viewMode == LibraryViewMode.FX) {
+                    val list = FXPresetListPanel.filteredPresets
+                    if (list.isNotEmpty()) {
+                        FXPresetListPanel.selectedAsset = list.first()
+                        activeSelectionSource = SelectionSource.PRESETS
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                } else {
+                    val list = PresetListPanel.filteredPresets
+                    if (list.isNotEmpty()) {
+                        selectPreset(list.first(), session, mixer)
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
                 }
             }
         }
     }
 
-    fun getSelectedAsset(): AssetItem? = PresetListPanel.selectedAsset
+    fun getSelectedAsset(): AssetItem? {
+        return if (viewMode == LibraryViewMode.FX) {
+            FXPresetListPanel.selectedAsset ?: FXChainListPanel.selectedAsset
+        } else {
+            PresetListPanel.selectedAsset
+        }
+    }
 }

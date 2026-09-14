@@ -6,7 +6,9 @@ package llm.slop.liquidlsd.ui
 enum class AssetType {
     PRESET,
     PLAYLIST,
-    FOLDER
+    FOLDER,
+    FX_PRESET,
+    FX_CHAIN
 }
 
 /**

@@ -494,6 +494,53 @@ object ParametersTabs {
     ) {
         var row = 0
 
+        // --- FX Chain Header Bar ---
+        ImGui.textDisabled("FX CHAIN")
+        ImGui.sameLine(labelColW - 24f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$deckLabel", 22f, 20f)) {
+                ImGui.openPopup("FXChainKebabPopup_$deckLabel")
+            }
+        }
+        itemTooltip("FX Chain Options (Save, Copy, Paste, Clear)")
+
+        if (ImGui.beginPopup("FXChainKebabPopup_$deckLabel")) {
+            if (ImGui.menuItem("Save Chain As...")) {
+                val chainDto = deck.toFxChainDto("fx_chain")
+                SavePresetModal.request(
+                    title = "Save FX Chain As",
+                    confirmLabel = "Save",
+                    defaultName = "fx_chain",
+                    targetDir = FileSystemManager.getFxChainsRoot(),
+                    extension = "lsdfxchain"
+                ) { name, tags ->
+                    val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
+                    session.presetManager.saveFxChainAsync(file, name, chainDto, tags)
+                }
+            }
+            if (ImGui.menuItem("Copy Chain")) {
+                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(deck.toFxChainDto("chain"))
+            }
+            val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
+            if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
+                llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard?.let {
+                    deck.applyFxChain(it)
+                    onPushUndo()
+                }
+            }
+            if (ImGui.menuItem("Clear All Slots")) {
+                for (c in 0 until Deck.FX_SLOT_COUNT) {
+                    deck.clearFxSlot(c)
+                }
+                onPushUndo()
+            }
+            ImGui.endPopup()
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // --- Per-Slot Controls ---
         for (i in deck.fxSlots.indices) {
             val slotNum = i + 1
             val fx = deck.fxSlots[i]
@@ -511,13 +558,12 @@ object ParametersTabs {
 
             ImGui.textDisabled("Slot $slotNum")
             ImGui.sameLine()
-            ImGui.setNextItemWidth(labelColW - 60f)
+            ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$deckLabel", labelColW - 60f, 0f)) {
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$deckLabel", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
                     ShaderPickerPopup.show("Select FX Slot $slotNum for $deckLabel", fxSlotPickerTypes[i]) { newFilterId ->
                         if (newFilterId == null) {
-                            deck.fxSlots[i]?.dispose()
-                            deck.fxSlots[i] = null
+                            deck.clearFxSlot(i)
                             onPushUndo()
                         } else {
                             val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
@@ -531,8 +577,8 @@ object ParametersTabs {
                 }
             }
 
+            ImGui.sameLine()
             if (fx != null) {
-                ImGui.sameLine()
                 val enabledBuf = fxSlotEnabledBufs[i]
                 enabledBuf.set(fx.enabled)
                 if (ImGui.checkbox("##fx${slotNum}_enabled_$deckLabel", enabledBuf)) {
@@ -540,14 +586,79 @@ object ParametersTabs {
                     onPushUndo()
                 }
                 itemTooltip("Bypass Slot $slotNum filter.")
+                ImGui.sameLine()
+            }
 
-                if (!isCollapsed) {
-                    ParametersRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            // Per-Slot Kebab Menu
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$deckLabel", 22f, 20f)) {
+                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_$deckLabel")
+                }
+            }
+            itemTooltip("Slot $slotNum Options (Save, Copy, Paste, Reset)")
 
-                    fx.parameters.forEach { (name, param) ->
-                        ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$deckLabel")) {
+                val hasFx = deck.fxSlots[i] != null
+                if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
+                    deck.toFxSlotDto(i)?.let { slotDto ->
+                        SavePresetModal.request(
+                            title = "Save FX Slot Preset As",
+                            confirmLabel = "Save",
+                            defaultName = fx?.displayName?.lowercase()?.replace(" ", "_") ?: "fx_preset",
+                            targetDir = FileSystemManager.getFxPresetsRoot(),
+                            extension = "lsdfx"
+                        ) { name, tags ->
+                            val file = java.io.File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
+                            session.presetManager.saveFxPresetAsync(file, name, slotDto, tags)
+                        }
                     }
                 }
+                if (ImGui.menuItem("Copy Slot", "", false, hasFx)) {
+                    deck.toFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
+                }
+                val canPasteSlot = llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard != null
+                if (ImGui.menuItem("Paste Slot", "", false, canPasteSlot)) {
+                    llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard?.let {
+                        deck.applyFxSlot(i, it)
+                        onPushUndo()
+                    }
+                }
+                if (ImGui.menuItem("Reset Slot", "", false, hasFx)) {
+                    deck.clearFxSlot(i)
+                    onPushUndo()
+                }
+                ImGui.endPopup()
+            }
+
+            if (fx != null && !isCollapsed) {
+                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+                fx.parameters.forEach { (name, param) ->
+                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                }
+            }
+
+            // Drag and Drop Target for FX Slot
+            if (ImGui.beginDragDropTarget()) {
+                val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+                if (payload != null) {
+                    val file = java.io.File(payload)
+                    if (file.exists()) {
+                        val ext = file.extension.lowercase()
+                        if (ext == "lsdfx") {
+                            session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                                deck.applyFxSlot(i, presetDto.slot)
+                                onPushUndo()
+                            }
+                        } else if (ext == "lsdfxchain") {
+                            session.presetManager.loadFxChainAsync(file).thenAccept { chainDto ->
+                                deck.applyFxChain(chainDto)
+                                onPushUndo()
+                            }
+                        }
+                    }
+                }
+                ImGui.endDragDropTarget()
             }
 
             if (i < deck.fxSlots.lastIndex) {
