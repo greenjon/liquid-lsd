@@ -23,7 +23,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
                 val isDescriptor = path.startsWith("Transition filter not found:") ||
                                    path.startsWith("Deck ") ||
                                    path.contains("filter not found:")
-                ImGui.text(path)
+                ImGui.textUnformatted(path)
                 if (!isDescriptor) {
                     ImGui.sameLine()
                     if (ImGui.button("Locate...##$path")) {

@@ -18,7 +18,7 @@ To remove the current source, click **Detach** or **None**.
 
 The most flexible built-in source. The Mandala engine generates intricate symmetrical geometry using around 300 curated harmonic ratios — basically: pick a harmonic ratio and it figures out the geometry. Built-in size normalization means the outer boundary stays stable and fills your vertical frame cleanly no matter how hard you push the parameters.
 
-**3D modes** (set via the View tab): Mandala visuals can be wrapped spherically, projected inside a cube cage, mapped onto six intersecting planes, or unfolded into a 24-chamber kaleidoscope. These apply to any 2D source, not just Mandala.
+**3D modes** (available via the 3D Elevation filter in FX Slot 2): Mandala visuals can be wrapped spherically, projected inside a cube cage, mapped onto six intersecting planes, or unfolded into a 24-chamber kaleidoscope. These apply to any 2D source, not just Mandala.
 
 **Good starting point:** Load a factory Mandala preset and use bass audio to drive the Lobes parameter. Even a single connection is immediately impressive.
 
@@ -58,22 +58,16 @@ A simple solid color field. Useful as a background layer or when you want total 
 
 ---
 
-## The 3D Stage (View Tab)
+## Deck Transform & Camera (View Tab)
 
-Every deck has a **View** tab that applies to whatever source is loaded. You can use it to position, scale, and project visuals before they hit the feedback loop:
+Every deck has a **View** tab that applies to whatever source is loaded. You can use it to position, scale, and frame visuals before they enter the FX chain and feedback loop:
 
 - **Zoom** — Scales from 0.1× to 5.0×. At 1.0, the source fills the vertical frame height exactly.
 - **Rotate Z** — Roll the image clockwise or counter-clockwise.
 
-The **3D Display Mode** slider converts any flat 2D source into 3D geometry:
+For **native 3D sources** (e.g. Gyroid, Hyper-Mesh, Icosahedron), the View tab automatically exposes the generator's internal camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and zoom controls.
 
-| Value | Mode |
-|-------|------|
-| 0.0 | Flat (standard 2D) |
-| 1.0 | Tri-Axial Orthogonal — three intersecting planes forming a gyroscope shape |
-| 2.0 | Cube Cage — maps visuals to six faces of a cube; increase Separation to explode them outward |
-| 3.0 | Hex-Planar — six intersecting tetrahedral planes |
-| 4.0 | Tetrahedral Kaleidoscope — 24-chamber space-folding kaleidoscope |
+To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the **3D Elevation** filter in **FX Slot 2** under the **FX** tab.
 
 ---
 

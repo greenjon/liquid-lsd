@@ -482,7 +482,7 @@ fun drawDeckMonitorToolbar(
             SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
         } ?: "unknown"
 
-        ImGui.text(activePreset ?: "None")
+        ImGui.textUnformatted(activePreset ?: "None")
         if (hasDeckIssues) {
             ImGui.spacing()
             ImGui.textColored(0.95f, 0.45f, 0.45f, 1f, "[!] Inactive or hidden modulators:")

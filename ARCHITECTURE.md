@@ -334,8 +334,10 @@ All post-processing effects, 2D-to-3D projection geometry, and mixer transitions
   - Exactly preserves the legacy cubic decay curve ($s \to (1 - s)^3$) and 9-parameter feedback optics (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`).
   - History buffers clear to zero on filter reset or preset loading (`ISFFilter.reset()`) to eliminate ghost frames.
 - **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**:
-  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders.
-  - Implements Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding via raymarching in FX Slot 2.
+  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders with a raymarched ISF filter in FX Slot 2.
+  - Implements Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding via analytic inverse camera raymarching with exact 1:1 scale normalization matching 2D mode height at $z = 0$.
+  - Supports dual blend modes (`blendMode`): luminous additive energy synthesis (`glBlendFunc(GL_ONE, GL_ONE)` equivalent) and premultiplied alpha over.
+  - All 10 parameters are directly accessible and modulatable in FX Slot 2 under the Deck "FX" tab.
 - **Pure ISF Mixer Transitions**:
   - Eliminates hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
   - All Deck A $\leftrightarrow$ Deck B transitions execute via `ISFFilter` taking `startImage`, `endImage`, and `progress` ($0 \dots 1$).

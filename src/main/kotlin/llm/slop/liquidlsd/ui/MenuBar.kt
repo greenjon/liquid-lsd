@@ -151,7 +151,7 @@ class MenuBar(
                         } else {
                             ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.95f, 0.45f, 1.0f)
                         }
-                        ImGui.text("Drop: %d (%.1f%%)".format(dropped, dropPct))
+                        ImGui.textUnformatted("Drop: %d (%.1f%%)".format(dropped, dropPct))
                         ImGui.popStyleColor()
                         itemTooltip("Dropped frame indicator: 0 drops means silky-smooth 60fps recording.")
                     }
@@ -362,7 +362,7 @@ class MenuBar(
                     cpuPct >= 50.0 -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
                     else           -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
                 }
-                ImGui.text(cpuText)
+                ImGui.textUnformatted(cpuText)
                 ImGui.popStyleColor()
                 ImGui.sameLine(0f, 0f)
             }
@@ -426,7 +426,7 @@ class MenuBar(
             } else {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue for live audio engine
             }
-            ImGui.text(bpmText)
+            ImGui.textUnformatted(bpmText)
             ImGui.popStyleColor()
 
             if (isBpmClicked) {
@@ -466,7 +466,7 @@ class MenuBar(
                 audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
                 else                 -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
             }
-            ImGui.text(dspText)
+            ImGui.textUnformatted(dspText)
             ImGui.popStyleColor()
 
             if (isDspClicked) {
@@ -496,7 +496,7 @@ class MenuBar(
                 fps < fpsYellow -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
                 else            -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
             }
-            ImGui.text(fpsText)
+            ImGui.textUnformatted(fpsText)
             ImGui.popStyleColor()
             ImGui.sameLine(0f, 0f)
 
@@ -511,7 +511,7 @@ class MenuBar(
                 ftMs > ftYellow -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
                 else            -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
             }
-            ImGui.text(ftText)
+            ImGui.textUnformatted(ftText)
             ImGui.popStyleColor()
 
             // ── Custom Window Controls (Frameless CSD Mode) ──────────────────────────

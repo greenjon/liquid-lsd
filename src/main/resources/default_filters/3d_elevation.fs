@@ -45,7 +45,7 @@
             "TYPE": "float",
             "DEFAULT": 1.0,
             "MIN": 0.1,
-            "MAX": 3.0
+            "MAX": 5.0
         },
         {
             "NAME": "separation",
@@ -70,6 +70,14 @@
             "DEFAULT": 0.5,
             "MIN": 0.0,
             "MAX": 1.0
+        },
+        {
+            "NAME": "blendMode",
+            "LABEL": "Blend Mode",
+            "TYPE": "long",
+            "DEFAULT": 1,
+            "VALUES": [0, 1],
+            "LABELS": ["Alpha Over", "Additive Luminous"]
         },
         {
             "NAME": "roundness",
@@ -198,6 +206,11 @@ void main() {
         float shapeDist = mix(squareDist, circleDist, roundness);
         float borderFade = smoothstep(1.0, 0.96, shapeDist);
 
+        if (borderFade <= 0.001) {
+            gl_FragColor = vec4(0.0);
+            return;
+        }
+
         vec2 sampleUV = vec2(0.5) + pCell * 0.5;
 
         float dist = 1.0 / px;
@@ -213,29 +226,44 @@ void main() {
         float baseAlpha = (texColor.a < 0.999) ? min(texColor.a, alphaFromLum) : alphaFromLum;
         float effectiveAlpha = baseAlpha * borderFade;
 
-        if (effectiveAlpha < 0.002 || lum < 0.01 || borderFade <= 0.001) {
+        if (effectiveAlpha < 0.002 || lum < 0.01) {
             gl_FragColor = vec4(0.0);
             return;
         }
 
         vec3 rgb = texColor.rgb * atten * borderFade * lumFactor;
+        if (blendMode >= 0.5) {
+            rgb *= (1.0 + lum * 0.2);
+        }
+
         gl_FragColor = vec4(rgb, effectiveAlpha);
         return;
     }
 
     // Modes 0..2: Tri-Axial, Cube Cage, Hex-Planar
-    vec2 aspectVec = vec2(RENDERSIZE.x / max(1.0, RENDERSIZE.y), 1.0);
-    vec2 st = (isf_FragNormCoord - vec2(0.5)) * aspectVec;
+    float aspect = RENDERSIZE.x / max(1.0, RENDERSIZE.y);
+    vec2 ndc = (isf_FragNormCoord - vec2(0.5)) * 2.0;
 
-    // Camera setup
+    // 1:1 Scale Normalization: at z=0, the quad spans [-1, 1] vertically at zoom=1.0, matching 2D flat mode exactly
+    float safeZoom = max(0.01, zoom);
+    vec3 pZero = vec3((ndc.x * aspect) / safeZoom, ndc.y / safeZoom, 0.0);
+
+    // Camera setup: smooth transition from Orthographic (persp=0) to Perspective (persp=1)
     float camDist = 2.5;
+    vec3 roView, rdView;
+    if (perspective < 0.001) {
+        roView = vec3(pZero.xy, camDist);
+        rdView = vec3(0.0, 0.0, -1.0);
+    } else {
+        float zEye = camDist / perspective;
+        roView = vec3(0.0, 0.0, zEye);
+        rdView = normalize(pZero - roView);
+    }
+
     mat3 rot = rotationMatrixY(yaw) * rotationMatrixX(pitch) * rotationMatrixZ(roll);
     mat3 invRot = transpose(rot);
 
-    vec3 ro = invRot * vec3(0.0, 0.0, camDist);
-
-    float fovScale = mix(1.0, 2.5, perspective) / max(0.01, zoom);
-    vec3 rdView = normalize(vec3(st * fovScale, -camDist));
+    vec3 ro = invRot * roView;
     vec3 rd = invRot * rdView;
 
     int numPlanes = (intMode == 0) ? 3 : 6;
@@ -268,29 +296,37 @@ void main() {
             float circleDist = length(vec2(u, v));
             float shapeDist = mix(squareDist, circleDist, roundness);
             float borderFade = smoothstep(1.0, 0.96, shapeDist);
+            if (borderFade <= 0.001) continue;
 
             vec2 texCoord = vec2(u, v) * 0.5 + vec2(0.5);
             vec4 texColor = IMG_NORM_PIXEL(inputImage, texCoord);
 
             float lum = max(texColor.r, max(texColor.g, texColor.b));
+            if (lum < 0.01) continue;
+
             float lumFactor = smoothstep(0.015, 0.08, lum);
             float alphaFromLum = lumFactor * clamp(lum * 1.5, 0.0, 1.0);
             float baseAlpha = (texColor.a < 0.999) ? min(texColor.a, alphaFromLum) : alphaFromLum;
             float effectiveAlpha = baseAlpha * borderFade;
 
-            if (effectiveAlpha > 0.002 && lum > 0.01 && borderFade > 0.001) {
-                // Depth attenuation
-                vec3 worldHit = rot * hitPos;
-                float depthFactor = 1.0 + (worldHit.z * 0.6) * depthDim;
-                float minDim = max(0.02, 1.0 - depthDim);
-                float atten = clamp(depthFactor, minDim, 1.0 + depthDim * 0.5);
+            if (effectiveAlpha < 0.002) continue;
 
-                vec4 finalColor = vec4(texColor.rgb * atten * lumFactor * borderFade, effectiveAlpha);
+            // Depth cueing / headlight falloff:
+            // Measured relative to the focal center (z=0) in view space
+            vec3 worldHit = roView + t * rdView;
+            float vCameraDepth = worldHit.z;
+            float depthFactor = 1.0 + (vCameraDepth * 0.6) * depthDim;
+            float minDim = max(0.02, 1.0 - depthDim);
+            float atten = clamp(depthFactor, minDim, 1.0 + depthDim * 0.5);
 
-                hitT[hitCount] = t;
-                hitColor[hitCount] = finalColor;
-                hitCount++;
+            vec3 rgb = texColor.rgb * atten * borderFade * lumFactor;
+            if (blendMode >= 0.5) {
+                rgb *= (1.0 + lum * 0.2);
             }
+
+            hitT[hitCount] = t;
+            hitColor[hitCount] = vec4(rgb, effectiveAlpha);
+            hitCount++;
         }
     }
 
@@ -309,13 +345,23 @@ void main() {
         }
     }
 
-    // Composite back-to-front
+    // Composite hits
     vec4 composite = vec4(0.0);
-    for (int i = 0; i < 6; i++) {
-        if (i >= hitCount) break;
-        vec4 src = hitColor[i];
-        composite.rgb = src.rgb * src.a + composite.rgb * (1.0 - src.a);
-        composite.a = src.a + composite.a * (1.0 - src.a);
+    if (blendMode >= 0.5) {
+        // Additive luminous blending (matches original glBlendFunc(GL_ONE, GL_ONE))
+        for (int i = 0; i < 6; i++) {
+            if (i >= hitCount) break;
+            composite.rgb += hitColor[i].rgb;
+            composite.a = clamp(composite.a + hitColor[i].a, 0.0, 1.0);
+        }
+    } else {
+        // Premultiplied alpha over back-to-front (matches original glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA))
+        for (int i = 0; i < 6; i++) {
+            if (i >= hitCount) break;
+            vec4 src = hitColor[i];
+            composite.rgb = src.rgb + composite.rgb * (1.0 - src.a);
+            composite.a = src.a + composite.a * (1.0 - src.a);
+        }
     }
 
     gl_FragColor = composite;

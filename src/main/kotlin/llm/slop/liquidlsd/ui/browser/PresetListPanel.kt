@@ -200,7 +200,7 @@ object PresetListPanel {
                     }
                 } else if (asset.tags.isNotEmpty()) {
                     showCustomTooltip(asset.path.hashCode()) {
-                        ImGui.text(asset.name)
+                        ImGui.textUnformatted(asset.name)
                         ImGui.separator()
                         ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
                     }
@@ -218,7 +218,7 @@ object PresetListPanel {
             // Drag source: drag a preset
             if (ImGui.beginDragDropSource()) {
                 ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
-                ImGui.text(asset.name)
+                ImGui.textUnformatted(asset.name)
                 ImGui.endDragDropSource()
             }
 

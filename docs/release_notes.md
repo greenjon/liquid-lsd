@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Consolidate 3D Elevation Under FX Tab & Streamline View Tab (`ParametersTabs.kt`, `Renderer.kt`, `DECISIONS.md`)
+- **Eliminated Duplicate 3D Elevation Controls**: Removed the redundant rendering of 3D Elevation sliders (`3D Mode`, `Zoom`, `Rotate X/Y/Z`, `Separation`, `Perspective`, `Depth Dim`, `Blend Mode`, `Roundness`) and the "+ Enable 3D Projection" button from the **View** tab. All `3d_elevation` filter parameters are now cleanly and exclusively managed under the **FX** tab in FX Slot 2.
+- **Focused View Tab**: The View tab now focuses purely on canvas framing and camera orientation: universal 2D scaling (`Zoom`) and roll (`Rotate Z`) for 2D sources, and native camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`, `Zoom`) for 3D generators.
+- **Renderer Consistency**: Removed the `has3DElevation` transform bypass in `Renderer.renderDeck()`, ensuring deck-level `Zoom` and `Rotate Z` always scale and orient the 2D source cleanly before it enters the FX filter chain.
+
+### Fix ISF "2D to 3D" Elevation Filter (`3d_elevation.fs`, `Renderer.kt`, `ParametersTabs.kt`, `PresetModels.kt`, `ISFFilterTest.kt`)
+- **Restored Exact 1:1 Scale-Normalized Projection**: Corrected screen NDC coordinates to span $[-1, 1]$ directly derived from `(isf_FragNormCoord - 0.5) * 2.0`. Replaced arbitrary `fovScale` with the exact analytic inverse of the original `tri_planar` projection matrix, guaranteeing that at $z = 0$, quad height matches 2D flat mode 1:1 at `Zoom = 1.0`. Perspective cleanly transitions from orthographic parallel rays to perspective without scaling the focal plane.
+- **Added `blendMode` Parameter & Dual Compositing**: Added `blendMode` input (defaulting to Additive Luminous with `(1.0 + lum * 0.2)` boost). In Additive mode, planes accumulate luminous energy (`composite.rgb += src.rgb`) matching original `glBlendFunc(GL_ONE, GL_ONE)` behavior. In Alpha mode, fragments composite cleanly via premultiplied alpha back-to-front without squaring edge fades.
+- **Double-Transform Prevention**: In `Renderer.renderDeck()`, when 3D elevation is active in either FX slot, the clean 2D source pass bypasses `viewZoom` and `viewRotateZ` to prevent compounding transforms.
+- **View Tab Parameter Exposing**: In `ParametersTabs.kt`, the View tab displays and controls all 10 parameters of the active 3D elevation filter directly (`3D Mode`, `Zoom`, `Rotate X`, `Rotate Y`, `Rotate Z`, `Separation`, `3D Persp`, `Depth Dim`, `Blend Mode`, `Roundness`) alongside an instant toggle button. Preset migration in `PresetModels.kt` automatically ports `viewBlendMode`.
+
 ### Fix Main Video Output for ISF Transitions in Mixer Compositing Pipeline (`mixer.frag`, `Renderer.kt`, `web/shaders/mixer.frag`, `MixerTransitionTest.kt`)
 - **Restored Main Video Output for ISF Transitions**: Fixed an issue where selecting ISF transitions resulted in a black main output while `Deck BG` continued rendering. In `mixer.frag`, implemented pure ISF transition composite mode (`uMode < 0`) that samples `uTex1` (the blended transition FBO) scaled by crossfade-interpolated channel level faders (`mix(uLevelA, uLevelB, uProgress)`), while preserving legacy dual-texture blend modes (`uMode >= 0`) for WebGL and fallback compatibility.
 - **Defensive Uniform Initialization**: Added explicit GLSL default initializers (`uLevelA = 1.0`, `uLevelB = 1.0`, `uLevelBG = 1.0`, `uMasterLevel = 1.0`, `uProgress = 0.5`, `uMode = -1`) to guard against uninitialized zero-gain states.

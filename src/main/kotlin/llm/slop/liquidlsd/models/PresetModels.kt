@@ -642,7 +642,10 @@ fun Deck.applyDto(dto: DeckPresetDto) {
             dto.viewParameters["viewSeparation"]?.let { elev.parameters["separation"]?.applyDto(it) }
             dto.viewParameters["viewPersp"]?.let { elev.parameters["perspective"]?.applyDto(it) }
             dto.viewParameters["viewDepthDim"]?.let { elev.parameters["depthDim"]?.applyDto(it) }
+            dto.viewParameters["viewBlendMode"]?.let { elev.parameters["blendMode"]?.applyDto(it) }
             dto.viewParameters["viewRoundness"]?.let { elev.parameters["roundness"]?.applyDto(it) }
+            viewZoom.reset()
+            viewRotateZ.reset()
             fxSlot2 = elev
         }
     }

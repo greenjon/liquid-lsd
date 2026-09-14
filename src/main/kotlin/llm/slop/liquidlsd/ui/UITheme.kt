@@ -797,58 +797,58 @@ object UITheme {
 
     // -- Semantic text helpers -------------------------------------------------
 
-    fun h1(text: String)      = withFont(FontLevel.H1)      { ImGui.text(text) }
-    fun h2(text: String)      = withFont(FontLevel.H2)      { ImGui.text(text) }
-    fun h3(text: String)      = withFont(FontLevel.H3)      { ImGui.text(text) }
-    fun body(text: String)    = withFont(FontLevel.BODY)    { ImGui.text(text) }
+    fun h1(text: String)      = withFont(FontLevel.H1)      { ImGui.textUnformatted(text) }
+    fun h2(text: String)      = withFont(FontLevel.H2)      { ImGui.textUnformatted(text) }
+    fun h3(text: String)      = withFont(FontLevel.H3)      { ImGui.textUnformatted(text) }
+    fun body(text: String)    = withFont(FontLevel.BODY)    { ImGui.textUnformatted(text) }
     fun caption(text: String) = withFont(FontLevel.CAPTION) {
         ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(ImGuiCol.TextDisabled))
-        ImGui.text(text)
+        ImGui.textUnformatted(text)
         ImGui.popStyleColor()
     }
-    fun code(text: String)    = withFont(FontLevel.CODE)    { ImGui.text(text) }
+    fun code(text: String)    = withFont(FontLevel.CODE)    { ImGui.textUnformatted(text) }
 
     // -- Coloured variants -----------------------------------------------------
 
     fun h1Colored(r: Float, g: Float, b: Float, a: Float, text: String) =
         withFont(FontLevel.H1) {
             ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
-            ImGui.text(text)
+            ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
 
     fun h2Colored(r: Float, g: Float, b: Float, a: Float, text: String) =
         withFont(FontLevel.H2) {
             ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
-            ImGui.text(text)
+            ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
 
     fun h3Colored(r: Float, g: Float, b: Float, a: Float, text: String) =
         withFont(FontLevel.H3) {
             ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
-            ImGui.text(text)
+            ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
 
     fun bodyColored(r: Float, g: Float, b: Float, a: Float, text: String) =
         withFont(FontLevel.BODY) {
             ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
-            ImGui.text(text)
+            ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
 
     fun captionColored(r: Float, g: Float, b: Float, a: Float, text: String) =
         withFont(FontLevel.CAPTION) {
             ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
-            ImGui.text(text)
+            ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
 
     fun codeColored(r: Float, g: Float, b: Float, a: Float, text: String) =
         withFont(FontLevel.CODE) {
             ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
-            ImGui.text(text)
+            ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
 }

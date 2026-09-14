@@ -284,7 +284,7 @@ fun itemTooltip(text: String, delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_
     TooltipHelper.prepareTooltipPos(width, height)
     ImGui.setNextWindowBgAlpha(1.0f)
     ImGui.beginTooltip()
-    ImGui.text(text)
+    ImGui.textUnformatted(text)
     ImGui.endTooltip()
     popTooltipStyles()
 }
@@ -342,7 +342,7 @@ fun showTooltip(text: String, key: Int = text.hashCode(), delayMs: Long = Toolti
     TooltipHelper.prepareTooltipPos(width, height)
     ImGui.setNextWindowBgAlpha(1.0f)
     ImGui.beginTooltip()
-    ImGui.text(text)
+    ImGui.textUnformatted(text)
     ImGui.endTooltip()
     popTooltipStyles()
 }

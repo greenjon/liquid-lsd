@@ -1,3 +1,18 @@
+## Consolidate 3D Elevation Under FX Tab & Streamline View Tab (`ParametersTabs.kt`, `Renderer.kt`, `DECISIONS.md`)
+
+- **Decision**: Fully consolidate 3D Elevation filter controls under the FX tab and eliminate duplicate 3D controls and the "+ Enable 3D Projection" shortcut button from the View tab:
+  - **Single Canonical Home for `3d_elevation`**: As an ISF filter, `3d_elevation` is loaded, toggled, and modulated in FX Slot 2 (or Slot 1). All 10 projection parameters (`mode3D`, `zoom`, `pitch`, `yaw`, `roll`, `separation`, `perspective`, `depthDim`, `blendMode`, `roundness`) now render exclusively within the FX tab.
+  - **Streamlined View Tab**:
+    - For 2D sources: Displays universal Deck `Zoom` (`deck.viewZoom`) and `Rotate Z` (`deck.viewRotateZ`), plus any generator transform parameters.
+    - For native 3D sources: Displays the source's native transform parameters (`Zoom`, `Rotate X`, `Rotate Y`, `Rotate Z`, etc.), or a clean disabled indicator if the 3D source handles projection internally with no exposed uniforms.
+    - Removed the confusing duplicate display of `3d_elevation` sliders and the "+ Enable 3D Projection" button from the View tab.
+  - **Renderer Consistency**: Removed `has3DElevation` bypass in `Renderer.renderDeck()`, allowing `deck.viewZoom` and `deck.viewRotateZ` to reliably scale and orient 2D sources before the FX chain, while `3d_elevation`'s camera zoom and roll parameters independently control the 3D projection stage in FX Slot 2.
+- **Rationale**:
+  - Eliminates confusing dual-tab parameter duplication where `FX2` and `View` showed the same sliders with identical parameter paths simultaneously.
+  - Keeps the View tab focused strictly on stage/camera framing and canvas transforms without magical side effects or implicit coupling to FX slots.
+
+---
+
 ## WirePlumber Link Negotiation Safety, Playback Probe Filtering & Coordinated Teardown (`JavaSoundClient.kt`, `JackClient.kt`, `AudioEngine.kt`, `MidiJackWatchdog.kt`, `AudioEnginePanel.kt`)
 
 - **Decision**: Harden audio client initialization, device enumeration, and teardown lifecycles across JACK and JavaSound to eliminate PipeWire/WirePlumber link negotiation races:
@@ -23,9 +38,12 @@
     - Calibrated with exact parity for all 9 parameters (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`).
     - Matched the exact cubic decay curve: $\text{invS} = 1.0 - \text{fbDecay}$, $\text{decayVal} = \text{invS}^3$, $\text{history.rgb} *= \text{fbGain} \times (1.0 - \text{decayVal})$, $\text{history.a} = \text{clamp}(\text{history.a} - \text{decayVal}, 0.0, 1.0)$.
     - Updated `ISFFilter.reset()` to explicitly clear persistent history FBOs to transparent black `(0, 0, 0, 0)` upon reset or preset load, eliminating ghost frames.
-  - **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**:
-    - Replaced monolithic `tri_planar.vert/frag` and `tetra_kaleido.vert/frag` with raymarched ISF shaders assigned to FX Slot 2.
-    - Supports Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding with continuous roundness control.
+  - **Modular 3D Elevation (`default_filters/3d_elevation.fs`, `Renderer.kt`, `ParametersTabs.kt`, `PresetModels.kt`)**:
+    - Replaced monolithic `tri_planar.vert/frag` and `tetra_kaleido.vert/frag` with raymarched ISF shaders assigned to FX Slot 2 with exact visual and mathematical parity to the original hardware pipeline.
+    - **Analytic 1:1 Scale Normalized Projection**: Screen NDC coordinates span $[-1, 1]$ directly derived from `(isf_FragNormCoord - 0.5) * 2.0`. Rays are constructed from the exact inverse of the original `tri_planar` projection matrix, guaranteeing that at $z = 0$, quad height matches 2D flat mode 1:1 at `Zoom = 1.0`. Perspective cleanly transitions from orthographic parallel rays (`roView = vec3(pZero.xy, 2.5), rdView = vec3(0, 0, -1)`) to deep perspective without altering the scale of the focal plane.
+    - **Dual Blend Modes (`blendMode`)**: Added `blendMode` parameter (default 1 / Additive Luminous). In Additive mode, planes accumulate luminous energy (`composite.rgb += src.rgb`, with `(1.0 + lum * 0.2)` boost) matching original `glBlendFunc(GL_ONE, GL_ONE)` behavior. In Alpha mode, fragments composite cleanly via premultiplied alpha back-to-front without squaring edge fades.
+    - **Double-Transform Prevention in Renderer**: In `Renderer.renderDeck()`, when 3D elevation is active in either FX slot, the clean 2D source pass bypasses `viewZoom` and `viewRotateZ` to prevent compounding transforms.
+    - **View Tab Parameter Exposing**: In `ParametersTabs.kt`, the View tab displays and controls all 10 parameters of the active 3D elevation filter directly (`3D Mode`, `Zoom`, `Rotate X`, `Rotate Y`, `Rotate Z`, `Separation`, `3D Persp`, `Depth Dim`, `Blend Mode`, `Roundness`) alongside an instant toggle button. Preset migration in `PresetModels.kt` automatically ports `viewBlendMode`.
   - **100% ISF Transitions & Bundled Blend Shaders**:
     - Replaced hardwired blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag` with pure ISF transition shaders taking `startImage`, `endImage`, and `progress`.
     - Bundled high-performance ISF transitions: `linear_crossfade.fs`, `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, `max_blend.fs`.
@@ -87,6 +105,8 @@
     - **Window Boundary Extension Compliance**: Added `ImGui.dummy(0f, 0f)` after cursor repositioning in `ParametersPanel.kt` and `MixerPanel.kt` to conform with Dear ImGui 1.90+ boundary extension rules.
     - **Separator Size Underflow Prevention**: Guarded `separatorSize` and `separatorTextBorderSize` with `.coerceAtLeast(1.0f)` in `UIThemeStyler.scaleStyleFromDefault()` to prevent integer truncation to `0.0f` from failing `thickness > 0.0f` inside `ImGui.separator()`.
     - **Mixer Initialization Ordering**: Moved `Mixer.init` block below `mode` property definition to avoid startup `NullPointerException` on `mode.setBaseValue()`.
+  - **Unformatted Telemetry & Format String Safety**:
+    - Replaced calls to `ImGui.text(...)` with `ImGui.textUnformatted(...)` across performance readouts in `MenuBar.kt` (`CPU %`, `BPM`, `DSP latency`, `FPS`, `Frame Time`, `dropped frames`), global typography helpers in `UITheme.kt` (`h1`..`code` and colored variants), tooltip utilities in `TooltipHelper.kt` (`itemTooltip`, `showTooltip`), and dynamic user string rendering in `DeckControlPanel.kt`, `MissingItemsPanel.kt`, and `PresetListPanel.kt`. Upstream `imgui-java` 1.92 passes text strings as `fmt` strings to C `vsnprintf`, causing stack memory dereferencing and corrupting UI readouts whenever strings contain literal `%` characters.
 - **Rationale**:
   - Positions the desktop UI on modern Dear ImGui 1.92, unlocking dynamic font scaling, upgraded table layouts, and native multi-selection primitives.
   - Fixes stale Gradle cache locking issues, ensures keyboard shortcuts work reliably at runtime, and guarantees stability across all UI panels.

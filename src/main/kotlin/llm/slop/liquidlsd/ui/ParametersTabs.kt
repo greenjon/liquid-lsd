@@ -415,32 +415,7 @@ object ParametersTabs {
             }
 
             drawSubGroupContent(session, deckLabel, "View", state) {
-                var row = 0
-                if (!activeSource.is3D) {
-                    ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                    val fx2 = deck.fxSlot2
-                    if (fx2 != null && fx2.id == "3d_elevation") {
-                        imgui.ImGui.spacing()
-                        imgui.ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, "3D Projection Active (FX Slot 2)")
-                    } else if (fx2 == null) {
-                        imgui.ImGui.spacing()
-                        if (imgui.ImGui.button("+ Enable 3D Projection##view_3d_$deckLabel")) {
-                            deck.fxSlot2 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
-                            onPushUndo()
-                        }
-                        itemTooltip("Elevate this 2D visual source into 3D space via FX Slot 2.")
-                    }
-
-                    transformParams.forEach { (name, param) ->
-                        ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                } else {
-                    transformParams.forEach { (name, param) ->
-                        ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    }
-                }
+                drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo, transformParams)
             }
         } else if (activeSource is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
             drawSubGroupContent(session, deckLabel, "SRC", state) {
@@ -452,24 +427,7 @@ object ParametersTabs {
             }
 
             drawSubGroupContent(session, deckLabel, "View", state) {
-                var row = 0
-                if (!activeSource.is3D) {
-                    ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                    val fx2 = deck.fxSlot2
-                    if (fx2 != null && fx2.id == "3d_elevation") {
-                        imgui.ImGui.spacing()
-                        imgui.ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, "3D Projection Active (FX Slot 2)")
-                    } else if (fx2 == null) {
-                        imgui.ImGui.spacing()
-                        if (imgui.ImGui.button("+ Enable 3D Projection##view_3d_ext_$deckLabel")) {
-                            deck.fxSlot2 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
-                            onPushUndo()
-                        }
-                        itemTooltip("Elevate this 2D visual source into 3D space via FX Slot 2.")
-                    }
-                }
+                drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         } else {
             drawSubGroupContent(session, deckLabel, "FX", state) {
@@ -477,23 +435,40 @@ object ParametersTabs {
             }
 
             drawSubGroupContent(session, deckLabel, "View", state) {
-                var row = 0
-                if (!activeSource.is3D) {
-                    ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                    ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            }
+        }
+    }
 
-                    val fx2 = deck.fxSlot2
-                    if (fx2 != null && fx2.id == "3d_elevation") {
-                        imgui.ImGui.spacing()
-                        imgui.ImGui.textColored(0.4f, 0.8f, 1.0f, 1.0f, "3D Projection Active (FX Slot 2)")
-                    } else if (fx2 == null) {
-                        imgui.ImGui.spacing()
-                        if (imgui.ImGui.button("+ Enable 3D Projection##view_3d_other_$deckLabel")) {
-                            deck.fxSlot2 = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter("3d_elevation")
-                            onPushUndo()
-                        }
-                        itemTooltip("Elevate this 2D visual source into 3D space via FX Slot 2.")
-                    }
+    private fun drawDeckViewSubgroup(
+        session: llm.slop.liquidlsd.SessionContext,
+        deckLabel: String,
+        deck: Deck,
+        state: ParametersState,
+        labelColW: Float,
+        mixer: Mixer,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit,
+        transformParams: List<Map.Entry<String, ModulatableParameter>> = emptyList()
+    ) {
+        var row = 0
+        if (!deck.source.is3D) {
+            ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+            transformParams.forEach { (name, param) ->
+                ParametersRenderer.drawParamRow(session, name, "$deckLabel/${deck.source.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            }
+        } else {
+            if (transformParams.isEmpty()) {
+                imgui.ImGui.spacing()
+                imgui.ImGui.textDisabled("3D source handles projection internally.")
+            } else {
+                transformParams.forEach { (name, param) ->
+                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/${deck.source.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
         }
