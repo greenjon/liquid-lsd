@@ -51,15 +51,17 @@ object Lfo2Section {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
         
-        if (ImGui.button("${Icons.POWER}##bypass_lfo2_$idx", btnWidth, btnHeight)) {
-            val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
-            val nextDepth = if (lfo2Bypassed && existing.generatorModDepth == 0.0f) 1.0f else existing.generatorModDepth
-            onReplace(existing.copy(
-                generatorModMode = nextMode,
-                generatorModDepth = nextDepth,
-                generatorModDepthMin = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMin,
-                generatorModDepthMax = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMax
-            ))
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.POWER}##bypass_lfo2_$idx", btnWidth, btnHeight)) {
+                val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
+                val nextDepth = if (lfo2Bypassed && existing.generatorModDepth == 0.0f) 1.0f else existing.generatorModDepth
+                onReplace(existing.copy(
+                    generatorModMode = nextMode,
+                    generatorModDepth = nextDepth,
+                    generatorModDepthMin = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMin,
+                    generatorModDepthMax = if (existing.generatorModDepth == 0.0f) nextDepth else existing.generatorModDepthMax
+                ))
+            }
         }
         itemTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
         ImGui.popStyleColor(3)
@@ -69,19 +71,23 @@ object Lfo2Section {
             ImGui.sameLine(0f, 10f * fontScale)
             if (param.isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
-                ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
+                }
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
-                if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
-                    val randomized = existing
-                        .randomizeGeneratorModDepth()
-                        .randomizeModSubdivision()
-                        .randomizeModPhaseOffset()
-                        .randomizeModSlope()
-                        .randomizeModMorph()
-                        .randomizeModHold()
-                    onReplace(randomized)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
+                        val randomized = existing
+                            .randomizeGeneratorModDepth()
+                            .randomizeModSubdivision()
+                            .randomizeModPhaseOffset()
+                            .randomizeModSlope()
+                            .randomizeModMorph()
+                            .randomizeModHold()
+                        onReplace(randomized)
+                    }
                 }
                 itemTooltip("Randomize LFO 2 values")
             }

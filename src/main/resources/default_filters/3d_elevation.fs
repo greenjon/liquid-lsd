@@ -12,8 +12,10 @@
             "LABEL": "3D Mode",
             "TYPE": "long",
             "DEFAULT": 0,
+            "MIN": 0,
+            "MAX": 3,
             "VALUES": [0, 1, 2, 3],
-            "LABELS": ["Tri-Axial (3-Plane)", "Cube Cage (6-Plane)", "Hex-Planar (6-Plane)", "Tetrahedral (24-Chamber)"]
+            "LABELS": ["Tri-Axial (3 Planes Intersecting)", "Hex-Planar (6 Planes Intersecting)", "Cube Cage (6-Plane Cube)", "Tetrahedral (Kaleidoscope)"]
         },
         {
             "NAME": "pitch",
@@ -116,8 +118,8 @@ struct Plane {
 };
 
 void getPlane(int idx, int mode, float sep, out Plane p) {
-    if (mode == 2) {
-        // Hex-Planar (6-Plane @ 60°)
+    if (mode == 1) {
+        // Hex-Planar (6 Planes Intersecting @ 60°)
         float invSqrt2 = 0.70710678;
         if (idx == 0) {
             p.normal = vec3(1.0, -1.0, 0.0) * invSqrt2;
@@ -146,7 +148,7 @@ void getPlane(int idx, int mode, float sep, out Plane p) {
         }
         p.center = p.normal * sep;
     } else {
-        // Tri-Axial (mode 0, 3 planes) or Cube Cage (mode 1, 6 planes)
+        // Tri-Axial (mode 0, 3 planes) or Cube Cage (mode 2, 6 planes)
         int planeType = idx % 3;
         float signVal = (idx >= 3) ? -1.0 : 1.0;
 
@@ -167,7 +169,7 @@ void getPlane(int idx, int mode, float sep, out Plane p) {
             p.vDir = vec3(1.0, 0.0, 0.0);
         }
 
-        float baseOffset = (mode == 1) ? 1.0 : 0.0;
+        float baseOffset = (mode == 2) ? 1.0 : 0.0;
         p.center = p.normal * (baseOffset + sep);
     }
 }
@@ -175,11 +177,12 @@ void getPlane(int idx, int mode, float sep, out Plane p) {
 void main() {
     int intMode = int(mode3D);
 
+    float aspect = RENDERSIZE.x / max(1.0, RENDERSIZE.y);
+
     if (intMode == 3) {
         // Mode 3: Tetrahedral Kaleidoscope (24-Chamber Space Folding)
-        vec2 aspectVec = vec2(RENDERSIZE.x / max(1.0, RENDERSIZE.y), 1.0);
         vec2 p2 = (isf_FragNormCoord - vec2(0.5)) * 2.0;
-        p2.x *= aspectVec.x;
+        p2.x *= aspect;
 
         float fov = 0.5 + perspective * 1.0;
         vec3 ray = normalize(vec3(p2 / max(0.01, zoom * fov), -1.0));
@@ -211,7 +214,11 @@ void main() {
             return;
         }
 
-        vec2 sampleUV = vec2(0.5) + pCell * 0.5;
+        // Correct texture coordinates for inputImage aspect ratio (e.g. 16:9), preserving isotropic circular geometry
+        vec2 sampleUV = vec2(
+            pCell.x / max(1.0, aspect),
+            pCell.y / max(1.0, 1.0 / aspect)
+        ) * 0.5 + vec2(0.5);
 
         float dist = 1.0 / px;
         float depthFactor = 1.0 - (dist - 1.0) * 0.8 * depthDim;
@@ -241,7 +248,6 @@ void main() {
     }
 
     // Modes 0..2: Tri-Axial, Cube Cage, Hex-Planar
-    float aspect = RENDERSIZE.x / max(1.0, RENDERSIZE.y);
     vec2 ndc = (isf_FragNormCoord - vec2(0.5)) * 2.0;
 
     // 1:1 Scale Normalization: at z=0, the quad spans [-1, 1] vertically at zoom=1.0, matching 2D flat mode exactly
@@ -298,8 +304,12 @@ void main() {
             float borderFade = smoothstep(1.0, 0.96, shapeDist);
             if (borderFade <= 0.001) continue;
 
-            vec2 texCoord = vec2(u, v) * 0.5 + vec2(0.5);
-            vec4 texColor = IMG_NORM_PIXEL(inputImage, texCoord);
+            // Correct texture coordinates for inputImage aspect ratio (e.g. 16:9), preserving isotropic circular geometry
+            vec2 texCoord = vec2(
+                u / max(1.0, aspect),
+                v / max(1.0, 1.0 / aspect)
+            ) * 0.5 + vec2(0.5);
+            vec4 texColor = IMG_NORM_PIXEL(inputImage, clamp(texCoord, 0.0, 1.0));
 
             float lum = max(texColor.r, max(texColor.g, texColor.b));
             if (lum < 0.01) continue;

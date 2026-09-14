@@ -168,15 +168,19 @@ object BeatDivisionSlider {
             
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
-                ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
+                }
                 ImGui.popStyleColor()
                 itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!effectiveIsRandomizable) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
                 }
-                if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
-                    onRandomizableChanged(!effectiveIsRandomizable)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
+                        onRandomizableChanged(!effectiveIsRandomizable)
+                    }
                 }
                 if (!effectiveIsRandomizable) {
                     ImGui.popStyleColor()

@@ -29,6 +29,24 @@ fun getMixModeLabel(mode: Float): String {
     }
 }
 
+val MODE_3D_LABELS = arrayOf(
+    "0: Tri-Axial (3 Planes Intersecting)",
+    "1: Hex-Planar (6 Planes Intersecting)",
+    "2: Cube Cage (6 Planes Cube)",
+    "3: Tetrahedral (Kaleidoscope)"
+)
+
+fun get3DModeLabel(mode: Float): String {
+    val idx = mode.roundToInt().coerceIn(0, 3)
+    return when (idx) {
+        0 -> "Tri-Axial (3 Planes Intersecting)"
+        1 -> "Hex-Planar (6 Planes Intersecting)"
+        2 -> "Cube Cage (6 Planes Cube)"
+        3 -> "Tetrahedral (Kaleidoscope)"
+        else -> "Tri-Axial (3 Planes Intersecting)"
+    }
+}
+
 object ValueParamSection {
 
     fun draw(
@@ -43,6 +61,7 @@ object ValueParamSection {
 
         // Live value text readout
         val isMixerMode = paramKey == "Mixer/mode"
+        val is3DMode = paramKey.endsWith("/mode3D") || paramKey.endsWith("/3D Mode")
         val isBgStyle = paramKey.endsWith("/Background/Style")
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep") || paramKey.endsWith("/Hue Sweep")
         val isLobes = paramKey.endsWith("/Geometry/Lobes") || paramKey.endsWith("/Lobes")
@@ -51,6 +70,7 @@ object ValueParamSection {
         val liveVal = param.value
         val liveLabel = when {
             isMixerMode -> getMixModeLabel(liveVal)
+            is3DMode -> get3DModeLabel(liveVal)
             isMaxPoints -> "${liveVal.roundToInt()} points"
             isHueSweep && mandala != null -> {
                 val petals = mandala.recipe.petals
@@ -349,6 +369,26 @@ object ValueParamSection {
 
                 ImGui.spacing()
                 session.uiTheme.caption("${Icons.ALERT} Not CV-modulatable — sets static deck compositing formula.")
+                ImGui.spacing()
+                ImGui.separator()
+                ImGui.spacing()
+            } else if (is3DMode) {
+                session.uiTheme.caption("3D Elevation Mode:")
+                val currentIdx = param.baseValue.roundToInt().coerceIn(0, MODE_3D_LABELS.size - 1)
+                val selectedOpt = ImInt(currentIdx)
+                ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
+                if (ImGui.combo("##mode3d_combo", selectedOpt, MODE_3D_LABELS)) {
+                    val nextIdx = selectedOpt.get().coerceIn(0, MODE_3D_LABELS.size - 1)
+                    val newVal = nextIdx.toFloat()
+                    param.baseValue = newVal
+                    if (!param.randomizeBase) {
+                        param.baseMin = newVal
+                        param.baseMax = newVal
+                    }
+                }
+                itemTooltip("Select 3D geometric elevation projection:\n0: Tri-Axial (3 planes intersecting at center)\n1: Hex-Planar (6 planes intersecting at 60°)\n2: Cube Cage (6 planes forming the faces of a cube)\n3: Tetrahedral (24-chamber kaleidoscope projection)")
+                ImGui.popItemWidth()
+
                 ImGui.spacing()
                 ImGui.separator()
                 ImGui.spacing()

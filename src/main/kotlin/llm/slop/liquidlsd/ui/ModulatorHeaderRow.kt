@@ -68,13 +68,15 @@ object ModulatorHeaderRow {
             
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
-            if (ImGui.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
-                onReset()
-                ImGui.popStyleColor(2)
-                if (isVirtual) {
-                    ImGui.endDisabled()
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
+                    onReset()
+                    ImGui.popStyleColor(2)
+                    if (isVirtual) {
+                        ImGui.endDisabled()
+                    }
+                    return
                 }
-                return
             }
             itemTooltip("Clear/reset modulators")
             ImGui.popStyleColor(2)
@@ -95,8 +97,10 @@ object ModulatorHeaderRow {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
         
-        if (ImGui.button("${Icons.POWER}##bypass_bar_$idx", btnWidth, btnHeight)) {
-            onReplace(existing.copy(bypassed = !bypassed))
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.POWER}##bypass_bar_$idx", btnWidth, btnHeight)) {
+                onReplace(existing.copy(bypassed = !bypassed))
+            }
         }
         itemTooltip(if (bypassed) "Unmute modulator (Enable)" else "Mute modulator (Bypass)")
         ImGui.popStyleColor(3)
@@ -106,18 +110,22 @@ object ModulatorHeaderRow {
             ImGui.sameLine(0f, 9.5f)
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
-                ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
+                }
                 ImGui.popStyleColor()
                 itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
-                if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
-                    val randomized = existing
-                        .randomizeDepth()
-                        .randomizeDcOffset()
-                        .randomizeSubdivision()
-                        .randomizePhaseOffset()
-                        .randomizeSlope()
-                    onReplace(randomized)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
+                        val randomized = existing
+                            .randomizeDepth()
+                            .randomizeDcOffset()
+                            .randomizeSubdivision()
+                            .randomizePhaseOffset()
+                            .randomizeSlope()
+                        onReplace(randomized)
+                    }
                 }
                 itemTooltip("Randomize primary LFO / modulator values")
             }

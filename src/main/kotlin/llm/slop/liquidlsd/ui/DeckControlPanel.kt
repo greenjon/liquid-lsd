@@ -524,56 +524,16 @@ private fun drawIconButton(
     tooltip: String? = null
 ): Boolean {
     var iconW = 0f
-    var iconH = 0f
     session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-        val sz = ImGui.calcTextSize(icon)
-        iconW = sz.x
-        iconH = sz.y
+        iconW = ImGui.calcTextSize(icon).x
     }
-
-    val padX = 10f
-    val btnW = (iconW + padX * 2f).coerceAtLeast(24f)
-    val startX = ImGui.getCursorScreenPosX()
-    val startY = ImGui.getCursorScreenPosY()
-    val endX = startX + btnW
-    val endY = startY + rowH
-
-    ImGui.invisibleButton(id, btnW.coerceAtLeast(1f), rowH.coerceAtLeast(1f))
-    val isHovered = ImGui.isItemHovered()
-    val isActive = ImGui.isItemActive()
-    val isClicked = ImGui.isItemClicked(0)
-
-    val dl = ImGui.getWindowDrawList()
-
-    val bgCol = when {
-        isActive -> ImGui.colorConvertFloat4ToU32(0.28f, 0.35f, 0.45f, 0.9f)
-        isHovered -> ImGui.colorConvertFloat4ToU32(0.20f, 0.25f, 0.35f, 0.8f)
-        else -> ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 0.7f)
-    }
-    val borderCol = if (isHovered) {
-        ImGui.colorConvertFloat4ToU32(0.35f, 0.45f, 0.60f, 0.9f)
-    } else {
-        ImGui.colorConvertFloat4ToU32(0.25f, 0.30f, 0.38f, 0.8f)
-    }
-    val iconCol = if (isHovered) {
-        ImGui.colorConvertFloat4ToU32(1.0f, 1.0f, 1.0f, 1.0f)
-    } else {
-        ImGui.colorConvertFloat4ToU32(0.85f, 0.90f, 0.95f, 0.9f)
-    }
-
-    dl.addRectFilled(startX, startY, endX, endY, bgCol, 3f)
-    dl.addRect(startX, startY, endX, endY, borderCol, 3f)
-
-    val iconX = startX + (btnW - iconW) * 0.5f
-    val iconY = startY + (rowH - iconH) * 0.5f
-
+    val btnW = (iconW + 20f).coerceAtLeast(28f)
+    var isClicked = false
     session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-        dl.addText(iconX, iconY, iconCol, icon)
+        isClicked = ImGui.button("$icon$id", btnW, rowH)
     }
-
     if (tooltip != null) {
         itemTooltip(tooltip)
     }
-
     return isClicked
 }

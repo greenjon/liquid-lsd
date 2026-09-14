@@ -699,8 +699,10 @@ object ParametersPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.22f, 0.30f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.34f, 0.46f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.44f, 0.58f, 1f))
-            if (ImGui.button("${Icons.PLUS}  Add Source", buttonWidth, buttonHeight)) {
-                ImGui.openPopup("##launchpad_source_popup_$deckLabel")
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.PLUS}  Add Source", buttonWidth, buttonHeight)) {
+                    ImGui.openPopup("##launchpad_source_popup_$deckLabel")
+                }
             }
             itemTooltip("Select a visual generator source (Mandala, Gyroid, Dynamic Spiral, etc.)")
             ImGui.popStyleColor(3)
@@ -737,8 +739,10 @@ object ParametersPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.26f, 0.24f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.38f, 0.34f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.48f, 0.44f, 1f))
-            if (ImGui.button("${Icons.FOLDER}  Load Preset", buttonWidth, buttonHeight)) {
-                ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.FOLDER}  Load Preset", buttonWidth, buttonHeight)) {
+                    ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
+                }
             }
             itemTooltip("Choose a saved preset for $deckLabel")
             ImGui.popStyleColor(3)

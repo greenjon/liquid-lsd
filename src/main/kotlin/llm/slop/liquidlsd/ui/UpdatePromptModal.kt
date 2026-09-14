@@ -87,10 +87,12 @@ object UpdatePromptModal {
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.22f, 0.75f, 0.38f, 1.0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.10f, 0.50f, 0.25f, 1.0f)
 
-            if (ImGui.button("${Icons.DOWNLOAD} Download Update", 160f, 32f)) {
-                DocManager.openUrl(release.htmlUrl)
-                latestRelease = null
-                ImGui.closeCurrentPopup()
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.DOWNLOAD} Download Update", 160f, 32f)) {
+                    DocManager.openUrl(release.htmlUrl)
+                    latestRelease = null
+                    ImGui.closeCurrentPopup()
+                }
             }
             ImGui.popStyleColor(3)
 

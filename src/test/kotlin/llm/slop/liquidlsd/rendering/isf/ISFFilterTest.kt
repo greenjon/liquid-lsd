@@ -105,8 +105,11 @@ class ISFFilterTest {
 
         val shader = mockk<Shader>(relaxed = true)
         val filter = ISFFilter("3d_elevation", "3D Elevation", header!!, shader)
-        assertEquals(10, filter.parameters.size) // 11 inputs - 1 image input = 10 parameters
-        assertTrue(filter.parameters.containsKey("mode3D"))
+        val modeParam = filter.parameters["mode3D"]
+        assertNotNull(modeParam)
+        assertEquals(0.0f, modeParam?.minClamp)
+        assertEquals(3.0f, modeParam?.maxClamp)
+
         assertTrue(filter.parameters.containsKey("pitch"))
         assertTrue(filter.parameters.containsKey("yaw"))
         assertTrue(filter.parameters.containsKey("roll"))
@@ -116,5 +119,28 @@ class ISFFilterTest {
         assertTrue(filter.parameters.containsKey("depthDim"))
         assertTrue(filter.parameters.containsKey("blendMode"))
         assertTrue(filter.parameters.containsKey("roundness"))
+    }
+
+    @Test
+    fun `test parameter clamp derivation from VALUES when MIN and MAX are omitted`() {
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(
+                NAME = "mode",
+                TYPE = "long",
+                DEFAULT = kotlinx.serialization.json.JsonPrimitive(0),
+                VALUES = listOf(
+                    kotlinx.serialization.json.JsonPrimitive(0),
+                    kotlinx.serialization.json.JsonPrimitive(1),
+                    kotlinx.serialization.json.JsonPrimitive(2),
+                    kotlinx.serialization.json.JsonPrimitive(3)
+                )
+            )
+        ))
+        val shader = mockk<Shader>(relaxed = true)
+        val filter = ISFFilter("test_mode", "Test Mode", header, shader)
+        val param = filter.parameters["mode"]
+        assertNotNull(param)
+        assertEquals(0.0f, param?.minClamp)
+        assertEquals(3.0f, param?.maxClamp)
     }
 }

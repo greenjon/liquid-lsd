@@ -496,18 +496,20 @@ object ParametersTabs {
         ImGui.textDisabled("Slot 1")
         ImGui.sameLine()
         ImGui.setNextItemWidth(labelColW - 60f)
-        if (ImGui.button("$filterName1  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
-            ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
-                if (newFilterId == null) {
-                    deck.fxSlot1?.dispose()
-                    deck.fxSlot1 = null
-                    onPushUndo()
-                } else {
-                    val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                    if (filter != null) {
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("$filterName1  ${Icons.CHEVRON_DOWN}##fx1_selector_$deckLabel", labelColW - 60f, 0f)) {
+                ShaderPickerPopup.show("Select FX Slot 1 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_1) { newFilterId ->
+                    if (newFilterId == null) {
                         deck.fxSlot1?.dispose()
-                        deck.fxSlot1 = filter
+                        deck.fxSlot1 = null
                         onPushUndo()
+                    } else {
+                        val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                        if (filter != null) {
+                            deck.fxSlot1?.dispose()
+                            deck.fxSlot1 = filter
+                            onPushUndo()
+                        }
                     }
                 }
             }
@@ -537,18 +539,20 @@ object ParametersTabs {
         ImGui.textDisabled("Slot 2")
         ImGui.sameLine()
         ImGui.setNextItemWidth(labelColW - 60f)
-        if (ImGui.button("$filterName2  ${Icons.CHEVRON_DOWN}##fx2_selector_$deckLabel", labelColW - 60f, 0f)) {
-            ShaderPickerPopup.show("Select FX Slot 2 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_2) { newFilterId ->
-                if (newFilterId == null) {
-                    deck.fxSlot2?.dispose()
-                    deck.fxSlot2 = null
-                    onPushUndo()
-                } else {
-                    val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                    if (filter != null) {
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("$filterName2  ${Icons.CHEVRON_DOWN}##fx2_selector_$deckLabel", labelColW - 60f, 0f)) {
+                ShaderPickerPopup.show("Select FX Slot 2 for $deckLabel", ShaderPickerPopup.PickerType.FX_SLOT_2) { newFilterId ->
+                    if (newFilterId == null) {
                         deck.fxSlot2?.dispose()
-                        deck.fxSlot2 = filter
+                        deck.fxSlot2 = null
                         onPushUndo()
+                    } else {
+                        val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                        if (filter != null) {
+                            deck.fxSlot2?.dispose()
+                            deck.fxSlot2 = filter
+                            onPushUndo()
+                        }
                     }
                 }
             }

@@ -630,9 +630,9 @@ fun Deck.applyDto(dto: DeckPresetDto) {
         if (elev != null) {
             val intMode = when {
                 legacy3DMode >= 3.5f -> 3f // Tetrahedral
-                legacy3DMode >= 2.5f -> 2f // Hex-Planar
-                legacy3DMode >= 1.5f -> 1f // Cube Cage
-                else -> 0f                 // Tri-Axial
+                legacy3DMode >= 2.5f -> 1f // Hex-Planar (legacy 3)
+                legacy3DMode >= 1.5f -> 2f // Cube Cage (legacy 2)
+                else -> 0f                 // Tri-Axial (legacy 1)
             }
             elev.parameters["mode3D"]?.baseValue = intMode
             dto.viewParameters["viewRotateX"]?.let { elev.parameters["pitch"]?.applyDto(it) }

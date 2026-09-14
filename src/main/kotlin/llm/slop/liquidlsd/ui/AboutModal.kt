@@ -84,9 +84,11 @@ object AboutModal {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.30f, 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.22f, 0.75f, 0.38f, 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.10f, 0.50f, 0.25f, 1.0f)
-                        if (ImGui.button("${Icons.DOWNLOAD} View Update", 160f, 28f)) {
-                            UpdatePromptModal.request(lastRes.latestRelease, lastRes.currentVersion)
-                            ImGui.closeCurrentPopup()
+                        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                            if (ImGui.button("${Icons.DOWNLOAD} View Update", 160f, 28f)) {
+                                UpdatePromptModal.request(lastRes.latestRelease, lastRes.currentVersion)
+                                ImGui.closeCurrentPopup()
+                            }
                         }
                         ImGui.popStyleColor(3)
                     }
@@ -95,8 +97,10 @@ object AboutModal {
                             ImGui.textColored(0.5f, 0.9f, 0.5f, 1.0f, "Liquid LSD is up to date.")
                         }
                         ImGui.spacing()
-                        if (ImGui.button("${Icons.REFRESH} Check Again", 140f, 28f)) {
-                            UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                            if (ImGui.button("${Icons.REFRESH} Check Again", 140f, 28f)) {
+                                UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                            }
                         }
                     }
                     is UpdateCheckResult.Error -> {
@@ -104,13 +108,17 @@ object AboutModal {
                             ImGui.textColored(1.0f, 0.4f, 0.4f, 1.0f, "Update check failed: ${lastRes.message}")
                         }
                         ImGui.spacing()
-                        if (ImGui.button("${Icons.REFRESH} Retry Check", 140f, 28f)) {
-                            UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                            if (ImGui.button("${Icons.REFRESH} Retry Check", 140f, 28f)) {
+                                UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                            }
                         }
                     }
                     UpdateCheckResult.Idle, UpdateCheckResult.Checking -> {
-                        if (ImGui.button("${Icons.REFRESH} Check for Updates", 170f, 28f)) {
-                            UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                            if (ImGui.button("${Icons.REFRESH} Check for Updates", 170f, 28f)) {
+                                UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
+                            }
                         }
                     }
                 }

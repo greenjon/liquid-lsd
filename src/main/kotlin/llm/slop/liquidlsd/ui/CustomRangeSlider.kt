@@ -182,15 +182,19 @@ object CustomRangeSlider {
             ImGui.setCursorScreenPos(randBtnX, startY)
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
-                ImGui.button("${Icons.DICES}##rand_disabled", buttonSize, buttonSize)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    ImGui.button("${Icons.DICES}##rand_disabled", buttonSize, buttonSize)
+                }
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!effectiveIsRandomizable) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
                 }
-                if (ImGui.button("${Icons.DICES}##rand_toggle", buttonSize, buttonSize)) {
-                    onRandomizableChanged(!effectiveIsRandomizable)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ImGui.button("${Icons.DICES}##rand_toggle", buttonSize, buttonSize)) {
+                        onRandomizableChanged(!effectiveIsRandomizable)
+                    }
                 }
                 if (!effectiveIsRandomizable) ImGui.popStyleColor()
                 if (ImGui.isItemClicked(1)) {
@@ -577,15 +581,19 @@ object CustomRangeSlider {
             
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
-                ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
+                }
                 ImGui.popStyleColor()
                 itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!effectiveIsRandomizable) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
                 }
-                if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
-                    onRandomizableChanged(!effectiveIsRandomizable)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
+                        onRandomizableChanged(!effectiveIsRandomizable)
+                    }
                 }
                 if (!effectiveIsRandomizable) {
                     ImGui.popStyleColor()

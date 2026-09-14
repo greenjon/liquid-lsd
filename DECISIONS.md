@@ -1,3 +1,26 @@
+## Restoring All 4 Distinct 3D Elevation Projection Modes (`3d_elevation.fs`, `ISFFilter.kt`, `PresetModels.kt`, `ValueParamSection.kt`)
+
+- **Decision**: Restructure and fully expose the four distinct geometric elevation projection modes in `3d_elevation.fs` with calibrated math, enum-safe clamp ranges, and dedicated UI selection:
+  - **4 Distinct Geometric Projections**:
+    - **Mode 0 — Tri-Axial (3 Planes Intersecting)**: Three orthogonal planes ($XY, YZ, ZX$) intersecting through the center coordinate space.
+    - **Mode 1 — Hex-Planar (6 Planes Intersecting)**: Six planes intersecting through the origin rotated symmetrically at 60° increments.
+    - **Mode 2 — Cube Cage (6 Planes as Faces of a Cube)**: Six planes oriented outward as the six square faces of a cube with inward facing normals and distance offset (`baseOffset = 1.0`).
+    - **Mode 3 — Tetrahedral (24-Chamber Kaleidoscope)**: A 24-chamber space-folding tetrahedral kaleidoscopic projection using folded ray reflections.
+  - **Enum/Long ISF Clamp Bounds Derivation (`ISFFilter.kt`)**: Added `"MIN": 0, "MAX": 3` explicitly to `mode3D`, and updated `ISFFilter.kt` to inspect `input.VALUES` if `MIN` or `MAX` are omitted. This guarantees integer/enum parameters are not inadvertently clamped to `[0.0, 1.0]`.
+  - **Preset Migration Calibration (`PresetModels.kt`)**: Aligned legacy preset migration so legacy modes (1: Tri-Axial, 2: Cube Cage, 3: Hex-Planar, 4: Tetrahedral) map directly to indices 0, 2, 1, 3 respectively.
+  - **Dedicated UI Combo (`ValueParamSection.kt`)**: Added a clear dropdown selector with mode descriptions and live text readout when inspecting the `mode3D` parameter in the Properties panel.
+  - **Isotropic Texture Coordinate Aspect Correction (`3d_elevation.fs`)**:
+    - In the original hard-coded pipeline, 2D visual sources were rendered to a dedicated square FBO (`FBO(height, height)`) with aspect $1.0$, which was then bound to the 3D projection shaders.
+    - In the modular ISF pipeline, the 2D visual source renders to `cleanFBO` ($1920 \times 1080$, aspect $16/9$). An isotropic circle in generator space occupies the center square region of the texture ($x \in [0.5 - 0.5/aspect, 0.5 + 0.5/aspect]$, $y \in [0, 1]$).
+    - When `3d_elevation.fs` previously mapped square 3D planes ($u, v \in [-1, 1]$) directly to $[0, 1] \times [0, 1]$, the image was squished horizontally by $1 / aspect$ ($9/16$), turning circles into ovals.
+    - Updated texture sampling in both planar modes ($0 \dots 2$) and kaleidoscopic mode ($3$) to scale normalized coordinates by $1 / \max(1.0, aspect)$ horizontally and $1 / \max(1.0, 1.0/aspect)$ vertically. This restores 100% isotropic geometry where circular sources remain true circles on the 3D planes and match 2D flat mode pixel-for-pixel at default orientation.
+- **Rationale**:
+  - The initial port had `mode3D` clamped to `[0.0, 1.0]` by the ISF parameter loader due to missing min/max bounds, hiding modes 2 and 3.
+  - Restoring all 4 modes provides the complete visual palette of 3D geometric elevations originally present in the hard-coded pipeline.
+  - Aspect-ratio correcting texture lookups eliminates the X-axis squish and oval distortion across non-square aspect ratios (e.g. 16:9).
+
+---
+
 ## Consolidate 3D Elevation Under FX Tab & Streamline View Tab (`ParametersTabs.kt`, `Renderer.kt`, `DECISIONS.md`)
 
 - **Decision**: Fully consolidate 3D Elevation filter controls under the FX tab and eliminate duplicate 3D controls and the "+ Enable 3D Projection" shortcut button from the View tab:

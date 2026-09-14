@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Correct Lucide Icon Font Scoping & Modern ImGui Icon Alignment (`Icons.kt`, `BrowserActionToolbar.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `DeckControlPanel.kt`, `MixerPanel.kt`, `ModulatorHeaderRow.kt`, `ParametersTabs.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `Lfo2Section.kt`)
+- **Accurate Lucide PUA Codepoint Mappings (`Icons.kt`)**: Updated `Icons.LOCK` (`\ue10a`) to standard Lucide closed padlock PUA codepoint, and `Icons.CHEVRON_UP` (`\ue071`) to standard Lucide chevron-up codepoint.
+- **Explicit Font Scoping for UI Icon Buttons**: Wrapped all icon-bearing button calls (`Icons.PLUS`, `Icons.POWER`, `Icons.LOCK`, `Icons.REPEAT`, `Icons.SHUFFLE`, `Icons.PLAY`, `Icons.PAUSE`, `Icons.DICES`, `Icons.TRASH`, `Icons.MORE_VERTICAL`, `Icons.CHEVRON_DOWN`) inside `session.uiTheme.withFont(UITheme.FontLevel.BODY)` (or `H3`), ensuring Dear ImGui's font stack has the merged Lucide PUA glyph atlas active when calculating text metrics and drawing buttons.
+- **Playlist Header Kebab & Popup Fix (`PlaylistEditorPanel.kt`)**: Fixed playlist header action button to use vertical kebab icon (`Icons.MORE_VERTICAL`) and positioned `ImGui.beginPopup("playlist_header_more_menu")` immediately after `openPopup`, restoring popup triggering in Dear ImGui 1.92.
+- **Unified Custom Icon Button Alignment (`DeckControlPanel.kt`, `MixerPanel.kt`)**: Refactored `drawIconButton` in `DeckControlPanel.kt` to use native `ImGui.button`, eliminating manual draw list text offset drift and ensuring perfect icon centering and border rendering across deck save and eject buttons.
+
+### Restore All 4 Distinct 3D Elevation Projection Modes (`3d_elevation.fs`, `ISFFilter.kt`, `PresetModels.kt`, `ValueParamSection.kt`, `ISFFilterTest.kt`)
+- **Restored All 4 Distinct Projection Modes**: Fully restored and calibrated all 4 geometric elevation modes in `3d_elevation.fs`:
+  - `Mode 0: Tri-Axial (3 Planes Intersecting)` — 3 orthogonal planes intersecting at origin.
+  - `Mode 1: Hex-Planar (6 Planes Intersecting)` — 6 planes intersecting at 60° angles through origin.
+  - `Mode 2: Cube Cage (6 Planes as Faces of a Cube)` — 6 planes arranged as the exterior faces of a cube with inward facing normals and distance offset.
+  - `Mode 3: Tetrahedral (Kaleidoscope)` — 24-chamber space-folding tetrahedral kaleidoscopic projection.
+- **Fixed Parameter Range Clamping in ISF Engine**: Added explicit `"MIN": 0, "MAX": 3` to `mode3D` in `3d_elevation.fs`. Enhanced `ISFFilter.kt` to derive parameter clamp boundaries from `VALUES` when explicit `MIN` and `MAX` are omitted, preventing enum/integer parameters from inadvertently defaulting to `[0.0, 1.0]`.
+- **Fixed X-Axis Squishing & Aspect Ratio Distortion**: Resolved an issue where circular 2D sources (e.g. Mandalas) were distorted into ovals squished along the horizontal X-axis by $9/16$ ($1/aspect$). In `3d_elevation.fs`, texture coordinate lookups across all planar modes ($0 \dots 2$) and kaleidoscopic mode ($3$) are now properly aspect-ratio corrected by scaling normalized coordinates by $1 / \max(1.0, aspect)$ horizontally and $1 / \max(1.0, 1.0/aspect)$ vertically, restoring 100% isotropic geometry and exact 1:1 pixel-accurate passthrough at default orientation.
+- **Dedicated UI Combo Selector & Readout**: Added a dedicated dropdown combo selector and live mode readout for `mode3D` in `ValueParamSection.kt`, allowing quick and descriptive selection of all 4 projections with informative tooltips.
+- **Updated Preset Migration**: Aligned legacy preset auto-migration in `PresetModels.kt` to map legacy mode indices to the newly ordered 0..3 projection modes.
+
 ### Consolidate 3D Elevation Under FX Tab & Streamline View Tab (`ParametersTabs.kt`, `Renderer.kt`, `DECISIONS.md`)
 - **Eliminated Duplicate 3D Elevation Controls**: Removed the redundant rendering of 3D Elevation sliders (`3D Mode`, `Zoom`, `Rotate X/Y/Z`, `Separation`, `Perspective`, `Depth Dim`, `Blend Mode`, `Roundness`) and the "+ Enable 3D Projection" button from the **View** tab. All `3d_elevation` filter parameters are now cleanly and exclusively managed under the **FX** tab in FX Slot 2.
 - **Focused View Tab**: The View tab now focuses purely on canvas framing and camera orientation: universal 2D scaling (`Zoom`) and roll (`Rotate Z`) for 2D sources, and native camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`, `Zoom`) for 3D generators.

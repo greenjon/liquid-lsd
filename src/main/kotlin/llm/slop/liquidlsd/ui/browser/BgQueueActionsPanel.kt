@@ -21,7 +21,9 @@ object BgQueueActionsPanel {
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
-        val playPauseBtnW = ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
+        val playPauseBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
+        }
         val itemSpacingX = ImGui.getStyle().getItemSpacingX()
         val totalRightW = navBtnW * 2f + playPauseBtnW + itemSpacingX * 2f
 
@@ -36,77 +38,79 @@ object BgQueueActionsPanel {
             ImGui.setCursorPosX(rightX)
         }
 
-        if (ImGui.button("<##bgQueuePrev", navBtnW, 0f)) {
-            BgQueueManager.triggerPrevious(mixer)
-        }
-        itemTooltip("Trigger previous preset in Background Queue (Mixer/bgQueuePrev).")
-
-        ImGui.sameLine()
-        val autoBgActive = BgQueueManager.isAutoBGEnabled
-        val autoBgIcon = if (autoBgActive) Icons.PAUSE else Icons.PLAY
-        if (ImGui.button("$autoBgIcon##autoBg", playPauseBtnW, 0f)) {
-            BgQueueManager.isAutoBGEnabled = !BgQueueManager.isAutoBGEnabled
-        }
-        itemTooltip("Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.")
-
-        ImGui.sameLine()
-        if (ImGui.button(">##bgQueueNext", navBtnW, 0f)) {
-            BgQueueManager.triggerNext(mixer)
-        }
-        itemTooltip("Trigger next preset in Background Queue (Mixer/bgQueueNext).")
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Controls Row: Repeat, Shuffle, Export, Clear
-        val repeatActive = BgQueueManager.isRepeatEnabled
-        if (repeatActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active (matching A/B Queue)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        if (ImGui.button("${Icons.REPEAT}##repeatBgQueue")) {
-            BgQueueManager.isRepeatEnabled = !BgQueueManager.isRepeatEnabled
-        }
-        if (repeatActive) {
-            ImGui.popStyleColor(4)
-        }
-        itemTooltip("Repeat BG Queue: cycle back to start when the bottom is reached.")
-
-        ImGui.sameLine()
-        val shuffleActive = BgQueueManager.isShuffleEnabled
-        if (shuffleActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active (matching A/B Queue)
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        if (ImGui.button("${Icons.SHUFFLE}##shuffleBgQueue")) {
-            BgQueueManager.isShuffleEnabled = !BgQueueManager.isShuffleEnabled
-            if (BgQueueManager.isShuffleEnabled) {
-                BgQueueManager.initializeShuffle()
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("<##bgQueuePrev", navBtnW, 0f)) {
+                BgQueueManager.triggerPrevious(mixer)
             }
-        }
-        if (shuffleActive) {
-            ImGui.popStyleColor(4)
-        }
-        itemTooltip("Shuffle BG Queue: play presets in a random order.")
+            itemTooltip("Trigger previous preset in Background Queue (Mixer/bgQueuePrev).")
 
-        ImGui.sameLine()
-        if (ImGui.button("Export##bgQueueExport")) {
-            ImGui.openPopup("ExportBgQueuePopup")
-        }
-        itemTooltip("Save current background queue sequence as a new playlist.")
-        BrowserPopupHandler.drawExportBgQueuePopup()
+            ImGui.sameLine()
+            val autoBgActive = BgQueueManager.isAutoBGEnabled
+            val autoBgIcon = if (autoBgActive) Icons.PAUSE else Icons.PLAY
+            if (ImGui.button("$autoBgIcon##autoBg", playPauseBtnW, 0f)) {
+                BgQueueManager.isAutoBGEnabled = !BgQueueManager.isAutoBGEnabled
+            }
+            itemTooltip("Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.")
 
-        ImGui.sameLine()
-        val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-        if (ImGui.button("Clear##bgQueue", clearBtnW, 0f)) {
-            BgQueueManager.clearQueue()
-            selectedIndex = -1
+            ImGui.sameLine()
+            if (ImGui.button(">##bgQueueNext", navBtnW, 0f)) {
+                BgQueueManager.triggerNext(mixer)
+            }
+            itemTooltip("Trigger next preset in Background Queue (Mixer/bgQueueNext).")
+
+            ImGui.separator()
+            ImGui.spacing()
+
+            // Controls Row: Repeat, Shuffle, Export, Clear
+            val repeatActive = BgQueueManager.isRepeatEnabled
+            if (repeatActive) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active (matching A/B Queue)
+                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+            }
+            if (ImGui.button("${Icons.REPEAT}##repeatBgQueue")) {
+                BgQueueManager.isRepeatEnabled = !BgQueueManager.isRepeatEnabled
+            }
+            if (repeatActive) {
+                ImGui.popStyleColor(4)
+            }
+            itemTooltip("Repeat BG Queue: cycle back to start when the bottom is reached.")
+
+            ImGui.sameLine()
+            val shuffleActive = BgQueueManager.isShuffleEnabled
+            if (shuffleActive) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active (matching A/B Queue)
+                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+            }
+            if (ImGui.button("${Icons.SHUFFLE}##shuffleBgQueue")) {
+                BgQueueManager.isShuffleEnabled = !BgQueueManager.isShuffleEnabled
+                if (BgQueueManager.isShuffleEnabled) {
+                    BgQueueManager.initializeShuffle()
+                }
+            }
+            if (shuffleActive) {
+                ImGui.popStyleColor(4)
+            }
+            itemTooltip("Shuffle BG Queue: play presets in a random order.")
+
+            ImGui.sameLine()
+            if (ImGui.button("Export##bgQueueExport")) {
+                ImGui.openPopup("ExportBgQueuePopup")
+            }
+            itemTooltip("Save current background queue sequence as a new playlist.")
+            BrowserPopupHandler.drawExportBgQueuePopup()
+
+            ImGui.sameLine()
+            val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+            if (ImGui.button("Clear##bgQueue", clearBtnW, 0f)) {
+                BgQueueManager.clearQueue()
+                selectedIndex = -1
+            }
+            itemTooltip("Empty the background queue.")
         }
-        itemTooltip("Empty the background queue.")
 
         ImGui.separator()
         ImGui.spacing()

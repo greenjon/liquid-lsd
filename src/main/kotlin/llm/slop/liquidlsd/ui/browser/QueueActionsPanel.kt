@@ -21,7 +21,9 @@ object QueueActionsPanel {
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
-        val playPauseBtnW = ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
+        val playPauseBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
+        }
         val itemSpacingX = ImGui.getStyle().getItemSpacingX()
         val totalRightW = navBtnW * 2f + playPauseBtnW + itemSpacingX * 2f
 
@@ -36,81 +38,83 @@ object QueueActionsPanel {
             ImGui.setCursorPosX(rightX)
         }
 
-        if (ImGui.button("<##queuePrev", navBtnW, 0f)) {
-            session.playQueueManager.triggerPrevious(mixer)
-        }
-        itemTooltip("Trigger previous preset in Play Queue (Mixer/queuePrev).")
-
-        ImGui.sameLine()
-        val autoVjActive = session.playQueueManager.isAutoVJEnabled
-        val autoVjIcon = if (autoVjActive) Icons.PAUSE else Icons.PLAY
-        if (ImGui.button("$autoVjIcon##autoVj", playPauseBtnW, 0f)) {
-            val nextState = !session.playQueueManager.isAutoVJEnabled
-            session.playQueueManager.isAutoVJEnabled = nextState
-            if (nextState) {
-                mixer.muteCrossfadeNonMidiCv()
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("<##queuePrev", navBtnW, 0f)) {
+                session.playQueueManager.triggerPrevious(mixer)
             }
-        }
-        itemTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
+            itemTooltip("Trigger previous preset in Play Queue (Mixer/queuePrev).")
 
-        ImGui.sameLine()
-        if (ImGui.button(">##queueNext", navBtnW, 0f)) {
-            session.playQueueManager.triggerNext(mixer)
-        }
-        itemTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Controls Row: Repeat, Shuffle, Export, Clear
-        val repeatActive = session.playQueueManager.isRepeatEnabled
-        if (repeatActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        if (ImGui.button("${Icons.REPEAT}##repeatQueue")) {
-            session.playQueueManager.isRepeatEnabled = !session.playQueueManager.isRepeatEnabled
-        }
-        if (repeatActive) {
-            ImGui.popStyleColor(4)
-        }
-        itemTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
-
-        ImGui.sameLine()
-        val shuffleActive = session.playQueueManager.isShuffleEnabled
-        if (shuffleActive) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-        }
-        if (ImGui.button("${Icons.SHUFFLE}##shuffleQueue")) {
-            session.playQueueManager.isShuffleEnabled = !session.playQueueManager.isShuffleEnabled
-            if (session.playQueueManager.isShuffleEnabled) {
-                session.playQueueManager.initializeShuffle()
+            ImGui.sameLine()
+            val autoVjActive = session.playQueueManager.isAutoVJEnabled
+            val autoVjIcon = if (autoVjActive) Icons.PAUSE else Icons.PLAY
+            if (ImGui.button("$autoVjIcon##autoVj", playPauseBtnW, 0f)) {
+                val nextState = !session.playQueueManager.isAutoVJEnabled
+                session.playQueueManager.isAutoVJEnabled = nextState
+                if (nextState) {
+                    mixer.muteCrossfadeNonMidiCv()
+                }
             }
-        }
-        if (shuffleActive) {
-            ImGui.popStyleColor(4)
-        }
-        itemTooltip("Shuffle Queue: play presets in a random order.")
+            itemTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
 
-        ImGui.sameLine()
-        if (ImGui.button("Export")) {
-            ImGui.openPopup("ExportQueuePopup")
-        }
-        itemTooltip("Save current queue sequence as a new playlist.")
-        BrowserPopupHandler.drawExportQueuePopup(session)
+            ImGui.sameLine()
+            if (ImGui.button(">##queueNext", navBtnW, 0f)) {
+                session.playQueueManager.triggerNext(mixer)
+            }
+            itemTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
 
-        ImGui.sameLine()
-        val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-        if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
-            session.playQueueManager.clearQueue()
-            selectedIndex = -1
+            ImGui.separator()
+            ImGui.spacing()
+
+            // Controls Row: Repeat, Shuffle, Export, Clear
+            val repeatActive = session.playQueueManager.isRepeatEnabled
+            if (repeatActive) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
+                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+            }
+            if (ImGui.button("${Icons.REPEAT}##repeatQueue")) {
+                session.playQueueManager.isRepeatEnabled = !session.playQueueManager.isRepeatEnabled
+            }
+            if (repeatActive) {
+                ImGui.popStyleColor(4)
+            }
+            itemTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
+
+            ImGui.sameLine()
+            val shuffleActive = session.playQueueManager.isShuffleEnabled
+            if (shuffleActive) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
+                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
+            }
+            if (ImGui.button("${Icons.SHUFFLE}##shuffleQueue")) {
+                session.playQueueManager.isShuffleEnabled = !session.playQueueManager.isShuffleEnabled
+                if (session.playQueueManager.isShuffleEnabled) {
+                    session.playQueueManager.initializeShuffle()
+                }
+            }
+            if (shuffleActive) {
+                ImGui.popStyleColor(4)
+            }
+            itemTooltip("Shuffle Queue: play presets in a random order.")
+
+            ImGui.sameLine()
+            if (ImGui.button("Export")) {
+                ImGui.openPopup("ExportQueuePopup")
+            }
+            itemTooltip("Save current queue sequence as a new playlist.")
+            BrowserPopupHandler.drawExportQueuePopup(session)
+
+            ImGui.sameLine()
+            val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
+            if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
+                session.playQueueManager.clearQueue()
+                selectedIndex = -1
+            }
+            itemTooltip("Empty the play queue.")
         }
-        itemTooltip("Empty the play queue.")
 
         ImGui.separator()
         ImGui.spacing()

@@ -80,50 +80,31 @@ object PlaylistEditorPanel {
         }
 
         // [ + ] Create New Playlist button
-        if (ImGui.button("${Icons.PLUS}##createNewPlaylistBtn", btnSize, btnSize)) {
-            ImGui.openPopup("NewPlaylistPopup")
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.PLUS}##createNewPlaylistBtn", btnSize, btnSize)) {
+                ImGui.openPopup("NewPlaylistPopup")
+            }
         }
         itemTooltip("Create new playlist.")
 
         ImGui.sameLine()
 
-        // [ ... ] More Playlist Actions button
+        // [ ... ] More Playlist Actions button (vertical kebab)
         val moreDisabled = selectedFile == null || currentPlaylist == null
         if (moreDisabled) {
             ImGui.beginDisabled()
         }
-        if (ImGui.button("${Icons.MORE_HORIZONTAL}##playlistMoreBtn", btnSize, btnSize)) {
-            ImGui.openPopup("playlist_header_more_menu")
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.MORE_VERTICAL}##playlistMoreBtn", btnSize, btnSize)) {
+                ImGui.openPopup("playlist_header_more_menu")
+            }
         }
         itemTooltip("Playlist actions.")
         if (moreDisabled) {
             ImGui.endDisabled()
         }
 
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Dropdown Combo (Full width)
-        val comboWidth = ImGui.getContentRegionAvailX()
-        val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No playlists" else "Select playlist..."
-        ImGui.setNextItemWidth(comboWidth)
-        if (ImGui.beginCombo("##playlistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
-            allPlaylists.forEach { item ->
-                val isSelected = selectedFile?.absolutePath == item.path
-                if (ImGui.selectable(item.name, isSelected)) {
-                    LibraryPanel.selectedPlaylistFile = File(item.path)
-                    LibraryPanel.activePlaylistData = null
-                    selectedPresetIndex = -1
-                }
-                if (isSelected) {
-                    ImGui.setItemDefaultFocus()
-                }
-            }
-            ImGui.endCombo()
-        }
-        itemTooltip("Select active playlist.")
-
-        // Popup menu for playlist actions
+        // Popup menu for playlist actions (placed immediately after openPopup trigger)
         if (selectedFile != null && currentPlaylist != null) {
             val playlistAsset = AssetItem(
                 path = selectedFile.absolutePath,
@@ -171,6 +152,29 @@ object PlaylistEditorPanel {
                 ImGui.endPopup()
             }
         }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // Dropdown Combo (Full width)
+        val comboWidth = ImGui.getContentRegionAvailX()
+        val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No playlists" else "Select playlist..."
+        ImGui.setNextItemWidth(comboWidth)
+        if (ImGui.beginCombo("##playlistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
+            allPlaylists.forEach { item ->
+                val isSelected = selectedFile?.absolutePath == item.path
+                if (ImGui.selectable(item.name, isSelected)) {
+                    LibraryPanel.selectedPlaylistFile = File(item.path)
+                    LibraryPanel.activePlaylistData = null
+                    selectedPresetIndex = -1
+                }
+                if (isSelected) {
+                    ImGui.setItemDefaultFocus()
+                }
+            }
+            ImGui.endCombo()
+        }
+        itemTooltip("Select active playlist.")
     }
 
     private fun drawEmptyPlaylistsState() {

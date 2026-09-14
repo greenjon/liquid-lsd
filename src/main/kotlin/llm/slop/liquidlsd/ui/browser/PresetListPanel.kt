@@ -48,8 +48,10 @@ object PresetListPanel {
         }
 
         // [ + ] Create New Preset dropdown button
-        if (ImGui.button("${Icons.PLUS}##preset_new_preset", btnSize, btnSize)) {
-            ImGui.openPopup("create_new_preset_popup")
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.PLUS}##preset_new_preset", btnSize, btnSize)) {
+                ImGui.openPopup("create_new_preset_popup")
+            }
         }
         itemTooltip("Create new preset on a deck...")
 

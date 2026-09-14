@@ -92,8 +92,13 @@ class ISFFilter(
             if (input.TYPE.lowercase() == "image") continue
 
             val defaultVal = input.DEFAULT?.toString()?.toFloatOrNull() ?: 0.0f
-            val minVal = input.MIN?.toString()?.toFloatOrNull() ?: 0.0f
-            val maxVal = input.MAX?.toString()?.toFloatOrNull() ?: 1.0f
+            val valuesFloat = input.VALUES?.mapNotNull { it.toString().toFloatOrNull() }
+            val minVal = input.MIN?.toString()?.toFloatOrNull()
+                ?: valuesFloat?.minOrNull()
+                ?: 0.0f
+            val maxVal = input.MAX?.toString()?.toFloatOrNull()
+                ?: valuesFloat?.maxOrNull()
+                ?: 1.0f
             
             parameters[input.NAME] = ModulatableParameter(
                 baseValue = defaultVal,

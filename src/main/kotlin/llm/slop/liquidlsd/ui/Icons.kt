@@ -15,7 +15,7 @@ object Icons {
     const val FILE        = "\ue0c0" // file
     const val ACTIVITY    = "\ue038" // activity
     const val ZAP         = "\ue1b4" // zap
-    const val CHEVRON_UP    = "\ue070" // chevron-up
+    const val CHEVRON_UP    = "\ue071" // chevron-up
     const val CHEVRON_DOWN  = "\ue06c" // chevron-down
     const val SEARCH      = "\ue151" // search
     const val REFRESH     = "\ue145" // refresh-cw
@@ -38,7 +38,7 @@ object Icons {
     const val MORE_HORIZONTAL = "\ue0b6" // ellipsis
     const val MORE_VERTICAL   = "\ue0b7" // ellipsis-vertical
     const val NOTE            = "\ue132" // pencil
-    const val LOCK            = "\ue10b" // lock
+    const val LOCK            = "\ue10a" // lock
     const val UNLOCK          = "\ue10c" // lock-open / unlock
     const val BOT             = "\ue1bb" // bot
     const val BOT_OFF         = "\ue5e0" // bot-off
