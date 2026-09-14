@@ -18,8 +18,16 @@ object Icons {
     const val FILE_PLUS   = "\ue0c9" // file-plus
     const val ACTIVITY    = "\ue038" // activity
     const val ZAP         = "\ue1b4" // zap
-    const val CHEVRON_UP    = "\ue070" // chevron-up
-    const val CHEVRON_DOWN  = "\ue06d" // chevron-down
+    // NOTE: Lucide's chevron-up (\ue070) and chevron-down (\ue06d) glyphs used to bake
+    // corrupted (aliasing onto unrelated digit glyphs). Root cause: Inter-Regular.ttf
+    // embeds ~760 stray glyphs of its own in the E000-F8FF PUA block (OpenType stylistic
+    // alternates, e.g. "G.1"), which collided with Lucide's merged icon glyphs at the same
+    // codepoints even though Inter is only ever requested for MAIN_RANGES. Fixed for the
+    // whole icon set by stripping those PUA cmap entries from the shipped Inter TTFs (see
+    // UITheme.loadFonts). Left as plain Unicode triangles rather than reverting to the
+    // Lucide glyphs since they already work and match visually.
+    const val CHEVRON_UP    = "\u25b2" // black up-pointing triangle
+    const val CHEVRON_DOWN  = "\u25bc" // black down-pointing triangle
     const val SEARCH      = "\ue151" // search
     const val REFRESH     = "\ue145" // refresh-cw
     const val PLUS        = "\ue13d" // plus

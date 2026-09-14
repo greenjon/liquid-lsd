@@ -649,9 +649,29 @@ object UITheme {
     private var codeBytes: ByteArray? = null
     private var lucideBytes: ByteArray? = null
 
-    // Range for standard Lucide (E000 - E7FF covers all Lucide icons used in the app)
+    // Baking the *entire* E000-E7FF Lucide PUA block (2048 codepoints) into every
+    // merged font size was pure waste: only a few dozen codepoints are ever used.
+    // Building a tight range from only the codepoints Icons.kt actually references
+    // keeps the atlas small. (This does NOT fix the separate chevron-glyph
+    // corruption -- see the CHEVRON_UP/CHEVRON_DOWN note in Icons.kt.)
     // Range format is [start, end, ..., 0]
-    private val ICON_RANGE = shortArrayOf(0xe000.toShort(), 0xe7ff.toShort(), 0)
+    private val ICON_RANGE: ShortArray = run {
+        val codepoints = sortedSetOf<Int>()
+        for (field in Icons::class.java.fields) {
+            val value = field.get(null)
+            if (value is String) {
+                value.codePoints().forEach { cp -> if (cp in 0xE000..0xF8FF) codepoints.add(cp) }
+            }
+        }
+        val range = ShortArray(codepoints.size * 2 + 1)
+        var i = 0
+        for (cp in codepoints) {
+            range[i++] = cp.toShort()
+            range[i++] = cp.toShort()
+        }
+        range[i] = 0
+        range
+    }
 
     // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, General Punctuation, Arrows, Math, Geometric Shapes
     private val MAIN_RANGES = shortArrayOf(
@@ -671,6 +691,12 @@ object UITheme {
 
     // -- Font resource paths (classpath-relative, inside resources/fonts/) -----
 
+    // NOTE: These Inter TTFs have had their stray Private Use Area cmap entries
+    // (E000-F8FF -- OpenType stylistic-alternate glyphs like "G.1") stripped via
+    // fontTools. Left in place, those entries collided with Lucide's merged icon
+    // glyphs at the same codepoints below, corrupting ~25 icons (wrong bitmap AND
+    // wrong advance width) even though Inter is only ever requested for
+    // MAIN_RANGES, not the PUA block. See git history for the stripping script.
     private const val INTER_REGULAR = "/fonts/Inter-Regular.ttf"
     private const val INTER_MEDIUM  = "/fonts/Inter-Medium.ttf"
     private const val INTER_BOLD    = "/fonts/Inter-Bold.ttf"

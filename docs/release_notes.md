@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fix ImGui 1.92 Icon Font Atlas Glyph Corruption via Inter PUA Cmap Stripping & Dynamic Icon Ranges (`UITheme.kt`, `Icons.kt`, TTF Assets)
+- **Inter PUA Cmap Stripping**: Stripped stray Private Use Area (`E000–F8FF`) OpenType stylistic-alternate cmap entries (e.g., `"G.1"`) from bundled Inter TTF font files (`Inter-Regular.ttf`, `Inter-Medium.ttf`, `Inter-Bold.ttf`). Left in place, those entries collided with Lucide merged icon glyphs at the same codepoints, causing icon corruption and glyph aliasing onto unrelated digits in Dear ImGui 1.92.
+- **Dynamic Icon Range Generation (`UITheme.kt`)**: Replaced the static full-block `E000–E7FF` (2048 codepoints) range with a dynamic `ICON_RANGE` built via reflection over `Icons.kt` fields, baking only referenced icon codepoints to optimize font atlas memory.
+- **Reliable Triangle Chevrons (`Icons.kt`)**: Switched `CHEVRON_UP` and `CHEVRON_DOWN` to standard Unicode triangles (`▲`/`▼`, `U+25B2`/`U+25BC`) baked directly into the base Inter font.
+
 ### Removal of Obsolete Legacy Preset Auto-Migration & Preset Loading Test Fix (`PresetModels.kt`, `PresetDirtyLoadingTest.kt`)
 - **Removal of Legacy Preset Auto-Migration (`PresetModels.kt`)**: Removed obsolete auto-migration logic in `Deck.applyDto` that conditionally injected legacy feedback and 3D parameters into empty FX slots.
 - **Preset Load Test Reliability (`PresetDirtyLoadingTest.kt`)**: Eliminated potential array index out-of-bounds exceptions when loading deck presets on mock decks during automated testing.
