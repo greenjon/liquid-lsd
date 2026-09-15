@@ -315,8 +315,8 @@ class Renderer {
 
         mixer.blendFBO.unbind()
 
-        // Pass 2: Composite blended result with Deck BG, bloom & master alpha
-        mixer.masterFBO.bind()
+        // Pass 2: Composite blended result with Deck BG, bloom & master alpha into masterCompositeFBO
+        mixer.masterCompositeFBO.bind()
         glViewport(0, 0, mixer.width, mixer.height)
         glClearColor(0f, 0f, 0f, 1f)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -344,6 +344,60 @@ class Renderer {
         Geometry.drawFullscreenQuad()
 
         mixerShader.unbind()
+        mixer.masterCompositeFBO.unbind()
+        glActiveTexture(GL_TEXTURE0)
+
+        // Pass 3: Serial Master FX Chain Processing
+        var currentTex = mixer.masterCompositeFBO.texture
+        for (i in mixer.masterFxSlots.indices) {
+            val fx = mixer.masterFxSlots[i] ?: continue
+            if (!fx.enabled || fx.dryWet.value <= 0.0f) continue
+
+            val fxFBO = mixer.masterFxFBOs[i]
+            val dryTex = currentTex
+
+            fxFBO.bind()
+            glViewport(0, 0, mixer.width, mixer.height)
+            glClearColor(0f, 0f, 0f, 0f)
+            glClear(GL_COLOR_BUFFER_BIT)
+            glDisable(GL_BLEND)
+
+            fx.render(dryTex, fxFBO.width, fxFBO.height)
+
+            val dryWet = fx.dryWet.value
+            if (dryWet < 1.0f) {
+                // Blend dry (previous stage's output) with wet (this stage's FBO)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+                glBlendColor(0f, 0f, 0f, 1.0f - dryWet) // dry amount
+
+                blitShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, dryTex)
+                blitShader.setUniform("uTexture", 0)
+                Geometry.drawFullscreenQuad()
+                blitShader.unbind()
+                glDisable(GL_BLEND)
+            }
+
+            fxFBO.unbind()
+            currentTex = fxFBO.texture
+        }
+
+        // Final Target Blit into masterFBO
+        mixer.masterFBO.bind()
+        glViewport(0, 0, mixer.width, mixer.height)
+        glClearColor(0f, 0f, 0f, 1f)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glDisable(GL_BLEND)
+
+        blitShader.bind()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, currentTex)
+        blitShader.setUniform("uTexture", 0)
+        Geometry.drawFullscreenQuad()
+
+        blitShader.unbind()
         mixer.masterFBO.unbind()
         glActiveTexture(GL_TEXTURE0)
     }

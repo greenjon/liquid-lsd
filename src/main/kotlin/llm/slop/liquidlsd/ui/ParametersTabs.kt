@@ -183,6 +183,32 @@ object ParametersTabs {
         return totalW
     }
 
+    fun calculateSectionTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer): Float {
+        val tabs = if (state.activeTopTab == "Mixer") {
+            listOf("CTRL", "TRANS", "FX")
+        } else {
+            val deck = when (state.activeTopTab) {
+                "Deck A" -> mixer.deckA
+                "Deck B" -> mixer.deckB
+                "Deck BG" -> mixer.deckBG
+                "Deck PV" -> mixer.deckPV
+                else -> mixer.deckA
+            }
+            getDeckSubTabs(deck)
+        }
+        if (tabs.isEmpty() || tabs == listOf("Empty")) return 0f
+        var totalW = 0f
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            tabs.forEachIndexed { i, tab ->
+                val tw = ImGui.calcTextSize(tab).x
+                val btnW = (tw + 18f).coerceAtLeast(44f)
+                totalW += btnW
+                if (i > 0) totalW += 4f
+            }
+        }
+        return totalW
+    }
+
     fun calculateSubTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, deck: Deck): Float {
         return calculateSourceTabWidth(session, state, deck) + calculateSectionTabsWidth(session, state, deck)
     }
@@ -193,6 +219,7 @@ object ParametersTabs {
             "Deck B" -> state.activeDeckBSubTab
             "Deck BG" -> state.activeDeckBGSubTab
             "Deck PV" -> state.activeDeckPVSubTab
+            "Mixer" -> state.activeMixerSubTab
             else -> state.activeDeckASubTab
         }
         if (activeSubTab !in tabs && tabs.isNotEmpty()) {
@@ -201,6 +228,7 @@ object ParametersTabs {
                 "Deck B" -> state.activeDeckBSubTab = tabs.first()
                 "Deck BG" -> state.activeDeckBGSubTab = tabs.first()
                 "Deck PV" -> state.activeDeckPVSubTab = tabs.first()
+                "Mixer" -> state.activeMixerSubTab = tabs.first()
             }
             return tabs.first()
         }
@@ -273,21 +301,22 @@ object ParametersTabs {
     }
 
     /**
-     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View]) above the first parameter name.
+     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View] for Decks or [CTRL], [TRANS], [FX] for Mixer) above the first parameter name.
      */
     fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer, btnH: Float? = null) {
-        if (state.activeTopTab == "Mixer") return
-
-        val deck = when (state.activeTopTab) {
-            "Deck A" -> mixer.deckA
-            "Deck B" -> mixer.deckB
-            "Deck BG" -> mixer.deckBG
-            "Deck PV" -> mixer.deckPV
-            else -> mixer.deckA
+        val tabs = if (state.activeTopTab == "Mixer") {
+            listOf("CTRL", "TRANS", "FX")
+        } else {
+            val deck = when (state.activeTopTab) {
+                "Deck A" -> mixer.deckA
+                "Deck B" -> mixer.deckB
+                "Deck BG" -> mixer.deckBG
+                "Deck PV" -> mixer.deckPV
+                else -> mixer.deckA
+            }
+            if (deck.isEmpty) return
+            getDeckSubTabs(deck)
         }
-        if (deck.isEmpty) return
-
-        val tabs = getDeckSubTabs(deck)
         if (tabs.isEmpty() || tabs == listOf("Empty")) return
 
         val currentSubTab = ensureValidSubTab(state, tabs)
@@ -321,12 +350,15 @@ object ParametersTabs {
                         "Deck B" -> state.activeDeckBSubTab = tab
                         "Deck BG" -> state.activeDeckBGSubTab = tab
                         "Deck PV" -> state.activeDeckPVSubTab = tab
+                        "Mixer" -> state.activeMixerSubTab = tab
                     }
                 }
                 val tooltip = when (tab) {
-                    "SRC" -> "Source: Parameters for active visual generator (${deck.source.displayName})."
-                    "FX" -> "FX: Color, shading, and feedback loop parameters."
+                    "SRC" -> "Source: Parameters for active visual generator."
+                    "FX" -> if (state.activeTopTab == "Mixer") "Master FX: 4 serial ISF effect slots on master output." else "FX: Color, shading, and feedback loop parameters."
                     "View" -> "View: 3D perspective, zoom, and rotation parameters."
+                    "CTRL" -> "Control: Master controls, channel levels, queue & clock triggers, and morph triggers."
+                    "TRANS" -> "Transition: Transition shader selection, bypass, dry/wet, and dynamic parameters."
                     else -> "$tab parameters"
                 }
                 itemTooltip(tooltip)
@@ -352,7 +384,7 @@ object ParametersTabs {
         val key = "$parentLabel/$label"
 
         val isVisible = if (parentLabel == "Mixer") {
-            state.activeTopTab == "Mixer"
+            state.activeTopTab == "Mixer" && state.activeMixerSubTab == label
         } else {
             val activeSubTab = when (parentLabel) {
                 "Deck A" -> state.activeDeckASubTab
@@ -377,6 +409,321 @@ object ParametersTabs {
         val endY = ImGui.getCursorScreenPosY()
 
         state.subgroupHeight[key] = endY - startY
+    }
+
+    fun drawMixerGroupContent(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        state: ParametersState,
+        labelColW: Float,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        drawSubGroupContent(session, "Mixer", "CTRL", state) {
+            drawMixerCtrlTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+
+        drawSubGroupContent(session, "Mixer", "TRANS", state) {
+            drawMixerTransTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+
+        drawSubGroupContent(session, "Mixer", "FX", state) {
+            drawMixerFxTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+    }
+
+    private fun drawMixerCtrlTab(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        state: ParametersState,
+        labelColW: Float,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        var row = 0
+        ParametersRenderer.drawParamRow(session, "crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        if (mixer.transitionFilter == null) {
+            ParametersRenderer.drawParamRow(session, "mix mode", "Mixer/mode", mixer.mode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+        ParametersRenderer.drawParamRow(session, "master Alpha", "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "bloom", "Mixer/bloom", mixer.bloom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+        ParametersRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "bg queue prev", "Mixer/bgQueuePrev", mixer.bgQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "bg queue next", "Mixer/bgQueueNext", mixer.bgQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "tap tempo", "Mixer/tapTempo", mixer.tapTempo, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+        if (session.uiTheme.randomizationEnabled) {
+            ParametersRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "rand Deck BG", "Mixer/randDeckBG", mixer.randDeckBG, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "rand Deck PV", "Mixer/randDeckPV", mixer.randDeckPV, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "rand All", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+    }
+
+    private fun drawMixerTransTab(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        state: ParametersState,
+        labelColW: Float,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        var row = 0
+        val trans = mixer.transitionFilter
+        val transName = trans?.displayName ?: "Linear Crossfade"
+
+        ImGui.textDisabled("TRANSITION SHADER")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth((labelColW - 130f).coerceAtLeast(30f))
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("$transName  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", (labelColW - 130f).coerceAtLeast(30f), 0f)) {
+                ShaderPickerPopup.show("Select Transition Shader", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { newTransId ->
+                    if (newTransId == null) {
+                        mixer.setTransition(null)
+                    } else {
+                        mixer.setTransition(newTransId)
+                    }
+                    onPushUndo()
+                }
+            }
+        }
+        itemTooltip("Select active ISF Transition Shader for Deck A/B crossfader.")
+
+        if (trans != null) {
+            ImGui.sameLine()
+            val enabledBuf = fxEnabledBuf
+            enabledBuf.set(trans.enabled)
+            if (ImGui.checkbox("##mixer_trans_enabled", enabledBuf)) {
+                trans.enabled = enabledBuf.get()
+                onPushUndo()
+            }
+            itemTooltip("Bypass Transition Shader.")
+
+            ImGui.sameLine()
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.MORE_VERTICAL}##mixer_trans_kebab", 22f, 20f)) {
+                    ImGui.openPopup("MixerTransKebabPopup")
+                }
+            }
+            itemTooltip("Transition Options (Reset to Default)")
+
+            if (ImGui.beginPopup("MixerTransKebabPopup")) {
+                if (ImGui.menuItem("Reset Transition")) {
+                    mixer.setTransition("linear_crossfade")
+                    onPushUndo()
+                }
+                ImGui.endPopup()
+            }
+
+            ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/Transition/DryWet", trans.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+            trans.parameters.forEach { (name, param) ->
+                ParametersRenderer.drawParamRow(session, name, "Mixer/Transition/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            }
+        } else {
+            ImGui.spacing()
+            ImGui.textDisabled("No transition filter active. Defaulting to linear crossfade.")
+        }
+    }
+
+    private fun drawMixerFxTab(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        state: ParametersState,
+        labelColW: Float,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        var row = 0
+
+        // --- Master FX Chain Header Bar ---
+        ImGui.textDisabled("MASTER FX CHAIN")
+        ImGui.sameLine(labelColW - 24f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.MORE_VERTICAL}##master_fx_chain_kebab", 22f, 20f)) {
+                ImGui.openPopup("FXChainKebabPopup_Master")
+            }
+        }
+        itemTooltip("Master FX Chain Options (Save, Copy, Paste, Clear)")
+
+        if (ImGui.beginPopup("FXChainKebabPopup_Master")) {
+            if (ImGui.menuItem("Save Chain As...")) {
+                val chainDto = mixer.toMasterFxChainDto("master_fx_chain")
+                SavePresetModal.request(
+                    title = "Save Master FX Chain As",
+                    confirmLabel = "Save",
+                    defaultName = "master_fx_chain",
+                    targetDir = FileSystemManager.getFxChainsRoot(),
+                    extension = "lsdfxchain"
+                ) { name, tags ->
+                    val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
+                    session.presetManager.saveFxChainAsync(file, name, chainDto, tags)
+                }
+            }
+            if (ImGui.menuItem("Copy Chain")) {
+                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(mixer.toMasterFxChainDto("master_chain"))
+            }
+            val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
+            if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
+                llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard?.let {
+                    mixer.applyMasterFxChain(it)
+                    onPushUndo()
+                }
+            }
+            if (ImGui.menuItem("Clear All Slots")) {
+                for (c in 0 until Deck.FX_SLOT_COUNT) {
+                    mixer.clearMasterFxSlot(c)
+                }
+                onPushUndo()
+            }
+            ImGui.endPopup()
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // --- Per-Slot Controls for Master FX ---
+        for (i in mixer.masterFxSlots.indices) {
+            val slotNum = i + 1
+            val fx = mixer.masterFxSlots[i]
+            val filterName = fx?.displayName ?: "None"
+            val collapseKey = "Mixer/FX$slotNum"
+            val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
+
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##master_fx${slotNum}_collapse")) {
+                    state.fxSlotCollapsed[collapseKey] = !isCollapsed
+                }
+            }
+            itemTooltip(if (isCollapsed) "Expand Master Slot $slotNum." else "Collapse Master Slot $slotNum.")
+            ImGui.sameLine()
+
+            ImGui.textDisabled("Slot $slotNum")
+            ImGui.sameLine()
+            ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##master_fx${slotNum}_selector", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
+                    ShaderPickerPopup.show("Select Master FX Slot $slotNum", fxSlotPickerTypes[i]) { newFilterId ->
+                        if (newFilterId == null) {
+                            mixer.clearMasterFxSlot(i)
+                            onPushUndo()
+                        } else {
+                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
+                            if (filter != null) {
+                                mixer.masterFxSlots[i]?.dispose()
+                                mixer.masterFxSlots[i] = filter
+                                onPushUndo()
+                            }
+                        }
+                    }
+                }
+            }
+
+            ImGui.sameLine()
+            if (fx != null) {
+                val enabledBuf = fxSlotEnabledBufs[i]
+                enabledBuf.set(fx.enabled)
+                if (ImGui.checkbox("##master_fx${slotNum}_enabled", enabledBuf)) {
+                    fx.enabled = enabledBuf.get()
+                    onPushUndo()
+                }
+                itemTooltip("Bypass Master Slot $slotNum filter.")
+                ImGui.sameLine()
+            }
+
+            // Per-Slot Kebab Menu
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.MORE_VERTICAL}##master_fx_slot_kebab_${slotNum}", 22f, 20f)) {
+                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_Master")
+                }
+            }
+            itemTooltip("Master Slot $slotNum Options (Save, Copy, Paste, Reset)")
+
+            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_Master")) {
+                val hasFx = mixer.masterFxSlots[i] != null
+                if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
+                    val slotDto = mixer.toMasterFxSlotDto(i)
+                    if (slotDto != null) {
+                        SavePresetModal.request(
+                            title = "Save Master FX Slot Preset As",
+                            confirmLabel = "Save",
+                            defaultName = fx?.displayName?.lowercase()?.replace(" ", "_") ?: "master_fx_preset",
+                            targetDir = FileSystemManager.getFxPresetsRoot(),
+                            extension = "lsdfx"
+                        ) { name, tags ->
+                            val file = java.io.File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
+                            session.presetManager.saveFxPresetAsync(file, name, slotDto, tags)
+                        }
+                    }
+                }
+                if (ImGui.menuItem("Copy Slot", "", false, hasFx)) {
+                    mixer.toMasterFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
+                }
+                val canPasteSlot = llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard != null
+                if (ImGui.menuItem("Paste Slot", "", false, canPasteSlot)) {
+                    llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard?.let {
+                        mixer.applyMasterFxSlot(i, it)
+                        onPushUndo()
+                    }
+                }
+                if (ImGui.menuItem("Reset Slot", "", false, hasFx)) {
+                    mixer.clearMasterFxSlot(i)
+                    onPushUndo()
+                }
+                ImGui.endPopup()
+            }
+
+            if (fx != null && !isCollapsed) {
+                ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+                fx.parameters.forEach { (name, param) ->
+                    ParametersRenderer.drawParamRow(session, name, "Mixer/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                }
+            }
+
+            // Drag and Drop Target for Master FX Slot
+            if (ImGui.beginDragDropTarget()) {
+                val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+                if (payload != null) {
+                    val file = java.io.File(payload)
+                    if (file.exists()) {
+                        val ext = file.extension.lowercase()
+                        if (ext == "lsdfx") {
+                            session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                                mixer.applyMasterFxSlot(i, presetDto.slot)
+                                onPushUndo()
+                            }
+                        } else if (ext == "lsdfxchain") {
+                            session.presetManager.loadFxChainAsync(file).thenAccept { chainDto ->
+                                mixer.applyMasterFxChain(chainDto)
+                                onPushUndo()
+                            }
+                        }
+                    }
+                }
+                ImGui.endDragDropTarget()
+            }
+
+            if (i < mixer.masterFxSlots.lastIndex) {
+                ImGui.separator()
+            }
+        }
     }
 
     fun drawDeckGroupContent(

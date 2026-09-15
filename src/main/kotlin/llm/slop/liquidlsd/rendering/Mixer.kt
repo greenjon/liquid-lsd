@@ -1,9 +1,15 @@
 package llm.slop.liquidlsd.rendering
 
+import llm.slop.liquidlsd.models.FXChainDto
+import llm.slop.liquidlsd.models.FXSlotDto
+import llm.slop.liquidlsd.models.applyDto
+import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.MeterType
 
 import llm.slop.liquidlsd.parameters.ParameterOwner
+import llm.slop.liquidlsd.rendering.isf.ISFFilter
+import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 
 /**
  * Manages the blending of two Decks (Deck A and Deck B) into a master output FBO.
@@ -18,14 +24,23 @@ class Mixer(
     var height: Int = 1080
 ) : ParameterOwner {
 
-    // The master FBO where the blended result is rendered
+    // The master FBO where the final output result is rendered
     var masterFBO = FBO(width, height)
 
     // FBO for intermediate transition rendering pass when an ISF transition is active
     var blendFBO = FBO(width, height)
 
+    // Intermediate FBO for pre-FX composite output (Deck A + Deck B composited over Deck BG)
+    var masterCompositeFBO = FBO(width, height)
+
+    // Master FX slots (chained in order: slot 0's output feeds slot 1's input, etc.)
+    val masterFxSlots = arrayOfNulls<ISFFilter>(Deck.FX_SLOT_COUNT)
+
+    // FBOs for master FX serial processing stages
+    var masterFxFBOs = Array(Deck.FX_SLOT_COUNT) { FBO(width, height) }
+
     // Active ISF transition filter for crossfading
-    var transitionFilter: llm.slop.liquidlsd.rendering.isf.ISFFilter? = null
+    var transitionFilter: ISFFilter? = null
     private var lastMode: Int = 4
 
 
@@ -61,10 +76,73 @@ class Mixer(
         blendFBO = FBO(width, height)
         blendFBO.clear(0f, 0f, 0f, 0f)
 
+        masterCompositeFBO.dispose()
+        masterCompositeFBO = FBO(width, height)
+        masterCompositeFBO.clear(0f, 0f, 0f, 0f)
+
+        masterFxFBOs.forEach { it.dispose() }
+        masterFxFBOs = Array(Deck.FX_SLOT_COUNT) { FBO(width, height) }
+        masterFxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+
         deckA.resize(newWidth, newHeight)
         deckB.resize(newWidth, newHeight)
         deckBG.resize(newWidth, newHeight)
         deckPV.resize(newWidth, newHeight)
+    }
+
+    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? {
+        val fx = masterFxSlots.getOrNull(slotIndex) ?: return null
+        if (fx.id.isEmpty()) return null
+        return FXSlotDto(
+            filterId = fx.id,
+            enabled = fx.enabled,
+            dryWet = fx.dryWet.toDto(),
+            parameters = fx.parameters.mapValues { p -> p.value.toDto() }
+        )
+    }
+
+    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) {
+        if (slotIndex !in masterFxSlots.indices) return
+        masterFxSlots[slotIndex]?.dispose()
+        masterFxSlots[slotIndex] = null
+
+        if (dto.filterId.isNotBlank()) {
+            val filter = ISFFilterRegistry.createFilter(dto.filterId)
+            if (filter != null) {
+                filter.enabled = dto.enabled
+                filter.dryWet.applyDto(dto.dryWet)
+                for ((key, paramDto) in dto.parameters) {
+                    filter.parameters[key]?.applyDto(paramDto)
+                }
+                masterFxSlots[slotIndex] = filter
+            }
+        }
+    }
+
+    fun clearMasterFxSlot(slotIndex: Int) {
+        if (slotIndex in masterFxSlots.indices) {
+            masterFxSlots[slotIndex]?.dispose()
+            masterFxSlots[slotIndex] = null
+        }
+    }
+
+    fun applyMasterFxChain(dto: FXChainDto) {
+        for (i in masterFxSlots.indices) {
+            clearMasterFxSlot(i)
+            val slotDto = dto.slots.getOrNull(i)
+            if (slotDto != null && slotDto.filterId.isNotBlank()) {
+                applyMasterFxSlot(i, slotDto)
+            }
+        }
+    }
+
+    fun toMasterFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto {
+        val slotsList = (0 until Deck.FX_SLOT_COUNT).map { toMasterFxSlotDto(it) }
+        return FXChainDto(
+            name = name,
+            tags = tags,
+            slots = slotsList
+        )
     }
 
     // Blend parameters
@@ -185,6 +263,12 @@ class Mixer(
         list.addAll(deckB.getAllRandomizableParameters())
         list.addAll(deckBG.getAllRandomizableParameters())
         list.addAll(deckPV.getAllRandomizableParameters())
+        masterFxSlots.forEach { fx ->
+            if (fx != null && fx.enabled) {
+                list.add(fx.dryWet)
+                list.addAll(fx.parameters.values)
+            }
+        }
         list.add(crossfade)
         list.add(masterAlpha)
         return list
@@ -213,6 +297,10 @@ class Mixer(
 
         transitionFilter?.let { filter ->
             list.addAll(filter.getParameterPaths("$prefix/Transition"))
+        }
+
+        masterFxSlots.forEachIndexed { i, fx ->
+            fx?.getParameterPaths("$prefix/FX${i + 1}")?.let { list.addAll(it) }
         }
 
         list.addAll(deckA.getParameterPaths("Deck A"))
@@ -316,6 +404,7 @@ class Mixer(
         randAll.evaluate()
 
         transitionFilter?.update()
+        masterFxSlots.forEach { it?.update() }
 
         // Continuous random morphing evaluation — zero-allocation check
         val isModA = randDeckA.hasActiveModulator() || randDeckA.value > 0.0001f
@@ -420,11 +509,14 @@ class Mixer(
     }
 
     /**
-     * Disposes the master FBO and transition filter resources.
+     * Disposes the master FBO, master composite FBO, FX slots, and transition filter resources.
      */
     fun dispose() {
         masterFBO.dispose()
         blendFBO.dispose()
+        masterCompositeFBO.dispose()
+        masterFxFBOs.forEach { it.dispose() }
+        masterFxSlots.forEach { it?.dispose() }
         transitionFilter?.dispose()
     }
 }

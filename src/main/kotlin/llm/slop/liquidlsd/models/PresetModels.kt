@@ -251,18 +251,10 @@ data class FXSlotDto(
 )
 
 @Serializable
-data class SessionStateDto(
-    val version: Int = 5,
-    val deckA: DeckPresetDto,
-    val deckB: DeckPresetDto,
-    val deckBG: DeckPresetDto? = null,
-    val deckPV: DeckPresetDto? = null,
+data class MixerDto(
     val crossfade: ParameterDto,
     val masterAlpha: ParameterDto,
     val blendMode: Float,
-    val queue: List<String>,
-    val activeIndex: Int,
-    val isAutoVJEnabled: Boolean,
     val bloom: ParameterDto? = null,
     val xfadeSpeed: ParameterDto? = null,
     val queueNext: ParameterDto? = null,
@@ -270,19 +262,33 @@ data class SessionStateDto(
     val bgQueueNext: ParameterDto? = null,
     val bgQueuePrev: ParameterDto? = null,
     val tapTempo: ParameterDto? = null,
+    val levelA: Float = 1.0f,
+    val levelB: Float = 1.0f,
+    val levelBG: Float = 1.0f,
+    val levelPV: Float = 1.0f,
+    val masterLevel: Float = 1.0f,
+    val transitionSlot: FXSlotDto? = null,
+    val masterFxSlots: List<FXSlotDto?> = emptyList()
+)
+
+@Serializable
+data class SessionStateDto(
+    val version: Int = 6,
+    val deckA: DeckPresetDto,
+    val deckB: DeckPresetDto,
+    val deckBG: DeckPresetDto? = null,
+    val deckPV: DeckPresetDto? = null,
+    val mixer: MixerDto,
+    val queue: List<String>,
+    val activeIndex: Int,
+    val isAutoVJEnabled: Boolean,
     val isRepeatEnabled: Boolean = false,
     val isShuffleEnabled: Boolean = false,
     val bgQueue: List<String> = emptyList(),
     val bgActiveIndex: Int = -1,
     val isAutoBGEnabled: Boolean = false,
     val isBgRepeatEnabled: Boolean = false,
-    val isBgShuffleEnabled: Boolean = false,
-    val levelA: Float = 1.0f,
-    val levelB: Float = 1.0f,
-    val levelBG: Float = 1.0f,
-    val levelPV: Float = 1.0f,
-    val masterLevel: Float = 1.0f,
-    val transitionSlot: FXSlotDto? = null
+    val isBgShuffleEnabled: Boolean = false
 )
 
 @Serializable

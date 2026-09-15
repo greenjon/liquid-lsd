@@ -539,17 +539,12 @@ object PresetManager {
                 )
             }
 
-            val session = SessionStateDto(
-                deckA = deckADto,
-                deckB = deckBDto,
-                deckBG = deckBGDto,
-                deckPV = deckPVDto,
+            val masterFxSlotDtos = (0 until Deck.FX_SLOT_COUNT).map { mixer.toMasterFxSlotDto(it) }
+
+            val mixerDto = MixerDto(
                 crossfade = mixer.crossfade.toDto(),
                 masterAlpha = mixer.masterAlpha.toDto(),
                 blendMode = mixer.mode.baseValue,
-                queue = PlayQueueManager.queue.map { serializeSessionPath(it) },
-                activeIndex = PlayQueueManager.activeIndex,
-                isAutoVJEnabled = PlayQueueManager.isAutoVJEnabled,
                 bloom = mixer.bloom.toDto(),
                 xfadeSpeed = mixer.xfadeSpeed.toDto(),
                 queueNext = mixer.queueNext.toDto(),
@@ -557,19 +552,31 @@ object PresetManager {
                 bgQueueNext = mixer.bgQueueNext.toDto(),
                 bgQueuePrev = mixer.bgQueuePrev.toDto(),
                 tapTempo = mixer.tapTempo.toDto(),
+                levelA = mixer.levelA,
+                levelB = mixer.levelB,
+                levelBG = mixer.levelBG,
+                levelPV = mixer.levelPV,
+                masterLevel = mixer.masterLevel,
+                transitionSlot = transSlot,
+                masterFxSlots = masterFxSlotDtos
+            )
+
+            val session = SessionStateDto(
+                deckA = deckADto,
+                deckB = deckBDto,
+                deckBG = deckBGDto,
+                deckPV = deckPVDto,
+                mixer = mixerDto,
+                queue = PlayQueueManager.queue.map { serializeSessionPath(it) },
+                activeIndex = PlayQueueManager.activeIndex,
+                isAutoVJEnabled = PlayQueueManager.isAutoVJEnabled,
                 isRepeatEnabled = PlayQueueManager.isRepeatEnabled,
                 isShuffleEnabled = PlayQueueManager.isShuffleEnabled,
                 bgQueue = BgQueueManager.queue.map { serializeSessionPath(it) },
                 bgActiveIndex = BgQueueManager.activeIndex,
                 isAutoBGEnabled = BgQueueManager.isAutoBGEnabled,
                 isBgRepeatEnabled = BgQueueManager.isRepeatEnabled,
-                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled,
-                levelA = mixer.levelA,
-                levelB = mixer.levelB,
-                levelBG = mixer.levelBG,
-                levelPV = mixer.levelPV,
-                masterLevel = mixer.masterLevel,
-                transitionSlot = transSlot
+                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled
             )
             
             val content = json.encodeToString(session)
@@ -592,17 +599,19 @@ object PresetManager {
             val content = sessionFile.readText()
             val session = json.decodeFromString<SessionStateDto>(content)
             
-            mixer.crossfade.applyDto(session.crossfade)
-            mixer.masterAlpha.applyDto(session.masterAlpha)
-            mixer.mode.set(session.blendMode)
-            mixer.levelA = session.levelA
-            mixer.levelB = session.levelB
-            mixer.levelBG = session.levelBG
-            mixer.levelPV = session.levelPV
-            mixer.masterLevel = session.masterLevel
+            val mDto = session.mixer
+
+            mixer.crossfade.applyDto(mDto.crossfade)
+            mixer.masterAlpha.applyDto(mDto.masterAlpha)
+            mixer.mode.set(mDto.blendMode)
+            mixer.levelA = mDto.levelA
+            mixer.levelB = mDto.levelB
+            mixer.levelBG = mDto.levelBG
+            mixer.levelPV = mDto.levelPV
+            mixer.masterLevel = mDto.masterLevel
 
             mixer.setTransition(null)
-            session.transitionSlot?.let { transDto ->
+            mDto.transitionSlot?.let { transDto ->
                 mixer.setTransition(transDto.filterId)
                 mixer.transitionFilter?.let { trans ->
                     trans.enabled = transDto.enabled
@@ -610,6 +619,14 @@ object PresetManager {
                     for ((key, paramDto) in transDto.parameters) {
                         trans.parameters[key]?.applyDto(paramDto)
                     }
+                }
+            }
+
+            for (i in 0 until Deck.FX_SLOT_COUNT) {
+                mixer.clearMasterFxSlot(i)
+                val slotDto = mDto.masterFxSlots.getOrNull(i)
+                if (slotDto != null && slotDto.filterId.isNotBlank()) {
+                    mixer.applyMasterFxSlot(i, slotDto)
                 }
             }
             
@@ -622,13 +639,13 @@ object PresetManager {
             val pvDto = session.deckPV ?: emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
             
-            session.bloom?.let { mixer.bloom.applyDto(it) }
-            session.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
-            session.queueNext?.let { mixer.queueNext.applyDto(it) }
-            session.queuePrev?.let { mixer.queuePrev.applyDto(it) }
-            session.bgQueueNext?.let { mixer.bgQueueNext.applyDto(it) }
-            session.bgQueuePrev?.let { mixer.bgQueuePrev.applyDto(it) }
-            session.tapTempo?.let { mixer.tapTempo.applyDto(it) }
+            mDto.bloom?.let { mixer.bloom.applyDto(it) }
+            mDto.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
+            mDto.queueNext?.let { mixer.queueNext.applyDto(it) }
+            mDto.queuePrev?.let { mixer.queuePrev.applyDto(it) }
+            mDto.bgQueueNext?.let { mixer.bgQueueNext.applyDto(it) }
+            mDto.bgQueuePrev?.let { mixer.bgQueuePrev.applyDto(it) }
+            mDto.tapTempo?.let { mixer.tapTempo.applyDto(it) }
             mixer.queueNext.baseValue = 0f
             mixer.queuePrev.baseValue = 0f
             mixer.bgQueueNext.baseValue = 0f
@@ -662,9 +679,14 @@ object PresetManager {
             
             val allUnresolved = mutableListOf<String>()
 
-            session.transitionSlot?.let { transDto ->
+            mDto.transitionSlot?.let { transDto ->
                 if (transDto.filterId.isNotBlank() && !llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.hasTransition(transDto.filterId)) {
                     allUnresolved.add("Transition filter not found: ${transDto.filterId}")
+                }
+            }
+            mDto.masterFxSlots.forEachIndexed { i, fxDto ->
+                if (fxDto != null && fxDto.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fxDto.filterId }) {
+                    allUnresolved.add("Master FX${i + 1} filter not found: ${fxDto.filterId}")
                 }
             }
 

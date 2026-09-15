@@ -196,32 +196,7 @@ object ParametersPanel {
             if (ImGui.beginChild("##parameters_scroll", gridContentWidth, 0f, false)) {
                 ImGui.setScrollX(0f)
                 if (state.activeTopTab == "Mixer") {
-                    ParametersTabs.drawSubGroupContent(session, "Mixer", "Mixer", state) {
-                        var row = 0
-                        ParametersRenderer.drawParamRow(session, "crossfade",  "Mixer/crossfade",  mixer.crossfade,  state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        if (mixer.transitionFilter == null) {
-                            ParametersRenderer.drawParamRow(session, "mix mode",   "Mixer/mode",       mixer.mode,       state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        } else {
-                            mixer.transitionFilter?.parameters?.forEach { (paramName, param) ->
-                                ParametersRenderer.drawParamRow(session, paramName.lowercase(), "Mixer/Transition/$paramName", param, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                            }
-                        }
-                        ParametersRenderer.drawParamRow(session, "master Alpha",   "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "bloom",      "Mixer/bloom",       mixer.bloom,       state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "fade speed",  "Mixer/xfadeSpeed",  mixer.xfadeSpeed,  state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "bg queue prev", "Mixer/bgQueuePrev", mixer.bgQueuePrev, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "bg queue next", "Mixer/bgQueueNext", mixer.bgQueueNext, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        ParametersRenderer.drawParamRow(session, "tap tempo", "Mixer/tapTempo", mixer.tapTempo, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        if (session.uiTheme.randomizationEnabled) {
-                            ParametersRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                            ParametersRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                            ParametersRenderer.drawParamRow(session, "rand Deck BG", "Mixer/randDeckBG", mixer.randDeckBG, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                            ParametersRenderer.drawParamRow(session, "rand Deck PV", "Mixer/randDeckPV", mixer.randDeckPV, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                            ParametersRenderer.drawParamRow(session, "rand All", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, row++, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                        }
-                    }
+                    ParametersTabs.drawMixerGroupContent(session, mixer, state, labelColW, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
                 } else if (state.activeTopTab == "Deck A") {
                     if (mixer.deckA.isEmpty) {
                         drawLaunchpad(session, "Deck A", mixer.deckA, state, mixer, deckPresetController)
@@ -369,7 +344,7 @@ object ParametersPanel {
             "Deck PV" -> mixer.deckPV
             else -> null
         }
-        if (activeDeck != null && !activeDeck.isEmpty) {
+        if (state.activeTopTab == "Mixer" || (activeDeck != null && !activeDeck.isEmpty)) {
             val subTabH = (headerH - 4f).coerceAtLeast(24f)
             ImGui.setCursorScreenPos(startX + SECTION_TABS_INSET_X, startY + (headerH - subTabH) * 0.5f)
             ParametersTabs.drawSectionTabs(session, state, mixer, btnH = subTabH)

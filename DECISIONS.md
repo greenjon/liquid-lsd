@@ -1,3 +1,19 @@
+## Phase 1: Master Output FX Pipeline & Mixer Sub-Tabs Architecture (`Mixer.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetManager.kt`, `ParametersState.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`)
+
+- **Decision**: Added a 4-slot serial ISF FX chain to the Master Output, introduced sub-tabs (`[ CTRL ]`, `[ TRANS ]`, `[ FX ]`) to the Mixer section in `ParametersTabs`, and refactored `SessionStateDto` (version 6) with a dedicated `MixerDto`:
+  - **Serial Master FX Pipeline**: Added `masterFxSlots` (4 ISF slots) and intermediate FBOs (`masterCompositeFBO` and `masterFxFBOs`) to `Mixer.kt`. Refactored `Renderer.renderMixer` into a 3-pass pipeline (Pass 1: Transition -> `blendFBO`, Pass 2: Composite -> `masterCompositeFBO`, Pass 3: Serial Master FX -> `masterFxFBOs` -> target `masterFBO`).
+  - **Modulation Grid Integration**: Parameter paths for Master FX slots are registered under `Mixer/FX1` .. `Mixer/FX4`, matching Deck FX paths so accordion keys and CV matrix rows align cleanly.
+  - **Mixer Sub-Tabs**: Added sub-tab bar `[ CTRL ] [ TRANS ] [ FX ]` under the `MIX` tab in the Parameters panel:
+    - `CTRL`: Master Alpha, Crossfade, Fade Speed, Bloom, Channel Levels, Queue & Clock triggers, and Morph triggers.
+    - `TRANS`: Transition shader selector button (`MIXER_TRANSITION`), bypass checkbox, dry/wet slider, and dynamic transition parameter rows on the CV modulation grid.
+    - `FX`: Master FX chain options (Save/Copy/Paste/Clear), 4 slot expand/collapse chevrons, shader selectors, bypass checkboxes, slot presets (`.lsdfx`), and dry/wet / parameter modulation rows on the grid.
+  - **Clean Serialization Schema (`MixerDto` & `SessionStateDto` v6)**: Consolidated all mixer properties, levels, transition slot, and master FX slots into `MixerDto`. Bumped `SessionStateDto` version to 6 with automatic graceful fallback on legacy session deserialization.
+- **Rationale**:
+  - Provides VJs with full master-bus effect processing (e.g. master bloom, color grade, glitch, or post-composite filters) across the composited output.
+  - Replaces monolithic Mixer parameter lists with structured sub-tabs while maintaining 100% modulation grid capability across transition and master FX parameters.
+
+---
+
 ## Lucide Icon PUA Codepoints & Dear ImGui 1.92 Font & Popup Scoping (`Icons.kt`, `DeckControlPanel.kt`, `PlaylistEditorPanel.kt`, `ModulatorHeaderRow.kt`, `Lfo2Section.kt`)
 
 - **Decision**: Aligned all `Icons.*` constants in `Icons.kt` with the verified Fontello Private Use Area (PUA) glyph mapping from `src/main/resources/fonts/lucide.ttf`, resolved popup modal scoping across ImGui child windows, and fixed inverted button arguments:

@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.presets
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.MixerDto
 import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.SessionStateDto
 import kotlin.test.Test
@@ -37,37 +38,43 @@ class SessionStateTest {
             globalAlpha = dummyParam,
             isEmpty = false
         )
-        val session = SessionStateDto(
-            version = 5,
-            deckA = dummyDeck,
-            deckB = dummyDeck.copy(name = "Deck B"),
-            deckBG = dummyDeck.copy(name = "Deck BG", isEmpty = true),
-            deckPV = dummyDeck.copy(name = "Deck PV", isEmpty = true),
+        val mixerDto = MixerDto(
             crossfade = dummyParam,
             masterAlpha = dummyParam,
             blendMode = 4.0f,
-            queue = listOf("presets/test.lsd"),
-            activeIndex = 0,
-            isAutoVJEnabled = true,
-            bgQueue = listOf("presets/bg.lsd"),
-            bgActiveIndex = 0,
-            isAutoBGEnabled = true,
             bloom = dummyParam,
             xfadeSpeed = dummyParam,
             queueNext = dummyParam,
             queuePrev = dummyParam,
-            isRepeatEnabled = true,
-            isShuffleEnabled = true,
+            bgQueueNext = dummyParam,
+            bgQueuePrev = dummyParam,
+            tapTempo = dummyParam,
             levelA = 0.8f,
             levelB = 0.6f,
             levelBG = 0.4f,
             levelPV = 0.2f,
             masterLevel = 0.9f
         )
+        val session = SessionStateDto(
+            version = 6,
+            deckA = dummyDeck,
+            deckB = dummyDeck.copy(name = "Deck B"),
+            deckBG = dummyDeck.copy(name = "Deck BG", isEmpty = true),
+            deckPV = dummyDeck.copy(name = "Deck PV", isEmpty = true),
+            mixer = mixerDto,
+            queue = listOf("presets/test.lsd"),
+            activeIndex = 0,
+            isAutoVJEnabled = true,
+            bgQueue = listOf("presets/bg.lsd"),
+            bgActiveIndex = 0,
+            isAutoBGEnabled = true,
+            isRepeatEnabled = true,
+            isShuffleEnabled = true
+        )
 
         val jsonStr = json.encodeToString(session)
         val decoded = json.decodeFromString<SessionStateDto>(jsonStr)
-        assertEquals(5, decoded.version)
+        assertEquals(6, decoded.version)
         assertEquals("Deck A", decoded.deckA.name)
         assertEquals("Deck B", decoded.deckB.name)
         assertNotNull(decoded.deckBG)
@@ -76,23 +83,23 @@ class SessionStateTest {
         assertEquals("Deck PV", decoded.deckPV.name)
         assertTrue(decoded.deckBG.isEmpty)
         assertTrue(decoded.deckPV.isEmpty)
-        assertNotNull(decoded.bloom)
-        assertEquals(0.5f, decoded.bloom.baseValue)
-        assertNotNull(decoded.xfadeSpeed)
-        assertEquals(0.5f, decoded.xfadeSpeed.baseValue)
-        assertNotNull(decoded.queueNext)
-        assertEquals(0.5f, decoded.queueNext.baseValue)
-        assertNotNull(decoded.queuePrev)
-        assertEquals(0.5f, decoded.queuePrev.baseValue)
+        assertNotNull(decoded.mixer.bloom)
+        assertEquals(0.5f, decoded.mixer.bloom?.baseValue)
+        assertNotNull(decoded.mixer.xfadeSpeed)
+        assertEquals(0.5f, decoded.mixer.xfadeSpeed?.baseValue)
+        assertNotNull(decoded.mixer.queueNext)
+        assertEquals(0.5f, decoded.mixer.queueNext?.baseValue)
+        assertNotNull(decoded.mixer.queuePrev)
+        assertEquals(0.5f, decoded.mixer.queuePrev?.baseValue)
         assertTrue(decoded.isRepeatEnabled)
         assertTrue(decoded.isShuffleEnabled)
         assertTrue(decoded.isAutoBGEnabled)
         assertEquals(listOf("presets/bg.lsd"), decoded.bgQueue)
-        assertEquals(0.8f, decoded.levelA)
-        assertEquals(0.6f, decoded.levelB)
-        assertEquals(0.4f, decoded.levelBG)
-        assertEquals(0.2f, decoded.levelPV)
-        assertEquals(0.9f, decoded.masterLevel)
+        assertEquals(0.8f, decoded.mixer.levelA)
+        assertEquals(0.6f, decoded.mixer.levelB)
+        assertEquals(0.4f, decoded.mixer.levelBG)
+        assertEquals(0.2f, decoded.mixer.levelPV)
+        assertEquals(0.9f, decoded.mixer.masterLevel)
     }
 
     @Test

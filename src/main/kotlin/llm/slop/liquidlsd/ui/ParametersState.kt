@@ -56,6 +56,7 @@ class ParametersState {
     var activeDeckBSubTab: String = "SRC"
     var activeDeckBGSubTab: String = "SRC"
     var activeDeckPVSubTab: String = "SRC"
+    var activeMixerSubTab: String = "CTRL"
 
     fun setDeckSubTab(deckLabel: String, tab: String) {
         when (deckLabel) {
@@ -63,6 +64,7 @@ class ParametersState {
             "Deck B" -> activeDeckBSubTab = tab
             "Deck BG" -> activeDeckBGSubTab = tab
             "Deck PV" -> activeDeckPVSubTab = tab
+            "Mixer" -> activeMixerSubTab = tab
         }
     }
 

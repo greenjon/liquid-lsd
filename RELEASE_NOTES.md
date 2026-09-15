@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Phase 1: Master Output FX Pipeline & Mixer Sub-Tabs (`Mixer.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetManager.kt`, `ParametersState.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`)
+- **4-Slot Serial Master FX Chain**: Added a 4-slot ISF effect chain to the Master Output stage in `Mixer.kt`, allowing VJs to chain serial post-composite effects (e.g. master bloom, CRT glitch, color adjustment, hue shift, or distortion) across the blended output of Deck A, Deck B, and Deck BG.
+- **3-Pass Composite Rendering Pipeline**: Refactored `Renderer.renderMixer()` into a 3-pass GPU architecture: Pass 1 (ISF Transition -> `blendFBO`), Pass 2 (Composite -> `masterCompositeFBO`), and Pass 3 (Serial Master FX chain -> `masterFxFBOs` -> target `masterFBO`). Downstream capture engines (recording, NDI/texture streaming, and display output) continue to consume `masterFBO` seamlessly.
+- **Mixer Panel Sub-Tabs (`[ CTRL ]`, `[ TRANS ]`, `[ FX ]`)**: Replaced the monolithic Mixer parameter panel with three structured sub-tabs:
+  - **`CTRL` Tab**: Master Alpha, Crossfade, Fade Speed, Bloom, Channel Isolation Levels, Queue & Clock triggers, and Morph triggers.
+  - **`TRANS` Tab**: Transition shader selector popup (`MIXER_TRANSITION`), bypass toggle, dry/wet fader, and dynamic transition parameter rows with full CV modulation grid support.
+  - **`FX` Tab**: Master FX Chain options (Save/Copy/Paste/Clear), 4 slot expand/collapse chevrons, shader selectors, bypass checkboxes, slot presets (`.lsdfx`), drag-and-drop targets, and dry/wet / parameter rows on the CV grid.
+- **Clean `MixerDto` & `SessionStateDto` Version 6**: Refactored session state to cleanly nest all mixer settings, levels, transition filters, and master FX slots into a dedicated `MixerDto`. Bumped `SessionStateDto` version to 6 with automatic graceful fallback on legacy session deserialization.
+
+
 ### 2x2 Grouped Container Layout for Library Panel (`LibraryPanel.kt`, `docs/developer/ui.md`)
 - **2x2 Grouped Box Architecture**: The 4 Library columns are now logically organized into two rounded container boxes (`LibraryGroup1` and `LibraryGroup2`) featuring 6 px rounded corners (`ChildRounding`), a subtle dark child background, and border frames (`Border`).
   - **Group 1 (Assets & Setlists)**: Encloses Column 1 (Presets / FX Presets) and Column 2 (Playlist Editor / FX Chains).
