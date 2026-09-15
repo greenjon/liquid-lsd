@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### 2x2 Grouped Container Layout for Library Panel (`LibraryPanel.kt`, `docs/developer/ui.md`)
+- **2x2 Grouped Box Architecture**: The 4 Library columns are now logically organized into two rounded container boxes (`LibraryGroup1` and `LibraryGroup2`) featuring 6 px rounded corners (`ChildRounding`), a subtle dark child background, and border frames (`Border`).
+  - **Group 1 (Assets & Setlists)**: Encloses Column 1 (Presets / FX Presets) and Column 2 (Playlist Editor / FX Chains).
+  - **Group 2 (Live Play Queues)**: Encloses Column 3 (Background Queue) and Column 4 (Play Queue A/B).
+- **Seamless Alignment**: An 8 px horizontal gap (`groupGap`) separates the two rounded group containers, and the top edge of both boxes touches the bottom of the top toolbar menu bar.
+
 ### Per-Slot FX Presets & 4-Slot FX Chains (`FXPresetModels.kt`, `ParametersTabs.kt`, `FXPresetListPanel.kt`, `FXChainListPanel.kt`, `LibraryPanel.kt`, `SavePresetModal.kt`, `PresetManager.kt`, `FileSystemManager.kt`)
 - **Per-Slot FX Presets (`.lsdfx`)**: Individual slot FX configurations (filter ID, bypass, dry/wet, and parameters) can now be saved into `.lsdfx` files under `library/fx/` and loaded directly onto any deck slot.
 - **4-Slot FX Chains (`.lsdfxchain`)**: Full 4-slot FX chains can be captured and saved into `.lsdfxchain` files under `library/fx_chains/` to instantly recall complete effect pipelines.

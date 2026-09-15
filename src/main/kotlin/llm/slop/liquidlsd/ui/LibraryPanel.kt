@@ -299,57 +299,85 @@ object LibraryPanel {
 
         if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 
-        val contentH = (ImGui.getContentRegionAvailY() - 5f).coerceAtLeast(1f)
+        val contentH = (ImGui.getContentRegionAvailY() - 4f).coerceAtLeast(1f)
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(80f)
-        val spacingX = ImGui.getStyle().getItemSpacingX()
-        val totalSpacing = spacingX * 3f
-        val colWidth = ((availW - totalSpacing) * 0.25f).coerceAtLeast(20f)
-        val lastColWidth = (availW - colWidth * 3f - totalSpacing).coerceAtLeast(20f)
+        val groupGap = 8f
+        val groupW1 = ((availW - groupGap) * 0.5f).coerceAtLeast(40f)
+        val groupW2 = (availW - groupW1 - groupGap).coerceAtLeast(40f)
 
         val outerFlags = imgui.flag.ImGuiWindowFlags.NoScrollbar or imgui.flag.ImGuiWindowFlags.NoScrollWithMouse
 
+        ImGui.pushStyleVar(ImGuiStyleVar.ChildRounding, 6f)
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 6f, 6f)
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.10f, 0.10f, 0.12f, 0.6f))
+        ImGui.pushStyleColor(ImGuiCol.Border, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.28f, 0.8f))
+
+        // Group 1 Box: Presets & Playlists (or FX Presets & FX Chains)
+        ImGui.beginChild("LibraryGroup1", groupW1, contentH, true, outerFlags)
+        val g1AvailW = ImGui.getContentRegionAvailX().coerceAtLeast(20f)
+        val g1AvailH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
+        val colGap = 6f
+        val c1W = ((g1AvailW - colGap) * 0.5f).coerceAtLeast(10f)
+        val c2W = (g1AvailW - c1W - colGap).coerceAtLeast(10f)
+
         if (viewMode == LibraryViewMode.PRESETS) {
             // Column 1: Presets Library
-            ImGui.beginChild("LibraryPresetsList", colWidth, contentH, true, outerFlags)
+            ImGui.beginChild("LibraryPresetsList", c1W, g1AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
             PresetListPanel.draw(session, mixer, parametersState)
             ImGui.endChild()
-            ImGui.sameLine()
+
+            ImGui.sameLine(0f, colGap)
 
             // Column 2: Playlist Editor
-            ImGui.beginChild("LibraryPlaylistEditor", colWidth, contentH, true, outerFlags)
+            ImGui.beginChild("LibraryPlaylistEditor", c2W, g1AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
             PlaylistEditorPanel.draw(session, mixer)
             ImGui.endChild()
-            ImGui.sameLine()
         } else {
             // Column 1: FX Presets List
-            ImGui.beginChild("LibraryFXPresetsList", colWidth, contentH, true, outerFlags)
+            ImGui.beginChild("LibraryFXPresetsList", c1W, g1AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
             FXPresetListPanel.draw(session, mixer, parametersState)
             ImGui.endChild()
-            ImGui.sameLine()
+
+            ImGui.sameLine(0f, colGap)
 
             // Column 2: FX Chains List
-            ImGui.beginChild("LibraryFXChainsList", colWidth, contentH, true, outerFlags)
+            ImGui.beginChild("LibraryFXChainsList", c2W, g1AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
             FXChainListPanel.draw(session, mixer)
             ImGui.endChild()
-            ImGui.sameLine()
         }
+        ImGui.endChild()
+
+        ImGui.sameLine(0f, groupGap)
+
+        // Group 2 Box: Background Queue & Play Queue
+        ImGui.beginChild("LibraryGroup2", groupW2, contentH, true, outerFlags)
+        val g2AvailW = ImGui.getContentRegionAvailX().coerceAtLeast(20f)
+        val g2AvailH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
+        val c3W = ((g2AvailW - colGap) * 0.5f).coerceAtLeast(10f)
+        val c4W = (g2AvailW - c3W - colGap).coerceAtLeast(10f)
 
         // Column 3: Background Queue (BG)
-        ImGui.beginChild("LibraryBgQueue", colWidth, contentH, true, outerFlags)
+        ImGui.beginChild("LibraryBgQueue", c3W, g2AvailH, false, outerFlags)
         ImGui.setScrollX(0f)
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
-        ImGui.sameLine()
+
+        ImGui.sameLine(0f, colGap)
 
         // Column 4: Play Queue (A/B)
-        ImGui.beginChild("LibraryQueue", lastColWidth, contentH, true, outerFlags)
+        ImGui.beginChild("LibraryQueue", c4W, g2AvailH, false, outerFlags)
         ImGui.setScrollX(0f)
         QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
+
+        ImGui.endChild()
+
+        ImGui.popStyleColor(2)
+        ImGui.popStyleVar(2)
 
         // Global library keyboard shortcuts dynamically mapped via ShortcutManager
         val activeFile = getActiveSelectedFile(session)
