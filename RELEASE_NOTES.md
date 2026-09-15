@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Transition Library UI & Macro Controls Architecture RFC (`LibraryPanel.kt`, `StockTransitionListPanel.kt`, `TransitionPresetListPanel.kt`, `TransitionPlaylistEditorPanel.kt`, `TransitionQueuePanel.kt`, `MixerPanel.kt`, `macro_controls_and_parameter_linking_proposal.md`)
+- **Library Panel `[ Trans ]` Mode**:
+  - Added `[ Trans ]` toggle to `LibraryPanel.kt`, enabling VJs to browse Stock ISF Transitions, Transition Presets (`.lsdtrans`), Transition Playlists (`.lsdtransplay`), and the Live Transition Queue.
+  - Added drag-and-drop targets on the Mixer Panel transition selector button and crossfader track, allowing direct drag-to-apply of `.lsdtrans` presets and transition shaders.
+  - Implemented keyboard navigation, selection management, and export popup handler for Transition Playlists.
+- **Macro Controls & Parameter Linking Architecture RFC (`docs/developer/macro_controls_and_parameter_linking_proposal.md`)**:
+  - Published comprehensive technical design for 8 Performance Macro Knobs + 4 Macro Switches per session with 1-to-many parameter mapping, curve shapes (Linear, Exp, Log, S-Curve), min/max travel bounds, and modulation matrix integration.
+
 ### Phase 2: Transition Presets & Transition Queue Engine (`TransitionPresetDto`, `TransitionPlaylistDto`, `TransitionQueueManager.kt`, `FileSystemManager.kt`, `PresetManager.kt`, `Mixer.kt`, `PlayQueueManager.kt`)
 - **Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)**:
   - Introduced `.lsdtrans` data format for saving and recalling transition parameter states (e.g., customized wipe angle, softness, glitch intensity, and dry/wet blend) stored under `library/transitions/`.

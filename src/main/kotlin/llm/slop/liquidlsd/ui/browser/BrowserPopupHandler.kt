@@ -4,6 +4,8 @@ import imgui.ImGui
 import imgui.type.ImString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.TransitionPlaylistDto
+import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
@@ -22,11 +24,13 @@ object BrowserPopupHandler {
     var pendingOpenRenamePopup = false
     var pendingOpenDeletePopup = false
     var pendingOpenNewPlaylistPopup = false
+    var pendingOpenExportQueuePopup = false
     
     val renameBuffer = ImString(256)
     val newPlaylistNameBuffer = ImString(256)
     val exportQueueNameBuffer = ImString(256)
     val exportBgQueueNameBuffer = ImString(256)
+    val exportTransQueueNameBuffer = ImString(256)
 
     fun openRenamePresetModal(asset: AssetItem) {
         val file = File(asset.path)
@@ -153,6 +157,11 @@ object BrowserPopupHandler {
                                 LibraryPanel.selectedPlaylistFile = File(newPath)
                                 LibraryPanel.activePlaylistData = null
                             }
+                        } else if (target.type == AssetType.TRANSITION_PLAYLIST) {
+                            val currentPlaylistPath = LibraryPanel.selectedTransitionPlaylistFile?.absolutePath
+                            if (target.path == currentPlaylistPath) {
+                                LibraryPanel.selectedTransitionPlaylistFile = File(newPath)
+                            }
                         }
                     }
                 }
@@ -206,6 +215,11 @@ object BrowserPopupHandler {
                             LibraryPanel.selectedPlaylistFile = null
                             LibraryPanel.activePlaylistData = null
                         }
+                    } else if (target.type == AssetType.TRANSITION_PLAYLIST) {
+                        val currentPlaylistPath = LibraryPanel.selectedTransitionPlaylistFile?.absolutePath
+                        if (target.path == currentPlaylistPath) {
+                            LibraryPanel.selectedTransitionPlaylistFile = null
+                        }
                     }
                 }
                 deleteTarget = null
@@ -222,17 +236,29 @@ object BrowserPopupHandler {
 
     fun drawNewPlaylistPopup() {
         if (ImGui.beginPopupModal("NewPlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Create New Playlist")
+            val isTransMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.TRANS
+            val titleText = if (isTransMode) "Create New Transition Playlist" else "Create New Playlist"
+            ImGui.text(titleText)
             ImGui.separator()
             ImGui.inputText("Name", newPlaylistNameBuffer)
             if (ImGui.button("Create", 120f, 0f)) {
                 val name = newPlaylistNameBuffer.get().trim()
                 if (name.isNotBlank()) {
-                    PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { newPlaylist ->
-                        LibraryPanel.selectedPlaylistFile = File(newPlaylist.filePath)
-                        LibraryPanel.activePlaylistData = newPlaylist
-                        newPlaylistNameBuffer.set("")
+                    if (isTransMode) {
+                        val root = FileSystemManager.getTransitionPlaylistsRoot()
+                        val file = File(root, "$name.lsdtransplay")
+                        val dto = TransitionPlaylistDto(name = name)
+                        file.parentFile?.mkdirs()
+                        file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
+                        LibraryPanel.selectedTransitionPlaylistFile = file
+                        LibraryPanel.refreshAssets()
+                    } else {
+                        PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { newPlaylist ->
+                            LibraryPanel.selectedPlaylistFile = File(newPlaylist.filePath)
+                            LibraryPanel.activePlaylistData = newPlaylist
+                        }
                     }
+                    newPlaylistNameBuffer.set("")
                 }
                 ImGui.closeCurrentPopup()
             }
@@ -292,6 +318,35 @@ object BrowserPopupHandler {
             ImGui.sameLine()
             if (ImGui.button("Cancel", 120f, 0f)) {
                 exportBgQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
+    fun drawExportTransQueuePopup() {
+        if (ImGui.beginPopupModal("ExportTransQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("Export Live Transition Queue as Playlist")
+            ImGui.separator()
+            ImGui.inputText("Playlist Name", exportTransQueueNameBuffer)
+            if (ImGui.button("Export", 120f, 0f)) {
+                val name = exportTransQueueNameBuffer.get().trim()
+                if (name.isNotBlank()) {
+                    val root = FileSystemManager.getTransitionPlaylistsRoot()
+                    val file = File(root, "$name.lsdtransplay")
+                    val itemsList = TransitionQueueManager.queue.map { it.absolutePath }
+                    val dto = TransitionPlaylistDto(name = name, items = itemsList)
+                    file.parentFile?.mkdirs()
+                    file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
+                    LibraryPanel.selectedTransitionPlaylistFile = file
+                    LibraryPanel.refreshAssets()
+                }
+                exportTransQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 120f, 0f)) {
+                exportTransQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()

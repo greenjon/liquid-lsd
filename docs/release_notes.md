@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Transition Library UI & Macro Controls Architecture RFC (`LibraryPanel.kt`, `StockTransitionListPanel.kt`, `TransitionPresetListPanel.kt`, `TransitionPlaylistEditorPanel.kt`, `TransitionQueuePanel.kt`, `MixerPanel.kt`, `macro_controls_and_parameter_linking_proposal.md`)
+- **Library Panel `[ Trans ]` Mode**:
+  - Added `[ Trans ]` toggle to `LibraryPanel.kt`, enabling VJs to browse Stock ISF Transitions, Transition Presets (`.lsdtrans`), Transition Playlists (`.lsdtransplay`), and the Live Transition Queue.
+  - Added drag-and-drop targets on the Mixer Panel transition selector button and crossfader track, allowing direct drag-to-apply of `.lsdtrans` presets and transition shaders.
+  - Implemented keyboard navigation, selection management, and export popup handler for Transition Playlists.
+- **Macro Controls & Parameter Linking Architecture RFC (`docs/developer/macro_controls_and_parameter_linking_proposal.md`)**:
+  - Published comprehensive technical design for 8 Performance Macro Knobs + 4 Macro Switches per session with 1-to-many parameter mapping, curve shapes (Linear, Exp, Log, S-Curve), min/max travel bounds, and modulation matrix integration.
+
 ### Phase 1: Master Output FX Pipeline & Mixer Sub-Tabs (`Mixer.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetManager.kt`, `ParametersState.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`)
 - **4-Slot Serial Master FX Chain**: Added a 4-slot ISF effect chain to the Master Output stage in `Mixer.kt`, allowing VJs to chain serial post-composite effects (e.g. master bloom, CRT glitch, color adjustment, hue shift, or distortion) across the blended output of Deck A, Deck B, and Deck BG.
 - **3-Pass Composite Rendering Pipeline**: Refactored `Renderer.renderMixer()` into a 3-pass GPU architecture: Pass 1 (ISF Transition -> `blendFBO`), Pass 2 (Composite -> `masterCompositeFBO`), and Pass 3 (Serial Master FX chain -> `masterFxFBOs` -> target `masterFBO`). Downstream capture engines (recording, NDI/texture streaming, and display output) continue to consume `masterFBO` seamlessly.

@@ -37,6 +37,7 @@ This proposal outlines a **Modular Video Rack** paradigm inspired by hardware ra
 
 ### 2.3 Macro Knobs as Expressive Instruments
 * A macro knob allows a single control on the faceplate to modulate multiple internal parameters simultaneously.
+* For the complete standalone macro specification, see [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md).
 * Each target parameter binding includes:
   * Minimum and Maximum travel bounds.
   * Curve profile (Linear, Exponential, Logarithmic, S-Curve).

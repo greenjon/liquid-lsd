@@ -30,6 +30,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
+| **Macro Controls & Parameter Linking** | `ui/*`, `parameters/*`, `models/*` | **PROPOSED** | 8 Knobs + 4 Switches, 1-to-many bindings, modulating modulators, Column 3 `[MIXER\|MACROS]` mode, Learn mode UX. |
 | **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **PENDING** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. |
 | **Build for ARM64 Linux** | `build.gradle.kts`, `ci` | **PLANNED** | Compile `imgui-java` via GitHub Actions ARM64 runner, integrate natives, restore Linux ARM64 distribution target. |
 
@@ -149,8 +150,10 @@ Enhancing the built-in Mandala procedural visual generator for live stage recall
 
 ---
 
-### Milestone 6: Modular Video Rack Paradigm
-> **Reference & Design Spec**: [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md)  
+### Milestone 6: Modular Video Rack & Macro Performance System
+> **Reference & Design Specs**:
+> - [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](docs/developer/macro_controls_and_parameter_linking_proposal.md) (Macro Controls & Parameter Linking System)
+> - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture)
 > **Status**: Concept / Long-Term Architecture RFC  
 > **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
 

@@ -334,12 +334,41 @@ class MixerPanel(
         val transBtnX = badgeBX + badgeW + gap
         ImGui.setCursorScreenPos(transBtnX, badgeBY)
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
-        if (ImGui.button("${Icons.SETTINGS} $transName##trans_picker_btn", transBtnW, badgeH)) {
+        val isTransModified = mixer.transitionFilter?.let { filter ->
+            filter.dryWet.baseValue != 1.0f ||
+                filter.parameters.any { (name, param) ->
+                    val defaultVal = filter.header.INPUTS.find { it.NAME == name }?.DEFAULT?.toString()?.toFloatOrNull() ?: 0.0f
+                    kotlin.math.abs(param.baseValue - defaultVal) > 0.001f || param.modulators.any { !it.bypassed }
+                }
+        } ?: false
+        val modBadge = if (isTransModified) " *" else ""
+
+        if (ImGui.button("${Icons.SETTINGS} $transName$modBadge##trans_picker_btn", transBtnW, badgeH)) {
             ShaderPickerPopup.show("Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { id ->
                 mixer.setTransition(id)
             }
         }
         itemTooltip("Select ISF transition shader (wipes, glitches, dissolves) or default non-ISF blend modes.")
+
+        if (ImGui.beginDragDropTarget()) {
+            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+            if (payload != null) {
+                val file = java.io.File(payload)
+                if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
+                    session.presetManager.loadTransitionPresetAsync(file).thenAccept { dto ->
+                        mixer.applyTransitionPreset(dto)
+                    }
+                } else {
+                    val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
+                        file.nameWithoutExtension
+                    } else {
+                        file.nameWithoutExtension.ifBlank { file.name }
+                    }
+                    mixer.setTransition(id)
+                }
+            }
+            ImGui.endDragDropTarget()
+        }
 
         // 3. Crossfader Slider (Standard track slider style from CustomRangeSlider)
         val lineStartX = badgeAX + badgeW + gap
@@ -351,6 +380,26 @@ class MixerPanel(
         val trackH = maxOf(badgeH, 18f)
         ImGui.setCursorScreenPos(lineStartX - trackPadX, centerY - trackH * 0.5f)
         ImGui.invisibleButton("##crossfader_slider_track", trackW, trackH)
+
+        if (ImGui.beginDragDropTarget()) {
+            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+            if (payload != null) {
+                val file = java.io.File(payload)
+                if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
+                    session.presetManager.loadTransitionPresetAsync(file).thenAccept { dto ->
+                        mixer.applyTransitionPreset(dto)
+                    }
+                } else {
+                    val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
+                        file.nameWithoutExtension
+                    } else {
+                        file.nameWithoutExtension.ifBlank { file.name }
+                    }
+                    mixer.setTransition(id)
+                }
+            }
+            ImGui.endDragDropTarget()
+        }
 
         val isTrackHovered = ImGui.isItemHovered()
         val isTrackActive = ImGui.isItemActive()

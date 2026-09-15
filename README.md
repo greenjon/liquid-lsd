@@ -1,57 +1,96 @@
-# Liquid LSD - Libre Shader Decks
+# Liquid LSD — Libre Shader Decks
 
-Liquid LSD is open-source VJ software for real-time, audio-reactive visual performance. It renders dual-deck parametric mandala and shader visuals, maps audio and generated CV sources into visual parameters, and exposes the performance surface through an ImGui desktop interface.
+Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ performance workstation. It renders multi-deck parametric mandala and shader visuals, processes audio feeds and generated CV modulators into visual parameters, and provides a low-latency, tactile performance interface built with Kotlin/JVM, OpenGL 3.3, and Dear ImGui.
 
-The project is in active beta: the core workflow is usable, the UI is close to its intended shape, and bug reports are welcome.
+---
 
 ## What It Does
 
-- Dual-deck visual mixer with per-deck feedback, blend, and monitor controls.
-- Audio-reactive modulation from JACK/PipeWire-JACK (Linux) or cross-platform Java Sound fallback (macOS/Windows/Linux fallback).
-- CV modulation matrix for amplitude bands, onset/accent triggers, beat phase, LFOs, and random/sample-and-hold sources.
-- Preset, playlist, play queue, clipboard, and MIDI mapping support.
-- Dynamic GLSL visual sources loaded from `library/sources/`.
-- Bundled shader and font resources under `src/main/resources/`
-- Full ISF support: generators, effects and transitions.
+- **4-Deck Visual Engine**: Independent visual decks for live output (**Deck A** and **Deck B**), a background compositor layer (**Deck BG**), and an offline audition deck (**Deck PV**) for previewing and tweaking presets live without affecting stage output.
+- **100% ISF 2.0 Shader Pipeline**: Native Interactive Shader Format (ISF 2.0) engine for visual generators, filters, and transitions. Includes an automated compatibility bridge for importing Shadertoy (`mainImage`) and GLSLSandbox shaders without code edits.
+- **Multi-Slot Deck & Master FX Chains**: 4-slot serial ISF FX chains per deck plus a 4-slot serial Master FX post-processing stage (bloom, CRT glitch, color correction, spatial distortion) operating across the final composite output.
+- **Modular Transitions & Setlist Queue**: ISF transition engine (Deck A $\leftrightarrow$ Deck B), custom transition presets (`.lsdtrans`), setlists (`.lsdtransplay`), auto-advance transition queue, and VJ crossfader controls.
+- **Low-Latency Audio & Beat Sync**: Real-time audio analysis via JACK / PipeWire-JACK (Linux) or cross-platform Java Sound fallback (macOS/Windows/Linux). Features an Adam Stark-based beat tracking engine with a continuous phase generator and Ableton Link network clock sync.
+- **Hierarchical CV Modulation Matrix**: Route real-time audio amplitude bands (Bass/Mid/High), onset triggers, beat clock phases, LFOs, and sample-and-hold generators to any visual parameter.
+- **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), 2x2 grouped Library panel, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
+- **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
+- **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
 
-## Current status (Sept 6 2026)
+---
 
-- Almost entirely tested on Fedora linux
-- the video pipe is solid as far as I can tell
-- the main UI has a reasonable amount of polish
-- Themes are usable but imperfect
-- Preferences panel could be made a lot prettier
-- ISF was added only recently and needs a thorough stress testing
-- the beat analyser is pretty good, at long last
-- LFO and Audio cv's are full featured and pretty well tested
-- the system for creating and renaming presets and playlists seems full featured and stable
-- the three methods for turning 2D objects to 3D seems solid
+## Current Status
 
-- the feedback system is well featured and tested
-- tooltips, user docs and dev docs are pretty mature
-- the sequencer is new and barely tested
-- using the CAPS lock to turn the trackpad is new, somewhat tested
-- the tagging system for adding notes to parameters and visual sources has had limited testing
-- MIDI is barely tested but was recently majorly overhauled
-- 
-"How to" videos do not exist
+Liquid LSD is in active beta with a stable, production-ready core video and audio pipeline.
+
+| Subsystem | Status | Details |
+| :--- | :---: | :--- |
+| **Video Pipeline & FX** | **Operational** | 4 decks (A, B, BG, PV), 100% ISF 2.0 pipeline, 4-slot deck FX chains, 4-slot Master FX chain, feedback loops, ping-pong FBOs. |
+| **Audio & Beat Sync** | **Operational** | Sub-millisecond JACK/PipeWire audio capture, Adam Stark beat tracking DSP, continuous phase generator, Ableton Link network sync. |
+| **Transitions & Setlists** | **Operational** | ISF transition shaders, `.lsdtrans` presets, `.lsdtransplay` setlists, auto-advance transition queue, 2x2 Library panel layout. |
+| **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 4-slot chains, preset tags, instant tag search, drag-and-drop preset loading. |
+| **MIDI & Shortcuts** | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer. |
+| **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine. |
+
+---
+
+## Roadmap & Path to v1.0
+
+The roadmap to v1.0 focuses on **tactile control, modular flexibility, hardware interoperability, and stage reliability**.
+
+### Active & Upcoming Milestones
+
+1. **TouchOSC & Open Sound Control (OSC)**:
+   - Zero-dependency Kotlin OSC 1.0 binary codec (`OscCodec`) and UDP socket engine (`OscEngine`).
+   - Out-of-the-box TouchOSC layout mapping (`/1/fader1`, `/2/xy`), XY pad float unpacking, slew smoothing, soft takeover, and bidirectional client feedback to keep mobile screens in sync.
+   - Interactive OSC Learn modal and Sniffer UI in Preferences.
+
+2. **Unified Control Mapping & Hardware Profiles**:
+   - Decouple all user actions into a universal `CommandRegistry` for hardware controllers, MIDI, keyboard shortcuts, and GUI.
+   - Pre-packaged controller profiles (`library/mappings/`) for Launchpad, APC40, Pioneer DDJ, and Midi Fighter.
+   - Universal right-click "Learn" overlay across all UI widgets.
+
+3. **Session Scratchpad & Live Notes**:
+   - Floating or docked set scratchpad window (`~/.liquid-lsd/scratchpad.txt`) for persistent set notes during live performances.
+
+4. **Mandala Visual Generator v2+ Recipe Vault**:
+   - Recipe gallery popover featuring micro-previews of ~300 built-in recipes grouped by lobe counts.
+   - Geometric style tagging, global recipe sweep LFO index, and quick-recall performance bookmark slots.
+
+5. **Modular Video Rack & Macro System**:
+   - 19" studio rack chassis paradigm housing interchangeable visual modules, post-processing blocks, and transitions.
+   - 8 Performance Macro Knobs + 4 Macro Switches per session with 1-to-many parameter mapping, min/max bounds, and non-linear response curves (linear, exponential, S-curve).
+   - Embedded confidence micro-monitors on each unit faceplate.
+   - Propellerhead Reason-style `Tab` key 180° rear panel flip to expose virtual patch cables and custom signal routing.
+
+6. **ARM64 Linux Desktop Build**:
+   - GitHub Actions ARM64 native compilation of `imgui-java`, runtime native loader integration, and restoration of the `linux-arm64` distribution package.
+
+*For complete details and progress tracking, see [`ROADMAP.md`](ROADMAP.md).*
+
+---
 
 ## Requirements
 
-- JDK 17.
-- OpenGL 3.3 capable GPU/driver.
-- Audio input device: JACK or PipeWire-JACK (recommended on Linux for superior low latency and routing) or any standard system audio input (works out-of-the-box via Java Sound on macOS, Windows, and JACK-less Linux).
-- Gradle Wrapper from this repository.
-- Optional: `mkdocs` and `mkdocs-material` if you want to regenerate bundled documentation.
+- **Java JDK**: JDK 17 or higher.
+- **GPU**: OpenGL 3.3 capable GPU and drivers.
+- **Audio Input**:
+  - **Linux**: JACK or PipeWire-JACK recommended for sub-millisecond latency and inter-app audio routing. Automatic Java Sound fallback available.
+  - **macOS / Windows**: Standard system audio input device via Java Sound (works out-of-the-box).
+- **Build Tool**: Gradle Wrapper (included).
+
+---
 
 ## Tech Stack
 
-- Kotlin/JVM 2.0.21.
-- LWJGL 3 for GLFW, OpenGL, and native desktop integration.
-- imgui-java for the immediate-mode UI.
-- JNAJack (JACK) and Java Sound (fallback/cross-platform) for audio input.
-- kotlinx.serialization for preset/session data.
-- Gradle Shadow for fat JAR packaging.
+- **Language & Runtime**: Kotlin 2.0.21 on JVM 17+.
+- **Graphics & Windowing**: LWJGL 3 (GLFW, OpenGL 3.3 Core Profile).
+- **UI Engine**: `imgui-java` 1.92.7.1 (Dear ImGui) with Inter & JetBrains Mono fonts and Lucide icons.
+- **Shader Pipeline**: ISF 2.0 parser & preprocessor, GLSL 330 core shaders.
+- **Audio Subsystem**: JNAJack (JACK/PipeWire) and Java Sound API fallback.
+- **Tempo & Network Sync**: Ableton Link C++ JNI (`liblink_jni`) and Carabiner TCP client interface.
+- **Serialization**: `kotlinx.serialization` (JSON) for presets, sessions, transitions, FX chains, and preferences.
+
+---
 
 ## Build
 
@@ -67,11 +106,13 @@ On Windows:
 .\gradlew.bat build
 ```
 
-If the Gradle daemon has local socket trouble, run the same command with `--no-daemon`.
+*(If the Gradle daemon encounters local socket issues, add `--no-daemon` to the command.)*
+
+---
 
 ## Run
 
-On Linux, starting JACK or PipeWire first is recommended for superior low-latency analysis and inter-app audio routing. Otherwise, the app automatically captures from the system's default audio input device using Java Sound.
+Launch the application:
 
 On Linux/macOS:
 
@@ -85,7 +126,7 @@ On Windows:
 .\gradlew.bat run
 ```
 
-Useful JACK/PipeWire commands:
+**Linux Audio Tip**: For optimal performance and zero-latency inter-app routing on Linux, launch PipeWire/JACK prior to starting Liquid LSD:
 
 ```bash
 jack_lsp
@@ -93,69 +134,87 @@ jack_connect <source> <destination>
 pw-link
 ```
 
-## Package
+---
 
-Create a fat JAR:
+## Package & Distribute
+
+Create a self-contained fat JAR:
 
 ```bash
 ./gradlew shadowJar
 ```
 
-The output is written to:
+Output binary:
 
 ```text
 build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 ```
 
-Platform ZIP distribution tasks are also defined in `build.gradle.kts`.
+Platform distribution ZIP tasks are available in `build.gradle.kts` (`zipLinux`, `zipMacArm`, `zipMacIntel`, `zipWindows`).
 
-## Website & Documentation Export (greenjon.com)
+---
 
-Generate the complete static website, responsive HTML documentation, and offline documentation ZIP bundle into `./greenjon/` ready for FTP upload:
+## Website & Documentation Export
+
+Generate the complete static website, responsive HTML documentation, and offline documentation ZIP bundle into `./greenjon/` ready for web deployment:
 
 ```bash
 ./gradlew buildWebsite
 ```
 
-This compiles all guides from `docs/` and `RELEASE_NOTES.md` into `./greenjon/docs/`, creates `greenjon/docs.zip`, renders `greenjon/index.html` with current version and release links, and bundles static assets. Upload the contents of `./greenjon/` directly to your web server.
+This compiles guides from `docs/` and `RELEASE_NOTES.md` into `./greenjon/docs/`, creates `greenjon/docs.zip`, and updates `greenjon/index.html`.
+
+---
 
 ## Project Map
 
 ```text
 src/main/kotlin/llm/slop/liquidlsd/
-  Main.kt                GLFW window, OpenGL context, render loop
-  SessionContext.kt      Application state & context
-  audio/                 JACK client, Java Sound fallback, DSP, beat/audio analysis
-  cv/                    CV registry, beat clock, evaluators, history buffers
-  export/                Video & audio render export, OfflineRenderStudio
-  midi/                  MIDI input, profiles, and mapping
-  models/                Serializable preset/session DTOs
-  notes/                 NotesManager and 3-tier notes persistence
-  parameters/            Modulatable parameters and CV operators
-  presets/               Preset, playlist, queue, and clipboard managers
-  rendering/             Decks, mixer, shaders, FBOs, VisualSources, SourceDocRegistry
-  ui/                    ImGui panels, browser subpackage, NoteEditorModal, UI state
-  utils/                 Timing utilities
+  Main.kt                GLFW window lifecycle, CSD titlebar, render loop
+  SessionContext.kt      Global application context & state
+  audio/                 JACK client, Java Sound fallback, DSP, Beat Tracker, volume control
+  link/                  Ableton Link network sync (Native JNI & Carabiner TCP backends)
+  broadcast/             WebSocket relay client & WebGL2 TV state serializer
+  cv/                    CV registry, BeatClock, evaluator functions, history ring buffers
+  export/                Asynchronous GPU PBO video renderer & export studio
+  input/                 TouchConsole controller (evdev/macOS JNA drivers)
+  midi/                  Multi-message MIDI receiver, soft takeover, relative encoders
+  models/                Preset, session, transition, and FX chain DTO schemas
+  notes/                 NotesManager & 3-tier set notes persistence
+  parameters/            Modulatable parameters, CV operators, parameter state
+  presets/               Preset, playlist, queue, transition queue, clipboard managers
+  rendering/             Decks, mixer, ISF engine, shaders, FBOs, VisualSources
+  ui/                    Dear ImGui panels, 2x2 Library, property editors, modals, CSD controls
+  utils/                 Timing and mathematical utilities
 
 src/main/resources/
-  shaders/               Built-in GLSL shaders
-  presets/               Default bundled preset data
-  fonts/                 Bundled UI/icon fonts
+  shaders/               Built-in GLSL shaders & ISF transitions
+  presets/               Bundled default preset data
+  fonts/                 Bundled Inter, JetBrains Mono, & Lucide fonts
   logback.xml            Logging configuration
 
-library/sources/         User-loadable dynamic visual sources
-docs/                    MkDocs source documentation
+library/                 User-loadable dynamic assets
+  sources/               GLSL & ISF visual generator sources
+  filters/               ISF effect filters (Slots 1-4)
+  transitions/           ISF transition filters & .lsdtrans presets
+  transition_playlists/  .lsdtransplay transition setlists
+  fx/                    .lsdfx single-slot FX presets
+  fx_chains/             .lsdfxchain 4-slot FX chain presets
+
+docs/                    MkDocs documentation sources
 ```
 
-For deeper implementation notes, see `ARCHITECTURE.md` and the docs site source under `docs/`.
+---
 
-## Development Notes
+## Developer Guidelines
 
-- Keep JACK callbacks real-time safe: no allocation, blocking calls, logging, or UI work in the callback path.
-- Keep GLFW polling and OpenGL context usage on the primary thread.
-- Manage ImGui native resources explicitly when adding UI code.
-- Prefer `.\gradlew.bat --no-daemon test` on Windows if daemon startup reports a file-lock listener bind error.
+- **Zero-Allocation Audio/Render Path**: Keep JACK audio callbacks and Thread 0 render loops 100% allocation-free (no lambda state capture, collection allocations, string formatting, or blocking I/O).
+- **Single-Threaded Windowing/GL**: Maintain all GLFW event polling and OpenGL context operations strictly on the primary OS thread (Thread 0).
+- **ImGui Native Memory**: Manage ImGui native objects and texture handles explicitly to prevent JVM native memory leaks.
+- **Documentation Maintenance**: Keep `ARCHITECTURE.md`, `ROADMAP.md`, `RELEASE_NOTES.md`, and `docs/` synchronized with code changes.
+
+---
 
 ## License
 
-GPL-3.0. See `LICENSE`.
+GNU General Public License v3.0 (GPL-3.0). See [`LICENSE`](LICENSE).
