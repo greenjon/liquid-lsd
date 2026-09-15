@@ -411,5 +411,6 @@ object BeatDivisionSlider {
 
         ImGui.popID()
         ImGui.setCursorScreenPos(rowStartX, startY + h)
+        ImGui.dummy(0f, 0f)
     }
 }

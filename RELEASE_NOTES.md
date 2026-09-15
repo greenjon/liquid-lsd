@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### ImGui SetCursorPos Un-submitted Bounds & Preferences Child Window Fix (`CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `OscilloscopeDrawer.kt`, `ParametersPanel.kt`, `PreferencesPanel.kt`)
+- **Fix ImGui Assertion Crash on Preferences Modal**: Fixed `Dear ImGui Assertion Failed: (0) && "Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries."` caused by `ImGui.setCursorScreenPos(...)` positioning layout cursors without a trailing `ImGui.dummy(0f, 0f)` item submission to reset `DC.IsSetPos` before closing child windows.
+- **Adjusted Preset Name Scale Child Height**: Increased `##preset_slider_child` height from `46f` to `52f` with `ImGuiWindowFlags.NoScrollbar` to accommodate theme window padding and custom slider heights cleanly.
+
 ### Zero-Allocation MIDI Slew & DSP Refactoring (`MidiMappingManager.kt`, `BeatTrackerEngine.kt`, `CvModulator.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`)
 - **Unboxed MIDI Slew State**: Moved target and smoothed parameter values directly onto `ResolvedMidiBinding` unboxed fields, eliminating string-keyed map lookups and GC churn on the hot MIDI update path.
 - **Beat Tracker & LFO Constants**: Centralized one-pole EMA smoothing factors (`EMA_RETAIN` / `EMA_UPDATE`) in `BeatTrackerEngine` and frame-subdivision upper bounds (`MAX_FRAME_SUBDIVISION`) in `CvModulator`.

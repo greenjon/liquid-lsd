@@ -171,6 +171,7 @@ object OscilloscopeDrawer {
         drawOverlayTimebaseDropdown(session, param, scopeKey, totalDuration, startX, startY, w)
 
         ImGui.setCursorScreenPos(startX, startY + h)
+        ImGui.dummy(0f, 0f)
     }
 
     fun drawFinalOscilloscope(
@@ -423,6 +424,7 @@ object OscilloscopeDrawer {
         handleOscilloscopeTooltips(session, startX, startY, w, h, nowX, totalDuration, hasLfo)
 
         ImGui.setCursorScreenPos(startX, startY + h)
+        ImGui.dummy(0f, 0f)
     }
 
     private fun drawOverlayTimebaseDropdown(
@@ -707,5 +709,6 @@ object OscilloscopeDrawer {
 
         // Reset cursor location
         ImGui.setCursorScreenPos(startX, startY + height)
+        ImGui.dummy(0f, 0f)
     }
 }

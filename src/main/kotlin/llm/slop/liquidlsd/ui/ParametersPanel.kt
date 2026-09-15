@@ -620,6 +620,7 @@ object ParametersPanel {
         
         // Restore cursor
         ImGui.setCursorScreenPos(startX, afterHeadersY)
+        ImGui.dummy(0f, 0f)
     }
 
     private fun drawLaunchpad(
