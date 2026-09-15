@@ -21,8 +21,9 @@ class BgQueueManagerTest {
     @BeforeTest
     fun setUp() {
         mockkObject(PresetManager)
+        mockkObject(PresetRepository)
         every { PresetManager.isDeckDirty(any(), any()) } returns false
-        every { PresetManager.loadDeckPresetAsync(any(), any(), any(), any(), any()) } returns Unit
+        every { PresetRepository.loadDeckPresetAsync(any(), any(), any(), any(), any()) } returns Unit
         BgQueueManager.clearQueue()
         BgQueueManager.isAutoBGEnabled = false
         BgQueueManager.isRepeatEnabled = false
@@ -32,6 +33,7 @@ class BgQueueManagerTest {
     @AfterTest
     fun tearDown() {
         unmockkObject(PresetManager)
+        unmockkObject(PresetRepository)
     }
 
     @Test

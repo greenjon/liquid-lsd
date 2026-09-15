@@ -65,7 +65,7 @@ object FXChainListPanel {
                         extension = "lsdfxchain"
                     ) { name, tags ->
                         val file = File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                        session.presetManager.saveFxChainAsync(file, name, chainDto, tags)
+                        session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
                     }
                 }
             }
@@ -151,7 +151,7 @@ object FXChainListPanel {
                     val targetIsA = mixer.crossfade.value > 0.0f
                     val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
                     val file = File(asset.path)
-                    session.presetManager.loadFxChainAsync(file).thenAccept { chainDto ->
+                    session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
                         targetDeck.applyFxChain(chainDto)
                     }
                 }
@@ -172,7 +172,7 @@ object FXChainListPanel {
                     val decks = listOf("Deck A" to mixer.deckA, "Deck B" to mixer.deckB, "Deck BG" to mixer.deckBG, "Deck PV" to mixer.deckPV)
                     for ((deckLabel, deck) in decks) {
                         if (ImGui.menuItem("Load to $deckLabel")) {
-                            session.presetManager.loadFxChainAsync(file).thenAccept { chainDto ->
+                            session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
                                 deck.applyFxChain(chainDto)
                             }
                         }

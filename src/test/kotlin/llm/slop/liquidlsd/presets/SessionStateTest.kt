@@ -111,7 +111,7 @@ class SessionStateTest {
 
         val restored = PresetManager.resolveRestoredQueue(
             listOf(missingFile.absolutePath, activeFile.absolutePath, nextFile.absolutePath),
-            savedActiveIndex = 1
+            activeIndex = 1
         )
 
         assertEquals(listOf(activeFile.absoluteFile, nextFile.absoluteFile), restored.files.map { it.absoluteFile })
@@ -127,7 +127,7 @@ class SessionStateTest {
 
         val restored = PresetManager.resolveRestoredQueue(
             listOf(previousFile.absolutePath, missingActiveFile.absolutePath, nextFile.absolutePath),
-            savedActiveIndex = 1
+            activeIndex = 1
         )
 
         assertEquals(listOf(previousFile.absoluteFile, nextFile.absoluteFile), restored.files.map { it.absoluteFile })
@@ -140,11 +140,11 @@ class SessionStateTest {
         val presetFile = File(root, "presets/MyPreset.lsd")
         
         val serialized = PresetManager.serializeSessionPath(presetFile)
-        assertEquals("presets/MyPreset.lsd", serialized)
+        assertEquals("\${LIBRARY}/presets/MyPreset.lsd", serialized)
         
         val outsideFile = File("/tmp/some_other_place.lsd")
         val serializedOutside = PresetManager.serializeSessionPath(outsideFile)
-        assertEquals(outsideFile.absolutePath, serializedOutside)
+        assertEquals(outsideFile.absolutePath.replace('\\', '/'), serializedOutside)
     }
 
     @Test
@@ -172,6 +172,7 @@ class SessionStateTest {
     
     @Test
     fun testRestoredQueueUnresolvedItems() {
+        PresetManager.sessionState = SessionState()
         val root = File("library").absoluteFile
         val presetFile = File(root, "presets/MyPreset.lsd")
         presetFile.parentFile.mkdirs()
@@ -179,8 +180,9 @@ class SessionStateTest {
         
         val result = PresetManager.resolveRestoredQueue(
             listOf("presets/MyPreset.lsd", "presets/MissingPreset.lsd"),
-            savedActiveIndex = 0
+            activeIndex = 0
         )
+        PresetManager.sessionState = PresetManager.sessionState.copy(unresolvedItems = result.unresolvedPaths)
         
         val unresolved = PresetManager.sessionState.unresolvedItems
         assertEquals(listOf("presets/MissingPreset.lsd"), unresolved)
@@ -203,11 +205,11 @@ class SessionStateTest {
 
         val resMain = PresetManager.resolveRestoredQueue(
             listOf("presets/ExistingMain.lsd", "presets/MissingMain1.lsd"),
-            savedActiveIndex = 0
+            activeIndex = 0
         )
         val resBg = PresetManager.resolveRestoredQueue(
             listOf("presets/ExistingBg.lsd", "presets/MissingBg1.lsd"),
-            savedActiveIndex = 0
+            activeIndex = 0
         )
 
         val combined = (resMain.unresolvedPaths + resBg.unresolvedPaths).distinct()

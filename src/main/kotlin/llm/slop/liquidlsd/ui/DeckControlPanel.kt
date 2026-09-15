@@ -116,7 +116,7 @@ class DeckControlPanel(
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                     val isDirty = session.presetManager.isDeckDirty(deck, mixer)
                     if (!isDirty) {
-                        session.presetManager.loadDeckPresetAsync(
+                        session.presetRepository.loadDeckPresetAsync(
                             file,
                             isDeckA = label == "Deck A",
                             isDeckBG = label == "Deck BG",

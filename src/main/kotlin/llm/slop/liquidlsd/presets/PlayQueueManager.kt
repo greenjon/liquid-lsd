@@ -192,7 +192,7 @@ object PlayQueueManager {
         }
 
         logger.info { "Playing index $index: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
-        PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
+        PresetRepository.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
 
         // Advance transition queue if auto-advance enabled
         TransitionQueueManager.advanceOnAutoFade(mixer)
@@ -358,7 +358,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering next: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
+        PresetRepository.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
         // Advance transition queue if auto-advance enabled
         TransitionQueueManager.advanceOnAutoFade(mixer)
@@ -448,7 +448,7 @@ object PlayQueueManager {
         
         logger.info { "Triggering previous: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         
-        PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
+        PresetRepository.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
         // Advance transition queue if auto-advance enabled
         TransitionQueueManager.advanceOnAutoFade(mixer)
@@ -474,7 +474,7 @@ object PlayQueueManager {
                 val activeName = if (targetIsA) PresetManager.activePresetA else PresetManager.activePresetB
                 val saveName = activeName ?: "AutoVJ_${if (targetIsA) "A" else "B"}_${System.currentTimeMillis()}"
                 logger.info { "AutoVJ: Autosaving dirty deck to $saveName" }
-                PresetManager.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), targetDeck, saveName)
+                PresetRepository.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), targetDeck, saveName)
                 true
             }
             UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {

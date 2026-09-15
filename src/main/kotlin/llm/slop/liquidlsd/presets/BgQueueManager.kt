@@ -237,7 +237,7 @@ object BgQueueManager {
         if (!withDipToBlack || transitionDurationSec <= 0.05f) {
             transitionState = TransitionState.IDLE
             pendingFile = null
-            PresetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true)
+            PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true)
             return
         }
         pendingFile = file
@@ -325,7 +325,7 @@ object BgQueueManager {
                 val activeName = PresetManager.activePresetBG
                 val saveName = activeName ?: "AutoBG_BG_${System.currentTimeMillis()}"
                 logger.info { "AutoBG: Autosaving dirty deck to $saveName" }
-                PresetManager.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), mixer.deckBG, saveName)
+                PresetRepository.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), mixer.deckBG, saveName)
                 true
             }
             UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
@@ -346,7 +346,7 @@ object BgQueueManager {
                     mixer.deckBG.source.globalAlpha.baseValue = 0f
                     val file = pendingFile
                     if (file != null) {
-                        PresetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true)
+                        PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true)
                     }
                     pendingFile = null
                     transitionProgress = 0f

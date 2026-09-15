@@ -64,7 +64,7 @@ object TransitionPresetListPanel {
                         extension = "lsdtrans"
                     ) { name, tags ->
                         val file = File(FileSystemManager.getTransitionsRoot(), "$name.lsdtrans")
-                        session.presetManager.saveTransitionPresetAsync(file, name, slotDto, tags)
+                        session.presetRepository.saveTransitionPresetAsync(file, name, slotDto, tags)
                         LibraryPanel.refreshAssets()
                     }
                 } else {
@@ -158,7 +158,7 @@ object TransitionPresetListPanel {
                     // Double-click: apply preset to mixer
                     if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                         val file = File(asset.path)
-                        session.presetManager.loadTransitionPresetAsync(file).thenAccept { dto ->
+                        session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
                             mixer.applyTransitionPreset(dto)
                         }
                     }
@@ -177,7 +177,7 @@ object TransitionPresetListPanel {
                     if (ImGui.beginPopup(popupId)) {
                         val file = File(asset.path)
                         if (ImGui.menuItem("Apply to Mixer")) {
-                            session.presetManager.loadTransitionPresetAsync(file).thenAccept { dto ->
+                            session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
                                 mixer.applyTransitionPreset(dto)
                             }
                         }

@@ -573,7 +573,7 @@ object ParametersTabs {
                     extension = "lsdfxchain"
                 ) { name, tags ->
                     val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                    session.presetManager.saveFxChainAsync(file, name, chainDto, tags)
+                    session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
                 }
             }
             if (ImGui.menuItem("Copy Chain")) {
@@ -668,7 +668,7 @@ object ParametersTabs {
                             extension = "lsdfx"
                         ) { name, tags ->
                             val file = java.io.File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                            session.presetManager.saveFxPresetAsync(file, name, slotDto, tags)
+                            session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
                         }
                     }
                 }
@@ -705,12 +705,12 @@ object ParametersTabs {
                     if (file.exists()) {
                         val ext = file.extension.lowercase()
                         if (ext == "lsdfx") {
-                            session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                            session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
                                 mixer.applyMasterFxSlot(i, presetDto.slot)
                                 onPushUndo()
                             }
                         } else if (ext == "lsdfxchain") {
-                            session.presetManager.loadFxChainAsync(file).thenAccept { chainDto ->
+                            session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
                                 mixer.applyMasterFxChain(chainDto)
                                 onPushUndo()
                             }
@@ -862,7 +862,7 @@ object ParametersTabs {
                     extension = "lsdfxchain"
                 ) { name, tags ->
                     val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                    session.presetManager.saveFxChainAsync(file, name, chainDto, tags)
+                    session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
                 }
             }
             if (ImGui.menuItem("Copy Chain")) {
@@ -956,7 +956,7 @@ object ParametersTabs {
                             extension = "lsdfx"
                         ) { name, tags ->
                             val file = java.io.File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                            session.presetManager.saveFxPresetAsync(file, name, slotDto, tags)
+                            session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
                         }
                     }
                 }
@@ -993,12 +993,12 @@ object ParametersTabs {
                     if (file.exists()) {
                         val ext = file.extension.lowercase()
                         if (ext == "lsdfx") {
-                            session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                            session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
                                 deck.applyFxSlot(i, presetDto.slot)
                                 onPushUndo()
                             }
                         } else if (ext == "lsdfxchain") {
-                            session.presetManager.loadFxChainAsync(file).thenAccept { chainDto ->
+                            session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
                                 deck.applyFxChain(chainDto)
                                 onPushUndo()
                             }

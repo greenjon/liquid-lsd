@@ -509,8 +509,10 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
 fun Deck.applyDto(dto: DeckPresetDto) {
     if (dto.isEmpty) {
         reset()
-        val defaultSource = availableSources.firstOrNull { (it as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id == "mandala" } ?: availableSources.first()
-        source = defaultSource
+        val defaultSource = availableSources.firstOrNull { (it as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id == "mandala" } ?: availableSources.firstOrNull()
+        if (defaultSource != null) {
+            source = defaultSource
+        }
         return
     }
     this.isEmpty = false

@@ -230,16 +230,16 @@ object PresetListPanel {
             // Context menu (triggered by right-click or more button)
             if (ImGui.beginPopup(popupId)) {
                 if (ImGui.menuItem("Load to Deck A")) {
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = true)
+                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
                 }
                 if (ImGui.menuItem("Load to Deck B")) {
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
+                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
                 }
                 if (ImGui.menuItem("Load to Deck BG")) {
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
+                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
                 }
                 if (ImGui.menuItem("Preview on Deck PV")) {
-                    session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
+                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Add to A/B Queue")) {

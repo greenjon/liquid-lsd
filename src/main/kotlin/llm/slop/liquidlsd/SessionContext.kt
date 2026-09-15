@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.midi.MidiMappingManager
 import llm.slop.liquidlsd.broadcast.BroadcastEngine
 import llm.slop.liquidlsd.presets.PresetManager
+import llm.slop.liquidlsd.presets.PresetRepository
 import llm.slop.liquidlsd.presets.DeckLifecycleManager
 import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.presets.BgQueueManager
@@ -15,6 +16,7 @@ class SessionContext {
     val cvRegistry = CVRegistry
     val audioEngine = AudioEngine
     val presetManager = PresetManager
+    val presetRepository = PresetRepository
     val deckLifecycleManager = DeckLifecycleManager
     val playQueueManager = PlayQueueManager
     val bgQueueManager = BgQueueManager

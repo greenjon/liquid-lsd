@@ -40,14 +40,14 @@ object BrowserActionToolbar {
         val ext = selectedFile.extension.lowercase()
         when (ext) {
             "lsdfxchain" -> {
-                session.presetManager.loadFxChainAsync(selectedFile).thenAccept { chainDto ->
+                session.presetRepository.loadFxChainAsync(selectedFile).thenAccept { chainDto ->
                     deck.applyFxChain(chainDto)
                 }
             }
             "lsdfx" -> {
                 val vacantIndex = (0 until Deck.FX_SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
                 if (vacantIndex != null) {
-                    session.presetManager.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
+                    session.presetRepository.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
                         deck.applyFxSlot(vacantIndex, presetDto.slot)
                     }
                 } else {
@@ -223,7 +223,7 @@ object BrowserActionToolbar {
                         val fx = deck.fxSlots[s]
                         val label = if (fx != null) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
                         if (ImGui.menuItem(label)) {
-                            session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                            session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
                                 deck.applyFxSlot(s, presetDto.slot)
                             }
                         }

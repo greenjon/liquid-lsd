@@ -355,7 +355,7 @@ class MixerPanel(
             if (payload != null) {
                 val file = java.io.File(payload)
                 if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
-                    session.presetManager.loadTransitionPresetAsync(file).thenAccept { dto ->
+                    session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
                         mixer.applyTransitionPreset(dto)
                     }
                 } else {
@@ -386,7 +386,7 @@ class MixerPanel(
             if (payload != null) {
                 val file = java.io.File(payload)
                 if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
-                    session.presetManager.loadTransitionPresetAsync(file).thenAccept { dto ->
+                    session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
                         mixer.applyTransitionPreset(dto)
                     }
                 } else {

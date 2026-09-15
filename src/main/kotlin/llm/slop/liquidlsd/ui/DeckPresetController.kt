@@ -31,7 +31,7 @@ class DeckPresetController(
         val cleanName = presetName.removeSuffix(".lsd").trim()
         val file = File("library/presets/$cleanName.lsd")
         if (file.exists()) {
-            session.presetManager.loadDeckPresetAsync(file, isDeckA = isDeckA, isDeckPV = isDeckPV)
+            session.presetRepository.loadDeckPresetAsync(file, isDeckA = isDeckA, isDeckPV = isDeckPV)
         }
     }
 
@@ -78,7 +78,7 @@ class DeckPresetController(
             deck === mixer.deckPV -> 3
             else -> -1
         }
-        session.presetManager.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
+        session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
     }
 
     /**
@@ -187,7 +187,7 @@ class DeckPresetController(
 
     fun loadDeckPresetSafely(mixer: Mixer, deck: Deck, file: File) {
         guardDeckTransition(mixer, deck) {
-            session.presetManager.loadDeckPresetAsync(
+            session.presetRepository.loadDeckPresetAsync(
                 file,
                 isDeckA = deck === mixer.deckA,
                 isDeckBG = deck === mixer.deckBG,
@@ -263,10 +263,10 @@ class DeckPresetController(
 
     fun drawFileBrowsers() {
         deckAFileBrowser.draw { file ->
-            session.presetManager.loadDeckPresetAsync(file, true)
+            session.presetRepository.loadDeckPresetAsync(file, true)
         }
         deckBFileBrowser.draw { file ->
-            session.presetManager.loadDeckPresetAsync(file, false)
+            session.presetRepository.loadDeckPresetAsync(file, false)
         }
     }
 }

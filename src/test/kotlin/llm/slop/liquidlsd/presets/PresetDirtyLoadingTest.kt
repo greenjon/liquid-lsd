@@ -78,7 +78,7 @@ class PresetDirtyLoadingTest {
             globalAlpha = null
         )
 
-        val (sanitized, wasMigrated) = PresetManager.sanitizePresetDto(rawLegacyDto)
+        val (sanitized, wasMigrated) = PresetMigrator.sanitizePresetDto(rawLegacyDto)
         assertTrue(wasMigrated, "Legacy preset must be flagged as migrated")
         assertFalse(sanitized.parameters.containsKey("ObsoleteKey"), "Obsolete keys must be removed")
         assertFalse(sanitized.feedbackParameters.containsKey("legacyFeedback"), "Legacy feedback keys must be removed")
@@ -94,8 +94,8 @@ class PresetDirtyLoadingTest {
     fun testSanitizePresetDtoDoesNotModifyCleanPreset() {
         val file = File("library/presets/test_preset_a.lsd")
         val rawDto = json.decodeFromString<DeckPresetDto>(file.readText())
-        val (cleanDto, _) = PresetManager.sanitizePresetDto(rawDto)
-        val (_, wasMigrated) = PresetManager.sanitizePresetDto(cleanDto)
+        val (cleanDto, _) = PresetMigrator.sanitizePresetDto(rawDto)
+        val (_, wasMigrated) = PresetMigrator.sanitizePresetDto(cleanDto)
         assertFalse(wasMigrated, "Clean preset should not trigger migration")
     }
 

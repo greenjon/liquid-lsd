@@ -234,7 +234,7 @@ object VideoExportModal {
                     val pFile = File(pPath)
                     if (pFile.exists()) {
                         try {
-                            session.presetManager.loadDeckPresetAsync(pFile, isDeckA = true)
+                            session.presetRepository.loadDeckPresetAsync(pFile, isDeckA = true)
                             logger.info { "Loaded preset snapshot for export: ${pFile.name}" }
                         } catch (e: Exception) {
                             logger.warn(e) { "Could not load preset snapshot before export: ${e.message}" }

@@ -230,13 +230,13 @@ object BgQueueActionsPanel {
                     BgQueueManager.playIndex(index, mixer, withDipToBlack = false)
                 }
                 if (ImGui.menuItem("Load to Deck A")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = true)
                 }
                 if (ImGui.menuItem("Load to Deck B")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
                 }
                 if (ImGui.menuItem("Preview on Deck PV")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckPV = true)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckPV = true)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Add to A/B Queue")) {

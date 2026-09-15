@@ -21,8 +21,9 @@ class PlayQueueManagerTest {
     @BeforeTest
     fun setUp() {
         mockkObject(PresetManager)
+        mockkObject(PresetRepository)
         every { PresetManager.isDeckDirty(any(), any()) } returns false
-        every { PresetManager.loadDeckPresetAsync(any(), any(), any(), any()) } returns Unit
+        every { PresetRepository.loadDeckPresetAsync(any(), any(), any(), any(), any()) } returns Unit
         PlayQueueManager.clearQueue()
         PlayQueueManager.isAutoVJEnabled = false
         PlayQueueManager.isRepeatEnabled = false
@@ -32,6 +33,7 @@ class PlayQueueManagerTest {
     @AfterTest
     fun tearDown() {
         unmockkObject(PresetManager)
+        unmockkObject(PresetRepository)
     }
 
     @Test

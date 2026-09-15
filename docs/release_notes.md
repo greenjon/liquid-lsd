@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Session Serialization Visibility & Test Delegates (`SessionSerializer.kt`, `PresetManager.kt`, `PresetModels.kt`, `SessionStateTest.kt`, `PresetDirtyLoadingTest.kt`)
+- **Restored Queue & Session Path Helper Visibility**: Exposed `startEmpty`, `serializeSessionPath`, `resolveSessionPath`, and `resolveRestoredQueue` with `internal` access on `SessionSerializer` and added delegating methods on `PresetManager`.
+- **Deck DTO Apply Safety**: Added null-safe fallback when resolving default visual sources during empty deck resets to prevent `NoSuchElementException` when operating on mock deck instances in unit tests.
+
+
 ### ImGui SetCursorPos Un-submitted Bounds & Preferences Child Window Fix (`CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `OscilloscopeDrawer.kt`, `ParametersPanel.kt`, `PreferencesPanel.kt`)
 - **Fix ImGui Assertion Crash on Preferences Modal**: Fixed `Dear ImGui Assertion Failed: (0) && "Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries."` caused by `ImGui.setCursorScreenPos(...)` positioning layout cursors without a trailing `ImGui.dummy(0f, 0f)` item submission to reset `DC.IsSetPos` before closing child windows.
 - **Adjusted Preset Name Scale Child Height**: Increased `##preset_slider_child` height from `46f` to `52f` with `ImGuiWindowFlags.NoScrollbar` to accommodate theme window padding and custom slider heights cleanly.

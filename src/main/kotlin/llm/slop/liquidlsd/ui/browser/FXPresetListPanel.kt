@@ -72,7 +72,7 @@ object FXPresetListPanel {
                                     extension = "lsdfx"
                                 ) { name, tags ->
                                     val file = File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                                    session.presetManager.saveFxPresetAsync(file, name, slotDto, tags)
+                                    session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
                                 }
                             }
                         }
@@ -184,7 +184,7 @@ object FXPresetListPanel {
                             for (s in 0 until Deck.FX_SLOT_COUNT) {
                                 val slotNum = s + 1
                                 if (ImGui.menuItem("Slot $slotNum")) {
-                                    session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+                                    session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
                                         deck.applyFxSlot(s, presetDto.slot)
                                     }
                                 }
@@ -229,7 +229,7 @@ object FXPresetListPanel {
 
     fun loadFxPresetToFirstVacantSlot(session: SessionContext, deck: Deck, file: File, fallbackSlot: Int = 0) {
         val vacantIndex = (0 until Deck.FX_SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null } ?: fallbackSlot
-        session.presetManager.loadFxPresetAsync(file).thenAccept { presetDto ->
+        session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
             deck.applyFxSlot(vacantIndex, presetDto.slot)
         }
     }

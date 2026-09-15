@@ -735,7 +735,7 @@ object ParametersPanel {
                     for (asset in presetFiles.sortedBy { it.name }) {
                         val label = asset.displayName.ifBlank { asset.name }
                         if (ImGui.menuItem("$label##launchpad_preset_${asset.path}")) {
-                            session.presetManager.loadDeckPresetAsync(File(asset.path), isDeckA = isDeckA, isDeckBG = isDeckBG, isDeckPV = isDeckPV)
+                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = isDeckA, isDeckBG = isDeckBG, isDeckPV = isDeckPV)
                         }
                     }
                 }

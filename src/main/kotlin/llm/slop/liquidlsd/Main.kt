@@ -14,6 +14,7 @@ import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.presets.PresetManager
+import llm.slop.liquidlsd.presets.SessionSerializer
 import mu.KotlinLogging
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
@@ -266,9 +267,9 @@ fun main(args: Array<String>) {
 
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckBG, deckPV, initialWidth, initialHeight)
-    PresetManager.startEmpty(mixer)
+    SessionSerializer.startEmpty(mixer)
     if (UITheme.startupBehavior != UITheme.StartupBehavior.EMPTY) {
-        PresetManager.loadSession(mixer)
+        SessionSerializer.loadSession(mixer)
     }
     NotesManager.loadSourceNotes()
     session.touchConsoleController.initialize(window, mixer)
@@ -591,7 +592,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.broadcast.BroadcastEngine.shutdown()
     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
-    PresetManager.saveSession(mixer)
+    SessionSerializer.saveSession(mixer)
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.liquidlsd.midi.MidiEngine.close()

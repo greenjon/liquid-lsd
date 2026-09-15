@@ -236,16 +236,16 @@ object QueueActionsPanel {
             // Context menu (triggered by right-click or more button)
             if (ImGui.beginPopup(popupId)) {
                 if (ImGui.menuItem("Load to Deck A")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = true)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = true)
                 }
                 if (ImGui.menuItem("Load to Deck B")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
                 }
                 if (ImGui.menuItem("Load to Deck BG")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckBG = true)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckBG = true)
                 }
                 if (ImGui.menuItem("Preview on Deck PV")) {
-                    session.presetManager.loadDeckPresetAsync(file, isDeckPV = true)
+                    session.presetRepository.loadDeckPresetAsync(file, isDeckPV = true)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Add to Background Queue")) {
