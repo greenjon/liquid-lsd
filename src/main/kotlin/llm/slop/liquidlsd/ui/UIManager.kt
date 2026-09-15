@@ -26,10 +26,6 @@ import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.presets.PlayQueueManager
-import llm.slop.liquidlsd.midi.MidiEngine
-import llm.slop.liquidlsd.midi.MidiMessageType
-import llm.slop.liquidlsd.midi.MidiInputType
-import llm.slop.liquidlsd.midi.TriggerMode
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -108,12 +104,6 @@ class UIManager(
             }
         }
     }
-
-    private var lastNextMidiCcHigh = false
-    private var lastPrevMidiCcHigh = false
-    private var lastBgNextMidiCcHigh = false
-    private var lastBgPrevMidiCcHigh = false
-    private var lastTapMidiCcHigh = false
 
     private var currentMixer: Mixer? = null
 
@@ -214,174 +204,20 @@ class UIManager(
             lastWindowTitle = title
         }
 
-        // Drain all MIDI events queued by the MIDI receiver thread.
-        var midiCcDelta = 0
-        var bgMidiCcDelta = 0
-        if (!session.uiTheme.midiEnabled) {
-            MidiEngine.receivedEvents.clear()
-            MidiEngine.receivedCcEvents.clear()
-        } else {
-            // Check for MIDI learn auto-timeout (15 seconds)
-            if (parametersState.midiLearnTarget != null && System.currentTimeMillis() - parametersState.midiLearnStartTimeMs > 15000L) {
-                parametersState.midiLearnTarget = null
-            }
-
-            while (true) {
-                val event = MidiEngine.receivedEvents.poll() ?: break
-                val target = parametersState.midiLearnTarget
-                if (target != null) {
-                    val inputType = when (event.type) {
-                        MidiMessageType.NOTE -> MidiInputType.BUTTON_NOTE
-                        MidiMessageType.PITCH_BEND -> MidiInputType.PITCH_BEND
-                        MidiMessageType.CC -> when {
-                            event.rawValue == 63 || event.rawValue == 65 -> MidiInputType.ROTARY_BINARY_OFFSET
-                            else -> MidiInputType.CONTINUOUS_CC
-                        }
-                    }
-                    val triggerMode = if (event.type == MidiMessageType.NOTE) TriggerMode.MOMENTARY else TriggerMode.TOGGLE
-
-                    when (target) {
-                        is MidiLearnTarget.BaseValueSlider -> {
-                            session.midiMappingManager.addMapping(
-                                parameterPath = target.paramKey,
-                                cc = event.index,
-                                channel = event.channel,
-                                minVal = target.min,
-                                maxVal = target.max,
-                                messageType = event.type,
-                                inputType = inputType,
-                                triggerMode = triggerMode
-                            )
-                            session.midiMappingManager.saveActiveProfile()
-                        }
-                        is MidiLearnTarget.GridCell -> {
-                            val midiId = if (event.type == MidiMessageType.NOTE) {
-                                "midi_note_${event.channel}_${event.index}"
-                            } else {
-                                "midi_cc_${event.channel}_${event.index}"
-                            }
-                            val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") || it.sourceId.startsWith("midi_note_") }
-                            target.param.modulators.removeAll(existingMods)
-                            val exists = target.param.modulators.any { it.sourceId == midiId }
-                            if (!exists) {
-                                target.param.modulators.add(
-                                    llm.slop.liquidlsd.parameters.CvModulator(
-                                        sourceId = midiId,
-                                        depth = 1.0f,
-                                        operator = llm.slop.liquidlsd.parameters.ModulationOperator.ADD
-                                    )
-                                )
-                            }
-                        }
-                        is MidiLearnTarget.GlobalAction -> {
-                            session.midiMappingManager.addMapping(
-                                parameterPath = target.actionKey,
-                                cc = event.index,
-                                channel = event.channel,
-                                minVal = 0f,
-                                maxVal = 1f,
-                                messageType = event.type,
-                                inputType = inputType,
-                                triggerMode = TriggerMode.TOGGLE
-                            )
-                            session.midiMappingManager.saveActiveProfile()
-                        }
-                    }
-                    parametersState.midiLearnTarget = null
-                } else {
-                    // Global Actions
-                    val nextCc = session.midiMappingManager.getCcForSpecial("Global/queueNext")
-                    val nextCh = session.midiMappingManager.getChannelForSpecial("Global/queueNext")
-                    if (nextCc != -1 && event.index == nextCc && event.channel == nextCh) {
-                        val isHigh = event.normalizedValue > 0.5f
-                        if (isHigh && !lastNextMidiCcHigh) {
-                            midiCcDelta += 1
-                        }
-                        lastNextMidiCcHigh = isHigh
-                    }
-                    val prevCc = session.midiMappingManager.getCcForSpecial("Global/queuePrev")
-                    val prevCh = session.midiMappingManager.getChannelForSpecial("Global/queuePrev")
-                    if (prevCc != -1 && event.index == prevCc && event.channel == prevCh) {
-                        val isHigh = event.normalizedValue > 0.5f
-                        if (isHigh && !lastPrevMidiCcHigh) {
-                            midiCcDelta -= 1
-                        }
-                        lastPrevMidiCcHigh = isHigh
-                    }
-                    val bgNextCc = session.midiMappingManager.getCcForSpecial("Global/bgQueueNext")
-                    val bgNextCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueueNext")
-                    if (bgNextCc != -1 && event.index == bgNextCc && event.channel == bgNextCh) {
-                        val isHigh = event.normalizedValue > 0.5f
-                        if (isHigh && !lastBgNextMidiCcHigh) {
-                            bgMidiCcDelta += 1
-                        }
-                        lastBgNextMidiCcHigh = isHigh
-                    }
-                    val bgPrevCc = session.midiMappingManager.getCcForSpecial("Global/bgQueuePrev")
-                    val bgPrevCh = session.midiMappingManager.getChannelForSpecial("Global/bgQueuePrev")
-                    if (bgPrevCc != -1 && event.index == bgPrevCc && event.channel == bgPrevCh) {
-                        val isHigh = event.normalizedValue > 0.5f
-                        if (isHigh && !lastBgPrevMidiCcHigh) {
-                            bgMidiCcDelta -= 1
-                        }
-                        lastBgPrevMidiCcHigh = isHigh
-                    }
-                    val tapCc = session.midiMappingManager.getCcForSpecial("Global/tapTempo")
-                    val tapCh = session.midiMappingManager.getChannelForSpecial("Global/tapTempo")
-                    if (tapCc != -1 && event.index == tapCc && event.channel == tapCh) {
-                        val isHigh = event.normalizedValue > 0.5f
-                        if (isHigh && !lastTapMidiCcHigh) {
-                            session.tapTempoController.tap()
-                        }
-                        lastTapMidiCcHigh = isHigh
-                    }
-
-                    // Forward to parameter bindings (rotary deltas, buttons, continuous takeover)
-                    session.midiMappingManager.onMidiEvent(event, mixer)
-                }
-            }
-            MidiEngine.receivedCcEvents.clear()
-        }
+        // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
+        // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
+        val (midiCcDelta, bgMidiCcDelta) = session.midiMappingManager.processGlobalMidiEvents(
+            midiEnabled = session.uiTheme.midiEnabled,
+            parametersState = parametersState,
+            mixer = mixer,
+            onTapTempo = { session.tapTempoController.tap() }
+        )
 
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
         if (mixer.pollTapTempo()) {
             session.tapTempoController.tap()
         }
-        var keyDelta = 0
-        if (!ImGui.getIO().wantTextInput) {
-
-            val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
-            val isSlash = ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
-            if (isCtrlF || isSlash) {
-                if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
-                    session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
-                    LibraryPanel.isLibraryExpanding = true
-                    session.uiTheme.savePreferences()
-                }
-                llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
-            }
-
-            if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) {
-                    LibraryPanel.cycleMode(session)
-                }
-            }
-            when (session.uiTheme.queueKeyTrigger) {
-                UITheme.QueueKeyTrigger.ARROWS -> {
-                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.LeftArrow)) keyDelta -= 1
-                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.RightArrow)) keyDelta += 1
-                }
-                UITheme.QueueKeyTrigger.PAGE_UP_DOWN -> {
-                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageUp)) keyDelta -= 1
-                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageDown)) keyDelta += 1
-                }
-                UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> {
-                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Backspace)) keyDelta -= 1
-                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) keyDelta += 1
-                }
-                else -> {}
-            }
-        }
+        val keyDelta = processQueueKeyboardShortcuts()
         val totalDelta = midiCcDelta + cvDelta + keyDelta
         if (totalDelta != 0) {
             if (totalDelta > 0) {
@@ -475,6 +311,50 @@ class UIManager(
 
         ImGui.render()
         imguiGl3.renderDrawData(ImGui.getDrawData())
+    }
+
+    /**
+     * Handles the fixed set of keyboard shortcuts for driving the play queue and library
+     * search, honoring the user's configured [UITheme.QueueKeyTrigger] binding. Returns the
+     * net queue-navigation delta (-1/0/+1) produced by this frame's key presses; search-focus
+     * and library-mode side effects are applied directly.
+     */
+    private fun processQueueKeyboardShortcuts(): Int {
+        var keyDelta = 0
+        if (ImGui.getIO().wantTextInput) return keyDelta
+
+        val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
+        val isSlash = ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
+        if (isCtrlF || isSlash) {
+            if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
+                session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
+                LibraryPanel.isLibraryExpanding = true
+                session.uiTheme.savePreferences()
+            }
+            llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
+        }
+
+        if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
+            if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) {
+                LibraryPanel.cycleMode(session)
+            }
+        }
+        when (session.uiTheme.queueKeyTrigger) {
+            UITheme.QueueKeyTrigger.ARROWS -> {
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.LeftArrow)) keyDelta -= 1
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.RightArrow)) keyDelta += 1
+            }
+            UITheme.QueueKeyTrigger.PAGE_UP_DOWN -> {
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageUp)) keyDelta -= 1
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageDown)) keyDelta += 1
+            }
+            UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> {
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Backspace)) keyDelta -= 1
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) keyDelta += 1
+            }
+            else -> {}
+        }
+        return keyDelta
     }
 
     fun onContentScaleChanged(newScale: Float) {

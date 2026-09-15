@@ -1,8 +1,12 @@
 package llm.slop.liquidlsd.midi
 
+import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.MidiLearnTarget
+import llm.slop.liquidlsd.ui.ParametersState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -101,6 +105,14 @@ object MidiMappingManager {
     private val lastButtonHigh = ConcurrentHashMap<String, Boolean>()
 
     private var lastUpdateTimeNanos = System.nanoTime()
+
+    // Edge-detection state for the fixed set of global (non-parameter) MIDI actions,
+    // consumed each frame by processGlobalMidiEvents().
+    private var lastNextMidiCcHigh = false
+    private var lastPrevMidiCcHigh = false
+    private var lastBgNextMidiCcHigh = false
+    private var lastBgPrevMidiCcHigh = false
+    private var lastTapMidiCcHigh = false
 
     init {
         if (!midiDir.exists()) midiDir.mkdirs()
@@ -451,6 +463,157 @@ object MidiMappingManager {
                 }
             }
         }
+    }
+
+    /** Queue-navigation deltas accumulated from global MIDI CC actions this frame. */
+    data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int)
+
+    /**
+     * Drains all MIDI events queued by the MIDI receiver thread since the last frame,
+     * dispatching each one to either MIDI-learn (if a learn target is active), the fixed
+     * set of global actions (queue next/prev, bg-queue next/prev, tap tempo), or the
+     * regular parameter bindings via [onMidiEvent].
+     *
+     * Returns the net queue-navigation deltas produced by global-action CC edges this frame;
+     * the caller combines these with CV/keyboard deltas to decide whether to advance the queue.
+     */
+    fun processGlobalMidiEvents(
+        midiEnabled: Boolean,
+        parametersState: ParametersState,
+        mixer: Mixer,
+        onTapTempo: () -> Unit
+    ): GlobalMidiDeltas {
+        var midiCcDelta = 0
+        var bgMidiCcDelta = 0
+
+        if (!midiEnabled) {
+            MidiEngine.receivedEvents.clear()
+            MidiEngine.receivedCcEvents.clear()
+            return GlobalMidiDeltas(0, 0)
+        }
+
+        // Check for MIDI learn auto-timeout (15 seconds)
+        if (parametersState.midiLearnTarget != null && System.currentTimeMillis() - parametersState.midiLearnStartTimeMs > 15000L) {
+            parametersState.midiLearnTarget = null
+        }
+
+        while (true) {
+            val event = MidiEngine.receivedEvents.poll() ?: break
+            val target = parametersState.midiLearnTarget
+            if (target != null) {
+                val inputType = when (event.type) {
+                    MidiMessageType.NOTE -> MidiInputType.BUTTON_NOTE
+                    MidiMessageType.PITCH_BEND -> MidiInputType.PITCH_BEND
+                    MidiMessageType.CC -> when {
+                        event.rawValue == 63 || event.rawValue == 65 -> MidiInputType.ROTARY_BINARY_OFFSET
+                        else -> MidiInputType.CONTINUOUS_CC
+                    }
+                }
+                val triggerMode = if (event.type == MidiMessageType.NOTE) TriggerMode.MOMENTARY else TriggerMode.TOGGLE
+
+                when (target) {
+                    is MidiLearnTarget.BaseValueSlider -> {
+                        addMapping(
+                            parameterPath = target.paramKey,
+                            cc = event.index,
+                            channel = event.channel,
+                            minVal = target.min,
+                            maxVal = target.max,
+                            messageType = event.type,
+                            inputType = inputType,
+                            triggerMode = triggerMode
+                        )
+                        saveActiveProfile()
+                    }
+                    is MidiLearnTarget.GridCell -> {
+                        val midiId = if (event.type == MidiMessageType.NOTE) {
+                            "midi_note_${event.channel}_${event.index}"
+                        } else {
+                            "midi_cc_${event.channel}_${event.index}"
+                        }
+                        val existingMods = target.param.modulators.filter { it.sourceId.startsWith("midi_cc_") || it.sourceId.startsWith("midi_note_") }
+                        target.param.modulators.removeAll(existingMods)
+                        val exists = target.param.modulators.any { it.sourceId == midiId }
+                        if (!exists) {
+                            target.param.modulators.add(
+                                CvModulator(
+                                    sourceId = midiId,
+                                    depth = 1.0f,
+                                    operator = ModulationOperator.ADD
+                                )
+                            )
+                        }
+                    }
+                    is MidiLearnTarget.GlobalAction -> {
+                        addMapping(
+                            parameterPath = target.actionKey,
+                            cc = event.index,
+                            channel = event.channel,
+                            minVal = 0f,
+                            maxVal = 1f,
+                            messageType = event.type,
+                            inputType = inputType,
+                            triggerMode = TriggerMode.TOGGLE
+                        )
+                        saveActiveProfile()
+                    }
+                }
+                parametersState.midiLearnTarget = null
+            } else {
+                // Global Actions
+                val nextCc = getCcForSpecial("Global/queueNext")
+                val nextCh = getChannelForSpecial("Global/queueNext")
+                if (nextCc != -1 && event.index == nextCc && event.channel == nextCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastNextMidiCcHigh) {
+                        midiCcDelta += 1
+                    }
+                    lastNextMidiCcHigh = isHigh
+                }
+                val prevCc = getCcForSpecial("Global/queuePrev")
+                val prevCh = getChannelForSpecial("Global/queuePrev")
+                if (prevCc != -1 && event.index == prevCc && event.channel == prevCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastPrevMidiCcHigh) {
+                        midiCcDelta -= 1
+                    }
+                    lastPrevMidiCcHigh = isHigh
+                }
+                val bgNextCc = getCcForSpecial("Global/bgQueueNext")
+                val bgNextCh = getChannelForSpecial("Global/bgQueueNext")
+                if (bgNextCc != -1 && event.index == bgNextCc && event.channel == bgNextCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastBgNextMidiCcHigh) {
+                        bgMidiCcDelta += 1
+                    }
+                    lastBgNextMidiCcHigh = isHigh
+                }
+                val bgPrevCc = getCcForSpecial("Global/bgQueuePrev")
+                val bgPrevCh = getChannelForSpecial("Global/bgQueuePrev")
+                if (bgPrevCc != -1 && event.index == bgPrevCc && event.channel == bgPrevCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastBgPrevMidiCcHigh) {
+                        bgMidiCcDelta -= 1
+                    }
+                    lastBgPrevMidiCcHigh = isHigh
+                }
+                val tapCc = getCcForSpecial("Global/tapTempo")
+                val tapCh = getChannelForSpecial("Global/tapTempo")
+                if (tapCc != -1 && event.index == tapCc && event.channel == tapCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastTapMidiCcHigh) {
+                        onTapTempo()
+                    }
+                    lastTapMidiCcHigh = isHigh
+                }
+
+                // Forward to parameter bindings (rotary deltas, buttons, continuous takeover)
+                onMidiEvent(event, mixer)
+            }
+        }
+        MidiEngine.receivedCcEvents.clear()
+
+        return GlobalMidiDeltas(midiCcDelta, bgMidiCcDelta)
     }
 
     /**
