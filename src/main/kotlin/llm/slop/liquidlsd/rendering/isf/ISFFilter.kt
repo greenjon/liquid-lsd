@@ -21,6 +21,65 @@ class ISFFilter(
     val ownsTextures: Boolean = false
 ) : VisualEffect {
 
+    /**
+     * Pre-parsed representation of an ISF pass dimension expression (e.g. "$WIDTH/2.0", "$HEIGHT", "512").
+     * Parsed once at construction time (see [parseDimExpr]) so the render loop only performs plain
+     * arithmetic on already-resolved operands — no String.replace/split in the hot path.
+     */
+    private sealed class DimOperand {
+        class Literal(val value: Float) : DimOperand()
+        object Width : DimOperand()
+        object Height : DimOperand()
+    }
+
+    private class DimExpr(private val op: Char, private val left: DimOperand, private val right: DimOperand?) {
+        fun eval(deckWidth: Int, deckHeight: Int): Int {
+            val l = resolve(left, deckWidth, deckHeight)
+            val r = right ?: return l.toInt()
+            val rv = resolve(r, deckWidth, deckHeight)
+            return when (op) {
+                '/' -> (l / rv).toInt()
+                '*' -> (l * rv).toInt()
+                else -> l.toInt()
+            }
+        }
+
+        private fun resolve(operand: DimOperand, deckWidth: Int, deckHeight: Int): Float = when (operand) {
+            is DimOperand.Literal -> operand.value
+            DimOperand.Width -> deckWidth.toFloat()
+            DimOperand.Height -> deckHeight.toFloat()
+        }
+    }
+
+    /**
+     * Parses an ISF pass dimension expression once at load/compile time. Mirrors the grammar previously
+     * handled by runtime string substitution: a bare literal, a bare $WIDTH/$HEIGHT token, or a division
+     * "TOKEN/TOKEN" (ISFFilter does not support "*", matching the prior implementation's behavior).
+     * Returns null when [expr] is null or unparseable, meaning "use the caller's base dimension".
+     */
+    private fun parseDimExpr(expr: String?): DimExpr? {
+        if (expr == null) return null
+        return try {
+            val divIdx = expr.indexOf('/')
+            if (divIdx >= 0) {
+                val left = parseDimOperand(expr.substring(0, divIdx).trim()) ?: return null
+                val right = parseDimOperand(expr.substring(divIdx + 1).trim()) ?: return null
+                DimExpr('/', left, right)
+            } else {
+                val operand = parseDimOperand(expr.trim()) ?: return null
+                DimExpr('=', operand, null)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun parseDimOperand(token: String): DimOperand? = when (token) {
+        "\$WIDTH" -> DimOperand.Width
+        "\$HEIGHT" -> DimOperand.Height
+        else -> token.toFloatOrNull()?.let { DimOperand.Literal(it) }
+    }
+
     override val parameters = mutableMapOf<String, ModulatableParameter>()
     override val dryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     override var enabled = true
@@ -32,9 +91,58 @@ class ISFFilter(
     private var frameIndex = 0
     private var lastTime = TimeSource.getTimeSec().toFloat()
     
-    // Multipass infrastructure
-    private val passFBOs = mutableMapOf<String, FBO>()
-    private val passHistoryFBOs = mutableMapOf<String, Pair<FBO, FBO>>()
+    // Multipass infrastructure — compiled once from the fixed header.PASSES list so the render loop
+    // never does string parsing, map lookups, or Pair allocation (see ARCHITECTURE.md zero-alloc guarantees).
+    private val passesArray: Array<ISFPass> = header.PASSES.toTypedArray()
+
+    // Target name -> integer slot, resolved once at construction (never touched on the hot render path)
+    private val nonPersistentTargetSlots: Map<String, Int>
+    private val persistentTargetSlots: Map<String, Int>
+    init {
+        val nonPersistent = LinkedHashMap<String, Int>()
+        val persistent = LinkedHashMap<String, Int>()
+        for (pass in passesArray) {
+            val target = pass.TARGET ?: continue
+            if (pass.PERSISTENT) {
+                if (!persistent.containsKey(target)) persistent[target] = persistent.size
+            } else {
+                if (!nonPersistent.containsKey(target)) nonPersistent[target] = nonPersistent.size
+            }
+        }
+        nonPersistentTargetSlots = nonPersistent
+        persistentTargetSlots = persistent
+    }
+
+    // Pre-parsed dimension expressions (e.g. "$WIDTH/2.0") — parsed once, evaluated with plain
+    // arithmetic every frame instead of String.replace/split.
+    private val passWidthExprs: Array<DimExpr?> = passesArray.map { parseDimExpr(it.WIDTH) }.toTypedArray()
+    private val passHeightExprs: Array<DimExpr?> = passesArray.map { parseDimExpr(it.HEIGHT) }.toTypedArray()
+
+    // Per-pass resolved slot indices (>=0 valid, -1 = not applicable), resolved once at construction
+    private val passPersistentSlots: IntArray = IntArray(passesArray.size) { i ->
+        val pass = passesArray[i]
+        val target = pass.TARGET
+        if (pass.PERSISTENT && target != null) persistentTargetSlots[target] ?: -1 else -1
+    }
+    private val passRegularSlots: IntArray = IntArray(passesArray.size) { i ->
+        val pass = passesArray[i]
+        val target = pass.TARGET
+        if (!pass.PERSISTENT && target != null) nonPersistentTargetSlots[target] ?: -1 else -1
+    }
+
+    // Ping-pong slot: front = write target this frame, back = read/history source. swap() flips the
+    // two FBO references in place with zero allocation (replaces the old Pair reallocation per frame).
+    private class PingPongSlot(var front: FBO, var back: FBO) {
+        fun swap() {
+            val tmp = front
+            front = back
+            back = tmp
+        }
+    }
+
+    private val regularFBOs: Array<FBO?> = arrayOfNulls(nonPersistentTargetSlots.size)
+    private val persistentSlots: Array<PingPongSlot?> = arrayOfNulls(persistentTargetSlots.size)
+
     private var deckWidth = 0
     private var deckHeight = 0
 
@@ -43,9 +151,12 @@ class ISFFilter(
     private val importedBindings: Array<ImportedTextureBinding>
     private val shouldDisposeTextures: Boolean
 
-    private class PassBinding(val target: String, val isPersistent: Boolean)
-    private val passBindings: Array<PassBinding> = header.PASSES.mapNotNull { pass ->
-        pass.TARGET?.let { PassBinding(it, pass.PERSISTENT) }
+    private class PassBinding(val target: String, val isPersistent: Boolean, val slot: Int)
+    private val passBindings: Array<PassBinding> = passesArray.mapNotNull { pass ->
+        pass.TARGET?.let { target ->
+            val slot = if (pass.PERSISTENT) persistentTargetSlots[target] ?: -1 else nonPersistentTargetSlots[target] ?: -1
+            PassBinding(target, pass.PERSISTENT, slot)
+        }
     }.toTypedArray()
 
     private class FilterParamBinding(val name: String, val type: String, val param: ModulatableParameter)
@@ -127,26 +238,6 @@ class ISFFilter(
     }
 
     /**
-     * Resolves pass width/height expressions like "$WIDTH/2.0".
-     */
-    private fun resolveDimension(expr: String?, baseDim: Int): Int {
-        if (expr == null) return baseDim
-        return try {
-            val s = expr.replace("\$WIDTH", deckWidth.toString())
-                        .replace("\$HEIGHT", deckHeight.toString())
-            // Very simple division parsing for now, enough for bloom
-            if (s.contains("/")) {
-                val parts = s.split("/")
-                (parts[0].trim().toFloat() / parts[1].trim().toFloat()).toInt()
-            } else {
-                s.toFloat().toInt()
-            }
-        } catch (e: Exception) {
-            baseDim
-        }
-    }
-
-    /**
      * Renders the filter reading from [inputTexture] into the currently bound FBO.
      */
     fun render(inputTexture: Int, width: Int, height: Int) {
@@ -181,7 +272,7 @@ class ISFFilter(
             }
         }
 
-        if (header.PASSES.isEmpty()) {
+        if (passesArray.isEmpty()) {
             shader.setUniform("PASSINDEX", 0)
             shader.setUniform("RENDERSIZE", width.toFloat(), height.toFloat())
             var texUnit = 0
@@ -207,31 +298,35 @@ class ISFFilter(
             val currentFbo = glGetInteger(GL_FRAMEBUFFER_BINDING)
             glDisable(GL_BLEND)
 
-            for ((passIdx, pass) in header.PASSES.withIndex()) {
-                val isFinalPass = (passIdx == header.PASSES.size - 1)
-                
-                // Determine target FBO
-                val targetName = pass.TARGET
+            for (passIdx in passesArray.indices) {
+                val pass = passesArray[passIdx]
+                val isFinalPass = (passIdx == passesArray.size - 1)
+
+                // Determine target FBO — array indexing over pre-resolved slot indices, no map lookups
+                val persistentSlotIdx = passPersistentSlots[passIdx]
+                val regularSlotIdx = passRegularSlots[passIdx]
                 val fboToBind = if (isFinalPass) {
                     currentFbo
-                } else if (pass.PERSISTENT && targetName != null) {
+                } else if (persistentSlotIdx >= 0) {
                     // write to the active persistent FBO
-                    passHistoryFBOs[targetName]?.first?.framebufferId ?: currentFbo
+                    persistentSlots[persistentSlotIdx]?.front?.framebufferId ?: currentFbo
+                } else if (regularSlotIdx >= 0) {
+                    regularFBOs[regularSlotIdx]?.framebufferId ?: currentFbo
                 } else {
-                    passFBOs[targetName]?.framebufferId ?: currentFbo
+                    currentFbo
                 }
 
                 glBindFramebuffer(GL_FRAMEBUFFER, fboToBind)
-                
-                val renderWidth = resolveDimension(pass.WIDTH, width)
-                val renderHeight = resolveDimension(pass.HEIGHT, height)
+
+                val renderWidth = passWidthExprs[passIdx]?.eval(deckWidth, deckHeight) ?: width
+                val renderHeight = passHeightExprs[passIdx]?.eval(deckWidth, deckHeight) ?: height
                 glViewport(0, 0, renderWidth, renderHeight)
-                
+
                 shader.setUniform("PASSINDEX", passIdx)
                 shader.setUniform("RENDERSIZE", renderWidth.toFloat(), renderHeight.toFloat())
 
                 var texUnit = 0
-                
+
                 // Bind input image
                 if (inputImageName != null) {
                     glActiveTexture(GL_TEXTURE0 + texUnit)
@@ -243,17 +338,16 @@ class ISFFilter(
                 // Bind all pass targets available — zero-allocation loop over pre-resolved pass bindings
                 for (b in 0 until passBindings.size) {
                     val binding = passBindings[b]
-                    val target = binding.target
                     val texToBind = if (binding.isPersistent) {
                         // read from the history persistent FBO
-                        passHistoryFBOs[target]?.second?.texture ?: 0
+                        if (binding.slot >= 0) persistentSlots[binding.slot]?.back?.texture ?: 0 else 0
                     } else {
-                        passFBOs[target]?.texture ?: 0
+                        if (binding.slot >= 0) regularFBOs[binding.slot]?.texture ?: 0 else 0
                     }
                     if (texToBind != 0) {
                         glActiveTexture(GL_TEXTURE0 + texUnit)
                         glBindTexture(GL_TEXTURE_2D, texToBind)
-                        shader.setUniform(target, texUnit)
+                        shader.setUniform(binding.target, texUnit)
                         texUnit++
                     }
                 }
@@ -272,12 +366,9 @@ class ISFFilter(
                 Geometry.drawFullscreenQuad()
 
 
-                // Swap ping pong buffers if persistent
-                if (pass.PERSISTENT && targetName != null) {
-                    val pair = passHistoryFBOs[targetName]
-                    if (pair != null) {
-                        passHistoryFBOs[targetName] = Pair(pair.second, pair.first)
-                    }
+                // Swap ping pong buffers if persistent — in-place reference swap, zero allocation
+                if (persistentSlotIdx >= 0) {
+                    persistentSlots[persistentSlotIdx]?.swap()
                 }
             }
             
@@ -355,32 +446,35 @@ class ISFFilter(
     }
 
     private fun resizePassFBOs() {
-        // clear existing
-        passFBOs.values.forEach { it.dispose() }
-        passFBOs.clear()
-        
-        passHistoryFBOs.values.forEach { 
-            it.first.dispose()
-            it.second.dispose()
+        // clear existing — this only runs on an actual resize, not the per-frame hot path
+        for (i in regularFBOs.indices) {
+            regularFBOs[i]?.dispose()
+            regularFBOs[i] = null
         }
-        passHistoryFBOs.clear()
+        for (i in persistentSlots.indices) {
+            persistentSlots[i]?.let { it.front.dispose(); it.back.dispose() }
+            persistentSlots[i] = null
+        }
 
         // create new
-        for (pass in header.PASSES) {
+        for (i in passesArray.indices) {
+            val pass = passesArray[i]
             val target = pass.TARGET ?: continue
-            val passW = resolveDimension(pass.WIDTH, deckWidth)
-            val passH = resolveDimension(pass.HEIGHT, deckHeight)
+            val passW = passWidthExprs[i]?.eval(deckWidth, deckHeight) ?: deckWidth
+            val passH = passHeightExprs[i]?.eval(deckWidth, deckHeight) ?: deckHeight
             val format = if (pass.FLOAT) GL_RGBA32F else GL_RGBA8
 
             if (pass.PERSISTENT) {
+                val slot = persistentTargetSlots[target] ?: continue
                 val fbo1 = FBO(passW, passH, format)
                 val fbo2 = FBO(passW, passH, format)
                 // Initialize persistent buffers to zero/transparent
                 fbo1.clear(0f,0f,0f,0f)
                 fbo2.clear(0f,0f,0f,0f)
-                passHistoryFBOs[target] = Pair(fbo1, fbo2)
+                persistentSlots[slot] = PingPongSlot(fbo1, fbo2)
             } else {
-                passFBOs[target] = FBO(passW, passH, format)
+                val slot = nonPersistentTargetSlots[target] ?: continue
+                regularFBOs[slot] = FBO(passW, passH, format)
             }
         }
     }
@@ -412,12 +506,14 @@ class ISFFilter(
         dryWet.reset()
         parameters.values.forEach { it.reset() }
         frameIndex = 0
-        passHistoryFBOs.values.forEach { (fbo1, fbo2) ->
-            fbo1.clear(0f, 0f, 0f, 0f)
-            fbo2.clear(0f, 0f, 0f, 0f)
+        for (slot in persistentSlots) {
+            slot?.let {
+                it.front.clear(0f, 0f, 0f, 0f)
+                it.back.clear(0f, 0f, 0f, 0f)
+            }
         }
-        passFBOs.values.forEach { fbo ->
-            fbo.clear(0f, 0f, 0f, 0f)
+        for (fbo in regularFBOs) {
+            fbo?.clear(0f, 0f, 0f, 0f)
         }
     }
 
@@ -430,13 +526,14 @@ class ISFFilter(
                 ISFTextureLoader.disposeTexture(b.textureId)
             }
         }
-        passFBOs.values.forEach { it.dispose() }
-        passFBOs.clear()
-        passHistoryFBOs.values.forEach { 
-            it.first.dispose()
-            it.second.dispose()
+        for (i in regularFBOs.indices) {
+            regularFBOs[i]?.dispose()
+            regularFBOs[i] = null
         }
-        passHistoryFBOs.clear()
+        for (i in persistentSlots.indices) {
+            persistentSlots[i]?.let { it.front.dispose(); it.back.dispose() }
+            persistentSlots[i] = null
+        }
     }
 
 

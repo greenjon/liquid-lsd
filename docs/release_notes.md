@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Zero-Allocation ISF Multipass Optimization (`ISFFilter.kt`, `ISFVisualSource.kt`)
+- **Pre-Parsed ISF Pass Dimensions & Array Indexing**: Pre-parse pass dimension expressions (`$WIDTH/2.0`, `$HEIGHT`, bare literals) into compiled `DimExpr` structures at load time. Replaced runtime string substitutions, `split()` calls, map lookups, and `Pair` allocations with fast array indexing and zero-allocation in-place ping-pong slot reference swaps during rendering.
+
 ### Transition Library UI & Macro Controls Architecture RFC (`LibraryPanel.kt`, `StockTransitionListPanel.kt`, `TransitionPresetListPanel.kt`, `TransitionPlaylistEditorPanel.kt`, `TransitionQueuePanel.kt`, `MixerPanel.kt`, `macro_controls_and_parameter_linking_proposal.md`)
 - **Library Panel `[ Trans ]` Mode**:
   - Added `[ Trans ]` toggle to `LibraryPanel.kt`, enabling VJs to browse Stock ISF Transitions, Transition Presets (`.lsdtrans`), Transition Playlists (`.lsdtransplay`), and the Live Transition Queue.
