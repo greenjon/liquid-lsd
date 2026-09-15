@@ -136,9 +136,9 @@ class DeckPresetController(
     fun handleUtilityAction(mixer: Mixer, mode: Int, from: Deck, to: Deck) {
         guardDeckTransition(mixer, to) {
             when (mode) {
-                0 -> session.presetManager.moveDeck(mixer, from, to)
-                1 -> session.presetManager.copyDeck(mixer, from, to)
-                2 -> session.presetManager.swapDecks(mixer, from, to)
+                0 -> session.deckLifecycleManager.moveDeck(mixer, from, to)
+                1 -> session.deckLifecycleManager.copyDeck(mixer, from, to)
+                2 -> session.deckLifecycleManager.swapDecks(mixer, from, to)
             }
         }
     }
@@ -223,7 +223,7 @@ class DeckPresetController(
         val doSwitch = {
             deck.source = newSource.clone()
             deck.isEmpty = false
-            session.presetManager.clearDeckActivePreset(deck, mixer)
+            session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
             state.clearSelection()
             state.setDeckSubTab(deckLabel, "SRC")
             ParametersUndo.pushUndoState(state, mixer)
@@ -240,7 +240,7 @@ class DeckPresetController(
 
     fun performEjectDeck(mixer: Mixer, deck: Deck) {
         deck.reset()
-        session.presetManager.clearDeckActivePreset(deck, mixer)
+        session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
     }
 
     fun generateUniqueCopyName(baseName: String): String {

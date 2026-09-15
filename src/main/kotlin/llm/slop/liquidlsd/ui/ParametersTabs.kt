@@ -286,7 +286,7 @@ object ParametersTabs {
                         } else {
                             deck.source = newSource.clone()
                             deck.isEmpty = false
-                            session.presetManager.clearDeckActivePreset(deck, mixer)
+                            session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
                             state.clearSelection()
                             state.setDeckSubTab(deckLabel, "SRC")
                             ParametersUndo.pushUndoState(state, mixer)

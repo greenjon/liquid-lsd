@@ -79,59 +79,13 @@ object PresetManager {
         return current != cached
     }
 
-    fun clearDeckActivePreset(deck: Deck, mixer: Mixer) {
-        when {
-            deck === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
-            deck === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
-            deck === mixer.deckBG -> { cachedDtoBG = null; activePresetBG = null }
-            deck === mixer.deckPV -> { cachedDtoPV = null; activePresetPV = null }
-        }
-    }
-
-    fun copyDeck(mixer: Mixer, from: Deck, to: Deck) {
-        if (from.isEmpty) {
-            to.applyDto(emptyDeckDto(to, mixer))
-            when {
-                to === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
-                to === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
-                to === mixer.deckBG -> { cachedDtoBG = null; activePresetBG = null }
-                to === mixer.deckPV -> { cachedDtoPV = null; activePresetPV = null }
-            }
-            return
-        }
-        val fromDto = when {
-            from === mixer.deckA -> cachedDtoA?.let { from.toDto(it.name) } ?: from.toDto("Deck A")
-            from === mixer.deckB -> cachedDtoB?.let { from.toDto(it.name) } ?: from.toDto("Deck B")
-            from === mixer.deckBG -> cachedDtoBG?.let { from.toDto(it.name) } ?: from.toDto("Deck BG")
-            from === mixer.deckPV -> cachedDtoPV?.let { from.toDto(it.name) } ?: from.toDto("Deck PV")
-            else -> return
-        }
-        
-        to.applyDto(fromDto)
-        
-        when {
-            to === mixer.deckA -> { cachedDtoA = fromDto; activePresetA = fromDto.name }
-            to === mixer.deckB -> { cachedDtoB = fromDto; activePresetB = fromDto.name }
-            to === mixer.deckBG -> { cachedDtoBG = fromDto; activePresetBG = fromDto.name }
-            to === mixer.deckPV -> { cachedDtoPV = fromDto; activePresetPV = fromDto.name }
-        }
-    }
-
-    fun moveDeck(mixer: Mixer, from: Deck, to: Deck) {
-        copyDeck(mixer, from, to)
-        from.applyDto(emptyDeckDto(from, mixer))
-        when {
-            from === mixer.deckA -> { cachedDtoA = null; activePresetA = null }
-            from === mixer.deckB -> { cachedDtoB = null; activePresetB = null }
-            from === mixer.deckBG -> { cachedDtoBG = null; activePresetBG = null }
-            from === mixer.deckPV -> { cachedDtoPV = null; activePresetPV = null }
-        }
-    }
-
     /**
      * Builds a canonical "empty" [DeckPresetDto] for the given deck.
+     *
+     * Internal (not private) because [DeckLifecycleManager] also needs it when
+     * clearing/moving decks.
      */
-    private fun emptyDeckDto(deck: Deck, mixer: Mixer): DeckPresetDto {
+    internal fun emptyDeckDto(deck: Deck, mixer: Mixer): DeckPresetDto {
         val label = when {
             deck === mixer.deckA -> "Deck A"
             deck === mixer.deckB -> "Deck B"
@@ -140,42 +94,6 @@ object PresetManager {
             else -> "Deck"
         }
         return deck.toDto(label).copy(isEmpty = true, visualSourceType = "mandala")
-    }
-
-    fun swapDecks(mixer: Mixer, deck1: Deck, deck2: Deck) {
-        val dto1 = when {
-            deck1 === mixer.deckA -> cachedDtoA?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck A")
-            deck1 === mixer.deckB -> cachedDtoB?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck B")
-            deck1 === mixer.deckBG -> cachedDtoBG?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck BG")
-            deck1 === mixer.deckPV -> cachedDtoPV?.let { deck1.toDto(it.name) } ?: deck1.toDto("Deck PV")
-            else -> return
-        }
-        val dto2 = when {
-            deck2 === mixer.deckA -> cachedDtoA?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck A")
-            deck2 === mixer.deckB -> cachedDtoB?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck B")
-            deck2 === mixer.deckBG -> cachedDtoBG?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck BG")
-            deck2 === mixer.deckPV -> cachedDtoPV?.let { deck2.toDto(it.name) } ?: deck2.toDto("Deck PV")
-            else -> return
-        }
-
-        deck1.applyDto(dto2)
-        deck2.applyDto(dto1)
-
-        val oldDto1 = dto1
-        val oldDto2 = dto2
-
-        when {
-            deck1 === mixer.deckA -> { cachedDtoA = oldDto2; activePresetA = oldDto2.name }
-            deck1 === mixer.deckB -> { cachedDtoB = oldDto2; activePresetB = oldDto2.name }
-            deck1 === mixer.deckBG -> { cachedDtoBG = oldDto2; activePresetBG = oldDto2.name }
-            deck1 === mixer.deckPV -> { cachedDtoPV = oldDto2; activePresetPV = oldDto2.name }
-        }
-        when {
-            deck2 === mixer.deckA -> { cachedDtoA = oldDto1; activePresetA = oldDto1.name }
-            deck2 === mixer.deckB -> { cachedDtoB = oldDto1; activePresetB = oldDto1.name }
-            deck2 === mixer.deckBG -> { cachedDtoBG = oldDto1; activePresetBG = oldDto1.name }
-            deck2 === mixer.deckPV -> { cachedDtoPV = oldDto1; activePresetPV = oldDto1.name }
-        }
     }
 
     /**

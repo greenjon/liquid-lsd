@@ -7,6 +7,7 @@ import io.mockk.verify
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
+import llm.slop.liquidlsd.presets.DeckLifecycleManager
 import llm.slop.liquidlsd.presets.PresetManager
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -43,7 +44,7 @@ class DeckUtilityTest {
         every { deckA.toDto(any(), any()) } returns dtoA
         every { deckB.applyDto(any()) } returns Unit
 
-        PresetManager.copyDeck(mixer, deckA, deckB)
+        DeckLifecycleManager.copyDeck(mixer, deckA, deckB)
 
         verify { deckA.toDto(any()) }
         verify { deckB.applyDto(dtoA) }
@@ -74,7 +75,7 @@ class DeckUtilityTest {
         // deckA.applyDto is called once with the empty DTO to clear the source deck
         every { deckA.applyDto(any()) } returns Unit
 
-        PresetManager.moveDeck(mixer, deckA, deckB)
+        DeckLifecycleManager.moveDeck(mixer, deckA, deckB)
 
         verify { deckA.toDto(any()) }
         verify { deckB.applyDto(dtoA) }
@@ -102,7 +103,7 @@ class DeckUtilityTest {
         every { deckA.applyDto(any()) } returns Unit
         every { deckB.applyDto(any()) } returns Unit
 
-        PresetManager.swapDecks(mixer, deckA, deckB)
+        DeckLifecycleManager.swapDecks(mixer, deckA, deckB)
 
         verify { deckA.applyDto(dtoB) }
         verify { deckB.applyDto(dtoA) }
