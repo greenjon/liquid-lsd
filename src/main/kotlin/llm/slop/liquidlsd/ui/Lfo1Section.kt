@@ -121,7 +121,7 @@ object Lfo1Section {
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {
                     val selectedUnit = GenUnit.entries[unitIdx.get()]
                     val adjustedSubdiv = when (selectedUnit) {
-                        GenUnit.FRAME -> existing.subdivision.coerceIn(1f, 10000f).toInt().toFloat()
+                        GenUnit.FRAME -> existing.subdivision.coerceIn(1f, CvModulator.MAX_FRAME_SUBDIVISION.toFloat()).toInt().toFloat()
                         GenUnit.TIME -> existing.subdivision.coerceIn(0.01f, 86400f)
                         GenUnit.BEAT -> {
                             val options = BeatDivisionSlider.subdivisionOptions
@@ -129,7 +129,7 @@ object Lfo1Section {
                         }
                     }
                     val adjustedMin = when (selectedUnit) {
-                        GenUnit.FRAME -> existing.subdivisionMin.coerceIn(1f, 10000f).toInt().toFloat()
+                        GenUnit.FRAME -> existing.subdivisionMin.coerceIn(1f, CvModulator.MAX_FRAME_SUBDIVISION.toFloat()).toInt().toFloat()
                         GenUnit.TIME -> existing.subdivisionMin.coerceIn(0.01f, 86400f)
                         GenUnit.BEAT -> {
                             val options = BeatDivisionSlider.subdivisionOptions
@@ -137,7 +137,7 @@ object Lfo1Section {
                         }
                     }
                     val adjustedMax = when (selectedUnit) {
-                        GenUnit.FRAME -> existing.subdivisionMax.coerceIn(1f, 10000f).toInt().toFloat()
+                        GenUnit.FRAME -> existing.subdivisionMax.coerceIn(1f, CvModulator.MAX_FRAME_SUBDIVISION.toFloat()).toInt().toFloat()
                         GenUnit.TIME -> existing.subdivisionMax.coerceIn(0.01f, 86400f)
                         GenUnit.BEAT -> {
                             val options = BeatDivisionSlider.subdivisionOptions
@@ -358,9 +358,9 @@ object Lfo1Section {
 
         // -- Frame Period / Speed ---------------------------------
         if (isGen && existing.genUnit == GenUnit.FRAME) {
-            val formatFunc: (Float) -> String = { v -> "${v.toInt().coerceIn(1, 10000)}" }
+            val formatFunc: (Float) -> String = { v -> "${v.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION)}" }
             val formatLabelFunc: (Float) -> String = { v ->
-                val frames = v.toInt().coerceIn(1, 10000)
+                val frames = v.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION)
                 val fps = session.uiTheme.maxFps.coerceAtLeast(1).toFloat()
                 val sec = frames / fps
                 val secFormatted = TimeUtils.formatPeriod(sec)
@@ -368,16 +368,16 @@ object Lfo1Section {
                 else "$frames frames ($secFormatted)"
             }
             val parseFunc: (String) -> Float? = { s ->
-                s.replace(Regex("[^0-9.]"), "").toFloatOrNull()?.toInt()?.coerceIn(1, 10000)?.toFloat()
+                s.replace(Regex("[^0-9.]"), "").toFloatOrNull()?.toInt()?.coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION)?.toFloat()
             }
 
             CustomRangeSlider.drawCustomRangeSlider(session, idPrefix = existing.id,
                 label = "LFO 1 Frames",
                 themeColor = themeColor,
-                currentValue = existing.subdivision.toInt().coerceIn(1, 10000).toFloat(),
-                currentMin = existing.subdivisionMin.toInt().coerceIn(1, 10000).toFloat(),
-                currentMax = existing.subdivisionMax.toInt().coerceIn(1, 10000).toFloat(),
-                minLimit = 1f, maxLimit = 10000f, defaultValue = 1f,
+                currentValue = existing.subdivision.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat(),
+                currentMin = existing.subdivisionMin.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat(),
+                currentMax = existing.subdivisionMax.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat(),
+                minLimit = 1f, maxLimit = CvModulator.MAX_FRAME_SUBDIVISION.toFloat(), defaultValue = 1f,
                 isRandomizable = existing.randomizeSubdivision,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
@@ -388,11 +388,11 @@ object Lfo1Section {
                 // Frames use integer halving/doubling for expansion — kept inline.
                 onRandomizableChanged = { checked ->
                     if (checked) {
-                        val rMin = existing.subdivisionMin.toInt().coerceIn(1, 10000)
-                        val rMax = existing.subdivisionMax.toInt().coerceIn(1, 10000)
-                        val cur = existing.subdivision.toInt().coerceIn(1, 10000)
+                        val rMin = existing.subdivisionMin.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION)
+                        val rMax = existing.subdivisionMax.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION)
+                        val cur = existing.subdivision.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION)
                         val (nextMin, nextMax) = if (rMin == rMax) {
-                            Pair((cur / 2).coerceIn(1, 10000).toFloat(), (cur * 2).coerceIn(1, 10000).toFloat())
+                            Pair((cur / 2).coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat(), (cur * 2).coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat())
                         } else {
                             Pair(rMin.toFloat(), rMax.toFloat())
                         }
@@ -402,7 +402,7 @@ object Lfo1Section {
                             subdivisionMax = nextMax
                         ))
                     } else {
-                        val cur = existing.subdivision.toInt().coerceIn(1, 10000).toFloat()
+                        val cur = existing.subdivision.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat()
                         onReplace(existing.copy(
                             randomizeSubdivision = false,
                             subdivisionMin = cur,
@@ -414,8 +414,8 @@ object Lfo1Section {
                     onReplace(existing.randomizeSubdivision())
                 },
                 onRangeChanged = { nextMin, nextMax ->
-                    val roundedMin = nextMin.toInt().coerceIn(1, 10000).toFloat()
-                    val roundedMax = nextMax.toInt().coerceIn(1, 10000).toFloat()
+                    val roundedMin = nextMin.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat()
+                    val roundedMax = nextMax.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat()
                     val safeMin = minOf(roundedMin, roundedMax)
                     val safeMax = maxOf(roundedMin, roundedMax)
                     val nextActive = existing.subdivision.toInt().coerceIn(safeMin.toInt(), safeMax.toInt()).toFloat()
@@ -426,7 +426,7 @@ object Lfo1Section {
                     ))
                 },
                 onValueChanged = { newVal ->
-                    val roundedVal = newVal.toInt().coerceIn(1, 10000).toFloat()
+                    val roundedVal = newVal.toInt().coerceIn(1, CvModulator.MAX_FRAME_SUBDIVISION).toFloat()
                     onReplace(existing.copy(
                         subdivision = roundedVal,
                         subdivisionMin = roundedVal,

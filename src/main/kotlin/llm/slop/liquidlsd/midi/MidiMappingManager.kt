@@ -95,8 +95,6 @@ object MidiMappingManager {
 
     // Runtime state tracking
     private val lastRawMidi = ConcurrentHashMap<String, Float>()
-    private val targetValues = ConcurrentHashMap<String, Float>()
-    private val smoothedValues = ConcurrentHashMap<String, Float>()
     private val hasTakenOver = ConcurrentHashMap<String, Boolean>()
     private val lastPhysicalScaled = ConcurrentHashMap<String, Float>()
     private val buttonLatched = ConcurrentHashMap<String, Boolean>()
@@ -268,7 +266,17 @@ object MidiMappingManager {
         val slewMs: Float,
         val stepSize: Float,
         val isCrossfade: Boolean
-    )
+    ) {
+        // Per-binding slew state, mutated directly on the hot per-frame update() path.
+        // Lives as unboxed fields on the binding itself (indexed via resolvedBindings)
+        // rather than in a String-keyed map, avoiding per-frame boxing/hashing/GC churn.
+        // Reset to "unset" automatically whenever bindings are rebuilt (mapping changes),
+        // since rebuildResolvedBindings() allocates fresh binding instances.
+        var hasTarget: Boolean = false
+        var targetValue: Float = 0f
+        var hasSmoothed: Boolean = false
+        var smoothedValue: Float = 0f
+    }
 
     @Volatile
     private var resolvedBindings: Array<ResolvedMidiBinding> = emptyArray()
@@ -278,8 +286,6 @@ object MidiMappingManager {
     fun invalidateBindings() {
         bindingsDirty = true
         hasTakenOver.clear()
-        targetValues.clear()
-        smoothedValues.clear()
         lastRawMidi.clear()
         lastPhysicalScaled.clear()
         buttonLatched.clear()
@@ -334,8 +340,10 @@ object MidiMappingManager {
                         val deltaVal = deltaSteps * b.stepSize * (b.maxVal - b.minVal) * sign
                         val newVal = (b.param.baseValue + deltaVal).coerceIn(b.minVal, b.maxVal)
                         b.param.baseValue = newVal
-                        targetValues[b.path] = newVal
-                        smoothedValues[b.path] = newVal
+                        b.targetValue = newVal
+                        b.hasTarget = true
+                        b.smoothedValue = newVal
+                        b.hasSmoothed = true
                         if (b.isCrossfade) mixer.onCrossfadeManualTakeover()
                     }
                 }
@@ -351,8 +359,10 @@ object MidiMappingManager {
                             val inactiveVal = if (b.inverted) b.maxVal else b.minVal
                             val newVal = if (isHigh) activeVal else inactiveVal
                             b.param.baseValue = newVal
-                            targetValues[b.path] = newVal
-                            smoothedValues[b.path] = newVal
+                            b.targetValue = newVal
+                            b.hasTarget = true
+                            b.smoothedValue = newVal
+                            b.hasSmoothed = true
                             if (b.isCrossfade) mixer.onCrossfadeManualTakeover()
                         }
                         TriggerMode.TOGGLE -> {
@@ -366,8 +376,10 @@ object MidiMappingManager {
                                 val inactiveVal = if (b.inverted) b.maxVal else b.minVal
                                 val newVal = if (nextLatched) activeVal else inactiveVal
                                 b.param.baseValue = newVal
-                                targetValues[b.path] = newVal
-                                smoothedValues[b.path] = newVal
+                                b.targetValue = newVal
+                                b.hasTarget = true
+                                b.smoothedValue = newVal
+                                b.hasSmoothed = true
                                 if (b.isCrossfade) mixer.onCrossfadeManualTakeover()
                             }
                         }
@@ -376,8 +388,10 @@ object MidiMappingManager {
                                 val step = b.stepSize * (b.maxVal - b.minVal) * (if (b.inverted) -1f else 1f)
                                 val newVal = (b.param.baseValue + step).coerceIn(b.minVal, b.maxVal)
                                 b.param.baseValue = newVal
-                                targetValues[b.path] = newVal
-                                smoothedValues[b.path] = newVal
+                                b.targetValue = newVal
+                                b.hasTarget = true
+                                b.smoothedValue = newVal
+                                b.hasSmoothed = true
                                 if (b.isCrossfade) mixer.onCrossfadeManualTakeover()
                             }
                         }
@@ -386,8 +400,10 @@ object MidiMappingManager {
                                 val step = b.stepSize * (b.maxVal - b.minVal) * (if (b.inverted) 1f else -1f)
                                 val newVal = (b.param.baseValue + step).coerceIn(b.minVal, b.maxVal)
                                 b.param.baseValue = newVal
-                                targetValues[b.path] = newVal
-                                smoothedValues[b.path] = newVal
+                                b.targetValue = newVal
+                                b.hasTarget = true
+                                b.smoothedValue = newVal
+                                b.hasSmoothed = true
                                 if (b.isCrossfade) mixer.onCrossfadeManualTakeover()
                             }
                         }
@@ -423,10 +439,12 @@ object MidiMappingManager {
                     }
 
                     if (hasTakenOver[b.path] == true) {
-                        targetValues[b.path] = scaledTarget
+                        b.targetValue = scaledTarget
+                        b.hasTarget = true
                         if (b.slewMs <= 0f) {
                             b.param.baseValue = scaledTarget
-                            smoothedValues[b.path] = scaledTarget
+                            b.smoothedValue = scaledTarget
+                            b.hasSmoothed = true
                         }
                         if (b.isCrossfade) mixer.onCrossfadeManualTakeover()
                     }
@@ -450,14 +468,16 @@ object MidiMappingManager {
         val bindings = resolvedBindings
         for (i in 0 until bindings.size) {
             val b = bindings[i]
-            val target = targetValues[b.path] ?: continue
+            if (!b.hasTarget) continue
+            val target = b.targetValue
 
             if (b.slewMs > 0f) {
-                val current = smoothedValues[b.path] ?: b.param.baseValue
+                val current = if (b.hasSmoothed) b.smoothedValue else b.param.baseValue
                 val tau = (b.slewMs / 1000f).coerceAtLeast(0.001f)
                 val alpha = (1.0f - kotlin.math.exp(-dtSeconds / tau)).coerceIn(0.01f, 1.0f)
                 val nextVal = current + (target - current) * alpha
-                smoothedValues[b.path] = nextVal
+                b.smoothedValue = nextVal
+                b.hasSmoothed = true
                 b.param.baseValue = nextVal
             }
         }

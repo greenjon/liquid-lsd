@@ -491,8 +491,7 @@ class BeatTrackerEngine(
                 // Build stability, capped at a maximum duration (1.5x threshold)
                 stableAccumulatedSec = min(stabilityLockDurationSec * 1.5f, stableAccumulatedSec + dt)
 
-                // Slightly smoother smoothing factor (0.95/0.05 instead of 0.9/0.1)
-                stableCandidateBpm = stableCandidateBpm * 0.95f + bpmMatch * 0.05f
+                stableCandidateBpm = stableCandidateBpm * EMA_RETAIN + bpmMatch * EMA_UPDATE
 
                 if (!isLocked && stableAccumulatedSec >= stabilityLockDurationSec) {
                     isLocked = true
@@ -663,14 +662,14 @@ class BeatTrackerEngine(
         }
 
         val frameRms = sqrt(sumSquares / safeLen.coerceAtLeast(1))
-        localAudioEnergy = localAudioEnergy * 0.95f + frameRms * 0.05f
+        localAudioEnergy = localAudioEnergy * EMA_RETAIN + frameRms * EMA_UPDATE
         val signalSufficient = localAudioEnergy > energySilenceThreshold
         isSignalSufficient = signalSufficient
 
         val odfSample: Float
         if (signalSufficient) {
             val rawOdf = computeComplexSpectralDifference()
-            localOdfMean = localOdfMean * 0.95f + rawOdf * 0.05f
+            localOdfMean = localOdfMean * EMA_RETAIN + rawOdf * EMA_UPDATE
             odfSample = max(0.0f, rawOdf - localOdfMean * 0.50f)
         } else {
             odfSample = 0.0f
@@ -697,14 +696,14 @@ class BeatTrackerEngine(
         }
 
         val frameRms = sqrt(sumSquares / safeLen.coerceAtLeast(1))
-        localAudioEnergy = localAudioEnergy * 0.95f + frameRms * 0.05f
+        localAudioEnergy = localAudioEnergy * EMA_RETAIN + frameRms * EMA_UPDATE
         val signalSufficient = localAudioEnergy > energySilenceThreshold
         isSignalSufficient = signalSufficient
 
         val odfSample: Float
         if (signalSufficient) {
             val rawOdf = computeComplexSpectralDifference()
-            localOdfMean = localOdfMean * 0.95f + rawOdf * 0.05f
+            localOdfMean = localOdfMean * EMA_RETAIN + rawOdf * EMA_UPDATE
             odfSample = max(0.0f, rawOdf - localOdfMean * 0.50f)
         } else {
             odfSample = 0.0f
@@ -837,5 +836,13 @@ class BeatTrackerEngine(
         val highBits = phase.toRawBits().toLong() and 0xFFFFFFFFL
         val lowBits = cosine.toRawBits().toLong() and 0xFFFFFFFFL
         return (highBits shl 32) or lowBits
+    }
+
+    companion object {
+        // Slightly smoother smoothing factor (0.95/0.05 instead of 0.9/0.1).
+        /** One-pole EMA retain weight applied to the prior smoothed value. */
+        const val EMA_RETAIN = 0.95f
+        /** One-pole EMA update weight applied to the new sample. */
+        const val EMA_UPDATE = 0.05f
     }
 }

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Zero-Allocation MIDI Slew & DSP Refactoring (`MidiMappingManager.kt`, `BeatTrackerEngine.kt`, `CvModulator.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`)
+- **Unboxed MIDI Slew State**: Moved target and smoothed parameter values directly onto `ResolvedMidiBinding` unboxed fields, eliminating string-keyed map lookups and GC churn on the hot MIDI update path.
+- **Beat Tracker & LFO Constants**: Centralized one-pole EMA smoothing factors (`EMA_RETAIN` / `EMA_UPDATE`) in `BeatTrackerEngine` and frame-subdivision upper bounds (`MAX_FRAME_SUBDIVISION`) in `CvModulator`.
+
 ### Zero-Allocation ISF Multipass Optimization (`ISFFilter.kt`, `ISFVisualSource.kt`)
 - **Pre-Parsed ISF Pass Dimensions & Array Indexing**: Pre-parse pass dimension expressions (`$WIDTH/2.0`, `$HEIGHT`, bare literals) into compiled `DimExpr` structures at load time. Replaced runtime string substitutions, `split()` calls, map lookups, and `Pair` allocations with fast array indexing and zero-allocation in-place ping-pong slot reference swaps during rendering.
 

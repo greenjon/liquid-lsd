@@ -591,7 +591,7 @@ object AudioEngine {
         val autoBpm = beatDetector.processBlock(amp, bass, mid, high, sampleRate, safeFrames, onsetStrength)
 
         // Fast adaptive local mean (τ ≈ 20 callbacks ≈ ~0.5 s) for onset thresholding
-        localOnsetMean = localOnsetMean * 0.95f + onsetStrength * 0.05f
+        localOnsetMean = localOnsetMean * BeatTrackerEngine.EMA_RETAIN + onsetStrength * BeatTrackerEngine.EMA_UPDATE
 
         // 6. Silence gate
         val currentRmsDb = 20f * log10(amp + 1e-6f)
