@@ -288,7 +288,12 @@ data class SessionStateDto(
     val bgActiveIndex: Int = -1,
     val isAutoBGEnabled: Boolean = false,
     val isBgRepeatEnabled: Boolean = false,
-    val isBgShuffleEnabled: Boolean = false
+    val isBgShuffleEnabled: Boolean = false,
+    val transQueue: List<String> = emptyList(),
+    val transActiveIndex: Int = -1,
+    val isTransAutoAdvanceEnabled: Boolean = true,
+    val isTransRepeatEnabled: Boolean = false,
+    val isTransShuffleEnabled: Boolean = false
 )
 
 @Serializable

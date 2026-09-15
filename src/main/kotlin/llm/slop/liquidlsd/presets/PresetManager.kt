@@ -418,6 +418,49 @@ object PresetManager {
         }, presetIoExecutor)
     }
 
+    fun saveTransitionPresetAsync(file: File, name: String, slotDto: FXSlotDto, tags: List<String> = emptyList()) {
+        CompletableFuture.runAsync({
+            try {
+                logger.info { "Saving Transition preset to ${file.absolutePath}..." }
+                val dto = TransitionPresetDto(name = name, tags = tags, slot = slotDto)
+                file.parentFile?.mkdirs()
+                file.writeText(json.encodeToString(dto))
+                logger.info { "Transition preset saved successfully to ${file.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to save Transition preset to ${file.absolutePath}" }
+            }
+        }, presetIoExecutor)
+    }
+
+    fun loadTransitionPresetAsync(file: File): CompletableFuture<TransitionPresetDto> {
+        return CompletableFuture.supplyAsync({
+            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
+            val content = file.readText()
+            json.decodeFromString<TransitionPresetDto>(content)
+        }, presetIoExecutor)
+    }
+
+    fun saveTransitionPlaylistAsync(file: File, playlist: TransitionPlaylistDto) {
+        CompletableFuture.runAsync({
+            try {
+                logger.info { "Saving Transition playlist to ${file.absolutePath}..." }
+                file.parentFile?.mkdirs()
+                file.writeText(json.encodeToString(playlist))
+                logger.info { "Transition playlist saved successfully to ${file.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to save Transition playlist to ${file.absolutePath}" }
+            }
+        }, presetIoExecutor)
+    }
+
+    fun loadTransitionPlaylistAsync(file: File): CompletableFuture<TransitionPlaylistDto> {
+        return CompletableFuture.supplyAsync({
+            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
+            val content = file.readText()
+            json.decodeFromString<TransitionPlaylistDto>(content)
+        }, presetIoExecutor)
+    }
+
     fun applyPendingPresets(mixer: Mixer) {
         var appliedAny = false
         // Poll deck A preset queue
@@ -576,7 +619,12 @@ object PresetManager {
                 bgActiveIndex = BgQueueManager.activeIndex,
                 isAutoBGEnabled = BgQueueManager.isAutoBGEnabled,
                 isBgRepeatEnabled = BgQueueManager.isRepeatEnabled,
-                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled
+                isBgShuffleEnabled = BgQueueManager.isShuffleEnabled,
+                transQueue = TransitionQueueManager.queue.map { serializeSessionPath(it) },
+                transActiveIndex = TransitionQueueManager.activeIndex,
+                isTransAutoAdvanceEnabled = TransitionQueueManager.isAutoAdvanceEnabled,
+                isTransRepeatEnabled = TransitionQueueManager.isRepeatEnabled,
+                isTransShuffleEnabled = TransitionQueueManager.isShuffleEnabled
             )
             
             val content = json.encodeToString(session)
@@ -723,6 +771,16 @@ object PresetManager {
                 session.isAutoBGEnabled,
                 session.isBgRepeatEnabled,
                 session.isBgShuffleEnabled
+            )
+
+            val restoredTransQueue = resolveRestoredQueue(session.transQueue, session.transActiveIndex)
+            allUnresolved.addAll(restoredTransQueue.unresolvedPaths)
+            TransitionQueueManager.restoreSessionQueue(
+                restoredTransQueue.files,
+                restoredTransQueue.activeIndex,
+                session.isTransAutoAdvanceEnabled,
+                session.isTransRepeatEnabled,
+                session.isTransShuffleEnabled
             )
 
             sessionState = sessionState.copy(unresolvedItems = allUnresolved.distinct())

@@ -4,6 +4,8 @@ import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXPresetDto
+import llm.slop.liquidlsd.models.TransitionPlaylistDto
+import llm.slop.liquidlsd.models.TransitionPresetDto
 import llm.slop.liquidlsd.presets.PlaylistParser
 import mu.KotlinLogging
 import java.io.File
@@ -27,6 +29,8 @@ object FileSystemManager {
     private const val PLAYLISTS_ROOT = "library/playlists"
     private const val FX_ROOT = "library/fx"
     private const val FX_CHAINS_ROOT = "library/fx_chains"
+    private const val TRANSITIONS_ROOT = "library/transitions"
+    private const val TRANSITION_PLAYLISTS_ROOT = "library/transition_playlists"
     private const val SCAN_CACHE_TTL_MS = 1_000L
 
     private data class ScanCacheEntry(
@@ -94,7 +98,7 @@ object FileSystemManager {
     private fun directorySignature(directory: File): String = getDirectorySignature(directory)
 
     private fun managedRootPaths(): List<Path> {
-        return listOf(getPresetsRoot(), getPlaylistsRoot(), getFxPresetsRoot(), getFxChainsRoot())
+        return listOf(getPresetsRoot(), getPlaylistsRoot(), getFxPresetsRoot(), getFxChainsRoot(), getTransitionsRoot(), getTransitionPlaylistsRoot())
             .map { it.canonicalFile.toPath() }
     }
 
@@ -260,6 +264,88 @@ object FileSystemManager {
         return items
     }
 
+    internal fun getTransitionPresetTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        return try {
+            val dto = json.decodeFromString<TransitionPresetDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    internal fun getTransitionPlaylistTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        return try {
+            val dto = json.decodeFromString<TransitionPlaylistDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun scanAllTransitionPresets(): List<AssetItem> {
+        val root = getTransitionsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_TRANSITION_PRESETS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdtrans" }
+            .map { file ->
+                val tags = getTransitionPresetTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.TRANSITION_PRESET,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
+    fun scanAllTransitionPlaylists(): List<AssetItem> {
+        val root = getTransitionPlaylistsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_TRANSITION_PLAYLISTS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdtransplay" }
+            .map { file ->
+                val tags = getTransitionPlaylistTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.TRANSITION_PLAYLIST,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
     fun scanDirectory(directory: File): List<AssetItem> {
         if (!directory.exists() || !directory.isDirectory) {
             return emptyList()
@@ -320,6 +406,22 @@ object FileSystemManager {
                     val tags = getFxChainTags(file)
                     items.add(AssetItem(
                         path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.FX_CHAIN,
+                        isValid = true,
+                        tags = tags
+                    ))
+                }
+                ext == "lsdtrans" -> {
+                    val tags = getTransitionPresetTags(file)
+                    items.add(AssetItem(
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.TRANSITION_PRESET,
+                        isValid = true,
+                        tags = tags
+                    ))
+                }
+                ext == "lsdtransplay" -> {
+                    val tags = getTransitionPlaylistTags(file)
+                    items.add(AssetItem(
+                        path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.TRANSITION_PLAYLIST,
                         isValid = true,
                         tags = tags
                     ))
@@ -385,6 +487,26 @@ object FileSystemManager {
                                 path = file.absolutePath,
                                 name = file.nameWithoutExtension,
                                 type = AssetType.FX_CHAIN,
+                                isValid = validatePresetFile(file),
+                                tags = tags
+                            ))
+                        }
+                        ext == "lsdtrans" -> {
+                            val tags = getTransitionPresetTags(file)
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.nameWithoutExtension,
+                                type = AssetType.TRANSITION_PRESET,
+                                isValid = validatePresetFile(file),
+                                tags = tags
+                            ))
+                        }
+                        ext == "lsdtransplay" -> {
+                            val tags = getTransitionPlaylistTags(file)
+                            items.add(AssetItem(
+                                path = file.absolutePath,
+                                name = file.nameWithoutExtension,
+                                type = AssetType.TRANSITION_PLAYLIST,
                                 isValid = validatePresetFile(file),
                                 tags = tags
                             ))
@@ -629,6 +751,28 @@ object FileSystemManager {
      */
     fun getFxChainsRoot(): File {
         val root = File(FX_CHAINS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for transition presets (.lsdtrans).
+     */
+    fun getTransitionsRoot(): File {
+        val root = File(TRANSITIONS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for transition playlists (.lsdtransplay).
+     */
+    fun getTransitionPlaylistsRoot(): File {
+        val root = File(TRANSITION_PLAYLISTS_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }

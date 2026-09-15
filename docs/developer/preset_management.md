@@ -118,9 +118,21 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
 - **Dirty Deck Guard**: Observes `UITheme.autoVjDirtyBehavior` (`SKIP`, `AUTO_SAVE`, `AUTO_DISCARD`) when transitioning or advancing on Deck BG.
 - **Double-Click Playback**: Double-clicking any track in BG Queue triggers immediate playback with dip-to-black (`playIndex(index, mixer, withDipToBlack = true)`), while double-clicking in Play Queue triggers standby deck load and auto-fade crossfading.
 
+## 5. Transition Queue Manager (`TransitionQueueManager.kt`)
+
+[`TransitionQueueManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt) manages the volatile Transition Queue engine (Phase 2).
+
+### Unified Queue Item Resolution
+The transition queue supports two types of transition items seamlessly:
+1. **Transition Presets (`.lsdtrans`)**: Customized transition presets containing shader ID, customized parameter values (wipe angle, smoothness, glitch rate), and dry/wet settings.
+2. **Stock Shaders (`.fs` files or shader IDs)**: Raw transition filters loaded with standard parameter defaults.
+
+### Auto-Advance Crossfade Hook Timing
+Auto-advance triggers inside `PlayQueueManager.triggerNext()`, `triggerPrevious()`, and `playIndex()` immediately before crossfading begins (`mixer.targetCrossfade = ...`), ensuring the new transition is loaded into `mixer.transitionFilter` prior to the crossfader moving.
+
 ---
 
-## 5. PlaylistManager & PlaylistParser
+## 6. PlaylistManager & PlaylistParser
 
 - **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdset` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
 - **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).
@@ -128,7 +140,7 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
 
 ---
 
-## 6. Factory Presets & Playlists Bundling (`defaults/`, First-Run Seeding)
+## 7. Factory Presets & Playlists Bundling (`defaults/`, First-Run Seeding)
 
 To ensure users never start with a blank screen on clean git clones or new releases while protecting user customizations:
 

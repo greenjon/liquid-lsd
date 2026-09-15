@@ -23,3 +23,26 @@ data class FXChainDto(
     val tags: List<String> = emptyList(),
     val slots: List<FXSlotDto?> = emptyList() // Size 4; null = empty slot
 )
+
+/**
+ * Data Transfer Object for an individual Transition Preset (.lsdtrans).
+ */
+@Serializable
+data class TransitionPresetDto(
+    val version: Int = 1,
+    val name: String,
+    val tags: List<String> = emptyList(),
+    val slot: FXSlotDto
+)
+
+/**
+ * Data Transfer Object for a Transition Playlist (.lsdtransplay).
+ */
+@Serializable
+data class TransitionPlaylistDto(
+    val version: Int = 1,
+    val name: String,
+    val tags: List<String> = emptyList(),
+    val items: List<String> = emptyList() // List of .lsdtrans file paths or stock shader IDs
+)
+

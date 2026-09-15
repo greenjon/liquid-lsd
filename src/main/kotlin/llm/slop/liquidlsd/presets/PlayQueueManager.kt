@@ -194,6 +194,9 @@ object PlayQueueManager {
         logger.info { "Playing index $index: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
         PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
 
+        // Advance transition queue if auto-advance enabled
+        TransitionQueueManager.advanceOnAutoFade(mixer)
+
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
         mixer.isAutoFading = true
@@ -293,6 +296,8 @@ object PlayQueueManager {
         if (isStaged) {
             if (targetIsA) stagedDeckA = false else stagedDeckB = false
             logger.info { "Triggering next to manually staged Deck ${if (targetIsA) "A" else "B"}" }
+            // Advance transition queue if auto-advance enabled
+            TransitionQueueManager.advanceOnAutoFade(mixer)
             // Start auto-fade to the target deck without loading from queue and without advancing queue pointer
             mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
             mixer.isAutoFading = true
@@ -355,6 +360,9 @@ object PlayQueueManager {
         
         PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
+        // Advance transition queue if auto-advance enabled
+        TransitionQueueManager.advanceOnAutoFade(mixer)
+
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
         mixer.isAutoFading = true
@@ -398,6 +406,8 @@ object PlayQueueManager {
         if (isStaged) {
             if (targetIsA) stagedDeckA = false else stagedDeckB = false
             logger.info { "Triggering previous to manually staged Deck ${if (targetIsA) "A" else "B"}" }
+            // Advance transition queue if auto-advance enabled
+            TransitionQueueManager.advanceOnAutoFade(mixer)
             // Start auto-fade to the target deck without loading from queue and without altering queue pointer
             mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
             mixer.isAutoFading = true
@@ -440,6 +450,9 @@ object PlayQueueManager {
         
         PresetManager.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
+        // Advance transition queue if auto-advance enabled
+        TransitionQueueManager.advanceOnAutoFade(mixer)
+
         // Start auto-fade to the target deck
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
         mixer.isAutoFading = true

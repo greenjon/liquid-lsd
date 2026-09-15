@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXSlotDto
+import llm.slop.liquidlsd.models.TransitionPresetDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
@@ -61,6 +62,20 @@ class Mixer(
             "multiply_blend" -> { mode.baseValue = 2.0f; lastMode = 2 }
             "max_blend" -> { mode.baseValue = 3.0f; lastMode = 3 }
             "linear_crossfade" -> { mode.baseValue = 4.0f; lastMode = 4 }
+        }
+    }
+
+    /**
+     * Applies a transition preset DTO to the active transition filter.
+     */
+    fun applyTransitionPreset(dto: TransitionPresetDto) {
+        setTransition(dto.slot.filterId)
+        transitionFilter?.let { trans ->
+            trans.enabled = dto.slot.enabled
+            trans.dryWet.applyDto(dto.slot.dryWet)
+            for ((key, paramDto) in dto.slot.parameters) {
+                trans.parameters[key]?.applyDto(paramDto)
+            }
         }
     }
 

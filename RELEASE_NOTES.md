@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Phase 2: Transition Presets & Transition Queue Engine (`TransitionPresetDto`, `TransitionPlaylistDto`, `TransitionQueueManager.kt`, `FileSystemManager.kt`, `PresetManager.kt`, `Mixer.kt`, `PlayQueueManager.kt`)
+- **Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)**:
+  - Introduced `.lsdtrans` data format for saving and recalling transition parameter states (e.g., customized wipe angle, softness, glitch intensity, and dry/wet blend) stored under `library/transitions/`.
+  - Introduced `.lsdtransplay` data format for saving ordered transition setlists stored under `library/transition_playlists/`.
+- **High-Performance Transition Queue Engine (`TransitionQueueManager.kt`)**:
+  - Volatile queue engine supporting unified stock transition shader IDs and `.lsdtrans` custom preset files.
+  - Implemented repeat modes, battle-tested shuffle cycle tracking (`playedIndices`/`playbackHistory`), queue mutation index re-basing (`insertAt`, `removeFromQueue`, `moveItem`), and history back-stepping (`advancePrevious`).
+- **Filesystem Scanner Caching & Unified Asset Types (`FileSystemManager.kt`)**:
+  - Added scanning support for `.lsdtrans` and `.lsdtransplay` files in `FileSystemManager` with signature-cached recursive directory indexing.
+  - Added root directory getters (`getTransitionsRoot()`, `getTransitionPlaylistsRoot()`) and extended `AssetType` with `TRANSITION_PRESET` and `TRANSITION_PLAYLIST`.
+- **Auto-Advance Crossfade Integration (`PlayQueueManager.kt`, `Mixer.kt`)**:
+  - Added `mixer.applyTransitionPreset(dto)` helper to apply transition presets seamlessly to `mixer.transitionFilter`.
+  - Integrated `TransitionQueueManager.advanceOnAutoFade(mixer)` auto-advance hooks into `PlayQueueManager.triggerNext()`, `triggerPrevious()`, and `playIndex()`, staging new transition filters prior to crossfader movement.
+- **Session State Persistence (`SessionStateDto` version 6)**:
+  - Extended `SessionStateDto` to serialize and restore transition queue items (`transQueue`), active index (`transActiveIndex`), auto-advance (`isTransAutoAdvanceEnabled`), repeat (`isTransRepeatEnabled`), and shuffle (`isTransShuffleEnabled`).
+
 ### Phase 1: Master Output FX Pipeline & Mixer Sub-Tabs (`Mixer.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetManager.kt`, `ParametersState.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`)
 - **4-Slot Serial Master FX Chain**: Added a 4-slot ISF effect chain to the Master Output stage in `Mixer.kt`, allowing VJs to chain serial post-composite effects (e.g. master bloom, CRT glitch, color adjustment, hue shift, or distortion) across the blended output of Deck A, Deck B, and Deck BG.
 - **3-Pass Composite Rendering Pipeline**: Refactored `Renderer.renderMixer()` into a 3-pass GPU architecture: Pass 1 (ISF Transition -> `blendFBO`), Pass 2 (Composite -> `masterCompositeFBO`), and Pass 3 (Serial Master FX chain -> `masterFxFBOs` -> target `masterFBO`). Downstream capture engines (recording, NDI/texture streaming, and display output) continue to consume `masterFBO` seamlessly.
