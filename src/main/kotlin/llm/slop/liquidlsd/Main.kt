@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.AppPreferencesStore
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.presets.PresetManager
@@ -313,15 +314,11 @@ fun main(args: Array<String>) {
         val isFullscreenKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.fullscreen", key, mods)
         val isExitFullscreenKey = UITheme.cleanModeEnabled && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.exit_fullscreen", key, mods)
         val isBgVideoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.bg_video", key, mods)
-        val isDecPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_dec", key, mods) ||
-                ((mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_MINUS || key == GLFW_KEY_KP_SUBTRACT))
-        val isIncPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_inc", key, mods) ||
-                ((mods and GLFW_MOD_CONTROL) != 0 && (key == GLFW_KEY_EQUAL || key == GLFW_KEY_KP_ADD))
+        val isDecPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_dec", key, mods)
+        val isIncPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_inc", key, mods)
         val isRecordHotKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.record_output", key, mods)
-        val isPreferencesKey = isShortcutAllowed && (
-            llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preferences", key, mods) ||
-            ((mods and (GLFW_MOD_CONTROL or GLFW_MOD_SUPER)) != 0 && key == GLFW_KEY_P)
-        )
+        val isPreferencesKey = isShortcutAllowed &&
+            llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preferences", key, mods)
         val isCapsLock = key == GLFW_KEY_CAPS_LOCK
         val isTapTempoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("clock.tap_tempo", key, mods)
 
@@ -362,7 +359,7 @@ fun main(args: Array<String>) {
                 logger.info { "Clean mode exited via ESC: ${UITheme.cleanModeEnabled}" }
             } else if (isBgVideoKey) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
-                UITheme.savePreferences()
+                AppPreferencesStore.savePreferences()
                 logger.info { "Background video toggled: ${UITheme.backgroundVideoEnabled}" }
             }
         }

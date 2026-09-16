@@ -46,7 +46,7 @@ class PreferencesDefaultsTest {
             legacySettingsFile.delete()
         }
 
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
     }
 
     @Test
@@ -65,7 +65,7 @@ class PreferencesDefaultsTest {
         UITheme.randomizationEnabled = true
         UITheme.midiEnabled = true
 
-        UITheme.savePreferences()
+        AppPreferencesStore.savePreferences()
         assertTrue(preferencesFile.exists(), "Preferences file should be written")
 
         val savedProps = preferencesFile.readText()
@@ -79,7 +79,7 @@ class PreferencesDefaultsTest {
         UITheme.midiEnabled = false
 
         // Reload from file
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
 
         // Verify loaded as true
         assertTrue(UITheme.sequencerEnabled)
@@ -90,9 +90,9 @@ class PreferencesDefaultsTest {
         UITheme.sequencerEnabled = false
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
-        UITheme.savePreferences()
+        AppPreferencesStore.savePreferences()
 
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
         assertFalse(UITheme.sequencerEnabled)
         assertFalse(UITheme.randomizationEnabled)
         assertFalse(UITheme.midiEnabled)
@@ -114,7 +114,7 @@ class PreferencesDefaultsTest {
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
 
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
 
         assertTrue(UITheme.sequencerEnabled, "Should load sequencerEnabled from legacy settings")
         assertTrue(UITheme.randomizationEnabled, "Should load randomizationEnabled from legacy settings")

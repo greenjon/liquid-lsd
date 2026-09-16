@@ -43,7 +43,7 @@ object MidiPreferencesPanel {
             val nextVal = midiEnabled.get()
             if (nextVal != session.uiTheme.midiEnabled) {
                 session.uiTheme.midiEnabled = nextVal
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
                 if (nextVal) {
                     MidiEngine.scanForNewDevices()
                 } else {
@@ -87,7 +87,7 @@ object MidiPreferencesPanel {
             val selected = profileArray[currentIdx.get()]
             session.midiMappingManager.loadProfile(selected)
             session.uiTheme.activeMidiProfile = selected
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         ImGui.sameLine()
         if (ImGui.button("${Icons.SAVE} Save##midi_save_profile")) {
@@ -99,7 +99,7 @@ object MidiPreferencesPanel {
         if (ImGui.button("${Icons.TRASH} Delete##midi_delete_profile")) {
             session.midiMappingManager.deleteProfile(session.midiMappingManager.activeProfileName)
             session.uiTheme.activeMidiProfile = "default"
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         if (!canDelete) ImGui.endDisabled()
 
@@ -114,7 +114,7 @@ object MidiPreferencesPanel {
                 session.midiMappingManager.loadProfile(safeName)
                 session.midiMappingManager.saveActiveProfile()
                 session.uiTheme.activeMidiProfile = safeName
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
                 newProfileInput.set("")
             }
         }

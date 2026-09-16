@@ -49,7 +49,7 @@ class UIThemeTest {
             UITheme.preferencesHeight = 600f
 
             // Save to disk
-            UITheme.savePreferences()
+            AppPreferencesStore.savePreferences()
             assertTrue(preferencesFile.exists(), "Preferences file should be written")
 
             // Reset values to defaults in memory
@@ -69,7 +69,7 @@ class UIThemeTest {
             UITheme.preferencesHeight = 520f
 
             // Reload preferences
-            UITheme.loadPreferences()
+            AppPreferencesStore.loadPreferences()
 
             // Assert restored values match what was saved
             assertEquals(110, UITheme.presetNameScalePercent)
@@ -105,7 +105,7 @@ class UIThemeTest {
                 legacySettingsFile.delete()
             }
 
-            UITheme.loadPreferences()
+            AppPreferencesStore.loadPreferences()
         }
     }
 
@@ -145,7 +145,7 @@ class UIThemeTest {
             UITheme.preferencesWidth = 640f
             UITheme.preferencesHeight = 520f
 
-            UITheme.loadPreferences()
+            AppPreferencesStore.loadPreferences()
 
             assertEquals(60, UITheme.maxFps)
             assertTrue(UITheme.cleanModeEnabled)
@@ -166,7 +166,7 @@ class UIThemeTest {
                 legacySettingsFile.delete()
             }
 
-            UITheme.loadPreferences()
+            AppPreferencesStore.loadPreferences()
         }
     }
 

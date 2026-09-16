@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### AppPreferencesStore Extraction (`AppPreferencesStore.kt`, `UITheme.kt`, Panels)
+- **Extracted Preferences Persistence**: Extracted preferences loading and saving logic out of `UITheme` into dedicated `AppPreferencesStore` object, decoupling theme styling from disk property persistence and streamlining preferences testability.
+- **Updated Panels & Tests**: Refactored all UI panels and unit tests to invoke `AppPreferencesStore.loadPreferences()` and `AppPreferencesStore.savePreferences()` directly.
+
 ### Session Serialization Visibility & Test Delegates (`SessionSerializer.kt`, `PresetManager.kt`, `PresetModels.kt`, `SessionStateTest.kt`, `PresetDirtyLoadingTest.kt`)
 - **Restored Queue & Session Path Helper Visibility**: Exposed `startEmpty`, `serializeSessionPath`, `resolveSessionPath`, and `resolveRestoredQueue` with `internal` access on `SessionSerializer` and added delegating methods on `PresetManager`.
 - **Deck DTO Apply Safety**: Added null-safe fallback when resolving default visual sources during empty deck resets to prevent `NoSuchElementException` when operating on mock deck instances in unit tests.

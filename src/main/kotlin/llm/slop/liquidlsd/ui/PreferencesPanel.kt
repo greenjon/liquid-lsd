@@ -89,7 +89,7 @@ object PreferencesPanel {
             kotlin.math.abs(currentWinH - session.uiTheme.preferencesHeight) > 1f) {
             session.uiTheme.preferencesWidth = currentWinW
             session.uiTheme.preferencesHeight = currentWinH
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
 
         val sidebarW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -193,7 +193,7 @@ object PreferencesPanel {
             val nextVal = randEnabled.get()
             if (nextVal != session.uiTheme.randomizationEnabled) {
                 session.uiTheme.randomizationEnabled = nextVal
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         }
         itemTooltip("Toggle parameter and modulator randomization controls.")
@@ -203,7 +203,7 @@ object PreferencesPanel {
             val nextVal = seqEnabled.get()
             if (nextVal != session.uiTheme.sequencerEnabled) {
                 session.uiTheme.sequencerEnabled = nextVal
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         }
         itemTooltip("Enable or disable the step sequencer modulation engine across presets and parameter properties.")
@@ -215,7 +215,7 @@ object PreferencesPanel {
             val nextVal = framelessEnabled.get()
             if (nextVal != session.uiTheme.framelessWindow) {
                 session.uiTheme.framelessWindow = nextVal
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         }
         itemTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
@@ -225,7 +225,7 @@ object PreferencesPanel {
             val nextVal = trackpadEnabled.get()
             if (nextVal != session.uiTheme.trackpadConsoleEnabled) {
                 session.uiTheme.trackpadConsoleEnabled = nextVal
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
                 if (!nextVal && session.touchConsoleController.isActive) {
                     session.touchConsoleController.toggleActive(false)
                 }
@@ -264,7 +264,7 @@ object PreferencesPanel {
             val nextVal = updatesOnStartup.get()
             if (nextVal != session.uiTheme.checkUpdatesOnStartup) {
                 session.uiTheme.checkUpdatesOnStartup = nextVal
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         }
         itemTooltip("Checks GitHub for new releases when Liquid LSD starts up.")
@@ -317,7 +317,7 @@ object PreferencesPanel {
         ImGui.setNextItemWidth(comboWidth)
         if (ImGui.combo("Startup Behavior", currentStartupIdx, startupOptions)) {
             session.uiTheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
 
         ImGui.spacing()
@@ -327,7 +327,7 @@ object PreferencesPanel {
         ImGui.setNextItemWidth(comboWidth)
         if (ImGui.combo("AutoVJ Dirty Behavior", currentAutoVjIdx, autoVjBehaviorNames)) {
             session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
 
         ImGui.spacing()
@@ -348,7 +348,7 @@ object PreferencesPanel {
         if (ImGui.combo("##ui_theme", currentThemeIdx, themeNames)) {
             val nextTheme = themes[currentThemeIdx.get()]
             session.uiTheme.theme = nextTheme
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Select the user interface color palette theme.")
         ImGui.spacing()

@@ -153,7 +153,7 @@ object TempoSyncPanel {
         // Half tempo (/2)
         if (ImGui.button("/2##tempo_half_btn", 46f, 32f)) {
             audioEngine.halveTempo()
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Halve tempo (e.g. 140 -> 70 BPM).")
 
@@ -162,7 +162,7 @@ object TempoSyncPanel {
         // Double tempo (*2)
         if (ImGui.button("*2##tempo_double_btn", 46f, 32f)) {
             audioEngine.doubleTempo()
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Double tempo (e.g. 70 -> 140 BPM).")
 
@@ -171,7 +171,7 @@ object TempoSyncPanel {
         // Fine Pitch Nudge: [-0.5] and [+0.5]
         if (ImGui.button("-0.5##tempo_nudge_down", 50f, 32f)) {
             audioEngine.nudgeTempo(-0.5f)
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Nudge tempo down by 0.5 BPM.")
 
@@ -179,7 +179,7 @@ object TempoSyncPanel {
 
         if (ImGui.button("+0.5##tempo_nudge_up", 50f, 32f)) {
             audioEngine.nudgeTempo(0.5f)
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Nudge tempo up by 0.5 BPM.")
 
@@ -208,7 +208,7 @@ object TempoSyncPanel {
             onValueChanged = { newVal ->
                 audioEngine.manualBpm = newVal
                 audioEngine.setBpmDirectly(newVal)
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         )
 
@@ -222,7 +222,7 @@ object TempoSyncPanel {
             ImGui.sameLine()
             if (ImGui.button("${p.toInt()} BPM##preset_$p", 70f, 22f)) {
                 audioEngine.setBpmDirectly(p)
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         }
 
@@ -240,7 +240,7 @@ object TempoSyncPanel {
         val isManual = currentClock == ClockSource.MANUAL
         if (ImGui.radioButton("Manual Fixed Tempo##clock_manual", isManual)) {
             audioEngine.clockSource = ClockSource.MANUAL
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Clock is driven directly by the manual BPM slider, tap tempo, or Ableton Link.")
 
@@ -249,7 +249,7 @@ object TempoSyncPanel {
         val isAudioTracker = currentClock == ClockSource.AUDIO_TRACKER
         if (ImGui.radioButton("Audio Beat Tracker (Auto)##clock_audio", isAudioTracker)) {
             audioEngine.clockSource = ClockSource.AUDIO_TRACKER
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Clock tracks real-time rhythmic transients and tempo directly from the incoming audio stream.")
 
@@ -299,7 +299,7 @@ object TempoSyncPanel {
                     val isSelected = detectorSettings.target == target
                     if (ImGui.selectable(target.name, isSelected)) {
                         detectorSettings.target = target
-                        theme.savePreferences()
+                        AppPreferencesStore.savePreferences()
                     }
                     if (isSelected) ImGui.setItemDefaultFocus()
                 }
@@ -314,21 +314,21 @@ object TempoSyncPanel {
             ImGui.sameLine()
             if (ImGui.button("High Accuracy##acc_btn")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             itemTooltip("Tuned for precise tempo detection.")
 
             ImGui.sameLine()
             if (ImGui.button("Balanced##bal_btn")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             itemTooltip("Balanced between tracking reactivity and stability.")
 
             ImGui.sameLine()
             if (ImGui.button("Eco##eco_btn")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             itemTooltip("Relaxed inertia for lower CPU usage.")
 
@@ -357,7 +357,7 @@ object TempoSyncPanel {
                     val safeMax = maxOf(nextMin, nextMax)
                     detectorSettings.bpmSearchFloor = safeMin.toInt()
                     detectorSettings.bpmSearchCeiling = safeMax.toInt()
-                    theme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
             )
         }
@@ -377,7 +377,7 @@ object TempoSyncPanel {
         if (ImGui.checkbox("Enable Ableton Link##tempo_link_toggle", linkState)) {
             val enabled = linkState.get()
             linkEngine.setEnabled(enabled)
-            theme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Synchronize beat timeline, tempo, and downbeat phase across the local network with Ableton Live, Resolume, Traktor, etc.")
 
@@ -409,7 +409,7 @@ object TempoSyncPanel {
                 val q = quantums[i]
                 if (ImGui.radioButton("${quantumLabels[i]}##quantum_$q", currentQuantum == q)) {
                     linkEngine.quantum = q
-                    theme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
                 if (i < quantums.size - 1) ImGui.sameLine(0f, 12f)
             }
@@ -421,7 +421,7 @@ object TempoSyncPanel {
             val ssSync = ImBoolean(linkEngine.isStartStopSyncEnabled())
             if (ImGui.checkbox("Enable Start/Stop Transport Sync##link_transport_sync", ssSync)) {
                 linkEngine.setStartStopSyncEnabled(ssSync.get())
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             itemTooltip("Synchronize play/pause transport commands across connected Ableton Link peers.")
 

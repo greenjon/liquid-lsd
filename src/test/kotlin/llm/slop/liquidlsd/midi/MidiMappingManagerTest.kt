@@ -88,7 +88,7 @@ class MidiMappingManagerTest {
 
         try {
             preferencesFile.writeText("activeMidiProfile=test_profile\n")
-            llm.slop.liquidlsd.ui.UITheme.loadPreferences()
+            llm.slop.liquidlsd.ui.AppPreferencesStore.loadPreferences()
 
             MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
 
@@ -108,7 +108,7 @@ class MidiMappingManagerTest {
                 settingsFile.delete()
             }
 
-            llm.slop.liquidlsd.ui.UITheme.loadPreferences()
+            llm.slop.liquidlsd.ui.AppPreferencesStore.loadPreferences()
         }
     }
 

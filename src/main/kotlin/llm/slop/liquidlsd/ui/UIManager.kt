@@ -329,7 +329,7 @@ class UIManager(
             if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
                 session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                 LibraryPanel.isLibraryExpanding = true
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
         }
@@ -371,7 +371,7 @@ class UIManager(
                 pendingOpenPreferences = true
                 pendingOpenPreferencesCategory = PreferencesPanel.activeCategory
             }
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
             logger.info { "User preset name scale changed to: $clamped%, scheduling font rebuild" }
         }
     }
@@ -539,7 +539,7 @@ class UIManager(
                                 theme.libraryMode = UITheme.LibraryMode.HALF
                                 LibraryPanel.isLibraryExpanding = true
                                 theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
-                                theme.savePreferences()
+                                AppPreferencesStore.savePreferences()
                             }
                         } else {
                             val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
@@ -554,7 +554,7 @@ class UIManager(
                                 theme.libraryRatio = newR
                                 theme.lastCustomLibraryRatio = newR
                             }
-                            theme.savePreferences()
+                            AppPreferencesStore.savePreferences()
                         }
                     },
                     onDoubleClick = {
@@ -562,7 +562,7 @@ class UIManager(
                         LibraryPanel.isLibraryExpanding = true
                         theme.libraryRatio = 0.50f
                         theme.lastCustomLibraryRatio = 0.50f
-                        theme.savePreferences()
+                        AppPreferencesStore.savePreferences()
                     }
                 )
             }

@@ -243,14 +243,14 @@ class MenuBar(
                             val isSelected = (source == currentClock)
                             if (ImGui.menuItem(source.displayName, "", isSelected)) {
                                 AudioEngine.clockSource = source
-                                session.uiTheme.savePreferences()
+                                AppPreferencesStore.savePreferences()
                             }
                         }
                         ImGui.separator()
                         val linkItemLabel = if (linkEngine.isEnabled) "Disable Ableton Link" else "Enable Ableton Link"
                         if (ImGui.menuItem(linkItemLabel, "", linkEngine.isEnabled)) {
                             linkEngine.setEnabled(!linkEngine.isEnabled)
-                            session.uiTheme.savePreferences()
+                            AppPreferencesStore.savePreferences()
                         }
                         if (ImGui.menuItem("Configure Tempo & Link...")) {
                             PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
@@ -272,7 +272,7 @@ class MenuBar(
                         val tooltipsEnabled = session.uiTheme.tooltipsEnabled
                         if (ImGui.menuItem("Show Tooltips", "", tooltipsEnabled)) {
                             session.uiTheme.tooltipsEnabled = !tooltipsEnabled
-                            session.uiTheme.savePreferences()
+                            AppPreferencesStore.savePreferences()
                         }
                         itemTooltip("Toggle visibility of helpful on-hover tooltips across the application.")
                         ImGui.separator()

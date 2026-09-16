@@ -26,7 +26,7 @@ object VideoDisplayPreferencesPanel {
                 session.uiTheme.customRenderWidth = nextPreset.width
                 session.uiTheme.customRenderHeight = nextPreset.height
             }
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Select internal target rendering resolution. Lower resolutions (e.g. 720p or 540p) significantly reduce GPU load on heavy raymarch shaders.")
 
@@ -35,12 +35,12 @@ object VideoDisplayPreferencesPanel {
             val customW = imgui.type.ImInt(session.uiTheme.customRenderWidth)
             if (ImGui.inputInt("Custom Width", customW)) {
                 session.uiTheme.customRenderWidth = customW.get().coerceIn(128, 7680)
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             val customH = imgui.type.ImInt(session.uiTheme.customRenderHeight)
             if (ImGui.inputInt("Custom Height", customH)) {
                 session.uiTheme.customRenderHeight = customH.get().coerceIn(128, 4320)
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         }
 
@@ -56,7 +56,7 @@ object VideoDisplayPreferencesPanel {
         ImGui.setNextItemWidth(displayScaleComboW)
         if (ImGui.combo("##Output Scaling", currentScaleIdx, scaleModeNames)) {
             session.uiTheme.outputScaleMode = scaleModes[currentScaleIdx.get()]
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("How output is scaled when target screen aspect ratio differs from render resolution: Fit (Letterbox/Pillarbox), Fill (Crop), or Stretch.")
 
@@ -68,14 +68,14 @@ object VideoDisplayPreferencesPanel {
         val bgVideoEnabled = ImBoolean(session.uiTheme.backgroundVideoEnabled)
         if (ImGui.checkbox("Background Video", bgVideoEnabled)) {
             session.uiTheme.backgroundVideoEnabled = bgVideoEnabled.get()
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Render master output video behind the semi-transparent interface (Hotkey: B).")
 
         val fpsCapVal = ImBoolean(session.uiTheme.maxFps <= 30)
         if (ImGui.checkbox("Cap UI to 30 FPS", fpsCapVal)) {
             session.uiTheme.maxFps = if (fpsCapVal.get()) 30 else 60
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Limit frame rate to 30 FPS to conserve power.")
 
@@ -109,7 +109,7 @@ object VideoDisplayPreferencesPanel {
                 val enabled = ImBoolean(config.isEnabled)
                 if (ImGui.checkbox("##enable_${endpoint.name}", enabled)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(isEnabled = enabled.get()))
-                    session.uiTheme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
                 
                 ImGui.tableNextColumn()
@@ -117,7 +117,7 @@ object VideoDisplayPreferencesPanel {
                 ImGui.setNextItemWidth(-1f)
                 if (ImGui.inputText("##name_${endpoint.name}", nameInput)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(customName = nameInput.get()))
-                    session.uiTheme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
                 
                 ImGui.tableNextColumn()
@@ -127,7 +127,7 @@ object VideoDisplayPreferencesPanel {
                 ImGui.setNextItemWidth(-1f)
                 if (ImGui.combo("##res_${endpoint.name}", currentResIdx, resModeNames)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(resolutionMode = resModes[currentResIdx.get()]))
-                    session.uiTheme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
                 if (config.resolutionMode != llm.slop.liquidlsd.rendering.OutputResolutionMode.SYNC_MASTER && config.resolutionMode != llm.slop.liquidlsd.rendering.OutputResolutionMode.RES_540P) {
                     itemTooltip("${Icons.ALERT} High resolution outputs significantly impact GPU performance!")
@@ -140,7 +140,7 @@ object VideoDisplayPreferencesPanel {
                 ImGui.setNextItemWidth(-1f)
                 if (ImGui.combo("##scale_${endpoint.name}", currentScaleIdx, scaleModeNames)) {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(scalingMode = scaleModes[currentScaleIdx.get()]))
-                    session.uiTheme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
 
                 ImGui.tableNextColumn()
@@ -167,19 +167,19 @@ object VideoDisplayPreferencesPanel {
         val dirInput = imgui.type.ImString(currentRecDir, 512)
         if (ImGui.inputText("##RecDir", dirInput)) {
             session.uiTheme.recordingDirectory = dirInput.get().trim()
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         ImGui.sameLine()
         if (ImGui.button("Reset to Default##RecDir")) {
             session.uiTheme.recordingDirectory = ""
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("Reset recording output folder to standard system Videos directory: $defaultDir")
 
         val recAudioVal = ImBoolean(session.uiTheme.recordingIncludeAudio)
         if (ImGui.checkbox("Record with Audio Muxing", recAudioVal)) {
             session.uiTheme.recordingIncludeAudio = recAudioVal.get()
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
         itemTooltip("When enabled, live recordings capture audio from AudioEngine and multiplex it into the video output container.")
 
@@ -198,7 +198,7 @@ object VideoDisplayPreferencesPanel {
             customBoxWidth = sliderBoxW,
             onValueChanged = { newVal ->
                 session.uiTheme.recordingBitrateMbps = newVal.toInt()
-                session.uiTheme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
         )
 
@@ -211,7 +211,7 @@ object VideoDisplayPreferencesPanel {
         ImGui.setNextItemWidth(recordingFpsComboW)
         if (ImGui.combo("##Recording Framerate", fpsIdx, fpsOptions)) {
             session.uiTheme.recordingFps = if (fpsIdx.get() == 0) 30 else 60
-            session.uiTheme.savePreferences()
+            AppPreferencesStore.savePreferences()
         }
     }
 }

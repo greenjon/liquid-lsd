@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.audio
 
+import llm.slop.liquidlsd.ui.AppPreferencesStore
 import llm.slop.liquidlsd.ui.UITheme
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +42,7 @@ class AudioEnginePreferencesTest {
             legacySettingsFile.delete()
         }
 
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
     }
 
     @Test
@@ -65,7 +66,7 @@ class AudioEnginePreferencesTest {
         )
 
         // Save to file
-        UITheme.savePreferences()
+        AppPreferencesStore.savePreferences()
         assertTrue(preferencesFile.exists(), "Preferences file should have been created")
 
         // Reset to different defaults
@@ -79,7 +80,7 @@ class AudioEnginePreferencesTest {
         AudioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
 
         // Load preferences
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
 
         // Verify all preferences were restored correctly
         assertEquals(false, UITheme.audioEngineEnabled)
@@ -101,7 +102,7 @@ class AudioEnginePreferencesTest {
         // Pre-populate preferences file with broadcast and custom properties
         preferencesFile.writeText("broadcastServerUrl=wss://example.com/live\nbroadcastAutoConnect=true\n")
 
-        UITheme.savePreferences()
+        AppPreferencesStore.savePreferences()
 
         val savedContent = preferencesFile.readText()
         assertTrue(savedContent.contains("broadcastServerUrl=wss\\://example.com/live") || savedContent.contains("broadcastServerUrl=wss://example.com/live"), "Existing broadcast URL should be preserved")
@@ -126,13 +127,13 @@ class AudioEnginePreferencesTest {
         val afterBeats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
         assertTrue(afterBeats >= initialBeats, "Beat count should advance monotonically after manual BPM change")
 
-        UITheme.savePreferences()
+        AppPreferencesStore.savePreferences()
 
         // Reset
         AudioEngine.manualBpm = 120.0f
         AudioEngine.setBpmDirectly(120.0f)
 
-        UITheme.loadPreferences()
+        AppPreferencesStore.loadPreferences()
 
         assertEquals(false, UITheme.audioEngineEnabled)
         assertEquals(135.0f, AudioEngine.manualBpm, 0.001f)

@@ -99,7 +99,7 @@ object AudioEnginePanel {
             val nextVal = isAudioEnabled.get()
             if (nextVal != theme.audioEngineEnabled) {
                 theme.audioEngineEnabled = nextVal
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
                 if (nextVal) audioEngine.start() else audioEngine.stop()
             }
         }
@@ -147,7 +147,7 @@ object AudioEnginePanel {
             if (ImGui.combo("##AudioBackend", currentBackendIdx, backendNames)) {
                 val nextBackend = backendModes[currentBackendIdx.get()]
                 audioEngine.selectDevice(audioEngine.selectedDeviceName, nextBackend)
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             itemTooltip("Select audio capture backend (JACK for low-latency Linux, Java Sound for cross-platform).")
 
@@ -172,7 +172,7 @@ object AudioEnginePanel {
                     val chosenDevice = devices.getOrNull(currentDeviceIdx.get())
                     if (chosenDevice != null) {
                         audioEngine.selectDevice(if (chosenDevice.isDefault) null else chosenDevice.name)
-                        theme.savePreferences()
+                        AppPreferencesStore.savePreferences()
                     }
                 }
                 itemTooltip("Select the audio input capture device.")
@@ -193,7 +193,7 @@ object AudioEnginePanel {
             if (ImGui.combo("##ChannelRouting", currentRoutingIdx, channelRoutingNames)) {
                 val chosenRouting = channelRoutings[currentRoutingIdx.get()]
                 audioEngine.channelRouting = chosenRouting
-                theme.savePreferences()
+                AppPreferencesStore.savePreferences()
             }
             itemTooltip("Select audio channel routing: Mix (L + R) with -6dB attenuation to prevent clipping, Left Only, or Right Only.")
 
@@ -214,7 +214,7 @@ object AudioEnginePanel {
                 customBoxWidth = sliderBoxW,
                 onValueChanged = { newVal ->
                     audioEngine.inputGain = newVal
-                    theme.savePreferences()
+                    AppPreferencesStore.savePreferences()
                 }
             )
 
