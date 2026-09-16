@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: write # Needed to create tags, releases, and upload assets
+  workflows: write # Needed to push tags for commits modifying workflow files
 
 jobs:
   build-imgui-arm64-native:
