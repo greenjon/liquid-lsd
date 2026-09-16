@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: libimgui-java64.so
-          key: imgui-java-arm64-v1.92.7.1-v3
+          key: imgui-java-arm64-v1.92.7.1-v4
 
       - name: Setup JDK 17
         if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
@@ -45,9 +45,13 @@ jobs:
           #!/bin/bash
           ARGS=()
           for arg in "$@"; do
-            if [ "$arg" != "-m64" ] && [ "$arg" != "-Wl,-wrap,memcpy" ]; then
-              ARGS+=("$arg")
-            fi
+            case "$arg" in
+              -m64|-mfpmath=*|-msse*|-Wl,-wrap,memcpy)
+                ;;
+              *)
+                ARGS+=("$arg")
+                ;;
+            esac
           done
           exec /usr/bin/g++ "${ARGS[@]}"
           EOF
@@ -56,9 +60,13 @@ jobs:
           #!/bin/bash
           ARGS=()
           for arg in "$@"; do
-            if [ "$arg" != "-m64" ] && [ "$arg" != "-Wl,-wrap,memcpy" ]; then
-              ARGS+=("$arg")
-            fi
+            case "$arg" in
+              -m64|-mfpmath=*|-msse*|-Wl,-wrap,memcpy)
+                ;;
+              *)
+                ARGS+=("$arg")
+                ;;
+            esac
           done
           exec /usr/bin/gcc "${ARGS[@]}"
           EOF
