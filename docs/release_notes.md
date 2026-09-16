@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Macro Controls UI & Dual-Mode Column 3 (`MacroKnobWidget.kt`, `MacroPanel.kt`, `UIManager.kt`, `UITheme.kt`, `AppPreferencesStore.kt`, `MacroKnobWidgetTest.kt`)
+- **Macro Controls Panel & Rotary Knobs (Phase 2)**:
+  - Added custom ImGui rotary knob widget (`MacroKnobWidget.kt`) with sweep math, DAW-style vertical drag scaling, theme hover/active highlight borders, and unit test coverage.
+  - Implemented `MacroPanel.kt` featuring a 2x4 knob bank grid, 4 momentary/toggle switches, and an integrated deck preview monitor.
+  - Introduced `Column3Mode` (`MIXER` / `MACROS`) header toggle in Column 3 with preferences persistence in `AppPreferencesStore`.
+
 ### AppPreferencesStore Extraction (`AppPreferencesStore.kt`, `UITheme.kt`, Panels)
 - **Extracted Preferences Persistence**: Extracted preferences loading and saving logic out of `UITheme` into dedicated `AppPreferencesStore` object, decoupling theme styling from disk property persistence and streamlining preferences testability.
 - **Updated Panels & Tests**: Refactored all UI panels and unit tests to invoke `AppPreferencesStore.loadPreferences()` and `AppPreferencesStore.savePreferences()` directly.

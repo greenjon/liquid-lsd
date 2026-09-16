@@ -196,6 +196,11 @@ object AppPreferencesStore {
                         logger.info { "Migrated assetManagerHalfHeight to libraryMode: ${UITheme.libraryMode}" }
                     }
                 }
+                val savedColumn3Mode = props.getProperty("column3Mode")
+                if (savedColumn3Mode != null) {
+                    UITheme.column3Mode = try { UITheme.Column3Mode.valueOf(savedColumn3Mode) } catch (e: Exception) { UITheme.Column3Mode.MIXER }
+                    logger.info { "Loaded column3Mode from settings file: ${UITheme.column3Mode}" }
+                }
                 val savedAutoVj = props.getProperty("autoVjDirtyBehavior")
                 if (savedAutoVj != null) {
                     UITheme.autoVjDirtyBehavior = try { UITheme.AutoVjDirtyBehavior.valueOf(savedAutoVj) } catch (e: Exception) { UITheme.AutoVjDirtyBehavior.AUTO_DISCARD }
@@ -302,6 +307,7 @@ object AppPreferencesStore {
             props.setProperty("tooltipsEnabled", UITheme.tooltipsEnabled.toString())
             props.setProperty("maxFps", UITheme.maxFps.toString())
             props.setProperty("libraryMode", UITheme.libraryMode.name)
+            props.setProperty("column3Mode", UITheme.column3Mode.name)
             props.setProperty("autoVjDirtyBehavior", UITheme.autoVjDirtyBehavior.name)
             props.setProperty("activeMidiProfile", UITheme.activeMidiProfile)
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)

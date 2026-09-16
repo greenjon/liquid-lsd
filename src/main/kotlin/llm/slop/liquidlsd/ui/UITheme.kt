@@ -154,10 +154,17 @@ object UITheme {
         set(value) { settings = settings.copy(startupBehavior = value) }
 
     enum class LibraryMode { FULL, HALF, HIDE }
-    
+
     var libraryMode: LibraryMode
         get() = settings.libraryMode
         set(value) { settings = settings.copy(libraryMode = value) }
+
+    /** Column 3 dual-mode header toggle (see docs/developer/macro_controls_and_parameter_linking_proposal.md §2). */
+    enum class Column3Mode { MIXER, MACROS }
+
+    var column3Mode: Column3Mode
+        get() = settings.column3Mode
+        set(value) { settings = settings.copy(column3Mode = value) }
 
     var showMidiCol: Boolean
         get() = settings.midiEnabled

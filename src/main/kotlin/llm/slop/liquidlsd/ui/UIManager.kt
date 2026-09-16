@@ -194,6 +194,8 @@ class UIManager(
         onEjectDeck = monitorEjectDeck
     )
 
+    private val macroPanel = MacroPanel(parametersState = parametersState)
+
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
 
@@ -586,7 +588,10 @@ class UIManager(
     }
 
     private fun drawMixer(mixer: Mixer) {
-        mixerPanel.draw(session, mixer)
+        when (session.uiTheme.column3Mode) {
+            UITheme.Column3Mode.MIXER -> mixerPanel.draw(session, mixer)
+            UITheme.Column3Mode.MACROS -> macroPanel.draw(session, mixer)
+        }
     }
 
     fun dispose() {

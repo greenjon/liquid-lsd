@@ -38,6 +38,7 @@ data class AppPreferences(
     val maxFps: Int = 30,
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
+    val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
     val theme: UITheme.Theme = UITheme.Theme.BORING,
     val showMidiCol: Boolean = true,
     val showLfoCol: Boolean = true,
