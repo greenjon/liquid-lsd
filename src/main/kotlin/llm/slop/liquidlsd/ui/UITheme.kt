@@ -166,6 +166,13 @@ object UITheme {
         get() = settings.column3Mode
         set(value) { settings = settings.copy(column3Mode = value) }
 
+    /** Primary workspace view layout mode: Classic 3-column Suite C vs 19" Modular Video Rack. */
+    enum class WorkspaceMode { CLASSIC, RACK }
+
+    var workspaceMode: WorkspaceMode
+        get() = settings.workspaceMode
+        set(value) { settings = settings.copy(workspaceMode = value) }
+
     var showMidiCol: Boolean
         get() = settings.midiEnabled
         set(value) { settings = settings.copy(midiEnabled = value, showMidiCol = value) }

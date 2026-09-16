@@ -195,6 +195,7 @@ class UIManager(
     )
 
     private val macroPanel = MacroPanel(parametersState = parametersState)
+    val rackPanel = llm.slop.liquidlsd.rack.ui.RackPanel()
 
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
@@ -323,7 +324,14 @@ class UIManager(
      */
     private fun processQueueKeyboardShortcuts(): Int {
         var keyDelta = 0
-        if (ImGui.getIO().wantTextInput) return keyDelta
+        if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.F4, false)) {
+            session.uiTheme.workspaceMode = if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+                UITheme.WorkspaceMode.CLASSIC
+            } else {
+                UITheme.WorkspaceMode.RACK
+            }
+            AppPreferencesStore.savePreferences()
+        }
 
         val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
         val isSlash = ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
@@ -438,6 +446,18 @@ class UIManager(
 
     private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
         val theme = session.uiTheme
+        if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+            ImGui.setNextWindowPos(0f, menuBarH)
+            ImGui.setNextWindowSize(displayWidth.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
+            val rackWindowFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
+            if (ImGui.begin("ModularVideoRack", rackWindowFlags)) {
+                UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                currentMixer?.let { rackPanel.draw(session, it, displayWidth, contentH) }
+            }
+            ImGui.end()
+            return
+        }
+
         val minRatio = 0.15f
 
         val sliderWasHovered = CustomRangeSlider.isAnySliderHovered

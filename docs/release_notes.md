@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Modular Video Rack Chassis & Slot Layout System (`RackUnit.kt`, `RackPipeline.kt`, `RackManager.kt`, `RackChassisRenderer.kt`, `RackUnitHeaderRail.kt`, `RackFaceplateGrid.kt`, `RackPanel.kt`, `UIManager.kt`, `UITheme.kt`, `MenuBar.kt`, `ShortcutManager.kt`)
+- **19" Rack Bay Chassis & Slot Layout (Milestone 6, Phase 5)**:
+  - Introduced the standardized **19" Modular Video Rack Bay** container with industrial dark brushed metal aesthetics, metallic rack ears, and screw heads aligned at 1U modular height increments.
+  - Implemented quantized modular height standards ($1\text{U} = 72\text{px}$, $2\text{U} = 144\text{px}$, $3\text{U} = 216\text{px}$) along with an ultra-compact $0.5\text{U}$ ($32\text{px}$) collapsed spine mode.
+  - Added standardized **Unit Header Rails** (`RackUnitHeaderRail.kt`) with illuminated Power switches, latching Bypass (`BYP`) buttons, Solo (`SOLO`) triggers, unit type badges (`GEN`, `FX`, `MIX`, `UTIL`), inline editable labels, drag/reorder controls, and collapse buttons.
+  - Implemented **Grid-Based Faceplate Layout** (`RackFaceplateGrid.kt`) snapping controls across responsive 8-column slots for Generator synth units, Processor FX units, Feedback loops, and Transition mixer units.
+  - Built **Normalled Top-Down Signal Flow Pipeline** (`RackPipeline.kt` & `RackManager.kt`) chaining stages sequentially with zero-overhead bypass passthrough (bypassing GL draw calls completely when bypassed), solo overrides, and headless test support.
+  - Added non-destructive **Workspace View Mode** (`WorkspaceMode.CLASSIC` vs `WorkspaceMode.RACK`) accessible via top-bar pill button `[ CLASSIC | RACK ]`, `View > Modular Video Rack` menu, and global `F4` keyboard shortcut, with automatic session bridging from active decks and mixer stages.
+  - Added unit test suites: `RackUnitTest.kt`, `RackPipelineTest.kt`, and `RackManagerTest.kt`.
+
 ### Macro Controls Interactive Learn Mode, Inspector, Serialization & Hardware Integration (`MacroLearnState.kt`, `MacroBindingInspector.kt`, `MacroBankSerializer.kt`, `MacroOscBridge.kt`, `MidiMappingManager.kt`, `SessionSerializer.kt`, `PresetManager.kt`, `PresetRepository.kt`, `ParametersRenderer.kt`, `ValueParamSection.kt`, `PropertiesPanel.kt`, `MacroPanel.kt`)
 - **Interactive Learn Mode & Inspector (Phase 3)**:
   - Added `MacroLearnState.kt` coordinating click-to-bind linking between armed macro controls and target parameters or modulator properties.

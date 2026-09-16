@@ -77,6 +77,38 @@ class MenuBar(
                         ImGui.endMenu()
                     }
 
+                    // ── View Menu ─────────────────────────────────────────────────────────
+                    if (ImGui.beginMenu("View")) {
+                        val isClassic = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.CLASSIC
+                        val isRack = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
+
+                        if (ImGui.menuItem("Classic Deck View", "F3", isClassic)) {
+                            session.uiTheme.workspaceMode = UITheme.WorkspaceMode.CLASSIC
+                            AppPreferencesStore.savePreferences()
+                        }
+                        if (ImGui.menuItem("Modular Video Rack", "F4", isRack)) {
+                            session.uiTheme.workspaceMode = UITheme.WorkspaceMode.RACK
+                            AppPreferencesStore.savePreferences()
+                        }
+                        ImGui.separator()
+                        if (ImGui.beginMenu("Library Drawer")) {
+                            if (ImGui.menuItem("Full", "", session.uiTheme.libraryMode == UITheme.LibraryMode.FULL)) {
+                                session.uiTheme.libraryMode = UITheme.LibraryMode.FULL
+                                AppPreferencesStore.savePreferences()
+                            }
+                            if (ImGui.menuItem("Half", "", session.uiTheme.libraryMode == UITheme.LibraryMode.HALF)) {
+                                session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
+                                AppPreferencesStore.savePreferences()
+                            }
+                            if (ImGui.menuItem("Hide", "", session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE)) {
+                                session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
+                                AppPreferencesStore.savePreferences()
+                            }
+                            ImGui.endMenu()
+                        }
+                        ImGui.endMenu()
+                    }
+
                     // ── Output Menu ──────────────────────────────────────────────────────
                     val isOutOpen = isOutputWindowOpen()
                     val isRec = llm.slop.liquidlsd.export.RealtimeRecorder.isRecording
@@ -207,6 +239,23 @@ class MenuBar(
                         ColorTunerPanel.toggle()
                     }
                     itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
+
+                    // ── Workspace Mode Pill: [ CLASSIC | RACK ] ──
+                    val isRack = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
+                    val rackPillLabel = if (isRack) "[ RACK ]" else "[ CLASSIC ]"
+                    if (isRack) {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
+                    } else {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 0.18f, 0.20f, 0.24f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.26f, 0.28f, 0.34f, 1.0f)
+                    }
+                    if (ImGui.button(rackPillLabel)) {
+                        session.uiTheme.workspaceMode = if (isRack) UITheme.WorkspaceMode.CLASSIC else UITheme.WorkspaceMode.RACK
+                        AppPreferencesStore.savePreferences()
+                    }
+                    ImGui.popStyleColor(2)
+                    itemTooltip("Toggle Workspace Mode (Shortcut: F4)\nCurrent: ${if (isRack) "19\" Modular Video Rack" else "Classic 3-Column Suite C"}")
 
                     // ── Clock Source & Ableton Link Status Pill ─────────────────────
                     val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine

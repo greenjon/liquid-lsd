@@ -39,6 +39,7 @@ data class AppPreferences(
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
     val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
+    val workspaceMode: UITheme.WorkspaceMode = UITheme.WorkspaceMode.CLASSIC,
     val theme: UITheme.Theme = UITheme.Theme.BORING,
     val showMidiCol: Boolean = true,
     val showLfoCol: Boolean = true,
