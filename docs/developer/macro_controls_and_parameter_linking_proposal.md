@@ -13,13 +13,14 @@ As Liquid LSD grows in synthesis capability, visual presets often expose dozens 
 This document outlines the design for the **Macro Controls & Parameter Linking System**—a foundation for both immediate live performance and the upcoming **Modular Video Rack Architecture**.
 
 ### Key Highlights:
-* **8 Macro Knobs + 4 Macro Switches**: A dedicated physical and UI control surface for live performance.
+* **Up to 8 Macro Knobs + 4 Macro Switches per Bank**: A fixed-shape physical and UI control surface for live performance — chosen to match common 8-knob/4-button hardware controllers, not a hard limit on the system's flexibility (see §6).
 * **1-to-Many Binding Topology**: A single Macro Knob or Switch can drive up to 4 target parameters simultaneously with independent min/max travel limits, inversion, and response curves.
 * **Modulating the Modulators**: Macro Knobs target not only parameter base values but also **modulator properties** (e.g. LFO speed/subdivision, LFO morph, envelope attack/decay, LFO depth).
 * **Interactive "Learn Mode" UX**: Click "Learn" on any knob/switch, then click any parameter slider or modulator control in the UI to establish a binding instantly.
 * **Column 3 Dual-Mode UI (`[ MIXER | MACROS ]`)**: Places the macro controls, binding inspector, and focused single-deck preview inside Column 3, leaving **Parameters** (Col 1) and **Properties** (Col 2) fully visible for seamless linking.
 * **Hardware Parity**: Full integration with `MidiMappingManager` (MIDI CC) and `OscEngine` (OSC).
-* **Preset Serialization**: Standalone `.knobpreset.json` files and bundled `.preset.json` presets.
+* **Instance-Scoped Bindings**: Bindings resolve against either the global session (today's decks) or a specific rack unit instance, so the same binding engine and UI serve both the Column 3 global bank and the per-unit banks introduced by the Modular Video Rack (see §6).
+* **Preset Serialization**: Bundled into `.lsd` / `.lsdset` preset files, with an on-demand export/import to standalone `.knobpreset.json` for reuse across presets.
 
 ---
 
@@ -64,7 +65,7 @@ enum class MacroTargetType {
 }
 
 enum class MacroCurveType {
-    LINEAR, EXPONENTIAL, LOGARITHMIC, STEP
+    LINEAR, EXPONENTIAL, LOGARITHMIC, S_CURVE, STEP
 }
 
 enum class SwitchBehavior {
@@ -74,10 +75,11 @@ enum class SwitchBehavior {
 }
 
 data class MacroBinding(
-    val parameterId: String,          // e.g. "deckA_zoom"
+    val unitInstanceId: String? = null, // null = global/session scope (today's decks); non-null = a Rack unit's stable id (see §6)
+    val parameterId: String,            // e.g. "deckA_zoom" (global scope) or "dimensionWarp" (local to unitInstanceId)
     val targetType: MacroTargetType,
-    val modulatorIndex: Int = 0,      // Index in parameter's modulator stack
-    val propertyName: String = "",    // e.g. "subdivision", "morph", "depth", "attackMs"
+    val modulatorIndex: Int = 0,        // Index in parameter's modulator stack
+    val propertyName: String = "",      // e.g. "subdivision", "morph", "depth", "attackMs"
     var minVal: Float = 0.0f,
     var maxVal: Float = 1.0f,
     var curve: MacroCurveType = MacroCurveType.LINEAR,
@@ -94,9 +96,11 @@ data class MacroControl(
     val bindings: MutableList<MacroBinding> = mutableListOf() // Max 4 bindings
 )
 
-data class MacroPreset(
-    val knobs: List<MacroControl>,     // 8 Knobs
-    val switches: List<MacroControl>   // 4 Switches
+// A bank is the fixed-shape container for one macro surface: the global Column 3
+// bank, or a single Rack unit's own local bank (see §6). Both use the same shape.
+data class MacroBank(
+    val knobs: List<MacroControl>,     // 0..8 Knobs
+    val switches: List<MacroControl>   // 0..4 Switches
 )
 ```
 
@@ -115,6 +119,15 @@ Instead of injecting Macro values as raw sources into `CVRegistry`, the `MacroEn
 
 This zero-allocation approach allows Macro Knobs to smoothly modulate LFO speeds, envelope decay times, and morph parameters in real-time.
 
+### 3.3 Field Ownership & Manual Override
+
+Because the pipeline above writes its target field unconditionally every frame the binding is `enabled`, that field cannot remain a normal interactive control elsewhere in the UI — a manual drag would be overwritten on the very next frame. This applies equally to `PARAM_BASE_VALUE` targets (Parameters panel) and `MODULATOR_PROPERTY` targets (Properties panel); both need the same treatment:
+
+* **Locked, labeled rendering**: Any slider whose exact field — a parameter's `baseValue`, or a specific property (`subdivision`, `morph`, `attackMs`, etc.) on one `CvModulator` — is targeted by an *enabled* `MacroBinding` renders read-only with a small "macro-owned" badge and a tooltip identifying the owner, e.g. `"Controlled by Knob 3 (WARP)"`. This reuses the existing pulsing-highlight visual language already used for the active `MidiLearnTarget` in `PropertiesPanel.kt` / `ParametersRenderer.kt`, rather than introducing a second "externally owned" affordance.
+* **One click to the source**: Clicking the badge jumps straight to that binding's row in the Column 3 Binding Inspector, so there is always an obvious next step for changing or releasing it.
+* **Release via the existing `enabled` flag**: `MacroBinding.enabled` is the release mechanism — switching it off in the Binding Inspector immediately returns the field to normal interactive editing; switching it back on resumes macro control and accepts a value jump on re-take (mirroring MIDI's `TakeoverMode.IMMEDIATE`, since re-enabling a binding is a deliberate, occasional action rather than a live hardware-jitter case that would need soft takeover).
+* **Single source of truth for "is this locked?"**: `MacroEngine` exposes `findBindingsTargeting(unitInstanceId: String?, parameterId: String, modulatorIndex: Int? = null, propertyName: String? = null): List<MacroBinding>`. Both the per-frame evaluation loop and the Parameters/Properties panels' "should this slider render locked?" check call the same lookup, so engine behavior and UI lock state can never drift apart.
+
 ---
 
 ## 4. Interactive "Learn Mode" UX Workflow
@@ -131,6 +144,7 @@ This zero-allocation approach allows Macro Knobs to smoothly modulate LFO speeds
 4. **Binding Inspector**:
    * Displays the active binding list for the selected Macro Knob.
    * Allows setting custom Min/Max bounds, response curve, Invert, or deleting bindings.
+   * Per-binding **Enabled** toggle: the release mechanism for the field-ownership lock described in §3.3 — disabling a binding here immediately hands its target field back to normal manual editing.
 
 ---
 
@@ -143,20 +157,30 @@ This zero-allocation approach allows Macro Knobs to smoothly modulate LFO speeds
 * When OSC is enabled, `/macro/knob/1`–`/macro/knob/8` and `/macro/switch/1`–`/macro/switch/4` send and receive bidirectional updates to tablet surfaces (TouchOSC).
 
 ### 5.2 Preset Serialization Schema
-* **Standalone Knob Presets**: Saved as `.knobpreset.json` files for instant recall across different visual sources.
-* **Bundled Visual Presets**: Extended `.preset.json` schema storing both visual generator/FX settings AND the active `MacroPreset` state.
+* **Bundled (primary, authoritative)**: The active `MacroBank` is embedded directly in the `.lsd` (single deck) / `.lsdset` (deck set) preset JSON, alongside visual generator/FX settings. This is what loads and saves automatically with the preset — no separate file to track, and no risk of bindings referencing parameters that no longer exist.
+* **Standalone export/import (secondary, on-demand)**: The Binding Inspector offers "Export Macro Bank..." / "Import Macro Bank..." actions that read/write just the `MacroBank` JSON fragment to a standalone `.knobpreset.json` file. This exists purely so a performer can carry a favorite knob layout across otherwise-unrelated presets; it is never a live-loaded, auto-tracked file the way the bundled copy is. Imports that reference parameters absent from the currently loaded preset simply skip that binding rather than failing the whole import.
 
 ---
 
 ## 6. Connection to the Modular Video Rack Architecture
 
-In the upcoming **Modular Video Rack Architecture** (`docs/developer/modular_video_rack_proposal.md`), each rack module faceplate will embed this 8-Knob / 4-Switch Macro System as its front-panel performance surface.
+The Modular Video Rack Architecture (`docs/developer/modular_video_rack_proposal.md`) reuses this exact data model and engine — `MacroControl`, `MacroBinding`, `MacroEngine` — at a second, additional scope, rather than defining its own macro system:
+
+* **Global bank (this document, unchanged)**: Exactly one `MacroBank` lives in Column 3, scoped to the whole session. Its bindings leave `unitInstanceId = null` and resolve against today's deck-scoped parameter ids (e.g. `"deckA_zoom"`), exactly as described above.
+* **Per-unit banks (new, added by the Rack)**: Each rack unit instance additionally owns its *own* `MacroBank` of the same fixed shape (0-8 knobs, 0-4 switches). Its bindings set `unitInstanceId` to that unit's stable id (assigned when the unit is dropped into the bay) and resolve `parameterId` against that unit's own parameters, not the global session. This is what makes the same generator module droppable multiple times into a rack without its macro bindings colliding — two instances of the same module have different `unitInstanceId`s even though their `parameterId`s (e.g. `"dimensionWarp"`) are identical local names.
+* **Curation, not custom design (v1 scope)**: A rack unit's faceplate does not get a freeform widget-placement designer in v1. Curating a unit's macro surface means picking which of that unit's exposed parameters occupy which of its (up to 8) knob slots and (up to 4) switch slots, and in what order — the same fixed 2×4 knob grid / 4-switch row layout as Column 3, just scoped to one unit. A full drag-and-drop faceplate designer (arbitrary widget types and grid placement) remains an explicit backlog item; see Open Question 3 in the Rack proposal.
+
+This means Phases 1-4 below (the engine, Column 3 UI, Learn Mode, and serialization) are pure prerequisites for the Rack's per-unit macro curation in Phase 6 — nothing there needs to be rebuilt, only re-scoped via `unitInstanceId`.
 
 ---
 
 ## 7. Phased Implementation Roadmap
 
-* **Phase 1: Data Model & MacroEngine**: Core `MacroBinding`, `MacroControl`, and zero-allocation frame evaluation.
+This is the unified roadmap for both this proposal and the Modular Video Rack Architecture; Phases 1-4 live here, Phases 5-8 (and the deferred backlog) are detailed in `modular_video_rack_proposal.md` §4. See also `ROADMAP.md` Milestone 6.
+
+* **Phase 1: Data Model & MacroEngine**: Core `MacroBinding` (including `unitInstanceId` scoping), `MacroControl`, `MacroBank`, and zero-allocation frame evaluation.
 * **Phase 2: Column 3 Macro UI Panel**: `[ MIXER | MACROS ]` header toggle, 2x4 Knob grid + 4 Switch buttons, single-deck preview window blit.
 * **Phase 3: Interactive Learn Mode & Inspector**: Global UI click interceptor and binding inspector drawer.
-* **Phase 4: Serialization & MIDI/OSC Integration**: JSON DTOs, file I/O, and `MidiMappingManager` linkage.
+* **Phase 4: Serialization & MIDI/OSC Integration**: Bundled `.lsd`/`.lsdset` DTOs, standalone `.knobpreset.json` export/import, and `MidiMappingManager`/`OscEngine` linkage.
+
+> Phases 5-8 (Rack Chassis, Per-Unit Macro Curation, Confidence Micro-Monitors, Rear Panel & Patch Cables) continue in `modular_video_rack_proposal.md`.

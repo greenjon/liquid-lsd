@@ -171,12 +171,16 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
     - By default, dropping units into a vertical stack normalizes connections top-to-bottom automatically without requiring manual patching.
     - Dragging virtual patch cables overrides the default flow for complex split-routing, parallel processing, external video I/O routing (Spout/Syphon/PipeWire), or intentional optical feedback loops.
 
-- **Implementation Milestones**:
-  - [ ] **Phase 1: Rack Chassis & Slot Layout System**: Standardized rack bay container, grid-based faceplate layout, and unit header rails (power, bypass, solo, drag handle).
-  - [ ] **Phase 2: Curated Faceplates & Custom Controls**: Faceplate layout serializer, widget library (large rotary knobs, vertical faders, status LEDs, micro-scopes).
-  - [ ] **Phase 3: Macro Modulation Engine**: Multi-parameter binding matrix with independent range scaling and curve shaping.
-  - [ ] **Phase 4: Embedded Confidence Micro-Monitors**: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
-  - [ ] **Phase 5: Rear Panel & Virtual Patch Cables (`Tab` Flip)**: 3D or 2.5D flipped rear chassis view with physics-curved virtual patch cables and port normaling.
+- **Implementation Milestones** (single unified roadmap across both reference docs — the Macro system is a shared engine, not a rack-specific one; full detail in each doc's own Phase list):
+  - [ ] **Phase 1: Data Model & MacroEngine** *(macro doc §7)*: Core `MacroBinding`/`MacroControl`/`MacroBank`, instance-scoped bindings, zero-allocation frame evaluation.
+  - [ ] **Phase 2: Column 3 Macro UI Panel** *(macro doc §7)*: `[ MIXER | MACROS ]` toggle, 2x4 Knob grid + 4 Switches, single-deck preview.
+  - [ ] **Phase 3: Interactive Learn Mode & Inspector** *(macro doc §7)*: Global click-to-bind UX and binding inspector drawer.
+  - [ ] **Phase 4: Serialization & MIDI/OSC Integration** *(macro doc §7)*: Bundled `.lsd`/`.lsdset` DTOs, standalone `.knobpreset.json` export/import, `MidiMappingManager`/`OscEngine` linkage.
+  - [ ] **Phase 5: Rack Chassis & Slot Layout System** *(rack doc §4)*: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle).
+  - [ ] **Phase 6: Per-Unit Macro Curation** *(rack doc §4)*: Each unit gets its own `MacroBank` (0-8 knobs/0-4 switches) scoped via `unitInstanceId`; curation UI picks which unit parameters occupy which slot. No freeform faceplate designer yet.
+  - [ ] **Phase 7: Embedded Confidence Micro-Monitors** *(rack doc §4)*: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
+  - [ ] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: 3D or 2.5D flipped rear chassis view with physics-curved virtual patch cables and port normaling.
+  - **Backlog / not yet scheduled**: Full freeform Faceplate Designer, Playlist/Setlist staging strategy, transition topology, GPU FBO pooling, hardware focus-follow mapping — see rack doc §3 Open Questions.
 
 ---
 

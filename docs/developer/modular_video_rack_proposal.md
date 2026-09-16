@@ -36,12 +36,13 @@ This proposal outlines a **Modular Video Rack** paradigm inspired by hardware ra
 * **Hardcoded / Autonomous Background Modulation**: Parameters can have active LFOs, audio-reactive envelopes, or fixed offsets that run continuously without cluttering the UI. These are configured in an "under-the-hood" inspector or edit mode, leaving the live faceplate clean and focused.
 
 ### 2.3 Macro Knobs as Expressive Instruments
-* A macro knob allows a single control on the faceplate to modulate multiple internal parameters simultaneously.
-* For the complete standalone macro specification, see [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md).
+* Each rack unit owns its own local `MacroBank` (0-8 knobs, 0-4 switches) — the same data model and engine as the global Column 3 macro bank, just scoped to that unit's own parameters via a stable `unitInstanceId`. There is no separate, rack-specific macro system; this section only summarizes how that shared system applies to a unit's faceplate.
+* For the complete data model (`MacroControl`, `MacroBinding`, curve types, evaluation pipeline) and the instance-scoping mechanism, see [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md) §6.
 * Each target parameter binding includes:
   * Minimum and Maximum travel bounds.
-  * Curve profile (Linear, Exponential, Logarithmic, S-Curve).
+  * Curve profile (Linear, Exponential, Logarithmic, S-Curve, or Step).
   * Direction inversion (e.g., as Macro turns up, Zoom increases while Feedback Gain decreases).
+* **v1 scope**: curating a unit's macro bank means choosing which of its parameters occupy which knob/switch slot and in what order — not designing an arbitrary widget layout. See Open Question 3 below.
 
 ### 2.4 Confidence Monitoring on Every Unit
 * Each rack module includes an integrated mini-monitor rendering an offscreen FBO preview of that unit's immediate state.
@@ -124,37 +125,38 @@ How should crossfading and transitions between two different visual streams be s
 
 How does the user construct their custom faceplate, and how is it stored?
 
-* **Editing Experience**:
-  * Should there be a dedicated "Edit Mode" toggle (like an unlock/wrench icon on the rack ears)?
-  * When unlocked: click to add widgets, drag to rearrange grid slots, right-click to bind parameters/macros.
-  * When locked: clean performance mode with no edit handles or accidental drags.
-* **Widget Palette**:
-  * Vintage rotary pot / knob (continuous and stepped).
-  * Vertical and horizontal sliders.
-  * Momentary strobe buttons and latched toggle switches.
-  * XY touch pads.
-  * Mini-monitor / oscilloscope display.
-* **Storage Schema**:
-  * How should the faceplate be persisted inside the `.lsd` JSON preset file?
-  * Example proposed schema:
+**Decided for v1**: no freeform widget-placement designer yet. A unit's macro surface is curated, not designed — the performer picks which of the unit's parameters occupy which of its (up to 8) knob slots and (up to 4) switch slots and in what order, reusing the same fixed 2×4 knob grid / 4-switch row as the Column 3 global bank (see §2.3 and the macro proposal §6). This avoids building a full grid-snap widget editor before the underlying macro engine and per-unit scoping exist. Plain (non-macro) widgets — a slider or button bound 1:1 to a single parameter, a mini-monitor — still need *some* placement mechanism; the simplest v1 answer is a fixed template per unit type (e.g. macro grid on top, monitor below) rather than user-arranged slots. The remaining questions below (freeform grid editing, full widget palette) are pushed to the backlog as the **Full Faceplate Designer**.
+
+* **v1 Storage Schema** (fixed macro slot curation + templated plain widgets):
     ```json
     {
       "presetName": "Cyber Gyroid",
       "generator": "gyroid_core",
       "faceplate": {
         "heightU": 2,
-        "gridColumns": 6,
-        "widgets": [
-          { "type": "macro_knob", "id": "warp", "label": "WARP", "slot": [0, 0], "targets": [
-            { "param": "dimensionWarp", "min": 0.0, "max": 2.5, "curve": "exponential" },
-            { "param": "feedbackZoom", "min": 1.0, "max": 0.85, "curve": "linear" }
-          ]},
-          { "type": "slider", "label": "COLOR DECAY", "param": "decayRate", "slot": [1, 0] },
-          { "type": "monitor", "slot": [4, 0], "colSpan": 2, "rowSpan": 2 }
+        "unitInstanceId": "a1b2c3d4",
+        "macroBank": {
+          "knobs": [
+            { "label": "WARP", "bindings": [
+              { "parameterId": "dimensionWarp", "minVal": 0.0, "maxVal": 2.5, "curve": "EXPONENTIAL" },
+              { "parameterId": "feedbackZoom", "minVal": 1.0, "maxVal": 0.85, "curve": "LINEAR" }
+            ]},
+            null, null, null, null, null, null, null
+          ],
+          "switches": [null, null, null, null]
+        },
+        "plainControls": [
+          { "type": "slider", "label": "COLOR DECAY", "param": "decayRate" }
         ]
       }
     }
     ```
+  (`null` slots are simply unused knob/switch positions.)
+
+* **Backlog — Full Faceplate Designer** (deferred, not part of v1):
+  * A dedicated "Edit Mode" toggle (unlock/wrench icon on the rack ears): unlocked allows adding widgets and dragging to arbitrary grid slots; locked is clean performance mode.
+  * Full widget palette beyond the macro grid: vintage rotary pots (continuous/stepped), vertical/horizontal sliders, XY touch pads, oscilloscope displays, arbitrarily placed via `slot: [col, row]` / `colSpan` / `rowSpan` grid coordinates.
+  * Revisit only if the fixed-template v1 model proves too limiting in practice.
 
 ---
 
@@ -199,13 +201,11 @@ How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fig
 
 ## 4. Next Steps & Recommended Milestones
 
-1. **Phase 1: Macro Parameter Engine**:
-   * Implement `MacroParameter` in `src/.../parameters/` capable of driving multi-target modulation with min/max bounds and non-linear response curves.
-2. **Phase 2: Faceplate Widget Layout Prototype**:
-   * Build the slot-grid layout container and basic skeuomorphic widgets (knob, slider, button, monitor) in Dear ImGui.
-3. **Phase 3: Rack Unit Container & Normalled Routing**:
-   * Implement the vertical rack container with top-down texture passing and bypass toggles.
-4. **Phase 4: Playlist / Setlist Staging Strategy Selection**:
-   * Prototype Accordion Spines (1A) vs. Two-Deck Caddy (1C) to evaluate live ergonomics under performance conditions.
-5. **Phase 5: The Flip-to-Back Patching System (`Tab`)**:
-   * Implement the rear chassis rendering and bezier patch cord interaction for advanced routing and feedback loops.
+These phases continue directly from Phases 1-4 in [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md) §7 (Data Model & `MacroEngine`, Column 3 UI, Learn Mode, Serialization). This document does not define its own macro engine — see §2.3 and §6 of that proposal for why.
+
+* **Phase 5: Rack Chassis & Slot Layout System**: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle), and normalled top-down texture routing. No custom faceplate designer yet (see Question 3).
+* **Phase 6: Per-Unit Macro Curation**: Give each rack unit its own `MacroBank` scoped via `unitInstanceId` (macro proposal §6), and build the curation UI for picking which unit parameters occupy which of its knob/switch slots. Reuses the Column 3 engine and Learn Mode UX from Phases 1-3 verbatim — no new binding infrastructure.
+* **Phase 7: Embedded Confidence Micro-Monitors**: Lightweight texture blits rendering downscaled offscreen FBO passes directly onto unit faceplates.
+* **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)**: 3D or 2.5D flipped rear chassis view with physics-curved virtual patch cables and port normaling.
+
+**Not yet scheduled** (open questions above still need a decision before these can be phased): Playlist/Setlist staging strategy (Question 1), transition topology (Question 2), the Full Faceplate Designer backlog item (Question 3), GPU FBO pooling (Question 4), and hardware focus-follow mapping (Question 5).
