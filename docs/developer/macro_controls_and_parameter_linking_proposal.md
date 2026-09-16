@@ -83,6 +83,7 @@ data class MacroBinding(
     var minVal: Float = 0.0f,
     var maxVal: Float = 1.0f,
     var curve: MacroCurveType = MacroCurveType.LINEAR,
+    var stepCount: Int = 8,             // Only meaningful when curve == STEP; number of discrete quantized positions
     var inverted: Boolean = false,
     var enabled: Boolean = true
 )
@@ -94,7 +95,11 @@ data class MacroControl(
     val isSwitch: Boolean = false,
     var switchBehavior: SwitchBehavior = SwitchBehavior.TOGGLE,
     val bindings: MutableList<MacroBinding> = mutableListOf() // Max 4 bindings
-)
+) {
+    // See §3.4 for the full TOGGLE/MOMENTARY/TRIGGER state machine these two methods implement.
+    fun onPress() { /* ... */ }
+    fun onRelease() { /* ... */ }
+}
 
 // A bank is the fixed-shape container for one macro surface: the global Column 3
 // bank, or a single Rack unit's own local bank (see §6). Both use the same shape.
@@ -127,6 +132,21 @@ Because the pipeline above writes its target field unconditionally every frame t
 * **One click to the source**: Clicking the badge jumps straight to that binding's row in the Column 3 Binding Inspector, so there is always an obvious next step for changing or releasing it.
 * **Release via the existing `enabled` flag**: `MacroBinding.enabled` is the release mechanism — switching it off in the Binding Inspector immediately returns the field to normal interactive editing; switching it back on resumes macro control and accepts a value jump on re-take (mirroring MIDI's `TakeoverMode.IMMEDIATE`, since re-enabling a binding is a deliberate, occasional action rather than a live hardware-jitter case that would need soft takeover).
 * **Single source of truth for "is this locked?"**: `MacroEngine` exposes `findBindingsTargeting(unitInstanceId: String?, parameterId: String, modulatorIndex: Int? = null, propertyName: String? = null): List<MacroBinding>`. Both the per-frame evaluation loop and the Parameters/Properties panels' "should this slider render locked?" check call the same lookup, so engine behavior and UI lock state can never drift apart.
+
+### 3.4 Switch Behavior State Machine
+
+A switch's `value` can't just be read passively like a knob's: `MOMENTARY` needs press/release edges, and `TRIGGER` needs to pulse `value` to 1 for exactly one frame and then reset — neither fits a plain persistent float driven only by curve math. Rather than special-case switches inside the `MacroEngine` per-frame loop, the state machine lives on `MacroControl` itself, so the engine's evaluation stays uniform for knobs and switches alike (it only ever reads `.value`):
+
+* **`onPress()`** — called by whatever input source registers a press (UI click, MIDI note-on, OSC message):
+  * `TOGGLE`: flips `value` between 0 and 1.
+  * `MOMENTARY`: sets `value = 1`.
+  * `TRIGGER`: sets `value = 1` and arms a one-shot reset flag.
+* **`onRelease()`** — called on release:
+  * `MOMENTARY`: sets `value = 0`.
+  * `TOGGLE` / `TRIGGER`: no-op.
+* **Trigger reset**: after evaluating a frame's bindings, `MacroEngine.tick()` consumes any armed one-shot reset flags and sets those controls' `value` back to 0 — this is what produces the "1-frame pulse" for `TRIGGER` without the input source needing to know anything about frame timing.
+
+This keeps the entire switch behavior testable in isolation (press/release/tick sequences) independent of any UI, MIDI, or OSC code, which don't exist until later phases.
 
 ---
 
@@ -170,7 +190,7 @@ The Modular Video Rack Architecture (`docs/developer/modular_video_rack_proposal
 * **Per-unit banks (new, added by the Rack)**: Each rack unit instance additionally owns its *own* `MacroBank` of the same fixed shape (0-8 knobs, 0-4 switches). Its bindings set `unitInstanceId` to that unit's stable id (assigned when the unit is dropped into the bay) and resolve `parameterId` against that unit's own parameters, not the global session. This is what makes the same generator module droppable multiple times into a rack without its macro bindings colliding — two instances of the same module have different `unitInstanceId`s even though their `parameterId`s (e.g. `"dimensionWarp"`) are identical local names.
 * **Curation, not custom design (v1 scope)**: A rack unit's faceplate does not get a freeform widget-placement designer in v1. Curating a unit's macro surface means picking which of that unit's exposed parameters occupy which of its (up to 8) knob slots and (up to 4) switch slots, and in what order — the same fixed 2×4 knob grid / 4-switch row layout as Column 3, just scoped to one unit. A full drag-and-drop faceplate designer (arbitrary widget types and grid placement) remains an explicit backlog item; see Open Question 3 in the Rack proposal.
 
-This means Phases 1-4 below (the engine, Column 3 UI, Learn Mode, and serialization) are pure prerequisites for the Rack's per-unit macro curation in Phase 6 — nothing there needs to be rebuilt, only re-scoped via `unitInstanceId`.
+This means Phases 1-4 below (the engine, Column 3 UI, Learn Mode, and serialization) are pure prerequisites for the Rack's per-unit macro curation in Phase 6 — nothing there needs to be rebuilt, only re-scoped via `unitInstanceId`. Concretely, `MacroEngine` holds a `Map<unitInstanceId: String?, MacroBank>` (the `null` key is the global Column 3 bank from Phase 1) behind `registerBank(unitInstanceId, bank)` / `unregisterBank(unitInstanceId)`. Phase 6 only needs to call these two methods as rack units are added/removed from the bay — no changes to the evaluation pipeline, curve math, or Learn Mode UX from earlier phases.
 
 ---
 

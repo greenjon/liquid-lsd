@@ -436,6 +436,9 @@ fun main(args: Array<String>) {
                 llm.slop.liquidlsd.midi.MidiMappingManager.update(mixer)
             }
 
+            // 0.5. Update Macro Engine (must run before any deck's .update()/.evaluate())
+            llm.slop.liquidlsd.macro.MacroEngine.tick(mixer)
+
             // 1. Update and Render Deck A (renders source + applies feedback loop)
             deckA.update()
             renderer.renderDeck(deckA)
