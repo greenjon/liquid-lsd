@@ -17,7 +17,7 @@ object MacroBindingInspector {
     private val labelBuf = ImString(64)
     private var lastControlId: String? = null
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, control: MacroControl?) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, control: MacroControl?, parametersState: ParametersState) {
         if (control == null) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 ImGui.textDisabled("Select a Knob or Switch above to inspect bindings.")
@@ -68,6 +68,32 @@ object MacroBindingInspector {
                 itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Column 1 or 2.")
             } else {
                 ImGui.textDisabled("[Max 4 targets]")
+            }
+        }
+
+        // Hardware MIDI Learn (proposal §5.1: physical CC/note -> this Macro Knob/Switch).
+        // Only the global Column 3 bank is addressable via "Macro/knob_N"/"Macro/switch_N" paths
+        // (MidiMappingManager.onMidiEvent dispatches against MacroEngine.globalBank() only) --
+        // per-unit Rack banks don't have hardware mapping yet (proposal's Rack doc, Open Question 5).
+        val midiPath = macroMidiPath(bank, control)
+        if (midiPath != null) {
+            ImGui.sameLine(0f, 8f)
+            val isMidiLearning = parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
+            if (isMidiLearning) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.72f, 0.45f, 1.00f, 0.7f))
+                if (ImGui.button("${Icons.REFRESH} Waiting for MIDI... (Cancel)##midi_learn_cancel")) {
+                    parametersState.midiLearnTarget = null
+                }
+                ImGui.popStyleColor()
+            } else {
+                if (ImGui.button("${Icons.PLUS} MIDI Learn##midi_learn_start")) {
+                    parametersState.midiLearnTarget = MidiLearnTarget.MacroTarget(midiPath, control.label.ifEmpty { control.id })
+                    parametersState.midiLearnStartTimeMs = System.currentTimeMillis()
+                    if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
+                        PopupManager.globalPendingMidiWarning = true
+                    }
+                }
+                itemTooltip("Arm hardware MIDI Learn: next CC/Note received binds a physical controller to this Macro $typeBadge.")
             }
         }
 
@@ -199,5 +225,20 @@ object MacroBindingInspector {
         }
 
         ImGui.popID()
+    }
+
+    /**
+     * Resolves the "Macro/knob_N" / "Macro/switch_N" MIDI mapping path for [control] within
+     * [bank], matching the format [llm.slop.liquidlsd.midi.MidiMappingManager.onMidiEvent]
+     * dispatches against. Returns null for anything other than the global bank (per-unit Rack
+     * banks aren't hardware-mappable yet) or if [control] isn't found in it.
+     */
+    private fun macroMidiPath(bank: MacroBank, control: MacroControl): String? {
+        if (bank !== MacroEngine.globalBank()) return null
+        val knobIdx = bank.knobs.indexOf(control)
+        if (knobIdx >= 0) return "Macro/knob_${knobIdx + 1}"
+        val switchIdx = bank.switches.indexOf(control)
+        if (switchIdx >= 0) return "Macro/switch_${switchIdx + 1}"
+        return null
     }
 }

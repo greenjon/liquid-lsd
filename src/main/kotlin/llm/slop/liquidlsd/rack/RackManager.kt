@@ -59,7 +59,7 @@ class RackManager(
         for (i in mixer.deckA.fxSlots.indices) {
             val fx = mixer.deckA.fxSlots[i]
             if (fx != null) {
-                val isfUnit = ISFProcessorUnit(fx, slotIndex = i, label = "Deck A FX ${i + 1}: ${fx.displayName}")
+                val isfUnit = ISFProcessorUnit(mixer.deckA, fx, slotIndex = i, label = "Deck A FX ${i + 1}: ${fx.displayName}")
                 setupCuratedBinding(isfUnit.macroBank.knobs[0], isfUnit.id, "DRY/WET", "dryWet", 0.0f, 1.0f, fx.dryWet.baseValue)
                 addUnit(isfUnit)
             }
@@ -83,7 +83,7 @@ class RackManager(
         for (i in mixer.deckB.fxSlots.indices) {
             val fx = mixer.deckB.fxSlots[i]
             if (fx != null) {
-                val isfUnit = ISFProcessorUnit(fx, slotIndex = i, label = "Deck B FX ${i + 1}: ${fx.displayName}")
+                val isfUnit = ISFProcessorUnit(mixer.deckB, fx, slotIndex = i, label = "Deck B FX ${i + 1}: ${fx.displayName}")
                 setupCuratedBinding(isfUnit.macroBank.knobs[0], isfUnit.id, "DRY/WET", "dryWet", 0.0f, 1.0f, fx.dryWet.baseValue)
                 addUnit(isfUnit)
             }

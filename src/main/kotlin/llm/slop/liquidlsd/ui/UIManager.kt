@@ -280,7 +280,7 @@ class UIManager(
                 PopupManager.globalPendingMidiWarning = false
             }
 
-            drawLayout(mixer, displayWidth, displayHeight)
+            drawLayout(mixer, renderer, displayWidth, displayHeight)
 
             PreferencesPanel.draw(
                 session = session,
@@ -431,7 +431,7 @@ class UIManager(
         }
     }
 
-    private fun drawLayout(mixer: Mixer, displayWidth: Float, displayHeight: Float) {
+    private fun drawLayout(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         val safeW = displayWidth.coerceAtLeast(100f)
         val safeH = displayHeight.coerceAtLeast(100f)
         val titleBarH = MenuBar.calculateHeight(session)
@@ -442,10 +442,10 @@ class UIManager(
                          ImGuiWindowFlags.NoCollapse or
                          ImGuiWindowFlags.NoBringToFrontOnFocus
 
-        drawAssetManagementLayout(safeW, safeH, menuBarH, contentH, noDecorate)
+        drawAssetManagementLayout(renderer, safeW, safeH, menuBarH, contentH, noDecorate)
     }
 
-    private fun drawAssetManagementLayout(displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
+    private fun drawAssetManagementLayout(renderer: Renderer, displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
         val theme = session.uiTheme
         if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
             ImGui.setNextWindowPos(0f, menuBarH)
@@ -453,7 +453,7 @@ class UIManager(
             val rackWindowFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
             if (ImGui.begin("ModularVideoRack", rackWindowFlags)) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                currentMixer?.let { rackPanel.draw(session, it, displayWidth, contentH) }
+                currentMixer?.let { rackPanel.draw(session, it, renderer, displayWidth, contentH) }
             }
             ImGui.end()
             return

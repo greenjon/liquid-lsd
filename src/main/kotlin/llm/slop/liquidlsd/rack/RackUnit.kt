@@ -4,11 +4,9 @@ import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FBO
-import llm.slop.liquidlsd.rendering.Geometry
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
-import org.lwjgl.opengl.GL33.*
 import java.util.UUID
 
 /**
@@ -66,26 +64,7 @@ interface RackUnit {
     ): Int
 
     /** Returns all available patch jacks on the rear panel of this unit. */
-    fun getRearPorts(): List<PatchPort> {
-        return when (unitType) {
-            RackUnitType.GENERATOR -> listOf(
-                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
-            )
-            RackUnitType.PROCESSOR -> listOf(
-                PatchPort(id, "video_in", "VIDEO IN", PortDirection.INPUT),
-                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
-            )
-            RackUnitType.TRANSITION -> listOf(
-                PatchPort(id, "video_in_a", "IN A", PortDirection.INPUT),
-                PatchPort(id, "video_in_b", "IN B", PortDirection.INPUT),
-                PatchPort(id, "video_out", "MASTER OUT", PortDirection.OUTPUT)
-            )
-            RackUnitType.UTILITY -> listOf(
-                PatchPort(id, "video_in", "VIDEO IN", PortDirection.INPUT),
-                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
-            )
-        }
-    }
+    fun getRearPorts(): List<PatchPort>
 
     /** Releases any dedicated GPU resources held by this unit. */
     fun dispose() {}
@@ -108,6 +87,38 @@ abstract class BaseRackUnit(
     override var lastOutputTexture: Int = 0
 ) : RackUnit {
     override fun update() {}
+
+    // Computed once from `id`/`unitType`, both fixed at construction -- avoids rebuilding this
+    // list (and its PatchPort/fullId allocations) every frame RackRearChassisRenderer draws it.
+    private val cachedRearPorts: List<PatchPort> by lazy {
+        when (unitType) {
+            RackUnitType.GENERATOR -> listOf(
+                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT),
+                PatchPort(id, "cv_in", "CV MOD IN", PortDirection.INPUT, SignalType.CV)
+            )
+            RackUnitType.PROCESSOR -> listOf(
+                PatchPort(id, "video_in", "VIDEO IN", PortDirection.INPUT),
+                PatchPort(id, "mask_in", "MASK/SIDECHAIN IN", PortDirection.INPUT, SignalType.MASK),
+                PatchPort(id, "cv_in", "CV MOD IN", PortDirection.INPUT, SignalType.CV),
+                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
+            )
+            RackUnitType.TRANSITION -> listOf(
+                PatchPort(id, "video_in_a", "IN A", PortDirection.INPUT),
+                PatchPort(id, "video_in_b", "IN B", PortDirection.INPUT),
+                PatchPort(id, "mask_in", "MASK/SIDECHAIN IN", PortDirection.INPUT, SignalType.MASK),
+                PatchPort(id, "cv_in", "CV MOD IN", PortDirection.INPUT, SignalType.CV),
+                PatchPort(id, "video_out", "MASTER OUT", PortDirection.OUTPUT)
+            )
+            RackUnitType.UTILITY -> listOf(
+                PatchPort(id, "video_in", "VIDEO IN", PortDirection.INPUT),
+                PatchPort(id, "mask_in", "MASK/SIDECHAIN IN", PortDirection.INPUT, SignalType.MASK),
+                PatchPort(id, "cv_in", "CV MOD IN", PortDirection.INPUT, SignalType.CV),
+                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
+            )
+        }
+    }
+
+    override fun getRearPorts(): List<PatchPort> = cachedRearPorts
 }
 
 /**
@@ -120,7 +131,6 @@ class DeckGeneratorUnit(
     heightU: Int = 2,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
-    id = if (isDeckA) "deck_a_gen" else "deck_b_gen",
     label = label,
     unitType = RackUnitType.GENERATOR,
     heightU = heightU,
@@ -149,32 +159,33 @@ class DeckGeneratorUnit(
         deck.source.update()
     }
 
+    /**
+     * Reads the deck's already-rendered clean source texture rather than re-invoking
+     * [Renderer.render]. Every frame's main loop already calls [Renderer.renderDeck] for this
+     * deck before the Rack UI draws (see `Main.kt` / `RackManager.process`), so re-rendering here
+     * would both double the GPU cost and double-advance any per-frame state (e.g. persistent-
+     * history ISF filters) -- this unit is a read-only monitor of that already-computed frame.
+     */
     override fun process(
         inputTexture: Int,
         outputFBO: FBO?,
         width: Int,
         height: Int,
         renderer: Renderer?
-    ): Int {
-        if (!isPowered || renderer == null) return 0
-        val zoom = if (deck.source.is3D) 1.0f else deck.viewZoom.value
-        val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
-        renderer.render(deck.source, deck.cleanFBO, zoom, rotZ)
-        return deck.cleanFBO.texture
-    }
+    ): Int = deck.cleanFBO.texture
 }
 
 /**
  * Processor Unit wrapping an [ISFFilter] effect slot.
  */
 class ISFProcessorUnit(
+    val deck: Deck,
     val filter: ISFFilter,
     val slotIndex: Int,
     label: String = filter.displayName,
     heightU: Int = 1,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
-    id = "isf_${filter.id}_$slotIndex",
     label = label,
     unitType = RackUnitType.PROCESSOR,
     heightU = heightU,
@@ -197,6 +208,14 @@ class ISFProcessorUnit(
         filter.update()
     }
 
+    /**
+     * Reads the deck's already-rendered per-slot FX texture (written this frame by
+     * [Renderer.renderDeck]'s own chained FX loop) instead of re-invoking [ISFFilter.render].
+     * Re-rendering the same filter instance a second time per frame would double its GPU cost
+     * and, for filters with persistent per-frame history buffers (e.g. the modular feedback
+     * filter), corrupt that history by advancing it twice per frame. Mirrors the same
+     * enabled/dryWet fallback logic as [Deck.getOutputTexture].
+     */
     override fun process(
         inputTexture: Int,
         outputFBO: FBO?,
@@ -204,39 +223,21 @@ class ISFProcessorUnit(
         height: Int,
         renderer: Renderer?
     ): Int {
-        if (!isPowered || isBypassed || filter.dryWet.value <= 0f || outputFBO == null || renderer == null) {
-            return inputTexture
-        }
-
-        outputFBO.bind()
-        glClearColor(0f, 0f, 0f, 0f)
-        glClear(GL_COLOR_BUFFER_BIT)
-        glDisable(GL_BLEND)
-
-        filter.render(inputTexture, width, height)
-
-        val dryWet = filter.dryWet.value
-        if (dryWet < 1.0f) {
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
-            glBlendColor(0f, 0f, 0f, 1.0f - dryWet)
-
-            renderer.blitShader.bind()
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, inputTexture)
-            renderer.blitShader.setUniform("uTexture", 0)
-            Geometry.drawFullscreenQuad()
-            renderer.blitShader.unbind()
-            glDisable(GL_BLEND)
-        }
-
-        outputFBO.unbind()
-        return outputFBO.texture
+        if (!filter.enabled || filter.dryWet.value <= 0f) return inputTexture
+        val stageFbo = deck.fxFBOs.getOrNull(slotIndex) ?: return inputTexture
+        return stageFbo.texture
     }
 }
 
 /**
- * Processor Unit wrapping a Deck's feedback stage.
+ * Processor Unit wrapping a Deck's legacy feedback parameters ([Deck.fbGain], [Deck.fbDecay],
+ * etc). These fields predate the 100% ISF pipeline migration (see ARCHITECTURE.md's "100% ISF
+ * Pipeline & Modular Effects Engine" section) and are retained on [Deck] only for backward
+ * preset/broadcast serialization -- they are no longer read by any shader. Feedback is now just
+ * another ISF filter (`default_filters/feedback.fs`) that, when loaded into one of the deck's FX
+ * slots, already appears in the rack as its own [ISFProcessorUnit] with real, live parameters.
+ * This unit is therefore a true passthrough: curating its exposed params to a macro knob will
+ * move the knob but produce no visible effect.
  */
 class FeedbackProcessorUnit(
     val deck: Deck,
@@ -245,7 +246,6 @@ class FeedbackProcessorUnit(
     heightU: Int = 2,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
-    id = if (isDeckA) "deck_a_feedback" else "deck_b_feedback",
     label = label,
     unitType = RackUnitType.PROCESSOR,
     heightU = heightU,
@@ -271,11 +271,7 @@ class FeedbackProcessorUnit(
         width: Int,
         height: Int,
         renderer: Renderer?
-    ): Int {
-        if (!isPowered || isBypassed) return inputTexture
-        // Return active deck feedback output texture
-        return deck.getOutputTexture()
-    }
+    ): Int = inputTexture
 }
 
 /**
@@ -287,7 +283,6 @@ class MixerTransitionUnit(
     heightU: Int = 2,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
-    id = "master_transition",
     label = label,
     unitType = RackUnitType.TRANSITION,
     heightU = heightU,
@@ -306,17 +301,22 @@ class MixerTransitionUnit(
         mixer.update()
     }
 
+    /**
+     * Reads the already-composited master output ([Mixer.masterFBO], written this frame by
+     * [Renderer.renderMixer] in the main loop) rather than re-invoking it. The Mixer always
+     * crossfades the live [Mixer.deckA]/[Mixer.deckB] state -- it isn't yet restructured to
+     * accept externally patched inputs, so `inputTexture` (any cable plugged into IN A/IN B) is
+     * not consumed here. Making that live would mean threading arbitrary external textures
+     * through the single master-output path every workspace mode relies on, which is a bigger,
+     * riskier change than this unit's read-only monitoring role.
+     */
     override fun process(
         inputTexture: Int,
         outputFBO: FBO?,
         width: Int,
         height: Int,
         renderer: Renderer?
-    ): Int {
-        if (!isPowered || isBypassed || renderer == null) return inputTexture
-        renderer.renderMixer(mixer)
-        return mixer.masterFBO.texture
-    }
+    ): Int = mixer.masterFBO.texture
 }
 
 /**

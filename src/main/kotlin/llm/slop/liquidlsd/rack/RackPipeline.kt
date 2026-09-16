@@ -81,7 +81,14 @@ class RackPipeline(
                 val overrideCable = patchBay.findCableInputFor(unit.id, "video_in")
                     ?: patchBay.findCableInputFor(unit.id, "video_in_a")
                 if (overrideCable != null) {
-                    val sourceUnit = units.find { it.id == overrideCable.fromPort.unitId }
+                    val sourceUnitId = overrideCable.fromPort.unitId
+                    var sourceUnit: RackUnit? = null
+                    for (j in units.indices) {
+                        if (units[j].id == sourceUnitId) {
+                            sourceUnit = units[j]
+                            break
+                        }
+                    }
                     if (sourceUnit != null) {
                         stageInputTexture = sourceUnit.lastOutputTexture
                     }

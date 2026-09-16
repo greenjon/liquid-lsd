@@ -95,10 +95,17 @@ object MacroEngine {
     @Volatile
     private var resolvedBindings: Array<ResolvedBinding> = emptyArray()
 
+    // Snapshot of all registered banks, rebuilt only when [bindingsDirty] (i.e. only on
+    // registerBank/unregisterBank/invalidate, not every frame). [tick] reuses this array to
+    // consume trigger resets without re-synchronizing/re-copying `banks.values` every frame.
+    @Volatile
+    private var banksSnapshot: Array<MacroBank> = arrayOf(banks.getValue(null))
+
     private fun rebuildResolvedBindings(mixer: Mixer) {
         val list = ArrayList<ResolvedBinding>()
-        val banksSnapshot = synchronized(lock) { ArrayList(banks.values) }
-        for (bank in banksSnapshot) {
+        val snapshot = synchronized(lock) { banks.values.toTypedArray() }
+        banksSnapshot = snapshot
+        for (bank in snapshot) {
             resolveControls(bank.knobs, mixer, list)
             resolveControls(bank.switches, mixer, list)
         }
@@ -153,11 +160,14 @@ object MacroEngine {
         }
 
         // Consume any armed one-shot TRIGGER resets, producing the "1-frame pulse" (proposal §3.4).
-        val banksSnapshot = synchronized(lock) { ArrayList(banks.values) }
-        for (bank in banksSnapshot) {
-            val switches = bank.switches
-            for (i in switches.indices) {
-                switches[i].consumeTriggerReset()
+        // Reuses the cached snapshot from the last rebuild instead of re-copying `banks.values`
+        // every frame (this loop runs every frame regardless of bindingsDirty, since a trigger
+        // switch's pulse must reset even when it has no active bindings).
+        val snapshot = banksSnapshot
+        for (i in snapshot.indices) {
+            val switches = snapshot[i].switches
+            for (j in switches.indices) {
+                switches[j].consumeTriggerReset()
             }
         }
     }
@@ -187,9 +197,12 @@ object MacroEngine {
 
     /**
      * Looks up enabled bindings from the resolved cache matching [unitInstanceId] and
-     * [parameterId] exactly, plus [modulatorIndex]/[propertyName] when non-null. Intended for
-     * later-phase UI to answer "is this slider/property locked by a macro?" (see proposal §3.3) —
-     * not otherwise used by this phase's engine loop.
+     * [parameterId] exactly, plus [modulatorIndex]/[propertyName] when non-null. Used by the
+     * Parameters/Properties panels to answer "is this slider/property locked by a macro?" (see
+     * proposal §3.3). Called every frame for every rendered parameter row/modulator slot, so the
+     * overwhelmingly common case (a field with no macro binding at all) must not allocate: only
+     * materializes an [ArrayList] once an actual match is found, returning the shared
+     * [emptyList] singleton otherwise.
      */
     fun findBindingsTargeting(
         unitInstanceId: String?,
@@ -198,15 +211,15 @@ object MacroEngine {
         propertyName: String? = null
     ): List<MacroBinding> {
         val bindings = resolvedBindings
-        val result = ArrayList<MacroBinding>()
+        var result: ArrayList<MacroBinding>? = null
         for (i in bindings.indices) {
             val b = bindings[i].binding
             if (b.unitInstanceId != unitInstanceId) continue
             if (b.parameterId != parameterId) continue
             if (modulatorIndex != null && b.modulatorIndex != modulatorIndex) continue
             if (propertyName != null && b.propertyName != propertyName) continue
-            result.add(b)
+            (result ?: ArrayList<MacroBinding>(4).also { result = it }).add(b)
         }
-        return result
+        return result ?: emptyList()
     }
 }

@@ -265,7 +265,7 @@ class MacroPanel(
             val availH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
             val maxInspectorH = (availH * 0.45f).coerceIn(120f, 220f)
             if (ImGui.beginChild("##macro_inspector_scroll", 0f, maxInspectorH, true)) {
-                MacroBindingInspector.draw(session, bank, selectedControl)
+                MacroBindingInspector.draw(session, bank, selectedControl, parametersState)
             }
             ImGui.endChild()
         }

@@ -23,7 +23,9 @@ data class PatchPort(
     val direction: PortDirection,
     val signalType: SignalType = SignalType.VIDEO
 ) {
-    val fullId: String get() = "$unitId:$portId"
+    // Computed once at construction (PatchPort instances are cached per-unit, not rebuilt every
+    // frame -- see BaseRackUnit.rearPorts) rather than re-concatenated on every access.
+    val fullId: String = "$unitId:$portId"
 }
 
 /**
@@ -66,11 +68,16 @@ class RackPatchBay {
     }
 
     /**
-     * Finds any cable plugged into a given destination input port.
+     * Finds any cable plugged into a given destination input port. Called once per unit per
+     * frame from [RackPipeline.process], so this compares fields directly rather than building
+     * a "$unitId:$portId" lookup string per call.
      */
     fun findCableInputFor(unitId: String, portId: String): PatchCable? {
-        val target = "$unitId:$portId"
-        return cables.find { it.toPort.fullId == target }
+        for (i in cables.indices) {
+            val c = cables[i]
+            if (c.toPort.unitId == unitId && c.toPort.portId == portId) return c
+        }
+        return null
     }
 
     /**

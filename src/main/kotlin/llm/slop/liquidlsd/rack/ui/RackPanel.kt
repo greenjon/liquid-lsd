@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.rack.GenericRackUnit
 import llm.slop.liquidlsd.rack.RackManager
 import llm.slop.liquidlsd.rack.RackUnitType
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme
 
@@ -25,6 +26,7 @@ class RackPanel(
     fun draw(
         session: SessionContext,
         mixer: Mixer,
+        renderer: Renderer,
         panelWidth: Float,
         panelHeight: Float
     ) {
@@ -34,6 +36,11 @@ class RackPanel(
         }
 
         rackManager.update()
+        // Resolves each unit's lastOutputTexture (normalled/patched routing) from this frame's
+        // already-rendered Deck/Mixer/FX state so the confidence monitors and rear-panel LEDs
+        // reflect real signal state. Pure texture-ID reads for the built-in unit types (see
+        // RackUnit.kt doc comments) -- safe to call here mid-ImGui-draw with no GL side effects.
+        rackManager.process(renderer)
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 0f, 0f)
 
