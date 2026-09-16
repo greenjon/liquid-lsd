@@ -71,18 +71,23 @@ jobs:
       - name: Build Java Bindings & Generate JNI Headers
         run: |
           ./gradlew :imgui-binding:compileJava
+          ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal || true
 
-      - name: Generate and Compile Native Libraries
+      - name: Compile Native Shared Library for ARM64
         run: |
-          # SpaiR's jnigen invokes host g++ to compile libimgui-java64.so.
-          # Because this runs on an ubuntu-24.04-arm runner, g++ naturally outputs an ARM64 ELF library.
-          ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal
+          JNI_DIR="imgui-binding/build/jni"
+          g++ -O3 -shared -fPIC -std=c++17 \
+            -I"$JAVA_HOME/include" \
+            -I"$JAVA_HOME/include/linux" \
+            -I"$JNI_DIR" \
+            $(find "$JNI_DIR" -name "*.cpp") \
+            -o libimgui-java64.so
 
       - name: Upload ARM64 Native Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: imgui-java-linux-arm64
-          path: |
+          path: libimgui-java64.so
             **/build/**/libimgui-java64.so
 ```
 

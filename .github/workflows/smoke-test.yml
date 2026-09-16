@@ -19,7 +19,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: libimgui-java64.so
-          key: imgui-java-arm64-v1.92.7.1-v1
+          key: imgui-java-arm64-v1.92.7.1-v2
 
       - name: Setup JDK 17
         if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Compiler Tools
         if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+        run: sudo apt-get update && sudo apt-get install -y build-essential file
 
       - name: Build imgui-java ARM64 Shared Library
         if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
@@ -39,13 +39,29 @@ jobs:
           cd imgui-java-src
           git submodule update --init --recursive
           ./gradlew :imgui-binding:compileJava
-          ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal
-          IMGUI_SO=$(find . -name "libimgui-java64.so" | head -n 1)
-          if [ -z "$IMGUI_SO" ]; then
-            echo "ERROR: libimgui-java64.so was not generated!" >&2
+          ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal || true
+
+          JNI_DIR="imgui-binding/build/jni"
+          if [ ! -d "$JNI_DIR" ]; then
+            echo "ERROR: JNI source directory $JNI_DIR was not generated!" >&2
             exit 1
           fi
-          cp "$IMGUI_SO" ../libimgui-java64.so
+
+          echo "Compiling ARM64 ELF shared library libimgui-java64.so with host g++..."
+          g++ -O3 -shared -fPIC -std=c++17 \
+            -I"$JAVA_HOME/include" \
+            -I"$JAVA_HOME/include/linux" \
+            -I"$JNI_DIR" \
+            $(find "$JNI_DIR" -name "*.cpp") \
+            -o ../libimgui-java64.so
+
+          cd ..
+          if [ ! -s "libimgui-java64.so" ]; then
+            echo "ERROR: Failed to compile libimgui-java64.so!" >&2
+            exit 1
+          fi
+
+          file libimgui-java64.so
 
       - name: Upload ImGui ARM64 Native Artifact
         uses: actions/upload-artifact@v4
