@@ -13,6 +13,8 @@ set(LINK_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/link/incl
 set(LINK_ASIO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/link/modules/asio-standalone/asio/include" CACHE PATH "Path to ASIO include directory")
 
 add_library(link_jni SHARED LinkJni.cpp)
+# Default CMake naming already produces liblink_jni.so on Linux, matching
+# NativeLibraryLoader's System.loadLibrary("link_jni") lookup convention.
 
 target_include_directories(link_jni PRIVATE
     ${JNI_INCLUDE_DIRS}
@@ -27,9 +29,4 @@ target_compile_definitions(link_jni PRIVATE
 
 target_link_libraries(link_jni PRIVATE
     Threads::Threads
-)
-
-set_target_properties(link_jni PROPERTIES
-    PREFIX ""
-    OUTPUT_NAME "link_jni"
 )

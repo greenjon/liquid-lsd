@@ -1,6 +1,11 @@
-# Liquid LSD — Release Notes
-
 ## [Unreleased]
+
+### Linux ARM64 (`aarch64`) Distribution Restoration (`build.gradle.kts`, `.github/workflows/*`, `utils/NativeLibraryLoader.kt`, `Main.kt`)
+- **Restored Linux ARM64 Build Target**: Re-enabled native Linux ARM64 (`aarch64`) support across the build system, JNI library extraction, and CI distribution matrix.
+- **Embedded JNI Library Loader (`NativeLibraryLoader.prepareImGuiNatives()`)**: Automatically extracts embedded `libimgui-java64.so` for Linux ARM64 to a temporary runtime folder and configures `System.setProperty("imgui.library.path", ...)` before ImGui context initialization.
+- **GitHub Actions Native ARM Compilation**: Documented and configured native `ubuntu-24.04-arm` runners for compiling `imgui-java` native shared libraries (`docs/developer/build_arm64_linux.md`).
+- **Adoptium JRE 17 `linux-aarch64` Packaging**: Restored `zipLinuxArm` Gradle task with `run-linux-arm.sh` launcher script and Adoptium JRE 17 bundling.
+- **5-Platform CI Verification Matrix**: Added `linux-arm64` matrix jobs to `.github/workflows/smoke-test.yml` and `.github/workflows/release.yml`.
 
 ### TouchOSC & Open Sound Control (OSC) Integration (`OscCodec.kt`, `OscEngine.kt`, `OscMappingManager.kt`, `OscPreferences.kt`, `OscPreferencesPanel.kt`, `MacroOscBridge.kt`)
 - **Pure Kotlin Zero-Dependency OSC 1.0 Codec (`OscCodec`)**: High-performance binary encoder and decoder for OSC messages and bundles supporting 32-bit floats (`f`), integers (`i`), strings (`s`), booleans (`T`/`F`), and multi-argument vectors, with 4-byte alignment padding and big-endian network byte order.

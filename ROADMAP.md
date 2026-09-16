@@ -32,7 +32,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
 | **Macro Controls & Parameter Linking** | `ui/*`, `parameters/*`, `models/*` | **COMPLETE** | 8 Knobs + 4 Switches, 1-to-many bindings, modulating modulators, Column 3 `[MIXER\|MACROS]` mode, Learn mode UX. |
 | **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
-| **Build for ARM64 Linux** | `build.gradle.kts`, `ci` | **PLANNED** | Compile `imgui-java` via GitHub Actions ARM64 runner, integrate natives, restore Linux ARM64 distribution target. |
+| **Build for ARM64 Linux** | `build.gradle.kts`, `ci`, `utils/NativeLibraryLoader.kt` | **COMPLETE** | GitHub Actions ARM64 workflow, runtime native loader hook (`prepareImGuiNatives()`), JRE 17 `linux-aarch64` integration, and 5-platform CI smoke matrix restored. |
 
 ---
 
@@ -193,18 +193,18 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
 
 ### Milestone 7: Build for ARM64 Linux
 > **Reference**: [Build for ARM64 Linux](docs/developer/build_arm64_linux.md)  
-> **Status**: Planned / Platform Target Restoration  
+> **Status**: Complete / Restored  
 > **Objective**: Restore native Linux ARM64 (`aarch64`) desktop support by compiling missing native JNI binaries (`imgui-java`) on GitHub Actions native ARM runners, integrating them via runtime loader hooks, and restoring `linux-arm64` distribution ZIP packaging.
 
-- [ ] **Compile `libimgui-java64.so` for aarch64 on GitHub Actions**:
+- [x] **Compile `libimgui-java64.so` for aarch64 on GitHub Actions**:
   - Run build workflow on GitHub's free native `ubuntu-24.04-arm` runners.
   - Compile Dear ImGui C++ sources and package native ELF shared library.
-- [ ] **Runtime Dynamic Loader Integration (`NativeLibraryLoader`)**:
+- [x] **Runtime Dynamic Loader Integration (`NativeLibraryLoader`)**:
   - Place `libimgui-java64.so` in `src/main/resources/natives/linux-arm64/`.
-  - Extract and configure `System.setProperty("imgui.library.path", ...)` before ImGui initialization on Linux ARM64.
-- [ ] **Optional: Native Ableton Link (`link_jni`) Build**:
+  - Extract and configure `System.setProperty("imgui.library.path", ...)` before ImGui initialization on Linux ARM64 (`prepareImGuiNatives()`).
+- [x] **Optional: Native Ableton Link (`link_jni`) Build**:
   - Compile `liblink_jni.so` for Linux ARM64 (or rely on automatic Carabiner TCP fallback).
-- [ ] **Re-enable Packaging & CI**:
+- [x] **Re-enable Packaging & CI**:
   - Restore `zipLinuxArm` task and Adoptium `linux-aarch64` JRE in `build.gradle.kts`.
   - Re-enable `linux-arm64` smoke test in GitHub Actions CI workflow.
 

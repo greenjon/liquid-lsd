@@ -396,9 +396,20 @@
 
 ---
 
-## Platform Target: Linux ARM64 Dropped
+## Platform Target Restoration: Linux ARM64 (`aarch64`) (`build.gradle.kts`, `.github/workflows/*`, `NativeLibraryLoader.kt`)
 
-- **Decision**: Linux ARM64 (aarch64) is **no longer a supported build target** as of 2026-09-10.
+- **Decision**: Restored Linux ARM64 (`aarch64`) as a first-class supported build and release target.
+- **Implementation**:
+  - **Native GitHub Actions ARM Runner Build Strategy**: Documented and implemented GitHub Actions workflow for building native `libimgui-java64.so` binaries on native `ubuntu-24.04-arm` runners (`docs/developer/build_arm64_linux.md`).
+  - **Embedded JNI Resource Loader (`NativeLibraryLoader.prepareImGuiNatives()`)**: Added dynamic loader hook that extracts embedded `libimgui-java64.so` from `/natives/linux-arm64/` resources to a temporary runtime folder and configures `System.setProperty("imgui.library.path", ...)` before ImGui context initialization.
+  - **Adoptium JRE 17 `linux-aarch64` Distribution Packaging**: Restored `zipLinuxArm` Gradle task in `build.gradle.kts` with `run-linux-arm.sh` launcher script and Adoptium `linux-aarch64` JRE 17 bundling.
+  - **5-Platform CI Smoke Testing Matrix**: Updated `.github/workflows/smoke-test.yml` and `release.yml` to test all 5 target platform distributions (`windows-x64`, `linux-x64`, `linux-arm64`, `macos-x64`, `macos-arm64`).
+
+---
+
+## Platform Target: Linux ARM64 Dropped (Archived / Superseded)
+
+- **Decision**: Linux ARM64 (aarch64) was temporarily dropped on 2026-09-10 due to missing upstream Maven binaries and restored via native GitHub Actions compilation and runtime JNI loader hooks.
 - **Reason**: Upstream `io.github.spair:imgui-java` does not publish an ARM64 Linux native binary (`libimgui-java64.so`), and upstream issue [#105](https://github.com/SpaiR/imgui-java/issues/105) remains open. A roadmap milestone and step-by-step restoration guide using GitHub Actions native ARM runners is documented in [`docs/developer/build_arm64_linux.md`](docs/developer/build_arm64_linux.md).
 - **Remaining targets**: Linux x64, macOS x64, macOS ARM64 (Apple Silicon), Windows x64.
 - **Note on ARM64 macOS**: macOS ARM64 (Apple Silicon) remains fully supported. The `NSRect`/`NSSize` JNA `Structure` field-type fix (`Double` instead of `Float`) introduced in the beta 57–62 audit specifically targets ARM64 macOS correctness and must be preserved.

@@ -111,4 +111,36 @@ object NativeLibraryLoader {
         logger.warn { "Could not load native library '$baseName' for platform $platformDir" }
         return false
     }
+
+    /**
+     * Prepares ImGui native library binaries for platforms (e.g. Linux ARM64) where upstream
+     * imgui-java does not bundle native JNI .so artifacts in its standard Maven packages.
+     * Extracts bundled libimgui-java64.so to temp directory and sets 'imgui.library.path'.
+     */
+    fun prepareImGuiNatives() {
+        if (currentOs == OS.LINUX && currentArch == Arch.ARM64) {
+            val libFileName = "libimgui-java64.so"
+            val resourcePath = "/natives/linux-arm64/$libFileName"
+            val stream = NativeLibraryLoader::class.java.getResourceAsStream(resourcePath)
+            if (stream != null) {
+                try {
+                    val tempDir = File(System.getProperty("java.io.tmpdir"), "liquid_lsd_imgui_arm64")
+                    tempDir.mkdirs()
+                    val destFile = File(tempDir, libFileName)
+                    if (!destFile.exists() || destFile.length() == 0L) {
+                        stream.use { input ->
+                            destFile.outputStream().use { output -> input.copyTo(output) }
+                        }
+                        destFile.setExecutable(true)
+                    }
+                    System.setProperty("imgui.library.path", tempDir.absolutePath)
+                    logger.info { "Configured ImGui ARM64 library path: ${tempDir.absolutePath}" }
+                } catch (e: Throwable) {
+                    logger.warn(e) { "Failed to extract ImGui ARM64 native library from resource $resourcePath" }
+                }
+            } else {
+                logger.debug { "ImGui ARM64 native library resource not present at $resourcePath" }
+            }
+        }
+    }
 }

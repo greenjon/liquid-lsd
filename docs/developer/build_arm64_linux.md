@@ -28,11 +28,11 @@ Rather than maintaining a local cross-compilation toolchain or Docker environmen
 
 ### Step 1: Fork and Branch
 1. Fork [`SpaiR/imgui-java`](https://github.com/SpaiR/imgui-java) on GitHub.
-2. Clone your fork locally and check out the version pinned by Liquid LSD (`v1.86.12`):
+2. Clone your fork locally and check out the version pinned by Liquid LSD (`v1.92.7.1`, see `build.gradle.kts` and [`imgui_upgrade_guide.md`](imgui_upgrade_guide.md)):
    ```bash
    git clone https://github.com/<your-username>/imgui-java.git
    cd imgui-java
-   git checkout -b build-arm64-1.86.12 v1.86.12
+   git checkout -b build-arm64-1.92.7.1 v1.92.7.1
    git submodule update --init --recursive
    ```
 
@@ -78,17 +78,12 @@ jobs:
           # Because this runs on an ubuntu-24.04-arm runner, g++ naturally outputs an ARM64 ELF library.
           ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal
 
-      - name: Package Natives JAR
-        run: |
-          ./gradlew :imgui-binding:jar
-
       - name: Upload ARM64 Native Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: imgui-java-linux-arm64
           path: |
             **/build/**/libimgui-java64.so
-            imgui-binding/build/libs/*.jar
 ```
 
 ### Step 3: Run the Workflow

@@ -132,6 +132,8 @@ private fun runSmokeTest(): Int {
 }
 
 fun main(args: Array<String>) {
+    llm.slop.liquidlsd.utils.NativeLibraryLoader.prepareImGuiNatives()
+
     if (args.contains("--help") || args.contains("-h")) {
         printHelp()
         kotlin.system.exitProcess(0)
