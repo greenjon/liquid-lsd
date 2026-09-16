@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Per-Unit Macro Curation (`RackUnit.kt`, `RackManager.kt`, `MacroEngine.kt`, `MacroLearnState.kt`, `RackUnitMacroCuration.kt`, `RackFaceplateGrid.kt`, `RackUnitHeaderRail.kt`, `RackChassisRenderer.kt`, `RackPanel.kt`)
+- **Per-Unit Macro Curation (Milestone 6, Phase 6)**:
+  - Extended `RackUnit` to own a dedicated, local `MacroBank` (0-8 knobs, 0-4 switches) scoped by `unitInstanceId`.
+  - Upgraded `MacroEngine` evaluation with `unitParameterResolver` to locally resolve rack unit parameters (`unitInstanceId`/`parameterId`) without name collisions across duplicate unit instances in the rack bay.
+  - Implemented unit front panel curated Macro controls row in `RackFaceplateGrid.kt`, exposing active curated knobs and switches directly on the 19" faceplate for instant live access.
+  - Added dedicated `[ MACRO ]` toggle button to `RackUnitHeaderRail.kt` and created `RackUnitMacroCuration.kt` curation drawer with tabbed views for Knobs (1-8) and Switches (1-4), dynamic target parameter selection combo, Min/Max range bounds, curve selectors, and inversion toggles.
+  - Integrated `MacroLearnState` auto-scoping for per-unit controls and expanded unit chassis height dynamically in `RackChassisRenderer.kt` when the curation drawer is open.
+  - Added comprehensive test suite `RackUnitMacroTest.kt`.
+
 ### Modular Video Rack Chassis & Slot Layout System (`RackUnit.kt`, `RackPipeline.kt`, `RackManager.kt`, `RackChassisRenderer.kt`, `RackUnitHeaderRail.kt`, `RackFaceplateGrid.kt`, `RackPanel.kt`, `UIManager.kt`, `UITheme.kt`, `MenuBar.kt`, `ShortcutManager.kt`)
 - **19" Rack Bay Chassis & Slot Layout (Milestone 6, Phase 5)**:
   - Introduced the standardized **19" Modular Video Rack Bay** container with industrial dark brushed metal aesthetics, metallic rack ears, and screw heads aligned at 1U modular height increments.

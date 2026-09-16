@@ -204,7 +204,7 @@ How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fig
 These phases continue directly from Phases 1-4 in [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md) §7 (Data Model & `MacroEngine`, Column 3 UI, Learn Mode, Serialization). This document does not define its own macro engine — see §2.3 and §6 of that proposal for why.
 
 * **[x] Phase 5: Rack Chassis & Slot Layout System**: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle), and normalled top-down texture routing. No custom faceplate designer yet (see Question 3). [Implemented]
-* **Phase 6: Per-Unit Macro Curation**: Give each rack unit its own `MacroBank` scoped via `unitInstanceId` (macro proposal §6), and build the curation UI for picking which unit parameters occupy which of its knob/switch slots. Reuses the Column 3 engine and Learn Mode UX from Phases 1-3 verbatim — no new binding infrastructure.
+* **[x] Phase 6: Per-Unit Macro Curation**: Give each rack unit its own `MacroBank` scoped via `unitInstanceId` (macro proposal §6), and build the curation UI for picking which unit parameters occupy which of its knob/switch slots. Reuses the Column 3 engine and Learn Mode UX from Phases 1-3 verbatim — no new binding infrastructure. [Implemented]
 * **Phase 7: Embedded Confidence Micro-Monitors**: Lightweight texture blits rendering downscaled offscreen FBO passes directly onto unit faceplates.
 * **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)**: 3D or 2.5D flipped rear chassis view with physics-curved virtual patch cables and port normaling.
 

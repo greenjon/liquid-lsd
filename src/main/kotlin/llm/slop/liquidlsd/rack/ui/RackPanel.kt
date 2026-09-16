@@ -61,7 +61,7 @@ class RackPanel(
             // Calculate total height of all units
             var totalUnitsH = 0f
             for (unit in rackManager.units) {
-                totalUnitsH += RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed) + RackChassisRenderer.UNIT_MARGIN_Y
+                totalUnitsH += RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed, unit.isMacroCurationOpen) + RackChassisRenderer.UNIT_MARGIN_Y
             }
             val insertionSlotH = 44.0f
             val totalBayH = maxOf(totalUnitsH + insertionSlotH + 40f, contentH)
@@ -79,7 +79,7 @@ class RackPanel(
 
             for (i in rackManager.units.indices) {
                 val unit = rackManager.units[i]
-                val unitH = RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed)
+                val unitH = RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed, unit.isMacroCurationOpen)
                 val unitScreenX = ImGui.getCursorScreenPosX()
                 val unitScreenY = ImGui.getCursorScreenPosY()
 
@@ -102,7 +102,7 @@ class RackPanel(
 
                 // Faceplate parameters (if not collapsed)
                 if (!unit.isCollapsed) {
-                    RackFaceplateGrid.drawFaceplate(unit, bayW, unitH - RackChassisRenderer.UNIT_HEADER_HEIGHT)
+                    RackFaceplateGrid.drawFaceplate(session, unit, bayW, unitH - RackChassisRenderer.UNIT_HEADER_HEIGHT)
                 }
 
                 // Advance cursor for next unit

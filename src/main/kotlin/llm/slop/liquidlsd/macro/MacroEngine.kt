@@ -39,11 +39,33 @@ object MacroEngine {
         invalidate()
     }
 
+    /** Returns the bank for [unitInstanceId] (null = global bank), or null if not registered. */
+    fun getBank(unitInstanceId: String?): MacroBank? {
+        synchronized(lock) {
+            return banks[unitInstanceId]
+        }
+    }
+
     /** Returns the global, session-scoped bank, recreating an empty one if it was ever unregistered. */
     fun globalBank(): MacroBank {
         synchronized(lock) {
             return banks.getOrPut(null) { MacroBank() }
         }
+    }
+
+    /** Optional resolver for parameters scoped to a rack unit instance. */
+    var unitParameterResolver: ((unitInstanceId: String, parameterId: String) -> ModulatableParameter?)? = null
+
+    /** Finds which bank (and optional unitInstanceId) contains the given control ID. */
+    fun findBankForControl(controlId: String): Pair<String?, MacroBank>? {
+        synchronized(lock) {
+            for ((unitId, bank) in banks) {
+                if (bank.knobs.any { it.id == controlId } || bank.switches.any { it.id == controlId }) {
+                    return Pair(unitId, bank)
+                }
+            }
+        }
+        return null
     }
 
     @Volatile
@@ -88,7 +110,12 @@ object MacroEngine {
         for (control in controls) {
             for (binding in control.bindings) {
                 if (!binding.enabled) continue
-                val param = ParameterResolver.findParameterByPath(mixer, binding.parameterId) ?: continue
+                val param = if (binding.unitInstanceId != null) {
+                    unitParameterResolver?.invoke(binding.unitInstanceId, binding.parameterId)
+                        ?: ParameterResolver.findParameterByPath(mixer, binding.parameterId)
+                } else {
+                    ParameterResolver.findParameterByPath(mixer, binding.parameterId)
+                } ?: continue
                 val modulator: CvModulator? = if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY) {
                     param.modulators.getOrNull(binding.modulatorIndex) ?: continue
                 } else {

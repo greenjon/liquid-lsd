@@ -18,11 +18,11 @@ object RackChassisRenderer {
     const val UNIT_HEADER_HEIGHT = 28.0f
     const val UNIT_MARGIN_Y = 4.0f
 
-    fun calculateUnitHeight(heightU: Int, isCollapsed: Boolean): Float {
-        return if (isCollapsed) {
-            SPINE_HEIGHT_PX
-        } else {
-            (heightU * U_HEIGHT_PX).coerceAtLeast(U_HEIGHT_PX)
+    fun calculateUnitHeight(heightU: Int, isCollapsed: Boolean, isMacroCurationOpen: Boolean = false): Float {
+        return when {
+            isCollapsed -> SPINE_HEIGHT_PX
+            isMacroCurationOpen -> maxOf(heightU * U_HEIGHT_PX, 260.0f)
+            else -> (heightU * U_HEIGHT_PX).coerceAtLeast(U_HEIGHT_PX)
         }
     }
 

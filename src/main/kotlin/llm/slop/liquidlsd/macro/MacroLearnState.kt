@@ -77,10 +77,13 @@ object MacroLearnState {
     }
 
     /**
-     * Resolves a control from the global bank by its ID.
+     * Resolves a control from the specified bank or any registered bank in MacroEngine.
      */
     fun findControl(controlId: String, bank: MacroBank = MacroEngine.globalBank()): MacroControl? {
-        return bank.knobs.find { it.id == controlId } ?: bank.switches.find { it.id == controlId }
+        val inBank = bank.knobs.find { it.id == controlId } ?: bank.switches.find { it.id == controlId }
+        if (inBank != null) return inBank
+        val pair = MacroEngine.findBankForControl(controlId)
+        return pair?.second?.let { b -> b.knobs.find { it.id == controlId } ?: b.switches.find { it.id == controlId } }
     }
 
     /**
@@ -90,7 +93,7 @@ object MacroLearnState {
      * @return true if binding was created, false otherwise.
      */
     fun bindTarget(
-        bank: MacroBank,
+        bank: MacroBank = MacroEngine.globalBank(),
         targetType: MacroTargetType,
         parameterId: String,
         unitInstanceId: String? = null,
@@ -101,7 +104,11 @@ object MacroLearnState {
         curve: MacroCurveType = MacroCurveType.LINEAR
     ): Boolean {
         val session = activeSession ?: return false
-        val control = findControl(session.controlId, bank)
+        val controlPair = MacroEngine.findBankForControl(session.controlId)
+        val targetBank = controlPair?.second ?: bank
+        val targetUnitInstanceId = unitInstanceId ?: controlPair?.first
+
+        val control = findControl(session.controlId, targetBank)
         if (control == null) {
             cancelLearn()
             return false
@@ -115,7 +122,7 @@ object MacroLearnState {
 
         // Check if duplicate binding already exists
         val existing = control.bindings.find {
-            it.unitInstanceId == unitInstanceId &&
+            it.unitInstanceId == targetUnitInstanceId &&
             it.parameterId == parameterId &&
             it.targetType == targetType &&
             (targetType != MacroTargetType.MODULATOR_PROPERTY || (it.modulatorIndex == modulatorIndex && it.propertyName == propertyName))
@@ -127,7 +134,7 @@ object MacroLearnState {
         }
 
         val newBinding = MacroBinding(
-            unitInstanceId = unitInstanceId,
+            unitInstanceId = targetUnitInstanceId,
             parameterId = parameterId,
             targetType = targetType,
             modulatorIndex = modulatorIndex,

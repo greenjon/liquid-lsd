@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.rack
 
+import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FBO
@@ -23,8 +24,22 @@ interface RackUnit {
     var isBypassed: Boolean
     var isSoloed: Boolean
 
+    /** Dedicated Macro Bank owned by this unit instance. */
+    val macroBank: MacroBank
+
+    /** Whether the unit's macro curation drawer is currently unfolded. */
+    var isMacroCurationOpen: Boolean
+
     /** Returns all modulatable parameters exposed on this unit's faceplate. */
     fun getParameters(): List<ModulatableParameter>
+
+    /** Returns all named modulatable parameters available for macro binding on this unit. */
+    fun getNamedParameters(): Map<String, ModulatableParameter>
+
+    /** Resolves a parameter on this unit by local name or path. */
+    fun findParameter(paramId: String): ModulatableParameter? {
+        return getNamedParameters()[paramId]
+    }
 
     /** Updates any internal state or timers. */
     fun update()
@@ -62,7 +77,9 @@ abstract class BaseRackUnit(
     override var isCollapsed: Boolean = false,
     override var isPowered: Boolean = true,
     override var isBypassed: Boolean = false,
-    override var isSoloed: Boolean = false
+    override var isSoloed: Boolean = false,
+    override val macroBank: MacroBank = MacroBank(),
+    override var isMacroCurationOpen: Boolean = false
 ) : RackUnit {
     override fun update() {}
 }
@@ -74,21 +91,32 @@ class DeckGeneratorUnit(
     val deck: Deck,
     val isDeckA: Boolean,
     label: String = if (isDeckA) "Deck A Generator" else "Deck B Generator",
-    heightU: Int = 2
+    heightU: Int = 2,
+    macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
     id = if (isDeckA) "deck_a_gen" else "deck_b_gen",
     label = label,
     unitType = RackUnitType.GENERATOR,
-    heightU = heightU
+    heightU = heightU,
+    macroBank = macroBank
 ) {
-    override fun getParameters(): List<ModulatableParameter> {
-        val params = mutableListOf<ModulatableParameter>()
-        params.addAll(deck.source.parameters.values)
-        if (!deck.source.is3D) {
-            params.add(deck.viewZoom)
-            params.add(deck.viewRotateZ)
+    override fun getNamedParameters(): Map<String, ModulatableParameter> {
+        val map = LinkedHashMap<String, ModulatableParameter>()
+        for ((name, p) in deck.source.parameters) {
+            map[name] = p
         }
-        return params
+        if (!deck.source.is3D) {
+            map["viewZoom"] = deck.viewZoom
+            map["viewRotateZ"] = deck.viewRotateZ
+            map["viewRotateX"] = deck.viewRotateX
+            map["viewRotateY"] = deck.viewRotateY
+            map["view3DMode"] = deck.view3DMode
+        }
+        return map
+    }
+
+    override fun getParameters(): List<ModulatableParameter> {
+        return getNamedParameters().values.toList()
     }
 
     override fun update() {
@@ -117,18 +145,26 @@ class ISFProcessorUnit(
     val filter: ISFFilter,
     val slotIndex: Int,
     label: String = filter.displayName,
-    heightU: Int = 1
+    heightU: Int = 1,
+    macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
     id = "isf_${filter.id}_$slotIndex",
     label = label,
     unitType = RackUnitType.PROCESSOR,
-    heightU = heightU
+    heightU = heightU,
+    macroBank = macroBank
 ) {
+    override fun getNamedParameters(): Map<String, ModulatableParameter> {
+        val map = LinkedHashMap<String, ModulatableParameter>()
+        map["dryWet"] = filter.dryWet
+        for ((name, p) in filter.parameters) {
+            map[name] = p
+        }
+        return map
+    }
+
     override fun getParameters(): List<ModulatableParameter> {
-        val params = mutableListOf<ModulatableParameter>()
-        params.add(filter.dryWet)
-        params.addAll(filter.parameters.values)
-        return params
+        return getNamedParameters().values.toList()
     }
 
     override fun update() {
@@ -180,24 +216,28 @@ class FeedbackProcessorUnit(
     val deck: Deck,
     val isDeckA: Boolean,
     label: String = if (isDeckA) "Deck A Feedback" else "Deck B Feedback",
-    heightU: Int = 2
+    heightU: Int = 2,
+    macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
     id = if (isDeckA) "deck_a_feedback" else "deck_b_feedback",
     label = label,
     unitType = RackUnitType.PROCESSOR,
-    heightU = heightU
+    heightU = heightU,
+    macroBank = macroBank
 ) {
-    override fun getParameters(): List<ModulatableParameter> = listOf(
-        deck.fbDecay,
-        deck.fbGain,
-        deck.fbZoom,
-        deck.fbRotate,
-        deck.fbHueShift,
-        deck.fbBlur,
-        deck.fbChroma,
-        deck.fbMode,
-        deck.fbKaleido
+    override fun getNamedParameters(): Map<String, ModulatableParameter> = linkedMapOf(
+        "fbDecay" to deck.fbDecay,
+        "fbGain" to deck.fbGain,
+        "fbZoom" to deck.fbZoom,
+        "fbRotate" to deck.fbRotate,
+        "fbHueShift" to deck.fbHueShift,
+        "fbBlur" to deck.fbBlur,
+        "fbChroma" to deck.fbChroma,
+        "fbMode" to deck.fbMode,
+        "fbKaleido" to deck.fbKaleido
     )
+
+    override fun getParameters(): List<ModulatableParameter> = getNamedParameters().values.toList()
 
     override fun process(
         inputTexture: Int,
@@ -218,19 +258,23 @@ class FeedbackProcessorUnit(
 class MixerTransitionUnit(
     val mixer: Mixer,
     label: String = "Master Crossfader & Transition",
-    heightU: Int = 2
+    heightU: Int = 2,
+    macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
     id = "master_transition",
     label = label,
     unitType = RackUnitType.TRANSITION,
-    heightU = heightU
+    heightU = heightU,
+    macroBank = macroBank
 ) {
-    override fun getParameters(): List<ModulatableParameter> = listOf(
-        mixer.crossfade,
-        mixer.mode,
-        mixer.masterAlpha,
-        mixer.bloom
+    override fun getNamedParameters(): Map<String, ModulatableParameter> = linkedMapOf(
+        "crossfade" to mixer.crossfade,
+        "mode" to mixer.mode,
+        "masterAlpha" to mixer.masterAlpha,
+        "bloom" to mixer.bloom
     )
+
+    override fun getParameters(): List<ModulatableParameter> = getNamedParameters().values.toList()
 
     override fun update() {
         mixer.update()
@@ -258,9 +302,30 @@ class GenericRackUnit(
     unitType: RackUnitType = RackUnitType.UTILITY,
     heightU: Int = 1,
     var onProcess: ((inputTexture: Int) -> Int)? = null,
-    val exposedParams: List<ModulatableParameter> = emptyList()
-) : BaseRackUnit(id, label, unitType, heightU) {
-    override fun getParameters(): List<ModulatableParameter> = exposedParams
+    val namedParams: Map<String, ModulatableParameter> = emptyMap(),
+    macroBank: MacroBank = MacroBank()
+) : BaseRackUnit(id, label, unitType, heightU, macroBank = macroBank) {
+
+    constructor(
+        id: String,
+        label: String,
+        unitType: RackUnitType,
+        heightU: Int,
+        onProcess: ((inputTexture: Int) -> Int)?,
+        exposedParams: List<ModulatableParameter>,
+        macroBank: MacroBank = MacroBank()
+    ) : this(
+        id = id,
+        label = label,
+        unitType = unitType,
+        heightU = heightU,
+        onProcess = onProcess,
+        namedParams = exposedParams.mapIndexed { idx, p -> "param_$idx" to p }.toMap(),
+        macroBank = macroBank
+    )
+
+    override fun getNamedParameters(): Map<String, ModulatableParameter> = namedParams
+    override fun getParameters(): List<ModulatableParameter> = namedParams.values.toList()
 
     override fun process(
         inputTexture: Int,

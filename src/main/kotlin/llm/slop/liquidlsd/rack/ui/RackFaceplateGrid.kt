@@ -20,6 +20,7 @@ object RackFaceplateGrid {
     const val COLUMN_GAP = 6.0f
 
     fun drawFaceplate(
+        session: llm.slop.liquidlsd.SessionContext,
         unit: RackUnit,
         faceplateWidth: Float,
         faceplateHeight: Float
@@ -27,12 +28,20 @@ object RackFaceplateGrid {
         if (unit.isCollapsed) return
 
         val paddingX = 12.0f
-        val paddingY = 8.0f
+        val paddingY = 6.0f
         val usableW = faceplateWidth - (paddingX * 2f)
         val colW = (usableW - (COLUMN_GAP * (GRID_COLUMNS - 1))) / GRID_COLUMNS
 
         ImGui.setCursorPosX(paddingX)
         ImGui.setCursorPosY(ImGui.getCursorPosY() + paddingY)
+
+        if (unit.isMacroCurationOpen) {
+            RackUnitMacroCuration.draw(session, unit, usableW)
+            return
+        }
+
+        // Draw curated active Macro Controls for this unit if any exist
+        drawCuratedMacrosRow(session, unit, usableW)
 
         when (unit) {
             is DeckGeneratorUnit -> drawGeneratorFaceplate(unit, usableW, colW)
@@ -41,6 +50,78 @@ object RackFaceplateGrid {
             is MixerTransitionUnit -> drawTransitionFaceplate(unit, usableW, colW)
             else -> drawGenericFaceplate(unit, usableW, colW)
         }
+    }
+
+    private fun drawCuratedMacrosRow(session: llm.slop.liquidlsd.SessionContext, unit: RackUnit, usableW: Float) {
+        val activeKnobs = unit.macroBank.knobs.filter { it.bindings.isNotEmpty() || it.label.isNotEmpty() }
+        val activeSwitches = unit.macroBank.switches.filter { it.bindings.isNotEmpty() || it.label.isNotEmpty() }
+
+        if (activeKnobs.isEmpty() && activeSwitches.isEmpty()) return
+
+        ImGui.beginGroup()
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 2.0f, 2.0f)
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 8.0f, 2.0f)
+
+        // Render knobs
+        for (i in activeKnobs.indices) {
+            val knob = activeKnobs[i]
+            if (i > 0) ImGui.sameLine(0f, 8f)
+
+            val isSelected = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == knob.id
+            val isLearning = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(knob.id)
+            llm.slop.liquidlsd.ui.MacroKnobWidget.draw(
+                session = session,
+                id = "unit_${unit.id}_knob_$i",
+                label = knob.label.ifEmpty { "K${i + 1}" },
+                value = knob.value,
+                diameter = 40f,
+                isSelected = isSelected,
+                isLearning = isLearning,
+                onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = knob.id },
+                onToggleLearn = {
+                    if (isLearning) {
+                        llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+                    } else {
+                        llm.slop.liquidlsd.macro.MacroLearnState.startLearn(knob.id)
+                    }
+                },
+                onChanged = { knob.value = it }
+            )
+        }
+
+        // Render switches
+        if (activeSwitches.isNotEmpty()) {
+            if (activeKnobs.isNotEmpty()) ImGui.sameLine(0f, 16f)
+            for (i in activeSwitches.indices) {
+                val sw = activeSwitches[i]
+                if (i > 0) ImGui.sameLine(0f, 6f)
+
+                val swActive = sw.value >= 0.5f
+                if (swActive) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, 0.95f, 0.75f, 0.15f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.1f, 0.1f, 0.1f, 1.0f)
+                } else {
+                    ImGui.pushStyleColor(ImGuiCol.Button, 0.20f, 0.22f, 0.25f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
+                }
+                val label = sw.label.ifEmpty { "SW ${i + 1}" }
+                if (ImGui.button("$label##sw_${unit.id}_$i", 52f, 22f)) {
+                    sw.onPress()
+                }
+                ImGui.popStyleColor(2)
+            }
+        }
+
+        ImGui.popStyleVar(2)
+        ImGui.endGroup()
+
+        // Subtle divider before standard parameters
+        val dl = ImGui.getWindowDrawList()
+        val sepY = ImGui.getCursorScreenPosY() + 2f
+        val startX = ImGui.getCursorScreenPosX()
+        val sepCol = ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.6f)
+        dl.addLine(startX, sepY, startX + usableW, sepY, sepCol, 1.0f)
+        ImGui.setCursorPosY(ImGui.getCursorPosY() + 6f)
     }
 
     private fun drawGeneratorFaceplate(unit: DeckGeneratorUnit, usableW: Float, colW: Float) {
