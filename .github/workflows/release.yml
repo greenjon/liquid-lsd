@@ -14,8 +14,53 @@ permissions:
   contents: write # Needed to create tags, releases, and upload assets
 
 jobs:
+  build-imgui-arm64-native:
+    name: Build imgui-java Linux ARM64 Native
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Cache imgui-java ARM64 Shared Library
+        id: cache-imgui-arm64
+        uses: actions/cache@v4
+        with:
+          path: libimgui-java64.so
+          key: imgui-java-arm64-v1.92.7.1-v1
+
+      - name: Setup JDK 17
+        if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Compiler Tools
+        if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Build imgui-java ARM64 Shared Library
+        if: steps.cache-imgui-arm64.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch v1.92.7.1 https://github.com/SpaiR/imgui-java.git imgui-java-src
+          cd imgui-java-src
+          git submodule update --init --recursive
+          ./gradlew :imgui-binding:compileJava
+          ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal
+          IMGUI_SO=$(find . -name "libimgui-java64.so" | head -n 1)
+          if [ -z "$IMGUI_SO" ]; then
+            echo "ERROR: libimgui-java64.so was not generated!" >&2
+            exit 1
+          fi
+          cp "$IMGUI_SO" ../libimgui-java64.so
+
+      - name: Upload ImGui ARM64 Native Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: imgui-java-arm64-so
+          path: libimgui-java64.so
+          retention-days: 1
+
   build-and-package:
     name: Build & Package Distributions
+    needs: build-imgui-arm64-native
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.version.outputs.tag_name }}
@@ -192,6 +237,12 @@ jobs:
           with open("release_notes.md", "w", encoding="utf-8") as f:
               f.write(body + "\n")
           EOF
+
+      - name: Download ImGui ARM64 Native Library
+        uses: actions/download-artifact@v4
+        with:
+          name: imgui-java-arm64-so
+          path: src/main/resources/natives/linux-arm64/
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
