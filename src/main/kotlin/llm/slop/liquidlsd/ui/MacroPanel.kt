@@ -26,8 +26,7 @@ class MacroPanel(
         drawModeToggle(session)
 
         ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
+        drawLearnBanner()
 
         val bank = MacroEngine.globalBank()
 
@@ -43,7 +42,36 @@ class MacroPanel(
         ImGui.separator()
         ImGui.spacing()
 
+        drawBindingInspectorDrawer(session, bank)
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
         drawPreviewMonitor(session, mixer)
+    }
+
+    private fun drawLearnBanner() {
+        val status = llm.slop.liquidlsd.macro.MacroLearnState.getActiveStatus()
+        val isLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+        if (isLearning || status != null) {
+            val text = status ?: "LEARN MODE: Click any parameter slider or modulator to bind"
+            val bgCol = if (isLearning) {
+                val alpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.2 + 0.6).toFloat()
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.55f, 0.75f, alpha)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.18f, 0.38f, 0.24f, 0.9f)
+            }
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, bgCol)
+            val btnW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
+            val actionLabel = if (isLearning) "${Icons.REFRESH} $text (Click to Cancel)" else text
+            if (ImGui.button(actionLabel, btnW, 26f)) {
+                if (isLearning) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+                else llm.slop.liquidlsd.macro.MacroLearnState.clearStatus()
+            }
+            ImGui.popStyleColor()
+            ImGui.spacing()
+        }
     }
 
     // -- [ MIXER | MACROS ] header toggle ------------------------------------------------------
@@ -156,12 +184,22 @@ class MacroPanel(
             val cx = startX + col * cellW + (cellW - diameter) / 2f
             val cy = startY + row * rowH
             ImGui.setCursorScreenPos(cx, cy)
+            val isSelected = (llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == control.id) ||
+                (llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == null && i == 0)
+            val isLearningThis = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(control.id)
             MacroKnobWidget.draw(
                 session = session,
                 id = "global_knob_$i",
                 label = control.label,
                 value = control.value,
                 diameter = diameter,
+                isSelected = isSelected,
+                isLearning = isLearningThis,
+                onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = control.id },
+                onToggleLearn = {
+                    if (isLearningThis) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+                    else llm.slop.liquidlsd.macro.MacroLearnState.startLearn(control.id)
+                },
                 onChanged = { newVal -> control.value = newVal }
             )
         }
@@ -189,18 +227,48 @@ class MacroPanel(
         bank.switches.forEachIndexed { i, control ->
             val x = startX + i * (switchW + gap)
             ImGui.setCursorScreenPos(x, startY)
+            val isSelected = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == control.id
+            val isLearningThis = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(control.id)
             MacroKnobWidget.drawSwitch(
                 session = session,
                 id = "global_switch_$i",
                 label = control.label,
                 control = control,
                 width = switchW,
-                height = switchH
+                height = switchH,
+                isSelected = isSelected,
+                isLearning = isLearningThis,
+                onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = control.id },
+                onToggleLearn = {
+                    if (isLearningThis) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+                    else llm.slop.liquidlsd.macro.MacroLearnState.startLearn(control.id)
+                }
             )
         }
 
         ImGui.setCursorScreenPos(startX, startY + switchH)
         ImGui.dummy(0f, 0f)
+    }
+
+    // -- Binding Inspector Accordion Drawer --------------------------------------------------------
+
+    private fun drawBindingInspectorDrawer(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
+        val selectedControl = bank.knobs.find { it.id == llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId }
+            ?: bank.switches.find { it.id == llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId }
+            ?: bank.knobs.firstOrNull()
+
+        val countText = if (selectedControl != null) " (${selectedControl.bindings.size}/4)" else ""
+        val ctrlName = selectedControl?.label?.ifEmpty { selectedControl.id } ?: "None"
+        val headerLabel = "BINDING INSPECTOR: $ctrlName$countText###macro_binding_inspector"
+
+        if (ImGui.collapsingHeader(headerLabel, imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
+            val availH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
+            val maxInspectorH = (availH * 0.45f).coerceIn(120f, 220f)
+            if (ImGui.beginChild("##macro_inspector_scroll", 0f, maxInspectorH, true)) {
+                MacroBindingInspector.draw(session, bank, selectedControl)
+            }
+            ImGui.endChild()
+        }
     }
 
     // -- Single-deck preview monitor (bottom) ------------------------------------------------------

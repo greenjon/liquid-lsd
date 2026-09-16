@@ -239,7 +239,8 @@ data class DeckPresetDto(
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
-    val paramNotes: Map<String, String> = emptyMap() // Per-parameter notes keyed by paramKey
+    val paramNotes: Map<String, String> = emptyMap(), // Per-parameter notes keyed by paramKey
+    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null
 )
 
 @Serializable
@@ -293,7 +294,8 @@ data class SessionStateDto(
     val transActiveIndex: Int = -1,
     val isTransAutoAdvanceEnabled: Boolean = true,
     val isTransRepeatEnabled: Boolean = false,
-    val isTransShuffleEnabled: Boolean = false
+    val isTransShuffleEnabled: Boolean = false,
+    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null
 )
 
 @Serializable

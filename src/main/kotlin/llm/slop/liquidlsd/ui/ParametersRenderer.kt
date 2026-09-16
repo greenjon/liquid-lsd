@@ -240,13 +240,36 @@ object ParametersRenderer {
         val valY = rowScreenY
         val isValSelected = state.selectedCell?.paramKey == paramKey && (state.selectedCell?.cvSourceId == "value" || state.selectedCell?.cvSourceId == "final")
 
+        val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+        val macroBindings = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, paramKey)
+        val isMacroBound = macroBindings.isNotEmpty()
+
         ImGui.setCursorScreenPos(valX, valY)
         ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
         val isValHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked(0)) {
-            state.select(ParameterCellId(paramKey, "value"), param)
+            if (isMacroLearning) {
+                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
+                    parameterId = paramKey,
+                    minVal = param.minClamp,
+                    maxVal = param.maxClamp
+                )
+            } else {
+                state.select(ParameterCellId(paramKey, "value"), param)
+                if (isMacroBound) {
+                    val boundBinding = macroBindings.first()
+                    val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
+                    val owner = bank.knobs.find { it.bindings.contains(boundBinding) }
+                        ?: bank.switches.find { it.bindings.contains(boundBinding) }
+                    if (owner != null) {
+                        llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = owner.id
+                    }
+                }
+            }
         }
-        if (ImGui.isItemClicked(2)) {
+        if (ImGui.isItemClicked(2) && !isMacroBound) {
             state.select(ParameterCellId(paramKey, "value"), param)
             onPushUndo()
             param.reset()
@@ -254,6 +277,16 @@ object ParametersRenderer {
         if (isValHovered && session.uiTheme.tooltipsEnabled) {
             val isMixerMode = paramKey == "Mixer/mode"
             val tipText = when {
+                isMacroLearning ->
+                    "Macro Learn Mode: Click to bind this parameter's base value to armed Macro Control."
+                isMacroBound -> {
+                    val boundBinding = macroBindings.first()
+                    val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
+                    val owner = bank.knobs.find { it.bindings.contains(boundBinding) }
+                        ?: bank.switches.find { it.bindings.contains(boundBinding) }
+                    val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
+                    "Locked: Driven by $ownerName.\nClick to view in Column 3 Macro Inspector."
+                }
                 isMixerMode || paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
                 param.modulatorFilter != null ->
@@ -264,13 +297,21 @@ object ParametersRenderer {
             showTooltip(tipText, (valX.toInt() shl 16) xor (valY.toInt() and 0xFFFF))
         }
 
+        val pulseAlpha = if (isMacroLearning) {
+            (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+        } else 1.0f
+
         val bgCol = when {
-            isValSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-            else          -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
+            isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.7f, 0.25f * pulseAlpha)
+            isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.1f, 0.4f, 0.6f, 0.4f)
+            isValSelected  -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
+            else           -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
         }
         val borderCol = when {
-            isValSelected -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
-            else          -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
+            isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+            isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.9f)
+            isValSelected  -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
+            else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
         val cellColor = CvTheme.getThemeColor("value")
 

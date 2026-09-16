@@ -75,7 +75,8 @@ object SessionSerializer {
                 transActiveIndex = TransitionQueueManager.activeIndex,
                 isTransAutoAdvanceEnabled = TransitionQueueManager.isAutoAdvanceEnabled,
                 isTransRepeatEnabled = TransitionQueueManager.isRepeatEnabled,
-                isTransShuffleEnabled = TransitionQueueManager.isShuffleEnabled
+                isTransShuffleEnabled = TransitionQueueManager.isShuffleEnabled,
+                macroBank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
             )
             
             val content = PresetManager.json.encodeToString(session)
@@ -233,6 +234,12 @@ object SessionSerializer {
                 session.isTransRepeatEnabled,
                 session.isTransShuffleEnabled
             )
+
+            if (session.macroBank != null) {
+                llm.slop.liquidlsd.macro.MacroEngine.registerBank(null, session.macroBank)
+            } else {
+                llm.slop.liquidlsd.macro.MacroEngine.registerBank(null, llm.slop.liquidlsd.macro.MacroBank())
+            }
 
             PresetManager.sessionState = PresetManager.sessionState.copy(unresolvedItems = allUnresolved.distinct())
             llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()

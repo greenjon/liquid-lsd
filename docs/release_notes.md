@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Macro Controls Interactive Learn Mode, Inspector, Serialization & Hardware Integration (`MacroLearnState.kt`, `MacroBindingInspector.kt`, `MacroBankSerializer.kt`, `MacroOscBridge.kt`, `MidiMappingManager.kt`, `SessionSerializer.kt`, `PresetManager.kt`, `PresetRepository.kt`, `ParametersRenderer.kt`, `ValueParamSection.kt`, `PropertiesPanel.kt`, `MacroPanel.kt`)
+- **Interactive Learn Mode & Inspector (Phase 3)**:
+  - Added `MacroLearnState.kt` coordinating click-to-bind linking between armed macro controls and target parameters or modulator properties.
+  - Implemented field-ownership locking with visual badges and one-click navigation from bound parameters in Columns 1 & 2 directly to the Column 3 Binding Inspector.
+  - Added `MacroBindingInspector.kt` collapsible accordion drawer in Column 3 with control renaming, switch behavior selection (`TOGGLE`, `MOMENTARY`, `TRIGGER`), 1-to-many binding management, Min/Max bounds, response curve selection (`LINEAR`, `EXPONENTIAL`, `LOGARITHMIC`, `S_CURVE`, `STEP`), direction inversion, and field-release toggles.
+- **Preset Serialization & Hardware MIDI/OSC Integration (Phase 4)**:
+  - Added `MacroBankSerializer.kt` supporting standalone `.knobpreset.json` export/import with missing-parameter skipping, and deck-scoped prefix filtering/restoration.
+  - Persisted active global macro bank in `SessionStateDto` for full session recovery and added optional deck-scoped `macroBank` to `DeckPresetDto`.
+  - Added hardware MIDI CC and note mapping for `Macro/knob_1`..`Macro/knob_8` and `Macro/switch_1`..`Macro/switch_4` in `MidiMappingManager.kt`.
+  - Implemented `MacroOscBridge.kt` supporting bidirectional OSC address routing (`/macro/knob/<1..8>` and `/macro/switch/<1..4>`).
+  - Added comprehensive test suites: `MacroLearnStateTest.kt`, `MacroBankSerializationTest.kt`, `MacroMidiIntegrationTest.kt`, and `MacroOscBridgeTest.kt`.
+
 ### Macro Controls UI & Dual-Mode Column 3 (`MacroKnobWidget.kt`, `MacroPanel.kt`, `UIManager.kt`, `UITheme.kt`, `AppPreferencesStore.kt`, `MacroKnobWidgetTest.kt`)
 - **Macro Controls Panel & Rotary Knobs (Phase 2)**:
   - Added custom ImGui rotary knob widget (`MacroKnobWidget.kt`) with sweep math, DAW-style vertical drag scaling, theme hover/active highlight borders, and unit test coverage.

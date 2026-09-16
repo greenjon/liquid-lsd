@@ -307,7 +307,7 @@ object MidiMappingManager {
     private fun rebuildResolvedBindings(mixer: Mixer) {
         val list = ArrayList<ResolvedMidiBinding>()
         for ((path, mapping) in activeProfile.mappings) {
-            if (path.startsWith("Global/")) continue
+            if (path.startsWith("Global/") || path.startsWith("Macro/")) continue
             val param = ParameterResolver.findParameterByPath(mixer, path) ?: continue
             list.add(
                 ResolvedMidiBinding(
@@ -336,6 +336,46 @@ object MidiMappingManager {
      * Called when a new MIDI event is received. Dispatches to all matching bindings.
      */
     fun onMidiEvent(event: MidiEvent, mixer: Mixer) {
+        // Dispatch to Macro mappings
+        for ((path, mapping) in activeProfile.mappings) {
+            if (!path.startsWith("Macro/")) continue
+            if (mapping.channel != event.channel || mapping.cc != event.index) continue
+            if (mapping.messageType != event.type && !(mapping.messageType == MidiMessageType.CC && event.type == MidiMessageType.PITCH_BEND)) continue
+
+            val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
+            if (path.startsWith("Macro/knob_")) {
+                val idx = path.removePrefix("Macro/knob_").toIntOrNull()?.minus(1) ?: continue
+                val knob = bank.knobs.getOrNull(idx) ?: continue
+                when (mapping.inputType) {
+                    MidiInputType.ROTARY_BINARY_OFFSET,
+                    MidiInputType.ROTARY_SIGNED_BIT,
+                    MidiInputType.ROTARY_TWOS_COMP -> {
+                        val deltaSteps = decodeRotaryDelta(mapping.inputType, event.rawValue)
+                        if (deltaSteps != 0) {
+                            val sign = if (mapping.inverted) -1f else 1f
+                            val deltaVal = deltaSteps * mapping.stepSize * sign
+                            knob.value = (knob.value + deltaVal).coerceIn(0f, 1f)
+                        }
+                    }
+                    else -> {
+                        val rawNorm = if (mapping.inverted) 1f - event.normalizedValue else event.normalizedValue
+                        knob.value = rawNorm.coerceIn(0f, 1f)
+                    }
+                }
+            } else if (path.startsWith("Macro/switch_")) {
+                val idx = path.removePrefix("Macro/switch_").toIntOrNull()?.minus(1) ?: continue
+                val switch = bank.switches.getOrNull(idx) ?: continue
+                val isHigh = event.normalizedValue > 0.05f
+                val prevHigh = lastButtonHigh[path] ?: false
+                lastButtonHigh[path] = isHigh
+                if (isHigh && !prevHigh) {
+                    switch.onPress()
+                } else if (!isHigh && prevHigh) {
+                    switch.onRelease()
+                }
+            }
+        }
+
         val bindings = resolvedBindings
         for (i in 0 until bindings.size) {
             val b = bindings[i]
@@ -554,6 +594,19 @@ object MidiMappingManager {
                             messageType = event.type,
                             inputType = inputType,
                             triggerMode = TriggerMode.TOGGLE
+                        )
+                        saveActiveProfile()
+                    }
+                    is MidiLearnTarget.MacroTarget -> {
+                        addMapping(
+                            parameterPath = target.macroPath,
+                            cc = event.index,
+                            channel = event.channel,
+                            minVal = 0f,
+                            maxVal = 1f,
+                            messageType = event.type,
+                            inputType = inputType,
+                            triggerMode = triggerMode
                         )
                         saveActiveProfile()
                     }

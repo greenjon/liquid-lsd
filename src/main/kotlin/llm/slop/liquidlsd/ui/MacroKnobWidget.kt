@@ -76,6 +76,10 @@ object MacroKnobWidget {
         diameter: Float = 56f,
         defaultValue: Float = 0.5f,
         pixelsForFullSweep: Float = 200f,
+        isSelected: Boolean = false,
+        isLearning: Boolean = false,
+        onSelect: () -> Unit = {},
+        onToggleLearn: () -> Unit = {},
         onChanged: (Float) -> Unit
     ) {
         val radius = diameter / 2f
@@ -88,6 +92,13 @@ object MacroKnobWidget {
         val isHovered = ImGui.isItemHovered()
         val isActivated = ImGui.isItemActivated()
         val isActive = ImGui.isItemActive()
+
+        if (ImGui.isItemClicked(0)) {
+            onSelect()
+        }
+        if (ImGui.isItemClicked(1)) {
+            onToggleLearn()
+        }
 
         val io = ImGui.getIO()
 
@@ -151,13 +162,20 @@ object MacroKnobWidget {
         dl.addLine(ix, iy, ox, oy, fillCol, 2.5f)
         dl.addCircleFilled(ox, oy, 2.2f, fillCol, 8)
 
+        val pulseAlpha = if (isLearning) {
+            (sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+        } else 1.0f
+
         val borderCol = when {
+            isLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
             isActive -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while dragging
+            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 1.0f) // Selected accent ring
             isHovered -> ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Amber Gold on hover
             else -> null
         }
         if (borderCol != null) {
-            dl.addCircle(cx, cy, radius + 1.5f, borderCol, 32, 2f)
+            val thickness = if (isLearning || isSelected) 2.5f else 2f
+            dl.addCircle(cx, cy, radius + 1.5f, borderCol, 32, thickness)
         }
 
         // Label centered below the knob face.
@@ -166,10 +184,18 @@ object MacroKnobWidget {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { labelW = ImGui.calcTextSize(label).x }
         val labelX = cx - labelW / 2f
         ImGui.setCursorScreenPos(labelX, labelY)
-        session.uiTheme.captionColored(0.8f, 0.8f, 0.8f, 0.9f, label)
+        val labelCol = if (isSelected) {
+            ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f)
+        } else {
+            ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 0.9f)
+        }
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            dl.addText(labelX, labelY, labelCol, label)
+        }
 
         if (isHovered) {
-            showTooltip("$label: ${"%.2f".format(newValue)}\nDrag vertically or scroll to adjust. Middle-click to reset.")
+            val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
+            showTooltip("$label: ${"%.2f".format(newValue)}$learnTip\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
         }
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -192,7 +218,11 @@ object MacroKnobWidget {
         label: String,
         control: llm.slop.liquidlsd.macro.MacroControl,
         width: Float = 64f,
-        height: Float = 34f
+        height: Float = 34f,
+        isSelected: Boolean = false,
+        isLearning: Boolean = false,
+        onSelect: () -> Unit = {},
+        onToggleLearn: () -> Unit = {}
     ) {
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
@@ -201,6 +231,13 @@ object MacroKnobWidget {
         val isHovered = ImGui.isItemHovered()
         val isActivated = ImGui.isItemActivated()
         val isActive = ImGui.isItemActive()
+
+        if (ImGui.isItemClicked(0)) {
+            onSelect()
+        }
+        if (ImGui.isItemClicked(1)) {
+            onToggleLearn()
+        }
 
         if (isActivated) {
             activeSwitchId = id
@@ -219,15 +256,23 @@ object MacroKnobWidget {
             isHovered -> ImGui.colorConvertFloat4ToU32(0.24f, 0.24f, 0.24f, 1f)
             else -> ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f)
         }
+
+        val pulseAlpha = if (isLearning) {
+            (sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+        } else 1.0f
+
         val borderCol = when {
+            isLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
             isActive -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f)
+            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 1.0f)
             isHovered -> ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
             isLit -> ImGui.colorConvertFloat4ToU32(0.6f, 0.95f, 1.0f, 1f)
             else -> ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 0.8f)
         }
 
+        val thickness = if (isLearning || isSelected) 2.5f else 1.5f
         dl.addRectFilled(startX, startY, startX + width, startY + height, bgCol, 4f)
-        dl.addRect(startX, startY, startX + width, startY + height, borderCol, 4f, 0, 1.5f)
+        dl.addRect(startX, startY, startX + width, startY + height, borderCol, 4f, 0, thickness)
 
         var tw = 0f
         var th = 0f
@@ -249,7 +294,8 @@ object MacroKnobWidget {
                 llm.slop.liquidlsd.macro.SwitchBehavior.MOMENTARY -> "Momentary: on while held."
                 llm.slop.liquidlsd.macro.SwitchBehavior.TRIGGER -> "Trigger: sends a one-frame pulse."
             }
-            showTooltip("$label\n$behaviorText")
+            val learnTip = if (isLearning) " [LEARNING...]" else ""
+            showTooltip("$label$learnTip\n$behaviorText\nLeft-click to trigger/select. Right-click for Learn.")
         }
     }
 }

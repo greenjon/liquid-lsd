@@ -122,6 +122,44 @@ object ValueParamSection {
             session.uiTheme.h3("Initial Value Configuration")
             ImGui.spacing()
 
+            val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+            val macroBindings = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, paramKey)
+            val isMacroBound = macroBindings.isNotEmpty()
+
+            if (isMacroLearning) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.6f, 0.8f, 0.7f))
+                if (ImGui.button("${Icons.REFRESH} Bind Base Value to armed Macro Control##bind_base_macro", ImGui.getContentRegionAvailX(), 26f)) {
+                    llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                        bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                        targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
+                        parameterId = paramKey,
+                        minVal = param.minClamp,
+                        maxVal = param.maxClamp
+                    )
+                }
+                ImGui.popStyleColor()
+                ImGui.spacing()
+            }
+
+            if (isMacroBound) {
+                val boundBinding = macroBindings.first()
+                val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
+                val owner = bank.knobs.find { it.bindings.contains(boundBinding) }
+                    ?: bank.switches.find { it.bindings.contains(boundBinding) }
+                val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
+
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.45f, 0.65f, 0.6f))
+                if (ImGui.button("${Icons.LOCK} Base value controlled by $ownerName. Click to inspect in Column 3.", ImGui.getContentRegionAvailX(), 26f)) {
+                    if (owner != null) {
+                        llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = owner.id
+                    }
+                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                }
+                ImGui.popStyleColor()
+                itemTooltip("This parameter's base value is continuously set by a Macro Control. Uncheck its binding in the Column 3 Binding Inspector to release it.")
+                ImGui.spacing()
+            }
+
             if (isHueSweep && mandala != null) {
             val petals = mandala.recipe.petals
             val options = mandala.getSymmetricHueCycles(petals)

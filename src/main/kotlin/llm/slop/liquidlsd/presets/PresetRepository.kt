@@ -79,7 +79,12 @@ object PresetRepository {
             3 -> "Deck PV"
             else -> "Deck"
         }
-        val dto = NotesManager.syncToDto(deckLabel, deck.toDto(name, tags))
+        val rawDto = deck.toDto(name, tags)
+        val deckMacroBank = llm.slop.liquidlsd.macro.MacroBankSerializer.filterMacroBankForDeck(
+            llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+            deckLabel
+        )
+        val dto = NotesManager.syncToDto(deckLabel, rawDto.copy(macroBank = deckMacroBank))
 
         if (deckIndex in 0..3) {
             PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.SAVING))

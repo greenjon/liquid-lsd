@@ -198,9 +198,9 @@ This means Phases 1-4 below (the engine, Column 3 UI, Learn Mode, and serializat
 
 This is the unified roadmap for both this proposal and the Modular Video Rack Architecture; Phases 1-4 live here, Phases 5-8 (and the deferred backlog) are detailed in `modular_video_rack_proposal.md` §4. See also `ROADMAP.md` Milestone 6.
 
-* **Phase 1: Data Model & MacroEngine**: Core `MacroBinding` (including `unitInstanceId` scoping), `MacroControl`, `MacroBank`, and zero-allocation frame evaluation.
-* **Phase 2: Column 3 Macro UI Panel**: `[ MIXER | MACROS ]` header toggle, 2x4 Knob grid + 4 Switch buttons, single-deck preview window blit.
-* **Phase 3: Interactive Learn Mode & Inspector**: Global UI click interceptor and binding inspector drawer.
-* **Phase 4: Serialization & MIDI/OSC Integration**: Bundled `.lsd`/`.lsdset` DTOs, standalone `.knobpreset.json` export/import, and `MidiMappingManager`/`OscEngine` linkage.
+* **Phase 1: Data Model & MacroEngine** (Completed): Core `MacroBinding` (including `unitInstanceId` scoping), `MacroControl`, `MacroBank`, and zero-allocation frame evaluation (`MacroEngine.kt`, `MacroModels.kt`).
+* **Phase 2: Column 3 Macro UI Panel** (Completed): `[ MIXER | MACROS ]` header toggle, 2x4 Knob grid + 4 Switch buttons, single-deck preview window blit (`MacroPanel.kt`, `MacroKnobWidget.kt`).
+* **Phase 3: Interactive Learn Mode & Inspector** (Completed): Global UI click interceptor, learn mode state machine, pulsing highlights, field-ownership locking, and binding inspector drawer (`MacroLearnState.kt`, `MacroBindingInspector.kt`).
+* **Phase 4: Serialization & MIDI/OSC Integration** (Completed): Bundled `.lsd`/`.lsdset` DTOs, standalone `.knobpreset.json` export/import, `MidiMappingManager` hardware mapping, and `MacroOscBridge` linkage (`MacroBankSerializer.kt`, `MacroOscBridge.kt`).
 
 > Phases 5-8 (Rack Chassis, Per-Unit Macro Curation, Confidence Micro-Monitors, Rear Panel & Patch Cables) continue in `modular_video_rack_proposal.md`.

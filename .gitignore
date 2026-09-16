@@ -3,6 +3,7 @@
 .gradle-home/
 .gradle_home/
 .gradle-user-home/
+.gradle_user_home/
 .kotlin/
 build/
 bin/

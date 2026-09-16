@@ -377,6 +377,59 @@ object PropertiesPanel {
 
                     ImGui.spacing()
 
+                    // Macro Learn & Lock indicators
+                    val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+                    if (isMacroLearning) {
+                        val propOptions = when {
+                            isLfo -> listOf("depth", "subdivision", "morph", "slope", "hold")
+                            llm.slop.liquidlsd.cv.isAudioSource(existing.sourceId) -> listOf("depth", "attackMs", "decayMs")
+                            else -> listOf("depth")
+                        }
+                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "${Icons.REFRESH} Click property to bind:")
+                        for (prop in propOptions) {
+                            ImGui.sameLine()
+                            if (ImGui.smallButton("+$prop##bind_${cell.paramKey}_${idx}_$prop")) {
+                                val (minVal, maxVal) = when (prop) {
+                                    "subdivision" -> 0.1f to 16f
+                                    "morph", "slope", "hold" -> 0f to 1f
+                                    "depth" -> 0f to 2f
+                                    "attackMs", "decayMs" -> 0f to 1000f
+                                    else -> 0f to 1f
+                                }
+                                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
+                                    parameterId = cell.paramKey,
+                                    modulatorIndex = idx,
+                                    propertyName = prop,
+                                    minVal = minVal,
+                                    maxVal = maxVal
+                                )
+                            }
+                        }
+                        ImGui.spacing()
+                    }
+
+                    val boundProps = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, cell.paramKey, modulatorIndex = idx)
+                    if (boundProps.isNotEmpty()) {
+                        val propNames = boundProps.joinToString(", ") { it.propertyName }
+                        val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
+                        val owner = bank.knobs.find { k -> k.bindings.any { boundProps.contains(it) } }
+                            ?: bank.switches.find { s -> s.bindings.any { boundProps.contains(it) } }
+                        val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
+
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.45f, 0.65f, 0.6f))
+                        if (ImGui.button("${Icons.LOCK} Properties [$propNames] controlled by $ownerName. Click to inspect##macro_inspect_${cell.paramKey}_$idx", ImGui.getContentRegionAvailX(), 22f)) {
+                            if (owner != null) {
+                                llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = owner.id
+                            }
+                            session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                        }
+                        ImGui.popStyleColor()
+                        itemTooltip("These modulator properties are continuously updated by a Macro Control. Uncheck their bindings in the Column 3 Binding Inspector to release them.")
+                        ImGui.spacing()
+                    }
+
                     when {
                         llm.slop.liquidlsd.cv.isAudioSource(existing.sourceId) -> {
                             // Draw dedicated Audio Envelope Follower + dynamics controls

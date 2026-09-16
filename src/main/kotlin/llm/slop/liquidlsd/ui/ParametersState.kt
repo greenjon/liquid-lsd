@@ -14,6 +14,7 @@ sealed class MidiLearnTarget {
     data class GridCell(val cellId: ParameterCellId, val param: ModulatableParameter) : MidiLearnTarget()
     data class BaseValueSlider(val paramKey: String, val label: String, val param: ModulatableParameter, val min: Float, val max: Float) : MidiLearnTarget()
     data class GlobalAction(val actionKey: String) : MidiLearnTarget()
+    data class MacroTarget(val macroPath: String, val label: String) : MidiLearnTarget()
 }
 
 /**

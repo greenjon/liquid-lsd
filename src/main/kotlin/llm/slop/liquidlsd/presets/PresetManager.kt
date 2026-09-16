@@ -105,6 +105,9 @@ object PresetManager {
             try {
                 val deckADto = pendingA.dto
                 mixer.deckA.applyDto(deckADto)
+                deckADto.macroBank?.let {
+                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck A")
+                }
                 activePresetA = deckADto.name
                 cachedDtoA = mixer.deckA.toDto(deckADto.name, deckADto.tags).copy(
                     presetNotes = deckADto.presetNotes,
@@ -128,6 +131,9 @@ object PresetManager {
             try {
                 val deckBDto = pendingB.dto
                 mixer.deckB.applyDto(deckBDto)
+                deckBDto.macroBank?.let {
+                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck B")
+                }
                 activePresetB = deckBDto.name
                 cachedDtoB = mixer.deckB.toDto(deckBDto.name, deckBDto.tags).copy(
                     presetNotes = deckBDto.presetNotes,
@@ -151,6 +157,9 @@ object PresetManager {
             try {
                 val deckBGDto = pendingBG.dto
                 mixer.deckBG.applyDto(deckBGDto)
+                deckBGDto.macroBank?.let {
+                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck BG")
+                }
                 activePresetBG = deckBGDto.name
                 cachedDtoBG = mixer.deckBG.toDto(deckBGDto.name, deckBGDto.tags).copy(
                     presetNotes = deckBGDto.presetNotes,
@@ -171,6 +180,9 @@ object PresetManager {
             try {
                 val deckPVDto = pendingPV.dto
                 mixer.deckPV.applyDto(deckPVDto)
+                deckPVDto.macroBank?.let {
+                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck PV")
+                }
                 activePresetPV = deckPVDto.name
                 cachedDtoPV = mixer.deckPV.toDto(deckPVDto.name, deckPVDto.tags).copy(
                     presetNotes = deckPVDto.presetNotes,
