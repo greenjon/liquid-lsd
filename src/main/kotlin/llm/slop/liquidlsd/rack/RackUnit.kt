@@ -30,6 +30,9 @@ interface RackUnit {
     /** Whether the unit's macro curation drawer is currently unfolded. */
     var isMacroCurationOpen: Boolean
 
+    /** Last processed OpenGL output texture ID produced by this unit (for micro-monitor and routing). */
+    var lastOutputTexture: Int
+
     /** Returns all modulatable parameters exposed on this unit's faceplate. */
     fun getParameters(): List<ModulatableParameter>
 
@@ -79,7 +82,8 @@ abstract class BaseRackUnit(
     override var isBypassed: Boolean = false,
     override var isSoloed: Boolean = false,
     override val macroBank: MacroBank = MacroBank(),
-    override var isMacroCurationOpen: Boolean = false
+    override var isMacroCurationOpen: Boolean = false,
+    override var lastOutputTexture: Int = 0
 ) : RackUnit {
     override fun update() {}
 }

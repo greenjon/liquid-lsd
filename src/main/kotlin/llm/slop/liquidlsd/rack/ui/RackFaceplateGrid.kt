@@ -44,11 +44,11 @@ object RackFaceplateGrid {
         drawCuratedMacrosRow(session, unit, usableW)
 
         when (unit) {
-            is DeckGeneratorUnit -> drawGeneratorFaceplate(unit, usableW, colW)
-            is FeedbackProcessorUnit -> drawFeedbackFaceplate(unit, usableW, colW)
-            is ISFProcessorUnit -> drawISFFaceplate(unit, usableW, colW)
-            is MixerTransitionUnit -> drawTransitionFaceplate(unit, usableW, colW)
-            else -> drawGenericFaceplate(unit, usableW, colW)
+            is DeckGeneratorUnit -> drawGeneratorFaceplate(session, unit, usableW, colW, faceplateHeight)
+            is FeedbackProcessorUnit -> drawFeedbackFaceplate(session, unit, usableW, colW, faceplateHeight)
+            is ISFProcessorUnit -> drawISFFaceplate(session, unit, usableW, colW, faceplateHeight)
+            is MixerTransitionUnit -> drawTransitionFaceplate(session, unit, usableW, colW, faceplateHeight)
+            else -> drawGenericFaceplate(session, unit, usableW, colW, faceplateHeight)
         }
     }
 
@@ -124,18 +124,29 @@ object RackFaceplateGrid {
         ImGui.setCursorPosY(ImGui.getCursorPosY() + 6f)
     }
 
-    private fun drawGeneratorFaceplate(unit: DeckGeneratorUnit, usableW: Float, colW: Float) {
+    private fun drawGeneratorFaceplate(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: DeckGeneratorUnit,
+        usableW: Float,
+        colW: Float,
+        faceplateHeight: Float
+    ) {
         val deck = unit.deck
         val params = unit.getParameters()
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        // Column 1 & 2: Source info & 3D toggle
+        // Columns 1 & 2: Confidence Micro-Monitor + Source info
         val col12W = (colW * 2f) + COLUMN_GAP
+        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
+
         ImGui.beginGroup()
+        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        ImGui.setCursorPosY(ImGui.getCursorPosY() + 2f)
+
         ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
-        ImGui.textUnformatted("SOURCE: ${deck.source.displayName}")
+        ImGui.textUnformatted("SRC: ${deck.source.displayName.take(18)}")
         ImGui.popStyleColor()
 
         // 3D View mode indicator
@@ -176,31 +187,65 @@ object RackFaceplateGrid {
         ImGui.popStyleVar(2)
     }
 
-    private fun drawFeedbackFaceplate(unit: FeedbackProcessorUnit, usableW: Float, colW: Float) {
+    private fun drawFeedbackFaceplate(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: FeedbackProcessorUnit,
+        usableW: Float,
+        colW: Float,
+        faceplateHeight: Float
+    ) {
         val params = unit.getParameters()
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        // 8 parameters across 8 columns
-        val activeParams = params.take(8)
+        // Columns 1 & 2: Feedback Confidence Micro-Monitor
+        val col12W = (colW * 2f) + COLUMN_GAP
+        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
+
+        ImGui.beginGroup()
+        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
+        ImGui.textUnformatted("OPTICAL LOOP")
+        ImGui.popStyleColor()
+        ImGui.endGroup()
+        ImGui.sameLine()
+
+        // Columns 3 to 8: 6 high-impact feedback parameters (Gain, Zoom, Rotate, Decay, Hue, Blur)
+        val remainingW = usableW - col12W - COLUMN_GAP
+        val paramColW = (remainingW - (COLUMN_GAP * 2f)) / 3f
+        val activeParams = params.take(6)
+
+        ImGui.beginGroup()
         for (i in activeParams.indices) {
-            if (i > 0) ImGui.sameLine(0f, COLUMN_GAP)
-            drawParamSlider(activeParams[i], colW, "fb_${unit.id}_$i")
+            if (i > 0 && i % 3 != 0) {
+                ImGui.sameLine(0f, COLUMN_GAP)
+            }
+            drawParamSlider(activeParams[i], paramColW, "fb_${unit.id}_$i")
         }
+        ImGui.endGroup()
 
         ImGui.popStyleVar(2)
     }
 
-    private fun drawISFFaceplate(unit: ISFProcessorUnit, usableW: Float, colW: Float) {
+    private fun drawISFFaceplate(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: ISFProcessorUnit,
+        usableW: Float,
+        colW: Float,
+        faceplateHeight: Float
+    ) {
         val filter = unit.filter
         val params = unit.getParameters()
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        // Column 1 & 2: Dry/Wet slider
+        // Column 1 & 2: Confidence Micro-Monitor + Dry/Wet slider
         val col12W = (colW * 2f) + COLUMN_GAP
+        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(36f, 64f)
+
         ImGui.beginGroup()
+        RackMicroMonitor.draw(session, unit, col12W, monitorH)
         drawParamSlider(filter.dryWet, col12W, "drywet_${unit.id}", customLabel = "DRY / WET")
         ImGui.endGroup()
         ImGui.sameLine()
@@ -224,19 +269,37 @@ object RackFaceplateGrid {
         ImGui.popStyleVar(2)
     }
 
-    private fun drawTransitionFaceplate(unit: MixerTransitionUnit, usableW: Float, colW: Float) {
+    private fun drawTransitionFaceplate(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: MixerTransitionUnit,
+        usableW: Float,
+        colW: Float,
+        faceplateHeight: Float
+    ) {
         val mixer = unit.mixer
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        // Columns 1 to 4: Crossfader slider (Deck A <-> Deck B)
-        val crossfaderW = (colW * 4f) + (COLUMN_GAP * 3f)
+        // Columns 1 & 2: Master Output Confidence Micro-Monitor
+        val col12W = (colW * 2f) + COLUMN_GAP
+        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
+
+        ImGui.beginGroup()
+        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
+        ImGui.textUnformatted("MASTER OUT")
+        ImGui.popStyleColor()
+        ImGui.endGroup()
+        ImGui.sameLine()
+
+        // Columns 3 to 5: Crossfader slider (Deck A <-> Deck B)
+        val crossfaderW = (colW * 3f) + (COLUMN_GAP * 2f)
         ImGui.beginGroup()
         drawParamSlider(mixer.crossfade, crossfaderW, "crossfade_${unit.id}", customLabel = "CROSSFADER [A <-> B]")
         ImGui.endGroup()
         ImGui.sameLine()
 
-        // Columns 5 to 8: Mode, Master Alpha, Bloom
+        // Columns 6 to 8: Mode, Master Alpha, Bloom
         val masterColW = colW
         drawParamSlider(mixer.mode, masterColW, "mm_${unit.id}", customLabel = "MODE")
         ImGui.sameLine(0f, COLUMN_GAP)
@@ -247,18 +310,44 @@ object RackFaceplateGrid {
         ImGui.popStyleVar(2)
     }
 
-    private fun drawGenericFaceplate(unit: RackUnit, usableW: Float, colW: Float) {
-        val params = unit.getParameters().take(GRID_COLUMNS)
-        if (params.isEmpty()) {
-            ImGui.textDisabled("No exposed faceplate parameters")
-            return
-        }
+    private fun drawGenericFaceplate(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: RackUnit,
+        usableW: Float,
+        colW: Float,
+        faceplateHeight: Float
+    ) {
+        val params = unit.getParameters()
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        for (i in params.indices) {
-            if (i > 0) ImGui.sameLine(0f, COLUMN_GAP)
-            drawParamSlider(params[i], colW, "gen_${unit.id}_$i")
+        // Columns 1 & 2: Confidence Micro-Monitor
+        val col12W = (colW * 2f) + COLUMN_GAP
+        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
+
+        ImGui.beginGroup()
+        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        ImGui.endGroup()
+        ImGui.sameLine()
+
+        // Columns 3 to 8: Up to 6 parameters
+        val remainingW = usableW - col12W - COLUMN_GAP
+        val activeParams = params.take(6)
+        val paramColW = if (activeParams.isNotEmpty()) {
+            (remainingW - (COLUMN_GAP * (activeParams.size - 1))) / activeParams.size
+        } else {
+            remainingW
+        }
+
+        if (activeParams.isEmpty()) {
+            ImGui.textDisabled("No exposed faceplate parameters")
+        } else {
+            ImGui.beginGroup()
+            for (i in activeParams.indices) {
+                if (i > 0) ImGui.sameLine(0f, COLUMN_GAP)
+                drawParamSlider(activeParams[i], paramColW, "gen_${unit.id}_$i")
+            }
+            ImGui.endGroup()
         }
 
         ImGui.popStyleVar(2)

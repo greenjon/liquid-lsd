@@ -65,7 +65,10 @@ class RackPipeline(
 
         for (i in units.indices) {
             val unit = units[i]
-            if (!unit.isPowered) continue
+            if (!unit.isPowered) {
+                unit.lastOutputTexture = 0
+                continue
+            }
 
             val targetFBO = if (pingPongIndex % 2 == 0) stageFboA else stageFboB
 
@@ -79,6 +82,7 @@ class RackPipeline(
                 out
             }
 
+            unit.lastOutputTexture = stageOut
             currentTexture = stageOut
 
             if (unit.isSoloed) {

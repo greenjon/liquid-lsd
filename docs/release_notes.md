@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Embedded Confidence Micro-Monitors (`RackMicroMonitor.kt`, `RackUnit.kt`, `RackPipeline.kt`, `RackFaceplateGrid.kt`, `RackMicroMonitorTest.kt`)
+- **Embedded Confidence Micro-Monitors (Milestone 6, Phase 7)**:
+  - Added dedicated hardware-styled confidence micro-monitors (`RackMicroMonitor.kt`) embedded directly into unit faceplates.
+  - Render clean, unadulterated 1:1 texture output true to the generated video without artificial CRT scanlines, barrel distortion, or color tinting.
+  - Implemented recessed industrial metallic bezel framing with rounded corners and subtle bevel highlights.
+  - Enhanced `RackUnit` and `RackPipeline` to track and expose `lastOutputTexture` per stage with zero additional GL draw passes or FBO overhead.
+  - Built state-reactive status overlays: active video blitting, deep solid black for powered-off units (`STANDBY`), dimming with amber badge for bypassed units (`BYPASS`), and awaiting signal badges.
+  - Integrated micro-monitors across `DeckGeneratorUnit` (Columns 1 & 2), `FeedbackProcessorUnit` (Columns 1 & 2 optical loop monitor), `ISFProcessorUnit` (Columns 1 & 2 FX monitor), `MixerTransitionUnit` (Master Out confidence monitor), and `GenericRackUnit`.
+  - Added comprehensive test suite `RackMicroMonitorTest.kt`.
+
 ### Per-Unit Macro Curation (`RackUnit.kt`, `RackManager.kt`, `MacroEngine.kt`, `MacroLearnState.kt`, `RackUnitMacroCuration.kt`, `RackFaceplateGrid.kt`, `RackUnitHeaderRail.kt`, `RackChassisRenderer.kt`, `RackPanel.kt`)
 - **Per-Unit Macro Curation (Milestone 6, Phase 6)**:
   - Extended `RackUnit` to own a dedicated, local `MacroBank` (0-8 knobs, 0-4 switches) scoped by `unitInstanceId`.
