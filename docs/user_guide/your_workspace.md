@@ -70,6 +70,8 @@ The right panel shows:
 
 Clicking the master monitor preview jumps directly to the **MIX** tab.
 
+A **`[ MIXER | MACROS ]`** toggle at the top of this panel switches it to the Macro Controls view — 8 knobs and 4 switches you can bind to any parameter or modulator for fast, tactile live control. See [Macro Controls & the Modular Video Rack](macros_and_rack.md).
+
 ---
 
 ## The Library
@@ -93,3 +95,4 @@ A few keyboard shortcuts work anywhere in the app:
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to preset search |
+| `F3` / `F4` | Switch between Classic Deck View and the Modular Video Rack |

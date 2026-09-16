@@ -25,7 +25,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Modern Window Experience (CSD)** | `MenuBar.kt`, `Main.kt` | **COMPLETE** | Unified 1.5x top bar, frameless window drag, window controls (`_ ◻ ✕`), and live telemetry HUD. |
 | **Video Recording & Export** | `export/*`, `VideoExportModal` | **COMPLETE** | High-performance asynchronous GPU-to-CPU PBO readback pipeline (`PboReadbackPipeline`). |
 | **Preset Tags & Search** | `browser/*`, `PresetModels` | **COMPLETE** | Preset tags in JSON, inline tag editor in browser context menu, tag search in Library. |
-| **TouchOSC & Open Sound Control** | `osc/*`, `ui/*` | **PENDING** | Native UDP OSC 1.0 engine, TouchOSC layout mapping, XY pads, OSC Learn, bidirectional feedback. |
+| **TouchOSC & Open Sound Control** | `osc/*`, `ui/*` | **COMPLETE** | Native UDP OSC 1.0 engine, TouchOSC layout mapping, XY pads, OSC Learn, bidirectional feedback. |
 | **100% ISF Pipeline Migration** | `rendering/*`, `shaders/*`, `isf/*` | **COMPLETE** | Migrate feedback, 2D-to-3D, & mixer to ISF; deprecate and remove legacy hard-wired shaders. |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
@@ -40,30 +40,31 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 
 ### Milestone 1: TouchOSC & Open Sound Control (OSC)
 > **Reference**: TouchOSC Modular Control Specification  
-> **Status**: Planned / Next Up  
+> **Status**: COMPLETE  
 > **Compatibility**: TouchOSC (iOS/Android/Desktop) control surfaces (faders, rotaries, XY pads, toggles, pushes). *Explicit non-goal: Resolume clip-launcher / composition hierarchy.*
 
 Enable wireless and wired control from mobile devices and tablets running TouchOSC without third-party bridges:
 
-- [ ] **Pure Kotlin Zero-Dependency OSC 1.0 Codec (`OscCodec`)**:
+- [x] **Pure Kotlin Zero-Dependency OSC 1.0 Codec (`OscCodec`)**:
   - High-performance binary encoder and decoder for OSC messages and bundles.
   - Full support for OSC types: 32-bit floats (`f`), integers (`i`), strings (`s`), booleans (`T`/`F`), and multi-argument vectors (XY pads).
   - 4-byte boundary padding and big-endian network byte order handling without external jar dependencies.
-- [ ] **Low-Latency UDP Engine & Bidirectional Feedback (`OscEngine`)**:
+- [x] **Low-Latency UDP Engine & Bidirectional Feedback (`OscEngine`)**:
   - Dedicated background UDP receiver socket (default incoming port `8000`).
   - Thread-safe, lock-free queue passing incoming OSC events to the render thread.
   - Real-time packet sniffer circular buffer for live monitoring in Preferences.
   - Outgoing UDP feedback socket (default outgoing port `9000`) transmitting parameter updates, toggle states, and text labels back to TouchOSC clients to keep tablet displays in sync.
   - Auto-learning of remote TouchOSC client IP address from incoming packets.
-- [ ] **TouchOSC Mapping Manager (`OscMappingManager`)**:
-  - Out-of-the-box support for classic TouchOSC default layouts (`/1/fader1`–`/1/fader5`, `/1/rotary1`–`/1/rotary4`, `/1/toggle1`–`/1/toggle4`, `/1/push1`–`/1/push4`, `/2/xy`).
-  - Direct semantic address fallback (`/mixer/crossfade`, `/deck_a/randomize`, `/clock/bpm`, `/param/...`).
-  - XY pad 2-float packet unpacking to dual parameters (e.g. Pan X & Pan Y, Zoom & Rotate Z).
+- [x] **TouchOSC Mapping Manager (`OscMappingManager`)**:
+  - Address-string-keyed mapping table (works out of the box with any TouchOSC layout address — `/1/fader1`–`/1/fader5`, `/1/rotary1`–`/1/rotary4`, `/1/toggle1`–`/1/toggle4`, `/1/push1`–`/1/push4`, `/2/xy`, or arbitrary semantic paths like `/mixer/crossfade` — with no special-casing required).
+  - XY pad (and other multi-float vector) packet unpacking to individually addressable per-component parameters (e.g. `/2/xy/0`, `/2/xy/1`).
   - Control shaping: Min/Max numerical clamping, Invert, exponential Slew smoothing ($0 \dots 250$ ms), and Soft Takeover (pickup).
-  - JSON mapping profile persistence in `library/osc/*.json`.
-- [ ] **Interactive OSC Learn & Preferences UI**:
-  - Dedicated **OSC Controls** tab in Preferences with server IP/port telemetry, client connection controls, live packet sniffer, and editable mappings table.
-  - Contextual "Learn OSC" button in Properties and Preferences for instant one-touch control binding.
+  - JSON mapping profile persistence under `library/osc/`.
+  - `/macro/knob/1..8` and `/macro/switch/1..4` forwarded directly to `MacroOscBridge`, with outbound feedback wired back through `OscEngine`.
+- [x] **Interactive OSC Learn & Preferences UI**:
+  - Dedicated **OSC Controls** tab in Preferences with server enable/port config, learned remote client status, live packet sniffer, and editable mappings table.
+  - "Learn OSC" flow in the OSC Controls tab: arm a target parameter path, then bind it to whichever address the next inbound message carries.
+  - **Deferred**: contextual per-widget "Learn OSC" buttons directly in the Properties column (mirroring the MIDI Learn wiring across individual sliders) and click-to-learn from a captured sniffer row — both left for a follow-up pass; Learn currently lives centrally in the OSC Controls tab rather than at each control site.
 
 ---
 
@@ -184,7 +185,7 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
   - **Known issues to revisit** (surfaced by a 2026-09-15 post-implementation correctness review of Phases 5-8; full rationale in `DECISIONS.md`):
     - `FeedbackProcessorUnit`'s curated macro knobs (GAIN/DECAY/ZOOM/HUE) are bound to `Deck.fbGain`/`fbDecay`/etc. — legacy fields left over from before the ISF feedback migration (see "100% ISF Pipeline & Modular Effects Engine" in `ARCHITECTURE.md`) that no shader reads anymore, so turning the knob currently does nothing audible/visible. Needs either rewiring to the deck's actual loaded feedback `ISFFilter` (when one is present in an FX slot) or removing the unit type.
     - Virtual patch-cable overrides only reroute pixels for genuinely custom/utility rack units. For the built-in Generator/Processor/Transition units that wrap the existing fixed `Deck`/`Mixer` pipeline, cables render and jacks light up but don't change actual signal routing — making that real requires restructuring `Deck`'s fixed FX-slot chain and `Mixer`'s hardcoded Deck A/B inputs to accept externally patched textures, which touches the master output path every workspace mode relies on.
-    - `MacroOscBridge` (Phase 4) has no OSC transport to connect to yet — blocked on Milestone 1 (`OscEngine`/`OscMappingManager` don't exist yet), not a rack/macro-specific bug.
+    - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved by Milestone 1: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
     - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent).
 
 ---

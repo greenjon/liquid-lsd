@@ -3,6 +3,7 @@ package llm.slop.liquidlsd
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.cv.CVRegistry
 import llm.slop.liquidlsd.midi.MidiMappingManager
+import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.broadcast.BroadcastEngine
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.presets.PresetRepository
@@ -21,6 +22,7 @@ class SessionContext {
     val playQueueManager = PlayQueueManager
     val bgQueueManager = BgQueueManager
     val midiMappingManager = MidiMappingManager
+    val oscMappingManager = OscMappingManager
     val visualSourceRegistry = VisualSourceRegistry
     val uiTheme = UITheme
     val broadcastEngine = BroadcastEngine

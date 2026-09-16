@@ -87,6 +87,12 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── midi/
 │   ├── MidiEngine.kt           — Multi-message MIDI receiver, atomic state, event queue, and live sniffer buffer
 │   └── MidiMappingManager.kt   — Multi-type parameter mapping, soft takeover, rotary decoding, and slew smoothing
+├── osc/
+│   ├── OscCodec.kt             — Pure Kotlin zero-dependency binary OSC 1.0 encoder/decoder
+│   ├── OscEngine.kt            — Low-latency UDP receiver/transmitter & packet sniffer
+│   ├── OscMappingManager.kt    — OSC address routing, vector unpacking, slew smoothing & profile manager
+│   ├── OscModels.kt            — OSC message, bundle, packet sniffer log & mapping profile data classes
+│   └── OscPreferences.kt        — OSC network port & mapping profile persistence settings
 ├── input/
 │   ├── TouchConsoleController.kt — 4-zone SCS.3m virtual console, LIFO stacks, zone affinity
 │   ├── TouchConsoleEvent.kt    — Low-latency native touch event model
@@ -163,6 +169,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
 │   ├── PreferencesPanel.kt     — App configuration & tabbed preferences modal
 │   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Preferences tab drawer)
+│   ├── MidiPreferencesPanel.kt — MIDI port configuration, channel filters & mapping table UI
+│   ├── OscPreferencesPanel.kt  — TouchOSC / OSC server config, live packet sniffer & Learn UI
 │   ├── ColorTunerPanel.kt      — Interactive theme editor
 │   ├── DeckControlPanel.kt     — Individual deck preview monitor, toolbar, inside-clustered badge/die overlays, and vertical channel level fader
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader

@@ -153,6 +153,7 @@ fun main(args: Array<String>) {
     java.io.File("library/presets").mkdirs()
     java.io.File("library/playlists").mkdirs()
     java.io.File("library/midi").mkdirs()
+    java.io.File("library/osc").mkdirs()
     llm.slop.liquidlsd.ui.FileSystemManager.ensureDefaultLibrary()
 
 
@@ -160,6 +161,11 @@ fun main(args: Array<String>) {
     // Load active MIDI mapping profile
     if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
         llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
+    }
+
+    // Load active OSC mapping profile
+    if (llm.slop.liquidlsd.osc.OscPreferences.enabled) {
+        llm.slop.liquidlsd.osc.OscMappingManager.loadProfile(llm.slop.liquidlsd.osc.OscPreferences.activeProfile)
     }
 
     // Initialize GLFW
@@ -373,6 +379,11 @@ fun main(args: Array<String>) {
         llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
     }
 
+    // Start the OSC UDP server if enabled in preferences
+    if (llm.slop.liquidlsd.osc.OscPreferences.enabled) {
+        llm.slop.liquidlsd.osc.OscEngine.start(llm.slop.liquidlsd.osc.OscPreferences.inboundPort, llm.slop.liquidlsd.osc.OscPreferences.outboundPort)
+    }
+
     // Main loop
     var frameCount = 0
     var frameIndex = 0
@@ -434,6 +445,15 @@ fun main(args: Array<String>) {
             // 0. Update MIDI mappings
             if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
                 llm.slop.liquidlsd.midi.MidiMappingManager.update(mixer)
+            }
+
+            // 0.25. Drain and dispatch queued inbound OSC messages, then update slew smoothing
+            if (llm.slop.liquidlsd.osc.OscEngine.isRunning) {
+                while (true) {
+                    val oscMessage = llm.slop.liquidlsd.osc.OscEngine.inboundQueue.poll() ?: break
+                    llm.slop.liquidlsd.osc.OscMappingManager.onOscMessage(oscMessage, mixer)
+                }
+                llm.slop.liquidlsd.osc.OscMappingManager.update(mixer)
             }
 
             // 0.5. Update Macro Engine (must run before any deck's .update()/.evaluate())
@@ -596,6 +616,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.liquidlsd.midi.MidiEngine.close()
+    llm.slop.liquidlsd.osc.OscEngine.stop()
 
     // Free key callbacks
     imguiKeyCallback?.free()

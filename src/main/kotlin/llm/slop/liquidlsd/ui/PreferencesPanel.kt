@@ -32,6 +32,7 @@ object PreferencesPanel {
         TEMPO_SYNC("Tempo & Sync"),
         AUDIO_ENGINE("Audio Hardware"),
         MIDI_CONTROLLER("MIDI Controls"),
+        OSC_CONTROLLER("OSC Controls"),
         SHADER_LOCATIONS("Shader Locations"),
         BROADCAST("Web Broadcast"),
         SHORTCUTS("Keyboard Shortcuts")
@@ -143,6 +144,7 @@ object PreferencesPanel {
                 Category.TEMPO_SYNC       -> drawTempoSyncPreferences(session)
                 Category.AUDIO_ENGINE     -> drawAudioEnginePreferences(session)
                 Category.MIDI_CONTROLLER  -> MidiPreferencesPanel.drawContent(session, parametersState)
+                Category.OSC_CONTROLLER   -> OscPreferencesPanel.drawContent(session)
                 Category.SHADER_LOCATIONS -> drawShaderLocationsPreferences(session)
                 Category.BROADCAST        -> BroadcastPreferencesPanel.drawContent(session, mixer)
                 Category.SHORTCUTS        -> ShortcutsPreferencesPanel.drawContent(session)
