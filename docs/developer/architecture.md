@@ -63,7 +63,7 @@ Because the audio processing loop runs at sub-millisecond hardware intervals (~5
 - **`@Volatile` Beat Anchor Fields**: Lock-free update passing `anchorBeats`, `anchorBpm`, and `anchorTimeNs` directly from the audio thread to `CVRegistry.updateBeatAnchor()` using primitive `@Volatile` fields. Zero object allocations occur on the audio callback thread. Thread 0 reads these volatile variables without locks and interpolates sub-millisecond phase accuracy via `CVRegistry.getSynchronizedTotalBeats()`.
 - **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in `PropertiesPanel`.
 - **`@Volatile` Flags**: Thread-safe single-scalar flags (`isBpmLocked`, `manualBpm`, `inputGain`) accessed across threads without lock overhead.
-- **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending preset loading DTOs (`PresetManager`) and incoming MIDI CC events (`MidiEngine`).
+- **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending preset loading DTOs (`PresetManager`), incoming MIDI CC events (`MidiEngine`), and incoming OSC messages decoded on the dedicated UDP receiver thread (`OscEngine.inboundQueue`), all drained on Thread 0 once per frame.
 
 ---
 

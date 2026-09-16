@@ -88,11 +88,11 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MidiEngine.kt           — Multi-message MIDI receiver, atomic state, event queue, and live sniffer buffer
 │   └── MidiMappingManager.kt   — Multi-type parameter mapping, soft takeover, rotary decoding, and slew smoothing
 ├── osc/
-│   ├── OscCodec.kt             — Pure Kotlin zero-dependency binary OSC 1.0 encoder/decoder
-│   ├── OscEngine.kt            — Low-latency UDP receiver/transmitter & packet sniffer
-│   ├── OscMappingManager.kt    — OSC address routing, vector unpacking, slew smoothing & profile manager
-│   ├── OscModels.kt            — OSC message, bundle, packet sniffer log & mapping profile data classes
-│   └── OscPreferences.kt        — OSC network port & mapping profile persistence settings
+│   ├── OscCodec.kt             — Pure Kotlin zero-dependency binary OSC 1.0 encoder/decoder (messages & bundles)
+│   ├── OscEngine.kt            — Low-latency UDP receiver/transmitter, remote client auto-learn & packet sniffer
+│   ├── OscLearnState.kt        — Interactive "Learn OSC" target-arming state machine, mirrors MacroLearnState
+│   ├── OscMappingManager.kt    — OSC address routing, vector unpacking, slew smoothing & profile persistence
+│   └── OscPreferences.kt       — OSC network port, enable flag & active profile persistence settings
 ├── input/
 │   ├── TouchConsoleController.kt — 4-zone SCS.3m virtual console, LIFO stacks, zone affinity
 │   ├── TouchConsoleEvent.kt    — Low-latency native touch event model

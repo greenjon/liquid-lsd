@@ -129,7 +129,7 @@ val depthCbs = cvModulatorSlider(
 
 
 ### 7. `PreferencesPanel.kt` & `ShortcutManager.kt` Architecture
-- **Preferences Category Routing**: `PreferencesPanel` organizes application preferences into 7 clean categories (`GENERAL`, `VIDEO_DISPLAY`, `TEMPO_SYNC`, `AUDIO_ENGINE`, `SHADER_LOCATIONS`, `BROADCAST`, `SHORTCUTS`) and supports targeted opening via `PreferencesPanel.open(category)`.
+- **Preferences Category Routing**: `PreferencesPanel` organizes application preferences into 9 clean categories (`GENERAL`, `VIDEO_DISPLAY`, `TEMPO_SYNC`, `AUDIO_ENGINE`, `MIDI_CONTROLLER`, `OSC_CONTROLLER`, `SHADER_LOCATIONS`, `BROADCAST`, `SHORTCUTS`) and supports targeted opening via `PreferencesPanel.open(category)`.
 - **Keyboard Shortcuts Overhaul (`ShortcutManager.kt`)**: Keyboard shortcut definitions, custom keybindings, and collision detection are centralized within `llm.slop.liquidlsd.ui.shortcuts`:
   - **`KeyCombination`**: Data model representing primary GLFW keys and modifier bitmasks (`Ctrl`, `Shift`, `Alt`, `Super`/`Cmd`) with human-readable string formatting.
   - **`ShortcutAction` & `ShortcutCategory`**: Defines action ID, category, name, detailed description, default key, current key, and collision exception rules.

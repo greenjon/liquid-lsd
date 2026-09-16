@@ -51,7 +51,7 @@ Macro banks are bundled directly into `.lsd` / `.lsdset` preset files — they l
 Macro Knobs and Switches sit at the top of the MIDI/OSC input hierarchy:
 
 - Map a physical MIDI CC knob or fader to any of the 8 Macro Knobs, and a MIDI CC/Note button to any of the 4 Macro Switches, the same way you'd MIDI-learn any other control (see [Performance Controls](performance_controls.md)).
-- With OSC enabled, `/macro/knob/1`–`/macro/knob/8` and `/macro/switch/1`–`/macro/switch/4` send and receive live updates — handy for a TouchOSC layout on a tablet.
+- Turn on the OSC server in **Preferences → OSC Controls**, and `/macro/knob/1`–`/macro/knob/8` and `/macro/switch/1`–`/macro/switch/4` send and receive live updates — handy for a TouchOSC layout on a tablet.
 
 ---
 

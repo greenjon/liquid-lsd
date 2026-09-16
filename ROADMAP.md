@@ -30,8 +30,8 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
-| **Macro Controls & Parameter Linking** | `ui/*`, `parameters/*`, `models/*` | **PROPOSED** | 8 Knobs + 4 Switches, 1-to-many bindings, modulating modulators, Column 3 `[MIXER\|MACROS]` mode, Learn mode UX. |
-| **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **PENDING** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. |
+| **Macro Controls & Parameter Linking** | `ui/*`, `parameters/*`, `models/*` | **COMPLETE** | 8 Knobs + 4 Switches, 1-to-many bindings, modulating modulators, Column 3 `[MIXER\|MACROS]` mode, Learn mode UX. |
+| **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
 | **Build for ARM64 Linux** | `build.gradle.kts`, `ci` | **PLANNED** | Compile `imgui-java` via GitHub Actions ARM64 runner, integrate natives, restore Linux ARM64 distribution target. |
 
 ---
@@ -155,13 +155,13 @@ Enhancing the built-in Mandala procedural visual generator for live stage recall
 > **Reference & Design Specs**:
 > - [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](docs/developer/macro_controls_and_parameter_linking_proposal.md) (Macro Controls & Parameter Linking System)
 > - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture)
-> **Status**: Concept / Long-Term Architecture RFC  
+> **Status**: Core Complete (Phases 1-8 shipped) — all 6 rack-doc Open Questions decided 2026-09-16; **Phase 9** (implementing those decisions) not yet started  
 > **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
 
 Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style video rack designed for tactile live performance:
 
 - **Concept & Architecture**:
-  - **Preset-as-Module**: Each visual generator, post-processing FX block, or transition is housed within an interchangeable rack unit with a standardized 19" bay width and quantized modular height ($1\text{U}, 2\text{U}, 3\text{U}, \dots$).
+  - **Preset-as-Module**: Each deck (generator + all its FX, flattened into one unit — see rack doc §2.7) or transition is housed within an interchangeable rack unit with a standardized 19" bay width and quantized modular height ($1\text{U}, 2\text{U}, 3\text{U}, \dots$).
   - **Curated Performance Faceplates (80/20 Rule)**: Performers curate custom front panels exposing *only* high-impact live controls (knobs, sliders, toggles, and macros). Underlying automation, LFOs, audio-reactive envelopes, and fine math run silently in the background without cluttering the performance surface.
   - **Integrated Confidence Monitoring**: Every rack unit features an embedded real-time preview monitor rendering an offscreen FBO preview of that unit's output before downstream routing.
   - **Macro Controls**: Assignable multi-target macro knobs modulating multiple internal parameters simultaneously with customizable travel limits, inverted directions, and nonlinear response curves (linear, exponential, S-curve).
@@ -181,12 +181,13 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
   - [x] **Phase 6: Per-Unit Macro Curation** *(rack doc §4)*: Each unit gets its own `MacroBank` (0-8 knobs/0-4 switches) scoped via `unitInstanceId`; curation UI picks which unit parameters occupy which slot. No freeform faceplate designer yet.
   - [x] **Phase 7: Embedded Confidence Micro-Monitors** *(rack doc §4)*: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
   - [x] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: Dual-faced 180° flipped rear chassis view with physics-curved virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine.
-  - **Backlog / not yet scheduled**: Full freeform Faceplate Designer, Playlist/Setlist staging strategy, transition topology, GPU FBO pooling, hardware focus-follow mapping — see rack doc §3 Open Questions.
-  - **Known issues to revisit** (surfaced by a 2026-09-15 post-implementation correctness review of Phases 5-8; full rationale in `DECISIONS.md`):
-    - `FeedbackProcessorUnit`'s curated macro knobs (GAIN/DECAY/ZOOM/HUE) are bound to `Deck.fbGain`/`fbDecay`/etc. — legacy fields left over from before the ISF feedback migration (see "100% ISF Pipeline & Modular Effects Engine" in `ARCHITECTURE.md`) that no shader reads anymore, so turning the knob currently does nothing audible/visible. Needs either rewiring to the deck's actual loaded feedback `ISFFilter` (when one is present in an FX slot) or removing the unit type.
-    - Virtual patch-cable overrides only reroute pixels for genuinely custom/utility rack units. For the built-in Generator/Processor/Transition units that wrap the existing fixed `Deck`/`Mixer` pipeline, cables render and jacks light up but don't change actual signal routing — making that real requires restructuring `Deck`'s fixed FX-slot chain and `Mixer`'s hardcoded Deck A/B inputs to accept externally patched textures, which touches the master output path every workspace mode relies on.
+  - [ ] **Phase 9: Unit Consolidation & Rack Layout Finalization** *(rack doc §4, implements all 6 decided Open Questions in rack doc §3)*: Merge `DeckGeneratorUnit` + up to 4 `ISFProcessorUnit`s + `FeedbackProcessorUnit` into one rack unit per deck with a flattened generator+FX parameter namespace (rack doc §2.7); delete `FeedbackProcessorUnit`; add a Deck BG column; build the 3U Queue & Staging master unit (Play Queue / BG Queue / Transition Staging) as a view onto the existing `PlayQueueManager`/BG queue engines; keep `MixerTransitionUnit` as its own Master unit; smart-cull bypassed/off-screen units and downscale confidence monitors. Not yet started.
+  - **Deferred, not scheduled**: true patchable transitions/splitters (rack doc Q2 Models B/C) and a freeform Faceplate Designer both depend on restructuring `Deck`/`Mixer` to accept externally patched textures — the same underlying capability as the patch-cable known issue below. Bundle these together into a future dedicated milestone once that foundational work is deliberately undertaken, rather than as incremental additions to Phase 9.
+  - **Known issues** (surfaced by a 2026-09-15 post-implementation correctness review of Phases 5-8; full rationale in `DECISIONS.md`):
+    - `FeedbackProcessorUnit`'s curated macro knobs (GAIN/DECAY/ZOOM/HUE) are bound to `Deck.fbGain`/`fbDecay`/etc. — legacy fields left over from before the ISF feedback migration (see "100% ISF Pipeline & Modular Effects Engine" in `ARCHITECTURE.md`) that no shader reads anymore, so turning the knob currently does nothing audible/visible. **Decided (2026-09-16)**: remove the unit type entirely in Phase 9 rather than rewire it — feedback already appears correctly as a normal FX-slot parameter once merged into a deck's flattened namespace, making the standalone unit redundant.
+    - Virtual patch-cable overrides only reroute pixels for genuinely custom/utility rack units. For the built-in Generator/Processor/Transition units that wrap the existing fixed `Deck`/`Mixer` pipeline, cables render and jacks light up but don't change actual signal routing — making that real requires restructuring `Deck`'s fixed FX-slot chain and `Mixer`'s hardcoded Deck A/B inputs to accept externally patched textures, which touches the master output path every workspace mode relies on. Tracked as the same deferred work as rack doc Q2 Models B/C above, not part of Phase 9.
     - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved by Milestone 1: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
-    - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent).
+    - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent). Both accepted as low-priority fix-opportunistically items, not blocking Phase 9.
 
 ---
 
@@ -229,7 +230,7 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
 ### Phase 3: Universal Shader Ecosystem & ISF Standard
 - [x] Full **Interactive Shader Format (ISF 2.0)** specification parser and GLSL preprocessor (`ISFParser`).
 - [x] Multi-format shader compatibility bridge: Automatic ingestion of **ISF**, **Shadertoy** (`mainImage`), and **GLSLSandbox** without manual modification.
-- [x] Dual modular FX slots per deck: **Slot 1: Color / Degradation** and **Slot 2: Spatial / Distortion**.
+- [x] Modular FX slots per deck (originally 2 — Slot 1: Color/Degradation, Slot 2: Spatial/Distortion — since expanded to 4, `Deck.FX_SLOT_COUNT`).
 - [x] ISF transition engine in Mixer with bundled transitions (`wipe`, `glitch`, `radial`, `luma_wipe`, `zoom_fade`).
 - [x] Multi-pass generator and filter FBO rendering with persistent history buffers and imported texture assets.
 - [x] Real-time audio FFT magnitude and waveform texture (`audioFFT` / `iChannel0` 512x2 `GL_R32F`).

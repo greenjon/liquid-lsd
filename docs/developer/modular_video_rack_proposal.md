@@ -1,6 +1,6 @@
 # Proposal: Modular Video Rack Architecture
 
-**Status**: Draft / RFC  
+**Status**: Core Complete (Phases 5-8 implemented — see §4) — All 6 Open Questions in §3 decided (2026-09-16); implementation of those decisions is **Phase 9**, not yet started (see §4).  
 **Target Area**: `ui/`, `rendering/`, `parameters/`, `presets/`, `io/`  
 **Authors**: GJ & Antigravity  
 
@@ -61,21 +61,39 @@ This proposal outlines a **Modular Video Rack** paradigm inspired by hardware ra
   * Rear jacks include: `Video In`, `Video Out`, `Mask / Sidechain In`, and `CV Modulation In`.
   * Dragging a patch cable overrides the normalled connection, enabling split routing, external I/O routing, and intentional video feedback loops.
 
+### 2.7 Unit Granularity: One Rack Unit Per Deck, Not Per Pipeline Stage
+
+**Decision (2026-09-16)**: A preset's full chain — generator + all 4 FX slots (`Deck.FX_SLOT_COUNT = 4`; the "dual FX slots" phrasing in earlier roadmap text is stale, the engine has supported 4 since before this proposal) — is represented as **one rack unit per deck**, not one unit per pipeline stage.
+
+* **Why not one unit per stage**: the initial Phase 5/6 implementation (`RackManager.populateFromSession`) creates one `DeckGeneratorUnit` plus one `ISFProcessorUnit` *per occupied FX slot* — up to 5 units for a single deck using all 4 FX slots. That's real clutter, and it doesn't buy real modularity today: patch cables between these units are cosmetic only (see the "Known issues" entry in `ROADMAP.md` Milestone 6 / `DECISIONS.md`), since the underlying render path is still one fixed `Deck.cleanFBO -> fxFBOs[0..3] -> output` chain, not an independently-repatchable graph. Splitting into per-stage units pays a UI-complexity cost without a matching capability gain.
+* **Why merging doesn't cost macro-knob headroom**: `MacroBank` is a fixed-shape container (8 knobs / 4 switches) *per unit instance*, regardless of `heightU`. Splitting a deck into 5 units yields up to 40 knobs of raw capacity across 5 separate banks; merging into 1 unit caps it at 8. That tradeoff was considered and accepted deliberately — 8 knobs freely assignable across generator + all 4 FX is judged sufficient for v1 (see Question 2 below), and the option to grow `MacroBank` beyond 8 later remains open if that judgment turns out wrong in practice.
+* **The merged unit's parameter namespace**: `getNamedParameters()` flattens the generator's own parameters together with each occupied FX slot's parameters, disambiguated with a slot prefix (e.g. `"FX1/dryWet"`, `"FX2/dryWet"`, `"dimensionWarp"` for the generator's own, unprefixed). Any of the unit's 8 knobs can be curated against *any* entry in that combined map — including one knob driving both a generator parameter and an FX parameter simultaneously, since `MacroControl.bindings` already supports up to `MAX_BINDINGS_PER_CONTROL = 4` independent target bindings per knob. **No `MacroEngine`/`MacroBinding` changes are required for this** — `RackUnitMacroCuration.kt`'s existing curation drawer already works unit-locally off `getNamedParameters()`, so it needs no changes either; only the flattened parameter map on the merged unit type is new.
+* **Fallout — `FeedbackProcessorUnit` is removed, not fixed**: per the existing known issue, this unit's knobs are bound to legacy `Deck.fbGain`/`fbDecay`/etc. fields no shader reads anymore. Feedback already appears correctly as a normal FX-slot filter (`default_filters/feedback.fs`) once merged into the deck's flattened parameter namespace, so the standalone unit is now fully redundant rather than fixable-in-place. It is deleted, not rewired.
+* **Rear-panel implication**: the merged unit exposes one `Video In`/`Video Out` pair (like today's `PROCESSOR` ports) rather than separate jacks per internal stage. A pre-FX "send" tap (output before the internal FX chain) is a reasonable future rear-panel jack on this unit, but depends on the same real-signal-routing work as Question 2's Models B/C — not scoped for the initial merge.
+
 ---
 
 ## 3. Open Questions & Decisions Requiring Deep Thought
+
+> All 6 questions below were **decided on 2026-09-16** (see the "Decision" block under each). The section is kept in its original open-question form — evaluated options included — as a record of the reasoning; nothing here is still open. Implementation is tracked as **Phase 9** in §4.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                             MODULAR VIDEO RACK                             │
 ├─────────────────────────────────────┬──────────────────────────────────────┤
-│ COMPLETED DECISIONS                 │ OPEN ARCHITECTURAL QUESTIONS         │
-│ • Standard 19" width (1U/2U/3U)     │ 1. Playlist & Setlist Management     │
-│ • Curated UI vs background mod      │ 2. Transition & Multi-Deck Topologies│
-│ • Multi-destination Macro knobs     │ 3. Faceplate Designer & Schema       │
-│ • Unit mini-monitors (FBO preview)  │ 4. GPU FBO Pooling & Smart Culling   │
-│ • Normalled top-down signal flow    │ 5. Hardware MIDI/OSC Controller Map  │
-│ • Tab flip for rear patch cables    │ 6. Migration & Backward Compatibility│
+│ COMPLETED DECISIONS (§2)            │ DECIDED QUESTIONS (§3, 2026-09-16)   │
+│ • Standard 19" width (1U/2U/3U)     │ 1. Playlist & Setlist -> 3U Queue    │
+│ • Curated UI vs background mod      │    Master unit                       │
+│ • Multi-destination Macro knobs     │ 2. Transition -> 3-column A/B/BG +   │
+│ • Unit mini-monitors (FBO preview)  │    dedicated Master unit             │
+│ • Normalled top-down signal flow    │ 3. Faceplate Designer -> deferred,   │
+│ • Tab flip for rear patch cables    │    fixed template stays              │
+│ • One unit per deck, not per stage  │ 4. GPU/FBO -> cull+downscale now,    │
+│   (§2.7)                            │    pooling only if measured need     │
+│                                      │ 5. Hardware mapping -> Fixed Global  │
+│                                      │    only, no Follow-Focus             │
+│                                      │ 6. Migration -> coexist permanently, │
+│                                      │    no auto-generated faceplates      │
 └─────────────────────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -102,6 +120,15 @@ If a show involves 30 presets, stacking 30 units vertically—with 29 bypassed�
   * A 1U rack unit containing a horizontal filmstrip timeline of upcoming presets.
   * Supports automatic beat-synced triggers (e.g. advance every 32 bars) or manual advance with customizable morph/dissolve durations.
 
+**Decision (2026-09-16)**: None of 1A-1D as originally scoped is sufficient on its own — the actual requirement is that Rack mode give the performer the *same* queue control they already have in Classic mode (`PlayQueueManager`, the background queue, and preset/transition staging), not a rack-native reinvention of it. A single-preset "cartridge loader" (1B) or a lone conductor timeline (1D) only covers one of those three existing queues.
+
+* **Chosen shape**: a dedicated **3U "Queue & Staging" master unit**, always present in the rack (not per-deck), with three stacked 1U sections:
+  * **1U — Play Queue**: mirrors the Classic-mode Deck A/B play queue (current, on-deck, upcoming), with advance/promote controls.
+  * **1U — Background Queue**: mirrors the Classic-mode BG queue, independent advance/promote.
+  * **1U — Transition Staging**: exposes whatever the chosen Question 2 topology needs staged before it goes live (e.g. next preset armed for the Master unit's crossfader).
+* This reuses the existing `PlayQueueManager`/BG queue engines directly (no new queue data model) — it's a rack-native *view* onto state that already exists and is already fully controllable from Classic mode, per the coexistence decision in Question 6.
+* Options 1A/1C's "collapse the rest of a 30-preset show into thin spines" idea is worth revisiting as a *display density* improvement inside this unit's Play Queue section later, but isn't required for v1 and shouldn't block it.
+
 ---
 
 ### Question 2: Transition Topologies (Serial vs. Dual-Bay vs. Patchable)
@@ -119,13 +146,20 @@ How should crossfading and transitions between two different visual streams be s
 * **Model C: Splitter / Branch Units (Parallel Chains)**  
   * A unit splits one video stream into two parallel sub-chains (e.g., clean vs. heavy feedback) and recombines them with a wet/dry crossfader before sending downstream.
 
+**Decision (2026-09-16)**: **Model A**, extended to three columns and paired with the §2.7 unit-merge decision.
+
+* **Three columns, one merged unit each**: **Deck A**, **Deck B**, and **Deck BG** each get exactly one rack unit (generator + its up to 4 FX slots, flattened per §2.7) — not a column of stacked generator/FX units. This is the direct reason the §2.7 merge decision exists: without it, "3 columns" would mean up to 15 stacked units (5 per deck × 3 decks) instead of 3.
+* **One dedicated Master unit**, separate from the three deck columns, owning the crossfader, blend mode, BG compositing, and master post-mix FX (bloom, master alpha) — i.e. `MixerTransitionUnit`'s current scope, kept as its own unit rather than folded into a deck column, since it isn't "owned" by any single deck.
+* **Deck PV is intentionally excluded** from this v1 layout — it's an audition/preview deck in Classic mode, not part of the live composite, and doesn't obviously map onto a rack column. Left as a follow-up question if a concrete use case shows up (e.g. a "preview" micro-monitor on the Master unit instead of its own column).
+* **Models B and C (true patchable transitions/splitters) are deferred**, not rejected — they require the same real-signal-routing capability as the pre-FX send tap from §2.7 and the "patch cables actually reroute pixels" known issue. Once that foundational work happens, Model B becomes a natural *additional* transition unit type alongside the fixed Master unit, not a replacement for it.
+
 ---
 
 ### Question 3: Faceplate Designer UX & File Format Schema
 
 How does the user construct their custom faceplate, and how is it stored?
 
-**Decided for v1**: no freeform widget-placement designer yet. A unit's macro surface is curated, not designed — the performer picks which of the unit's parameters occupy which of its (up to 8) knob slots and (up to 4) switch slots and in what order, reusing the same fixed 2×4 knob grid / 4-switch row as the Column 3 global bank (see §2.3 and the macro proposal §6). This avoids building a full grid-snap widget editor before the underlying macro engine and per-unit scoping exist. Plain (non-macro) widgets — a slider or button bound 1:1 to a single parameter, a mini-monitor — still need *some* placement mechanism; the simplest v1 answer is a fixed template per unit type (e.g. macro grid on top, monitor below) rather than user-arranged slots. The remaining questions below (freeform grid editing, full widget palette) are pushed to the backlog as the **Full Faceplate Designer**.
+**Decision (2026-09-16, reaffirmed)**: no freeform widget-placement designer for now — confirmed after weighing it against the §2.7 unit-merge decision, since a merged deck unit's flattened generator+FX parameter namespace makes the existing fixed 8-knob curation drawer (unmodified) sufficient rather than a reason to need more UI. A unit's macro surface is curated, not designed — the performer picks which of the unit's parameters occupy which of its (up to 8) knob slots and (up to 4) switch slots and in what order, reusing the same fixed 2×4 knob grid / 4-switch row as the Column 3 global bank (see §2.3 and the macro proposal §6). Plain (non-macro) widgets — a slider or button bound 1:1 to a single parameter, a mini-monitor — still need *some* placement mechanism; the simplest v1 answer is a fixed template per unit type (e.g. macro grid on top, monitor below) rather than user-arranged slots. The remaining ideas below (freeform grid editing, full widget palette) stay in the backlog as the **Full Faceplate Designer**, gated behind actual demand once people are hitting the fixed-template's limits in practice — not built speculatively.
 
 * **v1 Storage Schema** (fixed macro slot curation + templated plain widgets):
     ```json
@@ -173,6 +207,11 @@ Running $N$ simultaneous rack modules introduces GPU and framebuffer overhead.
 * **Resolution Scaling**:
   * Mini-monitors on the faceplate should render downscaled mipmaps or a shared preview resolution ($240 \times 135$) to eliminate full-res overhead during editing.
 
+**Decision (2026-09-16)**: don't front-load full FBO pooling. With the §2.7 merge, the base rack is now only ~4-5 units (3 deck columns + Master + Queue unit) instead of up to 16, which substantially reduces how urgent this is. Do now, cheaply, with no design risk:
+* **Smart Culling**: skip GL draw calls entirely for bypassed or off-screen units — a correctness/perf win regardless of scale.
+* **Confidence-monitor downscaling**: render mini-monitors at the shared $240 \times 135$ preview resolution rather than full-res.
+* **Instrument first**: add an FBO-count / GPU-memory readout to the existing telemetry HUD (`PerformanceStats`, see `ARCHITECTURE.md`). Only build the pooled allocator if real sessions with many units actually show it's a bottleneck — not speculatively.
+
 ---
 
 ### Question 5: Hardware Control Mapping (MIDI & OSC)
@@ -187,6 +226,8 @@ How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fig
 * **Soft Takeover Integration**:
   * Leverage Liquid LSD's existing `MidiEngine` soft-takeover and rotary encoder relative modes to prevent value jumps when switching focus between units.
 
+**Decision (2026-09-16)**: **Fixed Global Mapping only** for v1 — no Follow-Focus/Active Unit Mapping. Each rack unit already has its own independently learnable `MacroBank` (per §2.7, one per deck column plus Master and the Queue unit), so per-unit MIDI CC and OSC address mapping already works today via the existing Learn flows (`MidiMappingManager`, and now `OscMappingManager`/`OscLearnState` per the TouchOSC & OSC milestone) — no new plumbing required. Follow-Focus is rejected as a v1 default: a hardware knob silently remapping to a different parameter when UI focus changes is a real live-performance risk (a knob jump mid-set is worse than a knob that's simply not mapped), and it would require new cross-rack "focus" state that doesn't exist. Revisit only if fixed per-unit mapping proves limiting after real use.
+
 ---
 
 ### Question 6: Migration & Coexistence with Existing Architecture
@@ -196,6 +237,10 @@ How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fig
   * **Option B: Next-Generation Core Paradigm**: The Modular Rack replaces the fixed Decks A/B over time as the primary way users interact with Liquid LSD.
 * **Auto-Generating Faceplates for Legacy Presets**:
   * When loading an existing `.lsd` preset that lacks a `faceplate` block, the system automatically synthesizes a clean default 1U or 2U faceplate populated with the preset's primary modulators and a mini-monitor.
+
+**Decision (2026-09-16)**: **Option A, permanently** — not a migration path, a permanent coexistence. Classic Deck View already shipped as the default alongside Rack mode via the `F3`/`F4` `WorkspaceMode` toggle (`UITheme.WorkspaceMode.CLASSIC`/`RACK`); this decision formally rejects Option B. A single screen with access to every variable *and* full VJ ability is a capability Liquid LSD keeps, not a stepping stone to be replaced.
+
+**Auto-generating faceplates is explicitly rejected, not just deferred.** Curating a macro bank is a creative act — deciding which handful of parameters out of dozens deserve one of a unit's 8 precious knob slots, in what order, with what range and curve, is exactly the judgment a script can't make. Auto-generating a plausible-looking faceplate would fill racks with unconsidered, low-value units — worse than no rack support at all for that preset. Until a performer has consciously curated a faceplate for a preset, that preset simply isn't usable in Rack mode; Classic mode remains fully available for it in the meantime. This keeps every unit in a rack a deliberate creative choice.
 
 ---
 
@@ -207,5 +252,12 @@ These phases continue directly from Phases 1-4 in [`docs/developer/macro_control
 * **[x] Phase 6: Per-Unit Macro Curation**: Give each rack unit its own `MacroBank` scoped via `unitInstanceId` (macro proposal §6), and build the curation UI for picking which unit parameters occupy which of its knob/switch slots. Reuses the Column 3 engine and Learn Mode UX from Phases 1-3 verbatim — no new binding infrastructure. [Implemented]
 * **[x] Phase 7: Embedded Confidence Micro-Monitors**: Lightweight texture blits rendering downscaled offscreen FBO passes directly onto unit faceplates. [Implemented]
 * **[x] Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)**: Dual-faced flipped rear chassis view (`Tab` shortcut) with catenary-sagging virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine. [Implemented]
-
-**Not yet scheduled** (open questions above still need a decision before these can be phased): Playlist/Setlist staging strategy (Question 1), transition topology (Question 2), the Full Faceplate Designer backlog item (Question 3), GPU FBO pooling (Question 4), and hardware focus-follow mapping (Question 5).
+* **[ ] Phase 9: Unit Consolidation & Rack Layout Finalization** *(implements the §3 decisions above)*:
+  * Replace `DeckGeneratorUnit` + up to four `ISFProcessorUnit`s + `FeedbackProcessorUnit` per deck with **one new merged unit type per deck** (§2.7) exposing a flattened `getNamedParameters()` map (generator params unprefixed, FX params prefixed `"FX1/…"`..`"FX4/…"`). `RackUnitMacroCuration.kt` needs no changes.
+  * Delete `FeedbackProcessorUnit` entirely (§2.7 / known issue resolved by removal, not rewiring).
+  * Extend `RackManager.populateFromSession` to a third column for **Deck BG**, using the same merged unit type. Deck PV excluded (§ Question 2).
+  * Build the **3U Queue & Staging master unit** (§ Question 1): 1U Play Queue / 1U BG Queue / 1U Transition Staging, views onto the existing `PlayQueueManager`/BG queue engines — no new queue data model.
+  * Keep `MixerTransitionUnit` as its own **Master unit** (crossfade, blend, BG compositing, master post-FX), separate from the three deck columns (§ Question 2).
+  * Smart-cull bypassed/off-screen units' GL passes and downscale confidence monitors to the shared preview resolution (§ Question 4); add an FBO-count/GPU-memory readout to the telemetry HUD before considering pooling.
+  * No new hardware-mapping work needed (§ Question 5 — Fixed Global Mapping already works via existing per-unit MacroBank Learn flows).
+  * No auto-faceplate-generation work (§ Question 6 — explicitly rejected).

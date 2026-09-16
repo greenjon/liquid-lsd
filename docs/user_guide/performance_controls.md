@@ -181,3 +181,33 @@ Each rotary mapping includes an editable **Step** multiplier to dial in coarse o
 
 All assignments are stored in JSON profiles under `library/midi/<profile_name>.json`. You can create, save, switch, and delete mapping profiles in the MIDI tab, allowing you to quickly switch between different hardware setups (e.g. home studio controller vs live gig setup).
 
+---
+
+## OSC / TouchOSC Control Surfaces
+
+Liquid LSD includes a native, zero-dependency OSC 1.0 server for wireless control from TouchOSC and other OSC-capable apps on phones and tablets — no external bridge software required.
+
+### Quick Setup
+
+1. Open **Preferences → OSC Controls** (or press `Ctrl+,`).
+2. Check **Enable OSC Server**. By default it listens on UDP port `8000` and sends feedback out on port `9000` — both are editable, with a **Restart Server** button to apply port changes.
+3. Point your TouchOSC layout at your computer's IP address, using the same inbound/outbound ports. Move any control on the layout — Liquid LSD automatically learns the client's IP from the first packet it receives, so there's nothing to configure on the desktop side beyond the ports.
+4. The **Live Packet Sniffer** in the OSC Controls tab streams recent inbound and outbound traffic (address, arguments, and remote host) so you can confirm packets are arriving.
+
+### OSC Learn
+
+Unlike MIDI Learn, which arms from the target control, OSC Learn is driven from the OSC Controls tab:
+1. Type the target parameter's path into the **Learn OSC** field (e.g. `Mixer/crossfade`, or any path shown in the Properties panel).
+2. Click **Start Learn**, then move the control on your OSC surface. Liquid LSD binds whichever address sent that message.
+3. TouchOSC XY pads and other multi-argument messages (e.g. `/2/xy`) are unpacked per-axis — learning from one binds only that axis; repeat Learn for the other component.
+
+### Fine-Tuning & Macro Knobs
+
+The **Address Mappings** table in the OSC Controls tab offers the same per-control shaping as MIDI: **Min/Max** range clamping, **Invert**, **Slew** smoothing ($0 \dots 250\,\text{ms}$), and **Soft Takeover** (pickup) so an OSC control doesn't yank a parameter on first touch.
+
+Macro Knobs and Switches also respond directly to `/macro/knob/1`–`/macro/knob/8` and `/macro/switch/1`–`/macro/switch/4` (no manual mapping needed), and broadcast their values back out over OSC whenever they change — handy for keeping a tablet layout's on-screen state in sync. See [Macro Controls & the Modular Video Rack](macros_and_rack.md).
+
+### Profiles
+
+Like MIDI, OSC address mappings are stored in JSON profiles, under `library/osc/<profile_name>.json`. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.
+
