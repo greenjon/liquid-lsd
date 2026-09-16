@@ -87,7 +87,8 @@ class UIManager(
         },
         onToggleOutputWindow = onToggleOutputWindow,
         isOutputWindowOpen = isOutputWindowOpen,
-        windowFrameController = windowFrameController
+        windowFrameController = windowFrameController,
+        onFlipRack = { rackPanel.isRearView = !rackPanel.isRearView }
     )
 
     private val missingItemsPanel = MissingItemsPanel()

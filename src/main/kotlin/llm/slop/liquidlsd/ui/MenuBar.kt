@@ -15,7 +15,8 @@ class MenuBar(
     private val onOpenAudioEngineMonitor: () -> Unit,
     private val onToggleOutputWindow: () -> Unit = {},
     private val isOutputWindowOpen: () -> Boolean = { false },
-    private val windowFrameController: WindowFrameController? = null
+    private val windowFrameController: WindowFrameController? = null,
+    private val onFlipRack: () -> Unit = {}
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -89,6 +90,11 @@ class MenuBar(
                         if (ImGui.menuItem("Modular Video Rack", "F4", isRack)) {
                             session.uiTheme.workspaceMode = UITheme.WorkspaceMode.RACK
                             AppPreferencesStore.savePreferences()
+                        }
+                        if (isRack) {
+                            if (ImGui.menuItem("Flip Rack (Rear Panel)", "Tab")) {
+                                onFlipRack()
+                            }
                         }
                         ImGui.separator()
                         if (ImGui.beginMenu("Library Drawer")) {

@@ -179,7 +179,7 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
   - [x] **Phase 5: Rack Chassis & Slot Layout System** *(rack doc §4)*: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle).
   - [x] **Phase 6: Per-Unit Macro Curation** *(rack doc §4)*: Each unit gets its own `MacroBank` (0-8 knobs/0-4 switches) scoped via `unitInstanceId`; curation UI picks which unit parameters occupy which slot. No freeform faceplate designer yet.
   - [x] **Phase 7: Embedded Confidence Micro-Monitors** *(rack doc §4)*: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
-  - [ ] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: 3D or 2.5D flipped rear chassis view with physics-curved virtual patch cables and port normaling.
+  - [x] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: Dual-faced 180° flipped rear chassis view with physics-curved virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine.
   - **Backlog / not yet scheduled**: Full freeform Faceplate Designer, Playlist/Setlist staging strategy, transition topology, GPU FBO pooling, hardware focus-follow mapping — see rack doc §3 Open Questions.
 
 ---

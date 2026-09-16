@@ -19,6 +19,7 @@ class RackManager(
 
     val units = mutableListOf<RackUnit>()
     val pipeline = RackPipeline(allocateGlBuffers = allocateGlBuffers)
+    val patchBay = RackPatchBay()
 
     var isMasterBypassed: Boolean = false
     var isMasterFolded: Boolean = false
@@ -35,9 +36,10 @@ class RackManager(
      * Initializes or synchronizes the rack units from the current active [Mixer] session.
      */
     fun populateFromSession(mixer: Mixer) {
-        // Unregister existing unit banks
+        // Unregister existing unit banks and clear patch cables
         units.forEach { MacroEngine.unregisterBank(it.id) }
         units.clear()
+        patchBay.clearAll()
 
         // 1. Deck A Generator Unit
         val deckAGen = DeckGeneratorUnit(mixer.deckA, isDeckA = true, label = "Deck A Synth")
@@ -135,6 +137,7 @@ class RackManager(
         return if (idx >= 0) {
             val removed = units.removeAt(idx)
             MacroEngine.unregisterBank(id)
+            patchBay.removeUnitConnections(id)
             removed.dispose()
             logger.info { "Removed rack unit '${removed.label}' (id=$id)" }
             true
@@ -187,7 +190,7 @@ class RackManager(
     }
 
     fun process(renderer: Renderer?): Int {
-        return pipeline.process(units, renderer)
+        return pipeline.process(units, renderer, patchBay)
     }
 
     fun resize(width: Int, height: Int) {
@@ -196,6 +199,7 @@ class RackManager(
 
     fun dispose() {
         pipeline.dispose()
+        patchBay.clearAll()
         units.forEach {
             MacroEngine.unregisterBank(it.id)
             it.dispose()

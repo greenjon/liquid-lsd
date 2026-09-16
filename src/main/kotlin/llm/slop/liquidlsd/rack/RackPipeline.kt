@@ -49,10 +49,14 @@ class RackPipeline(
     }
 
     /**
-     * Evaluates the rack chain top-to-bottom.
+     * Evaluates the rack chain top-to-bottom with optional patch cable overrides.
      * Zero-allocation frame loop.
      */
-    fun process(units: List<RackUnit>, renderer: Renderer?): Int {
+    fun process(
+        units: List<RackUnit>,
+        renderer: Renderer?,
+        patchBay: RackPatchBay? = null
+    ): Int {
         if (units.isEmpty()) {
             lastOutputTexture = 0
             return 0
@@ -70,13 +74,27 @@ class RackPipeline(
                 continue
             }
 
+            // Determine effective input texture:
+            // Check if this unit's primary video input has a virtual patch cable plugged into it
+            var stageInputTexture = currentTexture
+            if (patchBay != null) {
+                val overrideCable = patchBay.findCableInputFor(unit.id, "video_in")
+                    ?: patchBay.findCableInputFor(unit.id, "video_in_a")
+                if (overrideCable != null) {
+                    val sourceUnit = units.find { it.id == overrideCable.fromPort.unitId }
+                    if (sourceUnit != null) {
+                        stageInputTexture = sourceUnit.lastOutputTexture
+                    }
+                }
+            }
+
             val targetFBO = if (pingPongIndex % 2 == 0) stageFboA else stageFboB
 
             val stageOut = if (unit.isBypassed) {
-                currentTexture
+                stageInputTexture
             } else {
-                val out = unit.process(currentTexture, targetFBO, width, height, renderer)
-                if (out != currentTexture) {
+                val out = unit.process(stageInputTexture, targetFBO, width, height, renderer)
+                if (out != stageInputTexture) {
                     pingPongIndex++
                 }
                 out

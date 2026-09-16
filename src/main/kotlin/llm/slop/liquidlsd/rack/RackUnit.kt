@@ -65,6 +65,28 @@ interface RackUnit {
         renderer: Renderer?
     ): Int
 
+    /** Returns all available patch jacks on the rear panel of this unit. */
+    fun getRearPorts(): List<PatchPort> {
+        return when (unitType) {
+            RackUnitType.GENERATOR -> listOf(
+                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
+            )
+            RackUnitType.PROCESSOR -> listOf(
+                PatchPort(id, "video_in", "VIDEO IN", PortDirection.INPUT),
+                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
+            )
+            RackUnitType.TRANSITION -> listOf(
+                PatchPort(id, "video_in_a", "IN A", PortDirection.INPUT),
+                PatchPort(id, "video_in_b", "IN B", PortDirection.INPUT),
+                PatchPort(id, "video_out", "MASTER OUT", PortDirection.OUTPUT)
+            )
+            RackUnitType.UTILITY -> listOf(
+                PatchPort(id, "video_in", "VIDEO IN", PortDirection.INPUT),
+                PatchPort(id, "video_out", "VIDEO OUT", PortDirection.OUTPUT)
+            )
+        }
+    }
+
     /** Releases any dedicated GPU resources held by this unit. */
     fun dispose() {}
 }

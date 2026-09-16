@@ -32,6 +32,7 @@ object ShortcutManager {
         register(ShortcutAction("global.record_output", ShortcutCategory.GLOBAL, "Start / Stop Recording", "Toggles live master output recording to MP4 video.", KeyCombination(GLFW_KEY_R, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.preferences", ShortcutCategory.GLOBAL, "Open Preferences", "Opens the application preferences dialog.", KeyCombination(GLFW_KEY_P, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.toggle_rack", ShortcutCategory.GLOBAL, "Toggle Modular Video Rack", "Switches between Classic Deck View and 19\" Modular Video Rack.", KeyCombination(GLFW_KEY_F4)))
+        register(ShortcutAction("global.flip_rack", ShortcutCategory.GLOBAL, "Flip Rack (Rear Panel)", "Flips 19\" Modular Video Rack between Front Faceplates and Rear Patch Chassis.", KeyCombination(GLFW_KEY_TAB)))
 
         // 2. Parameters & Modulation Matrix
         register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves active deck preset in Parameters (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))

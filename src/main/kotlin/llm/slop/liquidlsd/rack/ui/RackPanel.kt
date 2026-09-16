@@ -20,6 +20,7 @@ class RackPanel(
 ) {
     private var initializedFromSession = false
     private var isAddUnitPopupOpen = false
+    var isRearView = false
 
     fun draw(
         session: SessionContext,
@@ -48,9 +49,16 @@ class RackPanel(
         val bayW = minOf(maxBayW, 1400f)
         val bayStartX = ((panelWidth - bayW) * 0.5f).coerceAtLeast(earW + 8f)
 
+        // Handle Tab key shortcut to flip between Front and Rear
+        if (llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("global.flip_rack")) {
+            isRearView = !isRearView
+        }
+
         // 3. Scrollable Rack Bay Region
         ImGui.setCursorPosX(bayStartX - earW)
         ImGui.setCursorPosY(toolbarH)
+
+        RackRearChassisRenderer.clearFrameState()
 
         val childFlags = ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.AlwaysVerticalScrollbar
         if (ImGui.beginChild("##rack_bay_chassis", bayW + (earW * 2f), contentH, false, childFlags)) {
@@ -100,13 +108,24 @@ class RackPanel(
                     onRemove = { unitToRemoveId = unit.id }
                 )
 
-                // Faceplate parameters (if not collapsed)
+                val bodyH = unitH - RackChassisRenderer.UNIT_HEADER_HEIGHT
+
+                // Body: Faceplate (Front) vs Chassis Jacks (Rear)
                 if (!unit.isCollapsed) {
-                    RackFaceplateGrid.drawFaceplate(session, unit, bayW, unitH - RackChassisRenderer.UNIT_HEADER_HEIGHT)
+                    if (isRearView) {
+                        RackRearChassisRenderer.drawUnitRear(session, unit, rackManager.patchBay, bayW, bodyH)
+                    } else {
+                        RackFaceplateGrid.drawFaceplate(session, unit, bayW, bodyH)
+                    }
                 }
 
                 // Advance cursor for next unit
-                ImGui.setCursorPosY(ImGui.getCursorPosY() + (unitH - RackChassisRenderer.UNIT_HEADER_HEIGHT) + RackChassisRenderer.UNIT_MARGIN_Y)
+                ImGui.setCursorPosY(ImGui.getCursorPosY() + bodyH + RackChassisRenderer.UNIT_MARGIN_Y)
+            }
+
+            // Draw Virtual Patch Cables across the entire rear bay (drawn on top of all units)
+            if (isRearView) {
+                drawPatchCablesOverlay(dl)
             }
 
             // Apply deferred reordering or removal
@@ -163,6 +182,24 @@ class RackPanel(
         ImGui.popStyleColor()
         ImGui.sameLine()
 
+        // Flip Rack View (Tab) button
+        if (isRearView) {
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.25f, 0.65f, 0.90f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 1.0f, 1.0f, 1.0f)
+        } else {
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.20f, 0.22f, 0.25f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.70f, 0.75f, 0.80f, 1.0f)
+        }
+        val flipLabel = if (isRearView) "${Icons.REFRESH} REAR CHASSIS (Tab)" else "${Icons.REFRESH} FRONT FACEPLATE (Tab)"
+        if (ImGui.button(flipLabel)) {
+            isRearView = !isRearView
+        }
+        ImGui.popStyleColor(2)
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip("Flip rack 180° between Front Performance Faceplates and Rear Patch Cable Chassis (Shortcut: Tab)")
+        }
+        ImGui.sameLine()
+
         // Master Bypass button
         val bypActive = rackManager.isMasterBypassed
         if (bypActive) {
@@ -195,6 +232,46 @@ class RackPanel(
         }
 
         ImGui.popStyleVar(2)
+    }
+
+    private fun drawPatchCablesOverlay(dl: imgui.ImDrawList) {
+        val jackMap = RackRearChassisRenderer.registeredJackPositions
+
+        // 1. Draw established patch cables
+        for (cable in rackManager.patchBay.getCables()) {
+            val fromCoord = jackMap[cable.fromPort.fullId]
+            val toCoord = jackMap[cable.toPort.fullId]
+            if (fromCoord != null && toCoord != null) {
+                RackCableRenderer.drawCable(
+                    dl = dl,
+                    x1 = fromCoord.first,
+                    y1 = fromCoord.second,
+                    x2 = toCoord.first,
+                    y2 = toCoord.second,
+                    colorHex = cable.colorHex,
+                    isInteractiveDragging = false
+                )
+            }
+        }
+
+        // 2. Draw active dragging elastic cable following mouse cursor
+        val draggingFrom = RackRearChassisRenderer.draggingFromPort
+        if (draggingFrom != null) {
+            val startX = RackRearChassisRenderer.dragStartPos[0]
+            val startY = RackRearChassisRenderer.dragStartPos[1]
+            val mousePos = ImGui.getIO().mousePos
+
+            val previewColor = 0xFF00E5FF // Cyan preview
+            RackCableRenderer.drawCable(
+                dl = dl,
+                x1 = startX,
+                y1 = startY,
+                x2 = mousePos.x,
+                y2 = mousePos.y,
+                colorHex = previewColor,
+                isInteractiveDragging = true
+            )
+        }
     }
 
     private fun drawInsertionSlot(startX: Float, bayWidth: Float, slotHeight: Float) {

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Rear Panel & Virtual Patch Cables (`RackPatchBay.kt`, `RackCableRenderer.kt`, `RackRearChassisRenderer.kt`, `RackPanel.kt`, `RackUnit.kt`, `RackPipeline.kt`, `RackManager.kt`, `MenuBar.kt`, `ShortcutManager.kt`, `RackPatchBayTest.kt`)
+- **Rear Panel & Virtual Patch Cables (Milestone 6, Phase 8)**:
+  - Added dual-faced 180° rack flip toggle (`Tab` key, top toolbar `[ FRONT | REAR ]` toggle, and `View > Flip Rack (Rear Panel)` menu) to expose rear chassis panels.
+  - Implemented industrial rear panel design with heatsink ventilation slots, stenciled regulatory / warning labels, AC power inlet receptacle box, and 1/4" phone jacks with metallic hexagonal nuts.
+  - Built bidirectional port signaling LEDs: dim cyan for available inputs, dim amber for available outputs, and vibrant illuminated matching color when cabled.
+  - Designed `RackCableRenderer` simulating cubic Bézier catenary curve sag with distance-dependent physics, multi-pass rubber sheath rendering (drop shadow, thick outer casing, highlight specular core), and nickel-plated metal plugs with strain reliefs.
+  - Created interactive drag-to-patch cabling workflow: left-click jack to extend elastic cable, drop onto target jack to patch; right-click any connected jack to unplug.
+  - Built `RackPatchBay` routing engine enforcing directional validity (`OUTPUT` to `INPUT`), avoiding same-unit loops, and handling automatic input override replacement.
+  - Integrated `RackPipeline` override resolution: evaluates chained stages top-to-bottom normalled by default, seamlessly routing the connected upstream unit's texture output when patched via virtual cable.
+  - Added comprehensive test suite `RackPatchBayTest.kt`.
+
 ### Embedded Confidence Micro-Monitors (`RackMicroMonitor.kt`, `RackUnit.kt`, `RackPipeline.kt`, `RackFaceplateGrid.kt`, `RackMicroMonitorTest.kt`)
 - **Embedded Confidence Micro-Monitors (Milestone 6, Phase 7)**:
   - Added dedicated hardware-styled confidence micro-monitors (`RackMicroMonitor.kt`) embedded directly into unit faceplates.
