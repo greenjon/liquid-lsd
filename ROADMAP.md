@@ -32,7 +32,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
 | **Macro Controls & Parameter Linking** | `ui/*`, `parameters/*`, `models/*` | **COMPLETE** | 8 Knobs + 4 Switches, 1-to-many bindings, modulating modulators, Column 3 `[MIXER\|MACROS]` mode, Learn mode UX. |
 | **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
-| **Build for ARM64 Linux** | `build.gradle.kts`, `ci`, `utils/NativeLibraryLoader.kt` | **COMPLETE** | GitHub Actions ARM64 workflow, runtime native loader hook (`prepareImGuiNatives()`), JRE 17 `linux-aarch64` integration, and 5-platform CI smoke matrix restored. |
+| **Build for ARM64 Linux** | `build.gradle.kts`, `ci`, `utils/NativeLibraryLoader.kt` | **COMPLETE** | Prebuilt `imgui-java` ARM64 native sourced from a separate build repo, runtime native loader hook (`prepareImGuiNatives()`), JRE 17 `linux-aarch64` integration, and 5-platform CI smoke matrix restored. |
 
 ---
 
@@ -194,11 +194,11 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
 ### Milestone 7: Build for ARM64 Linux
 > **Reference**: [Build for ARM64 Linux](docs/developer/build_arm64_linux.md)  
 > **Status**: Complete / Restored  
-> **Objective**: Restore native Linux ARM64 (`aarch64`) desktop support by compiling missing native JNI binaries (`imgui-java`) on GitHub Actions native ARM runners, integrating them via runtime loader hooks, and restoring `linux-arm64` distribution ZIP packaging.
+> **Objective**: Restore native Linux ARM64 (`aarch64`) desktop support by sourcing the missing native JNI binary (`imgui-java`) from a dedicated build repo, integrating it via runtime loader hooks, and restoring `linux-arm64` distribution ZIP packaging.
 
-- [x] **Compile `libimgui-java64.so` for aarch64 on GitHub Actions**:
-  - Run build workflow on GitHub's free native `ubuntu-24.04-arm` runners.
-  - Compile Dear ImGui C++ sources and package native ELF shared library.
+- [x] **Source `libimgui-java64.so` for aarch64**:
+  - Built once per `imgui-java` version in [`imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64) on GitHub's free native `ubuntu-24.04-arm` runners, decoupled from Liquid LSD's own (much more frequent) release cadence.
+  - Liquid LSD's CI downloads the matching release asset by pinned `imguiVersion` rather than compiling it in-repo.
 - [x] **Runtime Dynamic Loader Integration (`NativeLibraryLoader`)**:
   - Place `libimgui-java64.so` in `src/main/resources/natives/linux-arm64/`.
   - Extract and configure `System.setProperty("imgui.library.path", ...)` before ImGui initialization on Linux ARM64 (`prepareImGuiNatives()`).
@@ -206,7 +206,7 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
   - Compile `liblink_jni.so` for Linux ARM64 (or rely on automatic Carabiner TCP fallback).
 - [x] **Re-enable Packaging & CI**:
   - Restore `zipLinuxArm` task and Adoptium `linux-aarch64` JRE in `build.gradle.kts`.
-  - Re-enable `linux-arm64` smoke test in GitHub Actions CI workflow.
+  - Re-enable `linux-arm64` smoke test in GitHub Actions CI workflow — verified passing across all 5 platforms in production release CI.
 
 ---
 

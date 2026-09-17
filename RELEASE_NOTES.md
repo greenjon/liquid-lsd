@@ -1,11 +1,11 @@
 ## [Unreleased]
 
-### Linux ARM64 (`aarch64`) Distribution Restoration (`build.gradle.kts`, `.github/workflows/*`, `utils/NativeLibraryLoader.kt`, `Main.kt`)
-- **Restored Linux ARM64 Build Target**: Re-enabled native Linux ARM64 (`aarch64`) support across the build system, JNI library extraction, and CI distribution matrix.
+### Linux ARM64 (`aarch64`) Distribution Restoration — Now Shipping on 5 Platforms (`build.gradle.kts`, `.github/workflows/*`, `utils/NativeLibraryLoader.kt`, `Main.kt`)
+- **Restored Linux ARM64 Build Target**: Re-enabled native Linux ARM64 (`aarch64`) support across the build system, JNI library extraction, and CI distribution matrix. Liquid LSD Desktop now ships on **5 platforms**: Linux x64, Linux ARM64, macOS x64, macOS ARM64, and Windows x64.
 - **Embedded JNI Library Loader (`NativeLibraryLoader.prepareImGuiNatives()`)**: Automatically extracts embedded `libimgui-java64.so` for Linux ARM64 to a temporary runtime folder and configures `System.setProperty("imgui.library.path", ...)` before ImGui context initialization.
-- **GitHub Actions Native ARM Compilation**: Documented and configured native `ubuntu-24.04-arm` runners for compiling `imgui-java` native shared libraries (`docs/developer/build_arm64_linux.md`).
+- **Native Binary Sourced from a Dedicated Repo, Not Compiled In-Repo**: Upstream `imgui-java` doesn't publish Linux ARM64 natives, so `libimgui-java64.so` is built once per `imgui-java` version in [`imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64) and CI downloads the matching release asset by pinned `imguiVersion` (`docs/developer/build_arm64_linux.md`) — decoupling the native build from Liquid LSD's much more frequent release cadence.
 - **Adoptium JRE 17 `linux-aarch64` Packaging**: Restored `zipLinuxArm` Gradle task with `run-linux-arm.sh` launcher script and Adoptium JRE 17 bundling.
-- **5-Platform CI Verification Matrix**: Added `linux-arm64` matrix jobs to `.github/workflows/smoke-test.yml` and `.github/workflows/release.yml`.
+- **5-Platform CI Verification Matrix**: Added `linux-arm64` matrix jobs to `.github/workflows/smoke-test.yml` and `.github/workflows/release.yml` — verified passing end-to-end in production release CI.
 
 ### TouchOSC & Open Sound Control (OSC) Integration (`OscCodec.kt`, `OscEngine.kt`, `OscMappingManager.kt`, `OscPreferences.kt`, `OscPreferencesPanel.kt`, `MacroOscBridge.kt`)
 - **Pure Kotlin Zero-Dependency OSC 1.0 Codec (`OscCodec`)**: High-performance binary encoder and decoder for OSC messages and bundles supporting 32-bit floats (`f`), integers (`i`), strings (`s`), booleans (`T`/`F`), and multi-argument vectors, with 4-byte alignment padding and big-endian network byte order.

@@ -63,7 +63,7 @@ The roadmap to v1.0 focuses on **tactile control, modular flexibility, hardware 
    - Propellerhead Reason-style `Tab` key 180° rear panel flip to expose virtual patch cables and custom signal routing.
 
 6. **ARM64 Linux Desktop Build**:
-   - GitHub Actions ARM64 native compilation of `imgui-java`, runtime native loader integration, and restoration of the `linux-arm64` distribution package.
+   - Prebuilt `imgui-java` ARM64 native (sourced from [`imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64), since upstream doesn't publish one), runtime native loader integration, and the `linux-arm64` distribution package — Liquid LSD now ships on **5 platforms**: Linux x64/ARM64, macOS x64/ARM64, and Windows x64.
 
 *For complete details and progress tracking, see [`ROADMAP.md`](ROADMAP.md).*
 
@@ -150,7 +150,7 @@ Output binary:
 build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 ```
 
-Platform distribution ZIP tasks are available in `build.gradle.kts` (`zipLinux`, `zipMacArm`, `zipMacIntel`, `zipWindows`).
+Platform distribution ZIP tasks are available in `build.gradle.kts` (`zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`, `zipWindows`).
 
 ---
 

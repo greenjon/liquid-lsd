@@ -396,6 +396,17 @@
 
 ---
 
+## ARM64 Linux Native Build Externalized to a Dedicated Repo (`.github/workflows/*`, `docs/developer/build_arm64_linux.md`)
+
+- **Context**: The initial ARM64 Linux restoration (below) compiled `libimgui-java64.so` in-repo on every CI run via a `build-imgui-arm64-native` job. That job never actually succeeded across 6 iterations of debugging (progressively more elaborate `g++`/`gcc` argument-stripping shim scripts), and even once fixed, compiling native C++ on every one of Liquid LSD's several-times-a-day releases is wasted CI time for a dependency (`imgui-java`) that changes far less often.
+- **Decision**: Moved the ARM64 native build out of this repo entirely into
+  [`greenjon/imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64), a small public repo that builds `libimgui-java64.so` once per `imgui-java` version and publishes it as a GitHub Release asset. Liquid LSD's CI now just `curl`s the asset matching the pinned `imguiVersion` (`build.gradle.kts`) into `src/main/resources/natives/linux-arm64/` — no compiler toolchain needed in this repo's CI at all.
+- **Root cause found while debugging the in-repo attempts**: `imgui-java`'s own `GenerateLibs.groovy` always constructs its Linux `BuildTarget` via `newDefaultTarget(Os.Linux, Bitness._64)`, which defaults to `Architecture.x86` and bakes in x86-only compiler flags (`-mfpmath=sse -msse -m64`) — rejected outright by a native aarch64 `g++`, regardless of the runner itself being ARM64. `gdx-jnigen` 2.5.2 (the library `imgui-java` builds on) already ships a working `Architecture.ARM` Linux target (`aarch64-linux-gnu-` prefix, `-fPIC`, no SSE flags); `imgui-java`'s script just never selects it. The natives repo's workflow patches this in via `sed` against the checked-out `imgui-java` source and pins the resulting file/folder naming back to what the rest of that script hardcodes downstream.
+- **Also found and fixed in the same pass**: `.github/workflows/release.yml` had `permissions: workflows: write`, which isn't a valid GitHub Actions permission scope (that's a PAT/OAuth-only concept). This made every run of the release workflow fail schema validation instantly — before any job could start — independent of the ARM64 issue. `contents: write` already covers the tag push this workflow performs.
+- **Verified**: a full production `release.yml` run (triggered by these fixes landing on `main`) passed end-to-end across all 5 platforms, including the `linux-arm64` smoke test, and published a real release.
+
+---
+
 ## Platform Target Restoration: Linux ARM64 (`aarch64`) (`build.gradle.kts`, `.github/workflows/*`, `NativeLibraryLoader.kt`)
 
 - **Decision**: Restored Linux ARM64 (`aarch64`) as a first-class supported build and release target.
