@@ -157,7 +157,7 @@ object MacroBindingInspector {
                 }
                 itemTooltip("Delete this binding.")
 
-                // Min/Max and Invert row
+                // Min/Max, Invert, and Curve row
                 ImGui.indent(18f)
 
                 ImGui.setNextItemWidth(65f)
@@ -182,7 +182,7 @@ object MacroBindingInspector {
                 }
                 itemTooltip("Invert travel direction.")
 
-                // Response curve row
+                ImGui.sameLine(0f, 8f)
                 ImGui.setNextItemWidth(100f)
                 val curves = arrayOf("Linear", "Exponential", "Logarithmic", "S-Curve", "Step")
                 val currentCurveIdx = when (binding.curve) {
@@ -202,6 +202,7 @@ object MacroBindingInspector {
                         else -> MacroCurveType.STEP
                     }
                 }
+                itemTooltip("Select response curve shaping.")
 
                 if (binding.curve == MacroCurveType.STEP) {
                     ImGui.sameLine(0f, 8f)
