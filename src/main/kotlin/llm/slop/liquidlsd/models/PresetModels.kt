@@ -295,7 +295,12 @@ data class SessionStateDto(
     val isTransAutoAdvanceEnabled: Boolean = true,
     val isTransRepeatEnabled: Boolean = false,
     val isTransShuffleEnabled: Boolean = false,
-    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null
+    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null,
+    // Per-Rack-unit MacroBanks, keyed by the stable RackUnit.id of each of the built-in unit
+    // slots (see RackManager's *_UNIT_ID constants). Absent/empty on session files saved before
+    // this field existed -- RackManager.populateFromSession() falls back to its hardcoded default
+    // curated bindings for any unit id missing from this map, so old files still load cleanly.
+    val rackUnitMacroBanks: Map<String, llm.slop.liquidlsd.macro.MacroBank> = emptyMap()
 )
 
 @Serializable

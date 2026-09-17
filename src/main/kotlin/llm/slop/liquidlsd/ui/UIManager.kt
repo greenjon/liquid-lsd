@@ -618,6 +618,8 @@ class UIManager(
     }
 
     private fun drawMixer(mixer: Mixer) {
+        Column3HeaderToggle.draw(session)
+        ImGui.spacing()
         when (session.uiTheme.column3Mode) {
             UITheme.Column3Mode.MIXER -> mixerPanel.draw(session, mixer)
             UITheme.Column3Mode.MACROS -> macroPanel.draw(session, mixer)

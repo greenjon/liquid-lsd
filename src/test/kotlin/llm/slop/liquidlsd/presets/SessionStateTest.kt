@@ -2,6 +2,10 @@ package llm.slop.liquidlsd.presets
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.macro.MacroBank
+import llm.slop.liquidlsd.macro.MacroBinding
+import llm.slop.liquidlsd.macro.MacroControl
+import llm.slop.liquidlsd.macro.MacroTargetType
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.MixerDto
 import llm.slop.liquidlsd.models.ParameterDto
@@ -100,6 +104,96 @@ class SessionStateTest {
         assertEquals(0.4f, decoded.mixer.levelBG)
         assertEquals(0.2f, decoded.mixer.levelPV)
         assertEquals(0.9f, decoded.mixer.masterLevel)
+    }
+
+    @Test
+    fun testSessionStateDtoRoundTripsRackUnitMacroBanks() {
+        val dummyParam = ParameterDto(
+            baseValue = 0.5f,
+            baseMin = 0.0f,
+            baseMax = 1.0f,
+            randomizeBase = false,
+            modulators = emptyList()
+        )
+        val dummyDeck = DeckPresetDto(
+            name = "Deck A",
+            visualSourceType = "mandala",
+            parameters = emptyMap(),
+            feedbackParameters = emptyMap(),
+            globalAlpha = dummyParam,
+            isEmpty = false
+        )
+        val mixerDto = MixerDto(
+            crossfade = dummyParam,
+            masterAlpha = dummyParam,
+            blendMode = 4.0f
+        )
+
+        // A per-unit bank with a curated knob binding, exactly as RackUnitMacroCuration would
+        // produce for a rack unit's own MacroBank -- keyed by the unit's stable id.
+        val curatedKnob = MacroControl(
+            label = "ZOOM",
+            value = 0.5f,
+            bindings = mutableListOf(
+                MacroBinding(
+                    unitInstanceId = "deckA",
+                    parameterId = "viewZoom",
+                    targetType = MacroTargetType.PARAM_BASE_VALUE,
+                    minVal = 0.2f,
+                    maxVal = 3.0f
+                )
+            )
+        )
+        val deckAUnitBank = MacroBank(knobs = listOf(curatedKnob) + List(7) { MacroControl(label = "KNOB ${it + 2}") })
+
+        val session = SessionStateDto(
+            deckA = dummyDeck,
+            deckB = dummyDeck.copy(name = "Deck B"),
+            mixer = mixerDto,
+            queue = emptyList(),
+            activeIndex = -1,
+            isAutoVJEnabled = false,
+            rackUnitMacroBanks = mapOf("deckA" to deckAUnitBank)
+        )
+
+        val jsonStr = json.encodeToString(session)
+        val decoded = json.decodeFromString<SessionStateDto>(jsonStr)
+
+        assertEquals(1, decoded.rackUnitMacroBanks.size)
+        val restoredBank = decoded.rackUnitMacroBanks["deckA"]
+        assertNotNull(restoredBank)
+        val restoredBinding = restoredBank.knobs[0].bindings.first()
+        assertEquals("deckA", restoredBinding.unitInstanceId)
+        assertEquals("viewZoom", restoredBinding.parameterId)
+        assertEquals(0.2f, restoredBinding.minVal)
+        assertEquals(3.0f, restoredBinding.maxVal)
+        assertEquals("ZOOM", restoredBank.knobs[0].label)
+    }
+
+    @Test
+    fun testSessionStateDtoWithoutRackUnitMacroBanksFieldDecodesGracefully() {
+        // Simulates a session file saved before rackUnitMacroBanks existed: the field is simply
+        // absent from the JSON. Must decode without error and default to an empty map so
+        // RackManager.populateFromSession() falls back to its hardcoded default curated bindings.
+        val legacyJson = """
+            {
+              "version": 6,
+              "deckA": {"name": "Deck A", "visualSourceType": "mandala", "parameters": {}, "feedbackParameters": {}},
+              "deckB": {"name": "Deck B", "visualSourceType": "mandala", "parameters": {}, "feedbackParameters": {}},
+              "mixer": {
+                "crossfade": {"baseValue": 0.0, "baseMin": -1.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []},
+                "masterAlpha": {"baseValue": 1.0, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []},
+                "blendMode": 0.0
+              },
+              "queue": [],
+              "activeIndex": -1,
+              "isAutoVJEnabled": false
+            }
+        """.trimIndent()
+
+        val decoded = json.decodeFromString<SessionStateDto>(legacyJson)
+        assertTrue(decoded.rackUnitMacroBanks.isEmpty())
+        assertNull(decoded.macroBank)
     }
 
     @Test

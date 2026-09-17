@@ -99,8 +99,9 @@ object MixerLayoutCalculator {
         presetNameExtraHeight: Float,
         itemSpacingY: Float
     ): Float {
+        val modeToggleH = 28f + itemSpacingY + 4f
         val separatorBands = itemSpacingY * 12f + 6f
         val safetyMargin = itemSpacingY * 3f + 8f
-        return masterControlsH + (presetNameExtraHeight * 2f) + separatorBands + safetyMargin
+        return modeToggleH + masterControlsH + (presetNameExtraHeight * 2f) + separatorBands + safetyMargin
     }
 }

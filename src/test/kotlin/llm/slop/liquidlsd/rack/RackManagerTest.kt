@@ -1,5 +1,9 @@
 package llm.slop.liquidlsd.rack
 
+import llm.slop.liquidlsd.macro.MacroBank
+import llm.slop.liquidlsd.macro.MacroBinding
+import llm.slop.liquidlsd.macro.MacroControl
+import llm.slop.liquidlsd.macro.MacroTargetType
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -95,5 +99,50 @@ class RackManagerTest {
         u0.isSoloed = true
         manager.clearAllSolo()
         assertFalse(u0.isSoloed)
+    }
+
+    /**
+     * Mirrors the exact "snapshot live units before rebuild" step at the top of
+     * [RackManager.populateFromSession] (real Deck/Mixer construction needs a live GL context, so
+     * it can't be exercised end-to-end here -- see the class doc comment on that method). Verifies
+     * the underlying contract that method relies on: a rack unit's live [RackUnit.macroBank]
+     * (e.g. curated per-unit bindings from RackUnitMacroCuration) captured into
+     * [RackManager.persistedUnitMacroBanks] keyed by its stable [RackUnit.id] round-trips back out
+     * unchanged, which is what lets a rebuilt unit with the same id recover its curation instead
+     * of falling back to hardcoded defaults.
+     */
+    @Test
+    fun testPersistedUnitMacroBanksCapturesAndRestoresLiveCuration() {
+        val manager = RackManager(allocateGlBuffers = false)
+        assertTrue(manager.persistedUnitMacroBanks.isEmpty(), "No persisted state until a unit has actually been curated/captured")
+
+        val curatedKnob = MacroControl(
+            label = "ZOOM",
+            bindings = mutableListOf(
+                MacroBinding(
+                    unitInstanceId = RackManager.DECK_A_UNIT_ID,
+                    parameterId = "viewZoom",
+                    targetType = MacroTargetType.PARAM_BASE_VALUE,
+                    minVal = 0.2f,
+                    maxVal = 3.0f
+                )
+            )
+        )
+        val curatedBank = MacroBank(knobs = listOf(curatedKnob) + List(7) { MacroControl(label = "KNOB ${it + 2}") })
+        val deckAUnit = GenericRackUnit(id = RackManager.DECK_A_UNIT_ID, label = "Deck A", macroBank = curatedBank)
+        manager.addUnit(deckAUnit)
+
+        // Same snapshot expression populateFromSession runs before wiping `units` on a rebuild
+        // (e.g. a RE-SYNC SESSION click).
+        manager.persistedUnitMacroBanks = manager.persistedUnitMacroBanks + manager.units.associate { it.id to it.macroBank }
+
+        val restored = manager.persistedUnitMacroBanks[RackManager.DECK_A_UNIT_ID]
+        assertNotNull(restored)
+        assertEquals("ZOOM", restored!!.knobs[0].label)
+        val restoredBinding = restored.knobs[0].bindings.first()
+        assertEquals(RackManager.DECK_A_UNIT_ID, restoredBinding.unitInstanceId)
+        assertEquals("viewZoom", restoredBinding.parameterId)
+        assertEquals(0.2f, restoredBinding.minVal)
+        assertEquals(3.0f, restoredBinding.maxVal)
     }
 }

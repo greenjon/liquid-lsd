@@ -258,6 +258,13 @@ class UIThemeTest {
     // --- UI Layout & Component Elements ---
 
     @Test
+    fun testColumn3ModeDefaultAndToggle() {
+        assertEquals(UITheme.Column3Mode.MIXER, UITheme.column3Mode)
+        UITheme.column3Mode = UITheme.Column3Mode.MACROS
+        assertEquals(UITheme.Column3Mode.MACROS, UITheme.column3Mode)
+        UITheme.column3Mode = UITheme.Column3Mode.MIXER
+        assertEquals(UITheme.Column3Mode.MIXER, UITheme.column3Mode)
+    }
     fun testFontSizeBoundaries() {
         // Preset name scale range: 80%–120%
         UITheme.presetNameScalePercent = 50 // below min

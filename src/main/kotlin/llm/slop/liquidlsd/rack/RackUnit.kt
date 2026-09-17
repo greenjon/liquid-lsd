@@ -133,9 +133,11 @@ abstract class BaseRackUnit(
 class DeckRackUnit(
     val deck: Deck,
     label: String,
+    id: String = UUID.randomUUID().toString().take(8),
     heightU: Int = 3,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
+    id = id,
     label = label,
     unitType = RackUnitType.GENERATOR,
     heightU = heightU,
@@ -193,9 +195,11 @@ class DeckRackUnit(
 class MixerTransitionUnit(
     val mixer: Mixer,
     label: String = "Master Crossfader & Transition",
+    id: String = UUID.randomUUID().toString().take(8),
     heightU: Int = 2,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
+    id = id,
     label = label,
     unitType = RackUnitType.TRANSITION,
     heightU = heightU,
@@ -246,9 +250,11 @@ class MixerTransitionUnit(
 class QueueStagingRackUnit(
     val mixer: Mixer,
     label: String = "Queue & Staging",
+    id: String = UUID.randomUUID().toString().take(8),
     heightU: Int = 3,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
+    id = id,
     label = label,
     unitType = RackUnitType.UTILITY,
     heightU = heightU,

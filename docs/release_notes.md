@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Column 3 Header Mode Toggle (`Column3HeaderToggle.kt`, `UIManager.kt`, `MacroPanel.kt`, `MixerLayout.kt`)
+- **Column 3 Mode Toggle Always Visible**: Extracted `Column3HeaderToggle` to draw the `[ MIXER | MACROS ]` header toggle directly at the top of the Column 3 window in `UIManager.kt`, ensuring the mode switch pill is always visible in both `MIXER` and `MACROS` modes as documented in `docs/user_guide/macros_and_rack.md`.
+- **Layout Height Calculation Update**: Updated `MixerLayoutCalculator`'s vertical chrome estimation to incorporate the header toggle height so Column 3 layout auto-sizing stays exact in both modes.
+
 ### Automated Screen Capture, Startup CLI Flags & Isolated UI Lab (`CliArgs.kt`, `ScreenshotCapture.kt`, `UiLabPanel.kt`, `Main.kt`, `UIManager.kt`, `build.gradle.kts`)
 - **Startup CLI Arguments Parser (`CliArgs.kt`)**: Added command-line option parser supporting `--screenshot-ui=<file.png>`, `--screenshot-after-frames=<N>` (default: 5), `--window=<W>x<H>|maximized`, `--no-audio`, `--ui-lab`, `--help`, and `--version`.
 - **Automated Frame Capture & Graceful Exit (`ScreenshotCapture.kt`)**: Implemented framebuffer PNG export with STB Image write and scanline vertical flipping. The render loop monitors the frame settle count and automatically captures the window framebuffer and exits cleanly when `--screenshot-ui` is provided.
