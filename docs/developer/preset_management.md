@@ -159,3 +159,18 @@ To ensure users never start with a blank screen on clean git clones or new relea
 - Users can trigger **File > Restore Factory Presets...** (or via the empty preset browser button) at any time.
 - Calls `ensureDefaultLibrary(forceRestore = true)` which re-extracts any missing factory presets and playlists without touching or overwriting custom presets.
 
+---
+
+## 8. Modular Video Rack Integration (Queue Staging & Per-Unit Macro Banks)
+
+The Modular Video Rack (`rack/`, `rack/ui/`; see `docs/developer/modular_video_rack_proposal.md`) is a performance-surface *view* onto the same preset/queue managers documented above, not a parallel queue or preset system.
+
+### Queue & Staging Master Unit (`QueueStagingRackUnit`)
+[`RackUnit.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rack/RackUnit.kt) defines `QueueStagingRackUnit`, a 3U rack unit that `RackManager.populateFromSession()` always inserts into the bay (one per rack, not per deck). Its three 1U sections are condensed transport views wired directly to the existing `PlayQueueManager`, `BgQueueManager`, and `TransitionQueueManager` singletons documented in §3-5 above — prev/play-pause/next controls plus a "now → next" readout, not a reimplementation of `QueueActionsPanel`'s full drag-and-drop list UI. `QueueStagingRackUnit` itself holds no queue state: it exposes no named parameters (`getNamedParameters()` returns `emptyMap()`) and its `process()` passes the input texture through unchanged, since all three underlying managers are already driven every frame by their existing call paths regardless of which workspace mode (`UITheme.WorkspaceMode.CLASSIC`/`RACK`) is currently visible.
+
+### Per-Unit Macro Banks (`unitInstanceId` Scoping)
+Every `RackUnit` owns its own `macroBank: MacroBank` (0-8 knobs, 0-4 switches — the same shape and engine as the Column 3 global bank; see `docs/user_guide/macros_and_rack.md`). `RackManager.addUnit()` registers each unit's bank with `MacroEngine.registerBank(unit.id, unit.macroBank)`, and `removeUnit()`/`dispose()` unregister it — this is what makes `MacroEngine.tick()` evaluate rack-unit-scoped bindings (`MacroBinding.unitInstanceId != null`) alongside the global bank every frame. `RackUnitMacroCuration.kt` is the drawer UI for picking which of a unit's `getNamedParameters()` entries occupy which knob/switch slot.
+
+### Current Persistence Scope: Global Bank Only
+Bundled preset serialization (§5.2 of the macro proposal) currently covers only the **global, session-scoped** Column 3 bank (`MacroBinding.unitInstanceId == null`): `PresetRepository` filters it per-deck via `MacroBankSerializer.filterMacroBankForDeck()` into each `DeckPresetDto.macroBank`, and `PresetManager.loadDeckPresetAsync` restores it via `MacroBankSerializer.restoreMacroBankForDeck()`; `SessionSerializer` separately bundles the full global bank into `SessionStateDto.macroBank` via `MacroEngine.globalBank()`. Neither the rack's unit list (which units are in the bay, their order, patch cables) nor any unit's per-instance `MacroBank` is part of these DTOs today — `RackManager.populateFromSession()` rebuilds the bay from scratch on every call (app launch, or the panel's "RE-SYNC SESSION" button), reconstructing each `DeckRackUnit`/`MixerTransitionUnit` with a fresh `MacroBank()` and re-applying only the two hardcoded ZOOM/ROTATE (or XFADE/BLOOM/ALPHA) curated bindings set up in that function — any additional curation a performer adds via `RackUnitMacroCuration` during a session does not survive a re-sync or app restart. Persisting rack layout and per-unit macro curation alongside deck presets is not yet implemented.
+

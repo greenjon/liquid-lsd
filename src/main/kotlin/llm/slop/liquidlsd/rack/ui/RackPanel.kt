@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
 
 /**
  * Top-level workspace panel rendering the 19" Modular Video Rack.
@@ -190,6 +191,7 @@ class RackPanel(
             isAddUnitPopupOpen = true
         }
         ImGui.popStyleColor()
+        itemTooltip("Insert a new rack module (Generator clone or blank Utility unit).")
         ImGui.sameLine()
 
         // Flip Rack View (Tab) button
@@ -205,9 +207,7 @@ class RackPanel(
             isRearView = !isRearView
         }
         ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Flip rack 180° between Front Performance Faceplates and Rear Patch Cable Chassis (Shortcut: Tab)")
-        }
+        itemTooltip("Flip rack 180° between Front Performance Faceplates and Rear Patch Cable Chassis (Shortcut: Tab)")
         ImGui.sameLine()
 
         // Master Bypass button
@@ -221,6 +221,7 @@ class RackPanel(
             rackManager.toggleMasterBypass()
         }
         ImGui.popStyleColor()
+        itemTooltip("Bypass processing on every rack unit at once (passthrough, overrides individual unit bypass).")
         ImGui.sameLine()
 
         // Fold / Unfold All
@@ -228,12 +229,14 @@ class RackPanel(
         if (ImGui.button(foldText)) {
             rackManager.toggleFoldAll()
         }
+        itemTooltip(if (rackManager.isMasterFolded) "Expand every rack unit back to full controls." else "Collapse every rack unit to its 0.5U spine.")
         ImGui.sameLine()
 
         // Clear Solo
         if (ImGui.button("CLEAR SOLO")) {
             rackManager.clearAllSolo()
         }
+        itemTooltip("Un-solo every rack unit.")
         ImGui.sameLine()
 
         // Reset to session
@@ -244,6 +247,7 @@ class RackPanel(
             RackMicroMonitor.releaseAll()
             rackManager.populateFromSession(mixer)
         }
+        itemTooltip("Rebuild the rack from the current session's Decks/Mixer, discarding any added units and patch cables.")
 
         ImGui.popStyleVar(2)
     }
@@ -305,6 +309,7 @@ class RackPanel(
         if (ImGui.button("+ INSERT RACK MODULE", 160f, 26f)) {
             isAddUnitPopupOpen = true
         }
+        itemTooltip("Insert a new rack module (Generator clone or blank Utility unit).")
     }
 
     private fun drawAddUnitModal(mixer: Mixer) {

@@ -15,6 +15,7 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), 2x2 grouped Library panel, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
 - **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
+- **Modular Video Rack & Macro Controls**: 19" rack-style alternate workspace with curated per-unit performance faceplates, embedded confidence micro-monitors, per-unit `MacroBank`s (8 knobs / 4 switches), and a Reason-style `Tab`-flip rear chassis with virtual patch cables.
 
 ---
 
@@ -30,42 +31,29 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 | **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 4-slot chains, preset tags, instant tag search, drag-and-drop preset loading. |
 | **MIDI & Shortcuts** | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer. |
 | **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine. |
+| **Modular Video Rack & Macros** | **Core Complete** | 19" rack workspace, curated faceplates, per-unit macro banks & confidence monitors, `Tab`-flip rear patch bay. Patch cables reroute pixels for custom Utility units only — see [`ROADMAP.md`](ROADMAP.md) for the built-in-unit limitation and remaining backlog. |
 
 ---
 
 ## Roadmap & Path to v1.0
 
-The roadmap to v1.0 focuses on **tactile control, modular flexibility, hardware interoperability, and stage reliability**.
+The core v1.0 feature set has shipped: the 100% ISF pipeline, TouchOSC/OSC control, the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64), and the Modular Video Rack & Macro system (Phases 1-9, Core Complete) are all implemented. What's left before v1.0 locks is parked as the v1.1 backlog:
 
-### Active & Upcoming Milestones
+### v1.1 Backlog
 
-1. **TouchOSC & Open Sound Control (OSC)**:
-   - Zero-dependency Kotlin OSC 1.0 binary codec (`OscCodec`) and UDP socket engine (`OscEngine`).
-   - Out-of-the-box TouchOSC layout mapping (`/1/fader1`, `/2/xy`), XY pad float unpacking, slew smoothing, soft takeover, and bidirectional client feedback to keep mobile screens in sync.
-   - Interactive OSC Learn modal and Sniffer UI in Preferences.
-
-2. **Unified Control Mapping & Hardware Profiles**:
+1. **Unified Control Mapping & Hardware Profiles**:
    - Decouple all user actions into a universal `CommandRegistry` for hardware controllers, MIDI, keyboard shortcuts, and GUI.
    - Pre-packaged controller profiles (`library/mappings/`) for Launchpad, APC40, Pioneer DDJ, and Midi Fighter.
    - Universal right-click "Learn" overlay across all UI widgets.
 
-3. **Session Scratchpad & Live Notes**:
+2. **Session Scratchpad & Live Notes**:
    - Floating or docked set scratchpad window (`~/.liquid-lsd/scratchpad.txt`) for persistent set notes during live performances.
 
-4. **Mandala Visual Generator v2+ Recipe Vault**:
+3. **Mandala Visual Generator v2+ Recipe Vault**:
    - Recipe gallery popover featuring micro-previews of ~300 built-in recipes grouped by lobe counts.
    - Geometric style tagging, global recipe sweep LFO index, and quick-recall performance bookmark slots.
 
-5. **Modular Video Rack & Macro System**:
-   - 19" studio rack chassis paradigm housing interchangeable visual modules, post-processing blocks, and transitions.
-   - 8 Performance Macro Knobs + 4 Macro Switches per session with 1-to-many parameter mapping, min/max bounds, and non-linear response curves (linear, exponential, S-curve).
-   - Embedded confidence micro-monitors on each unit faceplate.
-   - Propellerhead Reason-style `Tab` key 180° rear panel flip to expose virtual patch cables and custom signal routing.
-
-6. **ARM64 Linux Desktop Build**:
-   - Prebuilt `imgui-java` ARM64 native (sourced from [`imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64), since upstream doesn't publish one), runtime native loader integration, and the `linux-arm64` distribution package — Liquid LSD now ships on **5 platforms**: Linux x64/ARM64, macOS x64/ARM64, and Windows x64.
-
-*For complete details and progress tracking, see [`ROADMAP.md`](ROADMAP.md).*
+*For complete details and progress tracking — including known limitations of what's already shipped — see [`ROADMAP.md`](ROADMAP.md).*
 
 ---
 

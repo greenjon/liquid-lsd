@@ -10,6 +10,7 @@ import llm.slop.liquidlsd.rack.MixerTransitionUnit
 import llm.slop.liquidlsd.rack.QueueStagingRackUnit
 import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.rendering.Renderer
+import llm.slop.liquidlsd.ui.itemTooltip
 import java.io.File
 
 /**
@@ -78,6 +79,7 @@ object RackFaceplateGrid {
                 diameter = 40f,
                 isSelected = isSelected,
                 isLearning = isLearning,
+                bindings = knob.bindings,
                 onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = knob.id },
                 onToggleLearn = {
                     if (isLearning) {
@@ -134,7 +136,7 @@ object RackFaceplateGrid {
         renderer: Renderer?
     ) {
         val deck = unit.deck
-        val params = unit.getParameters()
+        val namedParams = unit.getNamedParameters().entries.toList()
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
@@ -162,14 +164,14 @@ object RackFaceplateGrid {
         val remainingW = usableW - col12W - COLUMN_GAP
         val paramColW = (remainingW - (COLUMN_GAP * 2f)) / 3f
 
-        val activeParams = params.take(6)
+        val activeParams = namedParams.take(6)
         ImGui.beginGroup()
         for (i in activeParams.indices) {
             if (i > 0 && i % 3 != 0) {
                 ImGui.sameLine(0f, COLUMN_GAP)
             }
-            val param = activeParams[i]
-            drawParamSlider(param, paramColW, "deck_${unit.id}_$i")
+            val (paramName, param) = activeParams[i]
+            drawParamSlider(param, paramColW, "deck_${unit.id}_$i", tooltip = paramName)
         }
         ImGui.endGroup()
 
@@ -203,17 +205,33 @@ object RackFaceplateGrid {
         // Columns 3 to 5: Crossfader slider (Deck A <-> Deck B)
         val crossfaderW = (colW * 3f) + (COLUMN_GAP * 2f)
         ImGui.beginGroup()
-        drawParamSlider(mixer.crossfade, crossfaderW, "crossfade_${unit.id}", customLabel = "CROSSFADER [A <-> B]")
+        drawParamSlider(
+            mixer.crossfade, crossfaderW, "crossfade_${unit.id}",
+            customLabel = "CROSSFADER [A <-> B]",
+            tooltip = "Blend between Deck A (-1.0) and Deck B (+1.0)."
+        )
         ImGui.endGroup()
         ImGui.sameLine()
 
         // Columns 6 to 8: Mode, Master Alpha, Bloom
         val masterColW = colW
-        drawParamSlider(mixer.mode, masterColW, "mm_${unit.id}", customLabel = "MODE")
+        drawParamSlider(
+            mixer.mode, masterColW, "mm_${unit.id}",
+            customLabel = "MODE",
+            tooltip = "Blend mode: 0=Add, 1=Screen, 2=Mult, 3=Max, 4=Crossfade."
+        )
         ImGui.sameLine(0f, COLUMN_GAP)
-        drawParamSlider(mixer.masterAlpha, masterColW, "ma_${unit.id}", customLabel = "ALPHA")
+        drawParamSlider(
+            mixer.masterAlpha, masterColW, "ma_${unit.id}",
+            customLabel = "ALPHA",
+            tooltip = "Master output gain/opacity."
+        )
         ImGui.sameLine(0f, COLUMN_GAP)
-        drawParamSlider(mixer.bloom, masterColW, "mb_${unit.id}", customLabel = "BLOOM")
+        drawParamSlider(
+            mixer.bloom, masterColW, "mb_${unit.id}",
+            customLabel = "BLOOM",
+            tooltip = "Post-process bloom/glow intensity."
+        )
 
         ImGui.popStyleVar(2)
     }
@@ -226,7 +244,7 @@ object RackFaceplateGrid {
         faceplateHeight: Float,
         renderer: Renderer?
     ) {
-        val params = unit.getParameters()
+        val namedParams = unit.getNamedParameters().entries.toList()
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
@@ -241,7 +259,7 @@ object RackFaceplateGrid {
 
         // Columns 3 to 8: Up to 6 parameters
         val remainingW = usableW - col12W - COLUMN_GAP
-        val activeParams = params.take(6)
+        val activeParams = namedParams.take(6)
         val paramColW = if (activeParams.isNotEmpty()) {
             (remainingW - (COLUMN_GAP * (activeParams.size - 1))) / activeParams.size
         } else {
@@ -254,7 +272,8 @@ object RackFaceplateGrid {
             ImGui.beginGroup()
             for (i in activeParams.indices) {
                 if (i > 0) ImGui.sameLine(0f, COLUMN_GAP)
-                drawParamSlider(activeParams[i], paramColW, "gen_${unit.id}_$i")
+                val (paramName, param) = activeParams[i]
+                drawParamSlider(param, paramColW, "gen_${unit.id}_$i", tooltip = paramName)
             }
             ImGui.endGroup()
         }
@@ -285,7 +304,10 @@ object RackFaceplateGrid {
                 llm.slop.liquidlsd.presets.PlayQueueManager.queue,
                 llm.slop.liquidlsd.presets.PlayQueueManager.activeIndex,
                 llm.slop.liquidlsd.presets.PlayQueueManager.isShuffleEnabled
-            )
+            ),
+            prevTooltip = "Trigger previous preset in Play Queue (Mixer/queuePrev).",
+            toggleTooltip = "Auto-VJ: Automatically cycle through queue presets at set intervals.",
+            nextTooltip = "Trigger next preset in Play Queue (Mixer/queueNext)."
         )
 
         ImGui.spacing()
@@ -306,7 +328,10 @@ object RackFaceplateGrid {
                 llm.slop.liquidlsd.presets.BgQueueManager.queue,
                 llm.slop.liquidlsd.presets.BgQueueManager.activeIndex,
                 llm.slop.liquidlsd.presets.BgQueueManager.isShuffleEnabled
-            )
+            ),
+            prevTooltip = "Trigger previous preset in Background Queue (Mixer/bgQueuePrev).",
+            toggleTooltip = "Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.",
+            nextTooltip = "Trigger next preset in Background Queue (Mixer/bgQueueNext)."
         )
 
         ImGui.spacing()
@@ -328,7 +353,10 @@ object RackFaceplateGrid {
                 llm.slop.liquidlsd.presets.TransitionQueueManager.queue,
                 llm.slop.liquidlsd.presets.TransitionQueueManager.activeIndex,
                 llm.slop.liquidlsd.presets.TransitionQueueManager.isShuffleEnabled
-            )
+            ),
+            prevTooltip = "Trigger previous transition in Live Transition Queue.",
+            toggleTooltip = "Auto-Advance: Automatically advance to the next transition preset when a crossfade triggers.",
+            nextTooltip = "Trigger next transition in Live Transition Queue."
         )
 
         ImGui.popStyleVar(2)
@@ -346,7 +374,10 @@ object RackFaceplateGrid {
         onToggle: () -> Unit,
         onNext: () -> Unit,
         nowLabel: String,
-        nextLabel: String
+        nextLabel: String,
+        prevTooltip: String,
+        toggleTooltip: String,
+        nextTooltip: String
     ) {
         ImGui.pushID(idSuffix)
 
@@ -357,6 +388,7 @@ object RackFaceplateGrid {
 
         val btnW = colW * 0.9f
         if (ImGui.button("<##prev", btnW, 0f)) onPrev()
+        itemTooltip(prevTooltip)
         ImGui.sameLine(0f, 3f)
 
         if (isActive) {
@@ -367,9 +399,11 @@ object RackFaceplateGrid {
         if (isActive) {
             ImGui.popStyleColor()
         }
+        itemTooltip(toggleTooltip)
         ImGui.sameLine(0f, 3f)
 
         if (ImGui.button(">##next", btnW, 0f)) onNext()
+        itemTooltip(nextTooltip)
 
         ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
         ImGui.textUnformatted("${nowLabel.take(16)}  ->  ${nextLabel.take(16)}")
@@ -392,7 +426,8 @@ object RackFaceplateGrid {
         param: ModulatableParameter,
         width: Float,
         idSuffix: String,
-        customLabel: String? = null
+        customLabel: String? = null,
+        tooltip: String? = null
     ) {
         ImGui.pushID(idSuffix)
         ImGui.beginGroup()
@@ -409,6 +444,7 @@ object RackFaceplateGrid {
         if (ImGui.sliderFloat("##val", arr, param.minClamp, param.maxClamp, "%.2f")) {
             param.baseValue = arr[0]
         }
+        if (tooltip != null) itemTooltip(tooltip)
 
         ImGui.endGroup()
         ImGui.popID()

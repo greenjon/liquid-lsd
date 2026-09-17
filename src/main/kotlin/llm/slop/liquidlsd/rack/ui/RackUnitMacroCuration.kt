@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.MacroKnobWidget
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
 
 /**
  * Collapsible curation drawer rendered inside a [RackUnit] allowing the performer
@@ -125,6 +126,7 @@ object RackUnitMacroCuration {
                 if (ImGui.inputText("##lbl", labelBuf)) {
                     knob.label = labelBuf.get()
                 }
+                itemTooltip("Rename this macro knob.")
 
                 // Dial preview
                 val isSelected = MacroLearnState.selectedControlId == knob.id
@@ -137,6 +139,7 @@ object RackUnitMacroCuration {
                     diameter = 44f,
                     isSelected = isSelected,
                     isLearning = isLearning,
+                    bindings = knob.bindings,
                     onSelect = { MacroLearnState.selectedControlId = knob.id },
                     onToggleLearn = {
                         if (isLearning) MacroLearnState.cancelLearn() else MacroLearnState.startLearn(knob.id)
@@ -179,6 +182,7 @@ object RackUnitMacroCuration {
                     }
                     MacroEngine.invalidate()
                 }
+                itemTooltip("Select which parameter this knob controls.")
 
                 if (primaryBinding != null) {
                     // Min / Max range
@@ -187,24 +191,28 @@ object RackUnitMacroCuration {
                     if (ImGui.dragFloat("##min", minArr, 0.01f, -10f, 10f, "Min:%.2f")) {
                         primaryBinding.minVal = minArr[0]
                     }
+                    itemTooltip("Output value when the knob is at 0.0.")
                     ImGui.sameLine(0f, 4f)
                     ImGui.setNextItemWidth(60f)
                     val maxArr = floatArrayOf(primaryBinding.maxVal)
                     if (ImGui.dragFloat("##max", maxArr, 0.01f, -10f, 10f, "Max:%.2f")) {
                         primaryBinding.maxVal = maxArr[0]
                     }
+                    itemTooltip("Output value when the knob is at 1.0.")
 
                     // Invert checkbox
                     val inv = ImBoolean(primaryBinding.inverted)
                     if (ImGui.checkbox("Inv##inv", inv)) {
                         primaryBinding.inverted = inv.get()
                     }
+                    itemTooltip("Invert travel direction.")
                     ImGui.sameLine(0f, 6f)
 
                     // Learn button
                     if (ImGui.button(if (isLearning) "Learning..." else "Learn##lrn")) {
                         if (isLearning) MacroLearnState.cancelLearn() else MacroLearnState.startLearn(knob.id)
                     }
+                    itemTooltip(if (isLearning) "Click any parameter control on this unit's faceplate to bind, or click again to cancel." else "Arm Learn Mode, then click any parameter control on this unit's faceplate to bind.")
                 }
 
                 ImGui.endGroup()
@@ -238,6 +246,7 @@ object RackUnitMacroCuration {
             if (ImGui.inputText("##sw_lbl", labelBuf)) {
                 sw.label = labelBuf.get()
             }
+            itemTooltip("Rename this macro switch.")
 
             // Switch button toggle
             val swActive = sw.value >= 0.5f
@@ -252,6 +261,7 @@ object RackUnitMacroCuration {
                 sw.onPress()
             }
             ImGui.popStyleColor(2)
+            itemTooltip("Test-fire this switch (applies its bound action immediately).")
 
             // Switch behavior
             val behaviors = arrayOf("Toggle", "Momentary", "Trigger")
@@ -298,6 +308,7 @@ object RackUnitMacroCuration {
                 }
                 MacroEngine.invalidate()
             }
+            itemTooltip("Select which parameter this switch controls.")
 
             ImGui.popID()
             ImGui.endGroup()

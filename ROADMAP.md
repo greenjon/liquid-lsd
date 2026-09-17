@@ -20,6 +20,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | Milestone / Workstream | Target Area | Target | Status | Key Deliverables |
 | :--- | :--- | :---: | :---: | :--- |
 | **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **v1.0** | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
+| **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.0** | **IN PROGRESS** | Headless CLI screenshot automation (`--screenshot-ui`) for CI/docs & isolated UI Lab gallery (`--ui-lab`). |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
@@ -30,7 +31,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 
 ### Milestone 1: Modular Video Rack & Macro Performance System
 > **Reference & Design Specs**:
-> - [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](docs/developer/macro_controls_and_parameter_linking_proposal.md) (Macro Controls & Parameter Linking System)
+> - [`docs/user_guide/macros_and_rack.md`](docs/user_guide/macros_and_rack.md) (Macro Controls & Modular Rack User Guide)
 > - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture)
 > **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16
 > **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
@@ -66,6 +67,18 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
     - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
     - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent). Both remain low-priority fix-opportunistically items.
     - The Phase 9 monitor-downscaling change (a GL viewport-changing blit inside the per-unit faceplate draw call) was not visually verified on screen — confirmed via live app launches that the render loop runs cleanly with no new errors, but the actual rack monitors weren't screenshotted (Wayland session, no reachable screenshot tooling in that pass). Worth a manual look next time the app is run interactively.
+
+---
+
+### Milestone 2: Automated Screen Capture & UI Lab
+> **Reference**: [`docs/developer/screen_capture_and_ui_iteration_proposal.md`](docs/developer/screen_capture_and_ui_iteration_proposal.md)
+> **Status**: Active / In Progress (Core GPU PBO readback complete; CLI screenshot automation pending)
+
+Automating crisp, deterministic UI screenshot capture for documentation assets and providing an isolated sandbox for UI layout regression testing:
+
+- [x] **Asynchronous GPU Readback**: High-performance PBO framebuffer readback pipeline (`PboReadbackPipeline.kt`) and Video Export dialog.
+- [ ] **Headless CLI Screenshot Runner**: Parsing `--screenshot-ui=<file>`, `--window=<1920x1080>`, and `--screenshot-after-frames=<N>` arguments in `Main.kt` for automated CI/documentation image generation.
+- [ ] **Isolated UI Lab Gallery Sandbox**: A lightweight `--ui-lab` startup mode providing an isolated sandbox environment to preview themes, custom icons, sliders, meters, and modal popups without requiring active audio hardware or heavyweight GLSL shader compilation.
 
 ---
 

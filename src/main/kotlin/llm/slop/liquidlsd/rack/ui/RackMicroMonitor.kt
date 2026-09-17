@@ -6,6 +6,7 @@ import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.rendering.FBO
 import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.showTooltip
 
 /**
  * Embedded Confidence Micro-Monitor rendered on a rack module's faceplate (Milestone 6, Phase 7).
@@ -124,7 +125,10 @@ object RackMicroMonitor {
                 textureId > 0 -> "Active Output (GL Tex #$textureId)"
                 else -> "Awaiting Input / Generator"
             }
-            ImGui.setTooltip("Confidence Monitor: ${unit.label}\nStatus: $status\nSignal: ${unit.unitType.badgeLabel} -> Video Out")
+            showTooltip(
+                "Confidence Monitor: ${unit.label}\nStatus: $status\nSignal: ${unit.unitType.badgeLabel} -> Video Out",
+                key = unit.id.hashCode()
+            )
         }
     }
 

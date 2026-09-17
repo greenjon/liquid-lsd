@@ -46,19 +46,6 @@ private fun printVersion() {
     println("JVM Home: $jvmHome")
 }
 
-private fun printHelp() {
-    val version = getAppVersion()
-    println("""
-Liquid LSD - Libre Shader Decks v$version
-Usage: liquid-lsd [OPTIONS]
-
-Options:
-  --version, -v      Print version and runtime platform details, then exit
-  --smoke-test       Run headless multi-component smoke test and exit (0 on success)
-  --help, -h         Display this help message and exit
-""".trimIndent())
-}
-
 private fun runSmokeTest(): Int {
     println("==================================================")
     println("   Liquid LSD Headless Binary Diagnostic Test     ")
@@ -134,17 +121,19 @@ private fun runSmokeTest(): Int {
 fun main(args: Array<String>) {
     llm.slop.liquidlsd.utils.NativeLibraryLoader.prepareImGuiNatives()
 
-    if (args.contains("--help") || args.contains("-h")) {
-        printHelp()
+    val cliArgs = llm.slop.liquidlsd.cli.CliArgs.parse(args)
+
+    if (cliArgs.helpRequested) {
+        llm.slop.liquidlsd.cli.CliArgs.printHelp(getAppVersion())
         kotlin.system.exitProcess(0)
     }
 
-    if (args.contains("--version") || args.contains("-v")) {
+    if (cliArgs.versionRequested) {
         printVersion()
         kotlin.system.exitProcess(0)
     }
 
-    if (args.contains("--smoke-test")) {
+    if (cliArgs.smokeTestRequested) {
         val code = runSmokeTest()
         kotlin.system.exitProcess(code)
     }
@@ -192,10 +181,16 @@ fun main(args: Array<String>) {
     glfwWindowHint(GLFW_DECORATED, if (isFrameless) GLFW_FALSE else GLFW_TRUE)
 
     // Create window
-    val window = glfwCreateWindow(1920, 1080, "Liquid LSD - Libre Shader Decks", 0, 0)
+    val initialWinW = cliArgs.windowWidth ?: 1920
+    val initialWinH = cliArgs.windowHeight ?: 1080
+    val window = glfwCreateWindow(initialWinW, initialWinH, "Liquid LSD - Libre Shader Decks", 0, 0)
     if (window == 0L) throw RuntimeException("Failed to create GLFW window")
     setWindowAppIcons(window)
     ensureLinuxDesktopEntry()
+
+    if (cliArgs.isMaximized) {
+        glfwMaximizeWindow(window)
+    }
 
     // Enforce minimum window size to prevent desktop layout compression
     glfwSetWindowSizeLimits(window, 1280, 720, GLFW_DONT_CARE, GLFW_DONT_CARE)
@@ -244,7 +239,8 @@ fun main(args: Array<String>) {
                 secondaryWindow = 0L
             }
         },
-        isOutputWindowOpen = { secondaryWindow != 0L }
+        isOutputWindowOpen = { secondaryWindow != 0L },
+        isUiLabMode = cliArgs.uiLab
     )
 
     glfwSetWindowCloseCallback(window) { win ->
@@ -300,7 +296,7 @@ fun main(args: Array<String>) {
     logger.info { "GL state configured" }
 
     // Start Audio engine if enabled
-    if (UITheme.audioEngineEnabled) {
+    if (UITheme.audioEngineEnabled && !cliArgs.noAudio) {
         AudioEngine.start()
     }
 
@@ -530,6 +526,14 @@ fun main(args: Array<String>) {
 
             // === UI PHASE ===
             uiManager.render(mixer, renderer, winW.toFloat(), winH.toFloat())
+
+            // Automated UI Screenshot Capture
+            if (cliArgs.screenshotUi != null && frameCount == cliArgs.screenshotAfterFrames) {
+                val outFile = java.io.File(cliArgs.screenshotUi)
+                logger.info { "Capturing automated UI screenshot (frame $frameCount) to ${outFile.absolutePath}" }
+                llm.slop.liquidlsd.export.ScreenshotCapture.captureFramebufferToPng(outFile, fbW, fbH, 0)
+                glfwSetWindowShouldClose(window, true)
+            }
         }
 
         org.lwjgl.opengl.GL15.glEndQuery(org.lwjgl.opengl.GL33.GL_TIME_ELAPSED)

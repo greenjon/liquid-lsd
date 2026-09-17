@@ -95,4 +95,4 @@ A few keyboard shortcuts work anywhere in the app:
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to preset search |
-| `F3` / `F4` | Switch between Classic Deck View and the Modular Video Rack |
+| `F4` | Toggle between Classic Deck View and the Modular Video Rack |

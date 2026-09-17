@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Automated Screen Capture, Startup CLI Flags & Isolated UI Lab (`CliArgs.kt`, `ScreenshotCapture.kt`, `UiLabPanel.kt`, `Main.kt`, `UIManager.kt`, `build.gradle.kts`)
+- **Startup CLI Arguments Parser (`CliArgs.kt`)**: Added command-line option parser supporting `--screenshot-ui=<file.png>`, `--screenshot-after-frames=<N>` (default: 5), `--window=<W>x<H>|maximized`, `--no-audio`, `--ui-lab`, `--help`, and `--version`.
+- **Automated Frame Capture & Graceful Exit (`ScreenshotCapture.kt`)**: Implemented framebuffer PNG export with STB Image write and scanline vertical flipping. The render loop monitors the frame settle count and automatically captures the window framebuffer and exits cleanly when `--screenshot-ui` is provided.
+- **Isolated UI Lab Component Sandbox (`UiLabPanel.kt`)**: Introduced an isolated sandbox environment displaying theme color swatches, Lucide icons catalog, wave shape selectors, custom range sliders, beat division selectors, and status meters.
+- **Gradle Automation Tasks (`build.gradle.kts`)**: Added `./gradlew captureResponsiveApp` (1080p workspace capture) and `./gradlew captureUiLab` (720p UI Lab sandbox capture) tasks.
+- **Documentation Updates**: Updated developer docs (`docs/developer/cli_and_screenshot_automation.md`), user guides (`docs/user_guide/cli_usage.md`), system architecture (`ARCHITECTURE.md`), decisions (`DECISIONS.md`), and proposal status record (`docs/developer/screen_capture_and_ui_iteration_proposal.md`).
+
 ### Modular Video Rack Phase 9: Unit Consolidation & Rack Layout Finalization (`RackUnit.kt`, `RackManager.kt`, `RackFaceplateGrid.kt`, `RackMicroMonitor.kt`, `RackPanel.kt`, `FBO.kt`, `PerformanceStats.kt`, `MenuBar.kt`)
 - **One Rack Unit Per Deck, Not Per Pipeline Stage**: Replaced `DeckGeneratorUnit` + up to four `ISFProcessorUnit`s per deck with a single merged `DeckRackUnit` exposing a flattened parameter namespace (generator params unprefixed, FX params as `"FX1/…"`..`"FX4/…"`) — a deck with 4 active FX slots now shows as 1 rack unit instead of 5. Deleted `FeedbackProcessorUnit` entirely (its knobs were already bound to legacy fields no shader reads).
 - **Deck BG Now Has a Rack Column**: The rack now shows three deck columns — Deck A, Deck B, and Deck BG — plus the Master unit. Deck PV remains excluded (preview/audition deck, not part of the live composite).

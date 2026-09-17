@@ -20,7 +20,7 @@ For a second display or projector, use **Preferences → Video & Display** to co
 
 Liquid LSD can share its video feeds live to other VJ apps, media servers, and streaming tools — without any encoding overhead or latency.
 
-Go to **Preferences → Video Sharing Matrix** and toggle which feeds you want to share:
+Go to **Preferences → Video & Display → Live Video Sharing** and toggle which feeds you want to share:
 
 - **Deck A, Deck B, Deck BG, Deck PV (Preview), Master Output** — enable any combination.
 - Set a custom stream name for each (e.g. `LiquidLSD-Master`, `MainStage-Feed`).
@@ -35,7 +35,7 @@ The sharing method depends on your platform:
 
 **On Linux with OBS:** Add a **PipeWire Screen Capture** source and select the Liquid LSD video node. Use `qpwgraph` or `Helvum` to inspect and route video nodes.
 
-**Status:** Check the **Preferences → Video Sharing** panel for a live status indicator showing which sharing method is active and whether it's working.
+**Status:** Check the **Preferences → Video & Display** panel for a live status indicator next to each shared feed showing which sharing method is active and whether it's working.
 
 ---
 

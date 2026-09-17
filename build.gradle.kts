@@ -664,6 +664,33 @@ val checkWebSync = tasks.register<Exec>("checkWebSync") {
     commandLine("python3", "scripts/sync_web.py", "--check")
 }
 
+val captureResponsiveApp = tasks.register<JavaExec>("captureResponsiveApp") {
+    group = "verification"
+    description = "Captures UI screenshots across standard responsive resolutions."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.liquidlsd.MainKt")
+    args = listOf(
+        "--screenshot-ui=docs/user_guide/assets/ui-desktop-1080p.png",
+        "--window=1920x1080",
+        "--screenshot-after-frames=6",
+        "--no-audio"
+    )
+}
+
+val captureUiLab = tasks.register<JavaExec>("captureUiLab") {
+    group = "verification"
+    description = "Captures isolated UI Lab component gallery screenshot."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.liquidlsd.MainKt")
+    args = listOf(
+        "--ui-lab",
+        "--screenshot-ui=docs/user_guide/assets/ui-lab-1080p.png",
+        "--window=1280x720",
+        "--screenshot-after-frames=6",
+        "--no-audio"
+    )
+}
+
 val syncWeb = tasks.register<Exec>("syncWeb") {
     group = "build"
     description = "Synchronizes and transpiles Desktop shaders and assets into the WebGL2 web application (web/)."

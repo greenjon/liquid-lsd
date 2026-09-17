@@ -82,7 +82,7 @@ modulation effect.
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `sourceId` | `String` | Which CV signal drives this modulator. Registered IDs: `lfo`, `beatPhase`, `sampleAndHold`, `audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `trigger_onset`, `trigger_accent`, `bpm`, `midi_cc_<ch>_<cc>` |
+| `sourceId` | `String` | Which CV signal drives this modulator. Registered IDs: `lfo`, `beatPhase`, `sampleAndHold`, `audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`, `bpm`, `midi_cc_<ch>_<cc>` (`trigger_onset`/`trigger_accent` exist only in the WebGL2 web client's `dsp.js`/`evaluator.js` — see `docs/developer/web_subsystem.md` — not as a desktop `CvModulator` source) |
 | `operator` | `ModulationOperator` | How this modulator combines with the accumulated result |
 | `bypassed` | `Boolean` | If true, skipped entirely in `evaluate()` |
 | `id` | `String` (UUID) | Unique identity for undo/copy-paste tracking |
@@ -275,8 +275,7 @@ evaluateModulator(mod) → Float   (range [-1, 1])
                     4. combine: AM → carrier*(1+lfo2*depth)
                                 ADD → carrier + lfo2*depth
                                 PM/NONE → carrier
-  "audio_*"       → CVRegistry.get(id) — pushed from AudioEngine each frame
-  "trigger_*"     → CVRegistry.get(id) — pushed from AudioEngine each frame
+  "audio_*"       → CVRegistry.get(id) — pushed from AudioEngine each frame (includes audio_flux_* onset/transient signals)
   "bpm"           → CVRegistry.get("bpm")
   "midi_cc_*"     → MidiEngine.getCcValue(channel, cc)
   else            → CVRegistry.get(id) — any registered custom source
@@ -306,7 +305,7 @@ Do not rename `CvModulator` fields without adding a corresponding `@SerialName` 
 `getAllParameterPaths(mixer)` returns every `(path, ModulatableParameter)` pair in the mixer,
 using the standard hierarchical path format (e.g. `"Deck A/Mandala/Lobes"`, `"Deck A/View/Zoom"`, `"Deck A/FB/Decay"`). Used for undo snapshots and MIDI learn target resolution.
 
-All dynamic visual sources (including `Mandala`, `DynamicSpiral`, `Icosahedron`, etc.) inherit from `DynamicVisualSource`, exposing their parameter map generically as `"Deck <X>/<DisplayName>/<Param>"` plus `"Deck <X>/<DisplayName>/Gain"`.
+All dynamic visual sources (`Mandala`, plus pure-ISF sources like `dynamic_spiral` and `icosa_h3` loaded via `ISFVisualSource`) inherit from `DynamicVisualSource`, exposing their parameter map generically as `"Deck <X>/<DisplayName>/<Param>"` plus `"Deck <X>/<DisplayName>/Gain"`. (The standalone `DynamicSpiral.kt` and `Icosahedron.kt` Kotlin classes referenced by older docs were retired when those generators were migrated to pure ISF v2.0 shader files — see `DECISIONS.md`.)
 
 The overall parameter categories cover:
 - Deck Visual Source: mapped dynamically from `source.parameters` (e.g. Lobes, Recipe Select, L1–L4, Thickness, Hue Offset, Hue Sweep, Depth, etc.) + `Gain`

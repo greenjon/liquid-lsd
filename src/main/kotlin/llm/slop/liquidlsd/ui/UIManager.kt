@@ -34,9 +34,11 @@ class UIManager(
     private val windowHandle: Long,
     val session: llm.slop.liquidlsd.SessionContext,
     private val onToggleOutputWindow: () -> Unit = {},
-    private val isOutputWindowOpen: () -> Boolean = { false }
+    private val isOutputWindowOpen: () -> Boolean = { false },
+    var isUiLabMode: Boolean = false
 ) {
     private val logger = KotlinLogging.logger {}
+    private val uiLabPanel = UiLabPanel()
     private val imguiGlfw = ImGuiImplGlfw()
     private val imguiGl3 = ImGuiImplGl3()
 
@@ -441,6 +443,13 @@ class UIManager(
                          ImGuiWindowFlags.NoMove or
                          ImGuiWindowFlags.NoCollapse or
                          ImGuiWindowFlags.NoBringToFrontOnFocus
+
+        if (isUiLabMode) {
+            ImGui.setNextWindowPos(0f, menuBarH)
+            ImGui.setNextWindowSize(safeW, contentH)
+            uiLabPanel.render(safeW, contentH)
+            return
+        }
 
         drawAssetManagementLayout(renderer, safeW, safeH, menuBarH, contentH, noDecorate)
     }

@@ -83,7 +83,7 @@ class MenuBar(
                         val isClassic = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.CLASSIC
                         val isRack = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
 
-                        if (ImGui.menuItem("Classic Deck View", "F3", isClassic)) {
+                        if (ImGui.menuItem("Classic Deck View", "", isClassic)) {
                             session.uiTheme.workspaceMode = UITheme.WorkspaceMode.CLASSIC
                             AppPreferencesStore.savePreferences()
                         }

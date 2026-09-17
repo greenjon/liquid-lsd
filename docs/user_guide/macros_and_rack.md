@@ -61,8 +61,8 @@ The Rack is an alternate workspace: instead of the fixed Deck A / B / BG layout,
 
 ### Switching to Rack view
 
-- Press **`F4`**, or use **View → Modular Video Rack** (`F3` returns to **Classic Deck View**).
-- Or click the **`[ CLASSIC | RACK ]`** pill in the menu bar.
+- Press **`F4`** to toggle between Classic Deck View and the Rack (pressing it again switches back).
+- Or use **View → Modular Video Rack** / **View → Classic Deck View** in the menu bar, or click the **`[ CLASSIC | RACK ]`** pill.
 
 ### The default rack layout
 
@@ -95,6 +95,8 @@ Press **`Tab`** (or click **FRONT FACEPLATE / REAR CHASSIS** in the toolbar) to 
 
 This is where you'd break the default top-to-bottom chain — routing one unit's output to two different downstream units, patching in an external Spout/Syphon/PipeWire feed, or building an intentional feedback loop.
 
+> **Known limitation:** Cables only actually reroute pixels for custom **Utility** units. For the built-in **Generator** (Deck) and **Transition** (Master) units, cables render and jacks light up, but the signal underneath still runs through the fixed Deck/Mixer pipeline — dragging a cable between two built-in units won't change what they actually output. Full patchable routing for built-in units is planned but not yet implemented.
+
 ### Master Bypass
 
 The **MASTER BYPASS** button in the rack toolbar passes the input straight through to the output, skipping every unit in the stack — useful for an instant A/B against the unprocessed signal.
@@ -105,6 +107,5 @@ The **MASTER BYPASS** button in the rack toolbar passes the input straight throu
 
 | Key | What it does |
 |-----|-------------|
-| `F3` | Switch to Classic Deck View |
-| `F4` | Switch to Modular Video Rack (toggles) |
+| `F4` | Toggle between Classic Deck View and the Modular Video Rack |
 | `Tab` | Flip the rack between Front Faceplate and Rear Chassis (Rack view only) |

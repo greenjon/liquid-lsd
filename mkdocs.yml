@@ -34,6 +34,7 @@ nav:
     - Presets & Library: user_guide/presets_and_library.md
     - Output & Recording: user_guide/output_and_recording.md
     - Performance Controls: user_guide/performance_controls.md
+    - Macro Controls & the Modular Video Rack: user_guide/macros_and_rack.md
     - Web Broadcast: user_guide/web_broadcast.md
   - Developer Reference:
     - Architecture Overview: developer/architecture.md
@@ -47,5 +48,9 @@ nav:
     - ImGui Upgrade & Modernization: developer/imgui_upgrade_guide.md
     - Preset & Queue Management: developer/preset_management.md
     - Mandala UX Roadmap: developer/mandala_future_roadmap.md
+    - Build for ARM64 Linux: developer/build_arm64_linux.md
+    - RFC: Modular Video Rack Proposal: developer/modular_video_rack_proposal.md
+    - Unified Control Mapping Architecture: developer/unified_control_mapping.md
+    - RFC: Screen Capture & UI Iteration Proposal: developer/screen_capture_and_ui_iteration_proposal.md
   - Operations & Tuning: developer/ops_tuning.md
   - Release Notes: release_notes.md

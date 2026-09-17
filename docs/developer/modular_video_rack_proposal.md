@@ -37,7 +37,7 @@ This proposal outlines a **Modular Video Rack** paradigm inspired by hardware ra
 
 ### 2.3 Macro Knobs as Expressive Instruments
 * Each rack unit owns its own local `MacroBank` (0-8 knobs, 0-4 switches) — the same data model and engine as the global Column 3 macro bank, just scoped to that unit's own parameters via a stable `unitInstanceId`. There is no separate, rack-specific macro system; this section only summarizes how that shared system applies to a unit's faceplate.
-* For the complete data model (`MacroControl`, `MacroBinding`, curve types, evaluation pipeline) and the instance-scoping mechanism, see [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md) §6.
+* For the complete data model (`MacroControl`, `MacroBinding`, curve types, evaluation pipeline) and the instance-scoping mechanism, see [`docs/developer/preset_management.md`](preset_management.md) §8 and [`docs/user_guide/macros_and_rack.md`](../user_guide/macros_and_rack.md).
 * Each target parameter binding includes:
   * Minimum and Maximum travel bounds.
   * Curve profile (Linear, Exponential, Logarithmic, S-Curve, or Step).
@@ -238,7 +238,7 @@ How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fig
 * **Auto-Generating Faceplates for Legacy Presets**:
   * When loading an existing `.lsd` preset that lacks a `faceplate` block, the system automatically synthesizes a clean default 1U or 2U faceplate populated with the preset's primary modulators and a mini-monitor.
 
-**Decision (2026-09-16)**: **Option A, permanently** — not a migration path, a permanent coexistence. Classic Deck View already shipped as the default alongside Rack mode via the `F3`/`F4` `WorkspaceMode` toggle (`UITheme.WorkspaceMode.CLASSIC`/`RACK`); this decision formally rejects Option B. A single screen with access to every variable *and* full VJ ability is a capability Liquid LSD keeps, not a stepping stone to be replaced.
+**Decision (2026-09-16)**: **Option A, permanently** — not a migration path, a permanent coexistence. Classic Deck View already shipped as the default alongside Rack mode via the `F4` `WorkspaceMode` toggle (`UITheme.WorkspaceMode.CLASSIC`/`RACK`); this decision formally rejects Option B. A single screen with access to every variable *and* full VJ ability is a capability Liquid LSD keeps, not a stepping stone to be replaced.
 
 **Auto-generating faceplates is explicitly rejected, not just deferred.** Curating a macro bank is a creative act — deciding which handful of parameters out of dozens deserve one of a unit's 8 precious knob slots, in what order, with what range and curve, is exactly the judgment a script can't make. Auto-generating a plausible-looking faceplate would fill racks with unconsidered, low-value units — worse than no rack support at all for that preset. Until a performer has consciously curated a faceplate for a preset, that preset simply isn't usable in Rack mode; Classic mode remains fully available for it in the meantime. This keeps every unit in a rack a deliberate creative choice.
 
@@ -246,7 +246,7 @@ How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fig
 
 ## 4. Next Steps & Recommended Milestones
 
-These phases continue directly from Phases 1-4 in [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](macro_controls_and_parameter_linking_proposal.md) §7 (Data Model & `MacroEngine`, Column 3 UI, Learn Mode, Serialization). This document does not define its own macro engine — see §2.3 and §6 of that proposal for why.
+These phases continue directly from Phases 1-4 of the Macro System (Data Model & `MacroEngine`, Column 3 UI, Learn Mode, Serialization). This document does not define its own macro engine — see §2.3 and [`docs/user_guide/macros_and_rack.md`](../user_guide/macros_and_rack.md).
 
 * **[x] Phase 5: Rack Chassis & Slot Layout System**: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle), and normalled top-down texture routing. No custom faceplate designer yet (see Question 3). [Implemented]
 * **[x] Phase 6: Per-Unit Macro Curation**: Give each rack unit its own `MacroBank` scoped via `unitInstanceId` (macro proposal §6), and build the curation UI for picking which unit parameters occupy which of its knob/switch slots. Reuses the Column 3 engine and Learn Mode UX from Phases 1-3 verbatim — no new binding infrastructure. [Implemented]

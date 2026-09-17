@@ -1,7 +1,7 @@
 # Concept Proposal: Automated Screen Capture, UI Testing & Responsive Lab
 
-**Status**: Draft / RFC  
-**Target Area**: `Main.kt`, `ui/UIManager.kt`, `export/PboReadbackPipeline.kt`, `build.gradle.kts`  
+**Status**: Implemented (`CliArgs.kt`, `ScreenshotCapture.kt`, `UiLabPanel.kt`, `./gradlew captureResponsiveApp`, `./gradlew captureUiLab`).
+**Target Area**: `Main.kt`, `cli/CliArgs.kt`, `export/ScreenshotCapture.kt`, `ui/UiLabPanel.kt`, `ui/UIManager.kt`, `build.gradle.kts`  
 **Origins**: Adapted from PR #22 concept by Lawrence Norton (`@lnorton89`)  
 
 ---

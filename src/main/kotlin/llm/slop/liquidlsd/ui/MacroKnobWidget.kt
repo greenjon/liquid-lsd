@@ -7,8 +7,7 @@ import kotlin.math.sin
 
 /**
  * Reusable rotary "Macro Knob" control and its sibling "Macro Switch" button, used by
- * [MacroPanel] (Phase 2 of the Macro Controls system -- see
- * docs/developer/macro_controls_and_parameter_linking_proposal.md).
+ * [MacroPanel] (Macro Controls system -- see docs/user_guide/macros_and_rack.md).
  *
  * Follows the same hand-rolled-ImGui-widget idiom as [CustomRangeSlider]: an
  * [ImGui.invisibleButton] hit-region, [ImGui.isItemActivated]/[ImGui.isItemActive] for drag-state
@@ -78,6 +77,7 @@ object MacroKnobWidget {
         pixelsForFullSweep: Float = 200f,
         isSelected: Boolean = false,
         isLearning: Boolean = false,
+        bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
         onChanged: (Float) -> Unit
@@ -193,10 +193,9 @@ object MacroKnobWidget {
             dl.addText(labelX, labelY, labelCol, label)
         }
 
-        if (isHovered) {
-            val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
-            showTooltip("$label: ${"%.2f".format(newValue)}$learnTip\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
-        }
+        val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
+        val bindingLine = formatBindingSummary(bindings)
+        itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
         ImGui.setCursorScreenPos(startX, startY + diameter + 3f + captionH + 4f)
@@ -288,14 +287,25 @@ object MacroKnobWidget {
             dl.addText(textX, textY, textCol, label)
         }
 
-        if (isHovered) {
-            val behaviorText = when (control.switchBehavior) {
-                llm.slop.liquidlsd.macro.SwitchBehavior.TOGGLE -> "Toggle: click to latch on/off."
-                llm.slop.liquidlsd.macro.SwitchBehavior.MOMENTARY -> "Momentary: on while held."
-                llm.slop.liquidlsd.macro.SwitchBehavior.TRIGGER -> "Trigger: sends a one-frame pulse."
-            }
-            val learnTip = if (isLearning) " [LEARNING...]" else ""
-            showTooltip("$label$learnTip\n$behaviorText\nLeft-click to trigger/select. Right-click for Learn.")
+        val behaviorText = when (control.switchBehavior) {
+            llm.slop.liquidlsd.macro.SwitchBehavior.TOGGLE -> "Toggle: click to latch on/off."
+            llm.slop.liquidlsd.macro.SwitchBehavior.MOMENTARY -> "Momentary: on while held."
+            llm.slop.liquidlsd.macro.SwitchBehavior.TRIGGER -> "Trigger: sends a one-frame pulse."
         }
+        val learnTip = if (isLearning) " [LEARNING...]" else ""
+        val bindingLine = formatBindingSummary(control.bindings)
+        itemTooltip("$label$learnTip\n$behaviorText\n$bindingLine\nLeft-click to trigger/select. Right-click for Learn.")
+    }
+
+    /**
+     * Builds the one-line binding summary shown in knob/switch tooltips, e.g.
+     * "Bound to: viewZoom [0.20 – 3.00]", sourced straight from the control's primary
+     * (first) [llm.slop.liquidlsd.macro.MacroBinding]. Falls back to an "Unbound" hint
+     * matching the empty-state affordance (right-click arms Learn Mode; see
+     * onToggleLearn) when no binding exists yet.
+     */
+    private fun formatBindingSummary(bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): String {
+        val binding = bindings.firstOrNull() ?: return "Unbound – right-click to assign"
+        return "Bound to: ${binding.parameterId} [${"%.2f".format(binding.minVal)} – ${"%.2f".format(binding.maxVal)}]"
     }
 }

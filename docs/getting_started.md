@@ -49,7 +49,7 @@ When the app opens, you'll see three main panels side by side:
 
 Here's what to try first:
 
-1. **Check the audio feed.** Go to **File>Settings>Audio Hardware** — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
+1. **Check the audio feed.** Open **Preferences → Audio Hardware** (`Ctrl+P`) — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
 
 2. **Click anything.** Click any cell in the Parameters panel to select it. The **Properties** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 

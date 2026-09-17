@@ -7,6 +7,7 @@ import imgui.type.ImString
 import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.itemTooltip
 
 /**
  * Standardized top header rail rendered across every rack unit.
@@ -43,9 +44,7 @@ object RackUnitHeaderRail {
         ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
         ImGui.textUnformatted(Icons.MORE_VERTICAL)
         ImGui.popStyleColor()
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Rack slot #${unitIndex + 1}")
-        }
+        itemTooltip("Rack slot #${unitIndex + 1}")
         ImGui.sameLine()
 
         // 2. Power button
@@ -60,9 +59,7 @@ object RackUnitHeaderRail {
             unit.isPowered = !unit.isPowered
         }
         ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(if (unit.isPowered) "Power: ON (Click to turn off)" else "Power: OFF (Click to turn on)")
-        }
+        itemTooltip(if (unit.isPowered) "Power: ON (Click to turn off)" else "Power: OFF (Click to turn on)")
         ImGui.sameLine()
 
         // 3. Bypass switch (BYP)
@@ -78,9 +75,7 @@ object RackUnitHeaderRail {
             unit.isBypassed = !unit.isBypassed
         }
         ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Bypass processing (passthrough video without shader cost)")
-        }
+        itemTooltip("Bypass processing (passthrough video without shader cost)")
         ImGui.sameLine()
 
         // 4. Solo switch (SOLO)
@@ -96,9 +91,7 @@ object RackUnitHeaderRail {
             unit.isSoloed = !unit.isSoloed
         }
         ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Solo unit output directly to master")
-        }
+        itemTooltip("Solo unit output directly to master")
         ImGui.sameLine()
 
         // 5. Unit Type Badge
@@ -107,9 +100,7 @@ object RackUnitHeaderRail {
         ImGui.pushStyleColor(ImGuiCol.Text, ut.colorR, ut.colorG, ut.colorB, 1.0f)
         ImGui.button(ut.badgeLabel)
         ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Unit Type: ${ut.displayName}")
-        }
+        itemTooltip("Unit Type: ${ut.displayName}")
         ImGui.sameLine()
 
         // 6. Unit Title / Editable Label
@@ -139,9 +130,7 @@ object RackUnitHeaderRail {
             unit.isMacroCurationOpen = !unit.isMacroCurationOpen
         }
         ImGui.popStyleColor(2)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(if (macroActive) "Close Macro Curation Drawer" else "Open Macro Curation Drawer (Curate Knobs & Switches)")
-        }
+        itemTooltip(if (macroActive) "Close Macro Curation Drawer" else "Open Macro Curation Drawer (Curate Knobs & Switches)")
         ImGui.sameLine()
 
         // Height badge (e.g. 1U, 2U)
@@ -157,7 +146,7 @@ object RackUnitHeaderRail {
             onMoveUp()
         }
         if (!canMoveUp) ImGui.popStyleVar()
-        if (ImGui.isItemHovered()) ImGui.setTooltip("Move unit up in rack")
+        itemTooltip("Move unit up in rack")
         ImGui.sameLine()
 
         // Move Down button
@@ -167,7 +156,7 @@ object RackUnitHeaderRail {
             onMoveDown()
         }
         if (!canMoveDown) ImGui.popStyleVar()
-        if (ImGui.isItemHovered()) ImGui.setTooltip("Move unit down in rack")
+        itemTooltip("Move unit down in rack")
         ImGui.sameLine()
 
         // Collapse / Expand toggle
@@ -175,9 +164,7 @@ object RackUnitHeaderRail {
         if (ImGui.button("${if (unit.isCollapsed) "+" else "-"}##fold_${unit.id}")) {
             unit.isCollapsed = !unit.isCollapsed
         }
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(if (unit.isCollapsed) "Expand to full unit controls" else "Collapse to 0.5U spine")
-        }
+        itemTooltip(if (unit.isCollapsed) "Expand to full unit controls" else "Collapse to 0.5U spine")
         ImGui.sameLine()
 
         // Remove button
@@ -186,7 +173,7 @@ object RackUnitHeaderRail {
             onRemove()
         }
         ImGui.popStyleColor()
-        if (ImGui.isItemHovered()) ImGui.setTooltip("Remove unit from rack")
+        itemTooltip("Remove unit from rack")
 
         ImGui.popStyleVar(2)
         ImGui.popID()

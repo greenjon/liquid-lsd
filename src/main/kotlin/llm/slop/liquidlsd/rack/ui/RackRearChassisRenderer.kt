@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.rack.PortDirection
 import llm.slop.liquidlsd.rack.RackPatchBay
 import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.ui.UITheme
+import llm.slop.liquidlsd.ui.showTooltip
 
 /**
  * Renders the industrial rear chassis panel for a rack unit (Milestone 6, Phase 8).
@@ -190,7 +191,7 @@ object RackRearChassisRenderer {
 
                 val dirDesc = if (isInput) "INPUT (Normalled from above or override via cable)" else "OUTPUT (Send to any input)"
                 val cableDesc = if (isConnected) "\nConnected (Right-click to unplug)" else "\nDrag cable to connect"
-                ImGui.setTooltip("Port: ${port.label} [${port.direction.name}]\n$dirDesc$cableDesc")
+                showTooltip("Port: ${port.label} [${port.direction.name}]\n$dirDesc$cableDesc", key = port.fullId.hashCode())
 
                 // Right click: Unplug cable
                 if (ImGui.isMouseClicked(1) && isConnected && connectedCable != null) {

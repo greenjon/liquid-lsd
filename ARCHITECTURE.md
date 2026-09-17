@@ -113,6 +113,13 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── ParameterOwner.kt       — Parameter ownership interface
 │   ├── ParameterResolver.kt    — Parameter lookup
 │   └── WaveformMath.kt         — Math utils
+├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
+│   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (knob/switch value + TOGGLE/MOMENTARY/TRIGGER state machine), `MacroBank` (up to 8 knobs / 4 switches)
+│   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP) and min/max/invert range mapping
+│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; one `MacroBank` per scope keyed by `unitInstanceId` (null = global Column 3 bank, non-null = a Rack unit instance)
+│   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
+│   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdset` DTOs, plus standalone `.knobpreset.json` export/import
+│   └── MacroOscBridge.kt       — `/macro/knob/N` & `/macro/switch/N` inbound OSC address routing and outbound feedback broadcast
 ├── presets/
 │   ├── PresetManager.kt        — Save/load presets, state management
 │   ├── PresetDependencyAnalyzer.kt — Dependency analysis, disabled/offline feature inspection, zero-alloc memoization
@@ -121,13 +128,16 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── PlaylistParser.kt       — Parses playlist files
 │   ├── SessionState.kt         — Session state management
 │   └── PresetIOStatus.kt       — IO status for UI feedback
+├── cli/                        — Startup CLI argument parsing & validation
+│   └── CliArgs.kt              — Command line options (--screenshot-ui, --window, --no-audio, --ui-lab)
 ├── export/                     — Video & audio render export
 │   ├── AccumulationBuffer.kt   — HDR multi-pass motion blur accumulation
 │   ├── AudioDecoder.kt         — Audio file decoding (WAV, MP3, FLAC, OGG, M4A)
 │   ├── FFmpegProcessPipe.kt    — Non-blocking FFmpeg subprocess pipe with HW encoder prioritization
 │   ├── OfflineRenderStudio.kt  — Deterministic offline video rendering with sample-accurate DSP
 │   ├── PboReadbackPipeline.kt  — High-speed DMA GPU-to-CPU framebuffer readback
-│   └── RealtimeRecorder.kt     — Live session video & audio capture and muxing
+│   ├── RealtimeRecorder.kt     — Live session video & audio capture and muxing
+│   └── ScreenshotCapture.kt    — Synchronous/FBO PNG image export with scanline vertical flip
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
@@ -142,8 +152,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
 │   ├── ExternalVideoSource.kt  — Live video ingest visual source driven by Spout/Syphon/PipeWire video streams
 │   ├── ExternalVideoDiscovery.kt — Background discovery service polling for active Spout, Syphon, and PipeWire video streams
-│   ├── HyperMesh.kt            — Real-time 4D Polychoron (600-cell & 120-cell) visual source with Hopf fibration
-│   │   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
+│   ├── SourceDocRegistry.kt    — Built-in engine & parameter documentation registry
 │   ├── Shader.kt               — GLSL shader compilation/management
 │   ├── Geometry.kt             — Vertex buffers, basic shapes
 │   ├── FBO.kt                  — OpenGL framebuffer wrapper
@@ -153,6 +162,21 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── TextureReceiver.kt      — Live video stream ingestion client bindings (Spout2 on Windows, Syphon Client on macOS, PipeWire 0.3 on Linux)
 │   ├── VideoOutputSettings.kt  — Video output endpoints, resolution overrides, scaling modes, and stream configurations
 │   └── ViewportHelper.kt       — Output scaling modes
+├── rack/                       — Modular Video Rack: 19" bay of interchangeable units wrapping Deck/Mixer state; see docs/developer/modular_video_rack_proposal.md
+│   ├── RackManager.kt          — Bay lifecycle: populates units from the active Mixer session (Deck A/B/BG + Master + Queue unit), add/remove/reorder, per-unit `MacroBank` registration
+│   ├── RackPipeline.kt         — Normalled top-down signal flow across units with bypass passthrough, solo override, and per-unit patch-cable input overrides
+│   ├── RackUnit.kt             — `RackUnit` interface/`BaseRackUnit`, `DeckRackUnit` (merged generator+FX unit, §2.7), `MixerTransitionUnit`, `QueueStagingRackUnit`, `GenericRackUnit`
+│   ├── RackPatchBay.kt         — Virtual patch cable connect/disconnect state and rear-jack routing overrides
+│   └── RackUnitType.kt         — `GENERATOR`/`PROCESSOR`/`TRANSITION`/`UTILITY` classification with badge label & accent color
+├── rack/ui/                    — Rack faceplate & rear-chassis rendering, nested under `rack/` but a distinct package
+│   ├── RackPanel.kt            — Top-level rack workspace panel: toolbar, scrollable 19" bay, front/rear Tab-flip, Add Unit modal
+│   ├── RackChassisRenderer.kt  — Rack ear/screw chassis styling and quantized 1U/2U/3U/0.5U-collapsed unit height math
+│   ├── RackFaceplateGrid.kt    — 8-column grid-based faceplate layout snapping curated controls into place per unit type
+│   ├── RackMicroMonitor.kt     — Embedded confidence monitor: downscale-blits each unit's output into a shared 240x135 preview `FBO` via `Renderer.rescale()`
+│   ├── RackUnitHeaderRail.kt   — Standardized per-unit header rail (power, bypass, solo, drag handle, reorder, remove)
+│   ├── RackUnitMacroCuration.kt— Collapsible drawer for curating which unit parameters occupy which of a unit's 8 knob / 4 switch slots
+│   ├── RackRearChassisRenderer.kt — `Tab`-flip rear chassis: 1/4" patch jacks, LED status, drag-to-patch interactive routing
+│   └── RackCableRenderer.kt    — Physics-style catenary-sag Bézier curve rendering for virtual patch cables
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── AppPreferences.kt       — App preferences data model, persistent layout & feature toggles
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
@@ -176,6 +200,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
+│   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
 │   └── ParametersState.kt      — Selection state & 30-level Undo Stack
 ├── tools/

@@ -159,7 +159,7 @@ object UITheme {
         get() = settings.libraryMode
         set(value) { settings = settings.copy(libraryMode = value) }
 
-    /** Column 3 dual-mode header toggle (see docs/developer/macro_controls_and_parameter_linking_proposal.md §2). */
+    /** Column 3 dual-mode header toggle (see docs/user_guide/macros_and_rack.md). */
     enum class Column3Mode { MIXER, MACROS }
 
     var column3Mode: Column3Mode

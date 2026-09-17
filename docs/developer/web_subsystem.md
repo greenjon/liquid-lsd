@@ -141,7 +141,7 @@ The computed CV envelopes are bound directly to WebGL shader uniforms (`audio_am
 ## 5. Desktop-to-Web Synchronization & Drift Tracking
 
 To maintain 1:1 visual parity without manual dual-maintenance:
-- **Authoritative Source**: Desktop GLSL shaders (`src/main/resources/shaders/`, `library/sources/`) and algorithmic Kotlin math files (`Icosahedron.kt`, `Evaluators.kt`, `WebPresetSerializer.kt`) are the sole sources of truth.
+- **Authoritative Source**: Desktop GLSL shaders (`src/main/resources/shaders/`, `library/sources/`) and algorithmic Kotlin math files (`Evaluators.kt`, `WebPresetSerializer.kt`) are the sole sources of truth. (`icosa_h3` and `dynamic_spiral` are now pure ISF v2.0 shaders rather than Kotlin-backed generators — see `DECISIONS.md`'s "Standardization on Pure ISF v2.0 Shaders" — so their web ports are tracked as shader files, not algorithm files.)
 - **Sync Manifest (`web/sync_manifest.json`)**: Authoritative mapping of desktop files to WebGL2 / ES module equivalents with tracked SHA-256 hashes.
 - **Sync CLI Tool (`scripts/sync_web.py`)**:
   - `--check`: Compares actual files against manifest hashes and transpiled sources; fails with exit code 1 if drift exists.

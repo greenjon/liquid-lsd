@@ -17,7 +17,7 @@
 
 ## Modular Video Rack Correctness Pass: Read-Only Signal Monitoring, Not an Independently-Repatchable Graph (`RackUnit.kt`, `RackPipeline.kt`, `RackManager.kt`, `RackPatchBay.kt`, `MacroEngine.kt`, `UIManager.kt`, `RackPanel.kt`, `MacroBindingInspector.kt`)
 
-- **Context**: A post-implementation review of Milestone 6 Phases 5-8 found that `RackManager.process()` — the routine that resolves each rack unit's `lastOutputTexture` for normalled/patched routing — was implemented and unit-tested but never called from any production code path. Every confidence micro-monitor showed "NO SIGNAL" and every rear-panel LED stayed dark in the running app.
+- **Context**: A 2026-09-15 post-implementation review of Milestone 6 Phases 5-8 found that `RackManager.process()` — the routine that resolves each rack unit's `lastOutputTexture` for normalled/patched routing — was implemented and unit-tested but never called from any production code path. Every confidence micro-monitor showed "NO SIGNAL" and every rear-panel LED stayed dark in the running app.
 - **Decision**: Wired `RackManager.process(renderer)` into the live per-frame ImGui draw path (`RackPanel.draw()`, via a `Renderer` reference threaded through `UIManager.render()` -> `drawLayout()` -> `drawAssetManagementLayout()`), but rejected the literal original design of having each `RackUnit.process()` re-invoke real rendering (`Renderer.render()`/`Renderer.renderMixer()`/`ISFFilter.render()`) to do it:
   - **Read-only monitoring for built-in wrapper units**: `DeckGeneratorUnit`, `ISFProcessorUnit`, `FeedbackProcessorUnit`, and `MixerTransitionUnit` now read the textures Main.kt's normal render pass already computed this frame (`deck.cleanFBO.texture`, `deck.fxFBOs[slot].texture`, `mixer.masterFBO.texture`) instead of re-rendering. Main.kt's `renderer.renderDeck(deckA)`/`renderMixer(mixer)` calls already run once per frame before the Rack UI draws; calling them a second time from inside `process()` would have doubled GPU cost and, for filters with persistent per-frame history buffers (e.g. the modular feedback ISF filter), corrupted that history by advancing it twice per frame.
   - **Patch-cable overrides stay real only for genuinely custom/utility units** (`GenericRackUnit` and any future truly-modular unit type), which already correctly consume the `inputTexture` argument. For units wrapping `Deck`'s fixed FX-slot chain or `Mixer`'s hardcoded Deck A/B crossfade, a dragged cable renders and its jack LED lights up, but does not reroute pixels — the rear-panel topology for these units accurately reflects Liquid LSD's real (currently fixed) signal path rather than pretending to be independently repatchable.
@@ -298,6 +298,27 @@
     - Renamed data model `AppSettings` to `AppPreferences`, with `typealias AppSettings = AppPreferences` for backward compatibility.
     - Renamed `BroadcastSettings` to `BroadcastPreferences`, with `typealias BroadcastSettings = BroadcastPreferences`.
     - Renamed `SettingsPanel` to `PreferencesPanel`, with `typealias SettingsPanel = PreferencesPanel`.
+
+---
+
+## Automated Screen Capture, Startup CLI Options, and Isolated UI Lab Sandbox (`CliArgs.kt`, `ScreenshotCapture.kt`, `UiLabPanel.kt`, `Main.kt`, `UIManager.kt`, `build.gradle.kts`)
+
+- **Decision**: Implement startup argument parsing, single-frame automated framebuffer PNG capture, an isolated UI Lab component sandbox, and Gradle verification tasks:
+  - **Startup Argument Parsing (`CliArgs.kt`)**:
+    - Introduced `CliArgs` data class and parser supporting `--screenshot-ui=<file.png>`, `--screenshot-after-frames=<N>` (default: 5), `--window=<W>x<H>|maximized`, `--no-audio`, `--ui-lab`, `--help`, and `--version`.
+  - **Framebuffer Capture & Auto-Exit Pipeline (`ScreenshotCapture.kt`, `Main.kt`)**:
+    - Synchronous/FBO PNG export utility using `glReadPixels` and scanline vertical flipping with STB Image (`stbi_write_png`).
+    - Render loop monitors frame settle count ($N$ frames); when `--screenshot-ui` is provided and frame count matches, it captures the framebuffer PNG and signals graceful exit (`glfwSetWindowShouldClose(window, true)`).
+  - **Isolated UI Lab Component Gallery (`UiLabPanel.kt`, `UIManager.kt`)**:
+    - Sandbox environment rendering theme color swatches, Lucide icons catalog, wave shape icon selectors, custom range sliders, beat division selectors, and status meters.
+    - Launched via `--ui-lab` flag, bypassing live audio hardware and shader compilation passes for lightweight UI design iteration.
+  - **Gradle Verification & Asset Build Automation (`build.gradle.kts`)**:
+    - Registered `./gradlew captureResponsiveApp` (1080p workspace capture) and `./gradlew captureUiLab` (720p UI Lab sandbox capture).
+- **Rationale**:
+  - Provides deterministic, automated screenshot generation for user guides and documentation without manual intervention.
+  - Enables headless visual regression testing on Linux CI runners via `xvfb`.
+  - Allows rapid theme and UI control development without requiring live audio drivers or heavy GLSL shader pipelines.
+
     - Renamed modal sizing state variables `settingsWidth`/`settingsHeight` to `preferencesWidth`/`preferencesHeight` in `UITheme`.
   - **Configuration File Migration & Fallback**:
     - Primary configuration file is now `lsd-preferences.properties`.

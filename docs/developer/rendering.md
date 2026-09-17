@@ -4,68 +4,50 @@ This document details the OpenGL graphics rendering pipeline, Framebuffer Object
 
 ---
 
-## Framebuffer Object (FBO) Ping-Pong Loop
+## Per-Deck FX Chain & ISF Transition Pipeline
 
-To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic aberration), each Deck maintains a dual FBO ping-pong loop:
+Following the 100% ISF Pipeline Migration (see `ARCHITECTURE.md`'s "100% ISF Pipeline & Modular Effects Engine"), each Deck's render path is a single generator pass into `cleanFBO` followed by a chain of up to 4 modular ISF FX slots. There is no separate hardcoded 3D-projection pass and no Deck-level ping-pong feedback loop — both are now ordinary ISF filters a performer loads into any FX slot (`default_filters/3d_elevation.fs`, `default_filters/feedback.fs`). The legacy `tri_planar.*`/`tetra_kaleido.*` shaders and the old `Deck.fbGain`/`fbDecay`/etc.-driven `feedback.frag` ping-pong stage were retired from the render path in Phase 6; their `.vert`/`.frag` files remain on disk under `src/main/resources/shaders/` but are no longer loaded by `Renderer.kt` or `Deck.kt`.
 
 ```
-[VisualSource (Mandala / GLSL Shader)]
-                 │
-                 ├── (3D Mode < 0.5: 2D View Pass)
-                 │   (3D Mode < 0.5: Direct Coordinate-Space 2D View Pass)
-                 │   ▼
-                 │   [blit.vert / source shader] (uZoom, uRotateZ directly in vertex space)
-                 │
-                 └── (3D Mode >= 0.5: 3D Tri-Planar Pass)
-                     ▼
-                     [rawSourceFBO] (Square 1:1 orthogonal aspect)
-                     ▼
-                     [tri_planar.vert / frag] (Pitch, Yaw, Roll, Zoom, Persp)
+[VisualSource (Mandala / DynamicVisualSource / ISFVisualSource / ExternalVideoSource)]
                  │
                  ▼
-            [cleanFBO]  (Composited clean source frame)
+     [Renderer.render()] — 2D View Pass: uZoom / uRotateZ applied directly in vertex space
+     (skipped for native-3D sources — Renderer.renderDeck() forces zoom=1.0/rotateZ=0.0
+     when deck.source.is3D, since those sources handle their own camera transform)
                  │
                  ▼
-     [FX Slot 1] (fxSlots[0], fxFBOs[0] — Invert, Posterize, Luma Key, etc.)
+            [deck.cleanFBO]  (Composited clean source frame)
                  │
                  ▼
-     [FX Slot 2] (fxSlots[1], fxFBOs[1] — 3D Elevation, Feedback Loop, Bloom, Glitch, Mirror, Trails)
+     [FX Slot 1] (deck.fxSlots[0] -> deck.fxFBOs[0] — any ISF filter: Invert, Posterize,
+                  Luma Key, Feedback Loop, 3D Elevation, Bloom, Glitch, Mirror, Trails, etc.)
                  │
                  ▼
-     [FX Slot 3] (fxSlots[2], fxFBOs[2])
+     [FX Slot 2] (deck.fxSlots[1] -> deck.fxFBOs[1])
                  │
                  ▼
-     [FX Slot 4] (fxSlots[3], fxFBOs[3])
+     [FX Slot 3] (deck.fxSlots[2] -> deck.fxFBOs[2])
                  │
                  ▼
-        [feedback.frag] ◄── [Previous Frame Feedback Texture]
+     [FX Slot 4] (deck.fxSlots[3] -> deck.fxFBOs[3])
                  │
                  ▼
-       [Write feedbackFBO]  (Applies decay, zoom, rotate, blur, chroma)
+     [Mixer.kt Transition Stage] — Renderer.renderMixer()
+     [mixer.transitionFilter (ISF)] -> [mixer.blendFBO] -> [mixer.frag composite over Deck BG]
                  │
                  ▼
-        (Swap Read/Write FBOs)
-                 │
-                 ▼
-     [Mixer.kt Transition Stage]
-     ├── Active ISF Transition: [transitionFilter] -> [blendFBO] -> [mixer.frag composite]
-     └── Default Non-ISF Fallback: [mixer.frag (uMode = ADD/SCREEN/MULT/MAX/XFADE)]
-                 │
-                 ▼
-            [masterFBO] ──► Screen
+            [mixer.masterFBO] ──► Screen
 ```
 
 ### Execution Steps
-1. **Source Render & View Stage**:
-   - **2D Sources (`!source.is3D`)**:
-     - **2D Mode (`3D Mode < 0.5`)**: The active 2D source renders directly into `cleanFBO` via `blit.vert` (or `mandala/shader.vert`), passing `uZoom`, `uRotateZ`, and `uAspectRatio` directly into the vertex shader. The procedural equations and fragment calculations evaluate across the full viewport in transformed coordinate space. Infinite patterns (e.g., brick wall, plasma) reveal more pattern elements filling the entire screen without boundaries, while finite objects (e.g. Mandala) render scaled/rotated in the center with transparent black around them, enabling downstream feedback loops to radiate freely to the edges.
-     - **3D Mode (`3D Mode >= 0.5`)**: The active 2D source renders into square `rawSourceFBO` (`height x height`). `tri_planar.vert` and `tri_planar.frag` (or `tetra_kaleido.frag`) project 3 intersecting planes (Tri-Axial), a 6-sided extruded cube cage with unit base displacement (Cube Cage), 6 tetrahedral symmetry planes at 60° (Hex-Planar), or a 24-chamber Coxeter space-folding kaleidoscope (Tetra Kaleido) onto `cleanFBO`. The projection is scale-normalized to 1.0 against `cameraDistance` so that `Zoom = 1.0` fills the vertical frame height identically to 2D flat mode.
-   - **Native 3D Sources (`source.is3D == true`)**: Native 3D visual sources (`icosa_h3`, `hyper_mesh`, `chladni`, `gyroid`, `hyper_slice`) handle their own 3D rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and camera zoom internally. They render directly to `rawSource2DFBO` at full native widescreen resolution, and `view2d.frag` blits the frame 1:1 onto `cleanFBO` (`uZoom = 1.0f`, `uRotateZ = 0.0f`) without secondary distortion. 3D Mode is excluded.
-   - **External Video Ingest Sources (`ExternalVideoSource`)**: Ingest live video streams from external applications via Spout2 on Windows, Syphon on macOS, or PipeWire 0.3 on Linux (`PipeWireReceiverImpl` in `TextureReceiver.kt` and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt`). `Renderer.renderExternalVideoSource` blits the active incoming texture (`currentTextureId`) using `blitShader` into `rawSource2DFBO` (for 2D mode view transformations) or `rawSourceFBO` (for 3D tri-planar / tetrahedral projection). External video sources are fully compatible with 2D/3D view transformations, the FX slot chain, and feedback loops.
-2. **FX Slot Chain (Serial Processing Stage)**: `Renderer.renderDeck` loops over `deck.fxSlots` (`Deck.FX_SLOT_COUNT` = 4). For each enabled slot with `dryWet > 0.0`, it processes the running texture (starting from `cleanFBO`) into that slot's `fxFBOs[i]`. For multi-pass ISF filters (`header.PASSES`), intermediate target FBOs and ping-pong history pairs are bound sequentially. Hardware dry/wet blending is performed using `glBlendColor(..., 1.0 - dryWet)` to mix the previous stage's output into `fxFBOs[i]`. The final enabled slot's output becomes `uTextureLive`; if no slots are enabled, `cleanFBO` passes through unchanged.
-3. **Feedback Quad Pass**: Binds the write `feedbackFBO` and renders a fullscreen quad running `src/main/resources/shaders/feedback.frag`. Passes the previous frame's feedback texture, live input texture (`uTextureLive`), and evaluated feedback parameters (**Decay**, **Gain**, **FB Zoom** via `uFbZoom` to maintain isolation from vertex view zoom, **Rotate**, **Hue Shift**, **Blur**, **Chroma Offset**).
-4. **Buffer Swap**: Swaps the read and write feedback FBO references.
-5. **Mixer Compositing**: `Mixer.kt` binds `masterFBO` and executes `mixer.frag` to blend Deck A and Deck B output textures according to the active blending mode and crossfader position.
+1. **Source Render & View Stage** (`Renderer.render()` / `Renderer.renderDeck()`):
+   - **2D Sources (`!source.is3D`)**: The active 2D source renders directly into `cleanFBO` via `blit.vert` (or the source's own multi-pass topology), passing `uZoom` (`deck.viewZoom`), `uRotateZ` (`deck.viewRotateZ`), and `uAspectRatio` directly into the vertex shader.
+   - **Native 3D Sources (`source.is3D == true`)**: e.g. `icosa_h3`, `hyper_mesh`. These handle their own rotation (`Rotate X/Y/Z`) and camera zoom internally and render straight into `cleanFBO`; `renderDeck()` forces the Deck's `viewZoom`/`viewRotateZ` to identity (`1.0`/`0.0`) for these sources rather than routing through a separate projection FBO.
+   - **External Video Ingest Sources (`ExternalVideoSource`)**: Ingest live video streams from external applications via Spout2 (Windows), Syphon (macOS), or PipeWire 0.3 (Linux) (`PipeWireReceiverImpl` in `TextureReceiver.kt` and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt`). `Renderer.renderExternalVideoSource()` blits the active incoming texture (`currentTextureId`) via `view2DShader` straight into `cleanFBO`, applying the same `uZoom`/`uRotateZ`/`uAspectRatio` uniforms as 2D sources.
+   - **Persistent-history generators**: sources with `hasFeedback == true` (e.g. trail-based generators like Dynamic Spiral) maintain their own `fb1`/`fb2` ping-pong pair directly on the `DynamicVisualSource` instance (not on `Deck`), lazily (re)allocated by `Renderer.render()` to match `cleanFBO`'s dimensions.
+2. **FX Slot Chain (Serial Processing Stage)**: `Renderer.renderDeck()` loops over `deck.fxSlots` (`Deck.FX_SLOT_COUNT` = 4). For each enabled slot with `dryWet > 0.0`, it renders the running texture (starting from `cleanFBO.texture`) through that slot's `ISFFilter` into `deck.fxFBOs[i]`, then blends dry (previous stage's output) against wet (this stage's output) via `glBlendColor(..., 1.0 - dryWet)` when `dryWet < 1.0`. The final enabled slot's texture becomes the deck's effective output (`Deck.getOutputTexture()`); if no slots are enabled, `cleanFBO` passes through unchanged.
+3. **Mixer Transition & Compositing** (`Renderer.renderMixer()`): Deck A and Deck B's effective output textures feed the active ISF transition filter (`mixer.transitionFilter` — `Renderer.kt` caches a `linear_crossfade` instance so an unassigned transition never allocates/disposes filters mid-frame) into `mixer.blendFBO`, then a composite pass blends that over Deck BG with channel levels, bloom, and master alpha into `mixer.masterFBO`.
 
 ---
 
@@ -73,7 +55,7 @@ To generate feedback effects (decay, zoom, rotation, hue shift, blur, chromatic 
 
 Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios (e.g. 1080p, 720p, 540p, 4K, 4:3 UXGA 1600x1200, 1:1 Square 800x800, or Custom) configured via `UITheme`:
 
-- **Dynamic Pipeline Resizing**: `Mixer.resize(width, height)` and `Deck.resize(width, height)` reallocate `cleanFBO`, `fb1`, `fb2`, and `masterFBO` on the main OpenGL thread without interrupting playback or dropping preset states.
+- **Dynamic Pipeline Resizing**: `Mixer.resize(width, height)` and `Deck.resize(width, height)` reallocate `cleanFBO`, `fxFBOs`, and `masterFBO` on the main OpenGL thread without interrupting playback or dropping preset states; each `DynamicVisualSource`'s own persistent-history `fb1`/`fb2` pair (see above) is disposed and lazily recreated on next render rather than eagerly resized.
 - **Shader Aspect Awareness**: Generative fragment shaders evaluate `float aspect = uResolution.x / uResolution.y;` from `targetFBO` dimensions, rendering undistorted geometry across any aspect ratio.
 - **Display Scaling with `ViewportHelper`**: [`ViewportHelper.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/ViewportHelper.kt) computes letterbox, pillarbox, and fill coordinates for secondary monitor outputs and background video blits:
   - `FIT`: Preserves exact content aspect ratio with letterboxing or pillarboxing.
@@ -83,11 +65,25 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 ---
 
+## Modular Video Rack: Micro-Monitor Downscaling & FBO Telemetry
+
+The Modular Video Rack (`rack/`, `rack/ui/`; see `docs/developer/modular_video_rack_proposal.md`) reuses the core render pipeline rather than introducing a parallel one — each rack unit's `process()` reads an already-rendered `Deck`/`Mixer` output texture (`Deck.getOutputTexture()`, `Mixer.masterFBO.texture`) computed earlier the same frame by `Renderer.renderDeck()`/`Renderer.renderMixer()` in the normal Classic-mode render path. The two pieces of rendering-pipeline machinery added specifically for the rack, both landed in Phase 9, are:
+
+### Confidence Micro-Monitor Downscaling (`RackMicroMonitor.kt`)
+Every rack unit's faceplate embeds a live confidence-monitor preview of its `lastOutputTexture`. Rather than sampling the full-resolution source texture directly into the ImGui draw list, `RackMicroMonitor.draw()` lazily allocates one dedicated 240×135 `FBO` per unit instance (`PREVIEW_WIDTH`/`PREVIEW_HEIGHT`, cached in a `unit.id`-keyed map) and blits into it via the existing `Renderer.rescale(srcTex, srcW, srcH, destFbo, mode)` utility (the same GL viewport-changing blit helper used elsewhere for output scaling — no new shader code) using `UITheme.OutputScaleMode.STRETCH`. `ImGui.image()` then displays that shared-resolution preview texture inside the unit's hardware-styled bezel. This was the § Question 4 decision in the rack proposal: downscale monitors to a fixed shared resolution up front rather than building a full pooled FBO allocator speculatively.
+
+Per-unit preview FBOs are disposed explicitly rather than left to GC/finalization — `RackMicroMonitor.releaseUnit(unitId)` fires when a unit is removed from the bay, and `releaseAll()` fires before `RackManager.populateFromSession()` rebuilds the unit list (e.g. on "RE-SYNC SESSION"), since a full re-sync discards the old unit list (and its now-orphaned FBO cache keys) without disposing it itself.
+
+### FBO-Count & GPU-Memory Telemetry
+`FBO.kt`'s companion object now tracks every live `FBO` instance app-wide in a `ConcurrentHashMap<framebufferId, estimatedByteSize>`, populated on construction and cleared on `dispose()`. Byte size is format-aware (`GL_RGBA8` = 4 bytes/px, `GL_RGBA16F` = 8, `GL_RGBA32F` = 16). This is exposed as `PerformanceStats.fboCount` / `PerformanceStats.fboMemoryMB` and rendered in the menu bar telemetry HUD as `FBO: N (XMB)` (`MenuBar.kt`). The readout covers all live FBOs across the whole app — core render pipeline (`cleanFBO`, `fxFBOs`, `masterFBO`, etc.) plus the rack's own `RackPipeline` ping-pong stage buffers and `RackMicroMonitor` preview FBOs — not a rack-scoped counter. Per the § Question 4 decision, this instrumentation was added deliberately *before* any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.
+
+---
+
 ## Source Documentation Registry (`SourceDocRegistry.kt`)
 
 [`SourceDocRegistry.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:
 
-- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers all built-in engines (`colors`, `mandala`, `dynamic_spiral`, `gyroid`, `chladni`, `attractor_feedback`, `icosa_h3`, `hyper_mesh`, `hyper_slice`).
+- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers the currently-bundled built-in engines (`mandala`, `dynamic_spiral`, `icosa_h3`) plus stale dead-code entries (`colors`, `gyroid`, `chladni`, `attractor_feedback`, `hyper_mesh`, `hyper_slice`) left over from the legacy-source removal (see below) that no `VisualSourceRegistry` entry resolves to anymore — harmless (map lookups simply never hit them) but worth pruning next time this file is touched.
 - **Parameter Descriptions**: `paramDescriptions: Map<String, String>` keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
 - **UI Lookup API**: Surfaced by `ParametersRenderer` and `DeckControlPanel` to draw rich tooltips.
 

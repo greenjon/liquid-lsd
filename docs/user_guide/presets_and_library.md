@@ -136,7 +136,7 @@ The Background Queue works the same way as the main queue but drives Deck BG ind
 
 ## MIDI Mapping
 
-> MIDI is disabled by default. Enable it in **Preferences → General** or via the Parameters header menu.
+> MIDI is disabled by default. Enable it in **Preferences → MIDI Controls** ("Enable MIDI Subsystem") or via the **⋮** kebab menu next to the Parameters panel's column headers ("MIDI Column").
 
 Liquid LSD keeps hardware controller maps separate from visual presets, so you can swap physical controllers without touching your preset files.
 

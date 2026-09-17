@@ -6,9 +6,8 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
- * Column 3's `MACROS` mode view (Phase 2 of the Macro Controls system -- see
- * docs/developer/macro_controls_and_parameter_linking_proposal.md §2 for the target layout and
- * §7 for phase scope).
+ * Column 3's `MACROS` mode view (Macro Controls system -- see
+ * docs/user_guide/macros_and_rack.md for details).
  *
  * Reads and writes [MacroEngine.globalBank] directly: dragging a knob mutates its
  * [llm.slop.liquidlsd.macro.MacroControl.value] in place, and switches go through
@@ -195,6 +194,7 @@ class MacroPanel(
                 diameter = diameter,
                 isSelected = isSelected,
                 isLearning = isLearningThis,
+                bindings = control.bindings,
                 onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = control.id },
                 onToggleLearn = {
                     if (isLearningThis) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()

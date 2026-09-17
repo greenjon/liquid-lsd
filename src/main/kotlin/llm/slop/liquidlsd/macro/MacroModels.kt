@@ -7,9 +7,9 @@ import java.util.UUID
 /**
  * Data model for the Macro Controls system.
  *
- * See docs/developer/macro_controls_and_parameter_linking_proposal.md (§3) for the full
- * design rationale, and docs/developer/modular_video_rack_proposal.md (§6) for how the same
- * model is re-scoped per rack-unit instance via [MacroBinding.unitInstanceId].
+ * See docs/user_guide/macros_and_rack.md for the user documentation,
+ * and docs/developer/preset_management.md (§8) for how the same model is re-scoped
+ * per rack-unit instance via [MacroBinding.unitInstanceId].
  *
  * This file is pure data model: no UI, no Learn Mode, no serialization-to-disk, no MIDI/OSC
  * wiring. Those land in later phases (see proposal §7).

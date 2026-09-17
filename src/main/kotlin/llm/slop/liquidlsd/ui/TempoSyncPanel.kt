@@ -19,12 +19,6 @@ object TempoSyncPanel {
 
     private val audioTargets = AudioTarget.values()
 
-    private fun itemTooltip(text: String) {
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(text)
-        }
-    }
-
     fun drawContent(session: SessionContext) {
         val theme = session.uiTheme
         val audioEngine = session.audioEngine

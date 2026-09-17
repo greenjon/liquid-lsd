@@ -31,9 +31,13 @@ graph TD
     UIManager --> PropertiesPanel[PropertiesPanel.kt]
     UIManager --> MixerPanel[MixerPanel.kt]
     UIManager --> LibraryPanel[LibraryPanel.kt & PlaylistEditorPanel.kt]
+    UIManager --> RackPanel[RackPanel.kt - rack/ui/, Rack workspace mode]
+
+    RackPanel --> RackChassisRenderer[RackChassisRenderer.kt]
+    RackPanel --> RackFaceplateGrid[RackFaceplateGrid.kt]
+    RackPanel --> RackRearChassisRenderer[RackRearChassisRenderer.kt]
 
     PropertiesPanel --> AudioModulatorSection[AudioModulatorSection.kt - Audio Followers & Controls]
-    PropertiesPanel --> TriggerModulatorSection[TriggerModulatorSection.kt - Trigger Impulse Controls]
     PropertiesPanel --> MidiModulatorSection[MidiModulatorSection.kt - MIDI CC Modulator Controls]
     PropertiesPanel --> Lfo1Section[Lfo1Section.kt - LFO 1 / Generator Shaping]
     PropertiesPanel --> Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
@@ -65,6 +69,7 @@ Left-clicking the main output monitor immediately focuses Parameters to the `MIX
 - **Deferred Font Atlas Rebuilding**: Adjusting preset name scale sets `pendingFontRebuild`. Rebuilding the font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
 - **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()`, `SavePresetModal.draw()`, and `PopupManager`'s specific draw methods (e.g. `drawExitPopup()`, `drawDeckConfirmPopups()`, `drawSourceChangeConfirmPopup()`, `drawMidiWarningPopup()`) at root scope.
+- **Workspace Modes (`UITheme.WorkspaceMode`)**: The top-level workspace is either `WorkspaceMode.CLASSIC` (the three-column Parameters/Properties/Mixer layout documented above) or `WorkspaceMode.RACK` (`RackPanel.kt` and `rack/ui/`, the 19" Modular Video Rack — see `modular_video_rack_proposal.md`). `UIManager.render()` branches on `session.uiTheme.workspaceMode` to draw one or the other. `F4` is wired in `UIManager.processQueueKeyboardShortcuts()` as a live two-way toggle (`ImGui.isKeyPressed(ImGuiKey.F4)` flips `RACK` ↔ `CLASSIC` regardless of which mode is active). The `View` menu (`MenuBar.kt`) additionally lists direct-select items "Classic Deck View" and "Modular Video Rack (F4)" — clicking either selects that mode directly. Only `Modular Video Rack` carries a keyboard-shortcut hint, since only `F4` is wired to an actual keypress handler; `Classic Deck View` has no keyboard shortcut, so its menu item carries no shortcut-hint text. While Rack mode is active, `Tab` flips the rack bay between its front faceplate and rear patch-cable chassis view (`ShortcutManager` action `global.flip_rack`, polled via `ShortcutManager.isTriggered("global.flip_rack")` in `RackPanel.kt`).
 
 ### 2. `UIThemeStyler.kt`, `ColorTunerPanel.kt` & `SplitterManager.kt`
 - **`UIThemeStyler.kt`**: Applies ImGui color palettes across all themes (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), manages window transparency/alpha blending when background video is enabled, renders multi-color Neon gradient backgrounds, and handles proportional `ImGuiStyle` styling.
@@ -211,4 +216,4 @@ Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules 
 
 ## ImGui Versioning & Future Modernization
 
-Liquid LSD is pinned to `io.github.spair:imgui-java:1.86.12` to provide native Apple Silicon (`macos-arm64`) universal binary support with zero breaking changes. For the multi-architecture ARM64 investigation and the complete migration plan for Dear ImGui 1.92.x, refer to [ImGui Upgrade & Modernization Guide](imgui_upgrade_guide.md).
+Liquid LSD is on `io.github.spair:imgui-java:1.92.7.1` (Dear ImGui 1.92, universal macOS arm64/x64 native support). For the migration history from 1.86.12 and the ARM64 native build story, refer to [ImGui Upgrade & Modernization Guide](imgui_upgrade_guide.md).
