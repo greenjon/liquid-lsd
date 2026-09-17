@@ -28,6 +28,8 @@ object AudioModulatorSection {
         session: SessionContext,
         param: ModulatableParameter,
         existing: CvModulator,
+        paramKey: String,
+        modulatorIndex: Int,
         themeColor: Int,
         onReplace: (CvModulator) -> Unit
     ) {
@@ -170,6 +172,7 @@ object AudioModulatorSection {
                 idPrefix = "${existing.id}_att",
                 label = "Attack",
                 themeColor = themeColor,
+                paramKey = paramKey, modulatorIndex = modulatorIndex, propertyName = "attackMs",
                 currentValue = existing.attackMs,
                 currentMin = existing.attackMsMin,
                 currentMax = existing.attackMsMax,
@@ -201,6 +204,7 @@ object AudioModulatorSection {
                 idPrefix = "${existing.id}_dec",
                 label = "Decay",
                 themeColor = themeColor,
+                paramKey = paramKey, modulatorIndex = modulatorIndex, propertyName = "decayMs",
                 currentValue = existing.decayMs,
                 currentMin = existing.decayMsMin,
                 currentMax = existing.decayMsMax,

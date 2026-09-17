@@ -87,9 +87,7 @@ object MacroEngine {
     private class ResolvedBinding(
         val control: MacroControl,
         val binding: MacroBinding,
-        val param: ModulatableParameter,
-        // Only set (non-null) for MODULATOR_PROPERTY bindings.
-        val modulator: CvModulator?
+        val param: ModulatableParameter
     )
 
     @Volatile
@@ -123,12 +121,11 @@ object MacroEngine {
                 } else {
                     ParameterResolver.findParameterByPath(mixer, binding.parameterId)
                 } ?: continue
-                val modulator: CvModulator? = if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY) {
-                    param.modulators.getOrNull(binding.modulatorIndex) ?: continue
-                } else {
-                    null
+                if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY &&
+                    param.modulators.getOrNull(binding.modulatorIndex) == null) {
+                    continue
                 }
-                out.add(ResolvedBinding(control, binding, param, modulator))
+                out.add(ResolvedBinding(control, binding, param))
             }
         }
     }
@@ -151,7 +148,13 @@ object MacroEngine {
             when (rb.binding.targetType) {
                 MacroTargetType.PARAM_BASE_VALUE -> rb.param.baseValue = mapped
                 MacroTargetType.MODULATOR_PROPERTY -> {
-                    val mod = rb.modulator
+                    // Re-fetched every tick rather than cached at rebuild time: UI edits to a
+                    // modulator (any slider drag/waveform-preset click) replace the CvModulator
+                    // instance at this index via `param.modulators[idx] = newMod.copy(...)`
+                    // without invalidating this cache, so a cached reference would silently start
+                    // mutating an orphaned object the moment the user touched any other control on
+                    // the same modulator after binding it.
+                    val mod = rb.param.modulators.getOrNull(rb.binding.modulatorIndex)
                     if (mod != null) {
                         applyModulatorProperty(mod, rb.binding.propertyName, mapped)
                     }

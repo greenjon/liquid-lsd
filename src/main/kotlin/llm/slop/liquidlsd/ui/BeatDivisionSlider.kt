@@ -27,7 +27,12 @@ object BeatDivisionSlider {
         formatValue: (Float) -> String,
         onRangeChanged: (Float, Float) -> Unit,
         idPrefix: String = "",
-        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f)
+        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
+        modulatorIndex: Int? = null,
+        propertyName: String? = null,
+        paramKey: String? = null,
+        bindMinVal: Float = minLimit,
+        bindMaxVal: Float = maxLimit
     ) {
         drawBeatDivisionSlider(
             session = session,
@@ -42,7 +47,12 @@ object BeatDivisionSlider {
             formatValue = formatValue,
             onRangeChanged = onRangeChanged,
             idPrefix = idPrefix,
-            themeColor = themeColor
+            themeColor = themeColor,
+            modulatorIndex = modulatorIndex,
+            propertyName = propertyName,
+            paramKey = paramKey,
+            bindMinVal = bindMinVal,
+            bindMaxVal = bindMaxVal
         )
     }
 
@@ -65,7 +75,16 @@ object BeatDivisionSlider {
         idPrefix: String = "",
         themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
         isRandomizeDisabled: Boolean = false,
-        randomizeDisabledTooltip: String? = null
+        randomizeDisabledTooltip: String? = null,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null,
+        paramKey: String? = null,
+        // minLimit/maxLimit above are the slider's own display range (subdivisionOptions array
+        // indices, e.g. 0..11) — NOT the actual field value range (e.g. 0.125..256). Macro binds
+        // must map onto the real value domain, so callers indexing into subdivisionOptions should
+        // pass the true min/max value here; defaults assume minLimit/maxLimit are already value-space.
+        bindMinVal: Float = minLimit,
+        bindMaxVal: Float = maxLimit
     ) {
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else (isRandomizable && session.uiTheme.randomizationEnabled)
         val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
@@ -144,6 +163,19 @@ object BeatDivisionSlider {
         ImGui.setCursorScreenPos(startX, row2Y)
         ImGui.invisibleButton("##bd_label_btn_${idPrefix}_$label", labelW, buttonSize)
         val isLabelHovered = ImGui.isItemHovered()
+        val isMacroBindable = propertyName != null && paramKey != null
+        val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+        if (isMacroLearning && ImGui.isItemClicked(0)) {
+            llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
+                parameterId = paramKey!!,
+                modulatorIndex = modulatorIndex ?: 0,
+                propertyName = propertyName!!,
+                minVal = bindMinVal,
+                maxVal = bindMaxVal
+            )
+        }
         if (ImGui.isItemClicked(2)) {
             val resetVal = defaultValue
             if (effectiveIsRandomizable) {
@@ -153,7 +185,13 @@ object BeatDivisionSlider {
             }
         }
         if (isLabelHovered) {
-            showTooltip("Variable: $label\nMiddle-click to reset to default.")
+            val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
+            showTooltip("Variable: $label\nMiddle-click to reset to default.$learnHint")
+        }
+        if (isMacroLearning) {
+            val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+            dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
         }
 
         // Render name of variable beside the die, to its left, sharing vertical center

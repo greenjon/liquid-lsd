@@ -116,6 +116,42 @@ class MacroEngineTest {
     }
 
     @Test
+    fun testModulatorPropertyBindingSurvivesModulatorObjectReplacement() {
+        // Regression test: the Properties panel UI (e.g. dragging an unrelated slider on the same
+        // modulator, or picking a waveform preset) replaces the whole CvModulator instance at
+        // param.modulators[idx] via `.copy()` without calling MacroEngine.invalidate(). A binding
+        // resolved before that swap must still apply to the *current* object on the next tick,
+        // not silently keep mutating the orphaned pre-swap instance.
+        val param = ModulatableParameter(0.0f)
+        param.modulators.add(CvModulator(sourceId = "lfo", subdivision = 1.0f, slope = 0.5f))
+        val mixer = createTestMixer(listOf("Deck A/warp" to param))
+
+        val binding = MacroBinding(
+            parameterId = "Deck A/warp",
+            targetType = MacroTargetType.MODULATOR_PROPERTY,
+            modulatorIndex = 0,
+            propertyName = "slope",
+            minVal = 0.001f,
+            maxVal = 0.999f
+        )
+        val control = MacroControl(label = "K1", value = 0.0f, bindings = mutableListOf(binding))
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
+
+        MacroEngine.tick(mixer)
+        assertEquals(0.001f, param.modulators[0].slope, absoluteTolerance = 1e-5f)
+
+        // Simulate the UI replacing the modulator object (e.g. PropertiesPanel.replaceModulator),
+        // as happens when the user touches any other control on the same modulator.
+        param.modulators[0] = param.modulators[0].copy(morph = 0.7f)
+
+        control.value = 1.0f
+        MacroEngine.tick(mixer)
+
+        assertEquals(0.999f, param.modulators[0].slope, absoluteTolerance = 1e-5f)
+        assertEquals(0.7f, param.modulators[0].morph, absoluteTolerance = 1e-5f)
+    }
+
+    @Test
     fun testUnknownPropertyNameDoesNotCrashOrMutate() {
         val param = ModulatableParameter(0.0f)
         val mod = CvModulator(sourceId = "lfo", subdivision = 1.0f, morph = 0.3f)

@@ -398,7 +398,10 @@ object CustomRangeSlider {
         parseValue: (String) -> Float? = { it.toFloatOrNull() },
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
-        readOnly: Boolean = false
+        readOnly: Boolean = false,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null,
+        paramKey: String? = null
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -419,7 +422,10 @@ object CustomRangeSlider {
             parseValue = parseValue,
             showCurrentLabel = showCurrentLabel,
             customBoxWidth = customBoxWidth,
-            readOnly = readOnly
+            readOnly = readOnly,
+            modulatorIndex = modulatorIndex,
+            propertyName = propertyName,
+            paramKey = paramKey
         )
     }
 
@@ -448,7 +454,10 @@ object CustomRangeSlider {
         customBoxWidth: Float? = null,
         isRandomizeDisabled: Boolean = false,
         randomizeDisabledTooltip: String? = null,
-        readOnly: Boolean = false
+        readOnly: Boolean = false,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null,
+        paramKey: String? = null
     ) {
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else ((isRandomizable && session.uiTheme.randomizationEnabled) || (!showControls && isRandomizable))
         val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
@@ -555,6 +564,19 @@ object CustomRangeSlider {
             ImGui.setCursorScreenPos(startX, row2Y)
             ImGui.invisibleButton("##label_btn_${idPrefix}_$label", labelW, buttonSize)
             val isLabelHovered = ImGui.isItemHovered()
+            val isMacroBindable = propertyName != null && paramKey != null
+            val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+            if (isMacroLearning && ImGui.isItemClicked(0)) {
+                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
+                    parameterId = paramKey!!,
+                    modulatorIndex = modulatorIndex ?: 0,
+                    propertyName = propertyName!!,
+                    minVal = minLimit,
+                    maxVal = maxLimit
+                )
+            }
             if (ImGui.isItemClicked(2)) {
                 val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
                 if (effectiveIsRandomizable) {
@@ -565,7 +587,13 @@ object CustomRangeSlider {
             }
             if (isLabelHovered) {
                 val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
-                showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.")
+                val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
+                showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint")
+            }
+            if (isMacroLearning) {
+                val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+                val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+                dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
             }
 
             // Render name of variable beside the die, to its left, sharing vertical center
