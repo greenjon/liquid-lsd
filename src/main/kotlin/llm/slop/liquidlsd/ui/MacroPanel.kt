@@ -26,13 +26,7 @@ class MacroPanel(
 
         val bank = MacroEngine.globalBank()
 
-        drawKnobGrid(session, bank)
-
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-
-        drawSwitchRow(session, bank)
+        drawMacroGrid(session, bank)
 
         ImGui.spacing()
         ImGui.separator()
@@ -70,25 +64,26 @@ class MacroPanel(
         }
     }
 
-    // -- 4x2 Macro Knob grid --------------------------------------------------------------------
+    // -- 6-Column Macro Grid: 8 Knobs (Cols 1-4, 2 Rows) + 4 Switches (Cols 5-6, 2 Rows) ---------
 
-    private fun drawKnobGrid(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO KNOBS") }
+    private fun drawMacroGrid(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO CONTROLS") }
         ImGui.spacing()
 
-        val cols = 4
+        val cols = 6
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(2f)
         val cellW = availW / cols
-        val diameter = (cellW - 24f).coerceIn(40f, 72f)
+        val diameter = (cellW - 10f).coerceIn(36f, 60f)
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
-        val rowH = diameter + captionH + 10f
+        val rowH = diameter + captionH + 6f
 
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
 
+        // 1. Draw 8 Knobs in Cols 0..3 (4 columns x 2 rows)
         bank.knobs.forEachIndexed { i, control ->
-            val row = i / cols
-            val col = i % cols
+            val row = i / 4
+            val col = i % 4
             val cx = startX + col * cellW + (cellW - diameter) / 2f
             val cy = startY + row * rowH
             ImGui.setCursorScreenPos(cx, cy)
@@ -113,29 +108,17 @@ class MacroPanel(
             )
         }
 
-        val totalRows = (bank.knobs.size + cols - 1) / cols
-        ImGui.setCursorScreenPos(startX, startY + totalRows * rowH)
-        ImGui.dummy(0f, 0f)
-    }
-
-    // -- 4 Macro Switches -------------------------------------------------------------------------
-
-    private fun drawSwitchRow(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO SWITCHES") }
-        ImGui.spacing()
-
-        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(2f)
-        val count = bank.switches.size.coerceAtLeast(1)
-        val gap = 6f
-        val switchW = ((availW - gap * (count - 1)) / count).coerceAtLeast(20f)
-        val switchH = 34f
-
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
+        // 2. Draw 4 Switches in Cols 4..5 (2 columns x 2 rows)
+        val gap = 4f
+        val switchW = (cellW - gap).coerceAtLeast(20f)
+        val switchH = 32f
 
         bank.switches.forEachIndexed { i, control ->
-            val x = startX + i * (switchW + gap)
-            ImGui.setCursorScreenPos(x, startY)
+            val row = i / 2
+            val col = 4 + (i % 2)
+            val sx = startX + col * cellW + gap / 2f
+            val sy = startY + row * rowH + (diameter - switchH) / 2f
+            ImGui.setCursorScreenPos(sx, sy)
             val isSelected = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == control.id
             val isLearningThis = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(control.id)
             MacroKnobWidget.drawSwitch(
@@ -155,7 +138,8 @@ class MacroPanel(
             )
         }
 
-        ImGui.setCursorScreenPos(startX, startY + switchH)
+        val totalRows = 2
+        ImGui.setCursorScreenPos(startX, startY + totalRows * rowH)
         ImGui.dummy(0f, 0f)
     }
 
