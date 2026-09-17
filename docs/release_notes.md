@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Modular Video Rack Phase 9: Unit Consolidation & Rack Layout Finalization (`RackUnit.kt`, `RackManager.kt`, `RackFaceplateGrid.kt`, `RackMicroMonitor.kt`, `RackPanel.kt`, `FBO.kt`, `PerformanceStats.kt`, `MenuBar.kt`)
+- **One Rack Unit Per Deck, Not Per Pipeline Stage**: Replaced `DeckGeneratorUnit` + up to four `ISFProcessorUnit`s per deck with a single merged `DeckRackUnit` exposing a flattened parameter namespace (generator params unprefixed, FX params as `"FX1/…"`..`"FX4/…"`) — a deck with 4 active FX slots now shows as 1 rack unit instead of 5. Deleted `FeedbackProcessorUnit` entirely (its knobs were already bound to legacy fields no shader reads).
+- **Deck BG Now Has a Rack Column**: The rack now shows three deck columns — Deck A, Deck B, and Deck BG — plus the Master unit. Deck PV remains excluded (preview/audition deck, not part of the live composite).
+- **New Queue & Staging Master Unit**: A always-present 3U rack unit with condensed Play Queue / BG Queue / Transition Staging transport controls (prev / play-pause / next + "now → next"), wired directly to the existing queue engines you already use in Classic mode — no new queue behavior, just a rack-native view onto it.
+- **Confidence Monitors Now Render at a Shared Preview Resolution**: Each unit's monitor downscales its output to 240×135 before display instead of sampling the full-resolution source texture directly, reducing per-monitor GPU cost.
+- **New GPU Telemetry in the Menu Bar**: Added an `FBO: N (XMB)` readout next to FPS/CPU/BPM showing live framebuffer count and estimated GPU memory in use.
+- **Fixed a Double-Update Bug in Rack Mode**: Deck FX filters and the Background Queue's dip-to-black fade timer were being ticked twice per frame whenever Rack mode was the visible workspace (once by the main render loop, once again by the rack unit's own `update()`). Both now tick exactly once, regardless of workspace mode.
+
 ### Linux ARM64 (`aarch64`) Distribution Restoration — Now Shipping on 5 Platforms (`build.gradle.kts`, `.github/workflows/*`, `utils/NativeLibraryLoader.kt`, `Main.kt`)
 - **Restored Linux ARM64 Build Target**: Re-enabled native Linux ARM64 (`aarch64`) support across the build system, JNI library extraction, and CI distribution matrix. Liquid LSD Desktop now ships on **5 platforms**: Linux x64, Linux ARM64, macOS x64, macOS ARM64, and Windows x64.
 - **Embedded JNI Library Loader (`NativeLibraryLoader.prepareImGuiNatives()`)**: Automatically extracts embedded `libimgui-java64.so` for Linux ARM64 to a temporary runtime folder and configures `System.setProperty("imgui.library.path", ...)` before ImGui context initialization.

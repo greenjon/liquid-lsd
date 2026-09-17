@@ -6,7 +6,6 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FBO
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Renderer
-import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import java.util.UUID
 
 /**
@@ -122,13 +121,19 @@ abstract class BaseRackUnit(
 }
 
 /**
- * Generator Unit wrapping a [Deck] visual synthesizer (e.g. Deck A or Deck B).
+ * Merged Generator + FX Unit wrapping a full [Deck] chain -- the source generator plus up to
+ * [Deck.FX_SLOT_COUNT] ISF FX slots -- as a single rack unit, per the §2.7 unit-consolidation
+ * decision in `modular_video_rack_proposal.md`. Replaces the previous one-unit-per-pipeline-stage
+ * split (one generator unit plus one FX unit per occupied slot): [getNamedParameters] flattens
+ * the generator's own parameters (unprefixed) together with each occupied FX slot's
+ * parameters (prefixed `"FX1/…"`..`"FX4/…"`), so any of this unit's macro knobs can target the
+ * generator or any occupied FX slot -- including one knob driving both simultaneously, since
+ * [MacroBinding] already supports multiple bindings per control.
  */
-class DeckGeneratorUnit(
+class DeckRackUnit(
     val deck: Deck,
-    val isDeckA: Boolean,
-    label: String = if (isDeckA) "Deck A Generator" else "Deck B Generator",
-    heightU: Int = 2,
+    label: String,
+    heightU: Int = 3,
     macroBank: MacroBank = MacroBank()
 ) : BaseRackUnit(
     label = label,
@@ -148,73 +153,30 @@ class DeckGeneratorUnit(
             map["viewRotateY"] = deck.viewRotateY
             map["view3DMode"] = deck.view3DMode
         }
-        return map
-    }
-
-    override fun getParameters(): List<ModulatableParameter> {
-        return getNamedParameters().values.toList()
-    }
-
-    override fun update() {
-        deck.source.update()
-    }
-
-    /**
-     * Reads the deck's already-rendered clean source texture rather than re-invoking
-     * [Renderer.render]. Every frame's main loop already calls [Renderer.renderDeck] for this
-     * deck before the Rack UI draws (see `Main.kt` / `RackManager.process`), so re-rendering here
-     * would both double the GPU cost and double-advance any per-frame state (e.g. persistent-
-     * history ISF filters) -- this unit is a read-only monitor of that already-computed frame.
-     */
-    override fun process(
-        inputTexture: Int,
-        outputFBO: FBO?,
-        width: Int,
-        height: Int,
-        renderer: Renderer?
-    ): Int = deck.cleanFBO.texture
-}
-
-/**
- * Processor Unit wrapping an [ISFFilter] effect slot.
- */
-class ISFProcessorUnit(
-    val deck: Deck,
-    val filter: ISFFilter,
-    val slotIndex: Int,
-    label: String = filter.displayName,
-    heightU: Int = 1,
-    macroBank: MacroBank = MacroBank()
-) : BaseRackUnit(
-    label = label,
-    unitType = RackUnitType.PROCESSOR,
-    heightU = heightU,
-    macroBank = macroBank
-) {
-    override fun getNamedParameters(): Map<String, ModulatableParameter> {
-        val map = LinkedHashMap<String, ModulatableParameter>()
-        map["dryWet"] = filter.dryWet
-        for ((name, p) in filter.parameters) {
-            map[name] = p
+        for (i in deck.fxSlots.indices) {
+            val fx = deck.fxSlots[i] ?: continue
+            map["FX${i + 1}/dryWet"] = fx.dryWet
+            for ((name, p) in fx.parameters) {
+                map["FX${i + 1}/$name"] = p
+            }
         }
         return map
     }
 
-    override fun getParameters(): List<ModulatableParameter> {
-        return getNamedParameters().values.toList()
-    }
+    override fun getParameters(): List<ModulatableParameter> = getNamedParameters().values.toList()
 
-    override fun update() {
-        filter.update()
-    }
+    // No [update] override: [Deck.update] already calls `source.update()` and ticks every FX
+    // slot's filter every frame from the main loop (see `Main.kt`), unconditionally of workspace
+    // mode. Re-ticking here would double-advance any per-frame state (e.g. persistent-history ISF
+    // filters) whenever Rack mode is visible -- inherits [BaseRackUnit]'s no-op default instead.
 
     /**
-     * Reads the deck's already-rendered per-slot FX texture (written this frame by
-     * [Renderer.renderDeck]'s own chained FX loop) instead of re-invoking [ISFFilter.render].
-     * Re-rendering the same filter instance a second time per frame would double its GPU cost
-     * and, for filters with persistent per-frame history buffers (e.g. the modular feedback
-     * filter), corrupt that history by advancing it twice per frame. Mirrors the same
-     * enabled/dryWet fallback logic as [Deck.getOutputTexture].
+     * Reads the deck's already-rendered output -- the last active FX slot's texture, or the clean
+     * generator texture if none are active -- via [Deck.getOutputTexture] rather than re-invoking
+     * rendering. Every frame's main loop already renders this deck's full generator+FX chain
+     * before the Rack UI draws (see `Main.kt` / `RackManager.process`), so re-rendering here would
+     * both double the GPU cost and double-advance any per-frame state (e.g. persistent-history ISF
+     * filters); this unit is a read-only monitor of that already-computed frame.
      */
     override fun process(
         inputTexture: Int,
@@ -222,56 +184,7 @@ class ISFProcessorUnit(
         width: Int,
         height: Int,
         renderer: Renderer?
-    ): Int {
-        if (!filter.enabled || filter.dryWet.value <= 0f) return inputTexture
-        val stageFbo = deck.fxFBOs.getOrNull(slotIndex) ?: return inputTexture
-        return stageFbo.texture
-    }
-}
-
-/**
- * Processor Unit wrapping a Deck's legacy feedback parameters ([Deck.fbGain], [Deck.fbDecay],
- * etc). These fields predate the 100% ISF pipeline migration (see ARCHITECTURE.md's "100% ISF
- * Pipeline & Modular Effects Engine" section) and are retained on [Deck] only for backward
- * preset/broadcast serialization -- they are no longer read by any shader. Feedback is now just
- * another ISF filter (`default_filters/feedback.fs`) that, when loaded into one of the deck's FX
- * slots, already appears in the rack as its own [ISFProcessorUnit] with real, live parameters.
- * This unit is therefore a true passthrough: curating its exposed params to a macro knob will
- * move the knob but produce no visible effect.
- */
-class FeedbackProcessorUnit(
-    val deck: Deck,
-    val isDeckA: Boolean,
-    label: String = if (isDeckA) "Deck A Feedback" else "Deck B Feedback",
-    heightU: Int = 2,
-    macroBank: MacroBank = MacroBank()
-) : BaseRackUnit(
-    label = label,
-    unitType = RackUnitType.PROCESSOR,
-    heightU = heightU,
-    macroBank = macroBank
-) {
-    override fun getNamedParameters(): Map<String, ModulatableParameter> = linkedMapOf(
-        "fbDecay" to deck.fbDecay,
-        "fbGain" to deck.fbGain,
-        "fbZoom" to deck.fbZoom,
-        "fbRotate" to deck.fbRotate,
-        "fbHueShift" to deck.fbHueShift,
-        "fbBlur" to deck.fbBlur,
-        "fbChroma" to deck.fbChroma,
-        "fbMode" to deck.fbMode,
-        "fbKaleido" to deck.fbKaleido
-    )
-
-    override fun getParameters(): List<ModulatableParameter> = getNamedParameters().values.toList()
-
-    override fun process(
-        inputTexture: Int,
-        outputFBO: FBO?,
-        width: Int,
-        height: Int,
-        renderer: Renderer?
-    ): Int = inputTexture
+    ): Int = deck.getOutputTexture()
 }
 
 /**
@@ -297,9 +210,10 @@ class MixerTransitionUnit(
 
     override fun getParameters(): List<ModulatableParameter> = getNamedParameters().values.toList()
 
-    override fun update() {
-        mixer.update()
-    }
+    // No [update] override: `Main.kt`'s main loop already calls [Mixer.update] unconditionally of
+    // workspace mode every frame. Re-invoking it here would double-tick the Mixer (and everything
+    // it drives, e.g. [llm.slop.liquidlsd.presets.BgQueueManager]'s dip-to-black timer) whenever
+    // Rack mode is visible -- inherits [BaseRackUnit]'s no-op default instead.
 
     /**
      * Reads the already-composited master output ([Mixer.masterFBO], written this frame by
@@ -317,6 +231,39 @@ class MixerTransitionUnit(
         height: Int,
         renderer: Renderer?
     ): Int = mixer.masterFBO.texture
+}
+
+/**
+ * Always-present "Queue & Staging" master unit (§ Question 1 decision in
+ * `modular_video_rack_proposal.md`) -- a rack-native *view* onto the existing
+ * [llm.slop.liquidlsd.presets.PlayQueueManager], [llm.slop.liquidlsd.presets.BgQueueManager], and
+ * [llm.slop.liquidlsd.presets.TransitionQueueManager] singletons, not a new queue data model.
+ * Carries no signal-processing role of its own: [process] passes its input texture straight
+ * through unchanged, and [update] is intentionally a no-op -- all three managers are already
+ * driven by their existing call paths (transport button presses, [Mixer.update] for the BG
+ * dip-to-black state machine) regardless of which workspace is currently visible.
+ */
+class QueueStagingRackUnit(
+    val mixer: Mixer,
+    label: String = "Queue & Staging",
+    heightU: Int = 3,
+    macroBank: MacroBank = MacroBank()
+) : BaseRackUnit(
+    label = label,
+    unitType = RackUnitType.UTILITY,
+    heightU = heightU,
+    macroBank = macroBank
+) {
+    override fun getNamedParameters(): Map<String, ModulatableParameter> = emptyMap()
+    override fun getParameters(): List<ModulatableParameter> = emptyList()
+
+    override fun process(
+        inputTexture: Int,
+        outputFBO: FBO?,
+        width: Int,
+        height: Int,
+        renderer: Renderer?
+    ): Int = inputTexture
 }
 
 /**

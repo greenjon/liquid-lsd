@@ -41,55 +41,29 @@ class RackManager(
         units.clear()
         patchBay.clearAll()
 
-        // 1. Deck A Generator Unit
-        val deckAGen = DeckGeneratorUnit(mixer.deckA, isDeckA = true, label = "Deck A Synth")
-        setupCuratedBinding(deckAGen.macroBank.knobs[0], deckAGen.id, "ZOOM", "viewZoom", 0.2f, 3.0f, 0.5f)
-        setupCuratedBinding(deckAGen.macroBank.knobs[1], deckAGen.id, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
-        addUnit(deckAGen)
+        // 1. Deck A: one merged generator+FX unit (§2.7)
+        val deckA = DeckRackUnit(mixer.deckA, label = "Deck A")
+        setupCuratedBinding(deckA.macroBank.knobs[0], deckA.id, "ZOOM", "viewZoom", 0.2f, 3.0f, 0.5f)
+        setupCuratedBinding(deckA.macroBank.knobs[1], deckA.id, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
+        addUnit(deckA)
 
-        // 2. Deck A Feedback Unit
-        val deckAFb = FeedbackProcessorUnit(mixer.deckA, isDeckA = true, label = "Deck A Feedback Loop")
-        setupCuratedBinding(deckAFb.macroBank.knobs[0], deckAFb.id, "GAIN", "fbGain", 0.0f, 2.0f, 0.5f)
-        setupCuratedBinding(deckAFb.macroBank.knobs[1], deckAFb.id, "DECAY", "fbDecay", 0.0f, 1.0f, 0.0f)
-        setupCuratedBinding(deckAFb.macroBank.knobs[2], deckAFb.id, "ZOOM", "fbZoom", -0.5f, 0.5f, 0.5f)
-        setupCuratedBinding(deckAFb.macroBank.knobs[3], deckAFb.id, "HUE", "fbHueShift", -1.0f, 1.0f, 0.5f)
-        addUnit(deckAFb)
+        // 2. Deck B: one merged generator+FX unit (§2.7)
+        val deckB = DeckRackUnit(mixer.deckB, label = "Deck B")
+        setupCuratedBinding(deckB.macroBank.knobs[0], deckB.id, "ZOOM", "viewZoom", 0.2f, 3.0f, 0.5f)
+        setupCuratedBinding(deckB.macroBank.knobs[1], deckB.id, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
+        addUnit(deckB)
 
-        // 3. Deck A active ISF FX slots
-        for (i in mixer.deckA.fxSlots.indices) {
-            val fx = mixer.deckA.fxSlots[i]
-            if (fx != null) {
-                val isfUnit = ISFProcessorUnit(mixer.deckA, fx, slotIndex = i, label = "Deck A FX ${i + 1}: ${fx.displayName}")
-                setupCuratedBinding(isfUnit.macroBank.knobs[0], isfUnit.id, "DRY/WET", "dryWet", 0.0f, 1.0f, fx.dryWet.baseValue)
-                addUnit(isfUnit)
-            }
-        }
+        // 3. Deck BG: one merged generator+FX unit (§2.7 / Question 2) -- Deck PV is intentionally excluded
+        val deckBG = DeckRackUnit(mixer.deckBG, label = "Deck BG")
+        setupCuratedBinding(deckBG.macroBank.knobs[0], deckBG.id, "ZOOM", "viewZoom", 0.2f, 3.0f, 0.5f)
+        setupCuratedBinding(deckBG.macroBank.knobs[1], deckBG.id, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
+        addUnit(deckBG)
 
-        // 4. Deck B Generator Unit
-        val deckBGen = DeckGeneratorUnit(mixer.deckB, isDeckA = false, label = "Deck B Synth")
-        setupCuratedBinding(deckBGen.macroBank.knobs[0], deckBGen.id, "ZOOM", "viewZoom", 0.2f, 3.0f, 0.5f)
-        setupCuratedBinding(deckBGen.macroBank.knobs[1], deckBGen.id, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
-        addUnit(deckBGen)
+        // 4. Queue & Staging master unit (§ Question 1) -- always present, views onto the
+        // existing PlayQueueManager/BgQueueManager/TransitionQueueManager singletons
+        addUnit(QueueStagingRackUnit(mixer))
 
-        // 5. Deck B Feedback Unit
-        val deckBFb = FeedbackProcessorUnit(mixer.deckB, isDeckA = false, label = "Deck B Feedback Loop")
-        setupCuratedBinding(deckBFb.macroBank.knobs[0], deckBFb.id, "GAIN", "fbGain", 0.0f, 2.0f, 0.5f)
-        setupCuratedBinding(deckBFb.macroBank.knobs[1], deckBFb.id, "DECAY", "fbDecay", 0.0f, 1.0f, 0.0f)
-        setupCuratedBinding(deckBFb.macroBank.knobs[2], deckBFb.id, "ZOOM", "fbZoom", -0.5f, 0.5f, 0.5f)
-        setupCuratedBinding(deckBFb.macroBank.knobs[3], deckBFb.id, "HUE", "fbHueShift", -1.0f, 1.0f, 0.5f)
-        addUnit(deckBFb)
-
-        // 6. Deck B active ISF FX slots
-        for (i in mixer.deckB.fxSlots.indices) {
-            val fx = mixer.deckB.fxSlots[i]
-            if (fx != null) {
-                val isfUnit = ISFProcessorUnit(mixer.deckB, fx, slotIndex = i, label = "Deck B FX ${i + 1}: ${fx.displayName}")
-                setupCuratedBinding(isfUnit.macroBank.knobs[0], isfUnit.id, "DRY/WET", "dryWet", 0.0f, 1.0f, fx.dryWet.baseValue)
-                addUnit(isfUnit)
-            }
-        }
-
-        // 7. Master Mixer & Transition Unit
+        // 5. Master Mixer & Transition Unit
         val transUnit = MixerTransitionUnit(mixer, label = "Master Crossfade & Color")
         setupCuratedBinding(transUnit.macroBank.knobs[0], transUnit.id, "XFADE", "crossfade", -1.0f, 1.0f, 0.0f)
         setupCuratedBinding(transUnit.macroBank.knobs[1], transUnit.id, "BLOOM", "bloom", 0.0f, 1.0f, 0.0f)

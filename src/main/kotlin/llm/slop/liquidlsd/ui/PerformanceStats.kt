@@ -78,4 +78,12 @@ object PerformanceStats {
     /** Current BPM estimate from the audio engine (120 when not active). */
     val bpm: Float
         get() = llm.slop.liquidlsd.audio.AudioEngine.getEstimatedBpm()
+
+    /** Number of live FBOs currently allocated app-wide (rack pipeline + core render passes). */
+    val fboCount: Int
+        get() = llm.slop.liquidlsd.rendering.FBO.liveCount
+
+    /** Estimated total GPU memory (MB) consumed by live FBO color attachments. */
+    val fboMemoryMB: Float
+        get() = llm.slop.liquidlsd.rendering.FBO.liveBytes / (1024f * 1024f)
 }

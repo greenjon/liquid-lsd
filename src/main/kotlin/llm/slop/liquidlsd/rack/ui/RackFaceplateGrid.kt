@@ -4,12 +4,13 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.parameters.ModulatableParameter
-import llm.slop.liquidlsd.rack.DeckGeneratorUnit
-import llm.slop.liquidlsd.rack.FeedbackProcessorUnit
+import llm.slop.liquidlsd.rack.DeckRackUnit
 import llm.slop.liquidlsd.rack.GenericRackUnit
-import llm.slop.liquidlsd.rack.ISFProcessorUnit
 import llm.slop.liquidlsd.rack.MixerTransitionUnit
+import llm.slop.liquidlsd.rack.QueueStagingRackUnit
 import llm.slop.liquidlsd.rack.RackUnit
+import llm.slop.liquidlsd.rendering.Renderer
+import java.io.File
 
 /**
  * Grid-based faceplate layout system snapping parameter controls into an 8-column modular grid.
@@ -23,7 +24,8 @@ object RackFaceplateGrid {
         session: llm.slop.liquidlsd.SessionContext,
         unit: RackUnit,
         faceplateWidth: Float,
-        faceplateHeight: Float
+        faceplateHeight: Float,
+        renderer: Renderer? = null
     ) {
         if (unit.isCollapsed) return
 
@@ -44,11 +46,10 @@ object RackFaceplateGrid {
         drawCuratedMacrosRow(session, unit, usableW)
 
         when (unit) {
-            is DeckGeneratorUnit -> drawGeneratorFaceplate(session, unit, usableW, colW, faceplateHeight)
-            is FeedbackProcessorUnit -> drawFeedbackFaceplate(session, unit, usableW, colW, faceplateHeight)
-            is ISFProcessorUnit -> drawISFFaceplate(session, unit, usableW, colW, faceplateHeight)
-            is MixerTransitionUnit -> drawTransitionFaceplate(session, unit, usableW, colW, faceplateHeight)
-            else -> drawGenericFaceplate(session, unit, usableW, colW, faceplateHeight)
+            is DeckRackUnit -> drawMergedDeckFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
+            is QueueStagingRackUnit -> drawQueueStagingFaceplate(unit, colW)
+            is MixerTransitionUnit -> drawTransitionFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
+            else -> drawGenericFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
         }
     }
 
@@ -124,12 +125,13 @@ object RackFaceplateGrid {
         ImGui.setCursorPosY(ImGui.getCursorPosY() + 6f)
     }
 
-    private fun drawGeneratorFaceplate(
+    private fun drawMergedDeckFaceplate(
         session: llm.slop.liquidlsd.SessionContext,
-        unit: DeckGeneratorUnit,
+        unit: DeckRackUnit,
         usableW: Float,
         colW: Float,
-        faceplateHeight: Float
+        faceplateHeight: Float,
+        renderer: Renderer?
     ) {
         val deck = unit.deck
         val params = unit.getParameters()
@@ -137,39 +139,26 @@ object RackFaceplateGrid {
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        // Columns 1 & 2: Confidence Micro-Monitor + Source info
+        // Columns 1 & 2: Confidence Micro-Monitor + Source/FX-chain info
         val col12W = (colW * 2f) + COLUMN_GAP
         val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
 
         ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        RackMicroMonitor.draw(session, unit, col12W, monitorH, renderer)
         ImGui.setCursorPosY(ImGui.getCursorPosY() + 2f)
 
         ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
         ImGui.textUnformatted("SRC: ${deck.source.displayName.take(18)}")
         ImGui.popStyleColor()
 
-        // 3D View mode indicator
-        val is3D = deck.source.is3D
-        if (is3D) {
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.8f, 1.0f, 1.0f)
-            ImGui.textUnformatted("MODE: 3D Raymarch")
-            ImGui.popStyleColor()
-        } else {
-            val v3d = deck.view3DMode.value.toInt()
-            val modeName = when (v3d) {
-                1 -> "Tri-Axial"
-                2 -> "Cube Cage"
-                3 -> "Hex-Planar"
-                4 -> "Tetra Kaleido"
-                else -> "2D Flat"
-            }
-            ImGui.textUnformatted("VIEW: $modeName")
-        }
+        val activeFxCount = deck.fxSlots.count { it != null }
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.70f, 0.85f, 0.55f, 1.0f)
+        ImGui.textUnformatted("FX: $activeFxCount/${deck.fxSlots.size} active")
+        ImGui.popStyleColor()
         ImGui.endGroup()
         ImGui.sameLine()
 
-        // Columns 3 to 8: Parameters mapped into 2 rows of 3 columns
+        // Columns 3 to 8: Curated parameters (generator + flattened FX slots) mapped into 2 rows of 3
         val remainingW = usableW - col12W - COLUMN_GAP
         val paramColW = (remainingW - (COLUMN_GAP * 2f)) / 3f
 
@@ -180,89 +169,7 @@ object RackFaceplateGrid {
                 ImGui.sameLine(0f, COLUMN_GAP)
             }
             val param = activeParams[i]
-            drawParamSlider(param, paramColW, "gen_${unit.id}_$i")
-        }
-        ImGui.endGroup()
-
-        ImGui.popStyleVar(2)
-    }
-
-    private fun drawFeedbackFaceplate(
-        session: llm.slop.liquidlsd.SessionContext,
-        unit: FeedbackProcessorUnit,
-        usableW: Float,
-        colW: Float,
-        faceplateHeight: Float
-    ) {
-        val params = unit.getParameters()
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
-
-        // Columns 1 & 2: Feedback Confidence Micro-Monitor
-        val col12W = (colW * 2f) + COLUMN_GAP
-        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
-
-        ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
-        ImGui.textUnformatted("OPTICAL LOOP")
-        ImGui.popStyleColor()
-        ImGui.endGroup()
-        ImGui.sameLine()
-
-        // Columns 3 to 8: 6 high-impact feedback parameters (Gain, Zoom, Rotate, Decay, Hue, Blur)
-        val remainingW = usableW - col12W - COLUMN_GAP
-        val paramColW = (remainingW - (COLUMN_GAP * 2f)) / 3f
-        val activeParams = params.take(6)
-
-        ImGui.beginGroup()
-        for (i in activeParams.indices) {
-            if (i > 0 && i % 3 != 0) {
-                ImGui.sameLine(0f, COLUMN_GAP)
-            }
-            drawParamSlider(activeParams[i], paramColW, "fb_${unit.id}_$i")
-        }
-        ImGui.endGroup()
-
-        ImGui.popStyleVar(2)
-    }
-
-    private fun drawISFFaceplate(
-        session: llm.slop.liquidlsd.SessionContext,
-        unit: ISFProcessorUnit,
-        usableW: Float,
-        colW: Float,
-        faceplateHeight: Float
-    ) {
-        val filter = unit.filter
-        val params = unit.getParameters()
-
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
-
-        // Column 1 & 2: Confidence Micro-Monitor + Dry/Wet slider
-        val col12W = (colW * 2f) + COLUMN_GAP
-        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(36f, 64f)
-
-        ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH)
-        drawParamSlider(filter.dryWet, col12W, "drywet_${unit.id}", customLabel = "DRY / WET")
-        ImGui.endGroup()
-        ImGui.sameLine()
-
-        // Columns 3 to 8: Filter parameters (up to 6)
-        val remainingW = usableW - col12W - COLUMN_GAP
-        val filterParams = filter.parameters.values.take(6).toList()
-        val paramColW = if (filterParams.isNotEmpty()) {
-            (remainingW - (COLUMN_GAP * (filterParams.size - 1))) / filterParams.size
-        } else {
-            remainingW
-        }
-
-        ImGui.beginGroup()
-        for (i in filterParams.indices) {
-            if (i > 0) ImGui.sameLine(0f, COLUMN_GAP)
-            drawParamSlider(filterParams[i], paramColW, "isf_${unit.id}_$i")
+            drawParamSlider(param, paramColW, "deck_${unit.id}_$i")
         }
         ImGui.endGroup()
 
@@ -274,7 +181,8 @@ object RackFaceplateGrid {
         unit: MixerTransitionUnit,
         usableW: Float,
         colW: Float,
-        faceplateHeight: Float
+        faceplateHeight: Float,
+        renderer: Renderer?
     ) {
         val mixer = unit.mixer
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
@@ -285,7 +193,7 @@ object RackFaceplateGrid {
         val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
 
         ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        RackMicroMonitor.draw(session, unit, col12W, monitorH, renderer)
         ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
         ImGui.textUnformatted("MASTER OUT")
         ImGui.popStyleColor()
@@ -315,7 +223,8 @@ object RackFaceplateGrid {
         unit: RackUnit,
         usableW: Float,
         colW: Float,
-        faceplateHeight: Float
+        faceplateHeight: Float,
+        renderer: Renderer?
     ) {
         val params = unit.getParameters()
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
@@ -326,7 +235,7 @@ object RackFaceplateGrid {
         val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
 
         ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH)
+        RackMicroMonitor.draw(session, unit, col12W, monitorH, renderer)
         ImGui.endGroup()
         ImGui.sameLine()
 
@@ -351,6 +260,132 @@ object RackFaceplateGrid {
         }
 
         ImGui.popStyleVar(2)
+    }
+
+    private fun drawQueueStagingFaceplate(unit: QueueStagingRackUnit, colW: Float) {
+        val mixer = unit.mixer
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 3.0f, 2.0f)
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 6.0f, 3.0f)
+
+        drawQueueSection(
+            idSuffix = "pq_${unit.id}",
+            title = "PLAY QUEUE",
+            accentR = 0.4f, accentG = 1.0f, accentB = 0.8f,
+            isActive = llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled,
+            colW = colW,
+            onPrev = { llm.slop.liquidlsd.presets.PlayQueueManager.triggerPrevious(mixer) },
+            onToggle = {
+                val next = !llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled
+                llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled = next
+                if (next) mixer.muteCrossfadeNonMidiCv()
+            },
+            onNext = { llm.slop.liquidlsd.presets.PlayQueueManager.triggerNext(mixer) },
+            nowLabel = queueNowLabel(llm.slop.liquidlsd.presets.PlayQueueManager.queue, llm.slop.liquidlsd.presets.PlayQueueManager.activeIndex),
+            nextLabel = queueNextLabel(
+                llm.slop.liquidlsd.presets.PlayQueueManager.queue,
+                llm.slop.liquidlsd.presets.PlayQueueManager.activeIndex,
+                llm.slop.liquidlsd.presets.PlayQueueManager.isShuffleEnabled
+            )
+        )
+
+        ImGui.spacing()
+
+        drawQueueSection(
+            idSuffix = "bgq_${unit.id}",
+            title = "BG QUEUE",
+            accentR = 0.9f, accentG = 0.35f, accentB = 0.65f,
+            isActive = llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled,
+            colW = colW,
+            onPrev = { llm.slop.liquidlsd.presets.BgQueueManager.triggerPrevious(mixer) },
+            onToggle = {
+                llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled = !llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled
+            },
+            onNext = { llm.slop.liquidlsd.presets.BgQueueManager.triggerNext(mixer) },
+            nowLabel = queueNowLabel(llm.slop.liquidlsd.presets.BgQueueManager.queue, llm.slop.liquidlsd.presets.BgQueueManager.activeIndex),
+            nextLabel = queueNextLabel(
+                llm.slop.liquidlsd.presets.BgQueueManager.queue,
+                llm.slop.liquidlsd.presets.BgQueueManager.activeIndex,
+                llm.slop.liquidlsd.presets.BgQueueManager.isShuffleEnabled
+            )
+        )
+
+        ImGui.spacing()
+
+        drawQueueSection(
+            idSuffix = "tq_${unit.id}",
+            title = "TRANSITION STAGING",
+            accentR = 0.55f, accentG = 0.75f, accentB = 1.0f,
+            isActive = llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled,
+            colW = colW,
+            onPrev = { llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer) },
+            onToggle = {
+                llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled =
+                    !llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled
+            },
+            onNext = { llm.slop.liquidlsd.presets.TransitionQueueManager.advanceNext(mixer) },
+            nowLabel = queueNowLabel(llm.slop.liquidlsd.presets.TransitionQueueManager.queue, llm.slop.liquidlsd.presets.TransitionQueueManager.activeIndex),
+            nextLabel = queueNextLabel(
+                llm.slop.liquidlsd.presets.TransitionQueueManager.queue,
+                llm.slop.liquidlsd.presets.TransitionQueueManager.activeIndex,
+                llm.slop.liquidlsd.presets.TransitionQueueManager.isShuffleEnabled
+            )
+        )
+
+        ImGui.popStyleVar(2)
+    }
+
+    private fun drawQueueSection(
+        idSuffix: String,
+        title: String,
+        accentR: Float,
+        accentG: Float,
+        accentB: Float,
+        isActive: Boolean,
+        colW: Float,
+        onPrev: () -> Unit,
+        onToggle: () -> Unit,
+        onNext: () -> Unit,
+        nowLabel: String,
+        nextLabel: String
+    ) {
+        ImGui.pushID(idSuffix)
+
+        ImGui.pushStyleColor(ImGuiCol.Text, accentR, accentG, accentB, 1.0f)
+        ImGui.textUnformatted(title)
+        ImGui.popStyleColor()
+        ImGui.sameLine(colW * 4.5f)
+
+        val btnW = colW * 0.9f
+        if (ImGui.button("<##prev", btnW, 0f)) onPrev()
+        ImGui.sameLine(0f, 3f)
+
+        if (isActive) {
+            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+        }
+        val toggleLabel = if (isActive) llm.slop.liquidlsd.ui.Icons.PAUSE else llm.slop.liquidlsd.ui.Icons.PLAY
+        if (ImGui.button("$toggleLabel##toggle", btnW, 0f)) onToggle()
+        if (isActive) {
+            ImGui.popStyleColor()
+        }
+        ImGui.sameLine(0f, 3f)
+
+        if (ImGui.button(">##next", btnW, 0f)) onNext()
+
+        ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
+        ImGui.textUnformatted("${nowLabel.take(16)}  ->  ${nextLabel.take(16)}")
+        ImGui.popStyleColor()
+
+        ImGui.popID()
+    }
+
+    private fun queueNowLabel(queue: List<File>, activeIndex: Int): String =
+        queue.getOrNull(activeIndex)?.nameWithoutExtension ?: "--"
+
+    private fun queueNextLabel(queue: List<File>, activeIndex: Int, isShuffle: Boolean): String {
+        if (queue.isEmpty()) return "--"
+        if (isShuffle) return "(shuffle)"
+        val nextIdx = if (activeIndex + 1 < queue.size) activeIndex + 1 else 0
+        return queue.getOrNull(nextIdx)?.nameWithoutExtension ?: "--"
     }
 
     private fun drawParamSlider(

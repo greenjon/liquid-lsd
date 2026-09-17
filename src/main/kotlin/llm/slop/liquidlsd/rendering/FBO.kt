@@ -17,9 +17,19 @@ class FBO(
     val internalFormat: Int = GL_RGBA8,
     val pixelType: Int = if (internalFormat == GL_RGBA16F || internalFormat == GL_RGBA32F) GL_FLOAT else GL_UNSIGNED_BYTE
 ) {
+    companion object {
+        // framebufferId -> estimated color-attachment byte size, for the telemetry HUD's
+        // FBO-count/GPU-memory readout (see Question 4 in modular_video_rack_proposal.md --
+        // "instrument first" before considering a pooled allocator).
+        private val liveInstances = java.util.concurrent.ConcurrentHashMap<Int, Long>()
+
+        val liveCount: Int get() = liveInstances.size
+        val liveBytes: Long get() = liveInstances.values.sum()
+    }
+
     val framebufferId: Int
     val texture: Int
-    
+
     private var isDisposed = false
 
     init {
@@ -60,6 +70,13 @@ class FBO(
         logger.debug { "Created FBO ${framebufferId} (${width}x${height}), texture: $texture" }
         val caller = Thread.currentThread().stackTrace.getOrNull(3) ?: Thread.currentThread().stackTrace[2]
         GLResourceTracker.register(framebufferId, "FBO created at $caller")
+
+        val bytesPerPixel = when (internalFormat) {
+            GL_RGBA32F -> 16L
+            GL_RGBA16F -> 8L
+            else -> 4L
+        }
+        liveInstances[framebufferId] = width.toLong() * height.toLong() * bytesPerPixel
     }
 
     /**
@@ -97,6 +114,7 @@ class FBO(
             glDeleteFramebuffers(framebufferId)
             isDisposed = true
             GLResourceTracker.unregister(framebufferId)
+            liveInstances.remove(framebufferId)
             logger.debug { "Disposed FBO $framebufferId" }
         }
     }

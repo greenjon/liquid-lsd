@@ -64,13 +64,17 @@ The Rack is an alternate workspace: instead of the fixed Deck A / B / BG layout,
 - Press **`F4`**, or use **View → Modular Video Rack** (`F3` returns to **Classic Deck View**).
 - Or click the **`[ CLASSIC | RACK ]`** pill in the menu bar.
 
+### The default rack layout
+
+Opening Rack view populates the bay from your current session:
+
+- **Deck A**, **Deck B**, and **Deck BG** each get one rack unit — the deck's generator *and* all of its active FX slots live together on that single unit's faceplate (FX parameters show up alongside the generator's own, so a deck using 3 FX filters is still just one unit, not four). Deck PV isn't shown in the rack — it's Classic mode's audition/preview deck and doesn't feed the live composite.
+- A **Queue & Staging** unit gives you condensed Play Queue / Background Queue / Transition Staging transport controls (prev / play-pause / next, plus what's playing now and what's up next) — the same queues you already use in Classic mode, just visible without leaving the rack.
+- A **Master** unit holds the crossfader, blend mode, and master post-FX.
+
 ### Adding and arranging units
 
-- **`+ ADD UNIT`** in the rack toolbar opens a picker for the four unit kinds:
-  - **Generator Synth (GEN)** — no video input, generates visuals from shader logic and audio CV.
-  - **Processor FX (FX)** — takes Video In, applies feedback/distortion/color grading/displacement, outputs Video Out.
-  - **Transition Mixer (MIX)** — takes multiple Video Inputs, crossfades/blends them, outputs to Master.
-  - **Utility / Bridge (UTIL)** — splitters, clock conductors, external I/O bridges.
+- **`+ ADD UNIT`** in the rack toolbar lets you drop in an extra clone of Deck A, Deck B, or Deck BG's generator, or a blank Utility unit to build your own — e.g. if you want a second confidence monitor on a deck elsewhere in the stack.
 - By default, units are **normalled**: dropping units into the stack automatically wires unit *N*'s output into unit *N+1*'s input, top to bottom — no manual patching needed for a straightforward chain.
 - Each unit's header rail has: power, bypass, solo (send straight to master), a macro curation toggle, move up/down, collapse to a thin spine, and remove.
 

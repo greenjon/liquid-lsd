@@ -380,7 +380,8 @@ class MenuBar(
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else if (isAudioDisabled) "DSP: OFF  " else "DSP: --  "
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%3.0f ms  ".format(ftMs)
-        val fullLabel = cpuText + bpmText + dspText + fpsText + ftText
+        val fboText = "FBO: %d (%.0fMB)  ".format(PerformanceStats.fboCount, PerformanceStats.fboMemoryMB)
+        val fullLabel = cpuText + bpmText + dspText + fpsText + ftText + fboText
 
         val isFrameless = session.uiTheme.framelessWindow && windowFrameController != null
         val btnW = 24f

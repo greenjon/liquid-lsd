@@ -122,7 +122,7 @@ class RackPanel(
                     if (isRearView) {
                         RackRearChassisRenderer.drawUnitRear(session, unit, rackManager.patchBay, bayW, bodyH)
                     } else {
-                        RackFaceplateGrid.drawFaceplate(session, unit, bayW, bodyH)
+                        RackFaceplateGrid.drawFaceplate(session, unit, bayW, bodyH, renderer)
                     }
                 }
 
@@ -136,7 +136,10 @@ class RackPanel(
             }
 
             // Apply deferred reordering or removal
-            unitToRemoveId?.let { rackManager.removeUnit(it) }
+            unitToRemoveId?.let {
+                rackManager.removeUnit(it)
+                RackMicroMonitor.releaseUnit(it)
+            }
             unitToMoveUpIdx?.let { rackManager.moveUp(it) }
             unitToMoveDownIdx?.let { rackManager.moveDown(it) }
 
@@ -235,6 +238,10 @@ class RackPanel(
 
         // Reset to session
         if (ImGui.button("${Icons.REFRESH} RE-SYNC SESSION")) {
+            // populateFromSession discards the old unit list without disposing it (units hold no
+            // GPU resources of their own -- see RackUnit.kt), but the monitor's preview FBOs are
+            // keyed by the old (now-orphaned) unit IDs and must be released here or they'd leak.
+            RackMicroMonitor.releaseAll()
             rackManager.populateFromSession(mixer)
         }
 
@@ -310,19 +317,19 @@ class RackPanel(
             ImGui.separator()
 
             if (ImGui.button("Generator: Deck A Clone", 260f, 32f)) {
-                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckGeneratorUnit(mixer.deckA, isDeckA = true, label = "Deck A Synth Extra"))
+                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckRackUnit(mixer.deckA, label = "Deck A Extra"))
                 isAddUnitPopupOpen = false
                 ImGui.closeCurrentPopup()
             }
 
             if (ImGui.button("Generator: Deck B Clone", 260f, 32f)) {
-                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckGeneratorUnit(mixer.deckB, isDeckA = false, label = "Deck B Synth Extra"))
+                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckRackUnit(mixer.deckB, label = "Deck B Extra"))
                 isAddUnitPopupOpen = false
                 ImGui.closeCurrentPopup()
             }
 
-            if (ImGui.button("Processor: Feedback Loop", 260f, 32f)) {
-                rackManager.addUnit(llm.slop.liquidlsd.rack.FeedbackProcessorUnit(mixer.deckA, isDeckA = true, label = "Feedback FX Unit"))
+            if (ImGui.button("Generator: Deck BG Clone", 260f, 32f)) {
+                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckRackUnit(mixer.deckBG, label = "Deck BG Extra"))
                 isAddUnitPopupOpen = false
                 ImGui.closeCurrentPopup()
             }

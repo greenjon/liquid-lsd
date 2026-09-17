@@ -3,6 +3,8 @@ package llm.slop.liquidlsd.rack.ui
 import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rack.RackUnit
+import llm.slop.liquidlsd.rendering.FBO
+import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.ui.UITheme
 
 /**
@@ -22,6 +24,16 @@ object RackMicroMonitor {
 
     private const val BEZEL_PADDING = 3.0f
 
+    // Shared downscaled preview resolution (§ Question 4 decision in
+    // modular_video_rack_proposal.md) -- every unit's monitor is rendered at this fixed size
+    // rather than sampling the full-res source texture directly.
+    private const val PREVIEW_WIDTH = 240
+    private const val PREVIEW_HEIGHT = 135
+
+    // One small preview FBO per unit instance, lazily created and reused across frames. Released
+    // via [releaseUnit]/[releaseAll] -- see call sites in RackPanel.kt.
+    private val previewFbos = HashMap<String, FBO>()
+
     /**
      * Draws the confidence micro-monitor for the given [unit].
      *
@@ -29,12 +41,16 @@ object RackMicroMonitor {
      * @param unit Target rack unit to monitor.
      * @param monitorWidth Total outer width including the hardware bezel.
      * @param monitorHeight Total outer height including the hardware bezel.
+     * @param renderer Renderer used to downscale-blit the unit's output into a shared preview
+     *   resolution FBO before display. Pass `null` to skip downscaling and sample the full-res
+     *   source texture directly (e.g. in a headless/test context with no live GL context).
      */
     fun draw(
         session: SessionContext,
         unit: RackUnit,
         monitorWidth: Float,
-        monitorHeight: Float
+        monitorHeight: Float,
+        renderer: Renderer? = null
     ) {
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
@@ -67,9 +83,16 @@ object RackMicroMonitor {
         val isBypassed = unit.isBypassed
 
         if (isPowered && textureId > 0) {
+            val previewTextureId = if (renderer != null) {
+                val previewFbo = previewFbos.getOrPut(unit.id) { FBO(PREVIEW_WIDTH, PREVIEW_HEIGHT) }
+                renderer.rescale(textureId, PREVIEW_WIDTH, PREVIEW_HEIGHT, previewFbo, UITheme.OutputScaleMode.STRETCH)
+                previewFbo.texture
+            } else {
+                textureId
+            }
             // ImGui uses inverted UVs for standard OpenGL textures (uv0=(0, 1), uv1=(1, 0))
             ImGui.setCursorScreenPos(screenX, screenY)
-            ImGui.image(textureId.toLong(), screenW, screenH, 0f, 1f, 1f, 0f)
+            ImGui.image(previewTextureId.toLong(), screenW, screenH, 0f, 1f, 1f, 0f)
         }
 
         // 3. Status Badges & Overlays
@@ -103,6 +126,21 @@ object RackMicroMonitor {
             }
             ImGui.setTooltip("Confidence Monitor: ${unit.label}\nStatus: $status\nSignal: ${unit.unitType.badgeLabel} -> Video Out")
         }
+    }
+
+    /** Number of live preview FBOs currently cached (for the telemetry HUD's GPU-memory readout). */
+    val previewFboCount: Int
+        get() = previewFbos.size
+
+    /** Disposes and releases the preview FBO for a single removed unit. */
+    fun releaseUnit(unitId: String) {
+        previewFbos.remove(unitId)?.dispose()
+    }
+
+    /** Disposes and releases every cached preview FBO (e.g. before a full rack re-sync). */
+    fun releaseAll() {
+        previewFbos.values.forEach { it.dispose() }
+        previewFbos.clear()
     }
 
     private fun drawCenterBadge(
