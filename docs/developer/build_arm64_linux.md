@@ -1,147 +1,87 @@
 # Build for ARM64 Linux
 
-This guide details how to restore the **Linux ARM64 (`aarch64`)** build target for Liquid LSD Desktop by building the missing native binaries via GitHub Actions and integrating them into the project.
+Linux ARM64 (`aarch64`) is a supported Liquid LSD Desktop distribution target. This
+guide explains how the one hard native-library blocker is solved, and how to refresh
+that native binary if the pinned `imgui-java` version ever changes.
 
 ---
 
-## 1. Background & Problem Statement
+## 1. Background
 
-Linux ARM64 support was dropped as a distribution target because upstream `imgui-java` ([`io.github.spair:imgui-java`](https://github.com/SpaiR/imgui-java)) does not publish ARM64 ELF native `.so` binaries for Linux:
-- Upstream issue [#105 (*"Make it work in arm64 linux"*)] (https://github.com/SpaiR/imgui-java/issues/105) remains open.
-- The `io.github.spair:imgui-java-natives-linux` artifact contains only `x86_64` ELF binaries (`io/imgui/java/native-bin/libimgui-java64.so`).
-- Upstream added Apple Silicon support in `1.86.12` via universal Mach-O binaries (`x86_64` + `arm64`), but never added Linux aarch64.
+Upstream `imgui-java` ([`io.github.spair:imgui-java`](https://github.com/SpaiR/imgui-java))
+does not publish Linux ARM64 native binaries:
+- Upstream issue [#105](https://github.com/SpaiR/imgui-java/issues/105) ("Make it work in
+  arm64 linux") has been open since 2022 and remains open through the currently pinned
+  `1.92.7.1` (see [`imgui_upgrade_guide.md`](imgui_upgrade_guide.md) for the version
+  history).
+- The `io.github.spair:imgui-java-natives-linux` artifact only ever contains `x86_64`
+  ELF binaries.
 
-### What Liquid LSD Already Has Ready
-All other dependencies and subsystems already have first-class Linux ARM64 support:
-- **LWJGL 3.3.3**: Already includes `natives-linux-arm64` runtime dependencies in `build.gradle.kts` (GLFW, OpenGL, OpenAL, STB).
-- **JRE / JVM**: Eclipse Temurin (Adoptium) provides production JRE 17 binaries for `linux-aarch64`.
-- **Audio (JACK) & Video (PipeWire)**: Link dynamically against standard distro packages via JNA (`libjack.so`, `libpipewire-0.3.so`), which are fully native on ARM64 distributions (Debian, Ubuntu, Fedora, Raspberry Pi OS 64-bit).
-- **Ableton Link**: If `link_jni` is missing, Liquid LSD gracefully falls back to Carabiner TCP synchronization.
+Every other dependency already has first-class Linux ARM64 support:
+- **LWJGL 3.3.3** ships `natives-linux-arm64` (GLFW, OpenGL, OpenAL, STB) — see
+  `build.gradle.kts`.
+- **JRE**: Eclipse Temurin provides `linux-aarch64` JRE 17 builds.
+- **Audio (JACK) & Video (PipeWire)**: linked dynamically via JNA against distro
+  packages, which are native on ARM64 distros (Debian, Ubuntu, Fedora, Raspberry Pi OS
+  64-bit).
+- **Ableton Link**: if `link_jni` is unavailable, Liquid LSD falls back to Carabiner
+  TCP sync automatically.
 
-The **sole hard blocker** is the native JNI library for Dear ImGui (`libimgui-java64.so`).
-
----
-
-## 2. Compiling `imgui-java` on GitHub Actions (No Docker Required)
-
-Rather than maintaining a local cross-compilation toolchain or Docker environment, you can compile native ARM64 binaries using **GitHub's free native ARM64 runners** (`ubuntu-24.04-arm`).
-
-### Step 1: Fork and Branch
-1. Fork [`SpaiR/imgui-java`](https://github.com/SpaiR/imgui-java) on GitHub.
-2. Clone your fork locally and check out the version pinned by Liquid LSD (`v1.92.7.1`, see `build.gradle.kts` and [`imgui_upgrade_guide.md`](imgui_upgrade_guide.md)):
-   ```bash
-   git clone https://github.com/<your-username>/imgui-java.git
-   cd imgui-java
-   git checkout -b build-arm64-1.92.7.1 v1.92.7.1
-   git submodule update --init --recursive
-   ```
-
-### Step 2: Add Native ARM64 Workflow
-Create `.github/workflows/build-arm64.yml` in your fork:
-
-```yaml
-name: Build Linux ARM64 Natives
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build-arm64:
-    name: Build Linux aarch64
-    runs-on: ubuntu-24.04-arm  # Native GitHub-hosted 64-bit ARM Linux runner
-    steps:
-      - name: Checkout Repository and Submodules
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Compiler Tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Build Java Bindings & Generate JNI Headers
-        run: |
-          ./gradlew :imgui-binding:compileJava
-          ./gradlew :imgui-binding:generateLibs -Denvs=linux -Dlocal || true
-
-      - name: Compile Native Shared Library for ARM64
-        run: |
-          JNI_DIR="imgui-binding/build/jni"
-          g++ -O3 -shared -fPIC -std=c++17 \
-            -I"$JAVA_HOME/include" \
-            -I"$JAVA_HOME/include/linux" \
-            -I"$JNI_DIR" \
-            $(find "$JNI_DIR" -name "*.cpp") \
-            -o libimgui-java64.so
-
-      - name: Upload ARM64 Native Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: imgui-java-linux-arm64
-          path: libimgui-java64.so
-            **/build/**/libimgui-java64.so
-```
-
-### Step 3: Run the Workflow
-1. Push the branch to your fork on GitHub:
-   ```bash
-   git push origin build-arm64-1.86.12
-   ```
-2. Navigate to **Actions** in your GitHub repository, select **Build Linux ARM64 Natives**, and click **Run workflow**.
-3. Download the zipped artifact `imgui-java-linux-arm64` containing `libimgui-java64.so`.
+So `libimgui-java64.so` for `linux-arm64` was the sole hard blocker.
 
 ---
 
-## 3. Integrating `libimgui-java64.so` into Liquid LSD
+## 2. Where the native binary comes from
 
-`imgui.ImGui` looks for native binaries using three fallback mechanisms:
-1. `System.getProperty("imgui.library.path")` — path to directory containing `libimgui-java64.so`.
-2. `System.loadLibrary("imgui-java64")`.
-3. Extraction from the classpath under `/native-bin/libimgui-java64.so`.
+Rather than cross-compiling `imgui-java` on every Liquid LSD release — this project
+ships multiple times a day, while `imgui-java` changes far less often — the ARM64
+native is built once per `imgui-java` version in a separate, standalone repo:
 
-We can wire the downloaded binary into Liquid LSD using either of the following approaches:
+**[`greenjon/imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64)**
 
-### Approach A: Embedded Resource & Dynamic Loader Hook (Recommended)
+That repo's workflow checks out `SpaiR/imgui-java` at a given tag on a native
+`ubuntu-24.04-arm` GitHub-hosted runner and runs its normal `generateLibs` build,
+patched to select gdx-jnigen's existing (but upstream-unused) ARM64 Linux build target
+instead of the x86 one `imgui-java`'s own script always requests.
 
-1. Place the compiled `libimgui-java64.so` in Liquid LSD resources:
-   ```
-   src/main/resources/natives/linux-arm64/libimgui-java64.so
-   ```
+That's the actual root cause of Linux ARM64 never having worked here, including
+several earlier in-repo attempts: `imgui-java`'s `GenerateLibs.groovy` hardcodes
+`BuildTarget.newDefaultTarget(Os.Linux, Architecture.Bitness._64)`, which defaults to
+`Architecture.x86` and bakes in x86-only compiler flags (`-mfpmath=sse -msse -m64`)
+that a native aarch64 `g++` rejects outright — *even though the runner itself is
+ARM64*. `gdx-jnigen` 2.5.2 (the library `imgui-java` builds on) already ships a correct
+`Architecture.ARM` Linux target (`aarch64-linux-gnu-` prefix, `-fPIC`, no SSE flags);
+`imgui-java`'s build script just never selects it. See that repo's
+`.github/workflows/build.yml` for the exact patch.
 
-2. In `NativeLibraryLoader.kt`, add an ImGui initialization helper:
-   ```kotlin
-   fun prepareImGuiNatives() {
-       if (currentOs == OS.LINUX && currentArch == Arch.ARM64) {
-           val libFileName = "libimgui-java64.so"
-           val resourcePath = "/natives/linux-arm64/$libFileName"
-           val stream = NativeLibraryLoader::class.java.getResourceAsStream(resourcePath)
-           if (stream != null) {
-               val tempDir = File(System.getProperty("java.io.tmpdir"), "liquid_lsd_imgui_arm64")
-               tempDir.mkdirs()
-               val destFile = File(tempDir, libFileName)
-               if (!destFile.exists() || destFile.length() == 0L) {
-                   stream.use { input ->
-                       destFile.outputStream().use { output -> input.copyTo(output) }
-                   }
-                   destFile.setExecutable(true)
-               }
-               System.setProperty("imgui.library.path", tempDir.absolutePath)
-               logger.info { "Configured ImGui ARM64 library path: ${tempDir.absolutePath}" }
-           }
-       }
-   }
-   ```
+The resulting `.so` is published as a GitHub Release asset tagged with the `imgui-java`
+version, e.g.
+[`v1.92.7.1`](https://github.com/greenjon/imgui-java-natives-linux-arm64/releases/tag/v1.92.7.1).
 
-3. Call `NativeLibraryLoader.prepareImGuiNatives()` early in `Main.kt` before calling any `ImGui` methods or loading UI layouts.
+### Rebuilding after an `imgui-java` version bump
+
+If `imguiVersion` in `build.gradle.kts` is bumped and no matching release exists yet in
+`imgui-java-natives-linux-arm64`:
+1. Go to that repo's **Actions** tab → **Build & Release Linux ARM64 Natives** → **Run workflow**.
+2. Pass the new `imgui-java` tag (e.g. `v1.93.0.0`).
+3. Confirm the new release and its `.so` asset, then re-run/re-trigger Liquid LSD's CI —
+   it downloads by version tag automatically (see below), no other changes needed.
+
+---
+
+## 3. How Liquid LSD consumes it
+
+CI (`.github/workflows/smoke-test.yml` and `.github/workflows/release.yml`) downloads
+the release asset matching the pinned `imguiVersion` directly into
+`src/main/resources/natives/linux-arm64/libimgui-java64.so` before building, so it
+ships embedded in the jar like any other resource — no native compiler toolchain is
+needed in Liquid LSD's own CI or on `linux-arm64` contributors' machines.
+
+At runtime, `NativeLibraryLoader.prepareImGuiNatives()` (in
+`src/main/kotlin/llm/slop/liquidlsd/utils/NativeLibraryLoader.kt`) extracts that
+embedded `.so` to a temp directory and points `imgui.ImGui` at it via
+`System.setProperty("imgui.library.path", ...)`. It's called early in `Main.kt`,
+before any `ImGui` calls.
 
 ---
 
@@ -160,18 +100,18 @@ Place the resulting `liblink_jni.so` into:
 ```
 src/main/resources/natives/linux-arm64/liblink_jni.so
 ```
-If omitted, Liquid LSD automatically falls back to Carabiner TCP sync without user intervention.
+If omitted, Liquid LSD automatically falls back to Carabiner TCP sync without user
+intervention.
 
 ---
 
-## 5. Re-Enabling Distribution Packaging
+## 5. Distribution packaging
 
-Once the native binary is staged:
-
-1. **`build.gradle.kts`**:
-   - Re-add `zipLinuxArm` task targeting `Adoptium` JRE 17 `linux-aarch64`.
-   - Include `zipLinuxArm` in `packageZips`.
-2. **CI / Smoke Tests**:
-   - Re-enable `linux-arm64` in `.github/workflows/smoke-test.yml` and `.github/workflows/release.yml` using `runs-on: ubuntu-24.04-arm`.
-3. **Verify PipeWire Structure Alignment**:
-   - Verify `SpaData` and `PipeWireBufferStruct` in `PipeWireLibrary.kt` on aarch64.
+Already wired up:
+- **`build.gradle.kts`**: `zipLinuxArm` task bundles the Adoptium JRE 17
+  `linux-aarch64` build and `run-linux-arm.sh` launcher; included in `packageZips`.
+- **CI**: `linux-arm64` is a matrix entry (`runs-on: ubuntu-24.04-arm`) in the
+  smoke-test matrices of both `smoke-test.yml` and `release.yml`.
+- **PipeWire**: `SpaData` and `PipeWireBufferStruct` in `PipeWireLibrary.kt` are JNA
+  structures whose layout follows declared field order rather than architecture-specific
+  padding assumed here — re-verify on aarch64 if those struct definitions ever change.
