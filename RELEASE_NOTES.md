@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Full Screen Video & Monitor Alpha Blend Parity (`Main.kt`, `default_filters/feedback.fs`)
+- **Fixed Full Screen vs Monitor Alpha Blend Mismatch**: Changed full screen viewport and secondary window rendering in `Main.kt` from `glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)` to `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` to match ImGui's monitor rendering pipeline. Previously, `GL_ONE` caused non-premultiplied decaying alpha pixels (such as feedback trails) to render at 100% RGB intensity on full screen video without alpha attenuation, appearing drastically heavier and thicker than in confidence monitors.
+- **Isotropic Aspect-Ratio Corrected Feedback Zoom & Rotation (`feedback.fs`)**: Added aspect-ratio scaling to `default_filters/feedback.fs` (`float aspect = RENDERSIZE.x / RENDERSIZE.y; uv.x *= aspect; ... uv.x /= aspect;`) so zoom and rotation transformations remain circular and isotropic in non-square viewports (e.g. 16:9).
+
 ### Column 3 Header Mode Toggle (`Column3HeaderToggle.kt`, `UIManager.kt`, `MacroPanel.kt`, `MixerLayout.kt`)
 - **Column 3 Mode Toggle Always Visible**: Extracted `Column3HeaderToggle` to draw the `[ MIXER | MACROS ]` header toggle directly at the top of the Column 3 window in `UIManager.kt`, ensuring the mode switch pill is always visible in both `MIXER` and `MACROS` modes as documented in `docs/user_guide/macros_and_rack.md`.
 - **Layout Height Calculation Update**: Updated `MixerLayoutCalculator`'s vertical chrome estimation to incorporate the header toggle height so Column 3 layout auto-sizing stays exact in both modes.

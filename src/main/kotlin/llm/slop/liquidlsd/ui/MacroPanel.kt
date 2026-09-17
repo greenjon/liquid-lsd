@@ -13,7 +13,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  * [llm.slop.liquidlsd.macro.MacroControl.value] in place, and switches go through
  * [llm.slop.liquidlsd.macro.MacroControl.onPress]/[llm.slop.liquidlsd.macro.MacroControl.onRelease].
  *
- * Layout, top to bottom: 2-column x 4-row knob grid, a row of 4 switches,
+ * Layout, top to bottom: 4-column x 2-row knob grid, a row of 4 switches,
  * binding inspector accordion drawer, then the single-deck preview monitor at the bottom.
  * Note: Header mode toggle `[ MIXER | MACROS ]` is drawn at the Column 3 window level by
  * [Column3HeaderToggle].
@@ -70,13 +70,13 @@ class MacroPanel(
         }
     }
 
-    // -- 2x4 Macro Knob grid --------------------------------------------------------------------
+    // -- 4x2 Macro Knob grid --------------------------------------------------------------------
 
     private fun drawKnobGrid(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO KNOBS") }
         ImGui.spacing()
 
-        val cols = 2
+        val cols = 4
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(2f)
         val cellW = availW / cols
         val diameter = (cellW - 24f).coerceIn(40f, 72f)

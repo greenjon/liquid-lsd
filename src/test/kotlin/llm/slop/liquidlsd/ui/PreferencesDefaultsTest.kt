@@ -19,9 +19,15 @@ class PreferencesDefaultsTest {
     private val legacySettingsFile = File("lsd-settings.properties")
     private var originalPrefBackup: String? = null
     private var originalSettingsBackup: String? = null
+    private var originalUIThemePreferences: AppPreferences? = null
 
     @BeforeEach
     fun setUp() {
+        // Snapshot in-memory UITheme state so this test class can never leak whatever
+        // was on disk (a real dev's lsd-preferences.properties) into the global
+        // UITheme singleton for other test classes sharing this JVM.
+        originalUIThemePreferences = UITheme.preferences
+
         if (preferencesFile.exists()) {
             originalPrefBackup = preferencesFile.readText()
             preferencesFile.delete()
@@ -47,6 +53,11 @@ class PreferencesDefaultsTest {
         }
 
         AppPreferencesStore.loadPreferences()
+
+        // loadPreferences() above may have just pulled whatever was in the restored
+        // file (real, possibly non-default local dev settings) into UITheme -- undo
+        // that so the singleton is back exactly where it was before this test ran.
+        originalUIThemePreferences?.let { UITheme.preferences = it }
     }
 
     @Test

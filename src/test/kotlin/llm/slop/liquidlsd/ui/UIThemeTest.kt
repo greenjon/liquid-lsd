@@ -259,11 +259,22 @@ class UIThemeTest {
 
     @Test
     fun testColumn3ModeDefaultAndToggle() {
-        assertEquals(UITheme.Column3Mode.MIXER, UITheme.column3Mode)
-        UITheme.column3Mode = UITheme.Column3Mode.MACROS
-        assertEquals(UITheme.Column3Mode.MACROS, UITheme.column3Mode)
-        UITheme.column3Mode = UITheme.Column3Mode.MIXER
-        assertEquals(UITheme.Column3Mode.MIXER, UITheme.column3Mode)
+        // Check the real default via a fresh AppPreferences instance rather than the
+        // live UITheme singleton: UITheme is a mutable global shared across every test
+        // class in this JVM, so asserting on its ambient value is order-dependent on
+        // whatever ran before it (and on any real lsd-preferences.properties a test
+        // reloaded from disk).
+        assertEquals(UITheme.Column3Mode.MIXER, AppPreferences().column3Mode)
+
+        val original = UITheme.column3Mode
+        try {
+            UITheme.column3Mode = UITheme.Column3Mode.MACROS
+            assertEquals(UITheme.Column3Mode.MACROS, UITheme.column3Mode)
+            UITheme.column3Mode = UITheme.Column3Mode.MIXER
+            assertEquals(UITheme.Column3Mode.MIXER, UITheme.column3Mode)
+        } finally {
+            UITheme.column3Mode = original
+        }
     }
     fun testFontSizeBoundaries() {
         // Preset name scale range: 80%–120%

@@ -508,7 +508,7 @@ fun main(args: Array<String>) {
                 glViewport(vp.x, vp.y, vp.width, vp.height)
 
                 glEnable(GL_BLEND)
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
                 renderer.blitShader.bind()
                 glActiveTexture(GL_TEXTURE0)
@@ -564,7 +564,7 @@ fun main(args: Array<String>) {
                 glViewport(vp.x, vp.y, vp.width, vp.height)
 
                 glEnable(GL_BLEND)
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
                 renderer.blitShader.bind()
                 glActiveTexture(GL_TEXTURE0)

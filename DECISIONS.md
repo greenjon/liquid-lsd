@@ -1,3 +1,16 @@
+## Full Screen Video & Monitor Alpha Blend Parity (`Main.kt`, `default_filters/feedback.fs`)
+
+- **Context**: On 2026-09-17, a visual rendering mismatch was identified between ImGui confidence monitors and full screen video mode: feedback effects (such as "Full feedback with zoom...") rendered drastically heavier and thicker on full screen video than in the confidence monitors.
+- **Decision**:
+  - Fixed `Main.kt`'s full screen and secondary window blit calls to use `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` instead of `glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)`.
+  - Added display aspect-ratio scaling to `default_filters/feedback.fs` (`float aspect = RENDERSIZE.x / RENDERSIZE.y; uv.x *= aspect; ... uv.x /= aspect;`).
+- **Rationale**:
+  - ImGui's monitor rendering pipeline uses `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`, which multiplies the source RGB by alpha ($\alpha \times \text{RGB}$).
+  - `Main.kt` was using `GL_ONE`, which assumed premultiplied alpha and drew non-premultiplied decaying feedback pixels at full 100% RGB weight ($1.0 \times \text{RGB}$), ignoring alpha attenuation. This caused decaying feedback trails and low-alpha pixels to linger brightly on full screen video while fading to black in confidence monitors.
+  - Applying `GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA` to full screen video ensures 100% visual parity across all monitors and full screen outputs.
+
+---
+
 ## Modular Video Rack Phase 9: Unit Consolidation & Rack Layout Finalization (`RackUnit.kt`, `RackManager.kt`, `RackFaceplateGrid.kt`, `RackMicroMonitor.kt`, `RackPanel.kt`, `FBO.kt`, `PerformanceStats.kt`, `MenuBar.kt`)
 
 - **Context**: All 6 Open Questions in `docs/developer/modular_video_rack_proposal.md` §3 were decided 2026-09-16. Phase 9 implements those decisions: merge the per-stage rack units into one unit per deck, add a Deck BG column, build the Queue & Staging master unit, and act on the GPU-resource-management decision (Question 4).

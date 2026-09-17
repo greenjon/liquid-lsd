@@ -130,6 +130,10 @@ void main() {
         // Apply coordinate transformations around center (0.5, 0.5) for zoom/rotate feedback
         vec2 uv = isf_FragNormCoord - vec2(0.5);
 
+        // Aspect ratio correction for isotropic rotation
+        float aspect = RENDERSIZE.x / RENDERSIZE.y;
+        uv.x *= aspect;
+
         // Kaleidoscope / radial symmetry
         float segments = floor(fbKaleido + 0.5);
         if (segments > 1.0) {
@@ -153,6 +157,9 @@ void main() {
             uv.x * cosRot - uv.y * sinRot,
             uv.x * sinRot + uv.y * cosRot
         );
+
+        // Restore aspect ratio
+        uv.x /= aspect;
 
         // Sample historical buffer with optional Chromatic Aberration split
         vec4 historyColor;
