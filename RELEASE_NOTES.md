@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Per-Binding Switch Behavior Override (`MacroModels.kt`, `MacroEngine.kt`, `MacroBindingInspector.kt`, `MacroKnobWidget.kt`)
+- **Per-binding behavior override for Macro Switches**: Each binding on a switch control can now carry its own `Behavior` setting — **Toggle (Latch)**, **Momentary (Hold)**, or **Trigger (Pulse)** — independently of the control-level **Default Behavior**. Selecting `— default` (the default for all existing bindings) preserves the previous behavior exactly. This allows a single button press to simultaneously latch one parameter, hold a second while pressed, and pulse a third with a one-frame impulse. The setting is saved and loaded with presets; old presets without the field deserialize cleanly.
+- **Switch widget tooltip now shows mixed behaviors**: When any binding on a switch has a behavior override, the tooltip lists the effective behavior per binding (e.g. *"Mixed behaviors: Toggle / Momentary / Trigger"*) instead of the single control-level description.
+
 ### Full Screen Video & Monitor Alpha Blend Parity (`Main.kt`, `default_filters/feedback.fs`)
 - **Fixed Full Screen vs Monitor Alpha Blend Mismatch**: Changed full screen viewport and secondary window rendering in `Main.kt` from `glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)` to `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` to match ImGui's monitor rendering pipeline. Previously, `GL_ONE` caused non-premultiplied decaying alpha pixels (such as feedback trails) to render at 100% RGB intensity on full screen video without alpha attenuation, appearing drastically heavier and thicker than in confidence monitors.
 - **Isotropic Aspect-Ratio Corrected Feedback Zoom & Rotation (`feedback.fs`)**: Added aspect-ratio scaling to `default_filters/feedback.fs` (`float aspect = RENDERSIZE.x / RENDERSIZE.y; uv.x *= aspect; ... uv.x /= aspect;`) so zoom and rotation transformations remain circular and isotropic in non-square viewports (e.g. 16:9).

@@ -287,10 +287,23 @@ object MacroKnobWidget {
             dl.addText(textX, textY, textCol, label)
         }
 
-        val behaviorText = when (control.switchBehavior) {
-            llm.slop.liquidlsd.macro.SwitchBehavior.TOGGLE -> "Toggle: click to latch on/off."
-            llm.slop.liquidlsd.macro.SwitchBehavior.MOMENTARY -> "Momentary: on while held."
-            llm.slop.liquidlsd.macro.SwitchBehavior.TRIGGER -> "Trigger: sends a one-frame pulse."
+        val behaviorText = buildString {
+            val hasOverrides = control.bindings.any { it.switchBehaviorOverride != null }
+            if (!hasOverrides) {
+                // All bindings inherit — describe the single control behavior as before.
+                append(when (control.switchBehavior) {
+                    llm.slop.liquidlsd.macro.SwitchBehavior.TOGGLE    -> "Toggle: click to latch on/off."
+                    llm.slop.liquidlsd.macro.SwitchBehavior.MOMENTARY -> "Momentary: on while held."
+                    llm.slop.liquidlsd.macro.SwitchBehavior.TRIGGER   -> "Trigger: sends a one-frame pulse."
+                })
+            } else {
+                // At least one binding has an override — list effective behavior per binding.
+                append("Mixed behaviors: ")
+                append(control.bindings.joinToString(" / ") { b ->
+                    (b.switchBehaviorOverride ?: control.switchBehavior).label
+                })
+                append(".")
+            }
         }
         val learnTip = if (isLearning) " [LEARNING...]" else ""
         val bindingLine = formatBindingSummary(control.bindings)

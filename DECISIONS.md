@@ -1,3 +1,20 @@
+## Per-Binding Switch Behavior Override (`MacroModels.kt`, `MacroEngine.kt`, `MacroBindingInspector.kt`, `MacroKnobWidget.kt`)
+
+- **Context**: 2026-09-17. The Binding Inspector previously applied a single `SwitchBehavior` (TOGGLE/MOMENTARY/TRIGGER) to all of a switch control's bindings. Users asked whether a single button press could latch one parameter, pulse a second, and hold a third simultaneously.
+- **Decision**:
+  - `SwitchBehavior` stays on `MacroControl` as the **default** that all bindings inherit. It is now labelled "Default Behavior" in the Inspector.
+  - A new `switchBehaviorOverride: SwitchBehavior?` field on `MacroBinding` carries the per-binding override; `null` = inherit the control default (backward-compatible serialization: old presets deserialize `null` cleanly via `ignoreUnknownKeys`).
+  - `MacroControl` gains two `@Transient` fields: `rawPressValue` (1f while held, 0f on release) and `prevRawPressValue` (previous frame, for edge detection). These are set in `onPress`/`onRelease` alongside the existing `value` state machine, which is left unchanged.
+  - `MacroEngine.effectiveValue(control, binding)` computes the binding's normalized input: falls back to `control.value` for knobs or when no override is set; routes through per-binding state (`bindingLatchState`, `rawPressValue`, `bindingPendingPulse`) for the three override cases.
+  - The per-binding state machines (TOGGLE edge-flip, TRIGGER pulse arm/consume) are driven by a press-edge detection loop in `MacroEngine.tick()`, immediately after the existing TRIGGER reset sweep.
+  - The switch widget is **not changed**: `isLit = control.value >= 0.5f` continues to reflect the button's raw press state, which is the correct mental model — the button is the input, not any one binding's output.
+- **Rationale**:
+  - Keeping `control.value` as the processed output for the widget and keeping `rawPressValue` as the raw signal consumed only by the engine cleanly separates rendering from evaluation without breaking any existing callers.
+  - `@Transient` body-property placement (not primary-constructor params) follows the established pattern set by `MacroControl.pendingTriggerReset` — excluded from `equals`/`hashCode`/`copy` and from serialization without a custom serializer.
+  - The Inspector shows the per-binding override combo only when the parent is a switch control; the first option dynamically embeds the current default behavior label (e.g. `"— default (Toggle)"`) so the user always knows what "inherit" means without scrolling up.
+
+---
+
 ## Full Screen Video & Monitor Alpha Blend Parity (`Main.kt`, `default_filters/feedback.fs`)
 
 - **Context**: On 2026-09-17, a visual rendering mismatch was identified between ImGui confidence monitors and full screen video mode: feedback effects (such as "Full feedback with zoom...") rendered drastically heavier and thicker on full screen video than in the confidence monitors.

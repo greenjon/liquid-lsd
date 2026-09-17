@@ -100,7 +100,7 @@ object MacroBindingInspector {
         // Switch behavior selector
         if (control.isSwitch) {
             ImGui.spacing()
-            ImGui.textDisabled("Behavior:")
+            ImGui.textDisabled("Default Behavior:")
             ImGui.sameLine(0f, 6f)
             val behaviors = arrayOf("Toggle (Latch)", "Momentary (Hold)", "Trigger (Pulse)")
             val currentIdx = when (control.switchBehavior) {
@@ -212,6 +212,31 @@ object MacroBindingInspector {
                         binding.stepCount = steps[0].coerceIn(2, 64)
                     }
                     itemTooltip("Number of quantized steps across the travel range.")
+                }
+
+                // Per-binding behavior override — only shown when the parent is a switch.
+                if (control.isSwitch) {
+                    ImGui.spacing()
+                    val defaultLabel = "— default (${control.switchBehavior.label})"
+                    val overrideLabels = arrayOf(defaultLabel, "Toggle (Latch)", "Momentary (Hold)", "Trigger (Pulse)")
+                    val currentOverrideIdx = when (binding.switchBehaviorOverride) {
+                        null                     -> 0
+                        SwitchBehavior.TOGGLE    -> 1
+                        SwitchBehavior.MOMENTARY -> 2
+                        SwitchBehavior.TRIGGER   -> 3
+                    }
+                    val overrideImIdx = ImInt(currentOverrideIdx)
+                    ImGui.setNextItemWidth(190f)
+                    if (ImGui.combo("Behavior##beh_$idx", overrideImIdx, overrideLabels)) {
+                        binding.switchBehaviorOverride = when (overrideImIdx.get()) {
+                            0    -> null
+                            1    -> SwitchBehavior.TOGGLE
+                            2    -> SwitchBehavior.MOMENTARY
+                            else -> SwitchBehavior.TRIGGER
+                        }
+                        MacroEngine.invalidate()
+                    }
+                    itemTooltip("Override switch behavior for this binding only. '— default' inherits the control's Default Behavior setting above.")
                 }
 
                 ImGui.unindent(18f)

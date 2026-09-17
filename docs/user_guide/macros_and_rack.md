@@ -29,6 +29,7 @@ Selecting a knob/switch shows its bindings in the inspector below the grid. For 
 - **Curve** — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number of positions).
 - **Invert** — turning the knob up moves this target down.
 - **Enabled** — toggling a binding off immediately hands the target field back to normal manual/mouse editing; toggling it back on resumes macro control.
+- **Behavior** *(switch controls only)* — per-binding override of the switch's press/release semantics (see below). Defaults to `— default`, which inherits the control-level **Default Behavior** setting.
 
 ### Locked fields
 
@@ -36,11 +37,21 @@ Any slider that's the live target of an enabled macro binding renders **read-onl
 
 ### Switch behaviors
 
-Each Macro Switch can be set to:
+Each Macro Switch has a **Default Behavior** that applies to all of its bindings unless overridden:
 
 - **Toggle** — click flips it between min and max, and it stays there.
 - **Momentary** — max while held down, snaps back to min on release. Good for strobes and glitch triggers.
 - **Trigger** — fires a single one-frame pulse per click, for one-shot impulses.
+
+Each binding can also carry its own **Behavior** override, set independently in the Binding Inspector. This means a single button press can:
+
+- **Latch** one parameter (Toggle override),
+- **Hold** another only while the button is depressed (Momentary override), and
+- **Pulse** a third with a one-frame impulse (Trigger override) —
+
+all at the same time, from one button. The switch's lit/unlit state in the UI reflects the button's raw press state as usual; the different downstream behaviors are invisible in the widget itself but described in the tooltip when overrides are mixed.
+
+When any binding has an override, the switch tooltip shows the effective behavior per binding, e.g. *"Mixed behaviors: Toggle / Momentary / Trigger."*
 
 ### Saving your knob layout
 

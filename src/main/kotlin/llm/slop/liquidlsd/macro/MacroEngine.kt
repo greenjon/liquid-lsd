@@ -144,7 +144,7 @@ object MacroEngine {
         val bindings = resolvedBindings
         for (i in 0 until bindings.size) {
             val rb = bindings[i]
-            val mapped = MacroCurve.mapToRange(rb.control.value, rb.binding)
+            val mapped = MacroCurve.mapToRange(effectiveValue(rb.control, rb.binding), rb.binding)
             when (rb.binding.targetType) {
                 MacroTargetType.PARAM_BASE_VALUE -> rb.param.baseValue = mapped
                 MacroTargetType.MODULATOR_PROPERTY -> {
@@ -162,16 +162,58 @@ object MacroEngine {
             }
         }
 
-        // Consume any armed one-shot TRIGGER resets, producing the "1-frame pulse" (proposal §3.4).
-        // Reuses the cached snapshot from the last rebuild instead of re-copying `banks.values`
-        // every frame (this loop runs every frame regardless of bindingsDirty, since a trigger
-        // switch's pulse must reset even when it has no active bindings).
+        // Per-switch tail: update per-binding override state and consume control-level TRIGGER
+        // resets. Reuses the cached snapshot from the last rebuild — no allocation every frame.
         val snapshot = banksSnapshot
         for (i in snapshot.indices) {
             val switches = snapshot[i].switches
             for (j in switches.indices) {
-                switches[j].consumeTriggerReset()
+                val ctrl = switches[j]
+
+                // Detect rising edge (rawPressValue went 0→1 this frame).
+                val pressEdge = ctrl.rawPressValue >= 0.5f && ctrl.prevRawPressValue < 0.5f
+                ctrl.prevRawPressValue = ctrl.rawPressValue
+
+                // Drive per-binding override state machines on press edge.
+                for (k in ctrl.bindings.indices) {
+                    val b = ctrl.bindings[k]
+                    when (b.switchBehaviorOverride) {
+                        SwitchBehavior.TOGGLE  -> if (pressEdge) b.bindingLatchState = !b.bindingLatchState
+                        SwitchBehavior.TRIGGER -> {
+                            if (pressEdge) b.bindingPendingPulse = true
+                            // Consume pulse now — effectiveValue() already read it this frame.
+                            else b.bindingPendingPulse = false
+                        }
+                        else -> {}
+                    }
+                }
+
+                // Existing control-level one-shot TRIGGER reset (unchanged).
+                ctrl.consumeTriggerReset()
             }
+        }
+    }
+
+    /**
+     * Returns the normalized [0,1] input value for [binding] on [control].
+     *
+     * For knob controls, or switch bindings with no override ([MacroBinding.switchBehaviorOverride]
+     * == null), this is simply [MacroControl.value] — fully backward-compatible.
+     *
+     * For switch bindings with an override the behavior is driven by the per-binding state:
+     * - **TOGGLE**: returns 1f when [MacroBinding.bindingLatchState] is true, 0f otherwise.
+     *   The state is flipped on each rising press edge by the tail loop in [tick].
+     * - **MOMENTARY**: returns [MacroControl.rawPressValue] (1f while held, 0f on release).
+     * - **TRIGGER**: returns 1f on the single frame that [MacroBinding.bindingPendingPulse] is
+     *   armed (set on the rising edge by the tail loop); the tail loop consumes it on the next frame.
+     */
+    private fun effectiveValue(control: MacroControl, binding: MacroBinding): Float {
+        val override = binding.switchBehaviorOverride
+        if (!control.isSwitch || override == null) return control.value
+        return when (override) {
+            SwitchBehavior.TOGGLE    -> if (binding.bindingLatchState) 1f else 0f
+            SwitchBehavior.MOMENTARY -> control.rawPressValue
+            SwitchBehavior.TRIGGER   -> if (binding.bindingPendingPulse) 1f else 0f
         }
     }
 

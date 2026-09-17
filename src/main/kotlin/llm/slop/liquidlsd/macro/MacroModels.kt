@@ -41,7 +41,14 @@ enum class SwitchBehavior {
     MOMENTARY,
 
     /** Impulse: sends a 1-frame pulse (one-shot trigger) then resets to 0. */
-    TRIGGER
+    TRIGGER;
+
+    /** Short human-readable label used in UI combos and tooltips. */
+    val label: String get() = when (this) {
+        TOGGLE    -> "Toggle"
+        MOMENTARY -> "Momentary"
+        TRIGGER   -> "Trigger"
+    }
 }
 
 /**
@@ -65,13 +72,28 @@ data class MacroBinding(
     // Only meaningful when curve == STEP; number of discrete quantized positions.
     var stepCount: Int = 8,
     var inverted: Boolean = false,
-    var enabled: Boolean = true
-)
+    var enabled: Boolean = true,
+    // null = inherit the parent MacroControl's switchBehavior. Only evaluated when the parent is
+    // a switch control. Serialized as null when not set so old presets deserialize identically.
+    var switchBehaviorOverride: SwitchBehavior? = null
+) {
+    // Per-binding runtime state for TOGGLE and TRIGGER overrides. @Transient excludes them from
+    // serialization (they are frame-rate state, meaningless to persist — same pattern as
+    // MacroControl.pendingTriggerReset). Not part of data-class equals/hashCode since they live
+    // in the class body rather than the primary constructor.
+
+    /** Current latch state for a TOGGLE override. Flips on each rising press edge. */
+    @Transient var bindingLatchState: Boolean = false
+
+    /** Armed by the engine on a rising press edge for a TRIGGER override; consumed one frame later. */
+    @Transient var bindingPendingPulse: Boolean = false
+}
 
 /**
  * One Macro Knob or Macro Switch. Knobs are read passively via [value]; switches additionally
  * go through the press/release/trigger state machine below (see proposal §3.4). The engine's
- * per-frame evaluation stays uniform for both kinds: it only ever reads [value].
+ * per-frame evaluation reads [value] for bindings that inherit the control behavior, and
+ * [rawPressValue] for bindings that carry a per-binding [MacroBinding.switchBehaviorOverride].
  */
 @Serializable
 data class MacroControl(
@@ -91,10 +113,26 @@ data class MacroControl(
     private var pendingTriggerReset: Boolean = false
 
     /**
+     * Raw press signal: 1f on the frame the button is pressed, stays 1f while held, 0f on
+     * release. Independent of [switchBehavior] processing — the existing [value] state machine
+     * is left unchanged. [MacroEngine] reads this to drive per-binding [MacroBinding.switchBehaviorOverride]
+     * logic (MOMENTARY tracking, TOGGLE/TRIGGER rising-edge detection).
+     * Not serialized; frame-rate state.
+     */
+    @Transient var rawPressValue: Float = 0f
+
+    /**
+     * Previous frame's [rawPressValue], maintained by [MacroEngine.tick] to detect rising edges
+     * (0→1 transitions) for TOGGLE and TRIGGER per-binding overrides. Not serialized.
+     */
+    @Transient internal var prevRawPressValue: Float = 0f
+
+    /**
      * Called by whatever input source registers a press (UI click, MIDI note-on, OSC message).
      * See proposal §3.4 for the full state machine this implements.
      */
     fun onPress() {
+        rawPressValue = 1f
         value = when (switchBehavior) {
             SwitchBehavior.TOGGLE -> if (value >= 0.5f) 0f else 1f
             SwitchBehavior.MOMENTARY -> 1f
@@ -107,6 +145,7 @@ data class MacroControl(
 
     /** Called on release. Only MOMENTARY reacts; TOGGLE/TRIGGER are no-ops. */
     fun onRelease() {
+        rawPressValue = 0f
         if (switchBehavior == SwitchBehavior.MOMENTARY) value = 0f
     }
 
