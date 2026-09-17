@@ -17,145 +17,22 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 
 ## Current Status & Summary Matrix
 
-| Milestone / Workstream | Target Area | Status | Key Deliverables |
-| :--- | :--- | :---: | :--- |
-| **Dear ImGui 1.92 Upgrade** | `ui/*`, `build.gradle.kts` | **COMPLETE** | Migrated to `imgui-java` 1.92.7.1, new key input API, 64-bit texture handles. |
-| **Tooltips & LFO Ergonomics** | `ui/Lfo*`, `TooltipHelper` | **COMPLETE** | Multi-tier tooltips, logarithmic LFO time parser, and Min/Max modulation ranges. |
-| **Continuous Random Morphing** | `Mixer.kt`, `Deck.kt`, `ui/*` | **COMPLETE** | Two-state interpolation ($S_0 \leftrightarrow S_1$), ping-pong flip-flop boundary latch, LFO/CV driving. |
-| **Modern Window Experience (CSD)** | `MenuBar.kt`, `Main.kt` | **COMPLETE** | Unified 1.5x top bar, frameless window drag, window controls (`_ ◻ ✕`), and live telemetry HUD. |
-| **Video Recording & Export** | `export/*`, `VideoExportModal` | **COMPLETE** | High-performance asynchronous GPU-to-CPU PBO readback pipeline (`PboReadbackPipeline`). |
-| **Preset Tags & Search** | `browser/*`, `PresetModels` | **COMPLETE** | Preset tags in JSON, inline tag editor in browser context menu, tag search in Library. |
-| **TouchOSC & Open Sound Control** | `osc/*`, `ui/*` | **COMPLETE** | Native UDP OSC 1.0 engine, TouchOSC layout mapping, XY pads, OSC Learn, bidirectional feedback. |
-| **100% ISF Pipeline Migration** | `rendering/*`, `shaders/*`, `isf/*` | **COMPLETE** | Migrate feedback, 2D-to-3D, & mixer to ISF; deprecate and remove legacy hard-wired shaders. |
-| **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
-| **Session Scratchpad** | `notes/*`, `ui/*` | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
-| **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
-| **Macro Controls & Parameter Linking** | `ui/*`, `parameters/*`, `models/*` | **COMPLETE** | 8 Knobs + 4 Switches, 1-to-many bindings, modulating modulators, Column 3 `[MIXER\|MACROS]` mode, Learn mode UX. |
-| **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
-| **Build for ARM64 Linux** | `build.gradle.kts`, `ci`, `utils/NativeLibraryLoader.kt` | **COMPLETE** | Prebuilt `imgui-java` ARM64 native sourced from a separate build repo, runtime native loader hook (`prepareImGuiNatives()`), JRE 17 `linux-aarch64` integration, and 5-platform CI smoke matrix restored. |
+| Milestone / Workstream | Target Area | Target | Status | Key Deliverables |
+| :--- | :--- | :---: | :---: | :--- |
+| **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **v1.0** | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
+| **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
+| **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
+| **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
 
 ---
 
-## Active & Upcoming Milestones
+## v1.0 Active Milestones
 
-### Milestone 1: TouchOSC & Open Sound Control (OSC)
-> **Reference**: TouchOSC Modular Control Specification  
-> **Status**: COMPLETE  
-> **Compatibility**: TouchOSC (iOS/Android/Desktop) control surfaces (faders, rotaries, XY pads, toggles, pushes). *Explicit non-goal: Resolume clip-launcher / composition hierarchy.*
-
-Enable wireless and wired control from mobile devices and tablets running TouchOSC without third-party bridges:
-
-- [x] **Pure Kotlin Zero-Dependency OSC 1.0 Codec (`OscCodec`)**:
-  - High-performance binary encoder and decoder for OSC messages and bundles.
-  - Full support for OSC types: 32-bit floats (`f`), integers (`i`), strings (`s`), booleans (`T`/`F`), and multi-argument vectors (XY pads).
-  - 4-byte boundary padding and big-endian network byte order handling without external jar dependencies.
-- [x] **Low-Latency UDP Engine & Bidirectional Feedback (`OscEngine`)**:
-  - Dedicated background UDP receiver socket (default incoming port `8000`).
-  - Thread-safe, lock-free queue passing incoming OSC events to the render thread.
-  - Real-time packet sniffer circular buffer for live monitoring in Preferences.
-  - Outgoing UDP feedback socket (default outgoing port `9000`) transmitting parameter updates, toggle states, and text labels back to TouchOSC clients to keep tablet displays in sync.
-  - Auto-learning of remote TouchOSC client IP address from incoming packets.
-- [x] **TouchOSC Mapping Manager (`OscMappingManager`)**:
-  - Address-string-keyed mapping table (works out of the box with any TouchOSC layout address — `/1/fader1`–`/1/fader5`, `/1/rotary1`–`/1/rotary4`, `/1/toggle1`–`/1/toggle4`, `/1/push1`–`/1/push4`, `/2/xy`, or arbitrary semantic paths like `/mixer/crossfade` — with no special-casing required).
-  - XY pad (and other multi-float vector) packet unpacking to individually addressable per-component parameters (e.g. `/2/xy/0`, `/2/xy/1`).
-  - Control shaping: Min/Max numerical clamping, Invert, exponential Slew smoothing ($0 \dots 250$ ms), and Soft Takeover (pickup).
-  - JSON mapping profile persistence under `library/osc/`.
-  - `/macro/knob/1..8` and `/macro/switch/1..4` forwarded directly to `MacroOscBridge`, with outbound feedback wired back through `OscEngine`.
-- [x] **Interactive OSC Learn & Preferences UI**:
-  - Dedicated **OSC Controls** tab in Preferences with server enable/port config, learned remote client status, live packet sniffer, and editable mappings table.
-  - "Learn OSC" flow in the OSC Controls tab: arm a target parameter path, then bind it to whichever address the next inbound message carries.
-  - **Deferred**: contextual per-widget "Learn OSC" buttons directly in the Properties column (mirroring the MIDI Learn wiring across individual sliders) and click-to-learn from a captured sniffer row — both left for a follow-up pass; Learn currently lives centrally in the OSC Controls tab rather than at each control site.
-
----
-
-### Milestone 2: 100% ISF Pipeline Migration — Deprecating Hard-Wired FX & Mixer
-> **Target Areas**: `Renderer.kt`, `Deck.kt`, `Mixer.kt`, `shaders/`, `library/filters/`, `library/transitions/`  
-> **Status**: COMPLETE  
-> **Objective**: Make all legacy hard-wired FX, 2D-to-3D projection shaders, and hard-coded mixer blend modes redundant by porting them completely to the open Interactive Shader Format (ISF), then removing the legacy code paths while preserving Deck BG compositing.
-
-- [x] **Port Legacy Feedback Loop (`feedback.frag`) to Native Modular ISF**:
-  - Re-architect the monolithic `feedback.frag` pass into clean, modular ISF effect(s) with multi-pass persistent history buffers.
-  - Encapsulate feedback decay, gain, zoom (`uFbZoom`), rotation, hue shift, directional/radial blur, chromatic aberration, and kaleidoscopic folding as standard ISF inputs.
-  - Run feedback through the modular deck FX chain instead of a rigid hardwired render pass in `Renderer.kt`.
-- [x] **Convert 2D-to-3D Projection Methods to Modular ISF Shaders**:
-  - Port `tri_planar.vert`/`frag` (Tri-Planar, Cube Cage, Hex-Planar instanced planes) and `tetra_kaleido.vert`/`frag` (Tetrahedral 24-chamber Coxeter space folding) to standard ISF shaders.
-  - Route them through **Slot 2: Spatial / Distortion**, eliminating the custom hard-wired 3D branches and intermediate `rawSourceFBO` in `Renderer.kt`.
-- [x] **100% ISF Mixer Transitions (Deck A $\leftrightarrow$ Deck B)**:
-  - Eliminate hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
-  - All transitions between Deck A and Deck B become pure ISF transitions (`ISFAssetType.TRANSITION`) taking `startImage` (Deck A), `endImage` (Deck B), and `progress` ($0.0 \dots 1.0$).
-  - Standard crossfade and blend modes ship as bundled, high-performance ISF transition shaders (`linear_crossfade.fs`, `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, `max_blend.fs`, alongside wipes, glitch, and morphs).
-- [x] **Preserve Deck BG Layering**:
-  - Maintain the architectural compositing model where **Deck BG is rendered behind Decks A and B**:
-    $$\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$$
-  - Streamline the final master compositing pass to cleanly blend Deck BG behind the active A/B transition output with bloom, levels, and master alpha.
-- [x] **Deprecation & Removal of Legacy Hard-Wired Code**:
-  - Remove `feedback.frag`, `feedbackShader`, `tri_planar.*`, `tetra_kaleido.*`, and legacy fallback blend code from `mixer.frag`.
-  - Remove obsolete FBO allocations (`rawSourceFBO`, legacy ping-pong buffers in `Deck.kt`).
-  - Clean up `Renderer.renderDeck` and `Renderer.renderMixer` into unified, lightweight ISF execution pipelines.
-
----
-
-### Milestone 3: Unified Control Mapping & Hardware Profiles
-> **Reference**: [`docs/developer/unified_control_mapping.md`](docs/developer/unified_control_mapping.md)  
-> **Status**: In Progress / High Priority
-
-While the multi-type MIDI subsystem (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders) and centralized `ShortcutManager` are operational, the goal is full control parity across all input modalities (inspired by Mixxx):
-
-- [x] Multi-type MIDI event capture and lock-free atomic buffers (`MidiEngine`).
-- [x] Soft takeover (pickup) and relative rotary encoder decoding (Binary Offset, Signed Bit, Two's Complement).
-- [x] Centralized `ShortcutManager` with interactive key rebinding and collision detection.
-- [x] Dedicated "MIDI Controls" tab in Preferences with real-time packet monitor and profile manager.
-- [ ] **Universal Action / Command Registry (`CommandRegistry`)**:
-  - Decouple all user actions (menu actions, deck operations, mixer transitions, parameter tweaks) into registered `Command` instances.
-  - Expose consistent interfaces for Trigger, Continuous/Scalar, Stepped/Relative, and Latched Toggle inputs.
-- [ ] **Hardware Controller Preset Profiles (`library/mappings/`)**:
-  - Out-of-the-box controller mappings (e.g. Novation Launchpad, Akai APC40, Pioneer DDJ, Midi Fighter).
-  - JSON profile schema for community controller sharing.
-- [ ] **Universal Right-Click "Learn" Overlay**:
-  - Context menu on any UI slider, button, or toggle to trigger MIDI Learn, key shortcut assignment, or CV binding.
-
----
-
-### Milestone 4: Session Scratchpad & Live Notes
-> **Reference**: Notes System & Companion Scratchpad Plan  
-> **Status**: Pending / Medium Priority
-
-Performers need persistent, glanceable set notes during live shows without relying on physical sticky notes on their monitors:
-
-- [x] Preset Tags metadata in `.lsdpatch` JSON DTOs (`DeckPresetDto.tags`).
-- [x] Library search filtering by preset tags (`Search presets & tags...`).
-- [x] Preset tag editing via browser context menu (`Rename / Edit Tags...`) and Save Preset modal.
-- [x] 3-tier hierarchical notes storage: Source notes, Preset notes, Parameter notes (`NotesManager`).
-- [ ] **Dedicated Session Scratchpad Window**:
-  - Lightweight, togglable floating or docked ImGui window ("Notes" / "Scratchpad").
-  - Unstructured multi-line text buffer automatically persisted to `~/.liquid-lsd/scratchpad.txt`.
-  - Accessible via global shortcut (`Ctrl+N` / `Cmd+N`) and MenuBar entry (`View > Scratchpad`).
-
----
-
-### Milestone 5: Mandala Visual Generator v2+
-> **Reference**: [`docs/developer/mandala_future_roadmap.md`](docs/developer/mandala_future_roadmap.md)  
-> **Status**: Backlog / Future Enhancement
-
-Enhancing the built-in Mandala procedural visual generator for live stage recall:
-
-- [ ] **Visual Recipe Vault / Gallery Popover**:
-  - Grid modal showing pre-rendered snapshots or live micro-previews of all ~300 built-in recipes.
-  - Category tabs (`All`, `3 Lobes`, `4 Lobes`, `5 Lobes`, `6 Lobes`, `8+ Lobes`).
-- [ ] **Geometric Tagging & Humanized Naming**:
-  - Descriptive names and style tags (e.g., `#7: Floral Weave`, `Crystalline`, `Starburst`) replacing raw math vectors (`[26, 23, 14, 14]`).
-- [ ] **Global Recipe Sweep Index**:
-  - Sweep parameter moving continuously through all 300 recipes across all lobe counts via a single LFO or MIDI slider.
-- [ ] **Favorites & Performance Quick-Slots**:
-  - Quick-recall bookmark buttons (`[ Fav 1 ] [ Fav 2 ] [ Fav 3 ] [ Fav 4 ]`) on the Deck panel for instant switching.
-
----
-
-### Milestone 6: Modular Video Rack & Macro Performance System
+### Milestone 1: Modular Video Rack & Macro Performance System
 > **Reference & Design Specs**:
 > - [`docs/developer/macro_controls_and_parameter_linking_proposal.md`](docs/developer/macro_controls_and_parameter_linking_proposal.md) (Macro Controls & Parameter Linking System)
 > - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture)
-> **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16  
+> **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16
 > **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
 
 Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style video rack designed for tactile live performance:
@@ -181,33 +58,74 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
   - [x] **Phase 6: Per-Unit Macro Curation** *(rack doc §4)*: Each unit gets its own `MacroBank` (0-8 knobs/0-4 switches) scoped via `unitInstanceId`; curation UI picks which unit parameters occupy which slot. No freeform faceplate designer yet.
   - [x] **Phase 7: Embedded Confidence Micro-Monitors** *(rack doc §4)*: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
   - [x] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: Dual-faced 180° flipped rear chassis view with physics-curved virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine.
-  - [x] **Phase 9: Unit Consolidation & Rack Layout Finalization** *(rack doc §4, implements all 6 decided Open Questions in rack doc §3)*: Merged `DeckGeneratorUnit` + up to 4 `ISFProcessorUnit`s into one new `DeckRackUnit` per deck with a flattened generator+FX parameter namespace (rack doc §2.7); deleted `FeedbackProcessorUnit`, `DeckGeneratorUnit`, and `ISFProcessorUnit` entirely (zero remaining construction sites); added a Deck BG column (`mixer.deckBG`, no new Deck plumbing needed); built the 3U `QueueStagingRackUnit` (Play Queue / BG Queue / Transition Staging) as a condensed-transport view onto the existing `PlayQueueManager`/`BgQueueManager`/`TransitionQueueManager` singletons; kept `MixerTransitionUnit` as its own Master unit; implemented confidence-monitor downscaling (240×135 preview `FBO` per unit via the existing `Renderer.rescale()`) and an FBO-count/GPU-memory telemetry readout in the menu bar. Off-screen GL culling was evaluated and deliberately not built (near-zero payoff given today's units are all cheap texture-ID reads, not real draw calls). Implemented 2026-09-16 — see rack doc §4 for full detail, including a double-update bug found and fixed along the way (Rack-mode `update()` was double-ticking `Deck`/`Mixer` state, since `Main.kt`'s main loop already ticks them unconditionally every frame regardless of workspace mode).
+  - [x] **Phase 9: Unit Consolidation & Rack Layout Finalization** *(rack doc §4, implements all 6 decided Open Questions in rack doc §3)*: Merged `DeckGeneratorUnit` + up to 4 `ISFProcessorUnit`s into one new `DeckRackUnit` per deck with a flattened generator+FX parameter namespace (rack doc §2.7); deleted `FeedbackProcessorUnit`, `DeckGeneratorUnit`, and `ISFProcessorUnit` entirely (zero remaining construction sites); added a Deck BG column (`mixer.deckBG`, no new Deck plumbing needed); built the 3U `QueueStagingRackUnit` (Play Queue / BG Queue / Transition Staging) as a condensed-transport view onto the existing `PlayQueueManager`/`BgQueueManager`/`TransitionQueueManager` singletons; kept `MixerTransitionUnit` as its own Master unit; implemented confidence-monitor downscaling (240x135 preview `FBO` per unit via the existing `Renderer.rescale()`) and an FBO-count/GPU-memory telemetry readout in the menu bar. Off-screen GL culling was evaluated and deliberately not built (near-zero payoff given today's units are all cheap texture-ID reads, not real draw calls). Implemented 2026-09-16 — see rack doc §4 for full detail, including a double-update bug found and fixed along the way (Rack-mode `update()` was double-ticking `Deck`/`Mixer` state, since `Main.kt`'s main loop already ticks them unconditionally every frame regardless of workspace mode).
   - **Deferred, not scheduled**: true patchable transitions/splitters (rack doc Q2 Models B/C) and a freeform Faceplate Designer both depend on restructuring `Deck`/`Mixer` to accept externally patched textures — the same underlying capability as the patch-cable known issue below. Bundle these together into a future dedicated milestone once that foundational work is deliberately undertaken.
   - **Known issues** (surfaced by a 2026-09-15 post-implementation correctness review of Phases 5-8; full rationale in `DECISIONS.md`):
     - ~~`FeedbackProcessorUnit`'s curated macro knobs (GAIN/DECAY/ZOOM/HUE) are bound to `Deck.fbGain`/`fbDecay`/etc. — legacy fields left over from before the ISF feedback migration that no shader reads anymore~~ — resolved by Phase 9: the unit type was deleted entirely rather than rewired; feedback already appears correctly as a normal FX-slot parameter in the merged `DeckRackUnit`'s flattened namespace.
     - Virtual patch-cable overrides only reroute pixels for genuinely custom/utility rack units. For the built-in Generator/Processor/Transition units that wrap the existing fixed `Deck`/`Mixer` pipeline, cables render and jacks light up but don't change actual signal routing — making that real requires restructuring `Deck`'s fixed FX-slot chain and `Mixer`'s hardcoded Deck A/B inputs to accept externally patched textures, which touches the master output path every workspace mode relies on. Tracked as the same deferred work as rack doc Q2 Models B/C above — not addressed by Phase 9.
-    - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved by Milestone 1: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
+    - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
     - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent). Both remain low-priority fix-opportunistically items.
     - The Phase 9 monitor-downscaling change (a GL viewport-changing blit inside the per-unit faceplate draw call) was not visually verified on screen — confirmed via live app launches that the render loop runs cleanly with no new errors, but the actual rack monitors weren't screenshotted (Wayland session, no reachable screenshot tooling in that pass). Worth a manual look next time the app is run interactively.
 
 ---
 
-### Milestone 7: Build for ARM64 Linux
-> **Reference**: [Build for ARM64 Linux](docs/developer/build_arm64_linux.md)  
-> **Status**: Complete / Restored  
-> **Objective**: Restore native Linux ARM64 (`aarch64`) desktop support by sourcing the missing native JNI binary (`imgui-java`) from a dedicated build repo, integrating it via runtime loader hooks, and restoring `linux-arm64` distribution ZIP packaging.
+## v1.1 Backlog
 
-- [x] **Source `libimgui-java64.so` for aarch64**:
-  - Built once per `imgui-java` version in [`imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64) on GitHub's free native `ubuntu-24.04-arm` runners, decoupled from Liquid LSD's own (much more frequent) release cadence.
-  - Liquid LSD's CI downloads the matching release asset by pinned `imguiVersion` rather than compiling it in-repo.
-- [x] **Runtime Dynamic Loader Integration (`NativeLibraryLoader`)**:
-  - Place `libimgui-java64.so` in `src/main/resources/natives/linux-arm64/`.
-  - Extract and configure `System.setProperty("imgui.library.path", ...)` before ImGui initialization on Linux ARM64 (`prepareImGuiNatives()`).
-- [x] **Optional: Native Ableton Link (`link_jni`) Build**:
-  - Compile `liblink_jni.so` for Linux ARM64 (or rely on automatic Carabiner TCP fallback).
-- [x] **Re-enable Packaging & CI**:
-  - Restore `zipLinuxArm` task and Adoptium `linux-aarch64` JRE in `build.gradle.kts`.
-  - Re-enable `linux-arm64` smoke test in GitHub Actions CI workflow — verified passing across all 5 platforms in production release CI.
+> These milestones are parked for consideration after v1.0 ships. Scope, priority, and whether each makes the cut will be decided once the v1.0 scope is locked.
+
+### Milestone 1: Unified Control Mapping & Hardware Profiles
+> **Reference**: [`docs/developer/unified_control_mapping.md`](docs/developer/unified_control_mapping.md)
+> **Status**: Pending / High Priority
+
+While the multi-type MIDI subsystem (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders) and centralized `ShortcutManager` are operational, the goal is full control parity across all input modalities (inspired by Mixxx):
+
+- [x] Multi-type MIDI event capture and lock-free atomic buffers (`MidiEngine`).
+- [x] Soft takeover (pickup) and relative rotary encoder decoding (Binary Offset, Signed Bit, Two's Complement).
+- [x] Centralized `ShortcutManager` with interactive key rebinding and collision detection.
+- [x] Dedicated "MIDI Controls" tab in Preferences with real-time packet monitor and profile manager.
+- [ ] **Universal Action / Command Registry (`CommandRegistry`)**:
+  - Decouple all user actions (menu actions, deck operations, mixer transitions, parameter tweaks) into registered `Command` instances.
+  - Expose consistent interfaces for Trigger, Continuous/Scalar, Stepped/Relative, and Latched Toggle inputs.
+- [ ] **Hardware Controller Preset Profiles (`library/mappings/`)**:
+  - Out-of-the-box controller mappings (e.g. Novation Launchpad, Akai APC40, Pioneer DDJ, Midi Fighter).
+  - JSON profile schema for community controller sharing.
+- [ ] **Universal Right-Click "Learn" Overlay**:
+  - Context menu on any UI slider, button, or toggle to trigger MIDI Learn, key shortcut assignment, or CV binding.
+
+---
+
+### Milestone 2: Session Scratchpad & Live Notes
+> **Reference**: Notes System & Companion Scratchpad Plan
+> **Status**: Pending / Medium Priority
+
+Performers need persistent, glanceable set notes during live shows without relying on physical sticky notes on their monitors:
+
+- [x] Preset Tags metadata in `.lsdpatch` JSON DTOs (`DeckPresetDto.tags`).
+- [x] Library search filtering by preset tags (`Search presets & tags...`).
+- [x] Preset tag editing via browser context menu (`Rename / Edit Tags...`) and Save Preset modal.
+- [x] 3-tier hierarchical notes storage: Source notes, Preset notes, Parameter notes (`NotesManager`).
+- [ ] **Dedicated Session Scratchpad Window**:
+  - Lightweight, togglable floating or docked ImGui window ("Notes" / "Scratchpad").
+  - Unstructured multi-line text buffer automatically persisted to `~/.liquid-lsd/scratchpad.txt`.
+  - Accessible via global shortcut (`Ctrl+N` / `Cmd+N`) and MenuBar entry (`View > Scratchpad`).
+
+---
+
+### Milestone 3: Mandala Visual Generator v2+
+> **Reference**: [`docs/developer/mandala_future_roadmap.md`](docs/developer/mandala_future_roadmap.md)
+> **Status**: Backlog / Future Enhancement
+
+Enhancing the built-in Mandala procedural visual generator for live stage recall:
+
+- [ ] **Visual Recipe Vault / Gallery Popover**:
+  - Grid modal showing pre-rendered snapshots or live micro-previews of all ~300 built-in recipes.
+  - Category tabs (`All`, `3 Lobes`, `4 Lobes`, `5 Lobes`, `6 Lobes`, `8+ Lobes`).
+- [ ] **Geometric Tagging & Humanized Naming**:
+  - Descriptive names and style tags (e.g., `#7: Floral Weave`, `Crystalline`, `Starburst`) replacing raw math vectors (`[26, 23, 14, 14]`).
+- [ ] **Global Recipe Sweep Index**:
+  - Sweep parameter moving continuously through all 300 recipes across all lobe counts via a single LFO or MIDI slider.
+- [ ] **Favorites & Performance Quick-Slots**:
+  - Quick-recall bookmark buttons (`[ Fav 1 ] [ Fav 2 ] [ Fav 3 ] [ Fav 4 ]`) on the Deck panel for instant switching.
 
 ---
 
@@ -249,6 +167,15 @@ Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style vide
 - [x] High-performance asynchronous PBO framebuffer readback pipeline (`PboReadbackPipeline.kt`) and Video Export dialog.
 - [x] Integrated telemetry HUD in top bar displaying FPS, frame time, DSP latency, CPU%, and beat phase dots.
 - [x] Dear ImGui modernization to 1.92.7.1.
+
+### Phase 6: Advanced Feature Milestones
+- [x] **TouchOSC & Open Sound Control**: Native UDP OSC 1.0 engine (`OscCodec`, `OscEngine`), TouchOSC layout mapping, XY pads, OSC Learn, bidirectional feedback. `OscMappingManager` with JSON profile persistence under `library/osc/`. Dedicated OSC Controls tab in Preferences. `/macro/knob/N` and `/macro/switch/N` forwarded to `MacroOscBridge` with outbound feedback.
+- [x] **100% ISF Pipeline Migration**: Feedback loop, 2D-to-3D projection methods, and all mixer blend modes fully ported to ISF. Legacy hard-wired shaders (`feedback.frag`, `tri_planar.*`, `tetra_kaleido.*`) retired from the rendering pipeline; `mixer.frag` legacy blend branches bypassed (`uMode = -1` in `Renderer.kt`). Bundled ISF transitions in `src/main/resources/default_transitions/`; `library/transitions/` is the user-scannable drop folder.
+- [x] **Preset Tags & Search**: Preset tags in `.lsdpatch` JSON (`DeckPresetDto.tags`), inline tag editor in browser context menu and Save Preset modal, tag search filtering in Library (`PresetListPanel`).
+- [x] **Tooltips & LFO Ergonomics**: Multi-tier tooltips (`TooltipHelper`), logarithmic LFO time parser (`TimeUtils.parsePeriod`), and Min/Max modulation ranges on `CustomRangeSlider`.
+- [x] **Modern Window Experience (CSD)**: Unified 1.5x top bar, frameless window drag region (`MenuBar`), window controls (minimize / maximize / close), and live telemetry HUD.
+- [x] **Macro Controls & Parameter Linking**: 8 Knobs + 4 Switches (`MacroBank` / `MacroControl` / `MacroBinding`), 1-to-many bindings, modulating modulators, Column 3 `[MIXER|MACROS]` mode, Learn mode UX; `MidiMappingManager` Macro CC dispatch and `MacroOscBridge` OSC linkage.
+- [x] **Build for ARM64 Linux**: Prebuilt `libimgui-java64.so` ARM64 native sourced from [`imgui-java-natives-linux-arm64`](https://github.com/greenjon/imgui-java-natives-linux-arm64) on GitHub free ARM runners; runtime dynamic loader hook (`NativeLibraryLoader.prepareImGuiNatives()`); JRE 17 `linux-aarch64` integration; `zipLinuxArm` packaging task; 5-platform CI smoke matrix restored and verified passing.
 
 ---
 
