@@ -466,30 +466,18 @@ class UIManager(
 
     private fun drawAssetManagementLayout(renderer: Renderer, displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
         val theme = session.uiTheme
-        if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-            ImGui.setNextWindowPos(0f, menuBarH)
-            ImGui.setNextWindowSize(displayWidth.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
-            val rackWindowFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
-            if (ImGui.begin("ModularVideoRack", rackWindowFlags)) {
-                UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                currentMixer?.let { rackPanel.draw(session, it, renderer, displayWidth, contentH) }
-            }
-            ImGui.end()
-            return
-        }
-
         val minRatio = 0.15f
 
-        val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
-        CustomRangeSlider.isAnySliderHovered = false
-
-        // Column 1 (Left Panel / Parameters): Auto-calculated based on active columns & font scale
+        // Shared Library/right-column width geometry -- computed regardless of workspace mode so
+        // Rack view's bottom-docked Library matches Classic's width, half/full behavior, and
+        // splitter drag exactly (see conversation: "same UI as Classic ... same docked-half-full
+        // behavior"). col1W/rightW only exist to reproduce Classic's ~2/3-width Library; Rack mode
+        // doesn't use col1W for anything else, and leaves the resulting right-column gap blank.
         val reqCol1W = currentMixer?.let { ParametersPanel.calculateRequiredWidth(session, it, parametersState) } ?: (displayWidth * 0.30f)
         val maxCol1W = (displayWidth * 0.50f).coerceAtMost(displayWidth - 200f).coerceAtLeast(displayWidth * minRatio)
         val minCol1W = (displayWidth * minRatio).coerceAtMost(maxCol1W)
         val col1W = reqCol1W.coerceIn(minCol1W, maxCol1W)
 
-        // Column 3 (Right Panel / Mixer): Sized strictly to max allowed width based on height & aspect ratio
         val style = ImGui.getStyle()
         val availHForMixer = (contentH - (style.getWindowPaddingY() * 2f)).coerceAtLeast(1f)
         val maxRightW = MixerLayoutCalculator.calculateMaxAllowedWindowWidth(
@@ -503,9 +491,7 @@ class UIManager(
         val maxAllowedRightW = (displayWidth - col1W - 450f).coerceAtLeast(100f)
         val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
-        // Column 2 (Middle Panel / Properties) and Library (Spans Col 1 + Col 2)
         val libraryW = (displayWidth - rightW).coerceAtLeast(100f)
-        val col2W = (libraryW - col1W).coerceAtLeast(450f)
 
         val libTitleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             (ImGui.getTextLineHeight() + 12f + (style.getWindowBorderSize() * 2f)).coerceAtLeast(32f)
@@ -516,6 +502,28 @@ class UIManager(
             UITheme.LibraryMode.HIDE -> libTitleBarH.coerceAtMost(contentH)
             UITheme.LibraryMode.HALF -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         }
+
+        if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+            if (theme.libraryMode != UITheme.LibraryMode.FULL) {
+                val topH = (contentH - libraryH).coerceAtLeast(1f)
+                ImGui.setNextWindowPos(0f, menuBarH)
+                ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
+                val rackWindowFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
+                if (ImGui.begin("ModularVideoRack", rackWindowFlags)) {
+                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                    currentMixer?.let { rackPanel.draw(session, it, renderer, libraryW, topH) }
+                }
+                ImGui.end()
+            }
+            drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+            return
+        }
+
+        val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
+        CustomRangeSlider.isAnySliderHovered = false
+
+        // Column 2 (Middle Panel / Properties) width: Library (Col 1 + Col 2) minus Col 1
+        val col2W = (libraryW - col1W).coerceAtLeast(450f)
 
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
             val topH = (contentH - libraryH).coerceAtLeast(1f)
@@ -553,10 +561,42 @@ class UIManager(
             }
         }
 
-        // Horizontal Splitter / Title bar drag region (above Library when not FULL)
+        drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+
+        // Column 3: Mixer
+        ImGui.setNextWindowPos(libraryW, menuBarH)
+        ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
+        val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoScrollbar
+        if (ImGui.begin("Mixer", noTitleDecorate)) {
+            UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+            drawMixer(currentMixer!!)
+
+            // Static divider line between Center Column/Library and Mixer
+            val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+            ImGui.getWindowDrawList().addLine(libraryW, menuBarH, libraryW, menuBarH + contentH, dividerColor, 1.5f)
+        }
+        ImGui.end()
+    }
+
+    /**
+     * Bottom-docked Library window: half/full toggle, drag-to-resize splitter, and spacebar
+     * shortcut (handled globally in [processQueueKeyboardShortcuts], workspace-mode-agnostic).
+     * Shared verbatim between Classic and Rack layouts so both behave identically.
+     */
+    private fun drawLibraryDock(
+        displayWidth: Float,
+        displayHeight: Float,
+        menuBarH: Float,
+        contentH: Float,
+        noDecorate: Int,
+        minRatio: Float,
+        libraryW: Float,
+        libraryH: Float,
+        libTitleBarH: Float
+    ) {
+        val theme = session.uiTheme
         val libraryPosH = if (theme.libraryMode == UITheme.LibraryMode.FULL) menuBarH else (menuBarH + contentH - libraryH)
 
-        // Library (Bottom or Full)
         ImGui.setNextWindowPos(0f, libraryPosH)
         ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f))
         val flags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
@@ -611,20 +651,6 @@ class UIManager(
         }
         ImGui.end()
         ImGui.popStyleVar()
-
-        // Column 3: Mixer
-        ImGui.setNextWindowPos(libraryW, menuBarH)
-        ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
-        val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoScrollbar
-        if (ImGui.begin("Mixer", noTitleDecorate)) {
-            UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-            drawMixer(currentMixer!!)
-
-            // Static divider line between Center Column/Library and Mixer
-            val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
-            ImGui.getWindowDrawList().addLine(libraryW, menuBarH, libraryW, menuBarH + contentH, dividerColor, 1.5f)
-        }
-        ImGui.end()
     }
 
     private fun drawMixer(mixer: Mixer) {

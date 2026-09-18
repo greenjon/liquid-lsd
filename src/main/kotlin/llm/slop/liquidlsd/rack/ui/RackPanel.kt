@@ -127,6 +127,14 @@ class RackPanel(
                 ImGui.setCursorPosY(ImGui.getCursorPosY() + bodyH + RackChassisRenderer.UNIT_MARGIN_Y)
             }
 
+            // Submits an item at the final cursor position so the child window's content bounds
+            // are legitimately extended down to it -- ImGui asserts if SetCursorPos moves past the
+            // last submitted item with nothing submitted there (see imgui.cpp's "Please submit an
+            // item e.g. Dummy() afterwards" assertion). This used to be the "+ INSERT RACK MODULE"
+            // button; removing that in the ad-hoc-units cleanup left the cursor advance with
+            // nothing after it.
+            ImGui.dummy(0f, 0f)
+
             // Draw Virtual Patch Cables across the entire rear bay (drawn on top of all units)
             if (isRearView) {
                 drawPatchCablesOverlay(dl)

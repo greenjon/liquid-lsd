@@ -63,6 +63,11 @@ object RackFaceplateGrid {
 
             val isSelected = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == knob.id
             val isLearning = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(knob.id)
+            // MacroKnobWidget.draw manually repositions the cursor to paint its label below the
+            // knob face and restores it via a trailing dummy item -- wrapping in a group makes
+            // that whole dance count as one atomic item, which is what the caller's sameLine()
+            // needs to lay knobs out in a row instead of stacking vertically.
+            ImGui.beginGroup()
             llm.slop.liquidlsd.ui.MacroKnobWidget.draw(
                 session = session,
                 id = "unit_${unit.id}_knob_$i",
@@ -82,6 +87,7 @@ object RackFaceplateGrid {
                 },
                 onChanged = { knob.value = it }
             )
+            ImGui.endGroup()
         }
 
         // Render switches
