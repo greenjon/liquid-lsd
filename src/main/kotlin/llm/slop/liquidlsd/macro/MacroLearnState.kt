@@ -109,7 +109,7 @@ object MacroLearnState {
         // Deliberately *not* auto-filled from controlPair?.first: unitInstanceId here describes
         // the binding's target scope (null = resolved by full "Deck A/..." path via
         // ParameterResolver), which is independent of which bank the control being learned lives
-        // in. Every Learn-mode call site passes null (or an explicit rack-unit id for the
+        // in. Every Learn-mode call site passes null for the default global scope.
         // relative-path case), and the UI's "is this parameter locked?" queries
         // (MacroEngine.findBindingsTargeting/findPrimaryBindingInfo) match on that same value, so
         // silently substituting the control's bank id here would make freshly-created bindings

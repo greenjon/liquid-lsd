@@ -9,7 +9,7 @@ import java.util.UUID
  *
  * See docs/user_guide/macros_and_rack.md for the user documentation,
  * and docs/developer/preset_management.md (§8) for how the same model is re-scoped
- * per rack-unit instance via [MacroBinding.unitInstanceId].
+ * per-scope instance via [MacroBinding.unitInstanceId].
  *
  * This file is pure data model: no UI, no Learn Mode, no serialization-to-disk, no MIDI/OSC
  * wiring. Those land in later phases (see proposal §7).

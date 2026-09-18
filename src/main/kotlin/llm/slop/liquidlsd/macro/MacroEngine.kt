@@ -13,11 +13,12 @@ import llm.slop.liquidlsd.rendering.Mixer
  * [ModulatableParameter]/[CvModulator] instances only when dirty, and the hot per-frame loop
  * walks a plain `Array` with an indexed for-loop to stay allocation-free.
  *
- * Holds one [MacroBank] per scope, keyed by unit instance id. The five canonical deck/mixer ids
- * ([DECK_A]/[DECK_B]/[DECK_BG]/[DECK_PV]/[TRANS]) are the resident banks Classic's Column 3
- * MACROS tabs and the Rack's per-deck faceplates both read and write directly -- there is no
- * separate "global" bank anymore. Other keys (e.g. a test's ad-hoc [llm.slop.liquidlsd.rack.GenericRackUnit]
- * id) are still supported generically for anything that registers its own bank.
+ * Holds one [MacroBank] per scope, keyed by a canonical bank id. The six canonical deck/mixer ids
+ * ([DECK_A]/[DECK_B]/[DECK_BG]/[DECK_PV]/[TRANS]/[MASTER]) are always-resident banks that
+ * Classic's Column 3 MACROS tab and the Performance Mode 4×4 Matrix both read and write directly —
+ * there is no separate "global" bank. Registration and persistence is handled entirely by
+ * [llm.slop.liquidlsd.presets.SessionSerializer]. Other keys are still supported generically for
+ * anything that registers its own bank.
  */
 object MacroEngine {
     private val lock = Any()
@@ -27,9 +28,10 @@ object MacroEngine {
     const val DECK_BG = "deckBG"
     const val DECK_PV = "deckPV"
     const val TRANS = "masterTransition"
+    const val MASTER = "master"
 
-    /** The five always-resident per-deck/mixer bank ids, in Classic-tab/rack-stack display order. */
-    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS)
+    /** The six always-resident per-deck/mixer bank ids, in display order. */
+    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER)
 
     private val banks = LinkedHashMap<String?, MacroBank>()
 
@@ -41,7 +43,7 @@ object MacroEngine {
         invalidate()
     }
 
-    /** Removes the bank for [unitInstanceId] (e.g. when a rack unit is removed from the bay) and invalidates the resolved cache. */
+    /** Removes the bank for [unitInstanceId] and invalidates the resolved cache. */
     fun unregisterBank(unitInstanceId: String?) {
         synchronized(lock) {
             banks.remove(unitInstanceId)
@@ -75,6 +77,7 @@ object MacroEngine {
         "Deck B" -> DECK_B
         "Deck BG" -> DECK_BG
         "Deck PV" -> DECK_PV
+        "Master" -> MASTER
         else -> TRANS
     }
 
@@ -85,8 +88,6 @@ object MacroEngine {
         }
     }
 
-    /** Optional resolver for parameters scoped to a rack unit instance. */
-    var unitParameterResolver: ((unitInstanceId: String, parameterId: String) -> ModulatableParameter?)? = null
 
     /** Finds which bank (and optional unitInstanceId) contains the given control ID. */
     fun findBankForControl(controlId: String): Pair<String?, MacroBank>? {
@@ -148,12 +149,7 @@ object MacroEngine {
         for (control in controls) {
             for (binding in control.bindings) {
                 if (!binding.enabled) continue
-                val param = if (binding.unitInstanceId != null) {
-                    unitParameterResolver?.invoke(binding.unitInstanceId, binding.parameterId)
-                        ?: ParameterResolver.findParameterByPath(mixer, binding.parameterId)
-                } else {
-                    ParameterResolver.findParameterByPath(mixer, binding.parameterId)
-                } ?: continue
+                val param = ParameterResolver.findParameterByPath(mixer, binding.parameterId) ?: continue
                 if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY &&
                     param.modulators.getOrNull(binding.modulatorIndex) == null) {
                     continue

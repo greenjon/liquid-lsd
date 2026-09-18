@@ -15,8 +15,7 @@ class MenuBar(
     private val onOpenAudioEngineMonitor: () -> Unit,
     private val onToggleOutputWindow: () -> Unit = {},
     private val isOutputWindowOpen: () -> Boolean = { false },
-    private val windowFrameController: WindowFrameController? = null,
-    private val onFlipRack: () -> Unit = {}
+    private val windowFrameController: WindowFrameController? = null
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -81,20 +80,15 @@ class MenuBar(
                     // ── View Menu ─────────────────────────────────────────────────────────
                     if (ImGui.beginMenu("View")) {
                         val isClassic = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.CLASSIC
-                        val isRack = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
+                        val isPerf = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
 
                         if (ImGui.menuItem("Classic Deck View", "", isClassic)) {
                             session.uiTheme.workspaceMode = UITheme.WorkspaceMode.CLASSIC
                             AppPreferencesStore.savePreferences()
                         }
-                        if (ImGui.menuItem("Modular Video Rack", "F4", isRack)) {
+                        if (ImGui.menuItem("Performance Mode", "F4", isPerf)) {
                             session.uiTheme.workspaceMode = UITheme.WorkspaceMode.RACK
                             AppPreferencesStore.savePreferences()
-                        }
-                        if (isRack) {
-                            if (ImGui.menuItem("Flip Rack (Rear Panel)", "Tab")) {
-                                onFlipRack()
-                            }
                         }
                         ImGui.separator()
                         if (ImGui.beginMenu("Library Drawer")) {
@@ -246,22 +240,22 @@ class MenuBar(
                     }
                     itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
 
-                    // ── Workspace Mode Pill: [ CLASSIC | RACK ] ──
-                    val isRack = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
-                    val rackPillLabel = if (isRack) "[ RACK ]" else "[ CLASSIC ]"
-                    if (isRack) {
+                    // ── Workspace Mode Pill: [ CLASSIC | PERF ] ──
+                    val isPerf = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
+                    val perfPillLabel = if (isPerf) "[ PERF ]" else "[ CLASSIC ]"
+                    if (isPerf) {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
                     } else {
                         ImGui.pushStyleColor(ImGuiCol.Button, 0.18f, 0.20f, 0.24f, 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.26f, 0.28f, 0.34f, 1.0f)
                     }
-                    if (ImGui.button(rackPillLabel)) {
-                        session.uiTheme.workspaceMode = if (isRack) UITheme.WorkspaceMode.CLASSIC else UITheme.WorkspaceMode.RACK
+                    if (ImGui.button(perfPillLabel)) {
+                        session.uiTheme.workspaceMode = if (isPerf) UITheme.WorkspaceMode.CLASSIC else UITheme.WorkspaceMode.RACK
                         AppPreferencesStore.savePreferences()
                     }
                     ImGui.popStyleColor(2)
-                    itemTooltip("Toggle Workspace Mode (Shortcut: F4)\nCurrent: ${if (isRack) "19\" Modular Video Rack" else "Classic 3-Column Suite C"}")
+                    itemTooltip("Toggle Workspace Mode (Shortcut: F4)\nCurrent: ${if (isPerf) "Performance Mode" else "Classic 3-Column Suite C"}")
 
                     // ── Clock Source & Ableton Link Status Pill ─────────────────────
                     val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine

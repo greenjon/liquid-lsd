@@ -34,7 +34,7 @@ nav:
     - Presets & Library: user_guide/presets_and_library.md
     - Output & Recording: user_guide/output_and_recording.md
     - Performance Controls: user_guide/performance_controls.md
-    - Macro Controls & the Modular Video Rack: user_guide/macros_and_rack.md
+    - Macro Controls & Performance Mode: user_guide/macros_and_rack.md
     - Web Broadcast: user_guide/web_broadcast.md
     - Command Line Usage & Startup Options: user_guide/cli_usage.md
   - Developer Reference:

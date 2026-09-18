@@ -116,7 +116,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
 │   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (knob/switch value + TOGGLE/MOMENTARY/TRIGGER state machine), `MacroBank` (up to 8 knobs / 4 switches)
 │   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP) and min/max/invert range mapping
-│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; one `MacroBank` per scope keyed by `unitInstanceId` (null = global Column 3 bank, non-null = a Rack unit instance)
+│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; one `MacroBank` per canonical bank id (`DECK_A`/`DECK_B`/`DECK_BG`/`DECK_PV`/`TRANS`/`MASTER`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
 │   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdset` DTOs, plus standalone `.knobpreset.json` export/import
 │   └── MacroOscBridge.kt       — `/macro/knob/N` & `/macro/switch/N` inbound OSC address routing and outbound feedback broadcast
@@ -162,21 +162,6 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── TextureReceiver.kt      — Live video stream ingestion client bindings (Spout2 on Windows, Syphon Client on macOS, PipeWire 0.3 on Linux)
 │   ├── VideoOutputSettings.kt  — Video output endpoints, resolution overrides, scaling modes, and stream configurations
 │   └── ViewportHelper.kt       — Output scaling modes
-├── rack/                       — Modular Video Rack: 19" bay of interchangeable units wrapping Deck/Mixer state; see docs/developer/modular_video_rack_proposal.md
-│   ├── RackManager.kt          — Bay lifecycle: populates units from the active Mixer session (Deck A/B/BG + Master + Queue unit), add/remove/reorder, per-unit `MacroBank` registration
-│   ├── RackPipeline.kt         — Normalled top-down signal flow across units with bypass passthrough, solo override, and per-unit patch-cable input overrides
-│   ├── RackUnit.kt             — `RackUnit` interface/`BaseRackUnit`, `DeckRackUnit` (merged generator+FX unit, §2.7), `MixerTransitionUnit`, `QueueStagingRackUnit`, `GenericRackUnit`
-│   ├── RackPatchBay.kt         — Virtual patch cable connect/disconnect state and rear-jack routing overrides
-│   └── RackUnitType.kt         — `GENERATOR`/`PROCESSOR`/`TRANSITION`/`UTILITY` classification with badge label & accent color
-├── rack/ui/                    — Rack faceplate & rear-chassis rendering, nested under `rack/` but a distinct package
-│   ├── RackPanel.kt            — Top-level rack workspace panel: toolbar, scrollable 19" bay, front/rear Tab-flip, Add Unit modal
-│   ├── RackChassisRenderer.kt  — Rack ear/screw chassis styling and quantized 1U/2U/3U/0.5U-collapsed unit height math
-│   ├── RackFaceplateGrid.kt    — 8-column grid-based faceplate layout snapping curated controls into place per unit type
-│   ├── RackMicroMonitor.kt     — Embedded confidence monitor: downscale-blits each unit's output into a shared 240x135 preview `FBO` via `Renderer.rescale()`
-│   ├── RackUnitHeaderRail.kt   — Standardized per-unit header rail (power, bypass, solo, drag handle, reorder, remove)
-│   ├── RackUnitMacroCuration.kt— Collapsible drawer for curating which unit parameters occupy which of a unit's 8 knob / 4 switch slots
-│   ├── RackRearChassisRenderer.kt — `Tab`-flip rear chassis: 1/4" patch jacks, LED status, drag-to-patch interactive routing
-│   └── RackCableRenderer.kt    — Physics-style catenary-sag Bézier curve rendering for virtual patch cables
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
 │   ├── AppPreferences.kt       — App preferences data model, persistent layout & feature toggles
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
@@ -200,6 +185,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
+│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 8 knobs + 4 switches, binding inspector, Learn Mode
+│   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
+│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs, deck-colored rows, read-only (no Learn Mode)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
 │   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
 │   └── ParametersState.kt      — Selection state & 30-level Undo Stack

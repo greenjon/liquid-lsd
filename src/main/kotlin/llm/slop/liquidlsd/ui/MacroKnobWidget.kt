@@ -66,6 +66,10 @@ object MacroKnobWidget {
      * interaction (vertical drag, mouse wheel fine-adjust, middle-click reset). Calls
      * [onChanged] with the new normalized value whenever it changes; does not mutate any state
      * itself -- the caller (typically binding straight to a [llm.slop.liquidlsd.macro.MacroControl.value]) owns that.
+     *
+     * @param accentColor Optional RGB float array `[r, g, b]` (values 0–1). When supplied the arc
+     *   fill, indicator line, and hover/active border ring use this tint instead of the default
+     *   amber gold. Pass `null` to keep the existing amber style (used by [MacroPanel]).
      */
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
@@ -77,6 +81,7 @@ object MacroKnobWidget {
         pixelsForFullSweep: Float = 200f,
         isSelected: Boolean = false,
         isLearning: Boolean = false,
+        accentColor: FloatArray? = null,
         bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
@@ -135,8 +140,13 @@ object MacroKnobWidget {
         // -- Drawing --
         val dl = ImGui.getWindowDrawList()
         val faceCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
-        val trackCol = ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
-        val fillCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1f) // Bright Amber Gold
+
+        // Accent-aware colors: use deck tint if provided, fall back to amber gold.
+        val ar = accentColor?.getOrElse(0) { 1.0f } ?: 1.0f
+        val ag = accentColor?.getOrElse(1) { 0.75f } ?: 0.75f
+        val ab = accentColor?.getOrElse(2) { 0.15f } ?: 0.15f
+        val fillCol   = ImGui.colorConvertFloat4ToU32(ar, ag, ab, 1f)
+        val trackCol  = ImGui.colorConvertFloat4ToU32(ar * 0.35f, ag * 0.35f, ab * 0.35f, 1f)
 
         dl.addCircleFilled(cx, cy, radius - 2f, faceCol, 32)
 
@@ -168,9 +178,9 @@ object MacroKnobWidget {
 
         val borderCol = when {
             isLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
-            isActive -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while dragging
-            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 1.0f) // Selected accent ring
-            isHovered -> ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Amber Gold on hover
+            isActive   -> ImGui.colorConvertFloat4ToU32(ar, ag, ab, 1.0f)
+            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 1.0f)
+            isHovered  -> ImGui.colorConvertFloat4ToU32(ar, ag, ab, 0.9f)
             else -> null
         }
         if (borderCol != null) {

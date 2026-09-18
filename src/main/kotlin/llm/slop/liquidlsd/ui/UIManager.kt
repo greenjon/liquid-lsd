@@ -89,8 +89,7 @@ class UIManager(
         },
         onToggleOutputWindow = onToggleOutputWindow,
         isOutputWindowOpen = isOutputWindowOpen,
-        windowFrameController = windowFrameController,
-        onFlipRack = { rackPanel.isRearView = !rackPanel.isRearView }
+        windowFrameController = windowFrameController
     )
 
     private val missingItemsPanel = MissingItemsPanel()
@@ -198,7 +197,7 @@ class UIManager(
     )
 
     private val macroPanel = MacroPanel(parametersState = parametersState)
-    val rackPanel = llm.slop.liquidlsd.rack.ui.RackPanel()
+    private val performanceMatrixPanel = PerformanceMatrixPanel()
 
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
@@ -468,11 +467,7 @@ class UIManager(
         val theme = session.uiTheme
         val minRatio = 0.15f
 
-        // Shared Library/right-column width geometry -- computed regardless of workspace mode so
-        // Rack view's bottom-docked Library matches Classic's width, half/full behavior, and
-        // splitter drag exactly (see conversation: "same UI as Classic ... same docked-half-full
-        // behavior"). col1W/rightW only exist to reproduce Classic's ~2/3-width Library; Rack mode
-        // doesn't use col1W for anything else, and leaves the resulting right-column gap blank.
+
         val reqCol1W = currentMixer?.let { ParametersPanel.calculateRequiredWidth(session, it, parametersState) } ?: (displayWidth * 0.30f)
         val maxCol1W = (displayWidth * 0.50f).coerceAtMost(displayWidth - 200f).coerceAtLeast(displayWidth * minRatio)
         val minCol1W = (displayWidth * minRatio).coerceAtMost(maxCol1W)
@@ -491,6 +486,9 @@ class UIManager(
         val maxAllowedRightW = (displayWidth - col1W - 450f).coerceAtLeast(100f)
         val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
+        // Rack mode has no separate Mixer preview column (the Alpha unit's own faceplate preview
+        // covers that), so it uses the full display width instead of leaving the Classic-mode
+        // right-column gap blank.
         val libraryW = (displayWidth - rightW).coerceAtLeast(100f)
 
         val libTitleBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -503,67 +501,63 @@ class UIManager(
             UITheme.LibraryMode.HALF -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         }
 
-        if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-            if (theme.libraryMode != UITheme.LibraryMode.FULL) {
-                val topH = (contentH - libraryH).coerceAtLeast(1f)
-                ImGui.setNextWindowPos(0f, menuBarH)
-                ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
-                val rackWindowFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
-                if (ImGui.begin("ModularVideoRack", rackWindowFlags)) {
-                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                    currentMixer?.let { rackPanel.draw(session, it, renderer, libraryW, topH) }
-                }
-                ImGui.end()
-            }
-            drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
-            return
-        }
-
-        val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
-        CustomRangeSlider.isAnySliderHovered = false
-
-        // Column 2 (Middle Panel / Properties) width: Library (Col 1 + Col 2) minus Col 1
-        val col2W = (libraryW - col1W).coerceAtLeast(450f)
-
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
             val topH = (contentH - libraryH).coerceAtLeast(1f)
 
-            // Column 1: Parameters
-            ImGui.setNextWindowPos(0f, menuBarH)
-            ImGui.setNextWindowSize(col1W.coerceAtLeast(1f), topH)
-            val parametersFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
-            PanelTitleBar.withFramePadding(session) {
-                if (ImGui.begin("Parameters", parametersFlags)) {
+            if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+                // Performance Mode: PerformanceMatrixPanel replaces Columns 1 & 2.
+                ImGui.setNextWindowPos(0f, menuBarH)
+                ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
+                val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
+                if (ImGui.begin("PerformanceMatrix", perfFlags)) {
                     UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                    ParametersPanel.draw(session, currentMixer!!, parametersState, deckPresetController)
+                    currentMixer?.let { performanceMatrixPanel.draw(session, it) }
                 }
                 ImGui.end()
-            }
-
-            // Column 2: Properties
-            ImGui.setNextWindowPos(col1W, menuBarH)
-            ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
-            val propertiesFlags = if (sliderWasHovered) {
-                noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
             } else {
-                noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
-            }
-            PanelTitleBar.withFramePadding(session) {
-                if (ImGui.begin("Properties", propertiesFlags)) {
-                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                    PropertiesPanel.draw(session, parametersState, currentMixer!!)
+                // Classic Mode: Parameters (Col 1) + Properties (Col 2).
+                val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
+                CustomRangeSlider.isAnySliderHovered = false
 
-                    // Static divider line between Parameters & Properties
-                    val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
-                    ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
+                val col2W = (libraryW - col1W).coerceAtLeast(450f)
+
+                // Column 1: Parameters
+                ImGui.setNextWindowPos(0f, menuBarH)
+                ImGui.setNextWindowSize(col1W.coerceAtLeast(1f), topH)
+                val parametersFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
+                PanelTitleBar.withFramePadding(session) {
+                    if (ImGui.begin("Parameters", parametersFlags)) {
+                        UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                        ParametersPanel.draw(session, currentMixer!!, parametersState, deckPresetController)
+                    }
+                    ImGui.end()
                 }
-                ImGui.end()
+
+                // Column 2: Properties
+                ImGui.setNextWindowPos(col1W, menuBarH)
+                ImGui.setNextWindowSize(col2W.coerceAtLeast(1f), topH)
+                val propertiesFlags = if (sliderWasHovered) {
+                    noDecorate or ImGuiWindowFlags.NoScrollWithMouse or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
+                } else {
+                    noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
+                }
+                PanelTitleBar.withFramePadding(session) {
+                    if (ImGui.begin("Properties", propertiesFlags)) {
+                        UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                        PropertiesPanel.draw(session, parametersState, currentMixer!!)
+
+                        // Static divider line between Parameters & Properties
+                        val dividerColor = ImGui.getColorU32(imgui.flag.ImGuiCol.Separator)
+                        ImGui.getWindowDrawList().addLine(col1W, menuBarH, col1W, menuBarH + topH, dividerColor, 1.5f)
+                    }
+                    ImGui.end()
+                }
             }
         }
 
         drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
 
-        // Column 3: Mixer
+        // Column 3: Mixer — rendered unconditionally in both Classic and Performance modes.
         ImGui.setNextWindowPos(libraryW, menuBarH)
         ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
         val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoScrollbar

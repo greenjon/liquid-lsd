@@ -173,6 +173,11 @@ object UITheme {
         get() = settings.workspaceMode
         set(value) { settings = settings.copy(workspaceMode = value) }
 
+    /** Index of the active tab in the Performance Mode 4×4 Matrix (0=LIVE QUAD … 3=MASTER & FX). */
+    var performanceMatrixTab: Int
+        get() = settings.performanceMatrixTab
+        set(value) { settings = settings.copy(performanceMatrixTab = value.coerceIn(0, 3)) }
+
     var showMidiCol: Boolean
         get() = settings.midiEnabled
         set(value) { settings = settings.copy(midiEnabled = value, showMidiCol = value) }
