@@ -5,9 +5,7 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.SessionContext
-import llm.slop.liquidlsd.rack.GenericRackUnit
 import llm.slop.liquidlsd.rack.RackManager
-import llm.slop.liquidlsd.rack.RackUnitType
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.ui.Icons
@@ -21,7 +19,6 @@ class RackPanel(
     val rackManager: RackManager = RackManager()
 ) {
     private var initializedFromSession = false
-    private var isAddUnitPopupOpen = false
     var isRearView = false
 
     fun draw(
@@ -79,8 +76,7 @@ class RackPanel(
             for (unit in rackManager.units) {
                 totalUnitsH += RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed, unit.isMacroCurationOpen) + RackChassisRenderer.UNIT_MARGIN_Y
             }
-            val insertionSlotH = 44.0f
-            val totalBayH = maxOf(totalUnitsH + insertionSlotH + 40f, contentH)
+            val totalBayH = maxOf(totalUnitsH + 40f, contentH)
 
             // Draw left & right metallic rack ears
             RackChassisRenderer.drawRackEars(dl, startX, startY, bayW, totalBayH)
@@ -143,14 +139,8 @@ class RackPanel(
             }
             unitToMoveUpIdx?.let { rackManager.moveUp(it) }
             unitToMoveDownIdx?.let { rackManager.moveDown(it) }
-
-            // Empty insertion slot at bottom
-            drawInsertionSlot(startX, bayW, insertionSlotH)
         }
         ImGui.endChild()
-
-        // Popup: Add Unit
-        drawAddUnitModal(mixer)
 
         ImGui.popStyleVar()
     }
@@ -183,15 +173,6 @@ class RackPanel(
         ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
         ImGui.textUnformatted("• ${rackManager.units.size} Units")
         ImGui.popStyleColor()
-        ImGui.sameLine()
-
-        // Add Unit button
-        ImGui.pushStyleColor(ImGuiCol.Button, 0.20f, 0.55f, 0.85f, 0.8f)
-        if (ImGui.button("${Icons.FILE} + ADD UNIT")) {
-            isAddUnitPopupOpen = true
-        }
-        ImGui.popStyleColor()
-        itemTooltip("Insert a new rack module (Generator clone or blank Utility unit).")
         ImGui.sameLine()
 
         // Flip Rack View (Tab) button
@@ -292,66 +273,4 @@ class RackPanel(
         }
     }
 
-    private fun drawInsertionSlot(startX: Float, bayWidth: Float, slotHeight: Float) {
-        val dl = ImGui.getWindowDrawList()
-        val curScreenX = startX
-        val curScreenY = ImGui.getCursorScreenPosY()
-
-        // Dashed / outline slot
-        val borderCol = ImGui.colorConvertFloat4ToU32(0.30f, 0.35f, 0.40f, 0.6f)
-        val bgCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.13f, 0.15f, 0.5f)
-        dl.addRectFilled(curScreenX, curScreenY, curScreenX + bayWidth, curScreenY + slotHeight, bgCol, 2.0f)
-        dl.addRect(curScreenX, curScreenY, curScreenX + bayWidth, curScreenY + slotHeight, borderCol, 2.0f)
-
-        ImGui.setCursorPosX(RackChassisRenderer.RACK_EAR_WIDTH + (bayWidth * 0.5f) - 80f)
-        ImGui.setCursorPosY(ImGui.getCursorPosY() + 8f)
-
-        if (ImGui.button("+ INSERT RACK MODULE", 160f, 26f)) {
-            isAddUnitPopupOpen = true
-        }
-        itemTooltip("Insert a new rack module (Generator clone or blank Utility unit).")
-    }
-
-    private fun drawAddUnitModal(mixer: Mixer) {
-        if (isAddUnitPopupOpen) {
-            ImGui.openPopup("Add Rack Unit##popup")
-        }
-
-        if (ImGui.beginPopupModal("Add Rack Unit##popup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Select module type to insert into rack:")
-            ImGui.separator()
-
-            if (ImGui.button("Generator: Deck A Clone", 260f, 32f)) {
-                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckRackUnit(mixer.deckA, label = "Deck A Extra"))
-                isAddUnitPopupOpen = false
-                ImGui.closeCurrentPopup()
-            }
-
-            if (ImGui.button("Generator: Deck B Clone", 260f, 32f)) {
-                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckRackUnit(mixer.deckB, label = "Deck B Extra"))
-                isAddUnitPopupOpen = false
-                ImGui.closeCurrentPopup()
-            }
-
-            if (ImGui.button("Generator: Deck BG Clone", 260f, 32f)) {
-                rackManager.addUnit(llm.slop.liquidlsd.rack.DeckRackUnit(mixer.deckBG, label = "Deck BG Extra"))
-                isAddUnitPopupOpen = false
-                ImGui.closeCurrentPopup()
-            }
-
-            if (ImGui.button("Utility: Generic Blank Unit", 260f, 32f)) {
-                rackManager.addUnit(GenericRackUnit(label = "Custom Utility Unit", unitType = RackUnitType.UTILITY, heightU = 1))
-                isAddUnitPopupOpen = false
-                ImGui.closeCurrentPopup()
-            }
-
-            ImGui.separator()
-            if (ImGui.button("Cancel", 120f, 26f)) {
-                isAddUnitPopupOpen = false
-                ImGui.closeCurrentPopup()
-            }
-
-            ImGui.endPopup()
-        }
-    }
 }

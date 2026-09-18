@@ -237,40 +237,6 @@ class MixerTransitionUnit(
     ): Int = mixer.masterFBO.texture
 }
 
-/**
- * Always-present "Queue & Staging" master unit (§ Question 1 decision in
- * `modular_video_rack_proposal.md`) -- a rack-native *view* onto the existing
- * [llm.slop.liquidlsd.presets.PlayQueueManager], [llm.slop.liquidlsd.presets.BgQueueManager], and
- * [llm.slop.liquidlsd.presets.TransitionQueueManager] singletons, not a new queue data model.
- * Carries no signal-processing role of its own: [process] passes its input texture straight
- * through unchanged, and [update] is intentionally a no-op -- all three managers are already
- * driven by their existing call paths (transport button presses, [Mixer.update] for the BG
- * dip-to-black state machine) regardless of which workspace is currently visible.
- */
-class QueueStagingRackUnit(
-    val mixer: Mixer,
-    label: String = "Queue & Staging",
-    id: String = UUID.randomUUID().toString().take(8),
-    heightU: Int = 3,
-    macroBank: MacroBank = MacroBank()
-) : BaseRackUnit(
-    id = id,
-    label = label,
-    unitType = RackUnitType.UTILITY,
-    heightU = heightU,
-    macroBank = macroBank
-) {
-    override fun getNamedParameters(): Map<String, ModulatableParameter> = emptyMap()
-    override fun getParameters(): List<ModulatableParameter> = emptyList()
-
-    override fun process(
-        inputTexture: Int,
-        outputFBO: FBO?,
-        width: Int,
-        height: Int,
-        renderer: Renderer?
-    ): Int = inputTexture
-}
 
 /**
  * Generic mockable/configurable unit for testing and custom bridges.

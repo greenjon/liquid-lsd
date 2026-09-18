@@ -96,14 +96,13 @@ The Rack is an alternate workspace: instead of the fixed Deck A / B / BG layout,
 
 Opening Rack view populates the bay from your current session:
 
-- **Deck A**, **Deck B**, and **Deck BG** each get one rack unit — the deck's generator *and* all of its active FX slots live together on that single unit's faceplate (FX parameters show up alongside the generator's own, so a deck using 3 FX filters is still just one unit, not four). Deck PV isn't shown in the rack — it's Classic mode's audition/preview deck and doesn't feed the live composite.
-- A **Queue & Staging** unit gives you condensed Play Queue / Background Queue / Transition Staging transport controls (prev / play-pause / next, plus what's playing now and what's up next) — the same queues you already use in Classic mode, just visible without leaving the rack.
-- A **Master** unit holds the crossfader, blend mode, and master post-FX.
+- **Deck A**, **Deck B**, and **Deck BG** each get one rack unit — the deck's generator *and* all of its active FX slots live together on that single unit's faceplate.
+- **Master Crossfade & Color** holds the crossfader, blend mode, and master post-FX.
+- **Deck PV** (Preview Deck) sits at the bottom of the rack as an audition/preview unit where performers can dial in a preset's macro bindings before loading it onto a live deck.
 
-### Adding and arranging units
+### Arranging units
 
-- **`+ ADD UNIT`** in the rack toolbar lets you drop in an extra clone of Deck A, Deck B, or Deck BG's generator, or a blank Utility unit to build your own — e.g. if you want a second confidence monitor on a deck elsewhere in the stack.
-- By default, units are **normalled**: dropping units into the stack automatically wires unit *N*'s output into unit *N+1*'s input, top to bottom — no manual patching needed for a straightforward chain.
+- By default, units are **normalled**: units are arranged in a top-to-bottom stack where routing flows sequentially down the chain.
 - Each unit's header rail has: power, bypass, solo (send straight to master), a macro curation toggle, move up/down, collapse to a thin spine, and remove.
 
 ### Per-unit macro curation

@@ -1261,22 +1261,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-modular-video-rack-integration-queue-staging-per-unit-macro-banks" class="md-nav__link">
+  <a href="#8-modular-video-rack-integration-deck-pv-per-unit-macro-banks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. Modular Video Rack Integration (Queue Staging &amp; Per-Unit Macro Banks)
+        8. Modular Video Rack Integration (Deck PV &amp; Per-Unit Macro Banks)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="8. Modular Video Rack Integration (Queue Staging &amp; Per-Unit Macro Banks)">
+    <nav class="md-nav" aria-label="8. Modular Video Rack Integration (Deck PV &amp; Per-Unit Macro Banks)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#queue-staging-master-unit-queuestagingrackunit" class="md-nav__link">
+  <a href="#deck-pv-unit-built-in-rack-units" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Queue &amp; Staging Master Unit (QueueStagingRackUnit)
+        Deck PV Unit &amp; Built-in Rack Units
       
     </span>
   </a>
@@ -1864,22 +1864,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-modular-video-rack-integration-queue-staging-per-unit-macro-banks" class="md-nav__link">
+  <a href="#8-modular-video-rack-integration-deck-pv-per-unit-macro-banks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. Modular Video Rack Integration (Queue Staging &amp; Per-Unit Macro Banks)
+        8. Modular Video Rack Integration (Deck PV &amp; Per-Unit Macro Banks)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="8. Modular Video Rack Integration (Queue Staging &amp; Per-Unit Macro Banks)">
+    <nav class="md-nav" aria-label="8. Modular Video Rack Integration (Deck PV &amp; Per-Unit Macro Banks)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#queue-staging-master-unit-queuestagingrackunit" class="md-nav__link">
+  <a href="#deck-pv-unit-built-in-rack-units" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Queue &amp; Staging Master Unit (QueueStagingRackUnit)
+        Deck PV Unit &amp; Built-in Rack Units
       
     </span>
   </a>
@@ -2070,14 +2070,14 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <li>Calls <code>ensureDefaultLibrary(forceRestore = true)</code> which re-extracts any missing factory presets and playlists without touching or overwriting custom presets.</li>
 </ul>
 <hr />
-<h2 id="8-modular-video-rack-integration-queue-staging-per-unit-macro-banks">8. Modular Video Rack Integration (Queue Staging &amp; Per-Unit Macro Banks)</h2>
-<p>The Modular Video Rack (<code>rack/</code>, <code>rack/ui/</code>; see <code>docs/developer/modular_video_rack_proposal.md</code>) is a performance-surface <em>view</em> onto the same preset/queue managers documented above, not a parallel queue or preset system.</p>
-<h3 id="queue-staging-master-unit-queuestagingrackunit">Queue &amp; Staging Master Unit (<code>QueueStagingRackUnit</code>)</h3>
-<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rack/RackUnit.kt"><code>RackUnit.kt</code></a> defines <code>QueueStagingRackUnit</code>, a 3U rack unit that <code>RackManager.populateFromSession()</code> always inserts into the bay (one per rack, not per deck). Its three 1U sections are condensed transport views wired directly to the existing <code>PlayQueueManager</code>, <code>BgQueueManager</code>, and <code>TransitionQueueManager</code> singletons documented in §3-5 above — prev/play-pause/next controls plus a "now → next" readout, not a reimplementation of <code>QueueActionsPanel</code>'s full drag-and-drop list UI. <code>QueueStagingRackUnit</code> itself holds no queue state: it exposes no named parameters (<code>getNamedParameters()</code> returns <code>emptyMap()</code>) and its <code>process()</code> passes the input texture through unchanged, since all three underlying managers are already driven every frame by their existing call paths regardless of which workspace mode (<code>UITheme.WorkspaceMode.CLASSIC</code>/<code>RACK</code>) is currently visible.</p>
+<h2 id="8-modular-video-rack-integration-deck-pv-per-unit-macro-banks">8. Modular Video Rack Integration (Deck PV &amp; Per-Unit Macro Banks)</h2>
+<p>The Modular Video Rack (<code>rack/</code>, <code>rack/ui/</code>; see <code>docs/developer/modular_video_rack_proposal.md</code>) is a performance-surface <em>view</em> onto the same preset/queue managers documented above.</p>
+<h3 id="deck-pv-unit-built-in-rack-units">Deck PV Unit &amp; Built-in Rack Units</h3>
+<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rack/RackManager.kt"><code>RackManager.populateFromSession()</code></a> populates the rack bay with standard units: Deck A, Deck B, Deck BG, Master Crossfade &amp; Color (<code>MixerTransitionUnit</code>), and Deck PV (<code>DeckRackUnit</code> backed by <code>mixer.deckPV</code>). Deck PV serves as the audition/preview deck unit at the bottom of the stack, allowing performers to dial in preset macro bindings before loading onto live decks.</p>
 <h3 id="per-unit-macro-banks-unitinstanceid-scoping">Per-Unit Macro Banks (<code>unitInstanceId</code> Scoping)</h3>
 <p>Every <code>RackUnit</code> owns its own <code>macroBank: MacroBank</code> (0-8 knobs, 0-4 switches — the same shape and engine as the Column 3 global bank; see <code>docs/user_guide/macros_and_rack.md</code>). <code>RackManager.addUnit()</code> registers each unit's bank with <code>MacroEngine.registerBank(unit.id, unit.macroBank)</code>, and <code>removeUnit()</code>/<code>dispose()</code> unregister it — this is what makes <code>MacroEngine.tick()</code> evaluate rack-unit-scoped bindings (<code>MacroBinding.unitInstanceId != null</code>) alongside the global bank every frame. <code>RackUnitMacroCuration.kt</code> is the drawer UI for picking which of a unit's <code>getNamedParameters()</code> entries occupy which knob/switch slot.</p>
 <h3 id="current-persistence-scope-global-bank-only">Current Persistence Scope: Global Bank Only</h3>
-<p>Bundled preset serialization (§5.2 of the macro proposal) currently covers only the <strong>global, session-scoped</strong> Column 3 bank (<code>MacroBinding.unitInstanceId == null</code>): <code>PresetRepository</code> filters it per-deck via <code>MacroBankSerializer.filterMacroBankForDeck()</code> into each <code>DeckPresetDto.macroBank</code>, and <code>PresetManager.loadDeckPresetAsync</code> restores it via <code>MacroBankSerializer.restoreMacroBankForDeck()</code>; <code>SessionSerializer</code> separately bundles the full global bank into <code>SessionStateDto.macroBank</code> via <code>MacroEngine.globalBank()</code>. Neither the rack's unit list (which units are in the bay, their order, patch cables) nor any unit's per-instance <code>MacroBank</code> is part of these DTOs today — <code>RackManager.populateFromSession()</code> rebuilds the bay from scratch on every call (app launch, or the panel's "RE-SYNC SESSION" button), reconstructing each <code>DeckRackUnit</code>/<code>MixerTransitionUnit</code> with a fresh <code>MacroBank()</code> and re-applying only the two hardcoded ZOOM/ROTATE (or XFADE/BLOOM/ALPHA) curated bindings set up in that function — any additional curation a performer adds via <code>RackUnitMacroCuration</code> during a session does not survive a re-sync or app restart. Persisting rack layout and per-unit macro curation alongside deck presets is not yet implemented.</p>
+<p>Bundled preset serialization (§5.2 of the macro proposal) currently covers only the <strong>global, session-scoped</strong> Column 3 bank (<code>MacroBinding.unitInstanceId == null</code>): <code>PresetRepository</code> filters it per-deck via <code>MacroBankSerializer.filterMacroBankForDeck()</code> into each <code>DeckPresetDto.macroBank</code>, and <code>PresetManager.loadDeckPresetAsync</code> restores it via <code>MacroBankSerializer.restoreMacroBankForDeck()</code>; <code>SessionSerializer</code> separately bundles the full global bank into <code>SessionStateDto.macroBank</code> via <code>SessionStateDto.macroBank</code> via <code>MacroEngine.globalBank()</code>. <code>RackManager.populateFromSession()</code> reconstructs each rack unit and applies curated defaults (e.g. ZOOM/ROTATE on Deck PV, XFADE on Master). Persisting rack layout and per-unit macro curation alongside deck presets is not yet implemented.</p>
 
 
 

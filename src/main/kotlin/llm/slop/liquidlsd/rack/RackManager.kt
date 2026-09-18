@@ -94,11 +94,7 @@ class RackManager(
         }
         addUnit(deckBG)
 
-        // 4. Queue & Staging master unit (§ Question 1) -- always present, views onto the
-        // existing PlayQueueManager/BgQueueManager/TransitionQueueManager singletons
-        addUnit(QueueStagingRackUnit(mixer, id = QUEUE_STAGING_UNIT_ID, macroBank = restoredBankFor(QUEUE_STAGING_UNIT_ID)))
-
-        // 5. Master Mixer & Transition Unit
+        // 4. Master Mixer & Transition Unit
         val transUnit = MixerTransitionUnit(mixer, label = "Master Crossfade & Color", id = MASTER_TRANSITION_UNIT_ID, macroBank = restoredBankFor(MASTER_TRANSITION_UNIT_ID))
         if (!hasPersistedBank(MASTER_TRANSITION_UNIT_ID)) {
             setupCuratedBinding(transUnit.macroBank.knobs[0], transUnit.id, "XFADE", "crossfade", -1.0f, 1.0f, 0.0f)
@@ -106,6 +102,19 @@ class RackManager(
             setupCuratedBinding(transUnit.macroBank.switches[0], transUnit.id, "ALPHA", "masterAlpha", 0.0f, 1.0f, 1.0f)
         }
         addUnit(transUnit)
+
+        // 5. Deck PV: the audition/preview deck. Placed last -- it deliberately never feeds the
+        // live composite (see DeckRackUnit doc comment), and RackPipeline's unit chain is a pure
+        // monitoring/patch-cable construct for built-in units (it doesn't drive real output), so
+        // trailing position is enough to convey "doesn't feed forward" without any pipeline
+        // special-casing. Still a full generator+FX unit otherwise -- PV is where a performer
+        // dials in a preset's own macro bindings before ever loading it onto a live deck.
+        val deckPV = DeckRackUnit(mixer.deckPV, label = "Deck PV", id = DECK_PV_UNIT_ID, macroBank = restoredBankFor(DECK_PV_UNIT_ID))
+        if (!hasPersistedBank(DECK_PV_UNIT_ID)) {
+            setupCuratedBinding(deckPV.macroBank.knobs[0], deckPV.id, "ZOOM", "viewZoom", 0.2f, 3.0f, 0.5f)
+            setupCuratedBinding(deckPV.macroBank.knobs[1], deckPV.id, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
+        }
+        addUnit(deckPV)
 
         logger.info { "Populated RackManager with ${units.size} units from active session" }
     }
@@ -229,7 +238,7 @@ class RackManager(
         const val DECK_A_UNIT_ID = "deckA"
         const val DECK_B_UNIT_ID = "deckB"
         const val DECK_BG_UNIT_ID = "deckBG"
-        const val QUEUE_STAGING_UNIT_ID = "queueStaging"
+        const val DECK_PV_UNIT_ID = "deckPV"
         const val MASTER_TRANSITION_UNIT_ID = "masterTransition"
     }
 }

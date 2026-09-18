@@ -7,11 +7,9 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rack.DeckRackUnit
 import llm.slop.liquidlsd.rack.GenericRackUnit
 import llm.slop.liquidlsd.rack.MixerTransitionUnit
-import llm.slop.liquidlsd.rack.QueueStagingRackUnit
 import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.ui.itemTooltip
-import java.io.File
 
 /**
  * Grid-based faceplate layout system snapping parameter controls into an 8-column modular grid.
@@ -48,7 +46,6 @@ object RackFaceplateGrid {
 
         when (unit) {
             is DeckRackUnit -> drawMergedDeckFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
-            is QueueStagingRackUnit -> drawQueueStagingFaceplate(unit, colW)
             is MixerTransitionUnit -> drawTransitionFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
             else -> drawGenericFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
         }
@@ -279,147 +276,6 @@ object RackFaceplateGrid {
         }
 
         ImGui.popStyleVar(2)
-    }
-
-    private fun drawQueueStagingFaceplate(unit: QueueStagingRackUnit, colW: Float) {
-        val mixer = unit.mixer
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 3.0f, 2.0f)
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 6.0f, 3.0f)
-
-        drawQueueSection(
-            idSuffix = "pq_${unit.id}",
-            title = "PLAY QUEUE",
-            accentR = 0.4f, accentG = 1.0f, accentB = 0.8f,
-            isActive = llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled,
-            colW = colW,
-            onPrev = { llm.slop.liquidlsd.presets.PlayQueueManager.triggerPrevious(mixer) },
-            onToggle = {
-                val next = !llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled
-                llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled = next
-                if (next) mixer.muteCrossfadeNonMidiCv()
-            },
-            onNext = { llm.slop.liquidlsd.presets.PlayQueueManager.triggerNext(mixer) },
-            nowLabel = queueNowLabel(llm.slop.liquidlsd.presets.PlayQueueManager.queue, llm.slop.liquidlsd.presets.PlayQueueManager.activeIndex),
-            nextLabel = queueNextLabel(
-                llm.slop.liquidlsd.presets.PlayQueueManager.queue,
-                llm.slop.liquidlsd.presets.PlayQueueManager.activeIndex,
-                llm.slop.liquidlsd.presets.PlayQueueManager.isShuffleEnabled
-            ),
-            prevTooltip = "Trigger previous preset in Play Queue (Mixer/queuePrev).",
-            toggleTooltip = "Auto-VJ: Automatically cycle through queue presets at set intervals.",
-            nextTooltip = "Trigger next preset in Play Queue (Mixer/queueNext)."
-        )
-
-        ImGui.spacing()
-
-        drawQueueSection(
-            idSuffix = "bgq_${unit.id}",
-            title = "BG QUEUE",
-            accentR = 0.9f, accentG = 0.35f, accentB = 0.65f,
-            isActive = llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled,
-            colW = colW,
-            onPrev = { llm.slop.liquidlsd.presets.BgQueueManager.triggerPrevious(mixer) },
-            onToggle = {
-                llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled = !llm.slop.liquidlsd.presets.BgQueueManager.isAutoBGEnabled
-            },
-            onNext = { llm.slop.liquidlsd.presets.BgQueueManager.triggerNext(mixer) },
-            nowLabel = queueNowLabel(llm.slop.liquidlsd.presets.BgQueueManager.queue, llm.slop.liquidlsd.presets.BgQueueManager.activeIndex),
-            nextLabel = queueNextLabel(
-                llm.slop.liquidlsd.presets.BgQueueManager.queue,
-                llm.slop.liquidlsd.presets.BgQueueManager.activeIndex,
-                llm.slop.liquidlsd.presets.BgQueueManager.isShuffleEnabled
-            ),
-            prevTooltip = "Trigger previous preset in Background Queue (Mixer/bgQueuePrev).",
-            toggleTooltip = "Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.",
-            nextTooltip = "Trigger next preset in Background Queue (Mixer/bgQueueNext)."
-        )
-
-        ImGui.spacing()
-
-        drawQueueSection(
-            idSuffix = "tq_${unit.id}",
-            title = "TRANSITION STAGING",
-            accentR = 0.55f, accentG = 0.75f, accentB = 1.0f,
-            isActive = llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled,
-            colW = colW,
-            onPrev = { llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer) },
-            onToggle = {
-                llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled =
-                    !llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled
-            },
-            onNext = { llm.slop.liquidlsd.presets.TransitionQueueManager.advanceNext(mixer) },
-            nowLabel = queueNowLabel(llm.slop.liquidlsd.presets.TransitionQueueManager.queue, llm.slop.liquidlsd.presets.TransitionQueueManager.activeIndex),
-            nextLabel = queueNextLabel(
-                llm.slop.liquidlsd.presets.TransitionQueueManager.queue,
-                llm.slop.liquidlsd.presets.TransitionQueueManager.activeIndex,
-                llm.slop.liquidlsd.presets.TransitionQueueManager.isShuffleEnabled
-            ),
-            prevTooltip = "Trigger previous transition in Live Transition Queue.",
-            toggleTooltip = "Auto-Advance: Automatically advance to the next transition preset when a crossfade triggers.",
-            nextTooltip = "Trigger next transition in Live Transition Queue."
-        )
-
-        ImGui.popStyleVar(2)
-    }
-
-    private fun drawQueueSection(
-        idSuffix: String,
-        title: String,
-        accentR: Float,
-        accentG: Float,
-        accentB: Float,
-        isActive: Boolean,
-        colW: Float,
-        onPrev: () -> Unit,
-        onToggle: () -> Unit,
-        onNext: () -> Unit,
-        nowLabel: String,
-        nextLabel: String,
-        prevTooltip: String,
-        toggleTooltip: String,
-        nextTooltip: String
-    ) {
-        ImGui.pushID(idSuffix)
-
-        ImGui.pushStyleColor(ImGuiCol.Text, accentR, accentG, accentB, 1.0f)
-        ImGui.textUnformatted(title)
-        ImGui.popStyleColor()
-        ImGui.sameLine(colW * 4.5f)
-
-        val btnW = colW * 0.9f
-        if (ImGui.button("<##prev", btnW, 0f)) onPrev()
-        itemTooltip(prevTooltip)
-        ImGui.sameLine(0f, 3f)
-
-        if (isActive) {
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-        }
-        val toggleLabel = if (isActive) llm.slop.liquidlsd.ui.Icons.PAUSE else llm.slop.liquidlsd.ui.Icons.PLAY
-        if (ImGui.button("$toggleLabel##toggle", btnW, 0f)) onToggle()
-        if (isActive) {
-            ImGui.popStyleColor()
-        }
-        itemTooltip(toggleTooltip)
-        ImGui.sameLine(0f, 3f)
-
-        if (ImGui.button(">##next", btnW, 0f)) onNext()
-        itemTooltip(nextTooltip)
-
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
-        ImGui.textUnformatted("${nowLabel.take(16)}  ->  ${nextLabel.take(16)}")
-        ImGui.popStyleColor()
-
-        ImGui.popID()
-    }
-
-    private fun queueNowLabel(queue: List<File>, activeIndex: Int): String =
-        queue.getOrNull(activeIndex)?.nameWithoutExtension ?: "--"
-
-    private fun queueNextLabel(queue: List<File>, activeIndex: Int, isShuffle: Boolean): String {
-        if (queue.isEmpty()) return "--"
-        if (isShuffle) return "(shuffle)"
-        val nextIdx = if (activeIndex + 1 < queue.size) activeIndex + 1 else 0
-        return queue.getOrNull(nextIdx)?.nameWithoutExtension ?: "--"
     }
 
     private fun drawParamSlider(
