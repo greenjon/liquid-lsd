@@ -5,6 +5,9 @@ import imgui.type.ImBoolean
 import imgui.type.ImInt
 import imgui.type.ImString
 import llm.slop.liquidlsd.macro.*
+import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.cv.isAudioSource
 
 /**
  * Binding Inspector drawer for the selected Macro Control in Column 3.
@@ -17,7 +20,7 @@ object MacroBindingInspector {
     private val labelBuf = ImString(64)
     private var lastControlId: String? = null
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, control: MacroControl?, parametersState: ParametersState) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, control: MacroControl?, parametersState: ParametersState, mixer: Mixer) {
         if (control == null) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 ImGui.textDisabled("Select a Knob or Switch above to inspect bindings.")
@@ -171,6 +174,15 @@ object MacroBindingInspector {
                 if (ImGui.isItemClicked(0) && navDeck != null) {
                     parametersState.activeTopTab = navDeck
                     parametersState.setDeckSubTab(navDeck, navSubTab)
+                    val targetParam = ParameterResolver.findParameterByPath(mixer, binding.parameterId)
+                    if (targetParam != null) {
+                        val cvId = if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY) {
+                            targetParam.modulators.getOrNull(binding.modulatorIndex)?.let { modulatorCvId(it.sourceId) } ?: "value"
+                        } else {
+                            "value"
+                        }
+                        parametersState.select(ParameterCellId(binding.parameterId, cvId), targetParam)
+                    }
                 }
 
                 val btnSize = 20f
@@ -275,6 +287,18 @@ object MacroBindingInspector {
         }
 
         ImGui.popID()
+    }
+
+    /**
+     * Maps a [llm.slop.liquidlsd.parameters.CvModulator.sourceId] to the Properties panel's
+     * cvSourceId column key (see [ParametersRenderer.drawCvCell]): individual audio-reactive
+     * bands share the single "audio" column/tab, MIDI CC modulators share "midi", and every
+     * other source (e.g. "lfo", "seq") is used verbatim as its own column.
+     */
+    private fun modulatorCvId(sourceId: String): String = when {
+        isAudioSource(sourceId)        -> "audio"
+        sourceId.startsWith("midi_cc_") -> "midi"
+        else                             -> sourceId
     }
 
     /**

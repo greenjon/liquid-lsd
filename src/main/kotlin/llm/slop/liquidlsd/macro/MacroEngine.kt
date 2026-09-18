@@ -221,6 +221,8 @@ object MacroEngine {
     private fun applyModulatorProperty(mod: CvModulator, propertyName: String, value: Float) {
         when (propertyName) {
             "depth" -> mod.depth = value
+            "lfoMin" -> { val max = mod.getLfoMax(); mod.dcOffset = (value + max) / 2f; mod.depth = (max - value) / 2f }
+            "lfoMax" -> { val min = mod.getLfoMin(); mod.dcOffset = (min + value) / 2f; mod.depth = (value - min) / 2f }
             "subdivision" -> mod.subdivision = value
             "phaseOffset" -> mod.phaseOffset = value
             "slope" -> mod.slope = value

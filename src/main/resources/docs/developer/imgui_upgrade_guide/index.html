@@ -1,0 +1,1828 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../ui/">
+      
+      
+        <link rel="next" href="../preset_management/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>ImGui Upgrade & Modernization - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#imgui-upgrade-modernization-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ImGui Upgrade & Modernization
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-support-matrix-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Support Matrix &amp; Findings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture Support Matrix &amp; Findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-apple-silicon-macos-arm64-aarch64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Apple Silicon (macOS ARM64 / aarch64)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-linux-arm64-linux-arm64-aarch64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Linux ARM64 (linux-arm64 / aarch64)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-phase-upgrade-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-Phase Upgrade Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two-Phase Upgrade Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-stable-adoption-18612" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Stable Adoption (1.86.12)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-modernization-19271" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Modernization (1.92.7.1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-migration-guide-breaking-changes-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 Migration Guide: Breaking Changes &amp; Fixes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2 Migration Guide: Breaking Changes &amp; Fixes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-64-bit-texture-handles-imtextureid-changed-from-int-to-long" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 64-bit Texture Handles (ImTextureID changed from Int to Long)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-backend-lifecycle-methods-dispose-to-shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Backend Lifecycle Methods (dispose() $\to$ shutdown())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-font-atlas-dynamic-rebuild-updatefontstexture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Font Atlas Dynamic Rebuild (updateFontsTexture())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-input-system-overhaul-getkeyindex-removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Input System Overhaul (getKeyIndex() Removed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-multi-color-drawlist-colors-long-to-int" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Multi-Color DrawList Colors (Long $\to$ Int)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-dynamic-font-scaling-parameter-in-pushfont" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Dynamic Font Scaling Parameter in pushFont
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-deprecated-style-attribute-removal-tabminwidthforclosebutton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Deprecated Style Attribute Removal (TabMinWidthForCloseButton)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-support-matrix-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Support Matrix &amp; Findings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture Support Matrix &amp; Findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-apple-silicon-macos-arm64-aarch64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Apple Silicon (macOS ARM64 / aarch64)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-linux-arm64-linux-arm64-aarch64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Linux ARM64 (linux-arm64 / aarch64)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-phase-upgrade-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-Phase Upgrade Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two-Phase Upgrade Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-stable-adoption-18612" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Stable Adoption (1.86.12)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-modernization-19271" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Modernization (1.92.7.1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-migration-guide-breaking-changes-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 Migration Guide: Breaking Changes &amp; Fixes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2 Migration Guide: Breaking Changes &amp; Fixes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-64-bit-texture-handles-imtextureid-changed-from-int-to-long" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 64-bit Texture Handles (ImTextureID changed from Int to Long)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-backend-lifecycle-methods-dispose-to-shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Backend Lifecycle Methods (dispose() $\to$ shutdown())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-font-atlas-dynamic-rebuild-updatefontstexture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Font Atlas Dynamic Rebuild (updateFontsTexture())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-input-system-overhaul-getkeyindex-removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Input System Overhaul (getKeyIndex() Removed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-multi-color-drawlist-colors-long-to-int" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Multi-Color DrawList Colors (Long $\to$ Int)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-dynamic-font-scaling-parameter-in-pushfont" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Dynamic Font Scaling Parameter in pushFont
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-deprecated-style-attribute-removal-tabminwidthforclosebutton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Deprecated Style Attribute Removal (TabMinWidthForCloseButton)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="imgui-upgrade-modernization-guide">ImGui Upgrade &amp; Modernization Guide</h1>
+<p>This document details the multi-architecture ARM64 investigation for <code>imgui-java</code> (<code>io.github.spair</code>), the rationale for our two-phase upgrade strategy, and a comprehensive migration guide for future upgrades to Dear ImGui 1.92.x.</p>
+<hr />
+<h2 id="architecture-support-matrix-findings">Architecture Support Matrix &amp; Findings</h2>
+<p>During our investigation of all published <code>io.github.spair:imgui-java</code> artifacts on Maven Central from <code>1.86.11</code> through <code>1.92.7.1</code>, we identified the exact state of ARM64 support across target platforms:</p>
+<h3 id="1-apple-silicon-macos-arm64-aarch64">1. Apple Silicon (macOS ARM64 / <code>aarch64</code>)</h3>
+<ul>
+<li><strong>Version 1.86.11</strong>: <code>imgui-java-natives-macos-1.86.11.jar</code> packaged <code>libimgui-java64.dylib</code> compiled <strong>exclusively for x86_64</strong>. On Apple Silicon JVMs, running the application crashed on startup with:
+  <code>text
+  java.lang.UnsatisfiedLinkError: ... libimgui-java64.dylib: mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64')</code></li>
+<li><strong>Version 1.86.12 (First ARM64 Release)</strong>: Starting with release <code>1.86.12</code>, the upstream maintainer repackaged the macOS dylib as a <strong>Mach-O Universal Binary</strong> containing both <code>x86_64</code> and <code>arm64</code> architectures merged via <code>lipo</code>.</li>
+<li><strong>Subsequent Releases (1.87.0 through 1.92.7.1)</strong>: All later versions retain universal binary packaging for macOS.</li>
+</ul>
+<h3 id="2-linux-arm64-linux-arm64-aarch64">2. Linux ARM64 (<code>linux-arm64</code> / <code>aarch64</code>)</h3>
+<ul>
+<li><strong>Upstream Status across ALL Releases</strong>: In every release of <code>io.github.spair:imgui-java-natives-linux</code> up to and including the latest <code>1.92.7.1</code>, the bundled <code>libimgui-java64.so</code> is <strong>strictly an <code>ELF 64-bit x86-64</code> shared object</strong>.</li>
+<li>Upstream issue <a href="https://github.com/SpaiR/imgui-java/issues/105">#105</a> (<em>"Make it work in arm64 linux"</em>) remains open. Upstream does not publish an official <code>imgui-java-natives-linux-arm64</code> artifact.</li>
+<li><strong>Impact</strong>: Upgrading <code>imgui-java</code> resolves macOS ARM64 out-of-the-box, but does not natively resolve Linux ARM64 without custom native build steps or an architecture-aware dynamic loader.</li>
+</ul>
+<hr />
+<h2 id="two-phase-upgrade-strategy">Two-Phase Upgrade Strategy</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Phase 1: Target <code>1.86.12</code></th>
+<th style="text-align: left;">Phase 2: Target <code>1.92.7.1</code> (Current)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>macOS ARM64 Support</strong></td>
+<td style="text-align: left;"><strong>Full</strong> (Universal <code>x86_64</code> + <code>arm64</code>)</td>
+<td style="text-align: left;"><strong>Full</strong> (Universal <code>x86_64</code> + <code>arm64</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Linux ARM64 Support</strong></td>
+<td style="text-align: left;">No (Upstream limitation)</td>
+<td style="text-align: left;">No (Upstream limitation)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Breaking API Changes</strong></td>
+<td style="text-align: left;"><strong>0</strong> (Drop-in compatible)</td>
+<td style="text-align: left;"><strong>Implemented</strong> across UI codebase</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Regression Risk</strong></td>
+<td style="text-align: left;"><strong>Zero</strong></td>
+<td style="text-align: left;">Verified via test suite &amp; styling fixes</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Status</strong></td>
+<td style="text-align: left;">Completed</td>
+<td style="text-align: left;"><strong>Completed &amp; Active</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-1-stable-adoption-18612">Phase 1: Stable Adoption (<code>1.86.12</code>)</h3>
+<p>We adopted <code>1.86.12</code> to immediately provide native Apple Silicon execution and unblock macOS ARM64 binary smoke testing without introducing source code churn, behavioural drift, or UI regression.</p>
+<h3 id="phase-2-modernization-19271">Phase 2: Modernization (<code>1.92.7.1</code>)</h3>
+<p>Adopted <code>1.92.7.1</code> to modernize Dear ImGui, upgrading the keyboard input system to the New Key API, switching to 64-bit texture handles, modernizing backend lifecycle methods, supporting dynamic font scaling, and enabling native multi-selection primitives.</p>
+<hr />
+<h2 id="phase-2-migration-guide-breaking-changes-fixes">Phase 2 Migration Guide: Breaking Changes &amp; Fixes</h2>
+<p>Upgrading from <code>1.86.x</code> to <code>1.92.x</code> introduces breaking changes across GLFW/GL3 backends, font management, keyboard input handling, 64-bit texture handles, and draw list APIs.</p>
+<h3 id="1-64-bit-texture-handles-imtextureid-changed-from-int-to-long">1. 64-bit Texture Handles (<code>ImTextureID</code> changed from <code>Int</code> to <code>Long</code>)</h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  DeckControlPanel.kt:82:21 Argument type mismatch: actual type is 'Int', but 'Long' was expected.
+  MixerMonitorPanel.kt:45:21 Argument type mismatch: actual type is 'Int', but 'Long' was expected.
+  VideoExportModal.kt:124:19 None of the following candidates is applicable: static fun image(p0: Long, ...): actual type is 'Int', but 'Long' was expected.</code></li>
+<li><strong>Cause</strong>: Upstream Dear ImGui switched <code>ImTextureID</code> from a 32-bit integer to a 64-bit pointer/scalar (<code>Long</code> in Java bindings) to support 64-bit handles and modern graphics APIs.</li>
+<li><strong>Fix</strong>: Convert OpenGL texture handle ints with <code>.toLong()</code>:
+  ```kotlin
+  // DeckControlPanel.kt:82
+  ImGui.image(deck.getOutputTexture().toLong(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)</li>
+</ul>
+<p>// MixerMonitorPanel.kt:45
+  ImGui.image(mixer.getOutputTexture().toLong(), imgAvailW, imgAvailH, 0f, 1f, 1f, 0f)</p>
+<p>// VideoExportModal.kt:124
+  ImGui.image(previewTexId.toLong(), previewW, previewH, 0f, 1f, 1f, 0f)
+  ```</p>
+<hr />
+<h3 id="2-backend-lifecycle-methods-dispose-to-shutdown">2. Backend Lifecycle Methods (<code>dispose()</code> $\to$ <code>shutdown()</code>)</h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  UIManager.kt:614:18 Unresolved reference 'dispose'.
+  UIManager.kt:615:19 Unresolved reference 'dispose'.</code></li>
+<li><strong>Cause</strong>: <code>imgui-java-lwjgl3</code> backend classes (<code>ImGuiImplGlfw</code> and <code>ImGuiImplGl3</code>) replaced the custom <code>.dispose()</code> method with standard Dear ImGui <code>.shutdown()</code>.</li>
+<li><strong>Fix</strong>:
+  <code>kotlin
+  // UIManager.kt:614-615
+  imGuiGlfw.shutdown()
+  imGuiGl3.shutdown()</code></li>
+</ul>
+<hr />
+<h3 id="3-font-atlas-dynamic-rebuild-updatefontstexture">3. Font Atlas Dynamic Rebuild (<code>updateFontsTexture()</code>)</h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  UIManager.kt:329:22 Unresolved reference 'updateFontsTexture'.</code></li>
+<li><strong>Cause</strong>: <code>ImGuiImplGl3.updateFontsTexture()</code> was removed. The backend now exposes discrete <code>destroyFontsTexture()</code> and <code>createFontsTexture()</code> operations.</li>
+<li><strong>Fix</strong>: Replace <code>updateFontsTexture()</code> with destroy and recreate calls:
+  <code>kotlin
+  // UIManager.kt:329
+  imguiGl3.destroyFontsTexture()
+  imguiGl3.createFontsTexture()</code></li>
+</ul>
+<hr />
+<h3 id="4-input-system-overhaul-getkeyindex-removed">4. Input System Overhaul (<code>getKeyIndex()</code> Removed)</h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  Unresolved reference 'getKeyIndex'.</code></li>
+<li><strong>Cause</strong>: Dear ImGui overhauled its keyboard input pipeline (the "New Key API"). <code>ImGuiKey</code> constants are now direct key identifiers rather than indices into the legacy <code>io.KeysDown</code> array. <code>ImGui.getKeyIndex(...)</code> was removed.</li>
+<li><strong>Impacted Files</strong>:</li>
+<li><code>src/main/kotlin/llm/slop/liquidlsd/ui/ParametersKeyboard.kt</code></li>
+<li><code>src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt</code></li>
+<li><code>src/main/kotlin/llm/slop/liquidlsd/ui/browser/BgQueueActionsPanel.kt</code></li>
+<li><code>src/main/kotlin/llm/slop/liquidlsd/ui/browser/PlaylistEditorPanel.kt</code></li>
+<li><code>src/main/kotlin/llm/slop/liquidlsd/ui/browser/PresetListPanel.kt</code></li>
+<li><code>src/main/kotlin/llm/slop/liquidlsd/ui/browser/QueueActionsPanel.kt</code></li>
+<li><strong>Fix</strong>: Pass the <code>ImGuiKey</code> enum constants directly to <code>ImGui.isKeyPressed</code> and <code>ImGui.isKeyDown</code>:
+  ```kotlin
+  // Legacy (1.86.x):
+  ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.UpArrow))
+  ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Enter))</li>
+</ul>
+<p>// Modern (1.92.x):
+  ImGui.isKeyPressed(ImGuiKey.UpArrow)
+  ImGui.isKeyPressed(ImGuiKey.Enter)
+  ```</p>
+<hr />
+<h3 id="5-multi-color-drawlist-colors-long-to-int">5. Multi-Color DrawList Colors (<code>Long</code> $\to$ <code>Int</code>)</h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  UIThemeStyler.kt:235:78 Argument type mismatch: actual type is 'Long', but 'Int' was expected.</code></li>
+<li><strong>Cause</strong>: In <code>1.86.x</code>, <code>ImDrawList.addRectFilledMultiColor</code> expected <code>Long</code> values for packed 32-bit colors. In <code>1.89+</code>, parameter types were standardized back to standard 32-bit integer color values (<code>Int</code>).</li>
+<li><strong>Fix</strong>: Remove <code>.toLong()</code> conversions:
+  ```kotlin
+  // UIThemeStyler.kt:232-235
+  val leftCol = getNeonBgColor((posX / displayWidth).coerceIn(0f, 1f))
+  val rightCol = getNeonBgColor(((posX + panelW) / displayWidth).coerceIn(0f, 1f))</li>
+</ul>
+<p>dl.addRectFilledMultiColor(posX, posY, posX + panelW, posY + panelH, leftCol, rightCol, rightCol, leftCol)
+  ```</p>
+<hr />
+<h3 id="6-dynamic-font-scaling-parameter-in-pushfont">6. Dynamic Font Scaling Parameter in <code>pushFont</code></h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  UITheme.kt:685:36 No value passed for parameter 'p1'.</code></li>
+<li><strong>Cause</strong>: Dear ImGui 1.92 added dynamic runtime font scaling support directly to <code>pushFont</code>. In the Java bindings, the signature is <code>ImGui.pushFont(ImFont font, float fontSize)</code>.</li>
+<li><strong>Fix</strong>: Pass <code>0f</code> (which instructs ImGui to use the font's native baked size) or <code>font.fontSize</code>:
+  <code>kotlin
+  // UITheme.kt:685
+  if (pushed) ImGui.pushFont(font, 0f)</code></li>
+</ul>
+<hr />
+<h3 id="7-deprecated-style-attribute-removal-tabminwidthforclosebutton">7. Deprecated Style Attribute Removal (<code>TabMinWidthForCloseButton</code>)</h3>
+<ul>
+<li><strong>Symptom</strong>:
+  <code>text
+  UIThemeStyler.kt:267:12 Unresolved reference 'setTabMinWidthForCloseButton'.
+  UIThemeStyler.kt:267:46 Unresolved reference 'getTabMinWidthForCloseButton'.</code></li>
+<li><strong>Cause</strong>: <code>tabMinWidthForCloseButton</code> was deprecated and removed from <code>ImGuiStyle</code> in Dear ImGui upstream.</li>
+<li><strong>Fix</strong>: Remove line 267 from <code>UIThemeStyler.copyStyleSizes</code>:
+  <code>kotlin
+  // Remove:
+  // to.setTabMinWidthForCloseButton(from.getTabMinWidthForCloseButton())</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

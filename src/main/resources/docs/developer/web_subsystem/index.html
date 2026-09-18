@@ -1,0 +1,1782 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../export_pipeline/">
+      
+      
+        <link rel="next" href="../ui/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Web Subsystem & Broadcast Protocol - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#web-subsystem-broadcast-protocol" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Web Subsystem & Broadcast Protocol
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-system-topology-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. System Topology &amp; Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-websocket-wire-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. WebSocket Wire Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. WebSocket Wire Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Message Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-full-state-snapshot-state_full" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Full State Snapshot (state_full)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-throttled-delta-update-state_delta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Throttled Delta Update (state_delta)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-broadcaster-handshake-broadcaster_online-broadcaster_offline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Broadcaster Handshake (broadcaster_online / broadcaster_offline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-dead-reckoning-continuous-phase-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Dead-Reckoning &amp; Continuous Phase Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-browser-side-web-audio-dsp-graph-dspjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Browser-Side Web Audio DSP Graph (dsp.js)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-desktop-to-web-synchronization-drift-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Desktop-to-Web Synchronization &amp; Drift Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-relay-server-operations-serverserverjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Relay Server Operations (server/server.js)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Relay Server Operations (server/server.js)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-monitoring-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health &amp; Monitoring Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-system-topology-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. System Topology &amp; Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-websocket-wire-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. WebSocket Wire Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. WebSocket Wire Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Message Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-full-state-snapshot-state_full" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Full State Snapshot (state_full)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-throttled-delta-update-state_delta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Throttled Delta Update (state_delta)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-broadcaster-handshake-broadcaster_online-broadcaster_offline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Broadcaster Handshake (broadcaster_online / broadcaster_offline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-dead-reckoning-continuous-phase-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Dead-Reckoning &amp; Continuous Phase Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-browser-side-web-audio-dsp-graph-dspjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Browser-Side Web Audio DSP Graph (dsp.js)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-desktop-to-web-synchronization-drift-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Desktop-to-Web Synchronization &amp; Drift Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-relay-server-operations-serverserverjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Relay Server Operations (server/server.js)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Relay Server Operations (server/server.js)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-monitoring-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health &amp; Monitoring Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="web-subsystem-broadcast-protocol">Web Subsystem &amp; Broadcast Protocol</h1>
+<p>This document provides a technical specification for Liquid LSD's browser-based WebGL2 visualizer, live WebSocket broadcast relay, and desktop-to-web synchronization architecture.</p>
+<hr />
+<h2 id="1-system-topology-architecture">1. System Topology &amp; Architecture</h2>
+<p>Liquid LSD's web subsystem enables zero-latency live visual streaming without video transcoding by transmitting lightweight mathematical state representations over WebSockets to client-side WebGL2 renderers.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│ DESKTOP APPLICATION                                          │
+│                                                              │
+│  Mixer / Deck Engine ──► WebPresetSerializer (JSON)          │
+│                               │                              │
+│                               ▼ (25 Hz Throttled)            │
+│  BroadcastEngine-IO Thread ──► java.net.http.WebSocket       │
+└───────────────────────────────┬──────────────────────────────┘
+                                │ WSS: ?role=broadcast&amp;key=&lt;token&gt;
+                                ▼
+┌──────────────────────────────────────────────────────────────┐
+│ NODE.JS RELAY SERVER (server/server.js)                      │
+│                                                              │
+│  - Authentication &amp; Role Verification                        │
+│  - Active Broadcaster Arbitration                            │
+│  - Full State Caching (`state_full`)                         │
+│  - Low-Latency Fan-Out Distribution                          │
+└───────────────────────────────┬──────────────────────────────┘
+                                │ WSS: ?role=viewer
+                                ▼
+┌──────────────────────────────────────────────────────────────┐
+│ BROWSER CLIENT (web/)                                        │
+│                                                              │
+│  - Autopilot Playlist Manager (autopilot.js)                 │
+│  - Web Audio DSP Graph &amp; Beat Tracker (dsp.js)               │
+│  - Dead-Reckoning Extrapolation (renderer.js)                │
+│  - WebGL2 Multi-Pass Pipeline &amp; CRT Post-Processing          │
+└──────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="2-websocket-wire-protocol">2. WebSocket Wire Protocol</h2>
+<p>The relay server and browser clients communicate using compact JSON messages.</p>
+<h3 id="message-types">Message Types</h3>
+<h4 id="1-full-state-snapshot-state_full">1. Full State Snapshot (<code>state_full</code>)</h4>
+<p>Dispatched immediately when the broadcaster connects, when a new preset is loaded, or when a new viewer joins mid-session. Contains complete deck parameters, shader source selections, LFO states, and CV routing matrices.</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;state_full&quot;,
+  &quot;timestamp&quot;: 1725234500123,
+  &quot;deckA&quot;: {
+    &quot;source&quot;: &quot;mandala&quot;,
+    &quot;params&quot;: {
+      &quot;petals&quot;: 8.0,
+      &quot;morph&quot;: 1.2,
+      &quot;zoom&quot;: 1.05,
+      &quot;rotSpeed&quot;: 0.4
+    }
+  },
+  &quot;deckB&quot;: {
+    &quot;source&quot;: &quot;dynamic_spiral&quot;,
+    &quot;params&quot;: {
+      &quot;coils&quot;: 12.0,
+      &quot;decay&quot;: 0.96
+    }
+  },
+  &quot;mixer&quot;: {
+    &quot;crossfader&quot;: 0.5,
+    &quot;blendMode&quot;: &quot;ADD&quot;,
+    &quot;masterGain&quot;: 1.0
+  }
+}
+</code></pre>
+<h4 id="2-throttled-delta-update-state_delta">2. Throttled Delta Update (<code>state_delta</code>)</h4>
+<p>Streamed at a configurable rate (default: 25 Hz) during live performance. Transmits only parameters and continuous signals that have changed beyond an epsilon threshold.</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;state_delta&quot;,
+  &quot;timestamp&quot;: 1725234500163,
+  &quot;integratedTime&quot;: 142.845,
+  &quot;integratedShear&quot;: 12.302,
+  &quot;crossfader&quot;: 0.52,
+  &quot;deckA&quot;: {
+    &quot;zoom&quot;: 1.08
+  }
+}
+</code></pre>
+<h4 id="3-broadcaster-handshake-broadcaster_online-broadcaster_offline">3. Broadcaster Handshake (<code>broadcaster_online</code> / <code>broadcaster_offline</code>)</h4>
+<p>Dispatched by the relay server to all connected viewers when the desktop broadcaster connects or disconnects:
+- <code>broadcaster_online</code>: Viewers smoothly transition from Autopilot mode to the live broadcaster state, and the TV station badge flips to <code>SPAZ RADIO • LIVE</code>.
+- <code>broadcaster_offline</code>: Viewers smoothly fade back to local autonomous Autopilot playlist cycles.</p>
+<hr />
+<h2 id="3-dead-reckoning-continuous-phase-tracking">3. Dead-Reckoning &amp; Continuous Phase Tracking</h2>
+<p>To eliminate visual jitter and 60 FPS stutter caused by network packet quantization:
+1. The desktop broadcaster transmits continuous monotonically accumulating time variables (<code>integratedTime</code>, <code>integratedShear</code>).
+2. The client-side WebGL2 renderer (<code>renderer.js</code>) maintains local dead-reckoning integration: between delta updates, the renderer advances time variables locally using <code>performance.now()</code>.
+3. When incoming delta packets arrive, the local timeline gently soft-locks to the broadcaster's anchor time without discontinuous phase jumps.</p>
+<hr />
+<h2 id="4-browser-side-web-audio-dsp-graph-dspjs">4. Browser-Side Web Audio DSP Graph (<code>dsp.js</code>)</h2>
+<p>In standalone web mode or Autopilot mode, the client performs real-time audio analysis on the Icecast stream (<code>https://radio.spaz.org:8060/radio.ogg</code>) via the Web Audio API:</p>
+<pre><code>Audio Element (Icecast stream)
+     │
+     ▼
+createMediaElementSource() ──► GainNode (Rotary Volume Dial: V²) ──► AudioDestination
+     │
+     ├─► BiquadFilter (Lowpass &lt;180Hz)  ─► AnalyserNode ─► RMS Envelope (audio_bass)
+     ├─► BiquadFilter (Bandpass ~1kHz)  ─► AnalyserNode ─► RMS Envelope (audio_mid)
+     ├─► BiquadFilter (Highpass &gt;5kHz)  ─► AnalyserNode ─► RMS Envelope (audio_high)
+     └─► Broadband AnalyserNode ───────► RMS Envelope (audio_amp)
+                                              │
+                                              ▼
+                                   Dual-Envelope Follower
+                                   (Fast Attack / Slow Baseline)
+                                              │
+                                              ▼
+                                   IOI Median Filter &amp; PLL
+                                   (beatPhase 0..1, beatSine)
+</code></pre>
+<p>The computed CV envelopes are bound directly to WebGL shader uniforms (<code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_high</code>, <code>beatPhase</code>, <code>beatSine</code>, <code>trigger_onset</code>) each frame.</p>
+<hr />
+<h2 id="5-desktop-to-web-synchronization-drift-tracking">5. Desktop-to-Web Synchronization &amp; Drift Tracking</h2>
+<p>To maintain 1:1 visual parity without manual dual-maintenance:
+- <strong>Authoritative Source</strong>: Desktop GLSL shaders (<code>src/main/resources/shaders/</code>, <code>library/sources/</code>) and algorithmic Kotlin math files (<code>Evaluators.kt</code>, <code>WebPresetSerializer.kt</code>) are the sole sources of truth. (<code>icosa_h3</code> and <code>dynamic_spiral</code> are now pure ISF v2.0 shaders rather than Kotlin-backed generators — see <code>DECISIONS.md</code>'s "Standardization on Pure ISF v2.0 Shaders" — so their web ports are tracked as shader files, not algorithm files.)
+- <strong>Sync Manifest (<code>web/sync_manifest.json</code>)</strong>: Authoritative mapping of desktop files to WebGL2 / ES module equivalents with tracked SHA-256 hashes.
+- <strong>Sync CLI Tool (<code>scripts/sync_web.py</code>)</strong>:
+  - <code>--check</code>: Compares actual files against manifest hashes and transpiled sources; fails with exit code 1 if drift exists.
+  - <code>--apply</code>: Automatically transpiles desktop <code>#version 330 core</code> GLSL shaders to WebGL2 <code>#version 300 es</code> (<code>precision highp float;</code>).
+  - <code>--mark-synced &lt;target&gt;</code>: Updates recorded hashes for verified manual Kotlin-to-JS algorithm ports.
+- <strong>Continuous Integration</strong>: Gradle task <code>./gradlew checkWebSync</code> and JVM unit test <code>WebSyncTest.kt</code> guard against drift on every build.</p>
+<hr />
+<h2 id="6-relay-server-operations-serverserverjs">6. Relay Server Operations (<code>server/server.js</code>)</h2>
+<p>The relay server is a zero-dependency Node.js service using <code>ws</code>.</p>
+<h3 id="environment-variables">Environment Variables</h3>
+<ul>
+<li><code>LSD_PORT</code>: Port to listen on (default: <code>9004</code>).</li>
+<li><code>LSD_HOST</code>: Host interface to bind to (default: <code>0.0.0.0</code>).</li>
+<li><code>LSD_TOKEN</code>: Broadcaster authorization secret (default: <code>lsd25</code>).</li>
+</ul>
+<h3 id="cli-management">CLI Management</h3>
+<pre><code class="language-bash"># Run standalone
+./server/lsd_relay start
+
+# Or deploy via PM2
+cd server
+npm install
+pm2 start server.js --name lsd-relay
+pm2 save &amp;&amp; pm2 startup
+</code></pre>
+<h3 id="health-monitoring-endpoint">Health &amp; Monitoring Endpoint</h3>
+<p><code>GET /health</code> returns live telemetry JSON:</p>
+<pre><code class="language-json">{
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;viewers&quot;: 42,
+  &quot;broadcasterConnected&quot;: true,
+  &quot;uptime&quot;: 128450
+}
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

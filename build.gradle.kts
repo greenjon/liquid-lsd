@@ -128,6 +128,10 @@ val generateDocs = tasks.register("generateDocs") {
     inputs.files(fileTree("docs"), "mkdocs.yml")
     outputs.dir("src/main/resources/docs")
 
+    // Captured at configuration time — `project.projectDir` can't be read inside doLast under the
+    // configuration cache (Task.project is unavailable at execution time).
+    val docsOutputDir = layout.projectDirectory.dir("src/main/resources/docs").asFile
+
     // Gradle 9: exec is no longer available on Project; use providers.exec or ProcessBuilder directly.
     doLast {
         val hasMkdocs = try {
@@ -139,7 +143,7 @@ val generateDocs = tasks.register("generateDocs") {
         }
 
         if (hasMkdocs) {
-            val result = ProcessBuilder("mkdocs", "build", "-d", "${project.projectDir}/src/main/resources/docs")
+            val result = ProcessBuilder("mkdocs", "build", "-d", docsOutputDir.absolutePath)
                 .inheritIO()
                 .start()
                 .waitFor()

@@ -1,0 +1,1991 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../build_arm64_linux/">
+      
+      
+        <link rel="next" href="../unified_control_mapping/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>RFC: Modular Video Rack Proposal - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#proposal-modular-video-rack-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RFC: Modular Video Rack Proposal
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-executive-summary-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Executive Summary &amp; Vision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-completed-decisions-architectural-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Completed Decisions &amp; Architectural Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Completed Decisions &amp; Architectural Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-the-modular-faceplate-form-factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 The Modular Faceplate Form Factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-curated-controls-vs-background-automation-the-8020-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Curated Controls vs. Background Automation (The 80/20 Rule)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-macro-knobs-as-expressive-instruments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Macro Knobs as Expressive Instruments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-confidence-monitoring-on-every-unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Confidence Monitoring on Every Unit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-io-external-video-streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 I/O &amp; External Video Streaming
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-normalled-top-down-signal-flow-with-rear-patching-tab-flip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Normalled Top-Down Signal Flow with Rear Patching (Tab Flip)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-unit-granularity-one-rack-unit-per-deck-not-per-pipeline-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Unit Granularity: One Rack Unit Per Deck, Not Per Pipeline Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-open-questions-decisions-requiring-deep-thought" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Open Questions &amp; Decisions Requiring Deep Thought
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Open Questions &amp; Decisions Requiring Deep Thought">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#question-1-how-should-playlists-and-cueing-work-without-excessive-vertical-clutter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 1: How should Playlists and Cueing work without excessive vertical clutter?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Question 1: How should Playlists and Cueing work without excessive vertical clutter?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#evaluated-approaches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluated Approaches:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-2-transition-topologies-serial-vs-dual-bay-vs-patchable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 2: Transition Topologies (Serial vs. Dual-Bay vs. Patchable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-3-faceplate-designer-ux-file-format-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 3: Faceplate Designer UX &amp; File Format Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-4-gpu-resource-management-fbo-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 4: GPU Resource Management &amp; FBO Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-5-hardware-control-mapping-midi-osc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 5: Hardware Control Mapping (MIDI &amp; OSC)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-6-migration-coexistence-with-existing-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 6: Migration &amp; Coexistence with Existing Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-next-steps-recommended-milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Next Steps &amp; Recommended Milestones
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-executive-summary-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Executive Summary &amp; Vision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-completed-decisions-architectural-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Completed Decisions &amp; Architectural Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Completed Decisions &amp; Architectural Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-the-modular-faceplate-form-factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 The Modular Faceplate Form Factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-curated-controls-vs-background-automation-the-8020-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Curated Controls vs. Background Automation (The 80/20 Rule)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-macro-knobs-as-expressive-instruments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Macro Knobs as Expressive Instruments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-confidence-monitoring-on-every-unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Confidence Monitoring on Every Unit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-io-external-video-streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 I/O &amp; External Video Streaming
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-normalled-top-down-signal-flow-with-rear-patching-tab-flip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Normalled Top-Down Signal Flow with Rear Patching (Tab Flip)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-unit-granularity-one-rack-unit-per-deck-not-per-pipeline-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Unit Granularity: One Rack Unit Per Deck, Not Per Pipeline Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-open-questions-decisions-requiring-deep-thought" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Open Questions &amp; Decisions Requiring Deep Thought
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Open Questions &amp; Decisions Requiring Deep Thought">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#question-1-how-should-playlists-and-cueing-work-without-excessive-vertical-clutter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 1: How should Playlists and Cueing work without excessive vertical clutter?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Question 1: How should Playlists and Cueing work without excessive vertical clutter?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#evaluated-approaches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluated Approaches:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-2-transition-topologies-serial-vs-dual-bay-vs-patchable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 2: Transition Topologies (Serial vs. Dual-Bay vs. Patchable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-3-faceplate-designer-ux-file-format-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 3: Faceplate Designer UX &amp; File Format Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-4-gpu-resource-management-fbo-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 4: GPU Resource Management &amp; FBO Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-5-hardware-control-mapping-midi-osc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 5: Hardware Control Mapping (MIDI &amp; OSC)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-6-migration-coexistence-with-existing-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 6: Migration &amp; Coexistence with Existing Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-next-steps-recommended-milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Next Steps &amp; Recommended Milestones
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="proposal-modular-video-rack-architecture">Proposal: Modular Video Rack Architecture</h1>
+<p><strong>Status</strong>: Core Complete (Phases 5-9 implemented — see §4). All 6 Open Questions in §3 decided (2026-09-16); <strong>Phase 9</strong> (implementing those decisions) shipped the same day (2026-09-16) — see §4 for what landed and what was deliberately deferred.<br />
+<strong>Target Area</strong>: <code>ui/</code>, <code>rendering/</code>, <code>parameters/</code>, <code>presets/</code>, <code>io/</code><br />
+<strong>Authors</strong>: GJ &amp; Antigravity  </p>
+<hr />
+<h2 id="1-executive-summary-vision">1. Executive Summary &amp; Vision</h2>
+<p>Liquid LSD currently organizes visual generation into fixed decks (Deck A, Deck B, Deck PV) and a master mixer. While powerful, this structure enforces a fixed mental model and exposes long lists of uniform sliders during live performance.</p>
+<p>This proposal outlines a <strong>Modular Video Rack</strong> paradigm inspired by hardware racks (19-inch audio racks, Reason, Eurorack, and Ableton Device Racks), reimagined specifically for <strong>live visual synthesis and VJing</strong>:</p>
+<ul>
+<li><strong>Preset-as-Module</strong>: Each preset or generator/effect is housed inside a customizable rack unit with a standardized width and variable modular height (1U, 2U, 3U, etc.).</li>
+<li><strong>Curated Performance Faceplates</strong>: The performer designs a custom front panel for each preset, exposing <em>only</em> high-impact controls (knobs, sliders, toggles, and multi-parameter macro knobs) while leaving underlying automation and complex modulation running silently in the background.</li>
+<li><strong>Integrated Confidence Monitoring</strong>: Every unit features an embedded real-time preview monitor.</li>
+<li><strong>Dual-Faced Architecture (Reason-Style)</strong>: The front panel provides a clean, tactile live performance surface. Pressing <code>Tab</code> flips the rack around to expose the rear panel with patch jacks (Video In, Video Out, Mask In, CV In) and virtual patch cables.</li>
+<li><strong>Normalled Signal Flow</strong>: By default, signals cascade top-to-bottom without requiring manual cabling, preserving zero-friction simplicity for standard chains.</li>
+</ul>
+<hr />
+<h2 id="2-completed-decisions-architectural-principles">2. Completed Decisions &amp; Architectural Principles</h2>
+<h3 id="21-the-modular-faceplate-form-factor">2.1 The Modular Faceplate Form Factor</h3>
+<ul>
+<li><strong>Standardized Width, Modular Height</strong>: Units conform to a standard width (representing a 19" rack bay) with height quantized to standard modular units ($1\text{U}, 2\text{U}, 3\text{U}, \dots$) or continuous heights.</li>
+<li><strong>Grid-Based Slot Layout</strong>: Rather than error-prone freeform pixel coordinates, faceplates use a column/row slot grid (e.g., 6 or 8 columns wide). Controls (knobs, faders, meters, monitors) snap into place, ensuring a cohesive, professional aesthetic.</li>
+<li><strong>Unit Classification</strong>:</li>
+<li><strong>Generator Units (Synths)</strong>: No video input. Generate visuals from shader logic, math, and audio CV $\to$ Video Out.</li>
+<li><strong>Processor Units (FX)</strong>: Accept Video In $\to$ apply feedback, distortion, color grading, displacement $\to$ Video Out.</li>
+<li><strong>Transition / Mixer Units</strong>: Accept multiple Video Inputs $\to$ crossfade / blend $\to$ Master Out.</li>
+<li><strong>Utility Units</strong>: Splitters, clock conductors, and external I/O bridges.</li>
+</ul>
+<h3 id="22-curated-controls-vs-background-automation-the-8020-rule">2.2 Curated Controls vs. Background Automation (The 80/20 Rule)</h3>
+<ul>
+<li><strong>Performance Surface Curation</strong>: Only performance-critical parameters are given physical knobs or buttons on the faceplate.</li>
+<li><strong>Hardcoded / Autonomous Background Modulation</strong>: Parameters can have active LFOs, audio-reactive envelopes, or fixed offsets that run continuously without cluttering the UI. These are configured in an "under-the-hood" inspector or edit mode, leaving the live faceplate clean and focused.</li>
+</ul>
+<h3 id="23-macro-knobs-as-expressive-instruments">2.3 Macro Knobs as Expressive Instruments</h3>
+<ul>
+<li>Each rack unit owns its own local <code>MacroBank</code> (0-8 knobs, 0-4 switches) — the same data model and engine as the global Column 3 macro bank, just scoped to that unit's own parameters via a stable <code>unitInstanceId</code>. There is no separate, rack-specific macro system; this section only summarizes how that shared system applies to a unit's faceplate.</li>
+<li>For the complete data model (<code>MacroControl</code>, <code>MacroBinding</code>, curve types, evaluation pipeline) and the instance-scoping mechanism, see <a href="../preset_management/"><code>docs/developer/preset_management.md</code></a> §8 and <a href="../../user_guide/macros_and_rack/"><code>docs/user_guide/macros_and_rack.md</code></a>.</li>
+<li>Each target parameter binding includes:</li>
+<li>Minimum and Maximum travel bounds.</li>
+<li>Curve profile (Linear, Exponential, Logarithmic, S-Curve, or Step).</li>
+<li>Direction inversion (e.g., as Macro turns up, Zoom increases while Feedback Gain decreases).</li>
+<li><strong>v1 scope</strong>: curating a unit's macro bank means choosing which of its parameters occupy which knob/switch slot and in what order — not designing an arbitrary widget layout. See Open Question 3 below.</li>
+</ul>
+<h3 id="24-confidence-monitoring-on-every-unit">2.4 Confidence Monitoring on Every Unit</h3>
+<ul>
+<li>Each rack module includes an integrated mini-monitor rendering an offscreen FBO preview of that unit's immediate state.</li>
+<li>Gives the VJ immediate visual feedback before mixing or routing the signal downstream.</li>
+</ul>
+<h3 id="25-io-external-video-streaming">2.5 I/O &amp; External Video Streaming</h3>
+<ul>
+<li>Each unit can expose assignable input and output ports:</li>
+<li>Internal GPU texture passes.</li>
+<li>External low-latency zero-copy bridges: Spout 2 (Windows), Syphon (macOS), and PipeWire (Linux).</li>
+<li>Allows any rack unit to ingest an external camera or feed from Resolume/TouchDesigner, process it through Liquid LSD shaders, and transmit it back out.</li>
+</ul>
+<h3 id="26-normalled-top-down-signal-flow-with-rear-patching-tab-flip">2.6 Normalled Top-Down Signal Flow with Rear Patching (<code>Tab</code> Flip)</h3>
+<ul>
+<li><strong>Default State (Normalled Top-to-Bottom)</strong>: Dropping units into a vertical stack automatically wires Unit $N$ Output into Unit $N+1$ Input.</li>
+<li><strong>Rear Panel (<code>Tab</code> Flip)</strong>:</li>
+<li>Pressing <code>Tab</code> spins the rack 180° to display the rear chassis.</li>
+<li>Rear jacks include: <code>Video In</code>, <code>Video Out</code>, <code>Mask / Sidechain In</code>, and <code>CV Modulation In</code>.</li>
+<li>Dragging a patch cable overrides the normalled connection, enabling split routing, external I/O routing, and intentional video feedback loops.</li>
+</ul>
+<h3 id="27-unit-granularity-one-rack-unit-per-deck-not-per-pipeline-stage">2.7 Unit Granularity: One Rack Unit Per Deck, Not Per Pipeline Stage</h3>
+<p><strong>Decision (2026-09-16)</strong>: A preset's full chain — generator + all 4 FX slots (<code>Deck.FX_SLOT_COUNT = 4</code>; the "dual FX slots" phrasing in earlier roadmap text is stale, the engine has supported 4 since before this proposal) — is represented as <strong>one rack unit per deck</strong>, not one unit per pipeline stage.</p>
+<ul>
+<li><strong>Why not one unit per stage</strong>: the initial Phase 5/6 implementation (<code>RackManager.populateFromSession</code>) creates one <code>DeckGeneratorUnit</code> plus one <code>ISFProcessorUnit</code> <em>per occupied FX slot</em> — up to 5 units for a single deck using all 4 FX slots. That's real clutter, and it doesn't buy real modularity today: patch cables between these units are cosmetic only (see the "Known issues" entry in <code>ROADMAP.md</code> Milestone 6 / <code>DECISIONS.md</code>), since the underlying render path is still one fixed <code>Deck.cleanFBO -&gt; fxFBOs[0..3] -&gt; output</code> chain, not an independently-repatchable graph. Splitting into per-stage units pays a UI-complexity cost without a matching capability gain.</li>
+<li><strong>Why merging doesn't cost macro-knob headroom</strong>: <code>MacroBank</code> is a fixed-shape container (8 knobs / 4 switches) <em>per unit instance</em>, regardless of <code>heightU</code>. Splitting a deck into 5 units yields up to 40 knobs of raw capacity across 5 separate banks; merging into 1 unit caps it at 8. That tradeoff was considered and accepted deliberately — 8 knobs freely assignable across generator + all 4 FX is judged sufficient for v1 (see Question 2 below), and the option to grow <code>MacroBank</code> beyond 8 later remains open if that judgment turns out wrong in practice.</li>
+<li><strong>The merged unit's parameter namespace</strong>: <code>getNamedParameters()</code> flattens the generator's own parameters together with each occupied FX slot's parameters, disambiguated with a slot prefix (e.g. <code>"FX1/dryWet"</code>, <code>"FX2/dryWet"</code>, <code>"dimensionWarp"</code> for the generator's own, unprefixed). Any of the unit's 8 knobs can be curated against <em>any</em> entry in that combined map — including one knob driving both a generator parameter and an FX parameter simultaneously, since <code>MacroControl.bindings</code> already supports up to <code>MAX_BINDINGS_PER_CONTROL = 4</code> independent target bindings per knob. <strong>No <code>MacroEngine</code>/<code>MacroBinding</code> changes are required for this</strong> — <code>RackUnitMacroCuration.kt</code>'s existing curation drawer already works unit-locally off <code>getNamedParameters()</code>, so it needs no changes either; only the flattened parameter map on the merged unit type is new.</li>
+<li><strong>Fallout — <code>FeedbackProcessorUnit</code> is removed, not fixed</strong>: per the existing known issue, this unit's knobs are bound to legacy <code>Deck.fbGain</code>/<code>fbDecay</code>/etc. fields no shader reads anymore. Feedback already appears correctly as a normal FX-slot filter (<code>default_filters/feedback.fs</code>) once merged into the deck's flattened parameter namespace, so the standalone unit is now fully redundant rather than fixable-in-place. It is deleted, not rewired.</li>
+<li><strong>Rear-panel implication</strong>: the merged unit exposes one <code>Video In</code>/<code>Video Out</code> pair (like today's <code>PROCESSOR</code> ports) rather than separate jacks per internal stage. A pre-FX "send" tap (output before the internal FX chain) is a reasonable future rear-panel jack on this unit, but depends on the same real-signal-routing work as Question 2's Models B/C — not scoped for the initial merge.</li>
+</ul>
+<hr />
+<h2 id="3-open-questions-decisions-requiring-deep-thought">3. Open Questions &amp; Decisions Requiring Deep Thought</h2>
+<blockquote>
+<p>All 6 questions below were <strong>decided on 2026-09-16</strong> (see the "Decision" block under each). The section is kept in its original open-question form — evaluated options included — as a record of the reasoning; nothing here is still open. Implementation is tracked as <strong>Phase 9</strong> in §4.</p>
+</blockquote>
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│                             MODULAR VIDEO RACK                             │
+├─────────────────────────────────────┬──────────────────────────────────────┤
+│ COMPLETED DECISIONS (§2)            │ DECIDED QUESTIONS (§3, 2026-09-16)   │
+│ • Standard 19&quot; width (1U/2U/3U)     │ 1. Playlist &amp; Setlist -&gt; 3U Queue    │
+│ • Curated UI vs background mod      │    Master unit                       │
+│ • Multi-destination Macro knobs     │ 2. Transition -&gt; 3-column A/B/BG +   │
+│ • Unit mini-monitors (FBO preview)  │    dedicated Master unit             │
+│ • Normalled top-down signal flow    │ 3. Faceplate Designer -&gt; deferred,   │
+│ • Tab flip for rear patch cables    │    fixed template stays              │
+│ • One unit per deck, not per stage  │ 4. GPU/FBO -&gt; cull+downscale now,    │
+│   (§2.7)                            │    pooling only if measured need     │
+│                                      │ 5. Hardware mapping -&gt; Fixed Global  │
+│                                      │    only, no Follow-Focus             │
+│                                      │ 6. Migration -&gt; coexist permanently, │
+│                                      │    no auto-generated faceplates      │
+└─────────────────────────────────────┴──────────────────────────────────────┘
+</code></pre>
+<h3 id="question-1-how-should-playlists-and-cueing-work-without-excessive-vertical-clutter">Question 1: How should Playlists and Cueing work without excessive vertical clutter?</h3>
+<p>If a show involves 30 presets, stacking 30 units vertically—with 29 bypassed—creates excessive vertical scrolling and high cognitive load.</p>
+<h4 id="evaluated-approaches">Evaluated Approaches:</h4>
+<ul>
+<li><strong>Option 1A: Accordion Spines (Collapsible 0.5U Blanking Panels)</strong>  </li>
+<li>The active preset expands to full $1\text{U}$–$3\text{U}$ controls.</li>
+<li>The "On-Deck" (Next) preset sits below in a compact $1\text{U}$ state with a preview pip and load button.</li>
+<li>All remaining queued presets collapse into ultra-thin $\approx 20\text{px}$ rack spines (showing only index, title, and BPM).</li>
+<li><em>Advantage</em>: Preserves the physical rack metaphor while keeping vertical space minimal.</li>
+<li><strong>Option 1B: Fixed Chassis with Cartridge / Hot-Swap Bays (500-Series Style)</strong>  </li>
+<li>The rack has fixed functional slots (e.g. Generator 1, FX 1, FX 2, Master).</li>
+<li>The Generator unit contains a "Cartridge Loader" header that cycles presets from a playlist.</li>
+<li>Advancing the playlist hot-swaps or morphs the faceplate and internal shader state in-place.</li>
+<li><em>Advantage</em>: Zero vertical expansion; constant screen footprint.</li>
+<li><strong>Option 1C: Two-Deck Staging Caddy (DJ Cue Model)</strong>  </li>
+<li>Dedicated "Live" rack slot and "Staged / Next" rack slot alongside a collapsible Setlist drawer.</li>
+<li>Crossfading automatically promotes the staged unit to live and pulls the next item from the queue into the staged slot.</li>
+<li><em>Advantage</em>: Foolproof live operation; matches existing DJ/VJ instincts.</li>
+<li><strong>Option 1D: Master "Conductor" Sequencer Unit</strong>  </li>
+<li>A 1U rack unit containing a horizontal filmstrip timeline of upcoming presets.</li>
+<li>Supports automatic beat-synced triggers (e.g. advance every 32 bars) or manual advance with customizable morph/dissolve durations.</li>
+</ul>
+<p><strong>Decision (2026-09-16)</strong>: None of 1A-1D as originally scoped is sufficient on its own — the actual requirement is that Rack mode give the performer the <em>same</em> queue control they already have in Classic mode (<code>PlayQueueManager</code>, the background queue, and preset/transition staging), not a rack-native reinvention of it. A single-preset "cartridge loader" (1B) or a lone conductor timeline (1D) only covers one of those three existing queues.</p>
+<ul>
+<li><strong>Chosen shape</strong>: a dedicated <strong>3U "Queue &amp; Staging" master unit</strong>, always present in the rack (not per-deck), with three stacked 1U sections:</li>
+<li><strong>1U — Play Queue</strong>: mirrors the Classic-mode Deck A/B play queue (current, on-deck, upcoming), with advance/promote controls.</li>
+<li><strong>1U — Background Queue</strong>: mirrors the Classic-mode BG queue, independent advance/promote.</li>
+<li><strong>1U — Transition Staging</strong>: exposes whatever the chosen Question 2 topology needs staged before it goes live (e.g. next preset armed for the Master unit's crossfader).</li>
+<li>This reuses the existing <code>PlayQueueManager</code>/BG queue engines directly (no new queue data model) — it's a rack-native <em>view</em> onto state that already exists and is already fully controllable from Classic mode, per the coexistence decision in Question 6.</li>
+<li>Options 1A/1C's "collapse the rest of a 30-preset show into thin spines" idea is worth revisiting as a <em>display density</em> improvement inside this unit's Play Queue section later, but isn't required for v1 and shouldn't block it.</li>
+</ul>
+<hr />
+<h3 id="question-2-transition-topologies-serial-vs-dual-bay-vs-patchable">Question 2: Transition Topologies (Serial vs. Dual-Bay vs. Patchable)</h3>
+<p>How should crossfading and transitions between two different visual streams be structured?</p>
+<ul>
+<li><strong>Model A: Dual-Bay Racks (Deck A Rack + Deck B Rack + Master Mixer Strip)</strong>  </li>
+<li>Matches Liquid LSD's existing underlying dual-deck rendering engine.</li>
+<li>Column A houses Generator A + FX; Column B houses Generator B + FX.</li>
+<li>A center or bottom mixer module handles crossfading, wipe patterns, and master post-processing.</li>
+<li><strong>Model B: In-Rack Transition Units (2-Input Module)</strong>  </li>
+<li>A 2U transition module placed anywhere in a single stack.</li>
+<li><code>Input A</code> is normalled from above; <code>Input B</code> is patched from another unit or external Spout feed.</li>
+<li>Contains a large crossfader, blend modes (Additive, Screen, Luma Key, Glitch Wipe), and curve shaping.</li>
+<li><strong>Model C: Splitter / Branch Units (Parallel Chains)</strong>  </li>
+<li>A unit splits one video stream into two parallel sub-chains (e.g., clean vs. heavy feedback) and recombines them with a wet/dry crossfader before sending downstream.</li>
+</ul>
+<p><strong>Decision (2026-09-16)</strong>: <strong>Model A</strong>, extended to three columns and paired with the §2.7 unit-merge decision.</p>
+<ul>
+<li><strong>Three columns, one merged unit each</strong>: <strong>Deck A</strong>, <strong>Deck B</strong>, and <strong>Deck BG</strong> each get exactly one rack unit (generator + its up to 4 FX slots, flattened per §2.7) — not a column of stacked generator/FX units. This is the direct reason the §2.7 merge decision exists: without it, "3 columns" would mean up to 15 stacked units (5 per deck × 3 decks) instead of 3.</li>
+<li><strong>One dedicated Master unit</strong>, separate from the three deck columns, owning the crossfader, blend mode, BG compositing, and master post-mix FX (bloom, master alpha) — i.e. <code>MixerTransitionUnit</code>'s current scope, kept as its own unit rather than folded into a deck column, since it isn't "owned" by any single deck.</li>
+<li><strong>Deck PV is intentionally excluded</strong> from this v1 layout — it's an audition/preview deck in Classic mode, not part of the live composite, and doesn't obviously map onto a rack column. Left as a follow-up question if a concrete use case shows up (e.g. a "preview" micro-monitor on the Master unit instead of its own column).</li>
+<li><strong>Models B and C (true patchable transitions/splitters) are deferred</strong>, not rejected — they require the same real-signal-routing capability as the pre-FX send tap from §2.7 and the "patch cables actually reroute pixels" known issue. Once that foundational work happens, Model B becomes a natural <em>additional</em> transition unit type alongside the fixed Master unit, not a replacement for it.</li>
+</ul>
+<hr />
+<h3 id="question-3-faceplate-designer-ux-file-format-schema">Question 3: Faceplate Designer UX &amp; File Format Schema</h3>
+<p>How does the user construct their custom faceplate, and how is it stored?</p>
+<p><strong>Decision (2026-09-16, reaffirmed)</strong>: no freeform widget-placement designer for now — confirmed after weighing it against the §2.7 unit-merge decision, since a merged deck unit's flattened generator+FX parameter namespace makes the existing fixed 8-knob curation drawer (unmodified) sufficient rather than a reason to need more UI. A unit's macro surface is curated, not designed — the performer picks which of the unit's parameters occupy which of its (up to 8) knob slots and (up to 4) switch slots and in what order, reusing the same fixed 2×4 knob grid / 4-switch row as the Column 3 global bank (see §2.3 and the macro proposal §6). Plain (non-macro) widgets — a slider or button bound 1:1 to a single parameter, a mini-monitor — still need <em>some</em> placement mechanism; the simplest v1 answer is a fixed template per unit type (e.g. macro grid on top, monitor below) rather than user-arranged slots. The remaining ideas below (freeform grid editing, full widget palette) stay in the backlog as the <strong>Full Faceplate Designer</strong>, gated behind actual demand once people are hitting the fixed-template's limits in practice — not built speculatively.</p>
+<ul>
+<li>
+<p><strong>v1 Storage Schema</strong> (fixed macro slot curation + templated plain widgets):
+    <code>json
+    {
+      "presetName": "Cyber Gyroid",
+      "generator": "gyroid_core",
+      "faceplate": {
+        "heightU": 2,
+        "unitInstanceId": "a1b2c3d4",
+        "macroBank": {
+          "knobs": [
+            { "label": "WARP", "bindings": [
+              { "parameterId": "dimensionWarp", "minVal": 0.0, "maxVal": 2.5, "curve": "EXPONENTIAL" },
+              { "parameterId": "feedbackZoom", "minVal": 1.0, "maxVal": 0.85, "curve": "LINEAR" }
+            ]},
+            null, null, null, null, null, null, null
+          ],
+          "switches": [null, null, null, null]
+        },
+        "plainControls": [
+          { "type": "slider", "label": "COLOR DECAY", "param": "decayRate" }
+        ]
+      }
+    }</code>
+  (<code>null</code> slots are simply unused knob/switch positions.)</p>
+</li>
+<li>
+<p><strong>Backlog — Full Faceplate Designer</strong> (deferred, not part of v1):</p>
+</li>
+<li>A dedicated "Edit Mode" toggle (unlock/wrench icon on the rack ears): unlocked allows adding widgets and dragging to arbitrary grid slots; locked is clean performance mode.</li>
+<li>Full widget palette beyond the macro grid: vintage rotary pots (continuous/stepped), vertical/horizontal sliders, XY touch pads, oscilloscope displays, arbitrarily placed via <code>slot: [col, row]</code> / <code>colSpan</code> / <code>rowSpan</code> grid coordinates.</li>
+<li>Revisit only if the fixed-template v1 model proves too limiting in practice.</li>
+</ul>
+<hr />
+<h3 id="question-4-gpu-resource-management-fbo-pipeline">Question 4: GPU Resource Management &amp; FBO Pipeline</h3>
+<p>Running $N$ simultaneous rack modules introduces GPU and framebuffer overhead.</p>
+<ul>
+<li><strong>FBO Pool Architecture</strong>:</li>
+<li>Avoid allocating dedicated $4\text{K}$ ping-pong FBOs for every inactive or bypassed unit.</li>
+<li>Implement a pooled intermediate FBO allocator that recycles buffers as frames flow down the chain.</li>
+<li><strong>Smart Culling / Bypass</strong>:</li>
+<li>If a unit's output is not routed to a visible monitor or active output, pause its GL draw calls entirely.</li>
+<li>If a unit is bypassed, zero shader passes should be executed (passthrough texture pointer handoff).</li>
+<li><strong>Resolution Scaling</strong>:</li>
+<li>Mini-monitors on the faceplate should render downscaled mipmaps or a shared preview resolution ($240 \times 135$) to eliminate full-res overhead during editing.</li>
+</ul>
+<p><strong>Decision (2026-09-16)</strong>: don't front-load full FBO pooling. With the §2.7 merge, the base rack is now only ~4-5 units (3 deck columns + Master + Queue unit) instead of up to 16, which substantially reduces how urgent this is. Do now, cheaply, with no design risk:
+* <strong>Smart Culling</strong>: skip GL draw calls entirely for bypassed or off-screen units — a correctness/perf win regardless of scale.
+* <strong>Confidence-monitor downscaling</strong>: render mini-monitors at the shared $240 \times 135$ preview resolution rather than full-res.
+* <strong>Instrument first</strong>: add an FBO-count / GPU-memory readout to the existing telemetry HUD (<code>PerformanceStats</code>, see <code>ARCHITECTURE.md</code>). Only build the pooled allocator if real sessions with many units actually show it's a bottleneck — not speculatively.</p>
+<hr />
+<h3 id="question-5-hardware-control-mapping-midi-osc">Question 5: Hardware Control Mapping (MIDI &amp; OSC)</h3>
+<p>How do physical hardware controllers (e.g., an 8-knob controller like a MIDI Fighter Twister or Akai Midimix) interact with a dynamic rack?</p>
+<ul>
+<li><strong>Follow-Focus / Active Unit Mapping</strong>:</li>
+<li>Knobs $1\dots8$ automatically map to whichever rack unit currently has focus.</li>
+<li>Clicking a unit (or using arrow keys) shifts the hardware control focus instantly.</li>
+<li><strong>Fixed Global Mapping</strong>:</li>
+<li>Specific knobs/faders can be locked to global elements (e.g. Master Crossfader, Master Strobe) regardless of which unit is selected.</li>
+<li><strong>Soft Takeover Integration</strong>:</li>
+<li>Leverage Liquid LSD's existing <code>MidiEngine</code> soft-takeover and rotary encoder relative modes to prevent value jumps when switching focus between units.</li>
+</ul>
+<p><strong>Decision (2026-09-16)</strong>: <strong>Fixed Global Mapping only</strong> for v1 — no Follow-Focus/Active Unit Mapping. Each rack unit already has its own independently learnable <code>MacroBank</code> (per §2.7, one per deck column plus Master and the Queue unit), so per-unit MIDI CC and OSC address mapping already works today via the existing Learn flows (<code>MidiMappingManager</code>, and now <code>OscMappingManager</code>/<code>OscLearnState</code> per the TouchOSC &amp; OSC milestone) — no new plumbing required. Follow-Focus is rejected as a v1 default: a hardware knob silently remapping to a different parameter when UI focus changes is a real live-performance risk (a knob jump mid-set is worse than a knob that's simply not mapped), and it would require new cross-rack "focus" state that doesn't exist. Revisit only if fixed per-unit mapping proves limiting after real use.</p>
+<hr />
+<h3 id="question-6-migration-coexistence-with-existing-architecture">Question 6: Migration &amp; Coexistence with Existing Architecture</h3>
+<ul>
+<li>How does the Modular Video Rack relate to Liquid LSD's current standard interface (Deck A, Deck B, Mixer, Parameters Panel)?</li>
+<li><strong>Option A: Dedicated "Rack Mode" View</strong>: A toggleable view workspace (e.g., <code>F4</code> or tab bar) alongside Classic Deck View.</li>
+<li><strong>Option B: Next-Generation Core Paradigm</strong>: The Modular Rack replaces the fixed Decks A/B over time as the primary way users interact with Liquid LSD.</li>
+<li><strong>Auto-Generating Faceplates for Legacy Presets</strong>:</li>
+<li>When loading an existing <code>.lsd</code> preset that lacks a <code>faceplate</code> block, the system automatically synthesizes a clean default 1U or 2U faceplate populated with the preset's primary modulators and a mini-monitor.</li>
+</ul>
+<p><strong>Decision (2026-09-16)</strong>: <strong>Option A, permanently</strong> — not a migration path, a permanent coexistence. Classic Deck View already shipped as the default alongside Rack mode via the <code>F4</code> <code>WorkspaceMode</code> toggle (<code>UITheme.WorkspaceMode.CLASSIC</code>/<code>RACK</code>); this decision formally rejects Option B. A single screen with access to every variable <em>and</em> full VJ ability is a capability Liquid LSD keeps, not a stepping stone to be replaced.</p>
+<p><strong>Auto-generating faceplates is explicitly rejected, not just deferred.</strong> Curating a macro bank is a creative act — deciding which handful of parameters out of dozens deserve one of a unit's 8 precious knob slots, in what order, with what range and curve, is exactly the judgment a script can't make. Auto-generating a plausible-looking faceplate would fill racks with unconsidered, low-value units — worse than no rack support at all for that preset. Until a performer has consciously curated a faceplate for a preset, that preset simply isn't usable in Rack mode; Classic mode remains fully available for it in the meantime. This keeps every unit in a rack a deliberate creative choice.</p>
+<hr />
+<h2 id="4-next-steps-recommended-milestones">4. Next Steps &amp; Recommended Milestones</h2>
+<p>These phases continue directly from Phases 1-4 of the Macro System (Data Model &amp; <code>MacroEngine</code>, Column 3 UI, Learn Mode, Serialization). This document does not define its own macro engine — see §2.3 and <a href="../../user_guide/macros_and_rack/"><code>docs/user_guide/macros_and_rack.md</code></a>.</p>
+<ul>
+<li><strong>[x] Phase 5: Rack Chassis &amp; Slot Layout System</strong>: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle), and normalled top-down texture routing. No custom faceplate designer yet (see Question 3). [Implemented]</li>
+<li><strong>[x] Phase 6: Per-Unit Macro Curation</strong>: Give each rack unit its own <code>MacroBank</code> scoped via <code>unitInstanceId</code> (macro proposal §6), and build the curation UI for picking which unit parameters occupy which of its knob/switch slots. Reuses the Column 3 engine and Learn Mode UX from Phases 1-3 verbatim — no new binding infrastructure. [Implemented]</li>
+<li><strong>[x] Phase 7: Embedded Confidence Micro-Monitors</strong>: Lightweight texture blits rendering downscaled offscreen FBO passes directly onto unit faceplates. [Implemented]</li>
+<li><strong>[x] Phase 8: Rear Panel &amp; Virtual Patch Cables (<code>Tab</code> Flip)</strong>: Dual-faced flipped rear chassis view (<code>Tab</code> shortcut) with catenary-sagging virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine. [Implemented]</li>
+<li><strong>[x] Phase 9: Unit Consolidation &amp; Rack Layout Finalization</strong> <em>(implements the §3 decisions above)</em> [Implemented 2026-09-16]:</li>
+<li>Replaced <code>DeckGeneratorUnit</code> + up to four <code>ISFProcessorUnit</code>s per deck with <strong>one new merged unit type per deck, <code>DeckRackUnit</code></strong> (§2.7), exposing a flattened <code>getNamedParameters()</code> map (generator params unprefixed, FX params prefixed <code>"FX1/…"</code>..<code>"FX4/…"</code>). <code>RackUnitMacroCuration.kt</code> needed no changes, confirming the §2.7 prediction. Gave it <code>GENERATOR</code>-type rear ports (<code>video_out</code>/<code>cv_in</code>, no <code>video_in</code>) since a deck column has no upstream unit in the 3-column layout.</li>
+<li>Deleted <code>FeedbackProcessorUnit</code> entirely, and <code>DeckGeneratorUnit</code>/<code>ISFProcessorUnit</code> once <code>RackManager.populateFromSession</code> no longer constructed them (all three had zero remaining construction sites) — including their now-dead <code>RackFaceplateGrid.kt</code> faceplate-drawing branches.</li>
+<li>Extended <code>RackManager.populateFromSession</code> to a third column for <strong>Deck BG</strong> (<code>mixer.deckBG</code>, already a first-class <code>Deck</code> — no new Deck plumbing needed), using <code>DeckRackUnit</code>. Deck PV excluded (§ Question 2). The "3 parallel columns vs. 1 serial pipeline" concern turned out to be a non-issue: every built-in unit's <code>process()</code> already ignores its <code>inputTexture</code> and reads its own pre-rendered Deck/Mixer state directly (per the Phase 5-8 correctness-pass doc comments), so the flat <code>units</code> list ordering doesn't corrupt anything — no column data structure was needed in <code>RackPipeline</code>.</li>
+<li>Built the <strong>3U Queue &amp; Staging master unit</strong> (<code>QueueStagingRackUnit</code>, § Question 1): 1U Play Queue / 1U BG Queue / 1U Transition Staging, each a condensed transport view (prev/play-pause/next + "now → next" text) wired directly to the existing <code>PlayQueueManager</code>/<code>BgQueueManager</code>/<code>TransitionQueueManager</code> singletons — no new queue data model, and deliberately <em>not</em> a re-implementation of the full drag-and-drop queue list UI (<code>QueueActionsPanel.kt</code> etc.), which doesn't fit a 1U row.</li>
+<li>Kept <code>MixerTransitionUnit</code> as its own <strong>Master unit</strong>, separate from the three deck columns (§ Question 2) — unchanged.</li>
+<li><strong>Smart culling</strong>: bypass/power-off skip was already fully implemented pre-Phase-9 (<code>RackPipeline.process()</code>). Off-screen culling was evaluated and <strong>deliberately not built</strong> — every current unit's <code>process()</code> is a cheap texture-ID read, not a real GPU draw call, so it has near-zero payoff today and would need real architectural risk (the pipeline resolves all units in one pass before the UI loop knows scroll position) for no measurable gain. Revisit once a real patchable transition/splitter unit (§ Question 2 Models B/C, deferred) does real per-unit GPU work.</li>
+<li><strong>Monitor downscaling</strong>: implemented using the existing <code>Renderer.rescale()</code> utility (already used elsewhere for output scaling, not new shader code) rather than the render-pipeline work originally scoped. Each unit lazily gets a 240×135 preview <code>FBO</code>, cached in <code>RackMicroMonitor</code> and released via <code>releaseUnit</code>/<code>releaseAll</code> hooks in <code>RackPanel.kt</code> (on unit removal and rack re-sync) to avoid leaking one FBO per unit lifetime.</li>
+<li><strong>Telemetry</strong>: <code>FBO.kt</code> now tracks live instance count and estimated byte size (format-aware: RGBA8/16F/32F), exposed via <code>PerformanceStats.fboCount</code>/<code>fboMemoryMB</code> and shown in the menu bar as <code>FBO: N (XMB)</code> — instrumentation in place before any pooled allocator is considered, per the Question 4 decision.</li>
+<li>No new hardware-mapping work needed (§ Question 5) — confirmed: MIDI/OSC Learn binds by opaque <code>MacroControl.id</code>, fully decoupled from parameter-name format, so it already works transparently with the new <code>"FX2/dryWet"</code>-style flattened keys.</li>
+<li>No auto-faceplate-generation work (§ Question 6 — explicitly rejected, nothing built).</li>
+<li><strong>Found and fixed during implementation</strong>: <code>DeckGeneratorUnit</code>/<code>MixerTransitionUnit</code>'s (now <code>DeckRackUnit</code>/<code>MixerTransitionUnit</code>'s) <code>update()</code> overrides were double-ticking <code>Deck</code>/<code>Mixer</code> state (FX filter history, <code>BgQueueManager</code>'s dip-to-black timer) whenever Rack mode was visible, since <code>Main.kt</code>'s main loop already ticks them unconditionally every frame regardless of workspace mode. Both now inherit <code>BaseRackUnit</code>'s no-op <code>update()</code>.</li>
+<li><strong>Not independently visually verified</strong>: the monitor-downscaling change does a real GL viewport-changing blit inside the per-unit faceplate draw call. Confirmed via <code>jstack</code> across several live app launches that the render loop runs cleanly with no new errors, and confirmed by reading <code>Main.kt</code> that this codebase already relies on ImGui's own backend resetting the GL viewport before drawing (an existing code path already leaves a partial viewport active before the UI render phase) — but the actual on-screen rack monitors were not screenshotted (the test session turned out to be native Wayland, and available tooling couldn't reach it). Worth a manual look next time the app is run interactively.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

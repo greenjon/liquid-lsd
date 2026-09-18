@@ -386,26 +386,9 @@ object PropertiesPanel {
 
                     ImGui.spacing()
 
-                    // Macro Learn indicator for "depth" — the one modulator property that still needs
-                    // a bespoke chip because it lives inside the combined dcOffset/depth "Modulation
-                    // Range" dual slider (drawMinMaxRangeSlider) rather than its own label-clickable
-                    // row. Every other property (subdivision, phase, morph, hold, slope, attack/decay,
-                    // and all LFO2 mod* fields) is now bound by clicking its slider's name label directly.
                     val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
                     if (isMacroLearning) {
-                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "${Icons.REFRESH} Click a slider's name to bind it, or:")
-                        ImGui.sameLine()
-                        if (ImGui.smallButton("+depth##bind_${cell.paramKey}_${idx}_depth")) {
-                            llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                                bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
-                                targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
-                                parameterId = cell.paramKey,
-                                modulatorIndex = globalModIndex,
-                                propertyName = "depth",
-                                minVal = 0f,
-                                maxVal = 2f
-                            )
-                        }
+                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "${Icons.REFRESH} Click a slider's name to bind it.")
                         ImGui.spacing()
                     }
 

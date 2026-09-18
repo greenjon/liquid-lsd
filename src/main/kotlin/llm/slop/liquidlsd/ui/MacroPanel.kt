@@ -32,7 +32,7 @@ class MacroPanel(
         ImGui.separator()
         ImGui.spacing()
 
-        drawBindingInspectorDrawer(session, bank)
+        drawBindingInspectorDrawer(session, bank, mixer)
 
         ImGui.spacing()
         ImGui.separator()
@@ -145,7 +145,7 @@ class MacroPanel(
 
     // -- Binding Inspector Accordion Drawer --------------------------------------------------------
 
-    private fun drawBindingInspectorDrawer(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
+    private fun drawBindingInspectorDrawer(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, mixer: Mixer) {
         val selectedControl = bank.knobs.find { it.id == llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId }
             ?: bank.switches.find { it.id == llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId }
             ?: bank.knobs.firstOrNull()
@@ -158,7 +158,7 @@ class MacroPanel(
             val availH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
             val maxInspectorH = (availH * 0.45f).coerceIn(120f, 220f)
             if (ImGui.beginChild("##macro_inspector_scroll", 0f, maxInspectorH, true)) {
-                MacroBindingInspector.draw(session, bank, selectedControl, parametersState)
+                MacroBindingInspector.draw(session, bank, selectedControl, parametersState, mixer)
             }
             ImGui.endChild()
         }

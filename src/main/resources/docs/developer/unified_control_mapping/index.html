@@ -1,0 +1,2468 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../modular_video_rack_proposal/">
+      
+      
+        <link rel="next" href="../screen_capture_and_ui_iteration_proposal/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Unified Control Mapping Architecture - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#unified-control-mapping-architecture-midi-keyboard-mouse-cv" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Unified Control Mapping Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-executive-summary-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Executive Summary &amp; Vision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architectural-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architectural Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Architectural Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-decoupled-action-command-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Decoupled Action / Command Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-input-handling-behaviors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Input Handling Behaviors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-comprehensive-inventory-of-user-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Comprehensive Inventory of User Actions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Comprehensive Inventory of User Actions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-global-transport-projects-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Global Transport, Projects &amp; Application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-mixer-crossfader-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Mixer &amp; Crossfader Section
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-deck-controls-independent-for-deck_a-and-deck_b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Deck Controls (Independent for deck_a and deck_b)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-mandala-shader-synthesis-parameters-per-deck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Mandala &amp; Shader Synthesis Parameters (Per Deck)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-parameters-performance-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Parameters &amp; Performance Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-library-asset-browser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Library &amp; Asset Browser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-audio-engine-clock-bpm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 Audio Engine, Clock &amp; BPM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38-ui-workspace-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 UI &amp; Workspace Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-hardware-controller-user-mapping-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Hardware Controller &amp; User Mapping Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Hardware Controller &amp; User Mapping Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-global-mapping-manager-table-gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Global Mapping Manager &amp; Table GUI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-interactive-learn-overlay-context-menus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Interactive "Learn" Overlay &amp; Context Menus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-hardware-controller-preset-files-json-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Hardware Controller Preset Files (JSON / YAML)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-implementation-phasing-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Implementation Phasing Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-executive-summary-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Executive Summary &amp; Vision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architectural-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architectural Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Architectural Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-decoupled-action-command-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Decoupled Action / Command Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-input-handling-behaviors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Input Handling Behaviors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-comprehensive-inventory-of-user-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Comprehensive Inventory of User Actions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Comprehensive Inventory of User Actions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-global-transport-projects-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Global Transport, Projects &amp; Application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-mixer-crossfader-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Mixer &amp; Crossfader Section
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-deck-controls-independent-for-deck_a-and-deck_b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Deck Controls (Independent for deck_a and deck_b)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-mandala-shader-synthesis-parameters-per-deck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Mandala &amp; Shader Synthesis Parameters (Per Deck)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-parameters-performance-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Parameters &amp; Performance Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-library-asset-browser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Library &amp; Asset Browser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-audio-engine-clock-bpm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 Audio Engine, Clock &amp; BPM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38-ui-workspace-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 UI &amp; Workspace Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-hardware-controller-user-mapping-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Hardware Controller &amp; User Mapping Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Hardware Controller &amp; User Mapping Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-global-mapping-manager-table-gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Global Mapping Manager &amp; Table GUI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-interactive-learn-overlay-context-menus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Interactive "Learn" Overlay &amp; Context Menus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-hardware-controller-preset-files-json-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Hardware Controller Preset Files (JSON / YAML)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-implementation-phasing-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Implementation Phasing Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="unified-control-mapping-architecture-midi-keyboard-mouse-cv">Unified Control Mapping Architecture (MIDI / Keyboard / Mouse / CV)</h1>
+<blockquote>
+<p><strong>Status</strong>: Architectural Brainstorm &amp; Design Specification (Roadmap)<br />
+<strong>Inspiration</strong>: <a href="https://mixxx.org/">Mixxx DJ Software</a> Controller &amp; Keyboard Mapping Architecture</p>
+</blockquote>
+<hr />
+<h2 id="1-executive-summary-vision">1. Executive Summary &amp; Vision</h2>
+<p>Liquid LSD is designed for high-energy, real-time live visual performance (VJing). While the existing application supports mouse manipulation, a subset of MIDI CC parameters, and CV modulation for select controls (like crossfading and play queue stepping), the long-term goal is <strong>full control parity across all input modalities</strong>:</p>
+<ol>
+<li><strong>Hardware MIDI Controllers</strong> (Faders, Knobs, Endless Encoders, Drum/Grid Pads, Pitch Wheels).</li>
+<li><strong>Computer Keyboard</strong> (Standard QWERTY keys, Modifiers: <code>Ctrl</code>, <code>Shift</code>, <code>Alt</code>/<code>Option</code>, <code>Meta</code>).</li>
+<li><strong>Control Voltage (CV) / Audio Modulation</strong> (LFOs, Audio Envelopes, JACK Audio/CV ports).</li>
+<li><strong>Mouse &amp; Touchpad</strong> (GUI clicks, drags, context menus).</li>
+</ol>
+<p>Any action that can be performed via a mouse click or menu selection should be exposable as a bindable <strong>Command / Action Object</strong> that can be assigned to keyboard shortcuts, MIDI controls (via MIDI Learn or config profiles), CV modulation, or combined macro triggers.</p>
+<hr />
+<h2 id="2-architectural-model">2. Architectural Model</h2>
+<pre><code class="language-mermaid">graph TD
+    subgraph Input Sources
+        KB[Keyboard Engine&lt;br/&gt;Keys + Modifiers Ctrl/Shift/Alt]
+        MIDI[MIDI Engine&lt;br/&gt;CC, Notes, Encoders + MIDI Learn]
+        CV[CV Engine&lt;br/&gt;JACK/Audio Control Voltages]
+        Mouse[GUI / Mouse Clicks&lt;br/&gt;Menus, Buttons, Sliders]
+    end
+
+    subgraph Command / Action Registry
+        Reg[Unified Command &amp; Parameter Registry&lt;br/&gt;e.g. 'deck_a.randomize', 'mixer.crossfade', 'library.load_deck_b']
+    end
+
+    subgraph Target Engines
+        Mixer[Mixer &amp; Crossfader]
+        DeckA[Deck A Engine]
+        DeckB[Deck B Engine]
+        Grid[Parameters Panel]
+        Lib[Library &amp; Playlists]
+        Audio[Audio / Clock / JACK]
+        UI[UI / Layout / Modals]
+    end
+
+    KB --&gt; Reg
+    MIDI --&gt; Reg
+    CV --&gt; Reg
+    Mouse --&gt; Reg
+
+    Reg --&gt; Mixer
+    Reg --&gt; DeckA
+    Reg --&gt; DeckB
+    Reg --&gt; Grid
+    Reg --&gt; Lib
+    Reg --&gt; Audio
+    Reg --&gt; UI
+</code></pre>
+<h3 id="21-decoupled-action-command-registry">2.1 Decoupled Action / Command Registry</h3>
+<p>Rather than hardcoding keyboard handlers or mouse click callbacks inside ImGui rendering passes:
+- Every action is registered with a unique path identifier (e.g. <code>[DeckA],randomize</code>, <code>[Mixer],crossfade</code>, <code>[Library],navigate_down</code>, <code>[Grid],trigger_cell_a</code>).
+- Actions define their input characteristics:
+  - <strong>Trigger / Momentary</strong>: Fires once on press, or stays active while held (e.g. stutter cut, blackout).
+  - <strong>Continuous / Scalar</strong>: Accepts a normalized range $[0.0, 1.0]$ with optional custom scaling.
+  - <strong>Stepped / Relative</strong>: Accepts relative delta ticks (e.g. $+1$ / $-1$ from rotary encoders or arrow keys).
+  - <strong>Toggle</strong>: Flips boolean state on press.</p>
+<h3 id="22-input-handling-behaviors">2.2 Input Handling Behaviors</h3>
+<ul>
+<li><strong>Stutter / Cut Mode (Momentary Gate)</strong>: Pressing a key/pad instantly slams a parameter (e.g. Crossfader to Deck A, or Master Blackout); releasing the key restores the previous state.</li>
+<li><strong>Nudge / Step Mode</strong>: Pressing a key increments or decrements a continuous value by a configurable delta (e.g. BPM $\pm 0.1$, Rotation Speed $\pm 5\%$).</li>
+<li><strong>Relative Encoders (Endless Knobs)</strong>: Support for 2's complement and binary offset modes used on DJ hardware for smooth library scrolling and parameter tweaking without value jumps.</li>
+<li><strong>Hardware Feedback (MIDI Out / LED Matrix)</strong>: Outputting state back to hardware (e.g. lighting Launchpad grid pads to match preset cell colors, flashing beat sync LEDs).</li>
+</ul>
+<hr />
+<h2 id="3-comprehensive-inventory-of-user-actions">3. Comprehensive Inventory of User Actions</h2>
+<p>The following is an exhaustive breakdown of every user-accessible function, menu choice, button, and slider in Liquid LSD to be registered in the unified command table.</p>
+<h3 id="31-global-transport-projects-application">3.1 Global Transport, Projects &amp; Application</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Default Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app.save_preset</code></td>
+<td>Save current preset / active state</td>
+<td>File IO</td>
+</tr>
+<tr>
+<td><code>app.save_preset_as</code></td>
+<td>Open Save Preset dialog</td>
+<td>Modal</td>
+</tr>
+<tr>
+<td><code>app.open_project</code></td>
+<td>Open project load dialog</td>
+<td>File IO</td>
+</tr>
+<tr>
+<td><code>app.export_video</code></td>
+<td>Open Video Export modal</td>
+<td>Modal</td>
+</tr>
+<tr>
+<td><code>app.toggle_settings</code></td>
+<td>Open / Close Settings panel</td>
+<td>UI</td>
+</tr>
+<tr>
+<td><code>app.toggle_performance_stats</code></td>
+<td>Toggle FPS / CPU / GPU metrics overlay</td>
+<td>UI</td>
+</tr>
+<tr>
+<td><code>app.toggle_fullscreen</code></td>
+<td>Toggle borderless fullscreen</td>
+<td>Window</td>
+</tr>
+<tr>
+<td><code>app.undo</code></td>
+<td>Undo last preset / grid modification</td>
+<td>State</td>
+</tr>
+<tr>
+<td><code>app.redo</code></td>
+<td>Redo last undone modification</td>
+<td>State</td>
+</tr>
+<tr>
+<td><code>app.quit</code></td>
+<td>Safe application exit</td>
+<td>Engine</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="32-mixer-crossfader-section">3.2 Mixer &amp; Crossfader Section</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mixer.crossfade</code></td>
+<td>Crossfader position (0.0 = A, 1.0 = B)</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_snap_a</code></td>
+<td>Snap crossfader instantly to Deck A (0%)</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_snap_b</code></td>
+<td>Snap crossfader instantly to Deck B (100%)</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_snap_center</code></td>
+<td>Snap crossfader to exact Center (50%)</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_stutter_a</code></td>
+<td>Hold to cut to Deck A; release to restore</td>
+<td>Momentary</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_stutter_b</code></td>
+<td>Hold to cut to Deck B; release to restore</td>
+<td>Momentary</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_nudge_left</code></td>
+<td>Nudge crossfader left by step</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>mixer.crossfade_nudge_right</code></td>
+<td>Nudge crossfader right by step</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>mixer.auto_crossfade_trigger</code></td>
+<td>Start automated crossfade transition</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>mixer.auto_crossfade_speed</code></td>
+<td>Adjust auto-crossfade duration (beats/sec)</td>
+<td>Continuous / Step</td>
+</tr>
+<tr>
+<td><code>mixer.curve_select</code></td>
+<td>Cycle / select transition blend curve</td>
+<td>Stepped</td>
+</tr>
+<tr>
+<td><code>mixer.master_brightness</code></td>
+<td>Master opacity / dimmer level</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>mixer.blackout</code></td>
+<td>Blackout all video output (momentary/toggle)</td>
+<td>Momentary / Toggle</td>
+</tr>
+<tr>
+<td><code>mixer.whiteout_strobe</code></td>
+<td>Flash master output to pure white</td>
+<td>Momentary</td>
+</tr>
+<tr>
+<td><code>mixer.queue_prev</code></td>
+<td>Play previous item in play queue</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>mixer.queue_next</code></td>
+<td>Play next item in play queue</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>mixer.toggle_auto_vj</code></td>
+<td>Enable / disable Auto-VJ automated setlist playback</td>
+<td>Toggle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="33-deck-controls-independent-for-deck_a-and-deck_b">3.3 Deck Controls (Independent for <code>deck_a</code> and <code>deck_b</code>)</h3>
+<p>Replace <code>deck_x</code> with <code>deck_a</code> or <code>deck_b</code> (or <code>deck_selected</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deck_x.load_active_preset</code></td>
+<td>Load currently selected library preset into deck</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.clear_deck</code></td>
+<td>Reset deck to blank default state</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.reload_preset</code></td>
+<td>Discard unsaved deck changes and reload preset</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.save_to_preset</code></td>
+<td>Save current deck state as a preset</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.mute</code></td>
+<td>Mute / blank deck output</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>deck_x.solo</code></td>
+<td>Solo deck (preview directly to master)</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>deck_x.randomize</code></td>
+<td>Randomize all unlocked parameters</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.mutate</code></td>
+<td>Mutate / drift unlocked parameters slightly</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.lock_all</code></td>
+<td>Lock all parameters against mutation</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.unlock_all</code></td>
+<td>Unlock all parameters</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>deck_x.toggle_param_lock</code></td>
+<td>Toggle lock for specific parameter</td>
+<td>Toggle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="34-mandala-shader-synthesis-parameters-per-deck">3.4 Mandala &amp; Shader Synthesis Parameters (Per Deck)</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deck_x.geometry.shape</code></td>
+<td>Select / cycle geometric shape mode</td>
+<td>Stepped / Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.geometry.symmetry</code></td>
+<td>Adjust petal count / radial symmetry order</td>
+<td>Continuous / Step</td>
+</tr>
+<tr>
+<td><code>deck_x.geometry.zoom</code></td>
+<td>Adjust camera zoom / scale</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.geometry.rotation</code></td>
+<td>Adjust static rotation angle</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.geometry.spin_speed</code></td>
+<td>Adjust dynamic rotation speed &amp; direction</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.geometry.layer_count</code></td>
+<td>Adjust number of nested visual layers</td>
+<td>Continuous / Step</td>
+</tr>
+<tr>
+<td><code>deck_x.geometry.blend_mode</code></td>
+<td>Cycle layer blend modes (Add, Multiply, Screen)</td>
+<td>Stepped</td>
+</tr>
+<tr>
+<td><code>deck_x.color.palette_select</code></td>
+<td>Select color palette (previous/next or direct)</td>
+<td>Stepped / Index</td>
+</tr>
+<tr>
+<td><code>deck_x.color.hue_shift</code></td>
+<td>Hue rotation fader ($0^\circ \dots 360^\circ$)</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.color.saturation</code></td>
+<td>Saturation boost / desaturate fader</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.color.brightness</code></td>
+<td>Brightness / level fader</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.color.contrast</code></td>
+<td>Contrast curve fader</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.color.invert</code></td>
+<td>Invert colors toggle</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>deck_x.color.cycle_speed</code></td>
+<td>Palette color cycling speed</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.mod.lfo1_rate</code></td>
+<td>LFO 1 frequency / beat division</td>
+<td>Continuous / Stepped</td>
+</tr>
+<tr>
+<td><code>deck_x.mod.lfo1_depth</code></td>
+<td>LFO 1 modulation depth</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.mod.lfo1_shape</code></td>
+<td>LFO 1 waveform (Sine, Tri, Saw, Square, S&amp;H)</td>
+<td>Stepped</td>
+</tr>
+<tr>
+<td><code>deck_x.mod.lfo2_rate</code></td>
+<td>LFO 2 frequency / beat division</td>
+<td>Continuous / Stepped</td>
+</tr>
+<tr>
+<td><code>deck_x.mod.lfo2_depth</code></td>
+<td>LFO 2 modulation depth</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>deck_x.mod.trigger_manual</code></td>
+<td>Manual trigger pulse for trigger modulator</td>
+<td>Trigger</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="35-parameters-performance-matrix">3.5 Parameters &amp; Performance Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grid.trigger_cell_a(x, y)</code></td>
+<td>Load preset at grid $(x, y)$ into Deck A</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.trigger_cell_b(x, y)</code></td>
+<td>Load preset at grid $(x, y)$ into Deck B</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.preview_cell(x, y)</code></td>
+<td>Preview preset at grid $(x, y)$ in monitor</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.clear_cell(x, y)</code></td>
+<td>Clear / delete preset at grid cell $(x, y)$</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.edit_cell_notes(x, y)</code></td>
+<td>Open Note Editor modal for cell $(x, y)$</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.tab_select(index)</code></td>
+<td>Select parameters tab / bank $(1 \dots N)$</td>
+<td>Index</td>
+</tr>
+<tr>
+<td><code>grid.tab_next</code></td>
+<td>Switch to next grid tab</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.tab_prev</code></td>
+<td>Switch to previous grid tab</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.tab_add</code></td>
+<td>Create new preset tab</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>grid.tab_rename</code></td>
+<td>Rename active preset tab</td>
+<td>Trigger</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="36-library-asset-browser">3.6 Library &amp; Asset Browser</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>library.nav_up</code></td>
+<td>Move selection cursor up in library tree/list</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>library.nav_down</code></td>
+<td>Move selection cursor down in library tree/list</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>library.nav_page_up</code></td>
+<td>Move selection up by page</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>library.nav_page_down</code></td>
+<td>Move selection down by page</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>library.expand_collapse</code></td>
+<td>Expand / collapse selected folder</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>library.focus_search</code></td>
+<td>Focus search / filter text input</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.clear_search</code></td>
+<td>Clear search query and reset view</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.filter_select</code></td>
+<td>Cycle / select category filter tab</td>
+<td>Stepped</td>
+</tr>
+<tr>
+<td><code>library.load_selected_a</code></td>
+<td>Load selected preset into Deck A</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.load_selected_b</code></td>
+<td>Load selected preset into Deck B</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.preview_selected</code></td>
+<td>Preview selected preset</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.enqueue_end</code></td>
+<td>Append selected preset to Play Queue</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.enqueue_next</code></td>
+<td>Insert selected preset as next item in Play Queue</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.toggle_favorite</code></td>
+<td>Toggle favorite / star on selected preset</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>library.rescan</code></td>
+<td>Rescan / refresh library directory on disk</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>library.delete_selected</code></td>
+<td>Delete selected preset from disk</td>
+<td>Trigger</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="37-audio-engine-clock-bpm">3.7 Audio Engine, Clock &amp; BPM</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>clock.tap_tempo</code></td>
+<td>Tap tempo button</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>clock.bpm_adjust</code></td>
+<td>Continuous BPM tempo fader</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>clock.bpm_nudge_up</code></td>
+<td>Nudge tempo up ($+0.1$ or $+1.0$ BPM)</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>clock.bpm_nudge_down</code></td>
+<td>Nudge tempo down ($-0.1$ or $-1.0$ BPM)</td>
+<td>Step</td>
+</tr>
+<tr>
+<td><code>clock.bpm_half</code></td>
+<td>Halve BPM ($/2$)</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>clock.bpm_double</code></td>
+<td>Double BPM ($\times 2$)</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>clock.sync_toggle</code></td>
+<td>Toggle external sync (JACK / MIDI / Link)</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>audio.input_gain</code></td>
+<td>Master audio input gain slider</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>audio.sensitivity</code></td>
+<td>Spectral flux / onset detection sensitivity</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>audio.band_gain_low</code></td>
+<td>Low frequency / bass band sensitivity</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>audio.band_gain_mid</code></td>
+<td>Mid frequency band sensitivity</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>audio.band_gain_high</code></td>
+<td>High frequency / treble band sensitivity</td>
+<td>Continuous</td>
+</tr>
+<tr>
+<td><code>audio.engine_toggle</code></td>
+<td>Start / pause / restart audio subsystem</td>
+<td>Toggle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="38-ui-workspace-layout">3.8 UI &amp; Workspace Layout</h3>
+<table>
+<thead>
+<tr>
+<th>Action Identifier</th>
+<th>Description</th>
+<th>Input Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui.toggle_left_panel</code></td>
+<td>Toggle Library / Browser panel visibility</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>ui.toggle_right_panel</code></td>
+<td>Toggle Settings / Audio / Oscilloscope panel</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>ui.toggle_bottom_panel</code></td>
+<td>Toggle Parameters panel visibility</td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td><code>ui.cycle_theme</code></td>
+<td>Cycle UI theme (Dark, Cyberpunk, High Contrast)</td>
+<td>Stepped</td>
+</tr>
+<tr>
+<td><code>ui.reset_layout</code></td>
+<td>Reset dockers and splitters to default</td>
+<td>Trigger</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-hardware-controller-user-mapping-workflow">4. Hardware Controller &amp; User Mapping Workflow</h2>
+<p>Inspired by Mixxx's mapping system, Liquid LSD can implement a tiered mapping system:</p>
+<h3 id="41-global-mapping-manager-table-gui">4.1 Global Mapping Manager &amp; Table GUI</h3>
+<ul>
+<li>A unified <strong>Mapping Settings Panel</strong> presenting the complete action inventory in a searchable, filterable table.</li>
+<li>Each row lists:</li>
+<li><code>Action Name &amp; Description</code></li>
+<li><code>Keyboard Binding</code> (e.g. <code>Ctrl + Shift + A</code>, <code>Space</code>, <code>Up Arrow</code>)</li>
+<li><code>MIDI Binding</code> (e.g. <code>Ch 1 - CC 14</code>, <code>Ch 1 - Note C3</code>)</li>
+<li><code>CV Source Binding</code> (e.g. <code>JACK In 1</code>, <code>LFO 1</code>)</li>
+<li><code>Mode</code> (Momentary, Toggle, Continuous, Stutter)</li>
+</ul>
+<h3 id="42-interactive-learn-overlay-context-menus">4.2 Interactive "Learn" Overlay &amp; Context Menus</h3>
+<ul>
+<li>Right-clicking any button, slider, or grid pad in the GUI reveals:</li>
+<li><strong>MIDI Learn</strong>: Listens for the next incoming MIDI CC or Note event and binds it immediately.</li>
+<li><strong>Assign Key</strong>: Prompts for a keypress (with automatic capture of <code>Ctrl</code>, <code>Shift</code>, <code>Alt</code>).</li>
+<li><strong>Bind CV</strong>: Drops down available internal CV modulators and external JACK CV ports.</li>
+</ul>
+<h3 id="43-hardware-controller-preset-files-json-yaml">4.3 Hardware Controller Preset Files (JSON / YAML)</h3>
+<p>Community and out-of-the-box hardware profiles stored under <code>library/mappings/</code>:
+- <code>library/mappings/controllers/novation_launchpad_mini.json</code> (Grid matrix mapping)
+- <code>library/mappings/controllers/akai_apc40_mk2.json</code> (Faders, knobs, crossfader, clip launch)
+- <code>library/mappings/controllers/pioneer_ddj_400.json</code> (DJ style transport, jog/rotary, crossfader)
+- <code>library/mappings/keyboard/qwerty_default.json</code> (Standard keyboard layout with stutter keys)</p>
+<hr />
+<h2 id="5-implementation-phasing-strategy">5. Implementation Phasing Strategy</h2>
+<ol>
+<li><strong>Phase 1: Core Action Registry (<code>CommandRegistry</code>)</strong>:</li>
+<li>Refactor existing parameter paths and button callbacks into registered <code>Command</code> instances with metadata (ID, category, input type, description).</li>
+<li><strong>Phase 2: Keyboard Shortcut Engine</strong>:</li>
+<li>Intercept GLFW key events with modifier state (<code>GLFW_MOD_CONTROL</code>, <code>GLFW_MOD_SHIFT</code>, <code>GLFW_MOD_ALT</code>).</li>
+<li>Dispatch to <code>CommandRegistry</code> for triggers, toggles, and momentary hold/release states (e.g., crossfader stutter).</li>
+<li><strong>Phase 3: Unified MIDI Mapping &amp; MIDI Learn</strong>:</li>
+<li>Generalize <code>MidiMappingManager</code> to bind to any registered <code>Command</code> (not just continuous float parameters).</li>
+<li>Support Note On/Off, relative encoders, and momentary buttons.</li>
+<li><strong>Phase 4: Mapping Configuration UI &amp; Profile Exporter</strong>:</li>
+<li>Build the GUI mapping table and right-click "Learn" modals in ImGui.</li>
+<li>Support loading/saving controller presets to <code>library/mappings/</code>.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

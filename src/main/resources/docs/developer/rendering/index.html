@@ -1,0 +1,2203 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../modulation/">
+      
+      
+        <link rel="next" href="../export_pipeline/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>OpenGL Rendering - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#opengl-rendering-pipeline-visual-sources" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              OpenGL Rendering
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-deck-fx-chain-isf-transition-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Deck FX Chain &amp; ISF Transition Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Deck FX Chain &amp; ISF Transition Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#execution-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamic-render-resolution-viewport-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic Render Resolution &amp; Viewport Scaling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modular-video-rack-micro-monitor-downscaling-fbo-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidence-micro-monitor-downscaling-rackmicromonitorkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Micro-Monitor Downscaling (RackMicroMonitor.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fbo-count-gpu-memory-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FBO-Count &amp; GPU-Memory Telemetry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-documentation-registry-sourcedocregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Documentation Registry (SourceDocRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pluggable-dynamic-visual-sources-visualsourceregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pluggable Dynamic Visual Sources (VisualSourceRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#h_3-coxeter-icosahedral-raymarcher-icosa_h3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        $H_3$ Coxeter Icosahedral Raymarcher (icosa_h3)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="$H_3$ Coxeter Icosahedral Raymarcher (icosa_h3)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-fundamental-mirror-planes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Fundamental Mirror Planes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-chamber-vertices-slerp-generator-vt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Chamber Vertices &amp; Slerp Generator $v(t)$
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kaleidoscopic-symmetry-folding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Kaleidoscopic Symmetry Folding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-signed-distance-field-continuous-stellation-plane-tilting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Signed Distance Field &amp; Continuous Stellation Plane Tilting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-independent-spike-blocker-stellation-csg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Independent Spike + Blocker Stellation CSG
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-family-crossfade-facet-aware-coloring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Family Crossfade &amp; Facet-Aware Coloring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-multi-layer-crystal-raymarching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Multi-Layer Crystal Raymarching
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#video-recording-deterministic-offline-studio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Video Recording &amp; Deterministic Offline Studio
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Video Recording &amp; Deterministic Offline Studio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-zero-copy-dma-readback-pboreadbackpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Zero-Copy DMA Readback (PboReadbackPipeline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-live-session-recording-realtimerecorder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Live Session Recording (RealtimeRecorder)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-deterministic-time-virtualization-timesource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Deterministic Time Virtualization (TimeSource)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-offline-render-studio-offlinerenderstudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Offline Render Studio (OfflineRenderStudio)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#desktop-to-web-shader-asset-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desktop-to-Web Shader &amp; Asset Synchronization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Desktop-to-Web Shader &amp; Asset Synchronization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-dialect-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Dialect Conversion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-algorithmic-drift-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Algorithmic Drift Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flexible-isf-directory-architecture-role-auto-detection-asset-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flexible ISF Directory Architecture, Role Auto-Detection &amp; Asset Resolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flexible ISF Directory Architecture, Role Auto-Detection &amp; Asset Resolution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-role-auto-detection-via-json-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Role Auto-Detection via JSON INPUTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-folder-hierarchy-preservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Folder Hierarchy Preservation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-respecting-relative-assets-imported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Respecting Relative Assets (IMPORTED)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-deck-fx-chain-isf-transition-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Deck FX Chain &amp; ISF Transition Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Deck FX Chain &amp; ISF Transition Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#execution-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamic-render-resolution-viewport-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic Render Resolution &amp; Viewport Scaling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modular-video-rack-micro-monitor-downscaling-fbo-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidence-micro-monitor-downscaling-rackmicromonitorkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Micro-Monitor Downscaling (RackMicroMonitor.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fbo-count-gpu-memory-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FBO-Count &amp; GPU-Memory Telemetry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-documentation-registry-sourcedocregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Documentation Registry (SourceDocRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pluggable-dynamic-visual-sources-visualsourceregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pluggable Dynamic Visual Sources (VisualSourceRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#h_3-coxeter-icosahedral-raymarcher-icosa_h3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        $H_3$ Coxeter Icosahedral Raymarcher (icosa_h3)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="$H_3$ Coxeter Icosahedral Raymarcher (icosa_h3)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-fundamental-mirror-planes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Fundamental Mirror Planes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-chamber-vertices-slerp-generator-vt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Chamber Vertices &amp; Slerp Generator $v(t)$
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kaleidoscopic-symmetry-folding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Kaleidoscopic Symmetry Folding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-signed-distance-field-continuous-stellation-plane-tilting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Signed Distance Field &amp; Continuous Stellation Plane Tilting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-independent-spike-blocker-stellation-csg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Independent Spike + Blocker Stellation CSG
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-family-crossfade-facet-aware-coloring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Family Crossfade &amp; Facet-Aware Coloring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-multi-layer-crystal-raymarching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Multi-Layer Crystal Raymarching
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#video-recording-deterministic-offline-studio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Video Recording &amp; Deterministic Offline Studio
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Video Recording &amp; Deterministic Offline Studio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-zero-copy-dma-readback-pboreadbackpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Zero-Copy DMA Readback (PboReadbackPipeline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-live-session-recording-realtimerecorder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Live Session Recording (RealtimeRecorder)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-deterministic-time-virtualization-timesource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Deterministic Time Virtualization (TimeSource)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-offline-render-studio-offlinerenderstudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Offline Render Studio (OfflineRenderStudio)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#desktop-to-web-shader-asset-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desktop-to-Web Shader &amp; Asset Synchronization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Desktop-to-Web Shader &amp; Asset Synchronization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-dialect-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Dialect Conversion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-algorithmic-drift-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Algorithmic Drift Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flexible-isf-directory-architecture-role-auto-detection-asset-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flexible ISF Directory Architecture, Role Auto-Detection &amp; Asset Resolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flexible ISF Directory Architecture, Role Auto-Detection &amp; Asset Resolution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-role-auto-detection-via-json-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Role Auto-Detection via JSON INPUTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-folder-hierarchy-preservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Folder Hierarchy Preservation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-respecting-relative-assets-imported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Respecting Relative Assets (IMPORTED)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="opengl-rendering-pipeline-visual-sources">OpenGL Rendering Pipeline &amp; Visual Sources</h1>
+<p>This document details the OpenGL graphics rendering pipeline, Framebuffer Object (FBO) ping-pong architecture, shader management, <code>SourceDocRegistry</code>, and visual source math in Liquid LSD.</p>
+<hr />
+<h2 id="per-deck-fx-chain-isf-transition-pipeline">Per-Deck FX Chain &amp; ISF Transition Pipeline</h2>
+<p>Following the 100% ISF Pipeline Migration (see <code>ARCHITECTURE.md</code>'s "100% ISF Pipeline &amp; Modular Effects Engine"), each Deck's render path is a single generator pass into <code>cleanFBO</code> followed by a chain of up to 4 modular ISF FX slots. There is no separate hardcoded 3D-projection pass and no Deck-level ping-pong feedback loop — both are now ordinary ISF filters a performer loads into any FX slot (<code>default_filters/3d_elevation.fs</code>, <code>default_filters/feedback.fs</code>). The legacy <code>tri_planar.*</code>/<code>tetra_kaleido.*</code> shaders and the old <code>Deck.fbGain</code>/<code>fbDecay</code>/etc.-driven <code>feedback.frag</code> ping-pong stage were retired from the render path in Phase 6; their <code>.vert</code>/<code>.frag</code> files remain on disk under <code>src/main/resources/shaders/</code> but are no longer loaded by <code>Renderer.kt</code> or <code>Deck.kt</code>.</p>
+<pre><code>[VisualSource (Mandala / DynamicVisualSource / ISFVisualSource / ExternalVideoSource)]
+                 │
+                 ▼
+     [Renderer.render()] — 2D View Pass: uZoom / uRotateZ applied directly in vertex space
+     (skipped for native-3D sources — Renderer.renderDeck() forces zoom=1.0/rotateZ=0.0
+     when deck.source.is3D, since those sources handle their own camera transform)
+                 │
+                 ▼
+            [deck.cleanFBO]  (Composited clean source frame)
+                 │
+                 ▼
+     [FX Slot 1] (deck.fxSlots[0] -&gt; deck.fxFBOs[0] — any ISF filter: Invert, Posterize,
+                  Luma Key, Feedback Loop, 3D Elevation, Bloom, Glitch, Mirror, Trails, etc.)
+                 │
+                 ▼
+     [FX Slot 2] (deck.fxSlots[1] -&gt; deck.fxFBOs[1])
+                 │
+                 ▼
+     [FX Slot 3] (deck.fxSlots[2] -&gt; deck.fxFBOs[2])
+                 │
+                 ▼
+     [FX Slot 4] (deck.fxSlots[3] -&gt; deck.fxFBOs[3])
+                 │
+                 ▼
+     [Mixer.kt Transition Stage] — Renderer.renderMixer()
+     [mixer.transitionFilter (ISF)] -&gt; [mixer.blendFBO] -&gt; [mixer.frag composite over Deck BG]
+                 │
+                 ▼
+            [mixer.masterFBO] ──► Screen
+</code></pre>
+<h3 id="execution-steps">Execution Steps</h3>
+<ol>
+<li><strong>Source Render &amp; View Stage</strong> (<code>Renderer.render()</code> / <code>Renderer.renderDeck()</code>):</li>
+<li><strong>2D Sources (<code>!source.is3D</code>)</strong>: The active 2D source renders directly into <code>cleanFBO</code> via <code>blit.vert</code> (or the source's own multi-pass topology), passing <code>uZoom</code> (<code>deck.viewZoom</code>), <code>uRotateZ</code> (<code>deck.viewRotateZ</code>), and <code>uAspectRatio</code> directly into the vertex shader.</li>
+<li><strong>Native 3D Sources (<code>source.is3D == true</code>)</strong>: e.g. <code>icosa_h3</code>, <code>hyper_mesh</code>. These handle their own rotation (<code>Rotate X/Y/Z</code>) and camera zoom internally and render straight into <code>cleanFBO</code>; <code>renderDeck()</code> forces the Deck's <code>viewZoom</code>/<code>viewRotateZ</code> to identity (<code>1.0</code>/<code>0.0</code>) for these sources rather than routing through a separate projection FBO.</li>
+<li><strong>External Video Ingest Sources (<code>ExternalVideoSource</code>)</strong>: Ingest live video streams from external applications via Spout2 (Windows), Syphon (macOS), or PipeWire 0.3 (Linux) (<code>PipeWireReceiverImpl</code> in <code>TextureReceiver.kt</code> and <code>fetchPipeWireStreams()</code> in <code>ExternalVideoDiscovery.kt</code>). <code>Renderer.renderExternalVideoSource()</code> blits the active incoming texture (<code>currentTextureId</code>) via <code>view2DShader</code> straight into <code>cleanFBO</code>, applying the same <code>uZoom</code>/<code>uRotateZ</code>/<code>uAspectRatio</code> uniforms as 2D sources.</li>
+<li><strong>Persistent-history generators</strong>: sources with <code>hasFeedback == true</code> (e.g. trail-based generators like Dynamic Spiral) maintain their own <code>fb1</code>/<code>fb2</code> ping-pong pair directly on the <code>DynamicVisualSource</code> instance (not on <code>Deck</code>), lazily (re)allocated by <code>Renderer.render()</code> to match <code>cleanFBO</code>'s dimensions.</li>
+<li><strong>FX Slot Chain (Serial Processing Stage)</strong>: <code>Renderer.renderDeck()</code> loops over <code>deck.fxSlots</code> (<code>Deck.FX_SLOT_COUNT</code> = 4). For each enabled slot with <code>dryWet &gt; 0.0</code>, it renders the running texture (starting from <code>cleanFBO.texture</code>) through that slot's <code>ISFFilter</code> into <code>deck.fxFBOs[i]</code>, then blends dry (previous stage's output) against wet (this stage's output) via <code>glBlendColor(..., 1.0 - dryWet)</code> when <code>dryWet &lt; 1.0</code>. The final enabled slot's texture becomes the deck's effective output (<code>Deck.getOutputTexture()</code>); if no slots are enabled, <code>cleanFBO</code> passes through unchanged.</li>
+<li><strong>Mixer Transition &amp; Compositing</strong> (<code>Renderer.renderMixer()</code>): Deck A and Deck B's effective output textures feed the active ISF transition filter (<code>mixer.transitionFilter</code> — <code>Renderer.kt</code> caches a <code>linear_crossfade</code> instance so an unassigned transition never allocates/disposes filters mid-frame) into <code>mixer.blendFBO</code>, then a composite pass blends that over Deck BG with channel levels, bloom, and master alpha into <code>mixer.masterFBO</code>.</li>
+</ol>
+<hr />
+<h2 id="dynamic-render-resolution-viewport-scaling">Dynamic Render Resolution &amp; Viewport Scaling</h2>
+<p>Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios (e.g. 1080p, 720p, 540p, 4K, 4:3 UXGA 1600x1200, 1:1 Square 800x800, or Custom) configured via <code>UITheme</code>:</p>
+<ul>
+<li><strong>Dynamic Pipeline Resizing</strong>: <code>Mixer.resize(width, height)</code> and <code>Deck.resize(width, height)</code> reallocate <code>cleanFBO</code>, <code>fxFBOs</code>, and <code>masterFBO</code> on the main OpenGL thread without interrupting playback or dropping preset states; each <code>DynamicVisualSource</code>'s own persistent-history <code>fb1</code>/<code>fb2</code> pair (see above) is disposed and lazily recreated on next render rather than eagerly resized.</li>
+<li><strong>Shader Aspect Awareness</strong>: Generative fragment shaders evaluate <code>float aspect = uResolution.x / uResolution.y;</code> from <code>targetFBO</code> dimensions, rendering undistorted geometry across any aspect ratio.</li>
+<li><strong>Display Scaling with <code>ViewportHelper</code></strong>: <a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/ViewportHelper.kt"><code>ViewportHelper.kt</code></a> computes letterbox, pillarbox, and fill coordinates for secondary monitor outputs and background video blits:</li>
+<li><code>FIT</code>: Preserves exact content aspect ratio with letterboxing or pillarboxing.</li>
+<li><code>FILL</code>: Centers and crops edges to completely fill the target screen.</li>
+<li><code>STRETCH</code>: Stretches content to fill the target viewport.</li>
+<li><strong>Aspect-Adaptive UI Previews</strong>: <code>MixerLayoutCalculator</code> dynamically adjusts Deck A, Deck B, Deck PV, and Master preview monitor heights to match the active render aspect ratio.</li>
+</ul>
+<hr />
+<h2 id="modular-video-rack-micro-monitor-downscaling-fbo-telemetry">Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry</h2>
+<p>The Modular Video Rack (<code>rack/</code>, <code>rack/ui/</code>; see <code>docs/developer/modular_video_rack_proposal.md</code>) reuses the core render pipeline rather than introducing a parallel one — each rack unit's <code>process()</code> reads an already-rendered <code>Deck</code>/<code>Mixer</code> output texture (<code>Deck.getOutputTexture()</code>, <code>Mixer.masterFBO.texture</code>) computed earlier the same frame by <code>Renderer.renderDeck()</code>/<code>Renderer.renderMixer()</code> in the normal Classic-mode render path. The two pieces of rendering-pipeline machinery added specifically for the rack, both landed in Phase 9, are:</p>
+<h3 id="confidence-micro-monitor-downscaling-rackmicromonitorkt">Confidence Micro-Monitor Downscaling (<code>RackMicroMonitor.kt</code>)</h3>
+<p>Every rack unit's faceplate embeds a live confidence-monitor preview of its <code>lastOutputTexture</code>. Rather than sampling the full-resolution source texture directly into the ImGui draw list, <code>RackMicroMonitor.draw()</code> lazily allocates one dedicated 240×135 <code>FBO</code> per unit instance (<code>PREVIEW_WIDTH</code>/<code>PREVIEW_HEIGHT</code>, cached in a <code>unit.id</code>-keyed map) and blits into it via the existing <code>Renderer.rescale(srcTex, srcW, srcH, destFbo, mode)</code> utility (the same GL viewport-changing blit helper used elsewhere for output scaling — no new shader code) using <code>UITheme.OutputScaleMode.STRETCH</code>. <code>ImGui.image()</code> then displays that shared-resolution preview texture inside the unit's hardware-styled bezel. This was the § Question 4 decision in the rack proposal: downscale monitors to a fixed shared resolution up front rather than building a full pooled FBO allocator speculatively.</p>
+<p>Per-unit preview FBOs are disposed explicitly rather than left to GC/finalization — <code>RackMicroMonitor.releaseUnit(unitId)</code> fires when a unit is removed from the bay, and <code>releaseAll()</code> fires before <code>RackManager.populateFromSession()</code> rebuilds the unit list (e.g. on "RE-SYNC SESSION"), since a full re-sync discards the old unit list (and its now-orphaned FBO cache keys) without disposing it itself.</p>
+<h3 id="fbo-count-gpu-memory-telemetry">FBO-Count &amp; GPU-Memory Telemetry</h3>
+<p><code>FBO.kt</code>'s companion object now tracks every live <code>FBO</code> instance app-wide in a <code>ConcurrentHashMap&lt;framebufferId, estimatedByteSize&gt;</code>, populated on construction and cleared on <code>dispose()</code>. Byte size is format-aware (<code>GL_RGBA8</code> = 4 bytes/px, <code>GL_RGBA16F</code> = 8, <code>GL_RGBA32F</code> = 16). This is exposed as <code>PerformanceStats.fboCount</code> / <code>PerformanceStats.fboMemoryMB</code> and rendered in the menu bar telemetry HUD as <code>FBO: N (XMB)</code> (<code>MenuBar.kt</code>). The readout covers all live FBOs across the whole app — core render pipeline (<code>cleanFBO</code>, <code>fxFBOs</code>, <code>masterFBO</code>, etc.) plus the rack's own <code>RackPipeline</code> ping-pong stage buffers and <code>RackMicroMonitor</code> preview FBOs — not a rack-scoped counter. Per the § Question 4 decision, this instrumentation was added deliberately <em>before</em> any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.</p>
+<hr />
+<h2 id="source-documentation-registry-sourcedocregistrykt">Source Documentation Registry (<code>SourceDocRegistry.kt</code>)</h2>
+<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt"><code>SourceDocRegistry.kt</code></a> is an immutable singleton repository storing documentation for visual sources and parameters:</p>
+<ul>
+<li><strong>Source Descriptions</strong>: <code>sourceDescriptions: Map&lt;String, String&gt;</code> keyed by <code>sourceId</code>. Covers the currently-bundled built-in engines (<code>mandala</code>, <code>dynamic_spiral</code>, <code>icosa_h3</code>) plus stale dead-code entries (<code>colors</code>, <code>gyroid</code>, <code>chladni</code>, <code>attractor_feedback</code>, <code>hyper_mesh</code>, <code>hyper_slice</code>) left over from the legacy-source removal (see below) that no <code>VisualSourceRegistry</code> entry resolves to anymore — harmless (map lookups simply never hit them) but worth pruning next time this file is touched.</li>
+<li><strong>Parameter Descriptions</strong>: <code>paramDescriptions: Map&lt;String, String&gt;</code> keyed by <code>"&lt;sourceId&gt;/&lt;paramName&gt;"</code>, <code>"feedback/&lt;paramName&gt;"</code>, or <code>"mixer/&lt;paramName&gt;"</code>.</li>
+<li><strong>UI Lookup API</strong>: Surfaced by <code>ParametersRenderer</code> and <code>DeckControlPanel</code> to draw rich tooltips.</li>
+</ul>
+<hr />
+<h2 id="pluggable-dynamic-visual-sources-visualsourceregistrykt">Pluggable Dynamic Visual Sources (<code>VisualSourceRegistry.kt</code>)</h2>
+<p>Beyond hardcoded generators, the engine loads dynamic shaders from <code>library/sources/</code>:</p>
+<ul>
+<li><strong><code>VisualSourceRegistry</code></strong>: Scans subfolders on startup, parses <code>meta.json</code>, compiles <code>shader.frag</code> against standard vertex shaders (<code>blit.vert</code>), and builds <code>DynamicVisualSource</code> templates.</li>
+<li><strong>Shader Ownership</strong>: The master template in <code>VisualSourceRegistry</code> owns the OpenGL shader program (<code>ownsShader = true</code>). Deck clones share shader program handles safely (<code>ownsShader = false</code>) to eliminate duplicate compilation overhead.</li>
+<li><strong>Polymorphic Draw Topology</strong>: Visual source rendering in <code>Renderer.render()</code> is fully polymorphic with zero source-type checks (<code>is Mandala</code>, <code>is HyperMesh</code>). Each visual generator overrides <code>DynamicVisualSource.drawTopology()</code>:</li>
+<li>Default: Renders a fullscreen quad via <code>Geometry.drawFullscreenQuad()</code>.</li>
+<li><code>Mandala</code>: Binds ribbon VAO and draws triangle strips via <code>glDrawArrays(GL_TRIANGLE_STRIP, 0, (POINTS + 1) * 2)</code>.</li>
+<li><code>HyperMesh</code>: Binds 4D polychoron strut and node VAOs and renders indexed triangles via <code>glDrawElements(GL_TRIANGLES, ...)</code>.</li>
+<li><strong>Error Fallbacks</strong>: If custom GLSL fails compilation, a fallback checkerboard shader is bound so the application avoids crashing.</li>
+</ul>
+<hr />
+<h2 id="h_3-coxeter-icosahedral-raymarcher-icosa_h3">$H_3$ Coxeter Icosahedral Raymarcher (<code>icosa_h3</code>)</h2>
+<p>The <code>icosa_h3</code> visual source is a single ISF shader (<a href="file:///home/gj/projects/liquid-lsd/library/sources/icosa_h3/icosa_h3.fs"><code>icosa_h3.fs</code></a>) that combines what were previously three separate visual sources (<code>icosa_dodeca</code>, <code>icosahedron</code>, <code>icosa-v3</code>) into one <strong>$H_3$ Coxeter Reflection Group Iterated Function System (IFS)</strong> raymarcher. It evaluates two independent stellation families sharing the same folded-chamber substrate and crossfades between them with the <code>Spike Mode</code> parameter, so the whole design space of the three predecessors is reachable from one shader:</p>
+<ul>
+<li><strong>Smooth duality-morph family</strong> (from <code>icosa_dodeca</code>): a continuous 4-phase Icosahedron ↔ Dodecahedron ↔ Great Stellated Dodecahedron ↔ Great Icosahedron cycle, with truncation/cantellation duals.</li>
+<li><strong>Spike + blocker stellation CSG</strong> (from <code>icosa-v3</code>): an independently-phased pole sweep that extrudes pyramid spikes and blunts their tips with a chopping plane.</li>
+<li>The brute-force 60-plane orbit approach of the original <code>icosahedron</code> source (which required <code>Icosahedron.kt</code> to generate the plane orbit on the CPU every frame) was dropped in favor of the GPU-only domain-folding technique below — it only ever covered the icosahedron's own stellations, not the icosahedron/dodecahedron duality, and its CPU dependency doesn't fit the ISF model.</li>
+</ul>
+<h3 id="1-fundamental-mirror-planes">1. Fundamental Mirror Planes</h3>
+<p>The $H_3$ Coxeter group (icosahedral symmetry $I_h$, order 120) is defined by three normalized mirror planes with dihedral angles $(\pi/5, \pi/3, \pi/2)$:
+$$n_0 = (1, 0, 0)$$
+$$n_1 = \left(-\frac{\phi}{2}, -\frac{1}{2}, \frac{1}{2\phi}\right)$$
+$$n_2 = (0, 1, 0)$$
+where $\phi = \frac{1+\sqrt{5}}{2} \approx 1.61803398875$.</p>
+<h3 id="2-chamber-vertices-slerp-generator-vt">2. Chamber Vertices &amp; Slerp Generator $v(t)$</h3>
+<p>The corners of the fundamental spherical triangle represent the primary symmetry axes:
+- <strong>3-Fold Axis $C_3$</strong> (Icosahedron face normal / Dodecahedron vertex): $C_3 = \text{normalize}(n_1 \times n_2) = \left(\frac{\phi - 1}{\sqrt{3}}, 0, \frac{\phi}{\sqrt{3}}\right)$
+- <strong>5-Fold Axis $C_5$</strong> (Dodecahedron face normal / Icosahedron vertex): $C_5 = \text{normalize}(n_0 \times n_1) = \left(0, \frac{1}{\sqrt{\phi + 2}}, \frac{\phi}{\sqrt{\phi + 2}}\right)$
+- <strong>2-Fold Axis $C_2$</strong> (Edge midpoint): $C_2 = (0, 0, 1)$</p>
+<p>The generator vector $v(t)$ continuously slerps between $C_3$ and $C_5$:
+$$v(t) = \frac{\sin((1-t)\Omega)}{\sin\Omega} C_3 + \frac{\sin(t\Omega)}{\sin\Omega} C_5,\quad \Omega = \arccos(C_3 \cdot C_5) \approx 0.652358\text{ rad}$$</p>
+<h3 id="3-kaleidoscopic-symmetry-folding">3. Kaleidoscopic Symmetry Folding</h3>
+<p>Any raymarching sample point $p \in \mathbb{R}^3$ is folded iteratively into the fundamental chamber:</p>
+<pre><code class="language-glsl">vec3 foldH3(vec3 p) {
+    for (int i = 0; i &lt; 16; ++i) {
+        p -= 2.0 * min(0.0, dot(p, n0)) * n0;
+        p -= 2.0 * min(0.0, dot(p, n1)) * n1;
+        p -= 2.0 * min(0.0, dot(p, n2)) * n2;
+    }
+    return p;
+}
+</code></pre>
+<h3 id="4-signed-distance-field-continuous-stellation-plane-tilting">4. Signed Distance Field &amp; Continuous Stellation Plane Tilting</h3>
+<p>In folded chamber space ($p' = \text{foldH3}(p)$), the generator vector $v(t)$ defines the face normal.
+Its adjacent reflection normal vector $v_{\text{adj}}(t)$ (derived from $C_3$ reflected across $n_0$ and $C_5$ reflected across $n_2$) defines the sloping stellation facet:
+$$C_3^{\text{adj}} = (-C_3.x, 0, C_3.z),\quad C_5^{\text{adj}} = (0, -C_5.y, C_5.z)$$
+$$v_{\text{adj}}(t) = \text{slerp}(C_3^{\text{adj}}, C_5^{\text{adj}}, t)$$</p>
+<p>The continuous stellation plane vector $v_{\text{morph}}$ tilts continuously between the flat face $v(t)$ at $s=0$ and the Kepler-Poinsot star facets $v_{\text{adj}}(t)$ at $s=1$:
+$$v_{\text{morph}} = \text{normalize}(\text{mix}(v(t), v_{\text{adj}}(t), s))$$
+$$SDF(p) = p' \cdot v_{\text{morph}} - h$$</p>
+<ul>
+<li><strong>Convex Core ($s=0$)</strong>: Evaluates flat Platonic/Archimedean faces.</li>
+<li><strong>Kepler-Poinsot Stellations ($s=1$)</strong>: Tilts face planes into intersecting star pyramids with exact sharp apexes at $r = h / (v \cdot v_{\text{adj}})$.</li>
+<li><strong>Smooth Emergence ($0 &lt; s &lt; 1$)</strong>: Spikes grow out of the face centers with continuous facet tilting.</li>
+</ul>
+<h3 id="5-independent-spike-blocker-stellation-csg">5. Independent Spike + Blocker Stellation CSG</h3>
+<p>A second stellation family shares the same <code>foldH3</code> substrate but is driven independently of <code>Morph</code>: <code>Spike Phase</code> sweeps a pole <code>corePole</code> around the $C_3$–$C_5$ arc (via a general <code>slerpArc(p0, p1, t)</code> valid for $t$ outside $[0,1]$, unlike the fixed-angle $v(t)$ generator above), which is then reflected across $n_0$ and $n_2$ to obtain two adjacent spike poles. <code>Spike Sharpness</code> tilts each spike pole from its flat core position toward the reflected (fully extruded) position, and the two resulting half-spaces are intersected (<code>max</code>) to form the spike shape. A third <code>blockerPole</code> — the same arc sampled one phase-step ahead — chops the spike tips off, with <code>Blocker Size</code> controlling how much survives:
+$$SDF_{\text{spike}}(p) = \max\big(\max(d_{\text{spike1}}, d_{\text{spike2}}),\ d_{\text{blocker}}\big)$$
+This is the same domain-folded CSG technique as the old <code>icosa-v3</code> source (evaluating only a handful of dot products instead of brute-forcing 60 planes), now running as one branch of <code>mapSDF</code> alongside the duality-morph family above.</p>
+<h3 id="6-family-crossfade-facet-aware-coloring">6. Family Crossfade &amp; Facet-Aware Coloring</h3>
+<p><code>Spike Mode</code> linearly crossfades the two families' SDF values, edge-seam distances, and a per-family "which half-space is dominant" index (<code>mix(dSmooth, dSpikeFinal, mode)</code>, etc.), producing a continuous blend between the smooth duality morph and the spiky CSG rather than a hard switch between two shaders. The dominant-half-space index feeds a dedicated <code>Color Mode = 0</code> ("Facet Family") coloring path that assigns each active facet family its own stable hue, on top of the inherited Chamber Sectors / Depth Gradient / Normal Spectrum modes and a new animated Fresnel-driven Iridescent mode.</p>
+<h3 id="7-multi-layer-crystal-raymarching">7. Multi-Layer Crystal Raymarching</h3>
+<ul>
+<li><strong>Under-Relaxation</strong>: Ray steps use a conservative $0.5\times$ scaling factor on miss (<code>t += dist * 0.5</code>), tuned to stay stable on the acute needle ridges the spike family can produce.</li>
+<li><strong>Front-to-Back Transparency</strong>: Steps through transparent outer faces (<code>Opacity</code> 0.6–0.8) to accumulate color and reveal inner self-intersecting facets without depth sorting.</li>
+</ul>
+<hr />
+<h2 id="video-recording-deterministic-offline-studio">Video Recording &amp; Deterministic Offline Studio</h2>
+<p>Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate offline rendering studio in the <code>llm.slop.liquidlsd.export</code> package.</p>
+<h3 id="1-zero-copy-dma-readback-pboreadbackpipeline">1. Zero-Copy DMA Readback (<code>PboReadbackPipeline</code>)</h3>
+<ul>
+<li><strong>Ping-Pong PBO Ring Buffer</strong>: Uses two <code>GL_PIXEL_PACK_BUFFER</code> objects. While PBO $A$ is mapped into CPU memory via <code>glMapBufferRange(GL_READ_ONLY)</code>, PBO $B$ executes an asynchronous GPU DMA transfer via <code>glReadPixels(..., 0)</code>.</li>
+<li><strong>Direct Memory Copy</strong>: Frame transfers use direct C-pointer block copies (<code>MemoryUtil.memCopy</code>) to eliminate CPU overhead on Thread 0. Vertical flipping is delegated to the FFmpeg filter graph (<code>-vf vflip</code>).</li>
+</ul>
+<h3 id="2-live-session-recording-realtimerecorder">2. Live Session Recording (<code>RealtimeRecorder</code>)</h3>
+<ul>
+<li><strong>Background Frame Queue</strong>: Bounded <code>ArrayBlockingQueue&lt;ByteBuffer&gt;(10)</code> prevents frame capture from stalling the main OpenGL render loop. If disk I/O stalls, frames are cleanly dropped with a live HUD counter and percentage indicator.</li>
+<li><strong>Lock-Free Zero-Allocation Audio Tapping</strong>: Live audio blocks from <code>AudioEngine.processAudio</code> are captured into a pre-allocated pool of <code>AudioBlock</code> instances via a lock-free, wait-free Single-Producer Single-Consumer (<code>SpscQueue</code>) ring buffer without heap allocations or mutex acquisitions on the real-time audio thread. Audio is written to a temporary PCM WAV file on a background worker thread and losslessly remuxed with FFmpeg (<code>-c:v copy -c:a aac -b:a 320k</code>) upon stopping.</li>
+<li><strong>Live REC Tally Badge</strong>: Pulsing red record badge overlaid directly on the master preview monitor with elapsed timer (<code>REC MM:SS</code>).</li>
+</ul>
+<h3 id="3-deterministic-time-virtualization-timesource">3. Deterministic Time Virtualization (<code>TimeSource</code>)</h3>
+<ul>
+<li><strong>Central Time Authority</strong>: All shaders (<code>uTime</code>), <code>CVRegistry</code> evaluators, <code>DynamicSpiral</code>, and <code>Mixer</code> query <code>TimeSource.getTimeSec()</code> and <code>TimeSource.getTimeNanos()</code>.</li>
+<li><strong>Offline Simulation Clock</strong>: During <code>OfflineRenderStudio</code> passes, <code>TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)</code> is set before stepping DSP analysis and deck rendering, guaranteeing sample-accurate synchronization between audio frequencies and visual animations regardless of rendering speed.</li>
+</ul>
+<h3 id="4-offline-render-studio-offlinerenderstudio">4. Offline Render Studio (<code>OfflineRenderStudio</code>)</h3>
+<ul>
+<li><strong>Frame-Accurate Stepping</strong>: Iterates frame-by-frame on Thread 0 while yielding to GLFW events.</li>
+<li><strong>Multi-Pass Motion Blur (<code>AccumulationBuffer</code>)</strong>: Supports up to 8x temporal super-sampling, blending sub-frame passes to generate cinematic motion blur.</li>
+<li><strong>Automatic Encoder Prioritization &amp; Fallback</strong>: Automatically probes and prioritizes hardware encoders (<code>h264_nvenc</code>, <code>h264_qsv</code>) with transparent fallback to software encoders (<code>libx264</code>, <code>libx265</code>, <code>prores_ks</code>).</li>
+</ul>
+<hr />
+<h2 id="desktop-to-web-shader-asset-synchronization">Desktop-to-Web Shader &amp; Asset Synchronization</h2>
+<p>To ensure continuous parity between desktop visual sources and the browser-based WebGL2 visualizer (<code>web/</code>), an automated synchronization subsystem tracks file changes and translates shader dialects.</p>
+<h3 id="1-dialect-conversion">1. Dialect Conversion</h3>
+<ul>
+<li><strong>GLSL 3.30 Core $\rightarrow$ WebGL2 (GLSL ES 3.00)</strong>:</li>
+<li>Desktop shaders in <code>src/main/resources/shaders/</code> and <code>library/sources/*/shader.frag</code> use <code>#version 330 core</code>.</li>
+<li>The synchronization tool transpiles <code>#version 330 core</code> into <code>#version 300 es\nprecision highp float;</code> for <code>web/shaders/</code>.</li>
+<li><strong>Sole Source of Truth</strong>: Shaders and visual sources should always be authored in desktop directories; running <code>./scripts/sync_web.py --apply</code> or <code>./gradlew syncWeb</code> mechanically updates the web client.</li>
+</ul>
+<h3 id="2-algorithmic-drift-tracking">2. Algorithmic Drift Tracking</h3>
+<ul>
+<li>For procedural geometry and math modules (<code>Evaluators.kt</code> $\rightarrow$ <code>web/evaluator.js</code>), <code>web/sync_manifest.json</code> tracks SHA-256 hashes.</li>
+<li>Whenever a desktop Kotlin algorithm is modified, running <code>./scripts/sync_web.py --check</code> or <code>./gradlew checkWebSync</code> alerts the developer to review and update the JavaScript equivalent. Once verified, <code>./scripts/sync_web.py --mark-synced &lt;target&gt;</code> records the updated hash.</li>
+</ul>
+<hr />
+<h2 id="flexible-isf-directory-architecture-role-auto-detection-asset-resolution">Flexible ISF Directory Architecture, Role Auto-Detection &amp; Asset Resolution</h2>
+<p>Liquid LSD scans arbitrary user-specified directories for Interactive Shader Format (ISF) assets without forcing files into rigid <code>Generators/</code>, <code>Filters/</code>, or <code>Transitions/</code> folders.</p>
+<h3 id="1-role-auto-detection-via-json-inputs">1. Role Auto-Detection via JSON <code>INPUTS</code></h3>
+<p>Shaders are classified dynamically by parsing their ISF JSON header and inspecting image inputs:
+- <strong>0 Image Inputs</strong>: Auto-detected as <strong>Generator</strong> (<code>ISFAssetType.GENERATOR</code>), loaded into <code>VisualSourceRegistry</code>.
+- <strong>1 Image Input</strong>: Auto-detected as <strong>Filter</strong> (<code>ISFAssetType.FILTER</code>), loaded into <code>ISFFilterRegistry</code>.
+- <strong>2+ Image Inputs</strong> (or 1 image input with explicit <code>progress</code> transition parameter): Auto-detected as <strong>Transition</strong> (<code>ISFAssetType.TRANSITION</code>), loaded into <code>ISFTransitionRegistry</code>.</p>
+<h3 id="2-folder-hierarchy-preservation">2. Folder Hierarchy Preservation</h3>
+<ul>
+<li>Relative subfolder structures (e.g., <code>PackName/Subfolder/shader.fs</code>) are captured in <code>ISFAsset.folderPath</code> and mirrored into <code>categories</code> tags.</li>
+<li>The UI shader browser (<code>ShaderPickerPopup</code>) provides a dual-mode interface:</li>
+<li><strong>Collapsible Folder Tree Mode</strong> (<code>Icons.FOLDER</code>): Groups shaders by their subfolder structure in expandable tree nodes.</li>
+<li><strong>Flat List Mode</strong> (<code>Icons.LAYOUT_FULL</code>): Fast 3-column table showing folder tags in the Categories column.</li>
+<li>Category pill filter row incorporates top-level folder names and custom tags.</li>
+</ul>
+<h3 id="3-respecting-relative-assets-imported">3. Respecting Relative Assets (<code>IMPORTED</code>)</h3>
+<ul>
+<li>Shaders remain in their original directories during execution.</li>
+<li>Shaders declaring static lookup tables, noise textures, or auxiliary assets in <code>IMPORTED</code> (using either JSON Object or JSON Array syntax) have their paths resolved relative to the shader's parent folder (<code>baseDir</code>).</li>
+<li><code>ISFParser.buildGLSLFragmentShader</code> automatically injects <code>uniform sampler2D &lt;name&gt;;</code> declarations for all declared imported textures.</li>
+<li><code>ISFTextureLoader</code> decodes image files into OpenGL 2D textures on Thread 0 via STBImage (<code>stbi_load</code>). During execution, pre-resolved texture units are bound with zero allocations per frame on the render thread.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

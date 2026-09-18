@@ -266,7 +266,9 @@ object AudioModulatorSection {
             },
             onMaxRangeChanged = { rMin, rMax ->
                 onReplace(existing.copy(lfoMinMaxMode = true, depthMin = rMin, depthMax = rMax))
-            }
+            },
+            modulatorIndex = modulatorIndex,
+            paramKey = paramKey
         )
         ImGui.spacing()
     }

@@ -1,0 +1,2401 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../beat_sync/">
+      
+      
+        <link rel="next" href="../rendering/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Modulation Engine - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#modulation-system" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Modulation Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modulatableparameter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModulatableParameter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ModulatableParameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#evaluate-per-frame-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate() — per-frame pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cvmodulator-full-field-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CvModulator — Full Field Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CvModulator — Full Field Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lfo-1-carrier-applies-to-all-sourceids-that-use-waveform-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LFO 1 (Carrier) — applies to all sourceIds that use waveform evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#randomization-ranges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Randomization Ranges
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modulation-range-bounds-minmax-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulation Range Bounds (Min/Max Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audio-envelope-followers-applies-when-isaudiosourcesourceid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Envelope Followers — applies when isAudioSource(sourceId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lfo-2-modulator-only-evaluated-when-sourceid-lfo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LFO 2 (Modulator) — only evaluated when sourceId == "lfo"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enums" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enums
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Enums">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modulationoperator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModulationOperator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#waveform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Waveform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#genunit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GenUnit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generatormodmode-lfo-2-interaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeneratorModMode (LFO 2 interaction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lfospeedmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LfoSpeedMode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#waveform-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Waveform Math
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Waveform Math">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculateadvancedlfophase-morph-hold-slope-waveform-used-by-lfo-beatphase-sampleandhold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculateAdvancedLFO(phase, morph, hold, slope, waveform) — used by lfo, beatPhase, sampleAndHold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-waveform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RANDOM waveform
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluators-evaluatemodulator-dispatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluators — evaluateModulator() Dispatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serialization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameterresolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ParameterResolver
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crossfade-manual-takeover-auto-centering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crossfade Manual Takeover &amp; Auto-Centering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#continuous-constrained-random-morphing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Continuous Constrained Random Morphing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modulatableparameter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModulatableParameter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ModulatableParameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#evaluate-per-frame-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate() — per-frame pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cvmodulator-full-field-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CvModulator — Full Field Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CvModulator — Full Field Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lfo-1-carrier-applies-to-all-sourceids-that-use-waveform-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LFO 1 (Carrier) — applies to all sourceIds that use waveform evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#randomization-ranges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Randomization Ranges
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modulation-range-bounds-minmax-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulation Range Bounds (Min/Max Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audio-envelope-followers-applies-when-isaudiosourcesourceid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Envelope Followers — applies when isAudioSource(sourceId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lfo-2-modulator-only-evaluated-when-sourceid-lfo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LFO 2 (Modulator) — only evaluated when sourceId == "lfo"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enums" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enums
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Enums">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modulationoperator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModulationOperator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#waveform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Waveform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#genunit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GenUnit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generatormodmode-lfo-2-interaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeneratorModMode (LFO 2 interaction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lfospeedmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LfoSpeedMode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#waveform-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Waveform Math
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Waveform Math">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculateadvancedlfophase-morph-hold-slope-waveform-used-by-lfo-beatphase-sampleandhold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculateAdvancedLFO(phase, morph, hold, slope, waveform) — used by lfo, beatPhase, sampleAndHold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-waveform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RANDOM waveform
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluators-evaluatemodulator-dispatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluators — evaluateModulator() Dispatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serialization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameterresolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ParameterResolver
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crossfade-manual-takeover-auto-centering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crossfade Manual Takeover &amp; Auto-Centering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#continuous-constrained-random-morphing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Continuous Constrained Random Morphing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="modulation-system">Modulation System</h1>
+<p>Every visual parameter in Liquid LSD is a <code>ModulatableParameter</code>. Each parameter holds a base value
+and a list of <code>CvModulator</code> instances. Once per frame <code>evaluate()</code> computes the final driven value
+by combining those modulators. This document explains the full pipeline.</p>
+<hr />
+<h2 id="modulatableparameter">ModulatableParameter</h2>
+<p><strong>File</strong>: <code>parameters/ModulatableParameter.kt</code></p>
+<pre><code>baseValue ──┐
+            ├──► evaluate() ──► value  (clamped to [minClamp, maxClamp])
+modulators ─┘                     │
+                                  └──► history (CvHistoryBuffer, 200 samples)
+</code></pre>
+<p>Key properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baseValue</code></td>
+<td>Starting value before any modulation</td>
+</tr>
+<tr>
+<td><code>baseMin / baseMax</code></td>
+<td>Randomization range for <code>baseValue</code> at preset-load time</td>
+</tr>
+<tr>
+<td><code>randomizeBase</code></td>
+<td>If true, <code>baseValue</code> is re-rolled at preset-load from <code>[baseMin, baseMax]</code></td>
+</tr>
+<tr>
+<td><code>minClamp / maxClamp</code></td>
+<td>Hard output clamp; also determines polarity (see below)</td>
+</tr>
+<tr>
+<td><code>meterType</code></td>
+<td><code>MONOPOLAR</code> (default), <code>BIPOLAR</code> (minClamp &lt; 0), <code>ENDLESS</code>, <code>DISCRETE</code></td>
+</tr>
+<tr>
+<td><code>modulators</code></td>
+<td><code>CopyOnWriteArrayList&lt;CvModulator&gt;</code> — safe for read-heavy concurrent access</td>
+</tr>
+<tr>
+<td><code>modulatorFilter</code></td>
+<td>Optional <code>@Volatile</code> predicate; when set only matching modulators are evaluated (used by deck-preview mode)</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>Last evaluated output (internal set; updated every <code>evaluate()</code> call)</td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td><code>CvHistoryBuffer</code> ring buffer — read by the oscilloscope in <code>PropertiesPanel</code></td>
+</tr>
+<tr>
+<td><code>scopeTimebase</code></td>
+<td><code>ScopeTimebase</code> (<code>AUTO</code>, <code>1s</code>, <code>10s</code>, <code>100s</code>, <code>15m</code>, <code>2.5h</code>, <code>24h</code>) — transient per-parameter oscilloscope zoom</td>
+</tr>
+</tbody>
+</table>
+<p>MIDI mapping fields (<code>mappedMidiId</code>, <code>midiMapMin</code>, <code>midiMapMax</code>) are deprecated. Use
+<code>MidiMappingManager</code> profiles instead.</p>
+<h3 id="evaluate-per-frame-pipeline">evaluate() — per-frame pipeline</h3>
+<pre><code class="language-kotlin">// Simplified from ModulatableParameter.evaluate()
+
+result = baseValue
+
+for (mod in modulators) {
+    if (bypassed || not registered || filtered) continue
+
+    rawCV = evaluateModulator(mod)          // Evaluators.kt — see below
+
+    // Polarity normalisation
+    rawModAmount = if (isBipolar)
+        rawCV * depth + dcOffset        // bipolar: symmetric around 0
+    else
+        ((rawCV + 1) / 2) * depth + dcOffset  // monopolar: maps [-1,1] → [0,depth]+dc
+
+    // Scale to parameter range
+    scalar = if (ADD) then (range / 2) for bipolar, else range for monopolar; else 1.0
+    modAmount = rawModAmount * scalar
+
+    result = when (operator) {
+        ADD   -&gt; result + modAmount
+        MUL   -&gt; result * (1 + modAmount)
+        SCALE -&gt; result * (1 - depth + modAmount)
+    }
+}
+
+value = result.coerceIn(minClamp, maxClamp)
+</code></pre>
+<p><strong>Polarity</strong>: if <code>minClamp &lt; 0</code>, the parameter is bipolar. Monopolar parameters map the raw CV
+signal from <code>[-1, 1]</code> into <code>[0, 1]</code> before scaling, so negative CV still produces positive
+modulation effect.</p>
+<hr />
+<h2 id="cvmodulator-full-field-reference">CvModulator — Full Field Reference</h2>
+<p><strong>File</strong>: <code>parameters/CvModulator.kt</code><br />
+<strong>Serializable</strong> — all fields are stored in <code>.lsd</code> preset files.</p>
+<h3 id="identity">Identity</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sourceId</code></td>
+<td><code>String</code></td>
+<td>Which CV signal drives this modulator. Registered IDs: <code>lfo</code>, <code>beatPhase</code>, <code>sampleAndHold</code>, <code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_high</code>, <code>audio_flux_amp</code>, <code>audio_flux_bass</code>, <code>audio_flux_mid</code>, <code>audio_flux_high</code>, <code>bpm</code>, <code>midi_cc_&lt;ch&gt;_&lt;cc&gt;</code> (<code>trigger_onset</code>/<code>trigger_accent</code> exist only in the WebGL2 web client's <code>dsp.js</code>/<code>evaluator.js</code> — see <code>docs/developer/web_subsystem.md</code> — not as a desktop <code>CvModulator</code> source)</td>
+</tr>
+<tr>
+<td><code>operator</code></td>
+<td><code>ModulationOperator</code></td>
+<td>How this modulator combines with the accumulated result</td>
+</tr>
+<tr>
+<td><code>bypassed</code></td>
+<td><code>Boolean</code></td>
+<td>If true, skipped entirely in <code>evaluate()</code></td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td><code>String</code> (UUID)</td>
+<td>Unique identity for undo/copy-paste tracking</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lfo-1-carrier-applies-to-all-sourceids-that-use-waveform-evaluation">LFO 1 (Carrier) — applies to all <code>sourceId</code>s that use waveform evaluation</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Range</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>depth</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 1]</code></td>
+<td>Peak modulation depth</td>
+</tr>
+<tr>
+<td><code>dcOffset</code></td>
+<td><code>Float</code></td>
+<td><code>[-1, 1]</code></td>
+<td>Constant offset added after depth scaling</td>
+</tr>
+<tr>
+<td><code>waveform</code></td>
+<td><code>Waveform</code></td>
+<td>—</td>
+<td>Shape: <code>SINE</code>, <code>TRIANGLE</code>, <code>SQUARE</code>, <code>RANDOM</code></td>
+</tr>
+<tr>
+<td><code>subdivision</code></td>
+<td><code>Float</code></td>
+<td>Seconds (<code>TIME</code>), beats (<code>BEAT</code>), or frames (<code>FRAME</code>)</td>
+<td>One cycle duration</td>
+</tr>
+<tr>
+<td><code>phaseOffset</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 1]</code></td>
+<td>Phase shift within the cycle</td>
+</tr>
+<tr>
+<td><code>slope</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 1]</code></td>
+<td>Asymmetry: <code>0</code> = sharp fall/slow rise, <code>0.5</code> = symmetric, <code>1</code> = slow rise/sharp fall</td>
+</tr>
+<tr>
+<td><code>morph</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 1]</code></td>
+<td>Waveshaping softness (0 = linear triangle, 1 = near-sine via <code>cosh</code> approximation)</td>
+</tr>
+<tr>
+<td><code>hold</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 0.99]</code></td>
+<td>Plateau width at peak (compresses the transition region)</td>
+</tr>
+<tr>
+<td><code>genUnit</code></td>
+<td><code>GenUnit</code></td>
+<td><code>TIME</code>, <code>BEAT</code>, or <code>FRAME</code></td>
+<td>Whether <code>subdivision</code> is measured in seconds, musical beats, or render frames (1-10000). Only meaningful for <code>lfo</code>.</td>
+</tr>
+<tr>
+<td><code>lfoSpeedMode</code></td>
+<td><code>LfoSpeedMode</code></td>
+<td><code>SLOW/MEDIUM/FAST</code></td>
+<td>UI-only speed range hint for the slider</td>
+</tr>
+</tbody>
+</table>
+<h3 id="randomization-ranges">Randomization Ranges</h3>
+<p>Every continuously-valued field has a <code>Min</code>/<code>Max</code> pair and a <code>randomize*</code> flag:</p>
+<pre><code>depthMin / depthMax / randomizeDepth
+subdivisionMin / subdivisionMax / randomizeSubdivision
+phaseOffsetMin / phaseOffsetMax / randomizePhaseOffset
+slopeMin / slopeMax / randomizeSlope
+morphMin / morphMax / randomizeMorph
+holdMin / holdMax / randomizeHold
+dcOffsetMin / dcOffsetMax / randomizeDcOffset
+</code></pre>
+<p>When the preset randomize action fires, <code>randomizeActiveValues()</code> samples uniformly within each
+<code>[min, max]</code> range. For beat-based subdivision the sample is drawn from a discrete set of musical
+values <code>{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}</code>. For frame-based subdivision, it samples discrete integers in <code>[min, max]</code>.</p>
+<h3 id="modulation-range-bounds-minmax-mode">Modulation Range Bounds (Min/Max Mode)</h3>
+<p>For LFO 1 and Audio followers, the UI presents human-readable <strong>Min Value</strong> and <strong>Max Value</strong> modulation bounds rather than abstract <code>depth</code> (amplitude) and <code>dcOffset</code> (center).</p>
+<ul>
+<li><strong>Mapping</strong>:</li>
+<li>$\text{Min} = \text{dcOffset} - \text{depth}$</li>
+<li>$\text{Max} = \text{dcOffset} + \text{depth}$</li>
+<li>$\text{depth} = (\text{Max} - \text{Min}) / 2$</li>
+<li>$\text{dcOffset} = (\text{Max} + \text{Min}) / 2$</li>
+<li><strong>Methods</strong>: <code>CvModulator.getLfoMin()</code>, <code>CvModulator.getLfoMax()</code>, <code>CvModulator.withLfoRange(min, max)</code>.</li>
+<li><strong>Randomization Range Storage</strong>: When <code>lfoMinMaxMode</code> is true, the two-tier randomization sliders store the bounds for the Minimum limit in <code>dcOffsetMin</code> / <code>dcOffsetMax</code> (with flag <code>randomizeDcOffset</code>) and the bounds for the Maximum limit in <code>depthMin</code> / <code>depthMax</code> (with flag <code>randomizeDepth</code>). This ensures complete preset serialization compatibility without altering the underlying DTO schema.</li>
+</ul>
+<h3 id="audio-envelope-followers-applies-when-isaudiosourcesourceid">Audio Envelope Followers — applies when <code>isAudioSource(sourceId)</code></h3>
+<p>When a modulator uses an audio band source (<code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_high</code>), it can apply an independent asymmetric one-pole IIR envelope follower:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Range</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>followerMode</code></td>
+<td><code>AudioFollowerMode</code></td>
+<td><code>RAW</code>, <code>PUNCHY</code>, <code>SMOOTH</code>, <code>SLOW</code>, <code>AMBIENT</code>, <code>CUSTOM</code></td>
+<td>Envelope dynamics preset mode</td>
+</tr>
+<tr>
+<td><code>attackMs</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 500]</code> ms</td>
+<td>Rise time constant ($\tau_{\text{att}}$)</td>
+</tr>
+<tr>
+<td><code>decayMs</code></td>
+<td><code>Float</code></td>
+<td><code>[10, 3000]</code> ms</td>
+<td>Fall time constant ($\tau_{\text{dec}}$)</td>
+</tr>
+<tr>
+<td><code>attackMsMin / attackMsMax</code></td>
+<td><code>Float</code></td>
+<td><code>[0, 500]</code> ms</td>
+<td>Randomization bounds for attack time</td>
+</tr>
+<tr>
+<td><code>decayMsMin / decayMsMax</code></td>
+<td><code>Float</code></td>
+<td><code>[10, 3000]</code> ms</td>
+<td>Randomization bounds for decay time</td>
+</tr>
+<tr>
+<td><code>randomizeAttackMs / randomizeDecayMs</code></td>
+<td><code>Boolean</code></td>
+<td><code>true/false</code></td>
+<td>Enables randomization for attack/decay</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Evaluation Pipeline</strong>: Implemented in <code>AudioFollowerTracker</code> inside <code>Evaluators.kt</code>. Uses framerate-independent exponential one-pole smoothing:
+  $$\alpha = 1 - e^{-\Delta t / \tau}$$
+  $$\text{If } x &gt; y_{\text{prev}}: \quad y = y_{\text{prev}} + \alpha_{\text{att}} \cdot (x - y_{\text{prev}})$$
+  $$\text{If } x \le y_{\text{prev}}: \quad y = y_{\text{prev}} + \alpha_{\text{dec}} \cdot (x - y_{\text{prev}})$$</li>
+<li><strong>Dual-Trace Scope</strong>: In <code>OscilloscopeDrawer.drawOscilloscope</code>, <code>ghostHistory</code> receives the un-followed raw band energy ($35\%$ alpha) while the main line plots the filtered follower output.</li>
+</ul>
+<h3 id="lfo-2-modulator-only-evaluated-when-sourceid-lfo">LFO 2 (Modulator) — only evaluated when <code>sourceId == "lfo"</code></h3>
+<p>LFO 2 is a second oscillator that modulates properties of LFO 1. It has its own waveform,
+speed, phase, slope, morph, and hold:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>modWaveform</code></td>
+<td>LFO 2 shape</td>
+</tr>
+<tr>
+<td><code>modSubdivision</code></td>
+<td>LFO 2 cycle duration</td>
+</tr>
+<tr>
+<td><code>modPhaseOffset</code></td>
+<td>LFO 2 phase shift</td>
+</tr>
+<tr>
+<td><code>modSlope</code></td>
+<td>LFO 2 asymmetry</td>
+</tr>
+<tr>
+<td><code>modMorph</code></td>
+<td>LFO 2 waveshaping</td>
+</tr>
+<tr>
+<td><code>modHold</code></td>
+<td>LFO 2 plateau</td>
+</tr>
+<tr>
+<td><code>modGenUnit</code></td>
+<td><code>TIME</code>, <code>BEAT</code>, or <code>FRAME</code> for LFO 2's clock</td>
+</tr>
+<tr>
+<td><code>generatorModMode</code></td>
+<td>How LFO 2 acts on LFO 1: <code>NONE</code>, <code>AM</code>, <code>PM</code>, or <code>ADD</code></td>
+</tr>
+<tr>
+<td><code>generatorModDepth</code></td>
+<td>How much LFO 2 influences LFO 1</td>
+</tr>
+</tbody>
+</table>
+<p>Randomization ranges also exist for all mod-fields (<code>modSubdivisionMin/Max</code>, etc.).</p>
+<hr />
+<h2 id="enums">Enums</h2>
+<p><strong>File</strong>: <code>parameters/Enums.kt</code></p>
+<h3 id="modulationoperator">ModulationOperator</h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ADD</code></td>
+<td><code>result + modAmount</code> — adds CV signal scaled to parameter range</td>
+</tr>
+<tr>
+<td><code>MUL</code></td>
+<td><code>result * (1 + modAmount)</code> — multiplicative ring-mod style</td>
+</tr>
+<tr>
+<td><code>SCALE</code></td>
+<td><code>result * (1 - depth + modAmount)</code> — attenuates the base value</td>
+</tr>
+</tbody>
+</table>
+<h3 id="waveform">Waveform</h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Shape</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SINE</code></td>
+<td>Standard sinusoid</td>
+</tr>
+<tr>
+<td><code>TRIANGLE</code></td>
+<td>Linear ramp with <code>slope</code>-controlled asymmetry</td>
+</tr>
+<tr>
+<td><code>SQUARE</code></td>
+<td>Duty-cycle set by <code>slope</code></td>
+</tr>
+<tr>
+<td><code>RANDOM</code></td>
+<td>Per-cycle sample-and-glide (deterministic from subdivision + phaseOffset hash)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="genunit">GenUnit</h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TIME</code></td>
+<td><code>subdivision</code> is a period in <strong>seconds</strong></td>
+</tr>
+<tr>
+<td><code>BEAT</code></td>
+<td><code>subdivision</code> is a number of <strong>beats</strong> (synced to <code>CVRegistry.getSynchronizedTotalBeats()</code>)</td>
+</tr>
+<tr>
+<td><code>FRAME</code></td>
+<td><code>subdivision</code> is a number of <strong>render frames</strong> (1 to 10,000 frames, synced to <code>CVRegistry.getRenderFrameCount()</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>When <code>genUnit == BEAT</code> the subdivision randomizer draws from the discrete musical grid
+rather than a continuous uniform. When <code>genUnit == FRAME</code>, the randomizer and UI lock strictly to integer frame counts. Beat mode uses <code>getSynchronizedTotalBeats()</code> which is an
+interpolated estimate updated from the JACK audio thread via <code>@Volatile</code> fields in <code>CVRegistry</code>. Frame mode uses monotonic render frame ticks updated on each frame.</p>
+<h3 id="generatormodmode-lfo-2-interaction">GeneratorModMode (LFO 2 interaction)</h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Effect on LFO 1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NONE</code></td>
+<td>LFO 2 disabled; LFO 1 runs independently</td>
+</tr>
+<tr>
+<td><code>AM</code></td>
+<td>Amplitude Modulation — <code>carrierVal * (1 + lfo2Val * depth)</code></td>
+</tr>
+<tr>
+<td><code>PM</code></td>
+<td>Phase Modulation — shifts LFO 1's <code>phaseOffset</code> by <code>lfo2Val * depth</code> before evaluation</td>
+</tr>
+<tr>
+<td><code>ADD</code></td>
+<td>Additive — <code>carrierVal + lfo2Val * depth</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="lfospeedmode">LfoSpeedMode</h3>
+<p>UI hint only (<code>SLOW</code>, <code>MEDIUM</code>, <code>FAST</code>). Controls the slider range shown in <code>PropertiesPanel</code>
+when the user adjusts <code>subdivision</code> in time mode. Does not affect evaluation.</p>
+<hr />
+<h2 id="waveform-math">Waveform Math</h2>
+<p><strong>File</strong>: <code>parameters/WaveformMath.kt</code></p>
+<h3 id="calculateadvancedlfophase-morph-hold-slope-waveform-used-by-lfo-beatphase-sampleandhold"><code>calculateAdvancedLFO(phase, morph, hold, slope, waveform)</code> — used by <code>lfo</code>, <code>beatPhase</code>, <code>sampleAndHold</code></h3>
+<pre><code>1. If waveform == SQUARE:
+   - slope functions as Duty Cycle D in [0.001, 0.999] (PWM)
+   - Threshold voltage: V_th = 1.0 - 2.0 * D
+   - Slices symmetric triangle through threshold V_th with rising edge aligned to phase 0.0
+   - Scales by 1.0 / (1.0 - safeHold) and clamps to [-1, 1]
+   - Applies morph log-cosh waveshaping
+2. If non-square (SINE, TRIANGLE):
+   - Extreme slope boundary:
+     - `slope &gt;= 0.999f`: evaluated as a pure unidirectional rising sawtooth ramp (`phase.toFloat()`, 0 to 1) with instantaneous wrap to 0 at the period boundary (no reverse fall slope).
+     - `slope &lt;= 0.001f`: evaluated as a pure unidirectional falling sawtooth ramp (`(1.0 - phase).toFloat()`, 1 to 0) with instantaneous wrap to 1 at the period boundary.
+     - `0.001f &lt; slope &lt; 0.999f`: computes raw asymmetric triangle (ramp up to 1 from [0, slope), ramp down to 0 from [slope, 1)).
+   - Stretch by hold: plateau the peak by compressing transition into (1 - safeHold) of the cycle
+   - safeHold is clamped to [0.0, 0.999] to prevent division by zero while enabling steep vertical edges
+   - If `morph &gt;= 0.999f`: bypasses waveshaper entirely and returns `shaped` directly (zero rounding, zero peak deceleration, exact linear segments).
+   - Otherwise, apply morph via log-cosh waveshaper:
+       k = lerp(1.5, 15.0, morph)         (higher k = sharper, more triangle/square-like; lower k = rounded sine)
+       shaped = log(cosh(k * tri)) / (k * maxVal)
+3. Output in [-1, 1]
+</code></pre>
+<p><code>morph = 0</code> → rounded sine-like corners. <code>morph = 1</code> → pure linear sharp transitions with zero apex rounding. Hold defaults to <code>0.999</code> for square waves.</p>
+<h3 id="random-waveform"><code>RANDOM</code> waveform</h3>
+<p>Uses a deterministic per-cycle hash seeded from <code>(subdivision, phaseOffset, modulator.id)</code>.
+Each cycle independently samples <code>previousValue</code> and <code>currentValue</code> from the hash, then
+interpolates between them using the <code>hold</code>/<code>morph</code> shaping above (<code>calculateRandomWaveform</code>
+in <code>Evaluators.kt</code>).</p>
+<hr />
+<h2 id="evaluators-evaluatemodulator-dispatch">Evaluators — <code>evaluateModulator()</code> Dispatch</h2>
+<p><strong>File</strong>: <code>cv/Evaluators.kt</code></p>
+<pre><code>evaluateModulator(mod) → Float   (range [-1, 1])
+
+  &quot;beatPhase&quot;     → phase-locked to beat; RANDOM uses per-cycle hash
+  &quot;sampleAndHold&quot; → always beat-clocked; RANDOM waveform only
+  &quot;lfo&quot;           → full generator:
+                    1. evaluate LFO 2 (mod* fields) if generatorModMode != NONE
+                    2. apply PM shift to LFO 1 phase if mode == PM
+                    3. evaluate LFO 1 (carrier) in TIME or BEAT clock
+                    4. combine: AM → carrier*(1+lfo2*depth)
+                                ADD → carrier + lfo2*depth
+                                PM/NONE → carrier
+  &quot;audio_*&quot;       → CVRegistry.get(id) — pushed from AudioEngine each frame (includes audio_flux_* onset/transient signals)
+  &quot;bpm&quot;           → CVRegistry.get(&quot;bpm&quot;)
+  &quot;midi_cc_*&quot;     → MidiEngine.getCcValue(channel, cc)
+  else            → CVRegistry.get(id) — any registered custom source
+</code></pre>
+<hr />
+<h2 id="serialization">Serialization</h2>
+<p><code>CvModulator</code> is <code>@Serializable</code> (kotlinx-serialization). The DTO conversion lives in
+<code>models/PresetModels.kt</code>:</p>
+<ul>
+<li><code>ModulatorDto.toDomain()</code> — load path; includes a one-line migration:
+  <code>"gen1" / "gen2"</code> → <code>"lfo"</code> to silently upgrade patches saved before the rename.</li>
+<li><code>CvModulator.toDto()</code> — save path; field names are stable (some use <code>@SerialName</code> aliases,
+  e.g. <code>weight</code> for <code>depth</code>).</li>
+</ul>
+<p>Do not rename <code>CvModulator</code> fields without adding a corresponding <code>@SerialName</code> or migration in
+<code>toDomain()</code>.</p>
+<hr />
+<h2 id="parameterresolver">ParameterResolver</h2>
+<p><strong>File</strong>: <code>parameters/ParameterResolver.kt</code></p>
+<p><code>getAllParameterPaths(mixer)</code> returns every <code>(path, ModulatableParameter)</code> pair in the mixer,
+using the standard hierarchical path format (e.g. <code>"Deck A/Mandala/Lobes"</code>, <code>"Deck A/View/Zoom"</code>, <code>"Deck A/FB/Decay"</code>). Used for undo snapshots and MIDI learn target resolution.</p>
+<p>All dynamic visual sources (<code>Mandala</code>, plus pure-ISF sources like <code>dynamic_spiral</code> and <code>icosa_h3</code> loaded via <code>ISFVisualSource</code>) inherit from <code>DynamicVisualSource</code>, exposing their parameter map generically as <code>"Deck &lt;X&gt;/&lt;DisplayName&gt;/&lt;Param&gt;"</code> plus <code>"Deck &lt;X&gt;/&lt;DisplayName&gt;/Gain"</code>. (The standalone <code>DynamicSpiral.kt</code> and <code>Icosahedron.kt</code> Kotlin classes referenced by older docs were retired when those generators were migrated to pure ISF v2.0 shader files — see <code>DECISIONS.md</code>.)</p>
+<p>The overall parameter categories cover:
+- Deck Visual Source: mapped dynamically from <code>source.parameters</code> (e.g. Lobes, Recipe Select, L1–L4, Thickness, Hue Offset, Hue Sweep, Depth, etc.) + <code>Gain</code>
+- Deck View: 3DMode, Zoom, RotateX, RotateY, RotateZ, Persp, DepthDim, Separation, BlendMode
+- Deck Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Kaleido
+- Mixer: crossfade, mode, masterAlpha, bloom, xfadeSpeed, queuePrev, queueNext, bgQueuePrev, bgQueueNext, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll</p>
+<hr />
+<h2 id="crossfade-manual-takeover-auto-centering">Crossfade Manual Takeover &amp; Auto-Centering</h2>
+<p><strong>Files</strong>: <code>rendering/Mixer.kt</code>, <code>ui/MixerPanel.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>midi/MidiMappingManager.kt</code></p>
+<p>The master crossfader (<code>Mixer/crossfade</code>) implements a performance takeover workflow:
+1. <strong>Manual Takeover (<code>Mixer.onCrossfadeManualTakeover()</code>)</strong>: Triggered when the user interacts with the crossfader slider via mouse or incoming hardware MIDI CC.
+   - Disarms Auto-VJ (<code>PlayQueueManager.isAutoVJEnabled = false</code>).
+   - Halts any active automated fade (<code>Mixer.isAutoFading = false</code>).
+   - Mutes all non-MIDI modulators on the crossfader (<code>mod.bypassed = true</code>), ensuring immediate 1:1 manual authority.
+2. <strong>Auto-Centering on Unmute (<code>Mixer.onCrossfadeCvUnmuted()</code>)</strong>: Triggered when any CV modulator on <code>Mixer/crossfade</code> is unmuted or assigned. Snaps <code>baseValue</code> to <code>0.0f</code> to ensure modulation oscillates symmetrically between decks.
+   - Resets <code>crossfade.baseValue = 0.0f</code> (and baseMin/baseMax if non-randomized).
+   - Guarantees immediate full-range, unbiased $[-1.0, +1.0]$ oscillation without waveform clipping against previous manual hold positions. Modulator <code>dcOffset</code> provides optional deck bias.</p>
+<hr />
+<h2 id="continuous-constrained-random-morphing">Continuous Constrained Random Morphing</h2>
+<p><strong>Files</strong>: <code>rendering/MorphState.kt</code>, <code>rendering/Deck.kt</code>, <code>rendering/Mixer.kt</code></p>
+<p>The randomization parameters (<code>Mixer/randDeckA</code>, <code>randDeckB</code>, <code>randDeckBG</code>, <code>randDeckPV</code>, <code>randAll</code>) operate as continuous morphing controllers:
+* <strong>Two-State Snapshot Model</strong>: Each <code>DeckMorphController</code> maintains two state snapshots (<code>state0</code> and <code>state1</code>) storing base values and all active modulator parameters.
+* <strong>In-Place Zero-Allocation Lerping</strong>: Per-frame interpolation mutates runtime fields directly on <code>CvModulator</code> and <code>ModulatableParameter</code> without creating garbage collection pressure on the render thread.
+* <strong>Boundary Hysteresis</strong>: Re-rolls opposite state targets at the $0.01$ and $0.99$ normalized thresholds via a flip-flop state machine (<code>READY_FOR_ONE</code> / <code>READY_FOR_ZERO</code>).
+* <strong>Shortest-Path Angle/Hue Wrapping</strong>: Uses modular circular arithmetic on angle and hue parameters to prevent unwanted unwinding spins.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

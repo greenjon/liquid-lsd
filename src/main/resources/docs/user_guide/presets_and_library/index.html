@@ -1,0 +1,1880 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../modulation/">
+      
+      
+        <link rel="next" href="../output_and_recording/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Presets & Library - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#presets-library" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Presets & Library
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presets
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Presets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-a-preset-contains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a preset contains
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-a-preset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving a preset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-lsd-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The .lsd format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#copying-settings-between-decks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copying settings between decks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unsaved-changes-the-auto-vj-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsaved changes &amp; the Auto-VJ queue
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-library-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Library Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Library Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#library-view-mode-presets-fx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library View Mode ([ Presets ] / [ FX ])
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preset-browser-all-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Browser (All Presets)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-presets-lsdfx-fx-chains-lsdfxchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Presets (.lsdfx) &amp; FX Chains (.lsdfxchain)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audition-latch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audition Latch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#playlists-setlists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Playlists (Setlists)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-play-queue-auto-vj" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Play Queue (Auto-VJ)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-queue-deck-bg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background Queue (Deck BG)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drag-drop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drag &amp; Drop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#midi-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MIDI Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#midi-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presets
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Presets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-a-preset-contains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a preset contains
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-a-preset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving a preset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-lsd-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The .lsd format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#copying-settings-between-decks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copying settings between decks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unsaved-changes-the-auto-vj-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsaved changes &amp; the Auto-VJ queue
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-library-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Library Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Library Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#library-view-mode-presets-fx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library View Mode ([ Presets ] / [ FX ])
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preset-browser-all-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Browser (All Presets)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-presets-lsdfx-fx-chains-lsdfxchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Presets (.lsdfx) &amp; FX Chains (.lsdfxchain)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audition-latch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audition Latch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#playlists-setlists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Playlists (Setlists)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-play-queue-auto-vj" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Play Queue (Auto-VJ)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-queue-deck-bg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background Queue (Deck BG)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drag-drop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drag &amp; Drop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#midi-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MIDI Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#midi-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="presets-library">Presets &amp; Library</h1>
+<p>Presets are the core unit of work in Liquid LSD. A preset captures the complete state of a deck — every parameter, every modulation connection, every note you've added — into a single <code>.lsd</code> file. The library and playlist tools are built around organizing and performing with those files.</p>
+<hr />
+<h2 id="presets">Presets</h2>
+<h3 id="what-a-preset-contains">What a preset contains</h3>
+<ul>
+<li>All visual parameter values (geometry, colour, view, feedback)</li>
+<li>Every modulation setup (LFOs, audio connections, sequencer patterns, MIDI assignments)</li>
+<li>Preset notes and per-parameter notes (if you've added any)</li>
+</ul>
+<h3 id="saving-a-preset">Saving a preset</h3>
+<ul>
+<li><strong><code>Ctrl+S</code></strong> — Saves the active deck's preset to disk immediately. If the deck doesn't have a saved file yet, it opens a <strong>Save As</strong> dialog instead.</li>
+<li><strong><code>Shift+Ctrl+S</code></strong> — Always opens the Save As dialog, even for already-saved presets. The suggested name gets <code>_copy</code> appended so you don't accidentally overwrite the original.</li>
+</ul>
+<p>When you modify a loaded preset, a <code>*</code> appears next to the deck name to show there are unsaved changes.</p>
+<h3 id="the-lsd-format">The <code>.lsd</code> format</h3>
+<p>Presets are plain JSON files stored in <code>library/presets/</code> (and subfolders). You can open them in any text editor, back them up, share them, or paste them as JSON using <strong>Copy Preset JSON</strong> / <strong>Paste Preset JSON</strong> from the right-click context menu.</p>
+<h3 id="copying-settings-between-decks">Copying settings between decks</h3>
+<p>Right-clicking in the <strong>VALUE</strong> column (or in Deck Controls) gives you copy and paste options to clone parameters from one deck to another. You can also copy individual modulator cells and paste them onto other parameters — see the <a href="../modulation/">Modulation</a> page for details. You can also use the keyboard shortcuts CTRL-c and CTRL-v to copy and paste (or Command-c and -v on Macs)</p>
+<h3 id="unsaved-changes-the-auto-vj-queue">Unsaved changes &amp; the Auto-VJ queue</h3>
+<p>If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in <strong>Preferences → General</strong>:</p>
+<ul>
+<li><strong>Skip</strong> — Don't load the next preset until changes are saved or discarded.</li>
+<li><strong>Auto-Save</strong> — Automatically save the current state before switching.</li>
+<li><strong>Auto-Discard</strong> — Discard changes and switch immediately.</li>
+</ul>
+<hr />
+<h2 id="the-library-panel">The Library Panel</h2>
+<p>The Library panel spans the left and middle columns and has three height modes. Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) to cycle between them:</p>
+<ul>
+<li><strong>Full Height</strong> — The Parameters and Properties panels are hidden. Use this when you're fully focused on building or editing playlists and queues.</li>
+<li><strong>Half Height</strong> — The Library sits in the lower half of the workspace, with Parameters and Properties still visible above it. Good for tweaking modulation while keeping your setlist in view.</li>
+<li><strong>Docked</strong> — The Library collapses to a slim toolbar. Use this during a performance when you don't need to manage playlists or queues.</li>
+</ul>
+<p>In Half Height mode, drag the Library's title bar to resize it freely — the height is remembered. Double-click the title bar to snap back to a 50/50 split. The window buttons on the right of the title bar also let you jump between heights directly.</p>
+<h3 id="library-view-mode-presets-fx">Library View Mode (<code>[ Presets ]</code> / <code>[ FX ]</code>)</h3>
+<p>Toggle between full visual presets and FX presets using the segmented mode button in the top-left of the Library menu bar:</p>
+<ul>
+<li><strong><code>[ Presets ]</code> Mode</strong>:</li>
+<li><strong>Column 1 (Presets Pool)</strong>: Shows all full visual deck presets (<code>.lsd</code>) in <code>library/presets/</code>.</li>
+<li><strong>Column 2 (Playlists Editor)</strong>: Setlists (<code>.lsdset</code>) in <code>library/playlists/</code>.</li>
+<li><strong><code>[ FX ]</code> Mode</strong>:</li>
+<li><strong>Column 1 (FX Presets)</strong>: Individual single-slot FX presets (<code>.lsdfx</code>) in <code>library/fx/</code>.</li>
+<li><strong>Column 2 (FX Chains)</strong>: 4-slot FX chain presets (<code>.lsdfxchain</code>) in <code>library/fx_chains/</code>.</li>
+</ul>
+<h3 id="preset-browser-all-presets">Preset Browser (All Presets)</h3>
+<p>The left column shows every preset saved in <code>library/presets/</code>. </p>
+<ul>
+<li><strong>Search</strong> — Type to filter by name or tag. <code>Ctrl+F</code> or <code>/</code> jumps focus to the search box from anywhere in the app.</li>
+<li><strong>Double-click</strong> — Loads the preset into whichever deck is currently inactive on the crossfader.</li>
+<li><strong>Number keys 1–4</strong> — Route the selected preset to Deck A, B, BG, or PV respectively.</li>
+<li><strong>Right-click or ⋮</strong> — Rename, retag, duplicate, add to a queue, or delete.</li>
+<li><strong><code>[!]</code> badge</strong> — Appears when a preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.</li>
+</ul>
+<h3 id="fx-presets-lsdfx-fx-chains-lsdfxchain">FX Presets (<code>.lsdfx</code>) &amp; FX Chains (<code>.lsdfxchain</code>)</h3>
+<p>When viewing <code>[ FX ]</code> mode in the Library:</p>
+<ul>
+<li><strong>Single FX Presets (<code>.lsdfx</code>)</strong>:</li>
+<li><strong>Drag-and-Drop</strong>: Drag directly onto Slot 1, 2, 3, or 4 in the Parameters panel <code>FX</code> subtab.</li>
+<li><strong>Toolbar <code>[A]</code>, <code>[B]</code>, <code>[BG]</code>, <code>[PV]</code></strong>: Loads into the <strong>first vacant slot</strong> on that deck. If all 4 slots are occupied, a prompt appears asking which slot (1–4) to overwrite.</li>
+<li><strong>Right-click menu</strong>: Choose <code>Load to &gt; Deck [A|B|BG|PV] &gt; Slot [1|2|3|4]</code>.</li>
+<li><strong>Double-click</strong>: Loads into the active deck's first vacant slot.</li>
+<li><strong>FX Chains (<code>.lsdfxchain</code>)</strong>:</li>
+<li>Captures or loads a complete 4-slot FX pipeline.</li>
+<li>Loading an FX chain replaces all 4 slots on the target deck.</li>
+</ul>
+<h3 id="audition-latch">Audition Latch</h3>
+<p>Click <strong><code>[ Lock ]</code></strong> in the toolbar to enable audition mode. While latched, clicking any preset (or pressing <code>↑</code> / <code>↓</code>) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click <code>A</code>, <code>B</code>, or <code>BG</code> while latched to target a different deck. Click the lock again to return to normal selection.</p>
+<hr />
+<h2 id="playlists-setlists">Playlists (Setlists)</h2>
+<p>The playlist column is where you build your setlist. Playlists are <code>.lsdset</code> files — simple ordered lists of presets.</p>
+<ul>
+<li><strong>Switch between playlists</strong> — Use the dropdown at the top of the playlist column.</li>
+<li><strong>Reorder</strong> — Drag and drop presets within the list. Changes save automatically.</li>
+<li><strong>Playlist actions (⋮ menu)</strong>:</li>
+<li><strong>Play Now</strong> — Replaces the live queue with this playlist and starts playback.</li>
+<li><strong>Insert After Current</strong> — Slides the playlist into the live queue right after the currently playing preset.</li>
+<li><strong>Add to Bottom</strong> — Appends it to the end of the queue.</li>
+</ul>
+<p>If a playlist references a preset that's been moved or deleted, the row appears in red with a <code>[!] (missing)</code> indicator. Right-click it to remove the dead link.</p>
+<hr />
+<h2 id="the-play-queue-auto-vj">The Play Queue (Auto-VJ)</h2>
+<p>The play queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.</p>
+<ul>
+<li><strong>Transport controls</strong> — <code>&lt;</code> (previous), <code>▶/⏸</code> (play/pause), <code>&gt;</code> (next).</li>
+<li><strong>Loop / Shuffle</strong> — <code>🔁</code> for continuous looping, <code>🔀</code> for random order.</li>
+<li><strong>Add to queue</strong> — Select a preset in the browser and press <code>Q</code>, or right-click and choose <strong>Add to Queue</strong>.</li>
+<li><strong>Export</strong> — Save an improvised live queue as a permanent playlist file.</li>
+</ul>
+<p>When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.</p>
+<hr />
+<h2 id="background-queue-deck-bg">Background Queue (Deck BG)</h2>
+<p>The Background Queue works the same way as the main queue but drives Deck BG independently. Add presets with <code>Shift+Q</code>. Background transitions use dip-to-black fades — double-click or right-click a queued item to choose between an instant cut or a fade.</p>
+<hr />
+<h2 id="drag-drop">Drag &amp; Drop</h2>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Preset Browser</td>
+<td>Playlist (between items)</td>
+<td>Inserts at that position</td>
+</tr>
+<tr>
+<td>Preset Browser</td>
+<td>Empty space at playlist bottom</td>
+<td>Appends to the end</td>
+</tr>
+<tr>
+<td>Playlist item</td>
+<td>Up / down in the same playlist</td>
+<td>Reorders</td>
+</tr>
+<tr>
+<td>Preset Browser or Playlist</td>
+<td>Queue</td>
+<td>Adds to the live queue</td>
+</tr>
+<tr>
+<td>FX Preset (<code>.lsdfx</code>)</td>
+<td>FX Slot 1–4 in Parameters</td>
+<td>Loads into target slot</td>
+</tr>
+<tr>
+<td>FX Chain (<code>.lsdfxchain</code>)</td>
+<td>FX Slot / Chain in Parameters</td>
+<td>Overwrites 4-slot chain</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="midi-mapping">MIDI Mapping</h2>
+<blockquote>
+<p>MIDI is disabled by default. Enable it in <strong>Preferences → MIDI Controls</strong> ("Enable MIDI Subsystem") or via the <strong>⋮</strong> kebab menu next to the Parameters panel's column headers ("MIDI Column").</p>
+</blockquote>
+<p>Liquid LSD keeps hardware controller maps separate from visual presets, so you can swap physical controllers without touching your preset files.</p>
+<p><strong>There are two levels of MIDI mapping:</strong></p>
+<ol>
+<li>
+<p><strong>Hardware Profile</strong> (stored in <code>library/midi/default.json</code>) — Maps physical knobs and faders to global controls like the master crossfader, deck gain, and level faders. These bindings follow you regardless of which preset is loaded.</p>
+</li>
+<li>
+<p><strong>Grid Cell Modulators</strong> (stored inside each <code>.lsd</code> file) — Binds MIDI CC numbers to specific parameters as dynamic modulation sources in the CV grid. These travel with the preset.</p>
+</li>
+</ol>
+<h3 id="midi-learn">MIDI Learn</h3>
+<ol>
+<li>Click the <strong>MIDI Learn</strong> button in the Parameters header or next to any parameter slider.</li>
+<li>Move a knob, fader, or button on your controller.</li>
+<li>Liquid LSD captures the CC and confirms the binding automatically.</li>
+<li>To unbind, right-click the mapped control and clear the MIDI assignment.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

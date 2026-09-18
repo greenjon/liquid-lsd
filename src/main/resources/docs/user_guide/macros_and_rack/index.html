@@ -1,0 +1,1797 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../performance_controls/">
+      
+      
+        <link rel="next" href="../web_broadcast/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Macro Controls & the Modular Video Rack - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#macro-controls-the-modular-video-rack" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Macro Controls & the Modular Video Rack
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#macro-controls-column-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Controls (Column 3)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Macro Controls (Column 3)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#binding-a-knob-or-switch-learn-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binding a knob or switch (Learn Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-binding-inspector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Binding Inspector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#locked-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locked fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-behaviors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switch behaviors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-your-knob-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving your knob layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware control
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-modular-video-rack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Modular Video Rack
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Modular Video Rack">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#switching-to-rack-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching to Rack view
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-default-rack-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The default rack layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-and-arranging-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding and arranging units
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-unit-macro-curation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-unit macro curation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confidence-micro-monitors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence micro-monitors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rear-panel-patch-cables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rear panel &amp; patch cables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#master-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#macro-controls-column-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Controls (Column 3)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Macro Controls (Column 3)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#binding-a-knob-or-switch-learn-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binding a knob or switch (Learn Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-binding-inspector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Binding Inspector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#locked-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locked fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-behaviors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switch behaviors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-your-knob-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving your knob layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware control
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-modular-video-rack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Modular Video Rack
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Modular Video Rack">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#switching-to-rack-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching to Rack view
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-default-rack-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The default rack layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-and-arranging-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding and arranging units
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-unit-macro-curation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-unit macro curation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confidence-micro-monitors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence micro-monitors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rear-panel-patch-cables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rear panel &amp; patch cables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#master-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="macro-controls-the-modular-video-rack">Macro Controls &amp; the Modular Video Rack</h1>
+<p>Macro Controls give you a small number of physical-style knobs and switches that each drive several parameters at once — the fast, tactile layer you reach for live instead of hunting through the Parameters panel. The Modular Video Rack builds on the same macro system to let you assemble your visuals as a stack of 19"-rack-style units, each with its own curated faceplate.</p>
+<hr />
+<h2 id="macro-controls-column-3">Macro Controls (Column 3)</h2>
+<p>Column 3 (the right-hand panel, where the Mixer normally lives) has a mode toggle at the top: <strong><code>[ MIXER | MACROS ]</code></strong>.</p>
+<ul>
+<li><strong>MIXER</strong> — The classic 4-deck crossfader layout (Deck A, B, BG, Master).</li>
+<li><strong>MACROS</strong> — 8 Macro Knobs (2×4 grid) + 4 Macro Switches, a binding inspector, and a single-deck preview.</li>
+</ul>
+<h3 id="binding-a-knob-or-switch-learn-mode">Binding a knob or switch (Learn Mode)</h3>
+<ol>
+<li>Click <strong><code>LEARN</code></strong> on any Macro Knob or Switch. It starts pulsing to show it's armed, and a banner appears: <em>"LEARN MODE: Click any parameter slider or modulator to bind."</em></li>
+<li>Click the target:</li>
+<li>A parameter slider in the <strong>Parameters</strong> panel (Column 1) binds to that parameter's base value.</li>
+<li>A modulator control in the <strong>Properties</strong> panel (Column 2) — e.g. an LFO's Subdivision or Morph slider, or an envelope's Attack/Decay — binds to that modulator property directly. This lets a macro knob speed up an LFO or shorten an envelope's decay, not just move a value.</li>
+<li>A toast confirms the binding (e.g. <em>"Bound Knob 3 → Zoom [LFO 1 Morph]"</em>) and Learn Mode turns itself off.</li>
+</ol>
+<p>Each knob or switch can hold up to <strong>4 bindings</strong>, so one knob can drive several parameters (or modulator properties) simultaneously — with independent settings per binding.</p>
+<h3 id="the-binding-inspector">The Binding Inspector</h3>
+<p>Selecting a knob/switch shows its bindings in the inspector below the grid. For each binding you can set:</p>
+<ul>
+<li><strong>Min / Max</strong> — the travel range the binding maps onto, independent of the target's own range.</li>
+<li><strong>Curve</strong> — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number of positions).</li>
+<li><strong>Invert</strong> — turning the knob up moves this target down.</li>
+<li><strong>Enabled</strong> — toggling a binding off immediately hands the target field back to normal manual/mouse editing; toggling it back on resumes macro control.</li>
+<li><strong>Behavior</strong> <em>(switch controls only)</em> — per-binding override of the switch's press/release semantics (see below). Defaults to <code>— default</code>, which inherits the control-level <strong>Default Behavior</strong> setting.</li>
+</ul>
+<p>The <strong>binding target name</strong> (e.g. <code>Deck A/Mandala/L1</code>) is a clickable link. Clicking it switches Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being controlled without hunting for it manually.</p>
+<h3 id="locked-fields">Locked fields</h3>
+<p>Any slider that's the live target of an enabled macro binding renders <strong>read-only</strong> with a small badge (e.g. <em>"Controlled by Knob 3 (WARP)"</em>). Click the badge to jump straight to that binding in the inspector — that's also where you'd disable the binding if you want to move the slider by hand again.</p>
+<h3 id="switch-behaviors">Switch behaviors</h3>
+<p>Each Macro Switch has a <strong>Default Behavior</strong> that applies to all of its bindings unless overridden:</p>
+<ul>
+<li><strong>Toggle</strong> — click flips it between min and max, and it stays there.</li>
+<li><strong>Momentary</strong> — max while held down, snaps back to min on release. Good for strobes and glitch triggers.</li>
+<li><strong>Trigger</strong> — fires a single one-frame pulse per click, for one-shot impulses.</li>
+</ul>
+<p>Each binding can also carry its own <strong>Behavior</strong> override, set independently in the Binding Inspector. This means a single button press can:</p>
+<ul>
+<li><strong>Latch</strong> one parameter (Toggle override),</li>
+<li><strong>Hold</strong> another only while the button is depressed (Momentary override), and</li>
+<li><strong>Pulse</strong> a third with a one-frame impulse (Trigger override) —</li>
+</ul>
+<p>all at the same time, from one button. The switch's lit/unlit state in the UI reflects the button's raw press state as usual; the different downstream behaviors are invisible in the widget itself but described in the tooltip when overrides are mixed.</p>
+<p>When any binding has an override, the switch tooltip shows the effective behavior per binding, e.g. <em>"Mixed behaviors: Toggle / Momentary / Trigger."</em></p>
+<h3 id="saving-your-knob-layout">Saving your knob layout</h3>
+<p>Macro banks are bundled directly into <code>.lsd</code> / <code>.lsdset</code> preset files — they load and save with the preset automatically, with no extra file to manage. If you want to reuse a favorite knob layout across unrelated presets, use <strong>Export Macro Bank...</strong> / <strong>Import Macro Bank...</strong> in the inspector to save/load a standalone <code>.knobpreset.json</code>. Imports that reference a parameter the currently loaded preset doesn't have simply skip that one binding rather than failing the whole import.</p>
+<h3 id="hardware-control">Hardware control</h3>
+<p>Macro Knobs and Switches sit at the top of the MIDI/OSC input hierarchy:</p>
+<ul>
+<li>Map a physical MIDI CC knob or fader to any of the 8 Macro Knobs, and a MIDI CC/Note button to any of the 4 Macro Switches, the same way you'd MIDI-learn any other control (see <a href="../performance_controls/">Performance Controls</a>).</li>
+<li>Turn on the OSC server in <strong>Preferences → OSC Controls</strong>, and <code>/macro/knob/1</code>–<code>/macro/knob/8</code> and <code>/macro/switch/1</code>–<code>/macro/switch/4</code> send and receive live updates — handy for a TouchOSC layout on a tablet.</li>
+</ul>
+<hr />
+<h2 id="the-modular-video-rack">The Modular Video Rack</h2>
+<p>The Rack is an alternate workspace: instead of the fixed Deck A / B / BG layout, you build a vertical stack of 19"-style rack units, each housing a generator, effect, transition, or utility, with its own curated performance faceplate.</p>
+<h3 id="switching-to-rack-view">Switching to Rack view</h3>
+<ul>
+<li>Press <strong><code>F4</code></strong> to toggle between Classic Deck View and the Rack (pressing it again switches back).</li>
+<li>Or use <strong>View → Modular Video Rack</strong> / <strong>View → Classic Deck View</strong> in the menu bar, or click the <strong><code>[ CLASSIC | RACK ]</code></strong> pill.</li>
+</ul>
+<h3 id="the-default-rack-layout">The default rack layout</h3>
+<p>Opening Rack view populates the bay from your current session:</p>
+<ul>
+<li><strong>Deck A</strong>, <strong>Deck B</strong>, and <strong>Deck BG</strong> each get one rack unit — the deck's generator <em>and</em> all of its active FX slots live together on that single unit's faceplate (FX parameters show up alongside the generator's own, so a deck using 3 FX filters is still just one unit, not four). Deck PV isn't shown in the rack — it's Classic mode's audition/preview deck and doesn't feed the live composite.</li>
+<li>A <strong>Queue &amp; Staging</strong> unit gives you condensed Play Queue / Background Queue / Transition Staging transport controls (prev / play-pause / next, plus what's playing now and what's up next) — the same queues you already use in Classic mode, just visible without leaving the rack.</li>
+<li>A <strong>Master</strong> unit holds the crossfader, blend mode, and master post-FX.</li>
+</ul>
+<h3 id="adding-and-arranging-units">Adding and arranging units</h3>
+<ul>
+<li><strong><code>+ ADD UNIT</code></strong> in the rack toolbar lets you drop in an extra clone of Deck A, Deck B, or Deck BG's generator, or a blank Utility unit to build your own — e.g. if you want a second confidence monitor on a deck elsewhere in the stack.</li>
+<li>By default, units are <strong>normalled</strong>: dropping units into the stack automatically wires unit <em>N</em>'s output into unit <em>N+1</em>'s input, top to bottom — no manual patching needed for a straightforward chain.</li>
+<li>Each unit's header rail has: power, bypass, solo (send straight to master), a macro curation toggle, move up/down, collapse to a thin spine, and remove.</li>
+</ul>
+<h3 id="per-unit-macro-curation">Per-unit macro curation</h3>
+<p>Click <strong><code>MACRO</code></strong> on a unit's header to open its curation drawer. Each rack unit has its own macro bank (up to 8 knobs, 4 switches) — completely independent of the global Column 3 bank and of every other unit's bank, even if two units are the same generator type. Switch between the <strong>Knobs (8)</strong> and <strong>Switches (4)</strong> tabs to pick which of that unit's parameters occupies which slot, and in what order. Binding, curves, min/max, and Learn Mode all work exactly as they do for the global Column 3 macros.</p>
+<h3 id="confidence-micro-monitors">Confidence micro-monitors</h3>
+<p>Each unit's faceplate includes a small live preview of that unit's own output, so you can see what it's doing before it feeds downstream, without leaving the rack view.</p>
+<h3 id="rear-panel-patch-cables">Rear panel &amp; patch cables</h3>
+<p>Press <strong><code>Tab</code></strong> (or click <strong>FRONT FACEPLATE / REAR CHASSIS</strong> in the toolbar) to flip the whole rack 180° and see the rear chassis: 1/4" phone jacks for <strong>Video In</strong>, <strong>Video Out</strong>, <strong>Mask/Sidechain In</strong>, and <strong>CV Modulation In</strong>, with LEDs showing live signal state.</p>
+<ul>
+<li><strong>Click a jack and drag</strong> to another jack to patch a cable between them — this overrides the normalled connection for that unit.</li>
+<li><strong>Right-click</strong> a cable to unplug it and fall back to the normalled routing.</li>
+</ul>
+<p>This is where you'd break the default top-to-bottom chain — routing one unit's output to two different downstream units, patching in an external Spout/Syphon/PipeWire feed, or building an intentional feedback loop.</p>
+<blockquote>
+<p><strong>Known limitation:</strong> Cables only actually reroute pixels for custom <strong>Utility</strong> units. For the built-in <strong>Generator</strong> (Deck) and <strong>Transition</strong> (Master) units, cables render and jacks light up, but the signal underneath still runs through the fixed Deck/Mixer pipeline — dragging a cable between two built-in units won't change what they actually output. Full patchable routing for built-in units is planned but not yet implemented.</p>
+</blockquote>
+<h3 id="master-bypass">Master Bypass</h3>
+<p>The <strong>MASTER BYPASS</strong> button in the rack toolbar passes the input straight through to the output, skipping every unit in the stack — useful for an instant A/B against the unprocessed signal.</p>
+<hr />
+<h2 id="shortcuts">Shortcuts</h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>F4</code></td>
+<td>Toggle between Classic Deck View and the Modular Video Rack</td>
+</tr>
+<tr>
+<td><code>Tab</code></td>
+<td>Flip the rack between Front Faceplate and Rear Chassis (Rack view only)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,2033 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../output_and_recording/">
+      
+      
+        <link rel="next" href="../macros_and_rack/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Performance Controls - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#performance-controls" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Performance Controls
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#trackpad-performance-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trackpad Performance Surface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trackpad Performance Surface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-finger-stutters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-finger stutters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup-on-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup on Linux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes-tooltips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes &amp; Tooltips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes &amp; Tooltips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hover-tooltips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hover tooltips
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-three-tier-notes-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three-tier notes system
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-and-editing-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding and editing notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-preset-name-label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The preset name label
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fx-chain-slot-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Chain &amp; Slot Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#midi-hardware-control-mappings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Hardware &amp; Control Mappings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MIDI Hardware &amp; Control Mappings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#midi-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intelligent-signal-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intelligent Signal Classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fine-tuning-continuous-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fine-Tuning Continuous Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discrete-controls-buttons-pads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discrete Controls (Buttons &amp; Pads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#relative-rotary-encoders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relative Rotary Encoders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#osc-touchosc-control-surfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OSC / TouchOSC Control Surfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OSC / TouchOSC Control Surfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-setup_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#osc-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OSC Learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fine-tuning-macro-knobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fine-Tuning &amp; Macro Knobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#profiles_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#trackpad-performance-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trackpad Performance Surface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trackpad Performance Surface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-finger-stutters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-finger stutters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup-on-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup on Linux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes-tooltips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes &amp; Tooltips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes &amp; Tooltips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hover-tooltips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hover tooltips
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-three-tier-notes-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three-tier notes system
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-and-editing-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding and editing notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-preset-name-label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The preset name label
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fx-chain-slot-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Chain &amp; Slot Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#midi-hardware-control-mappings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Hardware &amp; Control Mappings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MIDI Hardware &amp; Control Mappings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#midi-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI Learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intelligent-signal-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intelligent Signal Classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fine-tuning-continuous-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fine-Tuning Continuous Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discrete-controls-buttons-pads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discrete Controls (Buttons &amp; Pads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#relative-rotary-encoders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relative Rotary Encoders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#osc-touchosc-control-surfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OSC / TouchOSC Control Surfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OSC / TouchOSC Control Surfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-setup_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#osc-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OSC Learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fine-tuning-macro-knobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fine-Tuning &amp; Macro Knobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#profiles_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="performance-controls">Performance Controls</h1>
+<p>This page covers two things that are especially useful during a live show: the trackpad performance surface, and the notes system for keeping reminders attached to your presets and parameters.</p>
+<hr />
+<h2 id="trackpad-performance-surface">Trackpad Performance Surface</h2>
+<p>If you're performing on a laptop, you can turn your trackpad into a hardware-style performance controller — a bit like the classic Stanton SCS.3m DJ mixer. Hold <strong><code>CapsLock</code></strong> to activate it.</p>
+<p>While CapsLock is held:
+- The trackpad stops moving the mouse cursor
+- It becomes an absolute-position performance surface with three faders and a crossfader</p>
+<p>Release CapsLock to return to normal mouse control.</p>
+<h3 id="surface-layout">Surface layout</h3>
+<pre><code>┌────────────────────────────────────────────────────┐
+│  [Deck A Level]  [Deck BG Level]  [Deck B Level]   │  ← Top 55% of trackpad
+│                                                    │
+├────────────────────────────────────────────────────┤
+│                   (dead zone)                      │  ← Middle buffer zone
+├────────────────────────────────────────────────────┤
+│              Crossfader  (A ←——→ B)                │  ← Bottom 28%
+└────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Bottom zone (crossfader):</strong> Drag left for Deck A, right for Deck B. The full width maps to the crossfader range. Touch the centre and it snaps to 50/50.</p>
+<p><strong>Top zone (level faders):</strong> Three vertical strips — left third controls Deck A level, middle controls Deck BG, right controls Deck B. Touch anywhere in a strip to jump the level to that position instantly.</p>
+<p><strong>Dead zone (middle):</strong> A buffer between the two zones that prevents accidental switches when you're moving fast.</p>
+<h3 id="multi-finger-stutters">Multi-finger stutters</h3>
+<p>The real power comes from using two fingers at once. Each zone tracks fingers independently, using a last-in-first-out stack:</p>
+<p><strong>Crossfader cut stutters:</strong>
+1. Hold one finger down on the Deck A side.
+2. Tap repeatedly with a second finger on the Deck B side.
+3. Each tap snaps the crossfader to B; lifting the tap snaps it back to A.</p>
+<p>This gives you machine-gun visual cuts synchronized to your tapping rhythm.</p>
+<p><strong>Video strobes:</strong>
+1. Hold a finger at the bottom of a deck's level strip (level = 0%, blackout).
+2. Tap with a second finger at the top of the same strip (level = 100%, full brightness).
+3. Releasing the tap drops the deck back to blackout.</p>
+<p>This creates rhythmic video flashes and stroboscopic accents.</p>
+<p>When all fingers lift from a strip, the level stays frozen where you left it.</p>
+<h3 id="setup-on-linux">Setup on Linux</h3>
+<p>On Linux, the trackpad surface reads raw multi-touch input directly. This requires read/write permission on the input device.</p>
+<p>If the permission isn't set up, you'll see a <strong>Touchpad Status: Read/Write Permission Required</strong> message in <strong>Preferences → General</strong>, next to the <strong>Enable CapsLock Trackpad Console</strong> checkbox, with an <strong>Install Permissions (Polkit)</strong> button. Clicking it installs the necessary udev rule using <code>pkexec</code> — no reboot required. If you ran the desktop installer script (<code>./install-desktop.sh</code>) when you first unzipped the app, this was done automatically.</p>
+<p>On macOS, native trackpad support works without any extra setup.</p>
+<p><strong>Focus safety:</strong> If Liquid LSD loses window focus (e.g. via Alt+Tab), the trackpad grab releases immediately, so you're never locked out of your mouse.</p>
+<hr />
+<h2 id="notes-tooltips">Notes &amp; Tooltips</h2>
+<h3 id="hover-tooltips">Hover tooltips</h3>
+<p>Hovering over almost any parameter in the app shows a tooltip with:
+1. The parameter name, valid range, and factory default value.
+2. A plain-English description of what the parameter does.
+3. Any personal note you've attached to the parameter (in amber text).</p>
+<p>Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.</p>
+<h3 id="the-three-tier-notes-system">The three-tier notes system</h3>
+<p>You can attach notes at three different scopes:</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>What it's for</th>
+<th>Where it's stored</th>
+<th>When it appears</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Source Note</strong></td>
+<td>Notes about a visual generator (e.g. "Gyroid works best with low gain feedback")</td>
+<td><code>~/.liquid-lsd/source-notes.json</code></td>
+<td>Stays with you globally, across all presets</td>
+</tr>
+<tr>
+<td><strong>Preset Note</strong></td>
+<td>Notes about a specific preset</td>
+<td>Inside the <code>.lsd</code> file</td>
+<td>Shows when hovering the preset name label on the deck monitor</td>
+</tr>
+<tr>
+<td><strong>Parameter Note</strong></td>
+<td>A reminder about a specific parameter in a preset</td>
+<td>Inside the <code>.lsd</code> file</td>
+<td>Shows in the parameter's hover tooltip</td>
+</tr>
+</tbody>
+</table>
+<p>Source Notes are global and persist no matter which preset you load — good for tips about generators that are always true. Preset and Parameter Notes travel with the preset file when you share it.</p>
+<h3 id="adding-and-editing-notes">Adding and editing notes</h3>
+<p><strong>Parameter notes:</strong>
+Hover over any parameter row in the Parameters panel and click <strong>⋮</strong> (or right-click the parameter name), then choose <strong>Add/Edit Parameter Note...</strong></p>
+<p><strong>Preset notes:</strong>
+Right-click the preset name label below the deck monitor preview and choose <strong>Add/Edit Preset Note...</strong></p>
+<p><strong>Source notes:</strong>
+Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
+<p>All three open the same note editor: a multi-line text box up to 2048 characters. Press <code>Ctrl+Enter</code> to save, or <code>Escape</code> to cancel.</p>
+<h3 id="the-preset-name-label">The preset name label</h3>
+<p>Below each deck's monitor preview you'll see the name of the currently loaded preset. Hovering it shows the full file path, the last save time, and the preset note if one exists. A <code>*</code> next to the name means there are unsaved changes.</p>
+<p>If no preset is loaded yet (the deck is in an unsaved state), the label shows <code>Untitled</code> in grey. You can't attach a preset note until the preset has been saved at least once.</p>
+<hr />
+<h2 id="fx-chain-slot-management">FX Chain &amp; Slot Management</h2>
+<p>In the <strong>Parameters</strong> panel under the <strong><code>FX</code></strong> subtab, each deck provides a 4-slot modular ISF effects processor:</p>
+<ul>
+<li><strong>FX Chain Header Kebab (<code>⋮</code>)</strong>:</li>
+<li><strong>Save Chain As...</strong>: Saves all 4 slots into an <code>.lsdfxchain</code> file in <code>library/fx_chains/</code>.</li>
+<li><strong>Copy Chain / Paste Chain</strong>: Copies or pastes all 4 slots across decks.</li>
+<li><strong>Clear All Slots</strong>: Disposes and empties all 4 slots on the active deck.</li>
+<li><strong>Per-Slot Kebab (<code>⋮</code>)</strong>:</li>
+<li><strong>Save Slot Preset As...</strong>: Saves the slot's filter ID, dry/wet, and parameters into an <code>.lsdfx</code> file in <code>library/fx/</code>.</li>
+<li><strong>Copy Slot / Paste Slot</strong>: Copies or pastes individual slot configurations across slots or decks.</li>
+<li><strong>Reset Slot</strong>: Clears the slot filter and resets parameters.</li>
+<li><strong>Drag-and-Drop Targets</strong>: Drag <code>.lsdfx</code> or <code>.lsdfxchain</code> files from the Library directly onto any slot to instantly swap or update effects.</li>
+</ul>
+<hr />
+<h2 id="midi-hardware-control-mappings">MIDI Hardware &amp; Control Mappings</h2>
+<p>Liquid LSD includes an intelligent, multi-type MIDI subsystem for connecting hardware controllers (DJ controllers, fader banks, rotary knobs, pads, foot switches, and keyboards).</p>
+<h3 id="quick-setup">Quick Setup</h3>
+<ol>
+<li>Connect your USB or DIN MIDI interface.</li>
+<li>Open <strong>Preferences → MIDI Controls</strong> (or press <code>Ctrl+,</code>).</li>
+<li>Ensure <strong>Enable MIDI Subsystem</strong> is checked. The background watchdog automatically detects newly connected controllers without restarting the application.</li>
+<li>Check the <strong>Live MIDI Monitor (Sniffer)</strong> at the top of the panel: moving any knob or pressing any pad on your controller will immediately stream incoming packets (Channel, Message Type, Index, and Values).</li>
+</ol>
+<h3 id="midi-learn">MIDI Learn</h3>
+<p>You can map any parameter, matrix CV modulator, or global performance action:
+- <strong>Base Value Sliders / Knobs:</strong> Right-click a parameter row in the Parameters panel or click the Learn MIDI button in the Mixer panel.
+- <strong>Modulation Matrix Cells:</strong> Click any cell in the MIDI column of the Parameters matrix, then click <strong>Re-Learn MIDI</strong> in Properties.
+- <strong>Global Performance Actions:</strong> In <strong>Preferences → MIDI Controls</strong>, click <strong>Learn</strong> next to <em>Queue Advance A/B Next</em>, <em>Queue Step Back A/B Prev</em>, <em>BG Shader Advance</em>, <em>BG Step Back</em>, or <em>Tap Tempo</em>.</p>
+<h3 id="intelligent-signal-classification">Intelligent Signal Classification</h3>
+<p>When you turn a knob or tap a pad during Learn mode, Liquid LSD inspects the incoming stream and classifies it automatically:
+- <strong>Note On / Off:</strong> Identified as a discrete button (pads/keys), defaulting to Momentary mode.
+- <strong>Continuous CC:</strong> Identified as an absolute continuous pot or slider ($0 \dots 127$).
+- <strong>Relative Rotary Encoders:</strong> Endless rotaries sending delta step packets ($63/65$ or $1/127$) are auto-classified into relative decoding mode.
+- <strong>Pitch Bend:</strong> 14-bit bipolar inputs are mapped with center-spring return.</p>
+<p>You can override any auto-detected mode at any time using the dropdowns in <strong>Preferences → MIDI Controls</strong>.</p>
+<h3 id="fine-tuning-continuous-controls">Fine-Tuning Continuous Controls</h3>
+<p>In the <strong>Parameter Mappings</strong> table of the MIDI tab:
+- <strong>Min / Max Bounds:</strong> Clamp physical travel to a specific sub-range of the parameter.
+- <strong>Invert:</strong> Flips the physical direction ($0 \leftrightarrow 127$).
+- <strong>Slew (Smoothing):</strong> Configurable smoothing filter ($0 \dots 250\,\text{ms}$) that eliminates 7-bit "zipper noise" or stepped visual jumps on sensitive shader uniforms.
+- <strong>Soft Takeover (Pickup):</strong> Toggle between <em>Immediate</em> jump and <em>Soft Takeover</em>. With Soft Takeover active, parameter values will not jump upon loading a new preset until your physical knob/fader crosses the stored software value. The UI indicates <code>Awaiting Pickup</code> along with physical knob telemetry until synced.</p>
+<h3 id="discrete-controls-buttons-pads">Discrete Controls (Buttons &amp; Pads)</h3>
+<p>Hardware buttons and pads support four distinct trigger behaviors:
+- <strong>Momentary:</strong> Active only while held; snaps back to minimum/default on release (ideal for video strobes, momentary feedback bursts, and glitch triggers).
+- <strong>Toggle (Latched):</strong> Flips state on each press.
+- <strong>Step Increment:</strong> Each press increments the parameter value by a configurable step size.
+- <strong>Step Decrement:</strong> Each press decrements the parameter value by a configurable step size.</p>
+<h3 id="relative-rotary-encoders">Relative Rotary Encoders</h3>
+<p>Liquid LSD supports the three industry-standard relative encoding formats used by hardware like the DJ TechTools MIDI Fighter Twister, Behringer X-Touch, and Arturia controllers:
+- <strong>Binary Offset (64-centric):</strong> $65 = +1, 63 = -1$.
+- <strong>Signed Bit (1-centric):</strong> $1 = +1, 65 = -1$.
+- <strong>Two's Complement (1-centric):</strong> $1 = +1, 127 = -1$.
+Each rotary mapping includes an editable <strong>Step</strong> multiplier to dial in coarse or fine rotational sensitivity.</p>
+<h3 id="profiles">Profiles</h3>
+<p>All assignments are stored in JSON profiles under <code>library/midi/&lt;profile_name&gt;.json</code>. You can create, save, switch, and delete mapping profiles in the MIDI tab, allowing you to quickly switch between different hardware setups (e.g. home studio controller vs live gig setup).</p>
+<hr />
+<h2 id="osc-touchosc-control-surfaces">OSC / TouchOSC Control Surfaces</h2>
+<p>Liquid LSD includes a native, zero-dependency OSC 1.0 server for wireless control from TouchOSC and other OSC-capable apps on phones and tablets — no external bridge software required.</p>
+<h3 id="quick-setup_1">Quick Setup</h3>
+<ol>
+<li>Open <strong>Preferences → OSC Controls</strong> (or press <code>Ctrl+,</code>).</li>
+<li>Check <strong>Enable OSC Server</strong>. By default it listens on UDP port <code>8000</code> and sends feedback out on port <code>9000</code> — both are editable, with a <strong>Restart Server</strong> button to apply port changes.</li>
+<li>Point your TouchOSC layout at your computer's IP address, using the same inbound/outbound ports. Move any control on the layout — Liquid LSD automatically learns the client's IP from the first packet it receives, so there's nothing to configure on the desktop side beyond the ports.</li>
+<li>The <strong>Live Packet Sniffer</strong> in the OSC Controls tab streams recent inbound and outbound traffic (address, arguments, and remote host) so you can confirm packets are arriving.</li>
+</ol>
+<h3 id="osc-learn">OSC Learn</h3>
+<p>Unlike MIDI Learn, which arms from the target control, OSC Learn is driven from the OSC Controls tab:
+1. Type the target parameter's path into the <strong>Learn OSC</strong> field (e.g. <code>Mixer/crossfade</code>, or any path shown in the Properties panel).
+2. Click <strong>Start Learn</strong>, then move the control on your OSC surface. Liquid LSD binds whichever address sent that message.
+3. TouchOSC XY pads and other multi-argument messages (e.g. <code>/2/xy</code>) are unpacked per-axis — learning from one binds only that axis; repeat Learn for the other component.</p>
+<h3 id="fine-tuning-macro-knobs">Fine-Tuning &amp; Macro Knobs</h3>
+<p>The <strong>Address Mappings</strong> table in the OSC Controls tab offers the same per-control shaping as MIDI: <strong>Min/Max</strong> range clamping, <strong>Invert</strong>, <strong>Slew</strong> smoothing ($0 \dots 250\,\text{ms}$), and <strong>Soft Takeover</strong> (pickup) so an OSC control doesn't yank a parameter on first touch.</p>
+<p>Macro Knobs and Switches also respond directly to <code>/macro/knob/1</code>–<code>/macro/knob/8</code> and <code>/macro/switch/1</code>–<code>/macro/switch/4</code> (no manual mapping needed), and broadcast their values back out over OSC whenever they change — handy for keeping a tablet layout's on-screen state in sync. See <a href="../macros_and_rack/">Macro Controls &amp; the Modular Video Rack</a>.</p>
+<h3 id="profiles_1">Profiles</h3>
+<p>Like MIDI, OSC address mappings are stored in JSON profiles, under <code>library/osc/&lt;profile_name&gt;.json</code>. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

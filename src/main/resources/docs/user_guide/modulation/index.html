@@ -1,0 +1,2014 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../visual_sources/">
+      
+      
+        <link rel="next" href="../presets_and_library/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Modulation - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#modulation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Modulation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-cv-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The CV Grid
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The CV Grid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-modulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Modulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audio Modulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#frequency-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequency bands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#detection-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-oscilloscope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The oscilloscope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#range-min-max" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Range (Min / Max)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lfo-modulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LFO Modulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LFO Modulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#primary-lfo-lfo-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primary LFO (LFO 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-modulator-lfo-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secondary Modulator (LFO 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-sequencer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step Sequencer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-step-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The step grid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glide
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modulation-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulation Operators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shortcuts-power-user-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shortcuts &amp; Power-User Tips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shortcuts &amp; Power-User Tips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adjusting-values-without-clicking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adjusting values without clicking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters-panel-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters panel shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Modular Video Rack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-cv-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The CV Grid
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The CV Grid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-modulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Modulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audio Modulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#frequency-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequency bands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#detection-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-oscilloscope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The oscilloscope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#range-min-max" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Range (Min / Max)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lfo-modulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LFO Modulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LFO Modulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#primary-lfo-lfo-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primary LFO (LFO 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-modulator-lfo-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secondary Modulator (LFO 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-sequencer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step Sequencer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-step-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The step grid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glide
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modulation-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulation Operators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shortcuts-power-user-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shortcuts &amp; Power-User Tips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shortcuts &amp; Power-User Tips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adjusting-values-without-clicking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adjusting values without clicking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters-panel-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters panel shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="modulation">Modulation</h1>
+<p>Modulation is how you make your visuals react to music, touch, MIDI, oscillators, or a sequencer. Instead of just setting parameters to fixed values, you connect them to live signals — audio energy, LFOs, step patterns, or MIDI knobs — and let those signals drive what's happening on screen.</p>
+<hr />
+<h2 id="the-cv-grid">The CV Grid</h2>
+<p>The <strong>Parameters</strong> panel is the left panel, visible whenever the Library is in Half Height or Docked mode. It's a matrix:</p>
+<ul>
+<li><strong>Rows</strong> = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)</li>
+<li><strong>Columns</strong> = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)</li>
+</ul>
+<p>Click any cell at the intersection of a parameter and a source type to configure that connection. Active cells show an animated readout knob so you can see the live signal at a glance.</p>
+<p>The tabs at the top switch between decks (A, B, BG, PV) and the master mixer.</p>
+<h3 id="columns">Columns</h3>
+<p>Each column is colour-coded:</p>
+<ul>
+<li><strong>VAL</strong> (mint cyan) — The manual base value, plus range limits and a reset button.</li>
+<li><strong>MIDI</strong> (violet) — Hardware MIDI controller assignments.</li>
+<li><strong>LFO</strong> (sky blue) — Low-frequency oscillators.</li>
+<li><strong>SEQ</strong> (lime green) — Step sequencer.</li>
+<li><strong>AUD</strong> (amber) — Audio modulation.</li>
+</ul>
+<p>You can hide columns you're not using via the <strong>⋮</strong> kebab menu to the right of the column headers. That menu also shows warnings if a loaded preset uses modulators that are currently hidden or offline, with a one-click <strong>Turn On Needed Columns</strong> button to sort it out.</p>
+<hr />
+<h2 id="audio-modulation">Audio Modulation</h2>
+<p>Clicking an <strong>AUD</strong> cell opens the audio modulator config. Each parameter supports two independent audio connections (Audio 1 and Audio 2).</p>
+<h3 id="frequency-bands">Frequency bands</h3>
+<table>
+<thead>
+<tr>
+<th>Band</th>
+<th>What it tracks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AMP</td>
+<td>Full-spectrum energy</td>
+</tr>
+<tr>
+<td>BASS</td>
+<td>Low end — kick drums, sub-bass (below ~150 Hz)</td>
+</tr>
+<tr>
+<td>MID</td>
+<td>Midrange — vocals, snares, lead synths (~1 kHz)</td>
+</tr>
+<tr>
+<td>HIGH</td>
+<td>Top end — hi-hats, cymbals, texture (above ~5 kHz)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="detection-modes">Detection modes</h3>
+<ul>
+<li><strong>Continuous</strong> — Tracks the ongoing energy level of the band. Good for sustained movement, breathing dynamics, amplitude-following effects.</li>
+<li><strong>Transient</strong> — Fires on attacks and hits. Detects the moment energy <em>increases</em> in the band, making it sharp and percussive. Great for triggering flashes, jumps, or snaps on drum hits.</li>
+</ul>
+<h3 id="response-profiles">Response profiles</h3>
+<p>These control how quickly the signal rises and falls:</p>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th>Character</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Instant (Raw Jitter)</td>
+<td>No smoothing — raw and jittery.</td>
+</tr>
+<tr>
+<td>Snap</td>
+<td>Immediate attack, fast release. Good for fast percussive tracks.</td>
+</tr>
+<tr>
+<td>Punchy</td>
+<td>Slight attack, medium release. Captures rhythm cleanly.</td>
+</tr>
+<tr>
+<td>Smooth Swell</td>
+<td>Slower attack, long release. Peaks become gentle pulses.</td>
+</tr>
+<tr>
+<td>Slow Pulse</td>
+<td>Gradual rise, lingering tail.</td>
+</tr>
+<tr>
+<td>Ambient Drift</td>
+<td>Long, fluid swells. Ideal for ambient or drone music.</td>
+</tr>
+<tr>
+<td>Custom</td>
+<td>Set your own attack and decay times.</td>
+</tr>
+</tbody>
+</table>
+<p>Selecting <strong>Custom</strong> inherits the timings from whatever profile was active before, so you can fine-tune from a sensible starting point.</p>
+<h3 id="the-oscilloscope">The oscilloscope</h3>
+<p>The oscilloscope shows two traces: the raw audio energy (faint ghost trace) and the smoothed follower output (solid line). This makes it easy to see how the profile is shaping the signal before it reaches your parameter.</p>
+<h3 id="range-min-max">Range (Min / Max)</h3>
+<p>The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.</p>
+<p>Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.</p>
+<hr />
+<h2 id="lfo-modulation">LFO Modulation</h2>
+<p>Clicking an <strong>LFO</strong> cell opens the LFO config. Each cell has a primary oscillator and an optional secondary modulator.</p>
+<h3 id="primary-lfo-lfo-1">Primary LFO (LFO 1)</h3>
+<p><strong>Waveforms:</strong></p>
+<ul>
+<li><strong>Sine</strong> — Smooth, rounded oscillation.</li>
+<li><strong>Triangle</strong> — Linear rise and fall, adjustable asymmetry.</li>
+<li><strong>Square</strong> — Snaps between two values. Adjust pulse width with the Hold control.</li>
+<li><strong>Random (Sample &amp; Hold)</strong> — Holds a random value for each cycle, then jumps to a new one.</li>
+</ul>
+<p><strong>Clock mode:</strong></p>
+<ul>
+<li><strong>Time</strong> — Set the period in seconds. Use Fast / Medium / Slow sliders.</li>
+<li><strong>Beat</strong> — Synced to the beat clock. Subdivisions from 1/8 beat to 8 bars.</li>
+</ul>
+<p><strong>Waveshaping:</strong></p>
+<ul>
+<li><strong>Slope</strong> — Makes the waveform asymmetric. At 0.5 it's symmetric; at 1.0 you get a slow rise and a fast drop.</li>
+<li><strong>Morph</strong> — Softens sharp corners. At 0.0 you get a pure triangle; at 1.0 you get a smooth sine-like curve.</li>
+<li><strong>Hold</strong> — Compresses the transition into a shorter moment and adds a plateau at the peak.</li>
+</ul>
+<p><strong>Range (Min / Max):</strong> Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values.</p>
+<h3 id="secondary-modulator-lfo-2">Secondary Modulator (LFO 2)</h3>
+<p>LFO 2 modulates LFO 1 to add movement and complexity:</p>
+<ul>
+<li><strong>AM (Amplitude Modulation)</strong> — LFO 2 scales LFO 1's depth up and down, making the oscillation breathe.</li>
+<li><strong>PM (Phase Modulation)</strong> — LFO 2 shifts LFO 1's phase, making it wobble in time.</li>
+<li><strong>Add</strong> — LFO 2's output is added directly to LFO 1's output.</li>
+</ul>
+<hr />
+<h2 id="step-sequencer">Step Sequencer</h2>
+<p>The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.</p>
+<blockquote>
+<p><strong>Note:</strong> The sequencer is disabled by default. Enable it in <strong>Preferences → General</strong> (under Features, "Enable Step Sequencer"), or toggle it directly from the <strong>⋮</strong> kebab menu next to the Parameters panel's column headers.</p>
+</blockquote>
+<h3 id="the-step-grid">The step grid</h3>
+<p>Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Click any cell to type a value (0.0 to 1.0), or hover and scroll to adjust. The active step is highlighted in bright green.</p>
+<p><strong>Keyboard editing shortcuts</strong> (when a step is focused):</p>
+<ul>
+<li><code>Up</code> / <code>Down</code> — fine step (±0.001)</li>
+<li><code>Shift</code> + <code>Up</code> / <code>Down</code> — medium step (±0.01)</li>
+<li><code>Ctrl+Shift</code> + <code>Up</code> / <code>Down</code> — coarse step (±0.1)</li>
+<li>Middle-click — reset to 0.0</li>
+<li><code>Tab</code> / <code>Shift+Tab</code> — move between steps</li>
+</ul>
+<h3 id="timing">Timing</h3>
+<ul>
+<li><strong>Beat</strong> — Syncs to the beat clock. Pick a subdivision from 1/16 to 4 beats per step.</li>
+<li><strong>Time</strong> — Wall clock seconds per step (0.01s to 5.0s).</li>
+<li><strong>Frame</strong> — Advances every N render frames (1 to 120).</li>
+</ul>
+<h3 id="glide">Glide</h3>
+<ul>
+<li><strong>Step Hold</strong> slider — At 100% the value jumps instantly and holds flat for the full step. At 0% it glides smoothly from one step to the next over the whole duration. In between you get a hold then glide.</li>
+<li><strong>Glide Curve</strong> — Linear is a straight ramp; Smooth is an S-curve with gentle acceleration and deceleration.</li>
+</ul>
+<hr />
+<h2 id="modulation-operators">Modulation Operators</h2>
+<p>When you set up a modulator, you also choose how it combines with the base value:</p>
+<ul>
+<li><strong>ADD</strong> — The modulation signal is added on top of the base value. Most common.</li>
+<li><strong>MUL</strong> — The signal multiplies the base value. Quiet when the base is low, loud when it's high. Like ring modulation.</li>
+<li><strong>SCALE</strong> — Attenuates the base value based on the signal. At zero signal you get full base value; at full signal the base is scaled down. Useful for "duck" effects.</li>
+</ul>
+<p>All outputs are clamped to the parameter's valid range automatically.</p>
+<hr />
+<h2 id="shortcuts-power-user-tips">Shortcuts &amp; Power-User Tips</h2>
+<h3 id="adjusting-values-without-clicking">Adjusting values without clicking</h3>
+<p>Hover over any slider or number and scroll the mouse wheel:</p>
+<ul>
+<li>Scroll — fine step</li>
+<li><code>Shift</code> + scroll — medium step</li>
+<li><code>Ctrl+Shift</code> + scroll — coarse step</li>
+</ul>
+<p>Middle-click any slider or value cell to reset to factory default.</p>
+<h3 id="parameters-panel-shortcuts">Parameters panel shortcuts</h3>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Shortcut</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Save active preset</td>
+<td><code>Ctrl+S</code></td>
+</tr>
+<tr>
+<td>Save preset as...</td>
+<td><code>Shift+Ctrl+S</code></td>
+</tr>
+<tr>
+<td>Undo / Redo</td>
+<td><code>Ctrl+Z</code> / <code>Ctrl+Y</code></td>
+</tr>
+<tr>
+<td>Copy cell</td>
+<td><code>Ctrl+C</code> (with a CV cell selected)</td>
+</tr>
+<tr>
+<td>Paste cell</td>
+<td><code>Ctrl+V</code> (onto another cell)</td>
+</tr>
+<tr>
+<td>Copy full parameter row</td>
+<td><code>Ctrl+C</code> (with the VALUE cell selected)</td>
+</tr>
+<tr>
+<td>Clear / reset selected cell</td>
+<td><code>Delete</code> or <code>Backspace</code></td>
+</tr>
+<tr>
+<td>Toggle cell mute</td>
+<td>Middle-click the cell</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Muted cells</strong> still show the live oscilloscope but don't affect the parameter — useful for previewing what a connection would do without committing to it.</p>
+<p><strong>Copying cells:</strong> Copy an LFO, audio, or MIDI cell and paste it onto any compatible cell — the modulator follows automatically. Copy a full parameter row (from the VALUE cell) and paste it onto another parameter to clone all settings, rescaled to the new parameter's range.</p>
+<p><strong>Right-click</strong> any parameter row for a context menu with copy, paste, reset, mute, and note-editing options.</p>
+<p>See <strong>Preferences → Keyboard Shortcuts</strong> for a full grouped list of all shortcuts in the app.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
