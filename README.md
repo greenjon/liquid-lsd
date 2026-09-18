@@ -31,13 +31,13 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 | **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 4-slot chains, preset tags, instant tag search, drag-and-drop preset loading. |
 | **MIDI & Shortcuts** | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer. |
 | **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine. |
-| **Modular Video Rack & Macros** | **Core Complete** | 19" rack workspace, curated faceplates, per-unit macro banks & confidence monitors, `Tab`-flip rear patch bay. Patch cables reroute pixels for custom Utility units only — see [`ROADMAP.md`](ROADMAP.md) for the built-in-unit limitation and remaining backlog. |
+| **Modular Video Rack & Macros** | **Core Complete** | 19" rack workspace, curated faceplates, per-unit macro banks & confidence monitors, `Tab`-flip rear patch bay. The rack is completely unusable. The Macro Knobs are coming along and are the current intense area of focus. When the knobs are dialed in (pun intended) then the rack will be massaged into its final form. See [`ROADMAP.md`](ROADMAP.md) for the built-in-unit limitation and remaining backlog. |
 
 ---
 
 ## Roadmap & Path to v1.0
 
-The core v1.0 feature set has shipped: the 100% ISF pipeline, TouchOSC/OSC control, the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64), and the Modular Video Rack & Macro system (Phases 1-9, Core Complete) are all implemented. What's left before v1.0 locks is parked as the v1.1 backlog:
+The core v1.0 feature set has shipped: the 100% ISF pipeline, MIDI, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). The Modular Video Rack & Macro system is partially implemented and is under rapid development. What's left before v1.0 locks is finishing the Macro/Rack controls, some UI beautification, and general battle hardening.
 
 ### v1.1 Backlog
 
