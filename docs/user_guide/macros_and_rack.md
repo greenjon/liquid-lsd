@@ -31,6 +31,8 @@ Selecting a knob/switch shows its bindings in the inspector below the grid. For 
 - **Enabled** — toggling a binding off immediately hands the target field back to normal manual/mouse editing; toggling it back on resumes macro control.
 - **Behavior** *(switch controls only)* — per-binding override of the switch's press/release semantics (see below). Defaults to `— default`, which inherits the control-level **Default Behavior** setting.
 
+The **binding target name** (e.g. `Deck A/Mandala/L1`) is a clickable link. Clicking it switches Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being controlled without hunting for it manually.
+
 ### Locked fields
 
 Any slider that's the live target of an enabled macro binding renders **read-only** with a small badge (e.g. *"Controlled by Knob 3 (WARP)"*). Click the badge to jump straight to that binding in the inspector — that's also where you'd disable the binding if you want to move the slider by hand again.

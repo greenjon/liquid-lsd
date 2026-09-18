@@ -391,6 +391,21 @@ All post-processing effects, 2D-to-3D projection geometry, and mixer transitions
   - `UpdatePromptModal`: Prompts when newer releases are discovered, offering immediate download via system browser, session reminder, or permanent per-version skip.
   - `AboutModal`: Accessible from the Help menu; displays current version, manual update checker, and repository links.
 
+## System Requirements & Platform Constraints
+
+Liquid LSD targets low-latency live performance across 5 platforms (Linux x64, Linux ARM64, macOS x64, macOS ARM64, Windows x64). Because it runs multiple concurrent FBO render pipelines and GLSL 330 core shaders, the engine imposes strict architectural constraints:
+
+- **OpenGL 3.3 Core Profile Hardware Acceleration**:
+  - Requires hardware-accelerated OpenGL 3.3 Core Profile context (`GLFW_CONTEXT_VERSION_MAJOR 3`, `GLFW_CONTEXT_VERSION_MINOR 3`, `GLFW_OPENGL_PROFILE GLFW_OPENGL_CORE_PROFILE`, `GLFW_OPENGL_FORWARD_COMPAT GLFW_TRUE`).
+  - Legacy GPUs such as Intel GMA 3000/X3100/X4500 (standard in Core 2 Duo era machines) and 1st-Gen Intel HD Graphics (Arrandale/Clarkdale) cap out at OpenGL 1.4–2.1 and **cannot** instantiate an OpenGL 3.3 Core Profile GLFW context.
+  - Supported GPU families: Intel HD 3000/4000+ (Mesa 20+ on Linux), Iris, UHD, Xe, Arc; AMD Radeon HD 5000+ (TeraScale 2/GCN/RDNA); NVIDIA GeForce 8000/9000/GT 200+ (Tesla 2.0 / Fermi+); Apple Silicon M-Series.
+- **64-Bit OS & Architecture**:
+  - The JVM, JNI native loaders (`imgui-java`, `lwjgl`, `jna`, `liblink_jni`), and ZGC memory mapping require a 64-bit operating system (`x86_64` or `aarch64`). 32-bit systems are unsupported.
+- **CPU & Memory**:
+  - Minimum: 64-bit dual-core CPU with SSE4.1/AVX (Intel 2nd-gen Core 2011+, AMD FX/Ryzen, Apple Silicon). Recommended: 4+ physical cores with 8–16 GB RAM for smooth multi-deck video compositing and sub-millisecond ZGC GC pauses.
+- **Audio Subsystem**:
+  - Linux: Real-time JACK or PipeWire (`pipewire-jack`) recommended for sub-millisecond DSP and zero-allocation audio callbacks. Java Sound provides ALSA/PulseAudio fallback on Linux and primary audio input on macOS/Windows.
+
 ## Build & Run
 ```bash
 ./gradlew run              # launch (JACK/PipeWire recommended for Linux, Java Sound fallback runs otherwise)

@@ -146,8 +146,32 @@ object MacroBindingInspector {
                 } else {
                     "${binding.parameterId} [${binding.propertyName}]"
                 }
-                val textCol = if (binding.enabled) 0.95f else 0.5f
-                ImGui.textColored(textCol, textCol, textCol, 1f, targetText)
+
+                // Parse the deck/section from the parameterId for navigation.
+                // Paths are "Deck A/fbZoom", "Deck A/Mandala/L1", "Mixer/crossfade", etc.
+                val slashIdx = binding.parameterId.indexOf('/')
+                val navDeck = if (slashIdx > 0) binding.parameterId.substring(0, slashIdx) else null
+                val navSubTab = when (navDeck) {
+                    "Mixer" -> "CTRL"
+                    else    -> "SRC"
+                }
+
+                // Render as a tinted text label. textColored + isItemClicked is the standard
+                // ImGui clickable-text pattern and reliably receives clicks inside child windows,
+                // unlike smallButton which can be swallowed by a scroll child's focus logic.
+                val linkR = if (binding.enabled) 0.35f else 0.5f
+                val linkG = if (binding.enabled) 0.75f else 0.5f
+                val linkB = if (binding.enabled) 1.0f  else 0.5f
+                ImGui.textColored(linkR, linkG, linkB, 1f, targetText)
+
+                if (ImGui.isItemHovered()) {
+                    ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
+                    if (navDeck != null) itemTooltip("\u2192 Go to $navDeck \u2192 $navSubTab")
+                }
+                if (ImGui.isItemClicked(0) && navDeck != null) {
+                    parametersState.activeTopTab = navDeck
+                    parametersState.setDeckSubTab(navDeck, navSubTab)
+                }
 
                 val btnSize = 20f
                 val availW = ImGui.getContentRegionAvailX()

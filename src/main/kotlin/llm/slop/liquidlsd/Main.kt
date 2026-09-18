@@ -19,6 +19,7 @@ import llm.slop.liquidlsd.presets.SessionSerializer
 import mu.KotlinLogging
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
+import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWImage
 import org.lwjgl.stb.STBImage.*
 import org.lwjgl.system.MemoryStack
@@ -159,9 +160,13 @@ fun main(args: Array<String>) {
         llm.slop.liquidlsd.osc.OscMappingManager.loadProfile(llm.slop.liquidlsd.osc.OscPreferences.activeProfile)
     }
 
+    // Configure GLFW error callback before initialization
+    GLFWErrorCallback.createPrint(System.err).set()
+
     // Initialize GLFW
     if (!glfwInit()) {
-        throw RuntimeException("Failed to initialize GLFW")
+        val errorDesc = getGlfwErrorDescription()
+        throw RuntimeException("Failed to initialize GLFW: $errorDesc")
     }
 
     // Configure GLFW
@@ -184,7 +189,22 @@ fun main(args: Array<String>) {
     val initialWinW = cliArgs.windowWidth ?: 1920
     val initialWinH = cliArgs.windowHeight ?: 1080
     val window = glfwCreateWindow(initialWinW, initialWinH, "Liquid LSD - Libre Shader Decks", 0, 0)
-    if (window == 0L) throw RuntimeException("Failed to create GLFW window")
+    if (window == 0L) {
+        val errorDesc = getGlfwErrorDescription()
+        val errorMsg = buildString {
+            appendLine("Failed to create GLFW window ($errorDesc).")
+            appendLine()
+            appendLine("Liquid LSD requires a GPU and display driver with OpenGL 3.3 Core Profile support.")
+            appendLine("Common causes for this error:")
+            appendLine("  1. Legacy hardware: GPUs prior to Intel HD 3000/4000 (e.g. Intel GMA 950/3100/X3100/X4500 on Core 2 Duo era systems) only support OpenGL 1.4 - 2.1.")
+            appendLine("  2. Missing graphics drivers: Ensure proprietary GPU drivers (NVIDIA) or Mesa 20+ (Intel/AMD) with 3D acceleration are installed.")
+            appendLine("  3. Virtualized/Headless environments: Ensure 3D GPU acceleration is enabled in your VM/container.")
+            appendLine()
+            appendLine("See the System Requirements in README.md or docs/getting_started.md for supported hardware.")
+        }
+        logger.error { errorMsg }
+        throw RuntimeException(errorMsg)
+    }
     setWindowAppIcons(window)
     ensureLinuxDesktopEntry()
 
@@ -654,6 +674,25 @@ fun main(args: Array<String>) {
     GLDebug.disposeDebugCallback()
     glfwDestroyWindow(window)
     glfwTerminate()
+    glfwSetErrorCallback(null)?.free()
+}
+
+private fun getGlfwErrorDescription(): String {
+    return try {
+        MemoryStack.stackPush().use { stack ->
+            val descriptionPtr = stack.mallocPointer(1)
+            val errorCode = glfwGetError(descriptionPtr)
+            if (errorCode != GLFW_NO_ERROR && descriptionPtr.get(0) != 0L) {
+                MemoryUtil.memUTF8(descriptionPtr.get(0))
+            } else if (errorCode != GLFW_NO_ERROR) {
+                "GLFW error code 0x${errorCode.toString(16)}"
+            } else {
+                "Unknown GLFW error"
+            }
+        }
+    } catch (e: Throwable) {
+        "GLFW error query failed: ${e.message}"
+    }
 }
 
 private fun getExternalMonitor(): Long? {
@@ -701,6 +740,7 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
             return win
         }
     }
+    logger.warn { "Failed to create secondary window: ${getGlfwErrorDescription()}" }
     return 0L
 }
 

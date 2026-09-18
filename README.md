@@ -57,14 +57,23 @@ The core v1.0 feature set has shipped: the 100% ISF pipeline, TouchOSC/OSC contr
 
 ---
 
-## Requirements
+## System Requirements
 
-- **Java JDK**: JDK 17 or higher.
-- **GPU**: OpenGL 3.3 capable GPU and drivers.
-- **Audio Input**:
-  - **Linux**: JACK or PipeWire-JACK recommended for sub-millisecond latency and inter-app audio routing. Automatic Java Sound fallback available.
-  - **macOS / Windows**: Standard system audio input device via Java Sound (works out-of-the-box).
-- **Build Tool**: Gradle Wrapper (included).
+Liquid LSD is a real-time procedural visual synthesizer and low-latency audio DSP performance workstation. Rendering 4 simultaneous visual decks (A, B, BG, PV) with multi-pass ISF FX chains, feedback buffers, and audio analysis requires modern 64-bit hardware with hardware-accelerated **OpenGL 3.3 Core Profile** support.
+
+| Component | Minimum Specification | Recommended Specification |
+| :--- | :--- | :--- |
+| **Operating System** | **64-bit only**:<br>• Linux (Ubuntu 20.04+, Debian 11+, Fedora 36+, Arch Linux)<br>• macOS 11.0 Big Sur or newer<br>• Windows 10 / 11 | **64-bit only**:<br>• Linux x64 / ARM64 (Wayland or X11)<br>• macOS 13+ (Apple Silicon M-Series)<br>• Windows 11 (x64) |
+| **GPU / Graphics** | **Hardware OpenGL 3.3 Core Profile support**:<br>• **Intel**: HD Graphics 3000 / 4000+ (Mesa 20+ on Linux; HD 4000+ on Windows), Iris, UHD, Xe, Arc<br>• **AMD**: Radeon HD 5000+ (TeraScale 2), HD 7000+ (GCN), RX series, RDNA<br>• **NVIDIA**: GeForce 8000/9000/GT 200+ (Tesla 2.0), GeForce GTX 400+ (Fermi, Kepler, Maxwell, Pascal, Turing, Ampere, Ada)<br>• **Apple**: Apple Silicon M1+ or Metal/OpenGL 3.3+ capable Intel Macs<br>• **VRAM**: 512 MB | Dedicated GPU with **2 GB+ VRAM**:<br>• NVIDIA GeForce GTX 1060 / RTX series<br>• AMD Radeon RX 580 / RX 6000+ series<br>• Apple Silicon M-Series (Unified Memory) |
+| **Processor (CPU)** | **64-bit dual-core** with SSE4.1/AVX:<br>• Intel Core i3 / i5 / i7 (2nd-Gen Sandy Bridge, 2011 or newer)<br>• AMD FX / Zen (Ryzen) series<br>• Apple Silicon M1+<br>• ARMv8 64-bit (Raspberry Pi 4/5 or equivalent) | **Quad-core or 6+ core** processor:<br>• Intel Core i5/i7 (8th-Gen or newer)<br>• AMD Ryzen 5 / 7 (3000 series or newer)<br>• Apple Silicon (M1 Pro / M2 / M3 / M4) |
+| **Memory (RAM)** | **4 GB RAM** | **8 GB – 16 GB RAM** (supports ZGC sub-millisecond GC and high-res multi-deck FBOs) |
+| **Display Resolution** | **1280 × 720** (minimum window size limit enforced by window manager) | **1920 × 1080 (Full HD)** or higher |
+| **Audio Input** | • **Linux**: ALSA / PulseAudio via Java Sound fallback<br>• **macOS / Windows**: Standard system audio input (built-in mic, interface, or loopback) | • **Linux**: PipeWire (`pipewire-jack`) or JACK daemon for sub-millisecond latency and inter-app patchbay routing<br>• **macOS / Windows**: Low-latency USB/Thunderbolt audio interface |
+| **Java / Runtime** | • **Bundled Releases**: Adoptium JRE 17+ bundled (no external Java install required)<br>• **Building from Source**: JDK 17 or higher (tested with JDK 17, 21, 25) | Bundled Adoptium JRE 17+ or JDK 21+ with ZGC |
+
+> [!WARNING]
+> **Legacy Hardware Incompatibility (Intel Core 2 Duo / Core 2 Quad / Intel GMA Graphics)**:
+> Legacy processors such as **Intel Core 2 Duo / Core 2 Quad** (Conroe, Merom, Penryn ~2006–2008) and systems with **Intel GMA integrated graphics** (e.g. GMA 950, 3100, X3100, 4500MHD) or 1st-Gen Intel HD Graphics (Arrandale/Clarkdale) **do not support OpenGL 3.3 Core Profile** (hardware and drivers cap out at OpenGL 1.4 – 2.1). Attempting to launch Liquid LSD on these machines will fail immediately with `Failed to create GLFW window`. 32-bit operating systems and processors are also unsupported.
 
 ---
 
