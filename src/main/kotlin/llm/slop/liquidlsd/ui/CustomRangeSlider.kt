@@ -66,7 +66,8 @@ object CustomRangeSlider {
         onChanged: (Float) -> Unit,
         formatValue: (Float) -> String = { "%.3f".format(it) },
         parseValue: (String) -> Float? = { it.toFloatOrNull() },
-        readOnly: Boolean = false
+        readOnly: Boolean = false,
+        macroBindingInfo: llm.slop.liquidlsd.macro.MacroBindingInfo? = null
     ) {
         val buffer = textBuffers.getOrPut(key) { imgui.type.ImString(formatValue(currentValue), 32) }
         val active = textWidgetActive.getOrDefault(key, false)
@@ -78,7 +79,8 @@ object CustomRangeSlider {
 
         // Native callback to handle arrow keys
         var flags = imgui.flag.ImGuiInputTextFlags.CallbackHistory
-        if (readOnly) {
+        val isMacroBound = macroBindingInfo != null
+        if (readOnly || isMacroBound) {
             flags = flags or imgui.flag.ImGuiInputTextFlags.ReadOnly
         }
         val callback = textCallbacks.getOrPut(key) { ReusableInputCallback() }
@@ -88,8 +90,19 @@ object CustomRangeSlider {
         callback.formatValue = formatValue
         callback.onChanged = onChanged
 
+        val isBoundValue = isMacroBound && key.endsWith("_value")
+        if (isBoundValue) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBg, ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.08f))
+        }
+
         val inputChanged = ImGui.inputText("##input_$key", buffer, flags, callback)
-        if (inputChanged) {
+
+        if (isBoundValue) {
+            ImGui.popStyleColor(2)
+        }
+
+        if (inputChanged && !isMacroBound) {
             val parsed = parseValue(buffer.get())
             if (parsed != null) {
                 val clamped = parsed.coerceIn(minLimit, maxLimit)
@@ -98,31 +111,34 @@ object CustomRangeSlider {
         }
         val isItemFocused = ImGui.isItemActive()
         val isHovered = ImGui.isItemHovered()
-        if (isItemFocused || isHovered) {
+        if (isItemFocused || isHovered || isBoundValue) {
             isAnySliderHovered = true
             val dl = ImGui.getWindowDrawList()
             val frameH = ImGui.getFrameHeight()
-            val borderCol = if (isItemFocused) {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan for active focus/typing/arrows
-            } else {
-                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Bright Amber Gold for mouse hover target
+            val borderCol = when {
+                isBoundValue -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, if (isHovered) 1.0f else 0.7f)
+                isItemFocused -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan for active focus
+                else -> ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Bright Amber Gold for mouse hover
             }
-            dl.addRect(posX - 1.5f, posY - 1.5f, posX + width + 1.5f, posY + frameH + 1.5f, borderCol, 3f, 0, 2.0f)
+            dl.addRect(posX - 1.5f, posY - 1.5f, posX + width + 1.5f, posY + frameH + 1.5f, borderCol, 3f, 0, if (isBoundValue) 1.5f else 2.0f)
 
-            val io = ImGui.getIO()
-            if (io.mouseWheel != 0f) {
-                val shift = io.keyShift
-                val ctrl = io.keyCtrl
-                val deltaStep = if (ctrl && shift) 0.1f else if (shift) 0.01f else 0.001f
-                val nextVal = (currentValue + io.mouseWheel * deltaStep).coerceIn(minLimit, maxLimit)
-                onChanged(nextVal)
-                io.mouseWheel = 0f
-            }
-            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle click reset
-                val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
-                onChanged(resetTarget)
+            if (!isMacroBound) {
+                val io = ImGui.getIO()
+                if (io.mouseWheel != 0f) {
+                    val shift = io.keyShift
+                    val ctrl = io.keyCtrl
+                    val deltaStep = if (ctrl && shift) 0.1f else if (shift) 0.01f else 0.001f
+                    val nextVal = (currentValue + io.mouseWheel * deltaStep).coerceIn(minLimit, maxLimit)
+                    onChanged(nextVal)
+                    io.mouseWheel = 0f
+                }
+                if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle click reset
+                    val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
+                    onChanged(resetTarget)
+                }
             }
             val fieldType = when {
+                isBoundValue -> "Controlled by ${macroBindingInfo!!.controlName} [${macroBindingInfo.badgeLabel}].\nManual edits are disabled while macro is active."
                 key.endsWith("_min") -> "Minimum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
                 key.endsWith("_max") -> "Maximum modulation boundary. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
                 key.endsWith("_value") -> "Base value. Type, Up/Down, or Scroll to adjust. Middle-click to reset."
@@ -634,6 +650,24 @@ object CustomRangeSlider {
             }
         }
         
+        val macroInfo = if (paramKey != null) {
+            llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(
+                unitInstanceId = null,
+                parameterId = paramKey,
+                modulatorIndex = modulatorIndex,
+                propertyName = propertyName
+            )
+        } else null
+        val isMacroBound = macroInfo != null
+
+        // Draw bounding box / tint around the slider row when controlled by a Macro
+        if (isMacroBound) {
+            val cyanOutline = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.8f)
+            val cyanBg = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.05f)
+            dl.addRectFilled(startX - 4f, startY - 2f, startX + w - 4f, startY + h + 2f, cyanBg, 4f)
+            dl.addRect(startX - 4f, startY - 2f, startX + w - 4f, startY + h + 2f, cyanOutline, 4f, 0, 1.5f)
+        }
+
         // --- ROW 2: Widgets ---
         
         if (label.isNotEmpty()) {
@@ -653,8 +687,13 @@ object CustomRangeSlider {
                     minVal = minLimit,
                     maxVal = maxLimit
                 )
+            } else if (isMacroBound && ImGui.isItemClicked(0)) {
+                macroInfo?.control?.id?.let { ctrlId ->
+                    llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
+                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                }
             }
-            if (ImGui.isItemClicked(2)) {
+            if (ImGui.isItemClicked(2) && !isMacroBound) {
                 val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
                 if (effectiveIsRandomizable) {
                     onRangeChanged(resetTarget, resetTarget)
@@ -663,9 +702,14 @@ object CustomRangeSlider {
                 }
             }
             if (isLabelHovered) {
-                val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
-                val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-                showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint")
+                if (isMacroBound) {
+                    val info = macroInfo!!
+                    showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to inspect in Column 3 Macro Inspector.")
+                } else {
+                    val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
+                    val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
+                    showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint")
+                }
             }
             if (isMacroLearning) {
                 val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
@@ -673,11 +717,22 @@ object CustomRangeSlider {
                 dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
             }
 
-            // Render name of variable beside the die, to its left, sharing vertical center
+            // Render name of variable (and macro badge if bound)
             val textHeight = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
             val textY = row2Y + (buttonSize - textHeight) / 2f
             ImGui.setCursorScreenPos(startX, textY)
-            session.uiTheme.body(label)
+            if (isMacroBound) {
+                val badge = "[${macroInfo!!.badgeLabel}]"
+                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                    ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
+                }
+                ImGui.sameLine(0f, 4f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+                session.uiTheme.body(label)
+                ImGui.popStyleColor()
+            } else {
+                session.uiTheme.body(label)
+            }
         }
         
         if (effectiveShowControls) {
@@ -764,11 +819,18 @@ object CustomRangeSlider {
                 },
                 formatValue = formatValue,
                 parseValue = parseValue,
-                readOnly = readOnly
+                readOnly = readOnly,
+                macroBindingInfo = macroInfo
             )
         }
         
         // --- Dragging & Slider Render ---
+        val effectiveThemeColor = if (isMacroBound) {
+            ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.95f) // Electric Cyan track when bound
+        } else {
+            themeColor
+        }
+
         val trackPadX = 6f
         val trackW = (lineWidth + trackPadX * 2f).coerceAtLeast(1f)
         val trackH = buttonSize
@@ -779,8 +841,8 @@ object CustomRangeSlider {
         val isTrackActivated = ImGui.isItemActivated()
         val isTrackMiddleClicked = ImGui.isItemClicked(2)
 
-        val mousePressed = isTrackActivated || (isTrackHovered && ImGui.isMouseClicked(0))
-        val mouseDown = isTrackItemActive
+        val mousePressed = (isTrackActivated || (isTrackHovered && ImGui.isMouseClicked(0))) && !isMacroBound
+        val mouseDown = isTrackItemActive && !isMacroBound
         
         if (effectiveIsRandomizable) {
             val minPct = toPct(currentMin)
@@ -846,7 +908,7 @@ object CustomRangeSlider {
             // Draw tracks
             val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f) // Darker inactive track
             dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
-            dl.addLine(minHandleX, centerY, maxHandleX, centerY, themeColor, 3f) // Active track is theme color
+            dl.addLine(minHandleX, centerY, maxHandleX, centerY, effectiveThemeColor, 3f) // Active track
             
             // Draw handles
             val handleW = 6f
@@ -859,14 +921,14 @@ object CustomRangeSlider {
             dl.addRectFilled(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
             dl.addRect(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
 
-            // Draw dynamic current value indicator (Amber Gold dot)
+            // Draw dynamic current value indicator (Amber Gold dot, or Cyan if bound)
             val curPct = toPct(currentValue)
             val curX = lineStartX + curPct * lineWidth
             val dotY = centerY
             val dotR = 4f
-            val curDotCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f) // Bright Amber Gold
+            val curDotCol = if (isMacroBound) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f)
             dl.addCircleFilled(curX, dotY, dotR, curDotCol)
-            dl.addCircle(curX, dotY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f) // Dark border
+            dl.addCircle(curX, dotY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
         } else {
             val valPct = toPct(currentValue)
             val valHandleX = lineStartX + valPct * lineWidth
@@ -890,12 +952,12 @@ object CustomRangeSlider {
             // Draw tracks
             val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f) // Darker inactive track
             dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
-            dl.addLine(lineStartX, centerY, valHandleX, centerY, themeColor, 3f) // Active track is theme color
+            dl.addLine(lineStartX, centerY, valHandleX, centerY, effectiveThemeColor, 3f) // Active track
             
             // Draw single handle
             val handleW = 6f
             val handleH = 16f
-            val handleBgCol = ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
+            val handleBgCol = if (isMacroBound) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
             val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
             
             dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
@@ -906,48 +968,56 @@ object CustomRangeSlider {
         val isTrackActive = isTrackItemActive || activeSliderLabel == (idPrefix + label)
         if (isTrackHovered || isTrackActive) {
             isAnySliderHovered = true
-            val borderCol = if (isTrackActive) {
+            val borderCol = if (isMacroBound) {
+                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f)
+            } else if (isTrackActive) {
                 ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while active dragging
             } else {
-                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Amber Gold on hover target
+                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Bright Amber Gold on hover target
             }
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
             
-            val io = ImGui.getIO()
-            if (io.mouseWheel != 0f) {
-                val shift = io.keyShift
-                val ctrl = io.keyCtrl
-                val deltaStep = if (ctrl && shift) 0.1f else if (shift) 0.01f else 0.001f
-                val delta = io.mouseWheel * deltaStep
-                if (effectiveIsRandomizable) {
-                    val minPct = toPct(currentMin)
-                    val maxPct = toPct(currentMax)
-                    val minHandleX = lineStartX + minPct * lineWidth
-                    val maxHandleX = lineStartX + maxPct * lineWidth
-                    val distToMin = kotlin.math.abs(mouseX - minHandleX)
-                    val distToMax = kotlin.math.abs(mouseX - maxHandleX)
-                    if (distToMin < distToMax) {
-                        val nextMin = (currentMin + delta).coerceIn(minLimit, currentMax)
-                        onRangeChanged(nextMin, currentMax)
+            if (!isMacroBound) {
+                val io = ImGui.getIO()
+                if (io.mouseWheel != 0f) {
+                    val shift = io.keyShift
+                    val ctrl = io.keyCtrl
+                    val deltaStep = if (ctrl && shift) 0.1f else if (shift) 0.01f else 0.001f
+                    val delta = io.mouseWheel * deltaStep
+                    if (effectiveIsRandomizable) {
+                        val minPct = toPct(currentMin)
+                        val maxPct = toPct(currentMax)
+                        val minHandleX = lineStartX + minPct * lineWidth
+                        val maxHandleX = lineStartX + maxPct * lineWidth
+                        val distToMin = kotlin.math.abs(mouseX - minHandleX)
+                        val distToMax = kotlin.math.abs(mouseX - maxHandleX)
+                        if (distToMin < distToMax) {
+                            val nextMin = (currentMin + delta).coerceIn(minLimit, currentMax)
+                            onRangeChanged(nextMin, currentMax)
+                        } else {
+                            val nextMax = (currentMax + delta).coerceIn(currentMin, maxLimit)
+                            onRangeChanged(currentMin, nextMax)
+                        }
                     } else {
-                        val nextMax = (currentMax + delta).coerceIn(currentMin, maxLimit)
-                        onRangeChanged(currentMin, nextMax)
+                        val nextVal = (currentValue + delta).coerceIn(minLimit, maxLimit)
+                        onValueChanged(nextVal)
                     }
-                } else {
-                    val nextVal = (currentValue + delta).coerceIn(minLimit, maxLimit)
-                    onValueChanged(nextVal)
+                    io.mouseWheel = 0f // Consume mouse wheel event so parent panel does not scroll
                 }
-                io.mouseWheel = 0f // Consume mouse wheel event so parent panel does not scroll
-            }
-            if (ImGui.isMouseClicked(2) || isTrackMiddleClicked) { // Middle click reset
-                val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
-                if (effectiveIsRandomizable) {
-                    onRangeChanged(resetTarget, resetTarget)
-                } else {
-                    onValueChanged(resetTarget)
+                if (ImGui.isMouseClicked(2) || isTrackMiddleClicked) { // Middle click reset
+                    val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
+                    if (effectiveIsRandomizable) {
+                        onRangeChanged(resetTarget, resetTarget)
+                    } else {
+                        onValueChanged(resetTarget)
+                    }
                 }
             }
-            if (effectiveIsRandomizable) {
+
+            if (isMacroBound) {
+                val info = macroInfo!!
+                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust in Column 3 Macro Inspector.")
+            } else if (effectiveIsRandomizable) {
                 val minPct = toPct(currentMin)
                 val maxPct = toPct(currentMax)
                 val minHandleX = lineStartX + minPct * lineWidth

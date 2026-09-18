@@ -273,4 +273,39 @@ object MacroEngine {
         }
         return result ?: emptyList()
     }
+
+    /**
+     * Finds the primary (first active) [MacroBindingInfo] targeting the specified parameter
+     * (and optional modulator property), resolving the owning bank and control for UI rendering.
+     * Returns null if not bound.
+     */
+    fun findPrimaryBindingInfo(
+        unitInstanceId: String?,
+        parameterId: String,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null
+    ): MacroBindingInfo? {
+        val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
+        if (bindings.isEmpty()) return null
+        val targetBinding = bindings.first()
+
+        val bank = if (unitInstanceId != null) getBank(unitInstanceId) ?: globalBank() else globalBank()
+        val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(targetBinding) }
+        if (knobIdx >= 0) {
+            val ctrl = bank.knobs[knobIdx]
+            val badge = "K${knobIdx + 1}"
+            val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
+            return MacroBindingInfo(targetBinding, ctrl, isKnob = true, index = knobIdx, badgeLabel = badge, controlName = name)
+        }
+
+        val swIdx = bank.switches.indexOfFirst { it.bindings.contains(targetBinding) }
+        if (swIdx >= 0) {
+            val ctrl = bank.switches[swIdx]
+            val badge = "SW${swIdx + 1}"
+            val name = if (ctrl.label.isNotBlank()) ctrl.label else "Switch ${swIdx + 1}"
+            return MacroBindingInfo(targetBinding, ctrl, isKnob = false, index = swIdx, badgeLabel = badge, controlName = name)
+        }
+
+        return null
+    }
 }

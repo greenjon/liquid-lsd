@@ -609,10 +609,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#locked-fields" class="md-nav__link">
+  <a href="#locked-fields-visual-indicators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Locked fields
+        Locked fields &amp; Visual Indicators
       
     </span>
   </a>
@@ -1458,10 +1458,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#locked-fields" class="md-nav__link">
+  <a href="#locked-fields-visual-indicators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Locked fields
+        Locked fields &amp; Visual Indicators
       
     </span>
   </a>
@@ -1656,8 +1656,27 @@
 <li><strong>Behavior</strong> <em>(switch controls only)</em> — per-binding override of the switch's press/release semantics (see below). Defaults to <code>— default</code>, which inherits the control-level <strong>Default Behavior</strong> setting.</li>
 </ul>
 <p>The <strong>binding target name</strong> (e.g. <code>Deck A/Mandala/L1</code>) is a clickable link. Clicking it switches Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being controlled without hunting for it manually.</p>
-<h3 id="locked-fields">Locked fields</h3>
-<p>Any slider that's the live target of an enabled macro binding renders <strong>read-only</strong> with a small badge (e.g. <em>"Controlled by Knob 3 (WARP)"</em>). Click the badge to jump straight to that binding in the inspector — that's also where you'd disable the binding if you want to move the slider by hand again.</p>
+<h3 id="locked-fields-visual-indicators">Locked fields &amp; Visual Indicators</h3>
+<p>Any parameter base value or modulator property that is actively bound to an enabled macro control receives distinct visual cues across Columns 1 and 2:</p>
+<ul>
+<li><strong>Parameters List (Column 1)</strong>:</li>
+<li>The row displays an <strong>Electric Cyan left-accent border</strong> and a subtle cyan background tint.</li>
+<li>An inline badge such as <strong><code>[K1]</code></strong> or <strong><code>[SW2]</code></strong> appears beside the parameter name, and the name is tinted Electric Cyan.</li>
+<li>The "VAL" meter cell is outlined with a cyan border.</li>
+<li>Hovering over the row or value cell shows a contextual tooltip identifying the controlling macro (e.g. <code>Locked: Driven by Knob 1 (WARP) [K1]</code>).</li>
+<li>
+<p><strong>Clicking the row label, badge, or VAL cell</strong> directly navigates Column 3 to the <strong>MACROS</strong> view and selects that specific macro control.</p>
+</li>
+<li>
+<p><strong>Properties &amp; Sliders (Column 2)</strong>:</p>
+</li>
+<li>An Electric Cyan <strong>bounding box and background highlight</strong> frames the entire slider row.</li>
+<li>The variable label displays the <strong><code>[K1]</code></strong> / <strong><code>[SW1]</code></strong> badge in cyan.</li>
+<li>The slider track and dynamic indicator dot glow Electric Cyan instead of their default color.</li>
+<li>Numeric input text boxes are outlined in cyan and set to read-only to prevent fighting the engine.</li>
+<li>Hovering over the slider track, handle, or text box displays a tooltip indicating the bound macro control.</li>
+<li>Clicking the variable label or badge jumps directly to the Column 3 Macro Inspector.</li>
+</ul>
 <h3 id="switch-behaviors">Switch behaviors</h3>
 <p>Each Macro Switch has a <strong>Default Behavior</strong> that applies to all of its bindings unless overridden:</p>
 <ul>

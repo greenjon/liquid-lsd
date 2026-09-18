@@ -123,8 +123,8 @@ object ValueParamSection {
             ImGui.spacing()
 
             val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-            val macroBindings = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, paramKey)
-            val isMacroBound = macroBindings.isNotEmpty()
+            val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
+            val isMacroBound = macroInfo != null
 
             if (isMacroLearning) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.6f, 0.8f, 0.7f))
@@ -142,20 +142,14 @@ object ValueParamSection {
             }
 
             if (isMacroBound) {
-                val boundBinding = macroBindings.first()
-                val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
-                val owner = bank.knobs.find { it.bindings.contains(boundBinding) }
-                    ?: bank.switches.find { it.bindings.contains(boundBinding) }
-                val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
-
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.45f, 0.65f, 0.6f))
-                if (ImGui.button("${Icons.LOCK} Base value controlled by $ownerName. Click to inspect in Column 3.", ImGui.getContentRegionAvailX(), 26f)) {
-                    if (owner != null) {
-                        llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = owner.id
-                    }
+                val info = macroInfo!!
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.45f, 0.65f, 0.7f))
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.0f, 0.65f, 0.85f, 0.85f))
+                if (ImGui.button("${Icons.LOCK} Base value controlled by ${info.controlName} [${info.badgeLabel}]. Click to inspect in Column 3.", ImGui.getContentRegionAvailX(), 26f)) {
+                    llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = info.control.id
                     session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
                 }
-                ImGui.popStyleColor()
+                ImGui.popStyleColor(2)
                 itemTooltip("This parameter's base value is continuously set by a Macro Control. Uncheck its binding in the Column 3 Binding Inspector to release it.")
                 ImGui.spacing()
             }
@@ -509,7 +503,8 @@ object ValueParamSection {
                     param.baseValue = radianVal
                     param.baseMin = radianVal
                     param.baseMax = radianVal
-                }
+                },
+                paramKey = paramKey
             )
         }
 

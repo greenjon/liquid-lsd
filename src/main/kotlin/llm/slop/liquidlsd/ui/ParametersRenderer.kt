@@ -43,10 +43,21 @@ object ParametersRenderer {
 
         ImGui.pushID(paramKey)
 
+        val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
+        val isMacroBound = macroInfo != null
+
+        val dl = ImGui.getWindowDrawList()
         if (isEven) {
-            val dl = ImGui.getWindowDrawList()
             val stripeCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
             dl.addRectFilled(gridStartX, rowScreenY, gridStartX + rowWidth, rowScreenY + CELL, stripeCol)
+        }
+
+        // Draw Electric Cyan accent bar on left edge and subtle tint across the row if bound to a macro
+        if (isMacroBound) {
+            val cyanAccent = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f)
+            val cyanTint = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.06f)
+            dl.addRectFilled(gridStartX, rowScreenY, gridStartX + rowWidth, rowScreenY + CELL, cyanTint)
+            dl.addLine(gridStartX, rowScreenY + 1f, gridStartX, rowScreenY + CELL - 1f, cyanAccent, 2.5f)
         }
 
         // Row label
@@ -87,10 +98,33 @@ object ParametersRenderer {
 
         ImGui.sameLine(cursorStartX)
         ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
-        session.uiTheme.h3(label)
+        
+        // Render label (with badge if macro-bound)
+        if (isMacroBound) {
+            val badge = "[${macroInfo!!.badgeLabel}]"
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
+            }
+            ImGui.sameLine(0f, 4f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+            session.uiTheme.h3(label)
+            ImGui.popStyleColor()
+        } else {
+            session.uiTheme.h3(label)
+        }
+
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
             val key = paramKey.hashCode()
             showCustomTooltip(key, estimatedWidth = 320f, estimatedHeight = 120f) {
+                if (isMacroBound) {
+                    val info = macroInfo!!
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+                    ImGui.text("${Icons.LOCK} Bound to ${info.controlName} [${info.badgeLabel}]")
+                    ImGui.popStyleColor()
+                    ImGui.textDisabled("Click row or VAL cell to jump to Column 3 Macro Inspector.")
+                    ImGui.separator()
+                }
+
                 // Rich tooltip: name, range, default, description, user note
                 val minVal = param.minClamp
                 val maxVal = param.maxClamp
@@ -141,6 +175,12 @@ object ParametersRenderer {
         }
         if (ImGui.isItemClicked(0)) {
             state.select(ParameterCellId(paramKey, "value"), param)
+            if (isMacroBound) {
+                macroInfo?.control?.id?.let { ctrlId ->
+                    llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
+                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                }
+            }
         }
         if (ImGui.isItemClicked(2)) {
             state.select(ParameterCellId(paramKey, "value"), param)
@@ -198,8 +238,6 @@ object ParametersRenderer {
             ImGui.endPopup()
         }
         ImGui.setCursorPosY(rowY)
-
-        val dl = ImGui.getWindowDrawList()
         val r = CELL * 0.5f
 
         // 1. VALUE Cell
@@ -241,8 +279,8 @@ object ParametersRenderer {
         val isValSelected = state.selectedCell?.paramKey == paramKey && (state.selectedCell?.cvSourceId == "value" || state.selectedCell?.cvSourceId == "final")
 
         val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-        val macroBindings = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, paramKey)
-        val isMacroBound = macroBindings.isNotEmpty()
+        val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
+        val isMacroBound = macroInfo != null
 
         ImGui.setCursorScreenPos(valX, valY)
         ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
@@ -259,12 +297,9 @@ object ParametersRenderer {
             } else {
                 state.select(ParameterCellId(paramKey, "value"), param)
                 if (isMacroBound) {
-                    val boundBinding = macroBindings.first()
-                    val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
-                    val owner = bank.knobs.find { it.bindings.contains(boundBinding) }
-                        ?: bank.switches.find { it.bindings.contains(boundBinding) }
-                    if (owner != null) {
-                        llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = owner.id
+                    macroInfo?.control?.id?.let { ctrlId ->
+                        llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
+                        session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
                     }
                 }
             }
@@ -280,12 +315,8 @@ object ParametersRenderer {
                 isMacroLearning ->
                     "Macro Learn Mode: Click to bind this parameter's base value to armed Macro Control."
                 isMacroBound -> {
-                    val boundBinding = macroBindings.first()
-                    val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
-                    val owner = bank.knobs.find { it.bindings.contains(boundBinding) }
-                        ?: bank.switches.find { it.bindings.contains(boundBinding) }
-                    val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
-                    "Locked: Driven by $ownerName.\nClick to view in Column 3 Macro Inspector."
+                    val info = macroInfo!!
+                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to view in Column 3 Macro Inspector."
                 }
                 isMixerMode || paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."

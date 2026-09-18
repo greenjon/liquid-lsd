@@ -179,3 +179,16 @@ data class MacroBank(
     val knobs: List<MacroControl> = List(8) { MacroControl(label = "KNOB ${it + 1}") },
     val switches: List<MacroControl> = List(4) { MacroControl(isSwitch = true, label = "SW ${it + 1}") }
 )
+
+/**
+ * Descriptive snapshot of a resolved macro binding and its owning [MacroControl],
+ * formatted for UI indicators, badges, and tooltips.
+ */
+data class MacroBindingInfo(
+    val binding: MacroBinding,
+    val control: MacroControl,
+    val isKnob: Boolean,
+    val index: Int,            // 0-based index within knobs or switches list
+    val badgeLabel: String,    // e.g. "K1", "SW2"
+    val controlName: String    // e.g. "Knob 1" or "KNOB 1 (WARP)"
+)

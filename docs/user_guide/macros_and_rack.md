@@ -33,9 +33,24 @@ Selecting a knob/switch shows its bindings in the inspector below the grid. For 
 
 The **binding target name** (e.g. `Deck A/Mandala/L1`) is a clickable link. Clicking it switches Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being controlled without hunting for it manually.
 
-### Locked fields
+### Locked fields & Visual Indicators
 
-Any slider that's the live target of an enabled macro binding renders **read-only** with a small badge (e.g. *"Controlled by Knob 3 (WARP)"*). Click the badge to jump straight to that binding in the inspector — that's also where you'd disable the binding if you want to move the slider by hand again.
+Any parameter base value or modulator property that is actively bound to an enabled macro control receives distinct visual cues across Columns 1 and 2:
+
+- **Parameters List (Column 1)**:
+  - The row displays an **Electric Cyan left-accent border** and a subtle cyan background tint.
+  - An inline badge such as **`[K1]`** or **`[SW2]`** appears beside the parameter name, and the name is tinted Electric Cyan.
+  - The "VAL" meter cell is outlined with a cyan border.
+  - Hovering over the row or value cell shows a contextual tooltip identifying the controlling macro (e.g. `Locked: Driven by Knob 1 (WARP) [K1]`).
+  - **Clicking the row label, badge, or VAL cell** directly navigates Column 3 to the **MACROS** view and selects that specific macro control.
+
+- **Properties & Sliders (Column 2)**:
+  - An Electric Cyan **bounding box and background highlight** frames the entire slider row.
+  - The variable label displays the **`[K1]`** / **`[SW1]`** badge in cyan.
+  - The slider track and dynamic indicator dot glow Electric Cyan instead of their default color.
+  - Numeric input text boxes are outlined in cyan and set to read-only to prevent fighting the engine.
+  - Hovering over the slider track, handle, or text box displays a tooltip indicating the bound macro control.
+  - Clicking the variable label or badge jumps directly to the Column 3 Macro Inspector.
 
 ### Switch behaviors
 
