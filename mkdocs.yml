@@ -36,6 +36,7 @@ nav:
     - Performance Controls: user_guide/performance_controls.md
     - Macro Controls & the Modular Video Rack: user_guide/macros_and_rack.md
     - Web Broadcast: user_guide/web_broadcast.md
+    - Command Line Usage & Startup Options: user_guide/cli_usage.md
   - Developer Reference:
     - Architecture Overview: developer/architecture.md
     - Real-Time Audio & DSP: developer/audio_dsp.md
@@ -49,8 +50,9 @@ nav:
     - Preset & Queue Management: developer/preset_management.md
     - Mandala UX Roadmap: developer/mandala_future_roadmap.md
     - Build for ARM64 Linux: developer/build_arm64_linux.md
-    - RFC: Modular Video Rack Proposal: developer/modular_video_rack_proposal.md
+    - "RFC: Modular Video Rack Proposal": developer/modular_video_rack_proposal.md
     - Unified Control Mapping Architecture: developer/unified_control_mapping.md
-    - RFC: Screen Capture & UI Iteration Proposal: developer/screen_capture_and_ui_iteration_proposal.md
+    - "RFC: Screen Capture & UI Iteration Proposal": developer/screen_capture_and_ui_iteration_proposal.md
+    - CLI & Automated Screen Capture Pipeline: developer/cli_and_screenshot_automation.md
   - Operations & Tuning: developer/ops_tuning.md
   - Release Notes: release_notes.md
