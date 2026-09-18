@@ -129,8 +129,7 @@ class SessionStateTest {
             blendMode = 4.0f
         )
 
-        // A per-unit bank with a curated knob binding, exactly as RackUnitMacroCuration would
-        // produce for a rack unit's own MacroBank -- keyed by the unit's stable id.
+        // A canonical per-deck bank with a curated knob binding, keyed by the deck's stable id.
         val curatedKnob = MacroControl(
             label = "ZOOM",
             value = 0.5f,

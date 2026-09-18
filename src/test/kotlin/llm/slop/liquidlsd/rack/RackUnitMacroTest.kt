@@ -179,18 +179,4 @@ class RackUnitMacroTest {
         assertEquals("mixRate", createdBinding.parameterId)
         assertFalse(MacroLearnState.isControlLearning(targetKnob.id))
     }
-
-    @Test
-    fun testMacroCurationExpansionHeight() {
-        val unit = GenericRackUnit(id = "height_test", label = "Height", unitType = RackUnitType.GENERATOR, heightU = 1)
-
-        val normalH = llm.slop.liquidlsd.rack.ui.RackChassisRenderer.calculateUnitHeight(unit.heightU, isCollapsed = false, isMacroCurationOpen = false)
-        assertEquals(llm.slop.liquidlsd.rack.ui.RackChassisRenderer.U_HEIGHT_PX, normalH)
-
-        val curatedH = llm.slop.liquidlsd.rack.ui.RackChassisRenderer.calculateUnitHeight(unit.heightU, isCollapsed = false, isMacroCurationOpen = true)
-        assertEquals(260.0f, curatedH)
-
-        val collapsedH = llm.slop.liquidlsd.rack.ui.RackChassisRenderer.calculateUnitHeight(unit.heightU, isCollapsed = true, isMacroCurationOpen = true)
-        assertEquals(llm.slop.liquidlsd.rack.ui.RackChassisRenderer.SPINE_HEIGHT_PX, collapsedH, "Collapsed state takes precedence over curation drawer height")
-    }
 }

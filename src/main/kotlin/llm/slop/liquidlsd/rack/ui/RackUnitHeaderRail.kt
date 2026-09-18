@@ -109,29 +109,13 @@ object RackUnitHeaderRail {
         ImGui.popStyleColor()
         ImGui.sameLine()
 
-        // Right-aligned controls: Macro toggle, Up/Down reordering, Height badge, Collapse, Remove
-        val rightGroupW = 230.0f
+        // Right-aligned controls: Up/Down reordering, Height badge, Collapse, Remove
+        val rightGroupW = 160.0f
         val currentX = ImGui.getCursorPosX()
         val targetX = railWidth - rightGroupW
         if (targetX > currentX) {
             ImGui.setCursorPosX(targetX)
         }
-
-        // Macro curation drawer button
-        val macroActive = unit.isMacroCurationOpen
-        if (macroActive) {
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.65f, 0.85f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 1.0f, 1.0f, 1.0f)
-        } else {
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.20f, 0.22f, 0.25f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
-        }
-        if (ImGui.button("${Icons.SETTINGS} MACRO##${unit.id}")) {
-            unit.isMacroCurationOpen = !unit.isMacroCurationOpen
-        }
-        ImGui.popStyleColor(2)
-        itemTooltip(if (macroActive) "Close Macro Curation Drawer" else "Open Macro Curation Drawer (Curate Knobs & Switches)")
-        ImGui.sameLine()
 
         // Height badge (e.g. 1U, 2U)
         ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)

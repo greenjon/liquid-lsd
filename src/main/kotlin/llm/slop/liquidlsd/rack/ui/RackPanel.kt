@@ -74,7 +74,7 @@ class RackPanel(
             // Calculate total height of all units
             var totalUnitsH = 0f
             for (unit in rackManager.units) {
-                totalUnitsH += RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed, unit.isMacroCurationOpen) + RackChassisRenderer.UNIT_MARGIN_Y
+                totalUnitsH += RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed) + RackChassisRenderer.UNIT_MARGIN_Y
             }
             val totalBayH = maxOf(totalUnitsH + 40f, contentH)
 
@@ -91,7 +91,7 @@ class RackPanel(
 
             for (i in rackManager.units.indices) {
                 val unit = rackManager.units[i]
-                val unitH = RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed, unit.isMacroCurationOpen)
+                val unitH = RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed)
                 val unitScreenX = ImGui.getCursorScreenPosX()
                 val unitScreenY = ImGui.getCursorScreenPosY()
 

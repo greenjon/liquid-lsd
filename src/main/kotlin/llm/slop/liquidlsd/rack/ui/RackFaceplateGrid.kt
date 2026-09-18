@@ -36,11 +36,6 @@ object RackFaceplateGrid {
         ImGui.setCursorPosX(paddingX)
         ImGui.setCursorPosY(ImGui.getCursorPosY() + paddingY)
 
-        if (unit.isMacroCurationOpen) {
-            RackUnitMacroCuration.draw(session, unit, usableW)
-            return
-        }
-
         // Draw curated active Macro Controls for this unit if any exist
         drawCuratedMacrosRow(session, unit, usableW)
 
