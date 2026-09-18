@@ -395,9 +395,12 @@ object PropertiesPanel {
                     val boundProps = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, cell.paramKey, modulatorIndex = globalModIndex)
                     if (boundProps.isNotEmpty()) {
                         val propNames = boundProps.joinToString(", ") { it.propertyName }
-                        val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
-                        val owner = bank.knobs.find { k -> k.bindings.any { boundProps.contains(it) } }
-                            ?: bank.switches.find { s -> s.bindings.any { boundProps.contains(it) } }
+                        val owner = llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS
+                            .mapNotNull { llm.slop.liquidlsd.macro.MacroEngine.getBank(it) }
+                            .firstNotNullOfOrNull { bank ->
+                                bank.knobs.find { k -> k.bindings.any { boundProps.contains(it) } }
+                                    ?: bank.switches.find { s -> s.bindings.any { boundProps.contains(it) } }
+                            }
                         val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
 
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.45f, 0.65f, 0.6f))

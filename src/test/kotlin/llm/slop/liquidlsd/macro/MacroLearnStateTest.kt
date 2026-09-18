@@ -8,19 +8,19 @@ class MacroLearnStateTest {
     fun setUp() {
         MacroLearnState.cancelLearn()
         MacroLearnState.clearStatus()
-        MacroEngine.registerBank(null, MacroBank())
+        MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
     }
 
     @AfterTest
     fun tearDown() {
         MacroLearnState.cancelLearn()
         MacroLearnState.clearStatus()
-        MacroEngine.registerBank(null, MacroBank())
+        MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
     }
 
     @Test
     fun testStartAndCancelLearn() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val knob = bank.knobs[0]
 
         MacroLearnState.startLearn(knob.id)
@@ -35,7 +35,7 @@ class MacroLearnStateTest {
 
     @Test
     fun testBindTargetBaseValue() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val knob = bank.knobs[0]
         MacroLearnState.startLearn(knob.id)
 
@@ -61,7 +61,7 @@ class MacroLearnStateTest {
 
     @Test
     fun testBindTargetModulatorProperty() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val knob = bank.knobs[1]
         MacroLearnState.startLearn(knob.id)
 
@@ -90,7 +90,7 @@ class MacroLearnStateTest {
 
     @Test
     fun testMaxBindingsLimitEnforced() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val knob = bank.knobs[2]
 
         for (i in 1..4) {
@@ -118,7 +118,7 @@ class MacroLearnStateTest {
 
     @Test
     fun testDuplicateBindingRejected() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val knob = bank.knobs[0]
 
         MacroLearnState.startLearn(knob.id)

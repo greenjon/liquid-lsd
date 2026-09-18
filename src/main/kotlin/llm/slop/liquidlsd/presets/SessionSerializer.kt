@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.presets
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.*
-import llm.slop.liquidlsd.rack.RackManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import mu.KotlinLogging
@@ -12,15 +11,8 @@ import java.io.File
 object SessionSerializer {
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * Persists the active session, including [rackManager]'s per-unit macro curation
-     * ([RackManager.persistedUnitMacroBanks]) when supplied. If the Rack workspace has units
-     * loaded (the user opened it at least once this run), the live per-unit banks are read
-     * straight off them; otherwise [RackManager.persistedUnitMacroBanks] -- whatever was last
-     * loaded from disk or captured live -- is used as-is so a session where the user never opened
-     * the Rack tab doesn't wipe out previously-curated bindings.
-     */
-    fun saveSession(mixer: Mixer, rackManager: RackManager? = null) {
+    /** Persists the active session, including the five canonical per-deck/mixer macro banks. */
+    fun saveSession(mixer: Mixer) {
         try {
             val sessionFile = File(PresetManager.LIBRARY_ROOT, "last_session.json")
             val parent = sessionFile.parentFile
@@ -85,13 +77,8 @@ object SessionSerializer {
                 isTransAutoAdvanceEnabled = TransitionQueueManager.isAutoAdvanceEnabled,
                 isTransRepeatEnabled = TransitionQueueManager.isRepeatEnabled,
                 isTransShuffleEnabled = TransitionQueueManager.isShuffleEnabled,
-                macroBank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
-                rackUnitMacroBanks = if (rackManager == null) {
-                    emptyMap()
-                } else if (rackManager.units.isNotEmpty()) {
-                    rackManager.units.associate { it.id to it.macroBank }
-                } else {
-                    rackManager.persistedUnitMacroBanks
+                deckMacroBanks = llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS.associateWith {
+                    llm.slop.liquidlsd.macro.MacroEngine.getBank(it) ?: llm.slop.liquidlsd.macro.MacroBank()
                 }
             )
             
@@ -104,13 +91,12 @@ object SessionSerializer {
     }
 
     /**
-     * Restores the active session. When [rackManager] is supplied, seeds
-     * [RackManager.persistedUnitMacroBanks] from the saved [SessionStateDto.rackUnitMacroBanks] so
-     * that the *first* [RackManager.populateFromSession] call (deferred until the Rack workspace
-     * is first drawn -- see [llm.slop.liquidlsd.rack.ui.RackPanel]) can restore each built-in
-     * unit's curated macro bindings instead of falling back to hardcoded defaults.
+     * Restores the active session, including registering all five canonical per-deck/mixer macro
+     * banks with [llm.slop.liquidlsd.macro.MacroEngine] -- independent of whether the Rack
+     * workspace or Classic's MACROS tabs are ever opened this run, since both read/write these
+     * same resident banks directly (see [llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS]).
      */
-    fun loadSession(mixer: Mixer, rackManager: RackManager? = null) {
+    fun loadSession(mixer: Mixer) {
         try {
             val sessionFile = File(PresetManager.LIBRARY_ROOT, "last_session.json")
             if (!sessionFile.exists()) {
@@ -258,12 +244,10 @@ object SessionSerializer {
                 session.isTransShuffleEnabled
             )
 
-            if (session.macroBank != null) {
-                llm.slop.liquidlsd.macro.MacroEngine.registerBank(null, session.macroBank)
-            } else {
-                llm.slop.liquidlsd.macro.MacroEngine.registerBank(null, llm.slop.liquidlsd.macro.MacroBank())
+            for (canonicalId in llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS) {
+                val bank = session.deckMacroBanks[canonicalId] ?: llm.slop.liquidlsd.macro.MacroBank()
+                llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, bank)
             }
-            rackManager?.persistedUnitMacroBanks = session.rackUnitMacroBanks
 
             PresetManager.sessionState = PresetManager.sessionState.copy(unresolvedItems = allUnresolved.distinct())
             llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
@@ -351,6 +335,9 @@ object SessionSerializer {
         PlayQueueManager.restoreSessionQueue(emptyList(), -1, false, true, false)
         BgQueueManager.restoreSessionQueue(emptyList(), -1, false, true, false)
         TransitionQueueManager.restoreSessionQueue(emptyList(), -1, false, true, false)
+        for (canonicalId in llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS) {
+            llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, llm.slop.liquidlsd.macro.MacroBank())
+        }
         PresetManager.sessionState = SessionState()
         llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
         llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()

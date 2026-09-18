@@ -185,7 +185,7 @@ object BeatDivisionSlider {
         val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
         if (isMacroLearning && ImGui.isItemClicked(0)) {
             llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                 targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                 parameterId = paramKey!!,
                 modulatorIndex = modulatorIndex ?: 0,

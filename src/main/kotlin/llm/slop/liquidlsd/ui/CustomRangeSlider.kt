@@ -231,7 +231,7 @@ object CustomRangeSlider {
             val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
             drawMinMaxBoundLabel(session, "Min", isMacroLearning, textBoxesStartX, labelY, boxWidth) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
                     modulatorIndex = modulatorIndex ?: 0,
@@ -242,7 +242,7 @@ object CustomRangeSlider {
             }
             drawMinMaxBoundLabel(session, "Max", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
                     modulatorIndex = modulatorIndex ?: 0,
@@ -265,7 +265,7 @@ object CustomRangeSlider {
             val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
             val bindRangeBound = { propertyName: String ->
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
                     modulatorIndex = modulatorIndex ?: 0,
@@ -679,7 +679,7 @@ object CustomRangeSlider {
             val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
             if (isMacroLearning && ImGui.isItemClicked(0)) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
                     modulatorIndex = modulatorIndex ?: 0,

@@ -105,9 +105,7 @@ object PresetManager {
             try {
                 val deckADto = pendingA.dto
                 mixer.deckA.applyDto(deckADto)
-                deckADto.macroBank?.let {
-                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck A")
-                }
+                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, deckADto.macroBank, "Deck A")
                 activePresetA = deckADto.name
                 cachedDtoA = mixer.deckA.toDto(deckADto.name, deckADto.tags).copy(
                     presetNotes = deckADto.presetNotes,
@@ -131,9 +129,7 @@ object PresetManager {
             try {
                 val deckBDto = pendingB.dto
                 mixer.deckB.applyDto(deckBDto)
-                deckBDto.macroBank?.let {
-                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck B")
-                }
+                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_B, deckBDto.macroBank, "Deck B")
                 activePresetB = deckBDto.name
                 cachedDtoB = mixer.deckB.toDto(deckBDto.name, deckBDto.tags).copy(
                     presetNotes = deckBDto.presetNotes,
@@ -157,9 +153,7 @@ object PresetManager {
             try {
                 val deckBGDto = pendingBG.dto
                 mixer.deckBG.applyDto(deckBGDto)
-                deckBGDto.macroBank?.let {
-                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck BG")
-                }
+                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_BG, deckBGDto.macroBank, "Deck BG")
                 activePresetBG = deckBGDto.name
                 cachedDtoBG = mixer.deckBG.toDto(deckBGDto.name, deckBGDto.tags).copy(
                     presetNotes = deckBGDto.presetNotes,
@@ -180,9 +174,7 @@ object PresetManager {
             try {
                 val deckPVDto = pendingPV.dto
                 mixer.deckPV.applyDto(deckPVDto)
-                deckPVDto.macroBank?.let {
-                    llm.slop.liquidlsd.macro.MacroBankSerializer.restoreMacroBankForDeck(it, "Deck PV")
-                }
+                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_PV, deckPVDto.macroBank, "Deck PV")
                 activePresetPV = deckPVDto.name
                 cachedDtoPV = mixer.deckPV.toDto(deckPVDto.name, deckPVDto.tags).copy(
                     presetNotes = deckPVDto.presetNotes,

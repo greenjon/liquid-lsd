@@ -16,12 +16,12 @@ class MacroBankSerializationTest {
 
     @BeforeTest
     fun setUp() {
-        MacroEngine.registerBank(null, MacroBank())
+        for (id in MacroEngine.CANONICAL_BANK_IDS) MacroEngine.registerBank(id, MacroBank())
     }
 
     @AfterTest
     fun tearDown() {
-        MacroEngine.registerBank(null, MacroBank())
+        for (id in MacroEngine.CANONICAL_BANK_IDS) MacroEngine.registerBank(id, MacroBank())
     }
 
     @Test
@@ -56,40 +56,34 @@ class MacroBankSerializationTest {
     }
 
     @Test
-    fun testDeckPrefixFilteringAndRestoration() {
-        val globalBank = MacroBank()
-        globalBank.knobs[0].label = "ZOOM"
-        globalBank.knobs[0].bindings.add(
+    fun testSnapshotForPresetDeepCopiesAndInstallBankForDeckSwapsAndRemaps() {
+        val deckABank = MacroBank()
+        deckABank.knobs[0].label = "ZOOM"
+        deckABank.knobs[0].bindings.add(
             MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE)
         )
-        globalBank.knobs[0].bindings.add(
-            MacroBinding(parameterId = "Deck B/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE)
-        )
 
-        // Filter for Deck A
-        val deckABank = MacroBankSerializer.filterMacroBankForDeck(globalBank, "Deck A")
-        assertNotNull(deckABank)
-        assertEquals(1, deckABank.knobs[0].bindings.size)
-        assertEquals("Deck A/fbZoom", deckABank.knobs[0].bindings[0].parameterId)
+        // snapshotForPreset deep-copies -- mutating the original after snapshotting must not
+        // affect the snapshot.
+        val snapshot = MacroBankSerializer.snapshotForPreset(deckABank)
+        deckABank.knobs[0].bindings.clear()
+        assertEquals(1, snapshot.knobs[0].bindings.size)
+        assertEquals("Deck A/fbZoom", snapshot.knobs[0].bindings[0].parameterId)
 
-        // Filter for Deck B
-        val deckBBank = MacroBankSerializer.filterMacroBankForDeck(globalBank, "Deck B")
-        assertNotNull(deckBBank)
-        assertEquals(1, deckBBank.knobs[0].bindings.size)
-        assertEquals("Deck B/fbZoom", deckBBank.knobs[0].bindings[0].parameterId)
+        // installBankForDeck onto Deck B remaps the leading path segment.
+        val deckBTargetBank = MacroBank()
+        MacroBankSerializer.installBankForDeck(snapshot, deckBTargetBank, targetDeckLabel = "Deck B")
+        assertEquals(1, deckBTargetBank.knobs[0].bindings.size)
+        assertEquals("Deck B/fbZoom", deckBTargetBank.knobs[0].bindings[0].parameterId)
+        assertEquals("ZOOM", deckBTargetBank.knobs[0].label)
 
-        // Filter for Deck BG (has none)
-        val deckBGBank = MacroBankSerializer.filterMacroBankForDeck(globalBank, "Deck BG")
-        assertNull(deckBGBank)
-
-        // Test restoring Deck A bank onto Deck B (prefix remapping)
-        val freshGlobalBank = MacroBank()
-        MacroEngine.registerBank(null, freshGlobalBank)
-
-        MacroBankSerializer.restoreMacroBankForDeck(deckABank, targetDeckLabel = "Deck B")
-        val restoredBank = MacroEngine.globalBank()
-        assertEquals(1, restoredBank.knobs[0].bindings.size)
-        assertEquals("Deck B/fbZoom", restoredBank.knobs[0].bindings[0].parameterId)
+        // installBankForDeck is a full swap, not a merge: pre-existing bindings/labels on the
+        // target that aren't in the installed bank are cleared, and installing null (e.g. a
+        // preset with no bundled macro bank) blanks the target entirely.
+        deckBTargetBank.knobs[1].label = "STALE"
+        deckBTargetBank.knobs[1].bindings.add(MacroBinding(parameterId = "Deck B/stale", targetType = MacroTargetType.PARAM_BASE_VALUE))
+        MacroBankSerializer.installBankForDeck(null, deckBTargetBank, targetDeckLabel = "Deck B")
+        assertTrue(deckBTargetBank.knobs.all { it.label.isEmpty() && it.bindings.isEmpty() })
     }
 
     @Test

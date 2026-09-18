@@ -79,7 +79,7 @@ object MacroLearnState {
     /**
      * Resolves a control from the specified bank or any registered bank in MacroEngine.
      */
-    fun findControl(controlId: String, bank: MacroBank = MacroEngine.globalBank()): MacroControl? {
+    fun findControl(controlId: String, bank: MacroBank = MacroBank()): MacroControl? {
         val inBank = bank.knobs.find { it.id == controlId } ?: bank.switches.find { it.id == controlId }
         if (inBank != null) return inBank
         val pair = MacroEngine.findBankForControl(controlId)
@@ -93,7 +93,7 @@ object MacroLearnState {
      * @return true if binding was created, false otherwise.
      */
     fun bindTarget(
-        bank: MacroBank = MacroEngine.globalBank(),
+        bank: MacroBank,
         targetType: MacroTargetType,
         parameterId: String,
         unitInstanceId: String? = null,
@@ -106,7 +106,15 @@ object MacroLearnState {
         val session = activeSession ?: return false
         val controlPair = MacroEngine.findBankForControl(session.controlId)
         val targetBank = controlPair?.second ?: bank
-        val targetUnitInstanceId = unitInstanceId ?: controlPair?.first
+        // Deliberately *not* auto-filled from controlPair?.first: unitInstanceId here describes
+        // the binding's target scope (null = resolved by full "Deck A/..." path via
+        // ParameterResolver), which is independent of which bank the control being learned lives
+        // in. Every Learn-mode call site passes null (or an explicit rack-unit id for the
+        // relative-path case), and the UI's "is this parameter locked?" queries
+        // (MacroEngine.findBindingsTargeting/findPrimaryBindingInfo) match on that same value, so
+        // silently substituting the control's bank id here would make freshly-created bindings
+        // invisible to those queries.
+        val targetUnitInstanceId = unitInstanceId
 
         val control = findControl(session.controlId, targetBank)
         if (control == null) {

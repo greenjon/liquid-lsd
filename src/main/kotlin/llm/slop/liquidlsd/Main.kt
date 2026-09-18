@@ -294,7 +294,7 @@ fun main(args: Array<String>) {
     val mixer = Mixer(deckA, deckB, deckBG, deckPV, initialWidth, initialHeight)
     SessionSerializer.startEmpty(mixer)
     if (UITheme.startupBehavior != UITheme.StartupBehavior.EMPTY) {
-        SessionSerializer.loadSession(mixer, uiManager.rackPanel.rackManager)
+        SessionSerializer.loadSession(mixer)
     }
     NotesManager.loadSourceNotes()
     session.touchConsoleController.initialize(window, mixer)
@@ -638,7 +638,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.broadcast.BroadcastEngine.shutdown()
     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
-    SessionSerializer.saveSession(mixer, uiManager.rackPanel.rackManager)
+    SessionSerializer.saveSession(mixer)
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.liquidlsd.midi.MidiEngine.close()

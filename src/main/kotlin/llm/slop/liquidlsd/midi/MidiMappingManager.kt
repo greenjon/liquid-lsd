@@ -342,9 +342,15 @@ object MidiMappingManager {
             if (mapping.channel != event.channel || mapping.cc != event.index) continue
             if (mapping.messageType != event.type && !(mapping.messageType == MidiMessageType.CC && event.type == MidiMessageType.PITCH_BEND)) continue
 
-            val bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank()
-            if (path.startsWith("Macro/knob_")) {
-                val idx = path.removePrefix("Macro/knob_").toIntOrNull()?.minus(1) ?: continue
+            // "Macro/<bankId>/knob_N" or "Macro/<bankId>/switch_N"
+            val rest = path.removePrefix("Macro/")
+            val slashIdx = rest.indexOf('/')
+            if (slashIdx < 0) continue
+            val bankId = rest.substring(0, slashIdx)
+            val slot = rest.substring(slashIdx + 1)
+            val bank = llm.slop.liquidlsd.macro.MacroEngine.getBank(bankId) ?: continue
+            if (slot.startsWith("knob_")) {
+                val idx = slot.removePrefix("knob_").toIntOrNull()?.minus(1) ?: continue
                 val knob = bank.knobs.getOrNull(idx) ?: continue
                 when (mapping.inputType) {
                     MidiInputType.ROTARY_BINARY_OFFSET,
@@ -362,8 +368,8 @@ object MidiMappingManager {
                         knob.value = rawNorm.coerceIn(0f, 1f)
                     }
                 }
-            } else if (path.startsWith("Macro/switch_")) {
-                val idx = path.removePrefix("Macro/switch_").toIntOrNull()?.minus(1) ?: continue
+            } else if (slot.startsWith("switch_")) {
+                val idx = slot.removePrefix("switch_").toIntOrNull()?.minus(1) ?: continue
                 val switch = bank.switches.getOrNull(idx) ?: continue
                 val isHigh = event.normalizedValue > 0.05f
                 val prevHigh = lastButtonHigh[path] ?: false

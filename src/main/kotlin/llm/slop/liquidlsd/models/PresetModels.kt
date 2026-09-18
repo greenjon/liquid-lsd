@@ -295,12 +295,11 @@ data class SessionStateDto(
     val isTransAutoAdvanceEnabled: Boolean = true,
     val isTransRepeatEnabled: Boolean = false,
     val isTransShuffleEnabled: Boolean = false,
-    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null,
-    // Per-Rack-unit MacroBanks, keyed by the stable RackUnit.id of each of the built-in unit
-    // slots (see RackManager's *_UNIT_ID constants). Absent/empty on session files saved before
-    // this field existed -- RackManager.populateFromSession() falls back to its hardcoded default
-    // curated bindings for any unit id missing from this map, so old files still load cleanly.
-    val rackUnitMacroBanks: Map<String, llm.slop.liquidlsd.macro.MacroBank> = emptyMap()
+    // The five canonical per-deck/mixer MacroBanks (see MacroEngine.CANONICAL_BANK_IDS), keyed by
+    // their canonical bank id. Absent/empty on session files saved before this field existed, or
+    // missing an individual key -- SessionSerializer.loadSession falls back to an empty bank for
+    // any canonical id not present, so old files still load cleanly.
+    val deckMacroBanks: Map<String, llm.slop.liquidlsd.macro.MacroBank> = emptyMap()
 )
 
 @Serializable

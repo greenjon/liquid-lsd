@@ -153,14 +153,14 @@ class SessionStateTest {
             queue = emptyList(),
             activeIndex = -1,
             isAutoVJEnabled = false,
-            rackUnitMacroBanks = mapOf("deckA" to deckAUnitBank)
+            deckMacroBanks = mapOf("deckA" to deckAUnitBank)
         )
 
         val jsonStr = json.encodeToString(session)
         val decoded = json.decodeFromString<SessionStateDto>(jsonStr)
 
-        assertEquals(1, decoded.rackUnitMacroBanks.size)
-        val restoredBank = decoded.rackUnitMacroBanks["deckA"]
+        assertEquals(1, decoded.deckMacroBanks.size)
+        val restoredBank = decoded.deckMacroBanks["deckA"]
         assertNotNull(restoredBank)
         val restoredBinding = restoredBank.knobs[0].bindings.first()
         assertEquals("deckA", restoredBinding.unitInstanceId)
@@ -171,10 +171,10 @@ class SessionStateTest {
     }
 
     @Test
-    fun testSessionStateDtoWithoutRackUnitMacroBanksFieldDecodesGracefully() {
-        // Simulates a session file saved before rackUnitMacroBanks existed: the field is simply
+    fun testSessionStateDtoWithoutDeckMacroBanksFieldDecodesGracefully() {
+        // Simulates a session file saved before deckMacroBanks existed: the field is simply
         // absent from the JSON. Must decode without error and default to an empty map so
-        // RackManager.populateFromSession() falls back to its hardcoded default curated bindings.
+        // SessionSerializer.loadSession() falls back to an empty MacroBank for every canonical id.
         val legacyJson = """
             {
               "version": 6,
@@ -192,8 +192,7 @@ class SessionStateTest {
         """.trimIndent()
 
         val decoded = json.decodeFromString<SessionStateDto>(legacyJson)
-        assertTrue(decoded.rackUnitMacroBanks.isEmpty())
-        assertNull(decoded.macroBank)
+        assertTrue(decoded.deckMacroBanks.isEmpty())
     }
 
     @Test

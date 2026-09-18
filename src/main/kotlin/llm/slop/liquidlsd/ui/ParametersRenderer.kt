@@ -288,7 +288,7 @@ object ParametersRenderer {
         if (ImGui.isItemClicked(0)) {
             if (isMacroLearning) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
                     parameterId = paramKey,
                     minVal = param.minClamp,

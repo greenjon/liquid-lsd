@@ -8,12 +8,14 @@ import mu.KotlinLogging
 import java.io.File
 
 /**
- * Handles serialization, deck-scoped filtering/restoration, and standalone export/import
+ * Handles serialization, per-deck snapshot/install, and standalone export/import
  * of [MacroBank] instances.
  *
- * Implements proposal §5.2:
- * 1. Primary/bundled preset serialization: deck-specific bindings are bundled in [llm.slop.liquidlsd.models.DeckPresetDto]
- *    and the full global bank is bundled in [llm.slop.liquidlsd.models.SessionStateDto].
+ * 1. Primary/bundled preset serialization: a deck's own resident [MacroEngine] bank
+ *    (see [MacroEngine.CANONICAL_BANK_IDS]) is bundled into [llm.slop.liquidlsd.models.DeckPresetDto]
+ *    wholesale on save, and *replaces* the target deck's resident bank wholesale on load --
+ *    loading a preset is meant to swap in exactly the knob layout it was saved with, not merge
+ *    on top of whatever the deck's previous preset left behind.
  * 2. Standalone export/import (.knobpreset.json): reads and writes isolated MacroBank JSON fragments
  *    with graceful skipping for missing parameters.
  */
@@ -26,104 +28,61 @@ object MacroBankSerializer {
         encodeDefaults = true
     }
 
-    /**
-     * Extracts a deck-scoped [MacroBank] snapshot containing only bindings that target
-     * parameters under [deckLabel] (e.g. "Deck A/fbZoom").
-     * Returns null if no bindings target this deck.
-     */
-    fun filterMacroBankForDeck(globalBank: MacroBank, deckLabel: String): MacroBank? {
-        val prefix = "$deckLabel/"
-        var hasAnyBindings = false
-
-        val filteredKnobs = globalBank.knobs.map { knob ->
-            val matching = knob.bindings.filter { it.parameterId.startsWith(prefix) }
-            if (matching.isNotEmpty()) hasAnyBindings = true
-            knob.copy(bindings = matching.map { it.copy() }.toMutableList())
-        }
-
-        val filteredSwitches = globalBank.switches.map { switch ->
-            val matching = switch.bindings.filter { it.parameterId.startsWith(prefix) }
-            if (matching.isNotEmpty()) hasAnyBindings = true
-            switch.copy(bindings = matching.map { it.copy() }.toMutableList())
-        }
-
-        return if (hasAnyBindings) MacroBank(knobs = filteredKnobs, switches = filteredSwitches) else null
-    }
+    /** Deep-copies [bank] for bundling into a preset file so the saved snapshot is immutable. */
+    fun snapshotForPreset(bank: MacroBank): MacroBank = MacroBank(
+        knobs = bank.knobs.map { it.copy(bindings = it.bindings.map { b -> b.copy() }.toMutableList()) },
+        switches = bank.switches.map { it.copy(bindings = it.bindings.map { b -> b.copy() }.toMutableList()) }
+    )
 
     /**
-     * Merges a deck-scoped [MacroBank] into the active global bank, remapping parameter prefixes
-     * to [targetDeckLabel] (e.g. if loaded onto "Deck B", "Deck A/fbZoom" becomes "Deck B/fbZoom").
+     * Installs [deckBank] (as bundled in a [llm.slop.liquidlsd.models.DeckPresetDto]) into
+     * [targetBank] wholesale, replacing every existing label/binding on it -- a full swap, not a
+     * merge. A null/empty [deckBank] (e.g. an older preset saved before this field existed, or an
+     * empty deck slot) clears [targetBank] to blank rather than leaving stale bindings behind.
+     * Remaps each binding's parameterId's leading path segment to [targetDeckLabel] (e.g. a preset
+     * saved from "Deck A" loaded onto Deck B gets "Deck A/fbZoom" rewritten to "Deck B/fbZoom") so
+     * bundled bindings always target whichever deck slot the preset actually lands on.
      */
-    fun restoreMacroBankForDeck(
-        deckBank: MacroBank?,
-        targetDeckLabel: String,
-        sourceDeckLabel: String? = null
-    ) {
-        if (deckBank == null) return
-        val globalBank = MacroEngine.globalBank()
-
+    fun installBankForDeck(deckBank: MacroBank?, targetBank: MacroBank, targetDeckLabel: String) {
         fun remapParamId(originalId: String): String {
-            return if (sourceDeckLabel != null && originalId.startsWith("$sourceDeckLabel/")) {
-                "$targetDeckLabel/" + originalId.removePrefix("$sourceDeckLabel/")
-            } else if (!originalId.startsWith("$targetDeckLabel/")) {
-                val slashIdx = originalId.indexOf('/')
-                if (slashIdx > 0) "$targetDeckLabel/" + originalId.substring(slashIdx + 1)
-                else originalId
-            } else {
-                originalId
-            }
+            val slashIdx = originalId.indexOf('/')
+            return if (slashIdx > 0) "$targetDeckLabel/" + originalId.substring(slashIdx + 1) else originalId
         }
 
-        // Merge knob bindings
-        deckBank.knobs.forEachIndexed { i, srcKnob ->
-            val destKnob = globalBank.knobs.getOrNull(i) ?: return@forEachIndexed
-            if (destKnob.label.isEmpty() || destKnob.label.startsWith("KNOB ")) {
-                if (srcKnob.label.isNotEmpty() && !srcKnob.label.startsWith("KNOB ")) {
-                    destKnob.label = srcKnob.label
-                }
-            }
-            for (binding in srcKnob.bindings) {
-                val remappedId = remapParamId(binding.parameterId)
-                val exists = destKnob.bindings.any {
-                    it.parameterId == remappedId &&
-                    it.targetType == binding.targetType &&
-                    it.modulatorIndex == binding.modulatorIndex &&
-                    it.propertyName == binding.propertyName
-                }
-                if (!exists && destKnob.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL) {
-                    destKnob.bindings.add(binding.copy(parameterId = remappedId))
-                }
-            }
+        for (i in targetBank.knobs.indices) {
+            val destKnob = targetBank.knobs[i]
+            val srcKnob = deckBank?.knobs?.getOrNull(i)
+            destKnob.label = srcKnob?.label ?: ""
+            destKnob.bindings.clear()
+            srcKnob?.bindings?.forEach { destKnob.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
         }
 
-        // Merge switch bindings
-        deckBank.switches.forEachIndexed { i, srcSwitch ->
-            val destSwitch = globalBank.switches.getOrNull(i) ?: return@forEachIndexed
-            if (destSwitch.label.isEmpty() || destSwitch.label.startsWith("SW ")) {
-                if (srcSwitch.label.isNotEmpty() && !srcSwitch.label.startsWith("SW ")) {
-                    destSwitch.label = srcSwitch.label
-                }
-            }
-            destSwitch.switchBehavior = srcSwitch.switchBehavior
-            for (binding in srcSwitch.bindings) {
-                val remappedId = remapParamId(binding.parameterId)
-                val exists = destSwitch.bindings.any {
-                    it.parameterId == remappedId &&
-                    it.targetType == binding.targetType &&
-                    it.modulatorIndex == binding.modulatorIndex &&
-                    it.propertyName == binding.propertyName
-                }
-                if (!exists && destSwitch.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL) {
-                    destSwitch.bindings.add(binding.copy(parameterId = remappedId))
-                }
-            }
+        for (i in targetBank.switches.indices) {
+            val destSwitch = targetBank.switches[i]
+            val srcSwitch = deckBank?.switches?.getOrNull(i)
+            destSwitch.label = srcSwitch?.label ?: ""
+            destSwitch.switchBehavior = srcSwitch?.switchBehavior ?: SwitchBehavior.TOGGLE
+            destSwitch.bindings.clear()
+            srcSwitch?.bindings?.forEach { destSwitch.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
         }
 
         MacroEngine.invalidate()
     }
 
+    /**
+     * Convenience wrapper around [installBankForDeck] for the common preset-load case: looks up
+     * (auto-registering if missing) the canonical resident bank for [canonicalBankId] and installs
+     * [deckBank] into it. Always installs -- including a null [deckBank] -- so loading a preset
+     * with no bundled macro bank still clears the deck's previous knob layout rather than leaving
+     * it stale.
+     */
+    fun installPresetBank(canonicalBankId: String, deckBank: MacroBank?, targetDeckLabel: String) {
+        val targetBank = MacroEngine.getBank(canonicalBankId) ?: MacroBank().also { MacroEngine.registerBank(canonicalBankId, it) }
+        installBankForDeck(deckBank, targetBank, targetDeckLabel)
+    }
+
     /** Exports [bank] to a standalone JSON file. */
-    fun exportToFile(file: File, bank: MacroBank = MacroEngine.globalBank()) {
+    fun exportToFile(file: File, bank: MacroBank) {
         file.parentFile?.mkdirs()
         val content = json.encodeToString(bank)
         file.writeText(content)

@@ -9,11 +9,19 @@ import llm.slop.liquidlsd.rendering.Mixer
  * Column 3's `MACROS` mode view (Macro Controls system -- see
  * docs/user_guide/macros_and_rack.md for details).
  *
- * Reads and writes [MacroEngine.globalBank] directly: dragging a knob mutates its
+ * Shows one of the five canonical per-deck/mixer banks at a time ([MacroEngine.CANONICAL_BANK_IDS])
+ * -- the same resident banks the Rack's per-deck faceplates read and write directly, so editing a
+ * knob here and seeing it on the Rack (or vice versa) is the same object, not a copy. Which bank is
+ * showing follows [ParametersState.activeTopTab] -- the same "which deck is focused" state Columns
+ * 1/2 already use -- so clicking a deck tab in Parameters or a confidence monitor elsewhere
+ * automatically flips this panel to that deck's knobs too, and the tab strip drawn here writes
+ * back into [ParametersState.activeTopTab] so the reverse holds as well.
+ *
+ * Reads and writes the active [MacroBank] directly: dragging a knob mutates its
  * [llm.slop.liquidlsd.macro.MacroControl.value] in place, and switches go through
  * [llm.slop.liquidlsd.macro.MacroControl.onPress]/[llm.slop.liquidlsd.macro.MacroControl.onRelease].
  *
- * Layout, top to bottom: 4-column x 2-row knob grid, a row of 4 switches,
+ * Layout, top to bottom: deck tab strip, 4-column x 2-row knob grid, a row of 4 switches,
  * binding inspector accordion drawer, then the single-deck preview monitor at the bottom.
  * Note: Header mode toggle `[ MIXER | MACROS ]` is drawn at the Column 3 window level by
  * [Column3HeaderToggle].
@@ -22,9 +30,12 @@ class MacroPanel(
     private val parametersState: ParametersState
 ) {
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        drawDeckTabs()
+        ImGui.spacing()
+
         drawLearnBanner()
 
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(activeBankId()) ?: MacroEngine.bankForParamPath(parametersState.activeTopTab)
 
         drawMacroGrid(session, bank)
 
@@ -39,6 +50,40 @@ class MacroPanel(
         ImGui.spacing()
 
         drawPreviewMonitor(session, mixer)
+    }
+
+    /** Maps [ParametersState.activeTopTab] to its canonical bank id ("Mixer" and anything unrecognized -> [MacroEngine.TRANS]). */
+    private fun activeBankId(): String = when (parametersState.activeTopTab) {
+        "Deck A" -> MacroEngine.DECK_A
+        "Deck B" -> MacroEngine.DECK_B
+        "Deck BG" -> MacroEngine.DECK_BG
+        "Deck PV" -> MacroEngine.DECK_PV
+        else -> MacroEngine.TRANS
+    }
+
+    private val deckTabs = listOf("Deck A" to "A", "Deck B" to "B", "Deck BG" to "BG", "Deck PV" to "PV", "Mixer" to "TRANS")
+
+    private fun drawDeckTabs() {
+        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
+        val gap = 4f
+        val segW = ((availW - gap * (deckTabs.size - 1)) / deckTabs.size).coerceAtLeast(1f)
+        val btnH = 24f
+
+        for ((i, tab) in deckTabs.withIndex()) {
+            val (topTabValue, shortLabel) = tab
+            if (i > 0) ImGui.sameLine(0f, gap)
+            val isActive = parametersState.activeTopTab == topTabValue
+            if (isActive) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
+            } else {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
+            }
+            if (ImGui.button("$shortLabel##macro_deck_tab_$topTabValue", segW, btnH)) {
+                parametersState.activeTopTab = topTabValue
+            }
+            ImGui.popStyleColor()
+            itemTooltip("Show $topTabValue's macro knobs & switches.")
+        }
     }
 
     private fun drawLearnBanner() {

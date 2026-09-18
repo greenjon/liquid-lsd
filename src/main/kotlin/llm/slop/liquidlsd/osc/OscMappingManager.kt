@@ -186,8 +186,8 @@ object OscMappingManager {
 
     /**
      * Dispatches an inbound OSC message. If OSC Learn is armed, the message is consumed
-     * to establish a new binding instead of being routed normally. Otherwise, `/macro/knob/N`
-     * and `/macro/switch/N` are forwarded straight to [MacroOscBridge]; multi-argument vector
+     * to establish a new binding instead of being routed normally. Otherwise, `/macro/<bankId>/knob/N`
+     * and `/macro/<bankId>/switch/N` are forwarded straight to [MacroOscBridge]; multi-argument vector
      * messages (e.g. TouchOSC "/2/xy") are unpacked per-component; everything else is
      * resolved against the active mapping profile.
      */
@@ -197,7 +197,7 @@ object OscMappingManager {
             return
         }
 
-        if (message.address.startsWith("/macro/knob/") || message.address.startsWith("/macro/switch/")) {
+        if (message.address.startsWith("/macro/")) {
             val value = message.args.firstNotNullOfOrNull { asFloat(it) } ?: return
             MacroOscBridge.handleOscMessage(message.address, value)
             return

@@ -13,17 +13,27 @@ import llm.slop.liquidlsd.rendering.Mixer
  * [ModulatableParameter]/[CvModulator] instances only when dirty, and the hot per-frame loop
  * walks a plain `Array` with an indexed for-loop to stay allocation-free.
  *
- * Holds one [MacroBank] per scope: the `null` key is the global, session-scoped Column 3 bank;
- * non-null keys are Rack unit instance ids (see proposal §6 / modular_video_rack_proposal.md).
+ * Holds one [MacroBank] per scope, keyed by unit instance id. The five canonical deck/mixer ids
+ * ([DECK_A]/[DECK_B]/[DECK_BG]/[DECK_PV]/[TRANS]) are the resident banks Classic's Column 3
+ * MACROS tabs and the Rack's per-deck faceplates both read and write directly -- there is no
+ * separate "global" bank anymore. Other keys (e.g. a test's ad-hoc [llm.slop.liquidlsd.rack.GenericRackUnit]
+ * id) are still supported generically for anything that registers its own bank.
  */
 object MacroEngine {
     private val lock = Any()
 
-    private val banks = LinkedHashMap<String?, MacroBank>().apply {
-        put(null, MacroBank())
-    }
+    const val DECK_A = "deckA"
+    const val DECK_B = "deckB"
+    const val DECK_BG = "deckBG"
+    const val DECK_PV = "deckPV"
+    const val TRANS = "masterTransition"
 
-    /** Registers (or replaces) the bank for [unitInstanceId] (null = global bank) and invalidates the resolved cache. */
+    /** The five always-resident per-deck/mixer bank ids, in Classic-tab/rack-stack display order. */
+    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS)
+
+    private val banks = LinkedHashMap<String?, MacroBank>()
+
+    /** Registers (or replaces) the bank for [unitInstanceId] and invalidates the resolved cache. */
     fun registerBank(unitInstanceId: String?, bank: MacroBank) {
         synchronized(lock) {
             banks[unitInstanceId] = bank
@@ -39,17 +49,39 @@ object MacroEngine {
         invalidate()
     }
 
-    /** Returns the bank for [unitInstanceId] (null = global bank), or null if not registered. */
+    /** Returns the bank for [unitInstanceId], or null if not registered. */
     fun getBank(unitInstanceId: String?): MacroBank? {
         synchronized(lock) {
             return banks[unitInstanceId]
         }
     }
 
-    /** Returns the global, session-scoped bank, recreating an empty one if it was ever unregistered. */
-    fun globalBank(): MacroBank {
+    /**
+     * Returns the canonical bank whose deck prefix matches the first path segment of
+     * [parameterPath] (e.g. "Deck A/fbZoom" -> [DECK_A], "Deck PV/..." -> [DECK_PV],
+     * anything else including "Mixer/..." -> [TRANS]). Auto-registers an empty bank the first
+     * time a given canonical id is requested, so callers never see a missing bank.
+     */
+    fun bankForParamPath(parameterPath: String): MacroBank {
+        val key = canonicalIdForDeckLabel(parameterPath.substringBefore('/', parameterPath))
         synchronized(lock) {
-            return banks.getOrPut(null) { MacroBank() }
+            return banks.getOrPut(key) { MacroBank() }
+        }
+    }
+
+    /** Maps a deck label (e.g. "Deck A", or a full path's leading segment) to its canonical bank id. */
+    fun canonicalIdForDeckLabel(deckLabel: String): String = when (deckLabel) {
+        "Deck A" -> DECK_A
+        "Deck B" -> DECK_B
+        "Deck BG" -> DECK_BG
+        "Deck PV" -> DECK_PV
+        else -> TRANS
+    }
+
+    /** Reverse lookup: the key a given bank instance is registered under, or null if unregistered. */
+    fun keyForBank(bank: MacroBank): String? {
+        synchronized(lock) {
+            return banks.entries.find { it.value === bank }?.key
         }
     }
 
@@ -96,8 +128,9 @@ object MacroEngine {
     // Snapshot of all registered banks, rebuilt only when [bindingsDirty] (i.e. only on
     // registerBank/unregisterBank/invalidate, not every frame). [tick] reuses this array to
     // consume trigger resets without re-synchronizing/re-copying `banks.values` every frame.
+    // Empty until the first tick() rebuilds it (bindingsDirty starts true) -- see rebuildResolvedBindings.
     @Volatile
-    private var banksSnapshot: Array<MacroBank> = arrayOf(banks.getValue(null))
+    private var banksSnapshot: Array<MacroBank> = emptyArray()
 
     private fun rebuildResolvedBindings(mixer: Mixer) {
         val list = ArrayList<ResolvedBinding>()
@@ -289,21 +322,27 @@ object MacroEngine {
         if (bindings.isEmpty()) return null
         val targetBinding = bindings.first()
 
-        val bank = if (unitInstanceId != null) getBank(unitInstanceId) ?: globalBank() else globalBank()
-        val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(targetBinding) }
-        if (knobIdx >= 0) {
-            val ctrl = bank.knobs[knobIdx]
-            val badge = "K${knobIdx + 1}"
-            val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
-            return MacroBindingInfo(targetBinding, ctrl, isKnob = true, index = knobIdx, badgeLabel = badge, controlName = name)
-        }
+        // Search every registered bank for the control owning this binding -- unitInstanceId
+        // describes the binding's *target* scope, not which bank the knob/switch itself lives in,
+        // so it can't be used to pick a single bank to look in (a Deck A bank can perfectly well
+        // hold a binding whose unitInstanceId is null, or vice versa).
+        val allBanks = synchronized(lock) { banks.values.toList() }
+        for (bank in allBanks) {
+            val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(targetBinding) }
+            if (knobIdx >= 0) {
+                val ctrl = bank.knobs[knobIdx]
+                val badge = "K${knobIdx + 1}"
+                val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
+                return MacroBindingInfo(targetBinding, ctrl, isKnob = true, index = knobIdx, badgeLabel = badge, controlName = name)
+            }
 
-        val swIdx = bank.switches.indexOfFirst { it.bindings.contains(targetBinding) }
-        if (swIdx >= 0) {
-            val ctrl = bank.switches[swIdx]
-            val badge = "SW${swIdx + 1}"
-            val name = if (ctrl.label.isNotBlank()) ctrl.label else "Switch ${swIdx + 1}"
-            return MacroBindingInfo(targetBinding, ctrl, isKnob = false, index = swIdx, badgeLabel = badge, controlName = name)
+            val swIdx = bank.switches.indexOfFirst { it.bindings.contains(targetBinding) }
+            if (swIdx >= 0) {
+                val ctrl = bank.switches[swIdx]
+                val badge = "SW${swIdx + 1}"
+                val name = if (ctrl.label.isNotBlank()) ctrl.label else "Switch ${swIdx + 1}"
+                return MacroBindingInfo(targetBinding, ctrl, isKnob = false, index = swIdx, badgeLabel = badge, controlName = name)
+            }
         }
 
         return null

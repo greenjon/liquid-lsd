@@ -75,9 +75,8 @@ object MacroBindingInspector {
         }
 
         // Hardware MIDI Learn (proposal §5.1: physical CC/note -> this Macro Knob/Switch).
-        // Only the global Column 3 bank is addressable via "Macro/knob_N"/"Macro/switch_N" paths
-        // (MidiMappingManager.onMidiEvent dispatches against MacroEngine.globalBank() only) --
-        // per-unit Rack banks don't have hardware mapping yet (proposal's Rack doc, Open Question 5).
+        // Addressed as "Macro/<bankId>/knob_N" / "Macro/<bankId>/switch_N", matching the format
+        // MidiMappingManager.onMidiEvent dispatches against -- works for any registered bank.
         val midiPath = macroMidiPath(bank, control)
         if (midiPath != null) {
             ImGui.sameLine(0f, 8f)
@@ -302,17 +301,17 @@ object MacroBindingInspector {
     }
 
     /**
-     * Resolves the "Macro/knob_N" / "Macro/switch_N" MIDI mapping path for [control] within
-     * [bank], matching the format [llm.slop.liquidlsd.midi.MidiMappingManager.onMidiEvent]
-     * dispatches against. Returns null for anything other than the global bank (per-unit Rack
-     * banks aren't hardware-mappable yet) or if [control] isn't found in it.
+     * Resolves the "Macro/<bankId>/knob_N" / "Macro/<bankId>/switch_N" MIDI mapping path for
+     * [control] within [bank], matching the format
+     * [llm.slop.liquidlsd.midi.MidiMappingManager.onMidiEvent] dispatches against. Returns null
+     * if [bank] isn't currently registered with [MacroEngine] or [control] isn't found in it.
      */
     private fun macroMidiPath(bank: MacroBank, control: MacroControl): String? {
-        if (bank !== MacroEngine.globalBank()) return null
+        val bankId = MacroEngine.keyForBank(bank) ?: return null
         val knobIdx = bank.knobs.indexOf(control)
-        if (knobIdx >= 0) return "Macro/knob_${knobIdx + 1}"
+        if (knobIdx >= 0) return "Macro/$bankId/knob_${knobIdx + 1}"
         val switchIdx = bank.switches.indexOf(control)
-        if (switchIdx >= 0) return "Macro/switch_${switchIdx + 1}"
+        if (switchIdx >= 0) return "Macro/$bankId/switch_${switchIdx + 1}"
         return null
     }
 }

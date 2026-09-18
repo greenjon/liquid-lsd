@@ -80,10 +80,10 @@ object PresetRepository {
             else -> "Deck"
         }
         val rawDto = deck.toDto(name, tags)
-        val deckMacroBank = llm.slop.liquidlsd.macro.MacroBankSerializer.filterMacroBankForDeck(
-            llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
-            deckLabel
-        )
+        val canonicalBankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(deckLabel)
+        val deckMacroBank = llm.slop.liquidlsd.macro.MacroEngine.getBank(canonicalBankId)?.let {
+            llm.slop.liquidlsd.macro.MacroBankSerializer.snapshotForPreset(it)
+        }
         val dto = NotesManager.syncToDto(deckLabel, rawDto.copy(macroBank = deckMacroBank))
 
         if (deckIndex in 0..3) {

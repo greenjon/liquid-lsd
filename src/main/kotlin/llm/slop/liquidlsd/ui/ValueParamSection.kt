@@ -130,7 +130,7 @@ object ValueParamSection {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.6f, 0.8f, 0.7f))
                 if (ImGui.button("${Icons.REFRESH} Bind Base Value to armed Macro Control##bind_base_macro", ImGui.getContentRegionAvailX(), 26f)) {
                     llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                        bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                        bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey),
                         targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
                         parameterId = paramKey,
                         minVal = param.minClamp,

@@ -9,22 +9,22 @@ class MacroMidiIntegrationTest {
 
     @BeforeTest
     fun setUp() {
-        MacroEngine.registerBank(null, MacroBank())
+        MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
     }
 
     @AfterTest
     fun tearDown() {
-        MacroEngine.registerBank(null, MacroBank())
+        MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
     }
 
     @Test
     fun testMidiCcMapsToMacroKnob() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val knob1 = bank.knobs[0]
         knob1.value = 0.0f
 
         MidiMappingManager.addMapping(
-            parameterPath = "Macro/knob_1",
+            parameterPath = "Macro/deckA/knob_1",
             cc = 21,
             channel = 0,
             minVal = 0f,
@@ -49,13 +49,13 @@ class MacroMidiIntegrationTest {
 
     @Test
     fun testMidiNoteMapsToMacroSwitch() {
-        val bank = MacroEngine.globalBank()
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
         val switch1 = bank.switches[0]
         switch1.switchBehavior = SwitchBehavior.TOGGLE
         switch1.value = 0.0f
 
         MidiMappingManager.addMapping(
-            parameterPath = "Macro/switch_1",
+            parameterPath = "Macro/deckA/switch_1",
             cc = 60,
             channel = 0,
             minVal = 0f,

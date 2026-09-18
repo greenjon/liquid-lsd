@@ -6,10 +6,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * Open Sound Control (OSC) bridge and protocol specification for Macro Controls.
  *
- * Implements proposal §5.1:
- * - Inbound address routing:
- *     `/macro/knob/1`..`/macro/knob/8` (Float [0.0..1.0])
- *     `/macro/switch/1`..`/macro/switch/4` (Float [0.0 or 1.0])
+ * - Inbound address routing, namespaced per canonical deck/mixer bank
+ *   ([MacroEngine.CANONICAL_BANK_IDS], e.g. "deckA"):
+ *     `/macro/<bankId>/knob/1`..`/macro/<bankId>/knob/8` (Float [0.0..1.0])
+ *     `/macro/<bankId>/switch/1`..`/macro/<bankId>/switch/4` (Float [0.0 or 1.0])
  * - Outbound feedback dispatch: keeps external surfaces (e.g. TouchOSC on tablets)
  *   in bidirectional sync with knob/switch values.
  */
@@ -46,16 +46,21 @@ object MacroOscBridge {
     /**
      * Handles an incoming OSC message.
      *
-     * @param address e.g. "/macro/knob/1" or "/macro/switch/2"
+     * @param address e.g. "/macro/deckA/knob/1" or "/macro/trans/switch/2"
      * @param value normalized float argument
      * @return true if the address was matched and handled
      */
     fun handleOscMessage(address: String, value: Float): Boolean {
-        val bank = MacroEngine.globalBank()
+        if (!address.startsWith("/macro/")) return false
+        val rest = address.removePrefix("/macro/")
+        val parts = rest.split("/")
+        if (parts.size != 3) return false
+        val (bankId, slotType, numStr) = parts
+        val bank = MacroEngine.getBank(bankId) ?: return false
+        val num = numStr.toIntOrNull() ?: return false
+        val idx = num - 1
 
-        if (address.startsWith("/macro/knob/")) {
-            val num = address.removePrefix("/macro/knob/").toIntOrNull() ?: return false
-            val idx = num - 1
+        if (slotType == "knob") {
             val knob = bank.knobs.getOrNull(idx) ?: return false
             val clamped = value.coerceIn(0f, 1f)
             knob.value = clamped
@@ -63,9 +68,7 @@ object MacroOscBridge {
             return true
         }
 
-        if (address.startsWith("/macro/switch/")) {
-            val num = address.removePrefix("/macro/switch/").toIntOrNull() ?: return false
-            val idx = num - 1
+        if (slotType == "switch") {
             val switch = bank.switches.getOrNull(idx) ?: return false
             if (value >= 0.5f) {
                 switch.onPress()
@@ -79,9 +82,9 @@ object MacroOscBridge {
         return false
     }
 
-    /** Returns the canonical OSC address for a knob index (0..7). */
-    fun getKnobAddress(index: Int): String = "/macro/knob/${index + 1}"
+    /** Returns the canonical OSC address for a knob index (0..7) within [bankId]. */
+    fun getKnobAddress(bankId: String, index: Int): String = "/macro/$bankId/knob/${index + 1}"
 
-    /** Returns the canonical OSC address for a switch index (0..3). */
-    fun getSwitchAddress(index: Int): String = "/macro/switch/${index + 1}"
+    /** Returns the canonical OSC address for a switch index (0..3) within [bankId]. */
+    fun getSwitchAddress(bankId: String, index: Int): String = "/macro/$bankId/switch/${index + 1}"
 }
