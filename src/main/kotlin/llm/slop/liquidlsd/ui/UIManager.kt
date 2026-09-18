@@ -212,7 +212,7 @@ class UIManager(
 
         // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
         // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
-        val (midiCcDelta, bgMidiCcDelta) = session.midiMappingManager.processGlobalMidiEvents(
+        val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta) = session.midiMappingManager.processGlobalMidiEvents(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,
             mixer = mixer,
@@ -240,6 +240,16 @@ class UIManager(
                 session.bgQueueManager.triggerNext(mixer)
             } else {
                 session.bgQueueManager.triggerPrevious(mixer)
+            }
+        }
+
+        val transCvDelta = mixer.pollTransQueueAdvance()
+        val totalTransDelta = transMidiCcDelta + transCvDelta
+        if (totalTransDelta != 0) {
+            if (totalTransDelta > 0) {
+                llm.slop.liquidlsd.presets.TransitionQueueManager.advanceNext(mixer)
+            } else {
+                llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer)
             }
         }
 

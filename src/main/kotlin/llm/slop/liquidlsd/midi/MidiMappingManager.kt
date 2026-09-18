@@ -112,6 +112,8 @@ object MidiMappingManager {
     private var lastPrevMidiCcHigh = false
     private var lastBgNextMidiCcHigh = false
     private var lastBgPrevMidiCcHigh = false
+    private var lastTransNextMidiCcHigh = false
+    private var lastTransPrevMidiCcHigh = false
     private var lastTapMidiCcHigh = false
 
     init {
@@ -512,7 +514,7 @@ object MidiMappingManager {
     }
 
     /** Queue-navigation deltas accumulated from global MIDI CC actions this frame. */
-    data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int)
+    data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int, val transQueueDelta: Int = 0)
 
     /**
      * Drains all MIDI events queued by the MIDI receiver thread since the last frame,
@@ -531,11 +533,12 @@ object MidiMappingManager {
     ): GlobalMidiDeltas {
         var midiCcDelta = 0
         var bgMidiCcDelta = 0
+        var transMidiCcDelta = 0
 
         if (!midiEnabled) {
             MidiEngine.receivedEvents.clear()
             MidiEngine.receivedCcEvents.clear()
-            return GlobalMidiDeltas(0, 0)
+            return GlobalMidiDeltas(0, 0, 0)
         }
 
         // Check for MIDI learn auto-timeout (15 seconds)
@@ -656,6 +659,24 @@ object MidiMappingManager {
                     }
                     lastBgPrevMidiCcHigh = isHigh
                 }
+                val transNextCc = getCcForSpecial("Global/transQueueNext")
+                val transNextCh = getChannelForSpecial("Global/transQueueNext")
+                if (transNextCc != -1 && event.index == transNextCc && event.channel == transNextCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastTransNextMidiCcHigh) {
+                        transMidiCcDelta += 1
+                    }
+                    lastTransNextMidiCcHigh = isHigh
+                }
+                val transPrevCc = getCcForSpecial("Global/transQueuePrev")
+                val transPrevCh = getChannelForSpecial("Global/transQueuePrev")
+                if (transPrevCc != -1 && event.index == transPrevCc && event.channel == transPrevCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastTransPrevMidiCcHigh) {
+                        transMidiCcDelta -= 1
+                    }
+                    lastTransPrevMidiCcHigh = isHigh
+                }
                 val tapCc = getCcForSpecial("Global/tapTempo")
                 val tapCh = getChannelForSpecial("Global/tapTempo")
                 if (tapCc != -1 && event.index == tapCc && event.channel == tapCh) {
@@ -672,7 +693,7 @@ object MidiMappingManager {
         }
         MidiEngine.receivedCcEvents.clear()
 
-        return GlobalMidiDeltas(midiCcDelta, bgMidiCcDelta)
+        return GlobalMidiDeltas(midiCcDelta, bgMidiCcDelta, transMidiCcDelta)
     }
 
     /**

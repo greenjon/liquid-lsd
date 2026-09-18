@@ -242,6 +242,17 @@ class Mixer(
         }
     }
 
+    val transQueuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod ->
+            llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled || mod.sourceId.startsWith("midi_cc_")
+        }
+    }
+    val transQueueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod ->
+            llm.slop.liquidlsd.presets.TransitionQueueManager.isAutoAdvanceEnabled || mod.sourceId.startsWith("midi_cc_")
+        }
+    }
+
     val tapTempo = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true).apply {
         modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
     }
@@ -269,6 +280,8 @@ class Mixer(
     private var prevQueueNextVal = 0.0f
     private var prevBgQueuePrevVal = 0.0f
     private var prevBgQueueNextVal = 0.0f
+    private var prevTransQueuePrevVal = 0.0f
+    private var prevTransQueueNextVal = 0.0f
     private var prevTapTempoVal = 0.0f
     private var lastUpdateTimeNs: Long = System.nanoTime()
 
@@ -303,6 +316,8 @@ class Mixer(
         list.add("$prefix/queueNext" to queueNext)
         list.add("$prefix/bgQueuePrev" to bgQueuePrev)
         list.add("$prefix/bgQueueNext" to bgQueueNext)
+        list.add("$prefix/transQueuePrev" to transQueuePrev)
+        list.add("$prefix/transQueueNext" to transQueueNext)
         list.add("$prefix/tapTempo" to tapTempo)
         list.add("$prefix/randDeckA" to randDeckA)
         list.add("$prefix/randDeckB" to randDeckB)
@@ -411,6 +426,8 @@ class Mixer(
         queueNext.evaluate()
         bgQueuePrev.evaluate()
         bgQueueNext.evaluate()
+        transQueuePrev.evaluate()
+        transQueueNext.evaluate()
         tapTempo.evaluate()
         randDeckA.evaluate()
         randDeckB.evaluate()
@@ -495,6 +512,31 @@ class Mixer(
     }
 
     /**
+     * Evaluates if either Transition queue parameter crossed the 0.5 threshold since the last frame.
+     * Returns +1 if transQueueNext was triggered, -1 if transQueuePrev was triggered, or 0.
+     */
+    fun pollTransQueueAdvance(): Int {
+        val nextVal = transQueueNext.value
+        val prevVal = transQueuePrev.value
+
+        var delta = 0
+        if (prevTransQueueNextVal < 0.5f && nextVal >= 0.5f) {
+            delta += 1
+        }
+        if (prevTransQueuePrevVal < 0.5f && prevVal >= 0.5f) {
+            delta -= 1
+        }
+
+        prevTransQueueNextVal = nextVal
+        prevTransQueuePrevVal = prevVal
+
+        if (transQueueNext.baseValue != 0f) transQueueNext.baseValue = 0f
+        if (transQueuePrev.baseValue != 0f) transQueuePrev.baseValue = 0f
+
+        return delta
+    }
+
+    /**
      * Evaluates if the tapTempo parameter crossed the 0.5 threshold on a rising edge since last frame.
      * Returns true if triggered.
      */
@@ -515,11 +557,15 @@ class Mixer(
         queuePrev.evaluate()
         bgQueueNext.evaluate()
         bgQueuePrev.evaluate()
+        transQueueNext.evaluate()
+        transQueuePrev.evaluate()
         tapTempo.evaluate()
         prevQueueNextVal = queueNext.value
         prevQueuePrevVal = queuePrev.value
         prevBgQueueNextVal = bgQueueNext.value
         prevBgQueuePrevVal = bgQueuePrev.value
+        prevTransQueueNextVal = transQueueNext.value
+        prevTransQueuePrevVal = transQueuePrev.value
         prevTapTempoVal = tapTempo.value
     }
 

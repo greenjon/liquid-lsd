@@ -262,6 +262,8 @@ data class MixerDto(
     val queuePrev: ParameterDto? = null,
     val bgQueueNext: ParameterDto? = null,
     val bgQueuePrev: ParameterDto? = null,
+    val transQueueNext: ParameterDto? = null,
+    val transQueuePrev: ParameterDto? = null,
     val tapTempo: ParameterDto? = null,
     val levelA: Float = 1.0f,
     val levelB: Float = 1.0f,

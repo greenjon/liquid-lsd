@@ -288,16 +288,21 @@ class PresetDirtyLoadingTest {
         val queuePrevParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
         val bgQueueNextParam = ModulatableParameter(0.8f, minClamp = 0f, maxClamp = 1f)
         val bgQueuePrevParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+        val transQueueNextParam = ModulatableParameter(0.8f, minClamp = 0f, maxClamp = 1f)
+        val transQueuePrevParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
         val tapTempoParam = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
 
         every { mixer.queueNext } returns queueNextParam
         every { mixer.queuePrev } returns queuePrevParam
         every { mixer.bgQueueNext } returns bgQueueNextParam
         every { mixer.bgQueuePrev } returns bgQueuePrevParam
+        every { mixer.transQueueNext } returns transQueueNextParam
+        every { mixer.transQueuePrev } returns transQueuePrevParam
         every { mixer.tapTempo } returns tapTempoParam
         every { mixer.syncQueueTriggerPrevValues() } answers { callOriginal() }
         every { mixer.pollQueueAdvance() } answers { callOriginal() }
         every { mixer.pollBgQueueAdvance() } answers { callOriginal() }
+        every { mixer.pollTransQueueAdvance() } answers { callOriginal() }
 
         mixer.syncQueueTriggerPrevValues()
 
@@ -308,5 +313,9 @@ class PresetDirtyLoadingTest {
         val bgDelta = mixer.pollBgQueueAdvance()
         assertEquals(0, bgDelta, "pollBgQueueAdvance must return 0 after syncQueueTriggerPrevValues on session load")
         assertEquals(0f, mixer.bgQueueNext.baseValue, "baseValue should be reset to 0f after polling")
+
+        val transDelta = mixer.pollTransQueueAdvance()
+        assertEquals(0, transDelta, "pollTransQueueAdvance must return 0 after syncQueueTriggerPrevValues on session load")
+        assertEquals(0f, mixer.transQueueNext.baseValue, "baseValue should be reset to 0f after polling")
     }
 }

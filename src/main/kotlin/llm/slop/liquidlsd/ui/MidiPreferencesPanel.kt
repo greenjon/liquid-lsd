@@ -172,6 +172,8 @@ object MidiPreferencesPanel {
                 "Global/queuePrev" to "Queue Step Back A/B Prev",
                 "Global/bgQueueNext" to "BG Shader Advance Next",
                 "Global/bgQueuePrev" to "BG Shader Step Back Prev",
+                "Global/transQueueNext" to "Trans Queue Advance Next",
+                "Global/transQueuePrev" to "Trans Queue Step Back Prev",
                 "Global/tapTempo" to "Tap Tempo Trigger"
             )
 
