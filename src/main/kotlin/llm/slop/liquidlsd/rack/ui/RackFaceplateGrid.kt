@@ -1,22 +1,27 @@
 package llm.slop.liquidlsd.rack.ui
 
+import imgui.ImDrawList
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
+import llm.slop.liquidlsd.macro.MacroControl
+import llm.slop.liquidlsd.macro.MacroLearnState
 import llm.slop.liquidlsd.parameters.ModulatableParameter
-import llm.slop.liquidlsd.rack.DeckRackUnit
-import llm.slop.liquidlsd.rack.GenericRackUnit
 import llm.slop.liquidlsd.rack.MixerTransitionUnit
 import llm.slop.liquidlsd.rack.RackUnit
 import llm.slop.liquidlsd.rendering.Renderer
+import llm.slop.liquidlsd.ui.MacroKnobWidget
+import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
 
 /**
- * Grid-based faceplate layout system snapping parameter controls into an 8-column modular grid.
+ * Faceplate layout for rack units: a fixed 4-column x 2-row knob grid + 2-column x 2-row button
+ * grid (mirroring Classic view's [llm.slop.liquidlsd.ui.MacroPanel.drawMacroGrid]) with a
+ * confidence preview monitor to the right. Master additionally renders its crossfader/mode/alpha/
+ * bloom row below.
  */
 object RackFaceplateGrid {
 
-    const val GRID_COLUMNS = 8
     const val COLUMN_GAP = 6.0f
 
     fun drawFaceplate(
@@ -31,250 +36,200 @@ object RackFaceplateGrid {
         val paddingX = 12.0f
         val paddingY = 6.0f
         val usableW = faceplateWidth - (paddingX * 2f)
-        val colW = (usableW - (COLUMN_GAP * (GRID_COLUMNS - 1))) / GRID_COLUMNS
 
-        ImGui.setCursorPosX(paddingX)
+        // Relative to the caller's current cursor (not an absolute window-relative jump) so this
+        // renders correctly whether the unit occupies the full bay width or one half of a
+        // two-column row -- see RackPanel's per-unit ImGui.setCursorScreenPos before this call.
+        ImGui.setCursorPosX(ImGui.getCursorPosX() + paddingX)
         ImGui.setCursorPosY(ImGui.getCursorPosY() + paddingY)
 
-        // Draw curated active Macro Controls for this unit if any exist
-        drawCuratedMacrosRow(session, unit, usableW)
+        drawKnobButtonPreviewRow(session, unit, usableW, renderer)
 
-        when (unit) {
-            is DeckRackUnit -> drawMergedDeckFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
-            is MixerTransitionUnit -> drawTransitionFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
-            else -> drawGenericFaceplate(session, unit, usableW, colW, faceplateHeight, renderer)
+        if (unit is MixerTransitionUnit) {
+            drawMasterExtraControls(unit, usableW)
         }
     }
 
-    private fun drawCuratedMacrosRow(session: llm.slop.liquidlsd.SessionContext, unit: RackUnit, usableW: Float) {
-        val activeKnobs = unit.macroBank.knobs.filter { it.bindings.isNotEmpty() || it.label.isNotEmpty() }
-        val activeSwitches = unit.macroBank.switches.filter { it.bindings.isNotEmpty() || it.label.isNotEmpty() }
-
-        if (activeKnobs.isEmpty() && activeSwitches.isEmpty()) return
-
-        ImGui.beginGroup()
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 2.0f, 2.0f)
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 8.0f, 2.0f)
-
-        // Render knobs
-        for (i in activeKnobs.indices) {
-            val knob = activeKnobs[i]
-            if (i > 0) ImGui.sameLine(0f, 8f)
-
-            val isSelected = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == knob.id
-            val isLearning = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(knob.id)
-            // MacroKnobWidget.draw manually repositions the cursor to paint its label below the
-            // knob face and restores it via a trailing dummy item -- wrapping in a group makes
-            // that whole dance count as one atomic item, which is what the caller's sameLine()
-            // needs to lay knobs out in a row instead of stacking vertically.
-            ImGui.beginGroup()
-            llm.slop.liquidlsd.ui.MacroKnobWidget.draw(
-                session = session,
-                id = "unit_${unit.id}_knob_$i",
-                label = knob.label.ifEmpty { "K${i + 1}" },
-                value = knob.value,
-                diameter = 40f,
-                isSelected = isSelected,
-                isLearning = isLearning,
-                bindings = knob.bindings,
-                onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = knob.id },
-                onToggleLearn = {
-                    if (isLearning) {
-                        llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
-                    } else {
-                        llm.slop.liquidlsd.macro.MacroLearnState.startLearn(knob.id)
-                    }
-                },
-                onChanged = { knob.value = it }
-            )
-            ImGui.endGroup()
-        }
-
-        // Render switches
-        if (activeSwitches.isNotEmpty()) {
-            if (activeKnobs.isNotEmpty()) ImGui.sameLine(0f, 16f)
-            for (i in activeSwitches.indices) {
-                val sw = activeSwitches[i]
-                if (i > 0) ImGui.sameLine(0f, 6f)
-
-                val swActive = sw.value >= 0.5f
-                if (swActive) {
-                    ImGui.pushStyleColor(ImGuiCol.Button, 0.95f, 0.75f, 0.15f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.Text, 0.1f, 0.1f, 0.1f, 1.0f)
-                } else {
-                    ImGui.pushStyleColor(ImGuiCol.Button, 0.20f, 0.22f, 0.25f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
-                }
-                val label = sw.label.ifEmpty { "SW ${i + 1}" }
-                if (ImGui.button("$label##sw_${unit.id}_$i", 52f, 22f)) {
-                    sw.onPress()
-                }
-                ImGui.popStyleColor(2)
-            }
-        }
-
-        ImGui.popStyleVar(2)
-        ImGui.endGroup()
-
-        // Subtle divider before standard parameters
+    private fun drawKnobButtonPreviewRow(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: RackUnit,
+        usableW: Float,
+        renderer: Renderer?
+    ) {
+        val bank = unit.macroBank
         val dl = ImGui.getWindowDrawList()
-        val sepY = ImGui.getCursorScreenPosY() + 2f
-        val startX = ImGui.getCursorScreenPosX()
-        val sepCol = ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.6f)
-        dl.addLine(startX, sepY, startX + usableW, sepY, sepCol, 1.0f)
-        ImGui.setCursorPosY(ImGui.getCursorPosY() + 6f)
-    }
 
-    private fun drawMergedDeckFaceplate(
-        session: llm.slop.liquidlsd.SessionContext,
-        unit: DeckRackUnit,
-        usableW: Float,
-        colW: Float,
-        faceplateHeight: Float,
-        renderer: Renderer?
-    ) {
-        val deck = unit.deck
-        val namedParams = unit.getNamedParameters().entries.toList()
+        val knobCols = 4
+        val switchCols = 2
+        val totalCols = knobCols + switchCols
 
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
+        // Reserve ~60% of the width for the 4x2 knob + 2x2 button grid; the rest goes to the
+        // preview monitor, letterboxed to the session's render aspect ratio.
+        val knobSwitchW = (usableW * 0.60f).coerceAtLeast(totalCols * 40f)
+        val previewAvailW = (usableW - knobSwitchW - COLUMN_GAP).coerceAtLeast(60f)
 
-        // Columns 1 & 2: Confidence Micro-Monitor + Source/FX-chain info
-        val col12W = (colW * 2f) + COLUMN_GAP
-        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
+        val cellW = knobSwitchW / totalCols
+        val diameter = (cellW - 10f).coerceIn(28f, 56f)
+        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+        val rowH = diameter + captionH + 6f
+        val gridH = rowH * 2f
 
-        ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH, renderer)
-        ImGui.setCursorPosY(ImGui.getCursorPosY() + 2f)
-
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.65f, 0.70f, 0.75f, 1.0f)
-        ImGui.textUnformatted("SRC: ${deck.source.displayName.take(18)}")
-        ImGui.popStyleColor()
-
-        val activeFxCount = deck.fxSlots.count { it != null }
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.70f, 0.85f, 0.55f, 1.0f)
-        ImGui.textUnformatted("FX: $activeFxCount/${deck.fxSlots.size} active")
-        ImGui.popStyleColor()
-        ImGui.endGroup()
-        ImGui.sameLine()
-
-        // Columns 3 to 8: Curated parameters (generator + flattened FX slots) mapped into 2 rows of 3
-        val remainingW = usableW - col12W - COLUMN_GAP
-        val paramColW = (remainingW - (COLUMN_GAP * 2f)) / 3f
-
-        val activeParams = namedParams.take(6)
-        ImGui.beginGroup()
-        for (i in activeParams.indices) {
-            if (i > 0 && i % 3 != 0) {
-                ImGui.sameLine(0f, COLUMN_GAP)
-            }
-            val (paramName, param) = activeParams[i]
-            drawParamSlider(param, paramColW, "deck_${unit.id}_$i", tooltip = paramName)
+        val aspect = session.uiTheme.renderAspectRatio // height / width
+        var previewW = previewAvailW
+        var previewH = previewW * aspect
+        if (previewH > gridH) {
+            previewH = gridH
+            previewW = if (aspect > 0f) previewH / aspect else previewAvailW
         }
-        ImGui.endGroup()
 
-        ImGui.popStyleVar(2)
+        val startX = ImGui.getCursorScreenPosX()
+        val startY = ImGui.getCursorScreenPosY()
+
+        // 1. Knobs: 4 columns x 2 rows, fixed grid position per index. A preset only "claims" the
+        // slots it binds -- unbound slots render as a faint ghost outline instead of a live knob,
+        // marking where a configured knob would sit without cluttering the surface.
+        bank.knobs.forEachIndexed { i, control ->
+            val row = i / knobCols
+            val col = i % knobCols
+            val cx = startX + col * cellW + (cellW - diameter) / 2f
+            val cy = startY + row * rowH
+            ImGui.setCursorScreenPos(cx, cy)
+            if (control.bindings.isNotEmpty()) {
+                drawLiveKnob(session, unit, i, control, diameter)
+            } else {
+                drawGhostKnob(dl, cx, cy, diameter)
+            }
+        }
+
+        // 2. Buttons: 2 columns x 2 rows, to the right of the knobs.
+        val switchH = 28f
+        val switchW = (cellW - COLUMN_GAP).coerceAtLeast(20f)
+        bank.switches.forEachIndexed { i, control ->
+            val row = i / switchCols
+            val col = knobCols + (i % switchCols)
+            val sx = startX + col * cellW + COLUMN_GAP / 2f
+            val sy = startY + row * rowH + (diameter - switchH) / 2f
+            ImGui.setCursorScreenPos(sx, sy)
+            if (control.bindings.isNotEmpty()) {
+                drawLiveSwitch(session, unit, i, control, switchW, switchH)
+            } else {
+                drawGhostSwitch(dl, sx, sy, switchW, switchH)
+            }
+        }
+
+        // 3. Preview monitor, to the right of the buttons.
+        ImGui.setCursorScreenPos(startX + knobSwitchW + COLUMN_GAP, startY)
+        RackMicroMonitor.draw(session, unit, previewW, previewH, renderer)
+
+        ImGui.setCursorScreenPos(startX, startY + gridH)
+        ImGui.dummy(0f, 0f)
     }
 
-    private fun drawTransitionFaceplate(
+    private fun drawLiveKnob(
         session: llm.slop.liquidlsd.SessionContext,
-        unit: MixerTransitionUnit,
-        usableW: Float,
-        colW: Float,
-        faceplateHeight: Float,
-        renderer: Renderer?
+        unit: RackUnit,
+        index: Int,
+        control: MacroControl,
+        diameter: Float
     ) {
+        val isSelected = MacroLearnState.selectedControlId == control.id
+        val isLearning = MacroLearnState.isControlLearning(control.id)
+        ImGui.pushID("knob_${unit.id}_$index")
+        // See RackFaceplateGrid's old drawCuratedMacrosRow comment: wrapping the knob (which
+        // repositions the cursor to paint its label, then restores it via a trailing dummy item)
+        // in a group makes that whole dance count as one atomic item.
+        ImGui.beginGroup()
+        MacroKnobWidget.draw(
+            session = session,
+            id = "unit_${unit.id}_knob_$index",
+            label = control.label.ifEmpty { "K${index + 1}" },
+            value = control.value,
+            diameter = diameter,
+            isSelected = isSelected,
+            isLearning = isLearning,
+            bindings = control.bindings,
+            onSelect = { MacroLearnState.selectedControlId = control.id },
+            onToggleLearn = {
+                if (isLearning) MacroLearnState.cancelLearn() else MacroLearnState.startLearn(control.id)
+            },
+            onChanged = { control.value = it }
+        )
+        ImGui.endGroup()
+        ImGui.popID()
+    }
+
+    private fun drawLiveSwitch(
+        session: llm.slop.liquidlsd.SessionContext,
+        unit: RackUnit,
+        index: Int,
+        control: MacroControl,
+        width: Float,
+        height: Float
+    ) {
+        val isSelected = MacroLearnState.selectedControlId == control.id
+        val isLearning = MacroLearnState.isControlLearning(control.id)
+        ImGui.pushID("switch_${unit.id}_$index")
+        MacroKnobWidget.drawSwitch(
+            session = session,
+            id = "unit_${unit.id}_switch_$index",
+            label = control.label.ifEmpty { "SW${index + 1}" },
+            control = control,
+            width = width,
+            height = height,
+            isSelected = isSelected,
+            isLearning = isLearning,
+            onSelect = { MacroLearnState.selectedControlId = control.id },
+            onToggleLearn = {
+                if (isLearning) MacroLearnState.cancelLearn() else MacroLearnState.startLearn(control.id)
+            }
+        )
+        ImGui.popID()
+    }
+
+    private fun drawGhostKnob(dl: ImDrawList, x: Float, y: Float, diameter: Float) {
+        val radius = diameter / 2f
+        val col = ImGui.colorConvertFloat4ToU32(0.45f, 0.48f, 0.52f, 0.16f)
+        dl.addCircle(x + radius, y + radius, radius - 2f, col, 24, 1.0f)
+    }
+
+    private fun drawGhostSwitch(dl: ImDrawList, x: Float, y: Float, width: Float, height: Float) {
+        val col = ImGui.colorConvertFloat4ToU32(0.45f, 0.48f, 0.52f, 0.14f)
+        dl.addRect(x, y, x + width, y + height, col, 4f, 0, 1.0f)
+    }
+
+    private fun drawMasterExtraControls(unit: MixerTransitionUnit, usableW: Float) {
         val mixer = unit.mixer
+        ImGui.spacing()
+
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
 
-        // Columns 1 & 2: Master Output Confidence Micro-Monitor
-        val col12W = (colW * 2f) + COLUMN_GAP
-        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
-
-        ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH, renderer)
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f)
-        ImGui.textUnformatted("MASTER OUT")
-        ImGui.popStyleColor()
-        ImGui.endGroup()
-        ImGui.sameLine()
-
-        // Columns 3 to 5: Crossfader slider (Deck A <-> Deck B)
-        val crossfaderW = (colW * 3f) + (COLUMN_GAP * 2f)
-        ImGui.beginGroup()
+        val crossfaderW = usableW * 0.4f
         drawParamSlider(
             mixer.crossfade, crossfaderW, "crossfade_${unit.id}",
             customLabel = "CROSSFADER [A <-> B]",
             tooltip = "Blend between Deck A (-1.0) and Deck B (+1.0)."
         )
-        ImGui.endGroup()
-        ImGui.sameLine()
+        ImGui.sameLine(0f, COLUMN_GAP)
 
-        // Columns 6 to 8: Mode, Master Alpha, Bloom
-        val masterColW = colW
+        val restW = ((usableW - crossfaderW - COLUMN_GAP * 4f) / 3f).coerceAtLeast(40f)
         drawParamSlider(
-            mixer.mode, masterColW, "mm_${unit.id}",
+            mixer.mode, restW, "mm_${unit.id}",
             customLabel = "MODE",
             tooltip = "Blend mode: 0=Add, 1=Screen, 2=Mult, 3=Max, 4=Crossfade."
         )
         ImGui.sameLine(0f, COLUMN_GAP)
         drawParamSlider(
-            mixer.masterAlpha, masterColW, "ma_${unit.id}",
+            mixer.masterAlpha, restW, "ma_${unit.id}",
             customLabel = "ALPHA",
             tooltip = "Master output gain/opacity."
         )
         ImGui.sameLine(0f, COLUMN_GAP)
         drawParamSlider(
-            mixer.bloom, masterColW, "mb_${unit.id}",
+            mixer.bloom, restW, "mb_${unit.id}",
             customLabel = "BLOOM",
             tooltip = "Post-process bloom/glow intensity."
         )
-
-        ImGui.popStyleVar(2)
-    }
-
-    private fun drawGenericFaceplate(
-        session: llm.slop.liquidlsd.SessionContext,
-        unit: RackUnit,
-        usableW: Float,
-        colW: Float,
-        faceplateHeight: Float,
-        renderer: Renderer?
-    ) {
-        val namedParams = unit.getNamedParameters().entries.toList()
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4.0f, 3.0f)
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, COLUMN_GAP, 6.0f)
-
-        // Columns 1 & 2: Confidence Micro-Monitor
-        val col12W = (colW * 2f) + COLUMN_GAP
-        val monitorH = (col12W * session.uiTheme.renderAspectRatio).coerceIn(40f, 86f)
-
-        ImGui.beginGroup()
-        RackMicroMonitor.draw(session, unit, col12W, monitorH, renderer)
-        ImGui.endGroup()
-        ImGui.sameLine()
-
-        // Columns 3 to 8: Up to 6 parameters
-        val remainingW = usableW - col12W - COLUMN_GAP
-        val activeParams = namedParams.take(6)
-        val paramColW = if (activeParams.isNotEmpty()) {
-            (remainingW - (COLUMN_GAP * (activeParams.size - 1))) / activeParams.size
-        } else {
-            remainingW
-        }
-
-        if (activeParams.isEmpty()) {
-            ImGui.textDisabled("No exposed faceplate parameters")
-        } else {
-            ImGui.beginGroup()
-            for (i in activeParams.indices) {
-                if (i > 0) ImGui.sameLine(0f, COLUMN_GAP)
-                val (paramName, param) = activeParams[i]
-                drawParamSlider(param, paramColW, "gen_${unit.id}_$i", tooltip = paramName)
-            }
-            ImGui.endGroup()
-        }
 
         ImGui.popStyleVar(2)
     }
@@ -289,13 +244,11 @@ object RackFaceplateGrid {
         ImGui.pushID(idSuffix)
         ImGui.beginGroup()
 
-        // Parameter label
         val label = customLabel ?: "Param"
         ImGui.pushStyleColor(ImGuiCol.Text, 0.70f, 0.75f, 0.80f, 1.0f)
-        ImGui.textUnformatted(label.take(14))
+        ImGui.textUnformatted(label.take(20))
         ImGui.popStyleColor()
 
-        // Slider
         ImGui.setNextItemWidth(width)
         val arr = floatArrayOf(param.baseValue)
         if (ImGui.sliderFloat("##val", arr, param.minClamp, param.maxClamp, "%.2f")) {

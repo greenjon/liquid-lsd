@@ -71,60 +71,76 @@ class RackPanel(
             val startX = ImGui.getCursorScreenPosX() + earW
             val startY = ImGui.getCursorScreenPosY()
 
-            // Calculate total height of all units
+            // Fixed layout: Master spans the full bay width; Deck A/B and Deck BG/PV each share a
+            // row as half-width pairs. The rack only ever holds these five canonical units (see
+            // RackManager.populateFromSession) -- there's no ad-hoc unit list to lay out generically.
+            val unitsById = rackManager.units.associateBy { it.id }
+            val master = unitsById[RackManager.MASTER_TRANSITION_UNIT_ID]
+            val deckA = unitsById[RackManager.DECK_A_UNIT_ID]
+            val deckB = unitsById[RackManager.DECK_B_UNIT_ID]
+            val deckBG = unitsById[RackManager.DECK_BG_UNIT_ID]
+            val deckPV = unitsById[RackManager.DECK_PV_UNIT_ID]
+            val rows = listOf(
+                listOfNotNull(master),
+                listOfNotNull(deckA, deckB),
+                listOfNotNull(deckBG, deckPV)
+            ).filter { it.isNotEmpty() }
+
+            // Calculate total height of all rows (a row's height is its tallest unit)
             var totalUnitsH = 0f
-            for (unit in rackManager.units) {
-                totalUnitsH += RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed) + RackChassisRenderer.UNIT_MARGIN_Y
+            for (row in rows) {
+                val rowH = row.maxOf { RackChassisRenderer.calculateUnitHeight(it.heightU, it.isCollapsed) }
+                totalUnitsH += rowH + RackChassisRenderer.UNIT_MARGIN_Y
             }
             val totalBayH = maxOf(totalUnitsH + 40f, contentH)
 
             // Draw left & right metallic rack ears
             RackChassisRenderer.drawRackEars(dl, startX, startY, bayW, totalBayH)
 
-            // Render Units
-            var unitToRemoveId: String? = null
-            var unitToMoveUpIdx: Int? = null
-            var unitToMoveDownIdx: Int? = null
-
             ImGui.setCursorPosX(earW)
             ImGui.setCursorPosY(0f)
 
-            for (i in rackManager.units.indices) {
-                val unit = rackManager.units[i]
-                val unitH = RackChassisRenderer.calculateUnitHeight(unit.heightU, unit.isCollapsed)
-                val unitScreenX = ImGui.getCursorScreenPosX()
-                val unitScreenY = ImGui.getCursorScreenPosY()
+            val gap = RackChassisRenderer.UNIT_MARGIN_Y
+            val halfW = (bayW - gap) / 2f
 
-                // Draw recessed chassis
-                RackChassisRenderer.drawUnitChassis(
-                    dl, unitScreenX, unitScreenY, bayW, unitH,
-                    unit.isPowered, unit.isBypassed, unit.isSoloed
-                )
+            for (row in rows) {
+                val rowH = row.maxOf { RackChassisRenderer.calculateUnitHeight(it.heightU, it.isCollapsed) }
+                val rowScreenY = ImGui.getCursorScreenPosY()
+                val unitW = if (row.size > 1) halfW else bayW
 
-                // Header rail
-                RackUnitHeaderRail.draw(
-                    unit = unit,
-                    unitIndex = i,
-                    totalUnits = rackManager.units.size,
-                    railWidth = bayW,
-                    onMoveUp = { unitToMoveUpIdx = i },
-                    onMoveDown = { unitToMoveDownIdx = i },
-                    onRemove = { unitToRemoveId = unit.id }
-                )
+                for ((slot, unit) in row.withIndex()) {
+                    val unitScreenX = ImGui.getCursorScreenPosX() + slot * (halfW + gap)
+                    ImGui.setCursorScreenPos(unitScreenX, rowScreenY)
 
-                val bodyH = unitH - RackChassisRenderer.UNIT_HEADER_HEIGHT
+                    // Draw recessed chassis
+                    RackChassisRenderer.drawUnitChassis(
+                        dl, unitScreenX, rowScreenY, unitW, rowH,
+                        unit.isPowered, unit.isBypassed, unit.isSoloed
+                    )
 
-                // Body: Faceplate (Front) vs Chassis Jacks (Rear)
-                if (!unit.isCollapsed) {
-                    if (isRearView) {
-                        RackRearChassisRenderer.drawUnitRear(session, unit, rackManager.patchBay, bayW, bodyH)
-                    } else {
-                        RackFaceplateGrid.drawFaceplate(session, unit, bayW, bodyH, renderer)
+                    // Header rail
+                    RackUnitHeaderRail.draw(
+                        unit = unit,
+                        unitIndex = rackManager.units.indexOf(unit),
+                        totalUnits = rackManager.units.size,
+                        railWidth = unitW
+                    )
+
+                    val bodyH = rowH - RackChassisRenderer.UNIT_HEADER_HEIGHT
+
+                    // Body: Faceplate (Front) vs Chassis Jacks (Rear)
+                    if (!unit.isCollapsed) {
+                        ImGui.setCursorScreenPos(unitScreenX, rowScreenY + RackChassisRenderer.UNIT_HEADER_HEIGHT)
+                        if (isRearView) {
+                            RackRearChassisRenderer.drawUnitRear(session, unit, rackManager.patchBay, unitW, bodyH)
+                        } else {
+                            RackFaceplateGrid.drawFaceplate(session, unit, unitW, bodyH, renderer)
+                        }
                     }
                 }
 
-                // Advance cursor for next unit
-                ImGui.setCursorPosY(ImGui.getCursorPosY() + bodyH + RackChassisRenderer.UNIT_MARGIN_Y)
+                // Advance cursor for next row
+                ImGui.setCursorScreenPos(startX - earW, rowScreenY + rowH + gap)
             }
 
             // Submits an item at the final cursor position so the child window's content bounds
@@ -139,14 +155,6 @@ class RackPanel(
             if (isRearView) {
                 drawPatchCablesOverlay(dl)
             }
-
-            // Apply deferred reordering or removal
-            unitToRemoveId?.let {
-                rackManager.removeUnit(it)
-                RackMicroMonitor.releaseUnit(it)
-            }
-            unitToMoveUpIdx?.let { rackManager.moveUp(it) }
-            unitToMoveDownIdx?.let { rackManager.moveDown(it) }
         }
         ImGui.endChild()
 

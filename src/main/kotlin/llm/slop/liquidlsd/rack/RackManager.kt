@@ -67,8 +67,10 @@ class RackManager(
             setupCuratedBinding(bank.knobs[1], DECK_BG_UNIT_ID, "ROTATE", "viewRotateZ", -3.14f, 3.14f, 0.5f)
         }))
 
-        // 4. Master Mixer & Transition Unit
-        addUnit(MixerTransitionUnit(mixer, label = "Master Crossfade & Color", id = MASTER_TRANSITION_UNIT_ID, macroBank = residentBank(MASTER_TRANSITION_UNIT_ID) { bank ->
+        // 4. Master Mixer & Transition Unit. Taller than the default 2U -- it carries the same
+        // 4x2 knob / 2x2 button / preview faceplate as every other unit, plus its own
+        // crossfader/mode/alpha/bloom row underneath, so it needs the extra vertical room.
+        addUnit(MixerTransitionUnit(mixer, label = "Master Crossfade & Color", id = MASTER_TRANSITION_UNIT_ID, heightU = 4, macroBank = residentBank(MASTER_TRANSITION_UNIT_ID) { bank ->
             setupCuratedBinding(bank.knobs[0], MASTER_TRANSITION_UNIT_ID, "XFADE", "crossfade", -1.0f, 1.0f, 0.0f)
             setupCuratedBinding(bank.knobs[1], MASTER_TRANSITION_UNIT_ID, "BLOOM", "bloom", 0.0f, 1.0f, 0.0f)
             setupCuratedBinding(bank.switches[0], MASTER_TRANSITION_UNIT_ID, "ALPHA", "masterAlpha", 0.0f, 1.0f, 1.0f)

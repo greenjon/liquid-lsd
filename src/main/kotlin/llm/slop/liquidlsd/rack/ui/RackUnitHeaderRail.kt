@@ -18,10 +18,7 @@ object RackUnitHeaderRail {
         unit: RackUnit,
         unitIndex: Int,
         totalUnits: Int,
-        railWidth: Float,
-        onMoveUp: () -> Unit,
-        onMoveDown: () -> Unit,
-        onRemove: () -> Unit
+        railWidth: Float
     ) {
         ImGui.pushID(unit.id)
 
@@ -109,8 +106,8 @@ object RackUnitHeaderRail {
         ImGui.popStyleColor()
         ImGui.sameLine()
 
-        // Right-aligned controls: Up/Down reordering, Height badge, Collapse, Remove
-        val rightGroupW = 160.0f
+        // Right-aligned controls: Height badge, Collapse
+        val rightGroupW = 70.0f
         val currentX = ImGui.getCursorPosX()
         val targetX = railWidth - rightGroupW
         if (targetX > currentX) {
@@ -123,41 +120,12 @@ object RackUnitHeaderRail {
         ImGui.popStyleColor()
         ImGui.sameLine()
 
-        // Move Up button
-        val canMoveUp = unitIndex > 0
-        if (!canMoveUp) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.4f)
-        if (ImGui.button("${Icons.CHEVRON_UP}##up_${unit.id}") && canMoveUp) {
-            onMoveUp()
-        }
-        if (!canMoveUp) ImGui.popStyleVar()
-        itemTooltip("Move unit up in rack")
-        ImGui.sameLine()
-
-        // Move Down button
-        val canMoveDown = unitIndex < totalUnits - 1
-        if (!canMoveDown) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 0.4f)
-        if (ImGui.button("${Icons.CHEVRON_DOWN}##down_${unit.id}") && canMoveDown) {
-            onMoveDown()
-        }
-        if (!canMoveDown) ImGui.popStyleVar()
-        itemTooltip("Move unit down in rack")
-        ImGui.sameLine()
-
         // Collapse / Expand toggle
         val foldIcon = if (unit.isCollapsed) Icons.FOLDER else Icons.CHEVRON_DOWN
         if (ImGui.button("${if (unit.isCollapsed) "+" else "-"}##fold_${unit.id}")) {
             unit.isCollapsed = !unit.isCollapsed
         }
         itemTooltip(if (unit.isCollapsed) "Expand to full unit controls" else "Collapse to 0.5U spine")
-        ImGui.sameLine()
-
-        // Remove button
-        ImGui.pushStyleColor(ImGuiCol.Text, 0.75f, 0.25f, 0.25f, 1.0f)
-        if (ImGui.button("x##del_${unit.id}")) {
-            onRemove()
-        }
-        ImGui.popStyleColor()
-        itemTooltip("Remove unit from rack")
 
         ImGui.popStyleVar(2)
         ImGui.popID()
