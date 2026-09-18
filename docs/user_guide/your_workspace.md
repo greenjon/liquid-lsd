@@ -70,7 +70,7 @@ The right panel shows:
 
 Clicking the master monitor preview jumps directly to the **MIX** tab.
 
-A **`[ MIXER | MACROS ]`** toggle at the top of this panel switches it to the Macro Controls view — 8 knobs and 4 switches you can bind to any parameter or modulator for fast, tactile live control. See [Macro Controls & the Modular Video Rack](macros_and_rack.md).
+A **`[ MIXER | MACROS ]`** toggle at the top of this panel switches it to the Macro Controls view — 8 knobs you can bind to any parameter or modulator for fast, tactile live control. See [Macro Controls & the Modular Video Rack](macros_and_rack.md).
 
 ---
 

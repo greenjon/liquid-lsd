@@ -173,16 +173,6 @@ class OscMappingManagerTest {
         assertEquals(0.33f, bank.knobs[0].value, absoluteTolerance = 1e-4f)
     }
 
-    @Test
-    fun testMacroSwitchAddressForwardsToMacroOscBridge() {
-        val mixer = mockMixerWithParams()
-        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
-
-        OscMappingManager.onOscMessage(OscMessage("/macro/deckA/switch/1", listOf(1.0f)), mixer)
-
-        assertTrue(bank.switches[0].value > 0.5f)
-    }
-
     // --- OSC Learn integration ---
 
     @Test

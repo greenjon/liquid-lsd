@@ -9,9 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList
  * - Inbound address routing, namespaced per canonical deck/mixer bank
  *   ([MacroEngine.CANONICAL_BANK_IDS], e.g. "deckA"):
  *     `/macro/<bankId>/knob/1`..`/macro/<bankId>/knob/8` (Float [0.0..1.0])
- *     `/macro/<bankId>/switch/1`..`/macro/<bankId>/switch/4` (Float [0.0 or 1.0])
  * - Outbound feedback dispatch: keeps external surfaces (e.g. TouchOSC on tablets)
- *   in bidirectional sync with knob/switch values.
+ *   in bidirectional sync with knob values.
  */
 object MacroOscBridge {
     private val logger = KotlinLogging.logger {}
@@ -68,23 +67,9 @@ object MacroOscBridge {
             return true
         }
 
-        if (slotType == "switch") {
-            val switch = bank.switches.getOrNull(idx) ?: return false
-            if (value >= 0.5f) {
-                switch.onPress()
-            } else {
-                switch.onRelease()
-            }
-            broadcast(address, switch.value)
-            return true
-        }
-
         return false
     }
 
     /** Returns the canonical OSC address for a knob index (0..7) within [bankId]. */
     fun getKnobAddress(bankId: String, index: Int): String = "/macro/$bankId/knob/${index + 1}"
-
-    /** Returns the canonical OSC address for a switch index (0..3) within [bankId]. */
-    fun getSwitchAddress(bankId: String, index: Int): String = "/macro/$bankId/switch/${index + 1}"
 }

@@ -12,18 +12,21 @@ import llm.slop.liquidlsd.cv.isAudioSource
 /**
  * Binding Inspector drawer for the selected Macro Control in Column 3.
  *
- * Displays control metadata (label, switch behavior) and its active 1-to-many bindings list (0..4).
+ * Displays control metadata (label) and its active 1-to-many bindings list (0..4).
  * Allows modifying travel bounds (Min/Max), response curves, direction inversion, and enabling/disabling
  * bindings (which acts as the field-ownership lock release mechanism per proposal §3.3).
+ *
+ * Hardware MIDI Learn for macro knobs lives in the Performance Mode 4×4 matrix
+ * ([PerformanceMatrixPanel]), not here -- this drawer only handles parameter-bind Learn.
  */
 object MacroBindingInspector {
     private val labelBuf = ImString(64)
     private var lastControlId: String? = null
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, control: MacroControl?, parametersState: ParametersState, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, control: MacroControl?, parametersState: ParametersState, mixer: Mixer) {
         if (control == null) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("Select a Knob or Switch above to inspect bindings.")
+                ImGui.textDisabled("Select a Knob above to inspect bindings.")
             }
             return
         }
@@ -36,9 +39,8 @@ object MacroBindingInspector {
         ImGui.pushID(control.id)
 
         // Header row: Type badge, name input, value readout, and Learn button
-        val typeBadge = if (control.isSwitch) "SWITCH" else "KNOB"
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, typeBadge)
+            ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "KNOB")
         }
         ImGui.sameLine(0f, 6f)
 
@@ -71,53 +73,6 @@ object MacroBindingInspector {
                 itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Column 1 or 2.")
             } else {
                 ImGui.textDisabled("[Max 4 targets]")
-            }
-        }
-
-        // Hardware MIDI Learn (proposal §5.1: physical CC/note -> this Macro Knob/Switch).
-        // Addressed as "Macro/<bankId>/knob_N" / "Macro/<bankId>/switch_N", matching the format
-        // MidiMappingManager.onMidiEvent dispatches against -- works for any registered bank.
-        val midiPath = macroMidiPath(bank, control)
-        if (midiPath != null) {
-            ImGui.sameLine(0f, 8f)
-            val isMidiLearning = parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
-            if (isMidiLearning) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.72f, 0.45f, 1.00f, 0.7f))
-                if (ImGui.button("${Icons.REFRESH} Waiting for MIDI... (Cancel)##midi_learn_cancel")) {
-                    parametersState.midiLearnTarget = null
-                }
-                ImGui.popStyleColor()
-            } else {
-                if (ImGui.button("${Icons.PLUS} MIDI Learn##midi_learn_start")) {
-                    parametersState.midiLearnTarget = MidiLearnTarget.MacroTarget(midiPath, control.label.ifEmpty { control.id })
-                    parametersState.midiLearnStartTimeMs = System.currentTimeMillis()
-                    if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
-                        PopupManager.globalPendingMidiWarning = true
-                    }
-                }
-                itemTooltip("Arm hardware MIDI Learn: next CC/Note received binds a physical controller to this Macro $typeBadge.")
-            }
-        }
-
-        // Switch behavior selector
-        if (control.isSwitch) {
-            ImGui.spacing()
-            ImGui.textDisabled("Default Behavior:")
-            ImGui.sameLine(0f, 6f)
-            val behaviors = arrayOf("Toggle (Latch)", "Momentary (Hold)", "Trigger (Pulse)")
-            val currentIdx = when (control.switchBehavior) {
-                SwitchBehavior.TOGGLE -> 0
-                SwitchBehavior.MOMENTARY -> 1
-                SwitchBehavior.TRIGGER -> 2
-            }
-            val imIdx = ImInt(currentIdx)
-            ImGui.setNextItemWidth(150f)
-            if (ImGui.combo("##switch_behavior", imIdx, behaviors)) {
-                control.switchBehavior = when (imIdx.get()) {
-                    0 -> SwitchBehavior.TOGGLE
-                    1 -> SwitchBehavior.MOMENTARY
-                    else -> SwitchBehavior.TRIGGER
-                }
             }
         }
 
@@ -249,31 +204,6 @@ object MacroBindingInspector {
                     itemTooltip("Number of quantized steps across the travel range.")
                 }
 
-                // Per-binding behavior override — only shown when the parent is a switch.
-                if (control.isSwitch) {
-                    ImGui.spacing()
-                    val defaultLabel = "— default (${control.switchBehavior.label})"
-                    val overrideLabels = arrayOf(defaultLabel, "Toggle (Latch)", "Momentary (Hold)", "Trigger (Pulse)")
-                    val currentOverrideIdx = when (binding.switchBehaviorOverride) {
-                        null                     -> 0
-                        SwitchBehavior.TOGGLE    -> 1
-                        SwitchBehavior.MOMENTARY -> 2
-                        SwitchBehavior.TRIGGER   -> 3
-                    }
-                    val overrideImIdx = ImInt(currentOverrideIdx)
-                    ImGui.setNextItemWidth(190f)
-                    if (ImGui.combo("Behavior##beh_$idx", overrideImIdx, overrideLabels)) {
-                        binding.switchBehaviorOverride = when (overrideImIdx.get()) {
-                            0    -> null
-                            1    -> SwitchBehavior.TOGGLE
-                            2    -> SwitchBehavior.MOMENTARY
-                            else -> SwitchBehavior.TRIGGER
-                        }
-                        MacroEngine.invalidate()
-                    }
-                    itemTooltip("Override switch behavior for this binding only. '— default' inherits the control's Default Behavior setting above.")
-                }
-
                 ImGui.unindent(18f)
                 ImGui.spacing()
                 ImGui.popID()
@@ -298,20 +228,5 @@ object MacroBindingInspector {
         isAudioSource(sourceId)        -> "audio"
         sourceId.startsWith("midi_cc_") -> "midi"
         else                             -> sourceId
-    }
-
-    /**
-     * Resolves the "Macro/<bankId>/knob_N" / "Macro/<bankId>/switch_N" MIDI mapping path for
-     * [control] within [bank], matching the format
-     * [llm.slop.liquidlsd.midi.MidiMappingManager.onMidiEvent] dispatches against. Returns null
-     * if [bank] isn't currently registered with [MacroEngine] or [control] isn't found in it.
-     */
-    private fun macroMidiPath(bank: MacroBank, control: MacroControl): String? {
-        val bankId = MacroEngine.keyForBank(bank) ?: return null
-        val knobIdx = bank.knobs.indexOf(control)
-        if (knobIdx >= 0) return "Macro/$bankId/knob_${knobIdx + 1}"
-        val switchIdx = bank.switches.indexOf(control)
-        if (switchIdx >= 0) return "Macro/$bankId/switch_${switchIdx + 1}"
-        return null
     }
 }

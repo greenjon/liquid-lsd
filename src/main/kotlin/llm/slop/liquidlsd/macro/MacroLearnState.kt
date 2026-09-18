@@ -80,10 +80,10 @@ object MacroLearnState {
      * Resolves a control from the specified bank or any registered bank in MacroEngine.
      */
     fun findControl(controlId: String, bank: MacroBank = MacroBank()): MacroControl? {
-        val inBank = bank.knobs.find { it.id == controlId } ?: bank.switches.find { it.id == controlId }
+        val inBank = bank.knobs.find { it.id == controlId }
         if (inBank != null) return inBank
         val pair = MacroEngine.findBankForControl(controlId)
-        return pair?.second?.let { b -> b.knobs.find { it.id == controlId } ?: b.switches.find { it.id == controlId } }
+        return pair?.second?.knobs?.find { it.id == controlId }
     }
 
     /**
@@ -162,7 +162,7 @@ object MacroLearnState {
         } else {
             "$parameterId [$propertyName]"
         }
-        val ctrlName = control.label.ifEmpty { if (control.isSwitch) "Switch" else "Knob" }
+        val ctrlName = control.label.ifEmpty { "Knob" }
         setStatus("Bound $ctrlName -> $targetDesc", 4000L)
         return true
     }

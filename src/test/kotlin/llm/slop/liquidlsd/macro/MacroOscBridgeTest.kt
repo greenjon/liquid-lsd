@@ -41,24 +41,6 @@ class MacroOscBridgeTest {
     }
 
     @Test
-    fun testHandleOscSwitchMessage() {
-        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
-        val switch2 = bank.switches[1]
-        switch2.switchBehavior = SwitchBehavior.MOMENTARY
-        switch2.value = 0f
-
-        // High (> 0.5f) -> press
-        val handledPress = MacroOscBridge.handleOscMessage("/macro/deckA/switch/2", 1.0f)
-        assertTrue(handledPress)
-        assertEquals(1.0f, switch2.value)
-
-        // Low (<= 0.5f) -> release
-        val handledRelease = MacroOscBridge.handleOscMessage("/macro/deckA/switch/2", 0.0f)
-        assertTrue(handledRelease)
-        assertEquals(0.0f, switch2.value)
-    }
-
-    @Test
     fun testUnrecognizedAddressReturnsFalse() {
         val handled = MacroOscBridge.handleOscMessage("/unrecognized/address", 1.0f)
         assertFalse(handled)

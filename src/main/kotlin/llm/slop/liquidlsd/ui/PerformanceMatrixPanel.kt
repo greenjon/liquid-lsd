@@ -10,11 +10,11 @@ import llm.slop.liquidlsd.rendering.Mixer
  * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/performance_mode.md).
  *
  * Displays 16 knobs arranged as 4 rows × 4 columns, mapped to per-deck [MacroEngine] banks
- * according to the active layout tab. This panel is **read-only** from a macro-editing
- * perspective: knob drag adjusts the underlying [llm.slop.liquidlsd.macro.MacroControl.value]
- * directly, but there is no Learn Mode, no binding inspector, and no right-click action.
- * All macro editing (labels, bindings, curves, ranges) is done in Classic mode's Column 3
- * MACROS tab.
+ * according to the active layout tab. Knob drag adjusts the underlying
+ * [llm.slop.liquidlsd.macro.MacroControl.value] directly, and right-click arms hardware MIDI
+ * Learn for that knob (the pulsing cyan ring shows an armed knob; a repeat right-click cancels).
+ * There is no parameter-bind Learn or binding inspector here -- that editing (labels, bindings,
+ * curves, ranges) stays in Classic mode's Column 3 MACROS tab.
  *
  * Active tab is persisted via [UITheme.performanceMatrixTab] / [AppPreferences.performanceMatrixTab].
  *
@@ -92,11 +92,11 @@ class PerformanceMatrixPanel {
 
     // -- Draw ---------------------------------------------------------------------
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val theme = session.uiTheme
         drawTabStrip(session, theme)
         ImGui.spacing()
-        drawMatrix(session, theme)
+        drawMatrix(session, theme, parametersState)
     }
 
     // -- Tab strip ----------------------------------------------------------------
@@ -130,7 +130,7 @@ class PerformanceMatrixPanel {
 
     // -- 4x4 Knob Grid -----------------------------------------------------------
 
-    private fun drawMatrix(session: llm.slop.liquidlsd.SessionContext, theme: UITheme) {
+    private fun drawMatrix(session: llm.slop.liquidlsd.SessionContext, theme: UITheme, parametersState: ParametersState) {
         val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.values().size - 1)
         val rows = TAB_ROWS[tabIdx]
         val rowLabels = TAB_ROW_LABELS[tabIdx]
@@ -183,6 +183,10 @@ class PerformanceMatrixPanel {
 
                 ImGui.setCursorScreenPos(cellCenterX - diameter / 2f, knobTopY)
 
+                val midiPath = MacroEngine.midiPathFor(bank, control)
+                val isMidiLearning = midiPath != null &&
+                    parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
+
                 MacroKnobWidget.draw(
                     session = session,
                     id = "perf_${tabIdx}_r${rowIdx}_c${col}",
@@ -192,11 +196,23 @@ class PerformanceMatrixPanel {
                     defaultValue = 0.5f,
                     pixelsForFullSweep = 200f,
                     isSelected = false,
-                    isLearning = false,
+                    isLearning = isMidiLearning,
                     accentColor = row.accent,
                     bindings = emptyList(),
                     onSelect = {},
-                    onToggleLearn = {},
+                    onToggleLearn = {
+                        if (midiPath != null) {
+                            if (isMidiLearning) {
+                                parametersState.midiLearnTarget = null
+                            } else {
+                                parametersState.midiLearnTarget = MidiLearnTarget.MacroTarget(midiPath, control.label.ifEmpty { "K${knobIdx + 1}" })
+                                parametersState.midiLearnStartTimeMs = System.currentTimeMillis()
+                                if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
+                                    PopupManager.globalPendingMidiWarning = true
+                                }
+                            }
+                        }
+                    },
                     onChanged = { newVal -> control.value = newVal }
                 )
             }

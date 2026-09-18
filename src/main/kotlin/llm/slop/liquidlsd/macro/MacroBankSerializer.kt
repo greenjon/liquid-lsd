@@ -30,8 +30,7 @@ object MacroBankSerializer {
 
     /** Deep-copies [bank] for bundling into a preset file so the saved snapshot is immutable. */
     fun snapshotForPreset(bank: MacroBank): MacroBank = MacroBank(
-        knobs = bank.knobs.map { it.copy(bindings = it.bindings.map { b -> b.copy() }.toMutableList()) },
-        switches = bank.switches.map { it.copy(bindings = it.bindings.map { b -> b.copy() }.toMutableList()) }
+        knobs = bank.knobs.map { it.copy(bindings = it.bindings.map { b -> b.copy() }.toMutableList()) }
     )
 
     /**
@@ -55,15 +54,6 @@ object MacroBankSerializer {
             destKnob.label = srcKnob?.label ?: ""
             destKnob.bindings.clear()
             srcKnob?.bindings?.forEach { destKnob.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
-        }
-
-        for (i in targetBank.switches.indices) {
-            val destSwitch = targetBank.switches[i]
-            val srcSwitch = deckBank?.switches?.getOrNull(i)
-            destSwitch.label = srcSwitch?.label ?: ""
-            destSwitch.switchBehavior = srcSwitch?.switchBehavior ?: SwitchBehavior.TOGGLE
-            destSwitch.bindings.clear()
-            srcSwitch?.bindings?.forEach { destSwitch.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
         }
 
         MacroEngine.invalidate()
@@ -117,10 +107,7 @@ object MacroBankSerializer {
         val sanitizedKnobs = rawBank.knobs.map { knob ->
             knob.copy(bindings = filterValid(knob.bindings))
         }
-        val sanitizedSwitches = rawBank.switches.map { switch ->
-            switch.copy(bindings = filterValid(switch.bindings))
-        }
 
-        return MacroBank(knobs = sanitizedKnobs, switches = sanitizedSwitches) to skippedCount
+        return MacroBank(knobs = sanitizedKnobs) to skippedCount
     }
 }

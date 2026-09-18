@@ -587,10 +587,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#binding-a-knob-or-switch-learn-mode" class="md-nav__link">
+  <a href="#binding-a-knob-learn-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Binding a knob or switch (Learn Mode)
+        Binding a knob (Learn Mode)
       
     </span>
   </a>
@@ -613,17 +613,6 @@
     <span class="md-ellipsis">
       
         Locked fields &amp; Visual Indicators
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#switch-behaviors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Switch behaviors
       
     </span>
   </a>
@@ -1414,10 +1403,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#binding-a-knob-or-switch-learn-mode" class="md-nav__link">
+  <a href="#binding-a-knob-learn-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Binding a knob or switch (Learn Mode)
+        Binding a knob (Learn Mode)
       
     </span>
   </a>
@@ -1440,17 +1429,6 @@
     <span class="md-ellipsis">
       
         Locked fields &amp; Visual Indicators
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#switch-behaviors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Switch behaviors
       
     </span>
   </a>
@@ -1585,23 +1563,23 @@
 
 
 <h1 id="macro-controls-performance-mode">Macro Controls &amp; Performance Mode</h1>
-<p>Macro Controls give you a small number of physical-style knobs and switches that each drive
-several parameters at once — the fast, tactile layer you reach for live instead of hunting
-through the Parameters panel. Performance Mode builds on the same macro system to give you a
-full-screen 4×4 knob matrix purpose-built for live performance.</p>
+<p>Macro Controls give you a small number of physical-style knobs that each drive several
+parameters at once — the fast, tactile layer you reach for live instead of hunting through the
+Parameters panel. Performance Mode builds on the same macro system to give you a full-screen 4×4
+knob matrix purpose-built for live performance.</p>
 <hr />
 <h2 id="macro-controls-column-3-macros">Macro Controls (Column 3 MACROS)</h2>
 <p>Column 3 (the right-hand panel, where the Mixer normally lives) has a mode toggle at the top:
 <strong><code>[ MIXER | MACROS ]</code></strong>.</p>
 <ul>
 <li><strong>MIXER</strong> — The classic 4-deck crossfader layout (Deck A, B, BG, Master).</li>
-<li><strong>MACROS</strong> — 8 Macro Knobs (2×4 grid) + 4 Macro Switches, a binding inspector, and a
-  single-deck preview. This is the <strong>editing</strong> surface for your macro layout.</li>
+<li><strong>MACROS</strong> — 8 Macro Knobs (2×4 grid), a binding inspector, and a single-deck preview. This is
+  the <strong>editing</strong> surface for your macro layout.</li>
 </ul>
-<h3 id="binding-a-knob-or-switch-learn-mode">Binding a knob or switch (Learn Mode)</h3>
+<h3 id="binding-a-knob-learn-mode">Binding a knob (Learn Mode)</h3>
 <ol>
-<li>Click <strong><code>LEARN</code></strong> on any Macro Knob or Switch. It starts pulsing to show it's armed, and a
-   banner appears: <em>"LEARN MODE: Click any parameter slider or modulator to bind."</em></li>
+<li>Click <strong><code>LEARN</code></strong> on any Macro Knob. It starts pulsing to show it's armed, and a banner
+   appears: <em>"LEARN MODE: Click any parameter slider or modulator to bind."</em></li>
 <li>Click the target:</li>
 <li>A parameter slider in the <strong>Parameters</strong> panel (Column 1) binds to that parameter's base
      value.</li>
@@ -1611,11 +1589,11 @@ full-screen 4×4 knob matrix purpose-built for live performance.</p>
 <li>A toast confirms the binding (e.g. <em>"Bound Knob 3 → Zoom [LFO 1 Morph]"</em>) and Learn Mode
    turns itself off.</li>
 </ol>
-<p>Each knob or switch can hold up to <strong>4 bindings</strong>, so one knob can drive several parameters (or
-modulator properties) simultaneously — with independent settings per binding.</p>
+<p>Each knob can hold up to <strong>4 bindings</strong>, so one knob can drive several parameters (or modulator
+properties) simultaneously — with independent settings per binding.</p>
 <h3 id="the-binding-inspector">The Binding Inspector</h3>
-<p>Selecting a knob/switch shows its bindings in the inspector below the grid. For each binding
-you can set:</p>
+<p>Selecting a knob shows its bindings in the inspector below the grid. For each binding you can
+set:</p>
 <ul>
 <li><strong>Min / Max</strong> — the travel range the binding maps onto, independent of the target's own range.</li>
 <li><strong>Curve</strong> — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number
@@ -1623,9 +1601,6 @@ you can set:</p>
 <li><strong>Invert</strong> — turning the knob up moves this target down.</li>
 <li><strong>Enabled</strong> — toggling a binding off immediately hands the target field back to normal
   manual/mouse editing; toggling it back on resumes macro control.</li>
-<li><strong>Behavior</strong> <em>(switch controls only)</em> — per-binding override of the switch's press/release
-  semantics (see below). Defaults to <code>— default</code>, which inherits the control-level <strong>Default
-  Behavior</strong> setting.</li>
 </ul>
 <p>The <strong>binding target name</strong> (e.g. <code>Deck A/Mandala/L1</code>) is a clickable link. Clicking it switches
 Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being
@@ -1636,8 +1611,8 @@ receives distinct visual cues across Columns 1 and 2:</p>
 <ul>
 <li><strong>Parameters List (Column 1)</strong>:</li>
 <li>The row displays an <strong>Electric Cyan left-accent border</strong> and a subtle cyan background tint.</li>
-<li>An inline badge such as <strong><code>[K1]</code></strong> or <strong><code>[SW2]</code></strong> appears beside the parameter name, and the
-    name is tinted Electric Cyan.</li>
+<li>An inline badge such as <strong><code>[K1]</code></strong> appears beside the parameter name, and the name is
+    tinted Electric Cyan.</li>
 <li>The "VAL" meter cell is outlined with a cyan border.</li>
 <li>Hovering over the row or value cell shows a contextual tooltip identifying the controlling
     macro (e.g. <code>Locked: Driven by Knob 1 (WARP) [K1]</code>).</li>
@@ -1649,7 +1624,7 @@ receives distinct visual cues across Columns 1 and 2:</p>
 <p><strong>Properties &amp; Sliders (Column 2)</strong>:</p>
 </li>
 <li>An Electric Cyan <strong>bounding box and background highlight</strong> frames the entire slider row.</li>
-<li>The variable label displays the <strong><code>[K1]</code></strong> / <strong><code>[SW1]</code></strong> badge in cyan.</li>
+<li>The variable label displays the <strong><code>[K1]</code></strong> badge in cyan.</li>
 <li>The slider track and dynamic indicator dot glow Electric Cyan instead of their default color.</li>
 <li>Numeric input text boxes are outlined in cyan and set to read-only to prevent fighting the
     engine.</li>
@@ -1657,30 +1632,20 @@ receives distinct visual cues across Columns 1 and 2:</p>
     macro control.</li>
 <li>Clicking the variable label or badge jumps directly to the Column 3 Macro Inspector.</li>
 </ul>
-<h3 id="switch-behaviors">Switch behaviors</h3>
-<p>Each Macro Switch has a <strong>Default Behavior</strong> that applies to all of its bindings unless overridden:</p>
-<ul>
-<li><strong>Toggle</strong> — click flips it between min and max, and it stays there.</li>
-<li><strong>Momentary</strong> — max while held down, snaps back to min on release. Good for strobes and glitch
-  triggers.</li>
-<li><strong>Trigger</strong> — fires a single one-frame pulse per click, for one-shot impulses.</li>
-</ul>
-<p>Each binding can also carry its own <strong>Behavior</strong> override, set independently in the Binding
-Inspector. This means a single button press can simultaneously latch one parameter, hold another
-only while pressed, and pulse a third — all from one button.</p>
 <h3 id="saving-your-knob-layout">Saving your knob layout</h3>
 <p>Macro banks are bundled directly into <code>.lsd</code> / <code>.lsdset</code> preset files — they load and save with
 the preset automatically, with no extra file to manage. If you want to reuse a favorite knob
 layout across unrelated presets, use <strong>Export Macro Bank...</strong> / <strong>Import Macro Bank...</strong> in the
 inspector to save/load a standalone <code>.knobpreset.json</code>.</p>
 <h3 id="hardware-control">Hardware control</h3>
-<p>Macro Knobs and Switches sit at the top of the MIDI/OSC input hierarchy:</p>
+<p>Macro Knobs sit at the top of the MIDI/OSC input hierarchy:</p>
 <ul>
-<li>Map a physical MIDI CC knob or fader to any of the 8 Macro Knobs, and a MIDI CC/Note button to
-  any of the 4 Macro Switches, the same way you'd MIDI-learn any other control (see
-  <a href="../performance_controls/">Performance Controls</a>).</li>
+<li>Right-click any knob in the <strong>Performance Mode 4×4 matrix</strong> (see below) to arm hardware MIDI
+  Learn for it — the next CC your controller sends binds to that knob. Hardware MIDI Learn is
+  Performance-Mode-only; the Classic MACROS editor's <code>LEARN</code> button is for parameter binding, not
+  MIDI mapping.</li>
 <li>Turn on the OSC server in <strong>Preferences → OSC Controls</strong>, and <code>/macro/knob/1</code>–<code>/macro/knob/8</code>
-  and <code>/macro/switch/1</code>–<code>/macro/switch/4</code> send and receive live updates.</li>
+  send and receive live updates.</li>
 </ul>
 <hr />
 <h2 id="performance-mode-44-matrix">Performance Mode (4×4 Matrix)</h2>
@@ -1745,8 +1710,10 @@ edge and a faint row label.</p>
 <ul>
 <li><strong>Drag</strong> (up/down) to adjust the knob value — same feel as the classic macro knobs.</li>
 <li><strong>Mouse wheel</strong> to fine-adjust (Shift for finer, Ctrl+Shift for coarser).</li>
-<li><strong>Right-click</strong> does nothing in Performance Mode — editing (Learn Mode, binding inspector,
-  Min/Max/Curve) is done in Classic mode's Column 3 MACROS tab.</li>
+<li><strong>Right-click</strong> arms hardware MIDI Learn for that knob — the knob pulses cyan while armed, and
+  the next CC message from your controller binds to it. Right-click again to cancel. This is the
+  only editing action available in Performance Mode; everything else (parameter-bind Learn,
+  binding inspector, Min/Max/Curve) is done in Classic mode's Column 3 MACROS tab.</li>
 </ul>
 <p>Knobs in Performance Mode and Classic MACROS read from and write to the <strong>same underlying
 <code>MacroEngine</code> banks</strong> — changes in one mode are immediately visible in the other.</p>

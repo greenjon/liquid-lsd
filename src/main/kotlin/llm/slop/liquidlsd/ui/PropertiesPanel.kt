@@ -399,7 +399,6 @@ object PropertiesPanel {
                             .mapNotNull { llm.slop.liquidlsd.macro.MacroEngine.getBank(it) }
                             .firstNotNullOfOrNull { bank ->
                                 bank.knobs.find { k -> k.bindings.any { boundProps.contains(it) } }
-                                    ?: bank.switches.find { s -> s.bindings.any { boundProps.contains(it) } }
                             }
                         val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
 

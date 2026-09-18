@@ -344,7 +344,7 @@ object MidiMappingManager {
             if (mapping.channel != event.channel || mapping.cc != event.index) continue
             if (mapping.messageType != event.type && !(mapping.messageType == MidiMessageType.CC && event.type == MidiMessageType.PITCH_BEND)) continue
 
-            // "Macro/<bankId>/knob_N" or "Macro/<bankId>/switch_N"
+            // "Macro/<bankId>/knob_N"
             val rest = path.removePrefix("Macro/")
             val slashIdx = rest.indexOf('/')
             if (slashIdx < 0) continue
@@ -369,17 +369,6 @@ object MidiMappingManager {
                         val rawNorm = if (mapping.inverted) 1f - event.normalizedValue else event.normalizedValue
                         knob.value = rawNorm.coerceIn(0f, 1f)
                     }
-                }
-            } else if (slot.startsWith("switch_")) {
-                val idx = slot.removePrefix("switch_").toIntOrNull()?.minus(1) ?: continue
-                val switch = bank.switches.getOrNull(idx) ?: continue
-                val isHigh = event.normalizedValue > 0.05f
-                val prevHigh = lastButtonHigh[path] ?: false
-                lastButtonHigh[path] = isHigh
-                if (isHigh && !prevHigh) {
-                    switch.onPress()
-                } else if (!isHigh && prevHigh) {
-                    switch.onRelease()
                 }
             }
         }

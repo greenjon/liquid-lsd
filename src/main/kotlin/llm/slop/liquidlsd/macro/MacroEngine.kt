@@ -93,12 +93,24 @@ object MacroEngine {
     fun findBankForControl(controlId: String): Pair<String?, MacroBank>? {
         synchronized(lock) {
             for ((unitId, bank) in banks) {
-                if (bank.knobs.any { it.id == controlId } || bank.switches.any { it.id == controlId }) {
+                if (bank.knobs.any { it.id == controlId }) {
                     return Pair(unitId, bank)
                 }
             }
         }
         return null
+    }
+
+    /**
+     * Resolves the "Macro/&lt;bankId&gt;/knob_N" MIDI mapping path for [control] within [bank],
+     * matching the format [llm.slop.liquidlsd.midi.MidiMappingManager.onMidiEvent] dispatches
+     * against. Returns null if [bank] isn't currently registered or [control] isn't found in it.
+     */
+    fun midiPathFor(bank: MacroBank, control: MacroControl): String? {
+        val bankId = keyForBank(bank) ?: return null
+        val knobIdx = bank.knobs.indexOf(control)
+        if (knobIdx < 0) return null
+        return "Macro/$bankId/knob_${knobIdx + 1}"
     }
 
     @Volatile
@@ -126,20 +138,11 @@ object MacroEngine {
     @Volatile
     private var resolvedBindings: Array<ResolvedBinding> = emptyArray()
 
-    // Snapshot of all registered banks, rebuilt only when [bindingsDirty] (i.e. only on
-    // registerBank/unregisterBank/invalidate, not every frame). [tick] reuses this array to
-    // consume trigger resets without re-synchronizing/re-copying `banks.values` every frame.
-    // Empty until the first tick() rebuilds it (bindingsDirty starts true) -- see rebuildResolvedBindings.
-    @Volatile
-    private var banksSnapshot: Array<MacroBank> = emptyArray()
-
     private fun rebuildResolvedBindings(mixer: Mixer) {
         val list = ArrayList<ResolvedBinding>()
         val snapshot = synchronized(lock) { banks.values.toTypedArray() }
-        banksSnapshot = snapshot
         for (bank in snapshot) {
             resolveControls(bank.knobs, mixer, list)
-            resolveControls(bank.switches, mixer, list)
         }
         resolvedBindings = list.toTypedArray()
         bindingsDirty = false
@@ -173,7 +176,7 @@ object MacroEngine {
         val bindings = resolvedBindings
         for (i in 0 until bindings.size) {
             val rb = bindings[i]
-            val mapped = MacroCurve.mapToRange(effectiveValue(rb.control, rb.binding), rb.binding)
+            val mapped = MacroCurve.mapToRange(rb.control.value, rb.binding)
             when (rb.binding.targetType) {
                 MacroTargetType.PARAM_BASE_VALUE -> rb.param.baseValue = mapped
                 MacroTargetType.MODULATOR_PROPERTY -> {
@@ -189,60 +192,6 @@ object MacroEngine {
                     }
                 }
             }
-        }
-
-        // Per-switch tail: update per-binding override state and consume control-level TRIGGER
-        // resets. Reuses the cached snapshot from the last rebuild — no allocation every frame.
-        val snapshot = banksSnapshot
-        for (i in snapshot.indices) {
-            val switches = snapshot[i].switches
-            for (j in switches.indices) {
-                val ctrl = switches[j]
-
-                // Detect rising edge (rawPressValue went 0→1 this frame).
-                val pressEdge = ctrl.rawPressValue >= 0.5f && ctrl.prevRawPressValue < 0.5f
-                ctrl.prevRawPressValue = ctrl.rawPressValue
-
-                // Drive per-binding override state machines on press edge.
-                for (k in ctrl.bindings.indices) {
-                    val b = ctrl.bindings[k]
-                    when (b.switchBehaviorOverride) {
-                        SwitchBehavior.TOGGLE  -> if (pressEdge) b.bindingLatchState = !b.bindingLatchState
-                        SwitchBehavior.TRIGGER -> {
-                            if (pressEdge) b.bindingPendingPulse = true
-                            // Consume pulse now — effectiveValue() already read it this frame.
-                            else b.bindingPendingPulse = false
-                        }
-                        else -> {}
-                    }
-                }
-
-                // Existing control-level one-shot TRIGGER reset (unchanged).
-                ctrl.consumeTriggerReset()
-            }
-        }
-    }
-
-    /**
-     * Returns the normalized [0,1] input value for [binding] on [control].
-     *
-     * For knob controls, or switch bindings with no override ([MacroBinding.switchBehaviorOverride]
-     * == null), this is simply [MacroControl.value] — fully backward-compatible.
-     *
-     * For switch bindings with an override the behavior is driven by the per-binding state:
-     * - **TOGGLE**: returns 1f when [MacroBinding.bindingLatchState] is true, 0f otherwise.
-     *   The state is flipped on each rising press edge by the tail loop in [tick].
-     * - **MOMENTARY**: returns [MacroControl.rawPressValue] (1f while held, 0f on release).
-     * - **TRIGGER**: returns 1f on the single frame that [MacroBinding.bindingPendingPulse] is
-     *   armed (set on the rising edge by the tail loop); the tail loop consumes it on the next frame.
-     */
-    private fun effectiveValue(control: MacroControl, binding: MacroBinding): Float {
-        val override = binding.switchBehaviorOverride
-        if (!control.isSwitch || override == null) return control.value
-        return when (override) {
-            SwitchBehavior.TOGGLE    -> if (binding.bindingLatchState) 1f else 0f
-            SwitchBehavior.MOMENTARY -> control.rawPressValue
-            SwitchBehavior.TRIGGER   -> if (binding.bindingPendingPulse) 1f else 0f
         }
     }
 
@@ -319,9 +268,9 @@ object MacroEngine {
         val targetBinding = bindings.first()
 
         // Search every registered bank for the control owning this binding -- unitInstanceId
-        // describes the binding's *target* scope, not which bank the knob/switch itself lives in,
-        // so it can't be used to pick a single bank to look in (a Deck A bank can perfectly well
-        // hold a binding whose unitInstanceId is null, or vice versa).
+        // describes the binding's *target* scope, not which bank the knob itself lives in, so it
+        // can't be used to pick a single bank to look in (a Deck A bank can perfectly well hold a
+        // binding whose unitInstanceId is null, or vice versa).
         val allBanks = synchronized(lock) { banks.values.toList() }
         for (bank in allBanks) {
             val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(targetBinding) }
@@ -329,15 +278,7 @@ object MacroEngine {
                 val ctrl = bank.knobs[knobIdx]
                 val badge = "K${knobIdx + 1}"
                 val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
-                return MacroBindingInfo(targetBinding, ctrl, isKnob = true, index = knobIdx, badgeLabel = badge, controlName = name)
-            }
-
-            val swIdx = bank.switches.indexOfFirst { it.bindings.contains(targetBinding) }
-            if (swIdx >= 0) {
-                val ctrl = bank.switches[swIdx]
-                val badge = "SW${swIdx + 1}"
-                val name = if (ctrl.label.isNotBlank()) ctrl.label else "Switch ${swIdx + 1}"
-                return MacroBindingInfo(targetBinding, ctrl, isKnob = false, index = swIdx, badgeLabel = badge, controlName = name)
+                return MacroBindingInfo(targetBinding, ctrl, index = knobIdx, badgeLabel = badge, controlName = name)
             }
         }
 

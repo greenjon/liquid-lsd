@@ -18,11 +18,10 @@ import llm.slop.liquidlsd.rendering.Mixer
  * back into [ParametersState.activeTopTab] so the reverse holds as well.
  *
  * Reads and writes the active [MacroBank] directly: dragging a knob mutates its
- * [llm.slop.liquidlsd.macro.MacroControl.value] in place, and switches go through
- * [llm.slop.liquidlsd.macro.MacroControl.onPress]/[llm.slop.liquidlsd.macro.MacroControl.onRelease].
+ * [llm.slop.liquidlsd.macro.MacroControl.value] in place.
  *
- * Layout, top to bottom: deck tab strip, 4-column x 2-row knob grid, a row of 4 switches,
- * binding inspector accordion drawer, then the single-deck preview monitor at the bottom.
+ * Layout, top to bottom: deck tab strip, 4-column x 2-row knob grid, binding inspector
+ * accordion drawer, then the single-deck preview monitor at the bottom.
  * Note: Header mode toggle `[ MIXER | MACROS ]` is drawn at the Column 3 window level by
  * [Column3HeaderToggle].
  */
@@ -82,7 +81,7 @@ class MacroPanel(
                 parametersState.activeTopTab = topTabValue
             }
             ImGui.popStyleColor()
-            itemTooltip("Show $topTabValue's macro knobs & switches.")
+            itemTooltip("Show $topTabValue's macro knobs.")
         }
     }
 
@@ -109,13 +108,13 @@ class MacroPanel(
         }
     }
 
-    // -- 6-Column Macro Grid: 8 Knobs (Cols 1-4, 2 Rows) + 4 Switches (Cols 5-6, 2 Rows) ---------
+    // -- 4-Column x 2-Row Macro Knob Grid ---------------------------------------------------------
 
     private fun drawMacroGrid(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO CONTROLS") }
         ImGui.spacing()
 
-        val cols = 6
+        val cols = 4
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(2f)
         val cellW = availW / cols
         val diameter = (cellW - 10f).coerceIn(36f, 60f)
@@ -125,7 +124,6 @@ class MacroPanel(
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
 
-        // 1. Draw 8 Knobs in Cols 0..3 (4 columns x 2 rows)
         bank.knobs.forEachIndexed { i, control ->
             val row = i / 4
             val col = i % 4
@@ -153,36 +151,6 @@ class MacroPanel(
             )
         }
 
-        // 2. Draw 4 Switches in Cols 4..5 (2 columns x 2 rows)
-        val gap = 4f
-        val switchW = (cellW - gap).coerceAtLeast(20f)
-        val switchH = 32f
-
-        bank.switches.forEachIndexed { i, control ->
-            val row = i / 2
-            val col = 4 + (i % 2)
-            val sx = startX + col * cellW + gap / 2f
-            val sy = startY + row * rowH + (diameter - switchH) / 2f
-            ImGui.setCursorScreenPos(sx, sy)
-            val isSelected = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == control.id
-            val isLearningThis = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(control.id)
-            MacroKnobWidget.drawSwitch(
-                session = session,
-                id = "global_switch_$i",
-                label = control.label,
-                control = control,
-                width = switchW,
-                height = switchH,
-                isSelected = isSelected,
-                isLearning = isLearningThis,
-                onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = control.id },
-                onToggleLearn = {
-                    if (isLearningThis) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
-                    else llm.slop.liquidlsd.macro.MacroLearnState.startLearn(control.id)
-                }
-            )
-        }
-
         val totalRows = 2
         ImGui.setCursorScreenPos(startX, startY + totalRows * rowH)
         ImGui.dummy(0f, 0f)
@@ -192,7 +160,6 @@ class MacroPanel(
 
     private fun drawBindingInspectorDrawer(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, mixer: Mixer) {
         val selectedControl = bank.knobs.find { it.id == llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId }
-            ?: bank.switches.find { it.id == llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId }
             ?: bank.knobs.firstOrNull()
 
         val countText = if (selectedControl != null) " (${selectedControl.bindings.size}/4)" else ""
@@ -203,7 +170,7 @@ class MacroPanel(
             val availH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
             val maxInspectorH = (availH * 0.45f).coerceIn(120f, 220f)
             if (ImGui.beginChild("##macro_inspector_scroll", 0f, maxInspectorH, true)) {
-                MacroBindingInspector.draw(session, bank, selectedControl, parametersState, mixer)
+                MacroBindingInspector.draw(session, selectedControl, parametersState, mixer)
             }
             ImGui.endChild()
         }

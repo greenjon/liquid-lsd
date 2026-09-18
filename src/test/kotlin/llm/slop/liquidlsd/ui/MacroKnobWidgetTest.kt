@@ -7,8 +7,8 @@ import kotlin.test.assertTrue
 
 /**
  * Covers the pure math in [MacroKnobWidget]: [MacroKnobWidget.applyDragDelta] and
- * [MacroKnobWidget.valueToAngleRadians]. These require no ImGui context, unlike [MacroKnobWidget.draw]
- * / [MacroKnobWidget.drawSwitch] which need a real render loop to verify (see Phase 2 manual
+ * [MacroKnobWidget.valueToAngleRadians]. These require no ImGui context, unlike
+ * [MacroKnobWidget.draw] which needs a real render loop to verify (see Phase 2 manual
  * verification notes).
  */
 class MacroKnobWidgetTest {

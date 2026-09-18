@@ -511,7 +511,7 @@ class UIManager(
                 val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
                 if (ImGui.begin("PerformanceMatrix", perfFlags)) {
                     UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                    currentMixer?.let { performanceMatrixPanel.draw(session, it) }
+                    currentMixer?.let { performanceMatrixPanel.draw(session, it, parametersState) }
                 }
                 ImGui.end()
             } else {

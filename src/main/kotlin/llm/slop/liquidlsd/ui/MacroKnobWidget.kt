@@ -6,8 +6,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Reusable rotary "Macro Knob" control and its sibling "Macro Switch" button, used by
- * [MacroPanel] (Macro Controls system -- see docs/user_guide/macros_and_rack.md).
+ * Reusable rotary "Macro Knob" control, used by [MacroPanel] (Macro Controls system -- see
+ * docs/user_guide/macros_and_rack.md).
  *
  * Follows the same hand-rolled-ImGui-widget idiom as [CustomRangeSlider]: an
  * [ImGui.invisibleButton] hit-region, [ImGui.isItemActivated]/[ImGui.isItemActive] for drag-state
@@ -210,114 +210,6 @@ object MacroKnobWidget {
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
         ImGui.setCursorScreenPos(startX, startY + diameter + 3f + captionH + 4f)
         ImGui.dummy(0f, 0f)
-    }
-
-    // -- Macro Switch -------------------------------------------------------------------------
-
-    private var activeSwitchId: String? = null
-
-    /**
-     * Draws one macro switch button. Calls [llm.slop.liquidlsd.macro.MacroControl.onPress] on the mouse-down edge
-     * (not full click completion -- MOMENTARY needs press semantics) and
-     * [llm.slop.liquidlsd.macro.MacroControl.onRelease] on the release edge.
-     */
-    fun drawSwitch(
-        session: llm.slop.liquidlsd.SessionContext,
-        id: String,
-        label: String,
-        control: llm.slop.liquidlsd.macro.MacroControl,
-        width: Float = 64f,
-        height: Float = 34f,
-        isSelected: Boolean = false,
-        isLearning: Boolean = false,
-        onSelect: () -> Unit = {},
-        onToggleLearn: () -> Unit = {}
-    ) {
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
-
-        ImGui.invisibleButton("##macro_switch_$id", width, height)
-        val isHovered = ImGui.isItemHovered()
-        val isActivated = ImGui.isItemActivated()
-        val isActive = ImGui.isItemActive()
-
-        if (ImGui.isItemClicked(0)) {
-            onSelect()
-        }
-        if (ImGui.isItemClicked(1)) {
-            onToggleLearn()
-        }
-
-        if (isActivated) {
-            activeSwitchId = id
-            control.onPress()
-        }
-        if (!isActive && activeSwitchId == id) {
-            control.onRelease()
-            activeSwitchId = null
-        }
-
-        val isLit = control.value >= 0.5f
-        val dl = ImGui.getWindowDrawList()
-        val bgCol = when {
-            isLit -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f) // Electric Cyan lit
-            isActive -> ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 1f)
-            isHovered -> ImGui.colorConvertFloat4ToU32(0.24f, 0.24f, 0.24f, 1f)
-            else -> ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f)
-        }
-
-        val pulseAlpha = if (isLearning) {
-            (sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
-        } else 1.0f
-
-        val borderCol = when {
-            isLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
-            isActive -> ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f)
-            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 1.0f)
-            isHovered -> ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
-            isLit -> ImGui.colorConvertFloat4ToU32(0.6f, 0.95f, 1.0f, 1f)
-            else -> ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 0.8f)
-        }
-
-        val thickness = if (isLearning || isSelected) 2.5f else 1.5f
-        dl.addRectFilled(startX, startY, startX + width, startY + height, bgCol, 4f)
-        dl.addRect(startX, startY, startX + width, startY + height, borderCol, 4f, 0, thickness)
-
-        var tw = 0f
-        var th = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val sz = ImGui.calcTextSize(label)
-            tw = sz.x
-            th = sz.y
-        }
-        val textCol = if (isLit) ImGui.colorConvertFloat4ToU32(0.02f, 0.02f, 0.02f, 1f) else ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.95f)
-        val textX = startX + (width - tw) / 2f
-        val textY = startY + (height - th) / 2f
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            dl.addText(textX, textY, textCol, label)
-        }
-
-        val behaviorText = buildString {
-            val hasOverrides = control.bindings.any { it.switchBehaviorOverride != null }
-            if (!hasOverrides) {
-                // All bindings inherit — describe the single control behavior as before.
-                append(when (control.switchBehavior) {
-                    llm.slop.liquidlsd.macro.SwitchBehavior.TOGGLE    -> "Toggle: click to latch on/off."
-                    llm.slop.liquidlsd.macro.SwitchBehavior.MOMENTARY -> "Momentary: on while held."
-                    llm.slop.liquidlsd.macro.SwitchBehavior.TRIGGER   -> "Trigger: sends a one-frame pulse."
-                })
-            } else {
-                // At least one binding has an override — list effective behavior per binding.
-                append("Mixed behaviors: ")
-                append(control.bindings.joinToString(" / ") { b ->
-                    (b.switchBehaviorOverride ?: control.switchBehavior).label
-                })
-                append(".")
-            }
-        }
-        val learnTip = if (isLearning) " [LEARNING...]" else ""
-        val bindingLine = formatBindingSummary(control.bindings)
-        itemTooltip("$label$learnTip\n$behaviorText\n$bindingLine\nLeft-click to trigger/select. Right-click for Learn.")
     }
 
     /**
