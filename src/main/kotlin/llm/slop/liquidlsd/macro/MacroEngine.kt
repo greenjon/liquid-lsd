@@ -229,6 +229,10 @@ object MacroEngine {
             "morph" -> mod.morph = value
             "hold" -> mod.hold = value
             "dcOffset" -> mod.dcOffset = value
+            "dcOffsetMin" -> mod.dcOffsetMin = value
+            "dcOffsetMax" -> mod.dcOffsetMax = value
+            "depthMin" -> mod.depthMin = value
+            "depthMax" -> mod.depthMax = value
             "attackMs" -> mod.attackMs = value
             "decayMs" -> mod.decayMs = value
             "modSubdivision" -> mod.modSubdivision = value

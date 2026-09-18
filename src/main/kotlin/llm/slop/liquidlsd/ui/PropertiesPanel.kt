@@ -447,6 +447,8 @@ object PropertiesPanel {
                                 session = session,
                                 param = param,
                                 existing = existing,
+                                paramKey = cell.paramKey,
+                                modulatorIndex = globalModIndex,
                                 themeColor = currentThemeColor,
                                 onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
                             )

@@ -242,25 +242,43 @@ object CustomRangeSlider {
             renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged)
         } else {
             // DOUBLE tracks (Top for Min, Bottom for Max)
-            val row2Y = startY + buttonSize + 4f
-            
-            // Labels for columns
+            val rowLabelH = 14f
+            val row2Y = startY + buttonSize + 4f + rowLabelH
+
+            val isMacroBindable = modulatorIndex != null && paramKey != null
+            val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+            val bindRangeBound = { propertyName: String ->
+                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                    bank = llm.slop.liquidlsd.macro.MacroEngine.globalBank(),
+                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
+                    parameterId = paramKey!!,
+                    modulatorIndex = modulatorIndex ?: 0,
+                    propertyName = propertyName,
+                    minVal = minLimit,
+                    maxVal = maxLimit
+                )
+            }
+
+            // Labels for columns (Top row: dcOffset randomization bounds)
             val labelY = startY - 14f
-            ImGui.setCursorScreenPos(textBoxesStartX, labelY)
-            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Min Bound Range")
-            ImGui.setCursorScreenPos(textBoxesStartX + boxWidth + boxSpacing, labelY)
-            session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 0.7f, "Max Bound Range")
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth) { bindRangeBound("dcOffsetMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth) { bindRangeBound("dcOffsetMax") }
 
             // Top: Min range
             drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue)
             drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue)
             renderInternalDualSlider(idPrefix + label + "_min_r", minRangeMin, minRangeMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinRangeChanged)
 
+            // Labels for columns (Bottom row: depth randomization bounds)
+            val labelY2 = row2Y - 14f
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth) { bindRangeBound("depthMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth) { bindRangeBound("depthMax") }
+
             // Bottom: Max range
             drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue)
             drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue)
             renderInternalDualSlider(idPrefix + label + "_max_r", maxRangeMin, maxRangeMax, minLimit, maxLimit, sliderStartX, row2Y, lineWidth, themeColor, onMaxRangeChanged)
-            
+
             ImGui.setCursorPosY(ImGui.getCursorPosY() + buttonSize + 4f)
         }
 
@@ -287,6 +305,12 @@ object CustomRangeSlider {
         val col = if (isMacroLearning && isHovered) floatArrayOf(0.0f, 0.85f, 1.0f, 1.0f) else floatArrayOf(0.6f, 0.6f, 0.6f, 0.7f)
         ImGui.setCursorScreenPos(x, y)
         session.uiTheme.captionColored(col[0], col[1], col[2], col[3], text)
+        if (isMacroLearning) {
+            val dl = ImGui.getWindowDrawList()
+            val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+            dl.addRect(x - 2f, y - 2f, x + w + 2f, y + captionHeight + 2f, borderCol, 3f, 0, 1.5f)
+        }
         if (isHovered) {
             val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
             showTooltip("$text bound$learnHint")
@@ -404,7 +428,10 @@ object CustomRangeSlider {
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
         onValueChanged: (Float) -> Unit,
-        readOnly: Boolean = false
+        readOnly: Boolean = false,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null,
+        paramKey: String? = null
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -425,7 +452,10 @@ object CustomRangeSlider {
             parseValue = parseValue,
             showCurrentLabel = showCurrentLabel,
             customBoxWidth = customBoxWidth,
-            readOnly = readOnly
+            readOnly = readOnly,
+            modulatorIndex = modulatorIndex,
+            propertyName = propertyName,
+            paramKey = paramKey
         )
     }
 

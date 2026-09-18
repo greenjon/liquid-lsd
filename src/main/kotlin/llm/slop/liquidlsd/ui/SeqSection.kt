@@ -75,6 +75,8 @@ object SeqSection {
         session: SessionContext,
         param: ModulatableParameter,
         existing: CvModulator,
+        paramKey: String,
+        modulatorIndex: Int,
         themeColor: Int,
         onReplace: (CvModulator) -> Unit
     ) {
@@ -160,7 +162,10 @@ object SeqSection {
                     onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeSubdivision = checked)) },
                     onRandomizeNow = { onReplace(existing.randomizeSubdivision()) },
                     onRangeChanged = { min, max -> onReplace(existing.copy(subdivisionMin = min, subdivisionMax = max)) },
-                    onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) }
+                    onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) },
+                    paramKey = paramKey,
+                    modulatorIndex = modulatorIndex,
+                    propertyName = "subdivision"
                 )
             }
             GenUnit.TIME -> {
@@ -182,7 +187,10 @@ object SeqSection {
                     onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeSubdivision = checked)) },
                     onRandomizeNow = { onReplace(existing.randomizeSubdivision()) },
                     onRangeChanged = { min, max -> onReplace(existing.copy(subdivisionMin = min, subdivisionMax = max)) },
-                    onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) }
+                    onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) },
+                    paramKey = paramKey,
+                    modulatorIndex = modulatorIndex,
+                    propertyName = "subdivision"
                 )
             }
             GenUnit.FRAME -> {
@@ -204,7 +212,10 @@ object SeqSection {
                     onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeSubdivision = checked)) },
                     onRandomizeNow = { onReplace(existing.randomizeSubdivision()) },
                     onRangeChanged = { min, max -> onReplace(existing.copy(subdivisionMin = min, subdivisionMax = max)) },
-                    onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) }
+                    onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) },
+                    paramKey = paramKey,
+                    modulatorIndex = modulatorIndex,
+                    propertyName = "subdivision"
                 )
             }
         }
@@ -379,7 +390,10 @@ object SeqSection {
             formatValue = { "${(it * 100f).toInt()}%" },
             onValueChanged = { v ->
                 onReplace(existing.copy(seqHold = v, seqHoldMin = v, seqHoldMax = v))
-            }
+            },
+            paramKey = paramKey,
+            modulatorIndex = modulatorIndex,
+            propertyName = "seqHold"
         )
         itemTooltip("100% = Instant step jumps (no glide).\n0% = Continuous glide over full step duration.\n50% = Hold 50% of step, glide for 50%.")
 
@@ -434,7 +448,10 @@ object SeqSection {
             onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeDepth = checked)) },
             onRandomizeNow = { onReplace(existing.randomizeDepth()) },
             onRangeChanged = { min, max -> onReplace(existing.copy(depthMin = min, depthMax = max)) },
-            onValueChanged = { v -> onReplace(existing.copy(depth = v, depthMin = v, depthMax = v)) }
+            onValueChanged = { v -> onReplace(existing.copy(depth = v, depthMin = v, depthMax = v)) },
+            paramKey = paramKey,
+            modulatorIndex = modulatorIndex,
+            propertyName = "depth"
         )
 
         ImGui.spacing()

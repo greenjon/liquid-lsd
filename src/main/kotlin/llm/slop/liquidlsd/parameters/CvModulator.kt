@@ -19,8 +19,8 @@ data class CvModulator(
     val genUnit: GenUnit = GenUnit.TIME,
 
     // Range fields
-    val depthMin: Float = depth,
-    val depthMax: Float = depth,
+    var depthMin: Float = depth,
+    var depthMax: Float = depth,
     val subdivisionMin: Float = subdivision,
     val subdivisionMax: Float = subdivision,
     val phaseOffsetMin: Float = phaseOffset,
@@ -46,8 +46,8 @@ data class CvModulator(
 
     // DC Offset fields
     var dcOffset: Float = 0.0f,
-    val dcOffsetMin: Float = dcOffset,
-    val dcOffsetMax: Float = dcOffset,
+    var dcOffsetMin: Float = dcOffset,
+    var dcOffsetMax: Float = dcOffset,
     val randomizeDcOffset: Boolean = false,
 
     // Modulator LFO (LFO 2) fields for Gen 1/Gen 2
