@@ -594,20 +594,24 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
     dto.feedbackParameters["fbKaleido"]?.let { fbKaleido.applyDto(it) }
 
-    // Apply FX Slots
+    // Apply FX Slots — a preset with no FX configured at all leaves the deck's
+    // current FX slots untouched, so a deck-level FX chain (manual, playlist, or
+    // FXQ) keeps playing through preset switches instead of being cleared every time.
     val fxSlotDtos = listOf(dto.fxSlot1, dto.fxSlot2, dto.fxSlot3, dto.fxSlot4)
-    for (i in fxSlots.indices) {
-        fxSlots[i]?.dispose()
-        fxSlots[i] = null
-        fxSlotDtos.getOrNull(i)?.let { fxDto ->
-            val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
-            if (fx != null) {
-                fx.enabled = fxDto.enabled
-                fx.dryWet.applyDto(fxDto.dryWet)
-                for ((key, paramDto) in fxDto.parameters) {
-                    fx.parameters[key]?.applyDto(paramDto)
+    if (fxSlotDtos.any { it != null }) {
+        for (i in fxSlots.indices) {
+            fxSlots[i]?.dispose()
+            fxSlots[i] = null
+            fxSlotDtos.getOrNull(i)?.let { fxDto ->
+                val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
+                if (fx != null) {
+                    fx.enabled = fxDto.enabled
+                    fx.dryWet.applyDto(fxDto.dryWet)
+                    for ((key, paramDto) in fxDto.parameters) {
+                        fx.parameters[key]?.applyDto(paramDto)
+                    }
+                    fxSlots[i] = fx
                 }
-                fxSlots[i] = fx
             }
         }
     }
