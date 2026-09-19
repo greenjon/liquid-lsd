@@ -134,12 +134,14 @@ object BrowserPopupHandler {
                 AssetType.PRESET -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
+                AssetType.FX_STOCK -> "Stock FX Filter"
                 AssetType.FX_PRESET -> "FX Preset"
                 AssetType.FX_CHAIN -> "FX Chain"
+                AssetType.FX_PLAYLIST -> "FX Playlist"
                 AssetType.TRANSITION_PRESET -> "Transition Preset"
                 AssetType.TRANSITION_PLAYLIST -> "Transition Playlist"
             }
-            
+
             ImGui.text("Rename $typeStr to:")
             ImGui.inputText("##renameAssetInput", renameBuffer)
             
@@ -192,12 +194,14 @@ object BrowserPopupHandler {
                 AssetType.PRESET -> "Preset"
                 AssetType.PLAYLIST -> "Playlist"
                 AssetType.FOLDER -> "Folder"
+                AssetType.FX_STOCK -> "Stock FX Filter"
                 AssetType.FX_PRESET -> "FX Preset"
                 AssetType.FX_CHAIN -> "FX Chain"
+                AssetType.FX_PLAYLIST -> "FX Playlist"
                 AssetType.TRANSITION_PRESET -> "Transition Preset"
                 AssetType.TRANSITION_PLAYLIST -> "Transition Playlist"
             }
-            
+
             ImGui.text("Delete $typeStr '${target.name}'?")
             ImGui.text("Warning: This will permanently delete this $typeStr from your library.")
             ImGui.text("This action cannot be undone.")

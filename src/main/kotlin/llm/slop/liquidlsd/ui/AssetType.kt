@@ -7,8 +7,10 @@ enum class AssetType {
     PRESET,
     PLAYLIST,
     FOLDER,
+    FX_STOCK,
     FX_PRESET,
     FX_CHAIN,
+    FX_PLAYLIST,
     TRANSITION_PRESET,
     TRANSITION_PLAYLIST
 }
