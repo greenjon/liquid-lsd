@@ -208,7 +208,7 @@ object BgQueueActionsPanel {
                     if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
                         BgQueueManager.insertAt(insertAt, droppedFile)
                         logger.info { "Inserted BG preset from drag-drop at slot $insertAt: ${droppedFile.name}" }
-                    } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdset")) {
+                    } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdplay")) {
                         val files = session.playQueueManager.parsePlaylist(droppedFile)
                         files.forEachIndexed { i, f -> BgQueueManager.insertAt(insertAt + i, f) }
                         logger.info { "Inserted BG playlist from drag-drop at slot $insertAt: ${droppedFile.name} (${files.size} items)" }
@@ -299,7 +299,7 @@ object BgQueueActionsPanel {
                     val file = File(payload)
                     if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                         BgQueueManager.appendToQueue(file)
-                    } else if (file.extension.lowercase() in listOf("playlist", "lsdset")) {
+                    } else if (file.extension.lowercase() in listOf("playlist", "lsdplay")) {
                         val files = session.playQueueManager.parsePlaylist(file)
                         BgQueueManager.appendAllToQueue(files)
                     }

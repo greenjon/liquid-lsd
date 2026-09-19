@@ -2044,7 +2044,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <hr />
 <h2 id="6-playlistmanager-playlistparser">6. PlaylistManager &amp; PlaylistParser</h2>
 <ul>
-<li><strong><code>PlaylistManager.kt</code></strong>: Handles CRUD operations on setlists (<code>.lsdset</code> files), supports reordering presets, and provides <code>removePresetFromAllPlaylists(presetAbsPath)</code> to clean up deleted preset file references across all playlist files on disk.</li>
+<li><strong><code>PlaylistManager.kt</code></strong>: Handles CRUD operations on setlists (<code>.lsdplay</code> files), supports reordering presets, and provides <code>removePresetFromAllPlaylists(presetAbsPath)</code> to clean up deleted preset file references across all playlist files on disk.</li>
 <li><strong><code>PlaylistParser.kt</code></strong>: Parses text and DTO playlist formats, using primary resolution in <code>library/presets/</code> (and fallback to legacy <code>presets/patches/</code>) with auto-extension matching (<code>.lsd</code>, <code>.json</code>, <code>.patch</code>).</li>
 <li><strong><code>PlayQueueManager.kt</code> / <code>BgQueueManager.kt</code></strong>: Provides <code>removeFileFromQueue(file)</code> to remove all references to a deleted file from both queues and shift active index/shuffle state.</li>
 </ul>
@@ -2054,7 +2054,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <h3 id="version-controlled-defaults-defaults">Version-Controlled Defaults (<code>defaults/</code>)</h3>
 <ul>
 <li>Curated presets and playlists are kept under version control in <code>defaults/presets/</code> and <code>defaults/playlists/</code>.</li>
-<li><strong>Syncing from Library</strong>: Developers can run <code>./gradlew syncDefaultsFromLibrary</code> to copy curated <code>.lsd</code> presets from <code>library/presets/</code> and <code>.lsdset</code> setlists from <code>library/playlists/</code> into <code>defaults/</code>.</li>
+<li><strong>Syncing from Library</strong>: Developers can run <code>./gradlew syncDefaultsFromLibrary</code> to copy curated <code>.lsd</code> presets from <code>library/presets/</code> and <code>.lsdplay</code> setlists from <code>library/playlists/</code> into <code>defaults/</code>.</li>
 <li><strong>Automated Packaging (<code>prepareDefaultAssets</code>)</strong>: During build, Gradle automatically generates <code>manifest.txt</code> indices and packages the contents of <code>defaults/</code> into the classpath (<code>/default_presets/</code> and <code>/default_playlists/</code>).</li>
 </ul>
 <h3 id="safe-first-run-seeding-filesystemmanagerensuredefaultlibrary">Safe First-Run Seeding (<code>FileSystemManager.ensureDefaultLibrary</code>)</h3>

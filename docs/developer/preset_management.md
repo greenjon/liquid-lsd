@@ -134,7 +134,7 @@ Auto-advance triggers inside `PlayQueueManager.triggerNext()`, `triggerPrevious(
 
 ## 6. PlaylistManager & PlaylistParser
 
-- **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdset` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
+- **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdplay` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
 - **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).
 - **`PlayQueueManager.kt` / `BgQueueManager.kt`**: Provides `removeFileFromQueue(file)` to remove all references to a deleted file from both queues and shift active index/shuffle state.
 
@@ -146,7 +146,7 @@ To ensure users never start with a blank screen on clean git clones or new relea
 
 ### Version-Controlled Defaults (`defaults/`)
 - Curated presets and playlists are kept under version control in `defaults/presets/` and `defaults/playlists/`.
-- **Syncing from Library**: Developers can run `./gradlew syncDefaultsFromLibrary` to copy curated `.lsd` presets from `library/presets/` and `.lsdset` setlists from `library/playlists/` into `defaults/`.
+- **Syncing from Library**: Developers can run `./gradlew syncDefaultsFromLibrary` to copy curated `.lsd` presets from `library/presets/` and `.lsdplay` setlists from `library/playlists/` into `defaults/`.
 - **Automated Packaging (`prepareDefaultAssets`)**: During build, Gradle automatically generates `manifest.txt` indices and packages the contents of `defaults/` into the classpath (`/default_presets/` and `/default_playlists/`).
 
 ### Safe First-Run Seeding (`FileSystemManager.ensureDefaultLibrary`)

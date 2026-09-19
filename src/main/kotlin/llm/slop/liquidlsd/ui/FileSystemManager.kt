@@ -166,7 +166,7 @@ object FileSystemManager {
         }
 
         val items = root.walkTopDown()
-            .filter { it.isFile && it.extension.lowercase() == "lsdset" }
+            .filter { it.isFile && it.extension.lowercase() == "lsdplay" }
             .map { file ->
                 val validation = validatePlaylistFile(file)
                 AssetItem(
@@ -430,7 +430,7 @@ object FileSystemManager {
                         dependencies = deps
                     ))
                 }
-                ext == "lsdset" -> {
+                ext == "lsdplay" -> {
                     items.add(AssetItem(
                         path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PLAYLIST,
                         isValid = true, // Assume valid for fast scan
@@ -504,7 +504,7 @@ object FileSystemManager {
                                 dependencies = deps
                             ))
                         }
-                        ext == "lsdset" -> {
+                        ext == "lsdplay" -> {
                             val validation = validatePlaylistFile(file)
                             items.add(AssetItem(
                                 path = file.absolutePath,

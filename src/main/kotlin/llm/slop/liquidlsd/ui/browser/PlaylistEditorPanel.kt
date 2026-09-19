@@ -300,7 +300,7 @@ object PlaylistEditorPanel {
                 val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (assetPayload != null) {
                     val assetFile = File(assetPayload)
-                    if (assetFile.extension == "lsdset") {
+                    if (assetFile.extension == "lsdplay") {
                         PlaylistManager.unpackPlaylistInto(playlist, assetPayload, effectiveSlot)
                     } else {
                         PlaylistManager.insertPreset(playlist, assetPayload, effectiveSlot)
@@ -381,7 +381,7 @@ object PlaylistEditorPanel {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
             if (payload != null) {
                 val assetFile = File(payload)
-                if (assetFile.extension == "lsdset") {
+                if (assetFile.extension == "lsdplay") {
                     PlaylistManager.unpackPlaylistInto(playlist, payload, playlist.presets.size)
                 } else {
                     PlaylistManager.insertPreset(playlist, payload, playlist.presets.size)

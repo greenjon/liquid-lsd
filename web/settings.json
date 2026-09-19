@@ -1,6 +1,6 @@
 {
-  "fgPlaylist": "default.lsdset",
-  "bgPlaylist": "default_bg.lsdset",
+  "fgPlaylist": "default.lsdplay",
+  "bgPlaylist": "default_bg.lsdplay",
   "fgHoldDuration": 45.0,
   "fgFadeDuration": 2.5,
   "fgPlaybackOrder": "sequential",

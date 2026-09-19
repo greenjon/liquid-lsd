@@ -118,7 +118,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP) and min/max/invert range mapping
 │   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; one `MacroBank` per canonical bank id (`DECK_A`/`DECK_B`/`DECK_BG`/`DECK_PV`/`TRANS`/`MASTER`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
-│   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdset` DTOs, plus standalone `.knobpreset.json` export/import
+│   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdplay` DTOs, plus standalone `.knobpreset.json` export/import
 │   └── MacroOscBridge.kt       — `/macro/knob/N` & `/macro/switch/N` inbound OSC address routing and outbound feedback broadcast
 ├── presets/
 │   ├── PresetManager.kt        — Save/load presets, state management

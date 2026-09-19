@@ -245,8 +245,9 @@ object FXBrowserPanel {
         }
 
         if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-            val targetIsA = mixer.crossfade.value > 0.0f
-            val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
+            // crossfade: -1.0 = Deck A, 1.0 = Deck B (see Mixer.crossfade) — target the
+            // deck that's actually dominant, matching FXQueueManager/FXPlaylistEditorPanel.
+            val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
             applyToDeck(session, asset, targetDeck)
         }
 

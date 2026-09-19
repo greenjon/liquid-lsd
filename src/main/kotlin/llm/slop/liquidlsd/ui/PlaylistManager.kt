@@ -126,7 +126,7 @@ object PlaylistManager {
                 return Result.failure(IllegalArgumentException("Invalid directory"))
             }
             
-            val file = File(directory, "$name.lsdset")
+            val file = File(directory, "$name.lsdplay")
             if (file.exists()) {
                 return Result.failure(IllegalArgumentException("Playlist already exists"))
             }
@@ -309,7 +309,7 @@ object PlaylistManager {
         val oldCandidates = listOfNotNull(oldAbsPath, oldRel).toSet()
 
         playlistsRoot.walkTopDown()
-            .filter { it.isFile && it.extension == "lsdset" }
+            .filter { it.isFile && it.extension == "lsdplay" }
             .forEach { playlistFile ->
                 val lines = playlistFile.readLines()
                 var changed = false
@@ -345,7 +345,7 @@ object PlaylistManager {
         val candidates = listOfNotNull(presetAbsPath, relPath).toSet()
 
         playlistsRoot.walkTopDown()
-            .filter { it.isFile && it.extension == "lsdset" }
+            .filter { it.isFile && it.extension == "lsdplay" }
             .forEach { playlistFile ->
                 val lines = playlistFile.readLines()
                 var changed = false

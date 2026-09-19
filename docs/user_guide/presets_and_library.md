@@ -53,7 +53,7 @@ Toggle between full visual presets and FX presets using the segmented mode butto
 
 - **`[ Presets ]` Mode**:
   - **Column 1 (Presets Pool)**: Shows all full visual deck presets (`.lsd`) in `library/presets/`.
-  - **Column 2 (Playlists Editor)**: Setlists (`.lsdset`) in `library/playlists/`.
+  - **Column 2 (Playlists Editor)**: Setlists (`.lsdplay`) in `library/playlists/`.
 - **`[ FX ]` Mode**:
   - **Column 1 (FX Presets)**: Individual single-slot FX presets (`.lsdfx`) in `library/fx/`.
   - **Column 2 (FX Chains)**: 4-slot FX chain presets (`.lsdfxchain`) in `library/fx_chains/`.
@@ -89,7 +89,7 @@ Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clic
 
 ## Playlists (Setlists)
 
-The playlist column is where you build your setlist. Playlists are `.lsdset` files — simple ordered lists of presets.
+The playlist column is where you build your setlist. Playlists are `.lsdplay` files — simple ordered lists of presets.
 
 - **Switch between playlists** — Use the dropdown at the top of the playlist column.
 - **Reorder** — Drag and drop presets within the list. Changes save automatically.

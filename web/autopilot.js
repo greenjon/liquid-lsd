@@ -6,8 +6,8 @@ import { normalizeDeckPreset } from './renderer_utils.js';
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 
 export const autopilotSettings = {
-  fgPlaylist: 'default.lsdset',
-  bgPlaylist: 'default_bg.lsdset',
+  fgPlaylist: 'default.lsdplay',
+  bgPlaylist: 'default_bg.lsdplay',
   fgHoldDuration: 45.0,
   fgFadeDuration: 2.5,
   fgPlaybackOrder: 'sequential',
@@ -82,8 +82,8 @@ async function loadPlaylistFile(filename) {
   if (!path.startsWith('/') && !path.startsWith('http') && !path.startsWith('library/') && !path.startsWith('playlists/')) {
     path = `playlists/${path}`;
   }
-  if (!path.endsWith('.lsdset') && !path.endsWith('.json')) {
-    path = `${path}.lsdset`;
+  if (!path.endsWith('.lsdplay') && !path.endsWith('.json')) {
+    path = `${path}.lsdplay`;
   }
 
   try {

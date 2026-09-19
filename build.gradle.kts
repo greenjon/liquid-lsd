@@ -187,7 +187,7 @@ abstract class SyncDefaultsTask : DefaultTask() {
         val playlistsDest = File(def, "playlists")
         if (playlistsSrc.exists()) {
             playlistsDest.mkdirs()
-            playlistsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdset" }?.forEach { f ->
+            playlistsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdplay" }?.forEach { f ->
                 f.copyTo(File(playlistsDest, f.name), overwrite = true)
                 println("Synced playlist to defaults: ${f.name}")
             }
@@ -232,7 +232,7 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
 
         val playlistsIn = File(inBase, "playlists")
         val playlistFiles = if (playlistsIn.exists()) {
-            playlistsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdset" }?.sortedBy { it.name } ?: emptyList<File>()
+            playlistsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdplay" }?.sortedBy { it.name } ?: emptyList<File>()
         } else emptyList<File>()
 
         val playlistManifest = File(playlistsOut, "manifest.txt")
@@ -337,7 +337,7 @@ tasks.processResources {
             if (defPlaylists.exists()) {
                 val destPlaylists = file("$distDir/library/playlists")
                 destPlaylists.mkdirs()
-                defPlaylists.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdset" }?.forEach { f ->
+                defPlaylists.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdplay" }?.forEach { f ->
                     val target = File(destPlaylists, f.name)
                     if (!target.exists()) f.copyTo(target)
                 }

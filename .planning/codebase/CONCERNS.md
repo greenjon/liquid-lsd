@@ -17,9 +17,9 @@
 - Fix approach: Introduce explicit state holders for session, queue, settings, MIDI profiles, and CV registry state. Pass those dependencies to UI/rendering code while preserving singleton facades only at app boundaries.
 
 **Duplicate playlist parsing paths:**
-- Issue: Playlist parsing exists in `FileSystemManager.validatePlaylistFile()` and `PlayQueueManager.parsePlaylist()`, with different format support. `FileSystemManager.parseLsdsetPlaylist()` exists but is unused, while validation uses line parsing only.
+- Issue: Playlist parsing exists in `FileSystemManager.validatePlaylistFile()` and `PlayQueueManager.parsePlaylist()`, with different format support. `FileSystemManager.parseLsdplayPlaylist()` exists but is unused, while validation uses line parsing only.
 - Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`
-- Impact: A JSON `.lsdset` playlist can be accepted by the play queue but marked invalid in the asset browser, or vice versa.
+- Impact: A JSON `.lsdplay` playlist can be accepted by the play queue but marked invalid in the asset browser, or vice versa.
 - Fix approach: Create one playlist parser/resolver service used by validation, UI display, queue insertion, and session restore.
 
 **Manual parameter path registry:**
@@ -45,7 +45,7 @@
 **Asset browser playlist validation rejects JSON playlists:**
 - Symptoms: `FileSystemManager.validatePlaylistFile()` calls `parsePlaylistContent()` and treats JSON playlist text as path lines; `PlayQueueManager.parsePlaylist()` decodes JSON when content starts with `{`.
 - Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`
-- Trigger: Add a `.lsdset` JSON playlist with `PlaylistDto.items` under `presets/playlists`.
+- Trigger: Add a `.lsdplay` JSON playlist with `PlaylistDto.items` under `presets/playlists`.
 - Workaround: Use line-based playlist files, or route validation through `PlayQueueManager.parsePlaylist()`.
 
 ## Security Considerations

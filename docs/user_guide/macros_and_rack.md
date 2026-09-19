@@ -75,7 +75,7 @@ receives distinct visual cues across Columns 1 and 2:
 
 ### Saving your knob layout
 
-Macro banks are bundled directly into `.lsd` / `.lsdset` preset files — they load and save with
+Macro banks are bundled directly into `.lsd` / `.lsdplay` preset files — they load and save with
 the preset automatically, with no extra file to manage. If you want to reuse a favorite knob
 layout across unrelated presets, use **Export Macro Bank...** / **Import Macro Bank...** in the
 inspector to save/load a standalone `.knobpreset.json`.

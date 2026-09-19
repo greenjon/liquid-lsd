@@ -1036,7 +1036,7 @@
   3. *Phosphor Decay*: Decays the central dot with natural phosphor persistence until it gently fades into total darkness.
   4. Audio & Indicators: Suspends the Web Audio context, cuts the live Icecast stream, flips the physical switch knob up, and dims the station LED.
 - **Pristine Web TV Display Presentation (`web/shaders/crt_post.frag`, `web/renderer.js`)**: Streamlined the Web TV post-processing pass to display the live visualizer with maximum fidelity when powered on. Stripped out steady-state distortion artifacts (corner dimming/vignette, interlacing/scanlines, RGB shadow mask grating, chromatic aberration, and barrel warp) while fully preserving the 1.5s CRT warmup expansion and the 3-phase beam collapse shutdown sequence.
-- **Independent Web TV Presets & Playlists (`web/presets/`, `web/playlists/`, `web/autopilot.js`)**: Decoupled the Web TV client completely from the desktop application's `library/` folder. Replaced the `web/library` symlink with dedicated, self-contained `web/presets/` and `web/playlists/` directories populated with curated web visualizers (`mandala_flow`, `spiral_drift`, `cosmic_ribbon`, `hyperspace_slice`, `attractor_flow`, `ambient_bg`, `dark_spiral`) and default playlist files (`default.lsdset`, `default_bg.lsdset`). Updated `autopilot.js` to resolve relative preset and playlist paths to these web-specific directories by default.
+- **Independent Web TV Presets & Playlists (`web/presets/`, `web/playlists/`, `web/autopilot.js`)**: Decoupled the Web TV client completely from the desktop application's `library/` folder. Replaced the `web/library` symlink with dedicated, self-contained `web/presets/` and `web/playlists/` directories populated with curated web visualizers (`mandala_flow`, `spiral_drift`, `cosmic_ribbon`, `hyperspace_slice`, `attractor_flow`, `ambient_bg`, `dark_spiral`) and default playlist files (`default.lsdplay`, `default_bg.lsdplay`). Updated `autopilot.js` to resolve relative preset and playlist paths to these web-specific directories by default.
 
 #### 0.4. Renderer Polymorphism & Draw Topology Dispatch (`DynamicVisualSource.kt`, `Mandala.kt`, `HyperMesh.kt`, `Renderer.kt`)
 - **Zero Source-Type Knowledge in Renderer**: Completely eliminated `is Mandala` and `is HyperMesh` branching and private helper methods (`renderMandala()`, `renderHyperMesh()`) from `Renderer.kt`. The main rendering pipeline now collapses into a single, unified execution path.
@@ -1146,7 +1146,7 @@
 
 #### 4. Symmetrical Background Queue Management & Modulation Parity (`llm.slop.liquidlsd.presets`)
 
-- **Complete Playlist & Queue Parity**: Added BG Queue context menu options ("Play now in BG Queue", "Insert into BG Queue after current", "Add to bottom of BG Queue"), bidirectional routing between queues, and dedicated `.lsdset` export.
+- **Complete Playlist & Queue Parity**: Added BG Queue context menu options ("Play now in BG Queue", "Insert into BG Queue after current", "Add to bottom of BG Queue"), bidirectional routing between queues, and dedicated `.lsdplay` export.
 - **Modulation & MIDI Auto-Advance**: Added `Mixer/bgQueuePrev` and `Mixer/bgQueueNext` modulatable parameters with MIDI CC inputs (`Global/bgQueuePrev`, `Global/bgQueueNext`).
 - **Robot Icon Queue Toggles**: Replaced text checkboxes with robot toggle buttons (`Icons.BOT` / `Icons.BOT_OFF`) for both A/B Queue (`AUTO-VJ`) and Background Queue (`AUTO-BG`).
 - **Deck BG Dirty State Protection**: Symmetrically guards BG Queue auto-advances with `PresetManager.isDeckDirty` respecting `UITheme.autoVjDirtyBehavior`.
@@ -1514,7 +1514,7 @@
 #### 7. Preset & Library Architecture Modernization ("Patch" → "Preset")
 
 - **Industry Standard 'Preset' Terminology Refactor**: Refactored visual parameter snapshots across the codebase from 'Patch' to 'Preset' (`PresetManager`, `DeckPresetDto`, `GlobalPresetDto`, `PresetGridPanel`, `PresetGridState`, `PresetGridRenderer`, `PresetGridTabs`, `PresetGridUndo`).
-- **Unified `library/` User Storage Directory**: Standardized user data root to `library/` (`library/presets/*.lsd`, `library/midi/*.json`, `library/playlists/*.lsdset`, `library/sources/`, `library/last_session.json`).
+- **Unified `library/` User Storage Directory**: Standardized user data root to `library/` (`library/presets/*.lsd`, `library/midi/*.json`, `library/playlists/*.lsdplay`, `library/sources/`, `library/last_session.json`).
 - **Codebase Streamlining & Legacy Code Removal**: Removed legacy backwards compatibility shims across data models, serialization, session management, and UI browsers. Standardized `ModulatorDto` serialization to directly serialize `depth`, `depthMin`, `depthMax`, and `randomizeDepth` without legacy `@SerialName("weight")` aliases. Removed obsolete `GlobalPresetDto` and legacy conversion methods.
 
 #### 8. UI & UX Refinements, SavePresetModal & Responsive Layouts

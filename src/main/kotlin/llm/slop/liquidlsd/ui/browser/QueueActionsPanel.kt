@@ -220,7 +220,7 @@ object QueueActionsPanel {
                     if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
                         session.playQueueManager.queue.add(insertAt, droppedFile)
                         logger.info { "Inserted preset from drag-drop at slot $insertAt: ${droppedFile.name}" }
-                    } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdset")) {
+                    } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdplay")) {
                         val files = session.playQueueManager.parsePlaylist(droppedFile)
                         session.playQueueManager.queue.addAll(insertAt, files)
                         logger.info { "Inserted playlist from drag-drop at slot $insertAt: ${droppedFile.name} (${files.size} items)" }
@@ -308,7 +308,7 @@ object QueueActionsPanel {
                     val file = File(payload)
                     if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                         session.playQueueManager.appendToQueue(file)
-                    } else if (file.extension.lowercase() in listOf("playlist", "lsdset")) {
+                    } else if (file.extension.lowercase() in listOf("playlist", "lsdplay")) {
                         session.playQueueManager.appendPlaylistToQueue(file)
                     }
                 }

@@ -41,7 +41,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
     private var currentDir: File = File("library/global").canonicalFile
     private var selectedFile: File? = null
     private val filenameInput = ImString(128)
-    private var filterExts: List<String> = listOf(".json", ".lsd", ".lsdset")
+    private var filterExts: List<String> = listOf(".json", ".lsd", ".lsdplay")
 
     /** Set to true for one frame to trigger `ImGui.openPopup`. */
     private var pendingOpen = false
@@ -64,7 +64,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
         mode: Mode,
         startDir: File = File("library/global").canonicalFile,
         initialName: String = "",
-        extensions: List<String> = listOf(".json", ".lsd", ".lsdset")
+        extensions: List<String> = listOf(".json", ".lsd", ".lsdplay")
     ) {
         this.mode = mode
         currentDir = startDir.canonicalFile

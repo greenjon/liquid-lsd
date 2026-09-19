@@ -158,14 +158,14 @@ object VideoExportModal {
             presetBrowser.open(
                 mode = ImGuiFileBrowser.Mode.LOAD,
                 startDir = startDir,
-                extensions = listOf(".lsd", ".json", ".lsdset")
+                extensions = listOf(".lsd", ".json", ".lsdplay")
             )
         }
         ImGui.sameLine()
         if (ImGui.button("Clear##Preset")) {
             presetPath.set("")
         }
-        session.uiTheme.caption("Leave blank to render current live session, or select a .lsd preset / .lsdset setlist.")
+        session.uiTheme.caption("Leave blank to render current live session, or select a .lsd preset / .lsdplay playlist.")
         ImGui.spacing()
 
         // 3. Output Video File
