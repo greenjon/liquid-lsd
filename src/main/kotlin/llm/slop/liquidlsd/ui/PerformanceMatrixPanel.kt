@@ -37,12 +37,16 @@ class PerformanceMatrixPanel {
 
     /**
      * Describes one row of 4 knobs: which bank to pull from, which 4-knob offset within that
-     * bank (0 = knobs 0–3, 4 = knobs 4–7), and the RGB accent color for the row.
+     * bank (0 = knobs 0–3, 4 = knobs 4–7), and the RGB accent color for the row. Consecutive rows
+     * that share both [bankId] and [groupLabel] are enclosed in a single group box (see
+     * [drawMatrix]); [subLabel] (e.g. "1-4") distinguishes rows sharing one box.
      */
     private data class RowDescriptor(
         val bankId: String,
         val knobOffset: Int,
-        val accent: FloatArray
+        val accent: FloatArray,
+        val groupLabel: String,
+        val subLabel: String? = null
     )
 
     // Canonical deck colors matching BrowserDeckButtons.
@@ -57,39 +61,33 @@ class PerformanceMatrixPanel {
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // LIVE QUAD: one row per deck (knobs 0–3 each)
             listOf(
-                RowDescriptor(MacroEngine.DECK_A,  0, COLOR_DECK_A),
-                RowDescriptor(MacroEngine.DECK_B,  0, COLOR_DECK_B),
-                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG),
-                RowDescriptor(MacroEngine.TRANS,   0, COLOR_TRANS),
+                RowDescriptor(MacroEngine.DECK_A,  0, COLOR_DECK_A,  "DECK A"),
+                RowDescriptor(MacroEngine.DECK_B,  0, COLOR_DECK_B,  "DECK B"),
+                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG"),
+                RowDescriptor(MacroEngine.TRANS,   0, COLOR_TRANS,   "TRANSITIONS"),
             ),
-            // DUAL DECKS: Deck A full (0–3, 4–7), Deck B full (0–3, 4–7)
+            // DUAL DECKS: Deck A full (0–3, 4–7), Deck B full (0–3, 4–7) -- each deck's 2 rows
+            // share a group label so they render as one enclosing box.
             listOf(
-                RowDescriptor(MacroEngine.DECK_A, 0, COLOR_DECK_A),
-                RowDescriptor(MacroEngine.DECK_A, 4, COLOR_DECK_A),
-                RowDescriptor(MacroEngine.DECK_B, 0, COLOR_DECK_B),
-                RowDescriptor(MacroEngine.DECK_B, 4, COLOR_DECK_B),
+                RowDescriptor(MacroEngine.DECK_A, 0, COLOR_DECK_A, "DECK A", "1-4"),
+                RowDescriptor(MacroEngine.DECK_A, 4, COLOR_DECK_A, "DECK A", "5-8"),
+                RowDescriptor(MacroEngine.DECK_B, 0, COLOR_DECK_B, "DECK B", "1-4"),
+                RowDescriptor(MacroEngine.DECK_B, 4, COLOR_DECK_B, "DECK B", "5-8"),
             ),
             // PREP & BG: Deck PV full, Deck BG full
             listOf(
-                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV),
-                RowDescriptor(MacroEngine.DECK_PV, 4, COLOR_DECK_PV),
-                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG),
-                RowDescriptor(MacroEngine.DECK_BG, 4, COLOR_DECK_BG),
+                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", "1-4"),
+                RowDescriptor(MacroEngine.DECK_PV, 4, COLOR_DECK_PV, "DECK PV", "5-8"),
+                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", "1-4"),
+                RowDescriptor(MacroEngine.DECK_BG, 4, COLOR_DECK_BG, "DECK BG", "5-8"),
             ),
             // MASTER & FX: Transitions full, Master full
             listOf(
-                RowDescriptor(MacroEngine.TRANS,  0, COLOR_TRANS),
-                RowDescriptor(MacroEngine.TRANS,  4, COLOR_TRANS),
-                RowDescriptor(MacroEngine.MASTER, 0, COLOR_MASTER),
-                RowDescriptor(MacroEngine.MASTER, 4, COLOR_MASTER),
+                RowDescriptor(MacroEngine.TRANS,  0, COLOR_TRANS,  "TRANSITIONS", "1-4"),
+                RowDescriptor(MacroEngine.TRANS,  4, COLOR_TRANS,  "TRANSITIONS", "5-8"),
+                RowDescriptor(MacroEngine.MASTER, 0, COLOR_MASTER, "MASTER", "1-4"),
+                RowDescriptor(MacroEngine.MASTER, 4, COLOR_MASTER, "MASTER", "5-8"),
             ),
-        )
-
-        private val TAB_ROW_LABELS: Array<List<String>> = arrayOf(
-            listOf("DECK A", "DECK B", "DECK BG", "TRANSITIONS"),
-            listOf("DECK A  1-4", "DECK A  5-8", "DECK B  1-4", "DECK B  5-8"),
-            listOf("DECK PV  1-4", "DECK PV  5-8", "DECK BG  1-4", "DECK BG  5-8"),
-            listOf("TRANS  1-4", "TRANS  5-8", "MASTER  1-4", "MASTER  5-8"),
         )
     }
 
@@ -133,114 +131,153 @@ class PerformanceMatrixPanel {
 
     // -- 4x4 Knob Grid -----------------------------------------------------------
 
+    /** A run of consecutive [RowDescriptor]s sharing one bank/group label, enclosed in one box. */
+    private data class RowGroup(val startRow: Int, val rowCount: Int, val descriptor: RowDescriptor)
+
     private fun drawMatrix(session: llm.slop.liquidlsd.SessionContext, theme: UITheme, parametersState: ParametersState) {
         val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.values().size - 1)
         val rows = TAB_ROWS[tabIdx]
-        val rowLabels = TAB_ROW_LABELS[tabIdx]
+
+        val groups = mutableListOf<RowGroup>()
+        var gi = 0
+        while (gi < rows.size) {
+            var gj = gi + 1
+            while (gj < rows.size && rows[gj].bankId == rows[gi].bankId && rows[gj].groupLabel == rows[gi].groupLabel) gj++
+            groups.add(RowGroup(gi, gj - gi, rows[gi]))
+            gi = gj
+        }
 
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
 
         val gridW = availW
-
-        // Height budget per row: group-box margin + box top border + large centered group label
-        // (drawn just inside the box, under the top line) + knob diameter + per-knob caption.
-        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
-        val groupLabelH = session.uiTheme.withFont(UITheme.FontLevel.H1) { ImGui.getTextLineHeight() }
-        val boxMarginY = 3f   // gap between the row's edge and adjacent rows' boxes
-        val boxLabelGap = 3f  // gap above and below the group label, inside the box
-        val boxPad = 6f       // inner padding between the box border and the knobs it contains
-        val rowPad = 8f
         val rowH = (availH / 4f).coerceAtLeast(1f)
 
-        // Knob diameter: bounded by both column width and row height so all 16 always fit.
+        // Per group: box margin + box top border + large centered group title, then for each
+        // sub-row it contains: an optional small "1-4"/"5-8" sub-label + knob diameter + per-knob
+        // caption. All 16 knobs share one uniform diameter, so use the tightest group's budget.
+        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+        val groupLabelH = session.uiTheme.withFont(UITheme.FontLevel.H1) { ImGui.getTextLineHeight() }
+        val subLabelH = captionH
+        val boxMarginY = 3f   // gap between a group's box and the next group's / grid's edge
+        val boxLabelGap = 3f  // gap above and below the group title, inside the box
+        val subLabelGap = 2f  // gap between a sub-label and the knobs below it
+        val boxPad = 6f       // inner padding between the box border and the knobs it contains
+        val rowPad = 8f
         val colW = gridW / 4f
-        val diamByWidth  = (colW - rowPad).coerceAtLeast(8f)
-        val reservedV = boxMarginY * 2f + boxLabelGap * 2f + groupLabelH + boxPad
-        val diamByHeight = (rowH - reservedV - captionH).coerceAtLeast(8f)
+        val diamByWidth = (colW - rowPad).coerceAtLeast(8f)
+
+        var diamByHeight = Float.MAX_VALUE
+        for (group in groups) {
+            val groupH = group.rowCount * rowH
+            val hasSubLabel = rows[group.startRow].subLabel != null
+            val contentH = groupH - boxMarginY * 2f - boxLabelGap * 2f - groupLabelH - boxPad
+            val subRowH = contentH / group.rowCount
+            val knobAreaH = if (hasSubLabel) subRowH - subLabelH - subLabelGap else subRowH
+            diamByHeight = minOf(diamByHeight, (knobAreaH - captionH).coerceAtLeast(8f))
+        }
         val diameter = minOf(diamByWidth, diamByHeight).coerceIn(8f, 120f)
 
         val gridStartX = ImGui.getCursorScreenPosX()
         val gridStartY = ImGui.getCursorScreenPosY()
         val dl = ImGui.getWindowDrawList()
 
-        for ((rowIdx, row) in rows.withIndex()) {
-            val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
-            val rowTopY = gridStartY + rowIdx * rowH
+        // Explicit nonzero size rather than UITheme.withFont(H1) (which passes 0f for "native
+        // baked size") -- on this draw-list addText path, 0f renders H1 no bigger than H3, so the
+        // size is requested explicitly to get the real 22px glyphs.
+        val h1Font = session.uiTheme.fontFor(UITheme.FontLevel.H1)
+        val h1Pushable = h1Font != null && h1Font.ptr != 0L
 
-            val boxTopY = rowTopY + boxMarginY
-            val labelTopY = boxTopY + boxLabelGap
-            val boxBottomY = rowTopY + rowH - boxMarginY
+        for (group in groups) {
+            val descriptor = group.descriptor
+            val groupTopY = gridStartY + group.startRow * rowH
+            val groupBottomY = gridStartY + (group.startRow + group.rowCount) * rowH
+
+            val boxTopY = groupTopY + boxMarginY
+            val titleTopY = boxTopY + boxLabelGap
+            val boxBottomY = groupBottomY - boxMarginY
             val boxX1 = gridStartX + 2f
             val boxX2 = gridStartX + gridW - 2f
 
-            // Rounded group box (faint fill + accent border) around the row's 4 knobs.
-            val fillCol = ImGui.colorConvertFloat4ToU32(row.accent[0], row.accent[1], row.accent[2], 0.07f)
-            val borderCol = ImGui.colorConvertFloat4ToU32(row.accent[0], row.accent[1], row.accent[2], 0.85f)
+            // Rounded group box (faint fill + accent border) around the group's knobs.
+            val fillCol = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.07f)
+            val borderCol = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.85f)
             dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
             dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
 
-            // Large centered group label just under the box's top border. Pushes an explicit
-            // nonzero size rather than going through UITheme.withFont(H1) (which passes 0f for
-            // "native baked size") -- on this draw-list addText path, 0f renders H1 no bigger
-            // than H3, so the size is requested explicitly to get the real 22px glyphs.
-            run {
-                val font = session.uiTheme.fontFor(UITheme.FontLevel.H1)
-                val pushed = font != null && font.ptr != 0L
-                if (pushed) ImGui.pushFont(font, UITheme.FONT_H1)
-                val label = rowLabels[rowIdx]
-                val textW = ImGui.calcTextSize(label).x
-                val textX = gridStartX + (gridW - textW) / 2f
-                dl.addText(textX, labelTopY, borderCol, label)
-                if (pushed) ImGui.popFont()
-            }
+            // Large centered group title just under the box's top border.
+            if (h1Pushable) ImGui.pushFont(h1Font, UITheme.FONT_H1)
+            val textW = ImGui.calcTextSize(descriptor.groupLabel).x
+            dl.addText(gridStartX + (gridW - textW) / 2f, titleTopY, borderCol, descriptor.groupLabel)
+            if (h1Pushable) ImGui.popFont()
 
-            val contentTopY = labelTopY + groupLabelH + boxLabelGap
+            val contentTopY = titleTopY + groupLabelH + boxLabelGap
             val contentBottomY = boxBottomY - boxPad
-            val contentCenterY = contentTopY + (contentBottomY - contentTopY) / 2f
-            val knobTopY = contentCenterY - diameter / 2f - captionH / 2f
+            val subRowH = (contentBottomY - contentTopY) / group.rowCount
 
-            // 4 knobs for this row.
-            for (col in 0 until 4) {
-                val knobIdx = row.knobOffset + col
-                val control = bank.knobs.getOrNull(knobIdx) ?: continue
+            for (k in 0 until group.rowCount) {
+                val rowIdx = group.startRow + k
+                val row = rows[rowIdx]
+                val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
 
-                val cellCenterX = gridStartX + col * colW + colW / 2f
+                val subTopY = contentTopY + k * subRowH
+                val subBottomY = subTopY + subRowH
 
-                ImGui.setCursorScreenPos(cellCenterX - diameter / 2f, knobTopY)
+                val knobAreaTopY = if (row.subLabel != null) {
+                    session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                        val subTextW = ImGui.calcTextSize(row.subLabel).x
+                        dl.addText(gridStartX + (gridW - subTextW) / 2f, subTopY, borderCol, row.subLabel)
+                    }
+                    subTopY + subLabelH + subLabelGap
+                } else {
+                    subTopY
+                }
 
-                val midiPath = MacroEngine.midiPathFor(bank, control)
-                val isMidiLearning = midiPath != null &&
-                    parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
+                val knobAreaCenterY = knobAreaTopY + (subBottomY - knobAreaTopY) / 2f
+                val knobTopY = knobAreaCenterY - diameter / 2f - captionH / 2f
 
-                MacroKnobWidget.draw(
-                    session = session,
-                    id = "perf_${tabIdx}_r${rowIdx}_c${col}",
-                    label = control.label.ifEmpty { "K${knobIdx + 1}" },
-                    value = control.value,
-                    diameter = diameter,
-                    defaultValue = 0.5f,
-                    pixelsForFullSweep = 200f,
-                    isSelected = false,
-                    isLearning = isMidiLearning,
-                    accentColor = row.accent,
-                    bindings = emptyList(),
-                    onSelect = {},
-                    onToggleLearn = {
-                        if (midiPath != null) {
-                            if (isMidiLearning) {
-                                parametersState.midiLearnTarget = null
-                            } else {
-                                parametersState.midiLearnTarget = MidiLearnTarget.MacroTarget(midiPath, control.label.ifEmpty { "K${knobIdx + 1}" })
-                                parametersState.midiLearnStartTimeMs = System.currentTimeMillis()
-                                if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
-                                    PopupManager.globalPendingMidiWarning = true
+                // 4 knobs for this row.
+                for (col in 0 until 4) {
+                    val knobIdx = row.knobOffset + col
+                    val control = bank.knobs.getOrNull(knobIdx) ?: continue
+
+                    val cellCenterX = gridStartX + col * colW + colW / 2f
+
+                    ImGui.setCursorScreenPos(cellCenterX - diameter / 2f, knobTopY)
+
+                    val midiPath = MacroEngine.midiPathFor(bank, control)
+                    val isMidiLearning = midiPath != null &&
+                        parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
+
+                    MacroKnobWidget.draw(
+                        session = session,
+                        id = "perf_${tabIdx}_r${rowIdx}_c${col}",
+                        label = control.label.ifEmpty { "K${knobIdx + 1}" },
+                        value = control.value,
+                        diameter = diameter,
+                        defaultValue = 0.5f,
+                        pixelsForFullSweep = 200f,
+                        isSelected = false,
+                        isLearning = isMidiLearning,
+                        accentColor = row.accent,
+                        bindings = emptyList(),
+                        onSelect = {},
+                        onToggleLearn = {
+                            if (midiPath != null) {
+                                if (isMidiLearning) {
+                                    parametersState.midiLearnTarget = null
+                                } else {
+                                    parametersState.midiLearnTarget = MidiLearnTarget.MacroTarget(midiPath, control.label.ifEmpty { "K${knobIdx + 1}" })
+                                    parametersState.midiLearnStartTimeMs = System.currentTimeMillis()
+                                    if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
+                                        PopupManager.globalPendingMidiWarning = true
+                                    }
                                 }
                             }
-                        }
-                    },
-                    onChanged = { newVal -> control.value = newVal }
-                )
+                        },
+                        onChanged = { newVal -> control.value = newVal }
+                    )
+                }
             }
         }
 
