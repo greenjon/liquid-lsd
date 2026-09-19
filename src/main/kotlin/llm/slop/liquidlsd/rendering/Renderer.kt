@@ -241,38 +241,69 @@ class Renderer {
         // --- Chained FX Filter Stages ---
         // Each enabled slot's output feeds the next slot's input.
         var currentTex = deck.cleanFBO.texture
-        for (i in deck.fxSlots.indices) {
-            val fx = deck.fxSlots[i] ?: continue
-            if (!fx.enabled || fx.dryWet.value <= 0.0f) continue
+        if (deck.fxChainEnabled && deck.fxChainDryWet.value > 0.0f) {
+            for (i in deck.fxSlots.indices) {
+                val fx = deck.fxSlots[i] ?: continue
+                if (!fx.enabled || fx.dryWet.value <= 0.0f) continue
 
-            val fxFBO = deck.fxFBOs[i]
-            val dryTex = currentTex
+                val fxFBO = deck.fxFBOs[i]
+                val dryTex = currentTex
 
-            fxFBO.bind()
-            glClearColor(0f, 0f, 0f, 0f)
-            glClear(GL_COLOR_BUFFER_BIT)
-            glDisable(GL_BLEND)
+                fxFBO.bind()
+                glClearColor(0f, 0f, 0f, 0f)
+                glClear(GL_COLOR_BUFFER_BIT)
+                glDisable(GL_BLEND)
 
-            fx.render(dryTex, fxFBO.width, fxFBO.height)
+                fx.render(dryTex, fxFBO.width, fxFBO.height)
 
-            val dryWet = fx.dryWet.value
-            if (dryWet < 1.0f) {
-                // Blend dry (previous stage's output) with wet (this stage's FBO)
-                glEnable(GL_BLEND)
-                glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
-                glBlendColor(0f, 0f, 0f, 1.0f - dryWet) // dry amount
+                val dryWet = fx.dryWet.value
+                if (dryWet < 1.0f) {
+                    // Blend dry (previous stage's output) with wet (this stage's FBO)
+                    glEnable(GL_BLEND)
+                    glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+                    glBlendColor(0f, 0f, 0f, 1.0f - dryWet) // dry amount
+
+                    blitShader.bind()
+                    glActiveTexture(GL_TEXTURE0)
+                    glBindTexture(GL_TEXTURE_2D, dryTex)
+                    blitShader.setUniform("uTexture", 0)
+                    Geometry.drawFullscreenQuad()
+                    blitShader.unbind()
+                    glDisable(GL_BLEND)
+                }
+
+                fxFBO.unbind()
+                currentTex = fxFBO.texture
+            }
+
+            // --- Master Chain Dry/Wet ---
+            // Blends the clean source (dry) against the fully-processed chain output (wet),
+            // so a single modulatable control can gate/stutter the whole chain at once.
+            val chainDryWet = deck.fxChainDryWet.value
+            if (chainDryWet < 1.0f && currentTex != deck.cleanFBO.texture) {
+                val chainFBO = deck.fxChainOutFBO
+                chainFBO.bind()
+                glClearColor(0f, 0f, 0f, 0f)
+                glClear(GL_COLOR_BUFFER_BIT)
+                glDisable(GL_BLEND)
 
                 blitShader.bind()
                 glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, dryTex)
+                glBindTexture(GL_TEXTURE_2D, currentTex)
                 blitShader.setUniform("uTexture", 0)
+                Geometry.drawFullscreenQuad()
+
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+                glBlendColor(0f, 0f, 0f, 1.0f - chainDryWet) // dry amount
+
+                glBindTexture(GL_TEXTURE_2D, deck.cleanFBO.texture)
                 Geometry.drawFullscreenQuad()
                 blitShader.unbind()
                 glDisable(GL_BLEND)
-            }
 
-            fxFBO.unbind()
-            currentTex = fxFBO.texture
+                chainFBO.unbind()
+            }
         }
     }
 

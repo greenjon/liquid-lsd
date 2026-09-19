@@ -26,6 +26,7 @@ object ParametersTabs {
     var activeBtnMaxY: Float = 0f
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
+    private val fxChainEnabledBuf = imgui.type.ImBoolean()
     private val fxSlotEnabledBufs = Array(Deck.FX_SLOT_COUNT) { imgui.type.ImBoolean() }
     private val fxSlotPickerTypes = listOf(
         ShaderPickerPopup.PickerType.FX_SLOT_1,
@@ -852,6 +853,17 @@ object ParametersTabs {
             }
         }
         itemTooltip("FX Chain Options (Save, Copy, Paste, Clear)")
+
+        fxChainEnabledBuf.set(deck.fxChainEnabled)
+        if (ImGui.checkbox("Master##fx_chain_enabled_$deckLabel", fxChainEnabledBuf)) {
+            deck.fxChainEnabled = fxChainEnabledBuf.get()
+            onPushUndo()
+        }
+        itemTooltip("Bypass the entire FX chain for this deck, independent of each slot's own toggle.")
+
+        if (deck.fxChainEnabled) {
+            ParametersRenderer.drawParamRow(session, "Master Dry/Wet", "$deckLabel/FXChain/DryWet", deck.fxChainDryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
 
         if (ImGui.beginPopup("FXChainKebabPopup_$deckLabel")) {
             if (ImGui.menuItem("Save Chain As...")) {

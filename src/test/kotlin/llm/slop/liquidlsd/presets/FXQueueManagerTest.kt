@@ -1,6 +1,9 @@
 package llm.slop.liquidlsd.presets
 
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
@@ -18,6 +21,8 @@ class FXQueueManagerTest {
 
     @BeforeTest
     fun setUp() {
+        mockkObject(PresetManager)
+        every { PresetManager.isDeckDirty(any(), any()) } returns false
         FXQueueManager.clearQueue()
         FXQueueManager.isRepeatEnabled = false
         FXQueueManager.isShuffleEnabled = false
@@ -26,6 +31,7 @@ class FXQueueManagerTest {
     @AfterTest
     fun tearDown() {
         FXQueueManager.clearQueue()
+        unmockkObject(PresetManager)
     }
 
     @Test
@@ -138,5 +144,38 @@ class FXQueueManagerTest {
 
         io.mockk.every { mixer.crossfade.value } returns 0.5f
         assertEquals(mixer.deckB, FXQueueManager.getTargetDeck(mixer))
+    }
+
+    @Test
+    fun testDirtyTargetDeckSkipsAdvance() {
+        io.mockk.every { PresetManager.isDeckDirty(any(), any()) } returns true
+        val originalBehavior = llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior
+        llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.SKIP
+        try {
+            FXQueueManager.appendToQueue(File("fx1.lsdfx"))
+            FXQueueManager.appendToQueue(File("fx2.lsdfx"))
+
+            FXQueueManager.advanceNext(session, mixer)
+
+            assertEquals(-1, FXQueueManager.activeIndex, "Dirty target deck with SKIP behavior must not advance")
+        } finally {
+            llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = originalBehavior
+        }
+    }
+
+    @Test
+    fun testDirtyTargetDeckWithDiscardStillAdvances() {
+        io.mockk.every { PresetManager.isDeckDirty(any(), any()) } returns true
+        val originalBehavior = llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior
+        llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.AUTO_DISCARD
+        try {
+            FXQueueManager.appendToQueue(File("fx1.lsdfx"))
+
+            FXQueueManager.advanceNext(session, mixer)
+
+            assertEquals(0, FXQueueManager.activeIndex, "AUTO_DISCARD behavior must still advance past a dirty deck")
+        } finally {
+            llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = originalBehavior
+        }
     }
 }

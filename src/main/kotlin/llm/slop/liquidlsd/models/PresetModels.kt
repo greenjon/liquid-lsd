@@ -236,6 +236,8 @@ data class DeckPresetDto(
     val fxSlot2: FXSlotDto? = null,
     val fxSlot3: FXSlotDto? = null,
     val fxSlot4: FXSlotDto? = null,
+    val fxChainEnabled: Boolean? = null,
+    val fxChainDryWet: ParameterDto? = null,
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
@@ -509,6 +511,8 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         fxSlot2 = fxSlotDtos.getOrNull(1),
         fxSlot3 = fxSlotDtos.getOrNull(2),
         fxSlot4 = fxSlotDtos.getOrNull(3),
+        fxChainEnabled = fxChainEnabled,
+        fxChainDryWet = fxChainDryWet.toDto(),
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty
     )
@@ -615,6 +619,12 @@ fun Deck.applyDto(dto: DeckPresetDto) {
             }
         }
     }
+
+    // Apply master FX chain bypass/mix (absent on presets saved before this field existed,
+    // in which case the deck's current live setting is left untouched — same rationale as
+    // the fx-slot preservation above).
+    dto.fxChainEnabled?.let { fxChainEnabled = it }
+    dto.fxChainDryWet?.let { fxChainDryWet.applyDto(it) }
 
     // Apply global parameters
     source.globalAlpha.reset()

@@ -37,16 +37,24 @@ class Deck(
     val fxSlots = arrayOfNulls<llm.slop.liquidlsd.rendering.isf.ISFFilter>(FX_SLOT_COUNT)
     var fxFBOs = Array(FX_SLOT_COUNT) { FBO(width, height) }
 
+    // Master bypass/mix for the whole FX chain, independent of each slot's own enabled/dryWet.
+    var fxChainEnabled: Boolean = true
+    val fxChainDryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    var fxChainOutFBO = FBO(width, height)
+
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
         width = newWidth
         height = newHeight
         cleanFBO.dispose()
         fxFBOs.forEach { it.dispose() }
+        fxChainOutFBO.dispose()
         cleanFBO = FBO(width, height)
         fxFBOs = Array(FX_SLOT_COUNT) { FBO(width, height) }
+        fxChainOutFBO = FBO(width, height)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+        fxChainOutFBO.clear(0f, 0f, 0f, 0f)
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
                 src.fb1?.dispose()
@@ -106,6 +114,8 @@ class Deck(
     fun reset() {
         isEmpty = true
         fxSlots.forEach { it?.reset() }
+        fxChainEnabled = true
+        fxChainDryWet.reset()
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -136,6 +146,7 @@ class Deck(
         // Clear active FBOs
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+        fxChainOutFBO.clear(0f, 0f, 0f, 0f)
         morphController.initFromCurrentState()
     }
 
@@ -147,6 +158,9 @@ class Deck(
         allParams.addAll(this.source.parameters.values)
         allParams.add(this.source.globalAlpha)
         
+        if (fxChainEnabled) {
+            allParams.add(fxChainDryWet)
+        }
         fxSlots.forEach { fx ->
             if (fx != null && fx.enabled) {
                 allParams.add(fx.dryWet)
@@ -183,13 +197,18 @@ class Deck(
      * Retrieves the final output texture of the Deck (the active stage texture).
      */
     fun getOutputTexture(): Int {
+        if (!fxChainEnabled || fxChainDryWet.value <= 0.0f) return cleanFBO.texture
+
+        var wetTexture = cleanFBO.texture
         for (i in fxSlots.indices.reversed()) {
             val fx = fxSlots[i]
             if (fx != null && fx.enabled && fx.dryWet.value > 0.0f) {
-                return fxFBOs[i].texture
+                wetTexture = fxFBOs[i].texture
+                break
             }
         }
-        return cleanFBO.texture
+        if (wetTexture == cleanFBO.texture) return cleanFBO.texture
+        return if (fxChainDryWet.value < 1.0f) fxChainOutFBO.texture else wetTexture
     }
 
     /**

@@ -1,6 +1,9 @@
 package llm.slop.liquidlsd.presets
 
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import kotlin.test.AfterTest
@@ -17,6 +20,8 @@ class FXBgQueueManagerTest {
 
     @BeforeTest
     fun setUp() {
+        mockkObject(PresetManager)
+        every { PresetManager.isDeckDirty(any(), any()) } returns false
         FXBgQueueManager.clearQueue()
         FXBgQueueManager.isRepeatEnabled = false
         FXBgQueueManager.isShuffleEnabled = false
@@ -25,6 +30,7 @@ class FXBgQueueManagerTest {
     @AfterTest
     fun tearDown() {
         FXBgQueueManager.clearQueue()
+        unmockkObject(PresetManager)
     }
 
     @Test
@@ -81,5 +87,22 @@ class FXBgQueueManagerTest {
         FXBgQueueManager.clearQueue()
         assertEquals(0, FXBgQueueManager.queue.size)
         assertEquals(-1, FXBgQueueManager.activeIndex)
+    }
+
+    @Test
+    fun testDirtyTargetDeckSkipsAdvance() {
+        every { PresetManager.isDeckDirty(any(), any()) } returns true
+        val originalBehavior = llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior
+        llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.SKIP
+        try {
+            FXBgQueueManager.appendToQueue(File("bg_fx1.lsdfx"))
+            FXBgQueueManager.appendToQueue(File("bg_fx2.lsdfx"))
+
+            FXBgQueueManager.advanceNext(session, mixer)
+
+            assertEquals(-1, FXBgQueueManager.activeIndex, "Dirty Deck BG with SKIP behavior must not advance")
+        } finally {
+            llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = originalBehavior
+        }
     }
 }
