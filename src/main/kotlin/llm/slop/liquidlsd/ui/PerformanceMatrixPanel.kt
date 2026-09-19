@@ -20,6 +20,9 @@ import llm.slop.liquidlsd.rendering.Mixer
  *
  * Knob sizing: `diameter = min(availW/4 − pad, availH/4 − labelH − pad)` so all 16 knobs and
  * their labels always fit on screen regardless of window aspect ratio.
+ *
+ * Each row of 4 knobs is enclosed in a rounded, accent-colored group box with a large centered
+ * label (e.g. "DECK A") above it, so the current grouping is obvious at a glance.
  */
 class PerformanceMatrixPanel {
 
@@ -138,40 +141,64 @@ class PerformanceMatrixPanel {
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
 
-        // Reserve a thin left-edge colored bar per row.
-        val rowHeaderW = 6f
-        val gridW = availW - rowHeaderW
+        val gridW = availW
 
-        // Height budget per row: divide available height equally across 4 rows.
+        // Height budget per row: group-box margin + box top border + large centered group label
+        // (drawn just inside the box, under the top line) + knob diameter + per-knob caption.
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+        val groupLabelH = session.uiTheme.withFont(UITheme.FontLevel.H1) { ImGui.getTextLineHeight() }
+        val boxMarginY = 3f   // gap between the row's edge and adjacent rows' boxes
+        val boxLabelGap = 3f  // gap above and below the group label, inside the box
+        val boxPad = 6f       // inner padding between the box border and the knobs it contains
         val rowPad = 8f
         val rowH = (availH / 4f).coerceAtLeast(1f)
 
         // Knob diameter: bounded by both column width and row height so all 16 always fit.
         val colW = gridW / 4f
         val diamByWidth  = (colW - rowPad).coerceAtLeast(8f)
-        val diamByHeight = (rowH - captionH - rowPad).coerceAtLeast(8f)
+        val reservedV = boxMarginY * 2f + boxLabelGap * 2f + groupLabelH + boxPad
+        val diamByHeight = (rowH - reservedV - captionH).coerceAtLeast(8f)
         val diameter = minOf(diamByWidth, diamByHeight).coerceIn(8f, 120f)
 
-        val gridStartX = ImGui.getCursorScreenPosX() + rowHeaderW
+        val gridStartX = ImGui.getCursorScreenPosX()
         val gridStartY = ImGui.getCursorScreenPosY()
         val dl = ImGui.getWindowDrawList()
 
         for ((rowIdx, row) in rows.withIndex()) {
             val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
             val rowTopY = gridStartY + rowIdx * rowH
-            val rowCenterY = rowTopY + rowH / 2f
 
-            // Colored left-edge row header bar.
-            val barX = ImGui.getCursorScreenPosX()
-            val barCol = ImGui.colorConvertFloat4ToU32(row.accent[0], row.accent[1], row.accent[2], 0.75f)
-            dl.addRectFilled(barX, rowTopY + 2f, barX + rowHeaderW - 1f, rowTopY + rowH - 2f, barCol, 2f)
+            val boxTopY = rowTopY + boxMarginY
+            val labelTopY = boxTopY + boxLabelGap
+            val boxBottomY = rowTopY + rowH - boxMarginY
+            val boxX1 = gridStartX + 2f
+            val boxX2 = gridStartX + gridW - 2f
 
-            // Faint row label above the first knob.
-            val labelCol = ImGui.colorConvertFloat4ToU32(row.accent[0], row.accent[1], row.accent[2], 0.55f)
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                dl.addText(gridStartX + 2f, rowTopY + 2f, labelCol, rowLabels[rowIdx])
+            // Rounded group box (faint fill + accent border) around the row's 4 knobs.
+            val fillCol = ImGui.colorConvertFloat4ToU32(row.accent[0], row.accent[1], row.accent[2], 0.07f)
+            val borderCol = ImGui.colorConvertFloat4ToU32(row.accent[0], row.accent[1], row.accent[2], 0.85f)
+            dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
+            dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
+
+            // Large centered group label just under the box's top border. Pushes an explicit
+            // nonzero size rather than going through UITheme.withFont(H1) (which passes 0f for
+            // "native baked size") -- on this draw-list addText path, 0f renders H1 no bigger
+            // than H3, so the size is requested explicitly to get the real 22px glyphs.
+            run {
+                val font = session.uiTheme.fontFor(UITheme.FontLevel.H1)
+                val pushed = font != null && font.ptr != 0L
+                if (pushed) ImGui.pushFont(font, UITheme.FONT_H1)
+                val label = rowLabels[rowIdx]
+                val textW = ImGui.calcTextSize(label).x
+                val textX = gridStartX + (gridW - textW) / 2f
+                dl.addText(textX, labelTopY, borderCol, label)
+                if (pushed) ImGui.popFont()
             }
+
+            val contentTopY = labelTopY + groupLabelH + boxLabelGap
+            val contentBottomY = boxBottomY - boxPad
+            val contentCenterY = contentTopY + (contentBottomY - contentTopY) / 2f
+            val knobTopY = contentCenterY - diameter / 2f - captionH / 2f
 
             // 4 knobs for this row.
             for (col in 0 until 4) {
@@ -179,7 +206,6 @@ class PerformanceMatrixPanel {
                 val control = bank.knobs.getOrNull(knobIdx) ?: continue
 
                 val cellCenterX = gridStartX + col * colW + colW / 2f
-                val knobTopY = rowCenterY - diameter / 2f - captionH / 2f
 
                 ImGui.setCursorScreenPos(cellCenterX - diameter / 2f, knobTopY)
 
