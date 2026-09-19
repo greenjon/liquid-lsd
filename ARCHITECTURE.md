@@ -121,12 +121,22 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdplay` DTOs, plus standalone `.knobpreset.json` export/import
 │   └── MacroOscBridge.kt       — `/macro/knob/N` & `/macro/switch/N` inbound OSC address routing and outbound feedback broadcast
 ├── presets/
-│   ├── PresetManager.kt        — Save/load presets, state management
+│   ├── PresetManager.kt        — Save/load presets, state management, per-deck dirty-state cache (`isDeckDirty`)
+│   ├── PresetRepository.kt     — Async load/save for deck presets, FX presets/chains/playlists, and transition presets/playlists (`CompletableFuture` + bounded executor)
 │   ├── PresetDependencyAnalyzer.kt — Dependency analysis, disabled/offline feature inspection, zero-alloc memoization
-│   ├── PlayQueueManager.kt     — Manages A/B playback queues
-│   ├── BgQueueManager.kt       — Manages background deck queue
+│   ├── PresetMigrator.kt       — Sanitizes a loaded `DeckPresetDto` against the active visual source/feedback schema, filling defaults & stripping obsolete keys
+│   ├── DeckLifecycleManager.kt — Deck clear/copy/move/swap operations and associated active-preset bookkeeping
+│   ├── PlayQueueManager.kt     — Manages the A/B playback queue (shuffle/repeat/history, dirty-deck SKIP/AUTO_SAVE/AUTO_DISCARD guard via `UITheme.autoVjDirtyBehavior`); has its own independent copy of the index-bookkeeping helpers, not on `QueueEngine`
+│   ├── BgQueueManager.kt       — Manages the background deck queue, incl. dip-to-black transition state machine; also not on `QueueEngine` (see PlayQueueManager.kt note)
+│   ├── QueueEngine.kt          — Shared abstract base for FX and Transition queues: shuffle/repeat/history-index bookkeeping, playlist parsing (via `PlaylistParser`), append/insert/remove/move/clear, `computeNextIndex`/`computePrevIndex`
+│   ├── FxQueueEngine.kt        — `QueueEngine` + deck-targeting & dirty-deck guard, backing the FX A/B and FX BG queues
+│   ├── FXQueueManager.kt       — `FxQueueEngine` for Deck A/B, targets the crossfader-active deck
+│   ├── FXBgQueueManager.kt     — `FxQueueEngine` for Deck BG
+│   ├── FXItemApplier.kt        — Applies a queued `.lsdfx`/`.lsdfxchain` file to a deck's 4 FX slots deterministically
+│   ├── TransitionQueueManager.kt — `QueueEngine` + transition apply/auto-fade-hook/session-restore, for the Transition Queue (`.lsdtrans`/`.lsdtransplay`); keeps unresolved playlist items as literal stock-shader-ID tokens instead of dropping them
 │   ├── PlaylistParser.kt       — Parses playlist files
 │   ├── SessionState.kt         — Session state management
+│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the five canonical per-deck/mixer macro banks
 │   └── PresetIOStatus.kt       — IO status for UI feedback
 ├── cli/                        — Startup CLI argument parsing & validation
 │   └── CliArgs.kt              — Command line options (--screenshot-ui, --window, --no-audio, --ui-lab)
@@ -189,7 +199,23 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
 │   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs, deck-colored rows, read-only (no Learn Mode)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
-│   ├── browser/                — Sidebar, Playlist Editor, and Queue Actions sub-panels
+│   ├── browser/                — LibraryPanel sub-panels: preset/FX/transition list, playlist editor & queue actions
+│   │   ├── PresetListPanel.kt          — Preset list/grid tier of the library browser
+│   │   ├── PlaylistEditorPanel.kt      — `.lsdplay` playlist editor tier
+│   │   ├── QueueActionsPanel.kt        — Play Queue (A/B) actions: reorder, shuffle/repeat, jump/advance
+│   │   ├── BgQueueActionsPanel.kt      — Background Queue actions (mirrors QueueActionsPanel for Deck BG)
+│   │   ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain` in one list
+│   │   ├── FXPlaylistEditorPanel.kt    — `.lsdfxplay` FX playlist editor tier
+│   │   ├── FXQueueActionsPanel.kt      — FX Queue (A/B) actions, mirrors QueueActionsPanel for FX items
+│   │   ├── FXBgQueueActionsPanel.kt    — FX Queue (BG) actions, mirrors QueueActionsPanel for Deck BG FX items
+│   │   ├── StockTransitionListPanel.kt — Built-in ISF transition list tier
+│   │   ├── TransitionPresetListPanel.kt — Saved `.lsdtrans` transition preset list tier
+│   │   ├── TransitionPlaylistEditorPanel.kt — `.lsdtransplay` transition playlist editor tier
+│   │   ├── TransitionQueuePanel.kt     — Live Transition Queue actions
+│   │   ├── BrowserPopupHandler.kt      — Rename/delete/new-playlist/export-queue modal popups shared across all list tiers
+│   │   ├── BrowserActionToolbar.kt     — Shared top toolbar (view toggles, search, sort) across list tiers
+│   │   ├── BrowserDeckButtons.kt       — Shared deck-target button styling for PresetListPanel/PlaylistEditorPanel
+│   │   └── BrowserRowMoreButton.kt     — Shared right-aligned kebab (⋮) row context-menu button
 │   └── ParametersState.kt      — Selection state & 30-level Undo Stack
 ├── tools/
 │   └── SiteGenerator.kt        — Static site, documentation HTML, and offline ZIP builder for greenjon.com
@@ -265,6 +291,7 @@ The project includes an official application icon featuring an audio-reactive ps
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `DynamicSpiral` all satisfy the interface
 - **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `library/sources/`)
 - **Per-Slot FX Presets & FX Chains** — Modular `.lsdfx` (stored in `library/fx/`) and `.lsdfxchain` (stored in `library/fx_chains/`) serialized DTOs for saving and recalling single slot effects or 4-slot FX chains.
+- **FX Queues & Playlists** — `.lsdfxplay` FX playlists (stored in `library/fx_playlists/`) and the live volatile FX Queue (A/B and BG, `FxQueueEngine` + `FXQueueManager`/`FXBgQueueManager`) apply queued `.lsdfx`/`.lsdfxchain` items deterministically to all 4 slots via `FXItemApplier` — never a per-slot merge. Mirrors the `PlayQueueManager`/`BgQueueManager` shuffle/repeat/history/dirty-deck-guard pattern already used for presets.
 - **Thread safety & OpenGL Thread 0 Discipline** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events, and strict Main OS Thread (Thread 0) execution for all GLFW window polling, OpenGL context operations, and ISFFilter creation/disposal.
 - **Blank startup state** — Decks default to empty (`isEmpty = true`); on initial application launch without a prior session file, all four decks start with clean blank screens and Launchpad controls rather than pre-populated visual sources
 - **Serializable presets** — `CvModulator` is `@Serializable`; clean, direct serialization without legacy aliases

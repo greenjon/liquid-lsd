@@ -295,11 +295,13 @@ object FileSystemManager {
             .filter { it.isFile && it.extension.lowercase() == "lsdfxplay" }
             .map { file ->
                 val tags = getFxPlaylistTags(file)
+                val validation = validateFxPlaylistFile(file)
                 AssetItem(
                     path = file.absolutePath,
                     name = file.nameWithoutExtension,
                     type = AssetType.FX_PLAYLIST,
-                    isValid = validatePresetFile(file),
+                    isValid = validation.first,
+                    errorMessage = validation.second,
                     tags = tags
                 )
             }
@@ -603,7 +605,36 @@ object FileSystemManager {
             return false to "Parse error"
         }
     }
-    
+
+    /**
+     * Validates an FX playlist file and checks if all referenced `.lsdfx`/`.lsdfxchain`
+     * items exist, mirroring [validatePlaylistFile] for `.lsdfxplay`.
+     * Returns (isValid, errorMessage).
+     */
+    private fun validateFxPlaylistFile(file: File): Pair<Boolean, String?> {
+        if (!file.exists() || !file.canRead()) {
+            return false to "File not readable"
+        }
+
+        try {
+            val items = PlaylistParser.parseFile(file)
+            val roots = listOfNotNull(file.parentFile, getFxPresetsRoot(), getFxChainsRoot())
+
+            val missingItems = items.filter { item ->
+                PlaylistParser.resolveItem(item, roots) == null
+            }
+
+            if (missingItems.isNotEmpty()) {
+                return false to "Missing ${missingItems.size} item(s)"
+            }
+
+            return true to null
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to validate FX playlist: ${file.name}" }
+            return false to "Parse error"
+        }
+    }
+
     /**
      * Renames a file on disk.
      */

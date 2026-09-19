@@ -144,4 +144,32 @@ class FileSystemManagerTest {
             }
         }
     }
+
+    @Test
+    fun testScanAllFxPlaylistsFlagsMissingItemsInvalid() {
+        val fxPresetsRoot = FileSystemManager.getFxPresetsRoot()
+        val fxPlaylistsRoot = FileSystemManager.getFxPlaylistsRoot()
+        val realFxItem = File(fxPresetsRoot, "fx-playlist-test-item.lsdfx").apply { writeText("{}") }
+        val validPlaylist = File(fxPlaylistsRoot, "fx-playlist-test-valid.lsdfxplay").apply {
+            writeText("""{"version":1,"name":"valid","items":["${realFxItem.name}"]}""")
+        }
+        val brokenPlaylist = File(fxPlaylistsRoot, "fx-playlist-test-broken.lsdfxplay").apply {
+            writeText("""{"version":1,"name":"broken","items":["does-not-exist.lsdfx"]}""")
+        }
+
+        try {
+            val items = FileSystemManager.scanAllFxPlaylists()
+            val validEntry = items.first { it.name == validPlaylist.nameWithoutExtension }
+            val brokenEntry = items.first { it.name == brokenPlaylist.nameWithoutExtension }
+
+            assertTrue(validEntry.isValid, "Playlist referencing an existing FX item should be valid")
+            assertFalse(brokenEntry.isValid, "Playlist referencing a missing FX item should be invalid")
+            assertEquals("Missing 1 item(s)", brokenEntry.errorMessage)
+        } finally {
+            realFxItem.delete()
+            validPlaylist.delete()
+            brokenPlaylist.delete()
+            FileSystemManager.clearScanCache()
+        }
+    }
 }

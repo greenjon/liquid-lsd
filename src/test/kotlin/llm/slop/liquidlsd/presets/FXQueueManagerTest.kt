@@ -13,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import java.io.File
+import kotlin.io.path.createTempDirectory
 
 class FXQueueManagerTest {
 
@@ -177,5 +178,18 @@ class FXQueueManagerTest {
         } finally {
             llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = originalBehavior
         }
+    }
+
+    @Test
+    fun testParsePlaylistResolvesViaSharedPlaylistParserAndSkipsMissingItems() {
+        val tempDir = createTempDirectory().toFile()
+        val realItem = File(tempDir, "fx_real.lsdfx").apply { writeText("{}") }
+        val playlistFile = File(tempDir, "fx.lsdfxplay").apply {
+            writeText("""{"version":1,"name":"Test","items":["${realItem.name}","missing.lsdfx"]}""")
+        }
+
+        val resolved = FXQueueManager.parsePlaylist(playlistFile)
+
+        assertEquals(listOf(realItem.absoluteFile), resolved.map { it.absoluteFile })
     }
 }

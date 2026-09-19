@@ -1,26 +1,33 @@
 # Codebase Concerns
 
 **Analysis Date:** 2026-07-07
+**Partial refresh:** 2026-09-19 — file paths updated after the `patches/`→`presets/` and `AssetBrowserPanel.kt`→`ui/browser/` reorganization; items verified against current code are marked RESOLVED/PARTIALLY RESOLVED inline. Sections not touched by this refresh (Fragile Areas, Scaling Limits, Dependencies at Risk, Missing Critical Features, Test Coverage Gaps) were not re-verified and may also contain stale paths or resolved items.
 
 ## Tech Debt
 
-**Asset browser module size and mixed responsibilities:**
-- Issue: `src/main/kotlin/llm/slop/liquidlsd/ui/AssetBrowserPanel.kt` combines navigation tree rendering, playlist editing, patch drag/drop, queue commands, popup state, file operations, and deck-load behavior in one 1041-line singleton.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/AssetBrowserPanel.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`
-- Impact: UI changes can regress file operations or queue behavior because state such as `currentView`, `activePlaylistData`, popup targets, and drag/drop targets share one object. Tests cannot isolate most of the behavior without ImGui.
-- Fix approach: Split sidebar, center browser, queue panel, playlist editor, and popup handlers into focused render/controller units. Keep disk mutations in `FileSystemManager` and queue mutations in `PlayQueueManager`; make UI functions delegate instead of directly orchestrating.
+**RESOLVED (2026-09-18) — Asset browser module size and mixed responsibilities:**
+- Issue was: `ui/AssetBrowserPanel.kt` (now deleted) combined navigation tree rendering, playlist editing, patch drag/drop, queue commands, popup state, file operations, and deck-load behavior in one 1041-line singleton.
+- Fix landed: split into `ui/browser/` — `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `FXBrowserPanel.kt`, `FXPlaylistEditorPanel.kt`, `FXQueueActionsPanel.kt`, `FXBgQueueActionsPanel.kt`, `StockTransitionListPanel.kt`, `TransitionPresetListPanel.kt`, `TransitionPlaylistEditorPanel.kt`, `TransitionQueuePanel.kt`, plus shared `BrowserPopupHandler.kt`/`BrowserActionToolbar.kt`/`BrowserDeckButtons.kt`/`BrowserRowMoreButton.kt`. Disk mutations stayed in `ui/FileSystemManager.kt`; queue mutations stayed in `presets/PlayQueueManager.kt` and siblings. See `ARCHITECTURE.md`'s File Map for the full `ui/browser/` listing.
+- Watch-out: the split fixed the single-file "mixed responsibilities" problem, but the browser tier list itself is now duplicated four ways (Preset/FX/Transition-preset/Transition-playlist panels share near-identical draw logic) — see the queue-manager duplication entry below, which is the same underlying pattern applied to the panel layer instead of the manager layer.
 
 **Patch and session persistence uses global mutable singletons:**
-- Issue: `PatchManager`, `PlayQueueManager`, `UITheme`, `MidiMappingManager`, and `CVRegistry` store app state in process-wide objects.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt`, `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt`
-- Impact: Tests must reset singleton state manually, concurrent flows share mutable state implicitly, and features such as multiple sessions/profiles are hard to reason about.
+- Issue: `PresetManager`, `PlayQueueManager`, `BgQueueManager`, `FXQueueManager`, `FXBgQueueManager`, `TransitionQueueManager`, `UITheme`, `MidiMappingManager`, and `CVRegistry` store app state in process-wide `object` singletons.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PlayQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/BgQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/FXQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/FXBgQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt`, `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt`
+- Impact: Tests must reset singleton state manually (`mockkObject`/`clearQueue()` in `@BeforeTest`), concurrent flows share mutable state implicitly, and features such as multiple sessions/profiles are hard to reason about. The FX and Transition queue managers added since the original analysis perpetuate the same pattern rather than moving away from it — they're not even routed through a `SessionContext` facade the way `PlayQueueManager`/`BgQueueManager` nominally are.
 - Fix approach: Introduce explicit state holders for session, queue, settings, MIDI profiles, and CV registry state. Pass those dependencies to UI/rendering code while preserving singleton facades only at app boundaries.
 
-**Duplicate playlist parsing paths:**
-- Issue: Playlist parsing exists in `FileSystemManager.validatePlaylistFile()` and `PlayQueueManager.parsePlaylist()`, with different format support. `FileSystemManager.parseLsdplayPlaylist()` exists but is unused, while validation uses line parsing only.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`
-- Impact: A JSON `.lsdplay` playlist can be accepted by the play queue but marked invalid in the asset browser, or vice versa.
-- Fix approach: Create one playlist parser/resolver service used by validation, UI display, queue insertion, and session restore.
+**RESOLVED (2026-09-19) — Queue/playlist manager logic duplicated three times (Preset → Transition → FX):**
+- Issue was: `PlayQueueManager.kt`/`BgQueueManager.kt` (presets), `TransitionQueueManager.kt` (transitions), and `FXQueueManager.kt`/`FXBgQueueManager.kt` (FX) each reimplemented the same shuffle/repeat/history-index bookkeeping, playlist parsing, and advance/jump logic. A first pass (same day) extracted `FxQueueEngine` to unify only FX-A/B vs. FX-BG; a follow-up pass extended the extraction one layer further.
+- Fix landed: new `presets/QueueEngine.kt` is now the shared base for *all* queue types — it owns shuffle/repeat state, played/history index tracking (`shiftIndicesAfter`/`removeIndexAndShift`/`moveIndex`), playlist parsing (via `PlaylistParser`, with an overridable `resolveUnmatchedPlaylistItem` hook — see below), and queue mutation (`appendToQueue`/`insertAt`/`removeFromQueue`/`moveItem`/`clearQueue`), plus `computeNextIndex()`/`computePrevIndex()` for the shuffle/repeat advance-selection logic. `FxQueueEngine` (99 lines, was 300+) now only adds the deck-targeting + dirty-deck guard on top; `TransitionQueueManager` (107 lines, was 387) now only adds `applyTransitionItem`/`advanceOnAutoFade`/`restoreSessionQueue` on top. **`PlayQueueManager`/`BgQueueManager` were deliberately left unconverted** — they have real behavioral differences (staged-deck "jump the line" manual-load interaction, dip-to-black fade state machine) and are the most performance-critical, live-show code in the app; folding them into `QueueEngine` was judged higher-risk than the payoff for this pass. Revisit if a good abstraction presents itself, but don't force it.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/presets/QueueEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/FxQueueEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt`. `PlayQueueManager.kt`/`BgQueueManager.kt` still have their own independent (duplicated) copies of the same index-bookkeeping helpers.
+- Verification: full `./gradlew test` suite green, plus a new regression test (`testParsePlaylistKeepsStockTransitionIdsThatHaveNoBackingFile`) protecting the one subtle behavior difference the merge had to preserve — see next entry.
+
+**RESOLVED (2026-09-19) — Duplicate playlist parsing paths:**
+- Issue was: `FxQueueEngine.parsePlaylist()` decoded `.lsdfxplay` JSON directly rather than going through `PlaylistParser`, so it didn't support the line/`#`-comment text format `PlaylistParser` supports for `.lsdplay`, and `FileSystemManager.scanAllFxPlaylists()` validated `.lsdfxplay` with a generic exists/readable/non-empty check instead of resolving referenced items.
+- Fix landed: `PlaylistParser.parseItems()` (`presets/PlaylistParser.kt`) is now generic — it extracts an `items` JSON array from any playlist DTO shape (rather than decoding into the preset-specific `PlaylistDto`), so `.lsdplay`/`.lsdfxplay`/`.lsdtransplay` all share one parser. `QueueEngine.parsePlaylist()` (shared base, see above) uses it uniformly. `FileSystemManager` gained `validateFxPlaylistFile()` mirroring `validatePlaylistFile()`, now wired into `scanAllFxPlaylists()`, so a `.lsdfxplay` pointing at deleted `.lsdfx`/`.lsdfxchain` files is correctly flagged invalid instead of showing as valid.
+- Subtlety preserved: Transition playlist items can be stock-shader IDs with no backing file (e.g. `"linear_crossfade"`) — unlike FX/preset items, an unresolved Transition item must be *kept* as a literal token, not dropped. `QueueEngine` exposes this as `protected open fun resolveUnmatchedPlaylistItem(item: String): File? = null` (FX/base default: drop + warn); `TransitionQueueManager` overrides it to return `File(item)`. Covered by `TransitionQueueManagerTest.testParsePlaylistKeepsStockTransitionIdsThatHaveNoBackingFile`.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PlaylistParser.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/QueueEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt`
+- Remaining gap: `PlayQueueManager`/`BgQueueManager` (preset side) already used `PlaylistParser` before this pass, so they're unaffected and already correct.
 
 **Manual parameter path registry:**
 - Issue: `ParameterResolver.getAllParameterPaths()` hard-codes every mixer/deck/Mandala path and uses `!!` for many parameter lookups.
@@ -30,43 +37,42 @@
 
 ## Known Bugs
 
-**Settings active MIDI profile is saved but not applied to MIDI mapping state:**
-- Symptoms: `UITheme.loadSettings()` reads `activeMidiProfile`, but `MidiMappingManager` initializes its own `activeProfileName` as `"default"` and loads that profile during object initialization.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt`, `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt`
-- Trigger: Save a non-default active MIDI profile in `lsd-settings.properties`, restart, then inspect mappings used by `MidiMappingManager.update()`.
-- Workaround: Explicitly call `MidiMappingManager.loadProfile(UITheme.activeMidiProfile)` after settings load and before mappings are used.
+**RESOLVED — Settings active MIDI profile is saved but not applied to MIDI mapping state:**
+- Symptom was: `UITheme.loadSettings()` reads `activeMidiProfile`, but `MidiMappingManager` initialized its own `activeProfileName` as `"default"` on object init, ignoring the saved value.
+- Fix confirmed: `Main.kt:155` now explicitly calls `MidiMappingManager.loadProfile(UITheme.activeMidiProfile)` at startup — exactly the workaround this entry used to recommend.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/Main.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt`, `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt`
 
 **JACK reconnect can repeatedly restart the audio engine while save/load work is in flight:**
-- Symptoms: `MidiJackWatchdog` calls `AudioEngine.tryReconnect()` from a background daemon, which calls `stop()` and `start()` when inactive. Patch/session work uses `CompletableFuture.runAsync()` and shared singletons without lifecycle coordination.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/audio/MidiJackWatchdog.kt`, `src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`
+- Symptoms: `MidiJackWatchdog` calls `AudioEngine.tryReconnect()` from a background daemon, which calls `stop()` and `start()` when inactive. Preset/session work uses `CompletableFuture.runAsync()` and shared singletons without lifecycle coordination. (Not re-verified this refresh beyond confirming the files/structure still exist as described.)
+- Files: `src/main/kotlin/llm/slop/liquidlsd/audio/MidiJackWatchdog.kt`, `src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt`
 - Trigger: Start with JACK unavailable or unstable while interacting with session/preset saves and UI settings.
 - Workaround: Disable JACK reconnect with `UITheme.audioEngineEnabled = false` or `MidiJackWatchdog.isJackReconnectActive = false` for non-audio sessions.
 
-**Asset browser playlist validation rejects JSON playlists:**
-- Symptoms: `FileSystemManager.validatePlaylistFile()` calls `parsePlaylistContent()` and treats JSON playlist text as path lines; `PlayQueueManager.parsePlaylist()` decodes JSON when content starts with `{`.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`
-- Trigger: Add a `.lsdplay` JSON playlist with `PlaylistDto.items` under `presets/playlists`.
-- Workaround: Use line-based playlist files, or route validation through `PlayQueueManager.parsePlaylist()`.
+**RESOLVED (preset side) — Asset browser playlist validation rejects JSON playlists:**
+- Symptom was: `FileSystemManager.validatePlaylistFile()` treated JSON playlist text as path lines while `PlayQueueManager.parsePlaylist()` decoded JSON — divergent behavior for `.lsdplay`.
+- Fix confirmed: `validatePlaylistFile()` (`FileSystemManager.kt:584`) now calls `PlaylistParser.parseFile()`/`resolveItem()`, the same shared parser `PlayQueueManager.parsePlaylist()` uses.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PlayQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PlaylistParser.kt`
+- **New, weaker instance on the FX side**: see "Duplicate playlist parsing paths" under Tech Debt — `.lsdfxplay` validation doesn't resolve item references at all, so it doesn't have this bug's symptom, but only because it does no validation.
 
 ## Security Considerations
 
-**Preset file operations are not confined to preset roots:**
-- Risk: Rename, clone, move, and delete accept arbitrary string paths and operate directly on `File(path)`. Drag/drop payloads and playlist references can pass absolute paths.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/AssetBrowserPanel.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`
-- Current mitigation: UI navigation starts from `presets/patches` and `presets/playlists`, and operations are local desktop actions.
-- Recommendations: Canonicalize paths and enforce roots for destructive operations. Require `deleteFile()`, `renameFile()`, `moveFile()`, and playlist mutation paths to stay under allowed directories unless a trusted import flow explicitly opts out.
+**RESOLVED for rename/move/delete/clone; gap remained (now fixed 2026-09-19) for creation/export — Preset/FX/playlist file operations not confined to managed roots:**
+- Risk was: Rename, clone, move, and delete accepted arbitrary string paths and operated directly on `File(path)`.
+- Fix confirmed for mutation: `FileSystemManager.renameFile()`/`cloneFile()`/`moveFile()`/`deleteFile()` now call `requireManagedAssetPath()` (`FileSystemManager.kt:~112`), which checks the canonicalized target against `managedRootPaths()` (presets, playlists, FX presets/chains/playlists, transitions/transition playlists).
+- Gap found and fixed 2026-09-19: *creation/export* flows (new-playlist and export-queue-to-playlist popups in `ui/browser/BrowserPopupHandler.kt`, plus `PlaylistManager.createPlaylist()`) built `File(root, "$name.ext")` straight from a raw trimmed textbox and wrote it without ever calling the confinement check — a `../../` name could escape the library root. All six creation/export write sites now call `FileSystemManager.isManagedAssetPath(file)` before writing. `managedRootPaths()` was also missing `getFxPlaylistsRoot()` (added 2026-09-19); before that fix, rename/delete/move/clone on any `.lsdfxplay` file failed closed.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/PlaylistManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/browser/BrowserPopupHandler.kt`
+- Recommendation going forward: any *new* file-creation code path (new asset types, import flows) must call `isManagedAssetPath()`/`requireManagedAssetPath()` before writing — this has now been missed once already for a brand-new asset type (FX playlists) and should be treated as a checklist item, not assumed automatic.
 
-**MIDI profile names can construct arbitrary relative filenames:**
-- Risk: `MidiMappingManager.loadProfile(profileName)` and `saveActiveProfile()` create `File(midiDir, "$profileName.json")` without sanitizing path separators.
+**RESOLVED — MIDI profile names can construct arbitrary relative filenames:**
+- Risk was: `MidiMappingManager.loadProfile(profileName)`/`saveActiveProfile()` built `File(midiDir, "$profileName.json")` without sanitizing path separators.
+- Fix confirmed: `loadProfile()` now calls `sanitiseProfileName(profileName)` (`MidiMappingManager.kt:132`) before building the file path, falling back to `"default"` on failure.
 - Files: `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt`
-- Current mitigation: Profiles are app-local data and the default profile name is static.
-- Recommendations: Restrict profile IDs to a safe filename pattern, store display names inside JSON, and canonicalize against `presets/midi`.
 
-**Distribution task downloads executable runtimes without checksum pinning:**
-- Risk: `packageThumbDrive` downloads JRE archives from Adoptium URLs and packages launchers with the downloaded runtime without checksum verification.
+**PARTIALLY RESOLVED — Distribution task downloads executable runtimes without checksum pinning:**
+- Risk was: `packageThumbDrive` downloaded JRE archives from Adoptium URLs and packaged launchers with the downloaded runtime without checksum verification.
+- Fix landed but incomplete: `build.gradle.kts` now has a `jreChecksums` map and a `verifyChecksum()` function that hashes downloaded archives with SHA-256 and `require()`s a match — but every platform entry is still the placeholder `"EXPECTED_SHA256_HERE"`, and `verifyChecksum()` logs a warning and *skips* verification when it sees that placeholder rather than failing. So the mechanism exists but isn't actually pinning anything yet.
 - Files: `build.gradle.kts`
-- Current mitigation: Downloads use HTTPS and cache under `build/jre-cache`.
-- Recommendations: Pin expected checksums per platform, verify downloaded archive digests before extraction, and fail the package task on mismatch.
+- Recommendation: Fill in the real SHA-256 values from the Adoptium API (the code already has a comment pointing at `https://api.adoptium.net/v3/assets/...`) and change the placeholder-skip behavior to fail the build instead of warning.
 
 ## Performance Bottlenecks
 
@@ -76,16 +82,17 @@
 - Cause: The real-time callback snapshots all 8192 envelope blocks before scheduling background analysis.
 - Improvement path: Copy only the active analysis window or use a lock-free double-buffer handoff where the callback publishes an index and the background thread owns copying outside the callback.
 
-**Preset and playlist scanning performs blocking filesystem work on the UI thread:**
-- Problem: Directory scans call `listFiles()`, playlist validation reads file contents with `readText()`, and sidebar tree rendering recursively calls `scanDirectory()` from ImGui rendering.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/AssetBrowserPanel.kt`
-- Cause: Asset browsing and validation are synchronous and coupled to draw/navigation calls.
-- Improvement path: Cache directory snapshots, validate playlists asynchronously, debounce refreshes, and update the UI from immutable scan results.
+**PARTIALLY MITIGATED — Preset and playlist scanning performs blocking filesystem work on the UI thread:**
+- Problem: Directory scans call `listFiles()`, playlist validation reads file contents with `readText()`, and browser panel rendering (now `ui/browser/PresetListPanel.kt` and siblings, not `AssetBrowserPanel.kt` which was deleted 2026-09-18) triggers scans from ImGui draw calls.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/browser/PresetListPanel.kt`
+- Cause: Asset browsing and validation are still synchronous and coupled to draw/navigation calls.
+- Mitigation added since original analysis: `FileSystemManager` now has a `scanCache` (`ConcurrentHashMap<String, ScanCacheEntry>`, 1s TTL, keyed by recursive directory signature) so repeated draws within a second reuse the last scan instead of re-walking the tree — reduces frequency but a cache-miss scan is still synchronous on the calling (UI) thread.
+- Improvement path (still open): validate playlists asynchronously, debounce refreshes, and update the UI from immutable scan results instead of scanning inline during draw.
 
-**Unbounded async file I/O uses the common ForkJoin pool:**
-- Problem: `PatchManager.loadGlobalPatchAsync()`, `loadDeckPresetAsync()`, `saveGlobalPatchAsync()`, and `saveDeckPresetAsync()` call `CompletableFuture.runAsync()` without a bounded executor.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`
-- Cause: Every load/save task goes to the shared executor and can pile up during rapid queue changes or preset saves.
+**RESOLVED — Unbounded async file I/O uses the common ForkJoin pool:**
+- Problem was: preset load/save calls used `CompletableFuture.runAsync()` without a bounded executor, so tasks piled onto the shared ForkJoin pool during rapid queue changes or preset saves.
+- Fix confirmed: `PresetManager.presetIoExecutor` (`PresetManager.kt:20`) is now a dedicated `Executors.newSingleThreadExecutor`, and `PresetRepository.kt`'s `loadDeckPresetAsync()`/`saveDeckPresetAsync()`/`saveFxPresetAsync()`/etc. all run on it via `CompletableFuture.runAsync(..., PresetManager.presetIoExecutor)` instead of the default common pool.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PresetRepository.kt`
 - Improvement path: Use a dedicated bounded single-thread or small fixed executor for patch I/O, coalesce repeated saves, and expose completion/error state to the UI.
 
 **Render frame limiter busy-yields after sleeping:**
@@ -176,11 +183,12 @@
 - Risk: Audio dropouts, broken beat detection, or callback crashes can ship unnoticed.
 - Priority: High
 
-**Filesystem and playlist safety:**
-- What's not tested: Path confinement, rename/delete/move failures, JSON playlist validation, missing playlist item reporting, and session path portability.
-- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`
-- Risk: Data loss or confusing playlist behavior can ship unnoticed.
-- Priority: High
+**PARTIALLY COVERED — Filesystem and playlist safety:**
+- What's now tested (`FileSystemManagerTest.kt`, added since original analysis): `isManagedAssetPath()` root confinement, `renameFile()`/`deleteFile()` rejecting out-of-root targets, scan caching/signature invalidation, and (as of 2026-09-19) `scanAllFxPlaylists()` flagging a `.lsdfxplay` with a missing referenced item as invalid (`testScanAllFxPlaylistsFlagsMissingItemsInvalid`). `FXQueueManagerTest`/`TransitionQueueManagerTest` also now cover the shared `QueueEngine.parsePlaylist()` path, including the stock-transition-ID-must-not-be-dropped case.
+- What's still not tested: the FX-playlist creation/export write sites fixed 2026-09-19 (`ui/browser/BrowserPopupHandler.kt`, `ui/PlaylistManager.kt::createPlaylist`) have no regression test proving they now call `isManagedAssetPath()` before writing; session path portability.
+- Files: `src/main/kotlin/llm/slop/liquidlsd/ui/FileSystemManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/PlaylistManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/browser/BrowserPopupHandler.kt`, `src/main/kotlin/llm/slop/liquidlsd/presets/PlayQueueManager.kt`
+- Risk: Data loss or confusing playlist behavior can ship unnoticed for the still-untested creation/export write sites.
+- Priority: Medium
 
 **Rendering lifecycle and GL resources:**
 - What's not tested: `FBO.dispose()`, `Shader.dispose()`, dynamic visual feedback FBO recreation, secondary window context switching, and renderer shutdown.

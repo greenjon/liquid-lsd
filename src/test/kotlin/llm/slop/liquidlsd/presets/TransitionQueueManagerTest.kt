@@ -154,4 +154,19 @@ class TransitionQueueManagerTest {
         TransitionQueueManager.advanceOnAutoFade(mixer)
         assertEquals(0, TransitionQueueManager.activeIndex, "Active index should remain unchanged when auto-advance disabled")
     }
+
+    @Test
+    fun testParsePlaylistKeepsStockTransitionIdsThatHaveNoBackingFile() {
+        val tempDir = kotlin.io.path.createTempDirectory().toFile()
+        val realItem = File(tempDir, "real.lsdtrans").apply { writeText("{}") }
+        val playlistFile = File(tempDir, "trans.lsdtransplay").apply {
+            writeText("""{"version":1,"name":"Test","items":["${realItem.name}","linear_crossfade"]}""")
+        }
+
+        val resolved = TransitionQueueManager.parsePlaylist(playlistFile)
+
+        assertEquals(2, resolved.size, "Stock transition IDs with no backing file must be kept, not dropped")
+        assertEquals(realItem.absoluteFile, resolved[0].absoluteFile)
+        assertEquals("linear_crossfade", resolved[1].name)
+    }
 }

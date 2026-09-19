@@ -1,7 +1,9 @@
 package llm.slop.liquidlsd.presets
 
-import llm.slop.liquidlsd.models.PlaylistDto
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 
 object PlaylistParser {
@@ -9,9 +11,16 @@ object PlaylistParser {
     private val defaultPresetRoots = listOf(File("library/presets"))
     private val presetExtensions = listOf(".lsd")
 
+    /**
+     * Parses playlist item references from either JSON (an object with an `items` string
+     * array — the shape shared by `PlaylistDto`, `FXPlaylistDto`, and `TransitionPlaylistDto`,
+     * read generically here so this parser isn't tied to one of them) or line-based text
+     * (one path per line, blank lines and `#`-comments skipped).
+     */
     fun parseItems(content: String): List<String> {
         return if (content.trimStart().startsWith("{")) {
-            json.decodeFromString<PlaylistDto>(content).items
+            val root = json.parseToJsonElement(content).jsonObject
+            root["items"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
         } else {
             content.lines()
                 .map { it.trim() }
