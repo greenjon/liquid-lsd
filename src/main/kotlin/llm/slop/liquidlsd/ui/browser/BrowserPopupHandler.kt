@@ -4,7 +4,10 @@ import imgui.ImGui
 import imgui.type.ImString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.models.TransitionPlaylistDto
+import llm.slop.liquidlsd.presets.FXBgQueueManager
+import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.AssetItem
@@ -25,12 +28,16 @@ object BrowserPopupHandler {
     var pendingOpenDeletePopup = false
     var pendingOpenNewPlaylistPopup = false
     var pendingOpenExportQueuePopup = false
+    var pendingOpenExportFxQueuePopup = false
+    var pendingOpenExportFxBgQueuePopup = false
     
     val renameBuffer = ImString(256)
     val newPlaylistNameBuffer = ImString(256)
     val exportQueueNameBuffer = ImString(256)
     val exportBgQueueNameBuffer = ImString(256)
     val exportTransQueueNameBuffer = ImString(256)
+    val exportFxQueueNameBuffer = ImString(256)
+    val exportFxBgQueueNameBuffer = ImString(256)
 
     fun openRenamePresetModal(asset: AssetItem) {
         val file = File(asset.path)
@@ -164,6 +171,11 @@ object BrowserPopupHandler {
                             if (target.path == currentPlaylistPath) {
                                 LibraryPanel.selectedTransitionPlaylistFile = File(newPath)
                             }
+                        } else if (target.type == AssetType.FX_PLAYLIST) {
+                            val currentPlaylistPath = LibraryPanel.selectedFxPlaylistFile?.absolutePath
+                            if (target.path == currentPlaylistPath) {
+                                LibraryPanel.selectedFxPlaylistFile = File(newPath)
+                            }
                         }
                     }
                 }
@@ -224,6 +236,11 @@ object BrowserPopupHandler {
                         if (target.path == currentPlaylistPath) {
                             LibraryPanel.selectedTransitionPlaylistFile = null
                         }
+                    } else if (target.type == AssetType.FX_PLAYLIST) {
+                        val currentPlaylistPath = LibraryPanel.selectedFxPlaylistFile?.absolutePath
+                        if (target.path == currentPlaylistPath) {
+                            LibraryPanel.selectedFxPlaylistFile = null
+                        }
                     }
                 }
                 deleteTarget = null
@@ -241,7 +258,12 @@ object BrowserPopupHandler {
     fun drawNewPlaylistPopup() {
         if (ImGui.beginPopupModal("NewPlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             val isTransMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.TRANS
-            val titleText = if (isTransMode) "Create New Transition Playlist" else "Create New Playlist"
+            val isFxMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.FX
+            val titleText = when {
+                isTransMode -> "Create New Transition Playlist"
+                isFxMode -> "Create New FX Playlist"
+                else -> "Create New Playlist"
+            }
             ImGui.text(titleText)
             ImGui.separator()
             ImGui.inputText("Name", newPlaylistNameBuffer)
@@ -255,6 +277,14 @@ object BrowserPopupHandler {
                         file.parentFile?.mkdirs()
                         file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
                         LibraryPanel.selectedTransitionPlaylistFile = file
+                        LibraryPanel.refreshAssets()
+                    } else if (isFxMode) {
+                        val root = FileSystemManager.getFxPlaylistsRoot()
+                        val file = File(root, "$name.lsdfxplay")
+                        val dto = FXPlaylistDto(name = name)
+                        file.parentFile?.mkdirs()
+                        file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                        LibraryPanel.selectedFxPlaylistFile = file
                         LibraryPanel.refreshAssets()
                     } else {
                         PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { newPlaylist ->
@@ -351,6 +381,64 @@ object BrowserPopupHandler {
             ImGui.sameLine()
             if (ImGui.button("Cancel", 120f, 0f)) {
                 exportTransQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
+    fun drawExportFxQueuePopup() {
+        if (ImGui.beginPopupModal("ExportFxQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("Export Live FX Queue (A/B) as Playlist")
+            ImGui.separator()
+            ImGui.inputText("Playlist Name", exportFxQueueNameBuffer)
+            if (ImGui.button("Export", 120f, 0f)) {
+                val name = exportFxQueueNameBuffer.get().trim()
+                if (name.isNotBlank()) {
+                    val root = FileSystemManager.getFxPlaylistsRoot()
+                    val file = File(root, "$name.lsdfxplay")
+                    val itemsList = FXQueueManager.queue.map { it.absolutePath }
+                    val dto = FXPlaylistDto(name = name, items = itemsList)
+                    file.parentFile?.mkdirs()
+                    file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                    LibraryPanel.selectedFxPlaylistFile = file
+                    LibraryPanel.refreshAssets()
+                }
+                exportFxQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 120f, 0f)) {
+                exportFxQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
+        }
+    }
+
+    fun drawExportFxBgQueuePopup() {
+        if (ImGui.beginPopupModal("ExportFxBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+            ImGui.text("Export Background FX Queue as Playlist")
+            ImGui.separator()
+            ImGui.inputText("Playlist Name", exportFxBgQueueNameBuffer)
+            if (ImGui.button("Export", 120f, 0f)) {
+                val name = exportFxBgQueueNameBuffer.get().trim()
+                if (name.isNotBlank()) {
+                    val root = FileSystemManager.getFxPlaylistsRoot()
+                    val file = File(root, "$name.lsdfxplay")
+                    val itemsList = FXBgQueueManager.queue.map { it.absolutePath }
+                    val dto = FXPlaylistDto(name = name, items = itemsList)
+                    file.parentFile?.mkdirs()
+                    file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                    LibraryPanel.selectedFxPlaylistFile = file
+                    LibraryPanel.refreshAssets()
+                }
+                exportFxBgQueueNameBuffer.set("")
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 120f, 0f)) {
+                exportFxBgQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()

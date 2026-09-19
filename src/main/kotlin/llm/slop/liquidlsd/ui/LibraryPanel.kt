@@ -5,11 +5,16 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.presets.FXBgQueueManager
+import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
+import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
+import llm.slop.liquidlsd.ui.browser.FXPlaylistEditorPanel
+import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
@@ -37,13 +42,17 @@ object LibraryPanel {
         STOCK_TRANSITIONS,
         TRANSITION_PRESETS,
         TRANSITION_PLAYLIST,
-        TRANSITION_QUEUE
+        TRANSITION_QUEUE,
+        FX_PLAYLIST,
+        FX_QUEUE_AB,
+        FX_QUEUE_BG
     }
 
     var viewMode: LibraryViewMode = LibraryViewMode.PRESETS
     var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
     var selectedTransitionPlaylistFile: File? = null
+    var selectedFxPlaylistFile: File? = null
     internal var activePlaylistData: PlaylistManager.Playlist? = null
 
     var shouldReclaimFocus: Boolean = false
@@ -114,6 +123,17 @@ object LibraryPanel {
                 val idx = TransitionQueuePanel.selectedIndex
                 if (idx in TransitionQueueManager.queue.indices) TransitionQueueManager.queue[idx] else null
             }
+            SelectionSource.FX_PLAYLIST -> {
+                FXPlaylistEditorPanel.getSelectedPresetFile()
+            }
+            SelectionSource.FX_QUEUE_AB -> {
+                val idx = FXQueueActionsPanel.selectedIndex
+                if (idx in FXQueueManager.queue.indices) FXQueueManager.queue[idx] else null
+            }
+            SelectionSource.FX_QUEUE_BG -> {
+                val idx = FXBgQueueActionsPanel.selectedIndex
+                if (idx in FXBgQueueManager.queue.indices) FXBgQueueManager.queue[idx] else null
+            }
             null -> null
         }
     }
@@ -176,6 +196,9 @@ object LibraryPanel {
         PlaylistEditorPanel.selectedPresetIndex = -1
         QueueActionsPanel.selectedIndex = -1
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
+        FXPlaylistEditorPanel.selectedItemIndex = -1
+        FXQueueActionsPanel.selectedIndex = -1
+        FXBgQueueActionsPanel.selectedIndex = -1
     }
 
     fun auditionIfLocked(file: File, session: SessionContext, mixer: Mixer) {
@@ -216,6 +239,7 @@ object LibraryPanel {
         FileSystemManager.scanAllPlaylists()
         FileSystemManager.scanAllFxPresets()
         FileSystemManager.scanAllFxChains()
+        FileSystemManager.scanAllFxPlaylists()
         FileSystemManager.scanAllTransitionPresets()
         FileSystemManager.scanAllTransitionPlaylists()
     }
@@ -377,13 +401,10 @@ object LibraryPanel {
 
                 ImGui.sameLine(0f, colGap)
 
-                // Column 2: FX Playlists (not yet implemented)
+                // Column 2: FX Playlists Editor
                 ImGui.beginChild("LibraryFXPlaylists", c2W, g1AvailH, false, outerFlags)
                 ImGui.setScrollX(0f)
-                ImGui.textDisabled("FX Playlists")
-                ImGui.separator()
-                ImGui.spacing()
-                ImGui.textWrapped("Coming soon: save and reorder curated FX sequences here.")
+                FXPlaylistEditorPanel.draw(session, mixer)
                 ImGui.endChild()
             }
             LibraryViewMode.TRANS -> {
@@ -426,6 +447,20 @@ object LibraryPanel {
             ImGui.beginChild("LibraryTransitionQueue", c4W, g2AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
             TransitionQueuePanel.draw(session, mixer)
+            ImGui.endChild()
+        } else if (viewMode == LibraryViewMode.FX) {
+            // Column 3: Background FX Queue (BG)
+            ImGui.beginChild("LibraryFxBgQueue", c3W, g2AvailH, false, outerFlags)
+            ImGui.setScrollX(0f)
+            FXBgQueueActionsPanel.draw(session, mixer)
+            ImGui.endChild()
+
+            ImGui.sameLine(0f, colGap)
+
+            // Column 4: Play FX Queue (A/B)
+            ImGui.beginChild("LibraryFxQueue", c4W, g2AvailH, false, outerFlags)
+            ImGui.setScrollX(0f)
+            FXQueueActionsPanel.draw(session, mixer)
             ImGui.endChild()
         } else {
             // Column 3: Background Queue (BG)
@@ -527,6 +562,14 @@ object LibraryPanel {
             }
             BrowserPopupHandler.pendingOpenExportQueuePopup = false
         }
+        if (BrowserPopupHandler.pendingOpenExportFxQueuePopup) {
+            ImGui.openPopup("ExportFxQueuePopup")
+            BrowserPopupHandler.pendingOpenExportFxQueuePopup = false
+        }
+        if (BrowserPopupHandler.pendingOpenExportFxBgQueuePopup) {
+            ImGui.openPopup("ExportFxBgQueuePopup")
+            BrowserPopupHandler.pendingOpenExportFxBgQueuePopup = false
+        }
 
         BrowserPopupHandler.drawRenameAssetPopup()
         BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
@@ -534,6 +577,8 @@ object LibraryPanel {
         BrowserPopupHandler.drawExportQueuePopup(session)
         BrowserPopupHandler.drawExportBgQueuePopup()
         BrowserPopupHandler.drawExportTransQueuePopup()
+        BrowserPopupHandler.drawExportFxQueuePopup()
+        BrowserPopupHandler.drawExportFxBgQueuePopup()
 
         // Reset one-shot focus/scroll flags at end of frame
         shouldReclaimFocus = false
@@ -670,6 +715,41 @@ object LibraryPanel {
                     }
                     if (targetIdx != currentIdx) {
                         TransitionQueuePanel.selectedIndex = targetIdx
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
+            }
+            SelectionSource.FX_PLAYLIST -> {
+                // Navigation handled inside panel
+            }
+            SelectionSource.FX_QUEUE_AB -> {
+                val queue = FXQueueManager.queue
+                if (queue.isNotEmpty()) {
+                    val currentIdx = FXQueueActionsPanel.selectedIndex
+                    val targetIdx = if (currentIdx < 0) {
+                        if (delta > 0) 0 else queue.lastIndex
+                    } else {
+                        (currentIdx + delta).coerceIn(0, queue.lastIndex)
+                    }
+                    if (targetIdx != currentIdx) {
+                        FXQueueActionsPanel.selectedIndex = targetIdx
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
+            }
+            SelectionSource.FX_QUEUE_BG -> {
+                val queue = FXBgQueueManager.queue
+                if (queue.isNotEmpty()) {
+                    val currentIdx = FXBgQueueActionsPanel.selectedIndex
+                    val targetIdx = if (currentIdx < 0) {
+                        if (delta > 0) 0 else queue.lastIndex
+                    } else {
+                        (currentIdx + delta).coerceIn(0, queue.lastIndex)
+                    }
+                    if (targetIdx != currentIdx) {
+                        FXBgQueueActionsPanel.selectedIndex = targetIdx
                         shouldScrollToSelection = true
                         shouldReclaimFocus = true
                     }

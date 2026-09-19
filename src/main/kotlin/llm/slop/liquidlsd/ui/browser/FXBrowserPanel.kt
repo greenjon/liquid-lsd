@@ -4,7 +4,11 @@ import imgui.ImGui
 import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
 import imgui.type.ImString
+import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.models.FXPlaylistDto
+import llm.slop.liquidlsd.presets.FXBgQueueManager
+import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
@@ -28,6 +32,7 @@ import java.io.File
  */
 object FXBrowserPanel {
     private val logger = KotlinLogging.logger {}
+    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
     private const val STOCK_PATH_PREFIX = "stock-fx://"
 
@@ -165,13 +170,13 @@ object FXBrowserPanel {
                         val slotNum = i + 1
                         val fx = deck.fxSlots[i]
                         val hasFx = fx != null && fx.id.isNotEmpty()
-                        val label = if (hasFx) "Slot $slotNum: ${fx?.displayName}" else "Slot $slotNum: Empty"
-                        if (ImGui.menuItem(label, "", false, hasFx)) {
+                        val label = if (fx != null && fx.id.isNotEmpty()) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
+                        if (ImGui.menuItem(label, "", false, hasFx) && fx != null) {
                             deck.toFxSlotDto(i)?.let { slotDto ->
                                 SavePresetModal.request(
                                     title = "Save FX Slot Preset As",
                                     confirmLabel = "Save",
-                                    defaultName = fx?.displayName?.lowercase()?.replace(" ", "_") ?: "fx_preset",
+                                    defaultName = fx.displayName.lowercase().replace(" ", "_").ifBlank { "fx_preset" },
                                     targetDir = FileSystemManager.getFxPresetsRoot(),
                                     extension = "lsdfx"
                                 ) { name, tags ->
@@ -326,6 +331,19 @@ object FXBrowserPanel {
                     }
                 }
                 ImGui.separator()
+                if (ImGui.menuItem("Add to Live FX Queue (A/B)")) {
+                    FXQueueManager.appendToQueue(file)
+                }
+                if (ImGui.menuItem("Add to BG FX Queue")) {
+                    FXBgQueueManager.appendToQueue(file)
+                }
+                val activePlFilePreset = LibraryPanel.selectedFxPlaylistFile
+                if (activePlFilePreset != null) {
+                    if (ImGui.menuItem("Add to '${activePlFilePreset.nameWithoutExtension}' Playlist")) {
+                        appendToActiveFxPlaylist(activePlFilePreset, asset.path)
+                    }
+                }
+                ImGui.separator()
                 if (ImGui.menuItem("Rename...")) {
                     BrowserPopupHandler.renameTarget = asset
                     BrowserPopupHandler.renameBuffer.set(asset.name)
@@ -352,6 +370,19 @@ object FXBrowserPanel {
                     }
                 }
                 ImGui.separator()
+                if (ImGui.menuItem("Add to Live FX Queue (A/B)")) {
+                    FXQueueManager.appendToQueue(file)
+                }
+                if (ImGui.menuItem("Add to BG FX Queue")) {
+                    FXBgQueueManager.appendToQueue(file)
+                }
+                val activePlFileChain = LibraryPanel.selectedFxPlaylistFile
+                if (activePlFileChain != null) {
+                    if (ImGui.menuItem("Add to '${activePlFileChain.nameWithoutExtension}' Playlist")) {
+                        appendToActiveFxPlaylist(activePlFileChain, asset.path)
+                    }
+                }
+                ImGui.separator()
                 if (ImGui.menuItem("Rename...")) {
                     BrowserPopupHandler.renameTarget = asset
                     BrowserPopupHandler.renameBuffer.set(asset.name)
@@ -370,6 +401,18 @@ object FXBrowserPanel {
                 }
             }
             else -> {}
+        }
+    }
+
+    private fun appendToActiveFxPlaylist(playlistFile: File, fxPath: String) {
+        if (!playlistFile.exists()) return
+        try {
+            val dto = json.decodeFromString<FXPlaylistDto>(playlistFile.readText())
+            val updated = dto.copy(items = dto.items + fxPath)
+            playlistFile.writeText(json.encodeToString(FXPlaylistDto.serializer(), updated))
+            LibraryPanel.refreshAssets()
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to append item $fxPath to FX playlist ${playlistFile.name}" }
         }
     }
 

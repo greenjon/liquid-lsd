@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.FXChainDto
+import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.models.FXPresetDto
 import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.models.TransitionPresetDto
@@ -29,6 +30,7 @@ object FileSystemManager {
     private const val PLAYLISTS_ROOT = "library/playlists"
     private const val FX_ROOT = "library/fx"
     private const val FX_CHAINS_ROOT = "library/fx_chains"
+    private const val FX_PLAYLISTS_ROOT = "library/fx_playlists"
     private const val TRANSITIONS_ROOT = "library/transitions"
     private const val TRANSITION_PLAYLISTS_ROOT = "library/transition_playlists"
     private const val SCAN_CACHE_TTL_MS = 1_000L
@@ -253,6 +255,47 @@ object FileSystemManager {
                     path = file.absolutePath,
                     name = file.nameWithoutExtension,
                     type = AssetType.FX_CHAIN,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
+    internal fun getFxPlaylistTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        return try {
+            val dto = json.decodeFromString<FXPlaylistDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun scanAllFxPlaylists(): List<AssetItem> {
+        val root = getFxPlaylistsRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_FX_PLAYLISTS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdfxplay" }
+            .map { file ->
+                val tags = getFxPlaylistTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.FX_PLAYLIST,
                     isValid = validatePresetFile(file),
                     tags = tags
                 )
@@ -751,6 +794,17 @@ object FileSystemManager {
      */
     fun getFxChainsRoot(): File {
         val root = File(FX_CHAINS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for FX playlists (.lsdfxplay).
+     */
+    fun getFxPlaylistsRoot(): File {
+        val root = File(FX_PLAYLISTS_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }

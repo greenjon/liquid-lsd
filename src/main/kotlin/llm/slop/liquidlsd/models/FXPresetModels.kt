@@ -46,3 +46,17 @@ data class TransitionPlaylistDto(
     val items: List<String> = emptyList() // List of .lsdtrans file paths or stock shader IDs
 )
 
+/**
+ * Data Transfer Object for an FX Playlist (.lsdfxplay).
+ * A curated, ordered sequence of saved FX items only — single FX presets
+ * (.lsdfx) or FX chains (.lsdfxchain). Stock/unconfigured filters have no
+ * persisted parameters and are never eligible for playlist membership.
+ */
+@Serializable
+data class FXPlaylistDto(
+    val version: Int = 1,
+    val name: String,
+    val tags: List<String> = emptyList(),
+    val items: List<String> = emptyList() // List of .lsdfx or .lsdfxchain file paths
+)
+

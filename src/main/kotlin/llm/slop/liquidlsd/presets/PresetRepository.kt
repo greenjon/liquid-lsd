@@ -209,4 +209,25 @@ object PresetRepository {
             PresetManager.json.decodeFromString<TransitionPlaylistDto>(content)
         }, PresetManager.presetIoExecutor)
     }
+
+    fun saveFxPlaylistAsync(file: File, playlist: FXPlaylistDto) {
+        CompletableFuture.runAsync({
+            try {
+                logger.info { "Saving FX playlist to ${file.absolutePath}..." }
+                file.parentFile?.mkdirs()
+                file.writeText(PresetManager.json.encodeToString(playlist))
+                logger.info { "FX playlist saved successfully to ${file.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to save FX playlist to ${file.absolutePath}" }
+            }
+        }, PresetManager.presetIoExecutor)
+    }
+
+    fun loadFxPlaylistAsync(file: File): CompletableFuture<FXPlaylistDto> {
+        return CompletableFuture.supplyAsync({
+            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
+            val content = file.readText()
+            PresetManager.json.decodeFromString<FXPlaylistDto>(content)
+        }, PresetManager.presetIoExecutor)
+    }
 }

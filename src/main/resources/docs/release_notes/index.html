@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-playlists-live-fx-queues-unified-fx-browser-fxbrowserpanelkt-fxplaylisteditorpanelkt-fxqueueactionspanelkt-fxbgqueueactionspanelkt-fxqueuemanagerkt-fxbgqueuemanagerkt-fxitemapplierkt-fxpresetmodelskt-librarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Playlists, Live FX Queues &amp; Unified FX Browser (FXBrowserPanel.kt, FXPlaylistEditorPanel.kt, FXQueueActionsPanel.kt, FXBgQueueActionsPanel.kt, FXQueueManager.kt, FXBgQueueManager.kt, FXItemApplier.kt, FXPresetModels.kt, LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#minimum-system-requirements-startup-diagnostics-mainkt-readmemd-docsgetting_startedmd-architecturemd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3381,6 +3392,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-playlists-live-fx-queues-unified-fx-browser-fxbrowserpanelkt-fxplaylisteditorpanelkt-fxqueueactionspanelkt-fxbgqueueactionspanelkt-fxqueuemanagerkt-fxbgqueuemanagerkt-fxitemapplierkt-fxpresetmodelskt-librarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Playlists, Live FX Queues &amp; Unified FX Browser (FXBrowserPanel.kt, FXPlaylistEditorPanel.kt, FXQueueActionsPanel.kt, FXBgQueueActionsPanel.kt, FXQueueManager.kt, FXBgQueueManager.kt, FXItemApplier.kt, FXPresetModels.kt, LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#minimum-system-requirements-startup-diagnostics-mainkt-readmemd-docsgetting_startedmd-architecturemd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5529,6 +5551,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fx-playlists-live-fx-queues-unified-fx-browser-fxbrowserpanelkt-fxplaylisteditorpanelkt-fxqueueactionspanelkt-fxbgqueueactionspanelkt-fxqueuemanagerkt-fxbgqueuemanagerkt-fxitemapplierkt-fxpresetmodelskt-librarypanelkt">FX Playlists, Live FX Queues &amp; Unified FX Browser (<code>FXBrowserPanel.kt</code>, <code>FXPlaylistEditorPanel.kt</code>, <code>FXQueueActionsPanel.kt</code>, <code>FXBgQueueActionsPanel.kt</code>, <code>FXQueueManager.kt</code>, <code>FXBgQueueManager.kt</code>, <code>FXItemApplier.kt</code>, <code>FXPresetModels.kt</code>, <code>LibraryPanel.kt</code>)</h3>
+<ul>
+<li><strong>Preserve Deck FX on Clean Preset Load</strong>: <code>Deck.applyDto</code> skips rewriting and clearing a deck's active FX slots when incoming preset DTOs contain no configured FX, allowing live FX chains and queued FX to play uninterrupted through preset transitions.</li>
+<li><strong>Unified FX Browser</strong>: Merged <code>FXPresetListPanel</code> and <code>FXChainListPanel</code> into a single <code>FXBrowserPanel</code> presenting ISF stock filters, saved single presets (.lsdfx), and multi-slot FX chains (.lsdfxchain) with tier badges and filter menu (All / Stock / Singles / Chains). Stock filters only support loading directly to decks, while saved presets and chains can be added to playlists and live queues.</li>
+<li><strong>FX Playlists (<code>.lsdfxplay</code>)</strong>: Introduced curated FX playlist sequences supported by <code>FXPlaylistDto</code>, <code>PresetRepository</code>, <code>FileSystemManager</code>, and <code>FXPlaylistEditorPanel</code>. Supports drag-and-drop insertion, reordering, double-click application, and context menus.</li>
+<li><strong>Deterministic FX Application (<code>FXItemApplier</code>)</strong>: Resolves both <code>.lsdfx</code> single presets and <code>.lsdfxchain</code> multi-slot chains deterministically via <code>Deck.applyFxChain</code>, guaranteeing reproducible 4-slot FX state rather than arbitrary vacant-slot allocation.</li>
+<li><strong>Live FX Queues (A/B and BG)</strong>: Added <code>FXQueueManager</code> and <code>FXBgQueueManager</code> with volatile RAM queues, repeat, shuffle, history back-stepping, and UI controls in <code>FXQueueActionsPanel</code> and <code>FXBgQueueActionsPanel</code>. Column 3 (BG) and Column 4 (A/B) in the Library dock swap to FX queues when in FX mode.</li>
+<li><strong>Export Queue to Playlist</strong>: Enabled instant exporting of live FX queues (A/B and BG) directly to new <code>.lsdfxplay</code> playlists.</li>
+</ul>
 <h3 id="minimum-system-requirements-startup-diagnostics-mainkt-readmemd-docsgetting_startedmd-architecturemd">Minimum System Requirements &amp; Startup Diagnostics (<code>Main.kt</code>, <code>README.md</code>, <code>docs/getting_started.md</code>, <code>ARCHITECTURE.md</code>)</h3>
 <ul>
 <li><strong>Documented Minimum &amp; Recommended System Requirements</strong>: Formalized comprehensive hardware and software requirements across documentation (<code>README.md</code>, <code>docs/getting_started.md</code>, <code>ARCHITECTURE.md</code>). Explicitly documented that OpenGL 3.3 Core Profile hardware support is mandatory. Added prominent alerts clarifying that legacy architectures like Intel Core 2 Duo / Core 2 Quad and legacy Intel GMA graphics (GMA 3000/X3100/X4500) lack OpenGL 3.3 Core Profile capabilities and cannot run Liquid LSD.</li>
