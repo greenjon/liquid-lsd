@@ -100,8 +100,11 @@ object FileSystemManager {
     private fun directorySignature(directory: File): String = getDirectorySignature(directory)
 
     private fun managedRootPaths(): List<Path> {
-        return listOf(getPresetsRoot(), getPlaylistsRoot(), getFxPresetsRoot(), getFxChainsRoot(), getTransitionsRoot(), getTransitionPlaylistsRoot())
-            .map { it.canonicalFile.toPath() }
+        return listOf(
+            getPresetsRoot(), getPlaylistsRoot(),
+            getFxPresetsRoot(), getFxChainsRoot(), getFxPlaylistsRoot(),
+            getTransitionsRoot(), getTransitionPlaylistsRoot()
+        ).map { it.canonicalFile.toPath() }
     }
 
     internal fun isManagedAssetPath(file: File): Boolean {

@@ -205,7 +205,7 @@ Unlike MIDI Learn, which arms from the target control, OSC Learn is driven from 
 
 The **Address Mappings** table in the OSC Controls tab offers the same per-control shaping as MIDI: **Min/Max** range clamping, **Invert**, **Slew** smoothing ($0 \dots 250\,\text{ms}$), and **Soft Takeover** (pickup) so an OSC control doesn't yank a parameter on first touch.
 
-Macro Knobs also respond directly to `/macro/knob/1`–`/macro/knob/8` (no manual mapping needed), and broadcast their values back out over OSC whenever they change — handy for keeping a tablet layout's on-screen state in sync. See [Macro Controls & the Modular Video Rack](macros_and_rack.md).
+Macro Knobs also respond directly to `/macro/knob/1`–`/macro/knob/8` (no manual mapping needed), and broadcast their values back out over OSC whenever they change — handy for keeping a tablet layout's on-screen state in sync. See [Macro Controls & Performance Mode](macros_and_rack.md).
 
 ### Profiles
 

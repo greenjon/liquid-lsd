@@ -22,6 +22,8 @@ import llm.slop.liquidlsd.parameters.LfoSpeedMode
  * hold/glide dynamics slider with curve toggle, and modulation depth/offset.
  */
 object SeqSection {
+    private val unitLabels = GenUnit.entries.map { it.name }.toTypedArray()
+    private val unitIdxWrapper = ImInt()
 
     private class StepInputCallback : ImGuiInputTextCallback() {
         var currentValue: Float = 0f
@@ -89,10 +91,9 @@ object SeqSection {
         session.uiTheme.body("Clock Unit:")
         ImGui.sameLine(0f, 8f * fontScale)
 
-        val units = GenUnit.values()
-        val unitLabels = units.map { it.name }.toTypedArray()
+        val units = GenUnit.entries
         val currentUnitIdx = units.indexOf(existing.genUnit).coerceAtLeast(0)
-        val unitIdxWrapper = ImInt(currentUnitIdx)
+        unitIdxWrapper.set(currentUnitIdx)
 
         ImGui.pushItemWidth(110f * fontScale)
         if (ImGui.combo("##seq_unit_${existing.id}", unitIdxWrapper, unitLabels)) {

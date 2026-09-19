@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Architectural Compliance & ImGui Widget Hardening (`ValueParamSection.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`, `SeqSection.kt`, `PlaylistManagerTest.kt`, `DECISIONS.md`)
+- **Zero-Allocation ImGui Modulator & Parameter Dropdowns**: Pre-allocated reusable `ImInt` singleton fields and static/cached label arrays in `ValueParamSection`, `Lfo1Section`, `Lfo2Section`, and `SeqSection`, eliminating per-frame heap allocations when viewing parameter combos, clock unit selectors, and LFO modulation modes in the Properties panel.
+- **Playlist Asset Confinement Test Alignment**: Updated `PlaylistManagerTest` to construct temporary test playlists within `FileSystemManager.getPlaylistsRoot()`, conforming with the path isolation security rules enforced by `isManagedAssetPath`.
+
 ### FX Playlists, Live FX Queues & Unified FX Browser (`FXBrowserPanel.kt`, `FXPlaylistEditorPanel.kt`, `FXQueueActionsPanel.kt`, `FXBgQueueActionsPanel.kt`, `FXQueueManager.kt`, `FXBgQueueManager.kt`, `FXItemApplier.kt`, `FXPresetModels.kt`, `LibraryPanel.kt`)
 - **Preserve Deck FX on Clean Preset Load**: `Deck.applyDto` skips rewriting and clearing a deck's active FX slots when incoming preset DTOs contain no configured FX, allowing live FX chains and queued FX to play uninterrupted through preset transitions.
 - **Unified FX Browser**: Merged `FXPresetListPanel` and `FXChainListPanel` into a single `FXBrowserPanel` presenting ISF stock filters, saved single presets (.lsdfx), and multi-slot FX chains (.lsdfxchain) with tier badges and filter menu (All / Stock / Singles / Chains). Stock filters only support loading directly to decks, while saved presets and chains can be added to playlists and live queues.
@@ -7,6 +11,7 @@
 - **Deterministic FX Application (`FXItemApplier`)**: Resolves both `.lsdfx` single presets and `.lsdfxchain` multi-slot chains deterministically via `Deck.applyFxChain`, guaranteeing reproducible 4-slot FX state rather than arbitrary vacant-slot allocation.
 - **Live FX Queues (A/B and BG)**: Added `FXQueueManager` and `FXBgQueueManager` with volatile RAM queues, repeat, shuffle, history back-stepping, and UI controls in `FXQueueActionsPanel` and `FXBgQueueActionsPanel`. Column 3 (BG) and Column 4 (A/B) in the Library dock swap to FX queues when in FX mode.
 - **Export Queue to Playlist**: Enabled instant exporting of live FX queues (A/B and BG) directly to new `.lsdfxplay` playlists.
+- **Fixed FX-Mode Keyboard Shortcuts**: `1`–`4` (load to deck) and `Q`/`Shift+Q` (add to queue) previously routed through the visual-preset managers even while browsing `[ FX ]` mode, silently misapplying FX files as `.lsd` presets or queuing them on the wrong manager. `LibraryPanel`'s shortcut handler now dispatches through `BrowserActionToolbar.handleDeckLoad` and `FXQueueManager`/`FXBgQueueManager` when the Library is in FX view mode, matching the toolbar buttons' existing extension-aware behavior.
 
 ### Minimum System Requirements & Startup Diagnostics (`Main.kt`, `README.md`, `docs/getting_started.md`, `ARCHITECTURE.md`)
 - **Documented Minimum & Recommended System Requirements**: Formalized comprehensive hardware and software requirements across documentation (`README.md`, `docs/getting_started.md`, `ARCHITECTURE.md`). Explicitly documented that OpenGL 3.3 Core Profile hardware support is mandatory. Added prominent alerts clarifying that legacy architectures like Intel Core 2 Duo / Core 2 Quad and legacy Intel GMA graphics (GMA 3000/X3100/X4500) lack OpenGL 3.3 Core Profile capabilities and cannot run Liquid LSD.

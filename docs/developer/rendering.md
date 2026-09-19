@@ -65,17 +65,11 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 ---
 
-## Modular Video Rack: Micro-Monitor Downscaling & FBO Telemetry
+## FBO-Count & GPU-Memory Telemetry
 
-The Modular Video Rack (`rack/`, `rack/ui/`; see `docs/developer/modular_video_rack_proposal.md`) reuses the core render pipeline rather than introducing a parallel one — each rack unit's `process()` reads an already-rendered `Deck`/`Mixer` output texture (`Deck.getOutputTexture()`, `Mixer.masterFBO.texture`) computed earlier the same frame by `Renderer.renderDeck()`/`Renderer.renderMixer()` in the normal Classic-mode render path. The two pieces of rendering-pipeline machinery added specifically for the rack, both landed in Phase 9, are:
+`FBO.kt`'s companion object tracks every live `FBO` instance app-wide in a `ConcurrentHashMap<framebufferId, estimatedByteSize>`, populated on construction and cleared on `dispose()`. Byte size is format-aware (`GL_RGBA8` = 4 bytes/px, `GL_RGBA16F` = 8, `GL_RGBA32F` = 16). This is exposed as `PerformanceStats.fboCount` / `PerformanceStats.fboMemoryMB` and rendered in the menu bar telemetry HUD as `FBO: N (XMB)` (`MenuBar.kt`), covering all live FBOs in the core render pipeline (`cleanFBO`, `fxFBOs`, `masterFBO`, etc.) app-wide. This instrumentation was added deliberately *before* any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.
 
-### Confidence Micro-Monitor Downscaling (`RackMicroMonitor.kt`)
-Every rack unit's faceplate embeds a live confidence-monitor preview of its `lastOutputTexture`. Rather than sampling the full-resolution source texture directly into the ImGui draw list, `RackMicroMonitor.draw()` lazily allocates one dedicated 240×135 `FBO` per unit instance (`PREVIEW_WIDTH`/`PREVIEW_HEIGHT`, cached in a `unit.id`-keyed map) and blits into it via the existing `Renderer.rescale(srcTex, srcW, srcH, destFbo, mode)` utility (the same GL viewport-changing blit helper used elsewhere for output scaling — no new shader code) using `UITheme.OutputScaleMode.STRETCH`. `ImGui.image()` then displays that shared-resolution preview texture inside the unit's hardware-styled bezel. This was the § Question 4 decision in the rack proposal: downscale monitors to a fixed shared resolution up front rather than building a full pooled FBO allocator speculatively.
-
-Per-unit preview FBOs are disposed explicitly rather than left to GC/finalization — `RackMicroMonitor.releaseUnit(unitId)` fires when a unit is removed from the bay, and `releaseAll()` fires before `RackManager.populateFromSession()` rebuilds the unit list (e.g. on "RE-SYNC SESSION"), since a full re-sync discards the old unit list (and its now-orphaned FBO cache keys) without disposing it itself.
-
-### FBO-Count & GPU-Memory Telemetry
-`FBO.kt`'s companion object now tracks every live `FBO` instance app-wide in a `ConcurrentHashMap<framebufferId, estimatedByteSize>`, populated on construction and cleared on `dispose()`. Byte size is format-aware (`GL_RGBA8` = 4 bytes/px, `GL_RGBA16F` = 8, `GL_RGBA32F` = 16). This is exposed as `PerformanceStats.fboCount` / `PerformanceStats.fboMemoryMB` and rendered in the menu bar telemetry HUD as `FBO: N (XMB)` (`MenuBar.kt`). The readout covers all live FBOs across the whole app — core render pipeline (`cleanFBO`, `fxFBOs`, `masterFBO`, etc.) plus the rack's own `RackPipeline` ping-pong stage buffers and `RackMicroMonitor` preview FBOs — not a rack-scoped counter. Per the § Question 4 decision, this instrumentation was added deliberately *before* any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.
+> The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/`), including its `RackMicroMonitor` confidence-preview downscaling and `RackPipeline` ping-pong stage buffers, was removed when the workspace was replaced by Performance Mode (`PerformanceMatrixPanel.kt`); see `docs/developer/modular_video_rack_proposal.md` for retired design history.
 
 ---
 

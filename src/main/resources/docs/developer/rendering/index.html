@@ -871,29 +871,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#modular-video-rack-micro-monitor-downscaling-fbo-telemetry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#confidence-micro-monitor-downscaling-rackmicromonitorkt" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Confidence Micro-Monitor Downscaling (RackMicroMonitor.kt)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#fbo-count-gpu-memory-telemetry" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -901,11 +878,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1619,29 +1591,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#modular-video-rack-micro-monitor-downscaling-fbo-telemetry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#confidence-micro-monitor-downscaling-rackmicromonitorkt" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Confidence Micro-Monitor Downscaling (RackMicroMonitor.kt)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#fbo-count-gpu-memory-telemetry" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1649,11 +1598,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1998,13 +1942,11 @@
 <li><strong>Aspect-Adaptive UI Previews</strong>: <code>MixerLayoutCalculator</code> dynamically adjusts Deck A, Deck B, Deck PV, and Master preview monitor heights to match the active render aspect ratio.</li>
 </ul>
 <hr />
-<h2 id="modular-video-rack-micro-monitor-downscaling-fbo-telemetry">Modular Video Rack: Micro-Monitor Downscaling &amp; FBO Telemetry</h2>
-<p>The Modular Video Rack (<code>rack/</code>, <code>rack/ui/</code>; see <code>docs/developer/modular_video_rack_proposal.md</code>) reuses the core render pipeline rather than introducing a parallel one — each rack unit's <code>process()</code> reads an already-rendered <code>Deck</code>/<code>Mixer</code> output texture (<code>Deck.getOutputTexture()</code>, <code>Mixer.masterFBO.texture</code>) computed earlier the same frame by <code>Renderer.renderDeck()</code>/<code>Renderer.renderMixer()</code> in the normal Classic-mode render path. The two pieces of rendering-pipeline machinery added specifically for the rack, both landed in Phase 9, are:</p>
-<h3 id="confidence-micro-monitor-downscaling-rackmicromonitorkt">Confidence Micro-Monitor Downscaling (<code>RackMicroMonitor.kt</code>)</h3>
-<p>Every rack unit's faceplate embeds a live confidence-monitor preview of its <code>lastOutputTexture</code>. Rather than sampling the full-resolution source texture directly into the ImGui draw list, <code>RackMicroMonitor.draw()</code> lazily allocates one dedicated 240×135 <code>FBO</code> per unit instance (<code>PREVIEW_WIDTH</code>/<code>PREVIEW_HEIGHT</code>, cached in a <code>unit.id</code>-keyed map) and blits into it via the existing <code>Renderer.rescale(srcTex, srcW, srcH, destFbo, mode)</code> utility (the same GL viewport-changing blit helper used elsewhere for output scaling — no new shader code) using <code>UITheme.OutputScaleMode.STRETCH</code>. <code>ImGui.image()</code> then displays that shared-resolution preview texture inside the unit's hardware-styled bezel. This was the § Question 4 decision in the rack proposal: downscale monitors to a fixed shared resolution up front rather than building a full pooled FBO allocator speculatively.</p>
-<p>Per-unit preview FBOs are disposed explicitly rather than left to GC/finalization — <code>RackMicroMonitor.releaseUnit(unitId)</code> fires when a unit is removed from the bay, and <code>releaseAll()</code> fires before <code>RackManager.populateFromSession()</code> rebuilds the unit list (e.g. on "RE-SYNC SESSION"), since a full re-sync discards the old unit list (and its now-orphaned FBO cache keys) without disposing it itself.</p>
-<h3 id="fbo-count-gpu-memory-telemetry">FBO-Count &amp; GPU-Memory Telemetry</h3>
-<p><code>FBO.kt</code>'s companion object now tracks every live <code>FBO</code> instance app-wide in a <code>ConcurrentHashMap&lt;framebufferId, estimatedByteSize&gt;</code>, populated on construction and cleared on <code>dispose()</code>. Byte size is format-aware (<code>GL_RGBA8</code> = 4 bytes/px, <code>GL_RGBA16F</code> = 8, <code>GL_RGBA32F</code> = 16). This is exposed as <code>PerformanceStats.fboCount</code> / <code>PerformanceStats.fboMemoryMB</code> and rendered in the menu bar telemetry HUD as <code>FBO: N (XMB)</code> (<code>MenuBar.kt</code>). The readout covers all live FBOs across the whole app — core render pipeline (<code>cleanFBO</code>, <code>fxFBOs</code>, <code>masterFBO</code>, etc.) plus the rack's own <code>RackPipeline</code> ping-pong stage buffers and <code>RackMicroMonitor</code> preview FBOs — not a rack-scoped counter. Per the § Question 4 decision, this instrumentation was added deliberately <em>before</em> any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.</p>
+<h2 id="fbo-count-gpu-memory-telemetry">FBO-Count &amp; GPU-Memory Telemetry</h2>
+<p><code>FBO.kt</code>'s companion object tracks every live <code>FBO</code> instance app-wide in a <code>ConcurrentHashMap&lt;framebufferId, estimatedByteSize&gt;</code>, populated on construction and cleared on <code>dispose()</code>. Byte size is format-aware (<code>GL_RGBA8</code> = 4 bytes/px, <code>GL_RGBA16F</code> = 8, <code>GL_RGBA32F</code> = 16). This is exposed as <code>PerformanceStats.fboCount</code> / <code>PerformanceStats.fboMemoryMB</code> and rendered in the menu bar telemetry HUD as <code>FBO: N (XMB)</code> (<code>MenuBar.kt</code>), covering all live FBOs in the core render pipeline (<code>cleanFBO</code>, <code>fxFBOs</code>, <code>masterFBO</code>, etc.) app-wide. This instrumentation was added deliberately <em>before</em> any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.</p>
+<blockquote>
+<p>The 19" Modular Video Rack chassis UI (<code>rack/</code>, <code>rack/ui/</code>), including its <code>RackMicroMonitor</code> confidence-preview downscaling and <code>RackPipeline</code> ping-pong stage buffers, was removed when the workspace was replaced by Performance Mode (<code>PerformanceMatrixPanel.kt</code>); see <code>docs/developer/modular_video_rack_proposal.md</code> for retired design history.</p>
+</blockquote>
 <hr />
 <h2 id="source-documentation-registry-sourcedocregistrykt">Source Documentation Registry (<code>SourceDocRegistry.kt</code>)</h2>
 <p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt"><code>SourceDocRegistry.kt</code></a> is an immutable singleton repository storing documentation for visual sources and parameters:</p>

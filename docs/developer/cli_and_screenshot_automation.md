@@ -16,7 +16,7 @@ To support automated visual regression testing, documentation asset generation, 
    Live Workspace Mode                        Isolated UI Lab Mode
    - Main 3-Column Deck Mixer                 - Theme color swatches
    - Audio Engine (unless --no-audio)         - Custom widget & slider gallery
-   - Modular Rack & Shaders                   - Lucide icon catalog
+   - Performance Mode & Shaders               - Lucide icon catalog
               │                                         │
               └────────────────────┬────────────────────┘
                                    ▼

@@ -1,6 +1,8 @@
 # Proposal: Modular Video Rack Architecture
 
-**Status**: Core Complete (Phases 5-9 implemented — see §4). All 6 Open Questions in §3 decided (2026-09-16); **Phase 9** (implementing those decisions) shipped the same day (2026-09-16) — see §4 for what landed and what was deliberately deferred.  
+> **RETIRED**: The rack chassis UI described below (`rack/`, `rack/ui/` — faceplates, rear patch-cable view, per-unit macro banks) shipped per this proposal and then was **removed from the codebase entirely**, replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, a 4×4 macro knob matrix toggled with `F4`; see `docs/user_guide/macros_and_rack.md` and `docs/developer/preset_management.md` §8). This document is kept as historical design record only — none of the classes/files it references still exist.
+
+**Status**: ~~Core Complete (Phases 5-9 implemented — see §4).~~ Retired and removed; superseded by Performance Mode. All 6 Open Questions in §3 decided (2026-09-16); **Phase 9** (implementing those decisions) shipped the same day (2026-09-16) — see §4 for what landed and what was deliberately deferred, before the whole feature was later retired.  
 **Target Area**: `ui/`, `rendering/`, `parameters/`, `presets/`, `io/`  
 **Authors**: GJ & Antigravity  
 

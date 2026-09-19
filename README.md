@@ -15,7 +15,8 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), 2x2 grouped Library panel, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
 - **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
-- **Modular Video Rack & Macro Controls**: 19" rack-style alternate workspace with curated per-unit performance faceplates, embedded confidence micro-monitors, per-unit `MacroBank`s (8 knobs / 4 switches), and a Reason-style `Tab`-flip rear chassis with virtual patch cables.
+- **FX Playlists & Live FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 4-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
+- **Performance Mode & Macro Controls**: `F4` toggles a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, Transitions, Master) with color-coded rows and four context tabs (Live Quad, Dual Decks, Prep & BG, Master & FX), alongside `MacroBank` (8 knobs / 4 switches) binding and response curves edited in Classic mode.
 
 ---
 
@@ -28,16 +29,16 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 | **Video Pipeline & FX** | **Operational** | 4 decks (A, B, BG, PV), 100% ISF 2.0 pipeline, 4-slot deck FX chains, 4-slot Master FX chain, feedback loops, ping-pong FBOs. |
 | **Audio & Beat Sync** | **Operational** | Sub-millisecond JACK/PipeWire audio capture, Adam Stark beat tracking DSP, continuous phase generator, Ableton Link network sync. |
 | **Transitions & Setlists** | **Operational** | ISF transition shaders, `.lsdtrans` presets, `.lsdtransplay` setlists, auto-advance transition queue, 2x2 Library panel layout. |
-| **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 4-slot chains, preset tags, instant tag search, drag-and-drop preset loading. |
+| **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 4-slot chains, FX playlists (`.lsdfxplay`), live FX queues (A/B & BG), preset tags, instant tag search, drag-and-drop preset loading. |
 | **MIDI & Shortcuts** | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer. |
 | **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine. |
-| **Modular Video Rack & Macros** | **Core Complete** | 19" rack workspace, curated faceplates, per-unit macro banks & confidence monitors, `Tab`-flip rear patch bay. The rack is completely unusable. The Macro Knobs are coming along and are the current intense area of focus. When the knobs are dialed in (pun intended) then the rack will be massaged into its final form. See [`ROADMAP.md`](ROADMAP.md) for the built-in-unit limitation and remaining backlog. |
+| **Performance Mode & Macros** | **Operational** | `F4` 4×4 macro knob matrix (6 canonical banks: Deck A/B/BG/PV, Transitions, Master), binding, curve editing. Macro-learn/randomization coverage across control types is still being generalized — see [`ROADMAP.md`](ROADMAP.md). The 19" Modular Video Rack chassis UI this replaced has been fully removed. |
 
 ---
 
 ## Roadmap & Path to v1.0
 
-The core v1.0 feature set has shipped: the 100% ISF pipeline, MIDI, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). The Modular Video Rack & Macro system is partially implemented and is under rapid development. What's left before v1.0 locks is finishing the Macro/Rack controls, some UI beautification, and general battle hardening.
+The core v1.0 feature set has shipped: the 100% ISF pipeline, MIDI, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). Performance Mode and the Macro system have shipped and are under continued refinement. What's left before v1.0 locks is finishing macro-learn/randomization coverage, some UI beautification, and general battle hardening.
 
 ### v1.1 Backlog
 

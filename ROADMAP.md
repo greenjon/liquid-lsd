@@ -19,7 +19,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 
 | Milestone / Workstream | Target Area | Target | Status | Key Deliverables |
 | :--- | :--- | :---: | :---: | :--- |
-| **Modular Video Rack** | `ui/*`, `rendering/*`, `presets/*` | **v1.0** | **CORE COMPLETE** | 19" modular bay, curated faceplates, embedded confidence monitors, macros, Tab-flip rear patching. Backlog/open questions remain. |
+| **Performance Mode & Macros** | `ui/*`, `macro/*`, `presets/*` | **v1.0** | **OPERATIONAL** | 4×4 macro knob matrix (`PerformanceMatrixPanel`, `F4`) across 6 canonical banks, `MacroEngine`/`MacroBank` binding, curves. Supersedes the retired 19" Modular Video Rack (see Milestone 1). Macro-learn/randomization coverage for remaining control types still in progress. |
 | **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.0** | **IN PROGRESS** | Headless CLI screenshot automation (`--screenshot-ui`) for CI/docs & isolated UI Lab gallery (`--ui-lab`). |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
@@ -30,10 +30,12 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 ## v1.0 Active Milestones
 
 ### Milestone 1: Modular Video Rack & Macro Performance System
+> **RETIRED (rack half only)**: Phases 5-9 below (the rack chassis UI itself — bay, faceplates, confidence micro-monitors, `Tab`-flip rear patching) shipped as described, then were **deleted from the codebase** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, 4×4 macro knob matrix, `F4`). The Macro engine (Phases 1-4) is unaffected and still shipping — it's now consumed by Performance Mode instead of the rack. This section is kept as historical implementation record; see the Summary Matrix above for current status.
+>
 > **Reference & Design Specs**:
-> - [`docs/user_guide/macros_and_rack.md`](docs/user_guide/macros_and_rack.md) (Macro Controls & Modular Rack User Guide)
-> - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture)
-> **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16
+> - [`docs/user_guide/macros_and_rack.md`](docs/user_guide/macros_and_rack.md) (Macro Controls & Performance Mode User Guide)
+> - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture — retired design doc)
+> **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16; rack chassis (Phases 5, 7, 8, 9) later retired and removed
 > **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
 
 Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style video rack designed for tactile live performance:

@@ -161,16 +161,41 @@ To ensure users never start with a blank screen on clean git clones or new relea
 
 ---
 
-## 8. Modular Video Rack Integration (Deck PV & Per-Unit Macro Banks)
+## 8. Canonical Per-Deck Macro Banks (`MacroEngine`, `MacroBankSerializer`, `SessionSerializer`)
 
-The Modular Video Rack (`rack/`, `rack/ui/`; see `docs/developer/modular_video_rack_proposal.md`) is a performance-surface *view* onto the same preset/queue managers documented above.
+The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/` — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been **removed entirely** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, a 4×4 knob matrix toggled with `F4`; see `docs/user_guide/macros_and_rack.md`). Historical rack design notes are kept for reference in `docs/developer/modular_video_rack_proposal.md`, marked retired/superseded.
 
-### Deck PV Unit & Built-in Rack Units
-[`RackManager.populateFromSession()`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rack/RackManager.kt) populates the rack bay with standard units: Deck A, Deck B, Deck BG, Master Crossfade & Color (`MixerTransitionUnit`), and Deck PV (`DeckRackUnit` backed by `mixer.deckPV`). Deck PV serves as the audition/preview deck unit at the bottom of the stack, allowing performers to dial in preset macro bindings before loading onto live decks.
+### Six Always-Resident Canonical Banks
+`MacroEngine` registers six canonical, always-resident banks by id (`MacroEngine.CANONICAL_BANK_IDS`): `DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `TRANS`, and `MASTER`. `MacroEngine.canonicalIdForDeckLabel(deckLabel)` maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its bank id, falling through to `TRANS` for anything else. Both the Classic `[ MACROS ]` Column 3 view and the Performance Matrix's 4 tabs read and write these same underlying banks — Performance Mode is a read-only *view* onto them (dragging a knob live-updates `MacroControl.value`; editing bindings still happens in Classic mode).
 
-### Per-Unit Macro Banks (`unitInstanceId` Scoping)
-Every `RackUnit` owns its own `macroBank: MacroBank` (0-8 knobs — the same shape and engine as the Column 3 global bank; see `docs/user_guide/macros_and_rack.md`). `RackManager.addUnit()` registers each unit's bank with `MacroEngine.registerBank(unit.id, unit.macroBank)`, and `removeUnit()`/`dispose()` unregister it — this is what makes `MacroEngine.tick()` evaluate rack-unit-scoped bindings (`MacroBinding.unitInstanceId != null`) alongside the global bank every frame. `RackUnitMacroCuration.kt` is the drawer UI for picking which of a unit's `getNamedParameters()` entries occupy which knob/switch slot.
+### `SessionSerializer` Is the Sole Bank Registrar
+[`SessionSerializer.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) is the only site that calls `MacroEngine.registerBank()`: both `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and `startEmpty()` register all six banks on startup. There is no per-unit/dynamic bank registration anymore.
 
-### Current Persistence Scope: Global Bank Only
-Bundled preset serialization (§5.2 of the macro proposal) currently covers only the **global, session-scoped** Column 3 bank (`MacroBinding.unitInstanceId == null`): `PresetRepository` filters it per-deck via `MacroBankSerializer.filterMacroBankForDeck()` into each `DeckPresetDto.macroBank`, and `PresetManager.loadDeckPresetAsync` restores it via `MacroBankSerializer.restoreMacroBankForDeck()`; `SessionSerializer` separately bundles the full global bank into `SessionStateDto.macroBank` via `SessionStateDto.macroBank` via `MacroEngine.globalBank()`. `RackManager.populateFromSession()` reconstructs each rack unit and applies curated defaults (e.g. ZOOM/ROTATE on Deck PV, XFADE on Master). Persisting rack layout and per-unit macro curation alongside deck presets is not yet implemented.
+### Per-Deck Persistence (`MacroBankSerializer`, `PresetRepository`)
+Each deck's own canonical bank snapshot travels with its preset file, not just the session:
+- **Save**: `PresetRepository.saveDeckPresetAsync()` resolves the deck's canonical bank via `MacroEngine.canonicalIdForDeckLabel(deckLabel)` + `MacroEngine.getBank(canonicalBankId)`, deep-copies it immutably with `MacroBankSerializer.snapshotForPreset()`, and bundles it into `DeckPresetDto.macroBank`.
+- **Load**: `MacroBankSerializer.install(deckBank, targetBank)` performs a full **swap**, not a merge — loading a preset is meant to load exactly the knob layout it was saved with. A null/empty `deckBank` (older presets, or an empty deck slot) clears the target bank to blank rather than leaving stale bindings behind.
+- **Session-level**: `SessionSerializer` separately bundles all six canonical banks into `SessionStateDto.deckMacroBanks` so the full macro state round-trips even without touching individual preset files.
+
+---
+
+## 9. FX Presets, Playlists & Live Queues
+
+The `[ FX ]` Library view mode (see `docs/developer/ui.md` §8 and `docs/user_guide/presets_and_library.md`) is backed by its own preset/queue manager family, parallel to but independent from the `.lsd` preset managers documented above.
+
+### Deterministic Application (`FXItemApplier.kt`)
+[`FXItemApplier.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/FXItemApplier.kt) resolves both single FX presets (`.lsdfx`) and 4-slot FX chains (`.lsdfxchain`) into a target deck via `Deck.applyFxChain`, guaranteeing a reproducible 4-slot FX state rather than arbitrary vacant-slot allocation. It is the single application path used by the FX browser, FX playlists, and both live FX queues.
+
+### `FXQueueManager.kt` / `FXBgQueueManager.kt`
+Mirror `PlayQueueManager.kt` / `BgQueueManager.kt` but operate on FX assets instead of visual presets:
+- Volatile RAM `queue: CopyOnWriteArrayList<File>` of `.lsdfx` / `.lsdfxchain` / `.lsdfxplay` entries, with `isRepeatEnabled`, `isShuffleEnabled`, `activeIndex`, and `playbackHistory` for shuffle back-stepping (`initializeShuffle()`, `playedIndices`).
+- `FXQueueManager` applies deterministically to the crossfader-active deck (A or B); `FXBgQueueManager` drives Deck BG independently, same as the non-FX background queue.
+- UI: `FXQueueActionsPanel.kt` (Column 4 in FX mode) and `FXBgQueueActionsPanel.kt` (Column 3 in FX mode).
+- **Export Queue to Playlist**: Both managers support instantly exporting the current live queue to a new `.lsdfxplay` playlist file (`BrowserPopupHandler.kt` "Export Live FX Queue (A/B) as Playlist" / "Export Background FX Queue as Playlist" popups).
+
+### FX Playlists (`.lsdfxplay`) & `FXPlaylistEditorPanel.kt`
+[`FXPresetModels.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt) defines `FXPlaylistDto`, an ordered list of FX asset paths persisted by `PresetRepository` and `FileSystemManager` under `library/fx_playlists/`. `FXPlaylistEditorPanel.kt` (Column 2 in FX mode) supports drag-and-drop insertion, reordering, double-click application, and context-menu actions — the FX-mode counterpart to `PlaylistEditorPanel.kt`.
+
+### `FXBrowserPanel.kt`
+Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and `FXChainListPanel` (`.lsdfxchain` chains) into one Column 1 browser with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters only support loading directly to a deck; saved presets and chains can additionally be added to FX playlists and live FX queues.
 

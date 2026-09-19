@@ -127,6 +127,9 @@ object PlaylistManager {
             }
             
             val file = File(directory, "$name.lsdplay")
+            if (!FileSystemManager.isManagedAssetPath(file)) {
+                return Result.failure(IllegalArgumentException("Invalid playlist name: $name"))
+            }
             if (file.exists()) {
                 return Result.failure(IllegalArgumentException("Playlist already exists"))
             }

@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
- * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/performance_mode.md).
+ * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/macros_and_rack.md).
  *
  * Displays 16 knobs arranged as 4 rows × 4 columns, mapped to per-deck [MacroEngine] banks
  * according to the active layout tab. Knob drag adjusts the underlying
@@ -28,11 +28,11 @@ class PerformanceMatrixPanel {
 
     // -- Tab definitions ----------------------------------------------------------
 
-    private enum class Tab(val label: String) {
-        LIVE_QUAD("LIVE QUAD"),
-        DUAL_DECKS("DUAL DECKS"),
-        PREP_AND_BG("PREP & BG"),
-        MASTER_AND_FX("MASTER & FX")
+    private enum class Tab(val label: String, val tooltip: String) {
+        LIVE_QUAD("LIVE QUAD", "One row per deck (Deck A / Deck B / Deck BG / Transitions), knobs 1-4 each."),
+        DUAL_DECKS("DUAL DECKS", "All 8 knobs of Deck A (rows 1-2) and all 8 knobs of Deck B (rows 3-4)."),
+        PREP_AND_BG("PREP & BG", "All 8 knobs of Deck PV (rows 1-2) and all 8 knobs of Deck BG (rows 3-4)."),
+        MASTER_AND_FX("MASTER & FX", "All 8 Transition knobs (rows 1-2) and all 8 Master knobs (rows 3-4).")
     }
 
     /**
@@ -125,6 +125,7 @@ class PerformanceMatrixPanel {
                     AppPreferencesStore.savePreferences()
                 }
             }
+            itemTooltip(tab.tooltip)
             ImGui.popStyleColor(2)
         }
     }

@@ -48,6 +48,8 @@ fun get3DModeLabel(mode: Float): String {
 }
 
 object ValueParamSection {
+    private val comboInt = ImInt()
+    private val hueLabelsCache = HashMap<Int, Array<String>>()
 
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
@@ -142,7 +144,7 @@ object ValueParamSection {
             }
 
             if (isMacroBound) {
-                val info = macroInfo!!
+                val info = macroInfo
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.45f, 0.65f, 0.7f))
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.0f, 0.65f, 0.85f, 0.85f))
                 if (ImGui.button("${Icons.LOCK} Base value controlled by ${info.controlName} [${info.badgeLabel}]. Click to inspect in Column 3.", ImGui.getContentRegionAvailX(), 26f)) {
@@ -166,11 +168,11 @@ object ValueParamSection {
 
             session.uiTheme.caption("Symmetric Cycles (Symmetry-preserving factor/multiple of $petals petals):")
 
-            val labels = options.map { "$it cycles" }.toTypedArray()
-            val selectedOpt = ImInt(currentIndex)
+            val labels = hueLabelsCache.getOrPut(petals) { options.map { "$it cycles" }.toTypedArray() }
+            comboInt.set(currentIndex)
             ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
-            if (ImGui.combo("##hue_symmetry_combo", selectedOpt, labels)) {
-                val nextIdx = selectedOpt.get()
+            if (ImGui.combo("##hue_symmetry_combo", comboInt, labels)) {
+                val nextIdx = comboInt.get()
                 val newVal = if (options.size > 1) nextIdx.toFloat() / (options.size - 1).toFloat() else 0.0f
                 param.set(newVal)
             }
@@ -387,10 +389,10 @@ object ValueParamSection {
             } else if (isMixerMode) {
                 session.uiTheme.caption("Deck A/B Mix Mode:")
                 val currentIdx = param.baseValue.roundToInt().coerceIn(0, MIX_MODE_LABELS.size - 1)
-                val selectedOpt = ImInt(currentIdx)
+                comboInt.set(currentIdx)
                 ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
-                if (ImGui.combo("##mixer_mode_combo", selectedOpt, MIX_MODE_LABELS)) {
-                    val nextIdx = selectedOpt.get().coerceIn(0, MIX_MODE_LABELS.size - 1)
+                if (ImGui.combo("##mixer_mode_combo", comboInt, MIX_MODE_LABELS)) {
+                    val nextIdx = comboInt.get().coerceIn(0, MIX_MODE_LABELS.size - 1)
                     val newVal = nextIdx.toFloat()
                     param.baseValue = newVal
                     param.baseMin = newVal
@@ -407,10 +409,10 @@ object ValueParamSection {
             } else if (is3DMode) {
                 session.uiTheme.caption("3D Elevation Mode:")
                 val currentIdx = param.baseValue.roundToInt().coerceIn(0, MODE_3D_LABELS.size - 1)
-                val selectedOpt = ImInt(currentIdx)
+                comboInt.set(currentIdx)
                 ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
-                if (ImGui.combo("##mode3d_combo", selectedOpt, MODE_3D_LABELS)) {
-                    val nextIdx = selectedOpt.get().coerceIn(0, MODE_3D_LABELS.size - 1)
+                if (ImGui.combo("##mode3d_combo", comboInt, MODE_3D_LABELS)) {
+                    val nextIdx = comboInt.get().coerceIn(0, MODE_3D_LABELS.size - 1)
                     val newVal = nextIdx.toFloat()
                     param.baseValue = newVal
                     if (!param.randomizeBase) {

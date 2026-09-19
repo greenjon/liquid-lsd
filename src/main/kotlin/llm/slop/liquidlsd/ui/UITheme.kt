@@ -166,7 +166,7 @@ object UITheme {
         get() = settings.column3Mode
         set(value) { settings = settings.copy(column3Mode = value) }
 
-    /** Primary workspace view layout mode: Classic 3-column Suite C vs 19" Modular Video Rack. */
+    /** Primary workspace view layout mode: Classic 3-column Suite C vs Performance Mode (RACK name kept for save-file compatibility). */
     enum class WorkspaceMode { CLASSIC, RACK }
 
     var workspaceMode: WorkspaceMode

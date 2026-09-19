@@ -1971,7 +1971,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 3. TouchOSC XY pads and other multi-argument messages (e.g. <code>/2/xy</code>) are unpacked per-axis — learning from one binds only that axis; repeat Learn for the other component.</p>
 <h3 id="fine-tuning-macro-knobs">Fine-Tuning &amp; Macro Knobs</h3>
 <p>The <strong>Address Mappings</strong> table in the OSC Controls tab offers the same per-control shaping as MIDI: <strong>Min/Max</strong> range clamping, <strong>Invert</strong>, <strong>Slew</strong> smoothing ($0 \dots 250\,\text{ms}$), and <strong>Soft Takeover</strong> (pickup) so an OSC control doesn't yank a parameter on first touch.</p>
-<p>Macro Knobs also respond directly to <code>/macro/knob/1</code>–<code>/macro/knob/8</code> (no manual mapping needed), and broadcast their values back out over OSC whenever they change — handy for keeping a tablet layout's on-screen state in sync. See <a href="../macros_and_rack/">Macro Controls &amp; the Modular Video Rack</a>.</p>
+<p>Macro Knobs also respond directly to <code>/macro/knob/1</code>–<code>/macro/knob/8</code> (no manual mapping needed), and broadcast their values back out over OSC whenever they change — handy for keeping a tablet layout's on-screen state in sync. See <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>.</p>
 <h3 id="profiles_1">Profiles</h3>
 <p>Like MIDI, OSC address mappings are stored in JSON profiles, under <code>library/osc/&lt;profile_name&gt;.json</code>. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.</p>
 

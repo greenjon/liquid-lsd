@@ -1,3 +1,15 @@
+## Architectural Compliance: ImGui Widget Allocation Caching & Playlist Test Confinement (`ValueParamSection.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`, `SeqSection.kt`, `PlaylistManagerTest.kt`)
+
+- **Context**: 2026-09-18 architectural audit. Audited real-time audio, Thread 0 OpenGL context safety, UI typography, and ImGui native memory management against project standards.
+- **Decision**:
+  - **ImGui Widget Allocation Hardening**: Eliminated ephemeral per-frame `ImInt(...)` wrapper and label array allocations in secondary parameter and modulator panels (`ValueParamSection.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`, `SeqSection.kt`) by pre-allocating reusable `ImInt` singleton fields and static/cached label arrays. Removed unnecessary non-null assertion on smart-cast `macroInfo`.
+  - **Playlist Test Containment Alignment**: Updated `PlaylistManagerTest.testCreateAndAutoSaveOperations` to create its temporary test fixture inside `FileSystemManager.getPlaylistsRoot()`, conforming with the asset sandboxing rules enforced by `FileSystemManager.isManagedAssetPath()`.
+- **Rationale**:
+  - Enforces the `imgui_memory_management` standard ("Im-types Must Be Fields, Not Locals") across all parameter and modulator sections in `PropertiesPanel`, eliminating GC allocation churn during UI inspection.
+  - Ensures the full test suite runs cleanly while maintaining strict path confinement against path traversal outside managed asset roots.
+
+---
+
 ## Per-Binding Switch Behavior Override (`MacroModels.kt`, `MacroEngine.kt`, `MacroBindingInspector.kt`, `MacroKnobWidget.kt`)
 
 - **Context**: 2026-09-17. The Binding Inspector previously applied a single `SwitchBehavior` (TOGGLE/MOMENTARY/TRIGGER) to all of a switch control's bindings. Users asked whether a single button press could latch one parameter, pulse a second, and hold a third simultaneously.

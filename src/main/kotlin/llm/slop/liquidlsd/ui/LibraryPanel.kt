@@ -515,23 +515,30 @@ object LibraryPanel {
                 val isNavUp = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.navigate")
                 val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(ImGuiKey.DownArrow, false)
 
+                val isFxMode = viewMode == LibraryViewMode.FX
                 if (isLoadA && activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
+                    if (isFxMode) llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.handleDeckLoad(session, mixer, 1, mixer.deckA, "Deck A", activeFile)
+                    else BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 1)
                     shouldReclaimFocus = true
                 } else if (isLoadB && activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
+                    if (isFxMode) llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.handleDeckLoad(session, mixer, 2, mixer.deckB, "Deck B", activeFile)
+                    else BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 2)
                     shouldReclaimFocus = true
                 } else if (isLoadBG && activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
+                    if (isFxMode) llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.handleDeckLoad(session, mixer, 3, mixer.deckBG, "Deck BG", activeFile)
+                    else BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 3)
                     shouldReclaimFocus = true
                 } else if (isLoadPV && activeFile != null && activeFile.exists()) {
-                    BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
+                    if (isFxMode) llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", activeFile)
+                    else BrowserDeckButtons.loadPresetToDeck(session, mixer, activeFile, 4)
                     shouldReclaimFocus = true
                 } else if (isQueueBG && activeFile != null && activeFile.exists()) {
-                    llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(activeFile)
+                    if (isFxMode) llm.slop.liquidlsd.presets.FXBgQueueManager.appendToQueue(activeFile)
+                    else llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(activeFile)
                     shouldReclaimFocus = true
                 } else if (isQueueAB && activeFile != null && activeFile.exists()) {
-                    session.playQueueManager.appendToQueue(activeFile)
+                    if (isFxMode) llm.slop.liquidlsd.presets.FXQueueManager.appendToQueue(activeFile)
+                    else session.playQueueManager.appendToQueue(activeFile)
                     shouldReclaimFocus = true
                 } else if (isNavUp) {
                     navigateSelection(-1, session, mixer)

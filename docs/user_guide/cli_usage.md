@@ -46,7 +46,21 @@ Launch an isolated UI component gallery sandbox to preview theme colors, Lucide 
 ./gradlew run --args="--ui-lab --window=1280x720 --no-audio"
 ```
 
-### 5. Automated Gradle Tasks
+### 5. Headless Smoke Test
+Run a headless multi-component smoke test and exit with a status code (0 on success), without opening a window:
+```bash
+./gradlew run --args="--smoke-test"
+```
+
+### 6. Help & Version
+```bash
+./gradlew run --args="--help"
+./gradlew run --args="--version"
+```
+- `--help` / `-h`: Prints all available startup options and exits.
+- `--version` / `-v`: Prints the application version and exits.
+
+### 7. Automated Gradle Tasks
 Liquid LSD includes pre-configured Gradle tasks for automated asset generation:
 - `./gradlew captureResponsiveApp`: Captures 1080p main workspace screenshot.
 - `./gradlew captureUiLab`: Captures UI Lab gallery screenshot.

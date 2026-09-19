@@ -238,6 +238,13 @@ object FXBrowserPanel {
 
         ImGui.selectable("$icon ${asset.displayName}##fx_browser_$index", isSelected, 0, itemW, rowHeight)
         val isRowHovered = ImGui.isItemHovered()
+        itemTooltip(
+            when (asset.type) {
+                AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue."
+                AssetType.FX_CHAIN -> "Saved 4-slot FX chain (.lsdfxchain) — replaces all 4 slots on the target deck."
+                else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
+            }
+        )
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS

@@ -10,6 +10,10 @@ import llm.slop.liquidlsd.utils.TimeUtils
 import kotlin.math.roundToInt
 
 object Lfo2Section {
+    private val modeLabels = arrayOf("AM (Depth)", "PM (Phase)", "ADD (Additive)")
+    private val modUnitLabels = arrayOf("Time", "Beat", "Frame")
+    private val modeIdx = ImInt()
+    private val modUnitIdx = ImInt()
 
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
@@ -30,8 +34,7 @@ object Lfo2Section {
         ImGui.spacing()
 
         val currentMode = existing.generatorModMode
-        val modeLabels = arrayOf("AM (Depth)", "PM (Phase)", "ADD (Additive)")
-        val modeIdx = ImInt(if (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
+        modeIdx.set(if (currentMode == llm.slop.liquidlsd.parameters.GeneratorModMode.NONE) 0 else currentMode.ordinal - 1)
 
         val fontScale = 0.95f
         val isLfo2Active = (currentMode != llm.slop.liquidlsd.parameters.GeneratorModMode.NONE)
@@ -212,8 +215,7 @@ object Lfo2Section {
         // 4. LFO 2 Unit Dropdown
         session.uiTheme.body("LFO 2 Unit:")
         ImGui.sameLine(0f, 10f * fontScale)
-        val modUnitIdx = ImInt(existing.modGenUnit.ordinal)
-        val modUnitLabels = arrayOf("Time", "Beat", "Frame")
+        modUnitIdx.set(existing.modGenUnit.ordinal)
         if (bypassed) ImGui.popStyleVar()
         ImGui.pushItemWidth(110f * fontScale)
         if (ImGui.combo("##mod_unit", modUnitIdx, modUnitLabels)) {

@@ -36,7 +36,11 @@ object BrowserActionToolbar {
     private var pendingOverwriteDeckLabel: String = ""
     private var pendingFxFile: File? = null
 
-    private fun handleDeckLoad(session: SessionContext, mixer: Mixer, deckIndex: Int, deck: Deck, deckLabel: String, selectedFile: File) {
+    /** Extension-aware deck load: FX singles/chains resolve via [Deck.applyFxSlot]/[Deck.applyFxChain]
+     *  (first vacant slot, or an overwrite prompt when full); everything else loads as a full preset.
+     *  Shared by the toolbar `[A][B][BG][PV]` buttons and LibraryPanel's numeric-key shortcuts so both
+     *  paths apply FX items the same way regardless of Library view mode. */
+    fun handleDeckLoad(session: SessionContext, mixer: Mixer, deckIndex: Int, deck: Deck, deckLabel: String, selectedFile: File) {
         val ext = selectedFile.extension.lowercase()
         when (ext) {
             "lsdfxchain" -> {

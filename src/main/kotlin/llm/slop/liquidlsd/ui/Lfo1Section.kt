@@ -9,6 +9,8 @@ import llm.slop.liquidlsd.parameters.Waveform
 import llm.slop.liquidlsd.utils.TimeUtils
 
 object Lfo1Section {
+    private val unitLabels = arrayOf("Time", "Beat", "Frame")
+    private val unitIdx = ImInt()
 
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
@@ -116,8 +118,7 @@ object Lfo1Section {
             if (isGen) {
                 session.uiTheme.body("LFO 1 Unit:")
                 ImGui.sameLine(0f, 10f * fontScale)
-                val unitIdx = ImInt(existing.genUnit.ordinal)
-                val unitLabels = arrayOf("Time", "Beat", "Frame")
+                unitIdx.set(existing.genUnit.ordinal)
                 if (bypassed) ImGui.popStyleVar()
                 ImGui.pushItemWidth(110f * fontScale)
                 if (ImGui.combo("##unit", unitIdx, unitLabels)) {

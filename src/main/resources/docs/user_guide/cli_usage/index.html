@@ -698,10 +698,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-automated-gradle-tasks" class="md-nav__link">
+  <a href="#5-headless-smoke-test" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Automated Gradle Tasks
+        5. Headless Smoke Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-help-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Help &amp; Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-automated-gradle-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Automated Gradle Tasks
       
     </span>
   </a>
@@ -1386,10 +1408,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-automated-gradle-tasks" class="md-nav__link">
+  <a href="#5-headless-smoke-test" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Automated Gradle Tasks
+        5. Headless Smoke Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-help-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Help &amp; Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-automated-gradle-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Automated Gradle Tasks
       
     </span>
   </a>
@@ -1450,7 +1494,19 @@
 <p>Launch an isolated UI component gallery sandbox to preview theme colors, Lucide icons, custom sliders, and status meters:</p>
 <pre><code class="language-bash">./gradlew run --args=&quot;--ui-lab --window=1280x720 --no-audio&quot;
 </code></pre>
-<h3 id="5-automated-gradle-tasks">5. Automated Gradle Tasks</h3>
+<h3 id="5-headless-smoke-test">5. Headless Smoke Test</h3>
+<p>Run a headless multi-component smoke test and exit with a status code (0 on success), without opening a window:</p>
+<pre><code class="language-bash">./gradlew run --args=&quot;--smoke-test&quot;
+</code></pre>
+<h3 id="6-help-version">6. Help &amp; Version</h3>
+<pre><code class="language-bash">./gradlew run --args=&quot;--help&quot;
+./gradlew run --args=&quot;--version&quot;
+</code></pre>
+<ul>
+<li><code>--help</code> / <code>-h</code>: Prints all available startup options and exits.</li>
+<li><code>--version</code> / <code>-v</code>: Prints the application version and exits.</li>
+</ul>
+<h3 id="7-automated-gradle-tasks">7. Automated Gradle Tasks</h3>
 <p>Liquid LSD includes pre-configured Gradle tasks for automated asset generation:
 - <code>./gradlew captureResponsiveApp</code>: Captures 1080p main workspace screenshot.
 - <code>./gradlew captureUiLab</code>: Captures UI Lab gallery screenshot.</p>

@@ -55,8 +55,9 @@ Toggle between full visual presets and FX presets using the segmented mode butto
   - **Column 1 (Presets Pool)**: Shows all full visual deck presets (`.lsd`) in `library/presets/`.
   - **Column 2 (Playlists Editor)**: Setlists (`.lsdplay`) in `library/playlists/`.
 - **`[ FX ]` Mode**:
-  - **Column 1 (FX Presets)**: Individual single-slot FX presets (`.lsdfx`) in `library/fx/`.
-  - **Column 2 (FX Chains)**: 4-slot FX chain presets (`.lsdfxchain`) in `library/fx_chains/`.
+  - **Column 1 (FX Browser)**: A unified, filterable list combining stock ISF filters, saved single-slot FX presets (`.lsdfx`) in `library/fx/`, and saved 4-slot FX chains (`.lsdfxchain`) in `library/fx_chains/`.
+  - **Column 2 (FX Playlists Editor)**: Curated FX playlist sequences (`.lsdfxplay`) in `library/fx_playlists/`.
+  - Columns 3 and 4 (the Background Queue and Play Queue columns) swap to the **Live FX Queues** described below.
 
 ### Preset Browser (All Presets)
 
@@ -68,18 +69,37 @@ The left column shows every preset saved in `library/presets/`.
 - **Right-click or ⋮** — Rename, retag, duplicate, add to a queue, or delete.
 - **`[!]` badge** — Appears when a preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.
 
-### FX Presets (`.lsdfx`) & FX Chains (`.lsdfxchain`)
+### The Unified FX Browser
 
-When viewing `[ FX ]` mode in the Library:
+Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked with its own icon:
 
-- **Single FX Presets (`.lsdfx`)**:
-  - **Drag-and-Drop**: Drag directly onto Slot 1, 2, 3, or 4 in the Parameters panel `FX` subtab.
-  - **Toolbar `[A]`, `[B]`, `[BG]`, `[PV]`**: Loads into the **first vacant slot** on that deck. If all 4 slots are occupied, a prompt appears asking which slot (1–4) to overwrite.
-  - **Right-click menu**: Choose `Load to > Deck [A|B|BG|PV] > Slot [1|2|3|4]`.
-  - **Double-click**: Loads into the active deck's first vacant slot.
-- **FX Chains (`.lsdfxchain`)**:
-  - Captures or loads a complete 4-slot FX pipeline.
-  - Loading an FX chain replaces all 4 slots on the target deck.
+- **Stock ISF Filters** — Built-in filters with no saved parameters. They can only be loaded directly to a deck (first vacant FX slot); they can't be added to a playlist or live queue since there's no reproducible state to save.
+- **Saved Single FX Presets (`.lsdfx`)** — One FX slot's full parameter state, captured from a deck.
+- **Saved FX Chains (`.lsdfxchain`)** — A complete 4-slot FX pipeline, captured from a deck. Loading a chain replaces all 4 slots on the target deck.
+
+Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck slot (or all 4 slots as a chain) into a new preset.
+
+- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–4 in the Parameters panel `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
+- **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 4 slots (chains).
+- **Right-click menu**: `Load to > Deck [A|B|BG|PV] > Slot [1|2|3|4]` (singles) or `Load to Deck [A|B|BG|PV]` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
+
+### FX Playlists (`.lsdfxplay`)
+
+Column 2 of `[ FX ]` mode is a dedicated FX playlist editor, working like the preset Playlists column: switch between playlists with the dropdown, drag singles/chains in from the FX Browser to insert or reorder them, and double-click an entry to apply it. Missing files show the same red `[!] (missing)` indicator as preset playlists.
+
+### Live FX Queues (A/B and BG)
+
+While in `[ FX ]` mode, the Library's Background Queue and Play Queue columns (3 and 4) swap to two independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
+
+- **`<` / `>`** — Step to the previous/next queued FX item and apply it.
+- **🔁 Repeat** — Cycle back to the start when the bottom of the queue is reached.
+- **🔀 Shuffle** — Play items in random order.
+- **Export** — Save the current live queue as a new `.lsdfxplay` playlist.
+- **Clear** — Empty the queue.
+- **Drag-and-drop** — Reorder items within a queue, or drag a preset/chain from the FX Browser to append or insert it.
+- **Double-click** an item to jump straight to it.
+
+The **A/B queue** applies to whichever of Deck A/B is currently dominant on the crossfader; the **BG queue** always applies to Deck BG.
 
 ### Audition Latch
 
@@ -131,6 +151,9 @@ The Background Queue works the same way as the main queue but drives Deck BG ind
 | Preset Browser or Playlist | Queue                          | Adds to the live queue   |
 | FX Preset (`.lsdfx`)       | FX Slot 1–4 in Parameters      | Loads into target slot   |
 | FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters  | Overwrites 4-slot chain  |
+| FX Browser row              | FX Playlist (Column 2)         | Inserts/appends to playlist |
+| FX Browser row              | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
+| Live FX Queue item          | Up / down in the same queue    | Reorders                 |
 
 ---
 

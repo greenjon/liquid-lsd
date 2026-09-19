@@ -273,19 +273,27 @@ object BrowserPopupHandler {
                     if (isTransMode) {
                         val root = FileSystemManager.getTransitionPlaylistsRoot()
                         val file = File(root, "$name.lsdtransplay")
-                        val dto = TransitionPlaylistDto(name = name)
-                        file.parentFile?.mkdirs()
-                        file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
-                        LibraryPanel.selectedTransitionPlaylistFile = file
-                        LibraryPanel.refreshAssets()
+                        if (FileSystemManager.isManagedAssetPath(file)) {
+                            val dto = TransitionPlaylistDto(name = name)
+                            file.parentFile?.mkdirs()
+                            file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
+                            LibraryPanel.selectedTransitionPlaylistFile = file
+                            LibraryPanel.refreshAssets()
+                        } else {
+                            logger.error { "Refusing to create transition playlist outside managed root: $name" }
+                        }
                     } else if (isFxMode) {
                         val root = FileSystemManager.getFxPlaylistsRoot()
                         val file = File(root, "$name.lsdfxplay")
-                        val dto = FXPlaylistDto(name = name)
-                        file.parentFile?.mkdirs()
-                        file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
-                        LibraryPanel.selectedFxPlaylistFile = file
-                        LibraryPanel.refreshAssets()
+                        if (FileSystemManager.isManagedAssetPath(file)) {
+                            val dto = FXPlaylistDto(name = name)
+                            file.parentFile?.mkdirs()
+                            file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                            LibraryPanel.selectedFxPlaylistFile = file
+                            LibraryPanel.refreshAssets()
+                        } else {
+                            logger.error { "Refusing to create FX playlist outside managed root: $name" }
+                        }
                     } else {
                         PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { newPlaylist ->
                             LibraryPanel.selectedPlaylistFile = File(newPlaylist.filePath)
@@ -368,12 +376,16 @@ object BrowserPopupHandler {
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getTransitionPlaylistsRoot()
                     val file = File(root, "$name.lsdtransplay")
-                    val itemsList = TransitionQueueManager.queue.map { it.absolutePath }
-                    val dto = TransitionPlaylistDto(name = name, items = itemsList)
-                    file.parentFile?.mkdirs()
-                    file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
-                    LibraryPanel.selectedTransitionPlaylistFile = file
-                    LibraryPanel.refreshAssets()
+                    if (FileSystemManager.isManagedAssetPath(file)) {
+                        val itemsList = TransitionQueueManager.queue.map { it.absolutePath }
+                        val dto = TransitionPlaylistDto(name = name, items = itemsList)
+                        file.parentFile?.mkdirs()
+                        file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
+                        LibraryPanel.selectedTransitionPlaylistFile = file
+                        LibraryPanel.refreshAssets()
+                    } else {
+                        logger.error { "Refusing to export transition queue outside managed root: $name" }
+                    }
                 }
                 exportTransQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
@@ -397,12 +409,16 @@ object BrowserPopupHandler {
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getFxPlaylistsRoot()
                     val file = File(root, "$name.lsdfxplay")
-                    val itemsList = FXQueueManager.queue.map { it.absolutePath }
-                    val dto = FXPlaylistDto(name = name, items = itemsList)
-                    file.parentFile?.mkdirs()
-                    file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
-                    LibraryPanel.selectedFxPlaylistFile = file
-                    LibraryPanel.refreshAssets()
+                    if (FileSystemManager.isManagedAssetPath(file)) {
+                        val itemsList = FXQueueManager.queue.map { it.absolutePath }
+                        val dto = FXPlaylistDto(name = name, items = itemsList)
+                        file.parentFile?.mkdirs()
+                        file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                        LibraryPanel.selectedFxPlaylistFile = file
+                        LibraryPanel.refreshAssets()
+                    } else {
+                        logger.error { "Refusing to export FX queue outside managed root: $name" }
+                    }
                 }
                 exportFxQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
@@ -426,12 +442,16 @@ object BrowserPopupHandler {
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getFxPlaylistsRoot()
                     val file = File(root, "$name.lsdfxplay")
-                    val itemsList = FXBgQueueManager.queue.map { it.absolutePath }
-                    val dto = FXPlaylistDto(name = name, items = itemsList)
-                    file.parentFile?.mkdirs()
-                    file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
-                    LibraryPanel.selectedFxPlaylistFile = file
-                    LibraryPanel.refreshAssets()
+                    if (FileSystemManager.isManagedAssetPath(file)) {
+                        val itemsList = FXBgQueueManager.queue.map { it.absolutePath }
+                        val dto = FXPlaylistDto(name = name, items = itemsList)
+                        file.parentFile?.mkdirs()
+                        file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                        LibraryPanel.selectedFxPlaylistFile = file
+                        LibraryPanel.refreshAssets()
+                    } else {
+                        logger.error { "Refusing to export FX BG queue outside managed root: $name" }
+                    }
                 }
                 exportFxBgQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
