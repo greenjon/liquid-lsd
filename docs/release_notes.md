@@ -1,5 +1,40 @@
 ## [Unreleased]
 
+### Phase 3 Curated High-Quality Cleanroom ISF FX Suite (`ISFFilterRegistry.kt`, `ISFAutoBindEngine.kt`, `ISFFilterTest.kt`, `default_filters/`, `docs/licenses/SHADERS_LICENSE.md`)
+- **Cleanroom High-Quality ISF FX Suite (Phase 3 - Advanced Synthesis & Temporal FX)**: Added 5 native, permissively licensed (MIT) image filters engineered from scratch for commercial distribution, fluid dynamics, and live rhythmic performance:
+  - `luma_displace.fs` (Option B): 2D surface normal gradient refraction simulating liquid marbling, oily fluids, and melting glass with multi-spectral chromatic dispersion.
+  - `video_strobe.fs` (Option B): Multi-mode rhythmic strobe and persistent 2-pass frame freeze gate with beat flash modes (Black Gate, White Flash, Invert/Negative, Spectral Swap) and duty cycle modulation.
+  - `fluid_smear.fs` (Option B): Persistent 2-pass fluid curl-noise advection simulating organic liquid melting, ink diffusion, and viscous paint smearing with gravitational drift.
+  - `thermal_scanner.fs` (Option B): Tactical FLIR thermal camera and military night vision optics with heat bloom, sensor noise grain, and optic vignette across 3 false-color sensor modes (FLIR Ironbow, Military Green NVG, Rainbow Heat).
+  - `mirror_sphere.fs` (Option B): Raytraced 3D chrome mirror sphere reflecting the visual environment with surface normals, Schlick Fresnel rim glow, specular glints, and chromatic dispersion curvature.
+- **ISF Metaknob Auto-Bind & Curated Presets**: Added responsive Metaknob defaults in `ISFAutoBindEngine` for all 5 Phase 3 filters (`refractAmount`, `rate`, `smearAmount`, `intensity`, and `sphereRadius`).
+- **Bundled Registration & Automated Tests**: Registered in `ISFFilterRegistry.bundledFilters` and added automated test coverage in `ISFFilterTest`.
+- **Shaders License Audit Log**: Updated `docs/licenses/SHADERS_LICENSE.md` with all 5 Phase 3 filters.
+
+### Phase 2 Curated High-Quality Cleanroom ISF FX Suite (`ISFFilterRegistry.kt`, `ISFAutoBindEngine.kt`, `ISFFilterTest.kt`, `default_filters/`, `docs/licenses/SHADERS_LICENSE.md`)
+- **Cleanroom High-Quality ISF FX Suite (Phase 2 - Optics, Glitch & Texture)**: Added 6 native, permissively licensed (MIT) image filters engineered from scratch for commercial distribution, zero-compromise visual quality, and high audio-reactivity:
+  - `directional_blur.fs` (Option 1b): Stochastic dithered directional motion blur with continuous angle rotation, exponential decay, and bidirectional streak diffusion that eliminates stepping artifacts.
+  - `wave_displace.fs` (Option 2b): Dual-mode fluid displacement providing both Cartesian X/Y cross-waves and aspect-corrected concentric liquid droplet ripples with seamless mirror boundary wrapping.
+  - `pixelate.fs` (Option 3b): Multi-lattice aspect-preserving pixelation supporting Square Blocks, Diamond / 45-degree Rhombus, and Hexagonal Honeycomb crystal lattices with optional retro color depth quantization.
+  - `retro_crt.fs` (Option 4b): Authentic analog CRT monitor simulation with barrel tube curvature, RGB phosphor triad sub-pixel aperture grille, horizontal scanline rasterization, and glass corner vignette.
+  - `pinch_bulge.fs` (Option 5b): Aspect-preserving spherical lens deformation with cubic Hermite smoothstep falloff for seamless boundary transitions (positive values bulge/magnify, negative values pinch/funnel).
+  - `neon_edge.fs` (Option 6b): Directional Sobel edge detection with edge orientation angle mapped to vibrant glowing neon color palettes (Cyber Rainbow, Electric Cyan/Pink, Toxic Acid Green, Magma Flame) with dark background or overlay compositing.
+- **ISF Metaknob Auto-Bind & Curated Presets**: Added responsive Metaknob defaults in `ISFAutoBindEngine` for all 6 Phase 2 filters (`blurAmount`, `amplitude`, `pixelSize`, `scanlineIntensity`, `amount`, and `edgeStrength`).
+- **Bundled Registration & Automated Tests**: Registered in `ISFFilterRegistry.bundledFilters` and added automated test coverage in `ISFFilterTest` validating header parsing, inputs, and parameter binding.
+- **Shaders License Audit Log**: Updated `docs/licenses/SHADERS_LICENSE.md` with all 6 Phase 2 filters.
+
+### Phase 1 Curated High-Quality Cleanroom ISF FX Suite & Shaders License Audit Log (`ISFFilterRegistry.kt`, `ISFAutoBindEngine.kt`, `ISFFilterTest.kt`, `default_filters/`, `docs/licenses/SHADERS_LICENSE.md`)
+- **Cleanroom High-Quality ISF FX Suite (Phase 1)**: Added 6 native, permissively licensed (MIT) image processing filters engineered from scratch for commercial distribution and zero-compromise visual quality:
+  - `kaleidoscope.fs` (Option 1b): Multi-axis polyhedral mirror with dynamic aspect-ratio correction, continuous triangle-wave sector reflection, and audio-reactive zoom and rotation.
+  - `radial_blur.fs` (Option 2b): Stochastic dithered multi-tap radial zoom burst with screen-space jitter, eliminating concentric stepping rings at large blur radii.
+  - `rgb_split.fs` (Option 3a+b Synthesizer): Dual-mode chromatic aberration offering both a fast 3-tap discrete RGB channel glitch and a 12-tap continuous spectral lens dispersion approximating physical Cauchy prism refraction.
+  - `polar_tunnel.fs` (Option 4b): Aspect-preserving infinite logarithmic polar tunnel with spiral twist, azimuthal symmetry folding, seamless mirror wrapping, and singularity depth fog.
+  - `color_levels.fs` (Option 5b): Mastering-grade perceptual color grading in Oklab color space (preserves hue without saturation blow-out), ACES filmic highlight rolloff shoulder, and anti-banding triangular dither.
+  - `gradient_map.fs` (Option 6b): Multi-stop perceptual gradient duotone colorizer with 7 curated filmic palettes (Cyberpunk, Infrared Thermal, Sunset Gold, Acid Green, Vaporwave, Magma Fire, Deep Oceanic), dynamic phase cycling, and YIQ hue rotation.
+- **ISF Metaknob Auto-Bind & Curated Presets**: Hand-curated responsive Metaknob defaults in `ISFAutoBindEngine` for all 6 new filters, ensuring each filter has an immediate, expressive physical macro knob upon loading.
+- **Bundled Registration & Automated Tests**: Registered in `ISFFilterRegistry.bundledFilters` and added automated test coverage in `ISFFilterTest` validating header parsing, inputs, and parameter binding.
+- **Shaders License Audit Log (`docs/licenses/SHADERS_LICENSE.md`)**: Established an explicit licensing audit log tracking origin, author credit, commercial viability, and permissive licensing (MIT / CC0) for all bundled filters and generators.
+
 ### Two-Tier FX Macro Knobs (Chain Super Knob + Effect Metaknobs) & ISF Auto-Bind Engine (`FxMetaBinding.kt`, `ISFAutoBindEngine.kt`, `ISFFilter.kt`, `ISFModels.kt`, `FxChain.kt`, `FxBank.kt`, `FXChainMacroStrip.kt`, `MacroPanel.kt`, `ParametersTabs.kt`, `AssetType.kt`, `FileSystemManager.kt`, `FXBrowserPanel.kt`, `ISFAutoBindEngineTest.kt`, `FxChainSuperKnobTest.kt`)
 - **ISF Auto-Bind Engine**: Every ISF filter now gets a sensible default Metaknob binding automatically, even shaders never hand-configured — resolved via user override (cached by shader content hash), then a curated table for bundled filters, then a heuristic over the shader's declared `INPUTS` (the new `IDENTITY` property, semantic name matching with automatic exponential curves for time/frequency-like names, single/normalized-float fallback, and a Dry/Wet safety net as a last resort).
 - **Chain Super Knob with Soft-Takeover Linking**: Each FX chain now has a Super Knob that drives its 3 slots' Metaknobs when linked. Relinking a slot (or loading a new filter into an already-linked one) arms soft-takeover instead of snapping the Metaknob to the Super Knob's current position — it only starts following once the Super Knob's movement reaches it, mirroring the app's existing MIDI/OSC hardware pickup behavior.

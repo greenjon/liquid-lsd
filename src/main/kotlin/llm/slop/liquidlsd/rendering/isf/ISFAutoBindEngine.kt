@@ -37,17 +37,27 @@ object ISFAutoBindEngine {
     // over time, not the final word.
     private val CURATED: Map<String, FxMetaBinding> = mapOf(
         "invert" to FxMetaBinding("invertIntensity", 0f, 1f),
-        "hue_shift" to FxMetaBinding("hueShift", 0f, 1f),
-        // Knob 0 = many levels (subtle quantization), knob 1 = few levels (strong posterization)
-        "posterize" to FxMetaBinding("levels", 2f, 32f, invert = true),
         "luma_key" to FxMetaBinding("threshold", 0f, 1f),
-        "edge_detect" to FxMetaBinding("edgeStrength", 0f, 5f),
         "bloom" to FxMetaBinding("bloomIntensity", 0f, 3f),
-        "feedback_trails" to FxMetaBinding("trailDecay", 0f, 0.99f, curve = MetaCurve.EXPONENTIAL),
         "feedback" to FxMetaBinding("fbDecay", 0f, 1f, curve = MetaCurve.EXPONENTIAL),
         "3d_elevation" to FxMetaBinding("separation", 0f, 2f),
-        "glitch" to FxMetaBinding("glitchAmount", 0f, 1f),
-        "mirror" to FxMetaBinding("symmetryMode", 0f, 2f)
+        "kaleidoscope" to FxMetaBinding("rotation", -3.14159f, 3.14159f),
+        "radial_blur" to FxMetaBinding("blurAmount", 0f, 1f),
+        "rgb_split" to FxMetaBinding("amount", 0f, 0.1f),
+        "polar_tunnel" to FxMetaBinding("depth", 0.1f, 5f),
+        "color_levels" to FxMetaBinding("contrast", 0f, 3f),
+        "gradient_map" to FxMetaBinding("mixAmount", 0f, 1f),
+        "directional_blur" to FxMetaBinding("blurAmount", 0f, 1f),
+        "wave_displace" to FxMetaBinding("amplitude", 0f, 0.2f),
+        "pixelate" to FxMetaBinding("pixelSize", 1f, 64f),
+        "retro_crt" to FxMetaBinding("scanlineIntensity", 0f, 1f),
+        "pinch_bulge" to FxMetaBinding("amount", -1f, 1f),
+        "neon_edge" to FxMetaBinding("edgeStrength", 0f, 5f),
+        "luma_displace" to FxMetaBinding("refractAmount", 0f, 0.25f),
+        "video_strobe" to FxMetaBinding("rate", 0f, 20f),
+        "fluid_smear" to FxMetaBinding("smearAmount", 0f, 1f),
+        "thermal_scanner" to FxMetaBinding("intensity", 0f, 1f),
+        "mirror_sphere" to FxMetaBinding("sphereRadius", 0f, 0.8f)
     )
 
     /** Resolves the Metaknob binding for [filter]: user override, then curated, then heuristic. */

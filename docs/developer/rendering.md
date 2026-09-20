@@ -20,8 +20,8 @@ Following the 100% ISF Pipeline Migration (see `ARCHITECTURE.md`'s "100% ISF Pip
             [deck.cleanFBO]  (Composited clean source frame)
                  │
                  ▼
-     [FX Slot 1] (deck.fxSlots[0] -> deck.fxFBOs[0] — any ISF filter: Invert, Posterize,
-                  Luma Key, Feedback Loop, 3D Elevation, Bloom, Glitch, Mirror, Trails, etc.)
+     [FX Slot 1] (deck.fxSlots[0] -> deck.fxFBOs[0] — any ISF filter: Kaleidoscope, Radial Blur,
+                  RGB Split, Polar Tunnel, Color Levels, Gradient Map, Bloom, Glitch, Mirror, Feedback, etc.)
                  │
                  ▼
      [FX Slot 2] (deck.fxSlots[1] -> deck.fxFBOs[1])

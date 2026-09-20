@@ -9,7 +9,12 @@ private val logger = KotlinLogging.logger {}
 
 object ISFFilterRegistry {
     private val filters = ConcurrentHashMap<String, ISFFilter>()
-    private val bundledFilters = listOf("invert", "hue_shift", "posterize", "luma_key", "edge_detect", "bloom", "feedback_trails", "feedback", "3d_elevation", "glitch", "mirror")
+    private val bundledFilters = listOf(
+        "invert", "luma_key", "bloom", "feedback", "3d_elevation",
+        "kaleidoscope", "radial_blur", "rgb_split", "polar_tunnel", "color_levels", "gradient_map",
+        "directional_blur", "wave_displace", "pixelate", "retro_crt", "pinch_bulge", "neon_edge",
+        "luma_displace", "video_strobe", "fluid_smear", "thermal_scanner", "mirror_sphere"
+    )
 
     @Volatile
     private var cachedFilters: List<ISFFilter> = emptyList()
