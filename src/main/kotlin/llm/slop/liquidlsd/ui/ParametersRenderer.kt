@@ -110,7 +110,7 @@ object ParametersRenderer {
             tooltip = "Row options (Randomize, Copy/Paste, Reset, Notes)"
         )
 
-        ImGui.sameLine(cursorStartX)
+        ImGui.setCursorPosX(cursorStartX)
         ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
         
         // Render label (with badge if macro-bound)

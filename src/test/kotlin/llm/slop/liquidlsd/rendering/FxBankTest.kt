@@ -55,4 +55,94 @@ class FxBankTest {
 
         bank.slots.forEach { assertNull(it) }
     }
+
+    @Test
+    fun testFxBankLabelsAndParameterPaths() {
+        val bank1 = FxBank("FX1")
+        val bank2 = FxBank("FX2")
+
+        assertEquals("FX1", bank1.label)
+        assertEquals("FX2", bank2.label)
+
+        val paths1 = bank1.getParameterPaths(bank1.label).map { it.first }
+        assertTrue(paths1.contains("FX1/DryWet"))
+
+        val paths2 = bank2.getParameterPaths(bank2.label).map { it.first }
+        assertTrue(paths2.contains("FX2/DryWet"))
+    }
+
+    @Test
+    fun testMacroEngineCanonicalIdForFxBanks() {
+        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("FX1"))
+        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("FX2"))
+        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("Bank 1"))
+        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("Bank 2"))
+    }
+
+    @Test
+    fun testThreeChainsPerBank() {
+        val bank = FxBank("FX1")
+        assertEquals(3, bank.chains.size)
+        assertEquals(FxBank.CHAIN_COUNT, bank.chains.size)
+        for (i in 0 until FxBank.CHAIN_COUNT) {
+            val chain = bank.chains[i]
+            assertEquals("Chain ${i + 1}", chain.label)
+            assertEquals(3, chain.slots.size)
+            assertTrue(chain.enabled)
+            assertEquals(1.0f, chain.dryWet.value)
+        }
+    }
+
+    @Test
+    fun testThreeChainParameterPaths() {
+        val bank = FxBank("FX1")
+        val paths = bank.getParameterPaths(bank.label).map { it.first }
+
+        assertTrue(paths.contains("FX1/DryWet"))
+        assertTrue(paths.contains("FX1/C1/DryWet"))
+        assertTrue(paths.contains("FX1/C2/DryWet"))
+        assertTrue(paths.contains("FX1/C3/DryWet"))
+    }
+
+    @Test
+    fun testFxBankDtoRoundTrip() {
+        val bank = FxBank("FX1")
+        bank.masterWetDry.baseValue = 0.75f
+        bank.chains[0].dryWet.baseValue = 0.5f
+        bank.chains[1].dryWet.baseValue = 0.25f
+
+        val dto = bank.toFxBankDto("MyBank", listOf("custom", "psychedelic"))
+        assertEquals("MyBank", dto.name)
+        assertEquals(listOf("custom", "psychedelic"), dto.tags)
+        assertEquals(3, dto.chains.size)
+        assertEquals(0.75f, dto.masterWetDry?.baseValue)
+        assertEquals(0.5f, dto.chains[0]?.dryWet?.baseValue)
+        assertEquals(0.25f, dto.chains[1]?.dryWet?.baseValue)
+
+        val targetBank = FxBank("FX2")
+        targetBank.applyFxBank(dto)
+        assertEquals(0.75f, targetBank.masterWetDry.baseValue)
+        assertEquals(0.5f, targetBank.chains[0].dryWet.baseValue)
+        assertEquals(0.25f, targetBank.chains[1].dryWet.baseValue)
+    }
+
+    @Test
+    fun testFxChainDefaultStateAndDto() {
+        val chain = FxChain("TestChain")
+        assertEquals("TestChain", chain.label)
+        assertEquals(3, chain.slots.size)
+        assertTrue(chain.enabled)
+        assertEquals(1.0f, chain.dryWet.baseValue)
+
+        chain.dryWet.baseValue = 0.42f
+        val dto = chain.toFxChainDto("MyChain", listOf("reverb"))
+        assertEquals("MyChain", dto.name)
+        assertEquals(0.42f, dto.dryWet?.baseValue)
+        assertEquals(3, dto.slots.size)
+
+        val newChain = FxChain("NewChain")
+        newChain.applyFxChain(dto)
+        assertEquals(0.42f, newChain.dryWet.baseValue)
+    }
 }
+

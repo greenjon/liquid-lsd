@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterOwner
+import kotlin.math.roundToInt
 
 /**
  * Represents a single visual rendering chain (Deck).
@@ -33,39 +34,74 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
-    // The shared FxBank this deck is routed through, if any (see FxBank -- its 3 filter slots and
-    // their dry/wet are shared with any other deck routed to the same bank; only this deck's own
-    // send level and its render-target FBOs below are deck-owned).
-    var assignedFxBank: FxBank? = null
+    // Live references to both shared FxBanks this deck can route into (see FxBank -- a bank's 3
+    // filter chains and their dry/wet are shared with any other deck routed to it; only this
+    // deck's own send level, fxRouting, and its render-target FBOs below are deck-owned). Both
+    // refs are set once by Mixer.init; which one is actually in use is resolved live below from
+    // [fxRouting], so it can be modulated/switched per-frame.
+    var fxBank1: FxBank? = null
+    var fxBank2: FxBank? = null
     val fxSendLevel = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
-    var fxFBOs = Array(FxBank.SLOT_COUNT) { FBO(width, height) }
+    val fxRouting = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 2.0f) // 0 = Off, 1 = FX1, 2 = FX2
+    // This deck's own default FxRouting value, restored by reset() -- ModulatableParameter.reset()
+    // reverts to the value baked in at construction, not whatever baseValue was set to afterward,
+    // so Mixer.init's per-deck defaults (BG/PV default to FX2) need to be reapplied here too.
+    var fxRoutingDefault: Float = 1.0f
+
+    /** The bank this deck is actually routed to right now, resolved live from [fxRouting]. */
+    val assignedFxBank: FxBank?
+        get() = when (fxRouting.value.roundToInt().coerceIn(0, 2)) {
+            1 -> fxBank1
+            2 -> fxBank2
+            else -> null
+        }
+
+    // Four-buffer ping-pong architecture:
+    // Inner scratch pair for slot-to-slot progression within a chain:
+    var fxPingFBO = FBO(width, height)
+    var fxPongFBO = FBO(width, height)
+    // Outer alternating pair carrying chain outputs forward:
     var fxChainOutFBO = FBO(width, height)
+    var fxBankOutFBO = FBO(width, height)
+
+    var activeOutputTexture: Int = cleanFBO.texture
 
     /** Read-only view of the assigned bank's filter slots, or 3 empty slots if unassigned. */
     val fxSlots: Array<llm.slop.liquidlsd.rendering.isf.ISFFilter?>
         get() = assignedFxBank?.slots ?: arrayOfNulls(FxBank.SLOT_COUNT)
 
     /** This deck's send level combined with its bank's shared master wet/dry, or 0 if unassigned/bypassed. */
+    fun getEffectiveWet(bank: FxBank?): Float {
+        val b = bank ?: return 0.0f
+        if (!b.enabled) return 0.0f
+        return fxSendLevel.value * b.masterWetDry.value
+    }
+
     val fxEffectiveWet: Float
-        get() {
-            val bank = assignedFxBank ?: return 0.0f
-            if (!bank.enabled) return 0.0f
-            return fxSendLevel.value * bank.masterWetDry.value
-        }
+        get() = getEffectiveWet(assignedFxBank)
 
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
         width = newWidth
         height = newHeight
         cleanFBO.dispose()
-        fxFBOs.forEach { it.dispose() }
+        fxPingFBO.dispose()
+        fxPongFBO.dispose()
         fxChainOutFBO.dispose()
+        fxBankOutFBO.dispose()
+
         cleanFBO = FBO(width, height)
-        fxFBOs = Array(FxBank.SLOT_COUNT) { FBO(width, height) }
+        fxPingFBO = FBO(width, height)
+        fxPongFBO = FBO(width, height)
         fxChainOutFBO = FBO(width, height)
+        fxBankOutFBO = FBO(width, height)
+
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+        fxPingFBO.clear(0f, 0f, 0f, 0f)
+        fxPongFBO.clear(0f, 0f, 0f, 0f)
         fxChainOutFBO.clear(0f, 0f, 0f, 0f)
+        fxBankOutFBO.clear(0f, 0f, 0f, 0f)
+        activeOutputTexture = cleanFBO.texture
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
                 src.fb1?.dispose()
@@ -106,7 +142,10 @@ class Deck(
     init {
         // Clear all FBOs at startup to prevent reading uninitialized GPU memory
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+        fxPingFBO.clear(0f, 0f, 0f, 0f)
+        fxPongFBO.clear(0f, 0f, 0f, 0f)
+        fxChainOutFBO.clear(0f, 0f, 0f, 0f)
+        fxBankOutFBO.clear(0f, 0f, 0f, 0f)
 
         val initialId = (initialSource as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
@@ -121,6 +160,10 @@ class Deck(
     fun reset() {
         isEmpty = true
         fxSendLevel.reset()
+        fxRouting.reset()
+        fxRouting.baseValue = fxRoutingDefault
+        fxRouting.baseMin = fxRoutingDefault
+        fxRouting.baseMax = fxRoutingDefault
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -150,8 +193,11 @@ class Deck(
 
         // Clear active FBOs
         cleanFBO.clear(0f, 0f, 0f, 0f)
-        fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+        fxPingFBO.clear(0f, 0f, 0f, 0f)
+        fxPongFBO.clear(0f, 0f, 0f, 0f)
         fxChainOutFBO.clear(0f, 0f, 0f, 0f)
+        fxBankOutFBO.clear(0f, 0f, 0f, 0f)
+        activeOutputTexture = cleanFBO.texture
         morphController.initFromCurrentState()
     }
 
@@ -163,9 +209,8 @@ class Deck(
         allParams.addAll(this.source.parameters.values)
         allParams.add(this.source.globalAlpha)
         
-        if (assignedFxBank != null) {
-            allParams.add(fxSendLevel)
-        }
+        allParams.add(fxSendLevel)
+        allParams.add(fxRouting)
 
         allParams.add(this.view3DMode)
         allParams.add(this.viewZoom)
@@ -194,27 +239,14 @@ class Deck(
     /**
      * Retrieves the final output texture of the Deck (the active stage texture).
      */
-    fun getOutputTexture(): Int {
-        val wetAmount = fxEffectiveWet
-        if (wetAmount <= 0.0f) return cleanFBO.texture
-
-        var wetTexture = cleanFBO.texture
-        for (i in fxSlots.indices.reversed()) {
-            val fx = fxSlots[i]
-            if (fx != null && fx.enabled && fx.dryWet.value > 0.0f) {
-                wetTexture = fxFBOs[i].texture
-                break
-            }
-        }
-        if (wetTexture == cleanFBO.texture) return cleanFBO.texture
-        return if (wetAmount < 1.0f) fxChainOutFBO.texture else wetTexture
-    }
+    fun getOutputTexture(): Int = activeOutputTexture
 
     /**
      * Updates the underlying visual source and evaluates view and feedback parameters.
      */
     fun update() {
         source.update()
+        fxRouting.evaluate()
         view3DMode.evaluate()
         viewZoom.evaluate()
         viewRotateX.evaluate()
@@ -249,9 +281,11 @@ class Deck(
      */
     fun dispose() {
         cleanFBO.dispose()
-        fxFBOs.forEach { it.dispose() }
+        fxPingFBO.dispose()
+        fxPongFBO.dispose()
         fxChainOutFBO.dispose()
-        // Note: bank-owned filters (assignedFxBank.slots) are NOT disposed here -- they're
+        fxBankOutFBO.dispose()
+        // Note: bank-owned filters are NOT disposed here -- they're
         // shared with any other deck routed to the same bank and outlive any one deck.
         // Note: `source` is always one of the entries in `availableSources`, so the
         // forEach below already disposes it. Do NOT call source.dispose() here — that
@@ -265,11 +299,11 @@ class Deck(
         // Add all source parameters first (Mandala or DynamicVisualSource)
         list.addAll(source.getParameterPaths(prefix))
 
-        // This deck's own send level into its assigned FxBank (the bank's filters/dry-wet are
-        // shared and expose their own paths via FxBank.getParameterPaths, not here).
+        // This deck's own send level into its assigned FxBank
         list.add("$prefix/FXChain/DryWet" to fxSendLevel)
 
         // Add Deck's View parameters
+        list.add("$prefix/View/FxRouting" to fxRouting)
         list.add("$prefix/View/3DMode" to view3DMode)
         list.add("$prefix/View/Zoom" to viewZoom)
         list.add("$prefix/View/RotateX" to viewRotateX)
@@ -293,60 +327,5 @@ class Deck(
         list.add("$prefix/FB/Kaleido" to fbKaleido)
         
         return list
-    }
-
-    fun toFxSlotDto(slotIndex: Int): FXSlotDto? {
-        val fx = fxSlots.getOrNull(slotIndex) ?: return null
-        if (fx.id.isEmpty()) return null
-        return FXSlotDto(
-            filterId = fx.id,
-            enabled = fx.enabled,
-            dryWet = fx.dryWet.toDto(),
-            parameters = fx.parameters.mapValues { p -> p.value.toDto() }
-        )
-    }
-
-    fun applyFxSlot(slotIndex: Int, dto: FXSlotDto) {
-        if (slotIndex !in fxSlots.indices) return
-        fxSlots[slotIndex]?.dispose()
-        fxSlots[slotIndex] = null
-
-        if (dto.filterId.isNotBlank()) {
-            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(dto.filterId)
-            if (filter != null) {
-                filter.enabled = dto.enabled
-                filter.dryWet.applyDto(dto.dryWet)
-                for ((key, paramDto) in dto.parameters) {
-                    filter.parameters[key]?.applyDto(paramDto)
-                }
-                fxSlots[slotIndex] = filter
-            }
-        }
-    }
-
-    fun clearFxSlot(slotIndex: Int) {
-        if (slotIndex in fxSlots.indices) {
-            fxSlots[slotIndex]?.dispose()
-            fxSlots[slotIndex] = null
-        }
-    }
-
-    fun applyFxChain(dto: FXChainDto) {
-        for (i in fxSlots.indices) {
-            clearFxSlot(i)
-            val slotDto = dto.slots.getOrNull(i)
-            if (slotDto != null && slotDto.filterId.isNotBlank()) {
-                applyFxSlot(i, slotDto)
-            }
-        }
-    }
-
-    fun toFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto {
-        val slotsList = (0 until FxBank.SLOT_COUNT).map { toFxSlotDto(it) }
-        return FXChainDto(
-            name = name,
-            tags = tags,
-            slots = slotsList
-        )
     }
 }

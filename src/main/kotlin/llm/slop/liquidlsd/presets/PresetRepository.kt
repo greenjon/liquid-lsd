@@ -167,6 +167,28 @@ object PresetRepository {
         }, PresetManager.presetIoExecutor)
     }
 
+    fun saveFxBankAsync(file: File, name: String, bankDto: FXBankDto, tags: List<String> = emptyList()) {
+        CompletableFuture.runAsync({
+            try {
+                logger.info { "Saving FX bank to ${file.absolutePath}..." }
+                val dto = bankDto.copy(name = name, tags = tags)
+                file.parentFile?.mkdirs()
+                file.writeText(PresetManager.json.encodeToString(dto))
+                logger.info { "FX bank saved successfully to ${file.name}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to save FX bank to ${file.absolutePath}" }
+            }
+        }, PresetManager.presetIoExecutor)
+    }
+
+    fun loadFxBankAsync(file: File): CompletableFuture<FXBankDto> {
+        return CompletableFuture.supplyAsync({
+            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
+            val content = file.readText()
+            PresetManager.json.decodeFromString<FXBankDto>(content)
+        }, PresetManager.presetIoExecutor)
+    }
+
     fun saveTransitionPresetAsync(file: File, name: String, slotDto: FXSlotDto, tags: List<String> = emptyList()) {
         CompletableFuture.runAsync({
             try {

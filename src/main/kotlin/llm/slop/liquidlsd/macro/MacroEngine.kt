@@ -104,8 +104,9 @@ object MacroEngine {
         "Deck BG" -> DECK_BG
         "Deck PV" -> DECK_PV
         "Master" -> MASTER
-        "Bank 1" -> FX_BANK_1
-        "Bank 2" -> FX_BANK_2
+        "Bank 1", "FX1" -> FX_BANK_1
+        "Bank 2", "FX2" -> FX_BANK_2
+        "MFX" -> MASTER_FX
         else -> TRANS
     }
 

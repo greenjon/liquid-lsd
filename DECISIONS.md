@@ -1,3 +1,30 @@
+## 3-Chain FX Banks & Multi-Chain Architecture (`FxBank.kt`, `FxChain.kt`, `Deck.kt`, `Mixer.kt`, `Renderer.kt`, `ParametersTabs.kt`, `ParametersState.kt`, `FXPresetModels.kt`, `PresetRepository.kt`, `FileSystemManager.kt`)
+
+- **Context**: 2026-09-20. To level up to DJ/VJ performance standards (such as Mixxx and Traktor Pro), the FX architecture needed to evolve beyond simple banks of 3 individual effect slots. Users needed each FX bank to host multiple FX chains in series, with each chain hosting multiple effect slots, allowing complex multi-stage effect soundscapes (e.g. Distortion chain -> Color/Glitch chain -> Delay/Feedback chain), while keeping the parameter panel manageable via horizontal subtabs and maintaining strict real-time GPU rendering without feedback aliasing.
+- **Decision**:
+  - **3-Chain Hierarchy (`FxChain.kt`, `FxBank.kt`)**: Re-architected `FxBank` (`FX1`, `FX2`, `MFX`) so each bank owns 3 serial `FxChain` instances (`CHAIN_COUNT = 3`), and each `FxChain` owns 3 ISF filter slots (`SLOT_COUNT = 3`), providing up to 9 effects per bank and up to 27 filters system-wide.
+  - **Full Parity for Master FX (`Mixer.kt`)**: Replaced raw `masterFxSlots` with an `FxBank("MFX")` instance, giving master output identical 3-chain capability and enabling unified UI rendering via `drawFxBankGroupContent`.
+  - **4-Buffer Ping-Pong GPU Architecture (`Deck.kt`, `Mixer.kt`, `Renderer.kt`)**: Upgraded offscreen FBO architecture to 4 buffers per deck/mixer:
+    - Inner scratch pair (`fxPingFBO`, `fxPongFBO`) for slot-to-slot progression *within* a chain.
+    - Outer alternating pair (`fxChainOutFBO`, `fxBankOutFBO`) carrying chain-level blended results forward into the next chain.
+    - Ensures no shader pass reads and writes to the same texture/FBO, preventing driver texture feedback loop aliasing.
+  - **Modulatable Deck Routing (`Deck.kt`, `Mixer.kt`, `ParametersTabs.kt`)**: Added discrete modulatable parameter `View/FxRouting` (`0.0f` = None/Bypass, `1.0f` = FX1, `2.0f` = FX2) to each deck, synced in `Mixer.update()`.
+  - **Horizontal Subtabs UI (`ParametersTabs.kt`, `ParametersState.kt`)**:
+    - Bank Header: Displays bank label, Bank Enabled bypass toggle, Bank Wet/Dry slider (`$bankLabel/DryWet`), and Bank Kebab menu (Save `.lsdfxbank`, Copy, Paste, Clear All).
+    - Horizontal Subtabs `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` allow quick navigation without overwhelming vertical scrolling.
+    - Active Chain Section: Displays chain name, Chain Enabled bypass, Chain Wet/Dry (`$bankLabel/C$chainNum/DryWet`), Chain Kebab menu (Save `.lsdfxchain`, Copy, Paste, Clear), followed by accordion rows for the 3 slots (`$bankLabel/C$chainNum/FX$slotNum/*`).
+    - Drag-and-drop support: `.lsdfxbank` on bank, `.lsdfxchain` on bank/chain/slot, `.lsdfx` on slot.
+  - **Preset Persistence (`FXPresetModels.kt`, `PresetRepository.kt`, `FileSystemManager.kt`)**:
+    - Added `dryWet: ParameterDto?` to `FXChainDto` for chain-level blend persistence.
+    - Added `FXBankDto` for `.lsdfxbank` presets stored in `library/fx_banks/`.
+    - Extended `PresetRepository` with `saveFxBankAsync` and `loadFxBankAsync`.
+- **Rationale**:
+  - Provides professional-grade modular chaining while keeping parameter discovery and modulation clean and accessible.
+  - Guarantees 100% architectural and UI parity across FX1, FX2, and MFX.
+  - Adheres to Thread 0 OpenGL rendering safety and zero allocations on the audio callback thread.
+
+---
+
 ## Direct MIDI Control for Modulator Variables & In-Situ MIDI Learn (`ParametersState.kt`, `MidiMappingManager.kt`, `BeatDivisionSlider.kt`, `CustomRangeSlider.kt`, `MidiPreferencesPanel.kt`, `MidiMappingManagerModulatorTest.kt`)
 
 - **Context**: 2026-09-20. Following the implementation of direct OSC control for modulator variables, full hardware control parity was required for physical MIDI controllers (rotary knobs, sliders, pads, foot switches). Users needed to bind hardware controls directly to internal modulator variables (LFO speed/subdivision, depth, min/max bounds, asymmetry, morph, hold) via right-click in-situ learning without consuming a Macro knob.

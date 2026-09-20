@@ -1208,6 +1208,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#parameters-panel-fx-tabs-layout-label-alignment-parametersrendererkt-parameterstabskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters Panel FX Tabs Layout &amp; Label Alignment (ParametersRenderer.kt, ParametersTabs.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#direct-midi-control-for-modulator-variables-in-situ-midi-learn-parametersstatekt-midimappingmanagerkt-beatdivisionsliderkt-customrangesliderkt-midipreferencespanelkt-performance_controlsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct MIDI Control for Modulator Variables &amp; In-Situ MIDI Learn (ParametersState.kt, MidiMappingManager.kt, BeatDivisionSlider.kt, CustomRangeSlider.kt, MidiPreferencesPanel.kt, performance_controls.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#direct-osc-control-for-modulator-variables-in-situ-osc-learn-modulatorpropertyaccessorkt-oscmappingmanagerkt-osclearnstatekt-beatdivisionsliderkt-customrangesliderkt-oscpreferencespanelkt-performance_controlsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct OSC Control for Modulator Variables &amp; In-Situ OSC Learn (ModulatorPropertyAccessor.kt, OscMappingManager.kt, OscLearnState.kt, BeatDivisionSlider.kt, CustomRangeSlider.kt, OscPreferencesPanel.kt, performance_controls.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameters-val-cell-modulator-mute-toggle-parametersrendererkt-parameterspanelkt-parametersvalmutetestkt-modulationmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3414,6 +3447,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#parameters-panel-fx-tabs-layout-label-alignment-parametersrendererkt-parameterstabskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters Panel FX Tabs Layout &amp; Label Alignment (ParametersRenderer.kt, ParametersTabs.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#direct-midi-control-for-modulator-variables-in-situ-midi-learn-parametersstatekt-midimappingmanagerkt-beatdivisionsliderkt-customrangesliderkt-midipreferencespanelkt-performance_controlsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct MIDI Control for Modulator Variables &amp; In-Situ MIDI Learn (ParametersState.kt, MidiMappingManager.kt, BeatDivisionSlider.kt, CustomRangeSlider.kt, MidiPreferencesPanel.kt, performance_controls.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#direct-osc-control-for-modulator-variables-in-situ-osc-learn-modulatorpropertyaccessorkt-oscmappingmanagerkt-osclearnstatekt-beatdivisionsliderkt-customrangesliderkt-oscpreferencespanelkt-performance_controlsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct OSC Control for Modulator Variables &amp; In-Situ OSC Learn (ModulatorPropertyAccessor.kt, OscMappingManager.kt, OscLearnState.kt, BeatDivisionSlider.kt, CustomRangeSlider.kt, OscPreferencesPanel.kt, performance_controls.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameters-val-cell-modulator-mute-toggle-parametersrendererkt-parameterspanelkt-parametersvalmutetestkt-modulationmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5595,6 +5661,27 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="parameters-panel-fx-tabs-layout-label-alignment-parametersrendererkt-parameterstabskt">Parameters Panel FX Tabs Layout &amp; Label Alignment (<code>ParametersRenderer.kt</code>, <code>ParametersTabs.kt</code>)</h3>
+<ul>
+<li><strong>Indentation for FX Tabs</strong>: Added <code>PARAM_INDENT</code> (6f) indentation to <code>drawFxBankGroupContent</code> (FX1, FX2 tabs) and <code>drawMixerFxTab</code> (MFX tab), ensuring header rows (<code>FX CHAIN</code>, <code>MASTER FX CHAIN</code>), slot rows, and parameter rows match the standard visual alignment of Deck A, B, BG, PV, and Mixer tabs.</li>
+<li><strong>Fixed Parameter Label Positioning Over VAL Dial</strong>: In <code>ParametersRenderer.drawParamRow</code>, replaced <code>ImGui.sameLine(cursorStartX)</code> with <code>ImGui.setCursorPosX(cursorStartX)</code>. When rendering unindented or root-aligned rows (<code>cursorStartX == 0.0f</code>), ImGui previously fell back to default item spacing after the row's options button, shifting "Wet/Dry" and filter parameter names one column to the right on top of the VAL dial. Parameter names now reliably render in the label column.</li>
+</ul>
+<h3 id="direct-midi-control-for-modulator-variables-in-situ-midi-learn-parametersstatekt-midimappingmanagerkt-beatdivisionsliderkt-customrangesliderkt-midipreferencespanelkt-performance_controlsmd">Direct MIDI Control for Modulator Variables &amp; In-Situ MIDI Learn (<code>ParametersState.kt</code>, <code>MidiMappingManager.kt</code>, <code>BeatDivisionSlider.kt</code>, <code>CustomRangeSlider.kt</code>, <code>MidiPreferencesPanel.kt</code>, <code>performance_controls.md</code>)</h3>
+<ul>
+<li><strong>Direct Modulator Variable Addressing</strong>: Extended <code>MidiMappingManager</code> to support hierarchical parameter paths (<code>&lt;parameterPath&gt;:mod/&lt;modulatorIndex&gt;/&lt;propertyName&gt;</code>, e.g. <code>Deck A/geometry/zoom:mod/0/subdivision</code>), enabling direct hardware control of internal LFO speeds/subdivisions, depths, min/max bounds, asymmetry, morphing, and sample &amp; hold without using Macro knobs.</li>
+<li><strong>Dynamic Modulator Resolution &amp; Allocation-Free Dispatch</strong>: Updated <code>ResolvedMidiBinding</code> to delegate reading and writing dynamically to <code>ModulatorPropertyAccessor</code> via <code>getCurrentValue()</code> and <code>applyValue()</code>. Seamlessly handles continuous CCs, relative rotary deltas (Binary Offset, Signed Bit, Two's Complement), discrete buttons/pads (Momentary, Toggle, Step +/-), exponential slew smoothing ($0 \dots 250\,\text{ms}$), and soft takeover (pickup).</li>
+<li><strong>In-Situ Right-Click "Learn MIDI" Menus</strong>: Added right-click context menus to LFO and modulator sliders (<code>BeatDivisionSlider</code>, <code>CustomRangeSlider</code>) alongside OSC learn. Armed sliders display a pulsing cyan/blue outline and contextual status tooltip while awaiting controller input.</li>
+<li><strong>Preferences UI Label Formatting</strong>: The Parameter Mappings table in <code>MidiPreferencesPanel</code> now formats modulator paths into clean, readable labels (e.g. <code>Deck A/geometry/zoom [LFO 1 Speed]</code>) with full path inspection on hover.</li>
+<li><strong>Soft Takeover Verification Alignment</strong>: Aligned <code>isSoftTakeoverActive</code> in both <code>MidiMappingManager</code> and <code>OscMappingManager</code> to evaluate pickup state correctly, preventing false "Takeover Synced" displays prior to physical pickup.</li>
+</ul>
+<h3 id="direct-osc-control-for-modulator-variables-in-situ-osc-learn-modulatorpropertyaccessorkt-oscmappingmanagerkt-osclearnstatekt-beatdivisionsliderkt-customrangesliderkt-oscpreferencespanelkt-performance_controlsmd">Direct OSC Control for Modulator Variables &amp; In-Situ OSC Learn (<code>ModulatorPropertyAccessor.kt</code>, <code>OscMappingManager.kt</code>, <code>OscLearnState.kt</code>, <code>BeatDivisionSlider.kt</code>, <code>CustomRangeSlider.kt</code>, <code>OscPreferencesPanel.kt</code>, <code>performance_controls.md</code>)</h3>
+<ul>
+<li><strong>Direct Modulator Variable Addressing</strong>: Added hierarchical OSC parameter path addressing (<code>&lt;parameterPath&gt;:mod/&lt;modulatorIndex&gt;/&lt;propertyName&gt;</code>, e.g. <code>Deck A/geometry/zoom:mod/0/subdivision</code>) allowing incoming OSC messages to directly modulate internal LFO speeds/periods, depths, phases, morphing, asymmetry/duty cycle, sample &amp; hold, DC offset, and envelope followers without consuming Macro knobs.</li>
+<li><strong>Shared Accessor &amp; Mutator (<code>ModulatorPropertyAccessor</code>)</strong>: Created an allocation-free utility object to read and write <code>CvModulator</code> properties safely and format user-friendly labels. Replaced <code>MacroEngine</code>'s private property applicator with this shared implementation.</li>
+<li><strong>Dynamic Slew &amp; Soft Takeover for Modulators</strong>: Extended <code>OscMappingManager</code> target resolution to apply full min/max range scaling, value inversion, exponential slew smoothing ($0 \dots 250\,\text{ms}$), and soft takeover (pickup) to modulator properties dynamically each frame.</li>
+<li><strong>In-Situ Right-Click "Learn OSC" Menus</strong>: Added right-click context menus on all LFO and modulator sliders (<code>BeatDivisionSlider</code>, <code>CustomRangeSlider</code>) as well as base value sliders (<code>ValueParamSection</code>), allowing immediate click-to-bind OSC learning directly on the control surface. Armed sliders display a pulsing amber outline and contextual status tooltip.</li>
+<li><strong>Preferences UI Label Formatting</strong>: The Address Mappings table in <code>OscPreferencesPanel</code> now formats modulator paths into clean, readable labels (e.g. <code>Deck A/geometry/zoom [LFO 1 Speed]</code>) with full path inspection on hover.</li>
+</ul>
 <h3 id="parameters-val-cell-modulator-mute-toggle-parametersrendererkt-parameterspanelkt-parametersvalmutetestkt-modulationmd">Parameters VAL Cell Modulator Mute Toggle (<code>ParametersRenderer.kt</code>, <code>ParametersPanel.kt</code>, <code>ParametersValMuteTest.kt</code>, <code>modulation.md</code>)</h3>
 <ul>
 <li><strong>Toggle Row Modulation via VAL Cell</strong>: Right-clicking (mouse button 1) or middle-clicking (mouse button 2) the VAL cell now toggles mute (bypass) for all modulators on that parameter row instead of destructively clearing them via <code>param.reset()</code>.</li>

@@ -95,6 +95,25 @@ class ParametersState {
         }
     }
 
+    var activeFx1ChainIndex: Int = 0
+    var activeFx2ChainIndex: Int = 0
+    var activeMfxChainIndex: Int = 0
+
+    fun getActiveChainIndex(bankLabel: String): Int = when (bankLabel) {
+        "FX1" -> activeFx1ChainIndex
+        "FX2" -> activeFx2ChainIndex
+        "MFX" -> activeMfxChainIndex
+        else -> 0
+    }
+
+    fun setActiveChainIndex(bankLabel: String, index: Int) {
+        when (bankLabel) {
+            "FX1" -> activeFx1ChainIndex = index.coerceIn(0, 2)
+            "FX2" -> activeFx2ChainIndex = index.coerceIn(0, 2)
+            "MFX" -> activeMfxChainIndex = index.coerceIn(0, 2)
+        }
+    }
+
     fun select(cellId: ParameterCellId, param: ModulatableParameter) {
         if (selectedCell != cellId) {
             midiLearnTarget = null

@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxBank
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.VisualSource
@@ -27,8 +28,9 @@ object ParametersTabs {
     var activeBtnMaxY: Float = 0f
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
-    // Shared by both the master FX rows (Mixer.MASTER_FX_SLOT_COUNT slots) and the per-deck
-    // bank rows (FxBank.SLOT_COUNT slots) below -- sized to the larger of the two.
+    // Shared by both the master FX rows (Mixer.MASTER_FX_SLOT_COUNT slots) and the FxBank rows
+    // (FxBank.SLOT_COUNT slots) below -- both are 3 slots now, kept as separate constants since
+    // they're conceptually independent (master FX isn't itself an FxBank).
     private val fxSlotEnabledBufs = Array(Mixer.MASTER_FX_SLOT_COUNT) { imgui.type.ImBoolean() }
     private val fxSlotPickerTypes = listOf(
         ShaderPickerPopup.PickerType.FX_SLOT_1,
@@ -81,7 +83,7 @@ object ParametersTabs {
             Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV (Preview) visual source, geometry, color, and feedback parameters."),
             Triple("FX1", "FX1", "FX Bank 1: 3 shared filter slots + wet/dry, routable from any deck."),
             Triple("FX2", "FX2", "FX Bank 2: 3 shared filter slots + wet/dry, routable from any deck."),
-            Triple("MFX", "MFX", "Master FX: 4 serial ISF effect slots on the final composited output.")
+            Triple("MFX", "MFX", "Master FX: 3 serial ISF effect slots + wet/dry on the final composited output.")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
         val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
@@ -556,181 +558,9 @@ object ParametersTabs {
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
-        var row = 0
-
-        // --- Master FX Chain Header Bar ---
-        ImGui.textDisabled("MASTER FX CHAIN")
-        ImGui.sameLine(labelColW - 24f)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##master_fx_chain_kebab", 22f, 20f)) {
-                ImGui.openPopup("FXChainKebabPopup_Master")
-            }
-        }
-        itemTooltip("Master FX Chain Options (Save, Copy, Paste, Clear)")
-
-        if (ImGui.beginPopup("FXChainKebabPopup_Master")) {
-            if (ImGui.menuItem("Save Chain As...")) {
-                val chainDto = mixer.toMasterFxChainDto("master_fx_chain")
-                SavePresetModal.request(
-                    title = "Save Master FX Chain As",
-                    confirmLabel = "Save",
-                    defaultName = "master_fx_chain",
-                    targetDir = FileSystemManager.getFxChainsRoot(),
-                    extension = "lsdfxchain"
-                ) { name, tags ->
-                    val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                    session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
-                }
-            }
-            if (ImGui.menuItem("Copy Chain")) {
-                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(mixer.toMasterFxChainDto("master_chain"))
-            }
-            val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
-            if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
-                llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard?.let {
-                    mixer.applyMasterFxChain(it)
-                    onPushUndo()
-                }
-            }
-            if (ImGui.menuItem("Clear All Slots")) {
-                for (c in mixer.masterFxSlots.indices) {
-                    mixer.clearMasterFxSlot(c)
-                }
-                onPushUndo()
-            }
-            ImGui.endPopup()
-        }
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        // --- Per-Slot Controls for Master FX ---
-        for (i in mixer.masterFxSlots.indices) {
-            val slotNum = i + 1
-            val fx = mixer.masterFxSlots[i]
-            val filterName = fx?.displayName ?: "None"
-            val collapseKey = "Mixer/FX$slotNum"
-            val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
-
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##master_fx${slotNum}_collapse")) {
-                    state.fxSlotCollapsed[collapseKey] = !isCollapsed
-                }
-            }
-            itemTooltip(if (isCollapsed) "Expand Master Slot $slotNum." else "Collapse Master Slot $slotNum.")
-            ImGui.sameLine()
-
-            ImGui.textDisabled("Slot $slotNum")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##master_fx${slotNum}_selector", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
-                    ShaderPickerPopup.show("Select Master FX Slot $slotNum", fxSlotPickerTypes[i]) { newFilterId ->
-                        if (newFilterId == null) {
-                            mixer.clearMasterFxSlot(i)
-                            onPushUndo()
-                        } else {
-                            val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
-                            if (filter != null) {
-                                mixer.masterFxSlots[i]?.dispose()
-                                mixer.masterFxSlots[i] = filter
-                                onPushUndo()
-                            }
-                        }
-                    }
-                }
-            }
-
-            ImGui.sameLine()
-            if (fx != null) {
-                val enabledBuf = fxSlotEnabledBufs[i]
-                enabledBuf.set(fx.enabled)
-                if (ImGui.checkbox("##master_fx${slotNum}_enabled", enabledBuf)) {
-                    fx.enabled = enabledBuf.get()
-                    onPushUndo()
-                }
-                itemTooltip("Bypass Master Slot $slotNum filter.")
-                ImGui.sameLine()
-            }
-
-            // Per-Slot Kebab Menu
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.MORE_VERTICAL}##master_fx_slot_kebab_${slotNum}", 22f, 20f)) {
-                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_Master")
-                }
-            }
-            itemTooltip("Master Slot $slotNum Options (Save, Copy, Paste, Reset)")
-
-            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_Master")) {
-                val hasFx = mixer.masterFxSlots[i] != null
-                if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
-                    val slotDto = mixer.toMasterFxSlotDto(i)
-                    if (slotDto != null) {
-                        SavePresetModal.request(
-                            title = "Save Master FX Slot Preset As",
-                            confirmLabel = "Save",
-                            defaultName = fx?.displayName?.lowercase()?.replace(" ", "_") ?: "master_fx_preset",
-                            targetDir = FileSystemManager.getFxPresetsRoot(),
-                            extension = "lsdfx"
-                        ) { name, tags ->
-                            val file = java.io.File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                            session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
-                        }
-                    }
-                }
-                if (ImGui.menuItem("Copy Slot", "", false, hasFx)) {
-                    mixer.toMasterFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
-                }
-                val canPasteSlot = llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard != null
-                if (ImGui.menuItem("Paste Slot", "", false, canPasteSlot)) {
-                    llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard?.let {
-                        mixer.applyMasterFxSlot(i, it)
-                        onPushUndo()
-                    }
-                }
-                if (ImGui.menuItem("Reset Slot", "", false, hasFx)) {
-                    mixer.clearMasterFxSlot(i)
-                    onPushUndo()
-                }
-                ImGui.endPopup()
-            }
-
-            if (fx != null && !isCollapsed) {
-                ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-                fx.parameters.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "Mixer/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                }
-            }
-
-            // Drag and Drop Target for Master FX Slot
-            if (ImGui.beginDragDropTarget()) {
-                val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                if (payload != null) {
-                    val file = java.io.File(payload)
-                    if (file.exists()) {
-                        val ext = file.extension.lowercase()
-                        if (ext == "lsdfx") {
-                            session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                mixer.applyMasterFxSlot(i, presetDto.slot)
-                                onPushUndo()
-                            }
-                        } else if (ext == "lsdfxchain") {
-                            session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                                mixer.applyMasterFxChain(chainDto)
-                                onPushUndo()
-                            }
-                        }
-                    }
-                }
-                ImGui.endDragDropTarget()
-            }
-
-            if (i < mixer.masterFxSlots.lastIndex) {
-                ImGui.separator()
-            }
-        }
+        drawFxBankGroupContent(session, mixer.masterFxBank.label, mixer.masterFxBank, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
     }
+
 
     fun drawDeckGroupContent(
         session: llm.slop.liquidlsd.SessionContext,
@@ -801,6 +631,7 @@ object ParametersTabs {
         transformParams: List<Map.Entry<String, ModulatableParameter>> = emptyList()
     ) {
         var row = 0
+        ParametersRenderer.drawParamRow(session, "FX Route", "$deckLabel/View/FxRouting", deck.fxRouting, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         // This deck's send into its routed FxBank (see FX1/FX2 tabs for the bank's own 3-slot
         // chain + wet/dry) -- unassigned decks still show it, it's just a no-op until routed.
         if (deck.assignedFxBank != null) {
@@ -843,34 +674,152 @@ object ParametersTabs {
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
+        ImGui.indent(PARAM_INDENT)
         var row = 0
+        val rowStartX = ImGui.getCursorPosX()
 
-        // --- FX Chain Header Bar ---
-        ImGui.textDisabled("FX CHAIN")
+        // --- Bank Header Bar ---
+        ImGui.textDisabled("FX BANK: $bankLabel")
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$bankLabel", 22f, 20f)) {
-                ImGui.openPopup("FXChainKebabPopup_$bankLabel")
+            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_bank_kebab_$bankLabel", 22f, 20f)) {
+                ImGui.openPopup("FXBankKebabPopup_$bankLabel")
             }
         }
-        itemTooltip("FX Chain Options (Save, Copy, Paste, Clear)")
+        itemTooltip("FX Bank Options (Save Bank, Copy Bank, Paste Bank, Clear All)")
 
         fxEnabledBuf.set(bank.enabled)
         if (ImGui.checkbox("Bank Enabled##fx_bank_enabled_$bankLabel", fxEnabledBuf)) {
             bank.enabled = fxEnabledBuf.get()
             onPushUndo()
         }
-        itemTooltip("Bypass this bank entirely for every deck routed to it, independent of each slot's own toggle.")
+        itemTooltip("Bypass this bank entirely for every deck routed to it, independent of each chain's own toggle.")
 
-        ParametersRenderer.drawParamRow(session, "Wet/Dry", "$bankLabel/DryWet", bank.masterWetDry, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ImGui.setCursorPosX(rowStartX)
+        ParametersRenderer.drawParamRow(session, "Bank Wet/Dry", "$bankLabel/DryWet", bank.masterWetDry, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-        if (ImGui.beginPopup("FXChainKebabPopup_$bankLabel")) {
+        if (ImGui.beginPopup("FXBankKebabPopup_$bankLabel")) {
+            if (ImGui.menuItem("Save Bank Preset As...")) {
+                val bankDto = bank.toFxBankDto(bankLabel.lowercase())
+                SavePresetModal.request(
+                    title = "Save FX Bank As",
+                    confirmLabel = "Save",
+                    defaultName = "${bankLabel.lowercase()}_bank",
+                    targetDir = FileSystemManager.getFxBanksRoot(),
+                    extension = "lsdfxbank"
+                ) { name, tags ->
+                    val file = java.io.File(FileSystemManager.getFxBanksRoot(), "$name.lsdfxbank")
+                    session.presetRepository.saveFxBankAsync(file, name, bankDto, tags)
+                }
+            }
+            if (ImGui.menuItem("Copy Bank")) {
+                llm.slop.liquidlsd.models.ClipboardManager.copyFxBank(bank.toFxBankDto(bankLabel))
+            }
+            val canPasteBank = llm.slop.liquidlsd.models.ClipboardManager.fxBankClipboard != null
+            if (ImGui.menuItem("Paste Bank", "", false, canPasteBank)) {
+                llm.slop.liquidlsd.models.ClipboardManager.fxBankClipboard?.let {
+                    bank.applyFxBank(it)
+                    onPushUndo()
+                }
+            }
+            if (ImGui.menuItem("Clear All Chains")) {
+                bank.reset()
+                onPushUndo()
+            }
+            ImGui.endPopup()
+        }
+
+        // Drag and drop for bank
+        if (ImGui.beginDragDropTarget()) {
+            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+            if (payload != null) {
+                val file = java.io.File(payload)
+                if (file.exists() && file.extension.lowercase() == "lsdfxbank") {
+                    session.presetRepository.loadFxBankAsync(file).thenAccept { bankDto ->
+                        bank.applyFxBank(bankDto)
+                        onPushUndo()
+                    }
+                }
+            }
+            ImGui.endDragDropTarget()
+        }
+
+        ImGui.separator()
+        ImGui.spacing()
+
+        // --- Chain Subtabs [ 1 ] [ 2 ] [ 3 ] ---
+        val activeChainIndex = state.getActiveChainIndex(bankLabel).coerceIn(0, 2)
+        val chainTabs = listOf("1", "2", "3")
+
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 4f, 0f)
+
+        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+            chainTabs.forEachIndexed { i, tabLabel ->
+                if (i > 0) ImGui.sameLine()
+                val isActive = activeChainIndex == i
+
+                if (isActive) {
+                    val bgCol = getSubTabColor(state, 1f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, bgCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, bgCol)
+                } else {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+                }
+
+                val chainName = bank.chains[i].name.ifEmpty { "Chain ${i + 1}" }
+                val btnText = "Chain $tabLabel"
+                val tw = ImGui.calcTextSize(btnText).x
+                val btnW = (tw + 18f).coerceAtLeast(60f)
+                val subTabH = (ImGui.getTextLineHeight() + 8f).coerceAtLeast(26f)
+
+                if (ImGui.button("$btnText##chain_tab_${bankLabel}_$i", btnW, subTabH)) {
+                    state.setActiveChainIndex(bankLabel, i)
+                }
+                itemTooltip("$chainName: Click to view effects in chain ${i + 1}")
+                ImGui.popStyleColor(3)
+            }
+        }
+        ImGui.popStyleVar(2)
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // --- Active Chain Header & Controls ---
+        val chainNum = activeChainIndex + 1
+        val chain = bank.chains[activeChainIndex]
+        val chainPrefix = "$bankLabel/C$chainNum"
+
+        ImGui.textDisabled("CHAIN $chainNum ${if (chain.name.isNotEmpty()) "(${chain.name})" else ""}")
+        ImGui.sameLine(labelColW - 24f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_${bankLabel}_$activeChainIndex", 22f, 20f)) {
+                ImGui.openPopup("FXChainKebabPopup_${bankLabel}_$activeChainIndex")
+            }
+        }
+        itemTooltip("Chain $chainNum Options (Save Chain, Copy, Paste, Clear)")
+
+        fxEnabledBuf.set(chain.enabled)
+        if (ImGui.checkbox("Chain Enabled##fx_chain_enabled_${bankLabel}_$activeChainIndex", fxEnabledBuf)) {
+            chain.enabled = fxEnabledBuf.get()
+            onPushUndo()
+        }
+        itemTooltip("Bypass Chain $chainNum.")
+
+        ImGui.setCursorPosX(rowStartX)
+        ParametersRenderer.drawParamRow(session, "Chain Wet/Dry", "$chainPrefix/DryWet", chain.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+        if (ImGui.beginPopup("FXChainKebabPopup_${bankLabel}_$activeChainIndex")) {
             if (ImGui.menuItem("Save Chain As...")) {
-                val chainDto = bank.toFxChainDto("fx_chain")
+                val chainDto = chain.toFxChainDto(chain.name.ifEmpty { "chain_$chainNum" })
                 SavePresetModal.request(
                     title = "Save FX Chain As",
                     confirmLabel = "Save",
-                    defaultName = "fx_chain",
+                    defaultName = "chain_$chainNum",
                     targetDir = FileSystemManager.getFxChainsRoot(),
                     extension = "lsdfxchain"
                 ) { name, tags ->
@@ -879,37 +828,55 @@ object ParametersTabs {
                 }
             }
             if (ImGui.menuItem("Copy Chain")) {
-                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(bank.toFxChainDto("chain"))
+                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(chain.toFxChainDto(chain.name.ifEmpty { "chain_$chainNum" }))
             }
             val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
             if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
                 llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard?.let {
-                    bank.applyFxChain(it)
+                    chain.applyFxChain(it)
                     onPushUndo()
                 }
             }
-            if (ImGui.menuItem("Clear All Slots")) {
-                for (c in 0 until FxBank.SLOT_COUNT) {
-                    bank.clearFxSlot(c)
+            if (ImGui.menuItem("Clear Chain Slots")) {
+                for (c in 0 until FxChain.SLOT_COUNT) {
+                    chain.clearFxSlot(c)
                 }
                 onPushUndo()
             }
             ImGui.endPopup()
         }
 
+        // Drag and Drop Target for Chain
+        if (ImGui.beginDragDropTarget()) {
+            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+            if (payload != null) {
+                val file = java.io.File(payload)
+                if (file.exists()) {
+                    val ext = file.extension.lowercase()
+                    if (ext == "lsdfxchain") {
+                        session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
+                            chain.applyFxChain(chainDto)
+                            onPushUndo()
+                        }
+                    }
+                }
+            }
+            ImGui.endDragDropTarget()
+        }
+
         ImGui.separator()
         ImGui.spacing()
 
-        // --- Per-Slot Controls ---
-        for (i in bank.slots.indices) {
+        // --- Per-Slot Controls for Active Chain ---
+        for (i in chain.slots.indices) {
             val slotNum = i + 1
-            val fx = bank.slots[i]
+            val fx = chain.slots[i]
             val filterName = fx?.displayName ?: "None"
-            val collapseKey = "$bankLabel/FX$slotNum"
+            val collapseKey = "$chainPrefix/FX$slotNum"
             val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_$bankLabel")) {
+                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_${bankLabel}_$activeChainIndex")) {
                     state.fxSlotCollapsed[collapseKey] = !isCollapsed
                 }
             }
@@ -920,16 +887,16 @@ object ParametersTabs {
             ImGui.sameLine()
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$bankLabel", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
-                    ShaderPickerPopup.show("Select FX Slot $slotNum for $bankLabel", fxSlotPickerTypes[i]) { newFilterId ->
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_${bankLabel}_$activeChainIndex", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
+                    ShaderPickerPopup.show("Select FX Slot $slotNum for $bankLabel Chain $chainNum", fxSlotPickerTypes[i]) { newFilterId ->
                         if (newFilterId == null) {
-                            bank.clearFxSlot(i)
+                            chain.clearFxSlot(i)
                             onPushUndo()
                         } else {
                             val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
                             if (filter != null) {
-                                bank.slots[i]?.dispose()
-                                bank.slots[i] = filter
+                                chain.slots[i]?.dispose()
+                                chain.slots[i] = filter
                                 onPushUndo()
                             }
                         }
@@ -941,7 +908,7 @@ object ParametersTabs {
             if (fx != null) {
                 val enabledBuf = fxSlotEnabledBufs[i]
                 enabledBuf.set(fx.enabled)
-                if (ImGui.checkbox("##fx${slotNum}_enabled_$bankLabel", enabledBuf)) {
+                if (ImGui.checkbox("##fx${slotNum}_enabled_${bankLabel}_$activeChainIndex", enabledBuf)) {
                     fx.enabled = enabledBuf.get()
                     onPushUndo()
                 }
@@ -951,16 +918,16 @@ object ParametersTabs {
 
             // Per-Slot Kebab Menu
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$bankLabel", 22f, 20f)) {
-                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_$bankLabel")
+                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_${bankLabel}_$activeChainIndex", 22f, 20f)) {
+                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_${bankLabel}_$activeChainIndex")
                 }
             }
             itemTooltip("Slot $slotNum Options (Save, Copy, Paste, Reset)")
 
-            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$bankLabel")) {
-                val hasFx = bank.slots[i] != null
+            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_${bankLabel}_$activeChainIndex")) {
+                val hasFx = chain.slots[i] != null
                 if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
-                    bank.toFxSlotDto(i)?.let { slotDto ->
+                    chain.toFxSlotDto(i)?.let { slotDto ->
                         SavePresetModal.request(
                             title = "Save FX Slot Preset As",
                             confirmLabel = "Save",
@@ -974,27 +941,27 @@ object ParametersTabs {
                     }
                 }
                 if (ImGui.menuItem("Copy Slot", "", false, hasFx)) {
-                    bank.toFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
+                    chain.toFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
                 }
                 val canPasteSlot = llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard != null
                 if (ImGui.menuItem("Paste Slot", "", false, canPasteSlot)) {
                     llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard?.let {
-                        bank.applyFxSlot(i, it)
+                        chain.applyFxSlot(i, it)
                         onPushUndo()
                     }
                 }
                 if (ImGui.menuItem("Reset Slot", "", false, hasFx)) {
-                    bank.clearFxSlot(i)
+                    chain.clearFxSlot(i)
                     onPushUndo()
                 }
                 ImGui.endPopup()
             }
 
             if (fx != null && !isCollapsed) {
-                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$bankLabel/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$chainPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 fx.parameters.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$bankLabel/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    ParametersRenderer.drawParamRow(session, name, "$chainPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
 
@@ -1007,12 +974,12 @@ object ParametersTabs {
                         val ext = file.extension.lowercase()
                         if (ext == "lsdfx") {
                             session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                bank.applyFxSlot(i, presetDto.slot)
+                                chain.applyFxSlot(i, presetDto.slot)
                                 onPushUndo()
                             }
                         } else if (ext == "lsdfxchain") {
                             session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                                bank.applyFxChain(chainDto)
+                                chain.applyFxChain(chainDto)
                                 onPushUndo()
                             }
                         }
@@ -1021,10 +988,11 @@ object ParametersTabs {
                 ImGui.endDragDropTarget()
             }
 
-            if (i < bank.slots.lastIndex) {
+            if (i < chain.slots.lastIndex) {
                 ImGui.separator()
             }
         }
+        ImGui.unindent(PARAM_INDENT)
     }
 }
 

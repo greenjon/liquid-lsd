@@ -9,6 +9,7 @@ object ClipboardManager {
     var rowClipboard: RowClipboardData? = null
     var fxSlotClipboard: FXSlotDto? = null
     var fxChainClipboard: FXChainDto? = null
+    var fxBankClipboard: FXBankDto? = null
 
     fun copyFxSlot(slot: FXSlotDto) {
         fxSlotClipboard = slot
@@ -16,6 +17,10 @@ object ClipboardManager {
 
     fun copyFxChain(chain: FXChainDto) {
         fxChainClipboard = chain
+    }
+
+    fun copyFxBank(bank: FXBankDto) {
+        fxBankClipboard = bank
     }
 
     private val GENERATORS = listOf("beatPhase", "lfo", "sampleAndHold")

@@ -16,15 +16,16 @@ object FXItemApplier {
     private val logger = KotlinLogging.logger {}
 
     fun apply(session: SessionContext, file: File, deck: Deck) {
+        val bank = deck.assignedFxBank ?: return
         when (file.extension.lowercase()) {
             "lsdfxchain" -> {
                 session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                    deck.applyFxChain(chainDto)
+                    bank.applyFxChain(chainDto)
                 }
             }
             "lsdfx" -> {
                 session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                    deck.applyFxChain(FXChainDto(name = presetDto.name, tags = presetDto.tags, slots = listOf(presetDto.slot, null, null)))
+                    bank.applyFxChain(FXChainDto(name = presetDto.name, tags = presetDto.tags, slots = listOf(presetDto.slot, null, null)))
                 }
             }
             else -> {

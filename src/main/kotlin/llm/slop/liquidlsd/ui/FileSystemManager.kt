@@ -30,6 +30,7 @@ object FileSystemManager {
     private const val PLAYLISTS_ROOT = "library/playlists"
     private const val FX_ROOT = "library/fx"
     private const val FX_CHAINS_ROOT = "library/fx_chains"
+    private const val FX_BANKS_ROOT = "library/fx_banks"
     private const val FX_PLAYLISTS_ROOT = "library/fx_playlists"
     private const val TRANSITIONS_ROOT = "library/transitions"
     private const val TRANSITION_PLAYLISTS_ROOT = "library/transition_playlists"
@@ -828,6 +829,17 @@ object FileSystemManager {
      */
     fun getFxChainsRoot(): File {
         val root = File(FX_CHAINS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for FX bank presets (.lsdfxbank).
+     */
+    fun getFxBanksRoot(): File {
+        val root = File(FX_BANKS_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }

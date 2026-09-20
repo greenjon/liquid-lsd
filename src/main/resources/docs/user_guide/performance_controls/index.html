@@ -692,10 +692,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#midi-learn" class="md-nav__link">
+  <a href="#midi-learn-modulator-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MIDI Learn
+        MIDI Learn &amp; Modulator Variables
       
     </span>
   </a>
@@ -1658,10 +1658,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#midi-learn" class="md-nav__link">
+  <a href="#midi-learn-modulator-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MIDI Learn
+        MIDI Learn &amp; Modulator Variables
       
     </span>
   </a>
@@ -1922,11 +1922,33 @@ Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
 <li>Ensure <strong>Enable MIDI Subsystem</strong> is checked. The background watchdog automatically detects newly connected controllers without restarting the application.</li>
 <li>Check the <strong>Live MIDI Monitor (Sniffer)</strong> at the top of the panel: moving any knob or pressing any pad on your controller will immediately stream incoming packets (Channel, Message Type, Index, and Values).</li>
 </ol>
-<h3 id="midi-learn">MIDI Learn</h3>
-<p>You can map any parameter, matrix CV modulator, or global performance action:
-- <strong>Base Value Sliders / Knobs:</strong> Right-click a parameter row in the Parameters panel or click the Learn MIDI button in the Mixer panel.
-- <strong>Modulation Matrix Cells:</strong> Click any cell in the MIDI column of the Parameters matrix, then click <strong>Re-Learn MIDI</strong> in Properties.
-- <strong>Global Performance Actions:</strong> In <strong>Preferences → MIDI Controls</strong>, click <strong>Learn</strong> next to <em>Queue Advance A/B Next</em>, <em>Queue Step Back A/B Prev</em>, <em>BG Shader Advance</em>, <em>BG Step Back</em>, or <em>Tap Tempo</em>.</p>
+<h3 id="midi-learn-modulator-variables">MIDI Learn &amp; Modulator Variables</h3>
+<p>You can map any parameter, internal modulator variable, matrix CV modulator, or global performance action:</p>
+<ol>
+<li><strong>In-Situ Right-Click Learn (Fastest)</strong>:</li>
+<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry (Slope)</strong>, <strong>Morph</strong>, <strong>Hold</strong>, or a parameter's <strong>Initial Range (Base Value)</strong>.</li>
+<li>Select <strong>Learn MIDI (...)</strong> from the context menu. The slider will pulse in cyan/blue while awaiting hardware input.</li>
+<li>Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately binds the control, preserves your configured min/max limits, and saves the mapping to the active profile.</li>
+<li>
+<p>Right-click again and select <strong>Cancel MIDI Learn</strong> if needed.</p>
+</li>
+<li>
+<p><strong>Modulation Matrix Cells</strong>:</p>
+</li>
+<li>
+<p>Click any cell in the MIDI column of the Parameters matrix, then click <strong>Re-Learn MIDI</strong> in Properties.</p>
+</li>
+<li>
+<p><strong>Global Performance Actions</strong>:</p>
+</li>
+<li>
+<p>In <strong>Preferences → MIDI Controls</strong>, click <strong>Learn</strong> next to <em>Queue Advance A/B Next</em>, <em>Queue Step Back A/B Prev</em>, <em>BG Shader Advance</em>, <em>BG Step Back</em>, or <em>Tap Tempo</em>.</p>
+</li>
+<li>
+<p><strong>Modulator Variable Paths</strong>:</p>
+</li>
+<li>Modulator variables use unified path syntax: <code>&lt;parameterPath&gt;:mod/&lt;modulatorIndex&gt;/&lt;propertyName&gt;</code>, such as <code>Deck A/geometry/zoom:mod/0/subdivision</code> (LFO 1 Speed), <code>:mod/0/depth</code>, <code>:mod/0/slope</code>, or <code>:mod/1/morph</code>. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. <code>Deck A/geometry/zoom [LFO 1 Speed]</code>) in the MIDI Preferences mapping table.</li>
+</ol>
 <h3 id="intelligent-signal-classification">Intelligent Signal Classification</h3>
 <p>When you turn a knob or tap a pad during Learn mode, Liquid LSD inspects the incoming stream and classifies it automatically:
 - <strong>Note On / Off:</strong> Identified as a discrete button (pads/keys), defaulting to Momentary mode.

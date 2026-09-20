@@ -14,14 +14,27 @@ data class FXPresetDto(
 )
 
 /**
- * Data Transfer Object for a 4-slot FX chain preset (.lsdfxchain).
+ * Data Transfer Object for a 3-slot FX chain preset (.lsdfxchain).
  */
 @Serializable
 data class FXChainDto(
     val version: Int = 1,
     val name: String,
     val tags: List<String> = emptyList(),
-    val slots: List<FXSlotDto?> = emptyList() // Size 4; null = empty slot
+    val dryWet: ParameterDto? = null,
+    val slots: List<FXSlotDto?> = emptyList() // Size 3; null = empty slot
+)
+
+/**
+ * Data Transfer Object for a 3-chain FX bank preset (.lsdfxbank).
+ */
+@Serializable
+data class FXBankDto(
+    val version: Int = 1,
+    val name: String,
+    val tags: List<String> = emptyList(),
+    val masterWetDry: ParameterDto? = null,
+    val chains: List<FXChainDto?> = emptyList() // Size 3; null = empty chain
 )
 
 /**

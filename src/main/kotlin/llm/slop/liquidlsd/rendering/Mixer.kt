@@ -34,19 +34,26 @@ class Mixer(
     // Intermediate FBO for pre-FX composite output (Deck A + Deck B composited over Deck BG)
     var masterCompositeFBO = FBO(width, height)
 
-    // Master FX slots (chained in order: slot 0's output feeds slot 1's input, etc.)
-    // Separate from the two deck-routable FxBanks below -- this chain always applies to the
-    // final composited output and isn't assignable/shared the way the FxBanks are.
-    val masterFxSlots = arrayOfNulls<ISFFilter>(MASTER_FX_SLOT_COUNT)
+    // Master FX bank (3 serial chains x 3 slots)
+    val masterFxBank = FxBank("MFX")
 
-    // FBOs for master FX serial processing stages
-    var masterFxFBOs = Array(MASTER_FX_SLOT_COUNT) { FBO(width, height) }
+    val masterFxWetDry: ModulatableParameter
+        get() = masterFxBank.masterWetDry
+
+    val masterFxSlots: Array<ISFFilter?>
+        get() = masterFxBank.chains[0].slots
+
+    // Four-buffer ping-pong architecture for Master FX:
+    var masterFxPingFBO = FBO(width, height)
+    var masterFxPongFBO = FBO(width, height)
+    var masterFxChainOutFBO = FBO(width, height)
+    var masterFxBankOutFBO = FBO(width, height)
 
     // The two shared FX banks decks route into (see FxBank). Default assignment mirrors the
     // previous FXQueueManager/FXBgQueueManager split (A/B share one queue, BG has its own) --
     // there's no user-facing bank-assignment toggle yet, so this is fixed for now.
-    val fxBank1 = FxBank("Bank 1")
-    val fxBank2 = FxBank("Bank 2")
+    val fxBank1 = FxBank("FX1")
+    val fxBank2 = FxBank("FX2")
 
     // Active ISF transition filter for crossfading
     var transitionFilter: ISFFilter? = null
@@ -103,9 +110,20 @@ class Mixer(
         masterCompositeFBO = FBO(width, height)
         masterCompositeFBO.clear(0f, 0f, 0f, 0f)
 
-        masterFxFBOs.forEach { it.dispose() }
-        masterFxFBOs = Array(MASTER_FX_SLOT_COUNT) { FBO(width, height) }
-        masterFxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
+        masterFxPingFBO.dispose()
+        masterFxPongFBO.dispose()
+        masterFxChainOutFBO.dispose()
+        masterFxBankOutFBO.dispose()
+
+        masterFxPingFBO = FBO(width, height)
+        masterFxPongFBO = FBO(width, height)
+        masterFxChainOutFBO = FBO(width, height)
+        masterFxBankOutFBO = FBO(width, height)
+
+        masterFxPingFBO.clear(0f, 0f, 0f, 0f)
+        masterFxPongFBO.clear(0f, 0f, 0f, 0f)
+        masterFxChainOutFBO.clear(0f, 0f, 0f, 0f)
+        masterFxBankOutFBO.clear(0f, 0f, 0f, 0f)
 
         deckA.resize(newWidth, newHeight)
         deckB.resize(newWidth, newHeight)
@@ -113,60 +131,16 @@ class Mixer(
         deckPV.resize(newWidth, newHeight)
     }
 
-    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? {
-        val fx = masterFxSlots.getOrNull(slotIndex) ?: return null
-        if (fx.id.isEmpty()) return null
-        return FXSlotDto(
-            filterId = fx.id,
-            enabled = fx.enabled,
-            dryWet = fx.dryWet.toDto(),
-            parameters = fx.parameters.mapValues { p -> p.value.toDto() }
-        )
-    }
+    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? = masterFxBank.chains[0].toFxSlotDto(slotIndex)
 
-    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) {
-        if (slotIndex !in masterFxSlots.indices) return
-        masterFxSlots[slotIndex]?.dispose()
-        masterFxSlots[slotIndex] = null
+    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) = masterFxBank.chains[0].applyFxSlot(slotIndex, dto)
 
-        if (dto.filterId.isNotBlank()) {
-            val filter = ISFFilterRegistry.createFilter(dto.filterId)
-            if (filter != null) {
-                filter.enabled = dto.enabled
-                filter.dryWet.applyDto(dto.dryWet)
-                for ((key, paramDto) in dto.parameters) {
-                    filter.parameters[key]?.applyDto(paramDto)
-                }
-                masterFxSlots[slotIndex] = filter
-            }
-        }
-    }
+    fun clearMasterFxSlot(slotIndex: Int) = masterFxBank.chains[0].clearFxSlot(slotIndex)
 
-    fun clearMasterFxSlot(slotIndex: Int) {
-        if (slotIndex in masterFxSlots.indices) {
-            masterFxSlots[slotIndex]?.dispose()
-            masterFxSlots[slotIndex] = null
-        }
-    }
+    fun applyMasterFxChain(dto: FXChainDto) = masterFxBank.chains[0].applyFxChain(dto)
 
-    fun applyMasterFxChain(dto: FXChainDto) {
-        for (i in masterFxSlots.indices) {
-            clearMasterFxSlot(i)
-            val slotDto = dto.slots.getOrNull(i)
-            if (slotDto != null && slotDto.filterId.isNotBlank()) {
-                applyMasterFxSlot(i, slotDto)
-            }
-        }
-    }
-
-    fun toMasterFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto {
-        val slotsList = (0 until MASTER_FX_SLOT_COUNT).map { toMasterFxSlotDto(it) }
-        return FXChainDto(
-            name = name,
-            tags = tags,
-            slots = slotsList
-        )
-    }
+    fun toMasterFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto =
+        masterFxBank.chains[0].toFxChainDto(name, tags)
 
     // Blend parameters
     val crossfade = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR) // -1.0 = Deck A, 1.0 = Deck B
@@ -179,10 +153,18 @@ class Mixer(
  
     init {
         setTransition("linear_crossfade")
-        deckA.assignedFxBank = fxBank1
-        deckB.assignedFxBank = fxBank1
-        deckBG.assignedFxBank = fxBank2
-        deckPV.assignedFxBank = fxBank2
+        for (deck in listOf(deckA, deckB, deckBG, deckPV)) {
+            deck.fxBank1 = fxBank1
+            deck.fxBank2 = fxBank2
+        }
+        deckA.fxRouting.baseValue = 1.0f
+        deckB.fxRouting.baseValue = 1.0f
+        deckBG.fxRouting.baseValue = 2.0f
+        deckPV.fxRouting.baseValue = 2.0f
+        deckA.fxRoutingDefault = 1.0f
+        deckB.fxRoutingDefault = 1.0f
+        deckBG.fxRoutingDefault = 2.0f
+        deckPV.fxRoutingDefault = 2.0f
     }
 
     // Channel level multiplier faders (0.0 to 1.0) -- modulatable so they're macro/CV-bindable
@@ -277,7 +259,7 @@ class Mixer(
     val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
 
     companion object {
-        const val MASTER_FX_SLOT_COUNT = 4
+        const val MASTER_FX_SLOT_COUNT = 3
         const val FORBIDDEN_RANDOMIZE_TOOLTIP = "It is forbidden to randomize the randomizer. Chaos would ensue."
         val RANDOMIZER_PARAM_KEYS = setOf(
             "Mixer/randDeckA",
@@ -305,12 +287,18 @@ class Mixer(
         list.addAll(deckB.getAllRandomizableParameters())
         list.addAll(deckBG.getAllRandomizableParameters())
         list.addAll(deckPV.getAllRandomizableParameters())
-        masterFxSlots.forEach { fx ->
-            if (fx != null && fx.enabled) {
-                list.add(fx.dryWet)
-                list.addAll(fx.parameters.values)
+        masterFxBank.chains.forEach { chain ->
+            if (chain.enabled) {
+                list.add(chain.dryWet)
+                chain.slots.forEach { fx ->
+                    if (fx != null && fx.enabled) {
+                        list.add(fx.dryWet)
+                        list.addAll(fx.parameters.values)
+                    }
+                }
             }
         }
+        list.add(masterFxWetDry)
         list.add(crossfade)
         list.add(masterAlpha)
         return list
@@ -348,9 +336,9 @@ class Mixer(
             list.addAll(filter.getParameterPaths("$prefix/Transition"))
         }
 
-        masterFxSlots.forEachIndexed { i, fx ->
-            fx?.getParameterPaths("$prefix/FX${i + 1}")?.let { list.addAll(it) }
-        }
+        // Master FX paths use the literal "MFX" prefix (its own top-level Parameters tab and
+        // macro bank), not $prefix -- unlike everything else here, which is genuinely Mixer-owned.
+        list.addAll(masterFxBank.getParameterPaths("MFX"))
 
         list.addAll(fxBank1.getParameterPaths(fxBank1.label))
         list.addAll(fxBank2.getParameterPaths(fxBank2.label))
@@ -463,7 +451,7 @@ class Mixer(
         randAll.evaluate()
 
         transitionFilter?.update()
-        masterFxSlots.forEach { it?.update() }
+        masterFxBank.update()
         fxBank1.update()
         fxBank2.update()
 
@@ -605,8 +593,11 @@ class Mixer(
         masterFBO.dispose()
         blendFBO.dispose()
         masterCompositeFBO.dispose()
-        masterFxFBOs.forEach { it.dispose() }
-        masterFxSlots.forEach { it?.dispose() }
+        masterFxPingFBO.dispose()
+        masterFxPongFBO.dispose()
+        masterFxChainOutFBO.dispose()
+        masterFxBankOutFBO.dispose()
+        masterFxBank.dispose()
         fxBank1.dispose()
         fxBank2.dispose()
         transitionFilter?.dispose()

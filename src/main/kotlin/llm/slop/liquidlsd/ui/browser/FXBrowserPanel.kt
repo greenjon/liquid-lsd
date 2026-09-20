@@ -166,14 +166,15 @@ object FXBrowserPanel {
             ImGui.textDisabled("Save single FX slot from:")
             ImGui.separator()
             for ((deckLabel, deck) in decks) {
-                if (ImGui.beginMenu(deckLabel)) {
+                val bank = deck.assignedFxBank
+                if (bank != null && ImGui.beginMenu(deckLabel)) {
                     for (i in 0 until FxBank.SLOT_COUNT) {
                         val slotNum = i + 1
-                        val fx = deck.fxSlots[i]
+                        val fx = bank.slots[i]
                         val hasFx = fx != null && fx.id.isNotEmpty()
                         val label = if (fx != null && fx.id.isNotEmpty()) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
                         if (ImGui.menuItem(label, "", false, hasFx) && fx != null) {
-                            deck.toFxSlotDto(i)?.let { slotDto ->
+                            bank.toFxSlotDto(i)?.let { slotDto ->
                                 SavePresetModal.request(
                                     title = "Save FX Slot Preset As",
                                     confirmLabel = "Save",
@@ -195,16 +196,18 @@ object FXBrowserPanel {
             ImGui.separator()
             for ((deckLabel, deck) in decks) {
                 if (ImGui.menuItem(deckLabel)) {
-                    val chainDto = deck.toFxChainDto("fx_chain")
-                    SavePresetModal.request(
-                        title = "Save FX Chain As",
-                        confirmLabel = "Save",
-                        defaultName = "fx_chain",
-                        targetDir = FileSystemManager.getFxChainsRoot(),
-                        extension = "lsdfxchain"
-                    ) { name, tags ->
-                        val file = File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                        session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
+                    val chainDto = deck.assignedFxBank?.toFxChainDto("fx_chain")
+                    if (chainDto != null) {
+                        SavePresetModal.request(
+                            title = "Save FX Chain As",
+                            confirmLabel = "Save",
+                            defaultName = "fx_chain",
+                            targetDir = FileSystemManager.getFxChainsRoot(),
+                            extension = "lsdfxchain"
+                        ) { name, tags ->
+                            val file = File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
+                            session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
+                        }
                     }
                 }
             }
@@ -279,26 +282,27 @@ object FXBrowserPanel {
     }
 
     private fun applyToDeck(session: SessionContext, asset: AssetItem, deck: Deck) {
+        val bank = deck.assignedFxBank ?: return
         val file = File(asset.path)
         when (asset.type) {
             AssetType.FX_STOCK -> {
                 val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
-                val vacantIndex = (0 until FxBank.SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null } ?: 0
-                deck.clearFxSlot(vacantIndex)
+                val vacantIndex = (0 until FxBank.SLOT_COUNT).firstOrNull { bank.slots[it] == null } ?: 0
+                bank.clearFxSlot(vacantIndex)
                 val filter = ISFFilterRegistry.createFilter(id)
                 if (filter != null) {
-                    deck.fxSlots[vacantIndex] = filter
+                    bank.slots[vacantIndex] = filter
                 }
             }
             AssetType.FX_PRESET -> {
-                val vacantIndex = (0 until FxBank.SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null } ?: 0
+                val vacantIndex = (0 until FxBank.SLOT_COUNT).firstOrNull { bank.slots[it] == null } ?: 0
                 session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                    deck.applyFxSlot(vacantIndex, presetDto.slot)
+                    bank.applyFxSlot(vacantIndex, presetDto.slot)
                 }
             }
             AssetType.FX_CHAIN -> {
                 session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                    deck.applyFxChain(chainDto)
+                    bank.applyFxChain(chainDto)
                 }
             }
             else -> {}
@@ -313,12 +317,13 @@ object FXBrowserPanel {
             AssetType.FX_STOCK -> {
                 val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
                 for ((deckLabel, deck) in decks) {
-                    if (ImGui.beginMenu("Load to $deckLabel")) {
+                    val bank = deck.assignedFxBank
+                    if (bank != null && ImGui.beginMenu("Load to $deckLabel")) {
                         for (s in 0 until FxBank.SLOT_COUNT) {
                             val slotNum = s + 1
                             if (ImGui.menuItem("Slot $slotNum")) {
-                                deck.clearFxSlot(s)
-                                ISFFilterRegistry.createFilter(id)?.let { deck.fxSlots[s] = it }
+                                bank.clearFxSlot(s)
+                                ISFFilterRegistry.createFilter(id)?.let { bank.slots[s] = it }
                             }
                         }
                         ImGui.endMenu()
@@ -327,12 +332,13 @@ object FXBrowserPanel {
             }
             AssetType.FX_PRESET -> {
                 for ((deckLabel, deck) in decks) {
-                    if (ImGui.beginMenu("Load to $deckLabel")) {
+                    val bank = deck.assignedFxBank
+                    if (bank != null && ImGui.beginMenu("Load to $deckLabel")) {
                         for (s in 0 until FxBank.SLOT_COUNT) {
                             val slotNum = s + 1
                             if (ImGui.menuItem("Slot $slotNum")) {
                                 session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                    deck.applyFxSlot(s, presetDto.slot)
+                                    bank.applyFxSlot(s, presetDto.slot)
                                 }
                             }
                         }
@@ -372,9 +378,10 @@ object FXBrowserPanel {
             }
             AssetType.FX_CHAIN -> {
                 for ((deckLabel, deck) in decks) {
-                    if (ImGui.menuItem("Load to $deckLabel")) {
+                    val bank = deck.assignedFxBank
+                    if (bank != null && ImGui.menuItem("Load to $deckLabel")) {
                         session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                            deck.applyFxChain(chainDto)
+                            bank.applyFxChain(chainDto)
                         }
                     }
                 }

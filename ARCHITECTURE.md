@@ -17,7 +17,7 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                  │                  │                  │
               cleanFBO           cleanFBO           cleanFBO
                  │                  │                  │
-          [FX Slots 1-4: ISF] [FX Slots 1-4: ISF] [FX Slots 1-4: ISF]
+          [FX Routing: None/FX1/FX2 via 3 Serial Chains x 3 Filter Slots]
                  │                  └────────┬─────────┘
                  │                           │
                  │                ISF Transition Filter
@@ -29,6 +29,8 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                                  Mixer.kt
                                 mixer.frag
                    (Composite: Transition Output over BG)
+                                    │
+                    [MFX: 3 Serial Chains x 3 Filter Slots]
                                     │
                                masterFBO ──► screen
 
@@ -155,9 +157,11 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── VisualEffect.kt         — Interface for post-processing effects
 │   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter, multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
-│   ├── Deck.kt                 — VisualSource + cleanFBO + fxSlots[4]/fxFBOs[4] (modular chained ISF FX pipeline) + 2D View params
-│   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with channel level multipliers & ISF transition engine (blendFBO)
-│   ├── Renderer.kt             — Per-frame: universal uniform bridge (resolution, time, frame, date, mouse, audio) -> polymorphic source renderTopology() -> 2D view transform -> chained FX Slots 1-4 -> ISF transition pass (A/B) -> Deck BG composite -> blit
+│   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass
+│   ├── FxBank.kt               — FX Bank (FX1, FX2, MFX) managing 3 serial FxChain instances with master wet/dry and bypass
+│   ├── Deck.kt                 — VisualSource + cleanFBO + 4-buffer ping-pong architecture (scratch fxPingFBO/fxPongFBO + alternating fxChainOutFBO/fxBankOutFBO) + View & FxRouting params
+│   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with masterFxBank (MFX) & 4-buffer ping-pong architecture
+│   ├── Renderer.kt             — Per-frame: universal uniform bridge -> polymorphic source renderTopology() -> 2D view transform -> serial 3-chain FX bank pass -> ISF transition pass (A/B) -> Deck BG composite -> master FX pass -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D and foreign shader format detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
