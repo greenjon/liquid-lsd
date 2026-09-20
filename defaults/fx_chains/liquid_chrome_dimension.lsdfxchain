@@ -1,0 +1,144 @@
+{
+    "name": "Liquid Chrome Dimension",
+    "tags": [
+        "chrome",
+        "surreal",
+        "3d",
+        "sphere",
+        "psychedelic"
+    ],
+    "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slots": [
+        {
+            "filterId": "wave_displace",
+            "dryWet": {
+                "baseValue": 0.7,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "amplitude": {
+                    "baseValue": 0.04,
+                    "baseMin": 0.0,
+                    "baseMax": 0.2,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "frequency": {
+                    "baseValue": 8.0,
+                    "baseMin": 0.5,
+                    "baseMax": 50.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "speed": {
+                    "baseValue": 1.0,
+                    "baseMin": -5.0,
+                    "baseMax": 5.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "rippleMode": {
+                    "baseValue": 1.0,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "mirror_sphere",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "sphereRadius": {
+                    "baseValue": 0.45,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "fresnelGlow": {
+                    "baseValue": 0.6,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "chromaFringe": {
+                    "baseValue": 0.03,
+                    "baseMin": 0.0,
+                    "baseMax": 0.1,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "backgroundMix": {
+                    "baseValue": 0.2,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "color_levels",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "contrast": {
+                    "baseValue": 1.3,
+                    "baseMin": 0.0,
+                    "baseMax": 3.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "saturation": {
+                    "baseValue": 1.2,
+                    "baseMin": 0.0,
+                    "baseMax": 3.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "filmicTone": {
+                    "baseValue": 0.4,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        }
+    ],
+    "superKnob": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slotSuperKnobLink": [
+        true,
+        true,
+        true
+    ]
+}

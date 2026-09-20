@@ -75,13 +75,45 @@ Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked wit
 
 - **Stock ISF Filters** — Built-in filters with no saved parameters. They can only be loaded directly to a deck (first vacant FX slot); they can't be added to a playlist or live queue since there's no reproducible state to save.
 - **Saved Single FX Presets (`.lsdfx`)** — One FX slot's full parameter state, captured from a deck.
-- **Saved FX Chains (`.lsdfxchain`)** — A complete 4-slot FX pipeline, captured from a deck. Loading a chain replaces all 4 slots on the target deck.
+- **Saved FX Chains (`.lsdfxchain`)** — A complete 3-slot FX pipeline, captured from an FX bank chain. Loading a chain replaces all 3 slots on the target chain.
 
-Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck slot (or all 4 slots as a chain) into a new preset.
+Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck slot (or all 3 slots as a chain) into a new preset.
 
-- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–4 in the Parameters panel `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
-- **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 4 slots (chains).
-- **Right-click menu**: `Load to > Deck [A|B|BG|PV] > Slot [1|2|3|4]` (singles) or `Load to Deck [A|B|BG|PV]` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
+- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in the Parameters panel `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
+- **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains).
+- **Right-click menu**: `Load to > Deck [A|B|BG|PV] > Slot [1|2|3]` (singles) or `Load to Deck [A|B|BG|PV] > Chain [1|2|3]` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
+
+#### Bundled Stock FX Chains
+
+Liquid LSD includes 9 pre-calibrated 3-slot FX chains in `library/fx_chains/` designed for live club and festival VJ performance:
+
+1. **Hyperspace Trip** (`hyperspace_trip.lsdfxchain`):
+   - *Slots*: `kaleidoscope` → `radial_blur` → `color_levels`
+   - *Vibe*: Classic psychedelic trance / festival tunnel breakdown with multi-axis kaleidoscopic folding, dithered zoom burst, and filmic Oklab contrast roll-off.
+2. **The Drop Weapon** (`the_drop_weapon.lsdfxchain`):
+   - *Slots*: `directional_blur` → `video_strobe` → `rgb_split`
+   - *Vibe*: High-intensity EDM/bass music drop impact with directional motion streaks, rhythmic beat flash gating, and chromatic aberration impact.
+3. **Cyberpunk 1984** (`cyberpunk_1984.lsdfxchain`):
+   - *Slots*: `pixelate` → `retro_crt` → `gradient_map`
+   - *Vibe*: Retro-futuristic dystopian terminal aesthetic with honeycomb pixel lattice, curved CRT phosphor scanlines, and duotone cyberpunk neon grading.
+4. **Liquid Mercury** (`liquid_mercury.lsdfxchain`):
+   - *Slots*: `wave_displace` → `fluid_smear` → `luma_displace`
+   - *Vibe*: Viscous organic fluid and metallic chrome distortion with concentric liquid ripples, curl advection smearing, and surface normal refraction.
+5. **Neon Wireframe** (`neon_wireframe.lsdfxchain`):
+   - *Slots*: `neon_edge` → `pinch_bulge` → `bloom`
+   - *Vibe*: Glowing electric neon vector graphics with orientation-to-hue Sobel edge glow, spherical optical lens bulging, and soft high-pass bloom.
+6. **Wormhole Flight** (`wormhole_flight.lsdfxchain`):
+   - *Slots*: `polar_tunnel` → `radial_blur` → `feedback`
+   - *Vibe*: Deep space infinite warp portal with aspect-preserving log-polar vortex, zoom burst trails, and recursive feedback rotation.
+7. **FLIR Predator Vision** (`flir_predator_vision.lsdfxchain`):
+   - *Slots*: `thermal_scanner` → `directional_blur` → `pixelate`
+   - *Vibe*: Military reconnaissance and sci-fi tactical optics with FLIR Ironbow heat mapping, sensor noise grain, horizontal smear, and quantized block mosaic.
+8. **Liquid Chrome Dimension** (`liquid_chrome_dimension.lsdfxchain`):
+   - *Slots*: `mirror_sphere` → `wave_displace` → `color_levels`
+   - *Vibe*: 3D raytraced floating chrome orb reflecting the scene with liquid surface turbulence and punchy high-contrast color grading.
+9. **2D to 3D Elevation with Feedback** (`2d_to_3d_elevation_with_feedback.lsdfxchain`):
+   - *Slots*: `3d_elevation` → `feedback` → `color_levels`
+   - *Vibe*: The iconic Liquid LSD topological displacement chain featuring heightmap mesh rendering, recursive rotation feedback, and ACES filmic grading.
 
 ### FX Playlists (`.lsdfxplay`)
 
@@ -149,8 +181,8 @@ The Background Queue works the same way as the main queue but drives Deck BG ind
 | Preset Browser             | Empty space at playlist bottom | Appends to the end       |
 | Playlist item              | Up / down in the same playlist | Reorders                 |
 | Preset Browser or Playlist | Queue                          | Adds to the live queue   |
-| FX Preset (`.lsdfx`)       | FX Slot 1–4 in Parameters      | Loads into target slot   |
-| FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters  | Overwrites 4-slot chain  |
+| FX Preset (`.lsdfx`)       | FX Slot 1–3 in Parameters      | Loads into target slot   |
+| FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters  | Overwrites 3-slot chain  |
 | FX Browser row              | FX Playlist (Column 2)         | Inserts/appends to playlist |
 | FX Browser row              | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
 | Live FX Queue item          | Up / down in the same queue    | Reorders                 |

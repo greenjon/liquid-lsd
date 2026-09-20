@@ -106,4 +106,391 @@ class FXPresetSerializationTest {
         assertNull(decoded.slots[2])
         assertNull(decoded.slots[3])
     }
+
+    private fun p(value: Float, min: Float = 0.0f, max: Float = 1.0f): ParameterDto =
+        ParameterDto(baseValue = value, baseMin = min, baseMax = max, randomizeBase = false, modulators = emptyList())
+
+    @Test
+    fun generateAndValidateDefaultBundledFxChains() {
+        val chainsDir = java.io.File("library/fx_chains")
+        chainsDir.mkdirs()
+
+        val chains = listOf(
+            FXChainDto(
+                name = "Hyperspace Trip",
+                tags = listOf("psychedelic", "fractal", "feedback", "ambient"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "kaleidoscope",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "segments" to p(8.0f, 2.0f, 24.0f),
+                            "rotation" to p(0.0f, -3.14159f, 3.14159f),
+                            "zoom" to p(1.0f, 0.1f, 5.0f),
+                            "centerX" to p(0.5f, 0.0f, 1.0f),
+                            "centerY" to p(0.5f, 0.0f, 1.0f),
+                            "originOffset" to p(0.0f, -1.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "feedback",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "fbDecay" to p(0.72f, 0.0f, 1.0f),
+                            "fbGain" to p(0.95f, 0.0f, 2.0f),
+                            "fbZoom" to p(0.05f, -1.0f, 1.0f),
+                            "fbRotate" to p(0.02f, -3.14159f, 3.14159f),
+                            "fbBlur" to p(0.2f, 0.0f, 1.0f),
+                            "fbChroma" to p(0.15f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "gradient_map",
+                        dryWet = p(0.85f),
+                        parameters = mapOf(
+                            "mixAmount" to p(0.85f, 0.0f, 1.0f),
+                            "palette" to p(0.0f, 0.0f, 6.0f),
+                            "cycleSpeed" to p(0.08f, -2.0f, 2.0f),
+                            "cycleOffset" to p(0.0f, 0.0f, 1.0f),
+                            "hueShift" to p(0.0f, 0.0f, 1.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "The Drop Weapon",
+                tags = listOf("drop", "strobe", "bass", "glitch", "high-energy"),
+                dryWet = p(1.0f),
+                superKnob = p(0.0f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "radial_blur",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "blurAmount" to p(0.4f, 0.0f, 1.0f),
+                            "decay" to p(0.92f, 0.5f, 1.0f),
+                            "exposure" to p(1.2f, 0.1f, 2.5f),
+                            "centerX" to p(0.5f, 0.0f, 1.0f),
+                            "centerY" to p(0.5f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "video_strobe",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "rate" to p(8.0f, 0.0f, 30.0f),
+                            "freezeHold" to p(0.0f, 0.0f, 1.0f),
+                            "strobeMode" to p(1.0f, 0.0f, 3.0f),
+                            "dutyCycle" to p(0.25f, 0.05f, 0.95f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "rgb_split",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "amount" to p(0.04f, 0.0f, 0.1f),
+                            "radialMode" to p(1.0f, 0.0f, 1.0f),
+                            "dispersionMode" to p(0.0f, 0.0f, 1.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "Cyberpunk 1984",
+                tags = listOf("retro", "crt", "arcade", "synthwave", "lofi"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "pixelate",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "pixelSize" to p(4.0f, 1.0f, 128.0f),
+                            "latticeMode" to p(0.0f, 0.0f, 2.0f),
+                            "colorDepth" to p(16.0f, 0.0f, 32.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "retro_crt",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "scanlineIntensity" to p(0.45f, 0.0f, 1.0f),
+                            "scanlineCount" to p(240.0f, 50.0f, 800.0f),
+                            "curvature" to p(0.12f, 0.0f, 0.6f),
+                            "phosphorMask" to p(0.3f, 0.0f, 1.0f),
+                            "vignette" to p(0.35f, 0.0f, 1.0f),
+                            "brightnessBoost" to p(1.25f, 0.8f, 2.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "rgb_split",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "amount" to p(0.015f, 0.0f, 0.1f),
+                            "angle" to p(0.0f, -3.14159f, 3.14159f),
+                            "radialMode" to p(0.0f, 0.0f, 1.0f),
+                            "dispersionMode" to p(1.0f, 0.0f, 1.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "Liquid Mercury",
+                tags = listOf("liquid", "fluid", "organic", "marbling", "ambient"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "luma_displace",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "refractAmount" to p(0.08f, 0.0f, 0.25f),
+                            "smoothness" to p(3.0f, 0.5f, 8.0f),
+                            "chromaDispersion" to p(0.03f, 0.0f, 0.1f),
+                            "flowSpeed" to p(0.5f, -3.0f, 3.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "fluid_smear",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "smearAmount" to p(0.6f, 0.0f, 1.0f),
+                            "curlScale" to p(3.5f, 0.5f, 20.0f),
+                            "flowSpeed" to p(0.4f, -2.0f, 2.0f),
+                            "decay" to p(0.95f, 0.8f, 1.0f),
+                            "gravity" to p(0.05f, -1.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "bloom",
+                        dryWet = p(0.85f),
+                        parameters = mapOf(
+                            "bloomIntensity" to p(0.9f, 0.0f, 3.0f),
+                            "threshold" to p(0.45f, 0.0f, 1.0f),
+                            "blurAmount" to p(1.2f, 0.1f, 3.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "Neon Wireframe",
+                tags = listOf("neon", "laser", "techno", "minimal", "edges"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "neon_edge",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "edgeStrength" to p(3.5f, 0.0f, 10.0f),
+                            "threshold" to p(0.04f, 0.0f, 0.5f),
+                            "glowSpread" to p(1.5f, 0.5f, 5.0f),
+                            "palette" to p(0.0f, 0.0f, 3.0f),
+                            "backgroundBlend" to p(0.0f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "directional_blur",
+                        dryWet = p(0.8f),
+                        parameters = mapOf(
+                            "blurAmount" to p(0.3f, 0.0f, 1.0f),
+                            "angle" to p(0.0f, -3.14159f, 3.14159f),
+                            "decay" to p(0.9f, 0.5f, 1.0f),
+                            "bidirectional" to p(1.0f, 0.0f, 1.0f),
+                            "exposure" to p(1.2f, 0.2f, 2.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "feedback",
+                        dryWet = p(0.7f),
+                        parameters = mapOf(
+                            "fbDecay" to p(0.55f, 0.0f, 1.0f),
+                            "fbGain" to p(0.85f, 0.0f, 2.0f),
+                            "fbZoom" to p(0.0f, -1.0f, 1.0f),
+                            "fbRotate" to p(0.0f, -3.14159f, 3.14159f),
+                            "fbBlur" to p(0.1f, 0.0f, 1.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "Wormhole Flight",
+                tags = listOf("tunnel", "space", "warp", "cosmic"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "polar_tunnel",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "depth" to p(2.0f, 0.1f, 5.0f),
+                            "twist" to p(0.4f, -3.14159f, 3.14159f),
+                            "zoom" to p(1.0f, 0.1f, 5.0f),
+                            "symmetry" to p(2.0f, 1.0f, 8.0f),
+                            "depthFog" to p(0.6f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "pinch_bulge",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "amount" to p(0.4f, -1.0f, 1.0f),
+                            "radius" to p(0.6f, 0.05f, 1.5f),
+                            "centerX" to p(0.5f, 0.0f, 1.0f),
+                            "centerY" to p(0.5f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "bloom",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "bloomIntensity" to p(1.2f, 0.0f, 3.0f),
+                            "threshold" to p(0.35f, 0.0f, 1.0f),
+                            "blurAmount" to p(1.0f, 0.1f, 3.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "FLIR Predator Vision",
+                tags = listOf("thermal", "flir", "military", "tactical", "industrial"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "thermal_scanner",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "intensity" to p(1.0f, 0.0f, 1.0f),
+                            "mode" to p(0.0f, 0.0f, 2.0f),
+                            "thermalBloom" to p(0.4f, 0.0f, 1.0f),
+                            "sensorGrain" to p(0.25f, 0.0f, 1.0f),
+                            "vignette" to p(0.3f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "retro_crt",
+                        dryWet = p(0.85f),
+                        parameters = mapOf(
+                            "scanlineIntensity" to p(0.25f, 0.0f, 1.0f),
+                            "scanlineCount" to p(320.0f, 50.0f, 800.0f),
+                            "curvature" to p(0.06f, 0.0f, 0.6f),
+                            "phosphorMask" to p(0.0f, 0.0f, 1.0f),
+                            "vignette" to p(0.2f, 0.0f, 1.0f),
+                            "brightnessBoost" to p(1.1f, 0.8f, 2.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "video_strobe",
+                        dryWet = p(0.6f),
+                        parameters = mapOf(
+                            "rate" to p(3.0f, 0.0f, 30.0f),
+                            "freezeHold" to p(0.0f, 0.0f, 1.0f),
+                            "strobeMode" to p(0.0f, 0.0f, 3.0f),
+                            "dutyCycle" to p(0.12f, 0.05f, 0.95f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "Liquid Chrome Dimension",
+                tags = listOf("chrome", "surreal", "3d", "sphere", "psychedelic"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "wave_displace",
+                        dryWet = p(0.7f),
+                        parameters = mapOf(
+                            "amplitude" to p(0.04f, 0.0f, 0.2f),
+                            "frequency" to p(8.0f, 0.5f, 50.0f),
+                            "speed" to p(1.0f, -5.0f, 5.0f),
+                            "rippleMode" to p(1.0f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "mirror_sphere",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "sphereRadius" to p(0.45f, 0.0f, 1.0f),
+                            "fresnelGlow" to p(0.6f, 0.0f, 1.0f),
+                            "chromaFringe" to p(0.03f, 0.0f, 0.1f),
+                            "backgroundMix" to p(0.2f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "color_levels",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "contrast" to p(1.3f, 0.0f, 3.0f),
+                            "saturation" to p(1.2f, 0.0f, 3.0f),
+                            "filmicTone" to p(0.4f, 0.0f, 1.0f)
+                        )
+                    )
+                )
+            ),
+            FXChainDto(
+                name = "2D to 3D Elevation with Feedback",
+                tags = listOf("3d", "geometry", "feedback", "favorite"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(
+                        filterId = "3d_elevation",
+                        dryWet = p(1.0f),
+                        parameters = mapOf(
+                            "mode3D" to p(0.0f, 0.0f, 3.0f),
+                            "zoom" to p(1.0f, 0.1f, 5.0f),
+                            "perspective" to p(0.5f, 0.0f, 1.0f),
+                            "separation" to p(0.2f, 0.0f, 2.0f),
+                            "roundness" to p(1.0f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "feedback",
+                        dryWet = p(0.85f),
+                        parameters = mapOf(
+                            "fbDecay" to p(0.67f, 0.0f, 1.0f),
+                            "fbGain" to p(0.77f, 0.0f, 2.0f),
+                            "fbZoom" to p(0.13f, -1.0f, 1.0f),
+                            "fbBlur" to p(0.5f, 0.0f, 1.0f),
+                            "fbChroma" to p(0.7f, 0.0f, 1.0f)
+                        )
+                    ),
+                    FXSlotDto(
+                        filterId = "bloom",
+                        dryWet = p(0.6f),
+                        parameters = mapOf(
+                            "bloomIntensity" to p(0.8f, 0.0f, 3.0f),
+                            "threshold" to p(0.5f, 0.0f, 1.0f),
+                            "blurAmount" to p(1.0f, 0.1f, 3.0f)
+                        )
+                    )
+                )
+            )
+        )
+
+        for (chain in chains) {
+            val fileName = chain.name.lowercase().replace(" ", "_") + ".lsdfxchain"
+            val file = java.io.File(chainsDir, fileName)
+            val jsonText = json.encodeToString(chain)
+            file.writeText(jsonText)
+
+            // Validate that it reads back cleanly
+            val readBack = json.decodeFromString<FXChainDto>(file.readText())
+            assertEquals(chain.name, readBack.name)
+            assertEquals(3, readBack.slots.size)
+        }
+    }
 }

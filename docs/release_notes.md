@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### Curated Bundled 3-Slot FX Chains Suite (`library/fx_chains/`, `FXPresetSerializationTest.kt`, `docs/user_guide/presets_and_library.md`)
+- **9 Resolume-Inspired Curated FX Chains**: Generated and bundled 9 high-impact 3-slot FX chains in `library/fx_chains/` designed for live electronic music, techno, bass music, and club/festival visual performance:
+  - `hyperspace_trip.lsdfxchain`: Psychedelic trance warp combining `kaleidoscope` (polyhedral mirror) → `radial_blur` (stochastic dithered zoom) → `color_levels` (filmic Oklab punch).
+  - `the_drop_weapon.lsdfxchain`: Bass music / EDM drop impact chaining `directional_blur` (motion streak) → `video_strobe` (rhythmic beat flash gating) → `rgb_split` (spectral chromatic aberration).
+  - `cyberpunk_1984.lsdfxchain`: Retro-futuristic cyberpunk terminal chaining `pixelate` (honeycomb crystal mosaic) → `retro_crt` (aperture grille phosphor scanlines) → `gradient_map` (duotone cyber neon grading).
+  - `liquid_mercury.lsdfxchain`: Fluid metallic displacement chaining `wave_displace` (concentric ripples) → `fluid_smear` (persistent curl fluid advection) → `luma_displace` (normal refraction).
+  - `neon_wireframe.lsdfxchain`: Vector glowing outline aesthetics chaining `neon_edge` (angle-to-hue Sobel) → `pinch_bulge` (spherical optic lens) → `bloom` (high-pass diffusion).
+  - `wormhole_flight.lsdfxchain`: Deep space vortex chaining `polar_tunnel` (log-polar warp) → `radial_blur` (high-speed zoom streaks) → `feedback` (recursive rotation trails).
+  - `flir_predator_vision.lsdfxchain`: Sci-fi tactical optics chaining `thermal_scanner` (FLIR Ironbow heat camera) → `directional_blur` (sensor streak) → `pixelate` (recon block mosaic).
+  - `liquid_chrome_dimension.lsdfxchain`: Surreal reflective chrome dimension chaining `mirror_sphere` (raytraced 3D chrome orb) → `wave_displace` (liquid surface waves) → `color_levels` (high-contrast punch).
+  - `2d_to_3d_elevation_with_feedback.lsdfxchain`: Iconic Liquid LSD elevation chaining `3d_elevation` (heightmap 3D mesh) → `feedback` (recursive camera rotation) → `color_levels` (ACES highlight curve).
+- **Automated Validation**: Integrated automated generation and roundtrip deserialization verification in `FXPresetSerializationTest.kt`.
+
+
 ### Phase 3 Curated High-Quality Cleanroom ISF FX Suite (`ISFFilterRegistry.kt`, `ISFAutoBindEngine.kt`, `ISFFilterTest.kt`, `default_filters/`, `docs/licenses/SHADERS_LICENSE.md`)
 - **Cleanroom High-Quality ISF FX Suite (Phase 3 - Advanced Synthesis & Temporal FX)**: Added 5 native, permissively licensed (MIT) image filters engineered from scratch for commercial distribution, fluid dynamics, and live rhythmic performance:
   - `luma_displace.fs` (Option B): 2D surface normal gradient refraction simulating liquid marbling, oily fluids, and melting glass with multi-spectral chromatic dispersion.

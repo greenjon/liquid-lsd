@@ -192,6 +192,15 @@ abstract class SyncDefaultsTask : DefaultTask() {
                 println("Synced playlist to defaults: ${f.name}")
             }
         }
+        val fxChainsSrc = File(lib, "fx_chains")
+        val fxChainsDest = File(def, "fx_chains")
+        if (fxChainsSrc.exists()) {
+            fxChainsDest.mkdirs()
+            fxChainsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxchain" }?.forEach { f ->
+                f.copyTo(File(fxChainsDest, f.name), overwrite = true)
+                println("Synced fx chain to defaults: ${f.name}")
+            }
+        }
     }
 }
 
@@ -210,8 +219,10 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
         val outBase = outputDir.get().asFile
         val presetsOut = File(outBase, "default_presets")
         val playlistsOut = File(outBase, "default_playlists")
+        val fxChainsOut = File(outBase, "default_fx_chains")
         presetsOut.mkdirs()
         playlistsOut.mkdirs()
+        fxChainsOut.mkdirs()
 
         // Write version.txt
         File(outBase, "version.txt").writeText(appVersion.get().trim() + "\n")
@@ -242,6 +253,19 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
             playlistLines.add(f.name)
         }
         playlistManifest.writeText(playlistLines.joinToString("\n"))
+
+        val fxChainsIn = File(inBase, "fx_chains")
+        val fxChainFiles = if (fxChainsIn.exists()) {
+            fxChainsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxchain" }?.sortedBy { it.name } ?: emptyList<File>()
+        } else emptyList<File>()
+
+        val fxChainManifest = File(fxChainsOut, "manifest.txt")
+        val fxChainLines = mutableListOf<String>()
+        fxChainFiles.forEach { f ->
+            f.copyTo(File(fxChainsOut, f.name), overwrite = true)
+            fxChainLines.add(f.name)
+        }
+        fxChainManifest.writeText(fxChainLines.joinToString("\n"))
     }
 }
 

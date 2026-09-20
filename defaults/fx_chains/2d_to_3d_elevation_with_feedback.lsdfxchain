@@ -1,0 +1,157 @@
+{
+    "name": "2D to 3D Elevation with Feedback",
+    "tags": [
+        "3d",
+        "geometry",
+        "feedback",
+        "favorite"
+    ],
+    "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slots": [
+        {
+            "filterId": "3d_elevation",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "mode3D": {
+                    "baseValue": 0.0,
+                    "baseMin": 0.0,
+                    "baseMax": 3.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "zoom": {
+                    "baseValue": 1.0,
+                    "baseMin": 0.1,
+                    "baseMax": 5.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "perspective": {
+                    "baseValue": 0.5,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "separation": {
+                    "baseValue": 0.2,
+                    "baseMin": 0.0,
+                    "baseMax": 2.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "roundness": {
+                    "baseValue": 1.0,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "feedback",
+            "dryWet": {
+                "baseValue": 0.85,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "fbDecay": {
+                    "baseValue": 0.67,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "fbGain": {
+                    "baseValue": 0.77,
+                    "baseMin": 0.0,
+                    "baseMax": 2.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "fbZoom": {
+                    "baseValue": 0.13,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "fbBlur": {
+                    "baseValue": 0.5,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "fbChroma": {
+                    "baseValue": 0.7,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "bloom",
+            "dryWet": {
+                "baseValue": 0.6,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "bloomIntensity": {
+                    "baseValue": 0.8,
+                    "baseMin": 0.0,
+                    "baseMax": 3.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "threshold": {
+                    "baseValue": 0.5,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "blurAmount": {
+                    "baseValue": 1.0,
+                    "baseMin": 0.1,
+                    "baseMax": 3.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        }
+    ],
+    "superKnob": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slotSuperKnobLink": [
+        true,
+        true,
+        true
+    ]
+}

@@ -923,25 +923,28 @@ object FileSystemManager {
     data class LibrarySeedResult(
         val presetsExtracted: Int,
         val playlistsExtracted: Int,
+        val fxChainsExtracted: Int = 0,
         val wasAlreadyInstalled: Boolean
     )
 
     private const val DEFAULTS_MARKER_FILE = "library/.defaults_installed"
 
     /**
-     * Seeds default presets and playlists into library/ if not already initialized.
+     * Seeds default presets, playlists, and FX chains into library/ if not already initialized.
      * If [forceRestore] is true, missing factory files will be re-extracted without overwriting existing files.
      */
     fun ensureDefaultLibrary(forceRestore: Boolean = false): LibrarySeedResult {
         val markerFile = File(DEFAULTS_MARKER_FILE)
         if (markerFile.exists() && !forceRestore) {
-            return LibrarySeedResult(0, 0, wasAlreadyInstalled = true)
+            return LibrarySeedResult(0, 0, 0, wasAlreadyInstalled = true)
         }
 
         val presetsRoot = getPresetsRoot()
         val playlistsRoot = getPlaylistsRoot()
+        val fxChainsRoot = getFxChainsRoot()
         var presetsCount = 0
         var playlistsCount = 0
+        var fxChainsCount = 0
 
         // Extract bundled presets
         presetsCount += extractBundledAssets("default_presets", presetsRoot)
@@ -949,20 +952,23 @@ object FileSystemManager {
         // Extract bundled playlists
         playlistsCount += extractBundledAssets("default_playlists", playlistsRoot)
 
+        // Extract bundled FX chains
+        fxChainsCount += extractBundledAssets("default_fx_chains", fxChainsRoot)
+
         try {
             val parent = markerFile.parentFile
             if (parent != null && !parent.exists()) parent.mkdirs()
-            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\n")
+            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\nfxChains=$fxChainsCount\n")
         } catch (e: Exception) {
             logger.warn(e) { "Failed to write defaults marker file" }
         }
 
-        if (presetsCount > 0 || playlistsCount > 0) {
+        if (presetsCount > 0 || playlistsCount > 0 || fxChainsCount > 0) {
             clearScanCache()
-            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s)" }
+            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s), $fxChainsCount fx chain(s)" }
         }
 
-        return LibrarySeedResult(presetsCount, playlistsCount, wasAlreadyInstalled = false)
+        return LibrarySeedResult(presetsCount, playlistsCount, fxChainsCount, wasAlreadyInstalled = false)
     }
 
     private fun extractBundledAssets(resourceFolder: String, targetDir: File): Int {
