@@ -277,7 +277,10 @@ object MidiPreferencesPanel {
 
                     // Col 0: Path & Takeover Status
                     ImGui.tableNextColumn()
-                    session.uiTheme.body(paramPath)
+                    session.uiTheme.body(session.midiMappingManager.formatDisplayPath(paramPath))
+                    if (paramPath.contains(":mod/")) {
+                        itemTooltip("Full Path: $paramPath")
+                    }
                     if (map.takeoverMode == TakeoverMode.SOFT_TAKEOVER) {
                         val isLocked = session.midiMappingManager.isSoftTakeoverActive(paramPath)
                         if (!isLocked) {

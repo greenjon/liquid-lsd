@@ -324,13 +324,14 @@ object CustomRangeSlider {
             onBind()
         }
 
-        val oscTargetPath = if (paramKey != null && propertyName != null) {
+        val targetPath = if (paramKey != null && propertyName != null) {
             "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName"
         } else null
-        val isOscLearningThis = oscTargetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(oscTargetPath)
+        val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
+        val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
 
         if (ImGui.beginPopupContextItem("bnd_ctx_$text")) {
-            if (oscTargetPath != null) {
+            if (targetPath != null) {
                 if (isOscLearningThis) {
                     if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
                         llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
@@ -338,10 +339,27 @@ object CustomRangeSlider {
                 } else {
                     if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($text)")) {
                         llm.slop.liquidlsd.osc.OscLearnState.startLearn(
-                            parameterPath = oscTargetPath,
+                            parameterPath = targetPath,
                             minVal = minLimit,
                             maxVal = maxLimit,
                             displayLabel = "$paramKey ($text)"
+                        )
+                    }
+                }
+
+                if (isMidiLearningThis) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                        session.parametersState.midiLearnTarget = null
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI ($text)")) {
+                        session.parametersState.startMidiLearn(
+                            MidiLearnTarget.ModulatorProperty(
+                                fullPath = targetPath,
+                                label = "$paramKey ($text)",
+                                min = minLimit,
+                                max = maxLimit
+                            )
                         )
                     }
                 }
@@ -362,11 +380,18 @@ object CustomRangeSlider {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
             val borderCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.1f, pulseAlpha)
             dl.addRect(x - 2f, y - 2f, x + w + 2f, y + captionHeight + 2f, borderCol, 3f, 0, 2.0f)
+        } else if (isMidiLearningThis) {
+            val dl = ImGui.getWindowDrawList()
+            val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            val borderCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, pulseAlpha)
+            dl.addRect(x - 2f, y - 2f, x + w + 2f, y + captionHeight + 2f, borderCol, 3f, 0, 2.0f)
         }
         if (isHovered) {
             val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-            val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else (if (oscTargetPath != null) "\nRight-click for OSC Learn." else "")
-            showTooltip("$text bound$learnHint$oscHint")
+            val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else ""
+            val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to bind." else ""
+            val menuHint = if (!isOscLearningThis && !isMidiLearningThis && targetPath != null) "\nRight-click for OSC/MIDI Learn." else ""
+            showTooltip("$text bound$learnHint$oscHint$midiHint$menuHint")
         }
     }
 
@@ -739,13 +764,14 @@ object CustomRangeSlider {
                 }
             }
 
-            val oscTargetPath = if (paramKey != null) {
+            val targetPath = if (paramKey != null) {
                 if (propertyName != null) "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName" else paramKey
             } else null
-            val isOscLearningThis = oscTargetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(oscTargetPath)
+            val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
+            val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
 
             if (ImGui.beginPopupContextItem("crs_ctx_${idPrefix}_$label")) {
-                if (oscTargetPath != null) {
+                if (targetPath != null) {
                     val propLabel = if (propertyName != null) {
                         llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modulatorIndex ?: 0, propertyName)
                     } else "Base Value"
@@ -756,11 +782,36 @@ object CustomRangeSlider {
                     } else {
                         if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($propLabel)")) {
                             llm.slop.liquidlsd.osc.OscLearnState.startLearn(
-                                parameterPath = oscTargetPath,
+                                parameterPath = targetPath,
                                 minVal = minLimit,
                                 maxVal = maxLimit,
                                 displayLabel = "$paramKey ($propLabel)"
                             )
+                        }
+                    }
+
+                    if (isMidiLearningThis) {
+                        if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                            session.parametersState.midiLearnTarget = null
+                        }
+                    } else {
+                        if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI ($propLabel)")) {
+                            val midiTarget = if (propertyName != null) {
+                                MidiLearnTarget.ModulatorProperty(
+                                    fullPath = targetPath,
+                                    label = "$paramKey ($propLabel)",
+                                    min = minLimit,
+                                    max = maxLimit
+                                )
+                            } else {
+                                MidiLearnTarget.BaseValueSlider(
+                                    paramKey = targetPath,
+                                    label = "$paramKey ($propLabel)",
+                                    min = minLimit,
+                                    max = maxLimit
+                                )
+                            }
+                            session.parametersState.startMidiLearn(midiTarget)
                         }
                     }
                 }
@@ -774,8 +825,10 @@ object CustomRangeSlider {
                 } else {
                     val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
                     val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-                    val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else (if (oscTargetPath != null) "\nRight-click for OSC Learn." else "")
-                    showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint$oscHint")
+                    val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else ""
+                    val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to bind." else ""
+                    val menuHint = if (!isOscLearningThis && !isMidiLearningThis && targetPath != null) "\nRight-click for OSC/MIDI Learn." else ""
+                    showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint$oscHint$midiHint$menuHint")
                 }
             }
             if (isMacroLearning) {
@@ -785,6 +838,10 @@ object CustomRangeSlider {
             } else if (isOscLearningThis) {
                 val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
                 val borderCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.1f, pulseAlpha)
+                dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
+            } else if (isMidiLearningThis) {
+                val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+                val borderCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, pulseAlpha)
                 dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
             }
 

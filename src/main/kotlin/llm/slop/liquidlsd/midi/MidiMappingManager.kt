@@ -249,7 +249,11 @@ object MidiMappingManager {
     }
 
     fun isSoftTakeoverActive(parameterPath: String): Boolean {
-        return hasTakenOver[parameterPath] ?: true
+        val mapping = activeProfile.mappings[parameterPath]
+        if (mapping?.takeoverMode == TakeoverMode.SOFT_TAKEOVER) {
+            return hasTakenOver[parameterPath] ?: false
+        }
+        return true
     }
 
     fun getPhysicalPosition(parameterPath: String): Float? {
@@ -263,6 +267,22 @@ object MidiMappingManager {
             MidiInputType.ROTARY_TWOS_COMP -> if (rawValue >= 64) rawValue - 128 else rawValue
             else -> 0
         }
+    }
+
+    /**
+     * Formats a user-friendly label for a parameter path, handling both base paths
+     * and nested modulator variables (e.g. "Deck A/geometry/zoom [LFO 1 Speed]").
+     */
+    fun formatDisplayPath(parameterPath: String): String {
+        if (parameterPath.contains(":mod/")) {
+            val base = parameterPath.substringBefore(":mod/")
+            val remainder = parameterPath.substringAfter(":mod/")
+            val modIdx = remainder.substringBefore("/").toIntOrNull() ?: 0
+            val prop = remainder.substringAfter("/")
+            val label = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modIdx, prop)
+            return "$base [$label]"
+        }
+        return parameterPath
     }
 
     private class ResolvedMidiBinding(
@@ -279,7 +299,9 @@ object MidiMappingManager {
         val inverted: Boolean,
         val slewMs: Float,
         val stepSize: Float,
-        val isCrossfade: Boolean
+        val isCrossfade: Boolean,
+        val modIndex: Int? = null,
+        val propertyName: String? = null
     ) {
         // Per-binding slew state, mutated directly on the hot per-frame update() path.
         // Lives as unboxed fields on the binding itself (indexed via resolvedBindings)
@@ -290,6 +312,26 @@ object MidiMappingManager {
         var targetValue: Float = 0f
         var hasSmoothed: Boolean = false
         var smoothedValue: Float = 0f
+
+        fun getCurrentValue(): Float {
+            return if (modIndex != null && propertyName != null) {
+                param.modulators.getOrNull(modIndex)?.let {
+                    llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propertyName)
+                } ?: param.baseValue
+            } else {
+                param.baseValue
+            }
+        }
+
+        fun applyValue(value: Float) {
+            if (modIndex != null && propertyName != null) {
+                param.modulators.getOrNull(modIndex)?.let {
+                    llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propertyName, value)
+                }
+            } else {
+                param.baseValue = value
+            }
+        }
     }
 
     @Volatile
@@ -310,7 +352,19 @@ object MidiMappingManager {
         val list = ArrayList<ResolvedMidiBinding>()
         for ((path, mapping) in activeProfile.mappings) {
             if (path.startsWith("Global/") || path.startsWith("Macro/")) continue
-            val param = ParameterResolver.findParameterByPath(mixer, path) ?: continue
+
+            val (baseParamPath, modIndex, propertyName) = if (path.contains(":mod/")) {
+                val base = path.substringBefore(":mod/")
+                val rem = path.substringAfter(":mod/")
+                val idx = rem.substringBefore("/").toIntOrNull()
+                val prop = rem.substringAfter("/")
+                Triple(base, idx, prop)
+            } else {
+                Triple(path, null, null)
+            }
+            if (path.contains(":mod/") && modIndex == null) continue
+
+            val param = ParameterResolver.findParameterByPath(mixer, baseParamPath) ?: continue
             list.add(
                 ResolvedMidiBinding(
                     path = path,
@@ -326,7 +380,9 @@ object MidiMappingManager {
                     inverted = mapping.inverted,
                     slewMs = mapping.slewMs,
                     stepSize = mapping.stepSize,
-                    isCrossfade = (path == "Mixer/crossfade")
+                    isCrossfade = (baseParamPath == "Mixer/crossfade" && modIndex == null),
+                    modIndex = modIndex,
+                    propertyName = propertyName
                 )
             )
         }
@@ -338,6 +394,10 @@ object MidiMappingManager {
      * Called when a new MIDI event is received. Dispatches to all matching bindings.
      */
     fun onMidiEvent(event: MidiEvent, mixer: Mixer) {
+        if (bindingsDirty) {
+            rebuildResolvedBindings(mixer)
+        }
+
         // Dispatch to Macro mappings
         for ((path, mapping) in activeProfile.mappings) {
             if (!path.startsWith("Macro/")) continue
@@ -387,8 +447,8 @@ object MidiMappingManager {
                     if (deltaSteps != 0) {
                         val sign = if (b.inverted) -1f else 1f
                         val deltaVal = deltaSteps * b.stepSize * (b.maxVal - b.minVal) * sign
-                        val newVal = (b.param.baseValue + deltaVal).coerceIn(b.minVal, b.maxVal)
-                        b.param.baseValue = newVal
+                        val newVal = (b.getCurrentValue() + deltaVal).coerceIn(b.minVal, b.maxVal)
+                        b.applyValue(newVal)
                         b.targetValue = newVal
                         b.hasTarget = true
                         b.smoothedValue = newVal
@@ -407,7 +467,7 @@ object MidiMappingManager {
                             val activeVal = if (b.inverted) b.minVal else b.maxVal
                             val inactiveVal = if (b.inverted) b.maxVal else b.minVal
                             val newVal = if (isHigh) activeVal else inactiveVal
-                            b.param.baseValue = newVal
+                            b.applyValue(newVal)
                             b.targetValue = newVal
                             b.hasTarget = true
                             b.smoothedValue = newVal
@@ -424,7 +484,7 @@ object MidiMappingManager {
                                 val activeVal = if (b.inverted) b.minVal else b.maxVal
                                 val inactiveVal = if (b.inverted) b.maxVal else b.minVal
                                 val newVal = if (nextLatched) activeVal else inactiveVal
-                                b.param.baseValue = newVal
+                                b.applyValue(newVal)
                                 b.targetValue = newVal
                                 b.hasTarget = true
                                 b.smoothedValue = newVal
@@ -435,8 +495,8 @@ object MidiMappingManager {
                         TriggerMode.STEP_INCREMENT -> {
                             if (isHigh && !prevHigh) {
                                 val step = b.stepSize * (b.maxVal - b.minVal) * (if (b.inverted) -1f else 1f)
-                                val newVal = (b.param.baseValue + step).coerceIn(b.minVal, b.maxVal)
-                                b.param.baseValue = newVal
+                                val newVal = (b.getCurrentValue() + step).coerceIn(b.minVal, b.maxVal)
+                                b.applyValue(newVal)
                                 b.targetValue = newVal
                                 b.hasTarget = true
                                 b.smoothedValue = newVal
@@ -447,8 +507,8 @@ object MidiMappingManager {
                         TriggerMode.STEP_DECREMENT -> {
                             if (isHigh && !prevHigh) {
                                 val step = b.stepSize * (b.maxVal - b.minVal) * (if (b.inverted) 1f else -1f)
-                                val newVal = (b.param.baseValue + step).coerceIn(b.minVal, b.maxVal)
-                                b.param.baseValue = newVal
+                                val newVal = (b.getCurrentValue() + step).coerceIn(b.minVal, b.maxVal)
+                                b.applyValue(newVal)
                                 b.targetValue = newVal
                                 b.hasTarget = true
                                 b.smoothedValue = newVal
@@ -474,7 +534,7 @@ object MidiMappingManager {
                     if (b.takeoverMode == TakeoverMode.SOFT_TAKEOVER) {
                         val alreadyTakenOver = hasTakenOver[b.path] ?: false
                         if (!alreadyTakenOver) {
-                            val currentVal = b.param.baseValue
+                            val currentVal = b.getCurrentValue()
                             val tolerance = (b.maxVal - b.minVal) * 0.04f
                             // Crossed or within tolerance
                             val crossed = prevPhys != null && ((prevPhys - currentVal) * (scaledTarget - currentVal) <= 0f)
@@ -491,7 +551,7 @@ object MidiMappingManager {
                         b.targetValue = scaledTarget
                         b.hasTarget = true
                         if (b.slewMs <= 0f) {
-                            b.param.baseValue = scaledTarget
+                            b.applyValue(scaledTarget)
                             b.smoothedValue = scaledTarget
                             b.hasSmoothed = true
                         }
@@ -592,6 +652,19 @@ object MidiMappingManager {
                             messageType = event.type,
                             inputType = inputType,
                             triggerMode = TriggerMode.TOGGLE
+                        )
+                        saveActiveProfile()
+                    }
+                    is MidiLearnTarget.ModulatorProperty -> {
+                        addMapping(
+                            parameterPath = target.fullPath,
+                            cc = event.index,
+                            channel = event.channel,
+                            minVal = target.min,
+                            maxVal = target.max,
+                            messageType = event.type,
+                            inputType = inputType,
+                            triggerMode = triggerMode
                         )
                         saveActiveProfile()
                     }
@@ -704,13 +777,13 @@ object MidiMappingManager {
             val target = b.targetValue
 
             if (b.slewMs > 0f) {
-                val current = if (b.hasSmoothed) b.smoothedValue else b.param.baseValue
+                val current = if (b.hasSmoothed) b.smoothedValue else b.getCurrentValue()
                 val tau = (b.slewMs / 1000f).coerceAtLeast(0.001f)
                 val alpha = (1.0f - kotlin.math.exp(-dtSeconds / tau)).coerceIn(0.01f, 1.0f)
                 val nextVal = current + (target - current) * alpha
                 b.smoothedValue = nextVal
                 b.hasSmoothed = true
-                b.param.baseValue = nextVal
+                b.applyValue(nextVal)
             }
         }
     }

@@ -136,12 +136,24 @@ Liquid LSD includes an intelligent, multi-type MIDI subsystem for connecting har
 3. Ensure **Enable MIDI Subsystem** is checked. The background watchdog automatically detects newly connected controllers without restarting the application.
 4. Check the **Live MIDI Monitor (Sniffer)** at the top of the panel: moving any knob or pressing any pad on your controller will immediately stream incoming packets (Channel, Message Type, Index, and Values).
 
-### MIDI Learn
+### MIDI Learn & Modulator Variables
 
-You can map any parameter, matrix CV modulator, or global performance action:
-- **Base Value Sliders / Knobs:** Right-click a parameter row in the Parameters panel or click the Learn MIDI button in the Mixer panel.
-- **Modulation Matrix Cells:** Click any cell in the MIDI column of the Parameters matrix, then click **Re-Learn MIDI** in Properties.
-- **Global Performance Actions:** In **Preferences → MIDI Controls**, click **Learn** next to *Queue Advance A/B Next*, *Queue Step Back A/B Prev*, *BG Shader Advance*, *BG Step Back*, or *Tap Tempo*.
+You can map any parameter, internal modulator variable, matrix CV modulator, or global performance action:
+
+1. **In-Situ Right-Click Learn (Fastest)**:
+   - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry (Slope)**, **Morph**, **Hold**, or a parameter's **Initial Range (Base Value)**.
+   - Select **Learn MIDI (...)** from the context menu. The slider will pulse in cyan/blue while awaiting hardware input.
+   - Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately binds the control, preserves your configured min/max limits, and saves the mapping to the active profile.
+   - Right-click again and select **Cancel MIDI Learn** if needed.
+
+2. **Modulation Matrix Cells**:
+   - Click any cell in the MIDI column of the Parameters matrix, then click **Re-Learn MIDI** in Properties.
+
+3. **Global Performance Actions**:
+   - In **Preferences → MIDI Controls**, click **Learn** next to *Queue Advance A/B Next*, *Queue Step Back A/B Prev*, *BG Shader Advance*, *BG Step Back*, or *Tap Tempo*.
+
+4. **Modulator Variable Paths**:
+   - Modulator variables use unified path syntax: `<parameterPath>:mod/<modulatorIndex>/<propertyName>`, such as `Deck A/geometry/zoom:mod/0/subdivision` (LFO 1 Speed), `:mod/0/depth`, `:mod/0/slope`, or `:mod/1/morph`. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) in the MIDI Preferences mapping table.
 
 ### Intelligent Signal Classification
 

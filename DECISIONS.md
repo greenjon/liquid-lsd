@@ -1,3 +1,18 @@
+## Direct MIDI Control for Modulator Variables & In-Situ MIDI Learn (`ParametersState.kt`, `MidiMappingManager.kt`, `BeatDivisionSlider.kt`, `CustomRangeSlider.kt`, `MidiPreferencesPanel.kt`, `MidiMappingManagerModulatorTest.kt`)
+
+- **Context**: 2026-09-20. Following the implementation of direct OSC control for modulator variables, full hardware control parity was required for physical MIDI controllers (rotary knobs, sliders, pads, foot switches). Users needed to bind hardware controls directly to internal modulator variables (LFO speed/subdivision, depth, min/max bounds, asymmetry, morph, hold) via right-click in-situ learning without consuming a Macro knob.
+- **Decision**:
+  - **Shared Modulator Path Schema Parity**: Extended `MidiMappingManager` to natively support the hierarchical `:mod/<modulatorIndex>/<propertyName>` path schema established for OSC (e.g., `Deck A/geometry/zoom:mod/0/subdivision`).
+  - **Dynamic Modulator Resolution & Allocation-Free Dispatch**: Updated `ResolvedMidiBinding` to delegate value reading and writing dynamically to `ModulatorPropertyAccessor` via `getCurrentValue()` and `applyValue()`. This prevents stale object references across UI modulator cloning while supporting continuous CCs, relative rotary deltas (Binary Offset, Signed Bit, Two's Complement), discrete buttons/pads (Momentary, Toggle, Step +/-), exponential slew smoothing ($0 \dots 250\,\text{ms}$), and soft takeover (pickup).
+  - **In-Situ Right-Click "Learn MIDI" Menus (`BeatDivisionSlider.kt`, `CustomRangeSlider.kt`)**: Added right-click context menu options alongside OSC learn. Sliders armed for MIDI learn pulse in cyan/blue while awaiting hardware input.
+  - **Preferences UI Formatting (`MidiPreferencesPanel.kt`)**: Formatted modulator sub-paths in the MIDI mapping table into readable labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) with full path tooltips on hover.
+  - **Soft Takeover Verification Alignment**: Updated `isSoftTakeoverActive` in both `MidiMappingManager` and `OscMappingManager` to accurately reflect `hasTakenOver` when `takeoverMode == SOFT_TAKEOVER`, eliminating premature "Takeover Synced" status before physical pickup.
+- **Rationale**:
+  - Provides complete feature and architectural parity between MIDI and OSC control surfaces.
+  - Zero-allocation callback thread discipline and lock-free event processing maintained on Thread 0.
+
+---
+
 ## Direct OSC Control for Modulator Variables & In-Situ OSC Learn (`ModulatorPropertyAccessor.kt`, `OscMappingManager.kt`, `OscLearnState.kt`, `BeatDivisionSlider.kt`, `CustomRangeSlider.kt`, `OscPreferencesPanel.kt`)
 
 - **Context**: 2026-09-20. OSC control in Liquid LSD previously mapped exclusively to top-level `ModulatableParameter.baseValue` paths (e.g. `Mixer/crossfade`, `Deck A/geometry/zoom`). While internal modulator properties (such as an LFO's period/speed `subdivision`, depth, morph, or asymmetry) could be manipulated via Macro knobs (`/macro/<bankId>/knob/N`), there was no direct OSC addressing or in-situ Learn flow for modulator variables without consuming a Macro knob.

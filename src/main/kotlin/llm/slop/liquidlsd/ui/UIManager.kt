@@ -66,7 +66,7 @@ class UIManager(
 
     private val splitterManager = SplitterManager()
 
-    private val parametersState = ParametersState()
+    private val parametersState: ParametersState = session.parametersState
 
     private val popupManager: PopupManager = PopupManager(
         onTriggerExit = { org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose(windowHandle, true) },

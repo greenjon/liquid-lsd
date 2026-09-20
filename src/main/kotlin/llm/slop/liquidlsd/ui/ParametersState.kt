@@ -12,7 +12,8 @@ data class ParameterCellId(val paramKey: String, val cvSourceId: String)
 
 sealed class MidiLearnTarget {
     data class GridCell(val cellId: ParameterCellId, val param: ModulatableParameter) : MidiLearnTarget()
-    data class BaseValueSlider(val paramKey: String, val label: String, val param: ModulatableParameter, val min: Float, val max: Float) : MidiLearnTarget()
+    data class BaseValueSlider(val paramKey: String, val label: String, val param: ModulatableParameter? = null, val min: Float, val max: Float) : MidiLearnTarget()
+    data class ModulatorProperty(val fullPath: String, val label: String, val min: Float, val max: Float) : MidiLearnTarget()
     data class GlobalAction(val actionKey: String) : MidiLearnTarget()
     data class MacroTarget(val macroPath: String, val label: String) : MidiLearnTarget()
 }
@@ -49,8 +50,33 @@ class ParametersState {
     }
 
     /** Active MIDI Learn target and start timestamp */
-    var midiLearnTarget: MidiLearnTarget? = null
     var midiLearnStartTimeMs: Long = 0L
+    var midiLearnTarget: MidiLearnTarget? = null
+        set(value) {
+            field = value
+            if (value != null) {
+                midiLearnStartTimeMs = System.currentTimeMillis()
+            }
+        }
+
+    fun startMidiLearn(target: MidiLearnTarget) {
+        midiLearnTarget = target
+    }
+
+    fun isMidiTargetLearning(fullPath: String): Boolean {
+        val target = midiLearnTarget ?: return false
+        if (System.currentTimeMillis() - midiLearnStartTimeMs > 15000L) {
+            midiLearnTarget = null
+            return false
+        }
+        return when (target) {
+            is MidiLearnTarget.ModulatorProperty -> target.fullPath == fullPath
+            is MidiLearnTarget.BaseValueSlider -> target.paramKey == fullPath
+            is MidiLearnTarget.MacroTarget -> target.macroPath == fullPath
+            is MidiLearnTarget.GlobalAction -> target.actionKey == fullPath
+            else -> false
+        }
+    }
 
     var activeTopTab: String = "Deck A"
     var activeDeckASubTab: String = "SRC"

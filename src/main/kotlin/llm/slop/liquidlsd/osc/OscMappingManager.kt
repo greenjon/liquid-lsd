@@ -175,7 +175,13 @@ object OscMappingManager {
         slewStates.clear()
     }
 
-    fun isSoftTakeoverActive(address: String): Boolean = hasTakenOver[address] ?: true
+    fun isSoftTakeoverActive(address: String): Boolean {
+        val mapping = activeProfile.mappings[address]
+        if (mapping?.takeoverMode == OscTakeoverMode.SOFT_TAKEOVER) {
+            return hasTakenOver[address] ?: false
+        }
+        return true
+    }
     fun getPhysicalPosition(address: String): Float? = lastPhysicalScaled[address]
 
     private fun asFloat(arg: Any): Float? = when (arg) {

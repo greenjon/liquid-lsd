@@ -28,5 +28,6 @@ class SessionContext {
     val broadcastEngine = BroadcastEngine
     val touchConsoleController = llm.slop.liquidlsd.input.TouchConsoleController(this)
     val tapTempoController = llm.slop.liquidlsd.audio.TapTempoController(audioEngine)
+    val parametersState = llm.slop.liquidlsd.ui.ParametersState()
 }
 
