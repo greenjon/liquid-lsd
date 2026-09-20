@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#parameters-val-cell-modulator-mute-toggle-parametersrendererkt-parameterspanelkt-parametersvalmutetestkt-modulationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters VAL Cell Modulator Mute Toggle (ParametersRenderer.kt, ParametersPanel.kt, ParametersValMuteTest.kt, modulation.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#architectural-compliance-imgui-widget-hardening-valueparamsectionkt-lfo1sectionkt-lfo2sectionkt-seqsectionkt-playlistmanagertestkt-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3403,6 +3414,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#parameters-val-cell-modulator-mute-toggle-parametersrendererkt-parameterspanelkt-parametersvalmutetestkt-modulationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters VAL Cell Modulator Mute Toggle (ParametersRenderer.kt, ParametersPanel.kt, ParametersValMuteTest.kt, modulation.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#architectural-compliance-imgui-widget-hardening-valueparamsectionkt-lfo1sectionkt-lfo2sectionkt-seqsectionkt-playlistmanagertestkt-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5573,6 +5595,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="parameters-val-cell-modulator-mute-toggle-parametersrendererkt-parameterspanelkt-parametersvalmutetestkt-modulationmd">Parameters VAL Cell Modulator Mute Toggle (<code>ParametersRenderer.kt</code>, <code>ParametersPanel.kt</code>, <code>ParametersValMuteTest.kt</code>, <code>modulation.md</code>)</h3>
+<ul>
+<li><strong>Toggle Row Modulation via VAL Cell</strong>: Right-clicking (mouse button 1) or middle-clicking (mouse button 2) the VAL cell now toggles mute (bypass) for all modulators on that parameter row instead of destructively clearing them via <code>param.reset()</code>.</li>
+<li><strong>Safe Reset on Empty Modulator Rows</strong>: If no modulators are active on the parameter row, middle-clicking the VAL cell safely resets the base value to factory default.</li>
+<li><strong>Row Menu Mute/Unmute</strong>: Added "Mute all modulators" / "Unmute all modulators" to the row context menu (<code>row_menu_$paramKey</code>).</li>
+<li><strong>Tooltips &amp; Documentation</strong>: Updated tooltips on the VAL column header and VAL cells, and updated the User Guide shortcuts table to document row-level modulation mute toggling.</li>
+</ul>
 <h3 id="architectural-compliance-imgui-widget-hardening-valueparamsectionkt-lfo1sectionkt-lfo2sectionkt-seqsectionkt-playlistmanagertestkt-decisionsmd">Architectural Compliance &amp; ImGui Widget Hardening (<code>ValueParamSection.kt</code>, <code>Lfo1Section.kt</code>, <code>Lfo2Section.kt</code>, <code>SeqSection.kt</code>, <code>PlaylistManagerTest.kt</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Zero-Allocation ImGui Modulator &amp; Parameter Dropdowns</strong>: Pre-allocated reusable <code>ImInt</code> singleton fields and static/cached label arrays in <code>ValueParamSection</code>, <code>Lfo1Section</code>, <code>Lfo2Section</code>, and <code>SeqSection</code>, eliminating per-frame heap allocations when viewing parameter combos, clock unit selectors, and LFO modulation modes in the Properties panel.</li>

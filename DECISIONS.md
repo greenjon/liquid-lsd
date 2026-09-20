@@ -1,3 +1,18 @@
+## Direct OSC Control for Modulator Variables & In-Situ OSC Learn (`ModulatorPropertyAccessor.kt`, `OscMappingManager.kt`, `OscLearnState.kt`, `BeatDivisionSlider.kt`, `CustomRangeSlider.kt`, `OscPreferencesPanel.kt`)
+
+- **Context**: 2026-09-20. OSC control in Liquid LSD previously mapped exclusively to top-level `ModulatableParameter.baseValue` paths (e.g. `Mixer/crossfade`, `Deck A/geometry/zoom`). While internal modulator properties (such as an LFO's period/speed `subdivision`, depth, morph, or asymmetry) could be manipulated via Macro knobs (`/macro/<bankId>/knob/N`), there was no direct OSC addressing or in-situ Learn flow for modulator variables without consuming a Macro knob.
+- **Decision**:
+  - **Hierarchical Modulator Path Syntax**: Introduced a colon-delimited sub-path convention `<parameterPath>:mod/<modulatorIndex>/<propertyName>` (e.g. `Deck A/geometry/zoom:mod/0/subdivision`). Backward-compatible with existing JSON mapping profiles under `library/osc/`.
+  - **Protocol-Agnostic Accessor (`ModulatorPropertyAccessor.kt`)**: Created an allocation-free utility object to read and mutate `CvModulator` properties (`subdivision`, `depth`, `phaseOffset`, `slope`, `morph`, `hold`, `dcOffset`, `lfoMin`/`max`, `attackMs`, `decayMs`, etc.) and format human-readable labels. Refactored `MacroEngine.applyModulatorProperty` to delegate to `ModulatorPropertyAccessor.set`.
+  - **Dynamic Target Resolution in `OscMappingManager.kt`**: Extended `resolveTarget` to resolve both top-level parameters and nested modulator variables dynamically each tick, preventing stale object references when the UI clones modulators, and applying full min/max scaling, invert, slew smoothing ($0 \dots 250\,\text{ms}$), and soft takeover to modulator fields.
+  - **In-Situ Right-Click "Learn OSC" Menus (`BeatDivisionSlider.kt`, `CustomRangeSlider.kt`)**: Added right-click context menus on LFO and modulator sliders to arm OSC Learn on the fly with a single click. When armed, sliders render a pulsing amber outline and contextual tooltip feedback.
+  - **Preferences UI Formatting (`OscPreferencesPanel.kt`)**: Formatted modulator sub-paths into clean labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) with full path inspection on hover.
+- **Rationale**:
+  - Allows live performers to directly bind TouchOSC and external OSC controllers to LFO speeds, shapes, and modulation depths with zero boilerplate.
+  - Prepares the shared accessor layer so the same right-click learn flow can be extended to hardware MIDI in a subsequent pass without redesigning widget logic.
+
+---
+
 ## Parameters VAL Cell Modulator Mute Toggle (`ParametersRenderer.kt`, `ParametersPanel.kt`, `ParametersValMuteTest.kt`)
 
 - **Context**: 2026-09-20. Clicking or right-clicking on the VAL cell in the Parameters panel previously risked clearing all active modulators on that row due to a misplaced middle-click reset handler and `param.reset()` invocation. Users requested that right-clicking the VAL cell toggle mute for all modulators on that row instead of destructively wiping them out.

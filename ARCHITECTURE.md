@@ -91,7 +91,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── OscCodec.kt             — Pure Kotlin zero-dependency binary OSC 1.0 encoder/decoder (messages & bundles)
 │   ├── OscEngine.kt            — Low-latency UDP receiver/transmitter, remote client auto-learn & packet sniffer
 │   ├── OscLearnState.kt        — Interactive "Learn OSC" target-arming state machine, mirrors MacroLearnState
-│   ├── OscMappingManager.kt    — OSC address routing, vector unpacking, slew smoothing & profile persistence
+│   ├── OscMappingManager.kt    — OSC address routing (parameters & modulators), vector unpacking, slew smoothing & profile persistence
 │   └── OscPreferences.kt       — OSC network port, enable flag & active profile persistence settings
 ├── input/
 │   ├── TouchConsoleController.kt — 4-zone SCS.3m virtual console, LIFO stacks, zone affinity
@@ -109,6 +109,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── parameters/
 │   ├── ModulatableParameter.kt — Parameter state and evaluation
 │   ├── CvModulator.kt          — CV modulation routing
+│   ├── ModulatorPropertyAccessor.kt — Unified accessor/mutator for modulator variables (LFO period, depth, shape, hold)
 │   ├── Enums.kt                — Enums
 │   ├── ParameterOwner.kt       — Parameter ownership interface
 │   ├── ParameterResolver.kt    — Parameter lookup

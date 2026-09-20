@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Direct OSC Control for Modulator Variables & In-Situ OSC Learn (`ModulatorPropertyAccessor.kt`, `OscMappingManager.kt`, `OscLearnState.kt`, `BeatDivisionSlider.kt`, `CustomRangeSlider.kt`, `OscPreferencesPanel.kt`, `performance_controls.md`)
+- **Direct Modulator Variable Addressing**: Added hierarchical OSC parameter path addressing (`<parameterPath>:mod/<modulatorIndex>/<propertyName>`, e.g. `Deck A/geometry/zoom:mod/0/subdivision`) allowing incoming OSC messages to directly modulate internal LFO speeds/periods, depths, phases, morphing, asymmetry/duty cycle, sample & hold, DC offset, and envelope followers without consuming Macro knobs.
+- **Shared Accessor & Mutator (`ModulatorPropertyAccessor`)**: Created an allocation-free utility object to read and write `CvModulator` properties safely and format user-friendly labels. Replaced `MacroEngine`'s private property applicator with this shared implementation.
+- **Dynamic Slew & Soft Takeover for Modulators**: Extended `OscMappingManager` target resolution to apply full min/max range scaling, value inversion, exponential slew smoothing ($0 \dots 250\,\text{ms}$), and soft takeover (pickup) to modulator properties dynamically each frame.
+- **In-Situ Right-Click "Learn OSC" Menus**: Added right-click context menus on all LFO and modulator sliders (`BeatDivisionSlider`, `CustomRangeSlider`) as well as base value sliders (`ValueParamSection`), allowing immediate click-to-bind OSC learning directly on the control surface. Armed sliders display a pulsing amber outline and contextual status tooltip.
+- **Preferences UI Label Formatting**: The Address Mappings table in `OscPreferencesPanel` now formats modulator paths into clean, readable labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) with full path inspection on hover.
+
 ### Parameters VAL Cell Modulator Mute Toggle (`ParametersRenderer.kt`, `ParametersPanel.kt`, `ParametersValMuteTest.kt`, `modulation.md`)
 - **Toggle Row Modulation via VAL Cell**: Right-clicking (mouse button 1) or middle-clicking (mouse button 2) the VAL cell now toggles mute (bypass) for all modulators on that parameter row instead of destructively clearing them via `param.reset()`.
 - **Safe Reset on Empty Modulator Rows**: If no modulators are active on the parameter row, middle-clicking the VAL cell safely resets the base value to factory default.
