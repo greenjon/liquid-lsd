@@ -8,7 +8,7 @@ import java.io.File
 
 /**
  * Resolves a playlist/queue FX item (a .lsdfx or .lsdfxchain file) and applies it
- * to a deck deterministically — always all 4 slots, never "first vacant slot" —
+ * to a deck deterministically — always all 3 slots, never "first vacant slot" —
  * so a playlist/queue step reproduces the exact same FX state every time it's
  * loaded, the same guarantee a saved chain already provides via Deck.applyFxChain.
  */
@@ -24,7 +24,7 @@ object FXItemApplier {
             }
             "lsdfx" -> {
                 session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                    deck.applyFxChain(FXChainDto(name = presetDto.name, tags = presetDto.tags, slots = listOf(presetDto.slot, null, null, null)))
+                    deck.applyFxChain(FXChainDto(name = presetDto.name, tags = presetDto.tags, slots = listOf(presetDto.slot, null, null)))
                 }
             }
             else -> {

@@ -33,14 +33,25 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
-    // ISF Filter Slots (chained in order: slot 0's output feeds slot 1's input, etc.)
-    val fxSlots = arrayOfNulls<llm.slop.liquidlsd.rendering.isf.ISFFilter>(FX_SLOT_COUNT)
-    var fxFBOs = Array(FX_SLOT_COUNT) { FBO(width, height) }
-
-    // Master bypass/mix for the whole FX chain, independent of each slot's own enabled/dryWet.
-    var fxChainEnabled: Boolean = true
-    val fxChainDryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    // The shared FxBank this deck is routed through, if any (see FxBank -- its 3 filter slots and
+    // their dry/wet are shared with any other deck routed to the same bank; only this deck's own
+    // send level and its render-target FBOs below are deck-owned).
+    var assignedFxBank: FxBank? = null
+    val fxSendLevel = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    var fxFBOs = Array(FxBank.SLOT_COUNT) { FBO(width, height) }
     var fxChainOutFBO = FBO(width, height)
+
+    /** Read-only view of the assigned bank's filter slots, or 3 empty slots if unassigned. */
+    val fxSlots: Array<llm.slop.liquidlsd.rendering.isf.ISFFilter?>
+        get() = assignedFxBank?.slots ?: arrayOfNulls(FxBank.SLOT_COUNT)
+
+    /** This deck's send level combined with its bank's shared master wet/dry, or 0 if unassigned/bypassed. */
+    val fxEffectiveWet: Float
+        get() {
+            val bank = assignedFxBank ?: return 0.0f
+            if (!bank.enabled) return 0.0f
+            return fxSendLevel.value * bank.masterWetDry.value
+        }
 
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
@@ -50,7 +61,7 @@ class Deck(
         fxFBOs.forEach { it.dispose() }
         fxChainOutFBO.dispose()
         cleanFBO = FBO(width, height)
-        fxFBOs = Array(FX_SLOT_COUNT) { FBO(width, height) }
+        fxFBOs = Array(FxBank.SLOT_COUNT) { FBO(width, height) }
         fxChainOutFBO = FBO(width, height)
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
@@ -92,10 +103,6 @@ class Deck(
     val fbMode = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f) // 0 = Max, 1 = Difference
     val fbKaleido = ModulatableParameter(1.0f, minClamp = 1f, maxClamp = 12f)
 
-    companion object {
-        const val FX_SLOT_COUNT = 4
-    }
-
     init {
         // Clear all FBOs at startup to prevent reading uninitialized GPU memory
         cleanFBO.clear(0f, 0f, 0f, 0f)
@@ -113,9 +120,7 @@ class Deck(
 
     fun reset() {
         isEmpty = true
-        fxSlots.forEach { it?.reset() }
-        fxChainEnabled = true
-        fxChainDryWet.reset()
+        fxSendLevel.reset()
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -158,16 +163,9 @@ class Deck(
         allParams.addAll(this.source.parameters.values)
         allParams.add(this.source.globalAlpha)
         
-        if (fxChainEnabled) {
-            allParams.add(fxChainDryWet)
+        if (assignedFxBank != null) {
+            allParams.add(fxSendLevel)
         }
-        fxSlots.forEach { fx ->
-            if (fx != null && fx.enabled) {
-                allParams.add(fx.dryWet)
-                allParams.addAll(fx.parameters.values)
-            }
-        }
-
 
         allParams.add(this.view3DMode)
         allParams.add(this.viewZoom)
@@ -197,7 +195,8 @@ class Deck(
      * Retrieves the final output texture of the Deck (the active stage texture).
      */
     fun getOutputTexture(): Int {
-        if (!fxChainEnabled || fxChainDryWet.value <= 0.0f) return cleanFBO.texture
+        val wetAmount = fxEffectiveWet
+        if (wetAmount <= 0.0f) return cleanFBO.texture
 
         var wetTexture = cleanFBO.texture
         for (i in fxSlots.indices.reversed()) {
@@ -208,7 +207,7 @@ class Deck(
             }
         }
         if (wetTexture == cleanFBO.texture) return cleanFBO.texture
-        return if (fxChainDryWet.value < 1.0f) fxChainOutFBO.texture else wetTexture
+        return if (wetAmount < 1.0f) fxChainOutFBO.texture else wetTexture
     }
 
     /**
@@ -216,7 +215,6 @@ class Deck(
      */
     fun update() {
         source.update()
-        fxSlots.forEach { it?.update() }
         view3DMode.evaluate()
         viewZoom.evaluate()
         viewRotateX.evaluate()
@@ -252,7 +250,9 @@ class Deck(
     fun dispose() {
         cleanFBO.dispose()
         fxFBOs.forEach { it.dispose() }
-        fxSlots.forEach { it?.dispose() }
+        fxChainOutFBO.dispose()
+        // Note: bank-owned filters (assignedFxBank.slots) are NOT disposed here -- they're
+        // shared with any other deck routed to the same bank and outlive any one deck.
         // Note: `source` is always one of the entries in `availableSources`, so the
         // forEach below already disposes it. Do NOT call source.dispose() here — that
         // would double-free the active source's GPU objects.
@@ -265,10 +265,9 @@ class Deck(
         // Add all source parameters first (Mandala or DynamicVisualSource)
         list.addAll(source.getParameterPaths(prefix))
 
-        // Add FX parameters
-        fxSlots.forEachIndexed { i, fx ->
-            fx?.getParameterPaths("$prefix/FX${i + 1}")?.let { list.addAll(it) }
-        }
+        // This deck's own send level into its assigned FxBank (the bank's filters/dry-wet are
+        // shared and expose their own paths via FxBank.getParameterPaths, not here).
+        list.add("$prefix/FXChain/DryWet" to fxSendLevel)
 
         // Add Deck's View parameters
         list.add("$prefix/View/3DMode" to view3DMode)
@@ -343,7 +342,7 @@ class Deck(
     }
 
     fun toFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto {
-        val slotsList = (0 until FX_SLOT_COUNT).map { toFxSlotDto(it) }
+        val slotsList = (0 until FxBank.SLOT_COUNT).map { toFxSlotDto(it) }
         return FXChainDto(
             name = name,
             tags = tags,

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#architectural-compliance-imgui-widget-hardening-valueparamsectionkt-lfo1sectionkt-lfo2sectionkt-seqsectionkt-playlistmanagertestkt-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Compliance &amp; ImGui Widget Hardening (ValueParamSection.kt, Lfo1Section.kt, Lfo2Section.kt, SeqSection.kt, PlaylistManagerTest.kt, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-playlists-live-fx-queues-unified-fx-browser-fxbrowserpanelkt-fxplaylisteditorpanelkt-fxqueueactionspanelkt-fxbgqueueactionspanelkt-fxqueuemanagerkt-fxbgqueuemanagerkt-fxitemapplierkt-fxpresetmodelskt-librarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3392,6 +3403,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#architectural-compliance-imgui-widget-hardening-valueparamsectionkt-lfo1sectionkt-lfo2sectionkt-seqsectionkt-playlistmanagertestkt-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Compliance &amp; ImGui Widget Hardening (ValueParamSection.kt, Lfo1Section.kt, Lfo2Section.kt, SeqSection.kt, PlaylistManagerTest.kt, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-playlists-live-fx-queues-unified-fx-browser-fxbrowserpanelkt-fxplaylisteditorpanelkt-fxqueueactionspanelkt-fxbgqueueactionspanelkt-fxqueuemanagerkt-fxbgqueuemanagerkt-fxitemapplierkt-fxpresetmodelskt-librarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5551,9 +5573,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="architectural-compliance-imgui-widget-hardening-valueparamsectionkt-lfo1sectionkt-lfo2sectionkt-seqsectionkt-playlistmanagertestkt-decisionsmd">Architectural Compliance &amp; ImGui Widget Hardening (<code>ValueParamSection.kt</code>, <code>Lfo1Section.kt</code>, <code>Lfo2Section.kt</code>, <code>SeqSection.kt</code>, <code>PlaylistManagerTest.kt</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Zero-Allocation ImGui Modulator &amp; Parameter Dropdowns</strong>: Pre-allocated reusable <code>ImInt</code> singleton fields and static/cached label arrays in <code>ValueParamSection</code>, <code>Lfo1Section</code>, <code>Lfo2Section</code>, and <code>SeqSection</code>, eliminating per-frame heap allocations when viewing parameter combos, clock unit selectors, and LFO modulation modes in the Properties panel.</li>
+<li><strong>Playlist Asset Confinement Test Alignment</strong>: Updated <code>PlaylistManagerTest</code> to construct temporary test playlists within <code>FileSystemManager.getPlaylistsRoot()</code>, conforming with the path isolation security rules enforced by <code>isManagedAssetPath</code>.</li>
+</ul>
 <h3 id="fx-playlists-live-fx-queues-unified-fx-browser-fxbrowserpanelkt-fxplaylisteditorpanelkt-fxqueueactionspanelkt-fxbgqueueactionspanelkt-fxqueuemanagerkt-fxbgqueuemanagerkt-fxitemapplierkt-fxpresetmodelskt-librarypanelkt">FX Playlists, Live FX Queues &amp; Unified FX Browser (<code>FXBrowserPanel.kt</code>, <code>FXPlaylistEditorPanel.kt</code>, <code>FXQueueActionsPanel.kt</code>, <code>FXBgQueueActionsPanel.kt</code>, <code>FXQueueManager.kt</code>, <code>FXBgQueueManager.kt</code>, <code>FXItemApplier.kt</code>, <code>FXPresetModels.kt</code>, <code>LibraryPanel.kt</code>)</h3>
 <ul>
-<li><strong>Preserve Deck FX on Clean Preset Load</strong>: <code>Deck.applyDto</code> skips rewriting and clearing a deck's active FX slots when incoming preset DTOs contain no configured FX, allowing live FX chains and queued FX to play uninterrupted through preset transitions.</li>
+<li><strong>Removed Per-Preset FX (Breaking)</strong>: <code>DeckPresetDto</code> no longer carries <code>fxSlot1..4</code>/<code>fxChainEnabled</code>/<code>fxChainDryWet</code>. Visual presets (<code>.lsd</code>) never touch a deck's FX state on load or save — FX is now exclusively a per-deck concern driven by manual editing, the FX Browser, FX Playlists, and Live FX Queues. Old <code>.lsd</code>/session files with embedded FX keys load fine; the keys are silently ignored.</li>
 <li><strong>Unified FX Browser</strong>: Merged <code>FXPresetListPanel</code> and <code>FXChainListPanel</code> into a single <code>FXBrowserPanel</code> presenting ISF stock filters, saved single presets (.lsdfx), and multi-slot FX chains (.lsdfxchain) with tier badges and filter menu (All / Stock / Singles / Chains). Stock filters only support loading directly to decks, while saved presets and chains can be added to playlists and live queues.</li>
 <li><strong>FX Playlists (<code>.lsdfxplay</code>)</strong>: Introduced curated FX playlist sequences supported by <code>FXPlaylistDto</code>, <code>PresetRepository</code>, <code>FileSystemManager</code>, and <code>FXPlaylistEditorPanel</code>. Supports drag-and-drop insertion, reordering, double-click application, and context menus.</li>
 <li><strong>Deterministic FX Application (<code>FXItemApplier</code>)</strong>: Resolves both <code>.lsdfx</code> single presets and <code>.lsdfxchain</code> multi-slot chains deterministically via <code>Deck.applyFxChain</code>, guaranteeing reproducible 4-slot FX state rather than arbitrary vacant-slot allocation.</li>

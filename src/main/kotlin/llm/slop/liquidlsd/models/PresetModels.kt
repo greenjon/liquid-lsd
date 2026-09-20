@@ -232,12 +232,6 @@ data class DeckPresetDto(
     val parameters: Map<String, ParameterDto>, // Visual source params
     val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
     val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
-    val fxSlot1: FXSlotDto? = null,
-    val fxSlot2: FXSlotDto? = null,
-    val fxSlot3: FXSlotDto? = null,
-    val fxSlot4: FXSlotDto? = null,
-    val fxChainEnabled: Boolean? = null,
-    val fxChainDryWet: ParameterDto? = null,
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
@@ -299,7 +293,7 @@ data class SessionStateDto(
     val isTransAutoAdvanceEnabled: Boolean = true,
     val isTransRepeatEnabled: Boolean = false,
     val isTransShuffleEnabled: Boolean = false,
-    // The five canonical per-deck/mixer MacroBanks (see MacroEngine.CANONICAL_BANK_IDS), keyed by
+    // The canonical per-deck/mixer/FX-bank MacroBanks (see MacroEngine.CANONICAL_BANK_IDS), keyed by
     // their canonical bank id. Absent/empty on session files saved before this field existed, or
     // missing an individual key -- SessionSerializer.loadSession falls back to an empty bank for
     // any canonical id not present, so old files still load cleanly.
@@ -488,17 +482,6 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         "viewRoundness" to viewRoundness.toDto()
     )
 
-    val fxSlotDtos = fxSlots.map { fx ->
-        fx?.takeIf { it.id.isNotEmpty() }?.let {
-            FXSlotDto(
-                filterId = it.id,
-                enabled = it.enabled,
-                dryWet = it.dryWet.toDto(),
-                parameters = it.parameters.mapValues { p -> p.value.toDto() }
-            )
-        }
-    }
-
     return DeckPresetDto(
         name = name,
         tags = tags,
@@ -507,12 +490,6 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         parameters = paramsMap,
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
-        fxSlot1 = fxSlotDtos.getOrNull(0),
-        fxSlot2 = fxSlotDtos.getOrNull(1),
-        fxSlot3 = fxSlotDtos.getOrNull(2),
-        fxSlot4 = fxSlotDtos.getOrNull(3),
-        fxChainEnabled = fxChainEnabled,
-        fxChainDryWet = fxChainDryWet.toDto(),
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty
     )
@@ -597,34 +574,6 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     dto.feedbackParameters["fbChroma"]?.let { fbChroma.applyDto(it) }
     dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
     dto.feedbackParameters["fbKaleido"]?.let { fbKaleido.applyDto(it) }
-
-    // Apply FX Slots — a preset with no FX configured at all leaves the deck's
-    // current FX slots untouched, so a deck-level FX chain (manual, playlist, or
-    // FXQ) keeps playing through preset switches instead of being cleared every time.
-    val fxSlotDtos = listOf(dto.fxSlot1, dto.fxSlot2, dto.fxSlot3, dto.fxSlot4)
-    if (fxSlotDtos.any { it != null }) {
-        for (i in fxSlots.indices) {
-            fxSlots[i]?.dispose()
-            fxSlots[i] = null
-            fxSlotDtos.getOrNull(i)?.let { fxDto ->
-                val fx = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(fxDto.filterId)
-                if (fx != null) {
-                    fx.enabled = fxDto.enabled
-                    fx.dryWet.applyDto(fxDto.dryWet)
-                    for ((key, paramDto) in fxDto.parameters) {
-                        fx.parameters[key]?.applyDto(paramDto)
-                    }
-                    fxSlots[i] = fx
-                }
-            }
-        }
-    }
-
-    // Apply master FX chain bypass/mix (absent on presets saved before this field existed,
-    // in which case the deck's current live setting is left untouched — same rationale as
-    // the fx-slot preservation above).
-    dto.fxChainEnabled?.let { fxChainEnabled = it }
-    dto.fxChainDryWet?.let { fxChainDryWet.applyDto(it) }
 
     // Apply global parameters
     source.globalAlpha.reset()

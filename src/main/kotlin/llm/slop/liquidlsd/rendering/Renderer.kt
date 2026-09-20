@@ -241,7 +241,8 @@ class Renderer {
         // --- Chained FX Filter Stages ---
         // Each enabled slot's output feeds the next slot's input.
         var currentTex = deck.cleanFBO.texture
-        if (deck.fxChainEnabled && deck.fxChainDryWet.value > 0.0f) {
+        val deckWetAmount = deck.fxEffectiveWet
+        if (deckWetAmount > 0.0f) {
             for (i in deck.fxSlots.indices) {
                 val fx = deck.fxSlots[i] ?: continue
                 if (!fx.enabled || fx.dryWet.value <= 0.0f) continue
@@ -279,7 +280,7 @@ class Renderer {
             // --- Master Chain Dry/Wet ---
             // Blends the clean source (dry) against the fully-processed chain output (wet),
             // so a single modulatable control can gate/stutter the whole chain at once.
-            val chainDryWet = deck.fxChainDryWet.value
+            val chainDryWet = deckWetAmount
             if (chainDryWet < 1.0f && currentTex != deck.cleanFBO.texture) {
                 val chainFBO = deck.fxChainOutFBO
                 chainFBO.bind()

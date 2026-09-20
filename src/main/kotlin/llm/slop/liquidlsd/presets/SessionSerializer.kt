@@ -11,7 +11,7 @@ import java.io.File
 object SessionSerializer {
     private val logger = KotlinLogging.logger {}
 
-    /** Persists the active session, including the five canonical per-deck/mixer macro banks. */
+    /** Persists the active session, including the canonical per-deck/mixer/FX-bank macro banks. */
     fun saveSession(mixer: Mixer) {
         try {
             val sessionFile = File(PresetManager.LIBRARY_ROOT, "last_session.json")
@@ -34,7 +34,7 @@ object SessionSerializer {
                 )
             }
 
-            val masterFxSlotDtos = (0 until Deck.FX_SLOT_COUNT).map { mixer.toMasterFxSlotDto(it) }
+            val masterFxSlotDtos = (0 until mixer.masterFxSlots.size).map { mixer.toMasterFxSlotDto(it) }
 
             val mixerDto = MixerDto(
                 crossfade = mixer.crossfade.toDto(),
@@ -80,7 +80,7 @@ object SessionSerializer {
                 isTransRepeatEnabled = TransitionQueueManager.isRepeatEnabled,
                 isTransShuffleEnabled = TransitionQueueManager.isShuffleEnabled,
                 deckMacroBanks = llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS.associateWith {
-                    llm.slop.liquidlsd.macro.MacroEngine.getBank(it) ?: llm.slop.liquidlsd.macro.MacroBank()
+                    llm.slop.liquidlsd.macro.MacroEngine.getBank(it) ?: llm.slop.liquidlsd.macro.MacroEngine.newBankFor(it)
                 }
             )
             
@@ -93,7 +93,7 @@ object SessionSerializer {
     }
 
     /**
-     * Restores the active session, including registering all five canonical per-deck/mixer macro
+     * Restores the active session, including registering all canonical per-deck/mixer/FX-bank macro
      * banks with [llm.slop.liquidlsd.macro.MacroEngine] -- independent of whether the Rack
      * workspace or Classic's MACROS tabs are ever opened this run, since both read/write these
      * same resident banks directly (see [llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS]).
@@ -133,7 +133,7 @@ object SessionSerializer {
                 }
             }
 
-            for (i in 0 until Deck.FX_SLOT_COUNT) {
+            for (i in 0 until mixer.masterFxSlots.size) {
                 mixer.clearMasterFxSlot(i)
                 val slotDto = mDto.masterFxSlots.getOrNull(i)
                 if (slotDto != null && slotDto.filterId.isNotBlank()) {
@@ -213,11 +213,6 @@ object SessionSerializer {
                         allUnresolved.add("Deck $deckName visual source not found: ${dDto.visualSourceType}")
                     }
                 }
-                listOf("FX1" to dDto.fxSlot1, "FX2" to dDto.fxSlot2, "FX3" to dDto.fxSlot3, "FX4" to dDto.fxSlot4).forEach { (label, fx) ->
-                    if (fx != null && fx.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fx.filterId }) {
-                        allUnresolved.add("Deck $deckName $label filter not found: ${fx.filterId}")
-                    }
-                }
             }
 
             val restoredQueue = resolveRestoredQueue(session.queue, session.activeIndex)
@@ -251,7 +246,7 @@ object SessionSerializer {
             )
 
             for (canonicalId in llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS) {
-                val bank = session.deckMacroBanks[canonicalId] ?: llm.slop.liquidlsd.macro.MacroBank()
+                val bank = session.deckMacroBanks[canonicalId] ?: llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
                 llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, bank)
             }
 
@@ -342,7 +337,7 @@ object SessionSerializer {
         BgQueueManager.restoreSessionQueue(emptyList(), -1, false, true, false)
         TransitionQueueManager.restoreSessionQueue(emptyList(), -1, false, true, false)
         for (canonicalId in llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS) {
-            llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, llm.slop.liquidlsd.macro.MacroBank())
+            llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId))
         }
         PresetManager.sessionState = SessionState()
         llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()

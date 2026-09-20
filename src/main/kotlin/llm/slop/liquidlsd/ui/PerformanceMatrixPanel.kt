@@ -9,7 +9,8 @@ import llm.slop.liquidlsd.rendering.Mixer
 /**
  * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/macros_and_rack.md).
  *
- * Displays 16 knobs arranged as 4 rows × 4 columns, mapped to per-deck [MacroEngine] banks
+ * Displays up to 16 knobs arranged in rows of 4 columns (row count varies by tab -- e.g. DUAL
+ * DECKS shows 2 rows of 4, MASTER_AND_FX shows 4), mapped to per-deck [MacroEngine] banks
  * according to the active layout tab. Knob drag adjusts the underlying
  * [llm.slop.liquidlsd.macro.MacroControl.value] directly, and right-click arms hardware MIDI
  * Learn for that knob (the pulsing cyan ring shows an armed knob; a repeat right-click cancels).
@@ -18,8 +19,8 @@ import llm.slop.liquidlsd.rendering.Mixer
  *
  * Active tab is persisted via [UITheme.performanceMatrixTab] / [AppPreferences.performanceMatrixTab].
  *
- * Knob sizing: `diameter = min(availW/4 − pad, availH/4 − labelH − pad)` so all 16 knobs and
- * their labels always fit on screen regardless of window aspect ratio.
+ * Knob sizing: `diameter = min(availW/4 − pad, availH/rowCount − labelH − pad)` so every knob and
+ * its label always fits on screen regardless of window aspect ratio or the active tab's row count.
  *
  * Each row of 4 knobs is enclosed in a rounded, accent-colored group box with a large centered
  * label (e.g. "DECK A") above it, so the current grouping is obvious at a glance.
@@ -30,8 +31,8 @@ class PerformanceMatrixPanel {
 
     private enum class Tab(val label: String, val tooltip: String) {
         LIVE_QUAD("LIVE QUAD", "One row per deck (Deck A / Deck B / Deck BG / Transitions), knobs 1-4 each."),
-        DUAL_DECKS("DUAL DECKS", "All 8 knobs of Deck A (rows 1-2) and all 8 knobs of Deck B (rows 3-4)."),
-        PREP_AND_BG("PREP & BG", "All 8 knobs of Deck PV (rows 1-2) and all 8 knobs of Deck BG (rows 3-4)."),
+        DUAL_DECKS("DUAL DECKS", "Deck A's 4 knobs and Deck B's 4 knobs, larger than the Live Quad view."),
+        PREP_AND_BG("PREP & BG", "Deck PV's 4 knobs and Deck BG's 4 knobs, larger than the Live Quad view."),
         MASTER_AND_FX("MASTER & FX", "All 8 Transition knobs (rows 1-2) and all 8 Master knobs (rows 3-4).")
     }
 
@@ -66,20 +67,16 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG"),
                 RowDescriptor(MacroEngine.TRANS,   0, COLOR_TRANS,   "TRANSITIONS"),
             ),
-            // DUAL DECKS: Deck A full (0–3, 4–7), Deck B full (0–3, 4–7) -- each deck's 2 rows
-            // share a group label so they render as one enclosing box.
+            // DUAL DECKS: Deck A's 4 knobs, Deck B's 4 knobs -- each deck is a single row/group,
+            // just rendered larger than in LIVE_QUAD since there are only 2 groups to fit.
             listOf(
-                RowDescriptor(MacroEngine.DECK_A, 0, COLOR_DECK_A, "DECK A", "1-4"),
-                RowDescriptor(MacroEngine.DECK_A, 4, COLOR_DECK_A, "DECK A", "5-8"),
-                RowDescriptor(MacroEngine.DECK_B, 0, COLOR_DECK_B, "DECK B", "1-4"),
-                RowDescriptor(MacroEngine.DECK_B, 4, COLOR_DECK_B, "DECK B", "5-8"),
+                RowDescriptor(MacroEngine.DECK_A, 0, COLOR_DECK_A, "DECK A"),
+                RowDescriptor(MacroEngine.DECK_B, 0, COLOR_DECK_B, "DECK B"),
             ),
-            // PREP & BG: Deck PV full, Deck BG full
+            // PREP & BG: Deck PV's 4 knobs, Deck BG's 4 knobs
             listOf(
-                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", "1-4"),
-                RowDescriptor(MacroEngine.DECK_PV, 4, COLOR_DECK_PV, "DECK PV", "5-8"),
-                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", "1-4"),
-                RowDescriptor(MacroEngine.DECK_BG, 4, COLOR_DECK_BG, "DECK BG", "5-8"),
+                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV"),
+                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG"),
             ),
             // MASTER & FX: Transitions full, Master full
             listOf(
@@ -152,7 +149,7 @@ class PerformanceMatrixPanel {
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
 
         val gridW = availW
-        val rowH = (availH / 4f).coerceAtLeast(1f)
+        val rowH = (availH / rows.size.toFloat()).coerceAtLeast(1f)
 
         // Per group: box margin + box top border + large centered group title, then for each
         // sub-row it contains: an optional small "1-4"/"5-8" sub-label + knob diameter + per-knob

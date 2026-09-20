@@ -108,7 +108,7 @@ class MacroPanel(
         }
     }
 
-    // -- 4-Column x 2-Row Macro Knob Grid ---------------------------------------------------------
+    // -- 4-Column Macro Knob Grid (row count follows the active bank's knob count) ------------------
 
     private fun drawMacroGrid(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO CONTROLS") }
@@ -151,7 +151,7 @@ class MacroPanel(
             )
         }
 
-        val totalRows = 2
+        val totalRows = (bank.knobs.size + cols - 1) / cols
         ImGui.setCursorScreenPos(startX, startY + totalRows * rowH)
         ImGui.dummy(0f, 0f)
     }

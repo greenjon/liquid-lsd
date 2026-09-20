@@ -10,7 +10,7 @@ liquid-lsd-desktop/
 │   └── skills/              # Native ImGui, JACK, and LWJGL constraint docs
 ├── .github/                 # GitHub repository automation/configuration
 ├── .planning/               # GSD planning and generated codebase maps
-│   └── codebase/            # ARCHITECTURE.md and STRUCTURE.md live here
+│   └── codebase/            # STRUCTURE.md and other generated codebase maps live here
 ├── docs/                    # MkDocs source documentation
 │   ├── developer/           # Developer architecture/audio/rendering docs
 │   └── user_guide/          # User-facing concepts and workflow docs
@@ -41,7 +41,7 @@ liquid-lsd-desktop/
 **`.planning/`:**
 - Purpose: Store GSD planning artifacts and generated codebase maps.
 - Contains: `.planning/codebase/`.
-- Key files: `.planning/codebase/ARCHITECTURE.md`, `.planning/codebase/STRUCTURE.md`.
+- Key files: `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONCERNS.md`.
 
 **`docs/`:**
 - Purpose: Source content for MkDocs documentation and packaged help docs.

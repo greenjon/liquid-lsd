@@ -29,9 +29,26 @@ object MacroEngine {
     const val DECK_PV = "deckPV"
     const val TRANS = "masterTransition"
     const val MASTER = "master"
+    const val FX_BANK_1 = "fxBank1"
+    const val FX_BANK_2 = "fxBank2"
 
-    /** The six always-resident per-deck/mixer bank ids, in display order. */
-    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER)
+    /** The always-resident per-deck/mixer/FX-bank bank ids, in display order. */
+    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER, FX_BANK_1, FX_BANK_2)
+
+    /**
+     * Knob count for a freshly auto-vivified bank. Per-deck banks hold 4 generation-only knobs
+     * now that FX macros live on the shared FX_BANK_1/FX_BANK_2 banks (see FxBank); those two FX
+     * banks also get 4 (3 chain-depth + 1 wet/dry). TRANS/MASTER and any non-canonical (e.g.
+     * future Rack unit) id keep the original 8.
+     */
+    fun defaultKnobCountFor(bankId: String?): Int = when (bankId) {
+        DECK_A, DECK_B, DECK_BG, DECK_PV, FX_BANK_1, FX_BANK_2 -> 4
+        else -> 8
+    }
+
+    /** Builds a fresh, correctly-sized, blank-labeled bank for [bankId]. */
+    fun newBankFor(bankId: String?): MacroBank =
+        MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "KNOB ${it + 1}") })
 
     private val banks = LinkedHashMap<String?, MacroBank>()
 
@@ -67,7 +84,7 @@ object MacroEngine {
     fun bankForParamPath(parameterPath: String): MacroBank {
         val key = canonicalIdForDeckLabel(parameterPath.substringBefore('/', parameterPath))
         synchronized(lock) {
-            return banks.getOrPut(key) { MacroBank() }
+            return banks.getOrPut(key) { newBankFor(key) }
         }
     }
 
@@ -78,6 +95,8 @@ object MacroEngine {
         "Deck BG" -> DECK_BG
         "Deck PV" -> DECK_PV
         "Master" -> MASTER
+        "Bank 1" -> FX_BANK_1
+        "Bank 2" -> FX_BANK_2
         else -> TRANS
     }
 

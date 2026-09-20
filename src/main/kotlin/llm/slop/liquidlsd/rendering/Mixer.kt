@@ -35,10 +35,18 @@ class Mixer(
     var masterCompositeFBO = FBO(width, height)
 
     // Master FX slots (chained in order: slot 0's output feeds slot 1's input, etc.)
-    val masterFxSlots = arrayOfNulls<ISFFilter>(Deck.FX_SLOT_COUNT)
+    // Separate from the two deck-routable FxBanks below -- this chain always applies to the
+    // final composited output and isn't assignable/shared the way the FxBanks are.
+    val masterFxSlots = arrayOfNulls<ISFFilter>(MASTER_FX_SLOT_COUNT)
 
     // FBOs for master FX serial processing stages
-    var masterFxFBOs = Array(Deck.FX_SLOT_COUNT) { FBO(width, height) }
+    var masterFxFBOs = Array(MASTER_FX_SLOT_COUNT) { FBO(width, height) }
+
+    // The two shared FX banks decks route into (see FxBank). Default assignment mirrors the
+    // previous FXQueueManager/FXBgQueueManager split (A/B share one queue, BG has its own) --
+    // there's no user-facing bank-assignment toggle yet, so this is fixed for now.
+    val fxBank1 = FxBank("Bank 1")
+    val fxBank2 = FxBank("Bank 2")
 
     // Active ISF transition filter for crossfading
     var transitionFilter: ISFFilter? = null
@@ -96,7 +104,7 @@ class Mixer(
         masterCompositeFBO.clear(0f, 0f, 0f, 0f)
 
         masterFxFBOs.forEach { it.dispose() }
-        masterFxFBOs = Array(Deck.FX_SLOT_COUNT) { FBO(width, height) }
+        masterFxFBOs = Array(MASTER_FX_SLOT_COUNT) { FBO(width, height) }
         masterFxFBOs.forEach { it.clear(0f, 0f, 0f, 0f) }
 
         deckA.resize(newWidth, newHeight)
@@ -152,7 +160,7 @@ class Mixer(
     }
 
     fun toMasterFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto {
-        val slotsList = (0 until Deck.FX_SLOT_COUNT).map { toMasterFxSlotDto(it) }
+        val slotsList = (0 until MASTER_FX_SLOT_COUNT).map { toMasterFxSlotDto(it) }
         return FXChainDto(
             name = name,
             tags = tags,
@@ -171,6 +179,10 @@ class Mixer(
  
     init {
         setTransition("linear_crossfade")
+        deckA.assignedFxBank = fxBank1
+        deckB.assignedFxBank = fxBank1
+        deckBG.assignedFxBank = fxBank2
+        deckPV.assignedFxBank = fxBank2
     }
 
     // Channel level multiplier faders (0.0 to 1.0, non-modulatable, console channel strip isolation)
@@ -264,6 +276,7 @@ class Mixer(
     val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
 
     companion object {
+        const val MASTER_FX_SLOT_COUNT = 4
         const val FORBIDDEN_RANDOMIZE_TOOLTIP = "It is forbidden to randomize the randomizer. Chaos would ensue."
         val RANDOMIZER_PARAM_KEYS = setOf(
             "Mixer/randDeckA",
@@ -332,6 +345,9 @@ class Mixer(
         masterFxSlots.forEachIndexed { i, fx ->
             fx?.getParameterPaths("$prefix/FX${i + 1}")?.let { list.addAll(it) }
         }
+
+        list.addAll(fxBank1.getParameterPaths(fxBank1.label))
+        list.addAll(fxBank2.getParameterPaths(fxBank2.label))
 
         list.addAll(deckA.getParameterPaths("Deck A"))
         list.addAll(deckB.getParameterPaths("Deck B"))
@@ -437,6 +453,8 @@ class Mixer(
 
         transitionFilter?.update()
         masterFxSlots.forEach { it?.update() }
+        fxBank1.update()
+        fxBank2.update()
 
         // Continuous random morphing evaluation — zero-allocation check
         val isModA = randDeckA.hasActiveModulator() || randDeckA.value > 0.0001f
@@ -578,6 +596,8 @@ class Mixer(
         masterCompositeFBO.dispose()
         masterFxFBOs.forEach { it.dispose() }
         masterFxSlots.forEach { it?.dispose() }
+        fxBank1.dispose()
+        fxBank2.dispose()
         transitionFilter?.dispose()
     }
 }

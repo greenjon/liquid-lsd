@@ -1,3 +1,19 @@
+## Removed Per-Preset FX (`PresetModels.kt`, `SessionSerializer.kt`, `ISFMultiPassTest.kt`)
+
+- **Context**: 2026-09-19. Per-deck FX (manual editing, FX Browser, FX Playlists, and Live FX Queues via `FxQueueEngine`) fully superseded the older mechanism of embedding an FX chain inside a visual preset (`DeckPresetDto.fxSlot1..4`/`fxChainEnabled`/`fxChainDryWet`, restored on `Deck.applyDto()` and captured on `Deck.toDto()`). Keeping both meant a preset with configured FX would clobber whatever the deck's live FX queue/playlist had loaded — the exact hybrid "only overwrite if the preset has FX" behavior recorded as **Preserve Deck FX on Clean Preset Load** in the release notes was a patch over this redundancy, not a fix for it.
+- **Decision**:
+  - Deleted `fxSlot1..4`, `fxChainEnabled`, `fxChainDryWet` from `DeckPresetDto` entirely. `Deck.toDto()`/`Deck.applyDto()` no longer read or write a deck's FX state at all — loading or saving a `.lsd` preset is now a strict no-op for FX in every case, not just the "preset has no FX configured" case.
+  - Deleted the corresponding unresolved-filter validation for `dDto.fxSlot1..4` in `SessionSerializer.loadSession()` (master FX and transition-slot validation are untouched — separate systems).
+  - Deleted the `ISFMultiPassTest` test asserting on `DeckPresetDto.fxSlot1`/`fxSlot2` round-tripping.
+  - No migration/back-compat path: old `.lsd`/session files on disk that still have `fxSlot*` keys load fine and those keys are silently dropped by `ignoreUnknownKeys = true`. This is beta software; breaking changes are acceptable and preferred over carrying dead fields.
+  - `FXSlotDto` itself is kept — still the shared shape for `Mixer.masterFxSlots` and the standalone `.lsdfx`/`.lsdfxchain` asset files, which are unrelated to this removal.
+- **Rationale**:
+  - Eliminates a second, competing source of truth for deck FX state; FX is now unambiguously a per-deck, queue/playlist/manual-driven concern.
+  - Removes the load-time coupling where editing a deck's FX chain marked the currently-loaded preset "dirty" (`PresetManager.isDeckDirty` compares `toDto()` snapshots) — preset dirtiness now reflects only visual-source/feedback/view state, which better matches how deck FX and presets are actually used independently in performance.
+  - Simplifies `Deck.applyDto()` by removing a branch whose entire purpose was to paper over the two systems overlapping.
+
+---
+
 ## Architectural Compliance: ImGui Widget Allocation Caching & Playlist Test Confinement (`ValueParamSection.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`, `SeqSection.kt`, `PlaylistManagerTest.kt`)
 
 - **Context**: 2026-09-18 architectural audit. Audited real-time audio, Thread 0 OpenGL context safety, UI typography, and ImGui native memory management against project standards.

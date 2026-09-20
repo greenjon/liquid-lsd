@@ -4,6 +4,7 @@ import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.rendering.Deck
+import llm.slop.liquidlsd.rendering.FxBank
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
@@ -49,7 +50,7 @@ object BrowserActionToolbar {
                 }
             }
             "lsdfx" -> {
-                val vacantIndex = (0 until Deck.FX_SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
+                val vacantIndex = (0 until FxBank.SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
                 if (vacantIndex != null) {
                     session.presetRepository.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
                         deck.applyFxSlot(vacantIndex, presetDto.slot)
@@ -222,7 +223,7 @@ object BrowserActionToolbar {
                 ImGui.textDisabled("${pendingOverwriteDeckLabel} FX slots are full. Select slot to overwrite:")
                 ImGui.separator()
                 if (deck != null && file != null && file.exists()) {
-                    for (s in 0 until Deck.FX_SLOT_COUNT) {
+                    for (s in 0 until FxBank.SLOT_COUNT) {
                         val slotNum = s + 1
                         val fx = deck.fxSlots[s]
                         val label = if (fx != null) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"

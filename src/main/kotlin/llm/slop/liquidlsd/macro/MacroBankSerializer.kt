@@ -48,6 +48,13 @@ object MacroBankSerializer {
             return if (slashIdx > 0) "$targetDeckLabel/" + originalId.substring(slashIdx + 1) else originalId
         }
 
+        if (deckBank != null && deckBank.knobs.size > targetBank.knobs.size) {
+            logger.warn {
+                "Loading a ${deckBank.knobs.size}-knob macro bank onto $targetDeckLabel's " +
+                    "${targetBank.knobs.size}-knob bank -- knobs ${targetBank.knobs.size + 1}-${deckBank.knobs.size} will be dropped."
+            }
+        }
+
         for (i in targetBank.knobs.indices) {
             val destKnob = targetBank.knobs[i]
             val srcKnob = deckBank?.knobs?.getOrNull(i)
@@ -67,7 +74,7 @@ object MacroBankSerializer {
      * it stale.
      */
     fun installPresetBank(canonicalBankId: String, deckBank: MacroBank?, targetDeckLabel: String) {
-        val targetBank = MacroEngine.getBank(canonicalBankId) ?: MacroBank().also { MacroEngine.registerBank(canonicalBankId, it) }
+        val targetBank = MacroEngine.getBank(canonicalBankId) ?: MacroEngine.newBankFor(canonicalBankId).also { MacroEngine.registerBank(canonicalBankId, it) }
         installBankForDeck(deckBank, targetBank, targetDeckLabel)
     }
 

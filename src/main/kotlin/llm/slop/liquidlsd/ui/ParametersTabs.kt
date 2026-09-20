@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import llm.slop.liquidlsd.rendering.Deck
+import llm.slop.liquidlsd.rendering.FxBank
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.VisualSource
@@ -26,8 +27,9 @@ object ParametersTabs {
     var activeBtnMaxY: Float = 0f
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
-    private val fxChainEnabledBuf = imgui.type.ImBoolean()
-    private val fxSlotEnabledBufs = Array(Deck.FX_SLOT_COUNT) { imgui.type.ImBoolean() }
+    // Shared by both the master FX rows (Mixer.MASTER_FX_SLOT_COUNT slots) and the per-deck
+    // bank rows (FxBank.SLOT_COUNT slots) below -- sized to the larger of the two.
+    private val fxSlotEnabledBufs = Array(Mixer.MASTER_FX_SLOT_COUNT) { imgui.type.ImBoolean() }
     private val fxSlotPickerTypes = listOf(
         ShaderPickerPopup.PickerType.FX_SLOT_1,
         ShaderPickerPopup.PickerType.FX_SLOT_2,
@@ -590,7 +592,7 @@ object ParametersTabs {
                 }
             }
             if (ImGui.menuItem("Clear All Slots")) {
-                for (c in 0 until Deck.FX_SLOT_COUNT) {
+                for (c in mixer.masterFxSlots.indices) {
                     mixer.clearMasterFxSlot(c)
                 }
                 onPushUndo()
@@ -854,15 +856,11 @@ object ParametersTabs {
         }
         itemTooltip("FX Chain Options (Save, Copy, Paste, Clear)")
 
-        fxChainEnabledBuf.set(deck.fxChainEnabled)
-        if (ImGui.checkbox("Master##fx_chain_enabled_$deckLabel", fxChainEnabledBuf)) {
-            deck.fxChainEnabled = fxChainEnabledBuf.get()
-            onPushUndo()
-        }
-        itemTooltip("Bypass the entire FX chain for this deck, independent of each slot's own toggle.")
-
-        if (deck.fxChainEnabled) {
-            ParametersRenderer.drawParamRow(session, "Master Dry/Wet", "$deckLabel/FXChain/DryWet", deck.fxChainDryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        // Note: FX slots below now live on a shared FxBank (see FxBank/Mixer.fxBank1/fxBank2),
+        // not on this deck -- there's no bank-assignment/bypass toggle in this UI yet, so a deck
+        // with no bank assigned just always reads/writes 3 empty no-op slots.
+        if (deck.assignedFxBank != null) {
+            ParametersRenderer.drawParamRow(session, "Send Level", "$deckLabel/FXChain/DryWet", deck.fxSendLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
 
         if (ImGui.beginPopup("FXChainKebabPopup_$deckLabel")) {
@@ -890,7 +888,7 @@ object ParametersTabs {
                 }
             }
             if (ImGui.menuItem("Clear All Slots")) {
-                for (c in 0 until Deck.FX_SLOT_COUNT) {
+                for (c in 0 until FxBank.SLOT_COUNT) {
                     deck.clearFxSlot(c)
                 }
                 onPushUndo()
@@ -992,10 +990,13 @@ object ParametersTabs {
             }
 
             if (fx != null && !isCollapsed) {
-                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$deckLabel/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                // These filters are bank-owned (see FxBank), so their bindable path is scoped to
+                // the bank's label -- not this deck's -- matching Mixer.getParameterPaths().
+                val fxPathPrefix = deck.assignedFxBank?.label ?: deckLabel
+                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$fxPathPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 fx.parameters.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    ParametersRenderer.drawParamRow(session, name, "$fxPathPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
 
