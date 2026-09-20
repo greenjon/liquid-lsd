@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  * Column 3's `MACROS` mode view (Macro Controls system -- see
  * docs/user_guide/macros_and_rack.md for details).
  *
- * Shows one of the five canonical per-deck/mixer banks at a time ([MacroEngine.CANONICAL_BANK_IDS])
+ * Shows one of the canonical per-deck/mixer/FX-bank banks at a time ([MacroEngine.CANONICAL_BANK_IDS])
  * -- the same resident banks the Rack's per-deck faceplates read and write directly, so editing a
  * knob here and seeing it on the Rack (or vice versa) is the same object, not a copy. Which bank is
  * showing follows [ParametersState.activeTopTab] -- the same "which deck is focused" state Columns
@@ -57,10 +57,13 @@ class MacroPanel(
         "Deck B" -> MacroEngine.DECK_B
         "Deck BG" -> MacroEngine.DECK_BG
         "Deck PV" -> MacroEngine.DECK_PV
+        "FX1" -> MacroEngine.FX_BANK_1
+        "FX2" -> MacroEngine.FX_BANK_2
+        "MFX" -> MacroEngine.MASTER_FX
         else -> MacroEngine.TRANS
     }
 
-    private val deckTabs = listOf("Deck A" to "A", "Deck B" to "B", "Deck BG" to "BG", "Deck PV" to "PV", "Mixer" to "TRANS")
+    private val deckTabs = listOf("Deck A" to "A", "Deck B" to "B", "Deck BG" to "BG", "Deck PV" to "PV", "Mixer" to "TRANS", "FX1" to "FX1", "FX2" to "FX2", "MFX" to "MFX")
 
     private fun drawDeckTabs() {
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)

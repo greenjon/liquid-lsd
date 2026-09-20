@@ -43,6 +43,9 @@ object ParametersTabs {
             "Deck B", "B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
             "Deck BG", "BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
             "Deck PV", "PV" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
+            "FX1" -> floatArrayOf(0.55f, 0.35f, 0.85f)
+            "FX2" -> floatArrayOf(0.85f, 0.35f, 0.65f)
+            "MFX" -> floatArrayOf(0.9f, 0.25f, 0.35f)
             else -> floatArrayOf(0.4f, 0.4f, 0.4f) // Mixer / MIX
         }
         return ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], alpha)
@@ -75,7 +78,10 @@ object ParametersTabs {
             Triple("A",   "Deck A", if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A visual source, geometry, color, and feedback parameters."),
             Triple("B",   "Deck B", if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B visual source, geometry, color, and feedback parameters."),
             Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG (Background) visual source, geometry, color, and feedback parameters."),
-            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV (Preview) visual source, geometry, color, and feedback parameters.")
+            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV (Preview) visual source, geometry, color, and feedback parameters."),
+            Triple("FX1", "FX1", "FX Bank 1: 3 shared filter slots + wet/dry, routable from any deck."),
+            Triple("FX2", "FX2", "FX Bank 2: 3 shared filter slots + wet/dry, routable from any deck."),
+            Triple("MFX", "MFX", "Master FX: 4 serial ISF effect slots on the final composited output.")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
         val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
@@ -157,7 +163,6 @@ object ParametersTabs {
         }
         val tabs = mutableListOf<String>()
         tabs.add("SRC")
-        tabs.add("FX")
         tabs.add("View")
         return tabs.distinct()
     }
@@ -188,7 +193,7 @@ object ParametersTabs {
 
     fun calculateSectionTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer): Float {
         val tabs = if (state.activeTopTab == "Mixer") {
-            listOf("CTRL", "TRANS", "FX")
+            listOf("CTRL", "TRANS")
         } else {
             val deck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
@@ -308,7 +313,7 @@ object ParametersTabs {
      */
     fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer, btnH: Float? = null) {
         val tabs = if (state.activeTopTab == "Mixer") {
-            listOf("CTRL", "TRANS", "FX")
+            listOf("CTRL", "TRANS")
         } else {
             val deck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
@@ -432,10 +437,6 @@ object ParametersTabs {
         drawSubGroupContent(session, "Mixer", "TRANS", state) {
             drawMixerTransTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
-
-        drawSubGroupContent(session, "Mixer", "FX", state) {
-            drawMixerFxTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        }
     }
 
     private fun drawMixerCtrlTab(
@@ -544,7 +545,7 @@ object ParametersTabs {
         }
     }
 
-    private fun drawMixerFxTab(
+    fun drawMixerFxTab(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer,
         state: ParametersState,
@@ -767,10 +768,6 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/${activeSource.displayName}/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, otherParams.size, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                drawFxSubgroupContent(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-
             drawSubGroupContent(session, deckLabel, "View", state) {
                 drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo, transformParams)
             }
@@ -779,18 +776,10 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/External Video/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                drawFxSubgroupContent(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-
             drawSubGroupContent(session, deckLabel, "View", state) {
                 drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         } else {
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                drawFxSubgroupContent(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-
             drawSubGroupContent(session, deckLabel, "View", state) {
                 drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
@@ -812,6 +801,11 @@ object ParametersTabs {
         transformParams: List<Map.Entry<String, ModulatableParameter>> = emptyList()
     ) {
         var row = 0
+        // This deck's send into its routed FxBank (see FX1/FX2 tabs for the bank's own 3-slot
+        // chain + wet/dry) -- unassigned decks still show it, it's just a no-op until routed.
+        if (deck.assignedFxBank != null) {
+            ParametersRenderer.drawParamRow(session, "FX Send Level", "$deckLabel/FXChain/DryWet", deck.fxSendLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
         if (!deck.source.is3D) {
             ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -831,10 +825,15 @@ object ParametersTabs {
         }
     }
 
-    private fun drawFxSubgroupContent(
+    /**
+     * Renders an [FxBank]'s own tab (FX1/FX2): the 3 shared filter slots + master wet/dry that
+     * any deck routed to this bank shares (see FxBank). Unlike the old per-deck FX section this
+     * replaces, there's no deck indirection here -- the bank is addressed directly.
+     */
+    fun drawFxBankGroupContent(
         session: llm.slop.liquidlsd.SessionContext,
-        deckLabel: String,
-        deck: Deck,
+        bankLabel: String,
+        bank: FxBank,
         state: ParametersState,
         labelColW: Float,
         mixer: Mixer,
@@ -850,22 +849,24 @@ object ParametersTabs {
         ImGui.textDisabled("FX CHAIN")
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$deckLabel", 22f, 20f)) {
-                ImGui.openPopup("FXChainKebabPopup_$deckLabel")
+            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$bankLabel", 22f, 20f)) {
+                ImGui.openPopup("FXChainKebabPopup_$bankLabel")
             }
         }
         itemTooltip("FX Chain Options (Save, Copy, Paste, Clear)")
 
-        // Note: FX slots below now live on a shared FxBank (see FxBank/Mixer.fxBank1/fxBank2),
-        // not on this deck -- there's no bank-assignment/bypass toggle in this UI yet, so a deck
-        // with no bank assigned just always reads/writes 3 empty no-op slots.
-        if (deck.assignedFxBank != null) {
-            ParametersRenderer.drawParamRow(session, "Send Level", "$deckLabel/FXChain/DryWet", deck.fxSendLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        fxEnabledBuf.set(bank.enabled)
+        if (ImGui.checkbox("Bank Enabled##fx_bank_enabled_$bankLabel", fxEnabledBuf)) {
+            bank.enabled = fxEnabledBuf.get()
+            onPushUndo()
         }
+        itemTooltip("Bypass this bank entirely for every deck routed to it, independent of each slot's own toggle.")
 
-        if (ImGui.beginPopup("FXChainKebabPopup_$deckLabel")) {
+        ParametersRenderer.drawParamRow(session, "Wet/Dry", "$bankLabel/DryWet", bank.masterWetDry, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+
+        if (ImGui.beginPopup("FXChainKebabPopup_$bankLabel")) {
             if (ImGui.menuItem("Save Chain As...")) {
-                val chainDto = deck.toFxChainDto("fx_chain")
+                val chainDto = bank.toFxChainDto("fx_chain")
                 SavePresetModal.request(
                     title = "Save FX Chain As",
                     confirmLabel = "Save",
@@ -878,18 +879,18 @@ object ParametersTabs {
                 }
             }
             if (ImGui.menuItem("Copy Chain")) {
-                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(deck.toFxChainDto("chain"))
+                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(bank.toFxChainDto("chain"))
             }
             val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
             if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
                 llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard?.let {
-                    deck.applyFxChain(it)
+                    bank.applyFxChain(it)
                     onPushUndo()
                 }
             }
             if (ImGui.menuItem("Clear All Slots")) {
                 for (c in 0 until FxBank.SLOT_COUNT) {
-                    deck.clearFxSlot(c)
+                    bank.clearFxSlot(c)
                 }
                 onPushUndo()
             }
@@ -900,15 +901,15 @@ object ParametersTabs {
         ImGui.spacing()
 
         // --- Per-Slot Controls ---
-        for (i in deck.fxSlots.indices) {
+        for (i in bank.slots.indices) {
             val slotNum = i + 1
-            val fx = deck.fxSlots[i]
+            val fx = bank.slots[i]
             val filterName = fx?.displayName ?: "None"
-            val collapseKey = "$deckLabel/FX$slotNum"
+            val collapseKey = "$bankLabel/FX$slotNum"
             val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_$deckLabel")) {
+                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_$bankLabel")) {
                     state.fxSlotCollapsed[collapseKey] = !isCollapsed
                 }
             }
@@ -919,16 +920,16 @@ object ParametersTabs {
             ImGui.sameLine()
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$deckLabel", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
-                    ShaderPickerPopup.show("Select FX Slot $slotNum for $deckLabel", fxSlotPickerTypes[i]) { newFilterId ->
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$bankLabel", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
+                    ShaderPickerPopup.show("Select FX Slot $slotNum for $bankLabel", fxSlotPickerTypes[i]) { newFilterId ->
                         if (newFilterId == null) {
-                            deck.clearFxSlot(i)
+                            bank.clearFxSlot(i)
                             onPushUndo()
                         } else {
                             val filter = llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.createFilter(newFilterId)
                             if (filter != null) {
-                                deck.fxSlots[i]?.dispose()
-                                deck.fxSlots[i] = filter
+                                bank.slots[i]?.dispose()
+                                bank.slots[i] = filter
                                 onPushUndo()
                             }
                         }
@@ -940,7 +941,7 @@ object ParametersTabs {
             if (fx != null) {
                 val enabledBuf = fxSlotEnabledBufs[i]
                 enabledBuf.set(fx.enabled)
-                if (ImGui.checkbox("##fx${slotNum}_enabled_$deckLabel", enabledBuf)) {
+                if (ImGui.checkbox("##fx${slotNum}_enabled_$bankLabel", enabledBuf)) {
                     fx.enabled = enabledBuf.get()
                     onPushUndo()
                 }
@@ -950,16 +951,16 @@ object ParametersTabs {
 
             // Per-Slot Kebab Menu
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$deckLabel", 22f, 20f)) {
-                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_$deckLabel")
+                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$bankLabel", 22f, 20f)) {
+                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_$bankLabel")
                 }
             }
             itemTooltip("Slot $slotNum Options (Save, Copy, Paste, Reset)")
 
-            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$deckLabel")) {
-                val hasFx = deck.fxSlots[i] != null
+            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$bankLabel")) {
+                val hasFx = bank.slots[i] != null
                 if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
-                    deck.toFxSlotDto(i)?.let { slotDto ->
+                    bank.toFxSlotDto(i)?.let { slotDto ->
                         SavePresetModal.request(
                             title = "Save FX Slot Preset As",
                             confirmLabel = "Save",
@@ -973,30 +974,27 @@ object ParametersTabs {
                     }
                 }
                 if (ImGui.menuItem("Copy Slot", "", false, hasFx)) {
-                    deck.toFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
+                    bank.toFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
                 }
                 val canPasteSlot = llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard != null
                 if (ImGui.menuItem("Paste Slot", "", false, canPasteSlot)) {
                     llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard?.let {
-                        deck.applyFxSlot(i, it)
+                        bank.applyFxSlot(i, it)
                         onPushUndo()
                     }
                 }
                 if (ImGui.menuItem("Reset Slot", "", false, hasFx)) {
-                    deck.clearFxSlot(i)
+                    bank.clearFxSlot(i)
                     onPushUndo()
                 }
                 ImGui.endPopup()
             }
 
             if (fx != null && !isCollapsed) {
-                // These filters are bank-owned (see FxBank), so their bindable path is scoped to
-                // the bank's label -- not this deck's -- matching Mixer.getParameterPaths().
-                val fxPathPrefix = deck.assignedFxBank?.label ?: deckLabel
-                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$fxPathPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                ParametersRenderer.drawParamRow(session, "Dry/Wet", "$bankLabel/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 fx.parameters.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$fxPathPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    ParametersRenderer.drawParamRow(session, name, "$bankLabel/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
 
@@ -1009,12 +1007,12 @@ object ParametersTabs {
                         val ext = file.extension.lowercase()
                         if (ext == "lsdfx") {
                             session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                deck.applyFxSlot(i, presetDto.slot)
+                                bank.applyFxSlot(i, presetDto.slot)
                                 onPushUndo()
                             }
                         } else if (ext == "lsdfxchain") {
                             session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                                deck.applyFxChain(chainDto)
+                                bank.applyFxChain(chainDto)
                                 onPushUndo()
                             }
                         }
@@ -1023,7 +1021,7 @@ object ParametersTabs {
                 ImGui.endDragDropTarget()
             }
 
-            if (i < deck.fxSlots.lastIndex) {
+            if (i < bank.slots.lastIndex) {
                 ImGui.separator()
             }
         }

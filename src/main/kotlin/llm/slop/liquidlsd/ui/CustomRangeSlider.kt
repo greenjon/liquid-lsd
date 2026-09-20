@@ -229,7 +229,7 @@ object CustomRangeSlider {
             val labelY = startY - 14f
             val isMacroBindable = modulatorIndex != null && paramKey != null
             val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-            drawMinMaxBoundLabel(session, "Min", isMacroLearning, textBoxesStartX, labelY, boxWidth) {
+            drawMinMaxBoundLabel(session, "Min", isMacroLearning, textBoxesStartX, labelY, boxWidth, paramKey, modulatorIndex, "lfoMin", minLimit, maxLimit) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
                     bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
@@ -240,7 +240,7 @@ object CustomRangeSlider {
                     maxVal = maxLimit
                 )
             }
-            drawMinMaxBoundLabel(session, "Max", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth) {
+            drawMinMaxBoundLabel(session, "Max", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, paramKey, modulatorIndex, "lfoMax", minLimit, maxLimit) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
                     bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
@@ -309,6 +309,11 @@ object CustomRangeSlider {
         x: Float,
         y: Float,
         w: Float,
+        paramKey: String? = null,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null,
+        minLimit: Float = 0f,
+        maxLimit: Float = 1f,
         onBind: () -> Unit
     ) {
         val captionHeight = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -318,6 +323,32 @@ object CustomRangeSlider {
         if (isMacroLearning && ImGui.isItemClicked(0)) {
             onBind()
         }
+
+        val oscTargetPath = if (paramKey != null && propertyName != null) {
+            "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName"
+        } else null
+        val isOscLearningThis = oscTargetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(oscTargetPath)
+
+        if (ImGui.beginPopupContextItem("bnd_ctx_$text")) {
+            if (oscTargetPath != null) {
+                if (isOscLearningThis) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                        llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($text)")) {
+                        llm.slop.liquidlsd.osc.OscLearnState.startLearn(
+                            parameterPath = oscTargetPath,
+                            minVal = minLimit,
+                            maxVal = maxLimit,
+                            displayLabel = "$paramKey ($text)"
+                        )
+                    }
+                }
+            }
+            ImGui.endPopup()
+        }
+
         val col = if (isMacroLearning && isHovered) floatArrayOf(0.0f, 0.85f, 1.0f, 1.0f) else floatArrayOf(0.6f, 0.6f, 0.6f, 0.7f)
         ImGui.setCursorScreenPos(x, y)
         session.uiTheme.captionColored(col[0], col[1], col[2], col[3], text)
@@ -326,10 +357,16 @@ object CustomRangeSlider {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
             val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
             dl.addRect(x - 2f, y - 2f, x + w + 2f, y + captionHeight + 2f, borderCol, 3f, 0, 1.5f)
+        } else if (isOscLearningThis) {
+            val dl = ImGui.getWindowDrawList()
+            val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            val borderCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.1f, pulseAlpha)
+            dl.addRect(x - 2f, y - 2f, x + w + 2f, y + captionHeight + 2f, borderCol, 3f, 0, 2.0f)
         }
         if (isHovered) {
             val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-            showTooltip("$text bound$learnHint")
+            val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else (if (oscTargetPath != null) "\nRight-click for OSC Learn." else "")
+            showTooltip("$text bound$learnHint$oscHint")
         }
     }
 
@@ -701,6 +738,35 @@ object CustomRangeSlider {
                     onValueChanged(resetTarget)
                 }
             }
+
+            val oscTargetPath = if (paramKey != null) {
+                if (propertyName != null) "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName" else paramKey
+            } else null
+            val isOscLearningThis = oscTargetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(oscTargetPath)
+
+            if (ImGui.beginPopupContextItem("crs_ctx_${idPrefix}_$label")) {
+                if (oscTargetPath != null) {
+                    val propLabel = if (propertyName != null) {
+                        llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modulatorIndex ?: 0, propertyName)
+                    } else "Base Value"
+                    if (isOscLearningThis) {
+                        if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                            llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
+                        }
+                    } else {
+                        if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($propLabel)")) {
+                            llm.slop.liquidlsd.osc.OscLearnState.startLearn(
+                                parameterPath = oscTargetPath,
+                                minVal = minLimit,
+                                maxVal = maxLimit,
+                                displayLabel = "$paramKey ($propLabel)"
+                            )
+                        }
+                    }
+                }
+                ImGui.endPopup()
+            }
+
             if (isLabelHovered) {
                 if (isMacroBound) {
                     val info = macroInfo!!
@@ -708,13 +774,18 @@ object CustomRangeSlider {
                 } else {
                     val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
                     val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-                    showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint")
+                    val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else (if (oscTargetPath != null) "\nRight-click for OSC Learn." else "")
+                    showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint$oscHint")
                 }
             }
             if (isMacroLearning) {
                 val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
                 val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
                 dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
+            } else if (isOscLearningThis) {
+                val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+                val borderCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.1f, pulseAlpha)
+                dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
             }
 
             // Render name of variable (and macro badge if bound)

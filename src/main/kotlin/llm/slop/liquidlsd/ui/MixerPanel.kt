@@ -158,18 +158,18 @@ class MixerPanel(
         if (isFaderActive) {
             val mouseY = ImGui.getIO().mousePos.y
             val pct = ((stripMaxY - mouseY) / stripH).coerceIn(0f, 1f)
-            mixer.masterLevel = pct
+            mixer.masterLevel.baseValue = pct
         }
 
         val io = ImGui.getIO()
         if (isFaderHovered || isFaderActive) {
             if (io.mouseWheel != 0f) {
                 val delta = if (io.keyShift) 0.01f else 0.05f
-                mixer.masterLevel = (mixer.masterLevel + io.mouseWheel * delta).coerceIn(0f, 1f)
+                mixer.masterLevel.baseValue = (mixer.masterLevel.value + io.mouseWheel * delta).coerceIn(0f, 1f)
                 io.mouseWheel = 0f
             }
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
-                mixer.masterLevel = 1.0f
+                mixer.masterLevel.baseValue = 1.0f
             }
             itemTooltip("Master Output Level\nDrag or scroll to adjust. Middle-click to reset (100%).")
         }
@@ -181,7 +181,7 @@ class MixerPanel(
         dlMaster.addRect(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBorder, 3f, 0, 1.0f)
 
         // Draw Filled Level Bar (bottom to top)
-        val fillH = stripH * mixer.masterLevel
+        val fillH = stripH * mixer.masterLevel.value
         val fillTop = stripMaxY - fillH
         if (fillH > 1f) {
             dlMaster.addRectFilled(stripMinX + 2f, fillTop, stripMinX + stripW - 2f, stripMaxY - 1f, masterThemeCol, 2f)

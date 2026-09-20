@@ -214,9 +214,52 @@ object OscMappingManager {
         }
     }
 
+    /**
+     * Formats a user-friendly label for a parameter path, handling both base paths
+     * and nested modulator variables (e.g. "Deck A/geometry/zoom [LFO 1 Speed]").
+     */
+    fun formatDisplayPath(parameterPath: String): String {
+        if (parameterPath.contains(":mod/")) {
+            val base = parameterPath.substringBefore(":mod/")
+            val remainder = parameterPath.substringAfter(":mod/")
+            val modIdx = remainder.substringBefore("/").toIntOrNull() ?: 0
+            val prop = remainder.substringAfter("/")
+            val label = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modIdx, prop)
+            return "$base [$label]"
+        }
+        return parameterPath
+    }
+
+    /**
+     * Resolves an OSC mapping parameter path to a getter and setter.
+     * Supports both direct parameters (e.g. "Mixer/crossfade") and nested modulator
+     * variables (e.g. "Deck A/geometry/zoom:mod/0/subdivision").
+     */
+    private fun resolveTarget(mixer: Mixer, parameterPath: String): Pair<(() -> Float?), ((Float) -> Unit)>? {
+        if (parameterPath.contains(":mod/")) {
+            val baseParamPath = parameterPath.substringBefore(":mod/")
+            val remainder = parameterPath.substringAfter(":mod/")
+            val modIndex = remainder.substringBefore("/").toIntOrNull() ?: return null
+            val propName = remainder.substringAfter("/")
+            val param = ParameterResolver.findParameterByPath(mixer, baseParamPath) ?: return null
+            val getter: () -> Float? = {
+                param.modulators.getOrNull(modIndex)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propName) }
+            }
+            val setter: (Float) -> Unit = { v ->
+                param.modulators.getOrNull(modIndex)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propName, v) }
+            }
+            return Pair(getter, setter)
+        } else {
+            val param = ParameterResolver.findParameterByPath(mixer, parameterPath) ?: return null
+            val getter: () -> Float? = { param.baseValue }
+            val setter: (Float) -> Unit = { v -> param.baseValue = v }
+            return Pair(getter, setter)
+        }
+    }
+
     private fun dispatchToParameter(key: String, rawValue: Float, mixer: Mixer) {
         val mapping = activeProfile.mappings[key] ?: return
-        val param = ParameterResolver.findParameterByPath(mixer, mapping.parameterPath) ?: return
+        val (getter, setter) = resolveTarget(mixer, mapping.parameterPath) ?: return
 
         var norm = rawValue.coerceIn(0f, 1f)
         if (mapping.inverted) norm = 1f - norm
@@ -228,7 +271,7 @@ object OscMappingManager {
         if (mapping.takeoverMode == OscTakeoverMode.SOFT_TAKEOVER) {
             val alreadyTakenOver = hasTakenOver[key] ?: false
             if (!alreadyTakenOver) {
-                val currentVal = param.baseValue
+                val currentVal = getter() ?: 0f
                 val tolerance = (mapping.maxVal - mapping.minVal) * 0.04f
                 val crossed = prevPhys != null && ((prevPhys - currentVal) * (scaledTarget - currentVal) <= 0f)
                 val closeEnough = kotlin.math.abs(scaledTarget - currentVal) <= tolerance
@@ -244,7 +287,7 @@ object OscMappingManager {
         state.targetValue = scaledTarget
         state.hasTarget = true
         if (mapping.slewMs <= 0f) {
-            param.baseValue = scaledTarget
+            setter(scaledTarget)
             state.smoothedValue = scaledTarget
             state.hasSmoothed = true
         }
@@ -260,15 +303,15 @@ object OscMappingManager {
             if (mapping.slewMs <= 0f) continue
             val state = slewStates[key] ?: continue
             if (!state.hasTarget) continue
-            val param = ParameterResolver.findParameterByPath(mixer, mapping.parameterPath) ?: continue
+            val (getter, setter) = resolveTarget(mixer, mapping.parameterPath) ?: continue
 
-            val current = if (state.hasSmoothed) state.smoothedValue else param.baseValue
+            val current = if (state.hasSmoothed) state.smoothedValue else (getter() ?: 0f)
             val tau = (mapping.slewMs / 1000f).coerceAtLeast(0.001f)
             val alpha = (1.0f - kotlin.math.exp(-dtSeconds / tau)).coerceIn(0.01f, 1.0f)
             val nextVal = current + (state.targetValue - current) * alpha
             state.smoothedValue = nextVal
             state.hasSmoothed = true
-            param.baseValue = nextVal
+            setter(nextVal)
         }
     }
 }

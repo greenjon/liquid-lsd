@@ -164,7 +164,7 @@ Hover over any slider or number and scroll the mouse wheel:
 - `Shift` + scroll — medium step
 - `Ctrl+Shift` + scroll — coarse step
 
-Middle-click any slider or value cell to reset to factory default.
+Middle-click any slider to reset to factory default.
 
 ### Parameters panel shortcuts
 
@@ -177,12 +177,15 @@ Middle-click any slider or value cell to reset to factory default.
 | Paste cell                  | `Ctrl+V` (onto another cell)            |
 | Copy full parameter row     | `Ctrl+C` (with the VALUE cell selected) |
 | Clear / reset selected cell | `Delete` or `Backspace`                 |
-| Toggle cell mute            | Middle-click the cell                   |
+| Toggle cell mute            | Middle-click the modulation cell        |
+| Toggle row mute (all modulators) | Right-click or middle-click the VAL cell |
 
 **Muted cells** still show the live oscilloscope but don't affect the parameter — useful for previewing what a connection would do without committing to it.
 
+**Toggle all modulators:** Right-clicking or middle-clicking the **VAL** cell toggles mute for all active modulators assigned to that parameter. If the parameter has no modulators, middle-clicking the VAL cell resets the base value to default.
+
 **Copying cells:** Copy an LFO, audio, or MIDI cell and paste it onto any compatible cell — the modulator follows automatically. Copy a full parameter row (from the VALUE cell) and paste it onto another parameter to clone all settings, rescaled to the new parameter's range.
 
-**Right-click** any parameter row for a context menu with copy, paste, reset, mute, and note-editing options.
+**Right-click** any parameter row label or kebab button for a context menu with randomize, copy, paste, reset, mute/unmute all modulators, and note-editing options.
 
 See **Preferences → Keyboard Shortcuts** for a full grouped list of all shortcuts in the app.

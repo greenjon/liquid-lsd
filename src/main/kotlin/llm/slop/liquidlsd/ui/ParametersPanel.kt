@@ -221,6 +221,12 @@ object ParametersPanel {
                     } else {
                         ParametersTabs.drawDeckGroupContent(session, "Deck PV", mixer.deckPV, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
                     }
+                } else if (state.activeTopTab == "FX1") {
+                    ParametersTabs.drawFxBankGroupContent(session, mixer.fxBank1.label, mixer.fxBank1, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
+                } else if (state.activeTopTab == "FX2") {
+                    ParametersTabs.drawFxBankGroupContent(session, mixer.fxBank2.label, mixer.fxBank2, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
+                } else if (state.activeTopTab == "MFX") {
+                    ParametersTabs.drawMixerFxTab(session, mixer, state, labelColW, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
                 }
             }
             val childMaxY = ImGui.getCursorScreenPosY()
@@ -372,7 +378,7 @@ object ParametersPanel {
         session.uiTheme.body(labelValue)
         ImGui.popStyleColor()
         if (isValueHeaderHovered && session.uiTheme.tooltipsEnabled) {
-            showTooltip("VAL: Base parameter value and modulation bounds/limits.", (valueColX.toInt() shl 16) xor startY.toInt())
+            showTooltip("VAL: Base parameter value and modulation bounds/limits. Right-click or middle-click cell to toggle mute for all modulators.", (valueColX.toInt() shl 16) xor startY.toInt())
         }
 
         // Draw MIDI header

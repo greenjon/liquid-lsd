@@ -192,4 +192,32 @@ class OscMappingManagerTest {
         // Learn only creates the binding; it does not also apply this first message's value.
         assertEquals(0f, param.baseValue, absoluteTolerance = 1e-4f)
     }
+
+    // --- Modulator property dispatch & formatting ---
+
+    @Test
+    fun testOnOscMessageDispatchesToModulatorProperty() {
+        val mod = llm.slop.liquidlsd.parameters.CvModulator("lfo", subdivision = 1.0f)
+        val param = ModulatableParameter(0f, minClamp = 0f, maxClamp = 10f)
+        param.modulators.add(mod)
+        val mixer = mockMixerWithParams("Deck A/zoom" to param)
+
+        OscMappingManager.addMapping(
+            "/1/fader2",
+            OscControlMapping(parameterPath = "Deck A/zoom:mod/0/subdivision", minVal = 0.5f, maxVal = 8.0f)
+        )
+        OscMappingManager.onOscMessage(OscMessage("/1/fader2", listOf(0.5f)), mixer)
+
+        assertEquals(4.25f, mod.subdivision, absoluteTolerance = 1e-4f)
+        // param.baseValue should remain untouched
+        assertEquals(0f, param.baseValue, absoluteTolerance = 1e-4f)
+    }
+
+    @Test
+    fun testFormatDisplayPath() {
+        assertEquals("Mixer/crossfade", OscMappingManager.formatDisplayPath("Mixer/crossfade"))
+        assertEquals("Deck A/zoom [LFO 1 Speed]", OscMappingManager.formatDisplayPath("Deck A/zoom:mod/0/subdivision"))
+        assertEquals("Deck B/zoom [LFO 1 Depth]", OscMappingManager.formatDisplayPath("Deck B/zoom:mod/0/depth"))
+        assertEquals("Deck A/color [LFO 2 Morph]", OscMappingManager.formatDisplayPath("Deck A/color:mod/1/morph"))
+    }
 }

@@ -18,23 +18,22 @@ class TouchConsoleControllerTest {
     private lateinit var controller: TouchConsoleController
     private lateinit var mixer: Mixer
     private lateinit var crossfadeParam: ModulatableParameter
-
-    private var mockLevelA = 1.0f
-    private var mockLevelB = 1.0f
-    private var mockLevelBG = 1.0f
+    private lateinit var levelAParam: ModulatableParameter
+    private lateinit var levelBParam: ModulatableParameter
+    private lateinit var levelBGParam: ModulatableParameter
 
     @BeforeTest
     fun setUp() {
         crossfadeParam = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR)
+        levelAParam = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+        levelBParam = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+        levelBGParam = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
         mixer = mockk(relaxed = true)
 
         every { mixer.crossfade } returns crossfadeParam
-        every { mixer.levelA } answers { mockLevelA }
-        every { mixer.levelA = any() } answers { mockLevelA = firstArg() }
-        every { mixer.levelB } answers { mockLevelB }
-        every { mixer.levelB = any() } answers { mockLevelB = firstArg() }
-        every { mixer.levelBG } answers { mockLevelBG }
-        every { mixer.levelBG = any() } answers { mockLevelBG = firstArg() }
+        every { mixer.levelA } returns levelAParam
+        every { mixer.levelB } returns levelBParam
+        every { mixer.levelBG } returns levelBGParam
 
         controller = TouchConsoleController()
         controller.initialize(0L, mixer)
@@ -65,25 +64,25 @@ class TouchConsoleControllerTest {
         // 2. Deadzone Touch (Y in 0.28..0.45) - should be ignored on touch down
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(2L, 0.20f, 0.35f))
         controller.processPendingEvents()
-        assertEquals(1.0f, mockLevelA, "Deadzone touch down should not alter Level A")
+        assertEquals(1.0f, levelAParam.baseValue, "Deadzone touch down should not alter Level A")
 
         // 3. Deck A Alpha (X < 0.33, Y >= 0.45)
         // Y = 0.48 maps to 0.0 (blackout)
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(3L, 0.20f, 0.48f))
         controller.processPendingEvents()
-        assertEquals(0.0f, mockLevelA, 0.001f)
+        assertEquals(0.0f, levelAParam.baseValue, 0.001f)
 
         // 4. Deck BG Alpha (X in 0.33..0.67, Y >= 0.45)
         // Y = 0.94 maps to 1.0 (full brightness)
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(4L, 0.50f, 0.94f))
         controller.processPendingEvents()
-        assertEquals(1.0f, mockLevelBG, 0.001f)
+        assertEquals(1.0f, levelBGParam.baseValue, 0.001f)
 
         // 5. Deck B Alpha (X > 0.67, Y >= 0.45)
         // Y = 0.71 (midway: (0.71 - 0.48) / 0.46 = 0.5)
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(5L, 0.85f, 0.71f))
         controller.processPendingEvents()
-        assertEquals(0.5f, mockLevelB, 0.01f)
+        assertEquals(0.5f, levelBParam.baseValue, 0.01f)
     }
 
     @Test
@@ -121,12 +120,12 @@ class TouchConsoleControllerTest {
         // Alpha bottom clamp: Y <= 0.48 -> 0.0
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(21L, 0.15f, 0.46f))
         controller.processPendingEvents()
-        assertEquals(0.0f, mockLevelA, 0.001f)
+        assertEquals(0.0f, levelAParam.baseValue, 0.001f)
 
         // Alpha top clamp: Y >= 0.94 -> 1.0
         controller.eventQueue.add(TouchConsoleEvent.TouchMove(21L, 0.15f, 0.98f))
         controller.processPendingEvents()
-        assertEquals(1.0f, mockLevelA, 0.001f)
+        assertEquals(1.0f, levelAParam.baseValue, 0.001f)
     }
 
     @Test
@@ -157,18 +156,18 @@ class TouchConsoleControllerTest {
         // Finger 1 (Anchor): Blackout at bottom of Deck A (0.0)
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(200L, 0.10f, 0.48f))
         controller.processPendingEvents()
-        assertEquals(0.0f, mockLevelA, 0.001f)
+        assertEquals(0.0f, levelAParam.baseValue, 0.001f)
         assertEquals(0.0f, controller.holdLevelA, 0.001f)
 
         // Finger 2 (Strobe flash): Tap at top of Deck A (1.0)
         controller.eventQueue.add(TouchConsoleEvent.TouchDown(201L, 0.10f, 0.96f))
         controller.processPendingEvents()
-        assertEquals(1.0f, mockLevelA, 0.001f)
+        assertEquals(1.0f, levelAParam.baseValue, 0.001f)
 
         // Finger 2 released -> Snaps back to blackout (0.0)
         controller.eventQueue.add(TouchConsoleEvent.TouchUp(201L))
         controller.processPendingEvents()
-        assertEquals(0.0f, mockLevelA, 0.001f)
+        assertEquals(0.0f, levelAParam.baseValue, 0.001f)
 
         // Finger 1 released -> Sticky hold level preserved
         controller.eventQueue.add(TouchConsoleEvent.TouchUp(200L))

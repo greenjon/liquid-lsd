@@ -172,10 +172,10 @@ class DeckControlPanel(
         }
         
         val deckLevel = when (label) {
-            "Deck A" -> mixer.levelA
-            "Deck B" -> mixer.levelB
-            "Deck BG" -> mixer.levelBG
-            else -> mixer.levelPV
+            "Deck A" -> mixer.levelA.value
+            "Deck B" -> mixer.levelB.value
+            "Deck BG" -> mixer.levelBG.value
+            else -> mixer.levelPV.value
         }
         if (deckLevel < 0.999f) {
             val dimAlpha = (1.0f - deckLevel).coerceIn(0f, 1f)
@@ -286,10 +286,10 @@ class DeckControlPanel(
             val mouseY = ImGui.getIO().mousePos.y
             val pct = ((stripMaxY - mouseY) / stripH).coerceIn(0f, 1f)
             when (label) {
-                "Deck A" -> mixer.levelA = pct
-                "Deck B" -> mixer.levelB = pct
-                "Deck BG" -> mixer.levelBG = pct
-                else -> mixer.levelPV = pct
+                "Deck A" -> mixer.levelA.baseValue = pct
+                "Deck B" -> mixer.levelB.baseValue = pct
+                "Deck BG" -> mixer.levelBG.baseValue = pct
+                else -> mixer.levelPV.baseValue = pct
             }
         }
 
@@ -298,26 +298,26 @@ class DeckControlPanel(
             if (io.mouseWheel != 0f) {
                 val delta = if (io.keyShift) 0.01f else 0.05f
                 val current = when (label) {
-                    "Deck A" -> mixer.levelA
-                    "Deck B" -> mixer.levelB
-                    "Deck BG" -> mixer.levelBG
-                    else -> mixer.levelPV
+                    "Deck A" -> mixer.levelA.value
+                    "Deck B" -> mixer.levelB.value
+                    "Deck BG" -> mixer.levelBG.value
+                    else -> mixer.levelPV.value
                 }
                 val newLevel = (current + io.mouseWheel * delta).coerceIn(0f, 1f)
                 when (label) {
-                    "Deck A" -> mixer.levelA = newLevel
-                    "Deck B" -> mixer.levelB = newLevel
-                    "Deck BG" -> mixer.levelBG = newLevel
-                    else -> mixer.levelPV = newLevel
+                    "Deck A" -> mixer.levelA.baseValue = newLevel
+                    "Deck B" -> mixer.levelB.baseValue = newLevel
+                    "Deck BG" -> mixer.levelBG.baseValue = newLevel
+                    else -> mixer.levelPV.baseValue = newLevel
                 }
                 io.mouseWheel = 0f
             }
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
                 when (label) {
-                    "Deck A" -> mixer.levelA = 1.0f
-                    "Deck B" -> mixer.levelB = 1.0f
-                    "Deck BG" -> mixer.levelBG = 1.0f
-                    else -> mixer.levelPV = 1.0f
+                    "Deck A" -> mixer.levelA.baseValue = 1.0f
+                    "Deck B" -> mixer.levelB.baseValue = 1.0f
+                    "Deck BG" -> mixer.levelBG.baseValue = 1.0f
+                    else -> mixer.levelPV.baseValue = 1.0f
                 }
             }
             val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
@@ -332,10 +332,10 @@ class DeckControlPanel(
 
         // Draw Filled Level Bar (bottom up) with live level
         val liveLevel = when (label) {
-            "Deck A" -> mixer.levelA
-            "Deck B" -> mixer.levelB
-            "Deck BG" -> mixer.levelBG
-            else -> mixer.levelPV
+            "Deck A" -> mixer.levelA.value
+            "Deck B" -> mixer.levelB.value
+            "Deck BG" -> mixer.levelBG.value
+            else -> mixer.levelPV.value
         }
         val fillH = stripH * liveLevel
         val fillTop = stripMaxY - fillH

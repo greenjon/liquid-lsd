@@ -261,11 +261,11 @@ data class MixerDto(
     val transQueueNext: ParameterDto? = null,
     val transQueuePrev: ParameterDto? = null,
     val tapTempo: ParameterDto? = null,
-    val levelA: Float = 1.0f,
-    val levelB: Float = 1.0f,
-    val levelBG: Float = 1.0f,
-    val levelPV: Float = 1.0f,
-    val masterLevel: Float = 1.0f,
+    val levelA: ParameterDto? = null,
+    val levelB: ParameterDto? = null,
+    val levelBG: ParameterDto? = null,
+    val levelPV: ParameterDto? = null,
+    val masterLevel: ParameterDto? = null,
     val transitionSlot: FXSlotDto? = null,
     val masterFxSlots: List<FXSlotDto?> = emptyList()
 )

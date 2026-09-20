@@ -1,3 +1,18 @@
+## Parameters VAL Cell Modulator Mute Toggle (`ParametersRenderer.kt`, `ParametersPanel.kt`, `ParametersValMuteTest.kt`)
+
+- **Context**: 2026-09-20. Clicking or right-clicking on the VAL cell in the Parameters panel previously risked clearing all active modulators on that row due to a misplaced middle-click reset handler and `param.reset()` invocation. Users requested that right-clicking the VAL cell toggle mute for all modulators on that row instead of destructively wiping them out.
+- **Decision**:
+  - Right-clicking (mouse button 1) the VAL cell now directly toggles bypass/mute for all modulators on that parameter row. If all modulators are currently bypassed, it un-bypasses (unmutes) them; otherwise, it bypasses (mutes) them. If unmuting crossfade modulation, `mixer.onCrossfadeCvUnmuted()` is dispatched.
+  - Middle-clicking (mouse button 2) the VAL cell now also toggles mute when modulators are present on that row, guarding against accidental destruction of modulation routes. When no modulators exist, middle-clicking safely resets the base value to default (`param.reset()`).
+  - Moved row label click handlers directly adjacent to `invisibleButton("row_label_btn_$paramKey")`, fixing an issue where trailing click handlers checked mouse clicks against unrelated or subsequent widgets.
+  - Added a "Mute all modulators" / "Unmute all modulators" entry to the row label context menu (`row_menu_$paramKey`).
+  - Updated tooltips on the VAL column header and VAL cells to document the toggle mute interaction.
+- **Rationale**:
+  - Matches the existing master `[ LIVE ]` / `[ MUTED ]` toggle in the Properties panel when inspecting VALUE.
+  - Prevents irreversible loss of complex multi-modulator routing configurations while enabling fast, non-destructive A/B auditioning of parameter modulation during live performances.
+
+---
+
 ## Removed Per-Preset FX (`PresetModels.kt`, `SessionSerializer.kt`, `ISFMultiPassTest.kt`)
 
 - **Context**: 2026-09-19. Per-deck FX (manual editing, FX Browser, FX Playlists, and Live FX Queues via `FxQueueEngine`) fully superseded the older mechanism of embedding an FX chain inside a visual preset (`DeckPresetDto.fxSlot1..4`/`fxChainEnabled`/`fxChainDryWet`, restored on `Deck.applyDto()` and captured on `Deck.toDto()`). Keeping both meant a preset with configured FX would clobber whatever the deck's live FX queue/playlist had loaded — the exact hybrid "only overwrite if the preset has FX" behavior recorded as **Preserve Deck FX on Clean Preset Load** in the release notes was a patch over this redundancy, not a fix for it.

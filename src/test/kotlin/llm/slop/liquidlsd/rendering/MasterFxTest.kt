@@ -49,11 +49,11 @@ class MasterFxTest {
             bgQueueNext = dummy,
             bgQueuePrev = dummy,
             tapTempo = dummy,
-            levelA = 1.0f,
-            levelB = 0.8f,
-            levelBG = 0.6f,
-            levelPV = 0.4f,
-            masterLevel = 0.9f,
+            levelA = dummyParam(1.0f),
+            levelB = dummyParam(0.8f),
+            levelBG = dummyParam(0.6f),
+            levelPV = dummyParam(0.4f),
+            masterLevel = dummyParam(0.9f),
             transitionSlot = FXSlotDto("linear_crossfade", true, dummy),
             masterFxSlots = listOf(fxSlot, null, null, null)
         )
@@ -61,11 +61,11 @@ class MasterFxTest {
         val jsonStr = json.encodeToString(mixerDto)
         val decoded = json.decodeFromString<MixerDto>(jsonStr)
 
-        assertEquals(1.0f, decoded.levelA)
-        assertEquals(0.8f, decoded.levelB)
-        assertEquals(0.6f, decoded.levelBG)
-        assertEquals(0.4f, decoded.levelPV)
-        assertEquals(0.9f, decoded.masterLevel)
+        assertEquals(1.0f, decoded.levelA?.baseValue)
+        assertEquals(0.8f, decoded.levelB?.baseValue)
+        assertEquals(0.6f, decoded.levelBG?.baseValue)
+        assertEquals(0.4f, decoded.levelPV?.baseValue)
+        assertEquals(0.9f, decoded.masterLevel?.baseValue)
         assertEquals(4, decoded.masterFxSlots.size)
         assertNotNull(decoded.masterFxSlots[0])
         assertEquals("invert", decoded.masterFxSlots[0]?.filterId)
@@ -96,11 +96,11 @@ class MasterFxTest {
             bgQueueNext = dummy,
             bgQueuePrev = dummy,
             tapTempo = dummy,
-            levelA = 1.0f,
-            levelB = 0.9f,
-            levelBG = 0.8f,
-            levelPV = 0.7f,
-            masterLevel = 1.0f,
+            levelA = dummyParam(1.0f),
+            levelB = dummyParam(0.9f),
+            levelBG = dummyParam(0.8f),
+            levelPV = dummyParam(0.7f),
+            masterLevel = dummyParam(1.0f),
             masterFxSlots = listOf(FXSlotDto("crt_glitch", true, dummy))
         )
 
@@ -120,7 +120,7 @@ class MasterFxTest {
         val decoded = json.decodeFromString<SessionStateDto>(jsonStr)
 
         assertEquals(6, decoded.version)
-        assertEquals(0.9f, decoded.mixer.levelB)
+        assertEquals(0.9f, decoded.mixer.levelB?.baseValue)
         assertEquals(1, decoded.mixer.masterFxSlots.size)
         assertEquals("crt_glitch", decoded.mixer.masterFxSlots[0]?.filterId)
     }

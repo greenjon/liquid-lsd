@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Parameters VAL Cell Modulator Mute Toggle (`ParametersRenderer.kt`, `ParametersPanel.kt`, `ParametersValMuteTest.kt`, `modulation.md`)
+- **Toggle Row Modulation via VAL Cell**: Right-clicking (mouse button 1) or middle-clicking (mouse button 2) the VAL cell now toggles mute (bypass) for all modulators on that parameter row instead of destructively clearing them via `param.reset()`.
+- **Safe Reset on Empty Modulator Rows**: If no modulators are active on the parameter row, middle-clicking the VAL cell safely resets the base value to factory default.
+- **Row Menu Mute/Unmute**: Added "Mute all modulators" / "Unmute all modulators" to the row context menu (`row_menu_$paramKey`).
+- **Tooltips & Documentation**: Updated tooltips on the VAL column header and VAL cells, and updated the User Guide shortcuts table to document row-level modulation mute toggling.
+
 ### Architectural Compliance & ImGui Widget Hardening (`ValueParamSection.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`, `SeqSection.kt`, `PlaylistManagerTest.kt`, `DECISIONS.md`)
 - **Zero-Allocation ImGui Modulator & Parameter Dropdowns**: Pre-allocated reusable `ImInt` singleton fields and static/cached label arrays in `ValueParamSection`, `Lfo1Section`, `Lfo2Section`, and `SeqSection`, eliminating per-frame heap allocations when viewing parameter combos, clock unit selectors, and LFO modulation modes in the Properties panel.
 - **Playlist Asset Confinement Test Alignment**: Updated `PlaylistManagerTest` to construct temporary test playlists within `FileSystemManager.getPlaylistsRoot()`, conforming with the path isolation security rules enforced by `isManagedAssetPath`.

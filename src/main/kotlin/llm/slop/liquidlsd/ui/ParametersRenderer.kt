@@ -82,6 +82,20 @@ object ParametersRenderer {
         if (ImGui.isItemClicked(1)) {
             ImGui.openPopup(popupId)
         }
+        if (ImGui.isItemClicked(0)) {
+            state.select(ParameterCellId(paramKey, "value"), param)
+            if (isMacroBound) {
+                macroInfo?.control?.id?.let { ctrlId ->
+                    llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
+                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                }
+            }
+        }
+        if (ImGui.isItemClicked(2)) {
+            state.select(ParameterCellId(paramKey, "value"), param)
+            onPushUndo()
+            param.reset()
+        }
 
         ImGui.sameLine(0f, 0f)
         ImGui.setCursorPosY(rowY)
@@ -173,20 +187,6 @@ object ParametersRenderer {
                 }
             }
         }
-        if (ImGui.isItemClicked(0)) {
-            state.select(ParameterCellId(paramKey, "value"), param)
-            if (isMacroBound) {
-                macroInfo?.control?.id?.let { ctrlId ->
-                    llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
-                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
-                }
-            }
-        }
-        if (ImGui.isItemClicked(2)) {
-            state.select(ParameterCellId(paramKey, "value"), param)
-            onPushUndo()
-            param.reset()
-        }
         if (ImGui.beginPopup(popupId)) {
             if (session.uiTheme.randomizationEnabled) {
                 if (param.isRandomizeDisabled) {
@@ -214,6 +214,18 @@ object ParametersRenderer {
                 ClipboardManager.rowClipboard?.let { ClipboardManager.applyRowClipboard(param, it, mixer) }
             }
             ImGui.separator()
+            if (param.modulators.isNotEmpty()) {
+                val allBypassed = param.modulators.all { it.bypassed }
+                val muteItemLabel = if (allBypassed) "Unmute all modulators" else "Mute all modulators"
+                if (ImGui.menuItem(muteItemLabel)) {
+                    onPushUndo()
+                    val targetBypassed = !allBypassed
+                    val updated = param.modulators.map { it.copy(bypassed = targetBypassed) }
+                    param.modulators.clear()
+                    param.modulators.addAll(updated)
+                    if (!targetBypassed && paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+                }
+            }
             if (ImGui.menuItem("Reset Parameter to Default")) {
                 onPushUndo()
                 param.reset()
@@ -241,7 +253,7 @@ object ParametersRenderer {
         val r = CELL * 0.5f
 
         // 1. VALUE Cell
-        drawValueCell(session, dl, param, paramKey, state, gridStartX, labelColW, rowScreenY, CELL, r,
+        drawValueCell(session, dl, param, paramKey, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
             getColumnOffset, onPushUndo)
 
         // 2. MIDI Cell
@@ -269,6 +281,7 @@ object ParametersRenderer {
         param: llm.slop.liquidlsd.parameters.ModulatableParameter,
         paramKey: String,
         state: ParametersState,
+        mixer: llm.slop.liquidlsd.rendering.Mixer,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
         CELL: Float, r: Float,
         getColumnOffset: (String) -> Float,
@@ -304,10 +317,22 @@ object ParametersRenderer {
                 }
             }
         }
-        if (ImGui.isItemClicked(2) && !isMacroBound) {
+        val isRightClicked = ImGui.isItemClicked(1)
+        val isMiddleClicked = ImGui.isItemClicked(2)
+        if ((isRightClicked || isMiddleClicked) && !isMacroLearning) {
             state.select(ParameterCellId(paramKey, "value"), param)
-            onPushUndo()
-            param.reset()
+            if (param.modulators.isNotEmpty()) {
+                onPushUndo()
+                val allBypassed = param.modulators.all { it.bypassed }
+                val targetBypassed = !allBypassed
+                val updated = param.modulators.map { it.copy(bypassed = targetBypassed) }
+                param.modulators.clear()
+                param.modulators.addAll(updated)
+                if (!targetBypassed && paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
+            } else if (isMiddleClicked && !isMacroBound) {
+                onPushUndo()
+                param.reset()
+            }
         }
         if (isValHovered && session.uiTheme.tooltipsEnabled) {
             val isMixerMode = paramKey == "Mixer/mode"
@@ -320,6 +345,11 @@ object ParametersRenderer {
                 }
                 isMixerMode || paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
+                param.modulators.isNotEmpty() -> {
+                    val allBypassed = param.modulators.all { it.bypassed }
+                    val action = if (allBypassed) "unmute" else "mute"
+                    "Base parameter value.\nClick to configure bounds. Right-click or middle-click to $action all modulators for row."
+                }
                 param.modulatorFilter != null ->
                     "Base parameter value.\nClick to configure bounds/default values. Middle-click to reset.\n\nNote: Modulators for this parameter are conditionally filtered.\nWhen AUTO-VJ is OFF, LFO, Audio, and CV modulators are bypassed.\nMIDI CC remains active."
                 else ->

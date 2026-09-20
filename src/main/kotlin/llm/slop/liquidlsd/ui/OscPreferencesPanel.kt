@@ -189,8 +189,8 @@ object OscPreferencesPanel {
         if (activeStatus != null) {
             theme.captionColored(0.9f, 0.75f, 0.2f, 1.0f, activeStatus)
         }
-        ImGui.setNextItemWidth(260f)
-        ImGui.inputTextWithHint("##osc_learn_target", "Target parameter path (e.g. Mixer/crossfade)", learnParamInput)
+        ImGui.setNextItemWidth(320f)
+        ImGui.inputTextWithHint("##osc_learn_target", "Target path (e.g. Deck A/geometry/zoom:mod/0/subdivision)", learnParamInput)
         ImGui.sameLine()
         if (OscLearnState.isLearning()) {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
@@ -202,11 +202,11 @@ object OscPreferencesPanel {
             val target = learnParamInput.get().trim()
             if (target.isEmpty()) ImGui.beginDisabled()
             if (ImGui.button("${Icons.ACTIVITY} Start Learn##osc_learn_start")) {
-                OscLearnState.startLearn(target)
+                OscLearnState.startLearn(target, displayLabel = OscMappingManager.formatDisplayPath(target))
             }
             if (target.isEmpty()) ImGui.endDisabled()
         }
-        itemTooltip("Type the target parameter path, click Start Learn, then move a control on your OSC surface to bind it.")
+        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/0/subdivision'), click Start Learn, then move a control on your OSC surface to bind it. You can also right-click any slider in the UI to Learn OSC directly.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -231,7 +231,7 @@ object OscPreferencesPanel {
 
         if (mappings.isEmpty()) {
             ImGui.spacing()
-            theme.caption("No address mappings in this profile. Use 'Learn OSC' above to bind hardware/tablet controls.")
+            theme.caption("No address mappings in this profile. Use 'Learn OSC' above or right-click any slider in the UI to bind controls.")
         } else {
             val paramTableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp or ImGuiTableFlags.ScrollY
             if (ImGui.beginTable("##osc_mappings_table", 7, paramTableFlags, 0f, 320f)) {
@@ -262,7 +262,10 @@ object OscPreferencesPanel {
                     }
 
                     ImGui.tableNextColumn()
-                    theme.body(map.parameterPath)
+                    theme.body(OscMappingManager.formatDisplayPath(map.parameterPath))
+                    if (map.parameterPath.contains(":mod/")) {
+                        itemTooltip("Full Path: ${map.parameterPath}")
+                    }
 
                     ImGui.tableNextColumn()
                     val minArr = floatArrayOf(map.minVal)

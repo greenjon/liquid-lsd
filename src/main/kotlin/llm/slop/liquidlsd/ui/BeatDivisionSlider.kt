@@ -207,19 +207,50 @@ object BeatDivisionSlider {
                 onValueChanged(resetVal)
             }
         }
+        val oscTargetPath = if (paramKey != null && propertyName != null) {
+            "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName"
+        } else null
+        val isOscLearningThis = oscTargetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(oscTargetPath)
+
+        if (ImGui.beginPopupContextItem("bd_ctx_${idPrefix}_$label")) {
+            if (oscTargetPath != null) {
+                val propLabel = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modulatorIndex ?: 0, propertyName!!)
+                if (isOscLearningThis) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                        llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($propLabel)")) {
+                        llm.slop.liquidlsd.osc.OscLearnState.startLearn(
+                            parameterPath = oscTargetPath,
+                            minVal = bindMinVal,
+                            maxVal = bindMaxVal,
+                            displayLabel = "$paramKey ($propLabel)"
+                        )
+                    }
+                }
+            }
+            ImGui.endPopup()
+        }
+
         if (isLabelHovered) {
             if (isMacroBound) {
                 val info = macroInfo!!
                 showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to inspect in Column 3 Macro Inspector.")
             } else {
                 val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-                showTooltip("Variable: $label\nMiddle-click to reset to default.$learnHint")
+                val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else "\nRight-click for OSC Learn."
+                showTooltip("Variable: $label\nMiddle-click to reset to default.$learnHint$oscHint")
             }
         }
         if (isMacroLearning) {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
             val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
             dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
+        } else if (isOscLearningThis) {
+            val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            val borderCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.1f, pulseAlpha)
+            dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
         }
 
         // Render name of variable (and macro badge if bound)

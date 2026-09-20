@@ -49,11 +49,11 @@ object SessionSerializer {
                 transQueueNext = mixer.transQueueNext.toDto(),
                 transQueuePrev = mixer.transQueuePrev.toDto(),
                 tapTempo = mixer.tapTempo.toDto(),
-                levelA = mixer.levelA,
-                levelB = mixer.levelB,
-                levelBG = mixer.levelBG,
-                levelPV = mixer.levelPV,
-                masterLevel = mixer.masterLevel,
+                levelA = mixer.levelA.toDto(),
+                levelB = mixer.levelB.toDto(),
+                levelBG = mixer.levelBG.toDto(),
+                levelPV = mixer.levelPV.toDto(),
+                masterLevel = mixer.masterLevel.toDto(),
                 transitionSlot = transSlot,
                 masterFxSlots = masterFxSlotDtos
             )
@@ -115,11 +115,11 @@ object SessionSerializer {
             mixer.crossfade.applyDto(mDto.crossfade)
             mixer.masterAlpha.applyDto(mDto.masterAlpha)
             mixer.mode.set(mDto.blendMode)
-            mixer.levelA = mDto.levelA
-            mixer.levelB = mDto.levelB
-            mixer.levelBG = mDto.levelBG
-            mixer.levelPV = mDto.levelPV
-            mixer.masterLevel = mDto.masterLevel
+            mDto.levelA?.let { mixer.levelA.applyDto(it) }
+            mDto.levelB?.let { mixer.levelB.applyDto(it) }
+            mDto.levelBG?.let { mixer.levelBG.applyDto(it) }
+            mDto.levelPV?.let { mixer.levelPV.applyDto(it) }
+            mDto.masterLevel?.let { mixer.masterLevel.applyDto(it) }
 
             mixer.setTransition(null)
             mDto.transitionSlot?.let { transDto ->
@@ -314,11 +314,11 @@ object SessionSerializer {
         mixer.crossfade.baseValue = -1f
         mixer.masterAlpha.baseValue = 1f
         mixer.mode.baseValue = 0f
-        mixer.levelA = 1f
-        mixer.levelB = 1f
-        mixer.levelBG = 0f
-        mixer.levelPV = 1f
-        mixer.masterLevel = 1f
+        mixer.levelA.baseValue = 1f
+        mixer.levelB.baseValue = 1f
+        mixer.levelBG.baseValue = 0f
+        mixer.levelPV.baseValue = 1f
+        mixer.masterLevel.baseValue = 1f
 
         PresetManager.activePresetA = null
         PresetManager.activePresetB = null

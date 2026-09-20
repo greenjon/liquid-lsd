@@ -12,6 +12,7 @@ object OscLearnState {
         val parameterPath: String,
         val minVal: Float,
         val maxVal: Float,
+        val displayLabel: String = parameterPath,
         val startTimeMs: Long = System.currentTimeMillis()
     )
 
@@ -44,9 +45,9 @@ object OscLearnState {
     }
 
     /** Arms Learn Mode: the next inbound OSC message will be bound to [parameterPath]. */
-    fun startLearn(parameterPath: String, minVal: Float = 0f, maxVal: Float = 1f) {
-        activeSession = LearnSession(parameterPath, minVal, maxVal)
-        setStatus("OSC LEARN: Move a control on your OSC surface to bind '$parameterPath'.")
+    fun startLearn(parameterPath: String, minVal: Float = 0f, maxVal: Float = 1f, displayLabel: String = parameterPath) {
+        activeSession = LearnSession(parameterPath, minVal, maxVal, displayLabel)
+        setStatus("OSC LEARN: Move a control on your OSC surface to bind '$displayLabel'.")
     }
 
     fun cancelLearn() {
@@ -67,6 +68,9 @@ object OscLearnState {
         return true
     }
 
+    /** Returns true if a Learn session is currently armed specifically for [parameterPath]. */
+    fun isTargetLearning(parameterPath: String): Boolean = isLearning() && activeSession?.parameterPath == parameterPath
+
     /**
      * Consumes an inbound OSC message to complete the active Learn session, creating
      * (and persisting) a new [OscControlMapping] in [OscMappingManager]. Multi-argument
@@ -80,7 +84,8 @@ object OscLearnState {
             OscControlMapping(parameterPath = session.parameterPath, minVal = session.minVal, maxVal = session.maxVal)
         )
         OscMappingManager.saveActiveProfile()
+        val label = session.displayLabel
         activeSession = null
-        setStatus("Bound '${session.parameterPath}' -> $key", 4000L)
+        setStatus("Bound '$label' -> $key", 4000L)
     }
 }

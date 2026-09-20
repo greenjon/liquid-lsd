@@ -185,12 +185,13 @@ class Mixer(
         deckPV.assignedFxBank = fxBank2
     }
 
-    // Channel level multiplier faders (0.0 to 1.0, non-modulatable, console channel strip isolation)
-    var levelA: Float = 1.0f
-    var levelB: Float = 1.0f
-    var levelBG: Float = 1.0f
-    var levelPV: Float = 1.0f
-    var masterLevel: Float = 1.0f
+    // Channel level multiplier faders (0.0 to 1.0) -- modulatable so they're macro/CV-bindable
+    // from the Performance panel, e.g. as the FX page's per-deck alpha row.
+    val levelA = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    val levelB = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    val levelBG = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    val levelPV = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    val masterLevel = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
 
     @Volatile var targetCrossfade = -1.0f
     var isAutoFading = false
@@ -323,6 +324,11 @@ class Mixer(
         list.add("$prefix/crossfade" to crossfade)
         list.add("$prefix/mode" to mode)
         list.add("$prefix/masterAlpha" to masterAlpha)
+        list.add("$prefix/levelA" to levelA)
+        list.add("$prefix/levelB" to levelB)
+        list.add("$prefix/levelBG" to levelBG)
+        list.add("$prefix/levelPV" to levelPV)
+        list.add("$prefix/masterLevel" to masterLevel)
         list.add("$prefix/bloom" to bloom)
         list.add("$prefix/xfadeSpeed" to xfadeSpeed)
         list.add("$prefix/queuePrev" to queuePrev)
@@ -436,6 +442,11 @@ class Mixer(
             }
         }
         masterAlpha.evaluate()
+        levelA.evaluate()
+        levelB.evaluate()
+        levelBG.evaluate()
+        levelPV.evaluate()
+        masterLevel.evaluate()
         bloom.evaluate()
         xfadeSpeed.evaluate()
         queuePrev.evaluate()

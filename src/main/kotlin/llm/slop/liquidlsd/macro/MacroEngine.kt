@@ -31,18 +31,27 @@ object MacroEngine {
     const val MASTER = "master"
     const val FX_BANK_1 = "fxBank1"
     const val FX_BANK_2 = "fxBank2"
+    // Blank 4-knob banks for the FX Performance page's remaining two rows: FX_SENDS holds one
+    // knob per deck's fxSendLevel (A/B/BG/PV), MASTER_FX holds Mixer.masterFxSlots' 3 chain
+    // knobs + wet/dry. Neither has a natural path prefix to auto-route quick-bind into (a send
+    // knob's target deck varies per knob, and master FX already has its own "$prefix/FX..."
+    // paths under "Master" -- see Mixer.getParameterPaths), so both stay reachable only via the
+    // knob-first Learn flow (arm the knob, then click the target parameter row), same as any
+    // other macro knob.
+    const val FX_SENDS = "fxSends"
+    const val MASTER_FX = "masterFx"
 
     /** The always-resident per-deck/mixer/FX-bank bank ids, in display order. */
-    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER, FX_BANK_1, FX_BANK_2)
+    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX)
 
     /**
      * Knob count for a freshly auto-vivified bank. Per-deck banks hold 4 generation-only knobs
      * now that FX macros live on the shared FX_BANK_1/FX_BANK_2 banks (see FxBank); those two FX
-     * banks also get 4 (3 chain-depth + 1 wet/dry). TRANS/MASTER and any non-canonical (e.g.
+     * banks, plus FX_SENDS and MASTER_FX, also get 4. TRANS/MASTER and any non-canonical (e.g.
      * future Rack unit) id keep the original 8.
      */
     fun defaultKnobCountFor(bankId: String?): Int = when (bankId) {
-        DECK_A, DECK_B, DECK_BG, DECK_PV, FX_BANK_1, FX_BANK_2 -> 4
+        DECK_A, DECK_B, DECK_BG, DECK_PV, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX -> 4
         else -> 8
     }
 
@@ -207,39 +216,10 @@ object MacroEngine {
                     // the same modulator after binding it.
                     val mod = rb.param.modulators.getOrNull(rb.binding.modulatorIndex)
                     if (mod != null) {
-                        applyModulatorProperty(mod, rb.binding.propertyName, mapped)
+                        llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(mod, rb.binding.propertyName, mapped)
                     }
                 }
             }
-        }
-    }
-
-    /** Mutates the matching `var` field on [mod]. Unrecognized property names are a silent no-op — never throw. */
-    private fun applyModulatorProperty(mod: CvModulator, propertyName: String, value: Float) {
-        when (propertyName) {
-            "depth" -> mod.depth = value
-            "lfoMin" -> { val max = mod.getLfoMax(); mod.dcOffset = (value + max) / 2f; mod.depth = (max - value) / 2f }
-            "lfoMax" -> { val min = mod.getLfoMin(); mod.dcOffset = (min + value) / 2f; mod.depth = (value - min) / 2f }
-            "subdivision" -> mod.subdivision = value
-            "phaseOffset" -> mod.phaseOffset = value
-            "slope" -> mod.slope = value
-            "morph" -> mod.morph = value
-            "hold" -> mod.hold = value
-            "dcOffset" -> mod.dcOffset = value
-            "dcOffsetMin" -> mod.dcOffsetMin = value
-            "dcOffsetMax" -> mod.dcOffsetMax = value
-            "depthMin" -> mod.depthMin = value
-            "depthMax" -> mod.depthMax = value
-            "attackMs" -> mod.attackMs = value
-            "decayMs" -> mod.decayMs = value
-            "modSubdivision" -> mod.modSubdivision = value
-            "modPhaseOffset" -> mod.modPhaseOffset = value
-            "modSlope" -> mod.modSlope = value
-            "modMorph" -> mod.modMorph = value
-            "modHold" -> mod.modHold = value
-            "generatorModDepth" -> mod.generatorModDepth = value
-            "seqHold" -> mod.seqHold = value
-            else -> {}
         }
     }
 

@@ -241,17 +241,17 @@ class TouchConsoleController(
             }
             TouchZone.LEVEL_A -> {
                 val level = mapAlphaY(contact.y)
-                m.levelA = level
+                m.levelA.baseValue = level
                 holdLevelA = level
             }
             TouchZone.LEVEL_BG -> {
                 val level = mapAlphaY(contact.y)
-                m.levelBG = level
+                m.levelBG.baseValue = level
                 holdLevelBG = level
             }
             TouchZone.LEVEL_B -> {
                 val level = mapAlphaY(contact.y)
-                m.levelB = level
+                m.levelB.baseValue = level
                 holdLevelB = level
             }
             TouchZone.DEADZONE -> {}
@@ -273,9 +273,9 @@ class TouchConsoleController(
     private fun captureStickyHold(zone: TouchZone) {
         val m = mixer ?: return
         when (zone) {
-            TouchZone.LEVEL_A -> holdLevelA = m.levelA
-            TouchZone.LEVEL_BG -> holdLevelBG = m.levelBG
-            TouchZone.LEVEL_B -> holdLevelB = m.levelB
+            TouchZone.LEVEL_A -> holdLevelA = m.levelA.baseValue
+            TouchZone.LEVEL_BG -> holdLevelBG = m.levelBG.baseValue
+            TouchZone.LEVEL_B -> holdLevelB = m.levelB.baseValue
             else -> {}
         }
     }

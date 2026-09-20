@@ -53,11 +53,11 @@ class SessionStateTest {
             bgQueueNext = dummyParam,
             bgQueuePrev = dummyParam,
             tapTempo = dummyParam,
-            levelA = 0.8f,
-            levelB = 0.6f,
-            levelBG = 0.4f,
-            levelPV = 0.2f,
-            masterLevel = 0.9f
+            levelA = dummyParam.copy(baseValue = 0.8f),
+            levelB = dummyParam.copy(baseValue = 0.6f),
+            levelBG = dummyParam.copy(baseValue = 0.4f),
+            levelPV = dummyParam.copy(baseValue = 0.2f),
+            masterLevel = dummyParam.copy(baseValue = 0.9f)
         )
         val session = SessionStateDto(
             version = 6,
@@ -99,11 +99,11 @@ class SessionStateTest {
         assertTrue(decoded.isShuffleEnabled)
         assertTrue(decoded.isAutoBGEnabled)
         assertEquals(listOf("presets/bg.lsd"), decoded.bgQueue)
-        assertEquals(0.8f, decoded.mixer.levelA)
-        assertEquals(0.6f, decoded.mixer.levelB)
-        assertEquals(0.4f, decoded.mixer.levelBG)
-        assertEquals(0.2f, decoded.mixer.levelPV)
-        assertEquals(0.9f, decoded.mixer.masterLevel)
+        assertEquals(0.8f, decoded.mixer.levelA?.baseValue)
+        assertEquals(0.6f, decoded.mixer.levelB?.baseValue)
+        assertEquals(0.4f, decoded.mixer.levelBG?.baseValue)
+        assertEquals(0.2f, decoded.mixer.levelPV?.baseValue)
+        assertEquals(0.9f, decoded.mixer.masterLevel?.baseValue)
     }
 
     @Test
