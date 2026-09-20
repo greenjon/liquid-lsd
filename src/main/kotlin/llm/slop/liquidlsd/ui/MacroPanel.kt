@@ -34,9 +34,18 @@ class MacroPanel(
 
         drawLearnBanner()
 
+        val topTab = parametersState.activeTopTab
         val bank = MacroEngine.getBank(activeBankId()) ?: MacroEngine.bankForParamPath(parametersState.activeTopTab)
-
-        drawMacroGrid(session, bank)
+        if (topTab == "FX1" || topTab == "FX2" || topTab == "MFX") {
+            val fxBank = when (topTab) {
+                "FX1" -> mixer.fxBank1
+                "FX2" -> mixer.fxBank2
+                else -> mixer.masterFxBank
+            }
+            drawFxRackView(session, topTab, fxBank)
+        } else {
+            drawMacroGrid(session, bank)
+        }
 
         ImGui.spacing()
         ImGui.separator()
@@ -109,6 +118,41 @@ class MacroPanel(
             ImGui.popStyleColor()
             ImGui.spacing()
         }
+    }
+
+    // -- Dedicated FX Rack View (Traktor/Mixxx-style Chain Super Knob + 3 Metaknobs) -----------------
+    // Replaces the generic knob grid for FX1/FX2/MFX: these banks' actual macro surface is each
+    // chain's Super Knob/Metaknobs (see FxChain/ISFFilter), not arbitrary Learn-Mode bindings.
+
+    private fun drawFxRackView(session: llm.slop.liquidlsd.SessionContext, bankLabel: String, fxBank: llm.slop.liquidlsd.rendering.FxBank) {
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("FX RACK: $bankLabel") }
+        ImGui.spacing()
+
+        val activeChainIndex = parametersState.getActiveChainIndex(bankLabel).coerceIn(0, 2)
+        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
+        val gap = 4f
+        val segW = ((availW - gap * 2) / 3f).coerceAtLeast(1f)
+
+        for (i in 0 until 3) {
+            if (i > 0) ImGui.sameLine(0f, gap)
+            val isActive = activeChainIndex == i
+            ImGui.pushStyleColor(
+                imgui.flag.ImGuiCol.Button,
+                if (isActive) ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
+            )
+            if (ImGui.button("Chain ${i + 1}##macro_fx_chain_tab_${bankLabel}_$i", segW, 24f)) {
+                parametersState.setActiveChainIndex(bankLabel, i)
+            }
+            ImGui.popStyleColor()
+        }
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        val chain = fxBank.chains[activeChainIndex]
+        val chainPrefix = "$bankLabel/C${activeChainIndex + 1}"
+        FXChainMacroStrip.draw(session, chain, chainPrefix, parametersState) { }
     }
 
     // -- 4-Column Macro Knob Grid (row count follows the active bank's knob count) ------------------

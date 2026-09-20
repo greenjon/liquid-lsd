@@ -23,7 +23,9 @@ data class ISFInput(
     val MAX: JsonElement? = null,
     val LABEL: String? = null,
     val VALUES: List<JsonElement>? = null,
-    val LABELS: List<String>? = null
+    val LABELS: List<String>? = null,
+    /** Optional ISF-spec "neutral state" value (e.g. blur radius 0.0, opacity 1.0) used by [llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine]'s auto-bind heuristic. */
+    val IDENTITY: JsonElement? = null
 )
 
 @Serializable

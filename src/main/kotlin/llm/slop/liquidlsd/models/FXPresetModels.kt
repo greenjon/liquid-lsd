@@ -22,7 +22,9 @@ data class FXChainDto(
     val name: String,
     val tags: List<String> = emptyList(),
     val dryWet: ParameterDto? = null,
-    val slots: List<FXSlotDto?> = emptyList() // Size 3; null = empty slot
+    val slots: List<FXSlotDto?> = emptyList(), // Size 3; null = empty slot
+    val superKnob: ParameterDto? = null,
+    val slotSuperKnobLink: List<Boolean>? = null // Size 3; null = default (all linked)
 )
 
 /**

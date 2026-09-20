@@ -18,7 +18,9 @@ class ISFFilter(
     override val folderPath: String = "",
     val baseDir: java.io.File? = null,
     val importedTextures: Map<String, Int> = emptyMap(),
-    val ownsTextures: Boolean = false
+    val ownsTextures: Boolean = false,
+    /** Stable hash of the shader source, used to key user Metaknob-binding overrides (see [ISFAutoBindEngine]). */
+    val contentHash: String? = null
 ) : VisualEffect {
 
     /**
@@ -83,6 +85,24 @@ class ISFFilter(
     override val parameters = mutableMapOf<String, ModulatableParameter>()
     override val dryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     override var enabled = true
+
+    /** The effect's single macro control — see [ISFAutoBindEngine] for how [metaBinding] gets resolved. */
+    val metaKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
+    var metaBinding: FxMetaBinding = FxMetaBinding.DRY_WET_SAFETY_NET
+        private set
+
+    /** Rebinds this effect's Metaknob, optionally persisting it as a user override for this shader (by content hash). */
+    fun rebindMetaKnob(binding: FxMetaBinding, persistOverride: Boolean = true) {
+        metaBinding = binding
+        if (persistOverride) {
+            contentHash?.let { ISFAutoBindEngine.saveOverride(it, binding) }
+        }
+    }
+
+    /** Restores a specific binding without touching the persisted override (e.g. loading a baked preset). */
+    fun applyMetaBindingFromPreset(binding: FxMetaBinding) {
+        metaBinding = binding
+    }
 
     private val inputImageName: String?
     private val transitionStartName: String
@@ -228,12 +248,35 @@ class ISFFilter(
         }.toTypedArray()
 
         cachedParams = parameters.values.toTypedArray()
+
+        metaBinding = ISFAutoBindEngine.resolveBinding(this)
+        // Start the Metaknob at the position that reproduces the target's own authored default,
+        // so loading a filter never silently overwrites its default via knob=0 on the first update().
+        metaKnob.set(metaBinding.knobForTarget(currentMetaTargetValue()))
     }
 
+    /** The current value of whatever [metaBinding] currently targets (a named uniform, or [dryWet] as the safety net). */
+    private fun currentMetaTargetValue(): Float =
+        metaBinding.targetParamName?.let { parameters[it]?.baseValue } ?: dryWet.baseValue
+
     override fun update() {
+        metaKnob.evaluate()
+        applyMetaKnobBinding()
         dryWet.evaluate()
         for (i in 0 until cachedParams.size) {
             cachedParams[i].evaluate()
+        }
+    }
+
+    /** Drives [metaBinding]'s target uniform (or [dryWet] as the safety net) from the current [metaKnob] value. */
+    private fun applyMetaKnobBinding() {
+        val binding = metaBinding
+        val target = binding.targetParamName?.let { parameters[it] }
+        val mapped = binding.mapKnobToTarget(metaKnob.value)
+        if (target != null) {
+            target.baseValue = mapped
+        } else {
+            dryWet.baseValue = mapped
         }
     }
 
@@ -490,7 +533,8 @@ class ISFFilter(
             folderPath = this.folderPath,
             baseDir = this.baseDir,
             importedTextures = this.activeImportedTextures,
-            ownsTextures = false
+            ownsTextures = false,
+            contentHash = this.contentHash
         )
         copy.enabled = this.enabled
         copy.dryWet.baseValue = this.dryWet.baseValue
@@ -498,6 +542,10 @@ class ISFFilter(
         this.parameters.forEach { (name, param) ->
             copy.parameters[name]?.baseValue = param.baseValue
         }
+        // Preserve this instance's Metaknob binding/position rather than the freshly re-resolved one
+        // the constructor just computed from (already-copied) parameter defaults.
+        copy.metaBinding = this.metaBinding
+        copy.metaKnob.baseValue = this.metaKnob.baseValue
         return copy
     }
 
@@ -505,6 +553,10 @@ class ISFFilter(
         enabled = true
         dryWet.reset()
         parameters.values.forEach { it.reset() }
+        // Recompute rather than metaKnob.reset(): metaKnob's own constructor-time defaultValue (0f)
+        // has no relation to metaBinding's target range, so resetting to it would misrepresent the
+        // target's true authored default and get immediately re-applied by the next update().
+        metaKnob.set(metaBinding.knobForTarget(currentMetaTargetValue()))
         frameIndex = 0
         for (slot in persistentSlots) {
             slot?.let {
@@ -540,6 +592,7 @@ class ISFFilter(
     override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
         val list = mutableListOf<Pair<String, ModulatableParameter>>()
         list.add("$prefix/DryWet" to dryWet)
+        list.add("$prefix/Meta" to metaKnob)
         parameters.forEach { (name, param) ->
             list.add("$prefix/$name" to param)
         }

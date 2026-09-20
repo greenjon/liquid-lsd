@@ -93,6 +93,42 @@ Macro Knobs sit at the top of the MIDI/OSC input hierarchy:
 
 ---
 
+## FX Rack (FX1 / FX2 / MFX tabs)
+
+Selecting **FX1**, **FX2**, or **MFX** in Column 3's tab strip swaps the generic 8-knob grid for a
+dedicated **FX Rack** view — a Traktor/Mixxx-style performance strip for that bank's currently
+active chain (use the `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` subtabs to switch chains).
+
+### Chain Super Knob & effect Metaknobs
+
+- **Super Knob** — one knob that sweeps every **linked** slot's own Metaknob together.
+- **Metaknob** (one per slot) — the effect's single macro control. For a hand-curated effect
+  (the bundled filters) it's tuned to feel right out of the box. For any other ISF shader —
+  including the thousands available from third-party shader packs — it's auto-mapped the first
+  time the shader loads, using the shader's own declared `IDENTITY`/parameter metadata, or a
+  Dry/Wet fallback if nothing better is found. You never get a dead knob.
+- **Link** (per slot) — toggles whether that slot's Metaknob follows the Super Knob. Turning Link
+  back on doesn't snap the Metaknob to wherever the Super Knob currently sits — it waits until you
+  move the Super Knob far enough for it to reach the Metaknob's current position first (soft
+  pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.
+- **Focus** (per slot) — swaps the 3 knobs to that effect's own top parameters instead of the
+  group Metaknobs, for fine-grained single-effect tweaking. Click **Group Mode** to return.
+- **Right-click a Metaknob** to rebind it to a different parameter, to the Dry/Wet safety net, or
+  to reset it back to the auto-bind default.
+
+### Hardware control note
+
+Every knob in the strip (Super Knob, each Metaknob, and each focused-mode parameter row) supports
+the same right-click **Learn MIDI** / **Learn OSC** as any other slider in the app — each has its
+own fixed control path. **This means a physical knob you've bound to a slot's Metaknob in Group
+Mode will *not* automatically control that slot's parameters once you switch to Focus Mode** (and
+vice versa) — they're different paths, so you'd bind the physical knob again for the focused view
+if you want it there too. A true Traktor/Mixxx hardware unit keeps the same 4 physical knobs
+mapped regardless of focus state; matching that exactly would need new plumbing this pass didn't
+build. If this turns out to matter in practice for your hardware workflow, it's a known follow-up.
+
+---
+
 ## Performance Mode (4×4 Matrix)
 
 Performance Mode replaces Columns 1 & 2 with a full **4×4 Macro Knob Matrix** — 16 knobs

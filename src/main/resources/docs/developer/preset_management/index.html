@@ -1366,6 +1366,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fx-metaknob-super-knob-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Metaknob / Super Knob Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2030,6 +2041,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fx-metaknob-super-knob-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Metaknob / Super Knob Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2207,7 +2229,8 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <h2 id="9-fx-presets-playlists-live-queues">9. FX Presets, Playlists &amp; Live Queues</h2>
 <p>The <code>[ FX ]</code> Library view mode (see <code>docs/developer/ui.md</code> §8 and <code>docs/user_guide/presets_and_library.md</code>) is backed by its own preset/queue manager family, parallel to but independent from the <code>.lsd</code> preset managers documented above.</p>
 <h3 id="deterministic-application-fxitemapplierkt">Deterministic Application (<code>FXItemApplier.kt</code>)</h3>
-<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/FXItemApplier.kt"><code>FXItemApplier.kt</code></a> resolves both single FX presets (<code>.lsdfx</code>) and 4-slot FX chains (<code>.lsdfxchain</code>) into a target deck via <code>Deck.applyFxChain</code>, guaranteeing a reproducible 4-slot FX state rather than arbitrary vacant-slot allocation. It is the single application path used by the FX browser, FX playlists, and both live FX queues.</p>
+<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/FXItemApplier.kt"><code>FXItemApplier.kt</code></a> resolves both single FX presets (<code>.lsdfx</code>) and 3-slot FX chains (<code>.lsdfxchain</code>) into a target deck's <code>assignedFxBank</code>, guaranteeing a reproducible FX state rather than arbitrary vacant-slot allocation. It is the single application path used by the FX browser, FX playlists, and both live FX queues.
+<strong>Chain scope</strong>: both <code>.lsdfxchain</code> and <code>.lsdfx</code> items apply to <strong>Chain 1 only</strong> (<code>bank.applyFxChain(dto)</code>, the backward-compat single-arg delegate) — the live queue/playlist system is not chain-aware, by design; Chains 2/3 of a deck's bank are left for manual/persistent configuration outside the FXQ. This is a deliberate simplification, not a gap — revisit only if live-queue chain targeting is explicitly requested. (Contrast with <code>FXBrowserPanel.kt</code>'s manual "Load to Deck" context menus, which <em>do</em> let you target any of the 3 chains explicitly via <code>FxBank</code>'s indexed <code>applyFxSlot(chainIndex, slotIndex, ...)</code>/<code>applyFxChain(chainIndex, ...)</code> overloads.)</p>
 <h3 id="fxqueuemanagerkt-fxbgqueuemanagerkt"><code>FXQueueManager.kt</code> / <code>FXBgQueueManager.kt</code></h3>
 <p>Mirror <code>PlayQueueManager.kt</code> / <code>BgQueueManager.kt</code> but operate on FX assets instead of visual presets:
 - Volatile RAM <code>queue: CopyOnWriteArrayList&lt;File&gt;</code> of <code>.lsdfx</code> / <code>.lsdfxchain</code> / <code>.lsdfxplay</code> entries, with <code>isRepeatEnabled</code>, <code>isShuffleEnabled</code>, <code>activeIndex</code>, and <code>playbackHistory</code> for shuffle back-stepping (<code>initializeShuffle()</code>, <code>playedIndices</code>).
@@ -2217,7 +2240,9 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <h3 id="fx-playlists-lsdfxplay-fxplaylisteditorpanelkt">FX Playlists (<code>.lsdfxplay</code>) &amp; <code>FXPlaylistEditorPanel.kt</code></h3>
 <p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt"><code>FXPresetModels.kt</code></a> defines <code>FXPlaylistDto</code>, an ordered list of FX asset paths persisted by <code>PresetRepository</code> and <code>FileSystemManager</code> under <code>library/fx_playlists/</code>. <code>FXPlaylistEditorPanel.kt</code> (Column 2 in FX mode) supports drag-and-drop insertion, reordering, double-click application, and context-menu actions — the FX-mode counterpart to <code>PlaylistEditorPanel.kt</code>.</p>
 <h3 id="fxbrowserpanelkt"><code>FXBrowserPanel.kt</code></h3>
-<p>Unifies the formerly separate <code>FXPresetListPanel</code> (single <code>.lsdfx</code> presets) and <code>FXChainListPanel</code> (<code>.lsdfxchain</code> chains) into one Column 1 browser with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters only support loading directly to a deck; saved presets and chains can additionally be added to FX playlists and live FX queues.</p>
+<p>Unifies the formerly separate <code>FXPresetListPanel</code> (single <code>.lsdfx</code> presets) and <code>FXChainListPanel</code> (<code>.lsdfxchain</code> chains) into one Column 1 browser with ISF stock filters, saved singles, saved chains, and saved <code>.lsdfxbank</code> banks (<code>AssetType.FX_BANK</code>, <code>FileSystemManager.scanAllFxBanks()</code>), tier badges, and an All / Stock / Singles / Chains / Banks filter menu. Stock (built-in ISF) filters only support loading directly to a deck; saved presets and chains can additionally be added to FX playlists and live FX queues. Banks load only via <code>Load to FX1/FX2/MFX</code> (bank-scoped, not deck-scoped) and are not playlist/queue-eligible. "Load to Deck" submenus for stock/single/chain items nest a Chain 1/2/3 selector so any of a bank's 3 chains is reachable, not just Chain 1.</p>
+<h3 id="fx-metaknob-super-knob-persistence">FX Metaknob / Super Knob Persistence</h3>
+<p><code>FXSlotDto</code> (in <code>PresetModels.kt</code>) carries <code>metaKnob: ParameterDto?</code> and <code>metaBinding: FxMetaBindingDto?</code> (see <code>rendering/isf/FxMetaBinding.kt</code>); <code>FXChainDto</code> carries <code>superKnob: ParameterDto?</code> and <code>slotSuperKnobLink: List&lt;Boolean&gt;?</code>. Both are <strong>baked at save time</strong> — a saved slot/chain preset always restores the exact Metaknob binding/position it had when saved, even if <code>ISFAutoBindEngine</code>'s resolution for that shader (curated table, or a since-changed user override under <code>library/isf_overrides/</code>) has since changed. There is no live re-resolution path from a saved preset; re-save (or an explicit future "re-resolve" UI action) is required to pick up a changed binding.</p>
 
 
 

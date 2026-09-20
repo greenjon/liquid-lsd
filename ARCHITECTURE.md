@@ -155,9 +155,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
 │   ├── VisualEffect.kt         — Interface for post-processing effects
-│   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter, multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
+│   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter (incl. per-effect Metaknob), ISFAutoBindEngine & FxMetaBinding (3-tier Metaknob auto-bind: user override cache/curated/heuristic), multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
-│   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass
+│   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass, plus a Super Knob that drives linked slots' Metaknobs via soft-takeover
 │   ├── FxBank.kt               — FX Bank (FX1, FX2, MFX) managing 3 serial FxChain instances with master wet/dry and bypass
 │   ├── Deck.kt                 — VisualSource + cleanFBO + 4-buffer ping-pong architecture (scratch fxPingFBO/fxPongFBO + alternating fxChainOutFBO/fxBankOutFBO) + View & FxRouting params
 │   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with masterFxBank (MFX) & 4-buffer ping-pong architecture
@@ -200,8 +200,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
-│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 8 knobs + 4 switches, binding inspector, Learn Mode
+│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 8 knobs + 4 switches, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX1/FX2/MFX tabs
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
+│   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Parameters panel) and MacroPanel.kt (FX1/FX2/MFX tabs, Column 3)
 │   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs, deck-colored rows, read-only (no Learn Mode)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
 │   ├── browser/                — LibraryPanel sub-panels: preset/FX/transition list, playlist editor & queue actions
@@ -209,7 +210,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   │   ├── PlaylistEditorPanel.kt      — `.lsdplay` playlist editor tier
 │   │   ├── QueueActionsPanel.kt        — Play Queue (A/B) actions: reorder, shuffle/repeat, jump/advance
 │   │   ├── BgQueueActionsPanel.kt      — Background Queue actions (mirrors QueueActionsPanel for Deck BG)
-│   │   ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain` in one list
+│   │   ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain`, saved `.lsdfxbank` in one list
 │   │   ├── FXPlaylistEditorPanel.kt    — `.lsdfxplay` FX playlist editor tier
 │   │   ├── FXQueueActionsPanel.kt      — FX Queue (A/B) actions, mirrors QueueActionsPanel for FX items
 │   │   ├── FXBgQueueActionsPanel.kt    — FX Queue (BG) actions, mirrors QueueActionsPanel for Deck BG FX items

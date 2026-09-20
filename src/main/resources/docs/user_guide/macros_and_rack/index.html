@@ -647,6 +647,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fx-rack-fx1-fx2-mfx-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Rack (FX1 / FX2 / MFX tabs)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FX Rack (FX1 / FX2 / MFX tabs)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chain-super-knob-effect-metaknobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain Super Knob &amp; effect Metaknobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-control-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware control note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#performance-mode-44-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1463,6 +1502,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fx-rack-fx1-fx2-mfx-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Rack (FX1 / FX2 / MFX tabs)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FX Rack (FX1 / FX2 / MFX tabs)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chain-super-knob-effect-metaknobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain Super Knob &amp; effect Metaknobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-control-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware control note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#performance-mode-44-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1647,6 +1725,37 @@ inspector to save/load a standalone <code>.knobpreset.json</code>.</p>
 <li>Turn on the OSC server in <strong>Preferences → OSC Controls</strong>, and <code>/macro/knob/1</code>–<code>/macro/knob/8</code>
   send and receive live updates.</li>
 </ul>
+<hr />
+<h2 id="fx-rack-fx1-fx2-mfx-tabs">FX Rack (FX1 / FX2 / MFX tabs)</h2>
+<p>Selecting <strong>FX1</strong>, <strong>FX2</strong>, or <strong>MFX</strong> in Column 3's tab strip swaps the generic 8-knob grid for a
+dedicated <strong>FX Rack</strong> view — a Traktor/Mixxx-style performance strip for that bank's currently
+active chain (use the <code>[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]</code> subtabs to switch chains).</p>
+<h3 id="chain-super-knob-effect-metaknobs">Chain Super Knob &amp; effect Metaknobs</h3>
+<ul>
+<li><strong>Super Knob</strong> — one knob that sweeps every <strong>linked</strong> slot's own Metaknob together.</li>
+<li><strong>Metaknob</strong> (one per slot) — the effect's single macro control. For a hand-curated effect
+  (the bundled filters) it's tuned to feel right out of the box. For any other ISF shader —
+  including the thousands available from third-party shader packs — it's auto-mapped the first
+  time the shader loads, using the shader's own declared <code>IDENTITY</code>/parameter metadata, or a
+  Dry/Wet fallback if nothing better is found. You never get a dead knob.</li>
+<li><strong>Link</strong> (per slot) — toggles whether that slot's Metaknob follows the Super Knob. Turning Link
+  back on doesn't snap the Metaknob to wherever the Super Knob currently sits — it waits until you
+  move the Super Knob far enough for it to reach the Metaknob's current position first (soft
+  pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.</li>
+<li><strong>Focus</strong> (per slot) — swaps the 3 knobs to that effect's own top parameters instead of the
+  group Metaknobs, for fine-grained single-effect tweaking. Click <strong>Group Mode</strong> to return.</li>
+<li><strong>Right-click a Metaknob</strong> to rebind it to a different parameter, to the Dry/Wet safety net, or
+  to reset it back to the auto-bind default.</li>
+</ul>
+<h3 id="hardware-control-note">Hardware control note</h3>
+<p>Every knob in the strip (Super Knob, each Metaknob, and each focused-mode parameter row) supports
+the same right-click <strong>Learn MIDI</strong> / <strong>Learn OSC</strong> as any other slider in the app — each has its
+own fixed control path. <strong>This means a physical knob you've bound to a slot's Metaknob in Group
+Mode will <em>not</em> automatically control that slot's parameters once you switch to Focus Mode</strong> (and
+vice versa) — they're different paths, so you'd bind the physical knob again for the focused view
+if you want it there too. A true Traktor/Mixxx hardware unit keeps the same 4 physical knobs
+mapped regardless of focus state; matching that exactly would need new plumbing this pass didn't
+build. If this turns out to matter in practice for your hardware workflow, it's a known follow-up.</p>
 <hr />
 <h2 id="performance-mode-44-matrix">Performance Mode (4×4 Matrix)</h2>
 <p>Performance Mode replaces Columns 1 &amp; 2 with a full <strong>4×4 Macro Knob Matrix</strong> — 16 knobs

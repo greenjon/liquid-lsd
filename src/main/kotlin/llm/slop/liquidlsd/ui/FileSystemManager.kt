@@ -103,7 +103,7 @@ object FileSystemManager {
     private fun managedRootPaths(): List<Path> {
         return listOf(
             getPresetsRoot(), getPlaylistsRoot(),
-            getFxPresetsRoot(), getFxChainsRoot(), getFxPlaylistsRoot(),
+            getFxPresetsRoot(), getFxChainsRoot(), getFxBanksRoot(), getFxPlaylistsRoot(),
             getTransitionsRoot(), getTransitionPlaylistsRoot()
         ).map { it.canonicalFile.toPath() }
     }
@@ -259,6 +259,47 @@ object FileSystemManager {
                     path = file.absolutePath,
                     name = file.nameWithoutExtension,
                     type = AssetType.FX_CHAIN,
+                    isValid = validatePresetFile(file),
+                    tags = tags
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+            .toList()
+
+        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        return items
+    }
+
+    internal fun getFxBankTags(file: File): List<String> {
+        if (!file.exists() || !file.isFile) return emptyList()
+        return try {
+            val dto = json.decodeFromString<llm.slop.liquidlsd.models.FXBankDto>(file.readText())
+            dto.tags
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun scanAllFxBanks(): List<AssetItem> {
+        val root = getFxBanksRoot()
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val cacheKey = "ALL_FX_BANKS_ROOT_${root.canonicalPath}"
+        val signature = getRecursiveDirectorySignature(root)
+        val now = System.currentTimeMillis()
+        val cached = scanCache[cacheKey]
+        if (cached != null && cached.signature == signature) {
+            return cached.items
+        }
+
+        val items = root.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() == "lsdfxbank" }
+            .map { file ->
+                val tags = getFxBankTags(file)
+                AssetItem(
+                    path = file.absolutePath,
+                    name = file.nameWithoutExtension,
+                    type = AssetType.FX_BANK,
                     isValid = validatePresetFile(file),
                     tags = tags
                 )

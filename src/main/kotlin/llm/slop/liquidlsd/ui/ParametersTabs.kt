@@ -867,6 +867,11 @@ object ParametersTabs {
         ImGui.separator()
         ImGui.spacing()
 
+        FXChainMacroStrip.draw(session, chain, chainPrefix, state, onPushUndo)
+
+        ImGui.separator()
+        ImGui.spacing()
+
         // --- Per-Slot Controls for Active Chain ---
         for (i in chain.slots.indices) {
             val slotNum = i + 1
@@ -897,6 +902,7 @@ object ParametersTabs {
                             if (filter != null) {
                                 chain.slots[i]?.dispose()
                                 chain.slots[i] = filter
+                                chain.armSlotTakeover(i)
                                 onPushUndo()
                             }
                         }

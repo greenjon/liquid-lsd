@@ -152,7 +152,8 @@ object ISFFilterRegistry {
                 ownsShader = true,
                 categories = allCategories,
                 folderPath = relFolder,
-                baseDir = file?.parentFile
+                baseDir = file?.parentFile,
+                contentHash = ISFAutoBindEngine.contentHash(source)
             )
             filters[id] = filter
             logger.debug { "Registered ISF filter: $id ($parsedDisplayName)" }

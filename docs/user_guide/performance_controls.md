@@ -109,19 +109,33 @@ If no preset is loaded yet (the deck is in an unsaved state), the label shows `U
 
 ---
 
-## FX Chain & Slot Management
+## FX Bank, Chain & Slot Management
 
-In the **Parameters** panel under the **`FX`** subtab, each deck provides a 4-slot modular ISF effects processor:
+In the **Parameters** panel under the **`FX1`**, **`FX2`**, and **`MFX`** tabs, each bank provides
+3 serial **chains** (`[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` subtabs), each hosting 3 ISF filter
+slots (9 effects per bank). Each chain also has a **Chain Super Knob** and each slot its own
+**Metaknob** — see [Macro Controls & Performance Mode](macros_and_rack.md) for the FX Rack view
+that exposes these.
 
-- **FX Chain Header Kebab (`⋮`)**:
-  - **Save Chain As...**: Saves all 4 slots into an `.lsdfxchain` file in `library/fx_chains/`.
-  - **Copy Chain / Paste Chain**: Copies or pastes all 4 slots across decks.
-  - **Clear All Slots**: Disposes and empties all 4 slots on the active deck.
+- **Bank Header Kebab (`⋮`)**:
+  - **Save Bank Preset As...**: Saves all 3 chains into an `.lsdfxbank` file in `library/fx_banks/`.
+  - **Copy Bank / Paste Bank**: Copies or pastes the whole bank (all 3 chains) across FX1/FX2/MFX.
+  - **Clear All Chains**: Disposes and empties every chain in the bank.
+- **Chain Header Kebab (`⋮`)**:
+  - **Save Chain As...**: Saves that chain's 3 slots (and its Super Knob state) into an
+    `.lsdfxchain` file in `library/fx_chains/`.
+  - **Copy Chain / Paste Chain**: Copies or pastes one chain's 3 slots across chains or decks.
+  - **Clear Chain Slots**: Disposes and empties that chain's 3 slots.
 - **Per-Slot Kebab (`⋮`)**:
-  - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, and parameters into an `.lsdfx` file in `library/fx/`.
+  - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, Metaknob position/binding,
+    and parameters into an `.lsdfx` file in `library/fx/`.
   - **Copy Slot / Paste Slot**: Copies or pastes individual slot configurations across slots or decks.
   - **Reset Slot**: Clears the slot filter and resets parameters.
-- **Drag-and-Drop Targets**: Drag `.lsdfx` or `.lsdfxchain` files from the Library directly onto any slot to instantly swap or update effects.
+- **Drag-and-Drop Targets**: Drag `.lsdfxbank` onto the bank header, `.lsdfxchain` onto a bank
+  or a chain header, or `.lsdfx` onto a slot, to instantly load/swap effects.
+- **Library Browser**: The `[ FX ]` Library view's Column 1 browser also lists saved banks
+  (filterable via the kebab menu's **Saved FX Banks** checkbox) alongside stock filters, saved
+  singles, and saved chains — right-click one to **Load to FX1 / FX2 / MFX**.
 
 ---
 

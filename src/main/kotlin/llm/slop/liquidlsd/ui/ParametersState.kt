@@ -112,6 +112,17 @@ class ParametersState {
             "FX2" -> activeFx2ChainIndex = index.coerceIn(0, 2)
             "MFX" -> activeMfxChainIndex = index.coerceIn(0, 2)
         }
+        focusedFxSlot = null
+    }
+
+    /** The (chainPrefix, slotIndex) currently drilled into by [FXChainMacroStrip]'s "Single FX Focus Mode", or null in group mode. */
+    var focusedFxSlot: Pair<String, Int>? = null
+
+    fun focusedSlotIndexFor(chainPrefix: String): Int? =
+        focusedFxSlot?.takeIf { it.first == chainPrefix }?.second
+
+    fun toggleFxFocus(chainPrefix: String, slotIndex: Int) {
+        focusedFxSlot = if (focusedFxSlot == chainPrefix to slotIndex) null else chainPrefix to slotIndex
     }
 
     fun select(cellId: ParameterCellId, param: ModulatableParameter) {

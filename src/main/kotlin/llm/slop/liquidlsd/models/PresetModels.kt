@@ -244,7 +244,12 @@ data class FXSlotDto(
     val filterId: String,
     val enabled: Boolean = true,
     val dryWet: ParameterDto,
-    val parameters: Map<String, ParameterDto> = emptyMap()
+    val parameters: Map<String, ParameterDto> = emptyMap(),
+    // Metaknob state is baked (snapshotted) at save time, not re-resolved from the live auto-bind
+    // engine on load -- if the shader's binding is later customized, already-saved slots keep the
+    // binding they were saved with until explicitly re-saved.
+    val metaKnob: ParameterDto? = null,
+    val metaBinding: llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto? = null
 )
 
 @Serializable

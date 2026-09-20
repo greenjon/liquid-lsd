@@ -64,6 +64,22 @@ class FxBank(val label: String) {
     fun toFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto =
         chains[0].toFxChainDto(name, tags)
 
+    /** Indexed slot/chain accessors targeting a specific chain, for the Parameters panel's per-chain subtabs. */
+    fun toFxSlotDto(chainIndex: Int, slotIndex: Int): FXSlotDto? =
+        chains.getOrNull(chainIndex)?.toFxSlotDto(slotIndex)
+
+    fun applyFxSlot(chainIndex: Int, slotIndex: Int, dto: FXSlotDto) {
+        chains.getOrNull(chainIndex)?.applyFxSlot(slotIndex, dto)
+    }
+
+    fun clearFxSlot(chainIndex: Int, slotIndex: Int) {
+        chains.getOrNull(chainIndex)?.clearFxSlot(slotIndex)
+    }
+
+    fun applyFxChain(chainIndex: Int, dto: FXChainDto) {
+        chains.getOrNull(chainIndex)?.applyFxChain(dto)
+    }
+
     fun applyFxBank(dto: FXBankDto) {
         dto.masterWetDry?.let { masterWetDry.applyDto(it) }
         for (i in chains.indices) {
