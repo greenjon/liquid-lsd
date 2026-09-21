@@ -63,6 +63,8 @@ class FontInspectorTest {
             "LOCK" to 0xe10b,
             "UNLOCK" to 0xe10c,
             "LOCK_OPEN" to 0xe10c,
+            "LINK" to 0xe102,
+            "UNLINK" to 0xe19c,
             "POWER_OFF" to 0xe209,
             "VOLUME" to 0xe1a9,
             "VOLUME_X" to 0xe1ac,

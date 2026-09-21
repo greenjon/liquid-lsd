@@ -5,10 +5,14 @@
   2. In `MacroPanel.kt`, the Column 3 `MACROS` view for FX tabs (`FX1`, `FX2`, `MFX`) rendered `FXChainMacroStrip.draw()`, which displayed compact sliders (`CustomRangeSlider.drawCompactSlider()`). Because parameters were macro-bound, the slider's `!isMacroBound` guard suppressed mouse interaction, locking them from both drag and scroll. Furthermore, users preferred rotary knobs consistent with the rest of the Macro Panel.
 - **Decision**:
   - **Hit-Target Isolation (`PerformanceMatrixPanel.kt`)**: Constrain `##perf_fx_drop_target` strictly to the title header area (`afterTitleY - boxTopY`). The title bar remains an active drag-and-drop receiver for `.lsdfxchain` assets, while the header buttons and 4 rotary knobs below remain fully responsive and unoccluded. Also pass `control.bindings` to `MacroKnobWidget.draw()` to properly expose binding metadata and tooltips.
+  - **Clickable Chain Link / Unlink Icons (`PerformanceMatrixPanel.kt`, `Icons.kt`)**: Added standard Lucide `LINK` (`\ue102`) and `UNLINK` (`\ue19c`) icon buttons to the left of each FX slot knob (Slots 1–3) in Performance Mode. Clicking the icon immediately toggles the slot's link status (`setSlotLinked`), resyncing the chain without leaving Performance Mode.
+  - **Effect Name Retention for Linked Slots (`FxMacroSync.kt`)**: Ceased overriding macro control labels with `(linked)`. Instead, knobs consistently show the active effect's name (or `FX1`–`FX3` fallback), relying on the link icon to display and toggle link status.
   - **Rotary Knobs in Macro Panel FX Tabs (`MacroPanel.kt`)**: Replaced the slider strip in `drawFxRackView` with standard rotary knobs via `drawMacroGrid()`. Display the `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` switcher and compact `[x] Slot 1 [x] Slot 2 [x] Slot 3` Super Knob Link checkboxes directly above the knobs. Knob IDs are prefixed with `activeBankId()` to prevent ID collisions.
   - **Zero-Allocation Visual Sync in `MacroEngine.tick()`**: In `MacroEngine.tick()`, synchronize linked FX slot macro knob values (`knob.value`) to mirror `slot.metaKnob.baseValue` / `chain.superKnob.baseValue` in memory without heap allocations, providing smooth visual rotary tracking when turning the Super Knob.
 - **Rationale**:
   - Eliminates button and knob click-blocking in the Performance Console.
+  - Provides instant, in-place link toggling directly on the performance surface without context switching.
+  - Preserves effect identity on knob labels while clearly communicating link state through standard iconography.
   - Provides uniform rotary knob ergonomics, drag physics, scroll wheel fine-adjust, and MIDI learn across all tabs in Column 3 MACROS.
   - Keeps linked FX controls visually coherent across both Classic and Performance views.
 

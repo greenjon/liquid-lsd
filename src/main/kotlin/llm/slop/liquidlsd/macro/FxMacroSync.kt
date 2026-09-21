@@ -54,16 +54,17 @@ object FxMacroSync {
 
         for (slotIdx in 0 until FxChain.SLOT_COUNT) {
             val knobIndex = slotIdx + 1
+            val slot = chain.slots.getOrNull(slotIdx)
+            val label = slot?.displayName?.takeIf { it.isNotBlank() } ?: "FX$knobIndex"
             if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
                 // Linked slots are driven by the Super Knob's soft-takeover propagation
                 // (FxChain.propagateSuperKnob) -- a MacroBinding here would race it for the same
-                // field. Clear any previously-owned binding and leave the knob unbound.
+                // field. Clear any previously-owned binding and leave the knob unbound while
+                // keeping the effect label.
                 clearOwnedBinding(macroBank, knobIndex, bankLabel)
-                macroBank.knobs.getOrNull(knobIndex)?.let { if (isOwnedOrEmpty(it, bankLabel)) it.label = "(linked)" }
+                macroBank.knobs.getOrNull(knobIndex)?.let { if (isOwnedOrEmpty(it, bankLabel)) it.label = label }
                 continue
             }
-            val slot = chain.slots.getOrNull(slotIdx)
-            val label = slot?.displayName?.takeIf { it.isNotBlank() } ?: "FX$knobIndex"
             syncKnob(
                 macroBank = macroBank,
                 knobIndex = knobIndex,

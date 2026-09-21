@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
@@ -301,6 +302,43 @@ class PerformanceMatrixPanel {
                     val control = bank.knobs.getOrNull(knobIdx) ?: continue
 
                     val cellCenterX = gridStartX + col * colW + colW / 2f
+
+                    // Clickable link icon for FX slots (LIVE_CONSOLE FX row, cols 1..3)
+                    if (descriptor.hasExtraHeader && col in 1..3) {
+                        val slotIdx = col - 1
+                        val fxBank = resolveFxBank(mixer, focusedFxBankId)
+                        val isLinked = fxBank.activeChain.slotSuperKnobLink.getOrNull(slotIdx) == true
+                        val btnSize = 20f
+                        val btnX = (cellCenterX - diameter / 2f - btnSize - 4f).coerceAtLeast(gridStartX + col * colW + 2f)
+                        val btnY = knobTopY + (diameter - btnSize) / 2f
+                        ImGui.setCursorScreenPos(btnX, btnY)
+
+                        val icon = if (isLinked) Icons.LINK else Icons.UNLINK
+                        if (isLinked) {
+                            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.45f, 0.40f, 0.75f))
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.14f, 0.55f, 0.48f, 0.90f))
+                            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.35f, 0.95f, 0.85f, 1f))
+                        } else {
+                            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.50f))
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.32f, 0.80f))
+                            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.55f, 0.58f, 0.65f, 0.80f))
+                        }
+                        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
+                        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                            if (ImGui.button("$icon##perf_fx_link_${focusedFxBankId}_$slotIdx", btnSize, btnSize)) {
+                                val newLinked = !isLinked
+                                fxBank.activeChain.setSlotLinked(slotIdx, newLinked)
+                                val bankLabel = fxBankDisplayName(focusedFxBankId)
+                                llm.slop.liquidlsd.macro.FxMacroSync.syncChain(focusedFxBankId, bankLabel, fxBank.activeChain, fxBank.activeChainIndex)
+                            }
+                        }
+                        ImGui.popStyleVar()
+                        ImGui.popStyleColor(3)
+                        itemTooltip(
+                            if (isLinked) "Slot ${slotIdx + 1} (${control.label}) is linked to Super Knob.\nClick to unlink."
+                            else "Slot ${slotIdx + 1} (${control.label}) is unlinked.\nClick to link to Super Knob."
+                        )
+                    }
 
                     ImGui.setCursorScreenPos(cellCenterX - diameter / 2f, knobTopY)
 

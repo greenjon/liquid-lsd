@@ -52,6 +52,8 @@ object Icons {
     const val NOTE            = "\ue1f9" // pencil
     const val LOCK            = "\ue10b" // lock
     const val UNLOCK          = "\ue10c" // lock-open / unlock
+    const val LINK            = "\ue102" // link / chain link
+    const val UNLINK          = "\ue19c" // unlink / broken chain link
     const val VOLUME          = "\ue1a9" // volume
     const val VOLUME_X        = "\ue1ac" // volume-x
     const val BOT             = "\ue1bb" // bot

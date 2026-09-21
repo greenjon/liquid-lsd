@@ -1208,10 +1208,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-macroenginetestkt" class="md-nav__link">
+  <a href="#fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-fxmacrosynckt-iconskt-macroenginetestkt-fontinspectortestkt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (PerformanceMatrixPanel.kt, MacroPanel.kt, MacroEngine.kt, MacroEngineTest.kt)
+        Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (PerformanceMatrixPanel.kt, MacroPanel.kt, MacroEngine.kt, FxMacroSync.kt, Icons.kt, MacroEngineTest.kt, FontInspectorTest.kt)
       
     </span>
   </a>
@@ -3612,10 +3612,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-macroenginetestkt" class="md-nav__link">
+  <a href="#fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-fxmacrosynckt-iconskt-macroenginetestkt-fontinspectortestkt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (PerformanceMatrixPanel.kt, MacroPanel.kt, MacroEngine.kt, MacroEngineTest.kt)
+        Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (PerformanceMatrixPanel.kt, MacroPanel.kt, MacroEngine.kt, FxMacroSync.kt, Icons.kt, MacroEngineTest.kt, FontInspectorTest.kt)
       
     </span>
   </a>
@@ -5991,9 +5991,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
-<h3 id="fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-macroenginetestkt">Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (<code>PerformanceMatrixPanel.kt</code>, <code>MacroPanel.kt</code>, <code>MacroEngine.kt</code>, <code>MacroEngineTest.kt</code>)</h3>
+<h3 id="fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-fxmacrosynckt-iconskt-macroenginetestkt-fontinspectortestkt">Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (<code>PerformanceMatrixPanel.kt</code>, <code>MacroPanel.kt</code>, <code>MacroEngine.kt</code>, <code>FxMacroSync.kt</code>, <code>Icons.kt</code>, <code>MacroEngineTest.kt</code>, <code>FontInspectorTest.kt</code>)</h3>
 <ul>
 <li><strong>Performance Console FX Row Click Occlusion (<code>PerformanceMatrixPanel.kt</code>)</strong>: Constrained the FX chain drag-and-drop hit target (<code>##perf_fx_drop_target</code>) to the title header area (<code>afterTitleY - boxTopY</code>) instead of spanning the entire group box. Prevents the invisible button from capturing mouse events and unblocks the <code>[FX1][FX2][MFX]</code>, <code>[C1][C2][C3]</code>, <code>[BYPASS]</code>, and <code>[Resync]</code> buttons and rotary knobs from being click-locked.</li>
+<li><strong>Clickable Chain Link / Unlink Icons (<code>PerformanceMatrixPanel.kt</code>, <code>Icons.kt</code>)</strong>: Added standard Lucide <code>LINK</code> (<code>\ue102</code>) and <code>UNLINK</code> (<code>\ue19c</code>) chain-link icon buttons directly to the left of each FX slot knob (Slots 1–3) in the Performance Console's FX row. Users can now click the icon directly in Performance Mode to toggle a slot's link to the Super Knob without navigating to the Macro panel.</li>
+<li><strong>Effect Name Retention for Linked Slots (<code>FxMacroSync.kt</code>)</strong>: Replaced the previous <code>(linked)</code> label override on macro controls with the slot's actual effect name (e.g. <code>Colorize</code>, <code>Luma Key</code>, or <code>FX1</code>). Knobs now consistently display the effect name under the knob face while the link icon indicates and controls link status.</li>
 <li><strong>Rotary Knobs in Macro Panel FX Tabs (<code>MacroPanel.kt</code>)</strong>: Replaced the compact slider strip in <code>drawFxRackView</code> with rotary macro knobs via <code>drawMacroGrid()</code>, providing consistent rotary knobs across all tabs with mouse drag, scroll wheel fine-adjust, middle-click reset, selection, and MIDI learn.</li>
 <li><strong>Chain Switcher &amp; Super Link Toggles in Macro Panel (<code>MacroPanel.kt</code>)</strong>: Integrated the <code>[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]</code> selector buttons and compact <code>[x] Slot 1 [x] Slot 2 [x] Slot 3</code> Super Knob Link checkboxes directly above the rotary knobs in Column 3's FX tabs.</li>
 <li><strong>Linked FX Slot Visual Knob Tracking (<code>MacroEngine.kt</code>)</strong>: Added allocation-free synchronization in <code>MacroEngine.tick()</code> so linked FX slot knobs track the active chain's Super Knob / slot Metaknob value in memory, ensuring linked knobs visibly rotate in unison when turning the Super Knob.</li>
