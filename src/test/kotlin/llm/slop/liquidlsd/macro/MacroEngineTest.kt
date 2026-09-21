@@ -5,6 +5,7 @@ import io.mockk.mockk
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.rendering.FxBank
 import llm.slop.liquidlsd.rendering.Mixer
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -41,7 +42,7 @@ class MacroEngineTest {
     }
 
     private fun createTestMixer(paths: List<Pair<String, ModulatableParameter>>): Mixer {
-        val mixer = mockk<Mixer>()
+        val mixer = mockk<Mixer>(relaxed = true)
         every { mixer.getParameterPaths("Mixer") } returns paths
         return mixer
     }
@@ -388,6 +389,28 @@ class MacroEngineTest {
         // Should not throw, and should not appear in the resolved cache.
         MacroEngine.tick(mixer)
         assertTrue(MacroEngine.findBindingsTargeting(null, "Deck A/warp").isEmpty())
+    }
+
+    @Test
+    fun testLinkedFxKnobsSyncVisuallyToSuperKnobOnTick() {
+        val fxBank = FxBank("FX1")
+        fxBank.activeChain.superKnob.set(0.85f)
+        fxBank.activeChain.update()
+
+        val mixer = mockk<Mixer>(relaxed = true)
+        every { mixer.fxBank1 } returns fxBank
+
+        val macroBank = MacroEngine.newBankFor(MacroEngine.FX_BANK_1)
+        macroBank.knobs[0].value = 0.85f
+        MacroEngine.registerBank(MacroEngine.FX_BANK_1, macroBank)
+
+        // Slot 0 linked, Slot 1 unlinked
+        fxBank.activeChain.setSlotLinked(0, true)
+        fxBank.activeChain.setSlotLinked(1, false)
+
+        MacroEngine.tick(mixer)
+
+        assertEquals(0.85f, macroBank.knobs[1].value, absoluteTolerance = 1e-5f, "Linked slot 0 knob (Knob 2) should sync value to super knob")
     }
 
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {

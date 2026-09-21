@@ -42,7 +42,7 @@ class MacroPanel(
                 "FX2" -> mixer.fxBank2
                 else -> mixer.masterFxBank
             }
-            drawFxRackView(session, topTab, fxBank)
+            drawFxRackView(session, topTab, fxBank, bank)
         } else {
             drawMacroGrid(session, bank)
         }
@@ -124,7 +124,12 @@ class MacroPanel(
     // Replaces the generic knob grid for FX1/FX2/MFX: these banks' actual macro surface is each
     // chain's Super Knob/Metaknobs (see FxChain/ISFFilter), not arbitrary Learn-Mode bindings.
 
-    private fun drawFxRackView(session: llm.slop.liquidlsd.SessionContext, bankLabel: String, fxBank: llm.slop.liquidlsd.rendering.FxBank) {
+    private fun drawFxRackView(
+        session: llm.slop.liquidlsd.SessionContext,
+        bankLabel: String,
+        fxBank: llm.slop.liquidlsd.rendering.FxBank,
+        bank: MacroBank
+    ) {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("FX RACK: $bankLabel") }
         ImGui.spacing()
 
@@ -147,12 +152,29 @@ class MacroPanel(
         }
 
         ImGui.spacing()
+
+        val chain = fxBank.chains[activeChainIndex]
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.textDisabled("SUPER LINK:")
+            for (slotIdx in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
+                ImGui.sameLine(0f, 8f)
+                val linked = chain.slotSuperKnobLink.getOrNull(slotIdx) ?: false
+                val buf = imgui.type.ImBoolean(linked)
+                val slot = chain.slots.getOrNull(slotIdx)
+                val slotName = slot?.displayName?.takeIf { it.isNotBlank() } ?: "S${slotIdx + 1}"
+                if (ImGui.checkbox("$slotName##macro_fx_link_${bankLabel}_$slotIdx", buf)) {
+                    chain.setSlotLinked(slotIdx, buf.get())
+                    val bankId = activeBankId()
+                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, bankLabel, chain, activeChainIndex)
+                }
+            }
+        }
+
+        ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
 
-        val chain = fxBank.chains[activeChainIndex]
-        val chainPrefix = "$bankLabel/C${activeChainIndex + 1}"
-        FXChainMacroStrip.draw(session, chain, chainPrefix, parametersState) { }
+        drawMacroGrid(session, bank)
     }
 
     // -- 4-Column Macro Knob Grid (row count follows the active bank's knob count) ------------------
@@ -171,6 +193,7 @@ class MacroPanel(
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
 
+        val currentBankId = activeBankId()
         bank.knobs.forEachIndexed { i, control ->
             val row = i / 4
             val col = i % 4
@@ -182,7 +205,7 @@ class MacroPanel(
             val isLearningThis = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(control.id)
             MacroKnobWidget.draw(
                 session = session,
-                id = "global_knob_$i",
+                id = "${currentBankId}_knob_$i",
                 label = control.label,
                 value = control.value,
                 diameter = diameter,

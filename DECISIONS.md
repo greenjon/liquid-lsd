@@ -1,4 +1,20 @@
-## Retirement of Deck Macro Knobs 5-8 & Strict Clamping on Session Restore (`SessionSerializer.kt`, `MacroEngine.kt`)
+## FX Macro Knob Controls Unification & Hit-Target Isolation (`PerformanceMatrixPanel.kt`, `MacroPanel.kt`, `MacroEngine.kt`)
+
+- **Context**: 2026-09-21. With the migration to the Two-Tier FX Macro system (Chain Super Knob + Effect Metaknobs), two interaction issues emerged across views:
+  1. In `PerformanceMatrixPanel.kt`, dragging a `.lsdfxchain` file into the FX group box was handled via an `invisibleButton("##perf_fx_drop_target")` covering the entire box height. In Dear ImGui, this consumed mouse-down events across the entire group, preventing clicks from reaching the header buttons (`[FX1][FX2][MFX]`, `[C1][C2][C3]`, `[BYPASS]`, `[Resync]`) and disabling left-click-drag on `MacroKnobWidget` (while scroll wheel still responded due to global hover polling).
+  2. In `MacroPanel.kt`, the Column 3 `MACROS` view for FX tabs (`FX1`, `FX2`, `MFX`) rendered `FXChainMacroStrip.draw()`, which displayed compact sliders (`CustomRangeSlider.drawCompactSlider()`). Because parameters were macro-bound, the slider's `!isMacroBound` guard suppressed mouse interaction, locking them from both drag and scroll. Furthermore, users preferred rotary knobs consistent with the rest of the Macro Panel.
+- **Decision**:
+  - **Hit-Target Isolation (`PerformanceMatrixPanel.kt`)**: Constrain `##perf_fx_drop_target` strictly to the title header area (`afterTitleY - boxTopY`). The title bar remains an active drag-and-drop receiver for `.lsdfxchain` assets, while the header buttons and 4 rotary knobs below remain fully responsive and unoccluded. Also pass `control.bindings` to `MacroKnobWidget.draw()` to properly expose binding metadata and tooltips.
+  - **Rotary Knobs in Macro Panel FX Tabs (`MacroPanel.kt`)**: Replaced the slider strip in `drawFxRackView` with standard rotary knobs via `drawMacroGrid()`. Display the `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` switcher and compact `[x] Slot 1 [x] Slot 2 [x] Slot 3` Super Knob Link checkboxes directly above the knobs. Knob IDs are prefixed with `activeBankId()` to prevent ID collisions.
+  - **Zero-Allocation Visual Sync in `MacroEngine.tick()`**: In `MacroEngine.tick()`, synchronize linked FX slot macro knob values (`knob.value`) to mirror `slot.metaKnob.baseValue` / `chain.superKnob.baseValue` in memory without heap allocations, providing smooth visual rotary tracking when turning the Super Knob.
+- **Rationale**:
+  - Eliminates button and knob click-blocking in the Performance Console.
+  - Provides uniform rotary knob ergonomics, drag physics, scroll wheel fine-adjust, and MIDI learn across all tabs in Column 3 MACROS.
+  - Keeps linked FX controls visually coherent across both Classic and Performance views.
+
+---
+
+## Retirement of Deck Macro Knobs 5-8 & Strict Clamping on Session Restore (`SessionSerializer.kt`, `SessionStateTest.kt`, `MacroEngine.kt`)
 
 - **Context**: 2026-09-21. Following the migration to the Two-Tier FX Architecture (`FxBank` + `FxChain` + `FxMacroSync`), effects processing moved from deck-level slots into shared multi-chain insert banks (`FX1`, `FX2`, `MFX`) with their own 4-control performance surface (1 Super Knob + 3 Slot Metaknobs). Previously, decks owned 8 macro knobs (Knobs 1–4 for generation, Knobs 5–8 for deck FX). With FX decoupled from decks, per-deck macro banks were redesigned to hold strictly 4 generation-only knobs (`MacroEngine.defaultKnobCountFor`). However, `SessionSerializer.loadSession()` previously restored `session.deckMacroBanks` directly without clamping, allowing legacy session files saved prior to the migration to resurrect obsolete Knobs 5–8 in Classic Mode's Column 3 MACROS panel.
 - **Decision**:

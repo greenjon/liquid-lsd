@@ -3,6 +3,8 @@ package llm.slop.liquidlsd.macro
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.rendering.FxBank
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
@@ -220,6 +222,23 @@ object MacroEngine {
                         llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(mod, rb.binding.propertyName, mapped)
                     }
                 }
+            }
+        }
+
+        // Keep linked FX slot macro knobs visually in sync with their slot's Metaknob / Super Knob
+        syncLinkedFxKnobValues(FX_BANK_1, mixer.fxBank1)
+        syncLinkedFxKnobValues(FX_BANK_2, mixer.fxBank2)
+        syncLinkedFxKnobValues(MASTER_FX, mixer.masterFxBank)
+    }
+
+    private fun syncLinkedFxKnobValues(bankId: String, fxBank: FxBank) {
+        val macroBank = synchronized(lock) { banks[bankId] } ?: return
+        val chain = fxBank.activeChain
+        for (i in 0 until FxChain.SLOT_COUNT) {
+            if (chain.slotSuperKnobLink.getOrNull(i) == true) {
+                val knob = macroBank.knobs.getOrNull(i + 1) ?: continue
+                val slot = chain.slots.getOrNull(i)
+                knob.value = slot?.metaKnob?.baseValue ?: chain.superKnob.baseValue
             }
         }
     }

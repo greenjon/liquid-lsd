@@ -235,13 +235,21 @@ class PerformanceMatrixPanel {
             dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
             dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
 
-            // Drop target for dragging a .lsdfxchain from the Library onto the FX row's box,
-            // loading it into the currently active chain. Placed before the header buttons/knobs
-            // are drawn so those remain independently clickable (a drop landing exactly on one of
-            // them hits that item instead, same as any other overlapping ImGui widget).
+            // Large centered group title just under the box's top border.
+            val displayLabel = if (descriptor.hasExtraHeader) "FX: ${fxBankDisplayName(focusedFxBankId)}" else descriptor.groupLabel
+            if (h1Pushable) ImGui.pushFont(h1Font, UITheme.FONT_H1)
+            val textW = ImGui.calcTextSize(displayLabel).x
+            dl.addText(gridStartX + (gridW - textW) / 2f, titleTopY, borderCol, displayLabel)
+            if (h1Pushable) ImGui.popFont()
+
+            val afterTitleY = titleTopY + groupLabelH + boxLabelGap
+
+            // Drop target for dragging a .lsdfxchain from the Library onto the FX row's title bar,
+            // loading it into the currently active chain. Placed over the title header area so it
+            // does not occlude the header buttons or the knob grid below.
             if (descriptor.hasExtraHeader) {
                 ImGui.setCursorScreenPos(boxX1, boxTopY)
-                ImGui.invisibleButton("##perf_fx_drop_target", boxX2 - boxX1, boxBottomY - boxTopY)
+                ImGui.invisibleButton("##perf_fx_drop_target", boxX2 - boxX1, (afterTitleY - boxTopY).coerceAtLeast(1f))
                 if (ImGui.beginDragDropTarget()) {
                     val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                     if (payload != null) {
@@ -257,14 +265,6 @@ class PerformanceMatrixPanel {
                 }
             }
 
-            // Large centered group title just under the box's top border.
-            val displayLabel = if (descriptor.hasExtraHeader) "FX: ${fxBankDisplayName(focusedFxBankId)}" else descriptor.groupLabel
-            if (h1Pushable) ImGui.pushFont(h1Font, UITheme.FONT_H1)
-            val textW = ImGui.calcTextSize(displayLabel).x
-            dl.addText(gridStartX + (gridW - textW) / 2f, titleTopY, borderCol, displayLabel)
-            if (h1Pushable) ImGui.popFont()
-
-            val afterTitleY = titleTopY + groupLabelH + boxLabelGap
             val contentTopY = if (descriptor.hasExtraHeader) {
                 drawFxRowHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
                 afterTitleY + EXTRA_HEADER_H + boxLabelGap
@@ -319,7 +319,7 @@ class PerformanceMatrixPanel {
                         isSelected = false,
                         isLearning = isMidiLearning,
                         accentColor = row.accent,
-                        bindings = emptyList(),
+                        bindings = control.bindings,
                         onSelect = {},
                         onToggleLearn = {
                             if (midiPath != null) {

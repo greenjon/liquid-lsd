@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Fix FX Macro Knob Controls & Performance Console Button Responsiveness (`PerformanceMatrixPanel.kt`, `MacroPanel.kt`, `MacroEngine.kt`, `MacroEngineTest.kt`)
+- **Performance Console FX Row Click Occlusion (`PerformanceMatrixPanel.kt`)**: Constrained the FX chain drag-and-drop hit target (`##perf_fx_drop_target`) to the title header area (`afterTitleY - boxTopY`) instead of spanning the entire group box. Prevents the invisible button from capturing mouse events and unblocks the `[FX1][FX2][MFX]`, `[C1][C2][C3]`, `[BYPASS]`, and `[Resync]` buttons and rotary knobs from being click-locked.
+- **Rotary Knobs in Macro Panel FX Tabs (`MacroPanel.kt`)**: Replaced the compact slider strip in `drawFxRackView` with rotary macro knobs via `drawMacroGrid()`, providing consistent rotary knobs across all tabs with mouse drag, scroll wheel fine-adjust, middle-click reset, selection, and MIDI learn.
+- **Chain Switcher & Super Link Toggles in Macro Panel (`MacroPanel.kt`)**: Integrated the `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` selector buttons and compact `[x] Slot 1 [x] Slot 2 [x] Slot 3` Super Knob Link checkboxes directly above the rotary knobs in Column 3's FX tabs.
+- **Linked FX Slot Visual Knob Tracking (`MacroEngine.kt`)**: Added allocation-free synchronization in `MacroEngine.tick()` so linked FX slot knobs track the active chain's Super Knob / slot Metaknob value in memory, ensuring linked knobs visibly rotate in unison when turning the Super Knob.
+
 ### Macro Bank Knobs 5-8 Retirement & Clamping on Session Restore (`SessionSerializer.kt`, `SessionStateTest.kt`)
 - **Deck Macro Bank Sizing Clamping (`SessionSerializer.kt`)**: When restoring session state (`loadSession`), canonical macro banks are now strictly clamped to `MacroEngine.defaultKnobCountFor(canonicalId)` (4 knobs for Decks A/B/BG/PV, FX banks, and FX sends; 8 knobs for Transitions and Master). Prevents legacy sessions with pre-FX-migration 8-knob deck banks from resurrecting orphaned Knobs 5–8 in Classic Mode's Column 3 MACROS panel.
 - **Legacy Session Sanitization**: Cleaned up legacy 8-knob records and residual hardcoded bindings on generator banks in `library/last_session.json` to 4 clean, unbound knobs.
