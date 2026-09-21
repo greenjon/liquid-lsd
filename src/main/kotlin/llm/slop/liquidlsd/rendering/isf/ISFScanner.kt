@@ -68,8 +68,9 @@ object ISFScanner {
         } ?: ISFParser.createDefaultHeader(file.nameWithoutExtension.replace("_", " ").capitalize(), format)
 
         val filenameId = file.nameWithoutExtension.lowercase().replace(Regex("[^a-z0-9_]"), "_")
-        val jsonName = header.DESCRIPTION
-        val displayName = jsonName?.takeIf { it.isNotBlank() } ?: file.nameWithoutExtension.replace("_", " ").capitalize()
+        // DESCRIPTION is free-form documentation text per the ISF spec (often a full sentence),
+        // not a name -- the filename-derived title below is always the right one to show.
+        val displayName = file.nameWithoutExtension.replace("_", " ").capitalize()
         val id = filenameId
 
         // Determine relative folder hierarchy from scanned root

@@ -55,7 +55,9 @@ class ISFLibraryRegistryTest {
         ISFDirectoryManager.addCustomDirectory(shaderDir.absolutePath)
 
         val assets = ISFLibraryRegistry.scanLibrary()
-        assertTrue(assets.any { it.id == "test_plasma" && it.displayName == "Plasma Test Shader" && it.category == "Generator" })
+        // displayName comes from the filename, not DESCRIPTION -- DESCRIPTION is free-form
+        // documentation text per the ISF spec and can run to a full sentence or more.
+        assertTrue(assets.any { it.id == "test_plasma" && it.displayName == "Test plasma" && it.category == "Generator" })
     }
 
     @Test

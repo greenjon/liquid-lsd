@@ -134,7 +134,9 @@ object ISFFilterRegistry {
             .distinct()
             .ifEmpty { listOf("Color Adjustment") }
 
-        val parsedDisplayName = (header.DESCRIPTION?.takeIf { it.isNotBlank() } ?: displayName).ifBlank { id }
+        // DESCRIPTION is free-form documentation text per the ISF spec (often a full sentence),
+        // not a name -- the id/filename-derived displayName passed in is always the right title.
+        val parsedDisplayName = displayName.ifBlank { id }
 
         try {
             val glsl = ISFParser.buildGLSLFragmentShader(source, header)

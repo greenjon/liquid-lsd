@@ -28,10 +28,6 @@ object ParametersTabs {
     var activeBtnMaxY: Float = 0f
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
-    // Shared by both the master FX rows (Mixer.MASTER_FX_SLOT_COUNT slots) and the FxBank rows
-    // (FxBank.SLOT_COUNT slots) below -- both are 3 slots now, kept as separate constants since
-    // they're conceptually independent (master FX isn't itself an FxBank).
-    private val fxSlotEnabledBufs = Array(Mixer.MASTER_FX_SLOT_COUNT) { imgui.type.ImBoolean() }
     private val fxSlotPickerTypes = listOf(
         ShaderPickerPopup.PickerType.FX_SLOT_1,
         ShaderPickerPopup.PickerType.FX_SLOT_2,
@@ -679,6 +675,9 @@ object ParametersTabs {
         val rowStartX = ImGui.getCursorPosX()
 
         // --- Bank Header Bar ---
+        // No separate "Bank Enabled" control: Bank Wet/Dry at ~0 is the bypass signal (Renderer
+        // already skips a bank whose dryWet<=0 the same as a disabled one), so there's nothing
+        // else to toggle here.
         ImGui.textDisabled("FX BANK: $bankLabel")
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -687,13 +686,6 @@ object ParametersTabs {
             }
         }
         itemTooltip("FX Bank Options (Save Bank, Copy Bank, Paste Bank, Clear All)")
-
-        fxEnabledBuf.set(bank.enabled)
-        if (ImGui.checkbox("Bank Enabled##fx_bank_enabled_$bankLabel", fxEnabledBuf)) {
-            bank.enabled = fxEnabledBuf.get()
-            onPushUndo()
-        }
-        itemTooltip("Bypass this bank entirely for every deck routed to it, independent of each chain's own toggle.")
 
         ImGui.setCursorPosX(rowStartX)
         ParametersRenderer.drawParamRow(session, "Bank Wet/Dry", "$bankLabel/DryWet", bank.masterWetDry, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -794,6 +786,7 @@ object ParametersTabs {
         val chain = bank.chains[activeChainIndex]
         val chainPrefix = "$bankLabel/C$chainNum"
 
+        // No separate "Chain Enabled" control: Chain Wet/Dry at ~0 is the bypass signal.
         ImGui.textDisabled("CHAIN $chainNum ${if (chain.name.isNotEmpty()) "(${chain.name})" else ""}")
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -802,13 +795,6 @@ object ParametersTabs {
             }
         }
         itemTooltip("Chain $chainNum Options (Save Chain, Copy, Paste, Clear)")
-
-        fxEnabledBuf.set(chain.enabled)
-        if (ImGui.checkbox("Chain Enabled##fx_chain_enabled_${bankLabel}_$activeChainIndex", fxEnabledBuf)) {
-            chain.enabled = fxEnabledBuf.get()
-            onPushUndo()
-        }
-        itemTooltip("Bypass Chain $chainNum.")
 
         ImGui.setCursorPosX(rowStartX)
         ParametersRenderer.drawParamRow(session, "Chain Wet/Dry", "$chainPrefix/DryWet", chain.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -867,7 +853,12 @@ object ParametersTabs {
         ImGui.separator()
         ImGui.spacing()
 
-        FXChainMacroStrip.draw(session, chain, chainPrefix, state, onPushUndo)
+        row = FXChainMacroStrip.draw(
+            session, chain, chainPrefix, state,
+            grid = FXChainMacroStrip.GridContext(mixer, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor),
+            startRow = row,
+            onPushUndo = onPushUndo
+        )
 
         ImGui.separator()
         ImGui.spacing()
@@ -908,19 +899,11 @@ object ParametersTabs {
                         }
                     }
                 }
+                fx?.header?.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
             }
 
+            // No separate slot bypass control: this slot's Dry/Wet row at ~0 is the bypass signal.
             ImGui.sameLine()
-            if (fx != null) {
-                val enabledBuf = fxSlotEnabledBufs[i]
-                enabledBuf.set(fx.enabled)
-                if (ImGui.checkbox("##fx${slotNum}_enabled_${bankLabel}_$activeChainIndex", enabledBuf)) {
-                    fx.enabled = enabledBuf.get()
-                    onPushUndo()
-                }
-                itemTooltip("Bypass Slot $slotNum filter.")
-                ImGui.sameLine()
-            }
 
             // Per-Slot Kebab Menu
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {

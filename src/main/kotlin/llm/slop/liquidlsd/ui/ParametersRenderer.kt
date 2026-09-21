@@ -19,18 +19,20 @@ import kotlin.math.sin
 
 object ParametersRenderer {
     
-    fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String, 
-        paramKey: String, 
-        param: ModulatableParameter, 
-        state: ParametersState, 
-        labelColW: Float, 
+    fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String,
+        paramKey: String,
+        param: ModulatableParameter,
+        state: ParametersState,
+        labelColW: Float,
         mixer: Mixer,
         gridStartX: Float,
         rowIndex: Int,
         getCvColumns: () -> List<String>,
         getColumnOffset: (String) -> Float,
         getCvColor: (String, Float) -> Int,
-        onPushUndo: () -> Unit
+        onPushUndo: () -> Unit,
+        extraMenuItems: (() -> Unit)? = null,
+        descriptionOverride: String? = null
     ) {
         val metrics = GridMetrics.compute(session)
         val CELL = metrics.cell
@@ -161,7 +163,7 @@ object ParametersRenderer {
                     else "%.3f".format(v)
                 }
 
-                val description = when (sourceId) {
+                val description = descriptionOverride ?: when (sourceId) {
                     "feedback" -> SourceDocRegistry.paramDescriptions["feedback/fb${paramName.replace(" ", "")}"]
                         ?: SourceDocRegistry.paramDescriptions["feedback/$paramName"] ?: ""
                     "mixer" -> {
@@ -246,6 +248,10 @@ object ParametersRenderer {
             val noteLabel = if (existingNote.isNotEmpty()) "${Icons.NOTE} Edit Parameter Note\u2026" else "${Icons.NOTE} Add Parameter Note\u2026"
             if (ImGui.menuItem(noteLabel)) {
                 NoteEditorModal.request(NoteContext.Param(deckLabelForNote, paramKey, label))
+            }
+            if (extraMenuItems != null) {
+                ImGui.separator()
+                extraMenuItems()
             }
             ImGui.endPopup()
         }

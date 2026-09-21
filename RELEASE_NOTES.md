@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Fix OSC Engine Lifecycle Thread Safety & Intermittent Test Failures (`OscEngine.kt`, `OscEngineTest.kt`)
+- **Lifecycle Synchronization**: Added `@Synchronized` to `OscEngine.start()` and `OscEngine.stop()`, marked channel and receiver thread references as `@Volatile`, and joined the background receiver thread (`receiverThread?.join(1000L)`) on `stop()` to prevent unjoined, interrupted threads from racing and closing channels created in subsequent sessions.
+- **Dedicated Channel Parameter**: Passed the newly bound `DatagramChannel` directly into `receiveLoop(channel: DatagramChannel)` instead of resolving through the global mutable singleton field, preventing race conditions during rapid start/stop sequences.
+- **Test Resilience & Retries**: Enhanced loopback test cases in `OscEngineTest.kt` to retry sending UDP datagrams within the `waitUntil` poll loop and added descriptive assertions, eliminating intermittent `Condition not met within 2000ms` failures caused by packet drops or receiver startup timing.
+
 ### Hard Consolidation of Transitions & "Elite 8" Curated Transition Suite (`ISFTransitionRegistry.kt`, `default_transitions/`, `Mixer.kt`, `FileSystemManager.kt`, `build.gradle.kts`)
 - **Complete Legacy Deprecation**: Removed 10 legacy, simplistic mathematical blend modes and untextured geometric wipes (`additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `luma_wipe`, `glitch_transition`, `zoom_fade`).
 - **Curated "Elite 8" Transition Suite**:

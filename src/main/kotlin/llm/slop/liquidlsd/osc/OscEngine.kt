@@ -41,8 +41,11 @@ object OscEngine {
     val inboundQueue = ConcurrentLinkedQueue<OscMessage>()
 
     private val running = AtomicBoolean(false)
+    @Volatile
     private var receiveChannel: DatagramChannel? = null
+    @Volatile
     private var sendChannel: DatagramChannel? = null
+    @Volatile
     private var receiverThread: Thread? = null
 
     @Volatile
@@ -78,6 +81,7 @@ object OscEngine {
         }
     }
 
+    @Synchronized
     fun start(inPort: Int = DEFAULT_INBOUND_PORT, outPort: Int = DEFAULT_OUTBOUND_PORT) {
         if (running.get()) return
         try {
@@ -91,7 +95,7 @@ object OscEngine {
             outboundPort = outPort
             running.set(true)
 
-            val thread = Thread({ receiveLoop() }, "osc-receiver")
+            val thread = Thread({ receiveLoop(rx) }, "osc-receiver")
             thread.isDaemon = true
             thread.start()
             receiverThread = thread
@@ -104,12 +108,19 @@ object OscEngine {
         }
     }
 
+    @Synchronized
     fun stop() {
         if (!running.get()) return
         running.set(false)
-        closeChannelsQuietly()
-        receiverThread?.interrupt()
+        val thread = receiverThread
         receiverThread = null
+        closeChannelsQuietly()
+        thread?.interrupt()
+        try {
+            thread?.join(1000L)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
         inboundQueue.clear()
         synchronized(sniffedLock) { sniffedPackets.clear() }
         learnedRemoteAddress.set(null)
@@ -123,10 +134,9 @@ object OscEngine {
         sendChannel = null
     }
 
-    private fun receiveLoop() {
+    private fun receiveLoop(channel: DatagramChannel) {
         val buffer = ByteBuffer.allocate(MAX_DATAGRAM_SIZE)
-        val channel = receiveChannel ?: return
-        while (running.get()) {
+        while (running.get() && !Thread.currentThread().isInterrupted) {
             try {
                 buffer.clear()
                 val sender = channel.receive(buffer) ?: continue
@@ -146,8 +156,12 @@ object OscEngine {
                 dispatchInbound(element, senderAddr?.address?.hostAddress ?: "unknown")
             } catch (e: ClosedChannelException) {
                 break
+            } catch (e: InterruptedException) {
+                break
             } catch (e: Exception) {
-                if (running.get()) logger.warn(e) { "Error in OSC receive loop" }
+                if (running.get() && !Thread.currentThread().isInterrupted) {
+                    logger.warn(e) { "Error in OSC receive loop" }
+                }
             }
         }
     }

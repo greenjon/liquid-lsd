@@ -11,6 +11,7 @@ import imgui.type.ImString
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry
+import llm.slop.liquidlsd.rendering.isf.ISFVisualSource
 import llm.slop.liquidlsd.SessionContext
 
 /**
@@ -46,7 +47,10 @@ object ShaderPickerPopup {
         val categories: List<String>,
         val type: String,
         val isExternal: Boolean = false,
-        val folderPath: String = ""
+        val folderPath: String = "",
+        /** The ISF shader's own DESCRIPTION field, shown as a hover tooltip on the row -- this is
+         * where the free-form documentation text belongs, not the (now short) displayName. */
+        val description: String = ""
     ) {
         // Pre-joined at construction time — zero allocation when the table row renders
         val categoriesLabel: String = (if (folderPath.isNotBlank() && !categories.contains(folderPath)) listOf(folderPath) + categories else categories).joinToString(", ")
@@ -146,7 +150,8 @@ object ShaderPickerPopup {
                             displayName = source.displayName,
                             categories = source.categories,
                             type = "Source",
-                            folderPath = source.folderPath
+                            folderPath = source.folderPath,
+                            description = (source as? ISFVisualSource)?.header?.DESCRIPTION ?: ""
                         )
                     )
                 }
@@ -172,7 +177,8 @@ object ShaderPickerPopup {
                             displayName = transition.displayName,
                             categories = transition.categories,
                             type = "Transition",
-                            folderPath = transition.folderPath
+                            folderPath = transition.folderPath,
+                            description = transition.header.DESCRIPTION ?: ""
                         )
                     )
                 }
@@ -198,7 +204,8 @@ object ShaderPickerPopup {
                             displayName = filter.displayName,
                             categories = filter.categories,
                             type = "Filter",
-                            folderPath = filter.folderPath
+                            folderPath = filter.folderPath,
+                            description = filter.header.DESCRIPTION ?: ""
                         )
                     )
                 }
@@ -241,6 +248,9 @@ object ShaderPickerPopup {
         }
         if (item.isExternal) {
             ImGui.popStyleColor(1)
+        }
+        if (item.description.isNotBlank()) {
+            itemTooltip(item.description)
         }
         if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
              onSelect?.invoke(item.id)

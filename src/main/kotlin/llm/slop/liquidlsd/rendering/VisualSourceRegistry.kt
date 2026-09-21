@@ -260,8 +260,9 @@ object VisualSourceRegistry {
             .filter { it.isNotBlank() }
             .distinct()
         
-        val parsedDisplayName = header.DESCRIPTION?.takeIf { it.isNotBlank() }
-            ?: sourceId.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        // DESCRIPTION is free-form documentation text per the ISF spec (often a full sentence),
+        // not a name -- the id-derived title below is always the right one to show.
+        val parsedDisplayName = sourceId.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
         return ISFVisualSource(
             id = sourceId,
