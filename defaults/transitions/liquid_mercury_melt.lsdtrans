@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "liquid_mercury_melt",
+  "tags": ["liquid", "fluid", "melt", "organic"],
+  "slot": {
+    "filterId": "liquid_displacement",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "warpStrength": {
+        "baseValue": 0.45,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "viscosity": {
+        "baseValue": 1.8,
+        "baseMin": 0.5,
+        "baseMax": 3.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "chromaticDispersion": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

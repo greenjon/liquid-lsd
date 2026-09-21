@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "pure_smooth_crossfade",
+  "tags": ["dissolve", "smooth", "clean", "crossfade"],
+  "slot": {
+    "filterId": "linear_crossfade",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "curveMode": {
+        "baseValue": 0.0,
+        "baseMin": 0.0,
+        "baseMax": 2.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

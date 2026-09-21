@@ -50,6 +50,36 @@
       "web": "web/shaders/mandala.vert",
       "mode": "auto_shader",
       "description": "Mandala Fourier series ribbon vertex displacement shader"
+    },
+    {
+      "desktop": "library/sources/domain_warp_fluid/domain_warp_fluid.fs",
+      "web": "web/shaders/domain_warp_fluid.frag",
+      "mode": "auto_shader",
+      "description": "Domain-warped fluid simulation with curl noise and iridescent marbling"
+    },
+    {
+      "desktop": "library/sources/gyroid_hyperspace/gyroid_hyperspace.fs",
+      "web": "web/shaders/gyroid_hyperspace.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched Triply Periodic Minimal Surfaces (TPMS) with continuous morphing"
+    },
+    {
+      "desktop": "library/sources/celestial_engine/celestial_engine.fs",
+      "web": "web/shaders/celestial_engine.frag",
+      "mode": "auto_shader",
+      "description": "Multi-symmetry sacred geometry, Flower of Life folding, and op-art moiré fringes"
+    },
+    {
+      "desktop": "library/sources/hyper_slice/hyper_slice.fs",
+      "web": "web/shaders/hyper_slice.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora"
+    },
+    {
+      "desktop": "library/sources/chladni_cymatics/chladni_cymatics.fs",
+      "web": "web/shaders/chladni_cymatics.frag",
+      "mode": "auto_shader",
+      "description": "Physical 2D acoustic plate resonance simulation (Chladni cymatics)"
     }
   ],
   "monitored_sources": [

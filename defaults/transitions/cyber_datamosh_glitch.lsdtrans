@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "cyber_datamosh_glitch",
+  "tags": ["glitch", "datamosh", "digital", "cyber"],
+  "slot": {
+    "filterId": "cyber_datamosh",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "blockiness": {
+        "baseValue": 32.0,
+        "baseMin": 8.0,
+        "baseMax": 64.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "rgbSplit": {
+        "baseValue": 0.08,
+        "baseMin": 0.0,
+        "baseMax": 0.2,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "packetLoss": {
+        "baseValue": 1.2,
+        "baseMin": 0.0,
+        "baseMax": 2.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

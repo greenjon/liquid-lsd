@@ -19,6 +19,16 @@ object SourceDocRegistry {
         "icosa_h3" to "Icosahedral H3 Coxeter raymarcher combining a continuous Icosahedron/Dodecahedron" +
                 " duality morph (with Kepler-Poinsot stellations and truncation/cantellation duals) crossfaded" +
                 " against an independent spike-and-blocker stellation CSG, with facet-family aware coloring.",
+        "domain_warp_fluid" to "Domain-warped fluid simulation with multi-scale curl noise, dynamic vorticity," +
+                " surface specular normal lighting, and iridescent liquid marbling.",
+        "gyroid_hyperspace" to "Raymarched Triply Periodic Minimal Surfaces (TPMS) with continuous morphing between" +
+                " Gyroid, Schwarz P, and Neovius minimal surfaces, volumetric internal glow, and 3D camera flight.",
+        "celestial_engine" to "Multi-symmetry sacred geometry and op-art generator combining Flower of Life folding," +
+                " concentric harmonic interference rings, torus knot stereographic projections, and moiré fringes.",
+        "hyper_slice" to "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora via" +
+                " H4 Coxeter domain folding with 4D hyper-rotations and Wythoff facet morphing.",
+        "chladni_cymatics" to "Physical 2D acoustic plate resonance simulation (Chladni cymatics) with harmonic modal" +
+                " frequencies, boundary geometry folding, particle accumulation physics, and fluid antinode inversion.",
     )
 
     /**
@@ -74,6 +84,83 @@ object SourceDocRegistry {
         "icosa_h3/RotateX" to "Pitch rotation angle around the X axis.",
         "icosa_h3/RotateY" to "Yaw rotation angle around the Y axis.",
         "icosa_h3/RotateZ" to "Roll rotation angle around the Z axis.",
+
+        // Domain Warp Fluid
+        "domain_warp_fluid/Warp Strength" to "Amplitude of coordinate domain warping. High values produce intricate fractal marbling.",
+        "domain_warp_fluid/Swirl" to "Vorticity and curl rotation applied to the warped coordinate grid.",
+        "domain_warp_fluid/Viscosity" to "Spatial scale and thickness of fluid structures. Lower = thicker, higher = finer details.",
+        "domain_warp_fluid/Speed" to "Temporal advection speed of the fluid simulation.",
+        "domain_warp_fluid/Detail" to "Fractional Brownian motion octave depth (1 to 5 octaves).",
+        "domain_warp_fluid/Specular Gloss" to "Specular surface normal reflection strength for a wet, embossed liquid sheen.",
+        "domain_warp_fluid/Palette Mode" to "Color palette: 0 = Psychedelic Neon, 1 = Liquid Chrome, 2 = Oil Slick, 3 = Opal Sunset, 4 = Deep Ocean.",
+        "domain_warp_fluid/Hue Offset" to "Base hue rotation of the color palette.",
+        "domain_warp_fluid/Hue Cycle Speed" to "Continuous hue animation cycle speed.",
+        "domain_warp_fluid/Zoom" to "Viewport scale and magnification.",
+
+        // Gyroid Hyperspace
+        "gyroid_hyperspace/Surface Type" to "Continuous TPMS morphing: 0.0 = Gyroid, 1.0 = Schwarz P, 2.0 = Neovius minimal surface.",
+        "gyroid_hyperspace/Wall Thickness" to "Solid thickness of the minimal surface shell.",
+        "gyroid_hyperspace/Frequency" to "Spatial frequency of the periodic minimal surface cells.",
+        "gyroid_hyperspace/Flight Speed" to "Camera forward flight speed through the infinite cellular labyrinth.",
+        "gyroid_hyperspace/Wireframe Mode" to "Carves coordinate lattice struts to reveal an open architectural cage.",
+        "gyroid_hyperspace/Core Glow" to "Volumetric glowing light radiating from the interior cell chambers.",
+        "gyroid_hyperspace/Color Mode" to "Color algorithm: 0 = Surface Normal Spectrum, 1 = Distance Depth, 2 = Iridescent Fresnel, 3 = Monochrome Cyber Gold.",
+        "gyroid_hyperspace/Hue Offset" to "Base hue rotation of the palette.",
+        "gyroid_hyperspace/Saturation" to "Color saturation of the surfaces.",
+        "gyroid_hyperspace/Brightness" to "Luminance multiplier for surface lighting.",
+        "gyroid_hyperspace/Zoom" to "Camera field-of-view scale.",
+        "gyroid_hyperspace/Rotate X" to "Pitch rotation angle around the X axis.",
+        "gyroid_hyperspace/Rotate Y" to "Yaw rotation angle around the Y axis.",
+        "gyroid_hyperspace/Rotate Z" to "Roll rotation angle around the Z axis.",
+
+        // Celestial Engine
+        "celestial_engine/Symmetries" to "Rotational symmetry fold count (3 to 24-fold sacred geometry).",
+        "celestial_engine/Ring Density" to "Frequency of concentric harmonic rings.",
+        "celestial_engine/Phase Twist" to "Tangential radial twist producing spiraling vortex arms.",
+        "celestial_engine/Moiré Strength" to "Cross-modulation intensity creating shimmering op-art interference fringes.",
+        "celestial_engine/Flower of Life Fold" to "Weight of Flower of Life overlapping ring geometry.",
+        "celestial_engine/Pulse Wave" to "Expanding radial shockwave ring, ideal for kick/snare CV modulation.",
+        "celestial_engine/Speed" to "Rotation and phase oscillation animation speed.",
+        "celestial_engine/Line Width" to "Stroke thickness of the geometric laser lines.",
+        "celestial_engine/Glow" to "Additive laser bloom and optical radiance.",
+        "celestial_engine/Color Mode" to "Color palette: 0 = Sacred Gold/Violet/Emerald, 1 = Neon Laser Cyan/Pink, 2 = Prismatic Rainbow, 3 = Monochrome Silver.",
+        "celestial_engine/Hue Offset" to "Base hue rotation.",
+        "celestial_engine/Hue Sweep" to "Radial hue gradient width.",
+        "celestial_engine/Scale" to "Spatial scale.",
+
+        // 4D Hyper-Slice
+        "hyper_slice/Slice Offset W" to "Position of the 3D cutting hyperplane along the 4th dimension (W axis MRI scan sweep).",
+        "hyper_slice/Rotate XW (4D)" to "Primary 4D hyper-rotation through the XW plane (continuous inside-out cell morphing).",
+        "hyper_slice/Rotate YW (4D)" to "Secondary 4D hyper-rotation through the YW plane.",
+        "hyper_slice/Rotate ZW (4D)" to "Tertiary 4D hyper-rotation through the ZW plane.",
+        "hyper_slice/Rotate X" to "3D Pitch rotation of the cross-section solid.",
+        "hyper_slice/Rotate Y" to "3D Yaw rotation of the cross-section solid.",
+        "hyper_slice/Rotate Z" to "3D Roll rotation of the cross-section solid.",
+        "hyper_slice/Polychoron Morph" to "Continuous 4D Wythoff morph between 120-cell (0.0) and 600-cell (1.0).",
+        "hyper_slice/Facet Support H" to "Facet radius / support plane distance in 4D fundamental chamber.",
+        "hyper_slice/Color Method" to "Coloring: 0 = H4 Chamber Sector, 1 = 4D W-Depth, 2 = 3D Surface Normal.",
+        "hyper_slice/Hue Offset" to "Base hue rotation.",
+        "hyper_slice/Saturation" to "Color saturation.",
+        "hyper_slice/Brightness" to "Luminance multiplier.",
+        "hyper_slice/Face Opacity" to "Face opacity for translucent crystal interior reveal.",
+        "hyper_slice/Edge Thickness" to "Thickness of facet ridge crease highlights.",
+        "hyper_slice/Edge Brightness" to "Brightness of ridge lines and facet boundaries.",
+        "hyper_slice/Glow" to "Volumetric bloom and proximity halo.",
+        "hyper_slice/Zoom" to "Camera zoom scaling.",
+
+        // Chladni Cymatics
+        "chladni_cymatics/Frequency M" to "First acoustic modal harmonic frequency.",
+        "chladni_cymatics/Frequency N" to "Second acoustic modal harmonic frequency.",
+        "chladni_cymatics/Frequency L" to "Third acoustic cross-harmonic frequency.",
+        "chladni_cymatics/Plate Shape" to "Plate boundary geometry: 0.0 = Square plate, 1.0 = Circular plate.",
+        "chladni_cymatics/Node Sharpness" to "Sharpness and width of the quiet nodal lines where sand gathers.",
+        "chladni_cymatics/Sand Accumulation" to "Density and micro-granular noise texture of collecting sand particles.",
+        "chladni_cymatics/Vibration Speed" to "Temporal vibration oscillation speed.",
+        "chladni_cymatics/Invert (Fluid Antinodes)" to "Inversion toggle: 0 = Quiet nodal sand gathering, 1 = Kinetic fluid puddling in energetic antinodes.",
+        "chladni_cymatics/Glow" to "Acoustic resonance radiance halo.",
+        "chladni_cymatics/Palette Mode" to "Palette: 0 = Obsidian & Gold Sand, 1 = Electric Cymatic Blue, 2 = Prismatic Spectrum, 3 = Bioluminescent Emerald.",
+        "chladni_cymatics/Hue Offset" to "Base hue offset.",
+        "chladni_cymatics/Scale" to "Plate viewport scaling.",
 
         // Feedback chain (shared across all decks)
         // View (3D display and transform)

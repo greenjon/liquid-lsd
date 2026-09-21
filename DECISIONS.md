@@ -1,3 +1,47 @@
+## Hard Consolidation of Transitions & The "Elite 8" Curated Transition Suite (`ISFTransitionRegistry.kt`, `default_transitions/`, `Mixer.kt`, `FileSystemManager.kt`, `build.gradle.kts`)
+
+- **Context**: 2026-09-20. Liquid LSD previously bundled 11 stock transitions (`additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `luma_wipe`, `glitch_transition`, `zoom_fade`, `linear_crossfade`). Following the shader curation overhaul, an audit benchmarked against Resolume Arena, VDMX, and Synesthesia revealed that legacy mathematical blend formulas, simplistic PowerPoint-style wipes, and primitive block glitches degraded live VJ quality. As fast-moving beta software, backwards compatibility was explicitly dropped to allow a clean hard cut.
+- **Decision**:
+  - **Deprecated & Removed 10 Legacy Files**: Deleted `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, `max_blend.fs`, `wipe_horizontal.fs`, `wipe_vertical.fs`, `radial_wipe.fs`, `luma_wipe.fs`, `glitch_transition.fs`, and `zoom_fade.fs`.
+  - **Curated "Elite 8" Transition Suite (`src/main/resources/default_transitions/`)**:
+    1. **`linear_crossfade.fs`**: High-precision dissolve with selectable Perceptual Cosine S-curve, Linear, and Equal Power curve modes to eliminate midpoint perceived luminance drop.
+    2. **`luminous_flash.fs`**: Midpoint exposure flare and Gaussian bloom overdrive with tunable color temperature (-1.0 icy strobe to +1.0 warm incandescent) and spread, designed for musical drop transitions.
+    3. **`film_burn.fs`**: Organic 35mm celluloid burn featuring multi-octave procedural fractal noise erosion with intense chromatic glowing combustion contours (Fiery Ember, Electric Violet, Acid Green).
+    4. **`noise_dissolve.fs`**: Multi-octave domain-warped fractal noise erosion with feathered edge contouring and subtle chromatic aberration on dissolving frontiers.
+    5. **`liquid_displacement.fs`**: Interactive cross-deck vector morphing where Deck A and Deck B dynamically displace each other's UVs using luminance gradient fields, creating a molten hydrodynamic melt.
+    6. **`kinetic_zoom.fs`**: High-speed camera crash zoom with multi-tap radial velocity streak blur, edge chromatic dispersion, and exponential acceleration curves.
+    7. **`vortex_swirl.fs`**: Gravitational singularity twisting Deck A into a spiraling vortex at the center of the frame, peaking at midpoint, and unwinding into Deck B with chromatic flare.
+    8. **`cyber_datamosh.fs`**: Video compression breakdown emulating digital I-frame / P-frame corruption, macroblock displacement, horizontal sync tear, and chromatic shear.
+  - **Cleaned Mixer Engine**: Removed legacy hardcoded mode-to-transitionId mappings in `Mixer.kt` that attempted to synchronize `mode` to non-existent blend shaders.
+  - **Factory Transition Presets & Playlists**: Bundled 8 curated `.lsdtrans` presets and the default `festival_elite.lsdtransplay` playlist in `defaults/` and `library/`, and automated classpath asset packaging via `PrepareDefaultAssetsTask` and `FileSystemManager.ensureDefaultLibrary()`.
+- **Rationale**:
+  - Elevates stage visual production values to club- and festival-ready standards.
+  - Eliminates visual stutter and muddy mid-fade artifacts.
+
+---
+
+## Premier 8-Generator Procedural ISF v2.0 Suite & Canonical Source Packaging (`VisualSourceRegistry.kt`, `SourceDocRegistry.kt`, `default_sources/`, `library/sources/`, `web/sync_manifest.json`)
+
+- **Context**: 2026-09-20. Following the pure ISF v2.0 standardization where legacy proprietary sources were pruned down to 3 core favorites (`mandala`, `dynamic_spiral`, `icosa_h3`), users required a rich, curated catalogue of procedural generators designed for high expressive variety, visual "wow", and balanced coverage across geometric, 3D minimal surface, 4D polytope, organic fluid, and acoustic domains.
+- **Decision**:
+  - **Curated 8-Generator Core Lineup**:
+    - **`mandala`** (Existing): 4-arm Lissajous harmonic curves with 300+ curated recipes and size normalization.
+    - **`dynamic_spiral`** (Existing): High-performance logarithmic particle streak dynamics with wave frequencies and shear.
+    - **`icosa_h3`** (Existing): Native 3D $H_3$ Coxeter raymarcher with continuous duality morph and stellation CSG.
+    - **`domain_warp_fluid`** (New): Multi-scale domain-warped fBm fluid simulation with curl noise, dynamic vorticity, surface specular normals, and 5 color palettes (Psychedelic Neon, Liquid Chrome, Oil Slick, Opal Sunset, Deep Ocean).
+    - **`gyroid_hyperspace`** (New): Native 3D raymarcher rendering Triply Periodic Minimal Surfaces (TPMS) with continuous morphing between Gyroid, Schwarz P, and Neovius minimal surfaces, volumetric internal radiance, and camera flight.
+    - **`celestial_engine`** (New): Multi-symmetry sacred geometry and op-art generator combining Flower of Life overlapping circles, concentric harmonic rings, phase twisting, and moiré fringes.
+    - **`hyper_slice`** (Cleanroom Port): Raymarched 3D cross-section MRI scan through 4D 120-cell (600 vertices) and 600-cell (120 vertices) polytopes using the $H_4$ Coxeter reflection group with 4D hyper-rotations ($XW, YW, ZW$) and Wythoff facet morphing.
+    - **`chladni_cymatics`** (Cleanroom Redesign): Physical 2D acoustic plate resonance simulation computing standing wave nodal harmonics across square and circular boundaries with particle accumulation physics and antinode fluid inversion.
+  - **Canonical Packaging Architecture (`src/main/resources/default_sources/`)**: Established `src/main/resources/default_sources/` as the canonical build source (matching `default_filters/` and `default_transitions/`), extracted automatically into `library/sources/` on fresh installations via `VisualSourceRegistry.ensureDefaultSources()`.
+  - **Web Parity & Transpilation**: Updated `web/sync_manifest.json` and generated WebGL2 fragment shaders under `web/shaders/` via `scripts/sync_web.py --apply`.
+  - **Full Documentation**: Added detailed parameter docstrings in `SourceDocRegistry.kt` and user guide documentation in `docs/user_guide/visual_sources.md`.
+- **Rationale**:
+  - Delivers maximum visual variety and parameter-sweeping responsiveness without CPU allocations or runtime overhead.
+  - Standardizes generator resource bundling alongside filters and transitions.
+
+---
+
 ## Two-Tier FX Macro Knobs (Chain Super Knob + Effect Metaknobs) & ISF Auto-Bind Engine (`FxMetaBinding.kt`, `ISFAutoBindEngine.kt`, `ISFFilter.kt`, `ISFModels.kt`, `FxChain.kt`, `FxBank.kt`, `FXChainMacroStrip.kt`, `MacroPanel.kt`, `ParametersTabs.kt`, `AssetType.kt`, `FileSystemManager.kt`, `FXBrowserPanel.kt`)
 
 - **Context**: 2026-09-20. Building on the 3-chain FX bank architecture below, users needed Mixxx/Traktor S2 MK2-style performance macro knobs: one knob per effect ("Metaknob") plus one knob per chain ("Super Knob") that drives all 3 linked Metaknobs together. Since users can load thousands of arbitrary third-party ISF shaders (not just a hand-curated set), each shader's Metaknob needed a sensible default binding without manual configuration.

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "inferno_film_burn",
+  "tags": ["film", "burn", "heat", "fire", "ember"],
+  "slot": {
+    "filterId": "film_burn",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "burnSpread": {
+        "baseValue": 0.15,
+        "baseMin": 0.02,
+        "baseMax": 0.3,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "glowIntensity": {
+        "baseValue": 2.2,
+        "baseMin": 0.0,
+        "baseMax": 3.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "tintMode": {
+        "baseValue": 0.0,
+        "baseMin": 0.0,
+        "baseMax": 2.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

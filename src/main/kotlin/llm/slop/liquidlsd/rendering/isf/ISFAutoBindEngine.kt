@@ -57,7 +57,12 @@ object ISFAutoBindEngine {
         "video_strobe" to FxMetaBinding("rate", 0f, 20f),
         "fluid_smear" to FxMetaBinding("smearAmount", 0f, 1f),
         "thermal_scanner" to FxMetaBinding("intensity", 0f, 1f),
-        "mirror_sphere" to FxMetaBinding("sphereRadius", 0f, 0.8f)
+        "mirror_sphere" to FxMetaBinding("sphereRadius", 0f, 0.8f),
+        "halftone" to FxMetaBinding("dotScale", 5f, 150f),
+        "anamorphic_streak" to FxMetaBinding("streakIntensity", 0f, 3f),
+        "vhs_glitch" to FxMetaBinding("trackingJitter", 0f, 1f),
+        "vortex_swirl" to FxMetaBinding("twist", -3f, 3f),
+        "faceted_glass" to FxMetaBinding("refraction", 0f, 1f)
     )
 
     /** Resolves the Metaknob binding for [filter]: user override, then curated, then heuristic. */

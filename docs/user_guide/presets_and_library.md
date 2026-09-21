@@ -114,6 +114,46 @@ Liquid LSD includes 9 pre-calibrated 3-slot FX chains in `library/fx_chains/` de
 9. **2D to 3D Elevation with Feedback** (`2d_to_3d_elevation_with_feedback.lsdfxchain`):
    - *Slots*: `3d_elevation` → `feedback` → `color_levels`
    - *Vibe*: The iconic Liquid LSD topological displacement chain featuring heightmap mesh rendering, recursive rotation feedback, and ACES filmic grading.
+10. **Laser Concert Anamorphic** (`laser_concert_anamorphic.lsdfxchain`):
+    - *Slots*: `anamorphic_streak` → `bloom` → `color_levels`
+    - *Vibe*: Ultra-widescreen concert stage lighting with horizontal laser glare, soft volumetric bloom, and high-contrast filmic punch.
+11. **Pop-Art Comic Print** (`pop_art_comic_print.lsdfxchain`):
+    - *Slots*: `neon_edge` → `halftone` → `gradient_map`
+    - *Vibe*: Authentic Roy Lichtenstein / vintage comic book print with black ink contours, 4-plate CMYK dot rosettes, and duotone pop grading.
+12. **Grindhouse VHS Bootleg** (`grindhouse_vhs_bootleg.lsdfxchain`):
+    - *Slots*: `vhs_glitch` → `retro_crt` → `color_levels`
+    - *Vibe*: Gritty 80s horror / VHS bootleg tape with magnetic tracking jitter, head-switching bars, phosphor scanlines, and tape saturation.
+13. **Prismatic Crystal Kaleidoscope** (`prismatic_crystal_kaleidoscope.lsdfxchain`):
+    - *Slots*: `faceted_glass` → `kaleidoscope` → `rgb_split`
+    - *Vibe*: Shattered diamond prism reflection with polyhedral symmetry and spectral dispersion.
+14. **Cosmic Black Hole Vortex** (`cosmic_black_hole_vortex.lsdfxchain`):
+    - *Slots*: `vortex_swirl` → `luma_displace` → `polar_tunnel`
+    - *Vibe*: Gravitational accretion singularity with logarithmic space swirl, surface normal marbling, and infinite log-polar warp.
+
+#### Bundled Multi-Chain FX Banks (`.lsdfxbank`)
+
+Liquid LSD bundles 5 fully configured 3-chain rack presets in `library/fx_banks/` (and version-controlled in `defaults/fx_banks/`) designed to instantly load across **FX1**, **FX2**, or **MFX (Master FX)**:
+
+1. **Club Master Finishers** (`club_master_finishers.lsdfxbank` — Optimized for `MFX`):
+   - *Chain 1 (Subtle Optical Warmth)*: `color_levels` → `retro_crt` → `bloom` (Gentle tape/phosphor warming with contrast roll-off).
+   - *Chain 2 (Stage Laser Glare)*: `anamorphic_streak` → `bloom` → `color_levels` (Concert lighting highlight streaks).
+   - *Chain 3 (Drop Weapon Strobe)*: `directional_blur` → `video_strobe` → `rgb_split` (High-impact beat flash drop impact).
+2. **Psychedelic Warp & Flow** (`psychedelic_warp_and_flow.lsdfxbank` — Optimized for `FX1`):
+   - *Chain 1 (Liquid Mercury)*: `wave_displace` → `fluid_smear` → `luma_displace` (Viscous organic fluid deformation).
+   - *Chain 2 (Hyperspace Trip)*: `kaleidoscope` → `radial_blur` → `color_levels` (Symmetric fractal zoom tunnel).
+   - *Chain 3 (2D to 3D Elevation)*: `3d_elevation` → `feedback` → `color_levels` (Iconic topological mesh feedback).
+3. **Analog Tape & Retro Terminal** (`analog_tape_and_retro_terminal.lsdfxbank`):
+   - *Chain 1 (Grindhouse VHS Bootleg)*: `vhs_glitch` → `retro_crt` → `color_levels` (Helical scan tracking error & head switching).
+   - *Chain 2 (Pop-Art Comic Print)*: `neon_edge` → `halftone` → `gradient_map` (CMYK lithographic dot rosettes & paper tint).
+   - *Chain 3 (Cyberpunk 1984)*: `pixelate` → `retro_crt` → `gradient_map` (Honeycomb crystal mosaic & green terminal phosphor).
+4. **Glitch, Strobe & Tactical Recon** (`glitch_strobe_and_tactical_recon.lsdfxbank` — Optimized for `FX2`):
+   - *Chain 1 (The Drop Weapon)*: `directional_blur` → `video_strobe` → `rgb_split` (Transient beat flash gate).
+   - *Chain 2 (FLIR Predator Vision)*: `thermal_scanner` → `directional_blur` → `pixelate` (Ironbow heat bloom & tactical sensor grain).
+   - *Chain 3 (Digital Bitcrush Mosaic)*: `pixelate` → `rgb_split` → `video_strobe` (Lattice quantization & spectral glitch).
+5. **Liquid Chrome & Dimensional Prisms** (`liquid_chrome_and_prisms.lsdfxbank`):
+   - *Chain 1 (Liquid Chrome Dimension)*: `mirror_sphere` → `wave_displace` → `color_levels` (3D raytraced floating chrome orb).
+   - *Chain 2 (Prismatic Crystal Kaleidoscope)*: `faceted_glass` → `kaleidoscope` → `rgb_split` (Cellular Voronoi gem facet refractions).
+   - *Chain 3 (Cosmic Black Hole Vortex)*: `vortex_swirl` → `luma_displace` → `polar_tunnel` (Accretion disk swirl & infinite warp).
 
 ### FX Playlists (`.lsdfxplay`)
 
@@ -170,6 +210,27 @@ When the queue is playing, the crossfader moves automatically between decks as p
 ## Background Queue (Deck BG)
 
 The Background Queue works the same way as the main queue but drives Deck BG independently. Add presets with `Shift+Q`. Background transitions use dip-to-black fades — double-click or right-click a queued item to choose between an instant cut or a fade.
+
+---
+
+## Curated Transitions Suite & Transition Presets
+
+Liquid LSD features a curated suite of 8 club-grade ISF transition shaders designed for high-impact live mixing between Deck A and Deck B:
+
+1. **Linear Crossfade (`linear_crossfade.fs`)** — Pristine, transparent dissolve with Perceptual Cosine S-curve, Linear, or Equal Power curve modes.
+2. **Luminous Flash (`luminous_flash.fs`)** — Midpoint exposure flare and Gaussian bloom overdrive with tunable color temperature (-1.0 icy strobe to +1.0 warm amber) and spread, designed for high-energy beat drops.
+3. **Film Burn (`film_burn.fs`)** — 35mm celluloid burn with multi-octave procedural fractal noise erosion and glowing chromatic combustion contours (Fiery Ember, Electric Violet, Acid Green).
+4. **Noise Dissolve (`noise_dissolve.fs`)** — Multi-octave domain-warped fractal noise erosion with soft feathered contours and chromatic fringing.
+5. **Liquid Displacement (`liquid_displacement.fs`)** — Interactive cross-deck vector morphing where Deck A and Deck B dynamically displace each other's UV coordinates based on luminance gradient fields.
+6. **Kinetic Zoom (`kinetic_zoom.fs`)** — High-speed camera crash zoom with multi-tap radial velocity streak blur, edge chromatic dispersion, and exponential acceleration curves.
+7. **Vortex Swirl (`vortex_swirl.fs`)** — Gravitational singularity twisting Deck A into a spiraling vortex at the frame center, peaking at midpoint, and unwinding into Deck B with chromatic flare.
+8. **Cyber Datamosh (`cyber_datamosh.fs`)** — Digital video compression breakdown emulating I-frame/P-frame corruption, macroblock displacement, horizontal sync tear, and chromatic shear.
+
+### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)
+
+- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the **[+]** button in the Transition Presets browser or right-clicking in the Mixer panel.
+- **Transition Playlists (`.lsdtransplay`)**: Stored in `library/transition_playlists/`. Group transitions into ordered setlists for the Transition Queue. A factory playlist, `festival_elite.lsdtransplay`, is bundled out of the box.
+- **AutoVJ Integration**: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.
 
 ---
 

@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.rendering
 
+import llm.slop.liquidlsd.models.FXBankDto
 import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXSlotDto
 import llm.slop.liquidlsd.models.TransitionPresetDto
@@ -71,12 +72,9 @@ class Mixer(
             ?: llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition("linear_crossfade")
         transitionFilter = filter
 
-        when (filter?.id) {
-            "additive_blend" -> { mode.baseValue = 0.0f; lastMode = 0 }
-            "screen_blend" -> { mode.baseValue = 1.0f; lastMode = 1 }
-            "multiply_blend" -> { mode.baseValue = 2.0f; lastMode = 2 }
-            "max_blend" -> { mode.baseValue = 3.0f; lastMode = 3 }
-            "linear_crossfade" -> { mode.baseValue = 4.0f; lastMode = 4 }
+        if (filter?.id == "linear_crossfade") {
+            mode.baseValue = 4.0f
+            lastMode = 4
         }
     }
 
@@ -165,6 +163,42 @@ class Mixer(
         deckB.fxRoutingDefault = 1.0f
         deckBG.fxRoutingDefault = 2.0f
         deckPV.fxRoutingDefault = 2.0f
+        loadDefaultFxBanks()
+    }
+
+    private val bankJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+    /**
+     * Loads the default starter FX banks for live performance:
+     * - FX Bank 1: Psychedelic Warp and Flow
+     * - FX Bank 2: Liquid Chrome and Prisms
+     * - Master FX Bank: Club Master Finishers
+     */
+    fun loadDefaultFxBanks() {
+        fun loadBank(fileName: String): FXBankDto? {
+            val file = java.io.File(llm.slop.liquidlsd.ui.FileSystemManager.getFxBanksRoot(), fileName)
+            if (file.exists()) {
+                return try {
+                    bankJson.decodeFromString<FXBankDto>(file.readText())
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            val stream = Mixer::class.java.classLoader.getResourceAsStream("default_fx_banks/$fileName")
+            if (stream != null) {
+                return try {
+                    val text = stream.bufferedReader().use { it.readText() }
+                    bankJson.decodeFromString<FXBankDto>(text)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            return null
+        }
+
+        loadBank("psychedelic_warp_and_flow.lsdfxbank")?.let { fxBank1.applyFxBank(it) }
+        loadBank("liquid_chrome_and_prisms.lsdfxbank")?.let { fxBank2.applyFxBank(it) }
+        loadBank("club_master_finishers.lsdfxbank")?.let { masterFxBank.applyFxBank(it) }
     }
 
     // Channel level multiplier faders (0.0 to 1.0) -- modulatable so they're macro/CV-bindable
@@ -415,20 +449,6 @@ class Mixer(
 
         crossfade.evaluate()
         mode.evaluate()
-        val currentMode = mode.value.toInt()
-        if (currentMode != lastMode) {
-            lastMode = currentMode
-            val transitionId = when (currentMode) {
-                0 -> "additive_blend"
-                1 -> "screen_blend"
-                2 -> "multiply_blend"
-                3 -> "max_blend"
-                else -> "linear_crossfade"
-            }
-            if (transitionFilter?.id != transitionId) {
-                setTransition(transitionId)
-            }
-        }
         masterAlpha.evaluate()
         levelA.evaluate()
         levelB.evaluate()

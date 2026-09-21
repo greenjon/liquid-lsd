@@ -1,6 +1,64 @@
 ## [Unreleased]
 
-### Curated Bundled 3-Slot FX Chains Suite (`library/fx_chains/`, `FXPresetSerializationTest.kt`, `docs/user_guide/presets_and_library.md`)
+### Hard Consolidation of Transitions & "Elite 8" Curated Transition Suite (`ISFTransitionRegistry.kt`, `default_transitions/`, `Mixer.kt`, `FileSystemManager.kt`, `build.gradle.kts`)
+- **Complete Legacy Deprecation**: Removed 10 legacy, simplistic mathematical blend modes and untextured geometric wipes (`additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `luma_wipe`, `glitch_transition`, `zoom_fade`).
+- **Curated "Elite 8" Transition Suite**:
+  - **`linear_crossfade.fs`**: Pristine S-curve dissolve with selectable Perceptual Cosine, Linear, and Equal Power curve modes to prevent mid-crossfade perceptual luminance dips.
+  - **`luminous_flash.fs`**: Exponential Gaussian exposure overdrive and bloom flare with tunable color temperature (-1.0 icy strobe to +1.0 warm tungsten) and spread, designed for high-energy drop transitions.
+  - **`film_burn.fs`**: 35mm celluloid burn featuring multi-octave procedural fractal noise erosion with intense chromatic glowing combustion contours (Fiery Ember, Electric Violet, Acid Green).
+  - **`noise_dissolve.fs`**: Multi-octave domain-warped fractal noise erosion with soft feathered contours and subtle chromatic fringing.
+  - **`liquid_displacement.fs`**: Interactive cross-deck vector morphing where Deck A and Deck B dynamically displace each other's UV coordinates based on luminance gradient fields.
+  - **`kinetic_zoom.fs`**: High-speed camera crash zoom with multi-tap radial velocity streak blur, edge chromatic dispersion, and exponential acceleration curves.
+  - **`vortex_swirl.fs`**: Gravitational singularity twisting Deck A into a spiraling vortex at the frame center, peaking at midpoint, and unwinding into Deck B with chromatic flare.
+  - **`cyber_datamosh.fs`**: Video compression breakdown emulating digital I-frame / P-frame corruption, macroblock displacement, horizontal sync tear, and chromatic shear.
+- **Factory Transition Presets & Playlists**: Shipped 8 curated `.lsdtrans` presets and the default `festival_elite.lsdtransplay` playlist for `TransitionQueueManager` and AutoVJ.
+- **Engine Streamlining**: Cleaned up legacy mode-to-transition switching in `Mixer.kt` and automated transition asset packaging in `build.gradle.kts` and `FileSystemManager.kt`.
+
+### Premier 8-Generator Procedural ISF v2.0 Suite (`VisualSourceRegistry.kt`, `SourceDocRegistry.kt`, `default_sources/`, `library/sources/`, `web/sync_manifest.json`, `VisualSourceManifestTest.kt`)
+- **Curated 8-Generator Core Lineup**: Established an elite, high-variety catalogue of built-in pure ISF v2.0 generators:
+  - **`mandala`** (Harmonic Curves): 4-arm Lissajous harmonic curve engine with 300+ curated recipes.
+  - **`dynamic_spiral`** (Particle Dynamics): High-performance particle streak dynamics with wave frequencies and shear.
+  - **`icosa_h3`** (Sacred Polyhedra): Native 3D $H_3$ Coxeter raymarcher with duality morph and stellation CSG.
+  - **`domain_warp_fluid`** (Organic Fluid): Multi-scale domain-warped fBm fluid simulation with curl noise, dynamic vorticity, surface specular normals, and 5 color palettes.
+  - **`gyroid_hyperspace`** (3D Minimal Surfaces): Native 3D raymarcher rendering Triply Periodic Minimal Surfaces (TPMS) with continuous morphing between Gyroid, Schwarz P, and Neovius minimal surfaces, volumetric internal radiance, and camera flight.
+  - **`celestial_engine`** (Sacred Geometry & Op-Art): Multi-symmetry sacred geometry and op-art generator combining Flower of Life overlapping circles, concentric harmonic rings, phase twisting, and moiré fringes.
+  - **`hyper_slice`** (Higher Dimensions): Raymarched 3D cross-section MRI scan through 4D 120-cell (600 vertices) and 600-cell (120 vertices) polytopes using the $H_4$ Coxeter reflection group with 4D hyper-rotations ($XW, YW, ZW$) and Wythoff facet morphing.
+  - **`chladni_cymatics`** (Physics & Cymatics): Physical 2D acoustic plate resonance simulation computing standing wave nodal harmonics across square and circular boundaries with particle accumulation physics and antinode fluid inversion.
+- **Canonical Source Packaging Architecture**: Migrated bundled sources to canonical `src/main/resources/default_sources/`, syncing automatically into `library/sources/` on clean setups via `VisualSourceRegistry.ensureDefaultSources()`.
+- **Web Subsystem Parity**: Transpiled all 5 new generators to GLSL ES 3.0 WebGL2 shaders (`web/shaders/`) via `sync_web.py --apply` and added to `web/sync_manifest.json`.
+- **Documentation & Manifest Verification**: Registered all source descriptions and parameter tooltips in `SourceDocRegistry.kt`, updated `docs/user_guide/visual_sources.md`, and added comprehensive multi-source validation in `VisualSourceManifestTest.kt`.
+
+### Curated Multi-Chain FX Banks Suite (`library/fx_banks/`, `defaults/fx_banks/`, `build.gradle.kts`, `FileSystemManager.kt`, `FXPresetSerializationTest.kt`, `docs/user_guide/presets_and_library.md`)
+- **5 Multi-Chain Performance FX Banks (`.lsdfxbank`)**: Curated and bundled 5 complete 3-chain rack presets (up to 9 serial effects each) ready to load across FX1, FX2, or MFX:
+  - `club_master_finishers.lsdfxbank` (MFX): Mastering optical warmth, stage laser anamorphic glare, and drop weapon strobe impact.
+  - `psychedelic_warp_and_flow.lsdfxbank` (FX1): Viscous fluid ripple smearing, kaleidoscopic zoom fractal breakdown, and 3D elevation feedback.
+  - `analog_tape_and_retro_terminal.lsdfxbank`: Grindhouse VHS tape tracking error, pop-art CMYK halftone rosettes, and cyberpunk CRT terminal.
+  - `glitch_strobe_and_tactical_recon.lsdfxbank` (FX2): Audio-reactive beat flash gating, tactical FLIR thermal heat camera, and digital bitcrush mosaic.
+  - `liquid_chrome_and_prisms.lsdfxbank`: Raytraced 3D chrome sphere, cellular Voronoi diamond facet refractions, and cosmic accretion vortex swirl.
+- **Out-of-the-Box Starter Bank Assignments & Session Persistence**:
+  - Automatically initializes `MFX` to **Club Master Finishers**, `FX1` to **Psychedelic Warp and Flow**, and `FX2` to **Liquid Chrome and Prisms** on fresh launch or empty startup, giving users immediate hands-on control over 9 loaded effects across all three banks.
+  - Extended `MixerDto` and `SessionSerializer` to save and restore the full 3-bank FX state in `last_session.json`.
+- **Distribution & Seeding**: Added `fx_banks` syncing to `SyncDefaultsTask` and `PrepareDefaultAssetsTask` in `build.gradle.kts`, and automatic classpath resource extraction in `FileSystemManager.ensureDefaultLibrary()`.
+
+### Expanded 3-Slot FX Chains Suite (`library/fx_chains/`, `defaults/fx_chains/`)
+- **5 New High-Impact FX Chains (14 Total Chains)**:
+  - `laser_concert_anamorphic.lsdfxchain`: `anamorphic_streak` → `bloom` → `color_levels`
+  - `pop_art_comic_print.lsdfxchain`: `neon_edge` → `halftone` → `gradient_map`
+  - `grindhouse_vhs_bootleg.lsdfxchain`: `vhs_glitch` → `retro_crt` → `color_levels`
+  - `prismatic_crystal_kaleidoscope.lsdfxchain`: `faceted_glass` → `kaleidoscope` → `rgb_split`
+  - `cosmic_black_hole_vortex.lsdfxchain`: `vortex_swirl` → `luma_displace` → `polar_tunnel`
+
+### Phase 4 Curated High-Quality Cleanroom ISF FX Suite (`default_filters/`, `ISFFilterRegistry.kt`, `ISFAutoBindEngine.kt`, `ISFFilterTest.kt`, `docs/licenses/SHADERS_LICENSE.md`)
+- **Cleanroom High-Quality ISF FX Suite (Phase 4 - Print, Optics, Glitch & Prisms)**: Added 5 native, permissively licensed (MIT) image filters engineered from scratch for commercial distribution:
+  - `halftone.fs` (Option B): 4-plate lithographic CMYK screen angles (15°, 75°, 0°, 45°) with anti-aliased dot rosettes, monochrome newsprint, and paper tint.
+  - `anamorphic_streak.fs` (Option B): Concert laser & anamorphic horizontal exponential streak glare with chromatic blue/cyan dispersion and optional starburst cross.
+  - `vhs_glitch.fs` (Option B): Magnetic videotape mechanics including horizontal tracking jitter, bottom head-switching bar, Y/C chrominance delay, and RF static dropouts.
+  - `vortex_swirl.fs` (Option B): Logarithmic gravitational accretion vortex swirl with smooth cubic Hermite falloff and wavelength-dependent angular refraction.
+  - `faceted_glass.fs` (Option B): Dynamic cellular Voronoi crystal gem facets with 3D prism refraction, surface normal glints, and bevel highlights.
+- **ISF Metaknob Auto-Bind & Curated Presets**: Added responsive Metaknob defaults in `ISFAutoBindEngine` for all 5 Phase 4 filters (`dotScale`, `streakIntensity`, `trackingJitter`, `twist`, and `refraction`).
+- **Bundled Registration & Automated Tests**: Registered in `ISFFilterRegistry.bundledFilters` (26 bundled filters total) and verified in `ISFFilterTest`.
+- **Shaders License Audit Log**: Updated `docs/licenses/SHADERS_LICENSE.md` with all 5 Phase 4 filters.
+
 - **9 Resolume-Inspired Curated FX Chains**: Generated and bundled 9 high-impact 3-slot FX chains in `library/fx_chains/` designed for live electronic music, techno, bass music, and club/festival visual performance:
   - `hyperspace_trip.lsdfxchain`: Psychedelic trance warp combining `kaleidoscope` (polyhedral mirror) → `radial_blur` (stochastic dithered zoom) → `color_levels` (filmic Oklab punch).
   - `the_drop_weapon.lsdfxchain`: Bass music / EDM drop impact chaining `directional_blur` (motion streak) → `video_strobe` (rhythmic beat flash gating) → `rgb_split` (spectral chromatic aberration).

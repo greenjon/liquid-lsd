@@ -391,9 +391,17 @@ All post-processing effects, 2D-to-3D projection geometry, and mixer transitions
   - Supports dual blend modes (`blendMode`): luminous additive energy synthesis (`glBlendFunc(GL_ONE, GL_ONE)` equivalent) and premultiplied alpha over.
   - All 10 parameters are directly accessible and modulatable under the Deck "FX" tab, in whichever slot the filter is loaded.
 - **Pure ISF Mixer Transitions**:
-  - Eliminates hardcoded blend modes (`ADD`, `SCREEN`, `MULT`, `MAX`, `XFADE`) in `mixer.frag`.
+  - Eliminates legacy math blend modes and unfeathered geometric wipes in favor of a curated suite of 8 club-grade shaders.
   - All Deck A $\leftrightarrow$ Deck B transitions execute via `ISFFilter` taking `startImage`, `endImage`, and `progress` ($0 \dots 1$).
-  - Bundled transitions: `linear_crossfade`, `additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, along with geometric wipes and glitch transitions.
+  - Bundled curated transitions:
+    1. `linear_crossfade.fs`: Pristine dissolve with perceptual cosine S-curve smoothing and equal power options.
+    2. `luminous_flash.fs`: Filmic exposure overdrive and bloom flare peaking at midpoint for musical drops.
+    3. `film_burn.fs`: 35mm celluloid burn with organic fractal noise and glowing chromatic ember frontiers.
+    4. `noise_dissolve.fs`: Multi-octave domain-warped fractal noise erosion with soft feathered contours and chromatic fringing.
+    5. `liquid_displacement.fs`: Cross-deck optical vector morphing where Deck A and Deck B dynamically melt and ripple into each other.
+    6. `kinetic_zoom.fs`: High-speed camera crash zoom with multi-tap radial motion blur streak and edge chromatic dispersion.
+    7. `vortex_swirl.fs`: Gravitational vortex singularity spiraling Deck A into center and unwinding Deck B.
+    8. `cyber_datamosh.fs`: Digital video codec corruption with macroblock tearing, horizontal sync jitter, and chromatic shear.
 - **Preserved Deck BG Compositing & Dual-Mode Transition Shading**:
   - Deck BG is composited behind the active A/B transition output in a streamlined `mixer.frag` pass with bloom, levels, and master alpha:
     $$\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$$

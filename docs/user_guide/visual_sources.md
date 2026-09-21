@@ -14,47 +14,90 @@ To remove the current source, click **Detach** or **None**.
 
 ## Built-In Generators
 
-### Mandala
+Liquid LSD includes a curated suite of 8 built-in procedural generators spanning harmonic geometry, 3D raymarching, 4D polytopes, organic fluid dynamics, and acoustic wavefields.
 
-The most flexible built-in source. The Mandala engine generates intricate symmetrical geometry using around 300 curated harmonic ratios — basically: pick a harmonic ratio and it figures out the geometry. Built-in size normalization means the outer boundary stays stable and fills your vertical frame cleanly no matter how hard you push the parameters.
+### Mandala (`mandala`)
 
-**3D modes** (available via the 3D Elevation filter in any FX slot): Mandala visuals can be wrapped spherically, projected inside a cube cage, mapped onto six intersecting planes, or unfolded into a 24-chamber kaleidoscope. These apply to any 2D source, not just Mandala.
+The signature parametric harmonic curve engine. Mandala generates intricate symmetrical geometry using over 300 curated harmonic ratios. Built-in size normalization guarantees the outer boundary stays stable and fills your frame cleanly no matter how aggressively you modulate parameters.
 
-**Good starting point:** Load a factory Mandala preset and use bass audio to drive the Lobes parameter. Even a single connection is immediately impressive.
+- **Lobes**: Selects the petal-count harmonic group (3 to 26 lobes).
+- **Recipe Select**: Browses individual frequency ratios within the active Lobes group.
+- **Arm Lengths (L1–L4)**: Sets harmonic amplitude from primary outer petals down to inner detail loops.
+- **3D Elevation**: Pair with the `3d_elevation` filter in any FX slot to wrap Mandala into a spherical gyro, cube cage, 6-plane intersection, or 24-chamber kaleidoscope.
 
-### Icosa-Dodeca
+### Dynamic Spiral (`dynamic_spiral`)
 
-A 3D polyhedron that morphs continuously between different geometric solids. The morph slider moves through:
+A high-performance particle dynamics system where particles spiral outward under radial wave, shear, and velocity damping forces.
 
-| Value | Shape |
-|-------|-------|
-| 0.00 | Icosahedron (20 triangular faces) |
-| 0.125 | Icosidodecahedron (20 triangles + 12 pentagons) |
-| 0.25 | Dodecahedron (12 pentagonal faces) |
-| 0.50 | Great Stellated Dodecahedron |
-| 0.75 | Great Icosahedron |
+- **Max Points**: Particle density across the visible spiral.
+- **Wave Freq & Wave Amp**: Modulates particle trajectories into undulating ripple formations.
+- **Shear**: Applies tangential twisting to particle velocity, creating spiral vortices.
+- **Trail Decay**: Governs the longevity of particle streaks. Low decay produces luminous, silky light trails.
 
-**Tip:** Set Opacity to around 0.6–0.8 to make it translucent so you can see the internal facets.
+### Icosa-H3 (`icosa_h3`)
 
-### Dynamic Spiral
+A native 3D Coxeter $H_3$ raymarcher combining a continuous Icosahedron/Dodecahedron duality morph with an independent spike-and-blocker stellation CSG.
 
-Radial curves that react well to audio. One of the easiest sources to get looking good quickly.
+- **Morph**: Continuous 4-stage cyclic Coxeter morph:
+  - `0.00 – 0.25`: Icosahedron (20 triangular faces) $\to$ Dodecahedron (12 pentagonal faces).
+  - `0.25 – 0.50`: Dodecahedron $\to$ Great Stellated Dodecahedron.
+  - `0.50 – 0.75`: Great Stellated Dodecahedron $\to$ Great Icosahedron.
+  - `0.75 – 1.00`: Great Icosahedron $\to$ Icosahedron.
+- **Support H**: Wythoff facet cutting: negative values truncate vertices (e.g. $-0.15$ yields the truncated icosahedron / Buckyball), while positive values bevel edges.
+- **Opacity**: Translucency control ($0.6 \dots 0.8$ reveals internal self-intersecting facets).
+- **Camera Controls**: Native 3D pitch (`RotateX`), yaw (`RotateY`), roll (`RotateZ`), and `Zoom` exposed in the View tab.
 
-### Attractor Feedback
+### Domain Warp Fluid (`domain_warp_fluid`)
 
-A strange attractor that builds up log-density trails over time. Rewards patience — let it run for a few bars and it develops complex structures. Great with the feedback loop turned up.
+A multi-scale domain-warped fluid simulation with fractional Brownian motion (fBm) curl noise, dynamic vorticity, surface specular normals, and iridescent liquid marbling. Evokes 1960s liquid light overheads, oil-on-water marbling, and liquid metal.
 
-### Gyroid
+- **Warp Strength & Swirl**: Dial from gentle chromatic ripples to turbulent psychedelic marbling.
+- **Specular Gloss**: Computes finite-difference surface normals and specular highlights for a wet, embossed liquid look.
+- **Palette Modes**:
+  - `0`: Psychedelic Neon (Cyan / Magenta / Gold / Emerald)
+  - `1`: Liquid Chrome / Mercury
+  - `2`: Oil Slick / Prismatic Iridescence
+  - `3`: Opal Sunset / Warm Fire & Dusk
+  - `4`: Deep Ocean Bioluminescence
 
-A triply periodic minimal surface — it looks like a 3D foam or lattice structure. Still being refined, so some parameter combinations work better than others.
+### Gyroid Hyperspace (`gyroid_hyperspace`)
 
-### Chladni
+A native 3D raymarcher rendering Triply Periodic Minimal Surfaces (TPMS) with continuous morphing between Gyroid, Schwarz P, and Neovius minimal surfaces, volumetric internal radiance, and camera flight.
 
-Visualizes acoustic nodal patterns — the geometric shapes that emerge when you vibrate a physical plate at resonant frequencies. Reacts interestingly to different frequency bands.
+- **Surface Type**: Smoothly morphs the minimal surface geometry between Gyroid (`0.0`), Schwarz P (`1.0`), and Neovius (`2.0`).
+- **Wall Thickness & Hole Scale**: Transitions from delicate skeletal lattices to dense porous bio-sponges.
+- **Wireframe Mode**: Carves open coordinate lattice struts to reveal an architectural cage.
+- **Flight Speed**: Camera flight forward through the infinite labyrinth.
+- **Core Glow**: Volumetric radiance accumulating inside internal chambers.
 
-### Colors
+### Celestial Engine (`celestial_engine`)
 
-A simple solid color field. Useful as a background layer or when you want total control over what's behind more complex foreground visuals.
+A multi-symmetry sacred geometry and op-art generator combining Flower of Life overlapping circles, concentric harmonic rings, phase twisting, and moiré fringes.
+
+- **Symmetries**: Discrete rotational symmetry fold count from 3 to 24.
+- **Ring Density & Moiré Strength**: Cross-modulates radial harmonic rings to produce shimmering optical interference fringes.
+- **Flower Fold**: Folds the coordinate space into intersecting Flower of Life geometry.
+- **Pulse Wave**: Expanding radial shockwave ring, ideal for kick/snare CV modulation.
+
+### 4D Hyper-Slice (`hyper_slice`)
+
+A raymarched 3D cross-section (MRI scan) through 4-dimensional 120-cell (600 vertices) and 600-cell (120 vertices) polytopes using the $H_4$ Coxeter reflection group (order 14,400).
+
+- **Slice Offset W**: Sweeps the 3D cutting hyperplane along the 4th dimension ($W$ axis), revealing shifting geometric cross-sections.
+- **4D Hyper-Rotations (`RotateXW`, `RotateYW`, `RotateZW`)**: Rotates the polytope through 4-space, turning geometry inside-out in 3D.
+- **Polychoron Morph**: Smoothly interpolates the facet normals between the 600-cell and 120-cell.
+- **Support H**: Adjusts Wythoff facet cutting distance.
+- **Face Opacity & Edge Highlight**: Crystal interior reveal with glowing ridge boundaries.
+
+### Chladni Cymatics (`chladni_cymatics`)
+
+A physical 2D acoustic plate resonance simulation computing standing wave nodal harmonics across square and circular boundaries, complete with particle accumulation physics.
+
+- **Frequency M, N, L**: Acoustic modal frequencies governing standing wave harmonic interference patterns.
+- **Plate Shape**: Blends smoothly from square plate resonance (`0.0`) to circular Bessel vibration (`1.0`).
+- **Sand Accumulation & Node Sharpness**: Simulates sand grains migrating away from kinetic antinodes and gathering along quiet nodal lines.
+- **Invert Mode**: Swaps behavior from quiet nodal sand gathering (`0.0`) to kinetic fluid pooling in energetic antinodes (`1.0`).
+- **Palette Modes**: Obsidian & Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.
 
 ---
 

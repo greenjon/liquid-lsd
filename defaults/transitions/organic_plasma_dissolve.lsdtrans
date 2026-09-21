@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "organic_plasma_dissolve",
+  "tags": ["dissolve", "organic", "plasma", "texture"],
+  "slot": {
+    "filterId": "noise_dissolve",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "noiseScale": {
+        "baseValue": 7.0,
+        "baseMin": 2.0,
+        "baseMax": 20.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "softness": {
+        "baseValue": 0.12,
+        "baseMin": 0.01,
+        "baseMax": 0.4,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "chromaShift": {
+        "baseValue": 0.15,
+        "baseMin": 0.0,
+        "baseMax": 0.5,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

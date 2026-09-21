@@ -33,7 +33,7 @@ class MixerTransitionTest {
             )
         )
         val shader = mockk<Shader>(relaxed = true)
-        val filter = ISFFilter("wipe_horizontal", "Horizontal Wipe", header, shader)
+        val filter = ISFFilter("noise_dissolve", "Noise Dissolve", header, shader)
 
         val mixer = mockk<Mixer>(relaxed = true)
         every { mixer.crossfade } returns crossfade

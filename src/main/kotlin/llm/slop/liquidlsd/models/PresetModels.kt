@@ -272,7 +272,10 @@ data class MixerDto(
     val levelPV: ParameterDto? = null,
     val masterLevel: ParameterDto? = null,
     val transitionSlot: FXSlotDto? = null,
-    val masterFxSlots: List<FXSlotDto?> = emptyList()
+    val masterFxSlots: List<FXSlotDto?> = emptyList(),
+    val fxBank1: FXBankDto? = null,
+    val fxBank2: FXBankDto? = null,
+    val masterFxBank: FXBankDto? = null
 )
 
 @Serializable

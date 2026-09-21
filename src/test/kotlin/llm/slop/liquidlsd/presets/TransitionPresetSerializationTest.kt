@@ -40,7 +40,7 @@ class TransitionPresetSerializationTest {
 
     @Test
     fun testTransitionPresetDtoSerialization() {
-        val slot = createDummySlot("radial_wipe")
+        val slot = createDummySlot("vortex_swirl")
         val preset = TransitionPresetDto(
             version = 1,
             name = "custom_radial",
@@ -54,7 +54,7 @@ class TransitionPresetSerializationTest {
         assertEquals(1, decoded.version)
         assertEquals("custom_radial", decoded.name)
         assertEquals(listOf("radial", "wipe", "fast"), decoded.tags)
-        assertEquals("radial_wipe", decoded.slot.filterId)
+        assertEquals("vortex_swirl", decoded.slot.filterId)
         assertTrue(decoded.slot.enabled)
         assertEquals(1.0f, decoded.slot.dryWet.baseValue)
         assertNotNull(decoded.slot.parameters["smoothness"])

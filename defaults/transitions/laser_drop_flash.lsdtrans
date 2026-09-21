@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "laser_drop_flash",
+  "tags": ["flash", "strobe", "impact", "drop"],
+  "slot": {
+    "filterId": "luminous_flash",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "intensity": {
+        "baseValue": 1.4,
+        "baseMin": 0.0,
+        "baseMax": 2.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "colorTemp": {
+        "baseValue": 0.1,
+        "baseMin": -1.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "spread": {
+        "baseValue": 0.35,
+        "baseMin": 0.1,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

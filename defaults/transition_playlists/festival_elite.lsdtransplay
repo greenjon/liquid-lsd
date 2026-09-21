@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "festival_elite",
+  "tags": ["festival", "elite", "curated", "stage"],
+  "items": [
+    "liquid_displacement",
+    "luminous_flash",
+    "film_burn",
+    "kinetic_zoom",
+    "cyber_datamosh",
+    "vortex_swirl",
+    "noise_dissolve",
+    "linear_crossfade"
+  ]
+}

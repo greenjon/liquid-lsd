@@ -62,16 +62,13 @@ class ISFLibraryRegistryTest {
     fun testBundledTransitionShadersParsing() {
         val transitionNames = listOf(
             "linear_crossfade",
-            "additive_blend",
-            "screen_blend",
-            "multiply_blend",
-            "max_blend",
-            "wipe_horizontal",
-            "wipe_vertical",
-            "radial_wipe",
-            "glitch_transition",
-            "luma_wipe",
-            "zoom_fade"
+            "luminous_flash",
+            "film_burn",
+            "noise_dissolve",
+            "liquid_displacement",
+            "kinetic_zoom",
+            "vortex_swirl",
+            "cyber_datamosh"
         )
 
         for (name in transitionNames) {

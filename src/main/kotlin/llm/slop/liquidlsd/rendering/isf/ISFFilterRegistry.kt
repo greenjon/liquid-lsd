@@ -13,7 +13,8 @@ object ISFFilterRegistry {
         "invert", "luma_key", "bloom", "feedback", "3d_elevation",
         "kaleidoscope", "radial_blur", "rgb_split", "polar_tunnel", "color_levels", "gradient_map",
         "directional_blur", "wave_displace", "pixelate", "retro_crt", "pinch_bulge", "neon_edge",
-        "luma_displace", "video_strobe", "fluid_smear", "thermal_scanner", "mirror_sphere"
+        "luma_displace", "video_strobe", "fluid_smear", "thermal_scanner", "mirror_sphere",
+        "halftone", "anamorphic_streak", "vhs_glitch", "vortex_swirl", "faceted_glass"
     )
 
     @Volatile

@@ -238,4 +238,36 @@ class ISFFilterTest {
             }
         }
     }
+
+    @Test
+    fun `test Phase 4 bundled filter headers parse and instantiate parameters`() {
+        val filtersToTest = listOf(
+            "halftone" to listOf("dotScale", "screenAngle", "mode", "smoothness", "paperTint", "mixRatio"),
+            "anamorphic_streak" to listOf("streakIntensity", "streakLength", "threshold", "knee", "colorMode", "crossFlare"),
+            "vhs_glitch" to listOf("trackingJitter", "headSwitching", "ycDelay", "rfDropouts", "tapeNoise", "mixRatio"),
+            "vortex_swirl" to listOf("twist", "radius", "dispersion", "spiralArms", "centerX", "centerY"),
+            "faceted_glass" to listOf("facetScale", "refraction", "dispersion", "bevelStrength", "facetTilt")
+        )
+
+        val shader = mockk<Shader>(relaxed = true)
+
+        for ((filterName, expectedParams) in filtersToTest) {
+            val resourcePath = "default_filters/$filterName.fs"
+            val stream = javaClass.classLoader.getResourceAsStream(resourcePath)
+            assertNotNull(stream, "Bundled filter resource must exist: $resourcePath")
+
+            val source = stream!!.bufferedReader().use { it.readText() }
+            val header = ISFParser.parseHeader(source)
+            assertNotNull(header, "$filterName header should parse successfully")
+
+            val filter = ISFFilter(filterName, filterName, header!!, shader)
+            for (paramName in expectedParams) {
+                assertTrue(
+                    filter.parameters.containsKey(paramName),
+                    "Filter $filterName should register parameter: $paramName"
+                )
+            }
+        }
+    }
 }
+

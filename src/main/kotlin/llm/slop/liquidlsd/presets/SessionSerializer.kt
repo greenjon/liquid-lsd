@@ -55,7 +55,10 @@ object SessionSerializer {
                 levelPV = mixer.levelPV.toDto(),
                 masterLevel = mixer.masterLevel.toDto(),
                 transitionSlot = transSlot,
-                masterFxSlots = masterFxSlotDtos
+                masterFxSlots = masterFxSlotDtos,
+                fxBank1 = mixer.fxBank1.toFxBankDto("FX1"),
+                fxBank2 = mixer.fxBank2.toFxBankDto("FX2"),
+                masterFxBank = mixer.masterFxBank.toFxBankDto("MFX")
             )
 
             val session = SessionStateDto(
@@ -140,6 +143,10 @@ object SessionSerializer {
                     mixer.applyMasterFxSlot(i, slotDto)
                 }
             }
+
+            mDto.fxBank1?.let { mixer.fxBank1.applyFxBank(it) }
+            mDto.fxBank2?.let { mixer.fxBank2.applyFxBank(it) }
+            mDto.masterFxBank?.let { mixer.masterFxBank.applyFxBank(it) }
             
             mixer.deckA.applyDto(session.deckA)
             mixer.deckB.applyDto(session.deckB)
@@ -342,6 +349,7 @@ object SessionSerializer {
         PresetManager.sessionState = SessionState()
         llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
         llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
+        mixer.loadDefaultFxBanks()
     }
 
     private fun loadInitialPreset(mixer: Mixer) {

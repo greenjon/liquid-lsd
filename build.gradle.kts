@@ -201,6 +201,33 @@ abstract class SyncDefaultsTask : DefaultTask() {
                 println("Synced fx chain to defaults: ${f.name}")
             }
         }
+        val fxBanksSrc = File(lib, "fx_banks")
+        val fxBanksDest = File(def, "fx_banks")
+        if (fxBanksSrc.exists()) {
+            fxBanksDest.mkdirs()
+            fxBanksSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxbank" }?.forEach { f ->
+                f.copyTo(File(fxBanksDest, f.name), overwrite = true)
+                println("Synced fx bank to defaults: ${f.name}")
+            }
+        }
+        val transitionsSrc = File(lib, "transitions")
+        val transitionsDest = File(def, "transitions")
+        if (transitionsSrc.exists()) {
+            transitionsDest.mkdirs()
+            transitionsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdtrans" }?.forEach { f ->
+                f.copyTo(File(transitionsDest, f.name), overwrite = true)
+                println("Synced transition to defaults: ${f.name}")
+            }
+        }
+        val transPlaylistsSrc = File(lib, "transition_playlists")
+        val transPlaylistsDest = File(def, "transition_playlists")
+        if (transPlaylistsSrc.exists()) {
+            transPlaylistsDest.mkdirs()
+            transPlaylistsSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdtransplay" }?.forEach { f ->
+                f.copyTo(File(transPlaylistsDest, f.name), overwrite = true)
+                println("Synced transition playlist to defaults: ${f.name}")
+            }
+        }
     }
 }
 
@@ -220,9 +247,11 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
         val presetsOut = File(outBase, "default_presets")
         val playlistsOut = File(outBase, "default_playlists")
         val fxChainsOut = File(outBase, "default_fx_chains")
+        val fxBanksOut = File(outBase, "default_fx_banks")
         presetsOut.mkdirs()
         playlistsOut.mkdirs()
         fxChainsOut.mkdirs()
+        fxBanksOut.mkdirs()
 
         // Write version.txt
         File(outBase, "version.txt").writeText(appVersion.get().trim() + "\n")
@@ -266,6 +295,47 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
             fxChainLines.add(f.name)
         }
         fxChainManifest.writeText(fxChainLines.joinToString("\n"))
+
+        val fxBanksIn = File(inBase, "fx_banks")
+        val fxBankFiles = if (fxBanksIn.exists()) {
+            fxBanksIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxbank" }?.sortedBy { it.name } ?: emptyList<File>()
+        } else emptyList<File>()
+
+        val fxBankManifest = File(fxBanksOut, "manifest.txt")
+        val fxBankLines = mutableListOf<String>()
+        fxBankFiles.forEach { f ->
+            f.copyTo(File(fxBanksOut, f.name), overwrite = true)
+            fxBankLines.add(f.name)
+        }
+        fxBankManifest.writeText(fxBankLines.joinToString("\n"))
+
+        val transitionsOut = File(outBase, "default_transitions")
+        transitionsOut.mkdirs()
+        val transitionsIn = File(inBase, "transitions")
+        val transFiles = if (transitionsIn.exists()) {
+            transitionsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdtrans" }?.sortedBy { it.name } ?: emptyList<File>()
+        } else emptyList<File>()
+        val transManifest = File(transitionsOut, "manifest.txt")
+        val transLines = mutableListOf<String>()
+        transFiles.forEach { f ->
+            f.copyTo(File(transitionsOut, f.name), overwrite = true)
+            transLines.add(f.name)
+        }
+        transManifest.writeText(transLines.joinToString("\n"))
+
+        val transPlaylistsOut = File(outBase, "default_transition_playlists")
+        transPlaylistsOut.mkdirs()
+        val transPlaylistsIn = File(inBase, "transition_playlists")
+        val transPlayFiles = if (transPlaylistsIn.exists()) {
+            transPlaylistsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdtransplay" }?.sortedBy { it.name } ?: emptyList<File>()
+        } else emptyList<File>()
+        val transPlayManifest = File(transPlaylistsOut, "manifest.txt")
+        val transPlayLines = mutableListOf<String>()
+        transPlayFiles.forEach { f ->
+            f.copyTo(File(transPlaylistsOut, f.name), overwrite = true)
+            transPlayLines.add(f.name)
+        }
+        transPlayManifest.writeText(transPlayLines.joinToString("\n"))
     }
 }
 

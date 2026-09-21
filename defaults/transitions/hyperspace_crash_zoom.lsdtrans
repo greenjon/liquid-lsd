@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "hyperspace_crash_zoom",
+  "tags": ["zoom", "kinetic", "rush", "warp"],
+  "slot": {
+    "filterId": "kinetic_zoom",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "zoomFactor": {
+        "baseValue": 2.8,
+        "baseMin": 1.0,
+        "baseMax": 4.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "motionBlur": {
+        "baseValue": 0.75,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "chromatic": {
+        "baseValue": 0.6,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

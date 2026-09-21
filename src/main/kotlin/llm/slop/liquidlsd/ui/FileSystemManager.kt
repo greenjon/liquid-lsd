@@ -924,27 +924,36 @@ object FileSystemManager {
         val presetsExtracted: Int,
         val playlistsExtracted: Int,
         val fxChainsExtracted: Int = 0,
+        val fxBanksExtracted: Int = 0,
+        val transitionsExtracted: Int = 0,
+        val transitionPlaylistsExtracted: Int = 0,
         val wasAlreadyInstalled: Boolean
     )
 
     private const val DEFAULTS_MARKER_FILE = "library/.defaults_installed"
 
     /**
-     * Seeds default presets, playlists, and FX chains into library/ if not already initialized.
+     * Seeds default presets, playlists, FX chains, FX banks, transitions, and transition playlists into library/ if not already initialized.
      * If [forceRestore] is true, missing factory files will be re-extracted without overwriting existing files.
      */
     fun ensureDefaultLibrary(forceRestore: Boolean = false): LibrarySeedResult {
         val markerFile = File(DEFAULTS_MARKER_FILE)
         if (markerFile.exists() && !forceRestore) {
-            return LibrarySeedResult(0, 0, 0, wasAlreadyInstalled = true)
+            return LibrarySeedResult(0, 0, 0, 0, 0, 0, wasAlreadyInstalled = true)
         }
 
         val presetsRoot = getPresetsRoot()
         val playlistsRoot = getPlaylistsRoot()
         val fxChainsRoot = getFxChainsRoot()
+        val fxBanksRoot = getFxBanksRoot()
+        val transitionsRoot = getTransitionsRoot()
+        val transitionPlaylistsRoot = getTransitionPlaylistsRoot()
         var presetsCount = 0
         var playlistsCount = 0
         var fxChainsCount = 0
+        var fxBanksCount = 0
+        var transitionsCount = 0
+        var transPlaylistsCount = 0
 
         // Extract bundled presets
         presetsCount += extractBundledAssets("default_presets", presetsRoot)
@@ -955,20 +964,29 @@ object FileSystemManager {
         // Extract bundled FX chains
         fxChainsCount += extractBundledAssets("default_fx_chains", fxChainsRoot)
 
+        // Extract bundled FX banks
+        fxBanksCount += extractBundledAssets("default_fx_banks", fxBanksRoot)
+
+        // Extract bundled transition presets
+        transitionsCount += extractBundledAssets("default_transitions", transitionsRoot)
+
+        // Extract bundled transition playlists
+        transPlaylistsCount += extractBundledAssets("default_transition_playlists", transitionPlaylistsRoot)
+
         try {
             val parent = markerFile.parentFile
             if (parent != null && !parent.exists()) parent.mkdirs()
-            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\nfxChains=$fxChainsCount\n")
+            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\nfxChains=$fxChainsCount\nfxBanks=$fxBanksCount\ntransitions=$transitionsCount\ntransitionPlaylists=$transPlaylistsCount\n")
         } catch (e: Exception) {
             logger.warn(e) { "Failed to write defaults marker file" }
         }
 
-        if (presetsCount > 0 || playlistsCount > 0 || fxChainsCount > 0) {
+        if (presetsCount > 0 || playlistsCount > 0 || fxChainsCount > 0 || fxBanksCount > 0 || transitionsCount > 0 || transPlaylistsCount > 0) {
             clearScanCache()
-            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s), $fxChainsCount fx chain(s)" }
+            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s), $fxChainsCount fx chain(s), $fxBanksCount fx bank(s), $transitionsCount transition(s), $transPlaylistsCount transition playlist(s)" }
         }
 
-        return LibrarySeedResult(presetsCount, playlistsCount, fxChainsCount, wasAlreadyInstalled = false)
+        return LibrarySeedResult(presetsCount, playlistsCount, fxChainsCount, fxBanksCount, transitionsCount, transPlaylistsCount, wasAlreadyInstalled = false)
     }
 
     private fun extractBundledAssets(resourceFolder: String, targetDir: File): Int {

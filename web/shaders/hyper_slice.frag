@@ -1,68 +1,67 @@
 #version 300 es
 precision highp float;
-
-in vec2 vTexCoord;
-out vec4 fragColor;
-
-uniform float uSliceOffset;
-uniform float uRotateXW;
-uniform float uRotateYW;
-uniform float uRotateZW;
-uniform float uRotateX;
-uniform float uRotateY;
-uniform float uRotateZ;
-uniform float uMorph;
-uniform float uSupportH;
-uniform float uZoom;
-uniform float uColorMethod;
-uniform float uHueOffset;
-uniform float uSaturation;
-uniform float uBrightness;
-uniform float uOpacity;
-uniform float uEdgeThickness;
-uniform float uEdgeBrightness;
-uniform float uGlow;
-uniform float uAlpha;
-uniform vec2  uResolution;
-uniform float uTime;
+/*
+{
+    "DESCRIPTION": "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora via H4 Coxeter domain folding with 4D hyper-rotations and Wythoff facet morphing.",
+    "CREDIT": "Liquid LSD",
+    "ISFVSN": "2.0",
+    "is3D": true,
+    "CATEGORIES": [
+        "Generator",
+        "3D",
+        "Geometric"
+    ],
+    "INPUTS": [
+        { "NAME": "SliceOffset", "LABEL": "Slice Offset W", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.5, "MAX": 1.5 },
+        { "NAME": "RotateXW", "LABEL": "Rotate XW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
+        { "NAME": "RotateYW", "LABEL": "Rotate YW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
+        { "NAME": "RotateZW", "LABEL": "Rotate ZW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
+        { "NAME": "RotateX", "LABEL": "Rotate X", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
+        { "NAME": "RotateY", "LABEL": "Rotate Y", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
+        { "NAME": "RotateZ", "LABEL": "Rotate Z", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
+        { "NAME": "Morph", "LABEL": "Polychoron Morph", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "SupportH", "LABEL": "Facet Support H", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.3, "MAX": 1.8 },
+        { "NAME": "ColorMethod", "LABEL": "Color Method", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0 },
+        { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 1.1, "MIN": 0.0, "MAX": 2.0 },
+        { "NAME": "Opacity", "LABEL": "Face Opacity", "TYPE": "float", "DEFAULT": 0.8, "MIN": 0.1, "MAX": 1.0 },
+        { "NAME": "EdgeThickness", "LABEL": "Edge Thickness", "TYPE": "float", "DEFAULT": 0.015, "MIN": 0.002, "MAX": 0.08 },
+        { "NAME": "EdgeBrightness", "LABEL": "Edge Brightness", "TYPE": "float", "DEFAULT": 1.5, "MIN": 0.0, "MAX": 3.0 },
+        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0 },
+        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.2, "MAX": 4.0 }
+    ]
+}
+*/
 
 const float PI  = 3.14159265358979323846;
 const float PHI = 1.61803398874989484820;
 
-// =============================================================================
-// 4D Rotation & Transformation
-// =============================================================================
-
+// 4D Hyper-Rotations
 vec4 rotate4D(vec4 p) {
-    // 1. XW rotation
-    float cxw = cos(uRotateXW), sxw = sin(uRotateXW);
+    float cxw = cos(RotateXW), sxw = sin(RotateXW);
     p = vec4(cxw * p.x - sxw * p.w, p.y, p.z, sxw * p.x + cxw * p.w);
-    
-    // 2. YW rotation
-    float cyw = cos(uRotateYW), syw = sin(uRotateYW);
+
+    float cyw = cos(RotateYW), syw = sin(RotateYW);
     p = vec4(p.x, cyw * p.y - syw * p.w, p.z, syw * p.y + cyw * p.w);
 
-    // 3. ZW rotation
-    float czw = cos(uRotateZW), szw = sin(uRotateZW);
+    float czw = cos(RotateZW), szw = sin(RotateZW);
     p = vec4(p.x, p.y, czw * p.z - szw * p.w, szw * p.z + czw * p.w);
 
     return p;
 }
 
 mat3 rotate3DMatrix() {
-    float cx = cos(uRotateX), sx = sin(uRotateX);
-    float cy = cos(uRotateY), sy = sin(uRotateY);
-    float cz = cos(uRotateZ), sz = sin(uRotateZ);
-    mat3 rx = mat3(1.0, 0.0, 0.0,  0.0, cx, -sx,  0.0, sx, cx);
-    mat3 ry = mat3(cy, 0.0, sy,   0.0, 1.0, 0.0,  -sy, 0.0, cy);
-    mat3 rz = mat3(cz, -sz, 0.0,  sz, cz, 0.0,   0.0, 0.0, 1.0);
+    float cx = cos(RotateX), sx = sin(RotateX);
+    float cy = cos(RotateY), sy = sin(RotateY);
+    float cz = cos(RotateZ), sz = sin(RotateZ);
+    mat3 rx = mat3(1.0, 0.0, 0.0, 0.0, cx, -sx, 0.0, sx, cx);
+    mat3 ry = mat3(cy, 0.0, sy, 0.0, 1.0, 0.0, -sy, 0.0, cy);
+    mat3 rz = mat3(cz, -sz, 0.0, sz, cz, 0.0, 0.0, 0.0, 1.0);
     return rz * ry * rx;
 }
 
-// =============================================================================
-// H4 Coxeter Reflection Group (Order 14,400)
-// =============================================================================
-
+// H4 Coxeter Reflection Group Mirrors
 const vec4 n0 = vec4(1.0, 0.0, 0.0, 0.0);
 const vec4 n1 = vec4(-PHI * 0.5, -0.5, 0.5 / PHI, 0.0);
 const vec4 n2 = vec4(0.0, 1.0, 0.0, 0.0);
@@ -94,38 +93,31 @@ vec4 slerp4D(vec4 p0, vec4 p1, float t) {
     return normalize(p0 * w0 + p1 * w1);
 }
 
-// 4D Poles for 600-cell and 120-cell facets
 const vec4 pole600 = vec4(0.0, 0.0, 0.0, 1.0);
 const vec4 pole120 = vec4(1.0, 0.0, 0.0, 0.0);
 
 float mapSDF(vec3 p3, out float outEdge, out vec4 outColorCoord) {
-    // Reconstruct 4D coordinate in cutting hyperplane and apply 4D hyper-rotation
-    vec4 p4 = vec4(p3, uSliceOffset);
+    vec4 p4 = vec4(p3, SliceOffset);
     vec4 pRot = rotate4D(p4);
 
     float folds = 0.0;
     vec4 pFold = foldSpace4D(pRot, folds);
 
-    // Continuous morph between 600-cell and 120-cell facet normals
-    vec4 genPole = slerp4D(pole600, pole120, clamp(uMorph, 0.0, 1.0));
+    vec4 genPole = slerp4D(pole600, pole120, clamp(Morph, 0.0, 1.0));
+    float dFacet = dot(pFold, genPole) - SupportH;
 
-    // Distance to facet support plane
-    float dFacet = dot(pFold, genPole) - uSupportH;
-
-    // Edge crease detection between fundamental mirror walls
     float m0 = dot(pFold, n0);
     float m1 = dot(pFold, n1);
     float m2 = dot(pFold, n2);
     float m3 = dot(pFold, n3);
     float minMirror = min(min(m0, m1), min(m2, m3));
 
-    outEdge = smoothstep(uEdgeThickness, 0.0, minMirror);
+    outEdge = smoothstep(EdgeThickness, 0.0, minMirror);
     outColorCoord = vec4(folds, minMirror, pRot.w, length(p3));
 
     return dFacet;
 }
 
-// Central difference normal calculation in 3D
 vec3 calcNormal(vec3 p) {
     float dummyEdge;
     vec4 dummyCoord;
@@ -138,7 +130,6 @@ vec3 calcNormal(vec3 p) {
     ));
 }
 
-// Color Palette generator
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
     return a + b * cos(6.2831853 * (c * t + d));
 }
@@ -149,29 +140,28 @@ vec3 adjustColor(vec3 col, float sat, float bright) {
 }
 
 void main() {
-    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / min(uResolution.x, uResolution.y);
+    float aspect = RENDERSIZE.x / RENDERSIZE.y;
+    vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
 
     mat3 r3D = rotate3DMatrix();
 
-    // 3D Camera Setup
-    float camDist = 3.0 / max(0.1, uZoom);
+    float camDist = 3.0 / max(0.1, Zoom);
     vec3 ro = r3D * vec3(0.0, 0.0, camDist);
     vec3 rd = r3D * normalize(vec3(uv, -1.8));
 
-    // Bounding sphere intersection acceleration
+    // Bounding sphere acceleration
     float bRadius = 2.5;
     float bDot = dot(ro, rd);
     float bDisc = bDot * bDot - dot(ro, ro) + bRadius * bRadius;
 
     if (bDisc < 0.0) {
-        fragColor = vec4(0.0);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
         return;
     }
 
     float tNear = max(0.0, -bDot - sqrt(bDisc));
     float tFar = -bDot + sqrt(bDisc);
 
-    // Sphere tracing
     float t = tNear;
     float hitEdge = 0.0;
     vec4 hitCoord = vec4(0.0);
@@ -184,7 +174,6 @@ void main() {
         vec4 coord;
         float d = mapSDF(p, edge, coord);
 
-        // Volumetric glow accumulation near surface and inside chambers
         accumGlow += exp(-max(0.0, d) * 6.0) * 0.02;
 
         if (d < 0.001) {
@@ -199,35 +188,29 @@ void main() {
     }
 
     if (!hit) {
-        // Render atmospheric glow halo
-        float glowAlpha = clamp(accumGlow * uGlow * uAlpha, 0.0, 1.0);
-        vec3 glowCol = palette(uHueOffset, vec3(0.5), vec3(0.5), vec3(1.0), vec3(0.0, 0.33, 0.67));
-        glowCol = adjustColor(glowCol, uSaturation, uBrightness);
-        fragColor = vec4(glowCol * glowAlpha, glowAlpha);
+        float glowAlpha = clamp(accumGlow * Glow, 0.0, 1.0);
+        vec3 glowCol = palette(HueOffset, vec3(0.5), vec3(0.5), vec3(1.0), vec3(0.0, 0.33, 0.67));
+        glowCol = adjustColor(glowCol, Saturation, Brightness);
+        gl_FragColor = vec4(glowCol * glowAlpha, 1.0);
         return;
     }
 
     vec3 hitPos = ro + t * rd;
     vec3 normal = calcNormal(hitPos);
 
-    // Color generation
     float colorMetric = 0.0;
-    if (uColorMethod < 0.5) {
-        // H4 Fundamental Chamber fold sector
+    if (ColorMethod < 0.5) {
         colorMetric = hitCoord.x * 0.08;
-    } else if (uColorMethod < 1.5) {
-        // 4D Hyperplane W-Depth
+    } else if (ColorMethod < 1.5) {
         colorMetric = (hitCoord.z + 1.0) * 0.5;
     } else {
-        // 3D Surface Normal Spectrum
         colorMetric = dot(normal, vec3(0.3, 0.5, 0.2)) * 0.5 + 0.5;
     }
 
-    float hueVal = fract(uHueOffset + colorMetric);
+    float hueVal = fract(HueOffset + colorMetric);
     vec3 baseCol = palette(hueVal, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.333, 0.667));
-    baseCol = adjustColor(baseCol, uSaturation, uBrightness);
+    baseCol = adjustColor(baseCol, Saturation, Brightness);
 
-    // Blinn-Phong Lighting
     vec3 lightDir = normalize(vec3(0.5, 0.8, 1.0));
     vec3 viewDir = -rd;
     vec3 halfDir = normalize(lightDir + viewDir);
@@ -237,13 +220,8 @@ void main() {
     float fresnel = pow(1.0 - max(0.0, dot(normal, viewDir)), 3.0);
 
     vec3 shadedColor = baseCol * (0.25 + diff * 0.75) + vec3(spec) + baseCol * fresnel * 0.5;
+    shadedColor += vec3(1.0) * (hitEdge * EdgeBrightness);
+    shadedColor += baseCol * (accumGlow * Glow);
 
-    // Edge crease highlighting
-    shadedColor += vec3(1.0) * (hitEdge * uEdgeBrightness);
-
-    // Proximity ambient glow
-    shadedColor += baseCol * (accumGlow * uGlow);
-
-    float finalAlpha = clamp(uOpacity * uAlpha, 0.0, 1.0);
-    fragColor = vec4(shadedColor * finalAlpha, finalAlpha);
+    gl_FragColor = vec4(shadedColor * Opacity, 1.0);
 }

@@ -1,0 +1,441 @@
+{
+    "name": "Liquid Chrome and Prisms",
+    "tags": [
+        "chrome",
+        "liquid",
+        "prism",
+        "dimension"
+    ],
+    "masterWetDry": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "chains": [
+        {
+            "name": "Liquid Chrome Dimension",
+            "tags": [
+                "chrome",
+                "surreal",
+                "3d",
+                "sphere",
+                "psychedelic"
+            ],
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slots": [
+                {
+                    "filterId": "wave_displace",
+                    "dryWet": {
+                        "baseValue": 0.7,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "amplitude": {
+                            "baseValue": 0.04,
+                            "baseMin": 0.0,
+                            "baseMax": 0.2,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "frequency": {
+                            "baseValue": 8.0,
+                            "baseMin": 0.5,
+                            "baseMax": 50.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "speed": {
+                            "baseValue": 1.0,
+                            "baseMin": -5.0,
+                            "baseMax": 5.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "rippleMode": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "mirror_sphere",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "sphereRadius": {
+                            "baseValue": 0.45,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "fresnelGlow": {
+                            "baseValue": 0.6,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "chromaFringe": {
+                            "baseValue": 0.03,
+                            "baseMin": 0.0,
+                            "baseMax": 0.1,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "backgroundMix": {
+                            "baseValue": 0.2,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "color_levels",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "contrast": {
+                            "baseValue": 1.3,
+                            "baseMin": 0.0,
+                            "baseMax": 3.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "saturation": {
+                            "baseValue": 1.2,
+                            "baseMin": 0.0,
+                            "baseMax": 3.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "filmicTone": {
+                            "baseValue": 0.4,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                }
+            ],
+            "superKnob": {
+                "baseValue": 0.5,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slotSuperKnobLink": [
+                true,
+                true,
+                true
+            ]
+        },
+        {
+            "name": "Prismatic Crystal Kaleidoscope",
+            "tags": [
+                "geometry",
+                "prism",
+                "gem",
+                "kaleidoscope"
+            ],
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slots": [
+                {
+                    "filterId": "faceted_glass",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "facetScale": {
+                            "baseValue": 16.0,
+                            "baseMin": 3.0,
+                            "baseMax": 60.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "refraction": {
+                            "baseValue": 0.5,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "dispersion": {
+                            "baseValue": 0.4,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "bevelStrength": {
+                            "baseValue": 0.65,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "facetTilt": {
+                            "baseValue": 0.55,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "kaleidoscope",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "segments": {
+                            "baseValue": 6.0,
+                            "baseMin": 2.0,
+                            "baseMax": 24.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "rotation": {
+                            "baseValue": 0.0,
+                            "baseMin": -3.14159,
+                            "baseMax": 3.14159,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "zoom": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.1,
+                            "baseMax": 5.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "rgb_split",
+                    "dryWet": {
+                        "baseValue": 0.8,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "amount": {
+                            "baseValue": 0.03,
+                            "baseMin": 0.0,
+                            "baseMax": 0.1,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "mode": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "angle": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 6.28318,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                }
+            ],
+            "superKnob": {
+                "baseValue": 0.5,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slotSuperKnobLink": [
+                true,
+                true,
+                true
+            ]
+        },
+        {
+            "name": "Cosmic Black Hole Vortex",
+            "tags": [
+                "space",
+                "vortex",
+                "distortion",
+                "wormhole"
+            ],
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slots": [
+                {
+                    "filterId": "vortex_swirl",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "twist": {
+                            "baseValue": 1.2,
+                            "baseMin": -3.0,
+                            "baseMax": 3.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "radius": {
+                            "baseValue": 0.9,
+                            "baseMin": 0.1,
+                            "baseMax": 2.5,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "dispersion": {
+                            "baseValue": 0.45,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "spiralArms": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 12.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "luma_displace",
+                    "dryWet": {
+                        "baseValue": 0.85,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "refractAmount": {
+                            "baseValue": 0.12,
+                            "baseMin": 0.0,
+                            "baseMax": 0.25,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "smoothness": {
+                            "baseValue": 0.4,
+                            "baseMin": 0.05,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "chromaDispersion": {
+                            "baseValue": 0.35,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "polar_tunnel",
+                    "dryWet": {
+                        "baseValue": 0.9,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "depth": {
+                            "baseValue": 1.5,
+                            "baseMin": 0.1,
+                            "baseMax": 5.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "rotation": {
+                            "baseValue": 0.0,
+                            "baseMin": -3.14159,
+                            "baseMax": 3.14159,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "twist": {
+                            "baseValue": 0.5,
+                            "baseMin": -2.0,
+                            "baseMax": 2.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                }
+            ],
+            "superKnob": {
+                "baseValue": 0.5,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slotSuperKnobLink": [
+                true,
+                true,
+                true
+            ]
+        }
+    ]
+}

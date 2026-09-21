@@ -50,33 +50,49 @@ object VisualSourceRegistry {
         availableSources.clear()
     }
 
-    private val DEFAULT_SOURCE_IDS = listOf(
+    val DEFAULT_SOURCE_IDS = listOf(
+        "mandala",
         "dynamic_spiral",
         "icosa_h3",
-        "mandala"
+        "domain_warp_fluid",
+        "gyroid_hyperspace",
+        "celestial_engine",
+        "hyper_slice",
+        "chladni_cymatics"
     )
 
     internal fun ensureDefaultSources(sourcesDir: File) {
-        val mandalaFolder = File(sourcesDir, "mandala")
-        val mandalaMeta = File(mandalaFolder, "meta.json")
-        val mandalaFrag = File(mandalaFolder, "shader.frag")
-        if (mandalaMeta.exists() && mandalaFrag.exists()) {
+        val anyMissing = DEFAULT_SOURCE_IDS.any { id ->
+            val folder = File(sourcesDir, id)
+            if (id == "mandala") {
+                !File(folder, "meta.json").exists() || !File(folder, "shader.frag").exists()
+            } else {
+                !File(folder, "$id.fs").exists()
+            }
+        }
+        if (!anyMissing) {
             return
         }
 
         logger.info { "Default sources missing or incomplete in ${sourcesDir.path}; extracting bundled defaults..." }
-        val sourceFiles = listOf("meta.json", "shader.frag", "shader.vert")
         for (sourceId in DEFAULT_SOURCE_IDS) {
             val targetFolder = File(sourcesDir, sourceId)
+            val sourceFiles = if (sourceId == "mandala") {
+                listOf("meta.json", "shader.frag", "shader.vert")
+            } else {
+                listOf("$sourceId.fs")
+            }
             var extractedAny = false
             for (filename in sourceFiles) {
+                val targetFile = File(targetFolder, filename)
+                if (targetFile.exists()) continue
+
                 val resourcePath = "default_sources/$sourceId/$filename"
                 val stream = VisualSourceRegistry::class.java.classLoader.getResourceAsStream(resourcePath)
                     ?: continue
                 if (!targetFolder.exists()) {
                     targetFolder.mkdirs()
                 }
-                val targetFile = File(targetFolder, filename)
                 stream.use { input ->
                     targetFile.outputStream().use { output ->
                         input.copyTo(output)

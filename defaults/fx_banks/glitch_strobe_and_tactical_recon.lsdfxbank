@@ -1,0 +1,448 @@
+{
+    "name": "Glitch Strobe and Tactical Recon",
+    "tags": [
+        "glitch",
+        "strobe",
+        "tactical",
+        "fx2"
+    ],
+    "masterWetDry": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "chains": [
+        {
+            "name": "The Drop Weapon",
+            "tags": [
+                "drop",
+                "strobe",
+                "bass",
+                "glitch",
+                "high-energy"
+            ],
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slots": [
+                {
+                    "filterId": "radial_blur",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "blurAmount": {
+                            "baseValue": 0.4,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "decay": {
+                            "baseValue": 0.92,
+                            "baseMin": 0.5,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "exposure": {
+                            "baseValue": 1.2,
+                            "baseMin": 0.1,
+                            "baseMax": 2.5,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "centerX": {
+                            "baseValue": 0.5,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "centerY": {
+                            "baseValue": 0.5,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "video_strobe",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "rate": {
+                            "baseValue": 8.0,
+                            "baseMin": 0.0,
+                            "baseMax": 30.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "freezeHold": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "strobeMode": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.0,
+                            "baseMax": 3.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "dutyCycle": {
+                            "baseValue": 0.25,
+                            "baseMin": 0.05,
+                            "baseMax": 0.95,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "rgb_split",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "amount": {
+                            "baseValue": 0.04,
+                            "baseMin": 0.0,
+                            "baseMax": 0.1,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "radialMode": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "dispersionMode": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                }
+            ],
+            "superKnob": {
+                "baseValue": 0.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slotSuperKnobLink": [
+                true,
+                true,
+                true
+            ]
+        },
+        {
+            "name": "FLIR Predator Vision",
+            "tags": [
+                "thermal",
+                "flir",
+                "military",
+                "tactical",
+                "industrial"
+            ],
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slots": [
+                {
+                    "filterId": "thermal_scanner",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "intensity": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "mode": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 2.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "thermalBloom": {
+                            "baseValue": 0.4,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "sensorGrain": {
+                            "baseValue": 0.25,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "vignette": {
+                            "baseValue": 0.3,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "retro_crt",
+                    "dryWet": {
+                        "baseValue": 0.85,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "scanlineIntensity": {
+                            "baseValue": 0.25,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "scanlineCount": {
+                            "baseValue": 320.0,
+                            "baseMin": 50.0,
+                            "baseMax": 800.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "curvature": {
+                            "baseValue": 0.06,
+                            "baseMin": 0.0,
+                            "baseMax": 0.6,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "phosphorMask": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "vignette": {
+                            "baseValue": 0.2,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "brightnessBoost": {
+                            "baseValue": 1.1,
+                            "baseMin": 0.8,
+                            "baseMax": 2.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "video_strobe",
+                    "dryWet": {
+                        "baseValue": 0.6,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "rate": {
+                            "baseValue": 3.0,
+                            "baseMin": 0.0,
+                            "baseMax": 30.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "freezeHold": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "strobeMode": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 3.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "dutyCycle": {
+                            "baseValue": 0.12,
+                            "baseMin": 0.05,
+                            "baseMax": 0.95,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                }
+            ],
+            "superKnob": {
+                "baseValue": 0.5,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slotSuperKnobLink": [
+                true,
+                true,
+                true
+            ]
+        },
+        {
+            "name": "Digital Bitcrush Mosaic",
+            "tags": [
+                "bitcrush",
+                "mosaic",
+                "digital"
+            ],
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slots": [
+                {
+                    "filterId": "pixelate",
+                    "dryWet": {
+                        "baseValue": 1.0,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "pixelSize": {
+                            "baseValue": 16.0,
+                            "baseMin": 1.0,
+                            "baseMax": 64.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "lattice": {
+                            "baseValue": 1.0,
+                            "baseMin": 0.0,
+                            "baseMax": 2.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "rgb_split",
+                    "dryWet": {
+                        "baseValue": 0.9,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "amount": {
+                            "baseValue": 0.04,
+                            "baseMin": 0.0,
+                            "baseMax": 0.1,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "mode": {
+                            "baseValue": 0.0,
+                            "baseMin": 0.0,
+                            "baseMax": 1.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                },
+                {
+                    "filterId": "video_strobe",
+                    "dryWet": {
+                        "baseValue": 0.8,
+                        "baseMin": 0.0,
+                        "baseMax": 1.0,
+                        "randomizeBase": false,
+                        "modulators": []
+                    },
+                    "parameters": {
+                        "rate": {
+                            "baseValue": 8.0,
+                            "baseMin": 0.0,
+                            "baseMax": 20.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        },
+                        "strobeMode": {
+                            "baseValue": 2.0,
+                            "baseMin": 0.0,
+                            "baseMax": 3.0,
+                            "randomizeBase": false,
+                            "modulators": []
+                        }
+                    }
+                }
+            ],
+            "superKnob": {
+                "baseValue": 0.5,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "slotSuperKnobLink": [
+                true,
+                true,
+                true
+            ]
+        }
+    ]
+}

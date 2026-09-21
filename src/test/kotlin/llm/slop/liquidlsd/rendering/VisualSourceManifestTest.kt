@@ -56,7 +56,9 @@ class VisualSourceManifestTest {
             }
         }
 
-        assertTrue(discoveredIds.contains("mandala"), "mandala visual source must be discovered")
+        for (expectedId in VisualSourceRegistry.DEFAULT_SOURCE_IDS) {
+            assertTrue(discoveredIds.contains(expectedId), "Expected visual source '$expectedId' must be discovered in library/sources")
+        }
     }
 
     @Test
@@ -87,6 +89,13 @@ class VisualSourceManifestTest {
             assertTrue(mandalaFrag.exists(), "ensureDefaultSources should extract mandala/shader.frag")
             assertTrue(mandalaMeta.length() > 0, "Extracted meta.json should not be empty")
             assertTrue(mandalaFrag.length() > 0, "Extracted shader.frag should not be empty")
+
+            for (sourceId in VisualSourceRegistry.DEFAULT_SOURCE_IDS) {
+                if (sourceId == "mandala") continue
+                val shaderFile = File(tempDir, "$sourceId/$sourceId.fs")
+                assertTrue(shaderFile.exists(), "ensureDefaultSources should extract $sourceId/$sourceId.fs")
+                assertTrue(shaderFile.length() > 0, "Extracted $sourceId.fs should not be empty")
+            }
         } finally {
             tempDir.deleteRecursively()
         }
