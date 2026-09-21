@@ -410,13 +410,14 @@ object UITheme {
     }
 
     /**
-     * Loads all font levels into ImGui's font atlas.
+     * Loads all font levels into ImGui's font atlas and synchronously builds it.
      * Must be called after [ImGui.createContext] but before the GL3 backend
      * initialises (i.e. before [imguiGl3.init]), or after a [rebuildFonts]
      * cycle (atlas clear -> reload -> GL3 re-upload).
      *
-     * imgui-java's GL3 backend will call [ImFontAtlas.build] and upload the
-     * texture automatically on the first render call after init.
+     * Calling [ImFontAtlas.build] immediately within this method ensures glyph
+     * ranges and font data arrays are rasterized into the atlas while JNI memory
+     * pointers remain valid and before any concurrent GC (e.g. ZGC) relocates them.
      */
     fun loadFonts(io: ImGuiIO) {
         val atlas = io.fonts
@@ -461,6 +462,11 @@ object UITheme {
         val presetFontSize = (FONT_BODY * (presetNameScalePercent / 100f)).coerceIn(10f, 22f)
         fontPresetName = addFont(regularBytes!!, presetFontSize, cfg(), withIcons = true)
 
+        val built = atlas.build()
+        if (!built) {
+            logger.error { "Failed to build ImGui font atlas!" }
+        }
+
         isLoaded = true
         logger.info {
             "UITheme fonts loaded -- H1=${FONT_H1}px  H2=${FONT_H2}px  H3=${FONT_H3}px  Body=${FONT_BODY}px  Caption=${FONT_CAPTION}px  Code=${FONT_CODE}px  PresetName=${presetFontSize}px ($presetNameScalePercent%)"
@@ -475,8 +481,14 @@ object UITheme {
         isLoaded = false
         io.fonts.clear()
         loadFonts(io)
-        io.fonts.build()
         logger.info { "UITheme fonts rebuilt (presetNameScalePercent=$presetNameScalePercent%)" }
+    }
+
+    /**
+     * Resets the loaded state of UITheme fonts. Call when destroying ImGui contexts.
+     */
+    fun unloadFonts() {
+        isLoaded = false
     }
 
     // -- Core rendering primitive ----------------------------------------------

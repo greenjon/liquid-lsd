@@ -205,7 +205,14 @@ fun main(args: Array<String>) {
         logger.error { errorMsg }
         throw RuntimeException(errorMsg)
     }
-    setWindowAppIcons(window)
+    val isWayland = try {
+        glfwGetPlatform() == GLFW_PLATFORM_WAYLAND
+    } catch (e: Throwable) {
+        false
+    }
+    if (!isWayland) {
+        setWindowAppIcons(window)
+    }
     ensureLinuxDesktopEntry()
 
     if (cliArgs.isMaximized) {

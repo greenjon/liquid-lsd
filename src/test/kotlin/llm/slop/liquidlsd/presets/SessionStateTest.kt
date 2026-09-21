@@ -5,11 +5,13 @@ import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroBinding
 import llm.slop.liquidlsd.macro.MacroControl
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.macro.MacroTargetType
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.MixerDto
 import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.SessionStateDto
+import llm.slop.liquidlsd.rendering.Mixer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -314,4 +316,61 @@ class SessionStateTest {
         mainFile.delete()
         bgFile.delete()
     }
+
+    @Test
+    fun testRestoredDeckMacroBanksClampedToDefaultKnobCount() {
+        val dummyBank8 = MacroBank(knobs = List(8) { MacroControl(label = "KNOB ${it + 1}") })
+        val mixer = io.mockk.mockk<Mixer>(relaxed = true)
+        val tempSessionFile = File(PresetManager.LIBRARY_ROOT, "last_session.json")
+        val backupContent = if (tempSessionFile.exists()) tempSessionFile.readText() else null
+
+        try {
+            val dummyParam = ParameterDto(0.5f, 0f, 1f, false, emptyList())
+            val dummyDeck = DeckPresetDto(
+                name = "Deck A",
+                visualSourceType = "mandala",
+                parameters = emptyMap(),
+                feedbackParameters = emptyMap(),
+                globalAlpha = dummyParam,
+                isEmpty = false
+            )
+            val dummyMixer = MixerDto(dummyParam, dummyParam, 0f)
+            val sessionWith8KnobDecks = SessionStateDto(
+                deckA = dummyDeck,
+                deckB = dummyDeck.copy(name = "Deck B"),
+                mixer = dummyMixer,
+                queue = emptyList(),
+                activeIndex = -1,
+                isAutoVJEnabled = false,
+                deckMacroBanks = mapOf(
+                    MacroEngine.DECK_A to dummyBank8,
+                    MacroEngine.DECK_B to dummyBank8,
+                    MacroEngine.TRANS to dummyBank8
+                )
+            )
+            tempSessionFile.parentFile.mkdirs()
+            tempSessionFile.writeText(json.encodeToString(sessionWith8KnobDecks))
+
+            SessionSerializer.loadSession(mixer)
+
+            val deckABank = MacroEngine.getBank(MacroEngine.DECK_A)
+            assertNotNull(deckABank)
+            assertEquals(4, deckABank.knobs.size, "Deck A bank should be clamped to 4 knobs")
+
+            val deckBBank = MacroEngine.getBank(MacroEngine.DECK_B)
+            assertNotNull(deckBBank)
+            assertEquals(4, deckBBank.knobs.size, "Deck B bank should be clamped to 4 knobs")
+
+            val transBank = MacroEngine.getBank(MacroEngine.TRANS)
+            assertNotNull(transBank)
+            assertEquals(8, transBank.knobs.size, "TRANS bank should retain 8 knobs")
+        } finally {
+            if (backupContent != null) {
+                tempSessionFile.writeText(backupContent)
+            } else {
+                tempSessionFile.delete()
+            }
+        }
+    }
 }
+

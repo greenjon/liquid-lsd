@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Macro Bank Knobs 5-8 Retirement & Clamping on Session Restore (`SessionSerializer.kt`, `SessionStateTest.kt`)
+- **Deck Macro Bank Sizing Clamping (`SessionSerializer.kt`)**: When restoring session state (`loadSession`), canonical macro banks are now strictly clamped to `MacroEngine.defaultKnobCountFor(canonicalId)` (4 knobs for Decks A/B/BG/PV, FX banks, and FX sends; 8 knobs for Transitions and Master). Prevents legacy sessions with pre-FX-migration 8-knob deck banks from resurrecting orphaned Knobs 5–8 in Classic Mode's Column 3 MACROS panel.
+- **Legacy Session Sanitization**: Cleaned up legacy 8-knob records and residual hardcoded bindings on generator banks in `library/last_session.json` to 4 clean, unbound knobs.
+
+### Fix Font Atlas Build Timing, Corrupted Glyph Fallback & Wayland Platform Logging (`UITheme.kt`, `UIManager.kt`, `Main.kt`, `WindowFrameController.kt`)
+- **Synchronous Font Atlas Building (`UITheme.kt`)**: Added immediate `atlas.build()` inside `UITheme.loadFonts(io)` right after adding font memory buffers and glyph ranges. Previously, `atlas.build()` was deferred until the first frame render call. Under ZGC (`-XX:+UseZGC`), the temporary JNI critical array pointers (`MAIN_RANGES`, `ICON_RANGE`) released during `addFontFromMemoryTTF` were subject to memory unpinning/relocation during startup asset and shader loading, leaving Dear ImGui with corrupted glyph ranges that failed to bake Latin characters and caused all UI text to fall back to `?` (Inter) or `◆` (JetBrains Mono).
+- **Font Unload Lifecycle Cleanup (`UITheme.kt`, `UIManager.kt`)**: Added `UITheme.unloadFonts()` called during `UIManager.dispose()` to reset `isLoaded = false` when destroying the ImGui context, preventing cross-test state leakage and dangling native pointer crashes (`ImFont::GetFontBaked`) when multiple ImGui contexts run within the same JVM.
+- **Wayland Platform Guards (`Main.kt`, `WindowFrameController.kt`)**: Guarded `glfwSetWindowIcon` and `glfwGetWindowPos` / `glfwSetWindowPos` calls when running on Wayland (`GLFW_PLATFORM_WAYLAND`), eliminating repeated `GLFW_FEATURE_UNAVAILABLE` errors logged on Linux Wayland environments.
+
 ### Fix OSC Engine Lifecycle Thread Safety & Intermittent Test Failures (`OscEngine.kt`, `OscEngineTest.kt`)
 - **Lifecycle Synchronization**: Added `@Synchronized` to `OscEngine.start()` and `OscEngine.stop()`, marked channel and receiver thread references as `@Volatile`, and joined the background receiver thread (`receiverThread?.join(1000L)`) on `stop()` to prevent unjoined, interrupted threads from racing and closing channels created in subsequent sessions.
 - **Dedicated Channel Parameter**: Passed the newly bound `DatagramChannel` directly into `receiveLoop(channel: DatagramChannel)` instead of resolving through the global mutable singleton field, preventing race conditions during rapid start/stop sequences.

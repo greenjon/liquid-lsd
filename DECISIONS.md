@@ -1,3 +1,16 @@
+## Retirement of Deck Macro Knobs 5-8 & Strict Clamping on Session Restore (`SessionSerializer.kt`, `MacroEngine.kt`)
+
+- **Context**: 2026-09-21. Following the migration to the Two-Tier FX Architecture (`FxBank` + `FxChain` + `FxMacroSync`), effects processing moved from deck-level slots into shared multi-chain insert banks (`FX1`, `FX2`, `MFX`) with their own 4-control performance surface (1 Super Knob + 3 Slot Metaknobs). Previously, decks owned 8 macro knobs (Knobs 1–4 for generation, Knobs 5–8 for deck FX). With FX decoupled from decks, per-deck macro banks were redesigned to hold strictly 4 generation-only knobs (`MacroEngine.defaultKnobCountFor`). However, `SessionSerializer.loadSession()` previously restored `session.deckMacroBanks` directly without clamping, allowing legacy session files saved prior to the migration to resurrect obsolete Knobs 5–8 in Classic Mode's Column 3 MACROS panel.
+- **Decision**:
+  - **Enforce Clamping on Session Restore**: In `SessionSerializer.loadSession()`, canonical macro banks are now strictly clamped to `MacroEngine.defaultKnobCountFor(canonicalId)` (4 knobs for Decks A/B/BG/PV, FX banks, and FX sends; 8 knobs for Transitions and Master). If a saved bank contains fewer than the expected count, it is padded with generic blank controls.
+  - **Retain 8 Knobs for Transitions and Master Only**: Transitions (`TRANS`) and Master (`MASTER`) intentionally retain 8 knobs, powering the full 4×4 grid in the `MASTER & FX` performance matrix tab (Rows 1–2 for Transitions 1–8, Rows 3–4 for Master 1–8).
+  - **Cleaned Workspace State**: Sanitized `library/last_session.json` to eliminate legacy 8-knob records and residual hardcoded bindings on generator banks.
+- **Rationale**:
+  - Eliminates dead-weight, confusing orphan controls on decks that no longer map to any deck-level FX pipeline.
+  - Guarantees visual consistency between fresh installations, preset loads, and restored previous sessions across both Classic and Performance modes.
+
+---
+
 ## Hard Consolidation of Transitions & The "Elite 8" Curated Transition Suite (`ISFTransitionRegistry.kt`, `default_transitions/`, `Mixer.kt`, `FileSystemManager.kt`, `build.gradle.kts`)
 
 - **Context**: 2026-09-20. Liquid LSD previously bundled 11 stock transitions (`additive_blend`, `screen_blend`, `multiply_blend`, `max_blend`, `wipe_horizontal`, `wipe_vertical`, `radial_wipe`, `luma_wipe`, `glitch_transition`, `zoom_fade`, `linear_crossfade`). Following the shader curation overhaul, an audit benchmarked against Resolume Arena, VDMX, and Synesthesia revealed that legacy mathematical blend formulas, simplistic PowerPoint-style wipes, and primitive block glitches degraded live VJ quality. As fast-moving beta software, backwards compatibility was explicitly dropped to allow a clean hard cut.

@@ -663,5 +663,6 @@ class UIManager(
         imguiGl3.shutdown()
         imguiGlfw.shutdown()
         ImGui.destroyContext()
+        session.uiTheme.unloadFonts()
     }
 }

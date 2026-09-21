@@ -253,7 +253,21 @@ object SessionSerializer {
             )
 
             for (canonicalId in llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS) {
-                val bank = session.deckMacroBanks[canonicalId] ?: llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
+                val targetCount = llm.slop.liquidlsd.macro.MacroEngine.defaultKnobCountFor(canonicalId)
+                val rawBank = session.deckMacroBanks[canonicalId]
+                val bank = if (rawBank != null) {
+                    if (rawBank.knobs.size != targetCount) {
+                        val clampedKnobs = rawBank.knobs.take(targetCount).toMutableList()
+                        while (clampedKnobs.size < targetCount) {
+                            clampedKnobs.add(llm.slop.liquidlsd.macro.MacroControl(label = "KNOB ${clampedKnobs.size + 1}"))
+                        }
+                        rawBank.copy(knobs = clampedKnobs)
+                    } else {
+                        rawBank
+                    }
+                } else {
+                    llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
+                }
                 llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, bank)
             }
 

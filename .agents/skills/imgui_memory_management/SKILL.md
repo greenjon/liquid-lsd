@@ -59,22 +59,32 @@ This is the pattern used throughout the codebase (`LibraryPanel`, `DeckPresetCon
 
 ---
 
-## Font Byte Arrays — Keep Alive as Fields
+## Font Byte Arrays & Immediate Atlas Building
 
-ImGui holds a native pointer into the JVM byte array you pass to `addFontFromMemoryTTF`. If the
-GC collects the array, you get a segfault on the next atlas rebuild. Always store font data as
-a class field, never as a local:
+ImGui holds native pointers into the JVM byte array and short arrays you pass to `addFontFromMemoryTTF`.
+Because JNI releases the pinned array critical references upon returning from the native JNI method,
+those arrays become unpinned. Under moving concurrent GCs like ZGC (`-XX:+UseZGC`), if `atlas.build()`
+is delayed until first frame render after asset loading, the glyph range arrays can be relocated or
+overwritten, resulting in missing glyphs rendering as `?` (question mark fallback).
+
+Always:
+1. Store raw TTF font bytes as persistent fields (e.g. `regularBytes`).
+2. Retain glyph range short arrays permanently.
+3. Call `atlas.build()` **immediately** within `loadFonts()` while the memory arrays are hot and pinned:
 
 ```kotlin
 // From UITheme.kt — correct pattern
 private var regularBytes: ByteArray? = null   // ✅ kept alive as field
-private var iconRange: ShortArray? = null     // ✅ glyph range array also retained
+private val MAIN_RANGES = shortArrayOf(...)   // ✅ glyph range array also retained
 
-fun loadFonts() {
+fun loadFonts(io: ImGuiIO) {
+    val atlas = io.fonts
     regularBytes = resourceStream("/fonts/Inter-Regular.ttf").readBytes()
     // ...
     fontConfig.setFontDataOwnedByAtlas(false)   // tell native not to free JVM memory
-    atlas.addFontFromMemoryTTF(regularBytes, size, fontConfig, iconRange)
+    atlas.addFontFromMemoryTTF(regularBytes, size, fontConfig, MAIN_RANGES)
+    // ...
+    atlas.build()                               // ✅ Build atlas immediately before GC relocation!
 }
 ```
 

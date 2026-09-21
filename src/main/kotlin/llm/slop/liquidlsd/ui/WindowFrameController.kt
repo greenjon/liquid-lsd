@@ -58,6 +58,12 @@ class WindowFrameController(
         }
     }
 
+    private val isWayland = try {
+        org.lwjgl.glfw.GLFW.glfwGetPlatform() == org.lwjgl.glfw.GLFW.GLFW_PLATFORM_WAYLAND
+    } catch (e: Throwable) {
+        false
+    }
+
     fun isMaximized(): Boolean = glfwGetWindowAttrib(windowHandle, GLFW_MAXIMIZED) == GLFW_TRUE
 
     fun minimize() {
@@ -73,6 +79,7 @@ class WindowFrameController(
     }
 
     fun getWindowPos(): Pair<Int, Int> {
+        if (isWayland) return 0 to 0
         glfwGetWindowPos(windowHandle, winXBuf, winYBuf)
         return winXBuf[0] to winYBuf[0]
     }
@@ -144,7 +151,7 @@ class WindowFrameController(
                 val (curX, curY) = getCursorPos()
                 val deltaX = curX - dragStartCurX
                 val deltaY = curY - dragStartCurY
-                if (deltaX != 0.0 || deltaY != 0.0) {
+                if (!isWayland && (deltaX != 0.0 || deltaY != 0.0)) {
                     val (currentWinX, currentWinY) = getWindowPos()
                     val targetX = (currentWinX + deltaX).toInt()
                     val targetY = (currentWinY + deltaY).toInt()
@@ -282,7 +289,7 @@ class WindowFrameController(
                     ResizeEdge.NONE -> {}
                 }
 
-                if (newX != winX || newY != winY) {
+                if (!isWayland && (newX != winX || newY != winY)) {
                     glfwSetWindowPos(windowHandle, newX, newY)
                 }
                 if (newW != winW || newH != winH) {
