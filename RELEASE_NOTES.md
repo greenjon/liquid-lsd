@@ -1,5 +1,31 @@
 ## [Unreleased]
 
+### Live Console Preset Quick-Search & Header Controls MIDI/OSC Learn (`PerformanceMatrixPanel.kt`, `MidiMappingManager.kt`, `MidiPreferencesPanel.kt`, `docs/user_guide/macros_and_rack.md`)
+- **Preset Quick-Search in Deck A/B Headers**: Added an integrated quick-search input field at the top of Deck A and Deck B preset dropdown combos in `LIVE CONSOLE`. Automatically focuses on open, filters scanned presets in real-time, and supports pressing `Escape` to instantly clear the search filter.
+- **Right-Click MIDI & OSC Learn on Header Controls**: Right-clicking any interactive header control in `LIVE CONSOLE` now opens a context menu with direct **Learn MIDI**, **Learn OSC**, and clear mapping actions:
+  - **Crossfader Track**: Learn MIDI / OSC for `Mixer/crossfade`, reset to center (`0.0`), and snap to Deck A or Deck B.
+  - **Deck A & B Snap Badges (`[ A ]`, `[ B ]`)**: Learn MIDI for instant hardware snap triggers (`Global/snapDeckA`, `Global/snapDeckB`).
+  - **Auto-Fade Button (`[ AUTO ]`)**: Learn MIDI for crossfader auto-fade triggering (`Global/autoFade`).
+  - **PlayQueue Prev (`<`) & Next (`>`)**: Learn MIDI (`Global/queuePrev`, `Global/queueNext`) and Learn OSC (`Mixer/queuePrev`, `Mixer/queueNext`).
+  - **Transition Queue Prev (`<`) & Next (`>`)**: Learn MIDI (`Global/transQueuePrev`, `Global/transQueueNext`) and Learn OSC (`Mixer/transQueuePrev`, `Mixer/transQueueNext`).
+  - **FX Routing Toggles (`[FX1]`, `[FX2]`)**: Learn MIDI and Learn OSC for deck FX send routing (`$deckLabel/View/FxRouting`), with direct route switching menu items.
+- **Visual Armed Indicators & Tooltip Mapping Feedback**: Header controls armed for MIDI learn display a cyan highlight border. Active MIDI channel/CC bindings are automatically appended to control tooltips.
+- **New Global Actions in MIDI Subsystem**: Added `Global/autoFade`, `Global/snapDeckA`, and `Global/snapDeckB` with high-edge detection in `MidiMappingManager.processGlobalMidiEvents()` and registered them in the `MidiPreferencesPanel` global actions table.
+
+### Live Console Master & Transitions Performance Header Controls (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
+- **Integrated Horizontal Crossfader**: Embedded a full-featured zero-centered bipolar crossfader slider (`-1.0` Deck A to `+1.0` Deck B) into Row 4 (`MASTER / TRANSITIONS`) of the `LIVE CONSOLE` performance matrix tab. Supports left-click-drag scrubbing, mouse scroll wheel with fine/coarse modifiers, middle-click center reset to `0.0`, tick marks at endpoints and quarters, and a live amber indicator dot tracking active CV modulation and automated transitions.
+- **Deck A & B Instant Snap Badges**: Added color-coded `[ A ]` (cyan/blue) and `[ B ]` (orange/amber) snap buttons at the ends of the crossfader track. Clicking either badge disarms Auto-VJ, halts active transitions, and immediately snaps the crossfader to -1.0 or +1.0.
+- **Auto-Fade Trigger**: Added a dedicated `[ AUTO ]` / `[ FADING ]` button that smoothly fades the crossfader to the opposite deck over the configured `mixer.xfadeSpeed` duration, with instant click-to-cancel support.
+- **Transition Picker & Modified Indicator**: Added a transition selector button with settings icon displaying the active transition shader or blend mode name, dirty unsaved marker (`*`), and instant access to `ShaderPickerPopup`. Presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can also be dropped directly onto the header or slider track.
+- **Transition Queue Navigation**: Added Prev (`<`) and Next (`>`) navigation buttons with a status counter (`N/Total` or `"--"`) directly stepping through the active `TransitionQueueManager`.
+
+### Performance Matrix Tab Streamlining: 4-Deck LIVE QUAD & Redundant Tab Removal (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`)
+- **True 4-Deck LIVE QUAD**: Replaced the 4th row (Transitions) in the `LIVE QUAD` performance tab with Deck PV (Preview), so `LIVE QUAD` now presents all four visual generation decks (Deck A, Deck B, Deck BG, Deck PV) with 4 macro knobs each.
+- **Pruned Redundant Tabs**: Removed the legacy `DUAL DECKS` and `PREP & BG` tabs from the Performance Matrix. The Performance view is now streamlined to three purpose-built tabs:
+  1. **`LIVE QUAD`**: 4 visual decks (A, B, BG, PV) with 16 knobs total.
+  2. **`MASTER & FX`**: Dedicated 8-knob Transition and 8-knob Master performance surface.
+  3. **`LIVE CONSOLE`**: Curated live show console pairing Deck A, Deck B, active FX Bank (with in-place chain selection & Super link buttons), and Master/Transitions.
+
 ### Fix FX Macro Knob Controls & Performance Console Button Responsiveness (`PerformanceMatrixPanel.kt`, `MacroPanel.kt`, `MacroEngine.kt`, `FxMacroSync.kt`, `Icons.kt`, `MacroEngineTest.kt`, `FontInspectorTest.kt`)
 - **Performance Console FX Row Click Occlusion (`PerformanceMatrixPanel.kt`)**: Constrained the FX chain drag-and-drop hit target (`##perf_fx_drop_target`) to the title header area (`afterTitleY - boxTopY`) instead of spanning the entire group box. Prevents the invisible button from capturing mouse events and unblocks the `[FX1][FX2][MFX]`, `[C1][C2][C3]`, `[BYPASS]`, and `[Resync]` buttons and rotary knobs from being click-locked.
 - **Clickable Chain Link / Unlink Icons (`PerformanceMatrixPanel.kt`, `Icons.kt`)**: Added standard Lucide `LINK` (`\ue102`) and `UNLINK` (`\ue19c`) chain-link icon buttons directly to the left of each FX slot knob (Slots 1–3) in the Performance Console's FX row. Users can now click the icon directly in Performance Mode to toggle a slot's link to the Super Knob without navigating to the Macro panel.

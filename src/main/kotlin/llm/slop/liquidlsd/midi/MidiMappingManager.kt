@@ -128,6 +128,9 @@ object MidiMappingManager {
     private var lastTransNextMidiCcHigh = false
     private var lastTransPrevMidiCcHigh = false
     private var lastTapMidiCcHigh = false
+    private var lastAutoFadeMidiCcHigh = false
+    private var lastSnapAMidiCcHigh = false
+    private var lastSnapBMidiCcHigh = false
 
     init {
         if (!midiDir.exists()) midiDir.mkdirs()
@@ -771,6 +774,45 @@ object MidiMappingManager {
                         onTapTempo()
                     }
                     lastTapMidiCcHigh = isHigh
+                }
+
+                val autoFadeCc = getCcForSpecial("Global/autoFade")
+                val autoFadeCh = getChannelForSpecial("Global/autoFade")
+                if (autoFadeCc != -1 && event.index == autoFadeCc && event.channel == autoFadeCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastAutoFadeMidiCcHigh) {
+                        if (mixer.isAutoFading) {
+                            mixer.onCrossfadeManualTakeover()
+                        } else {
+                            val targetIsA = mixer.crossfade.baseValue > 0.0f
+                            mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
+                            mixer.isAutoFading = true
+                            mixer.muteCrossfadeNonMidiCv()
+                        }
+                    }
+                    lastAutoFadeMidiCcHigh = isHigh
+                }
+
+                val snapACc = getCcForSpecial("Global/snapDeckA")
+                val snapACh = getChannelForSpecial("Global/snapDeckA")
+                if (snapACc != -1 && event.index == snapACc && event.channel == snapACh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastSnapAMidiCcHigh) {
+                        mixer.onCrossfadeManualTakeover()
+                        mixer.crossfade.set(-1.0f)
+                    }
+                    lastSnapAMidiCcHigh = isHigh
+                }
+
+                val snapBCc = getCcForSpecial("Global/snapDeckB")
+                val snapBCh = getChannelForSpecial("Global/snapDeckB")
+                if (snapBCc != -1 && event.index == snapBCc && event.channel == snapBCh) {
+                    val isHigh = event.normalizedValue > 0.5f
+                    if (isHigh && !lastSnapBMidiCcHigh) {
+                        mixer.onCrossfadeManualTakeover()
+                        mixer.crossfade.set(1.0f)
+                    }
+                    lastSnapBMidiCcHigh = isHigh
                 }
 
                 // Forward to parameter bindings (rotary deltas, buttons, continuous takeover)

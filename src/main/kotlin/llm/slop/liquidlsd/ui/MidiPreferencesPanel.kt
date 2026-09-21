@@ -174,7 +174,10 @@ object MidiPreferencesPanel {
                 "Global/bgQueuePrev" to "BG Shader Step Back Prev",
                 "Global/transQueueNext" to "Trans Queue Advance Next",
                 "Global/transQueuePrev" to "Trans Queue Step Back Prev",
-                "Global/tapTempo" to "Tap Tempo Trigger"
+                "Global/tapTempo" to "Tap Tempo Trigger",
+                "Global/autoFade" to "Crossfader Auto-Fade Toggle",
+                "Global/snapDeckA" to "Snap Crossfader to Deck A",
+                "Global/snapDeckB" to "Snap Crossfader to Deck B"
             )
 
             val gTableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp

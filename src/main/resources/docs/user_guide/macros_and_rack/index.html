@@ -709,10 +709,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-four-layout-tabs" class="md-nav__link">
+  <a href="#the-layout-tabs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The four layout tabs
+        The layout tabs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-console-row-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Console Row Headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#midi-and-osc-learn-on-live-console-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI and OSC Learn on Live Console Controls
       
     </span>
   </a>
@@ -1564,10 +1586,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-four-layout-tabs" class="md-nav__link">
+  <a href="#the-layout-tabs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The four layout tabs
+        The layout tabs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-console-row-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Console Row Headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#midi-and-osc-learn-on-live-console-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIDI and OSC Learn on Live Console Controls
       
     </span>
   </a>
@@ -1769,7 +1813,7 @@ Mixer column (Column 3) and Library dock remain fully visible.</p>
   the <strong><code>[ CLASSIC | PERF ]</code></strong> pill in the toolbar.</li>
 </ul>
 <p>Your active tab is remembered between sessions.</p>
-<h3 id="the-four-layout-tabs">The four layout tabs</h3>
+<h3 id="the-layout-tabs">The layout tabs</h3>
 <p>Each tab shows 16 knobs across 4 rows, mapped to different banks:</p>
 <table>
 <thead>
@@ -1787,21 +1831,7 @@ Mixer column (Column 3) and Library dock remain fully visible.</p>
 <td style="text-align: left;">Deck A (1–4)</td>
 <td style="text-align: left;">Deck B (1–4)</td>
 <td style="text-align: left;">Deck BG (1–4)</td>
-<td style="text-align: left;">Transitions (1–4)</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>DUAL DECKS</strong></td>
-<td style="text-align: left;">Deck A (1–4)</td>
-<td style="text-align: left;">Deck A (5–8)</td>
-<td style="text-align: left;">Deck B (1–4)</td>
-<td style="text-align: left;">Deck B (5–8)</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>PREP &amp; BG</strong></td>
 <td style="text-align: left;">Deck PV (1–4)</td>
-<td style="text-align: left;">Deck PV (5–8)</td>
-<td style="text-align: left;">Deck BG (1–4)</td>
-<td style="text-align: left;">Deck BG (5–8)</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>MASTER &amp; FX</strong></td>
@@ -1810,11 +1840,32 @@ Mixer column (Column 3) and Library dock remain fully visible.</p>
 <td style="text-align: left;">Master (1–4)</td>
 <td style="text-align: left;">Master (5–8)</td>
 </tr>
+<tr>
+<td style="text-align: left;"><strong>LIVE CONSOLE</strong></td>
+<td style="text-align: left;">Deck A (1–4)</td>
+<td style="text-align: left;">Deck B (1–4)</td>
+<td style="text-align: left;">FX Bank (Super + 3 Metaknobs)</td>
+<td style="text-align: left;">Master / Transitions (1–4)</td>
+</tr>
 </tbody>
 </table>
 <p>Each row is color-coded to its deck (blue for Deck A, orange for Deck B, amber for Deck BG,
-mint for Deck PV, violet for Transitions, crimson for Master) with a colored bar on the left
+mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) with a colored bar on the left
 edge and a faint row label.</p>
+<h3 id="live-console-row-headers">Live Console Row Headers</h3>
+<p>In <strong><code>LIVE CONSOLE</code></strong>, each row is equipped with an integrated performance header above its knobs:
+- <strong>Deck A &amp; Deck B (Rows 1 &amp; 2)</strong>: Feature an active generator badge (<code>deck.source.displayName</code>), an instant preset dropdown selector combo with integrated <strong>auto-focused Quick-Search filter bar</strong> and dirty marker (<code>*</code>), PlayQueue stepping buttons (<code>&lt;</code> and <code>&gt;</code>) with position counter (<code>N/Total</code>), and color-coded FX Send routing toggles (<code>[FX1]</code> and <code>[FX2]</code>). Presets can also be dragged and dropped directly onto the group title.
+- <strong>FX Bank (Row 3)</strong>: Features FX bank switching (<code>[FX1]</code>, <code>[FX2]</code>, <code>[MFX]</code>), active chain switching (<code>[C1]</code>, <code>[C2]</code>, <code>[C3]</code>), a bank bypass toggle (<code>[BYPASS]</code>), an explicit <code>[Resync]</code> button, and clickable chain link icon buttons (<code>Icons.LINK</code> / <code>Icons.UNLINK</code>) beside each slot knob to toggle Super Knob linking. Chain files (<code>.lsdfxchain</code>) can be dragged and dropped onto the title bar.
+- <strong>Master / Transitions (Row 4)</strong>: Features Deck A and Deck B quick-snap buttons (<code>[ A ]</code> and <code>[ B ]</code>), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth <code>[ AUTO ]</code> crossfade trigger, a Transition Picker popup button displaying the active transition with modified indicator (<code>*</code>), and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>). Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the title header or crossfader track.</p>
+<h3 id="midi-and-osc-learn-on-live-console-controls">MIDI and OSC Learn on Live Console Controls</h3>
+<p>All interactive header controls in <code>LIVE CONSOLE</code> support right-click context menus for instant MIDI and OSC mapping:
+- <strong>Crossfader Track</strong>: Right-click to Learn MIDI / OSC for <code>Mixer/crossfade</code>, reset to center (0.0), or snap directly to Deck A or Deck B.
+- <strong>Deck A &amp; Deck B Snap Badges (<code>[ A ]</code>, <code>[ B ]</code>)</strong>: Right-click to Learn MIDI for instant hardware button snaps (<code>Global/snapDeckA</code>, <code>Global/snapDeckB</code>).
+- <strong>Auto-Fade Button (<code>[ AUTO ]</code>)</strong>: Right-click to Learn MIDI for smooth automated crossfade triggers (<code>Global/autoFade</code>).
+- <strong>PlayQueue <code>&lt;</code> and <code>&gt;</code></strong>: Right-click to Learn MIDI (<code>Global/queuePrev</code>, <code>Global/queueNext</code>) or Learn OSC (<code>Mixer/queuePrev</code>, <code>Mixer/queueNext</code>).
+- <strong>Transition Queue <code>&lt;</code> and <code>&gt;</code></strong>: Right-click to Learn MIDI (<code>Global/transQueuePrev</code>, <code>Global/transQueueNext</code>) or Learn OSC (<code>Mixer/transQueuePrev</code>, <code>Mixer/transQueueNext</code>).
+- <strong>FX Routing Toggles (<code>[FX1]</code>, <code>[FX2]</code>)</strong>: Right-click to Learn MIDI / OSC for deck send routing (<code>$deckLabel/View/FxRouting</code>) or select routes directly from the menu.
+Controls actively armed for MIDI learn display a pulsing cyan highlight border. Active MIDI assignments are shown in tooltips.</p>
 <h3 id="interacting-with-knobs">Interacting with knobs</h3>
 <ul>
 <li><strong>Drag</strong> (up/down) to adjust the knob value — same feel as the classic macro knobs.</li>

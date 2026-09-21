@@ -1208,6 +1208,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#live-console-preset-quick-search-header-controls-midiosc-learn-performancematrixpanelkt-midimappingmanagerkt-midipreferencespanelkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Console Preset Quick-Search &amp; Header Controls MIDI/OSC Learn (PerformanceMatrixPanel.kt, MidiMappingManager.kt, MidiPreferencesPanel.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-console-master-transitions-performance-header-controls-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Console Master &amp; Transitions Performance Header Controls (PerformanceMatrixPanel.kt, docs/user_guide/macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-tab-streamlining-4-deck-live-quad-redundant-tab-removal-performancematrixpanelkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Tab Streamlining: 4-Deck LIVE QUAD &amp; Redundant Tab Removal (PerformanceMatrixPanel.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-fxmacrosynckt-iconskt-macroenginetestkt-fontinspectortestkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3612,6 +3645,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#live-console-preset-quick-search-header-controls-midiosc-learn-performancematrixpanelkt-midimappingmanagerkt-midipreferencespanelkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Console Preset Quick-Search &amp; Header Controls MIDI/OSC Learn (PerformanceMatrixPanel.kt, MidiMappingManager.kt, MidiPreferencesPanel.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-console-master-transitions-performance-header-controls-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Console Master &amp; Transitions Performance Header Controls (PerformanceMatrixPanel.kt, docs/user_guide/macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-tab-streamlining-4-deck-live-quad-redundant-tab-removal-performancematrixpanelkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Tab Streamlining: 4-Deck LIVE QUAD &amp; Redundant Tab Removal (PerformanceMatrixPanel.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-fxmacrosynckt-iconskt-macroenginetestkt-fontinspectortestkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5991,6 +6057,35 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="live-console-preset-quick-search-header-controls-midiosc-learn-performancematrixpanelkt-midimappingmanagerkt-midipreferencespanelkt-docsuser_guidemacros_and_rackmd">Live Console Preset Quick-Search &amp; Header Controls MIDI/OSC Learn (<code>PerformanceMatrixPanel.kt</code>, <code>MidiMappingManager.kt</code>, <code>MidiPreferencesPanel.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>)</h3>
+<ul>
+<li><strong>Preset Quick-Search in Deck A/B Headers</strong>: Added an integrated quick-search input field at the top of Deck A and Deck B preset dropdown combos in <code>LIVE CONSOLE</code>. Automatically focuses on open, filters scanned presets in real-time, and supports pressing <code>Escape</code> to instantly clear the search filter.</li>
+<li><strong>Right-Click MIDI &amp; OSC Learn on Header Controls</strong>: Right-clicking any interactive header control in <code>LIVE CONSOLE</code> now opens a context menu with direct <strong>Learn MIDI</strong>, <strong>Learn OSC</strong>, and clear mapping actions:</li>
+<li><strong>Crossfader Track</strong>: Learn MIDI / OSC for <code>Mixer/crossfade</code>, reset to center (<code>0.0</code>), and snap to Deck A or Deck B.</li>
+<li><strong>Deck A &amp; B Snap Badges (<code>[ A ]</code>, <code>[ B ]</code>)</strong>: Learn MIDI for instant hardware snap triggers (<code>Global/snapDeckA</code>, <code>Global/snapDeckB</code>).</li>
+<li><strong>Auto-Fade Button (<code>[ AUTO ]</code>)</strong>: Learn MIDI for crossfader auto-fade triggering (<code>Global/autoFade</code>).</li>
+<li><strong>PlayQueue Prev (<code>&lt;</code>) &amp; Next (<code>&gt;</code>)</strong>: Learn MIDI (<code>Global/queuePrev</code>, <code>Global/queueNext</code>) and Learn OSC (<code>Mixer/queuePrev</code>, <code>Mixer/queueNext</code>).</li>
+<li><strong>Transition Queue Prev (<code>&lt;</code>) &amp; Next (<code>&gt;</code>)</strong>: Learn MIDI (<code>Global/transQueuePrev</code>, <code>Global/transQueueNext</code>) and Learn OSC (<code>Mixer/transQueuePrev</code>, <code>Mixer/transQueueNext</code>).</li>
+<li><strong>FX Routing Toggles (<code>[FX1]</code>, <code>[FX2]</code>)</strong>: Learn MIDI and Learn OSC for deck FX send routing (<code>$deckLabel/View/FxRouting</code>), with direct route switching menu items.</li>
+<li><strong>Visual Armed Indicators &amp; Tooltip Mapping Feedback</strong>: Header controls armed for MIDI learn display a cyan highlight border. Active MIDI channel/CC bindings are automatically appended to control tooltips.</li>
+<li><strong>New Global Actions in MIDI Subsystem</strong>: Added <code>Global/autoFade</code>, <code>Global/snapDeckA</code>, and <code>Global/snapDeckB</code> with high-edge detection in <code>MidiMappingManager.processGlobalMidiEvents()</code> and registered them in the <code>MidiPreferencesPanel</code> global actions table.</li>
+</ul>
+<h3 id="live-console-master-transitions-performance-header-controls-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd">Live Console Master &amp; Transitions Performance Header Controls (<code>PerformanceMatrixPanel.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Integrated Horizontal Crossfader</strong>: Embedded a full-featured zero-centered bipolar crossfader slider (<code>-1.0</code> Deck A to <code>+1.0</code> Deck B) into Row 4 (<code>MASTER / TRANSITIONS</code>) of the <code>LIVE CONSOLE</code> performance matrix tab. Supports left-click-drag scrubbing, mouse scroll wheel with fine/coarse modifiers, middle-click center reset to <code>0.0</code>, tick marks at endpoints and quarters, and a live amber indicator dot tracking active CV modulation and automated transitions.</li>
+<li><strong>Deck A &amp; B Instant Snap Badges</strong>: Added color-coded <code>[ A ]</code> (cyan/blue) and <code>[ B ]</code> (orange/amber) snap buttons at the ends of the crossfader track. Clicking either badge disarms Auto-VJ, halts active transitions, and immediately snaps the crossfader to -1.0 or +1.0.</li>
+<li><strong>Auto-Fade Trigger</strong>: Added a dedicated <code>[ AUTO ]</code> / <code>[ FADING ]</code> button that smoothly fades the crossfader to the opposite deck over the configured <code>mixer.xfadeSpeed</code> duration, with instant click-to-cancel support.</li>
+<li><strong>Transition Picker &amp; Modified Indicator</strong>: Added a transition selector button with settings icon displaying the active transition shader or blend mode name, dirty unsaved marker (<code>*</code>), and instant access to <code>ShaderPickerPopup</code>. Presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can also be dropped directly onto the header or slider track.</li>
+<li><strong>Transition Queue Navigation</strong>: Added Prev (<code>&lt;</code>) and Next (<code>&gt;</code>) navigation buttons with a status counter (<code>N/Total</code> or <code>"--"</code>) directly stepping through the active <code>TransitionQueueManager</code>.</li>
+</ul>
+<h3 id="performance-matrix-tab-streamlining-4-deck-live-quad-redundant-tab-removal-performancematrixpanelkt-docsuser_guidemacros_and_rackmd">Performance Matrix Tab Streamlining: 4-Deck LIVE QUAD &amp; Redundant Tab Removal (<code>PerformanceMatrixPanel.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>)</h3>
+<ul>
+<li><strong>True 4-Deck LIVE QUAD</strong>: Replaced the 4th row (Transitions) in the <code>LIVE QUAD</code> performance tab with Deck PV (Preview), so <code>LIVE QUAD</code> now presents all four visual generation decks (Deck A, Deck B, Deck BG, Deck PV) with 4 macro knobs each.</li>
+<li><strong>Pruned Redundant Tabs</strong>: Removed the legacy <code>DUAL DECKS</code> and <code>PREP &amp; BG</code> tabs from the Performance Matrix. The Performance view is now streamlined to three purpose-built tabs:</li>
+<li><strong><code>LIVE QUAD</code></strong>: 4 visual decks (A, B, BG, PV) with 16 knobs total.</li>
+<li><strong><code>MASTER &amp; FX</code></strong>: Dedicated 8-knob Transition and 8-knob Master performance surface.</li>
+<li><strong><code>LIVE CONSOLE</code></strong>: Curated live show console pairing Deck A, Deck B, active FX Bank (with in-place chain selection &amp; Super link buttons), and Master/Transitions.</li>
+</ul>
 <h3 id="fix-fx-macro-knob-controls-performance-console-button-responsiveness-performancematrixpanelkt-macropanelkt-macroenginekt-fxmacrosynckt-iconskt-macroenginetestkt-fontinspectortestkt">Fix FX Macro Knob Controls &amp; Performance Console Button Responsiveness (<code>PerformanceMatrixPanel.kt</code>, <code>MacroPanel.kt</code>, <code>MacroEngine.kt</code>, <code>FxMacroSync.kt</code>, <code>Icons.kt</code>, <code>MacroEngineTest.kt</code>, <code>FontInspectorTest.kt</code>)</h3>
 <ul>
 <li><strong>Performance Console FX Row Click Occlusion (<code>PerformanceMatrixPanel.kt</code>)</strong>: Constrained the FX chain drag-and-drop hit target (<code>##perf_fx_drop_target</code>) to the title header area (<code>afterTitleY - boxTopY</code>) instead of spanning the entire group box. Prevents the invisible button from capturing mouse events and unblocks the <code>[FX1][FX2][MFX]</code>, <code>[C1][C2][C3]</code>, <code>[BYPASS]</code>, and <code>[Resync]</code> buttons and rotary knobs from being click-locked.</li>

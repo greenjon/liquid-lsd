@@ -1,3 +1,63 @@
+## Live Console Preset Quick-Search & Header Controls MIDI/OSC Learn (`PerformanceMatrixPanel.kt`, `MidiMappingManager.kt`)
+
+- **Context**: 2026-09-21. Performers utilizing the `LIVE CONSOLE` layout needed rapid preset filtering for large preset libraries directly within the Deck A and Deck B dropdown combos, as well as unified MIDI and OSC hardware learnability for interactive header controls (Crossfader, Snap buttons, Auto-Fade, PlayQueue, Transition Queue, and FX routing toggles) without needing to configure them in separate preference tabs.
+- **Decision**:
+  - **Preset Quick-Search**:
+    - Integrated an auto-focused search text input (`ImGui.inputTextWithHint`) at the top of Deck A and Deck B preset combo popups.
+    - Implemented real-time case-insensitive string filtering over `FileSystemManager.scanAllPresets()`, with `Escape` shortcut to clear the search buffer and automatic state cleanup on combo close.
+  - **Unified MIDI & OSC Context Menus**:
+    - Implemented right-click context menus (`beginPopupContextItem`) on all `LIVE CONSOLE` header controls:
+      - Crossfader slider track: Learn MIDI (`Mixer/crossfade`), Learn OSC (`Mixer/crossfade`), Reset to Center, Snap A/B, Clear Mappings.
+      - Deck A & B snap badges (`[ A ]`, `[ B ]`): Learn MIDI (`Global/snapDeckA`, `Global/snapDeckB`), Clear Mappings.
+      - Auto-Fade button (`[ AUTO ]`): Learn MIDI (`Global/autoFade`), Clear Mappings.
+      - PlayQueue `<` and `>`: Learn MIDI (`Global/queuePrev`, `Global/queueNext`), Learn OSC (`Mixer/queuePrev`, `Mixer/queueNext`), Clear Mappings.
+      - Transition Queue `<` and `>`: Learn MIDI (`Global/transQueuePrev`, `Global/transQueueNext`), Learn OSC (`Mixer/transQueuePrev`, `Mixer/transQueueNext`), Clear Mappings.
+      - FX Routing toggles (`[FX1]`, `[FX2]`): Learn MIDI & OSC for `$deckLabel/View/FxRouting`, Clear Mappings.
+  - **New Global Actions**:
+    - Added high-edge detection for `Global/autoFade`, `Global/snapDeckA`, and `Global/snapDeckB` in `MidiMappingManager.processGlobalMidiEvents()`.
+    - Exposed them in `MidiPreferencesPanel` for centralized inspection and manual mapping.
+  - **Visual Feedback**:
+    - Added a cyan border highlight around header controls when armed for MIDI learn, and added active MIDI channel/CC indicators to control tooltips.
+- **Rationale**:
+  - Provides instantaneous hardware binding and keyboard-friendly search directly inside the live show workflow, keeping performers focused on the Performance Matrix without context switching.
+  - Adheres strictly to Zero-Allocation callback rules and maintains consistency with the app's established MIDI/OSC learn architecture.
+
+---
+
+## Live Console Master & Transitions Performance Header Controls (`PerformanceMatrixPanel.kt`)
+
+- **Context**: 2026-09-21. In the `LIVE CONSOLE` tab of Performance Mode, Decks A, B, and FX rows were equipped with quick-access headers (preset loading, generator badges, play queue, FX routing, bank/chain switching). Row 4 (`MASTER / TRANSITIONS`) contained only 4 macro knobs, leaving performers without a way to crossfade, snap between decks, inspect/pick transition shaders, or step the transition queue without switching to the Classic Mixer.
+- **Decision**:
+  - Set `hasExtraHeader = true` on Row 4 of `LIVE CONSOLE`.
+  - Embedded an interactive zero-centered horizontal crossfader slider (`-1.0` Deck A to `+1.0` Deck B) with mouse drag, mouse wheel fine-adjust, middle-click center reset, and live amber modulation/auto-fade indicator dot.
+  - Added Deck A `[ A ]` and Deck B `[ B ]` instant snap badges that immediately disarm Auto-VJ, halt auto-fading, and snap the crossfader to -1.0 or +1.0.
+  - Added an `[ AUTO ]` / `[ FADING ]` button that fades to the opposite deck over the configured `mixer.xfadeSpeed` duration.
+  - Added a Transition Picker button showing the active transition name and modified indicator (`*`), launching `ShaderPickerPopup`.
+  - Added Transition Queue navigation (`<`, `N/Total`, `>`) controlling `TransitionQueueManager`.
+  - Added drag-and-drop support on the row title and crossfader track for `.lsdtrans` presets and `.fs`/`.isf` transition shaders.
+- **Rationale**:
+  - Makes `LIVE CONSOLE` a completely self-contained performance surface, allowing a performer to execute a full DJ/VJ set (deck selection, preset queuing, FX tweaking, crossfading, and transitions) entirely from the 4×4 Performance Matrix.
+  - Preserves zero-allocation real-time safety and integrates seamlessly with existing `Mixer`, `TransitionQueueManager`, and `ShaderPickerPopup` models.
+
+---
+
+## Performance Matrix Tab Streamlining: 4-Deck LIVE QUAD & Pruning Redundant Tabs (`PerformanceMatrixPanel.kt`)
+
+- **Context**: 2026-09-21. The Performance Mode 4×4 Matrix previously had five layout tabs: `LIVE QUAD` (A, B, BG, Transitions), `DUAL DECKS` (A 1-4, B 1-4), `PREP & BG` (PV 1-4, BG 1-4), `MASTER & FX` (Transitions 1-8, Master 1-8), and `LIVE CONSOLE` (A, B, FX, Master/Transitions). With the recent retirement of Knobs 5-8 on decks and the addition of `LIVE CONSOLE`, `DUAL DECKS` and `PREP & BG` became redundant sub-slices of the quad view. Meanwhile, `LIVE QUAD` awkwardly contained Transitions on Row 4 instead of the 4th deck (Deck PV).
+- **Decision**:
+  - **4-Deck `LIVE QUAD`**: Replaced Transitions on Row 4 of `LIVE QUAD` with Deck PV (`MacroEngine.DECK_PV`). `LIVE QUAD` now maps cleanly to all four visual generation decks (Deck A, Deck B, Deck BG, Deck PV) with 4 macro knobs each.
+  - **Pruned `DUAL DECKS` and `PREP & BG`**: Removed both 2-deck tabs from `Tab` and `TAB_ROWS`.
+  - **Streamlined 3-Tab Structure**: Performance Mode now has three focused tabs:
+    1. `LIVE QUAD` (16 generation knobs across Decks A, B, BG, PV).
+    2. `MASTER & FX` (16 knobs: 8 for Transitions, 8 for Master).
+    3. `LIVE CONSOLE` (16 knobs: Deck A, Deck B, focused FX bank/chain with in-place link buttons, Master/Transitions).
+- **Rationale**:
+  - Eliminates tab clutter and visual redundancy.
+  - Makes `LIVE QUAD` an intuitive, complete representation of all 4 visual decks.
+  - Provides three distinct, complementary performance surfaces for live show workflows.
+
+---
+
 ## FX Macro Knob Controls Unification & Hit-Target Isolation (`PerformanceMatrixPanel.kt`, `MacroPanel.kt`, `MacroEngine.kt`)
 
 - **Context**: 2026-09-21. With the migration to the Two-Tier FX Macro system (Chain Super Knob + Effect Metaknobs), two interaction issues emerged across views:
