@@ -350,6 +350,14 @@ object SessionSerializer {
         llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
         llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
         mixer.loadDefaultFxBanks()
+        // Pre-populate Performance Console's FX row (Super Knob + 3 Metaknobs) so a fresh install
+        // is ready to play without the user hand-wiring bindings first. Must run after the
+        // canonical MacroBank registration above -- registering later would silently discard
+        // these bindings. Only for fresh/empty sessions, not session restore: a returning user's
+        // already-tuned Performance Console bindings should never be touched here.
+        llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1, mixer.fxBank1)
+        llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2, mixer.fxBank2)
+        llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX, mixer.masterFxBank)
     }
 
     private fun loadInitialPreset(mixer: Mixer) {

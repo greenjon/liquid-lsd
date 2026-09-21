@@ -29,6 +29,19 @@ object FXChainMacroStrip {
     private val linkBufs = Array(FxChain.SLOT_COUNT) { ImBoolean(true) }
 
     /**
+     * Re-runs [llm.slop.liquidlsd.macro.FxMacroSync] after a Link checkbox toggle: linking a slot
+     * must clear that slot's Performance Console Metaknob binding (both would otherwise write
+     * [llm.slop.liquidlsd.rendering.isf.ISFFilter.metaKnob]'s base value every frame), and
+     * unlinking must restore it. [chainPrefix] is "$bankLabel/C$chainNum" (e.g. "FX1/C1").
+     */
+    private fun resyncMacroKnobs(chainPrefix: String, chain: FxChain) {
+        val bankLabel = chainPrefix.substringBefore("/C")
+        val chainIndex = chainPrefix.substringAfterLast("/C").toIntOrNull()?.minus(1) ?: 0
+        val bankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(bankLabel)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, bankLabel, chain, chainIndex)
+    }
+
+    /**
      * Grid-rendering context supplied by the Parameters Panel so the Super Knob and each slot's
      * Metaknob render as full [ParametersRenderer.drawParamRow] rows (gaining Seq/LFO/Audio/MIDI
      * modulation columns) instead of the compact MIDI-learn-only slider. Left null by narrower
@@ -112,6 +125,7 @@ object FXChainMacroStrip {
                 linkBufs[i].set(chain.slotSuperKnobLink[i])
                 if (ImGui.checkbox("Link##fx_link_${chainPrefix}_$i", linkBufs[i])) {
                     chain.setSlotLinked(i, linkBufs[i].get())
+                    resyncMacroKnobs(chainPrefix, chain)
                 }
                 itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).")
                 ImGui.spacing()
@@ -126,6 +140,7 @@ object FXChainMacroStrip {
                 linkBufs[i].set(chain.slotSuperKnobLink[i])
                 if (ImGui.checkbox("##fx_link_${chainPrefix}_$i", linkBufs[i])) {
                     chain.setSlotLinked(i, linkBufs[i].get())
+                    resyncMacroKnobs(chainPrefix, chain)
                 }
                 itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).")
                 ImGui.sameLine(0f, 4f)
@@ -153,6 +168,7 @@ object FXChainMacroStrip {
                 linkBufs[i].set(chain.slotSuperKnobLink[i])
                 if (ImGui.checkbox("Link##fx_link_${chainPrefix}_$i", linkBufs[i])) {
                     chain.setSlotLinked(i, linkBufs[i].get())
+                    resyncMacroKnobs(chainPrefix, chain)
                 }
                 itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).")
 

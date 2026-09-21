@@ -29,11 +29,16 @@ class PerformanceMatrixPanel {
 
     // -- Tab definitions ----------------------------------------------------------
 
-    private enum class Tab(val label: String, val tooltip: String) {
+    // internal (not private): UITheme needs Tab.entries.size to coerce the persisted tab index
+    // without hardcoding a count that silently drifts when a tab is added/removed.
+    internal enum class Tab(val label: String, val tooltip: String) {
         LIVE_QUAD("LIVE QUAD", "One row per deck (Deck A / Deck B / Deck BG / Transitions), knobs 1-4 each."),
         DUAL_DECKS("DUAL DECKS", "Deck A's 4 knobs and Deck B's 4 knobs, larger than the Live Quad view."),
         PREP_AND_BG("PREP & BG", "Deck PV's 4 knobs and Deck BG's 4 knobs, larger than the Live Quad view."),
-        MASTER_AND_FX("MASTER & FX", "All 8 Transition knobs (rows 1-2) and all 8 Master knobs (rows 3-4).")
+        MASTER_AND_FX("MASTER & FX", "All 8 Transition knobs (rows 1-2) and all 8 Master knobs (rows 3-4)."),
+        // Appended LAST, not first: performanceMatrixTab is persisted by raw ordinal, so inserting
+        // this earlier would silently reassign every existing saved preference to the wrong tab.
+        LIVE_CONSOLE("LIVE CONSOLE", "Deck A / Deck B / focused FX bank+chain / Master & Transitions -- a single 4x4 surface for live shows.")
     }
 
     /**
@@ -47,7 +52,9 @@ class PerformanceMatrixPanel {
         val knobOffset: Int,
         val accent: FloatArray,
         val groupLabel: String,
-        val subLabel: String? = null
+        val subLabel: String? = null,
+        /** True only for LIVE_CONSOLE's FX row: reserves header space for the bank/chain/bypass switcher buttons. */
+        val hasExtraHeader: Boolean = false
     )
 
     // Canonical deck colors matching BrowserDeckButtons.
@@ -58,6 +65,9 @@ class PerformanceMatrixPanel {
         private val COLOR_DECK_PV  = floatArrayOf(0.2f,  0.7f,  0.5f)
         private val COLOR_TRANS    = floatArrayOf(0.7f,  0.4f,  0.9f)
         private val COLOR_MASTER   = floatArrayOf(0.9f,  0.25f, 0.35f)
+        private val COLOR_FX       = floatArrayOf(0.15f, 0.75f, 0.65f)
+
+        private const val EXTRA_HEADER_H = 28f
 
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // LIVE QUAD: one row per deck (knobs 0–3 each)
@@ -85,8 +95,22 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.MASTER, 0, COLOR_MASTER, "MASTER", "1-4"),
                 RowDescriptor(MacroEngine.MASTER, 4, COLOR_MASTER, "MASTER", "5-8"),
             ),
+            // LIVE CONSOLE: Deck A, Deck B, focused FX bank/chain (bankId placeholder rewritten to
+            // the current focusedFxBankId each frame -- see drawMatrix), Master/Transitions.
+            listOf(
+                RowDescriptor(MacroEngine.DECK_A,    0, COLOR_DECK_A, "DECK A"),
+                RowDescriptor(MacroEngine.DECK_B,    0, COLOR_DECK_B, "DECK B"),
+                RowDescriptor(MacroEngine.FX_BANK_1, 0, COLOR_FX,     "FX", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "MASTER / TRANSITIONS"),
+            ),
         )
     }
+
+    /** LIVE_CONSOLE-only: which FX bank Row 3 is currently focused on. Local UI state -- Classic
+     *  Mode shows all 3 banks as separate subtabs simultaneously, so there's no shared "current
+     *  bank" concept to read from. Chain selection *within* that bank, however, reads/writes the
+     *  shared [llm.slop.liquidlsd.rendering.FxBank.activeChainIndex]. */
+    private var focusedFxBankId: String = MacroEngine.FX_BANK_1
 
     // -- Draw ---------------------------------------------------------------------
 
@@ -94,7 +118,7 @@ class PerformanceMatrixPanel {
         val theme = session.uiTheme
         drawTabStrip(session, theme)
         ImGui.spacing()
-        drawMatrix(session, theme, parametersState)
+        drawMatrix(session, theme, mixer, parametersState)
     }
 
     // -- Tab strip ----------------------------------------------------------------
@@ -132,9 +156,16 @@ class PerformanceMatrixPanel {
     /** A run of consecutive [RowDescriptor]s sharing one bank/group label, enclosed in one box. */
     private data class RowGroup(val startRow: Int, val rowCount: Int, val descriptor: RowDescriptor)
 
-    private fun drawMatrix(session: llm.slop.liquidlsd.SessionContext, theme: UITheme, parametersState: ParametersState) {
-        val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.values().size - 1)
-        val rows = TAB_ROWS[tabIdx]
+    private fun drawMatrix(session: llm.slop.liquidlsd.SessionContext, theme: UITheme, mixer: Mixer, parametersState: ParametersState) {
+        val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
+        val templateRows = TAB_ROWS[tabIdx]
+        // LIVE_CONSOLE's FX row bankId is dynamic (whichever bank is focused), not baked into the
+        // static table -- substitute it here rather than forking a separate row-list per bank.
+        val rows = if (tabIdx == Tab.LIVE_CONSOLE.ordinal) {
+            templateRows.map { if (it.hasExtraHeader) it.copy(bankId = focusedFxBankId) else it }
+        } else {
+            templateRows
+        }
 
         val groups = mutableListOf<RowGroup>()
         var gi = 0
@@ -169,7 +200,8 @@ class PerformanceMatrixPanel {
         for (group in groups) {
             val groupH = group.rowCount * rowH
             val hasSubLabel = rows[group.startRow].subLabel != null
-            val contentH = groupH - boxMarginY * 2f - boxLabelGap * 2f - groupLabelH - boxPad
+            val extraHeaderH = if (rows[group.startRow].hasExtraHeader) EXTRA_HEADER_H + boxLabelGap else 0f
+            val contentH = groupH - boxMarginY * 2f - boxLabelGap * 2f - groupLabelH - boxPad - extraHeaderH
             val subRowH = contentH / group.rowCount
             val knobAreaH = if (hasSubLabel) subRowH - subLabelH - subLabelGap else subRowH
             diamByHeight = minOf(diamByHeight, (knobAreaH - captionH).coerceAtLeast(8f))
@@ -203,13 +235,42 @@ class PerformanceMatrixPanel {
             dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
             dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
 
+            // Drop target for dragging a .lsdfxchain from the Library onto the FX row's box,
+            // loading it into the currently active chain. Placed before the header buttons/knobs
+            // are drawn so those remain independently clickable (a drop landing exactly on one of
+            // them hits that item instead, same as any other overlapping ImGui widget).
+            if (descriptor.hasExtraHeader) {
+                ImGui.setCursorScreenPos(boxX1, boxTopY)
+                ImGui.invisibleButton("##perf_fx_drop_target", boxX2 - boxX1, boxBottomY - boxTopY)
+                if (ImGui.beginDragDropTarget()) {
+                    val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+                    if (payload != null) {
+                        val file = java.io.File(payload)
+                        if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
+                            val fxBank = resolveFxBank(mixer, focusedFxBankId)
+                            session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
+                                fxBank.activeChain.applyFxChain(chainDto)
+                            }
+                        }
+                    }
+                    ImGui.endDragDropTarget()
+                }
+            }
+
             // Large centered group title just under the box's top border.
+            val displayLabel = if (descriptor.hasExtraHeader) "FX: ${fxBankDisplayName(focusedFxBankId)}" else descriptor.groupLabel
             if (h1Pushable) ImGui.pushFont(h1Font, UITheme.FONT_H1)
-            val textW = ImGui.calcTextSize(descriptor.groupLabel).x
-            dl.addText(gridStartX + (gridW - textW) / 2f, titleTopY, borderCol, descriptor.groupLabel)
+            val textW = ImGui.calcTextSize(displayLabel).x
+            dl.addText(gridStartX + (gridW - textW) / 2f, titleTopY, borderCol, displayLabel)
             if (h1Pushable) ImGui.popFont()
 
-            val contentTopY = titleTopY + groupLabelH + boxLabelGap
+            val afterTitleY = titleTopY + groupLabelH + boxLabelGap
+            val contentTopY = if (descriptor.hasExtraHeader) {
+                drawFxRowHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+                afterTitleY + EXTRA_HEADER_H + boxLabelGap
+            } else {
+                afterTitleY
+            }
             val contentBottomY = boxBottomY - boxPad
             val subRowH = (contentBottomY - contentTopY) / group.rowCount
 
@@ -282,5 +343,97 @@ class PerformanceMatrixPanel {
         // Advance the ImGui cursor past the grid so the window scrollbar is correct.
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), gridStartY + availH)
         ImGui.dummy(0f, 0f)
+    }
+
+    // -- LIVE_CONSOLE FX row header: bank switcher, chain switcher, bypass, resync -------------
+
+    private fun resolveFxBank(mixer: Mixer, bankId: String): llm.slop.liquidlsd.rendering.FxBank = when (bankId) {
+        MacroEngine.FX_BANK_1 -> mixer.fxBank1
+        MacroEngine.FX_BANK_2 -> mixer.fxBank2
+        MacroEngine.MASTER_FX -> mixer.masterFxBank
+        else -> mixer.fxBank1
+    }
+
+    private fun fxBankDisplayName(bankId: String): String = when (bankId) {
+        MacroEngine.FX_BANK_1 -> "FX1"
+        MacroEngine.FX_BANK_2 -> "FX2"
+        MacroEngine.MASTER_FX -> "MFX"
+        else -> bankId
+    }
+
+    /** Drawn in place of the plain group title for LIVE_CONSOLE's FX row (see [RowDescriptor.hasExtraHeader]). */
+    private fun drawFxRowHeaderControls(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        boxX1: Float,
+        boxX2: Float,
+        headerY: Float,
+        headerH: Float
+    ) {
+        val fxBank = resolveFxBank(mixer, focusedFxBankId)
+        val pad = 6f
+        val gap = 4f
+        val availW = (boxX2 - boxX1 - pad * 2f).coerceAtLeast(1f)
+
+        val bankSegW = availW * 0.28f
+        val chainSegW = availW * 0.34f
+        val bypassSegW = availW * 0.20f
+        val resyncSegW = availW * 0.14f
+
+        ImGui.setCursorScreenPos(boxX1 + pad, headerY)
+        ImGui.beginGroup()
+
+        // Bank switcher [FX1][FX2][MFX]
+        val bankIds = listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)
+        val bankBtnW = ((bankSegW - gap * 2f) / 3f).coerceAtLeast(1f)
+        for ((i, bankId) in bankIds.withIndex()) {
+            if (i > 0) ImGui.sameLine(0f, gap)
+            val isActive = bankId == focusedFxBankId
+            ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
+            if (ImGui.button("${fxBankDisplayName(bankId)}##perf_fx_bank_$bankId", bankBtnW, headerH)) {
+                focusedFxBankId = bankId
+                llm.slop.liquidlsd.macro.FxMacroSync.sync(bankId, resolveFxBank(mixer, bankId))
+            }
+            ImGui.popStyleColor()
+        }
+        itemTooltip("Focus Row 3 on FX Bank 1, FX Bank 2, or the post-crossfader Master FX bank.")
+
+        ImGui.sameLine(0f, gap * 2f)
+
+        // Chain switcher [C1][C2][C3] -- genuinely switches which chain is live (FxBank.activeChainIndex).
+        val chainBtnW = ((chainSegW - gap * 2f) / 3f).coerceAtLeast(1f)
+        for (i in 0 until 3) {
+            if (i > 0) ImGui.sameLine(0f, gap)
+            val isActive = fxBank.activeChainIndex == i
+            ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) ImGui.colorConvertFloat4ToU32(0.10f, 0.72f, 0.52f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
+            if (ImGui.button("C${i + 1}##perf_fx_chain_$i", chainBtnW, headerH)) {
+                parametersState.setActiveChainIndex(fxBank, i)
+            }
+            ImGui.popStyleColor()
+        }
+        itemTooltip("Switch which of the 3 alternative chains is live in this bank.")
+
+        ImGui.sameLine(0f, gap * 2f)
+
+        // Bank-level bypass -- hard-mutes the whole bank regardless of which chain is active.
+        val isBypassed = !fxBank.enabled
+        ImGui.pushStyleColor(ImGuiCol.Button, if (isBypassed) ImGui.colorConvertFloat4ToU32(0.6f, 0.15f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
+        if (ImGui.button((if (isBypassed) "BYPASS" else "FX ON") + "##perf_fx_bypass", bypassSegW.coerceAtLeast(1f), headerH)) {
+            fxBank.enabled = !fxBank.enabled
+        }
+        ImGui.popStyleColor()
+        itemTooltip("Hard-bypasses the whole ${fxBankDisplayName(focusedFxBankId)} bank regardless of which chain is active.")
+
+        ImGui.sameLine(0f, gap * 2f)
+
+        // Explicit opt-back-in to the smart default, for a knob the user (or a prior focus
+        // change) left manually retargeted -- see FxMacroSync's ownership rule.
+        if (ImGui.button("Resync##perf_fx_resync", resyncSegW.coerceAtLeast(1f), headerH)) {
+            llm.slop.liquidlsd.macro.FxMacroSync.sync(focusedFxBankId, fxBank, forceResync = true)
+        }
+        itemTooltip("Reset these 4 knobs to the Super Knob + 3 Metaknobs smart default, even if one was manually retargeted.")
+
+        ImGui.endGroup()
     }
 }

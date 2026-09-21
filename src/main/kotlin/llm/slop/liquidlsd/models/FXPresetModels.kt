@@ -36,7 +36,8 @@ data class FXBankDto(
     val name: String,
     val tags: List<String> = emptyList(),
     val masterWetDry: ParameterDto? = null,
-    val chains: List<FXChainDto?> = emptyList() // Size 3; null = empty chain
+    val chains: List<FXChainDto?> = emptyList(), // Size 3; null = empty chain
+    val activeChainIndex: Int = 0
 )
 
 /**

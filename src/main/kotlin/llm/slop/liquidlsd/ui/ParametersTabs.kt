@@ -740,7 +740,7 @@ object ParametersTabs {
         ImGui.spacing()
 
         // --- Chain Subtabs [ 1 ] [ 2 ] [ 3 ] ---
-        val activeChainIndex = state.getActiveChainIndex(bankLabel).coerceIn(0, 2)
+        val activeChainIndex = state.getActiveChainIndex(bank)
         val chainTabs = listOf("1", "2", "3")
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 4f)
@@ -769,7 +769,7 @@ object ParametersTabs {
                 val subTabH = (ImGui.getTextLineHeight() + 8f).coerceAtLeast(26f)
 
                 if (ImGui.button("$btnText##chain_tab_${bankLabel}_$i", btnW, subTabH)) {
-                    state.setActiveChainIndex(bankLabel, i)
+                    state.setActiveChainIndex(bank, i)
                 }
                 itemTooltip("$chainName: Click to view effects in chain ${i + 1}")
                 ImGui.popStyleColor(3)

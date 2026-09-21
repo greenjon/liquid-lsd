@@ -13,7 +13,7 @@ import llm.slop.liquidlsd.rendering.isf.toDto
 /**
  * An individual FX chain holding [SLOT_COUNT] serial ISF filter slots,
  * with its own chain-level [dryWet] blend and [enabled] bypass toggle.
- * Owned by an [FxBank] as one of its 3 serial processing stages.
+ * Owned by an [FxBank] as one of its 3 alternative chains (see [FxBank.activeChainIndex]).
  *
  * [superKnob] is a Traktor/Mixxx-style "chain macro": when a slot is linked
  * ([slotSuperKnobLink]), moving the Super Knob drives that slot's own [ISFFilter.metaKnob].

@@ -17,6 +17,19 @@ import java.util.concurrent.ConcurrentHashMap
 private val safeProfileCharacter = Regex("[^A-Za-z0-9._-]")
 private val repeatedUnderscores = Regex("_+")
 
+private val fxMacroSyncBankIds = setOf(
+    llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1,
+    llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2,
+    llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX
+)
+private val macroKnobPathPattern = Regex("""^Macro/([^/]+)/knob_([1-4])$""")
+
+/** True for "Macro/<bankId>/knob_N" paths on FX1/FX2/MFX's 4-knob row -- see [MidiLearnTarget.MacroTarget]. */
+internal fun isFxMacroSyncOwnedKnobPath(macroPath: String): Boolean {
+    val match = macroKnobPathPattern.matchEntire(macroPath) ?: return false
+    return match.groupValues[1] in fxMacroSyncBankIds
+}
+
 internal fun sanitiseProfileName(name: String): String {
     val trimmed = name.trim()
     if (trimmed.contains("/") || trimmed.contains("\\") || trimmed.contains("..") || trimmed.contains("\u0000")) {
@@ -669,6 +682,16 @@ object MidiMappingManager {
                         saveActiveProfile()
                     }
                     is MidiLearnTarget.MacroTarget -> {
+                        // Performance Console's FX row knobs get re-synced to a new target every
+                        // time the focused bank/chain changes (see FxMacroSync); an absolute CC
+                        // learned onto one of them defaults to soft-takeover so re-focusing never
+                        // yanks the value on the next physical touch. Relative encoders have no
+                        // jump problem by construction, so they're left at IMMEDIATE regardless.
+                        val takeoverMode = if (inputType == MidiInputType.CONTINUOUS_CC && isFxMacroSyncOwnedKnobPath(target.macroPath)) {
+                            TakeoverMode.SOFT_TAKEOVER
+                        } else {
+                            TakeoverMode.IMMEDIATE
+                        }
                         addMapping(
                             parameterPath = target.macroPath,
                             cc = event.index,
@@ -677,7 +700,8 @@ object MidiMappingManager {
                             maxVal = 1f,
                             messageType = event.type,
                             inputType = inputType,
-                            triggerMode = triggerMode
+                            triggerMode = triggerMode,
+                            takeoverMode = takeoverMode
                         )
                         saveActiveProfile()
                     }

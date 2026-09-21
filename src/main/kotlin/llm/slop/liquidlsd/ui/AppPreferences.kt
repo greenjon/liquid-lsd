@@ -40,7 +40,7 @@ data class AppPreferences(
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
     val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
     val workspaceMode: UITheme.WorkspaceMode = UITheme.WorkspaceMode.CLASSIC,
-    val performanceMatrixTab: Int = 0,
+    val performanceMatrixTab: Int = PerformanceMatrixPanel.Tab.entries.indexOf(PerformanceMatrixPanel.Tab.LIVE_CONSOLE),
     val theme: UITheme.Theme = UITheme.Theme.BORING,
     val showMidiCol: Boolean = true,
     val showLfoCol: Boolean = true,

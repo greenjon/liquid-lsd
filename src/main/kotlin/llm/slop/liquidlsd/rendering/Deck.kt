@@ -56,12 +56,10 @@ class Deck(
             else -> null
         }
 
-    // Four-buffer ping-pong architecture:
-    // Inner scratch pair for slot-to-slot progression within a chain:
+    // Inner scratch pair for slot-to-slot progression within the active chain:
     var fxPingFBO = FBO(width, height)
     var fxPongFBO = FBO(width, height)
-    // Outer alternating pair carrying chain outputs forward:
-    var fxChainOutFBO = FBO(width, height)
+    // Holds the active chain's dry/wet-blended output:
     var fxBankOutFBO = FBO(width, height)
 
     var activeOutputTexture: Int = cleanFBO.texture
@@ -87,19 +85,16 @@ class Deck(
         cleanFBO.dispose()
         fxPingFBO.dispose()
         fxPongFBO.dispose()
-        fxChainOutFBO.dispose()
         fxBankOutFBO.dispose()
 
         cleanFBO = FBO(width, height)
         fxPingFBO = FBO(width, height)
         fxPongFBO = FBO(width, height)
-        fxChainOutFBO = FBO(width, height)
         fxBankOutFBO = FBO(width, height)
 
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxPingFBO.clear(0f, 0f, 0f, 0f)
         fxPongFBO.clear(0f, 0f, 0f, 0f)
-        fxChainOutFBO.clear(0f, 0f, 0f, 0f)
         fxBankOutFBO.clear(0f, 0f, 0f, 0f)
         activeOutputTexture = cleanFBO.texture
         availableSources.forEach { src ->
@@ -144,7 +139,6 @@ class Deck(
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxPingFBO.clear(0f, 0f, 0f, 0f)
         fxPongFBO.clear(0f, 0f, 0f, 0f)
-        fxChainOutFBO.clear(0f, 0f, 0f, 0f)
         fxBankOutFBO.clear(0f, 0f, 0f, 0f)
 
         val initialId = (initialSource as? DynamicVisualSource)?.id
@@ -195,7 +189,6 @@ class Deck(
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxPingFBO.clear(0f, 0f, 0f, 0f)
         fxPongFBO.clear(0f, 0f, 0f, 0f)
-        fxChainOutFBO.clear(0f, 0f, 0f, 0f)
         fxBankOutFBO.clear(0f, 0f, 0f, 0f)
         activeOutputTexture = cleanFBO.texture
         morphController.initFromCurrentState()
@@ -283,7 +276,6 @@ class Deck(
         cleanFBO.dispose()
         fxPingFBO.dispose()
         fxPongFBO.dispose()
-        fxChainOutFBO.dispose()
         fxBankOutFBO.dispose()
         // Note: bank-owned filters are NOT disposed here -- they're
         // shared with any other deck routed to the same bank and outlive any one deck.

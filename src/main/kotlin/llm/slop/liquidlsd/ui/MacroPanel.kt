@@ -128,7 +128,7 @@ class MacroPanel(
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("FX RACK: $bankLabel") }
         ImGui.spacing()
 
-        val activeChainIndex = parametersState.getActiveChainIndex(bankLabel).coerceIn(0, 2)
+        val activeChainIndex = parametersState.getActiveChainIndex(fxBank)
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
         val gap = 4f
         val segW = ((availW - gap * 2) / 3f).coerceAtLeast(1f)
@@ -141,7 +141,7 @@ class MacroPanel(
                 if (isActive) ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
             )
             if (ImGui.button("Chain ${i + 1}##macro_fx_chain_tab_${bankLabel}_$i", segW, 24f)) {
-                parametersState.setActiveChainIndex(bankLabel, i)
+                parametersState.setActiveChainIndex(fxBank, i)
             }
             ImGui.popStyleColor()
         }

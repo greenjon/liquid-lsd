@@ -42,12 +42,11 @@ class Mixer(
         get() = masterFxBank.masterWetDry
 
     val masterFxSlots: Array<ISFFilter?>
-        get() = masterFxBank.chains[0].slots
+        get() = masterFxBank.activeChain.slots
 
-    // Four-buffer ping-pong architecture for Master FX:
+    // Ping-pong pair for Master FX's active chain, plus its dry/wet-blended output:
     var masterFxPingFBO = FBO(width, height)
     var masterFxPongFBO = FBO(width, height)
-    var masterFxChainOutFBO = FBO(width, height)
     var masterFxBankOutFBO = FBO(width, height)
 
     // The two shared FX banks decks route into (see FxBank). Default assignment mirrors the
@@ -110,17 +109,14 @@ class Mixer(
 
         masterFxPingFBO.dispose()
         masterFxPongFBO.dispose()
-        masterFxChainOutFBO.dispose()
         masterFxBankOutFBO.dispose()
 
         masterFxPingFBO = FBO(width, height)
         masterFxPongFBO = FBO(width, height)
-        masterFxChainOutFBO = FBO(width, height)
         masterFxBankOutFBO = FBO(width, height)
 
         masterFxPingFBO.clear(0f, 0f, 0f, 0f)
         masterFxPongFBO.clear(0f, 0f, 0f, 0f)
-        masterFxChainOutFBO.clear(0f, 0f, 0f, 0f)
         masterFxBankOutFBO.clear(0f, 0f, 0f, 0f)
 
         deckA.resize(newWidth, newHeight)
@@ -129,16 +125,16 @@ class Mixer(
         deckPV.resize(newWidth, newHeight)
     }
 
-    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? = masterFxBank.chains[0].toFxSlotDto(slotIndex)
+    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? = masterFxBank.activeChain.toFxSlotDto(slotIndex)
 
-    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) = masterFxBank.chains[0].applyFxSlot(slotIndex, dto)
+    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) = masterFxBank.activeChain.applyFxSlot(slotIndex, dto)
 
-    fun clearMasterFxSlot(slotIndex: Int) = masterFxBank.chains[0].clearFxSlot(slotIndex)
+    fun clearMasterFxSlot(slotIndex: Int) = masterFxBank.activeChain.clearFxSlot(slotIndex)
 
-    fun applyMasterFxChain(dto: FXChainDto) = masterFxBank.chains[0].applyFxChain(dto)
+    fun applyMasterFxChain(dto: FXChainDto) = masterFxBank.activeChain.applyFxChain(dto)
 
     fun toMasterFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto =
-        masterFxBank.chains[0].toFxChainDto(name, tags)
+        masterFxBank.activeChain.toFxChainDto(name, tags)
 
     // Blend parameters
     val crossfade = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR) // -1.0 = Deck A, 1.0 = Deck B
@@ -615,7 +611,6 @@ class Mixer(
         masterCompositeFBO.dispose()
         masterFxPingFBO.dispose()
         masterFxPongFBO.dispose()
-        masterFxChainOutFBO.dispose()
         masterFxBankOutFBO.dispose()
         masterFxBank.dispose()
         fxBank1.dispose()

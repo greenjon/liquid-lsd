@@ -10,17 +10,22 @@ import llm.slop.liquidlsd.rendering.isf.ISFFilter
 
 /**
  * A shared FX processing unit that decks route into (e.g. FX1/FX2/MFX).
- * The bank owns 3 serial [FxChain] instances, each containing 3 ISF filter slots,
- * plus a single [masterWetDry] shared by every deck currently routed to it.
+ * The bank owns 3 **alternative** [FxChain] instances (A/B/C preset-slot model), plus a single
+ * [masterWetDry] shared by every deck currently routed to it.
  *
- * Signal flows through the chains in series:
- * Source Texture -> Chain 1 -> Chain 2 -> Chain 3 -> Bank Output Blend.
+ * Only one chain is live at a time, selected by [activeChainIndex] -- picking a chain switches
+ * which one processes the signal, it does not run all 3 in series.
  */
 class FxBank(val label: String) {
 
     val chains = Array(CHAIN_COUNT) { i -> FxChain("Chain ${i + 1}") }
     val masterWetDry = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     var enabled: Boolean = true
+
+    var activeChainIndex: Int = 0
+        set(value) { field = value.coerceIn(0, CHAIN_COUNT - 1) }
+
+    val activeChain: FxChain get() = chains[activeChainIndex]
 
     fun update() {
         chains.forEach { it.update() }
@@ -30,6 +35,7 @@ class FxBank(val label: String) {
     fun reset() {
         chains.forEach { it.reset() }
         enabled = true
+        activeChainIndex = 0
         masterWetDry.reset()
     }
 
@@ -48,21 +54,21 @@ class FxBank(val label: String) {
     }
 
     /**
-     * Backward-compatible slot accessor targeting the first chain ([chains][0]).
+     * Backward-compatible slot accessor targeting the active chain ([activeChain]).
      */
     val slots: Array<ISFFilter?>
-        get() = chains[0].slots
+        get() = activeChain.slots
 
-    fun toFxSlotDto(slotIndex: Int): FXSlotDto? = chains[0].toFxSlotDto(slotIndex)
+    fun toFxSlotDto(slotIndex: Int): FXSlotDto? = activeChain.toFxSlotDto(slotIndex)
 
-    fun applyFxSlot(slotIndex: Int, dto: FXSlotDto) = chains[0].applyFxSlot(slotIndex, dto)
+    fun applyFxSlot(slotIndex: Int, dto: FXSlotDto) = activeChain.applyFxSlot(slotIndex, dto)
 
-    fun clearFxSlot(slotIndex: Int) = chains[0].clearFxSlot(slotIndex)
+    fun clearFxSlot(slotIndex: Int) = activeChain.clearFxSlot(slotIndex)
 
-    fun applyFxChain(dto: FXChainDto) = chains[0].applyFxChain(dto)
+    fun applyFxChain(dto: FXChainDto) = activeChain.applyFxChain(dto)
 
     fun toFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto =
-        chains[0].toFxChainDto(name, tags)
+        activeChain.toFxChainDto(name, tags)
 
     /** Indexed slot/chain accessors targeting a specific chain, for the Parameters panel's per-chain subtabs. */
     fun toFxSlotDto(chainIndex: Int, slotIndex: Int): FXSlotDto? =
@@ -89,6 +95,7 @@ class FxBank(val label: String) {
                 chains[i].applyFxChain(chainDto)
             }
         }
+        activeChainIndex = dto.activeChainIndex
     }
 
     fun toFxBankDto(name: String, tags: List<String> = emptyList()): FXBankDto {
@@ -97,7 +104,8 @@ class FxBank(val label: String) {
             name = name,
             tags = tags,
             masterWetDry = masterWetDry.toDto(),
-            chains = chainsList
+            chains = chainsList,
+            activeChainIndex = activeChainIndex
         )
     }
 

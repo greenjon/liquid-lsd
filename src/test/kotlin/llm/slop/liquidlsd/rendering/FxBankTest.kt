@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.rendering
 
+import llm.slop.liquidlsd.models.FXChainDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -124,6 +125,59 @@ class FxBankTest {
         assertEquals(0.75f, targetBank.masterWetDry.baseValue)
         assertEquals(0.5f, targetBank.chains[0].dryWet.baseValue)
         assertEquals(0.25f, targetBank.chains[1].dryWet.baseValue)
+    }
+
+    @Test
+    fun testActiveChainIndexDefaultsToZeroAndCoerces() {
+        val bank = FxBank("FX1")
+        assertEquals(0, bank.activeChainIndex)
+        assertEquals(bank.chains[0], bank.activeChain)
+
+        bank.activeChainIndex = 1
+        assertEquals(1, bank.activeChainIndex)
+        assertEquals(bank.chains[1], bank.activeChain)
+
+        bank.activeChainIndex = 99
+        assertEquals(2, bank.activeChainIndex)
+
+        bank.activeChainIndex = -5
+        assertEquals(0, bank.activeChainIndex)
+    }
+
+    @Test
+    fun testBackwardCompatAccessorsFollowActiveChainIndex() {
+        val bank = FxBank("FX1")
+        bank.activeChainIndex = 1
+
+        assertEquals(bank.chains[1].slots, bank.slots)
+
+        val dto = bank.toFxChainDto("Chain2Name")
+        assertEquals(bank.chains[1].toFxChainDto("Chain2Name").name, dto.name)
+
+        bank.applyFxChain(FXChainDto(name = "applied", dryWet = null, slots = emptyList()))
+        assertEquals("applied", bank.chains[1].name)
+        assertEquals("", bank.chains[0].name)
+    }
+
+    @Test
+    fun testActiveChainIndexRoundTripsThroughDto() {
+        val bank = FxBank("FX1")
+        bank.activeChainIndex = 2
+
+        val dto = bank.toFxBankDto("MyBank")
+        assertEquals(2, dto.activeChainIndex)
+
+        val targetBank = FxBank("FX2")
+        targetBank.applyFxBank(dto)
+        assertEquals(2, targetBank.activeChainIndex)
+    }
+
+    @Test
+    fun testResetRestoresActiveChainIndexToZero() {
+        val bank = FxBank("FX1")
+        bank.activeChainIndex = 2
+        bank.reset()
+        assertEquals(0, bank.activeChainIndex)
     }
 
     @Test
