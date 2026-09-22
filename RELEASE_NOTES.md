@@ -1,5 +1,24 @@
 ## [Unreleased]
 
+### Performance Matrix Deck Controls Parity, Randomize Dice (A, B, BG, PV, ALL) & Fade Speed Control (`PerformanceMatrixPanel.kt`, `DECISIONS.md`)
+- **Randomization Dice for All Decks**: Added `[ ALL 🎲 ]` button at the right edge of the performance matrix tab strip for instant whole-rig randomization with undo snapshot, plus dedicated dice buttons (`🎲`) in each deck row header (Deck A, Deck B, Deck BG, Deck PV) for individual deck randomization.
+- **Header Controls Parity for Decks BG and PV**: Enabled full header controls for all 4 decks in `LIVE QUAD` (and `LIVE CONSOLE`), including generator source badge, searchable preset dropdown combo (`presetSearchBG`, `presetSearchPV`), eject button (`⏏`) routing through `UIManager.triggerDeckEject(deck)`, and FX routing toggles (`[FX1][FX2]`) with MIDI/OSC learn.
+- **Queue Navigation Parity**: Deck BG header connects directly to `BgQueueManager` with `< N/Total >` navigation and MIDI/OSC learn, while Deck PV provides a preview deck indicator and focus button.
+- **Crossfader Fade Speed Control**: Added an interactive duration badge widget (`${mixer.xfadeSpeed.baseValue}s`) directly between the `[ AUTO ]` button and Transition Picker button on the Master / Transitions row header. Supports drag scrubbing, mouse scroll wheel, and right-click context menu with quick presets (`0.5s`, `1.0s`, `2.0s`, `4.0s`, `8.0s`), MIDI Learn, and OSC Learn.
+
+### Mixer Shader & Engine Consolidation (`Mixer.kt`, `mixer.frag`, `Renderer.kt`)
+- **Removed Legacy Mixer Bloom**: Removed the legacy 9-tap blur bloom from `Mixer` and `mixer.frag` (as well as `web/shaders/mixer.frag`). Bloom is now handled exclusively via the modular ISF `"bloom"` filter or transitions.
+- **Consolidated Master Opacity into `masterLevel`**: Retired `mixer.masterAlpha` and `uAlpha` uniform, merging master opacity and gain strictly into `mixer.masterLevel` (`uMasterLevel`). Legacy sessions with `masterAlpha` automatically migrate seamlessly to `masterLevel`.
+- **Removed Deprecated Mix Mode**: Deleted `Mixer.mode` and the legacy GLSL branching (`uMode`, `uBalance`, `uTex2`) in `mixer.frag`. Transitions are now 100% shader-driven through the ISF transition framework.
+- **Parameters UI Cleanup**: Cleaned up the Mixer controls in `ParametersTabs.kt` and `ValueParamSection.kt` to reflect `Master Level` and eliminate the deprecated mix mode and bloom rows.
+
+### Audio Hardware 5×2 Oscilloscope Grid & VU Meter Consolidation (`AudioEnginePanel.kt`, `docs/developer/ui.md`)
+- **Deduplicated Stereo VU Meter**: Removed the redundant duplicate input meter from the left controls column, centralizing stereo input peak monitoring at the top of the right monitoring column.
+- **Unified 5×2 Oscilloscope Grid**: Standardized all oscilloscopes to uniform 50 px height and organized them into a 5×2 grid with Raw Buffer on row 0 left directly beside Beat Sine (Oscillator) on row 0 right, followed by the four RMS energy bands (Full Mix, Bass Band, Mid Band, High Band) in the left column paired with their corresponding Flux transient bands (Full Mix Transient, Kick Transient, Snare Transient, Hat Transient) in the right column.
+
+### Reorganized Preferences Category Ordering (`PreferencesPanel.kt`, `UIThemeTest.kt`, `docs/developer/ui.md`)
+- **Streamlined Preferences Sidebar Flow**: Reordered the left navigation tabs in Preferences (`PreferencesPanel.kt`) to: **General**, **Shader Locations**, **Video & Display**, **Audio Hardware**, **Tempo & Sync**, **MIDI Controls**, **OSC Controls**, **Keyboard Shortcuts**, and **Web Broadcast**. This places critical assets and display/audio configuration directly beneath General settings.
+
 ### Live Console Preset Quick-Search & Header Controls MIDI/OSC Learn (`PerformanceMatrixPanel.kt`, `MidiMappingManager.kt`, `MidiPreferencesPanel.kt`, `docs/user_guide/macros_and_rack.md`)
 - **Preset Quick-Search in Deck A/B Headers**: Added an integrated quick-search input field at the top of Deck A and Deck B preset dropdown combos in `LIVE CONSOLE`. Automatically focuses on open, filters scanned presets in real-time, and supports pressing `Escape` to instantly clear the search filter.
 - **Right-Click MIDI & OSC Learn on Header Controls**: Right-clicking any interactive header control in `LIVE CONSOLE` now opens a context menu with direct **Learn MIDI**, **Learn OSC**, and clear mapping actions:
@@ -33,6 +52,13 @@
 - **Rotary Knobs in Macro Panel FX Tabs (`MacroPanel.kt`)**: Replaced the compact slider strip in `drawFxRackView` with rotary macro knobs via `drawMacroGrid()`, providing consistent rotary knobs across all tabs with mouse drag, scroll wheel fine-adjust, middle-click reset, selection, and MIDI learn.
 - **Chain Switcher & Super Link Toggles in Macro Panel (`MacroPanel.kt`)**: Integrated the `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` selector buttons and compact `[x] Slot 1 [x] Slot 2 [x] Slot 3` Super Knob Link checkboxes directly above the rotary knobs in Column 3's FX tabs.
 - **Linked FX Slot Visual Knob Tracking (`MacroEngine.kt`)**: Added allocation-free synchronization in `MacroEngine.tick()` so linked FX slot knobs track the active chain's Super Knob / slot Metaknob value in memory, ensuring linked knobs visibly rotate in unison when turning the Super Knob.
+
+### 4-Knob Canonical Bank Standardization, Master Alpha Defaults & MST Macro Tab (`MacroEngine.kt`, `MacroPanel.kt`, `PerformanceMatrixPanel.kt`)
+- **4-Knob Standardization Across All Canonical Banks (`MacroEngine.kt`)**: Standardized all canonical macro banks (`DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `TRANS`, `MASTER`, `FX_BANK_1`, `FX_BANK_2`, `FX_SENDS`, `MASTER_FX`) to exactly 4 knobs. Transitions and Master banks no longer allocate redundant 8 knobs, ensuring uniform 4-knob single-row layout across the entire interface. Older sessions with 8-knob Transition/Master banks automatically clamp to the first 4 knobs upon load.
+- **Master Composite Alpha Smart Defaults (`MacroEngine.kt`)**: Initialized default bindings for the `MASTER` macro bank targeting the 4 core composite layers: `ALPHA A` (`Mixer/levelA`), `ALPHA B` (`Mixer/levelB`), `ALPHA BG` (`Mixer/levelBG`), and `MASTER` (`Mixer/masterLevel`).
+- **FX Sends Smart Defaults (`MacroEngine.kt`)**: Initialized default bindings for `FX_SENDS` targeting `SEND A`, `SEND B`, `SEND BG`, and `SEND PV` (`$deck/FXChain/DryWet`).
+- **Dedicated `MST` Tab in Column 3 Macro Panel (`MacroPanel.kt`)**: Added the `MST` tab button to the macro deck selector (`[ A | B | BG | PV | TRANS | MST | FX1 | FX2 | MFX ]`). Selecting `TRANS` switches to `Mixer` parameters with `TRANS` sub-tab; selecting `MST` switches to `Mixer` parameters with `CTRL` sub-tab. The preview monitor displays `PREVIEW: MASTER` for MST and `PREVIEW: TRANSITION` for TRANS.
+- **Performance Matrix `MASTER & FX` Tab Redesign (`PerformanceMatrixPanel.kt`)**: Replaced the previous 2-row duplicate groups with 4 focused, single-row (4-knob) group boxes: `TRANSITIONS` (4 knobs), `MASTER` (4 knobs), `FX SENDS` (4 knobs), and `MASTER FX` (4 knobs).
 
 ### Macro Bank Knobs 5-8 Retirement & Clamping on Session Restore (`SessionSerializer.kt`, `SessionStateTest.kt`)
 - **Deck Macro Bank Sizing Clamping (`SessionSerializer.kt`)**: When restoring session state (`loadSession`), canonical macro banks are now strictly clamped to `MacroEngine.defaultKnobCountFor(canonicalId)` (4 knobs for Decks A/B/BG/PV, FX banks, and FX sends; 8 knobs for Transitions and Master). Prevents legacy sessions with pre-FX-migration 8-knob deck banks from resurrecting orphaned Knobs 5–8 in Classic Mode's Column 3 MACROS panel.

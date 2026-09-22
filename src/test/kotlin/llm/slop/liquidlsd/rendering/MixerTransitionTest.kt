@@ -20,39 +20,27 @@ class MixerTransitionTest {
 
     @Test
     fun testMixerTransitionParameterRouting() {
-        val crossfade = ModulatableParameter(-1.0f)
-        val mode = ModulatableParameter(4.0f)
-        val masterAlpha = ModulatableParameter(1.0f)
-
-        val header = ISFHeader(
-            INPUTS = listOf(
-                ISFInput(NAME = "startImage", TYPE = "image"),
-                ISFInput(NAME = "endImage", TYPE = "image"),
-                ISFInput(NAME = "progress", TYPE = "float"),
-                ISFInput(NAME = "softness", TYPE = "float", DEFAULT = kotlinx.serialization.json.JsonPrimitive(0.1f))
-            )
-        )
-        val shader = mockk<Shader>(relaxed = true)
-        val filter = ISFFilter("noise_dissolve", "Noise Dissolve", header, shader)
+        val crossfade = ModulatableParameter(0.5f)
+        val masterLevel = ModulatableParameter(1.0f)
+        val filter: ISFFilter = mockk(relaxed = true)
+        every { filter.getParameterPaths(any()) } returns listOf("Mixer/Transition/softness" to ModulatableParameter(0.2f))
 
         val mixer = mockk<Mixer>(relaxed = true)
         every { mixer.crossfade } returns crossfade
-        every { mixer.mode } returns mode
-        every { mixer.masterAlpha } returns masterAlpha
+        every { mixer.masterLevel } returns masterLevel
         every { mixer.transitionFilter } returns filter
 
         every { mixer.getParameterPaths("Mixer") } answers {
             val list = mutableListOf<Pair<String, ModulatableParameter>>()
             list.add("Mixer/crossfade" to crossfade)
-            list.add("Mixer/mode" to mode)
-            list.add("Mixer/masterAlpha" to masterAlpha)
+            list.add("Mixer/masterLevel" to masterLevel)
             filter.let { f -> list.addAll(f.getParameterPaths("Mixer/Transition")) }
             list
         }
 
         val paths = mixer.getParameterPaths("Mixer")
         assertTrue(paths.any { it.first == "Mixer/crossfade" })
-        assertTrue(paths.any { it.first == "Mixer/mode" })
+        assertTrue(paths.any { it.first == "Mixer/masterLevel" })
         assertTrue(paths.any { it.first == "Mixer/Transition/softness" }, "Transition parameter 'softness' should be registered")
     }
 
@@ -68,16 +56,17 @@ class MixerTransitionTest {
     }
 
     @Test
-    fun testMixerFragHasDualModeIsfCompositeSupport() {
+    fun testMixerFragHasIsfCompositeSupport() {
         val stream = javaClass.classLoader.getResourceAsStream("shaders/mixer.frag")
         assertNotNull(stream, "shaders/mixer.frag must exist")
         val source = stream!!.bufferedReader().use { it.readText() }
 
-        assertTrue(source.contains("uMode = -1"), "mixer.frag must declare uMode = -1 for ISF composite mode")
         assertTrue(source.contains("uProgress"), "mixer.frag must declare uProgress uniform")
         assertTrue(source.contains("uLevelA = 1.0"), "mixer.frag must declare uLevelA default 1.0")
         assertTrue(source.contains("uLevelB = 1.0"), "mixer.frag must declare uLevelB default 1.0")
-        assertTrue(source.contains("if (uMode < 0)"), "mixer.frag must support uMode < 0 pure ISF composite branch")
+        assertTrue(source.contains("uLevelBG = 1.0"), "mixer.frag must declare uLevelBG default 1.0")
+        assertTrue(source.contains("uMasterLevel = 1.0"), "mixer.frag must declare uMasterLevel default 1.0")
+        assertTrue(source.contains("sampleComposite"), "mixer.frag must composite foreground and background layers")
     }
 
     // --- Tap Tempo Operations ---

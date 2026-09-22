@@ -323,8 +323,20 @@ class UIThemeTest {
     @Test
     fun testPreferencesCategories() {
         val categories = PreferencesPanel.Category.values()
-        assertTrue(categories.contains(PreferencesPanel.Category.SHORTCUTS))
+        val expectedOrder = listOf(
+            PreferencesPanel.Category.GENERAL,
+            PreferencesPanel.Category.SHADER_LOCATIONS,
+            PreferencesPanel.Category.VIDEO_DISPLAY,
+            PreferencesPanel.Category.AUDIO_ENGINE,
+            PreferencesPanel.Category.TEMPO_SYNC,
+            PreferencesPanel.Category.MIDI_CONTROLLER,
+            PreferencesPanel.Category.OSC_CONTROLLER,
+            PreferencesPanel.Category.SHORTCUTS,
+            PreferencesPanel.Category.BROADCAST
+        )
+        assertEquals(expectedOrder, categories.toList())
         assertEquals("Keyboard Shortcuts", PreferencesPanel.Category.SHORTCUTS.label)
+        assertEquals("Shader Locations", PreferencesPanel.Category.SHADER_LOCATIONS.label)
     }
 
     @Test

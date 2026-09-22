@@ -28,14 +28,14 @@ object PreferencesPanel {
 
     enum class Category(val label: String) {
         GENERAL("General"),
+        SHADER_LOCATIONS("Shader Locations"),
         VIDEO_DISPLAY("Video & Display"),
-        TEMPO_SYNC("Tempo & Sync"),
         AUDIO_ENGINE("Audio Hardware"),
+        TEMPO_SYNC("Tempo & Sync"),
         MIDI_CONTROLLER("MIDI Controls"),
         OSC_CONTROLLER("OSC Controls"),
-        SHADER_LOCATIONS("Shader Locations"),
-        BROADCAST("Web Broadcast"),
-        SHORTCUTS("Keyboard Shortcuts")
+        SHORTCUTS("Keyboard Shortcuts"),
+        BROADCAST("Web Broadcast")
     }
 
     var isOpen: Boolean = false
@@ -140,14 +140,14 @@ object PreferencesPanel {
         if (ImGui.beginChild("##preferences_content", rightContentW, contentH, true)) {
             when (activeCategory) {
                 Category.GENERAL          -> drawGeneralPreferences(session, currentSize, onPresetScaleChanged)
+                Category.SHADER_LOCATIONS -> drawShaderLocationsPreferences(session)
                 Category.VIDEO_DISPLAY    -> drawVideoDisplayPreferences(session)
-                Category.TEMPO_SYNC       -> drawTempoSyncPreferences(session)
                 Category.AUDIO_ENGINE     -> drawAudioEnginePreferences(session)
+                Category.TEMPO_SYNC       -> drawTempoSyncPreferences(session)
                 Category.MIDI_CONTROLLER  -> MidiPreferencesPanel.drawContent(session, parametersState)
                 Category.OSC_CONTROLLER   -> OscPreferencesPanel.drawContent(session)
-                Category.SHADER_LOCATIONS -> drawShaderLocationsPreferences(session)
-                Category.BROADCAST        -> BroadcastPreferencesPanel.drawContent(session, mixer)
                 Category.SHORTCUTS        -> ShortcutsPreferencesPanel.drawContent(session)
+                Category.BROADCAST        -> BroadcastPreferencesPanel.drawContent(session, mixer)
             }
         }
         ImGui.endChild()

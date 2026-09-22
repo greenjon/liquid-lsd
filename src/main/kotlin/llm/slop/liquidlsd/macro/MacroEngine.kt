@@ -47,19 +47,119 @@ object MacroEngine {
     val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX)
 
     /**
-     * Knob count for a freshly auto-vivified bank. Per-deck banks hold 4 generation-only knobs
-     * now that FX macros live on the shared FX_BANK_1/FX_BANK_2 banks (see FxBank); those two FX
-     * banks, plus FX_SENDS and MASTER_FX, also get 4. TRANS/MASTER and any non-canonical (e.g.
-     * future Rack unit) id keep the original 8.
+     * Knob count for a freshly auto-vivified bank. All canonical banks
+     * ([CANONICAL_BANK_IDS]) hold 4 knobs, conforming to the 4-column performance grid.
      */
-    fun defaultKnobCountFor(bankId: String?): Int = when (bankId) {
-        DECK_A, DECK_B, DECK_BG, DECK_PV, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX -> 4
-        else -> 8
-    }
+    fun defaultKnobCountFor(bankId: String?): Int = 4
 
-    /** Builds a fresh, correctly-sized, blank-labeled bank for [bankId]. */
-    fun newBankFor(bankId: String?): MacroBank =
-        MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "KNOB ${it + 1}") })
+    /** Builds a fresh, correctly-sized, blank-labeled or pre-bound default bank for [bankId]. */
+    fun newBankFor(bankId: String?): MacroBank = when (bankId) {
+        MASTER -> MacroBank(
+            knobs = listOf(
+                MacroControl(
+                    label = "ALPHA A",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Mixer/levelA",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                ),
+                MacroControl(
+                    label = "ALPHA B",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Mixer/levelB",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                ),
+                MacroControl(
+                    label = "ALPHA BG",
+                    value = 0.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Mixer/levelBG",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                ),
+                MacroControl(
+                    label = "MASTER",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Mixer/masterLevel",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                )
+            )
+        )
+        FX_SENDS -> MacroBank(
+            knobs = listOf(
+                MacroControl(
+                    label = "SEND A",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Deck A/FXChain/DryWet",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                ),
+                MacroControl(
+                    label = "SEND B",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Deck B/FXChain/DryWet",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                ),
+                MacroControl(
+                    label = "SEND BG",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Deck BG/FXChain/DryWet",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                ),
+                MacroControl(
+                    label = "SEND PV",
+                    value = 1.0f,
+                    bindings = mutableListOf(
+                        MacroBinding(
+                            parameterId = "Deck PV/FXChain/DryWet",
+                            targetType = MacroTargetType.PARAM_BASE_VALUE,
+                            minVal = 0.0f,
+                            maxVal = 1.0f
+                        )
+                    )
+                )
+            )
+        )
+        else -> MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "KNOB ${it + 1}") })
+    }
 
     private val banks = LinkedHashMap<String?, MacroBank>()
 
@@ -105,7 +205,8 @@ object MacroEngine {
         "Deck B" -> DECK_B
         "Deck BG" -> DECK_BG
         "Deck PV" -> DECK_PV
-        "Master" -> MASTER
+        "Master", "MST" -> MASTER
+        "TRANS", "Transition" -> TRANS
         "Bank 1", "FX1" -> FX_BANK_1
         "Bank 2", "FX2" -> FX_BANK_2
         "MFX" -> MASTER_FX

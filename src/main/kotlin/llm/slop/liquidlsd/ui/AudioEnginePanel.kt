@@ -61,17 +61,37 @@ object AudioEnginePanel {
 
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
 
-    private val cvSignals = arrayOf(
-        CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine")),
+    private val beatSineSignal = CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine"))
+
+    private val rmsSignals = arrayOf(
         CvSignalDef("audio_amp", "Full Mix (RMS)", CvTheme.getThemeColor("audio_amp")),
         CvSignalDef("audio_bass", "Bass Band (RMS)", CvTheme.getThemeColor("audio_bass")),
         CvSignalDef("audio_mid", "Mid Band (RMS)", CvTheme.getThemeColor("audio_mid")),
-        CvSignalDef("audio_high", "High Band (RMS)", CvTheme.getThemeColor("audio_high")),
+        CvSignalDef("audio_high", "High Band (RMS)", CvTheme.getThemeColor("audio_high"))
+    )
+
+    private val fluxSignals = arrayOf(
         CvSignalDef("audio_flux_amp", "Full Mix Transient (Flux)", CvTheme.getThemeColor("audio_flux_amp")),
         CvSignalDef("audio_flux_bass", "Kick Transient (Flux)", CvTheme.getThemeColor("audio_flux_bass")),
         CvSignalDef("audio_flux_mid", "Snare Transient (Flux)", CvTheme.getThemeColor("audio_flux_mid")),
         CvSignalDef("audio_flux_high", "Hat Transient (Flux)", CvTheme.getThemeColor("audio_flux_high"))
     )
+
+    private fun drawCvScope(session: llm.slop.liquidlsd.SessionContext, sig: CvSignalDef) {
+        val history = session.cvRegistry.getHistory(sig.id) ?: return
+        history.copyTo(cvSamples)
+        val minV = if (sig.id == "beatSine") -1.0f else 0.0f
+        val maxV = 1.0f
+        OscilloscopeDrawer.drawBufferOscilloscope(
+            session,
+            sig.title,
+            cvSamples,
+            minV,
+            maxV,
+            sig.colorU32,
+            50f
+        )
+    }
 
     /**
      * Opens the Preferences modal focused directly on the Audio Engine tab.
@@ -243,13 +263,6 @@ object AudioEnginePanel {
 
             ImGui.spacing()
 
-            // Visual Input Metering
-            theme.body("Input Peak Meter (L / R):")
-            drawStereoVuMeter(session, ImGui.getContentRegionAvailX().coerceAtMost(380f))
-            itemTooltip("Real-time 2-channel stereo input peak meter. Shows physical incoming channel levels before routing.")
-
-            ImGui.spacing()
-
             // Backend Status & Reconnection Options
             val state = audioEngine.currentState
 
@@ -323,45 +336,58 @@ object AudioEnginePanel {
             itemTooltip("Open master tempo deck to adjust BPM slider, tap tempo, beat tracking, or Ableton Link.")
 
             // -----------------------------------------------------------------
-            // RIGHT COLUMN: Raw Audio Input + Sound-Derived CV Oscilloscopes
+            // RIGHT COLUMN: Audio Input Metering & Oscilloscopes
             // -----------------------------------------------------------------
             ImGui.tableSetColumnIndex(1)
 
-            // Section 3: Raw Audio Input
-            theme.h2("Raw Audio Input")
+            // Section 3: Raw Audio Input Metering
+            theme.h2("Input Peak Meter (L / R)")
             ImGui.separator()
             ImGui.spacing()
 
             drawStereoVuMeter(session)
-            ImGui.spacing()
-            audioEngine.rawHistory.copyTo(rawSamples)
-            val rawColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 1.0f) // Neon Green
-            OscilloscopeDrawer.drawBufferOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 65f)
+            itemTooltip("Real-time 2-channel stereo input peak meter. Shows physical incoming channel levels before routing.")
 
             ImGui.spacing()
             ImGui.separator()
             ImGui.spacing()
 
-            // Section 4: Sound-Derived CV Oscilloscopes (Stacked Vertically)
-            theme.h2("Sound-Derived Control Voltages (CV)")
+            // Section 4: Signal & Sound-Derived CV Oscilloscopes (2-Column Grid)
+            theme.h2("Signal & Control Voltage (CV) Oscilloscopes")
             ImGui.separator()
             ImGui.spacing()
 
-            for (sig in cvSignals) {
-                val history = session.cvRegistry.getHistory(sig.id) ?: continue
-                history.copyTo(cvSamples)
-                val minV = if (sig.id == "beatSine") -1.0f else 0.0f
-                val maxV = 1.0f
-                OscilloscopeDrawer.drawBufferOscilloscope(
-                    session,
-                    sig.title,
-                    cvSamples,
-                    minV,
-                    maxV,
-                    sig.colorU32,
-                    50f
-                )
+            val cvTableFlags = ImGuiTableFlags.SizingStretchSame
+            if (ImGui.beginTable("##cv_oscilloscopes_grid", 2, cvTableFlags)) {
+                ImGui.tableSetupColumn("##cv_col_left", ImGuiTableColumnFlags.WidthStretch, 1f)
+                ImGui.tableSetupColumn("##cv_col_right", ImGuiTableColumnFlags.WidthStretch, 1f)
+
+                // Row 0: Raw Buffer on Left, Beat Sine (Oscillator) on Right
+                ImGui.tableNextRow()
+                ImGui.tableSetColumnIndex(0)
+                audioEngine.rawHistory.copyTo(rawSamples)
+                val rawColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 1.0f) // Neon Green
+                OscilloscopeDrawer.drawBufferOscilloscope(session, "Raw Buffer", rawSamples, -1.0f, 1.0f, rawColor, 50f)
                 ImGui.spacing()
+
+                ImGui.tableSetColumnIndex(1)
+                drawCvScope(session, beatSineSignal)
+                ImGui.spacing()
+
+                // Rows 1-4: RMS on Left, Flux Transient on Right
+                for (i in rmsSignals.indices) {
+                    ImGui.tableNextRow()
+
+                    ImGui.tableSetColumnIndex(0)
+                    drawCvScope(session, rmsSignals[i])
+                    ImGui.spacing()
+
+                    ImGui.tableSetColumnIndex(1)
+                    drawCvScope(session, fluxSignals[i])
+                    ImGui.spacing()
+                }
+
+                ImGui.endTable()
             }
 
             ImGui.endTable()

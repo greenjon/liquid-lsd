@@ -56,11 +56,9 @@ object WebPresetSerializer {
     }
 
     fun serializeMixer(mixer: Mixer): JsonObject = buildJsonObject {
-        put("mode", JsonPrimitive(mixer.mode.value.roundToInt()))
         val balance01 = ((mixer.crossfade.value + 1.0f) * 0.5f).coerceIn(0.0f, 1.0f)
         put("balance", JsonPrimitive(round4(balance01)))
-        put("alpha", JsonPrimitive(round4(mixer.masterAlpha.value)))
-        put("bloom", JsonPrimitive(round4(mixer.bloom.value)))
+        put("alpha", JsonPrimitive(round4(mixer.masterLevel.value)))
         put("transition", JsonPrimitive(mixer.transitionFilter?.id ?: ""))
     }
 

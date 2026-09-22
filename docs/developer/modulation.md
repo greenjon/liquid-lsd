@@ -311,7 +311,7 @@ The overall parameter categories cover:
 - Deck Visual Source: mapped dynamically from `source.parameters` (e.g. Lobes, Recipe Select, L1–L4, Thickness, Hue Offset, Hue Sweep, Depth, etc.) + `Gain`
 - Deck View: 3DMode, Zoom, RotateX, RotateY, RotateZ, Persp, DepthDim, Separation, BlendMode
 - Deck Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Kaleido
-- Mixer: crossfade, mode, masterAlpha, bloom, xfadeSpeed, queuePrev, queueNext, bgQueuePrev, bgQueueNext, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll
+- Mixer: crossfade, xfadeSpeed, levelA, levelB, levelBG, levelPV, masterLevel, queuePrev, queueNext, bgQueuePrev, bgQueueNext, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll
 
 ---
 

@@ -95,8 +95,7 @@ object ClipboardManager {
                 if (parts.size > 1) {
                     when (parts[1]) {
                         "crossfade" -> mixer.crossfade
-                        "masterAlpha" -> mixer.masterAlpha
-                        "bloom" -> mixer.bloom
+                        "masterLevel" -> mixer.masterLevel
                         else -> null
                     }
                 } else null

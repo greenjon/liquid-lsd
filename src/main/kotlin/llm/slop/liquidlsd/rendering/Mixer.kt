@@ -68,13 +68,7 @@ class Mixer(
         transitionFilter?.dispose()
         val transId = if (!id.isNullOrBlank()) id else "linear_crossfade"
         val filter = llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition(transId)
-            ?: llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition("linear_crossfade")
         transitionFilter = filter
-
-        if (filter?.id == "linear_crossfade") {
-            mode.baseValue = 4.0f
-            lastMode = 4
-        }
     }
 
     /**
@@ -138,11 +132,6 @@ class Mixer(
 
     // Blend parameters
     val crossfade = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR) // -1.0 = Deck A, 1.0 = Deck B
-    val mode = ModulatableParameter(4.0f, minClamp = 0.0f, maxClamp = 4.0f).apply { // 0 = ADD, 1 = SCREEN, 2 = MULT, 3 = MAX, 4 = XFADE
-        modulatorFilter = { false }
-    }
-    val masterAlpha = ModulatableParameter(1.0f) // Master output gain
-    val bloom = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
     val xfadeSpeed = ModulatableParameter(5.0f, minClamp = 0.1f, maxClamp = 30.0f)
  
     init {
@@ -330,7 +319,7 @@ class Mixer(
         }
         list.add(masterFxWetDry)
         list.add(crossfade)
-        list.add(masterAlpha)
+        list.add(masterLevel)
         return list
     }
 
@@ -340,14 +329,11 @@ class Mixer(
         val list = mutableListOf<Pair<String, ModulatableParameter>>()
         
         list.add("$prefix/crossfade" to crossfade)
-        list.add("$prefix/mode" to mode)
-        list.add("$prefix/masterAlpha" to masterAlpha)
         list.add("$prefix/levelA" to levelA)
         list.add("$prefix/levelB" to levelB)
         list.add("$prefix/levelBG" to levelBG)
         list.add("$prefix/levelPV" to levelPV)
         list.add("$prefix/masterLevel" to masterLevel)
-        list.add("$prefix/bloom" to bloom)
         list.add("$prefix/xfadeSpeed" to xfadeSpeed)
         list.add("$prefix/queuePrev" to queuePrev)
         list.add("$prefix/queueNext" to queueNext)
@@ -402,7 +388,7 @@ class Mixer(
         deckB.randomizeModulators()
         deckBG.randomizeModulators()
         deckPV.randomizeModulators()
-        listOf(crossfade, masterAlpha).forEach { param ->
+        listOf(crossfade, masterLevel).forEach { param ->
             val randomized = param.modulators.map { it.randomizeActiveValues() }
             param.modulators.clear()
             param.modulators.addAll(randomized)
@@ -444,14 +430,11 @@ class Mixer(
         llm.slop.liquidlsd.presets.BgQueueManager.update(this, deltaTime)
 
         crossfade.evaluate()
-        mode.evaluate()
-        masterAlpha.evaluate()
         levelA.evaluate()
         levelB.evaluate()
         levelBG.evaluate()
         levelPV.evaluate()
         masterLevel.evaluate()
-        bloom.evaluate()
         xfadeSpeed.evaluate()
         queuePrev.evaluate()
         queueNext.evaluate()

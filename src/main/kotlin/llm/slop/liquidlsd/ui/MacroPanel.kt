@@ -60,7 +60,7 @@ class MacroPanel(
         drawPreviewMonitor(session, mixer)
     }
 
-    /** Maps [ParametersState.activeTopTab] to its canonical bank id ("Mixer" and anything unrecognized -> [MacroEngine.TRANS]). */
+    /** Maps [ParametersState.activeTopTab] to its canonical bank id ("Mixer" -> TRANS or MASTER depending on subtab). */
     private fun activeBankId(): String = when (parametersState.activeTopTab) {
         "Deck A" -> MacroEngine.DECK_A
         "Deck B" -> MacroEngine.DECK_B
@@ -69,10 +69,23 @@ class MacroPanel(
         "FX1" -> MacroEngine.FX_BANK_1
         "FX2" -> MacroEngine.FX_BANK_2
         "MFX" -> MacroEngine.MASTER_FX
+        "Master", "MST" -> MacroEngine.MASTER
+        "TRANS", "Transition" -> MacroEngine.TRANS
+        "Mixer" -> if (parametersState.activeMixerSubTab == "CTRL") MacroEngine.MASTER else MacroEngine.TRANS
         else -> MacroEngine.TRANS
     }
 
-    private val deckTabs = listOf("Deck A" to "A", "Deck B" to "B", "Deck BG" to "BG", "Deck PV" to "PV", "Mixer" to "TRANS", "FX1" to "FX1", "FX2" to "FX2", "MFX" to "MFX")
+    private val deckTabs = listOf(
+        "Deck A" to "A",
+        "Deck B" to "B",
+        "Deck BG" to "BG",
+        "Deck PV" to "PV",
+        "TRANS" to "TRANS",
+        "MST" to "MST",
+        "FX1" to "FX1",
+        "FX2" to "FX2",
+        "MFX" to "MFX"
+    )
 
     private fun drawDeckTabs() {
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
@@ -81,19 +94,40 @@ class MacroPanel(
         val btnH = 24f
 
         for ((i, tab) in deckTabs.withIndex()) {
-            val (topTabValue, shortLabel) = tab
+            val (tabId, shortLabel) = tab
             if (i > 0) ImGui.sameLine(0f, gap)
-            val isActive = parametersState.activeTopTab == topTabValue
+            val isActive = when (tabId) {
+                "TRANS" -> parametersState.activeTopTab == "TRANS" || (parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "TRANS")
+                "MST" -> parametersState.activeTopTab == "Master" || parametersState.activeTopTab == "MST" || (parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "CTRL")
+                else -> parametersState.activeTopTab == tabId
+            }
             if (isActive) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
             } else {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
             }
-            if (ImGui.button("$shortLabel##macro_deck_tab_$topTabValue", segW, btnH)) {
-                parametersState.activeTopTab = topTabValue
+            if (ImGui.button("$shortLabel##macro_deck_tab_$tabId", segW, btnH)) {
+                when (tabId) {
+                    "TRANS" -> {
+                        parametersState.activeTopTab = "Mixer"
+                        parametersState.activeMixerSubTab = "TRANS"
+                    }
+                    "MST" -> {
+                        parametersState.activeTopTab = "Mixer"
+                        parametersState.activeMixerSubTab = "CTRL"
+                    }
+                    else -> {
+                        parametersState.activeTopTab = tabId
+                    }
+                }
             }
             ImGui.popStyleColor()
-            itemTooltip("Show $topTabValue's macro knobs.")
+            val tip = when (tabId) {
+                "TRANS" -> "Show Transition macro knobs."
+                "MST" -> "Show Master composite macro knobs."
+                else -> "Show $tabId's macro knobs."
+            }
+            itemTooltip(tip)
         }
     }
 
@@ -249,8 +283,15 @@ class MacroPanel(
     // -- Single-deck preview monitor (bottom) ------------------------------------------------------
 
     private fun drawPreviewMonitor(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        val previewTitle = when {
+            parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "CTRL" -> "PREVIEW: MASTER"
+            parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "TRANS" -> "PREVIEW: TRANSITION"
+            parametersState.activeTopTab == "Master" || parametersState.activeTopTab == "MST" -> "PREVIEW: MASTER"
+            parametersState.activeTopTab == "TRANS" || parametersState.activeTopTab == "Transition" -> "PREVIEW: TRANSITION"
+            else -> "PREVIEW: ${parametersState.activeTopTab.uppercase()}"
+        }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.textDisabled("PREVIEW: ${parametersState.activeTopTab.uppercase()}")
+            ImGui.textDisabled(previewTitle)
         }
         ImGui.spacing()
 
@@ -284,8 +325,7 @@ class MacroPanel(
      * Resolves the deck currently focused by Columns 1/2 ([ParametersState.activeTopTab]) to its
      * output texture. The Macros preview intentionally follows this same "which deck" selection
      * rather than introducing a second, independent picker. Falls back to the master output
-     * texture for the "Mixer" tab (no single deck focused), matching what the Mixer view's own
-     * master monitor already shows.
+     * texture for the "Mixer" tab (or transition FBO when on TRANS).
      */
     private fun resolvePreviewTexture(mixer: Mixer): Int {
         return when (parametersState.activeTopTab) {
@@ -293,6 +333,9 @@ class MacroPanel(
             "Deck B" -> mixer.deckB.getOutputTexture()
             "Deck BG" -> mixer.deckBG.getOutputTexture()
             "Deck PV" -> mixer.deckPV.getOutputTexture()
+            "Mixer" -> if (parametersState.activeMixerSubTab == "TRANS") mixer.blendFBO.texture else mixer.masterFBO.texture
+            "TRANS", "Transition" -> mixer.blendFBO.texture
+            "Master", "MST" -> mixer.masterFBO.texture
             else -> mixer.masterFBO.texture
         }
     }

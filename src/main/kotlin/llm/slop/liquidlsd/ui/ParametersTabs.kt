@@ -450,11 +450,7 @@ object ParametersTabs {
     ) {
         var row = 0
         ParametersRenderer.drawParamRow(session, "crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        if (mixer.transitionFilter == null) {
-            ParametersRenderer.drawParamRow(session, "mix mode", "Mixer/mode", mixer.mode, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        }
-        ParametersRenderer.drawParamRow(session, "master Alpha", "Mixer/masterAlpha", mixer.masterAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "bloom", "Mixer/bloom", mixer.bloom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
         ParametersRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)

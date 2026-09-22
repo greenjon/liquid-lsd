@@ -255,8 +255,8 @@ data class FXSlotDto(
 @Serializable
 data class MixerDto(
     val crossfade: ParameterDto,
-    val masterAlpha: ParameterDto,
-    val blendMode: Float,
+    val masterAlpha: ParameterDto? = null,
+    val blendMode: Float? = null,
     val bloom: ParameterDto? = null,
     val xfadeSpeed: ParameterDto? = null,
     val queueNext: ParameterDto? = null,

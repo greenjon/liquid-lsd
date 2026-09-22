@@ -341,7 +341,6 @@ object ParametersRenderer {
             }
         }
         if (isValHovered && session.uiTheme.tooltipsEnabled) {
-            val isMixerMode = paramKey == "Mixer/mode"
             val tipText = when {
                 isMacroLearning ->
                     "Macro Learn Mode: Click to bind this parameter's base value to armed Macro Control."
@@ -349,7 +348,7 @@ object ParametersRenderer {
                     val info = macroInfo!!
                     "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to view in Column 3 Macro Inspector."
                 }
-                isMixerMode || paramKey.endsWith("/Max Points") ->
+                paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
                 param.modulators.isNotEmpty() -> {
                     val allBypassed = param.modulators.all { it.bypassed }

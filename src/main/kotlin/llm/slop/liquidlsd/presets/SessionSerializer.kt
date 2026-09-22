@@ -38,9 +38,6 @@ object SessionSerializer {
 
             val mixerDto = MixerDto(
                 crossfade = mixer.crossfade.toDto(),
-                masterAlpha = mixer.masterAlpha.toDto(),
-                blendMode = mixer.mode.baseValue,
-                bloom = mixer.bloom.toDto(),
                 xfadeSpeed = mixer.xfadeSpeed.toDto(),
                 queueNext = mixer.queueNext.toDto(),
                 queuePrev = mixer.queuePrev.toDto(),
@@ -116,13 +113,15 @@ object SessionSerializer {
             val mDto = session.mixer
 
             mixer.crossfade.applyDto(mDto.crossfade)
-            mixer.masterAlpha.applyDto(mDto.masterAlpha)
-            mixer.mode.set(mDto.blendMode)
             mDto.levelA?.let { mixer.levelA.applyDto(it) }
             mDto.levelB?.let { mixer.levelB.applyDto(it) }
             mDto.levelBG?.let { mixer.levelBG.applyDto(it) }
             mDto.levelPV?.let { mixer.levelPV.applyDto(it) }
-            mDto.masterLevel?.let { mixer.masterLevel.applyDto(it) }
+            if (mDto.masterLevel != null) {
+                mixer.masterLevel.applyDto(mDto.masterLevel)
+            } else if (mDto.masterAlpha != null) {
+                mixer.masterLevel.applyDto(mDto.masterAlpha)
+            }
 
             mixer.setTransition(null)
             mDto.transitionSlot?.let { transDto ->
@@ -157,7 +156,6 @@ object SessionSerializer {
             val pvDto = session.deckPV ?: PresetManager.emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
             
-            mDto.bloom?.let { mixer.bloom.applyDto(it) }
             mDto.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             mDto.queueNext?.let { mixer.queueNext.applyDto(it) }
             mDto.queuePrev?.let { mixer.queuePrev.applyDto(it) }
@@ -333,8 +331,6 @@ object SessionSerializer {
         mixer.deckPV.applyDto(PresetManager.emptyDeckDto(mixer.deckPV, mixer))
         
         mixer.crossfade.baseValue = -1f
-        mixer.masterAlpha.baseValue = 1f
-        mixer.mode.baseValue = 0f
         mixer.levelA.baseValue = 1f
         mixer.levelB.baseValue = 1f
         mixer.levelBG.baseValue = 0f

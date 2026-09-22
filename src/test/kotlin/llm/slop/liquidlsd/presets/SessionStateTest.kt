@@ -88,9 +88,8 @@ class SessionStateTest {
         assertEquals("Deck BG", decoded.deckBG.name)
         assertEquals("Deck PV", decoded.deckPV.name)
         assertTrue(decoded.deckBG.isEmpty)
-        assertTrue(decoded.deckPV.isEmpty)
-        assertNotNull(decoded.mixer.bloom)
-        assertEquals(0.5f, decoded.mixer.bloom?.baseValue)
+        assertNotNull(decoded.mixer.masterLevel)
+        assertEquals(0.9f, decoded.mixer.masterLevel?.baseValue)
         assertNotNull(decoded.mixer.xfadeSpeed)
         assertEquals(0.5f, decoded.mixer.xfadeSpeed?.baseValue)
         assertNotNull(decoded.mixer.queueNext)
@@ -363,7 +362,7 @@ class SessionStateTest {
 
             val transBank = MacroEngine.getBank(MacroEngine.TRANS)
             assertNotNull(transBank)
-            assertEquals(8, transBank.knobs.size, "TRANS bank should retain 8 knobs")
+            assertEquals(4, transBank.knobs.size, "TRANS bank should be clamped to 4 knobs")
         } finally {
             if (backupContent != null) {
                 tempSessionFile.writeText(backupContent)

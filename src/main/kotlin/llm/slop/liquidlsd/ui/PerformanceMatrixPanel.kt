@@ -42,7 +42,7 @@ class PerformanceMatrixPanel {
     // without hardcoding a count that silently drifts when a tab is added/removed.
     internal enum class Tab(val label: String, val tooltip: String) {
         LIVE_QUAD("LIVE QUAD", "One row per deck (Deck A / Deck B / Deck BG / Deck PV), knobs 1-4 each."),
-        MASTER_AND_FX("MASTER & FX", "All 8 Transition knobs (rows 1-2) and all 8 Master knobs (rows 3-4)."),
+        MASTER_AND_FX("MASTER & FX", "Transitions, Master composite alphas, FX sends, and Master FX."),
         LIVE_CONSOLE("LIVE CONSOLE", "Deck A / Deck B / focused FX bank+chain / Master & Transitions -- a single 4x4 surface for live shows.")
     }
 
@@ -77,17 +77,17 @@ class PerformanceMatrixPanel {
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // LIVE QUAD: one row per deck (knobs 0–3 each: Deck A, Deck B, Deck BG, Deck PV)
             listOf(
-                RowDescriptor(MacroEngine.DECK_A,  0, COLOR_DECK_A,  "DECK A"),
-                RowDescriptor(MacroEngine.DECK_B,  0, COLOR_DECK_B,  "DECK B"),
-                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG"),
-                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV"),
+                RowDescriptor(MacroEngine.DECK_A,  0, COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_B,  0, COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
-            // MASTER & FX: Transitions full, Master full
+            // MASTER & FX: Transitions, Master, FX Sends, Master FX (1 row of 4 knobs each)
             listOf(
-                RowDescriptor(MacroEngine.TRANS,  0, COLOR_TRANS,  "TRANSITIONS", "1-4"),
-                RowDescriptor(MacroEngine.TRANS,  4, COLOR_TRANS,  "TRANSITIONS", "5-8"),
-                RowDescriptor(MacroEngine.MASTER, 0, COLOR_MASTER, "MASTER", "1-4"),
-                RowDescriptor(MacroEngine.MASTER, 4, COLOR_MASTER, "MASTER", "5-8"),
+                RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "TRANSITIONS"),
+                RowDescriptor(MacroEngine.MASTER,    0, COLOR_MASTER, "MASTER"),
+                RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX SENDS"),
+                RowDescriptor(MacroEngine.MASTER_FX, 0, COLOR_FX,     "MASTER FX"),
             ),
             // LIVE CONSOLE: Deck A, Deck B, focused FX bank/chain (bankId placeholder rewritten to
             // the current focusedFxBankId each frame -- see drawMatrix), Master/Transitions.
@@ -107,26 +107,38 @@ class PerformanceMatrixPanel {
     private var focusedFxBankId: String = MacroEngine.FX_BANK_1
     private val presetSearchA = ImString(64)
     private val presetSearchB = ImString(64)
+    private val presetSearchBG = ImString(64)
+    private val presetSearchPV = ImString(64)
     private var comboWasOpenA = false
     private var comboWasOpenB = false
+    private var comboWasOpenBG = false
+    private var comboWasOpenPV = false
 
     // -- Draw ---------------------------------------------------------------------
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val theme = session.uiTheme
-        drawTabStrip(session, theme)
+        drawTabStrip(session, theme, mixer, parametersState)
         ImGui.spacing()
         drawMatrix(session, theme, mixer, parametersState)
     }
 
     // -- Tab strip ----------------------------------------------------------------
 
-    private fun drawTabStrip(session: llm.slop.liquidlsd.SessionContext, theme: UITheme) {
+    private fun drawTabStrip(
+        session: llm.slop.liquidlsd.SessionContext,
+        theme: UITheme,
+        mixer: Mixer,
+        parametersState: ParametersState
+    ) {
         val tabs = Tab.values()
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
         val gap = 4f
-        val tabW = ((availW - gap * (tabs.size - 1)) / tabs.size).coerceAtLeast(1f)
         val tabH = 28f
+        val showAllDice = session.uiTheme.randomizationEnabled
+        val allDiceBtnW = if (showAllDice) 80f else 0f
+        val totalTabAreaW = (if (showAllDice) availW - allDiceBtnW - gap else availW).coerceAtLeast(1f)
+        val tabW = ((totalTabAreaW - gap * (tabs.size - 1)) / tabs.size).coerceAtLeast(1f)
 
         for ((i, tab) in tabs.withIndex()) {
             if (i > 0) ImGui.sameLine(0f, gap)
@@ -146,6 +158,21 @@ class PerformanceMatrixPanel {
             }
             itemTooltip(tab.tooltip)
             ImGui.popStyleColor(2)
+        }
+
+        if (showAllDice) {
+            ImGui.sameLine(0f, gap)
+            ImGui.pushStyleColor(ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.25f, 0.18f, 0.32f, 0.90f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.25f, 0.48f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 1.0f, 1f))
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.DICES} ALL##perf_rand_all", allDiceBtnW, tabH)) {
+                    ParametersUndo.pushUndoState(parametersState, mixer)
+                    mixer.randomizeAll()
+                }
+            }
+            ImGui.popStyleColor(3)
+            itemTooltip("Randomize ALL Decks (A, B, BG, PV) and Modulators.\nClick to randomize all decks with undo support.")
         }
     }
 
@@ -236,6 +263,9 @@ class PerformanceMatrixPanel {
             // Large centered group title just under the box's top border.
             val isDeckA = descriptor.bankId == MacroEngine.DECK_A
             val isDeckB = descriptor.bankId == MacroEngine.DECK_B
+            val isDeckBG = descriptor.bankId == MacroEngine.DECK_BG
+            val isDeckPV = descriptor.bankId == MacroEngine.DECK_PV
+            val isDeckRow = isDeckA || isDeckB || isDeckBG || isDeckPV
             val isFxRow = descriptor.bankId in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)
             val isTransRow = descriptor.bankId == MacroEngine.TRANS
             val displayLabel = when {
@@ -267,10 +297,21 @@ class PerformanceMatrixPanel {
                         }
                         ImGui.endDragDropTarget()
                     }
-                } else if (isDeckA || isDeckB) {
-                    val targetDeck = if (isDeckA) mixer.deckA else mixer.deckB
+                } else if (isDeckRow) {
+                    val targetDeck = when {
+                        isDeckA -> mixer.deckA
+                        isDeckB -> mixer.deckB
+                        isDeckBG -> mixer.deckBG
+                        else -> mixer.deckPV
+                    }
+                    val dropTag = when {
+                        isDeckA -> "A"
+                        isDeckB -> "B"
+                        isDeckBG -> "BG"
+                        else -> "PV"
+                    }
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
-                    ImGui.invisibleButton("##perf_deck_drop_${if (isDeckA) "A" else "B"}", boxX2 - boxX1, (afterTitleY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton("##perf_deck_drop_$dropTag", boxX2 - boxX1, (afterTitleY - boxTopY).coerceAtLeast(1f))
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -278,7 +319,12 @@ class PerformanceMatrixPanel {
                             if (file.exists() && file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                                 if (!isDirty) {
-                                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = isDeckA)
+                                    session.presetRepository.loadDeckPresetAsync(
+                                        file,
+                                        isDeckA = isDeckA,
+                                        isDeckBG = isDeckBG,
+                                        isDeckPV = isDeckPV
+                                    )
                                 } else {
                                     UIManager.triggerDeckDragDrop(file, targetDeck, isDeckA, mixer)
                                 }
@@ -314,8 +360,10 @@ class PerformanceMatrixPanel {
             val contentTopY = if (descriptor.hasExtraHeader) {
                 when {
                     isFxRow -> drawFxRowHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
-                    isDeckA -> drawDeckRowHeaderControls(session, mixer, "Deck A", mixer.deckA, true, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
-                    isDeckB -> drawDeckRowHeaderControls(session, mixer, "Deck B", mixer.deckB, false, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+                    isDeckA -> drawDeckRowHeaderControls(session, mixer, parametersState, "Deck A", mixer.deckA, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+                    isDeckB -> drawDeckRowHeaderControls(session, mixer, parametersState, "Deck B", mixer.deckB, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+                    isDeckBG -> drawDeckRowHeaderControls(session, mixer, parametersState, "Deck BG", mixer.deckBG, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+                    isDeckPV -> drawDeckRowHeaderControls(session, mixer, parametersState, "Deck PV", mixer.deckPV, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
                     isTransRow -> drawMasterTransitionsHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
                 }
                 afterTitleY + EXTRA_HEADER_H + boxLabelGap
@@ -526,15 +574,16 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * Drawn in place of the plain group title for LIVE_CONSOLE's Deck A and Deck B rows.
-     * Provides quick generator badge, preset selector combo, play queue navigation, and FX send routing.
+     * Drawn in place of the plain group title for Deck rows with headers (Deck A, B, BG, PV).
+     * Provides quick generator badge, preset selector combo, eject button, randomize die button,
+     * play queue / bg queue navigation, and FX send routing.
      */
     private fun drawDeckRowHeaderControls(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer,
+        parametersState: ParametersState,
         deckLabel: String,
         deck: Deck,
-        isDeckA: Boolean,
         boxX1: Float,
         boxX2: Float,
         headerY: Float,
@@ -543,13 +592,22 @@ class PerformanceMatrixPanel {
         val pad = 6f
         val gap = 4f
         val availW = (boxX2 - boxX1 - pad * 2f).coerceAtLeast(1f)
-        val tag = if (isDeckA) "A" else "B"
+        val isDeckA = deck === mixer.deckA
+        val isDeckB = deck === mixer.deckB
+        val isDeckBG = deck === mixer.deckBG
+        val isDeckPV = deck === mixer.deckPV
+        val tag = when {
+            isDeckA -> "A"
+            isDeckB -> "B"
+            isDeckBG -> "BG"
+            else -> "PV"
+        }
 
         ImGui.setCursorScreenPos(boxX1 + pad, headerY)
         ImGui.beginGroup()
 
-        // 1. Generator badge (fixed ~110px or scaled)
-        val genBadgeW = (availW * 0.20f).coerceIn(80f, 160f)
+        // 1. Generator badge (fixed ~100px or scaled)
+        val genBadgeW = (availW * 0.16f).coerceIn(70f, 130f)
         val genName = deck.source.displayName
         val genBorderCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
         val genBgCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
@@ -572,20 +630,40 @@ class PerformanceMatrixPanel {
         ImGui.sameLine(0f, gap)
 
         // 2. Preset dropdown combo with quick-search
-        val activePreset = if (isDeckA) session.presetManager.activePresetA else session.presetManager.activePresetB
+        val activePreset = when {
+            isDeckA -> session.presetManager.activePresetA
+            isDeckB -> session.presetManager.activePresetB
+            isDeckBG -> session.presetManager.activePresetBG
+            else -> session.presetManager.activePresetPV
+        }
         val isDirty = session.presetManager.isDeckDirty(deck, mixer)
         val dirtyMarker = if (isDirty) " *" else ""
         val presetDisplay = (activePreset ?: "Default") + dirtyMarker
-        val comboW = (availW * 0.38f).coerceIn(100f, 300f)
+        val comboW = (availW * 0.28f).coerceIn(90f, 250f)
 
         ImGui.setNextItemWidth(comboW)
-        val searchBuf = if (isDeckA) presetSearchA else presetSearchB
-        val wasOpen = if (isDeckA) comboWasOpenA else comboWasOpenB
+        val searchBuf = when {
+            isDeckA -> presetSearchA
+            isDeckB -> presetSearchB
+            isDeckBG -> presetSearchBG
+            else -> presetSearchPV
+        }
+        val wasOpen = when {
+            isDeckA -> comboWasOpenA
+            isDeckB -> comboWasOpenB
+            isDeckBG -> comboWasOpenBG
+            else -> comboWasOpenPV
+        }
         val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
         if (isComboOpen) {
             if (!wasOpen) {
                 ImGui.setKeyboardFocusHere()
-                if (isDeckA) comboWasOpenA = true else comboWasOpenB = true
+                when {
+                    isDeckA -> comboWasOpenA = true
+                    isDeckB -> comboWasOpenB = true
+                    isDeckBG -> comboWasOpenBG = true
+                    else -> comboWasOpenPV = true
+                }
             }
             ImGui.setNextItemWidth(-1f)
             ImGui.inputTextWithHint("##preset_search_$tag", "Search presets... (Esc to clear)", searchBuf)
@@ -604,7 +682,12 @@ class PerformanceMatrixPanel {
                 for (preset in filtered) {
                     val isSelected = preset.name == activePreset
                     if (ImGui.selectable("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
-                        session.presetRepository.loadDeckPresetAsync(File(preset.path), isDeckA = isDeckA)
+                        session.presetRepository.loadDeckPresetAsync(
+                            File(preset.path),
+                            isDeckA = isDeckA,
+                            isDeckBG = isDeckBG,
+                            isDeckPV = isDeckPV
+                        )
                         searchBuf.set("")
                     }
                     if (isSelected) {
@@ -616,7 +699,12 @@ class PerformanceMatrixPanel {
         } else {
             if (wasOpen) {
                 searchBuf.set("")
-                if (isDeckA) comboWasOpenA = false else comboWasOpenB = false
+                when {
+                    isDeckA -> comboWasOpenA = false
+                    isDeckB -> comboWasOpenB = false
+                    isDeckBG -> comboWasOpenBG = false
+                    else -> comboWasOpenPV = false
+                }
             }
         }
         itemTooltip(
@@ -624,135 +712,302 @@ class PerformanceMatrixPanel {
             else "Select a preset for $deckLabel."
         )
 
+        ImGui.sameLine(0f, gap)
+
+        // 3. Eject Button [ EJECT ]
+        val iconBtnW = headerH
+        ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f))
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.EJECT}##perf_eject_$tag", iconBtnW, headerH)) {
+                UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
+            }
+        }
+        ImGui.popStyleColor(2)
+        itemTooltip("Eject current preset from $deckLabel and reset to defaults.")
+
+        // 4. Randomize Die Button [ DICES ]
+        if (session.uiTheme.randomizationEnabled) {
+            ImGui.sameLine(0f, gap)
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f))
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.DICES}##perf_rand_$tag", iconBtnW, headerH)) {
+                    ParametersUndo.pushUndoState(parametersState, mixer)
+                    when {
+                        isDeckA -> mixer.randomizeDeckA()
+                        isDeckB -> mixer.randomizeDeckB()
+                        isDeckBG -> mixer.randomizeDeckBG()
+                        else -> mixer.randomizeDeckPV()
+                    }
+                }
+            }
+            ImGui.popStyleColor(2)
+            itemTooltip("Randomize $deckLabel modulators & base values.\nClick to randomize with undo support.")
+        }
+
         ImGui.sameLine(0f, gap * 2f)
 
-        // 3. PlayQueue prev/next navigation
+        // 5. PlayQueue / BG Queue navigation (or preview indicator for PV)
         val navBtnW = (headerH * 0.9f).coerceAtLeast(22f)
-        val q = session.playQueueManager.queue
-        val qIdx = session.playQueueManager.activeIndex
-        val qCountStr = if (q.isNotEmpty() && qIdx in q.indices) "${qIdx + 1}/${q.size}" else if (q.isNotEmpty()) "-/${q.size}" else "--"
+        if (isDeckA || isDeckB) {
+            val q = session.playQueueManager.queue
+            val qIdx = session.playQueueManager.activeIndex
+            val qCountStr = if (q.isNotEmpty() && qIdx in q.indices) "${qIdx + 1}/${q.size}" else if (q.isNotEmpty()) "-/${q.size}" else "--"
 
-        val qPrevKey = "Global/queuePrev"
-        val qPrevOscKey = "Mixer/queuePrev"
-        val isMidiLearnQPrev = session.parametersState.isMidiTargetLearning(qPrevKey)
-        val isOscLearnQPrev = OscLearnState.isTargetLearning(qPrevOscKey)
-        val qPrevMidiMapping = session.midiMappingManager.getMappingForParameter(qPrevKey)
-        val qPrevMidiText = qPrevMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+            val qPrevKey = "Global/queuePrev"
+            val qPrevOscKey = "Mixer/queuePrev"
+            val isMidiLearnQPrev = session.parametersState.isMidiTargetLearning(qPrevKey)
+            val isOscLearnQPrev = OscLearnState.isTargetLearning(qPrevOscKey)
+            val qPrevMidiMapping = session.midiMappingManager.getMappingForParameter(qPrevKey)
+            val qPrevMidiText = qPrevMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
 
-        val qPrevX = ImGui.getCursorScreenPosX()
-        val qPrevY = ImGui.getCursorScreenPosY()
-        if (ImGui.button("<##perf_q_prev_$tag", navBtnW, headerH)) {
-            session.playQueueManager.triggerPrevious(mixer)
-        }
-        if (isMidiLearnQPrev) {
-            dl.addRect(qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
-        }
-        if (ImGui.beginPopupContextItem("perf_q_prev_ctx_$tag")) {
-            ImGui.textDisabled("PlayQueue Prev (<)")
-            ImGui.separator()
-            if (ImGui.menuItem("Trigger Previous")) {
+            val qPrevX = ImGui.getCursorScreenPosX()
+            val qPrevY = ImGui.getCursorScreenPosY()
+            if (ImGui.button("<##perf_q_prev_$tag", navBtnW, headerH)) {
                 session.playQueueManager.triggerPrevious(mixer)
             }
-            ImGui.separator()
             if (isMidiLearnQPrev) {
-                if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                    session.parametersState.midiLearnTarget = null
-                }
-            } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Queue Prev)")) {
-                    session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(qPrevKey))
-                }
+                dl.addRect(qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
             }
-            if (qPrevMidiMapping != null) {
-                if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                    session.midiMappingManager.removeMapping(qPrevKey)
-                    session.midiMappingManager.saveActiveProfile()
+            if (ImGui.beginPopupContextItem("perf_q_prev_ctx_$tag")) {
+                ImGui.textDisabled("PlayQueue Prev (<)")
+                ImGui.separator()
+                if (ImGui.menuItem("Trigger Previous")) {
+                    session.playQueueManager.triggerPrevious(mixer)
                 }
+                ImGui.separator()
+                if (isMidiLearnQPrev) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                        session.parametersState.midiLearnTarget = null
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Queue Prev)")) {
+                        session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(qPrevKey))
+                    }
+                }
+                if (qPrevMidiMapping != null) {
+                    if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
+                        session.midiMappingManager.removeMapping(qPrevKey)
+                        session.midiMappingManager.saveActiveProfile()
+                    }
+                }
+                if (isOscLearnQPrev) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                        OscLearnState.cancelLearn()
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Prev)")) {
+                        OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
+                    }
+                }
+                ImGui.endPopup()
             }
-            if (isOscLearnQPrev) {
-                if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                    OscLearnState.cancelLearn()
-                }
-            } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Prev)")) {
-                    OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
-                }
+            itemTooltip("Advance to previous item in PlayQueue.$qPrevMidiText\nRight-click for MIDI/OSC Learn.")
+
+            ImGui.sameLine(0f, 2f)
+
+            val qTextW = (availW * 0.10f).coerceIn(36f, 54f)
+            val qCurX = ImGui.getCursorScreenPosX()
+            val qCurY = ImGui.getCursorScreenPosY()
+            dl.addRectFilled(qCurX, qCurY, qCurX + qTextW, qCurY + headerH, genBgCol, 3f)
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                val sz = ImGui.calcTextSize(qCountStr)
+                dl.addText(qCurX + (qTextW - sz.x) * 0.5f, qCurY + (headerH - sz.y) * 0.5f, genTextCol, qCountStr)
             }
-            ImGui.endPopup()
-        }
-        itemTooltip("Advance to previous item in PlayQueue.$qPrevMidiText\nRight-click for MIDI/OSC Learn.")
+            ImGui.invisibleButton("##perf_q_idx_$tag", qTextW, headerH)
+            itemTooltip("PlayQueue status: $qCountStr")
 
-        ImGui.sameLine(0f, 2f)
+            ImGui.sameLine(0f, 2f)
 
-        val qTextW = (availW * 0.12f).coerceIn(36f, 60f)
-        val qCurX = ImGui.getCursorScreenPosX()
-        val qCurY = ImGui.getCursorScreenPosY()
-        dl.addRectFilled(qCurX, qCurY, qCurX + qTextW, qCurY + headerH, genBgCol, 3f)
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val sz = ImGui.calcTextSize(qCountStr)
-            dl.addText(qCurX + (qTextW - sz.x) * 0.5f, qCurY + (headerH - sz.y) * 0.5f, genTextCol, qCountStr)
-        }
-        ImGui.invisibleButton("##perf_q_idx_$tag", qTextW, headerH)
-        itemTooltip("PlayQueue status: $qCountStr")
+            val qNextKey = "Global/queueNext"
+            val qNextOscKey = "Mixer/queueNext"
+            val isMidiLearnQNext = session.parametersState.isMidiTargetLearning(qNextKey)
+            val isOscLearnQNext = OscLearnState.isTargetLearning(qNextOscKey)
+            val qNextMidiMapping = session.midiMappingManager.getMappingForParameter(qNextKey)
+            val qNextMidiText = qNextMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
 
-        ImGui.sameLine(0f, 2f)
-
-        val qNextKey = "Global/queueNext"
-        val qNextOscKey = "Mixer/queueNext"
-        val isMidiLearnQNext = session.parametersState.isMidiTargetLearning(qNextKey)
-        val isOscLearnQNext = OscLearnState.isTargetLearning(qNextOscKey)
-        val qNextMidiMapping = session.midiMappingManager.getMappingForParameter(qNextKey)
-        val qNextMidiText = qNextMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-
-        val qNextX = ImGui.getCursorScreenPosX()
-        val qNextY = ImGui.getCursorScreenPosY()
-        if (ImGui.button(">##perf_q_next_$tag", navBtnW, headerH)) {
-            session.playQueueManager.triggerNext(mixer)
-        }
-        if (isMidiLearnQNext) {
-            dl.addRect(qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
-        }
-        if (ImGui.beginPopupContextItem("perf_q_next_ctx_$tag")) {
-            ImGui.textDisabled("PlayQueue Next (>)")
-            ImGui.separator()
-            if (ImGui.menuItem("Trigger Next")) {
+            val qNextX = ImGui.getCursorScreenPosX()
+            val qNextY = ImGui.getCursorScreenPosY()
+            if (ImGui.button(">##perf_q_next_$tag", navBtnW, headerH)) {
                 session.playQueueManager.triggerNext(mixer)
             }
-            ImGui.separator()
             if (isMidiLearnQNext) {
-                if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                    session.parametersState.midiLearnTarget = null
+                dl.addRect(qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            }
+            if (ImGui.beginPopupContextItem("perf_q_next_ctx_$tag")) {
+                ImGui.textDisabled("PlayQueue Next (>)")
+                ImGui.separator()
+                if (ImGui.menuItem("Trigger Next")) {
+                    session.playQueueManager.triggerNext(mixer)
                 }
-            } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Queue Next)")) {
-                    session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(qNextKey))
+                ImGui.separator()
+                if (isMidiLearnQNext) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                        session.parametersState.midiLearnTarget = null
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Queue Next)")) {
+                        session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(qNextKey))
+                    }
+                }
+                if (qNextMidiMapping != null) {
+                    if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
+                        session.midiMappingManager.removeMapping(qNextKey)
+                        session.midiMappingManager.saveActiveProfile()
+                    }
+                }
+                if (isOscLearnQNext) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                        OscLearnState.cancelLearn()
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Next)")) {
+                        OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
+                    }
+                }
+                ImGui.endPopup()
+            }
+            itemTooltip("Advance to next item in PlayQueue.$qNextMidiText\nRight-click for MIDI/OSC Learn.")
+        } else if (isDeckBG) {
+            val bgQ = session.bgQueueManager.queue
+            val bgQIdx = session.bgQueueManager.activeIndex
+            val bgQCountStr = if (bgQ.isNotEmpty() && bgQIdx in bgQ.indices) "${bgQIdx + 1}/${bgQ.size}" else if (bgQ.isNotEmpty()) "-/${bgQ.size}" else "--"
+
+            val bgPrevKey = "Global/bgQueuePrev"
+            val bgPrevOscKey = "Mixer/bgQueuePrev"
+            val isMidiLearnBgPrev = session.parametersState.isMidiTargetLearning(bgPrevKey)
+            val isOscLearnBgPrev = OscLearnState.isTargetLearning(bgPrevOscKey)
+            val bgPrevMidiMapping = session.midiMappingManager.getMappingForParameter(bgPrevKey)
+            val bgPrevMidiText = bgPrevMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+
+            val bgPrevX = ImGui.getCursorScreenPosX()
+            val bgPrevY = ImGui.getCursorScreenPosY()
+            if (ImGui.button("<##perf_bg_prev", navBtnW, headerH)) {
+                session.bgQueueManager.triggerPrevious(mixer)
+            }
+            if (isMidiLearnBgPrev) {
+                dl.addRect(bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            }
+            if (ImGui.beginPopupContextItem("perf_bg_prev_ctx")) {
+                ImGui.textDisabled("BG Queue Prev (<)")
+                ImGui.separator()
+                if (ImGui.menuItem("Trigger Previous")) {
+                    session.bgQueueManager.triggerPrevious(mixer)
+                }
+                ImGui.separator()
+                if (isMidiLearnBgPrev) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                        session.parametersState.midiLearnTarget = null
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (BG Queue Prev)")) {
+                        session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(bgPrevKey))
+                    }
+                }
+                if (bgPrevMidiMapping != null) {
+                    if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
+                        session.midiMappingManager.removeMapping(bgPrevKey)
+                        session.midiMappingManager.saveActiveProfile()
+                    }
+                }
+                if (isOscLearnBgPrev) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                        OscLearnState.cancelLearn()
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (BG Queue Prev)")) {
+                        OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
+                    }
+                }
+                ImGui.endPopup()
+            }
+            itemTooltip("Advance to previous item in BG Queue.$bgPrevMidiText\nRight-click for MIDI/OSC Learn.")
+
+            ImGui.sameLine(0f, 2f)
+
+            val bgQTextW = (availW * 0.10f).coerceIn(36f, 54f)
+            val bgCurX = ImGui.getCursorScreenPosX()
+            val bgCurY = ImGui.getCursorScreenPosY()
+            dl.addRectFilled(bgCurX, bgCurY, bgCurX + bgQTextW, bgCurY + headerH, genBgCol, 3f)
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                val sz = ImGui.calcTextSize(bgQCountStr)
+                dl.addText(bgCurX + (bgQTextW - sz.x) * 0.5f, bgCurY + (headerH - sz.y) * 0.5f, genTextCol, bgQCountStr)
+            }
+            ImGui.invisibleButton("##perf_bg_idx", bgQTextW, headerH)
+            itemTooltip("BG Queue status: $bgQCountStr")
+
+            ImGui.sameLine(0f, 2f)
+
+            val bgNextKey = "Global/bgQueueNext"
+            val bgNextOscKey = "Mixer/bgQueueNext"
+            val isMidiLearnBgNext = session.parametersState.isMidiTargetLearning(bgNextKey)
+            val isOscLearnBgNext = OscLearnState.isTargetLearning(bgNextOscKey)
+            val bgNextMidiMapping = session.midiMappingManager.getMappingForParameter(bgNextKey)
+            val bgNextMidiText = bgNextMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+
+            val bgNextX = ImGui.getCursorScreenPosX()
+            val bgNextY = ImGui.getCursorScreenPosY()
+            if (ImGui.button(">##perf_bg_next", navBtnW, headerH)) {
+                session.bgQueueManager.triggerNext(mixer)
+            }
+            if (isMidiLearnBgNext) {
+                dl.addRect(bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            }
+            if (ImGui.beginPopupContextItem("perf_bg_next_ctx")) {
+                ImGui.textDisabled("BG Queue Next (>)")
+                ImGui.separator()
+                if (ImGui.menuItem("Trigger Next")) {
+                    session.bgQueueManager.triggerNext(mixer)
+                }
+                ImGui.separator()
+                if (isMidiLearnBgNext) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                        session.parametersState.midiLearnTarget = null
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (BG Queue Next)")) {
+                        session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(bgNextKey))
+                    }
+                }
+                if (bgNextMidiMapping != null) {
+                    if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
+                        session.midiMappingManager.removeMapping(bgNextKey)
+                        session.midiMappingManager.saveActiveProfile()
+                    }
+                }
+                if (isOscLearnBgNext) {
+                    if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                        OscLearnState.cancelLearn()
+                    }
+                } else {
+                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (BG Queue Next)")) {
+                        OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
+                    }
+                }
+                ImGui.endPopup()
+            }
+            itemTooltip("Advance to next item in BG Queue.$bgNextMidiText\nRight-click for MIDI/OSC Learn.")
+        } else {
+            // Deck PV indicator / focus button
+            val pvBadgeW = (navBtnW * 2f + 40f).coerceIn(50f, 90f)
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.12f, 0.22f, 0.18f, 0.85f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f))
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                if (ImGui.button("PREVIEW##perf_pv_badge", pvBadgeW, headerH)) {
+                    parametersState.activeTopTab = "Deck PV"
                 }
             }
-            if (qNextMidiMapping != null) {
-                if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                    session.midiMappingManager.removeMapping(qNextKey)
-                    session.midiMappingManager.saveActiveProfile()
-                }
-            }
-            if (isOscLearnQNext) {
-                if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                    OscLearnState.cancelLearn()
-                }
-            } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Next)")) {
-                    OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
-                }
-            }
-            ImGui.endPopup()
+            ImGui.popStyleColor(2)
+            itemTooltip("Deck PV (Preview Deck)\nClick to focus in Parameters panel.")
         }
-        itemTooltip("Advance to next item in PlayQueue.$qNextMidiText\nRight-click for MIDI/OSC Learn.")
 
         ImGui.sameLine(0f, gap * 2f)
 
-        // 4. FX Routing toggles [FX1][FX2]
+        // 6. FX Routing toggles [FX1][FX2]
         // deck.fxRouting.baseValue: 0 = Off, 1 = FX1, 2 = FX2
         val currentRouting = kotlin.math.round(deck.fxRouting.baseValue).toInt().coerceIn(0, 2)
-        val fxBtnW = ((availW - (ImGui.getCursorScreenPosX() - (boxX1 + pad)) - gap) * 0.5f).coerceIn(32f, 60f)
+        val fxBtnW = ((availW - (ImGui.getCursorScreenPosX() - (boxX1 + pad)) - gap) * 0.5f).coerceIn(28f, 55f)
         val fxRouteParamKey = "$deckLabel/View/FxRouting"
         val isMidiLearnFx = session.parametersState.isMidiTargetLearning(fxRouteParamKey)
         val isOscLearnFx = OscLearnState.isTargetLearning(fxRouteParamKey)
@@ -951,14 +1206,17 @@ class PerformanceMatrixPanel {
         val transBtnW = (availW * 0.22f).coerceIn(100f, 200f)
 
         // Auto-Fade button
-        val autoBtnW = (availW * 0.11f).coerceIn(52f, 85f)
+        val autoBtnW = (availW * 0.10f).coerceIn(48f, 75f)
+
+        // Fade Speed widget (drag/badge)
+        val speedBtnW = (availW * 0.08f).coerceIn(44f, 65f)
 
         // Deck B badge width
         val badgeBW = badgeW
 
         // Crossfader slider takes whatever remaining width is available between Deck A and Deck B
-        val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + transBtnW + gap + qNavTotalW
-        val crossfaderW = (availW - badgeW - fixedRightW).coerceAtLeast(60f)
+        val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + speedBtnW + gap + transBtnW + gap + qNavTotalW
+        val crossfaderW = (availW - badgeW - fixedRightW).coerceAtLeast(50f)
 
         // 2. Crossfader Slider Track
         val lineStartX = badgeAX + badgeW + gap
@@ -1274,7 +1532,97 @@ class PerformanceMatrixPanel {
 
         ImGui.sameLine(0f, gap)
 
-        // 5. Transition Picker Button [ Settings Icon + Name * ]
+        // 5. Fade Speed Widget [ N.Ns ]
+        val xfadeSpeedParamKey = "Mixer/xfadeSpeed"
+        val isMidiLearnSpeed = session.parametersState.isMidiTargetLearning(xfadeSpeedParamKey)
+        val isOscLearnSpeed = OscLearnState.isTargetLearning(xfadeSpeedParamKey)
+        val speedMidiMapping = session.midiMappingManager.getMappingForParameter(xfadeSpeedParamKey)
+        val speedMidiText = speedMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+
+        val speedX = ImGui.getCursorScreenPosX()
+        val speedY = ImGui.getCursorScreenPosY()
+        val speedStr = "${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.baseValue)}s"
+
+        ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.90f))
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.20f, 0.24f, 0.32f, 1f))
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.button("$speedStr##perf_speed_badge", speedBtnW, headerH)
+        }
+        ImGui.popStyleColor(2)
+
+        val isSpeedHovered = ImGui.isItemHovered()
+        val isSpeedActive = ImGui.isItemActive()
+        if (isSpeedActive) {
+            val dragDelta = ImGui.getIO().mouseDelta.x - ImGui.getIO().mouseDelta.y
+            if (dragDelta != 0f) {
+                val step = if (ImGui.getIO().keyShift) 0.02f else 0.1f
+                mixer.xfadeSpeed.baseValue = (mixer.xfadeSpeed.baseValue + dragDelta * step).coerceIn(0.1f, 30.0f)
+            }
+        }
+        if (isSpeedHovered && ImGui.getIO().mouseWheel != 0f) {
+            val step = if (ImGui.getIO().keyShift) 0.05f else 0.2f
+            mixer.xfadeSpeed.baseValue = (mixer.xfadeSpeed.baseValue + ImGui.getIO().mouseWheel * step).coerceIn(0.1f, 30.0f)
+            ImGui.getIO().mouseWheel = 0f
+        }
+
+        if (isMidiLearnSpeed) {
+            dl.addRect(speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+        }
+        if (ImGui.beginPopupContextItem("perf_speed_ctx")) {
+            ImGui.textDisabled("Auto-Fade Duration ($speedStr)")
+            ImGui.separator()
+            listOf(0.5f, 1.0f, 2.0f, 4.0f, 8.0f).forEach { s ->
+                if (ImGui.menuItem("${s}s", "", kotlin.math.abs(mixer.xfadeSpeed.baseValue - s) < 0.05f)) {
+                    mixer.xfadeSpeed.baseValue = s
+                }
+            }
+            ImGui.separator()
+            if (isMidiLearnSpeed) {
+                if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                    session.parametersState.midiLearnTarget = null
+                }
+            } else {
+                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Fade Speed)")) {
+                    session.parametersState.startMidiLearn(
+                        MidiLearnTarget.BaseValueSlider(
+                            paramKey = xfadeSpeedParamKey,
+                            label = "Fade Speed",
+                            param = mixer.xfadeSpeed,
+                            min = 0.1f,
+                            max = 15.0f
+                        )
+                    )
+                }
+            }
+            if (speedMidiMapping != null) {
+                if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
+                    session.midiMappingManager.removeMapping(xfadeSpeedParamKey)
+                    session.midiMappingManager.saveActiveProfile()
+                }
+            }
+            if (isOscLearnSpeed) {
+                if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                    OscLearnState.cancelLearn()
+                }
+            } else {
+                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Fade Speed)")) {
+                    OscLearnState.startLearn(xfadeSpeedParamKey, 0.1f, 15.0f, "Fade Speed")
+                }
+            }
+            val oscAddress = OscMappingManager.getMappings().entries.find { it.value.parameterPath == xfadeSpeedParamKey }?.key
+            if (oscAddress != null) {
+                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping ($oscAddress)")) {
+                    OscMappingManager.removeMapping(oscAddress)
+                    OscMappingManager.saveActiveProfile()
+                }
+            }
+            ImGui.endPopup()
+        }
+        itemTooltip("Auto-fade duration: $speedStr$speedMidiText\nDrag or scroll to adjust speed.\nRight-click for quick presets & MIDI/OSC Learn.")
+
+        ImGui.sameLine(0f, gap)
+
+        // 6. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
         val isTransModified = mixer.transitionFilter?.let { filter ->
             filter.dryWet.baseValue != 1.0f ||

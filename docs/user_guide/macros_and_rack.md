@@ -151,29 +151,39 @@ Each tab shows 16 knobs across 4 rows, mapped to different banks:
 | Tab | Row 1 | Row 2 | Row 3 | Row 4 |
 |:---|:---|:---|:---|:---|
 | **LIVE QUAD** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Deck PV (1–4) |
-| **MASTER & FX** | Transitions (1–4) | Transitions (5–8) | Master (1–4) | Master (5–8) |
+| **MASTER & FX** | Transitions (1–4) | Master (1–4) | FX Sends (1–4) | Master FX (Super + 3 Metaknobs) |
 | **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | FX Bank (Super + 3 Metaknobs) | Master / Transitions (1–4) |
 
 Each row is color-coded to its deck (blue for Deck A, orange for Deck B, amber for Deck BG,
 mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) with a colored bar on the left
 edge and a faint row label.
 
-### Live Console Row Headers
+### Performance Row Headers & Control Parity
 
-In **`LIVE CONSOLE`**, each row is equipped with an integrated performance header above its knobs:
-- **Deck A & Deck B (Rows 1 & 2)**: Feature an active generator badge (`deck.source.displayName`), an instant preset dropdown selector combo with integrated **auto-focused Quick-Search filter bar** and dirty marker (`*`), PlayQueue stepping buttons (`<` and `>`) with position counter (`N/Total`), and color-coded FX Send routing toggles (`[FX1]` and `[FX2]`). Presets can also be dragged and dropped directly onto the group title.
-- **FX Bank (Row 3)**: Features FX bank switching (`[FX1]`, `[FX2]`, `[MFX]`), active chain switching (`[C1]`, `[C2]`, `[C3]`), a bank bypass toggle (`[BYPASS]`), an explicit `[Resync]` button, and clickable chain link icon buttons (`Icons.LINK` / `Icons.UNLINK`) beside each slot knob to toggle Super Knob linking. Chain files (`.lsdfxchain`) can be dragged and dropped onto the title bar.
-- **Master / Transitions (Row 4)**: Features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header or crossfader track.
+In both **`LIVE QUAD`** and **`LIVE CONSOLE`**, deck rows are equipped with integrated performance headers above their knobs:
+- **All Decks (Deck A, B, BG, PV)**:
+  - **Generator Badge**: Displays active visual source (`deck.source.displayName`).
+  - **Preset Dropdown Combo**: Searchable preset selector with auto-focus Quick-Search filter bar (`presetSearch*`) and dirty marker (`*`).
+  - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
+  - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values with undo support.
+  - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
+  - **FX Send Routing**: Color-coded `[FX1]` and `[FX2]` send toggles with right-click MIDI/OSC learn.
+- **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
+- **FX Bank (Row 3 in Live Console)**: Features FX bank switching (`[FX1]`, `[FX2]`, `[MFX]`), active chain switching (`[C1]`, `[C2]`, `[C3]`), bank bypass toggle (`[BYPASS]`), explicit `[Resync]` button, and clickable chain link icon buttons (`Icons.LINK` / `Icons.UNLINK`) beside each slot knob to toggle Super Knob linking. Chain files (`.lsdfxchain`) can be dragged and dropped onto the title bar.
+- **Master / Transitions (Row 4 in Live Console)**: Features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, an interactive **Fade Speed Duration Badge** (scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn), a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header or crossfader track.
 
-### MIDI and OSC Learn on Live Console Controls
+### MIDI Learn in the Performance Matrix
 
-All interactive header controls in `LIVE CONSOLE` support right-click context menus for instant MIDI and OSC mapping:
-- **Crossfader Track**: Right-click to Learn MIDI / OSC for `Mixer/crossfade`, reset to center (0.0), or snap directly to Deck A or Deck B.
-- **Deck A & Deck B Snap Badges (`[ A ]`, `[ B ]`)**: Right-click to Learn MIDI for instant hardware button snaps (`Global/snapDeckA`, `Global/snapDeckB`).
-- **Auto-Fade Button (`[ AUTO ]`)**: Right-click to Learn MIDI for smooth automated crossfade triggers (`Global/autoFade`).
-- **PlayQueue `<` and `>`**: Right-click to Learn MIDI (`Global/queuePrev`, `Global/queueNext`) or Learn OSC (`Mixer/queuePrev`, `Mixer/queueNext`).
+Right-click any knob to arm it for MIDI Learn — a cyan pulsing ring appears around the knob,
+identical to the Learn ring on Parameter rows. Send a CC message from any connected controller to bind
+it immediately. Right-click again while armed to cancel.
+
+Interactive header controls in the Performance Matrix also support right-click MIDI & OSC Learn:
+- **Deck A and Deck B Badges**: Right-click to Learn MIDI (`Global/snapDeckA`, `Global/snapDeckB`) or Learn OSC (`Mixer/snapDeckA`, `Mixer/snapDeckB`) to instantly snap the crossfader left or right.
+- **Auto-Fade Button `[ AUTO ]` & Fade Speed Badge**: Right-click to Learn MIDI (`Global/autoFade`, `Mixer/xfadeSpeed`) or Learn OSC (`Mixer/xfadeSpeed`).
+- **PlayQueue & BG Queue `<` and `>`**: Right-click to Learn MIDI (`Global/queuePrev`, `Global/queueNext`, `Global/bgQueuePrev`, `Global/bgQueueNext`).
 - **Transition Queue `<` and `>`**: Right-click to Learn MIDI (`Global/transQueuePrev`, `Global/transQueueNext`) or Learn OSC (`Mixer/transQueuePrev`, `Mixer/transQueueNext`).
-- **FX Routing Toggles (`[FX1]`, `[FX2]`)**: Right-click to Learn MIDI / OSC for deck send routing (`$deckLabel/View/FxRouting`) or select routes directly from the menu.
+- **FX Routing Toggles**: Right-click to Learn MIDI/OSC for `$deckLabel/View/FxRouting`.
 Controls actively armed for MIDI learn display a pulsing cyan highlight border. Active MIDI assignments are shown in tooltips.
 
 ### Interacting with knobs

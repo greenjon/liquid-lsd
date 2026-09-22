@@ -315,15 +315,12 @@ class Renderer {
         glBindTexture(GL_TEXTURE_2D, mixer.deckBG.getOutputTexture())
         mixerShader.setUniform("uTexBG", 1)
 
-        mixerShader.setUniform("uMode", -1)
         mixerShader.setUniform("uProgress", progress)
         mixerShader.setUniform("uLevelA", mixer.levelA.value)
         mixerShader.setUniform("uLevelB", mixer.levelB.value)
         mixerShader.setUniform("uLevelBG", mixer.levelBG.value)
         mixerShader.setUniform("uMasterLevel", mixer.masterLevel.value)
-        mixerShader.setUniform("uAlpha", mixer.masterAlpha.value)
         mixerShader.setUniform("uBgAlpha", 1.0f)
-        mixerShader.setUniform("uBloom", mixer.bloom.value)
 
         Geometry.drawFullscreenQuad()
 

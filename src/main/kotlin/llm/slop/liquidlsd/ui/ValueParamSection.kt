@@ -9,25 +9,6 @@ import llm.slop.liquidlsd.rendering.MandalaLibrary
 import kotlin.math.roundToInt
 
 private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
-val MIX_MODE_LABELS = arrayOf(
-    "0: Add (ADD)",
-    "1: Screen (SCREEN)",
-    "2: Multiply (MULT)",
-    "3: Max (MAX)",
-    "4: Crossfade (XFADE)"
-)
-
-fun getMixModeLabel(mode: Float): String {
-    val idx = mode.roundToInt().coerceIn(0, 4)
-    return when (idx) {
-        0 -> "Add (ADD)"
-        1 -> "Screen (SCREEN)"
-        2 -> "Multiply (MULT)"
-        3 -> "Max (MAX)"
-        4 -> "Crossfade (XFADE)"
-        else -> "Crossfade (XFADE)"
-    }
-}
 
 val MODE_3D_LABELS = arrayOf(
     "0: Tri-Axial (3 Planes Intersecting)",
@@ -62,7 +43,6 @@ object ValueParamSection {
         val mandala = source as? Mandala
 
         // Live value text readout
-        val isMixerMode = paramKey == "Mixer/mode"
         val is3DMode = paramKey.endsWith("/mode3D") || paramKey.endsWith("/3D Mode")
         val isBgStyle = paramKey.endsWith("/Background/Style")
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep") || paramKey.endsWith("/Hue Sweep")
@@ -71,7 +51,6 @@ object ValueParamSection {
         val isMaxPoints = paramKey.endsWith("/Max Points")
         val liveVal = param.value
         val liveLabel = when {
-            isMixerMode -> getMixModeLabel(liveVal)
             is3DMode -> get3DModeLabel(liveVal)
             isMaxPoints -> "${liveVal.roundToInt()} points"
             isHueSweep && mandala != null -> {
@@ -385,27 +364,6 @@ object ValueParamSection {
                 }
                 ImGui.spacing()
                 ImGui.separator()
-                ImGui.spacing()
-            } else if (isMixerMode) {
-                session.uiTheme.caption("Deck A/B Mix Mode:")
-                val currentIdx = param.baseValue.roundToInt().coerceIn(0, MIX_MODE_LABELS.size - 1)
-                comboInt.set(currentIdx)
-                ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
-                if (ImGui.combo("##mixer_mode_combo", comboInt, MIX_MODE_LABELS)) {
-                    val nextIdx = comboInt.get().coerceIn(0, MIX_MODE_LABELS.size - 1)
-                    val newVal = nextIdx.toFloat()
-                    param.baseValue = newVal
-                    param.baseMin = newVal
-                    param.baseMax = newVal
-                }
-                itemTooltip("Select blending mode between Deck A and Deck B.\n0: ADD — additive blend\n1: SCREEN — screen blend\n2: MULT — multiply blend\n3: MAX — maximum pixel brightness\n4: XFADE — 4th-order polynomial crossfade")
-                ImGui.popItemWidth()
-
-                ImGui.spacing()
-                session.uiTheme.caption("${Icons.ALERT} Not CV-modulatable — sets static deck compositing formula.")
-                ImGui.spacing()
-                ImGui.separator()
-                ImGui.spacing()
             } else if (is3DMode) {
                 session.uiTheme.caption("3D Elevation Mode:")
                 val currentIdx = param.baseValue.roundToInt().coerceIn(0, MODE_3D_LABELS.size - 1)
@@ -444,7 +402,6 @@ object ValueParamSection {
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
                 formatValue = {
                     when {
-                        isMixerMode -> getMixModeLabel(it)
                         isMaxPoints -> "${it.roundToInt()} pts"
                         isBgStyle -> {
                             when (it.roundToInt()) {
@@ -535,9 +492,7 @@ object ValueParamSection {
 
 
         ImGui.spacing()
-        if (isMixerMode) {
-            session.uiTheme.caption("Static Initial Value: ${getMixModeLabel(param.baseValue)}")
-        } else if (isMaxPoints) {
+        if (isMaxPoints) {
             session.uiTheme.caption("Static Initial Value: ${param.baseValue.roundToInt()} pts")
         } else if (isHueSweep && mandala != null) {
             val petals = mandala.recipe.petals

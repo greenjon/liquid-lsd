@@ -28,23 +28,18 @@ class ParameterResolverTest {
     @Test
     fun testMixerModeParameterPathAndModulatorFilter() {
         val mixer = mockk<Mixer>()
-        val modeParam = ModulatableParameter(4.0f, minClamp = 0.0f, maxClamp = 4.0f).apply {
-            modulatorFilter = { false }
-        }
+        val masterLevelParam = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
         every { mixer.getParameterPaths("Mixer") } returns listOf(
             Pair("Mixer/crossfade", ModulatableParameter(0.5f)),
-            Pair("Mixer/mode", modeParam)
+            Pair("Mixer/masterLevel", masterLevelParam)
         )
         val paths = ParameterResolver.getAllParameterPaths(mixer)
         
-        val modeEntry = paths.find { it.first == "Mixer/mode" }
-        assertTrue(modeEntry != null, "Mixer/mode should be registered in parameter paths")
-        assertTrue(modeEntry.second === modeParam, "Mixer/mode path should map to modeParam instance")
+        val masterLevelEntry = paths.find { it.first == "Mixer/masterLevel" }
+        assertTrue(masterLevelEntry != null, "Mixer/masterLevel should be registered in parameter paths")
+        assertTrue(masterLevelEntry.second === masterLevelParam, "Mixer/masterLevel path should map to masterLevelParam instance")
 
-        val found = ParameterResolver.findParameterByPath(mixer, "Mixer/mode")
-        assertTrue(found === modeParam, "ParameterResolver should find Mixer/mode")
-
-        val dummyMod = CvModulator(sourceId = "lfo_1")
-        assertTrue(modeParam.modulatorFilter?.invoke(dummyMod) == false, "Mixer mode must be non-modulatable")
+        val found = ParameterResolver.findParameterByPath(mixer, "Mixer/masterLevel")
+        assertTrue(found === masterLevelParam, "ParameterResolver should find Mixer/masterLevel")
     }
 }

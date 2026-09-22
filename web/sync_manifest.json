@@ -67,7 +67,7 @@
       "desktop": "library/sources/celestial_engine/celestial_engine.fs",
       "web": "web/shaders/celestial_engine.frag",
       "mode": "auto_shader",
-      "description": "Multi-symmetry sacred geometry, Flower of Life folding, and op-art moiré fringes"
+      "description": "Multi-symmetry sacred geometry, Flower of Life folding, and op-art moir\u00e9 fringes"
     },
     {
       "desktop": "library/sources/hyper_slice/hyper_slice.fs",
@@ -95,7 +95,7 @@
       "web": "web/renderer.js",
       "mode": "manual_review",
       "description": "JSON preset serialization schema & dead reckoning state sync",
-      "last_synced_hash": "50a9cc18a4f646fba4532f881842e65355816fe8ab1eaf6a535175b251550de3"
+      "last_synced_hash": "21f506d0c1992ee145a02aa4097a4a871dc2fa7b78a79c09d7f69b895cedd70d"
     }
   ]
 }
