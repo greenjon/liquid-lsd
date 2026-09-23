@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-matrix-row-reshuffle-mastertransitions-split-deck-bg-on-live-console-deck-pv-on-master-fx-performancematrixpanelkt-decisionsmd-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Row Reshuffle: Master/Transitions Split, Deck BG on Live Console, Deck PV on Master &amp; FX (PerformanceMatrixPanel.kt, DECISIONS.md, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-binding-inspector-moved-to-the-macros-tab-learn-now-auto-opens-it-performancematrixpanelkt-parametersstatekt-rackunitkt-rackdisclosuretestkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix: Binding Inspector Moved to the Macros Tab; Learn Now Auto-Opens It (PerformanceMatrixPanel.kt, ParametersState.kt, RackUnit.kt, RackDisclosureTest.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-right-aligned-row-titles-elevated-knobs-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3744,6 +3766,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-matrix-row-reshuffle-mastertransitions-split-deck-bg-on-live-console-deck-pv-on-master-fx-performancematrixpanelkt-decisionsmd-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Row Reshuffle: Master/Transitions Split, Deck BG on Live Console, Deck PV on Master &amp; FX (PerformanceMatrixPanel.kt, DECISIONS.md, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-binding-inspector-moved-to-the-macros-tab-learn-now-auto-opens-it-performancematrixpanelkt-parametersstatekt-rackunitkt-rackdisclosuretestkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix: Binding Inspector Moved to the Macros Tab; Learn Now Auto-Opens It (PerformanceMatrixPanel.kt, ParametersState.kt, RackUnit.kt, RackDisclosureTest.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-right-aligned-row-titles-elevated-knobs-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6255,6 +6299,18 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-matrix-row-reshuffle-mastertransitions-split-deck-bg-on-live-console-deck-pv-on-master-fx-performancematrixpanelkt-decisionsmd-docsuser_guidemacros_and_rackmd">Performance Matrix Row Reshuffle: Master/Transitions Split, Deck BG on Live Console, Deck PV on Master &amp; FX (<code>PerformanceMatrixPanel.kt</code>, <code>DECISIONS.md</code>, <code>docs/user_guide/macros_and_rack.md</code>)</h3>
+<ul>
+<li><strong><code>MASTER &amp; FX</code> reordered to Master, Transitions, FX Sends, Deck PV</strong>: The crossfader and crossfader-time (Fade Speed) controls now live on the <strong>Master</strong> row alongside the composite alpha/master-level knobs; the transition picker and queue prev/next controls now live on the <strong>Transitions</strong> row, which is no longer 4 dead unbound knobs. Both were previously stuck together on <code>LIVE CONSOLE</code>'s single combined "Master / Transitions" row.</li>
+<li><strong>Removed the dedicated <code>MASTER FX</code> row</strong>: it drove the exact same <code>masterFxBank</code> that <code>LIVE CONSOLE</code>'s FX row already reaches via its <code>[MFX]</code> bank selector — a straight duplicate, not a distinct signal path. Master FX is now reached from <code>LIVE CONSOLE</code> only.</li>
+<li><strong><code>LIVE CONSOLE</code> reordered to Deck A, Deck B, Deck BG, FX</strong>: gained a full Deck BG row in the slot the old combined Master/Transitions row vacated.</li>
+<li><strong><code>MASTER &amp; FX</code> gained a full Deck PV row</strong>: same generator badge, preset combo, eject, randomize, preview badge, and FX send toggles <code>LIVE QUAD</code> already shows for Deck PV. <code>LIVE QUAD</code> itself is unchanged this pass, but is now a clear "fold into the other tabs" candidate since Deck A/B/BG/PV each live on 2-3 tabs.</li>
+</ul>
+<h3 id="performance-matrix-binding-inspector-moved-to-the-macros-tab-learn-now-auto-opens-it-performancematrixpanelkt-parametersstatekt-rackunitkt-rackdisclosuretestkt-docsuser_guidemacros_and_rackmd">Performance Matrix: Binding Inspector Moved to the Macros Tab; Learn Now Auto-Opens It (<code>PerformanceMatrixPanel.kt</code>, <code>ParametersState.kt</code>, <code>RackUnit.kt</code>, <code>RackDisclosureTest.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>)</h3>
+<ul>
+<li><strong>Removed the Bay disclosure tier</strong>: The Modular Rack's per-row chevron now toggles only <strong>Faceplate ↔ Deep Edit</strong> (<code>ParametersState.DisclosureLevel</code> dropped <code>BAY</code>) instead of cycling through three tiers. The full Target Bindings Inspector (rename, target list, Min/Max/Curve/Invert/Enabled) that used to live in the standalone Bay tier has been removed from Performance Mode entirely — it duplicated Classic mode's Column 3 <code>[ MACROS ]</code> tab and forced scrolling past Parameters/Properties to reach it.</li>
+<li><strong>Inline Learn now jumps to the Macros tab</strong>: Pressing a selected knob's inline <code>[Learn]</code> button in Performance Mode arms parameter-bind Learn <em>and</em> automatically switches Column 3 to <code>[ MACROS ]</code>, navigating to the matching deck/bank tab (<code>PerformanceMatrixPanel.navigateMacroPanelTo</code>) so the Binding Inspector opens already pointed at that knob — no manual mode switch or re-selecting the knob required.</li>
+</ul>
 <h3 id="performance-matrix-right-aligned-row-titles-elevated-knobs-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd">Performance Matrix Right-Aligned Row Titles &amp; Elevated Knobs (<code>PerformanceMatrixPanel.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Right-Aligned Group Titles</strong>: Moved row group titles (e.g. <code>DECK A</code>, <code>FX: FX Bank 1</code>, <code>TRANSITIONS</code>) from being centered across the row box to the right side above the right-wing UI elements (<code>[FX1][FX2]</code>, <code>[BYPASS][Resync]</code>), right before the <code>[Collapse]</code> and chevron buttons.</li>

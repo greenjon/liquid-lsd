@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Performance Matrix Row Reshuffle: Master/Transitions Split, Deck BG on Live Console, Deck PV on Master & FX (`PerformanceMatrixPanel.kt`, `DECISIONS.md`, `docs/user_guide/macros_and_rack.md`)
+- **`MASTER & FX` reordered to Master, Transitions, FX Sends, Deck PV**: The crossfader and crossfader-time (Fade Speed) controls now live on the **Master** row alongside the composite alpha/master-level knobs; the transition picker and queue prev/next controls now live on the **Transitions** row, which is no longer 4 dead unbound knobs. Both were previously stuck together on `LIVE CONSOLE`'s single combined "Master / Transitions" row.
+- **Removed the dedicated `MASTER FX` row**: it drove the exact same `masterFxBank` that `LIVE CONSOLE`'s FX row already reaches via its `[MFX]` bank selector — a straight duplicate, not a distinct signal path. Master FX is now reached from `LIVE CONSOLE` only.
+- **`LIVE CONSOLE` reordered to Deck A, Deck B, Deck BG, FX**: gained a full Deck BG row in the slot the old combined Master/Transitions row vacated.
+- **`MASTER & FX` gained a full Deck PV row**: same generator badge, preset combo, eject, randomize, preview badge, and FX send toggles `LIVE QUAD` already shows for Deck PV. `LIVE QUAD` itself is unchanged this pass, but is now a clear "fold into the other tabs" candidate since Deck A/B/BG/PV each live on 2-3 tabs.
+
+### Performance Matrix: Binding Inspector Moved to the Macros Tab; Learn Now Auto-Opens It (`PerformanceMatrixPanel.kt`, `ParametersState.kt`, `RackUnit.kt`, `RackDisclosureTest.kt`, `docs/user_guide/macros_and_rack.md`)
+- **Removed the Bay disclosure tier**: The Modular Rack's per-row chevron now toggles only **Faceplate ↔ Deep Edit** (`ParametersState.DisclosureLevel` dropped `BAY`) instead of cycling through three tiers. The full Target Bindings Inspector (rename, target list, Min/Max/Curve/Invert/Enabled) that used to live in the standalone Bay tier has been removed from Performance Mode entirely — it duplicated Classic mode's Column 3 `[ MACROS ]` tab and forced scrolling past Parameters/Properties to reach it.
+- **Inline Learn now jumps to the Macros tab**: Pressing a selected knob's inline `[Learn]` button in Performance Mode arms parameter-bind Learn *and* automatically switches Column 3 to `[ MACROS ]`, navigating to the matching deck/bank tab (`PerformanceMatrixPanel.navigateMacroPanelTo`) so the Binding Inspector opens already pointed at that knob — no manual mode switch or re-selecting the knob required.
+
 ### Performance Matrix Right-Aligned Row Titles & Elevated Knobs (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
 - **Right-Aligned Group Titles**: Moved row group titles (e.g. `DECK A`, `FX: FX Bank 1`, `TRANSITIONS`) from being centered across the row box to the right side above the right-wing UI elements (`[FX1][FX2]`, `[BYPASS][Resync]`), right before the `[Collapse]` and chevron buttons.
 - **Elevated Knob Cluster**: Removing the row title from the center column allows the 4-knob cluster to start higher up inside the row box (`boxTopY + boxPad`), freeing ~24px of vertical clearance.

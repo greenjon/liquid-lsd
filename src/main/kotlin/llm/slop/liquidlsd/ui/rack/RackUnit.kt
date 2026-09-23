@@ -8,20 +8,19 @@ import llm.slop.liquidlsd.ui.itemTooltip
 
 /**
  * Shared, stateless drawing helpers for the Modular Rack's disclosure-tier chevron and its
- * scrollable Bay/Deep-Edit content frame (see docs/user_guide/macros_and_rack.md).
+ * scrollable Deep-Edit content frame (see docs/user_guide/macros_and_rack.md).
  *
  * Per-module rack content (DeckRackUnit, FxRackUnit, MasterRackUnit) lives alongside
  * [llm.slop.liquidlsd.ui.PerformanceMatrixPanel], which owns the fixed-height Tier-1 faceplate
- * grid; this object only draws the chevron affordance and the Bay/Deep-Edit scroll region that
+ * grid; this object only draws the chevron affordance and the Deep-Edit scroll region that
  * appears beneath that grid. Disclosure changes here call [ParametersState.setDisclosure] only --
  * never any FX focus-switch or FxMacroSync re-run path, per the focus-swap decoupling rule.
  */
 object RackUnit {
 
-    /** Cycles COLLAPSED -> BAY -> DEEP_EDIT -> COLLAPSED. */
+    /** Toggles COLLAPSED <-> DEEP_EDIT. */
     fun nextLevel(level: ParametersState.DisclosureLevel): ParametersState.DisclosureLevel = when (level) {
-        ParametersState.DisclosureLevel.COLLAPSED -> ParametersState.DisclosureLevel.BAY
-        ParametersState.DisclosureLevel.BAY -> ParametersState.DisclosureLevel.DEEP_EDIT
+        ParametersState.DisclosureLevel.COLLAPSED -> ParametersState.DisclosureLevel.DEEP_EDIT
         ParametersState.DisclosureLevel.DEEP_EDIT -> ParametersState.DisclosureLevel.COLLAPSED
     }
 
@@ -34,7 +33,6 @@ object RackUnit {
         val level = parametersState.disclosureFor(moduleId)
         val icon = when (level) {
             ParametersState.DisclosureLevel.COLLAPSED -> "v"
-            ParametersState.DisclosureLevel.BAY -> "vv"
             ParametersState.DisclosureLevel.DEEP_EDIT -> "^"
         }
         val isExpanded = level != ParametersState.DisclosureLevel.COLLAPSED
@@ -51,8 +49,7 @@ object RackUnit {
         ImGui.popStyleColor(2)
         itemTooltip(
             when (level) {
-                ParametersState.DisclosureLevel.COLLAPSED -> "Expand Bay (curated controls + macro binding inspector)."
-                ParametersState.DisclosureLevel.BAY -> "Expand Deep Edit (full parameter editor)."
+                ParametersState.DisclosureLevel.COLLAPSED -> "Expand Deep Edit (full parameter editor)."
                 ParametersState.DisclosureLevel.DEEP_EDIT -> "Collapse."
             }
         )
@@ -60,7 +57,7 @@ object RackUnit {
 
     /**
      * Persistent one-line indicator for an armed Macro Learn, shown outside all Rack Units (e.g.
-     * in the toolbar) so the state is never invisible even if the owning module's Bay was
+     * in the toolbar) so the state is never invisible even if the owning module's Deep Edit was
      * collapsed by other means. Returns true if it drew anything.
      */
     fun drawLearnIndicator(): Boolean {

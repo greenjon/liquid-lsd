@@ -27,8 +27,7 @@ object MacroBindingInspector {
         session: llm.slop.liquidlsd.SessionContext,
         control: MacroControl?,
         parametersState: ParametersState,
-        mixer: Mixer,
-        showKnobHeader: Boolean = true
+        mixer: Mixer
     ) {
         if (control == null) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -44,55 +43,42 @@ object MacroBindingInspector {
 
         ImGui.pushID(control.id)
 
-        if (showKnobHeader) {
-            // Header row: Type badge, name input, value readout, and Learn button
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "KNOB")
-            }
-            ImGui.sameLine(0f, 6f)
+        // Header row: Type badge, name input, value readout, and Learn button
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "KNOB")
+        }
+        ImGui.sameLine(0f, 6f)
 
-            ImGui.setNextItemWidth(120f)
-            if (ImGui.inputText("##rename_${control.id}", labelBuf)) {
-                control.label = labelBuf.get()
-            }
-            itemTooltip("Rename macro control.")
+        ImGui.setNextItemWidth(120f)
+        if (ImGui.inputText("##rename_${control.id}", labelBuf)) {
+            control.label = labelBuf.get()
+        }
+        itemTooltip("Rename macro control.")
 
-            ImGui.sameLine(0f, 8f)
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("Val: ${"%.2f".format(control.value)}")
-            }
+        ImGui.sameLine(0f, 8f)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.textDisabled("Val: ${"%.2f".format(control.value)}")
+        }
 
-            val isLearning = MacroLearnState.isControlLearning(control.id)
-            ImGui.sameLine(0f, 8f)
-            if (isLearning) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.85f, 0.2f, 0.2f, 0.8f))
-                if (ImGui.button("${Icons.X} Cancel Learn##cancel_learn")) {
-                    MacroLearnState.cancelLearn()
-                }
-                ImGui.popStyleColor()
-                itemTooltip("Cancel Learn Mode.")
-            } else {
-                val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
-                if (canLearn) {
-                    if (ImGui.button("${Icons.REFRESH} Learn##start_learn")) {
-                        MacroLearnState.startLearn(control.id)
-                    }
-                    itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Column 1 or 2.")
-                } else {
-                    ImGui.textDisabled("[Max 4 targets]")
-                }
+        val isLearning = MacroLearnState.isControlLearning(control.id)
+        ImGui.sameLine(0f, 8f)
+        if (isLearning) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.85f, 0.2f, 0.2f, 0.8f))
+            if (ImGui.button("${Icons.X} Cancel Learn##cancel_learn")) {
+                MacroLearnState.cancelLearn()
             }
+            ImGui.popStyleColor()
+            itemTooltip("Cancel Learn Mode.")
         } else {
-            // Compact Bay view: label input and bindings header only (knob/val/learn live directly on the knob UI)
-            session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "Target Bindings:")
+            val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
+            if (canLearn) {
+                if (ImGui.button("${Icons.REFRESH} Learn##start_learn")) {
+                    MacroLearnState.startLearn(control.id)
+                }
+                itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Column 1 or 2.")
+            } else {
+                ImGui.textDisabled("[Max 4 targets]")
             }
-            ImGui.sameLine(0f, 8f)
-            ImGui.setNextItemWidth(140f)
-            if (ImGui.inputText("##rename_${control.id}", labelBuf)) {
-                control.label = labelBuf.get()
-            }
-            itemTooltip("Rename macro control.")
         }
 
         ImGui.spacing()

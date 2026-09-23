@@ -151,8 +151,15 @@ Each tab shows 16 knobs across 4 rows, mapped to different banks:
 | Tab | Row 1 | Row 2 | Row 3 | Row 4 |
 |:---|:---|:---|:---|:---|
 | **LIVE QUAD** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Deck PV (1–4) |
-| **MASTER & FX** | Transitions (1–4) | Master (1–4) | FX Sends (1–4) | Master FX (Super + 3 Metaknobs) |
-| **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | FX Bank (Super + 3 Metaknobs) | Master / Transitions (1–4) |
+| **MASTER & FX** | Master (1–4) | Transitions (1–4) | FX Sends (1–4) | Deck PV (1–4) |
+| **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | FX Bank (Super + 3 Metaknobs) |
+
+The Master row carries the crossfader and crossfader-time (Fade Speed) controls; the Transitions
+row carries the transition picker and queue prev/next controls -- previously both lived together
+on a single combined "Master / Transitions" row in `LIVE CONSOLE`. There's no dedicated "Master
+FX" row anymore: `Master FX` (`masterFxBank`) is reached via `LIVE CONSOLE`'s FX row by selecting
+`[MFX]` in its bank switcher, which drives the exact same live bank -- it was a straight duplicate
+of a row already reachable elsewhere.
 
 Each row is color-coded to its deck (blue for Deck A, orange for Deck B, amber for Deck BG,
 mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) with a colored bar on the left
@@ -171,13 +178,14 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
     - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
   - **Center Cluster**: The 4 macro knobs are grouped close together, centered neatly between the control wings with uniform column alignment across rows.
   - **Right Wing (FX Send Routing)**: Color-coded `[FX1]` and `[FX2]` send toggles with right-click MIDI/OSC learn, positioned directly beneath the right-aligned row title.
-- **FX Row (Row 3 in Live Console)**:
-  - **Left Wing (Bank & Chain Switchers)**: Quick bank buttons (`[FX1]`, `[FX2]`, `[MFX]`) and chain selection buttons (`[C1]`, `[C2]`, `[C3]`).
+- **FX Row (Row 4 in Live Console)**:
+  - **Left Wing (Bank & Chain Switchers)**: Quick bank buttons (`[FX1]`, `[FX2]`, `[MFX]`) and chain selection buttons (`[C1]`, `[C2]`, `[C3]`). Selecting `[MFX]` here focuses the same `masterFxBank` the Master row's crossfader sits above, post-crossfade -- it's the only place to reach Master FX now that `MASTER & FX` no longer has a dedicated Master FX row.
   - **Center Cluster**: The 4 macro knobs (Super Knob + 3 slot Metaknobs) with slot link/unlink buttons (`Icons.LINK`/`Icons.UNLINK`) beside each slot knob.
   - **Right Wing (Bypass & Utility)**: Bank bypass toggle (`[BYPASS]`) and explicit `[Resync]` button beneath the bank title.
   - Chain files (`.lsdfxchain`) can be dragged and dropped onto the title bar.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
-- **Master / Transitions (Row 4 in Live Console)**: Features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, an interactive **Fade Speed Duration Badge** (scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn), a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header or crossfader track.
+- **Master (Row 1 in Master & FX)**: Features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, and an interactive **Fade Speed Duration Badge** (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) dropped onto the crossfader track apply directly.
+- **Transitions (Row 2 in Master & FX)**: Features a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header.
 
 ### MIDI Learn in the Performance Matrix
 
@@ -203,40 +211,37 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 Knobs in Performance Mode and Classic MACROS read from and write to the **same underlying
 `MacroEngine` banks** — changes in one mode are immediately visible in the other.
 
-### The Modular Rack: Bay & Deep Edit
+### The Modular Rack: Deep Edit
 
-Every row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Transitions, Master, FX Sends,
-Master FX) has a small **chevron button** in its top-right corner. Clicking it cycles that row
-through three disclosure tiers, without leaving Performance Mode:
+Every row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions, FX Sends)
+has a small **chevron button** in its top-right corner. Clicking it toggles that row
+between two disclosure tiers, without leaving Performance Mode:
 
 1. **Faceplate** (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
-   above.
-2. **Bay** — click once to open the rack bay below the grid:
-   - **Direct UI Knob Selection**: Instead of a redundant text list of knobs below, you select any knob by clicking on it directly in the 4-knob UI. The selected knob is highlighted with an electric cyan focus card, glowing rim, and cyan label.
-   - **Value Readout**: Each knob displays its current numerical value (`Val: 0.00`) directly beneath the knob label when the bay is open.
-   - **Inline Learn Button**: The selected knob shows a compact `[Learn]` / `[Cancel]` parameter-bind button directly beneath its value readout, allowing instant binding to sliders and parameters without hunting through sub-panels.
-   - **Target Bindings Inspector**: The Bay area displays the selected knob's target bindings list without redundant knob badges, providing quick control over Min/Max/Curve/Invert/Enabled for each of up to 4 parameter targets.
-   - **Faceplate Collapse**: A `[Collapse]` button appears directly in the row's title header next to the chevron, allowing one-click folding back to standard view.
-3. **Deep Edit** — click again to add, side-by-side like Classic mode's Parameters/Properties
+   above. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
+   its current value (`Val: 0.00`) beneath the label, and reveals a compact `[Learn]` / `[Cancel]`
+   button for arming parameter-bind Learn on the spot.
+2. **Deep Edit** — click the chevron to add, side-by-side like Classic mode's Parameters/Properties
    columns, the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid on the left and the
    per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD) on the right,
-   for **Deck rows** (SRC/View), the **FX row / Master FX row** (chain switcher, per-slot ISF
-   uniforms), and **Transitions / Master** (CTRL/TRANS subtabs — transition shader, dry/wet,
-   crossfade, master level, queue navigation). Binding a macro knob to an LFO's period, for
-   example, works entirely from here. Deep Edit isn't wired up yet for the FX Sends row (its 4
-   per-deck send levels are already reachable in each deck's own Deep Edit instead) — use Classic
-   mode (`F4`) for that one in the meantime.
+   for **Deck rows** (SRC/View), the **FX row** (chain switcher, per-slot ISF uniforms -- also
+   covers Master FX, since selecting `[MFX]` in the FX row focuses `masterFxBank`), and the
+   **Master and Transitions rows** (CTRL/TRANS subtabs — transition shader, dry/wet, crossfade,
+   master level, queue navigation; both rows' chevrons open the same Mixer Deep Edit content).
+   Deep Edit isn't wired up yet for the FX Sends row
+   (its 4 per-deck send levels are already reachable in each deck's own Deep Edit instead) — use
+   Classic mode (`F4`) for that one in the meantime.
 
-**While a row is expanded** (Bay or Deep Edit), every other still-collapsed row is hidden from the
-grid entirely — not just left the same size — so the expanded row and its Bay/Deep Edit panel get
-the freed screen space. Collapsing back to Faceplate (or expanding a different row in `SOLO` mode)
-brings the rest of the 4×4 grid back.
+**While a row is expanded**, every other still-collapsed row is hidden from the grid entirely —
+not just left the same size — so the expanded row and its Deep Edit panel get the freed screen
+space. Collapsing back to Faceplate (or expanding a different row in `SOLO` mode) brings the rest
+of the 4×4 grid back.
 
-Click the chevron a third time (or the **Collapse** button inside the Bay/Deep Edit panel) to fold
-back to the Faceplate.
+Click the chevron again (or the **Collapse** button inside the Deep Edit panel) to fold back to
+the Faceplate.
 
-**Accordion behavior**: by default the rack is in **`SOLO`** mode — opening one row's Bay/Deep
-Edit automatically collapses any other expanded row, so you're never scrolling past several open
+**Accordion behavior**: by default the rack is in **`SOLO`** mode — opening one row's Deep Edit
+automatically collapses any other expanded row, so you're never scrolling past several open
 panels at once. The toolbar above the grid has a **`[ SOLO | MULTI ]`** toggle (persisted across
 restarts) to switch to `MULTI`, where several rows can stay open side by side, and a
 **`Collapse All`** button.
@@ -253,12 +258,15 @@ FX1/FX2/MFX selection or re-syncs the Super Knob/Metaknob mapping.
 
 ### Setting up knob labels and bindings
 
-You can do this either without leaving Performance Mode, or in Classic mode:
+The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Enabled) lives only in
+Classic mode's **`[ MACROS ]`** tab (Column 3) — it's no longer duplicated inside the Performance
+Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it.
 
-- **In Performance Mode**: click a row's chevron to open its **Bay**, click the knob you want to
-  configure in the list, then use the Binding Inspector that appears below it — rename the knob,
-  click **LEARN**, click a target parameter (open that row's **Deep Edit** first if the parameter
-  you want isn't visible anywhere else), and set Min/Max/Curve as desired.
+- **In Performance Mode**: click a knob to select it, then click its inline **`[Learn]`** button.
+  This arms parameter-bind Learn *and* automatically switches Column 3 to **`[ MACROS ]`** on the
+  matching bank/tab, with the Binding Inspector already open on that knob — click a target
+  parameter (open that row's **Deep Edit** first if the parameter you want isn't visible anywhere
+  else) and set Min/Max/Curve as desired.
 - **In Classic mode**: press **`F4`**, open **`[ MACROS ]`** in Column 3, select the knob, click
   **LEARN**, and click a target parameter.
 

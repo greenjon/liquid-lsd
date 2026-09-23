@@ -38,8 +38,8 @@ class ParametersState {
 
     // -- Modular Rack disclosure state (docs/user_guide/macros_and_rack.md) --------------------
 
-    /** The three disclosure tiers a [llm.slop.liquidlsd.ui.rack.RackUnit] can be in. */
-    enum class DisclosureLevel { COLLAPSED, BAY, DEEP_EDIT }
+    /** The two disclosure tiers a [llm.slop.liquidlsd.ui.rack.RackUnit] can be in. */
+    enum class DisclosureLevel { COLLAPSED, DEEP_EDIT }
 
     /** Per rack-module ("DECK_A", "DECK_B", "FX", "MASTER", etc.) disclosure tier. Absent = COLLAPSED. */
     val rackModuleDisclosure = mutableMapOf<String, DisclosureLevel>()
@@ -47,7 +47,7 @@ class ParametersState {
     init {
         // UITheme's init block loads preferences the first time it's touched, which SessionContext
         // guarantees happens before ParametersState is constructed (uiTheme is declared first) --
-        // so UITheme.rackExpandedModules is already hydrated here. Only BAY/DEEP_EDIT are ever
+        // so UITheme.rackExpandedModules is already hydrated here. Only DEEP_EDIT is ever
         // persisted (see persistRackExpandedModules), and no Learn session survives a restart, so
         // this can never resurrect a mid-Learn-pinned state.
         for ((moduleId, levelName) in UITheme.rackExpandedModules) {
@@ -66,12 +66,12 @@ class ParametersState {
         AppPreferencesStore.savePreferences()
     }
 
-    /** When true, opening one module's Bay/Deep Edit auto-collapses every other module (except a Learn-pinned one). Persisted via [UITheme.rackSoloMode]. */
+    /** When true, opening one module's Deep Edit auto-collapses every other module (except a Learn-pinned one). Persisted via [UITheme.rackSoloMode]. */
     var rackSoloMode: Boolean
         get() = UITheme.rackSoloMode
         set(value) { UITheme.rackSoloMode = value }
 
-    /** Per rack-module: which macro knob's Binding Inspector is showing in that module's Bay. */
+    /** Per rack-module: which macro knob is selected -- drives the Tier-1 grid highlight and inline Learn button. */
     val selectedRackMacroId = mutableMapOf<String, String?>()
 
     /** Per rack-module: that module's own Tier-3 Deep Edit selected cell (analogue of [selectedCell]). */

@@ -9,7 +9,7 @@ import kotlin.test.*
 /**
  * Covers the Modular Rack disclosure state machine in [ParametersState] (see
  * docs/user_guide/macros_and_rack.md): Solo-mode auto-collapse and the Learn-mode pinning
- * exception that keeps a module's Bay open while one of its own macro knobs is armed for
+ * exception that keeps a module's Deep Edit open while one of its own macro knobs is armed for
  * [MacroLearnState] Learn.
  *
  * Note: [ParametersState.setDisclosure] and [ParametersState.collapseAllRackModules] take no
@@ -65,10 +65,10 @@ class RackDisclosureTest {
         state.rackSoloMode = true
 
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
-        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
 
         assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor(MacroEngine.DECK_B))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
     }
 
     @Test
@@ -77,10 +77,10 @@ class RackDisclosureTest {
         state.rackSoloMode = false
 
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
-        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
 
         assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor(MacroEngine.DECK_B))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
     }
 
     @Test
@@ -90,15 +90,15 @@ class RackDisclosureTest {
         val deckAKnob = MacroEngine.getBank(MacroEngine.DECK_A)!!.knobs[0]
         MacroLearnState.startLearn(deckAKnob.id)
 
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.BAY)
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor(MacroEngine.DECK_A))
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
 
         // Expanding a sibling module in solo mode would normally collapse Deck A too -- but
         // Deck A is Learn-pinned (one of its own knobs is armed), so it must stay open.
-        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
 
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor(MacroEngine.DECK_B))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
     }
 
     @Test
@@ -106,19 +106,19 @@ class RackDisclosureTest {
         val state = ParametersState()
         val deckAKnob = MacroEngine.getBank(MacroEngine.DECK_A)!!.knobs[0]
         MacroLearnState.startLearn(deckAKnob.id)
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.BAY)
-        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
 
         state.collapseAllRackModules()
 
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor(MacroEngine.DECK_A))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
         assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_B))
     }
 
     @Test
     fun collapseAllRackModulesCollapsesEverythingWhenNoLearnIsArmed() {
         val state = ParametersState()
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
         state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
 
         state.collapseAllRackModules()
@@ -148,10 +148,10 @@ class RackDisclosureTest {
         val fx1Knob = MacroEngine.getBank(MacroEngine.FX_BANK_1)!!.knobs[0]
         MacroLearnState.startLearn(fx1Knob.id)
 
-        state.setDisclosure("FX", ParametersState.DisclosureLevel.BAY)
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure("FX", ParametersState.DisclosureLevel.DEEP_EDIT)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
 
-        assertEquals(ParametersState.DisclosureLevel.BAY, state.disclosureFor("FX"))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor("FX"))
     }
 
     @Test
@@ -169,7 +169,7 @@ class RackDisclosureTest {
     @Test
     fun collapsedModulesAreNotPersisted() {
         val state = ParametersState()
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.BAY)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.COLLAPSED)
 
         assertFalse(UITheme.rackExpandedModules.containsKey(MacroEngine.DECK_A))

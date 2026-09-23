@@ -26,8 +26,10 @@ import java.io.File
  * according to the active layout tab. Knob drag adjusts the underlying
  * [llm.slop.liquidlsd.macro.MacroControl.value] directly, and right-click arms hardware MIDI
  * Learn for that knob (the pulsing cyan ring shows an armed knob; a repeat right-click cancels).
- * There is no parameter-bind Learn or binding inspector here -- that editing (labels, bindings,
- * curves, ranges) stays in Classic mode's Column 3 MACROS tab.
+ * A selected knob also shows an inline "Learn" button to arm parameter-bind Learn -- pressing it
+ * jumps Column 3 to [UITheme.Column3Mode.MACROS] on the matching bank/tab (see
+ * [navigateMacroPanelTo]), since the actual binding inspector (labels, bindings, curves, ranges)
+ * lives there, not in this panel.
  *
  * Active tab is persisted via [UITheme.performanceMatrixTab] / [AppPreferences.performanceMatrixTab].
  *
@@ -45,8 +47,8 @@ class PerformanceMatrixPanel {
     // without hardcoding a count that silently drifts when a tab is added/removed.
     internal enum class Tab(val label: String, val tooltip: String) {
         LIVE_QUAD("LIVE QUAD", "One row per deck (Deck A / Deck B / Deck BG / Deck PV), knobs 1-4 each."),
-        MASTER_AND_FX("MASTER & FX", "Transitions, Master composite alphas, FX sends, and Master FX."),
-        LIVE_CONSOLE("LIVE CONSOLE", "Deck A / Deck B / focused FX bank+chain / Master & Transitions -- a single 4x4 surface for live shows.")
+        MASTER_AND_FX("MASTER & FX", "Master (composite alphas + crossfader), Transitions (picker + queue), FX sends, and Deck PV."),
+        LIVE_CONSOLE("LIVE CONSOLE", "Deck A / Deck B / Deck BG / focused FX bank+chain -- a single 4x4 surface for live shows.")
     }
 
     /**
@@ -85,20 +87,22 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
-            // MASTER & FX: Transitions, Master, FX Sends, Master FX (1 row of 4 knobs each)
+            // MASTER & FX: Master (composite alphas + crossfader/crossfader-time), Transitions
+            // (transition picker + queue nav), FX Sends, Deck PV (1 row of 4 knobs each, except
+            // Master/Transitions which also reserve header space -- see drawMatrix).
             listOf(
-                RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "TRANSITIONS"),
-                RowDescriptor(MacroEngine.MASTER,    0, COLOR_MASTER, "MASTER"),
+                RowDescriptor(MacroEngine.MASTER,    0, COLOR_MASTER, "MASTER", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX SENDS"),
-                RowDescriptor(MacroEngine.MASTER_FX, 0, COLOR_FX,     "MASTER FX"),
+                RowDescriptor(MacroEngine.DECK_PV,   0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
-            // LIVE CONSOLE: Deck A, Deck B, focused FX bank/chain (bankId placeholder rewritten to
-            // the current focusedFxBankId each frame -- see drawMatrix), Master/Transitions.
+            // LIVE CONSOLE: Deck A, Deck B, Deck BG, focused FX bank/chain (bankId placeholder
+            // rewritten to the current focusedFxBankId each frame -- see drawMatrix).
             listOf(
-                RowDescriptor(MacroEngine.DECK_A,    0, COLOR_DECK_A, "DECK A", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_B,    0, COLOR_DECK_B, "DECK B", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.FX_BANK_1, 0, COLOR_FX,     "FX", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "MASTER / TRANSITIONS", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_A,    0, COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_B,    0, COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_BG,   0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.FX_BANK_1, 0, COLOR_FX,      "FX",      hasExtraHeader = true),
             ),
         )
     }
@@ -126,7 +130,7 @@ class PerformanceMatrixPanel {
 
         // Modular Rack: when any module is above Tier 1, every *other* (still-collapsed) row is
         // hidden from the grid entirely -- rather than reserving a fixed-height band for all 16
-        // knobs regardless of disclosure state -- so the expanded row(s) and the Bay/Deep-Edit
+        // knobs regardless of disclosure state -- so the expanded row(s) and the Deep-Edit
         // region below get the screen space instead. If a Learn-pinned/expanded module doesn't
         // have a row on the *current* tab (e.g. it was expanded on a different tab), the grid falls
         // back to showing every row on this tab rather than rendering nothing.
@@ -247,7 +251,7 @@ class PerformanceMatrixPanel {
         }
         ImGui.popStyleColor(2)
         itemTooltip(
-            if (isSolo) "SOLO: expanding one module's Bay/Deep Edit auto-collapses the others.\nClick to switch to MULTI (several modules can stay expanded at once)."
+            if (isSolo) "SOLO: expanding one module's Deep Edit auto-collapses the others.\nClick to switch to MULTI (several modules can stay expanded at once)."
             else "MULTI: several modules can stay expanded at once.\nClick to switch to SOLO accordion behavior."
         )
 
@@ -380,6 +384,7 @@ class PerformanceMatrixPanel {
             val isDeckRow = isDeckA || isDeckB || isDeckBG || isDeckPV
             val isFxRow = descriptor.bankId in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)
             val isTransRow = descriptor.bankId == MacroEngine.TRANS
+            val isMasterRow = descriptor.bankId == MacroEngine.MASTER
             val displayLabel = when {
                 descriptor.hasExtraHeader && isFxRow -> "FX: ${fxBankDisplayName(focusedFxBankId)}"
                 else -> descriptor.groupLabel
@@ -389,10 +394,12 @@ class PerformanceMatrixPanel {
             val isModuleExpanded = parametersState.disclosureFor(moduleId) != ParametersState.DisclosureLevel.COLLAPSED
             val chevronSize = groupLabelH.coerceIn(16f, 22f)
 
-            // The Master/Transitions row reserves a header-controls bar at the top of the box, so its
-            // title stays there too; every other row's title sits to the left of its knobs, top-aligned
-            // with them, so its Y is derived from the same knob-top geometry the row loop computes below.
-            val isSpecialHeaderRow = descriptor.hasExtraHeader && isTransRow
+            // The Master and Transitions rows each reserve a header-controls bar at the top of the
+            // box (crossfader/crossfader-time on Master, transition picker/queue nav on
+            // Transitions), so their titles stay there too; every other row's title sits to the
+            // left of its knobs, top-aligned with them, so its Y is derived from the same knob-top
+            // geometry the row loop computes below.
+            val isSpecialHeaderRow = descriptor.hasExtraHeader && (isTransRow || isMasterRow)
             val titleY = if (isSpecialHeaderRow) {
                 titleTopY
             } else {
@@ -510,8 +517,11 @@ class PerformanceMatrixPanel {
                 parametersState, moduleId, chevronSize, "${tabIdx}_${group.startRow}"
             )
 
-            val contentTopY = if (descriptor.hasExtraHeader && isTransRow) {
-                drawMasterTransitionsHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+            val contentTopY = if (descriptor.hasExtraHeader && isMasterRow) {
+                drawMasterHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
+                afterTitleY + EXTRA_HEADER_H + boxLabelGap
+            } else if (descriptor.hasExtraHeader && isTransRow) {
+                drawTransitionsHeaderControls(session, mixer, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
                 afterTitleY + EXTRA_HEADER_H + boxLabelGap
             } else {
                 boxTopY + boxPad
@@ -693,9 +703,12 @@ class PerformanceMatrixPanel {
                                     ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.38f, 0.24f, 0.85f))
                                     if (ImGui.button("${Icons.REFRESH} Learn##inline_learn_${control.id}", btnW, btnH)) {
                                         MacroLearnState.startLearn(control.id)
+                                        MacroLearnState.selectedControlId = control.id
+                                        navigateMacroPanelTo(parametersState, row.bankId)
+                                        session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
                                     }
                                     ImGui.popStyleColor()
-                                    itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Column 1 or 2.")
+                                    itemTooltip("Arm Learn Mode and open the Mixer panel's Macros tab. Then click any parameter slider or modulator property in Column 1 or 2.")
                                 } else {
                                     ImGui.textDisabled("Max 4")
                                 }
@@ -711,9 +724,37 @@ class PerformanceMatrixPanel {
         ImGui.dummy(0f, 0f)
     }
 
-    // -- Modular Rack Bay / Deep Edit (Tier 2 / Tier 3) ---------------------------------------
+    /**
+     * Points [ParametersState.activeTopTab] (and Mixer sub-tab) at whichever tab [MacroPanel]
+     * reads to display [bankId], mirroring [MacroPanel.activeBankId]'s reverse mapping -- so
+     * arming Learn on a Performance-panel knob and having [UITheme.Column3Mode.MACROS] pop open
+     * lands on the *same* bank's knobs rather than whatever tab Columns 1/2 last had focused.
+     * FX_SENDS has no dedicated Macros-tab destination, so it's left as a no-op (Macros still
+     * opens, just without a matching tab switch).
+     */
+    private fun navigateMacroPanelTo(parametersState: ParametersState, bankId: String) {
+        when (bankId) {
+            MacroEngine.DECK_A -> parametersState.activeTopTab = "Deck A"
+            MacroEngine.DECK_B -> parametersState.activeTopTab = "Deck B"
+            MacroEngine.DECK_BG -> parametersState.activeTopTab = "Deck BG"
+            MacroEngine.DECK_PV -> parametersState.activeTopTab = "Deck PV"
+            MacroEngine.FX_BANK_1 -> parametersState.activeTopTab = "FX1"
+            MacroEngine.FX_BANK_2 -> parametersState.activeTopTab = "FX2"
+            MacroEngine.MASTER_FX -> parametersState.activeTopTab = "MFX"
+            MacroEngine.MASTER -> {
+                parametersState.activeTopTab = "Mixer"
+                parametersState.activeMixerSubTab = "CTRL"
+            }
+            MacroEngine.TRANS -> {
+                parametersState.activeTopTab = "Mixer"
+                parametersState.activeMixerSubTab = "TRANS"
+            }
+        }
+    }
 
-    /** Friendly title for a rack module id shown in the Bay/Deep-Edit region's header line. */
+    // -- Modular Rack Deep Edit (Tier 2) -------------------------------------------------------
+
+    /** Friendly title for a rack module id shown in the Deep-Edit region's header line. */
     private fun rackModuleDisplayLabel(moduleId: String): String = when (moduleId) {
         MacroEngine.DECK_A -> "DECK A"
         MacroEngine.DECK_B -> "DECK B"
@@ -750,21 +791,18 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * Tier 2 (Bay): a curated 4-knob quick list plus the same [MacroBindingInspector] Column 3
-     * already uses, for whichever knob is selected. Tier 3 (Deep Edit) adds the full parameter
-     * editor below that, reusing [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawFxBankGroupContent]
-     * and [PropertiesPanel.draw] verbatim (see [drawRackDeepEdit]) -- same reachable bindings as
-     * Classic mode, no regressions.
+     * The Deep Edit tier: the full parameter/CV editor, reusing
+     * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawFxBankGroupContent] and
+     * [PropertiesPanel.draw] verbatim (see [drawRackDeepEdit]) -- same reachable bindings as
+     * Classic mode, no regressions. Macro target binding (arm Learn, inspect/edit bindings) lives
+     * on the Mixer panel's MACROS tab ([MacroPanel]), not here -- pressing Learn on a Tier-1 knob
+     * jumps there automatically (see [navigateMacroPanelTo]).
      */
     private fun drawRackBayModule(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
-        val level = parametersState.disclosureFor(moduleId)
-        val bankId = if (moduleId == "FX") focusedFxBankId else moduleId
-        val bank = MacroEngine.getBank(bankId) ?: MacroEngine.bankForParamPath(bankId)
         val label = rackModuleDisplayLabel(moduleId)
-        val tierLabel = if (level == ParametersState.DisclosureLevel.DEEP_EDIT) "DEEP EDIT" else "BAY"
 
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.textColored(0.75f, 0.85f, 1f, 1f, "$label — $tierLabel")
+            ImGui.textColored(0.75f, 0.85f, 1f, 1f, "$label — DEEP EDIT")
         }
         ImGui.sameLine()
         if (ImGui.smallButton("Collapse##rack_bay_collapse_$moduleId")) {
@@ -772,16 +810,7 @@ class PerformanceMatrixPanel {
         }
         ImGui.spacing()
 
-        if (level == ParametersState.DisclosureLevel.DEEP_EDIT) {
-            drawRackDeepEdit(session, mixer, parametersState, moduleId)
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-        }
-
-        val selectedId = parametersState.selectedRackMacroId[moduleId] ?: bank.knobs.firstOrNull()?.id
-        val selectedControl = bank.knobs.find { it.id == selectedId } ?: bank.knobs.firstOrNull()
-        MacroBindingInspector.draw(session, selectedControl, parametersState, mixer, showKnobHeader = false)
+        drawRackDeepEdit(session, mixer, parametersState, moduleId)
     }
 
     private fun deckLabelForModuleId(moduleId: String): String? = when (moduleId) {
@@ -1604,11 +1633,11 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * Drawn in place of the plain group title for LIVE_CONSOLE's Master / Transitions row.
-     * Provides Deck A snap badge, interactive crossfader slider, Deck B snap badge, Auto-fade button,
-     * transition picker popup button, and TransitionQueue prev/status/next navigation.
+     * Drawn in place of the plain group title for the Master row (MASTER & FX / LIVE_CONSOLE).
+     * Provides Deck A snap badge, interactive crossfader slider, Deck B snap badge, Auto-fade
+     * button, and the crossfader-time (Fade Speed) badge.
      */
-    private fun drawMasterTransitionsHeaderControls(
+    private fun drawMasterHeaderControls(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer,
         parametersState: ParametersState,
@@ -1683,14 +1712,6 @@ class PerformanceMatrixPanel {
         ImGui.sameLine(0f, gap)
 
         // Calculate layout allocations for right-side elements first:
-        // Transition Queue nav: Prev (24px) + Count (~45px) + Next (24px) + gaps
-        val navBtnW = (headerH * 0.9f).coerceIn(22f, 28f)
-        val qTextW = 46f
-        val qNavTotalW = navBtnW * 2f + qTextW + 4f
-
-        // Transition Picker button
-        val transBtnW = (availW * 0.22f).coerceIn(100f, 200f)
-
         // Auto-Fade button
         val autoBtnW = (availW * 0.10f).coerceIn(48f, 75f)
 
@@ -1701,7 +1722,7 @@ class PerformanceMatrixPanel {
         val badgeBW = badgeW
 
         // Crossfader slider takes whatever remaining width is available between Deck A and Deck B
-        val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + speedBtnW + gap + transBtnW + gap + qNavTotalW
+        val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + speedBtnW
         val crossfaderW = (availW - badgeW - fixedRightW).coerceAtLeast(50f)
 
         // 2. Crossfader Slider Track
@@ -2106,9 +2127,38 @@ class PerformanceMatrixPanel {
         }
         itemTooltip("Auto-fade duration: $speedStr$speedMidiText\nDrag or scroll to adjust speed.\nRight-click for quick presets & MIDI/OSC Learn.")
 
-        ImGui.sameLine(0f, gap)
+        ImGui.endGroup()
+    }
 
-        // 6. Transition Picker Button [ Settings Icon + Name * ]
+    /**
+     * Drawn in place of the plain group title for the Transitions row (MASTER & FX). Provides a
+     * transition picker popup button displaying the active transition with modified indicator
+     * (`*`), and TransitionQueue prev/status/next navigation.
+     */
+    private fun drawTransitionsHeaderControls(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        boxX1: Float,
+        boxX2: Float,
+        headerY: Float,
+        headerH: Float
+    ) {
+        val pad = 6f
+        val gap = 4f
+        val availW = (boxX2 - boxX1 - pad * 2f).coerceAtLeast(1f)
+        val dl = ImGui.getWindowDrawList()
+
+        ImGui.setCursorScreenPos(boxX1 + pad, headerY)
+        ImGui.beginGroup()
+
+        // Transition Queue nav: Prev (24px) + Count (~45px) + Next (24px) + gaps
+        val navBtnW = (headerH * 0.9f).coerceIn(22f, 28f)
+        val qTextW = 46f
+
+        // Transition Picker button
+        val transBtnW = (availW * 0.35f).coerceIn(140f, 320f)
+
+        // 1. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
         val isTransModified = mixer.transitionFilter?.let { filter ->
             filter.dryWet.baseValue != 1.0f ||
@@ -2148,7 +2198,7 @@ class PerformanceMatrixPanel {
 
         ImGui.sameLine(0f, gap)
 
-        // 6. Transition Queue Navigation [ < ] [ N/Total ] [ > ]
+        // 2. Transition Queue Navigation [ < ] [ N/Total ] [ > ]
         val transQ = TransitionQueueManager.queue
         val transQIdx = TransitionQueueManager.activeIndex
         val transCountStr = if (transQ.isNotEmpty() && transQIdx in transQ.indices) "${transQIdx + 1}/${transQ.size}" else if (transQ.isNotEmpty()) "-/${transQ.size}" else "--"

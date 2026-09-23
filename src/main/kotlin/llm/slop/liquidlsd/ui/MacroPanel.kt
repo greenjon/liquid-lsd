@@ -17,11 +17,16 @@ import llm.slop.liquidlsd.rendering.Mixer
  * automatically flips this panel to that deck's knobs too, and the tab strip drawn here writes
  * back into [ParametersState.activeTopTab] so the reverse holds as well.
  *
- * Reads and writes the active [MacroBank] directly: dragging a knob mutates its
- * [llm.slop.liquidlsd.macro.MacroControl.value] in place.
+ * Reads the active [MacroBank] directly -- selecting a knob here is inspecting/editing the same
+ * [llm.slop.liquidlsd.macro.MacroControl] object Performance Mode's own knobs drag and arm Learn
+ * on, not a copy. This panel itself doesn't render rotary knobs or drag-to-adjust value; the knob
+ * selector strip below is a row of labeled chips (label + binding count) purely for picking which
+ * control's bindings the inspector shows -- value drag and hardware/parameter-bind Learn both live
+ * on the actual knobs in Performance Mode (see [PerformanceMatrixPanel]), whose inline Learn button
+ * jumps back here automatically once armed.
  *
- * Layout, top to bottom: deck tab strip, 4-column x 2-row knob grid, binding inspector
- * accordion drawer, then the single-deck preview monitor at the bottom.
+ * Layout, top to bottom: deck tab strip, knob selector strip, binding inspector accordion drawer,
+ * then the single-deck preview monitor at the bottom.
  * Note: Header mode toggle `[ MIXER | MACROS ]` is drawn at the Column 3 window level by
  * [Column3HeaderToggle].
  */
@@ -211,53 +216,42 @@ class MacroPanel(
         drawMacroGrid(session, bank)
     }
 
-    // -- 4-Column Macro Knob Grid (row count follows the active bank's knob count) ------------------
+    // -- Knob Selector Strip (picks which knob's bindings the inspector below shows) -----------------
+    // No rotary widgets here -- dragging a macro's value and arming/cancelling its Learn both live
+    // in the Binding Inspector header right below (and, for playing a set, in Performance Mode's
+    // own knobs, whose inline Learn button already jumps here -- see PerformanceMatrixPanel). This
+    // strip's only job is selection, so it's a row of labeled chips instead of a knob grid.
 
     private fun drawMacroGrid(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank) {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("MACRO CONTROLS") }
         ImGui.spacing()
 
-        val cols = 4
-        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(2f)
-        val cellW = availW / cols
-        val diameter = (cellW - 10f).coerceIn(36f, 60f)
-        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
-        val rowH = diameter + captionH + 6f
+        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
+        val gap = 4f
+        val n = bank.knobs.size.coerceAtLeast(1)
+        val segW = ((availW - gap * (n - 1)) / n).coerceAtLeast(1f)
+        val btnH = 30f
 
-        val startX = ImGui.getCursorScreenPosX()
-        val startY = ImGui.getCursorScreenPosY()
-
-        val currentBankId = activeBankId()
         bank.knobs.forEachIndexed { i, control ->
-            val row = i / 4
-            val col = i % 4
-            val cx = startX + col * cellW + (cellW - diameter) / 2f
-            val cy = startY + row * rowH
-            ImGui.setCursorScreenPos(cx, cy)
+            if (i > 0) ImGui.sameLine(0f, gap)
             val isSelected = (llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == control.id) ||
                 (llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId == null && i == 0)
             val isLearningThis = llm.slop.liquidlsd.macro.MacroLearnState.isControlLearning(control.id)
-            MacroKnobWidget.draw(
-                session = session,
-                id = "${currentBankId}_knob_$i",
-                label = control.label,
-                value = control.value,
-                diameter = diameter,
-                isSelected = isSelected,
-                isLearning = isLearningThis,
-                bindings = control.bindings,
-                onSelect = { llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = control.id },
-                onToggleLearn = {
-                    if (isLearningThis) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
-                    else llm.slop.liquidlsd.macro.MacroLearnState.startLearn(control.id)
-                },
-                onChanged = { newVal -> control.value = newVal }
-            )
-        }
 
-        val totalRows = (bank.knobs.size + cols - 1) / cols
-        ImGui.setCursorScreenPos(startX, startY + totalRows * rowH)
-        ImGui.dummy(0f, 0f)
+            val btnColor = when {
+                isLearningThis -> ImGui.colorConvertFloat4ToU32(0.55f, 0.16f, 0.16f, 1f)
+                isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
+                else -> ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
+            }
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
+            val label = control.label.ifEmpty { "K${i + 1}" }
+            val countSuffix = if (control.bindings.isNotEmpty()) " (${control.bindings.size})" else ""
+            if (ImGui.button("$label$countSuffix##macro_select_${control.id}", segW, btnH)) {
+                llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = control.id
+            }
+            ImGui.popStyleColor()
+            itemTooltip(if (isLearningThis) "Learning -- click a parameter to bind, or Cancel below." else "Select to inspect/edit $label's bindings below.")
+        }
     }
 
     // -- Binding Inspector Accordion Drawer --------------------------------------------------------
